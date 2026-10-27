@@ -52,6 +52,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
 )
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
+from ...adapters import profile_worker_transport
 from ...adapters.profile_worker import ProfileWorkerProcess
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
 from ..session_owner import ProfileWorkerSessionOwner
@@ -105,7 +106,8 @@ def test_activity_replies_continue_while_the_real_diagnostic_file_sink_is_blocke
                 assert win32event.WaitForSingleObject(entered, 5000) == win32event.WAIT_OBJECT_0
                 started = time.monotonic()
                 for _ in range(16):
-                    assert worker.activity().in_flight_operations == 0
+                    probe = worker.activity(deadline=time.monotonic() + 5)
+                    assert probe is not None and probe.in_flight_operations == 0
                     assert not worker.status().sessions
                 assert time.monotonic() - started < 3
                 assert not worker.stopping
@@ -127,6 +129,114 @@ def _activity_owner(worker: ProfileWorkerProcess, root: Path) -> ProfileWorkerSe
     )
     owner._worker = worker
     return owner
+
+
+@contextmanager
+def _held_by_another_thread(lock: RLock) -> Generator[None]:
+    """Keep one of the worker's locks busy as a concurrent caller would."""
+    acquired, release = Event(), Event()
+
+    def hold() -> None:
+        with lock:
+            acquired.set()
+            release.wait(10)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        held = pool.submit(hold)
+        assert acquired.wait(5)
+        try:
+            yield
+        finally:
+            release.set()
+            held.result(timeout=10)
+
+
+def test_unanswered_activity_probe_keeps_the_busy_worker_and_its_sessions(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A late heartbeat answer is unknown, never death: the worker, its lease and its stream survive.
+
+    The reply is held past the whole control-exchange budget, which once contained the worker.
+    """
+    import win32api
+    import win32event
+
+    control_budget = 1.0
+    monkeypatch.setattr(profile_worker_transport, "_CONTROL_EXCHANGE_SECONDS", control_budget)
+
+    armed_name, entered_name, release_name = (f"Local\\cadrumo-probe-test-{uuid4()}" for _ in range(3))
+    armed, entered, release = (
+        win32event.CreateEvent(None, True, False, name) for name in (armed_name, entered_name, release_name)
+    )
+    script = tmp_path / "slow_activity_worker.py"
+    script.write_text(
+        "import win32event\n"
+        "from cadrumo_runtime.host.operation_host import ProfileWorkerOperationHost\n"
+        "from cadrumo_runtime.host.worker import run\n"
+        f"armed = win32event.OpenEvent(0x100000, False, {armed_name!r})\n"
+        f"entered = win32event.OpenEvent(2, False, {entered_name!r})\n"
+        f"release = win32event.OpenEvent(0x100000, False, {release_name!r})\n"
+        "original = ProfileWorkerOperationHost.in_flight_operation_count\n"
+        "held = False\n"
+        "def slow(self):\n"
+        "    global held\n"
+        "    if not held and win32event.WaitForSingleObject(armed, 0) == win32event.WAIT_OBJECT_0:\n"
+        "        held = True\n"
+        "        win32event.SetEvent(entered)\n"
+        "        win32event.WaitForSingleObject(release, 15000)\n"
+        "    return original(self)\n"
+        "ProfileWorkerOperationHost.in_flight_operation_count = slow\n"
+        "raise SystemExit(run())\n",
+        encoding="utf-8",
+    )
+    try:
+        with worker_profiles(tmp_path) as profiles:
+            root, ((identity, key), _) = profiles
+            worker = ProfileWorkerProcess(identity, storage_root=root, worker_script=script)
+            owner = _activity_owner(worker, root)
+            try:
+                admitted = lease(identity)
+                worker.install(admitted, bytearray(key))
+                # Install's own status reply counts operations too; only the probe after it is held.
+                win32event.SetEvent(armed)
+                started = time.monotonic()
+                assert owner.in_flight_operation_count(deadline=started + 0.5) is None
+                assert time.monotonic() - started < 3
+                assert win32event.WaitForSingleObject(entered, 5000) == win32event.WAIT_OBJECT_0
+                assert not worker.stopping and not owner.lost
+                # The first reply is still owed, so a second probe sends nothing and stays unknown.
+                assert owner.in_flight_operation_count(deadline=time.monotonic() + 0.2) is None
+                time.sleep(control_budget + 0.5)
+                assert not worker.stopping and not owner.lost
+                win32event.SetEvent(release)
+                # The next exchange discards the late activity reply and reads only its own.
+                assert worker.status().sessions == (admitted.session_id,)
+                assert owner.in_flight_operation_count(deadline=time.monotonic() + 5) == 0
+                assert not worker.stopping and not owner.lost
+            finally:
+                win32event.SetEvent(release)
+                worker.close()
+    finally:
+        for handle in (armed, entered, release):
+            win32api.CloseHandle(handle)
+
+
+def test_native_contention_refuses_custody_observation_but_only_worker_death_loses_it(tmp_path: Path) -> None:
+    """Only positive evidence of worker death fences the owner; a contended health check does not."""
+    with worker_profiles(tmp_path) as profiles:
+        root, ((identity, _), _) = profiles
+        worker = ProfileWorkerProcess(identity, storage_root=root)
+        owner = _activity_owner(worker, root)
+        try:
+            with _held_by_another_thread(worker._native_guard), pytest.raises(AutomationCustodyError):
+                owner.facts(uuid4())
+            assert not owner.lost and not worker.stopping
+            worker._scope.terminate(timeout=5)
+            with pytest.raises(AutomationCustodyError):
+                owner.facts(uuid4())
+            assert owner.lost
+        finally:
+            owner.close()
 
 
 def _profile_baseline(profile_id: object) -> tuple[int, str]:
@@ -239,11 +349,9 @@ def test_installed_worker_uses_native_guards_for_real_profile_mutation(tmp_path:
             admitted = lease(identity)
             worker.install(admitted, bytearray(key))
             assert activity.in_flight_operation_count(deadline=time.monotonic() + 3) == 0
-            with worker._lock:
+            with _held_by_another_thread(worker._lock):
                 assert activity.in_flight_operation_count(deadline=time.monotonic() + 0.05) is None
                 assert not worker.stopping
-            assert activity._activity_guard.acquire(timeout=3)
-            activity._activity_guard.release()
             request = OperationRequest(
                 definition_id="user-profile.field-mutation",
                 subject_ref=f"profile:{identity.binding.profile_id}",

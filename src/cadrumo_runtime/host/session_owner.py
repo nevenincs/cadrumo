@@ -7,11 +7,12 @@ from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
 from datetime import datetime
 from pathlib import Path
-from threading import Event, Lock, RLock, Thread, get_ident
+from threading import Event, Lock, RLock, get_ident
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -58,7 +59,6 @@ class ProfileWorkerSessionOwner:
         self._wall_clock = wall_clock
         self._retiring: list[ProfileWorkerProcess] = []
         self._lifecycle_guard = RLock()
-        self._activity_guard = Lock()
         self._stopping = Event()
         self._construction_done = Event()
         self._construction_done.set()
@@ -139,28 +139,14 @@ class ProfileWorkerSessionOwner:
             self._lifecycle_guard.release()
         if worker is None:
             return 0
-        if time.monotonic() >= deadline or not self._activity_guard.acquire(blocking=False):
+        try:
+            # An unanswered probe reports unknown and leaves a busy worker
+            # alive. Its late answer is discarded, never reused as proof that a
+            # subsequent admission fence was idle.
+            activity = worker.activity(deadline=deadline)
+        except (RefusalError, AutomationCustodyError, ProfileAccessRefusedError):
             return None
-        finished = Event()
-        result: list[int | None] = [None]
-
-        def observe() -> None:
-            try:
-                # Preserve the worker's own control-exchange budget. A short
-                # heartbeat timeout must not kill a healthy busy worker. Only
-                # one observation may remain pending; its late answer is never
-                # reused as proof that a subsequent admission fence was idle.
-                result[0] = worker.activity().in_flight_operations
-            except (RefusalError, AutomationCustodyError):
-                pass
-            finally:
-                self._activity_guard.release()
-                finished.set()
-
-        Thread(target=observe, name="profile-worker-activity", daemon=True).start()
-        if not finished.wait(max(0.0, deadline - time.monotonic())):
-            return None
-        return result[0]
+        return None if activity is None else activity.in_flight_operations
 
     @contextmanager
     def _custody(self, *, await_construction: bool = False) -> Generator[ProfileWorkerProcess]:

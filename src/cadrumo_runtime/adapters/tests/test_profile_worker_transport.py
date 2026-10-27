@@ -22,7 +22,7 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import document_frame
 from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_process import WindowsProcessScope
-from cadrumo_runtime.contracts.profile_worker import ProfileWorkerRefusal
+from cadrumo_runtime.contracts.profile_worker import ProfileWorkerActivity, ProfileWorkerRefusal
 
 from .. import profile_worker_transport as transport
 from ..profile_worker import ProfileWorkerProcess
@@ -275,3 +275,102 @@ def test_failed_exchange_is_fenced_before_retirement(monkeypatch: pytest.MonkeyP
     with pytest.raises(RefusalError):
         worker.status()
     assert worker.contained
+
+
+class _ProbeChannel(WindowsChannel):
+    """A control pipe whose worker answers an activity probe only when the test says so.
+
+    Every other request is answered at once with the worker's own typed refusal.
+    """
+
+    def __init__(self) -> None:
+        self.pending = bytearray()
+        self.requests: list[dict[str, str]] = []
+        self.written = Event()
+
+    @override
+    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
+        request = json.loads(bytes(payload[5:]))
+        self.requests.append(request)
+        self.written.set()
+        if request.get("action") != "activity":
+            reply = ProfileWorkerRefusal(
+                identity=_IDENTITY,
+                request_id=UUID(request["request_id"]),
+                reason=AccessDenialCode.OPERATION_UNAVAILABLE,
+            )
+            self.pending.extend(document_frame(reply))
+
+    def answer_probe(self, request_id: UUID) -> None:
+        self.pending.extend(
+            document_frame(ProfileWorkerActivity(identity=_IDENTITY, request_id=request_id, in_flight_operations=0))
+        )
+
+    @override
+    def read_ready(self) -> bool:
+        return bool(self.pending)
+
+    @override
+    def read_exact(self, count: int, *, deadline: float) -> bytes:
+        if len(self.pending) < count:
+            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        result = bytes(self.pending[:count])
+        del self.pending[:count]
+        return result
+
+    @override
+    def close(self) -> None:
+        return None
+
+
+def _probed_worker() -> tuple[_Worker, _ProbeChannel, UUID]:
+    """Leave one activity probe unanswered on a worker's control pipe."""
+    worker = _worker(latency=0)
+    channel = _ProbeChannel()
+    worker._channel = channel
+    assert worker.activity(deadline=time.monotonic() + 0.05) is None
+    assert not worker.contained and not worker.stopping
+    return worker, channel, UUID(channel.requests[-1]["request_id"])
+
+
+def test_unanswered_probe_sends_nothing_more_and_keeps_the_worker() -> None:
+    worker, channel, _ = _probed_worker()
+
+    assert worker.activity(deadline=time.monotonic() + 0.05) is None
+    with pytest.raises(RefusalError) as refused:
+        worker.prepare_api_admission(deadline=time.monotonic() + 0.05)
+
+    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert len(channel.requests) == 1
+    assert not worker.contained and not worker.stopping
+
+
+def test_late_probe_reply_is_discarded_before_the_next_exchange_reads_its_own() -> None:
+    worker, channel, probe = _probed_worker()
+    channel.answer_probe(probe)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        worker.status()
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+    assert not channel.pending
+    assert not worker.contained and not worker.stopping
+    channel.requests.clear()
+    channel.written.clear()
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        answered = pool.submit(worker.activity, deadline=time.monotonic() + 5)
+        assert channel.written.wait(5)
+        channel.answer_probe(UUID(channel.requests[0]["request_id"]))
+        reply = answered.result(timeout=5)
+    assert reply is not None and reply.in_flight_operations == 0
+
+
+def test_misaddressed_late_probe_reply_is_a_framing_fault_that_contains_the_worker() -> None:
+    worker, channel, _ = _probed_worker()
+    channel.answer_probe(uuid4())
+
+    with pytest.raises(RefusalError) as refused:
+        worker.status()
+
+    assert refused.value.reason is RefusalCode.INVALID_FRAME
+    assert worker.contained and worker.stopping
