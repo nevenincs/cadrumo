@@ -1543,9 +1543,9 @@ desktop:
         vision: Llegit de la imatge
       paused_local_ai: La IA local, que llegeix els documents en pausa, no està a
         punt. Torna-los a afegir quan estigui a punt per acabar-los.
-      paused_unavailable: La IA local no ha pogut llegir els documents en pausa. Revisa
-        la seva llista de models a la configuració de l'agent i torna-los a afegir
-        per acabar-los.
+      paused_unavailable: El model que has triat no ha pogut llegir els documents
+        en pausa. Revisa'l al selector de models de l'agent i torna-los a afegir per
+        acabar-los.
       printed_differs: El document indica {printed}; la factura registra {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Lectures per revisar
@@ -1557,20 +1557,16 @@ desktop:
       reader:
         all_documents: Tots els documents
         available: Disponible
-        choose_model: Obre l'agent
+        cannot_read_images: El model que has triat no pot llegir imatges, així que
+          les pàgines escanejades no es llegeixen. Tria un model que pugui llegir
+          imatges.
+        choose_model: Triar un model
         extraction: Lectura de documents
         host: Servidor local de models
-        no_model: Cap model de la llista de la IA local pot llegir això. Revisa la
-          llista de models a la configuració de l'agent.
-        not_ready: No disponible
+        no_model: Els documents no es llegeixen fins que triïs un model que l'agent
+          pugui fer servir. Tria'n un al selector de models de l'agent.
         off_host: Lectura fora d'aquest ordinador
         off_host_note: Només amb la teva conformitat, cada vegada
-        reads:
-          column_role_mapping: Llegeix columnes de taules
-          supply_nature_proposal: Proposa el tipus de venda o compra
-          text_extraction: Llegeix el text dels documents
-          vision_transcription: Llegeix pàgines escanejades
-        ready: A punt
         text_only: Només documents amb capa de text
         unavailable: No disponible
         version: Versió {version}
@@ -2109,8 +2105,8 @@ desktop:
         own_account_mismatch: Les seves files indiquen un altre compte.
         reader_unavailable: 'No s''ha llegit: la IA local, que llegeix aquest fitxer,
           no està a punt.'
-        reader_unavailable_here: 'No s''ha llegit: la IA local no està disponible
-          ara mateix. Revisa la seva llista de models a la configuració de l''agent.'
+        reader_unavailable_here: 'No s''ha llegit: el model que has triat no està
+          disponible ara mateix. Revisa''l al selector de models de l''agent.'
         result_limit: 'Més de 4.096 files: importa''l per parts.'
         source_changed: 'Ha canviat després de la previsualització: torna a previsualitzar-lo.'
         transaction_validation: No s'ha pogut llegir com a extracte bancari.
@@ -2986,7 +2982,6 @@ desktop:
         category: Categoria
         kind: Tipus
         ratio: El teu percentatge
-        standard: Estàndard
       enter: Introdueix un percentatge
       findings: '{count} per revisar: {categories}'
       input: Percentatge de {category}; escriu 50 per al 50 %
@@ -5401,17 +5396,16 @@ tui:
           amb la teva situació censal.
         column:
           category: Categoria
-          default: Per defecte
           kind: Tipus
           override: La teva proporció
           ratio: Proporció
         eligible_heading: Categories admeses
-        no_overrides: No has fixat proporcions per a %{year}; s'apliquen les per defecte.
+        no_overrides: No has fixat proporcions per a %{year}.
         override_absent: Sense fixar
         override_present: Fixada
         overrides_heading: Les teves proporcions
-        prompt: Una proporció d'ús substitueix el percentatge professional per defecte
-          d'una categoria al teu perfil.
+        prompt: Una proporció d'ús fixa el percentatge professional d'una categoria
+          al teu perfil.
         ratio: Proporció (fracció de 0 a 1)
         read: Llegeix proporcions
         review_set: Revisa la proporció
@@ -5419,8 +5413,7 @@ tui:
         set_done: '%{category} ara fa servir la proporció %{ratio} (abans: %{prior}).'
         set_heading: Fixa o treu una proporció
         stage_set: Fixa la proporció de %{category} en %{ratio} (exercici %{year}).
-        stage_unset: Treu la teva proporció de %{category}; torna a aplicar-se la
-          per defecte.
+        stage_unset: Treu la teva proporció de %{category}.
         title: Proporcions d'ús
         unset_done: S'ha tret la teva proporció de %{category} (era %{prior}).
         unset_nothing: '%{category} no tenia cap proporció teva per treure.'
@@ -5919,8 +5912,8 @@ tui:
             a llegir el document.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
-            {fields}. Revisa la llista de models de la IA local a l''aplicació d''escriptori
-            de Cadrumo i torna a llegir el document.'
+            {fields}. Revisa el model que has triat al selector de models de l''agent
+            a l''aplicació d''escriptori de Cadrumo i torna a llegir el document.'
         line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
           · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
           · recàrrec: {recargo}'
@@ -6041,9 +6034,9 @@ tui:
           partial: 'Aquest lot ha estat parcial: alguns documents s''han desat i d''altres
             no. Torna a llançar-lo després de corregir els rebutjats; els documents
             desats no es desen dues vegades.'
-          paused: La IA local no ha pogut llegir els documents en pausa. Revisa la
-            seva llista de models a l'aplicació d'escriptori de Cadrumo i torna a
-            llançar el lot per acabar-los.
+          paused: El model que has triat no ha pogut llegir els documents en pausa.
+            Revisa'l al selector de models de l'agent a l'aplicació d'escriptori de
+            Cadrumo i torna a llançar el lot per acabar-los.
           paused_local_ai_not_ready: La IA local, que llegeix els documents en pausa,
             no està a punt. Torna a llançar el lot quan estigui a punt per acabar-los.
           writes: 'Registres escrits: {count}.'
@@ -6282,9 +6275,9 @@ tui:
         own_account_mismatch: l'extracte indica un compte diferent del que has triat
         reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
           així que no s'ha llegit el fitxer
-        reader_unavailable_here: la IA local no està disponible ara mateix, així que
-          no s'ha llegit el fitxer; revisa la seva llista de models a l'aplicació
-          d'escriptori de Cadrumo
+        reader_unavailable_here: el model que has triat no està disponible ara mateix,
+          així que no s'ha llegit el fitxer; revisa'l al selector de models de l'agent
+          a l'aplicació d'escriptori de Cadrumo
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
           n'ha importat res; torna a previsualitzar-lo

@@ -1515,8 +1515,8 @@ desktop:
         vision: Read from the image
       paused_local_ai: Local AI, which reads the paused documents, is not ready. Add
         them again once it is ready to finish them.
-      paused_unavailable: Local AI could not read the paused documents. Check its
-        model list in the agent settings, then add them again to finish them.
+      paused_unavailable: The model you picked could not read the paused documents.
+        Check it in the agent's model picker, then add them again to finish them.
       printed_differs: The document prints {printed}; the invoice records {recorded}.
       provenance: '{origin}, {grounding}'
       queue: Readings to review
@@ -1528,20 +1528,15 @@ desktop:
       reader:
         all_documents: Every document
         available: Available
-        choose_model: Open the agent
+        cannot_read_images: The model you picked can't read images, so scanned pages
+          aren't read. Pick a model that can read images.
+        choose_model: Pick a model
         extraction: Reading documents
         host: Local model host
-        no_model: No model on the local AI's list can read this. Check the model list
-          in the agent settings.
-        not_ready: Not ready
+        no_model: Documents aren't read until you pick a model the agent can use.
+          Pick one in the agent's model picker.
         off_host: Reading off this computer
         off_host_note: Only with your acknowledgement, each time
-        reads:
-          column_role_mapping: Reads table columns
-          supply_nature_proposal: Proposes the kind of sale or purchase
-          text_extraction: Reads document text
-          vision_transcription: Reads scanned pages
-        ready: Ready
         text_only: Documents with a text layer only
         unavailable: Not available
         version: Version {version}
@@ -2077,8 +2072,8 @@ desktop:
         other: 'Not imported: {code}'
         own_account_mismatch: Its rows name a different account.
         reader_unavailable: 'Not read: Local AI, which reads this file, is not ready.'
-        reader_unavailable_here: 'Not read: Local AI is not available right now. Check
-          its model list in the agent settings.'
+        reader_unavailable_here: 'Not read: the model you picked is not available
+          right now. Check it in the agent''s model picker.'
         result_limit: 'More than 4,096 rows: import it in parts.'
         source_changed: 'Changed after the preview: preview it again.'
         transaction_validation: Couldn't be read as a bank statement.
@@ -2947,7 +2942,6 @@ desktop:
         category: Category
         kind: Kind
         ratio: Your ratio
-        standard: Standard
       enter: Enter a ratio
       findings: '{count} to look at: {categories}'
       input: Ratio for {category}, write 50 for 50%
@@ -5306,17 +5300,15 @@ tui:
           match your census registration.
         column:
           category: Category
-          default: Default
           kind: Kind
           override: Your ratio
           ratio: Ratio
         eligible_heading: Eligible categories
-        no_overrides: You have set no ratios for %{year}; the defaults apply.
+        no_overrides: You have set no ratios for %{year}.
         override_absent: Not set
         override_present: Set
         overrides_heading: Your ratios
-        prompt: A usage ratio replaces the default business share of one category
-          for your profile.
+        prompt: A usage ratio states the business share of one category for your profile.
         ratio: Ratio (decimal fraction from 0 to 1)
         read: Read ratios
         review_set: Review ratio
@@ -5324,7 +5316,7 @@ tui:
         set_done: '%{category} now uses ratio %{ratio} (before: %{prior}).'
         set_heading: Set or remove a ratio
         stage_set: Set the ratio of %{category} to %{ratio} (filing year %{year}).
-        stage_unset: Remove your ratio for %{category}; the default applies again.
+        stage_unset: Remove your ratio for %{category}.
         title: Usage ratios
         unset_done: Your ratio for %{category} was removed (it was %{prior}).
         unset_nothing: '%{category} had no ratio of yours to remove.'
@@ -5820,8 +5812,8 @@ tui:
             again.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
             the labels did not cover have not been read yet and stay empty: {fields}.
-            Check the local AI''s model list in the Cadrumo desktop app, then read
-            the document again.'
+            Check the model you picked in the agent''s model picker in the Cadrumo
+            desktop app, then read the document again.'
         line: '{index}. {description} · quantity: {quantity} · unit price: {unit_price}
           · base: {base} · rate: {rate} · IVA: {iva} · surcharge rate: {recargo_rate}
           · surcharge: {recargo}'
@@ -5938,8 +5930,9 @@ tui:
           partial: 'This batch was partial: some documents were stored and others
             were not. Run it again after fixing the refused ones; stored documents
             are not stored twice.'
-          paused: Local AI could not read the paused documents. Check its model list
-            in the Cadrumo desktop app, then run the batch again to finish them.
+          paused: The model you picked could not read the paused documents. Check
+            it in the agent's model picker in the Cadrumo desktop app, then run the
+            batch again to finish them.
           paused_local_ai_not_ready: Local AI, which reads the paused documents, is
             not ready. Run the batch again once it is ready to finish them.
           writes: 'Records written: {count}.'
@@ -6173,8 +6166,9 @@ tui:
           you chose
         reader_unavailable: the local AI, which reads this file, is not ready, so
           the file was not read
-        reader_unavailable_here: the local AI is not available right now, so the file
-          was not read; check its model list in the Cadrumo desktop app
+        reader_unavailable_here: the model you picked is not available right now,
+          so the file was not read; check it in the agent's model picker in the Cadrumo
+          desktop app
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again

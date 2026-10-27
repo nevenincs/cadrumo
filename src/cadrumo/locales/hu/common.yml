@@ -1527,8 +1527,8 @@ desktop:
       paused_local_ai: A helyi MI, amely a szüneteltetett dokumentumokat olvassa,
         nem áll készen. A befejezésükhöz add hozzá újra a dokumentumokat, amint készen
         áll.
-      paused_unavailable: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat.
-        Ellenőrizd a modelllistáját az ügynök beállításaiban, majd a befejezésükhöz
+      paused_unavailable: A kiválasztott modell nem tudta beolvasni a szüneteltetett
+        dokumentumokat. Ellenőrizd az ügynök modellválasztójában, majd a befejezésükhöz
         add hozzá újra a dokumentumokat.
       printed_differs: A dokumentumon {printed} áll; a számla {recorded} összeget
         rögzít.
@@ -1542,20 +1542,16 @@ desktop:
       reader:
         all_documents: Minden dokumentum
         available: Elérhető
-        choose_model: Az ügynök megnyitása
+        cannot_read_images: A kiválasztott modell nem tud képeket olvasni, ezért a
+          beszkennelt oldalak nem lesznek beolvasva. Válassz olyan modellt, amely
+          tud képeket olvasni.
+        choose_model: Modell kiválasztása
         extraction: Dokumentumok beolvasása
         host: Helyi modellkiszolgáló
-        no_model: A helyi MI listáján egyik modell sem tudja ezt beolvasni. Ellenőrizd
-          a modelllistát az ügynök beállításaiban.
-        not_ready: Nem kész
+        no_model: A dokumentumok beolvasásához válassz egy modellt, amelyet az ügynök
+          használni tud. Válassz egyet az ügynök modellválasztójában.
         off_host: Beolvasás a gépen kívül
         off_host_note: Csak a jóváhagyásoddal, minden alkalommal
-        reads:
-          column_role_mapping: Beolvassa a táblázatok oszlopait
-          supply_nature_proposal: Javaslatot tesz az eladás vagy vásárlás típusára
-          text_extraction: Beolvassa a dokumentumok szövegét
-          vision_transcription: Beolvassa a szkennelt oldalakat
-        ready: Kész
         text_only: Csak szövegréteggel rendelkező dokumentumok
         unavailable: Nem elérhető
         version: '{version} verzió'
@@ -2094,8 +2090,8 @@ desktop:
         own_account_mismatch: A sorai másik számlát neveznek meg.
         reader_unavailable: 'Nincs beolvasva: a helyi MI, amely ezt a fájlt olvassa,
           nem áll készen.'
-        reader_unavailable_here: 'Nincs beolvasva: a helyi MI jelenleg nem érhető
-          el. Ellenőrizd a modelllistáját az ügynök beállításaiban.'
+        reader_unavailable_here: 'Nincs beolvasva: a kiválasztott modell jelenleg
+          nem érhető el. Ellenőrizd az ügynök modellválasztójában.'
         result_limit: 'Több mint 4096 sor: importáld részletekben.'
         source_changed: 'Az előnézet óta megváltozott: nézd meg újra.'
         transaction_validation: Nem olvasható be bankszámlakivonatként.
@@ -2970,7 +2966,6 @@ desktop:
         category: Kategória
         kind: Fajta
         ratio: A te arányod
-        standard: Alapértelmezett
       enter: Adj meg egy arányt
       findings: '{count} átnézendő: {categories}'
       input: '{category} aránya; 50%-hoz írd: 50'
@@ -5381,18 +5376,16 @@ tui:
           a cenzusbeli bejegyzéseddel.
         column:
           category: Kategória
-          default: Alapértelmezés
           kind: Fajta
           override: Saját arány
           ratio: Arány
         eligible_heading: Jogosult kategóriák
-        no_overrides: '%{year}. évre nem állítottál be arányt; az alapértelmezések
-          érvényesek.'
+        no_overrides: '%{year}. évre nem állítottál be arányt.'
         override_absent: Nincs beállítva
         override_present: Beállítva
         overrides_heading: A te arányaid
-        prompt: Egy használati arány a profilodban egy kategória alapértelmezett üzleti
-          hányadát váltja fel.
+        prompt: Egy használati arány a profilodban egy kategória üzleti hányadát határozza
+          meg.
         ratio: Arány (0 és 1 közötti tizedes tört)
         read: Arányok beolvasása
         review_set: Arány áttekintése
@@ -5400,8 +5393,7 @@ tui:
         set_done: '%{category} aránya mostantól %{ratio} (korábban: %{prior}).'
         set_heading: Arány beállítása vagy törlése
         stage_set: '%{category} arányának beállítása erre: %{ratio} (adóév: %{year}).'
-        stage_unset: '%{category} saját arányának törlése; ismét az alapértelmezés
-          érvényes.'
+        stage_unset: '%{category} saját arányának törlése.'
         title: Használati arányok
         unset_done: '%{category} saját aránya törölve (korábban: %{prior}).'
         unset_nothing: '%{category} esetében nem volt törölhető saját arány.'
@@ -5898,8 +5890,8 @@ tui:
             a dokumentumot.'
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
             nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
-            Ellenőrizd a helyi MI modelllistáját a Cadrumo asztali alkalmazásában,
-            majd olvasd be újra a dokumentumot.'
+            Ellenőrizd a kiválasztott modellt az ügynök modellválasztójában a Cadrumo
+            asztali alkalmazásában, majd olvasd be újra a dokumentumot.'
         line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
           · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
           · áfapótlék: {recargo}'
@@ -6020,9 +6012,9 @@ tui:
           partial: 'A köteg részleges volt: egyes dokumentumok tárolódtak, mások nem.
             Az elutasítottak javítása után futtasd újra; a tárolt dokumentumok nem
             kerülnek kétszer tárolásra.'
-          paused: A helyi MI nem tudta beolvasni a szüneteltetett dokumentumokat.
-            Ellenőrizd a modelllistáját a Cadrumo asztali alkalmazásában, majd a befejezésükhöz
-            futtasd újra a beolvasást.
+          paused: A kiválasztott modell nem tudta beolvasni a szüneteltetett dokumentumokat.
+            Ellenőrizd az ügynök modellválasztójában a Cadrumo asztali alkalmazásában,
+            majd a befejezésükhöz futtasd újra a beolvasást.
           paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
             olvassa, nem áll készen. A befejezésükhöz futtasd újra a beolvasást, amint
             készen áll.
@@ -6263,8 +6255,9 @@ tui:
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
         reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
           ezért a fájl nem lett beolvasva
-        reader_unavailable_here: a helyi MI jelenleg nem érhető el, ezért a fájl nem
-          lett beolvasva; ellenőrizd a modelllistáját a Cadrumo asztali alkalmazásában
+        reader_unavailable_here: a kiválasztott modell jelenleg nem érhető el, ezért
+          a fájl nem lett beolvasva; ellenőrizd az ügynök modellválasztójában a Cadrumo
+          asztali alkalmazásában
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet
