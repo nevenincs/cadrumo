@@ -14,15 +14,18 @@ with no effect.
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Literal, Self
+from contextlib import AbstractContextManager
+from typing import Final, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.diagnostic_log import DiagnosticValue, diagnostic_phase, diagnostic_scope
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
+from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -59,6 +62,9 @@ from .declarations_list import (
 from .declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 
 MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID = "modelo.declarations.list"
+
+_LOGGER = get_logger(__name__)
+_LIST_PHASE_EVENT: Final = "declarations_list_phase"
 
 type DeclarationListReaderFactory = Callable[[str, PinnedAuthorityOperation], Callable[[], DeclarationListInputs]]
 """Bind the list's capture to one profile and the pinned authority of the read."""
@@ -99,6 +105,16 @@ class ModeloDeclarationsListProjectionV1(BaseModel):
         return self
 
 
+def _list_phase(phase: str) -> AbstractContextManager[dict[str, DiagnosticValue]]:
+    """Record how long one phase of the list read took, and what it counted."""
+    return diagnostic_phase(
+        _LOGGER,
+        _LIST_PHASE_EVENT,
+        phase,
+        fields={"definition_id": MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID},
+    )
+
+
 class ModeloDeclarationsListExecutor:
     """Capture the list under the pinned authority inside profile custody."""
 
@@ -118,13 +134,19 @@ class ModeloDeclarationsListExecutor:
         operation = context.authority_operation
 
         def read() -> ModeloDeclarationsListProjectionV1:
-            with validating_governed_facts(operation):
-                inputs = self._reader_factory(str(payload.profile_id), operation)()
+            with validating_governed_facts(operation), _list_phase("read"):
+                with _list_phase("reader_binding"):
+                    capture = self._reader_factory(str(payload.profile_id), operation)
+                with _list_phase("capture") as measured:
+                    inputs = capture()
+                    measured["item_count"] = None if inputs.workspace is None else len(inputs.workspace.declarations)
                 if inputs.workspace is None:
                     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
                 return project_declarations_list(payload, inputs.workspace, inputs.calendar)
 
-        return await capture_read_result(context, read, task_name="modelo-declarations-list")
+        # The seconds the whole call takes beyond "read" are the thread hop and the encrypted result write.
+        with diagnostic_scope(), _list_phase("read_and_store"):
+            return await capture_read_result(context, read, task_name="modelo-declarations-list")
 
 
 def project_declarations_list(
@@ -134,18 +156,21 @@ def project_declarations_list(
 ) -> ModeloDeclarationsListProjectionV1:
     """Say one profile's list in the language asked for: its rows, what it could read, and what may be started."""
     language = payload.output_language
-    rows = declaration_list_rows(workspace, calendar)
-    return ModeloDeclarationsListProjectionV1(
-        result_version=1,
-        profile_id=payload.profile_id,
-        output_language=language,
-        rows=tuple(worded_list_row(row, language) for row in rows),
-        zones=zone_states(workspace, language),
-        sources=calendar_sources(calendar, language),
-        notices=source_notices(workspace, calendar, language),
-        deadline_note_words=deadline_note_words(rows, language),
-        creation_targets=worded_creation_targets(rows, workspace.creation_targets, language),
-    )
+    with _list_phase("rows") as measured:
+        rows = declaration_list_rows(workspace, calendar)
+        measured["item_count"] = len(rows)
+    with _list_phase("wording"):
+        return ModeloDeclarationsListProjectionV1(
+            result_version=1,
+            profile_id=payload.profile_id,
+            output_language=language,
+            rows=tuple(worded_list_row(row, language) for row in rows),
+            zones=zone_states(workspace, language),
+            sources=calendar_sources(calendar, language),
+            notices=source_notices(workspace, calendar, language),
+            deadline_note_words=deadline_note_words(rows, language),
+            creation_targets=worded_creation_targets(rows, workspace.creation_targets, language),
+        )
 
 
 def build_modelo_declarations_list_definition(reader_factory: DeclarationListReaderFactory) -> OperationDefinition:

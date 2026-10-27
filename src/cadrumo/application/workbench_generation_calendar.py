@@ -23,11 +23,14 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import dataclass, replace
 from datetime import date
 from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
+from ..core.diagnostic_log import DiagnosticValue, diagnostic_phase
 from ..core.errors.hierarchy import InternalInvariantError
+from ..core.logging import get_logger
 from ..core.time.utc import UtcInstant
 from ..domain.deadlines.errors import ProfileError
 from ..domain.deadlines.models import TaxpayerProfile
@@ -67,6 +70,14 @@ from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCalenda
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+
+_LOGGER = get_logger(__name__)
+_CALENDAR_PHASE_EVENT: Final = "workbench_calendar_phase"
+
+
+def _calendar_phase(phase: str) -> AbstractContextManager[dict[str, DiagnosticValue]]:
+    """Record how long one step of the calendar work took, and what it counted."""
+    return diagnostic_phase(_LOGGER, _CALENDAR_PHASE_EVENT, phase)
 
 
 def declared_tax_id(raw_values: Mapping[str, object]) -> str | None:
@@ -225,11 +236,12 @@ def read_workbench_calendar_inputs(
     Parameter types: ``record`` (:class:`~cadrumo.domain.user_profile.values.UserProfileRecord`).
     """
     try:
-        taxpayer = projection_for_taxpayer(
-            record,
-            tax_id_default="00000000T",
-            schema=operation.profile_schema(),
-        )
+        with _calendar_phase("taxpayer_projection"):
+            taxpayer = projection_for_taxpayer(
+                record,
+                tax_id_default="00000000T",
+                schema=operation.profile_schema(),
+            )
     except (ProfileError, UserProfileValidationError):
         refusal = _taxpayer_profile_refusal(raw_values, operation=operation)
         return WorkbenchCalendarInputs(
@@ -387,18 +399,19 @@ def _build_workbench_calendar_inputs(
         )
 
     def compute() -> WorkbenchCalendarWork:
-        schedule_calendar = build_overview_calendar(
-            taxpayer,
-            query_range,
-            today=as_of,
-            raw_values=raw_values,
-            work_units=tuple(work_units.values()),
-            operation=operation,
-            applicability_evidence=applicability_evidence,
-        )
-        return WorkbenchCalendarWork(
-            schedule_calendar=schedule_calendar,
-            calendar=build_overview_calendar(
+        with _calendar_phase("calendar_schedule") as measured:
+            schedule_calendar = build_overview_calendar(
+                taxpayer,
+                query_range,
+                today=as_of,
+                raw_values=raw_values,
+                work_units=tuple(work_units.values()),
+                operation=operation,
+                applicability_evidence=applicability_evidence,
+            )
+            measured["item_count"] = len(schedule_calendar.entries)
+        with _calendar_phase("calendar_with_filing_evidence") as measured:
+            calendar = build_overview_calendar(
                 taxpayer,
                 query_range,
                 today=as_of,
@@ -407,24 +420,28 @@ def _build_workbench_calendar_inputs(
                 work_units=tuple(work_units.values()),
                 operation=operation,
                 applicability_evidence=applicability_evidence,
-            ),
-            agenda=build_overview_agenda(
+            )
+            measured["item_count"] = len(calendar.entries)
+        with _calendar_phase("agenda"):
+            agenda = build_overview_agenda(
                 taxpayer,
                 as_of=as_of,
                 raw_values=raw_values,
                 operation=operation,
                 applicability_evidence=applicability_evidence,
-            ),
-        )
+            )
+        return WorkbenchCalendarWork(schedule_calendar=schedule_calendar, calendar=calendar, agenda=agenda)
 
     work = memo.reuse(compute)
     # The evidence rows depend only on the memo key's inputs; their observation
     # state is this capture's own, so the projection is rebuilt every time.
-    evidence = evidence_for(work.schedule_calendar)
-    declarations_calendar = project_declarations_calendar(
-        calendar=work.calendar,
-        evidence=evidence,
-        as_of=as_of,
-        schedule_observation=_schedule_observation(work.calendar, observed_at),
-    )
+    with _calendar_phase("declarations_calendar") as measured:
+        evidence = evidence_for(work.schedule_calendar)
+        declarations_calendar = project_declarations_calendar(
+            calendar=work.calendar,
+            evidence=evidence,
+            as_of=as_of,
+            schedule_observation=_schedule_observation(work.calendar, observed_at),
+        )
+        measured["item_count"] = len(declarations_calendar.entries)
     return evidence, declarations_calendar, work.agenda, work.calendar.taxpayer_model_declared

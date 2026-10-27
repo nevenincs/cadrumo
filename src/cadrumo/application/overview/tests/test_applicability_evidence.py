@@ -11,6 +11,7 @@ adquisiciones de bienes y servicios".
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Iterable
 from datetime import date
 from decimal import Decimal
@@ -18,6 +19,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from cadrumo.tests.log_records import delivered_records
 
 from ....core.modelo import Modelo
 from ....domain.calculations.registry.applicability import (
@@ -507,3 +509,32 @@ def test_calendar_reads_the_threshold_answer_for_each_filing_year(operation: Pin
 
     assert _m347_years(undated.entries) == {2024, 2025}
     assert _m347_years(per_year.entries) == {2025}
+
+
+def test_the_ledger_derivation_of_a_filing_year_records_its_phase_once_per_year(
+    caplog: pytest.LogCaptureFixture, operation: PinnedAuthorityOperation
+) -> None:
+    """The seconds the ledger signals take inside a calendar build are attributed to their own phase."""
+    record = create_user_profile_record(
+        context=operation.profile_create_context(),
+        profile_id=_BUCKET_ID,
+        facts=_AUTONOMO_FACTS,
+        setup_state=ProfileSetupState.COMPLETE,
+    )
+    evidence = bind_filing_year_applicability_evidence(
+        record=record,
+        schema=operation.profile_decode_context().schema,
+        bucket_id=_BUCKET_ID,
+        invoice_source_ports=_ports(),
+        operation=operation,
+        today=_AFTER_YEAR_END,
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        derived = evidence.ledger_payer_facts_for_year(_FILING_YEAR)
+        evidence.ledger_payer_facts_for_year(_FILING_YEAR)
+    (phase,) = [entry for entry in delivered_records(caplog) if entry.getMessage() == "overview_applicability_phase"]
+
+    assert phase.__dict__["phase"] == "ledger_payer_facts"
+    assert phase.__dict__["item_count"] == len(derived) > 0
+    assert isinstance(phase.__dict__["elapsed_seconds"], float)

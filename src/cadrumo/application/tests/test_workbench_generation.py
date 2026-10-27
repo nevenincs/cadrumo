@@ -2,17 +2,24 @@
 
 from __future__ import annotations
 
+import asyncio
+import logging
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, cast
+from uuid import UUID
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
+
+from cadrumo.tests.log_records import delivered_records
 
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
+from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
@@ -40,6 +47,12 @@ from ..ledger.workspace import (
 )
 from ..live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
+from ..modelo.declarations_list_operation import (
+    MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
+    ModeloDeclarationsListExecutor,
+    ModeloDeclarationsListProjectionV1,
+    ModeloDeclarationsListRequest,
+)
 from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 from ..modelo.work_addressing import ModeloExactWorkUnitTarget
 from ..modelo.workspace import resolve_static_inspection_result
@@ -48,6 +61,9 @@ from ..modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceStaticInspectionResultV1,
 )
+from ..operations import profile_guard
+from ..operations.models import OperationIdentity, OperationRequest
+from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicContractSetV1
 from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
@@ -119,6 +135,29 @@ def _profile_record(
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.INCOMPLETE,
         facts=facts,
+    )
+
+
+def _declaration_work_unit(operation: PinnedAuthorityOperation) -> WorkUnit:
+    """Create the one Modelo 130 declaration the profile holds in these fixtures."""
+    period = Period.from_year_and_code(2026, "1T")
+    revision_id = operation.snapshot("130", filing_year=2026, period="1T").revision.id
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_PROFILE_ID,
+            modelo="130",
+            filing_year=2026,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=_PROFILE_ID,
+        modelo="130",
+        filing_year=2026,
+        period=period,
+        revision_id=revision_id,
+        name="declaration",
+        created_at=_NOW,
+        updated_at=_NOW,
     )
 
 
@@ -280,25 +319,7 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """An invalid declaration identity refuses its row while retaining its healthy neighbour."""
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
-    unit = WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=_PROFILE_ID,
-            modelo="130",
-            filing_year=2026,
-            period=period,
-            revision_id=revision_id,
-        ),
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=period,
-        revision_id=revision_id,
-        name="declaration",
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
+    unit = _declaration_work_unit(authority_operation)
     duplicate_address = unit.model_copy(update={"work_unit_id": "a" * 64})
     profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(
@@ -342,25 +363,7 @@ def test_secure_profile_modelo_source_carries_each_work_unit_s_projection(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The Modelo source names every work unit the profile holds, through the reader it is given."""
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
-    unit = WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=_PROFILE_ID,
-            modelo="130",
-            filing_year=2026,
-            period=period,
-            revision_id=revision_id,
-        ),
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=period,
-        revision_id=revision_id,
-        name="declaration",
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
+    unit = _declaration_work_unit(authority_operation)
     profile = _Repository(_profile_record(authority_operation))
     work_units = _Repository(WorkUnitCatalogue.model_construct(work_units={unit.work_unit_id: unit}))
     revisions = _Repository(CalculationRevisionCatalogue())
@@ -1254,6 +1257,167 @@ def test_an_undeclared_taxpayer_model_leaves_the_agenda_unavailable(
     assert home.agenda == ()
 
 
+_PHASE_EVENTS = frozenset(
+    {"workbench_capture_phase", "workbench_calendar_phase", "overview_applicability_phase", "declarations_list_phase"}
+)
+_PRIVATE_NAME = "synthetic-private-taxpayer-canary"
+
+
+def _declaration_list_door(operation: PinnedAuthorityOperation) -> SecureProfileWorkbenchGenerationReadDoorV1:
+    """Read one declaration, an empty ledger and a census and custody reader, from in-memory stores."""
+    from ...domain.buckets.event import BucketEventHistoryCatalogue
+    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.transactions.models import TransactionCatalogue
+
+    unit = _declaration_work_unit(operation)
+    record = _profile_record(operation, facts=(UserProfileFact(path="identity.name", value=_PRIVATE_NAME),))
+    return SecureProfileWorkbenchGenerationReadDoorV1(
+        profile_id=_PROFILE_ID,
+        operation=operation,
+        profile_repository=cast(Any, _Repository(record)),
+        work_unit_repository=cast(Any, _Repository(WorkUnitCatalogue(work_units={unit.work_unit_id: unit}))),
+        calculation_repository=cast(Any, _Repository(CalculationRevisionCatalogue())),
+        filing_repository=cast(Any, _Repository(ModeloRecordCatalogue())),
+        clock=lambda: _NOW,
+        bucket_event_repository=cast(Any, _Repository(BucketEventHistoryCatalogue())),
+        ledger_action_ports=_ledger_ports(
+            operation, transactions=_StableStore(TransactionCatalogue()), invoices=_StableStore(InvoiceCatalogue())
+        ),
+        notification_custody_reader=lambda: 4,
+        census_observation_reader=lambda: None,
+    )
+
+
+def _phase_records(caplog: pytest.LogCaptureFixture, event: str | None = None) -> list[logging.LogRecord]:
+    """The phase records a read delivered, in the order their phases ended."""
+    return [
+        record
+        for record in delivered_records(caplog)
+        if record.getMessage() in _PHASE_EVENTS and (event is None or record.getMessage() == event)
+    ]
+
+
+def _phase_names(records: list[logging.LogRecord]) -> list[str]:
+    return [cast(str, record.__dict__["phase"]) for record in records]
+
+
+def _assert_phase_records_are_timed_correlated_and_value_free(records: list[logging.LogRecord]) -> None:
+    for record in records:
+        elapsed = record.__dict__["elapsed_seconds"]
+        assert isinstance(elapsed, float) and elapsed >= 0.0
+        assert record.__dict__["outcome"] == "completed"
+        assert (record.levelno >= logging.WARNING) == (elapsed >= 1.0), "only a phase from the slow bound warns"
+        assert _PRIVATE_NAME not in repr(record.__dict__)
+    assert len({record.__dict__["_cadrumo_diagnostic_id"] for record in records}) == 1
+    assert records[0].__dict__["_cadrumo_diagnostic_id"] is not None
+
+
+def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_counts(
+    caplog: pytest.LogCaptureFixture, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """The seconds of one list capture are attributed to named phases, down to the re-read that closes it."""
+    door = _declaration_list_door(authority_operation)
+
+    with caplog.at_level(logging.DEBUG):
+        door.read_declaration_list_inputs()
+    records = _phase_records(caplog)
+
+    assert _phase_names(_phase_records(caplog, "workbench_capture_phase")) == [
+        "profile_record",
+        "work_units",
+        "calculation_revisions",
+        "filings",
+        "verification_reports",
+        "bucket_events",
+        "lifecycle_facts",
+        "declarations_portfolio",
+        "declaration_summaries",
+        "ledger_revision",
+        "ledger_transactions",
+        "ledger_invoices",
+        "calendar_aeat_evidence",
+        "calendar_memo_key",
+        "calendar_inputs",
+        "custody_count",
+        "census_observation",
+        "recheck_profile_record",
+        "recheck_work_units",
+        "recheck_calculation_revisions",
+        "recheck_filings",
+        "recheck_ledger_transactions",
+        "recheck_ledger_invoices",
+        "recheck_ledger",
+        "recheck_verification_reports",
+        "recheck_bucket_events",
+        "recheck_custody_count",
+        "recheck_census_observation",
+        "recheck",
+        "declaration_list_inputs",
+    ]
+    assert _phase_names(_phase_records(caplog, "workbench_calendar_phase")) == [
+        "taxpayer_projection",
+        "calendar_schedule",
+        "calendar_with_filing_evidence",
+        "agenda",
+        "declarations_calendar",
+    ]
+    counts = {record.__dict__["phase"]: record.__dict__.get("item_count") for record in records}
+    assert counts["work_units"] == counts["declarations_portfolio"] == counts["declaration_summaries"] == 1
+    assert counts["calculation_revisions"] == counts["filings"] == counts["bucket_events"] == 0
+    assert counts["ledger_transactions"] == counts["ledger_invoices"] == 0
+    assert counts["custody_count"] is None, "a phase that counts nothing says so rather than claiming zero"
+    _assert_phase_records_are_timed_correlated_and_value_free(records)
+
+
+def test_the_declarations_list_read_records_every_phase_from_binding_the_reader_to_storing_the_result(
+    caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """The executor's phases and the door's belong to one request, so its uncovered seconds are visible."""
+    door = _declaration_list_door(authority_operation)
+    request = OperationRequest[ModeloDeclarationsListRequest](
+        definition_id=MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(_PROFILE_ID),
+        payload=ModeloDeclarationsListRequest(profile_id=UUID(_PROFILE_ID), output_language=OutputLanguage.EN),
+    )
+    stored: list[BaseModel] = []
+
+    async def put(operand: BaseModel, *, written_at: datetime) -> str:
+        del written_at
+        stored.append(operand)
+        return "sha256:" + "a" * 64
+
+    async def ignore(*_args: object) -> None:
+        return None
+
+    context = cast(
+        OperationExecutorContext,
+        SimpleNamespace(
+            identity=OperationIdentity(
+                operation_id="a" * 64, definition_id=request.definition_id, subject_ref=request.subject_ref
+            ),
+            events=SimpleNamespace(phase=ignore, effect=ignore),
+            operands=SimpleNamespace(put=put),
+            authority_operation=authority_operation,
+        ),
+    )
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: _PROFILE_ID)
+    executor = ModeloDeclarationsListExecutor(lambda _profile_id, _operation: door.read_declaration_list_inputs)
+
+    with caplog.at_level(logging.DEBUG):
+        asyncio.run(executor.execute(request, context))
+    records = _phase_records(caplog)
+
+    (projection,) = stored
+    assert isinstance(projection, ModeloDeclarationsListProjectionV1)
+    listed = _phase_records(caplog, "declarations_list_phase")
+    assert _phase_names(listed) == ["reader_binding", "capture", "rows", "wording", "read", "read_and_store"]
+    assert {record.__dict__["definition_id"] for record in listed} == {MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID}
+    counts = {record.__dict__["phase"]: record.__dict__.get("item_count") for record in listed}
+    assert counts["capture"] == 1 and counts["rows"] == len(projection.rows)
+    assert len(_phase_records(caplog, "workbench_capture_phase")) > 1, "the door's phases belong to the same read"
+    _assert_phase_records_are_timed_correlated_and_value_free(records)
+
+
 def test_the_filing_history_reads_the_bucket_event_log(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -1262,25 +1426,7 @@ def test_the_filing_history_reads_the_bucket_event_log(
     from ...domain.buckets.event_repository import build_bucket_event
     from ..modelo.declarations_workspace_contracts import DeclarationsLifecycleKind, DeclarationsWorkspaceZone
 
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = authority_operation.snapshot("130", filing_year=2026, period="1T").revision.id
-    unit = WorkUnit(
-        work_unit_id=derive_work_unit_id(
-            bucket_id=_PROFILE_ID,
-            modelo="130",
-            filing_year=2026,
-            period=period,
-            revision_id=revision_id,
-        ),
-        bucket_id=_PROFILE_ID,
-        modelo="130",
-        filing_year=2026,
-        period=period,
-        revision_id=revision_id,
-        name="declaration",
-        created_at=_NOW,
-        updated_at=_NOW,
-    )
+    unit = _declaration_work_unit(authority_operation)
     created = build_bucket_event(
         bucket_id=_PROFILE_ID,
         event_type=BucketEventType.MODELO_WORK_UNIT_CREATED,

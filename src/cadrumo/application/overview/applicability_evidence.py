@@ -26,8 +26,10 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
+from ...core.diagnostic_log import diagnostic_phase
+from ...core.logging import get_logger
 from ...core.period import Period
 from ...domain.calculations.registry.applicability import LedgerPayerFactDerivation
 from ...domain.calculations.registry.applicability_payer_facts import resolve_payer_fact_catalogue
@@ -49,6 +51,9 @@ if TYPE_CHECKING:
     from ...domain.invoices.models import InvoiceCatalogue
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ...domain.user_profile.values import UserProfileRecord
+
+_LOGGER = get_logger(__name__)
+_APPLICABILITY_PHASE_EVENT: Final = "overview_applicability_phase"
 
 
 @dataclass(frozen=True, slots=True)
@@ -158,13 +163,16 @@ def bind_filing_year_applicability_evidence(
         return projection_for_taxpayer(record, schema=schema, as_of=date(filing_year, 12, 31))
 
     def ledger_for_year(filing_year: int) -> Mapping[str, LedgerPayerFactDerivation]:
-        return derive_ledger_payer_facts(
-            filing_year,
-            bucket_id=bucket_id,
-            invoice_source_ports=ports,
-            operation=operation,
-            today=today,
-        )
+        with diagnostic_phase(_LOGGER, _APPLICABILITY_PHASE_EVENT, "ledger_payer_facts") as measured:
+            derived = derive_ledger_payer_facts(
+                filing_year,
+                bucket_id=bucket_id,
+                invoice_source_ports=ports,
+                operation=operation,
+                today=today,
+            )
+            measured["item_count"] = len(derived)
+        return derived
 
     return FilingYearApplicabilityEvidence(
         profile_for_year=_memoized(profile_for_year),

@@ -23,13 +23,15 @@ Core types:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
+from contextlib import AbstractContextManager
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, NamedTuple
 from zoneinfo import ZoneInfo
 
 from pydantic import ValidationError
 
+from ..core.diagnostic_log import DiagnosticValue, diagnostic_phase, diagnostic_scope
 from ..core.errors.hierarchy import InternalInvariantError
 from ..core.hashing import content_hash_hex
 from ..core.identifier_grammar import NamespacedId
@@ -119,6 +121,7 @@ from .workbench_generation_contracts import (
 from .workbench_generation_home import build_workbench_generation_inputs
 
 _LOGGER = get_logger(__name__)
+_CAPTURE_PHASE_EVENT: Final = "workbench_capture_phase"
 _AEAT_SYNC_READER_UNAVAILABLE: Final[str] = "workbench.aeat_sync.reader_unavailable"
 _AEAT_SYNC_SNAPSHOT_PROJECTOR_UNAVAILABLE: Final[str] = "workbench.aeat_sync.snapshot_projector_unavailable"
 
@@ -151,6 +154,22 @@ The meaning of every event is the declaration history's; this history reports
 the meanings above, and leaves exports, corrections, discards and the events
 with no lifecycle meaning to each declaration's own history.
 """
+
+
+def _capture_phase(phase: str) -> AbstractContextManager[dict[str, DiagnosticValue]]:
+    """Record how long one step of a capture took, and what it counted."""
+    return diagnostic_phase(_LOGGER, _CAPTURE_PHASE_EVENT, phase)
+
+
+def _timed[ResultT](
+    phase: str, read: Callable[[], ResultT], *, count: Callable[[ResultT], int | None] | None = None
+) -> ResultT:
+    """Run one capture step inside its phase record, counting the items it produced when asked."""
+    with _capture_phase(phase) as measured:
+        result = read()
+        if count is not None:
+            measured["item_count"] = count(result)
+        return result
 
 
 def _lifecycle_work_unit_id(
@@ -291,6 +310,20 @@ def _invoice_catalogue_revision(
     return content_hash_hex(ledger_sources[1].model_dump(mode="json"))
 
 
+class _StoredCatalogues(NamedTuple):
+    """What the profile's stores held when a capture began, with the revision each stated."""
+
+    record: UserProfileRecord
+    work_units: WorkUnitCatalogue
+    work_units_revision: str
+    revisions: CalculationRevisionCatalogue
+    calculations_revision: str
+    filings: ModeloRecordCatalogue
+    filings_revision: str
+    verification: VerificationReportCatalogue | None
+    bucket_events: BucketEventHistoryCatalogue | None
+
+
 @dataclass(frozen=True, slots=True)
 class SecureProfileWorkbenchGenerationReadDoorV1:
     """Read one generation from explicit secure profile repositories.
@@ -348,18 +381,27 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
 
     def read_workbench_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         """Capture secure local facts once and build installed projections."""
+        with diagnostic_scope(), _capture_phase("generation_inputs"):
+            return self._capture_generation_inputs()
+
+    def _capture_generation_inputs(self) -> WorkbenchGenerationInputsV1:
         account_session_reader = self.account_session_reader
         if account_session_reader is None:
             raise InternalInvariantError("a workbench generation needs the live account session")
-        account_session_reader()
+        _timed("account_session", account_session_reader)
         observed_at = self.clock()
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
-        record = self.profile_repository.load(self.profile_id)
-        work_units, work_units_revision = self.work_unit_repository.load_revisioned()
-        revisions, calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
-        filings, filings_revision = self.filing_repository.load_revisioned()
-        verification = self._load_verification_reports()
-        bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
+        (
+            record,
+            work_units,
+            work_units_revision,
+            revisions,
+            calculations_revision,
+            filings,
+            filings_revision,
+            verification,
+            bucket_events,
+        ) = self._load_stored_catalogues()
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -371,9 +413,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         raw_values = record_to_path_values(record)
         # The ledger is read before the calendar: its invoices answer the
         # ledger-derived obligation signals the calendar decides on.
-        ledger_revision = self._ledger_revision()
+        ledger_revision = _timed("ledger_revision", self._ledger_revision)
         ledger_sources = self._load_ledger_sources()
-        aeat_evidence, aeat_projection = self._read_calendar_aeat_evidence(raw_values)
+        aeat_evidence, aeat_projection = _timed(
+            "calendar_aeat_evidence", lambda: self._read_calendar_aeat_evidence(raw_values)
+        )
         calendar_inputs = self._read_calendar_inputs(
             record=record,
             raw_values=raw_values,
@@ -389,25 +433,35 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
         )
-        custody_count = self._load_custody_count()
-        census_observation = None if self.census_observation_reader is None else self.census_observation_reader()
+        custody_count = _timed("custody_count", self._load_custody_count)
+        census_observation = _timed("census_observation", self._load_census_observation)
         ledger_ports = self.ledger_action_ports
         ledger = (
             None
             if ledger_ports is None
-            else self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports)
+            else _timed(
+                "ledger_workspace",
+                lambda: self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports),
+            )
         )
-        modelo = self._read_modelo(work_units)
-        aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
-            declared_tax_id(raw_values),
-            observed_at=observed_at,
-            filings=tuple(filings.records.values()),
-            custody_count=custody_count,
-            censo_values=raw_values,
-            census_observation=census_observation,
-            filed_evidence=aeat_projection,
+        modelo = _timed(
+            "modelo_workspaces",
+            lambda: self._read_modelo(work_units),
+            count=lambda projections: None if projections is None else len(projections),
         )
-        account_session = account_session_reader()
+        aeat_sync, aeat_sync_refusal = _timed(
+            "aeat_sync_workspace",
+            lambda: self._read_aeat_sync(
+                declared_tax_id(raw_values),
+                observed_at=observed_at,
+                filings=tuple(filings.records.values()),
+                custody_count=custody_count,
+                censo_values=raw_values,
+                census_observation=census_observation,
+                filed_evidence=aeat_projection,
+            ),
+        )
+        account_session = _timed("account_session", account_session_reader)
         if not self._capture_is_unchanged(
             record=record,
             work_units_revision=work_units_revision,
@@ -421,17 +475,20 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             census_observation=census_observation,
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
-        return build_workbench_generation_inputs(
-            observed_at=observed_at,
-            account_session=account_session,
-            calendar_inputs=calendar_inputs,
-            ledger=ledger,
-            declarations=declarations,
-            aeat_sync=aeat_sync,
-            aeat_sync_refusal=aeat_sync_refusal,
-            modelo=modelo,
-            work_units=work_units,
-            verification=verification,
+        return _timed(
+            "generation_assembly",
+            lambda: build_workbench_generation_inputs(
+                observed_at=observed_at,
+                account_session=account_session,
+                calendar_inputs=calendar_inputs,
+                ledger=ledger,
+                declarations=declarations,
+                aeat_sync=aeat_sync,
+                aeat_sync_refusal=aeat_sync_refusal,
+                modelo=modelo,
+                work_units=work_units,
+                verification=verification,
+            ),
         )
 
     def read_declaration_list_inputs(self) -> DeclarationListInputs:
@@ -441,14 +498,23 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         generation does, and is checked unchanged across the capture the same
         way, without the account session only Home needs.
         """
+        with diagnostic_scope(), _capture_phase("declaration_list_inputs"):
+            return self._capture_declaration_list_inputs()
+
+    def _capture_declaration_list_inputs(self) -> DeclarationListInputs:
         observed_at = self.clock()
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
-        record = self.profile_repository.load(self.profile_id)
-        work_units, work_units_revision = self.work_unit_repository.load_revisioned()
-        revisions, calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
-        filings, filings_revision = self.filing_repository.load_revisioned()
-        verification = self._load_verification_reports()
-        bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
+        (
+            record,
+            work_units,
+            work_units_revision,
+            revisions,
+            calculations_revision,
+            filings,
+            filings_revision,
+            verification,
+            bucket_events,
+        ) = self._load_stored_catalogues()
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -458,9 +524,11 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             observed_at=observed_at,
         )
         raw_values = record_to_path_values(record)
-        ledger_revision = self._ledger_revision()
+        ledger_revision = _timed("ledger_revision", self._ledger_revision)
         ledger_sources = self._load_ledger_sources()
-        aeat_evidence, aeat_projection = self._read_calendar_aeat_evidence(raw_values)
+        aeat_evidence, aeat_projection = _timed(
+            "calendar_aeat_evidence", lambda: self._read_calendar_aeat_evidence(raw_values)
+        )
         calendar_inputs = self._read_calendar_inputs(
             record=record,
             raw_values=raw_values,
@@ -485,8 +553,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_sources=ledger_sources,
             verification=verification,
             bucket_events=bucket_events,
-            custody_count=self._load_custody_count(),
-            census_observation=None if self.census_observation_reader is None else self.census_observation_reader(),
+            custody_count=_timed("custody_count", self._load_custody_count),
+            census_observation=_timed("census_observation", self._load_census_observation),
         ):
             raise InternalInvariantError("secure declarations list changed during capture")
         return DeclarationListInputs(workspace=declarations, calendar=calendar_inputs.declarations_calendar)
@@ -504,46 +572,56 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         lifecycle_facts = (
             None
             if bucket_events is None
-            else _declarations_lifecycle_facts(
-                bucket_events,
-                work_units=work_units,
-                revisions=revisions,
-                verification=verification,
-                filings=filings,
+            else _timed(
+                "lifecycle_facts",
+                lambda: _declarations_lifecycle_facts(
+                    bucket_events,
+                    work_units=work_units,
+                    revisions=revisions,
+                    verification=verification,
+                    filings=filings,
+                ),
+                count=len,
             )
         )
-        declarations = _read_declarations_workspace(
-            operation=self.operation,
-            bucket_id=self.profile_id,
-            work_units=work_units,
-            calculation_revisions=revisions,
-            filing_records=filings,
-            observed_at=observed_at,
-            result_casilla_reader=self.result_casilla_reader,
-            lifecycle_facts=lifecycle_facts,
+        declarations = _timed(
+            "declarations_portfolio",
+            lambda: _read_declarations_workspace(
+                operation=self.operation,
+                bucket_id=self.profile_id,
+                work_units=work_units,
+                calculation_revisions=revisions,
+                filing_records=filings,
+                observed_at=observed_at,
+                result_casilla_reader=self.result_casilla_reader,
+                lifecycle_facts=lifecycle_facts,
+            ),
+            count=lambda workspace: None if workspace is None else len(workspace.declarations),
         )
         if declarations is None:
             return None
         current_ids = {unit.current_calculation_revision_id for unit in work_units.values()}
         current_revisions = {key: value for key, value in revisions.revisions.items() if key in current_ids}
-        return declarations.model_copy(
-            update={
-                "declarations": tuple(
-                    ref.model_copy(
-                        update={
-                            "summary": ref.summary
-                            or declaration_summary(
-                                ref,
-                                revisions=current_revisions,
-                                verification=verification,
-                                operation=self.operation,
-                            )
-                        }
+        with _capture_phase("declaration_summaries") as measured:
+            measured["item_count"] = len(declarations.declarations)
+            return declarations.model_copy(
+                update={
+                    "declarations": tuple(
+                        ref.model_copy(
+                            update={
+                                "summary": ref.summary
+                                or declaration_summary(
+                                    ref,
+                                    revisions=current_revisions,
+                                    verification=verification,
+                                    operation=self.operation,
+                                )
+                            }
+                        )
+                        for ref in declarations.declarations
                     )
-                    for ref in declarations.declarations
-                )
-            }
-        )
+                }
+            )
 
     def _read_calendar_aeat_evidence(
         self, raw_values: Mapping[str, str]
@@ -585,17 +663,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
     ) -> WorkbenchCalendarInputs:
-        return read_workbench_calendar_inputs(
-            record=record,
-            raw_values=raw_values,
-            as_of=as_of,
-            work_units=work_units,
-            filings=filings,
-            observed_at=observed_at,
-            operation=operation,
-            aeat_evidence=aeat_evidence,
-            invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
-            memo=CalendarMemo(
+        with _capture_phase("calendar_memo_key"):
+            memo = CalendarMemo(
                 memory=self.capture_memory,
                 key=WorkbenchCalendarMemoKey(
                     profile_content_digest=record.content_digest,
@@ -611,6 +680,20 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
                     ),
                     invoice_catalogue_revision=_invoice_catalogue_revision(ledger_revision, ledger_sources),
                 ),
+            )
+        return _timed(
+            "calendar_inputs",
+            lambda: read_workbench_calendar_inputs(
+                record=record,
+                raw_values=raw_values,
+                as_of=as_of,
+                work_units=work_units,
+                filings=filings,
+                observed_at=observed_at,
+                operation=operation,
+                aeat_evidence=aeat_evidence,
+                invoice_source_ports=loaded_invoice_source_ports(None if ledger_sources is None else ledger_sources[1]),
+                memo=memo,
             ),
         )
 
@@ -628,22 +711,69 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         custody_count: int | None,
         census_observation: CensalObservation | None = None,
     ) -> bool:
-        final_record = self.profile_repository.load(self.profile_id)
-        _, final_work_units_revision = self.work_unit_repository.load_revisioned()
-        _, final_calculations_revision = self.calculation_repository.load_revisioned(operation=self.operation)
-        _, final_filings_revision = self.filing_repository.load_revisioned()
-        return (
-            final_record.content_digest == record.content_digest
-            and final_work_units_revision == work_units_revision
-            and final_calculations_revision == calculations_revision
-            and final_filings_revision == filings_revision
-            and self._ledger_is_unchanged(ledger_revision, ledger_sources)
-            and self._load_verification_reports() == verification
-            and (None if self.bucket_event_repository is None else self.bucket_event_repository.load()) == bucket_events
-            and self._load_custody_count() == custody_count
-            and (None if self.census_observation_reader is None else self.census_observation_reader())
-            == census_observation
+        with _capture_phase("recheck"):
+            final_record = _timed("recheck_profile_record", lambda: self.profile_repository.load(self.profile_id))
+            _, final_work_units_revision = _timed("recheck_work_units", self.work_unit_repository.load_revisioned)
+            _, final_calculations_revision = _timed(
+                "recheck_calculation_revisions",
+                lambda: self.calculation_repository.load_revisioned(operation=self.operation),
+            )
+            _, final_filings_revision = _timed("recheck_filings", self.filing_repository.load_revisioned)
+            return (
+                final_record.content_digest == record.content_digest
+                and final_work_units_revision == work_units_revision
+                and final_calculations_revision == calculations_revision
+                and final_filings_revision == filings_revision
+                and _timed("recheck_ledger", lambda: self._ledger_is_unchanged(ledger_revision, ledger_sources))
+                and _timed("recheck_verification_reports", self._load_verification_reports) == verification
+                and _timed("recheck_bucket_events", self._load_bucket_events) == bucket_events
+                and _timed("recheck_custody_count", self._load_custody_count) == custody_count
+                and _timed("recheck_census_observation", self._load_census_observation) == census_observation
+            )
+
+    def _load_stored_catalogues(self) -> _StoredCatalogues:
+        """Read the profile record and every catalogue a capture joins, each as its own timed phase."""
+        record = _timed("profile_record", lambda: self.profile_repository.load(self.profile_id))
+        work_units, work_units_revision = _timed(
+            "work_units", self.work_unit_repository.load_revisioned, count=lambda loaded: len(loaded[0].work_units)
         )
+        revisions, calculations_revision = _timed(
+            "calculation_revisions",
+            lambda: self.calculation_repository.load_revisioned(operation=self.operation),
+            count=lambda loaded: len(loaded[0].revisions),
+        )
+        filings, filings_revision = _timed(
+            "filings", self.filing_repository.load_revisioned, count=lambda loaded: len(loaded[0].records)
+        )
+        verification = _timed(
+            "verification_reports",
+            self._load_verification_reports,
+            count=lambda reports: None if reports is None else len(reports.reports),
+        )
+        bucket_events = _timed(
+            "bucket_events",
+            self._load_bucket_events,
+            count=lambda events: None if events is None else len(events.events),
+        )
+        return _StoredCatalogues(
+            record,
+            work_units,
+            work_units_revision,
+            revisions,
+            calculations_revision,
+            filings,
+            filings_revision,
+            verification,
+            bucket_events,
+        )
+
+    def _load_bucket_events(self) -> BucketEventHistoryCatalogue | None:
+        """Read the bucket event log, or nothing when no host bound one."""
+        return None if self.bucket_event_repository is None else self.bucket_event_repository.load()
+
+    def _load_census_observation(self) -> CensalObservation | None:
+        """Read the stored census observation, or nothing when no host bound a reader."""
+        return None if self.census_observation_reader is None else self.census_observation_reader()
 
     def _ledger_revision(self) -> tuple[str, str] | None:
         """State both ledger stores' revisions without decrypting them, when both can.
@@ -671,7 +801,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
     ) -> bool:
         if revision is not None:
             return self._ledger_revision() == revision
-        return self._load_ledger_sources() == sources
+        return self._load_ledger_sources(phase_prefix="recheck_") == sources
 
     def _load_custody_count(self) -> int | None:
         """Count documents in local custody, or nothing when no reader is bound.
@@ -698,7 +828,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             operation=self.operation,
         )
 
-    def _load_ledger_sources(self) -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
+    def _load_ledger_sources(self, *, phase_prefix: str = "") -> tuple[TransactionCatalogue, InvoiceCatalogue] | None:
         """Read the ledger stores once, as the value the guard compares.
 
         Neither store exposes a revision handle the way the work-unit,
@@ -707,11 +837,20 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         reads. Bucket events are deliberately outside it -- they only supply
         review context and have no whole-catalogue read to compare.
         """
-        if self.ledger_action_ports is None:
+        ports = self.ledger_action_ports
+        if ports is None:
             return None
         return (
-            self.ledger_action_ports.transaction_repository.load(),
-            self.ledger_action_ports.invoice_repository.load(),
+            _timed(
+                f"{phase_prefix}ledger_transactions",
+                ports.transaction_repository.load,
+                count=lambda catalogue: len(catalogue.transactions),
+            ),
+            _timed(
+                f"{phase_prefix}ledger_invoices",
+                ports.invoice_repository.load,
+                count=lambda catalogue: len(catalogue.invoices),
+            ),
         )
 
     def _read_ledger(
