@@ -138,8 +138,9 @@ def test_scope_constructor_owner_survives_public_refusal_and_failed_settlement(
 def test_concurrent_custody_cannot_construct_a_second_worker_while_first_launch_is_pending(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=0)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
     entered, release = Event(), Event()
     constructed: list[ProfileWorkerIdentity] = []
 
@@ -184,8 +185,9 @@ def test_a_sign_in_meeting_a_pending_construction_uses_the_worker_it_builds(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """A sign-in that arrives while its watch is starting the worker waits for that worker, never a second one."""
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=0)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
     entered, release = Event(), Event()
     constructed: list[ProfileWorkerIdentity] = []
 
@@ -215,7 +217,8 @@ def test_a_sign_in_meeting_a_pending_construction_uses_the_worker_it_builds(
 
 
 def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_path: Path) -> None:
-    owner = _owner(tmp_path)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
     connection_id = uuid4()
     facts = SessionAuthorityFacts(
         ProfileAccessState(
@@ -255,7 +258,7 @@ def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_
             if self.busy:
                 raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
 
-    worker = ObservedWorker(owner.identity, owner._guard, failures=0)
+    worker = ObservedWorker(owner.identity, guard, failures=0)
     owner._worker = worker
     with pytest.raises(AutomationCustodyError):
         owner.facts(connection_id)
@@ -306,7 +309,8 @@ class _Candidate(ProfileWorkerProcess):
 def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_worker(
     tmp_path: Path, stopping: bool
 ) -> None:
-    owner = _owner(tmp_path)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
     connection_id = uuid4()
     primary = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
 
@@ -332,7 +336,7 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             assert self.close_calls == 0
 
-    worker = QueuedWorker(owner.identity, owner._guard, failures=0)
+    worker = QueuedWorker(owner.identity, guard, failures=0)
     owner._worker = worker
     try:
         with pytest.raises(RefusalError) as caught, owner.prepare_api_admission(connection_id):
@@ -361,7 +365,8 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
 
 @pytest.mark.parametrize("outcome", ["fenced", "containment_failure", "queue_timeout"])
 def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tmp_path: Path, outcome: str) -> None:
-    owner = _owner(tmp_path)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
     session_id = uuid4()
 
     class FencedWorker(_Candidate):
@@ -378,7 +383,7 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
                 raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
-    worker = FencedWorker(owner.identity, owner._guard, failures=1 if outcome == "containment_failure" else 0)
+    worker = FencedWorker(owner.identity, guard, failures=1 if outcome == "containment_failure" else 0)
     owner._worker = worker
     try:
         if outcome == "fenced":
@@ -402,7 +407,7 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
         owner.settle()
 
 
-def _owner(root: Path) -> ProfileWorkerSessionOwner:
+def _owner(root: Path, guard: RLock | None = None) -> ProfileWorkerSessionOwner:
     identity = ProfileWorkerIdentity(
         worker_id=uuid4(),
         runtime_boot_id=uuid4(),
@@ -424,7 +429,7 @@ def _owner(root: Path) -> ProfileWorkerSessionOwner:
         yield
 
     return ProfileWorkerSessionOwner(
-        identity, storage_root=root, observe=unused_observe, human_secret=unused_secret, guard=RLock()
+        identity, storage_root=root, observe=unused_observe, human_secret=unused_secret, guard=guard or RLock()
     )
 
 
@@ -433,8 +438,9 @@ def _owner(root: Path) -> ProfileWorkerSessionOwner:
 def test_unreturned_candidate_survives_exact_primary_and_public_refusal_until_settled(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, kind: str, failures: int
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=failures)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=failures)
     primary = (
         RefusalError(RefusalCode.PEER_UNTRUSTED)
         if kind == "refusal"
@@ -524,8 +530,9 @@ def test_unreturned_candidate_survives_exact_primary_and_public_refusal_until_se
 def test_stop_racing_returned_candidate_keeps_recoverable_construction_settlement(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, failures: int
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=failures)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=failures)
 
     def late_native_constructor(*args: object, **kwargs: object) -> ProfileWorkerProcess:
         owner._stopping.set()
@@ -550,8 +557,9 @@ def test_stop_racing_returned_candidate_keeps_recoverable_construction_settlemen
 def test_published_worker_drain_preserves_recoverable_construction_after_body_failure(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    owner = _owner(tmp_path)
-    candidate = _Candidate(owner.identity, owner._guard, failures=0)
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
     primary = OSError("synthetic failure after published worker drain")
 
     def native_constructor(*args: object, **kwargs: object) -> ProfileWorkerProcess:

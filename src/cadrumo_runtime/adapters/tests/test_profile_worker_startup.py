@@ -28,9 +28,13 @@ class _Clock:
 
 class _Child(WindowsOwnedProcess):
     def __init__(self, *, exit_code: int | None = None, failure: Exception | None = None) -> None:
-        self.exit_code = exit_code
+        self.status = exit_code
         self.failure = failure
         self.wait_timeouts: list[float] = []
+
+    @override
+    def exit_code(self) -> int | None:
+        return self.status
 
     @override
     def wait(self, *, timeout: float | None) -> int:
@@ -38,8 +42,8 @@ class _Child(WindowsOwnedProcess):
         self.wait_timeouts.append(timeout)
         if self.failure is not None:
             raise self.failure
-        if self.exit_code is not None:
-            return self.exit_code
+        if self.status is not None:
+            return self.status
         raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
 
 
@@ -70,13 +74,13 @@ class _Endpoint(WindowsEndpoint):
         if event == "accepted":
             return self.channel
         if event == "accepted_exit":
-            self.child.exit_code = 1
+            self.child.status = 1
             return self.channel
         if isinstance(event, RefusalCode):
             raise RefusalError(event)
         self.clock.elapsed += timeout
         if event == "exit":
-            self.child.exit_code = 1
+            self.child.status = 1
         raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
 
 
