@@ -8,9 +8,10 @@ related:
   - '[[2026-08-10-current-schema-only-purge-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
+  - '[[2026-10-27-profile-field-remap-iva-usage-share-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:5b62a21cf8159e00f61143b7a94f3b17dbaee5b7e79c588fa9e59dc3f95e55cc'
+body_hash: 'sha256:6ec4dec2d07f6b9782e5743f6dafb9b43eb1440e980711dba40c008d78cf7550'
 ---
 
 # `profile-field-remap` plan
@@ -45,7 +46,7 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 - [ ] `S08` - replace frontend classification availability, field routes, clearing and identity rules with backend-served contract data; `native/desktop/frontend/src/shell/ledgerCommands.ts`.
 - [ ] `S09` - replace frontend invoice arithmetic, retention, validation facts and the IVA rate table with a backend invoice preview operation; `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`.
 - [ ] `S10` - replace frontend rule-pattern matching, percent and period grammar with backend previews and served grammar; `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
-- [ ] `S11` - ground the IVA deductibility of home-office suministros in official AEAT or DGT criteria and correct the IVA share, which today carries the IRPF-only 0.30 factor (user ruling 2026-10-27: ground first); `src/cadrumo/application/aggregation/iva_ledger.py`.
+- [x] `S11` - ground the IVA deductibility of home-office suministros in official AEAT or DGT criteria and correct the IVA share, which today carries the IRPF-only 0.30 factor (user ruling 2026-10-27: ground first); `src/cadrumo/application/aggregation/iva_ledger.py`.
 - [ ] `S12` - audit every category deductibility rule (IRPF proportionality, statutory multiplier, IVA treatment, citations, locale notes) against bundled official sources and correct each wrong rule (user instruction 2026-10-27: fix all deductibility rules); `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`.
 
 ## Parallelization

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:94f7f4ce0afac3bc308ad6da9a8265145c25088893acfcc3b8bbc3310d73a358'
+body_hash: 'sha256:3db36f200d809426f296ac5056fa3f45cae54fac0a724ceb19c930e2ef0a5b74'
 related:
   - "[[2026-10-27-profile-field-remap-plan]]"
 ---
@@ -279,6 +279,45 @@ related:
 - `S04` `verify:` `cmake --target desktop-frontend-check` -> `pass`
 - `S04` `verify:` `dev.operation_contract_manifest.generate (manifest regenerated)` -> `pass`
 - `S04` `by:` `vaultspec-standard-executor`
+- `S11` `M` `docs/technical/articles/153-usage-ratios-and-user-profile-domain.md`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_actions_update_validation.py`
+- `S11` `M` `src/cadrumo/adapters/persistence/profile/tests/test_renta_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S11` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S11` `M` `src/cadrumo/application/aggregation/tests/usage_ratio_support.py`
+- `S11` `M` `src/cadrumo/application/ledger/actions_common.py`
+- `S11` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S11` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S11` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S11` `M` `src/cadrumo/application/ledger/tests/test_ratios_censo_override.py`
+- `S11` `M` `src/cadrumo/domain/categories/proportionality.py`
+- `S11` `M` `src/cadrumo/domain/categories/registry.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_citation_edition_window.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_citation_quote_grounding.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_profile.py`
+- `S11` `M` `src/cadrumo/domain/categories/tests/test_provision_window_bounds_citations.py`
+- `S11` `A` `src/cadrumo/domain/categories/tests/test_iva_mixed_use.py`
+- `S11` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S11` `M` `src/cadrumo/domain/renta/tests/test_region_deductibility_selection.py`
+- `S11` `M` `src/cadrumo/domain/usage_ratios/__init__.py`
+- `S11` `M` `src/cadrumo/domain/usage_ratios/model.py`
+- `S11` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S11` `M` `src/cadrumo/locales/ca/common.yml`
+- `S11` `M` `src/cadrumo/locales/en/common.yml`
+- `S11` `M` `src/cadrumo/locales/es/common.yml`
+- `S11` `M` `src/cadrumo/locales/hu/common.yml`
+- `S11` `A` `.vault/adr/2026-10-27-profile-field-remap-iva-usage-share-adr.md`
+- `S11` `verify:` `uv run --no-sync ruff check + ruff format --check (26 touched Python files)` -> `pass`
+- `S11` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept, 0 broken)` -> `pass`
+- `S11` `verify:` `just check-types` -> `pass`
+- `S11` `verify:` `uv run --no-sync pytest aggregation, ledger, categories, renta, usage_ratios, persistence profile, user_profile, dev/locales (7376 passed; 11 failed, none in S11 code: async log dispatch caplog x6, other writers' locale and schema hunks x5)` -> `pass`
+- `S11` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -295,3 +334,4 @@ related:
 - `S04` `test_registered_executor_conformance` no longer imports because `application/live/sede_view_operation` imports `close_live_view_session,` which application/live/session.py does not define yet; the ledger.ratios.eligible case passed before that.
 - `S04` The category note cleanup in `src/cadrumo/locales/*/common.yml` is not committed with S04: those files also hold another session's uncommitted hunks.
 - `S04` Docs sequence goldens that print ratios eligible stay stale until the registry authority is republished and dev.docs.sequences refresh runs.
+- `S11` 11 suite failures attributed outside S11: caplog tests vs the asynchronous log dispatch of 6cbfacbc8b; dict-constant naming in tui ledger files; atribucion sample row vs S01 schema; desktop.browser locale keys of the uncommitted sede-browser hunks
