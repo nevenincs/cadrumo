@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:1dad7883f124d745f37e50cbb0e8d181a3251d1de72bf44ef2f49b71d1eb1d0c'
+body_hash: 'sha256:6d1976bb3f6793f3db1a05ed459c7bf6693b608f7f40d295bea64b7f793855e5'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -183,6 +183,100 @@ related:
 - `S03` `by:` `vaultspec-standard-executor`
 - `S07` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_command_aeat_capability_probe.py`
 - `S07` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests -k 'view or sede'` -> `pass`
+- `S08` `A` `native/desktop/src-tauri/src/shell/sede_view.rs`
+- `S08` `A` `native/desktop/src-tauri/src/shell/sede_view/transfer.rs`
+- `S08` `A` `native/desktop/src-tauri/src/shell/sede_view/upstream.rs`
+- `S08` `A` `native/desktop/src-tauri/src/shell/sede_view/tests.rs`
+- `S08` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S08` `M` `native/desktop/src-tauri/src/app.rs`
+- `S08` `M` `native/desktop/src-tauri/src/shell/sign_in/mod.rs`
+- `S08` `M` `native/desktop/src-tauri/src/agent/person.rs`
+- `S08` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S08` `M` `native/application/src/view_stream/documents.rs`
+- `S08` `verify:` `just check-rust` -> `pass`
+- `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (full desktop host suite, 675 passed 1 ignored; sede_view filter 47 passed; shell-token dispatch test over all commands passed)` -> `pass`
+- `S08` `verify:` `ctest --preset debug -R ^application.rust$` -> `pass`
+- `S08` `verify:` `just test-native-bundle Debug` -> `fail`
+- `S08` `by:` `vaultspec-standard-executor`
+- `S12` `M` `src/cadrumo/application/auth/protocols.py`
+- `S12` `M` `src/cadrumo/application/auth/sessions.py`
+- `S12` `M` `src/cadrumo/application/live/session.py`
+- `S12` `M` `src/cadrumo/application/live/sede_view_ports.py`
+- `S12` `M` `src/cadrumo/application/live/sede_view_operation.py`
+- `S12` `M` `src/cadrumo/application/live/tests/test_sede_view_operation.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/authenticator.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/session_store.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_session_custody.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_sign_in.py`
+- `S12` `A` `src/cadrumo/adapters/outbound/aeat/auth/tests/view_session_support.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/browser/sede_view.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_sede_view_page.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/view_page_support.py`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests -k 'view or headless' (18 passed)` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/browser/tests src/cadrumo/application/live/tests/test_sede_view_operation.py src/cadrumo/adapters/outbound/aeat/auth/tests (514 passed)` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_session_custody.py -m '' (8 passed)` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/application/auth/tests src/cadrumo/application/live/tests (545 passed)` -> `pass`
+- `S12` `verify:` `uv run --no-sync ruff check and ruff format --check on scope` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.quality.types (scope clean; 1 diagnostic in src/cadrumo/application/aggregation/iva_ledger.py outside scope)` -> `pass`
+- `S12` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S12` `by:` `vaultspec-high-executor`
+- `S09` `A` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/browser/BrowserPrompts.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/browser/BrowserSurface.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/browser/BrowserToolbar.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/browser/PageDialog.tsx`
+- `S09` `A` `native/desktop/frontend/src/components/browser/browserModel.ts`
+- `S09` `A` `native/desktop/frontend/src/components/browser/browserWords.ts`
+- `S09` `A` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/sedeView.ts`
+- `S09` `A` `native/desktop/frontend/src/shell/tauriSedeView.ts`
+- `S09` `A` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S09` `A` `native/desktop/frontend/tests/sede-view-model.spec.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/navigation/windowViews.ts`
+- `S09` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S09` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S09` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S09` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S09` `M` `native/desktop/frontend/eslint.config.js`
+- `S09` `M` `dev/locales/desktop_chrome.py`
+- `S09` `M` `src/cadrumo/locales/en/common.yml`
+- `S09` `M` `src/cadrumo/locales/es/common.yml`
+- `S09` `M` `src/cadrumo/locales/ca/common.yml`
+- `S09` `M` `src/cadrumo/locales/hu/common.yml`
+- `S09` `verify:` `npm run check (native/desktop/frontend)` -> `pass`
+- `S09` `verify:` `npx playwright test tests/sede-view-model.spec.ts (15 tests)` -> `pass`
+- `S09` `verify:` `page smoke through the scenario fixture in Chromium: draw, credit, pointer, keys, wheel, paste, toolbar, offers, dialog, download, chooser, acquiring, closing guard, unmount close and reopen (temporary harness, removed)` -> `pass`
+- `S09` `verify:` `uv run --no-sync pytest dev/locales/tests -k desktop` -> `pass`
+- `S09` `verify:` `npx playwright test tests/scenarios/navigation-register.spec.ts tests/scenarios/palette.spec.ts (16 passed, 1 failed)` -> `fail`
+- `S09` `verify:` `just check-locales (blocking findings are spelling only)` -> `fail`
+- `S09` `by:` `vaultspec-standard-executor`
+- `S10` `M` `native/desktop/frontend/src/App.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/Rail.tsx`
+- `S10` `M` `native/desktop/frontend/src/components/ui/icon.tsx`
+- `S10` `M` `native/desktop/frontend/src/shell/layout.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/palette.spec.ts`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S10` `M` `src/cadrumo_client/contracts/navigation.toml`
+- `S10` `M` `src/cadrumo_client/contracts/tests/navigation_shipped_views.json`
+- `S10` `M` `src/cadrumo_client/contracts/tests/test_navigation_register.py`
+- `S10` `M` `src/cadrumo/locales/en/common.yml`
+- `S10` `M` `src/cadrumo/locales/es/common.yml`
+- `S10` `M` `src/cadrumo/locales/ca/common.yml`
+- `S10` `M` `src/cadrumo/locales/hu/common.yml`
+- `S10` `M` `dev/locales/desktop_chrome.py`
+- `S10` `verify:` `npm run check (native/desktop/frontend)` -> `pass`
+- `S10` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/navigation-register.spec.ts tests/scenarios/palette.spec.ts (18 passed)` -> `pass`
+- `S10` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/scenarios.spec.ts -g 'AEAT shortcut|shortcut the host cannot|the rail keeps its order|never restored' (5 passed)` -> `pass`
+- `S10` `verify:` `npx playwright test keyboard columns navigation-guards window-close reconnecting specs (67 passed)` -> `pass`
+- `S10` `verify:` `uv run --no-sync pytest navigation register, links, presentation, desktop navigation labels, desktop navigation packaging tests (all passed)` -> `pass`
+- `S10` `verify:` `uv run --no-sync pytest src/cadrumo_mcp/mcp/tests/test_views_tool.py (2 failed on profile/aeat-access surfaces, none on browser)` -> `fail`
+- `S10` `verify:` `just check-locales (exit 1 on baseline findings; none on this Step's keys except en 'maximize' spelling shared with the existing maximize keys)` -> `fail`
+- `S10` `verify:` `uv run --no-sync ruff check and ruff format --check on dev/locales/desktop_chrome.py and test_navigation_register.py` -> `pass`
+- `S10` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -202,3 +296,12 @@ related:
 - `S07` `contract_manifest.json` and the import load target sets were regenerated but not committed: they carry other sessions' uncommitted edits
 - `S07` check-import-boundaries ended unavailable only because the shared source tree changed while it ran; 30 of 30 contracts kept, 0 hard findings, 4965 of 4965 modules load
 - `S03` P01.S03 just test-native-bundle Debug stops before any test at the `registry_authority` target: Registry authority is unavailable or stale (the legal sources changed since the indexed generation was published); the target fails alone, apart from this Step; rerun after the registry owner runs just registry-publish-authority
+- `S08` P03.S08 just test-native-bundle Debug did not reach any test: `registry_authority` validated this time, but the desktop host build failed on another session's uncommitted custody-recovery edits (Person::native now takes 5 arguments, SignInStatus has no reconnecting field) and the python wheel capture reported that enrolled product source changed while it ran. The Step stays open until that run can complete.
+- `S08` P03.S08 person.rs, person/native.rs and `sign_in/mod.rs` also hold another session's uncommitted recovery hunks; the S08 hunks there are the Bridge and Person `view_attach` methods, NativeSession `view_attach` and SignIn `runtime_target.`
+- `S08` P03.S08 the host holds the page's origin and path from view.state; the stream carries no query or fragment, so Open in external browser opens the page without them. Raw image messages ride the shell channel interceptor, which evaluates them as a number-array script.
+- `S09` navigation-register.spec: the window's table covers exactly the register's window elements fails until P04.S10 adds the browser gui element to the register; windowViews.ts already holds it
+- `S09` just check-locales fails on the spelling dictionary alone (21640 findings across the catalogues, e.g. Cadrumo and apostrophe contractions in strings committed earlier); the 58 desktop.browser keys have no missing, drift or translation finding
+- `S09` the four locale catalogues and `dev/locales/desktop_chrome.py` hold the 58 desktop.browser keys uncommitted: another session's edits are in the same files
+- `S09` contract.ts and scenarioHost.ts were committed whole and carry another session's reconnecting hunks
+- `S10` `navigation_shipped_views.json` has no generator: it is an append-only baseline grown by hand with the new id; `test_navigation_register.py` reads it.
+- `S10` `desktop_chrome.py` and the four common.yml catalogues also carry another session's uncommitted reconnecting hunks, so they are left uncommitted by pathspec rule; the browser strings declared by P04.S09 sit in the same uncommitted `desktop_chrome.py` hunk.
