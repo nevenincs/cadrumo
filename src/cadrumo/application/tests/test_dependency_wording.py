@@ -27,7 +27,6 @@ from ..dependency_wording import (
     dependency_failure_key,
     dependency_held_sentence,
     dependency_name_key,
-    dependency_retry_sentence,
     dependency_row_wording,
     dependency_space_sentence,
 )
@@ -47,7 +46,6 @@ def _all_keys() -> tuple[str, ...]:
         *(dependency_failure_key(category) for category in DependencyFailureCategory),
         *(dependency_action_key(action) for action in DependencyRecoveryAction),
         f"{root}.in_desktop",
-        f"{root}.retry",
         f"{root}.space_needed",
         *(dependency_name_key(d) for d in dependency_item_declarations()),
     )
@@ -64,8 +62,6 @@ def test_every_sentence_and_label_is_authored_plainly_in_every_language(locale: 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
 def test_placeholders_survive_translation(locale: str) -> None:
-    assert "7" in dependency_retry_sentence(attempt=3, delay_s=7, locale=locale)
-    assert "3" in dependency_retry_sentence(attempt=3, delay_s=7, locale=locale)
     sentence = dependency_space_sentence(required="5.2 GB", free="1.1 GB", locale=locale)
     assert "5.2 GB" in sentence and "1.1 GB" in sentence
 

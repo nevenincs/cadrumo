@@ -37,7 +37,6 @@ __all__ = [
     "dependency_failure_key",
     "dependency_held_sentence",
     "dependency_name_key",
-    "dependency_retry_sentence",
     "dependency_row_wording",
     "dependency_sentence_key",
     "dependency_space_sentence",
@@ -137,11 +136,6 @@ def dependency_held_sentence(
     if row.recovery is DependencyRecoveryAction.SET_UP_IN_DESKTOP:
         return f"{held} {dependency_desktop_pointer(locale=locale)}"
     return held
-
-
-def dependency_retry_sentence(*, attempt: int, delay_s: int, locale: str | None = None) -> str:
-    """Render the notice shown before a retry's wait."""
-    return tr(_key("retry"), attempt=attempt, seconds=delay_s, locale=locale)
 
 
 def dependency_space_sentence(*, required: str, free: str, locale: str | None = None) -> str:

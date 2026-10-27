@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import cast, override
 from uuid import uuid4
 
@@ -16,13 +17,16 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from .....adapters.outbound.components.protocol import ComponentsReviewLine, decode_components_line
 from .....application.components_operations import (
     COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_STATUS_OPERATION_ID,
     PROVISION_RESPONSE_SCHEMA,
     PROVISION_REVIEW_SCHEMA,
     ProvisionPlan,
     ProvisionReviewProjection,
 )
 from .....application.operations.frontend_projection import (
+    OperationNoPendingInteractionV1,
     OperationPublicProgressV1,
+    OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
     OperationReviewProjectionReferenceV1,
 )
@@ -37,11 +41,10 @@ from .....application.operations.frontend_requests import (
 from .....application.operations.interactions import OperationResponseIntent
 from .....application.operations.persistence.replay import OperationReplayStatus
 from .....application.operations.registry import OperationRegistry
-from .....application.operations.tests.test_public_contracts import _projection
 from .....core.config import override_settings
 from .....core.hashing import content_hash_hex
 from .....core.i18n.render import tr
-from .....core.operations import OperationLifecycle
+from .....core.operations import OperationEffect, OperationLifecycle
 from ....components_operation_composition import build_components_operations
 from ...components.host import ScreenHostApp
 from ...setup.screen import SetupScreen
@@ -97,15 +100,33 @@ class ReviewController:
             expires_at=None,
             review_reference=self.reference,
         )
-        self.projection = _projection(
-            contract_set=registry.public_contract_set,
+        self.projection = OperationPublicProjectionV1(
             operation_id=self.operation_id,
             subject_ref="components:installation",
             definition_id=COMPONENTS_SETUP_OPERATION_ID,
             definition_contract=contract,
+            contract_set_digest=registry.public_contract_set.contract_set_digest,
+            revision=4,
+            anchor_cursor=0,
             phase_code=COMPONENTS_SETUP_OPERATION_ID,
             lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
+            terminal_condition=None,
+            effect=OperationEffect.NONE,
+            started_at=datetime(2026, 8, 24, tzinfo=UTC),
+            updated_at=datetime(2026, 8, 24, tzinfo=UTC),
+            progress=None,
+            close_policy=contract.close_policy,
+            cancellation=contract.cancellation,
+            cancellable_now=False,
+            cancellation_requested=False,
+            cancellation_acknowledged=False,
+            execution_deadline_at=None,
+            cleanup_deadline_at=None,
             pending_interaction=pending,
+            result_ref=None,
+            refusal_ref=None,
+            failure_error_code=None,
+            diagnostic_ref=None,
         )
         self.calls: list[str] = []
         self.claimed = False
@@ -311,7 +332,21 @@ async def test_known_reference_opens_response_only_and_closes_without_detaching(
 @pytest.mark.asyncio
 async def test_response_only_reference_to_another_operation_never_resolves_or_claims() -> None:
     controller = ReviewController()
-    controller.projection = _projection(operation_id=controller.operation_id)
+    group = build_components_operations()
+    registry = OperationRegistry(definitions=group.definitions, public_registrations=group.registrations)
+    contract = registry.lookup_public_contract(COMPONENTS_STATUS_OPERATION_ID)
+    values = controller.projection.model_dump(mode="python")
+    values.update(
+        definition_id=COMPONENTS_STATUS_OPERATION_ID,
+        definition_contract=contract,
+        contract_set_digest=registry.public_contract_set.contract_set_digest,
+        phase_code=None,
+        close_policy=contract.close_policy,
+        cancellation=contract.cancellation,
+        lifecycle=OperationLifecycle.RUNNING,
+        pending_interaction=OperationNoPendingInteractionV1(),
+    )
+    controller.projection = OperationPublicProjectionV1.model_validate(values)
     modal = OperationModal(cast(OperationControllerPort, controller), response_only=True)
     async with ScreenHostApp(modal).run_test(size=(120, 50)) as pilot:
         await settle_until(pilot, lambda: modal._observation_stopped, "foreign operation refused", workers=False)
