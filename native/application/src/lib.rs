@@ -43,6 +43,7 @@ pub mod runtime;
 #[cfg(all(windows, feature = "platform"))]
 pub mod runtime_client;
 pub mod value;
+pub mod view_stream;
 
 mod archive;
 mod filesystem;

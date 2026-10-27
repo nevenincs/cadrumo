@@ -256,7 +256,7 @@ fn sha256_hex(bytes: &[u8]) -> String {
     Sha256Digest::of(bytes).to_string()
 }
 
-fn is_uuid(text: &str) -> bool {
+pub(crate) fn is_uuid(text: &str) -> bool {
     let bytes = text.as_bytes();
     bytes.len() == 36
         && bytes.iter().enumerate().all(|(index, byte)| match index {
@@ -295,7 +295,7 @@ pub fn request_id() -> String {
     )
 }
 
-fn frame(kind: u8, payload: &[u8]) -> Result<Vec<u8>, Refusal> {
+pub(crate) fn frame(kind: u8, payload: &[u8]) -> Result<Vec<u8>, Refusal> {
     let limit = if kind == SECRET_FRAME {
         MAXIMUM_SECRET_BYTES
     } else {
@@ -322,7 +322,7 @@ fn frame_header(header: &[u8; 5]) -> Result<(u8, usize), Refusal> {
 
 /// Reads one frame before the caller's deadline, allowing at most
 /// [`FRAME_BUDGET`] for the payload after its header.
-fn read_frame(pipe: &Pipe, header_deadline: Instant) -> Result<(u8, Vec<u8>), Refusal> {
+pub(crate) fn read_frame(pipe: &Pipe, header_deadline: Instant) -> Result<(u8, Vec<u8>), Refusal> {
     let mut header = [0u8; 5];
     pipe.read_exact(&mut header, header_deadline)?;
     let (kind, size) = frame_header(&header)?;
@@ -345,14 +345,14 @@ fn read_idle_frame(pipe: &Pipe) -> Result<(u8, Vec<u8>), Refusal> {
     Ok((kind, payload))
 }
 
-fn document(payload: &[u8]) -> Result<Map<String, Value>, Refusal> {
+pub(crate) fn document(payload: &[u8]) -> Result<Map<String, Value>, Refusal> {
     match serde_json::from_slice::<Value>(payload) {
         Ok(Value::Object(object)) => Ok(object),
         _ => Err(Refusal::InvalidFrame),
     }
 }
 
-fn text<'a>(document: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
+pub(crate) fn text<'a>(document: &'a Map<String, Value>, key: &str) -> Option<&'a str> {
     document.get(key).and_then(Value::as_str)
 }
 
@@ -552,15 +552,41 @@ impl Drop for ExchangeClaim<'_> {
     }
 }
 
-fn hello_document(endpoint: &Endpoint, cohort: &Cohort) -> Value {
-    json!({
+/// The client's hello. A connection that asks for lifecycle notices receives
+/// `E` frames between replies; one that does not never does.
+fn hello_document(endpoint: &Endpoint, cohort: &Cohort, lifecycle_notices: bool) -> Value {
+    let mut hello = json!({
         "kind": "client_hello",
         "protocol_version": PROTOCOL_VERSION,
         "product_version": cohort.product_version,
         "storage_identity": endpoint.storage_identity,
         "authority_generation": cohort.authority_generation,
-        "lifecycle_notices": "v1",
-    })
+    });
+    if lifecycle_notices {
+        hello["lifecycle_notices"] = json!("v1");
+    }
+    hello
+}
+
+/// Connects to `endpoint` before `deadline`, verifies the runtime as its
+/// pipe's same-account peer, and completes the cohort handshake. Every
+/// connection to the runtime, an event-reading one or a view stream, starts here.
+pub(crate) fn handshake(
+    endpoint: &Endpoint,
+    cohort: &Cohort,
+    lifecycle_notices: bool,
+    deadline: Instant,
+) -> Result<(Pipe, Hello), Refusal> {
+    let pipe = Pipe::connect(&endpoint.pipe_name, &endpoint.owner_sid, deadline)?;
+    let payload = serde_json::to_vec(&hello_document(endpoint, cohort, lifecycle_notices))
+        .map_err(|_| Refusal::InvalidFrame)?;
+    pipe.write_all(&frame(DOCUMENT_FRAME, &payload)?, deadline)?;
+    let (kind, payload) = read_frame(&pipe, deadline)?;
+    if kind != DOCUMENT_FRAME {
+        return Err(Refusal::InvalidFrame);
+    }
+    let hello = server_hello(&document(&payload)?, endpoint, cohort)?;
+    Ok((pipe, hello))
 }
 
 fn server_hello(
@@ -646,15 +672,7 @@ impl Connection {
     /// verified, the handshake completed, and the event reader started. No
     /// credential is involved.
     pub fn open(endpoint: &Endpoint, cohort: &Cohort, deadline: Instant) -> Result<Self, Refusal> {
-        let pipe = Pipe::connect(&endpoint.pipe_name, &endpoint.owner_sid, deadline)?;
-        let payload = serde_json::to_vec(&hello_document(endpoint, cohort))
-            .map_err(|_| Refusal::InvalidFrame)?;
-        pipe.write_all(&frame(DOCUMENT_FRAME, &payload)?, deadline)?;
-        let (kind, payload) = read_frame(&pipe, deadline)?;
-        if kind != DOCUMENT_FRAME {
-            return Err(Refusal::InvalidFrame);
-        }
-        let hello = server_hello(&document(&payload)?, endpoint, cohort)?;
+        let (pipe, hello) = handshake(endpoint, cohort, true, deadline)?;
         let pipe = Arc::new(pipe);
         let shared = Arc::new(Shared {
             connection_id: Mutex::new(None),
@@ -1847,7 +1865,7 @@ mod tests {
 
     #[test]
     fn the_client_hello_names_the_cohort_and_asks_for_lifecycle_notices() {
-        let hello = hello_document(&endpoint(), &cohort(Some("a1")));
+        let hello = hello_document(&endpoint(), &cohort(Some("a1")), true);
         assert_eq!(
             hello,
             json!({
@@ -1855,7 +1873,19 @@ mod tests {
                 "storage_identity": "f".repeat(64), "authority_generation": "a1", "lifecycle_notices": "v1"
             })
         );
-        assert!(hello_document(&endpoint(), &cohort(None))["authority_generation"].is_null());
+        assert!(hello_document(&endpoint(), &cohort(None), true)["authority_generation"].is_null());
+    }
+
+    #[test]
+    fn a_hello_that_asks_for_no_lifecycle_notices_omits_the_member() {
+        let hello = hello_document(&endpoint(), &cohort(Some("a1")), false);
+        assert_eq!(
+            hello,
+            json!({
+                "kind": "client_hello", "protocol_version": 3, "product_version": "0.6.0",
+                "storage_identity": "f".repeat(64), "authority_generation": "a1"
+            })
+        );
     }
 
     fn server(version: &str, identity: &str, generation: Option<&str>) -> Map<String, Value> {
