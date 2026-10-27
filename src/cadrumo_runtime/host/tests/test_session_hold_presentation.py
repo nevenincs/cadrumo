@@ -13,6 +13,9 @@ import pytest
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _TRANSACTION = "0123456789abcdef" * 4
+#: A fresh interpreter importing the hold takes seconds when parallel test workers contend for the machine;
+#: replies to an already running hold keep the tighter bound.
+_HOLD_STARTUP_SECONDS = 30
 
 _SCRIPT = r"""
 import contextlib
@@ -102,7 +105,7 @@ async def _converse_logged(
     assert process.stdout is not None
     replies: list[dict[str, object]] = []
     try:
-        held = await asyncio.wait_for(process.stdout.readline(), timeout=10)
+        held = await asyncio.wait_for(process.stdout.readline(), timeout=_HOLD_STARTUP_SECONDS)
         assert b'"kind":"session_held"' in held
         for index, fields in enumerate(requests):
             request = {"request_id": f"eeeeeeee-eeee-4eee-8eee-{index:012d}", **fields}
