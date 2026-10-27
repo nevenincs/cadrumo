@@ -15,6 +15,8 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_records
+
 from ..controller import (
     EXIT_OBSERVATION_SECONDS,
     AgentGenerations,
@@ -146,7 +148,7 @@ def test_an_exit_with_the_hosts_status_after_the_output_ended_is_its_refusal(
     assert process.waits[0] == EXIT_OBSERVATION_SECONDS
     # The failed start leaves no tree behind.
     assert process.terminated and controller.state is AgentHostState.DETACHED
-    messages = [record.getMessage() for record in caplog.records if record.name == _CONTROLLER_LOGGER]
+    messages = [record.getMessage() for record in delivered_records(caplog) if record.name == _CONTROLLER_LOGGER]
     assert messages == [
         "agent launch refused by the native host exit=125 native_refusal=launch_value_missing subject=SLOT_NAME"
     ]
@@ -170,7 +172,7 @@ def test_the_hosts_status_without_a_readable_line_is_still_a_launch_profile_refu
     assert error.reason is AgentHostRefusal.LAUNCH_PROFILE_REFUSED
     assert error.native_refusal == NativeLaunchRefusal(code=None, subject=None)
     assert str(error) == "launch_profile_refused"
-    logged = " ".join(record.getMessage() for record in caplog.records)
+    logged = " ".join(record.getMessage() for record in delivered_records(caplog))
     assert "native_refusal=unrecognized subject=unrecognized" in logged
     assert "S3CRET" not in logged
 
@@ -191,7 +193,7 @@ def test_no_value_the_line_carries_beyond_the_closed_fields_reaches_the_error_or
     with caplog.at_level(logging.DEBUG, logger=_CONTROLLER_LOGGER):
         _, error = _start(_Process(read_error=EOFError(), standard_error=planted + b"\n"), tmp_path)
     assert error.native_refusal == NativeLaunchRefusal(code=None, subject=None)
-    everything = " ".join([str(error), *(record.getMessage() for record in caplog.records)])
+    everything = " ".join([str(error), *(record.getMessage() for record in delivered_records(caplog))])
     assert "PLANTED-SECRET" not in everything
 
 
@@ -202,7 +204,7 @@ def test_a_subject_that_is_a_path_is_not_logged(tmp_path: Path, caplog: pytest.L
     assert error.native_refusal == NativeLaunchRefusal(
         code=NativeLaunchRefusalCode.LAUNCH_VALUE_MALFORMED, subject=None
     )
-    assert "someone" not in " ".join(record.getMessage() for record in caplog.records)
+    assert "someone" not in " ".join(record.getMessage() for record in delivered_records(caplog))
 
 
 @pytest.mark.parametrize("status", [0, 1, 2, 64, 120, 124, 126, 0xC0000005])
@@ -217,7 +219,7 @@ def test_any_other_exit_status_is_not_the_hosts_refusal_and_its_standard_error_i
     assert error.native_refusal is None
     assert process.standard_error_reads == 0
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
-    assert [record for record in caplog.records if record.name == _CONTROLLER_LOGGER] == []
+    assert [record for record in delivered_records(caplog) if record.name == _CONTROLLER_LOGGER] == []
     assert process.terminated and controller.state is AgentHostState.DETACHED
 
 

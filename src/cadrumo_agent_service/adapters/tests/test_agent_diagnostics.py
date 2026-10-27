@@ -60,6 +60,7 @@ def _line(sequence: int, *, service: str = "worker", level: str = "DEBUG", messa
 
 
 def _read(path: Path) -> str:
+    assert project_logging.flush_logging(timeout=5)
     for handler in logging.getLogger().handlers:
         handler.flush()
     return path.read_text(encoding="utf-8")

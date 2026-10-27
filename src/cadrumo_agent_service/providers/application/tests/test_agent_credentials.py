@@ -7,6 +7,8 @@ from typing import override
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_text
+
 from ....host.controller import AgentHostError, AgentHostRefusal
 from ....host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from ...domain.catalog import ProviderCatalog
@@ -85,7 +87,7 @@ def test_catalog_failure_retains_its_category_and_safe_diagnostic(
     assert refused.value.reason is host_refusal
     assert launcher_refusal_for(refused.value) is launcher_refusal
     assert isinstance(refused.value.__cause__, ProviderCatalogUnavailableError)
-    assert f"agent provider catalog unavailable reason={reason.value}" in caplog.text
+    assert f"agent provider catalog unavailable reason={reason.value}" in delivered_text(caplog)
 
 
 def test_unset_credentials_do_not_prevent_a_valid_agent_from_starting() -> None:

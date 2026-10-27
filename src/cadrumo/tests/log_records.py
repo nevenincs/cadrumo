@@ -20,3 +20,9 @@ def delivered_records(caplog: pytest.LogCaptureFixture, logger_name: str | None 
     assert flush_logging(timeout=5)
     distinct = {id(record): record for record in caplog.records if logger_name is None or record.name == logger_name}
     return list(distinct.values())
+
+
+def delivered_text(caplog: pytest.LogCaptureFixture) -> str:
+    """Return the capture handler's formatted text, tracebacks included, after the asynchronous dispatch has drained."""
+    assert flush_logging(timeout=5)
+    return caplog.text

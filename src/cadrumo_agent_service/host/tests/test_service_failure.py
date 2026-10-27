@@ -6,6 +6,7 @@ import logging
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...adapters.agent_programs import AgentProgramRefusalError
@@ -33,26 +34,26 @@ def test_hosted_proof_refusal_remains_visible_in_diagnostics(caplog: pytest.LogC
     with caplog.at_level(logging.WARNING, logger="cadrumo_agent_service.service"):
         result = service_failure(AgentHostError(AgentHostRefusal.AGENT_REFUSED, agent_code="hosted_lane_unproven"))
     assert result == {"event": "refused", "code": "agent_service_failed"}
-    assert "hosted_lane_unproven" in caplog.text
+    assert "hosted_lane_unproven" in delivered_text(caplog)
 
 
 def test_unexpected_failure_never_serializes_or_logs_the_exception(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.ERROR, logger="cadrumo_agent_service.service"):
         result = service_failure(ValueError("synthetic-private-payload"))
     assert result == {"event": "refused", "code": "service_failed"}
-    assert "ValueError" in caplog.text
-    assert "synthetic-private-payload" not in caplog.text
+    assert "ValueError" in delivered_text(caplog)
+    assert "synthetic-private-payload" not in delivered_text(caplog)
 
 
 def test_runtime_refusal_keeps_its_closed_reason_in_diagnostics(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING, logger="cadrumo_agent_service.service"):
         result = service_failure(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
     assert result == {"event": "refused", "code": "service_failed"}
-    assert RefusalCode.DEADLINE_EXCEEDED.value in caplog.text
+    assert RefusalCode.DEADLINE_EXCEEDED.value in delivered_text(caplog)
 
 
 def test_an_absent_runtime_is_reported_as_typed_unavailability(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING, logger="cadrumo_agent_service.service"):
         result = service_failure(RefusalError(RefusalCode.UNAVAILABLE))
     assert result == {"event": "refused", "code": "agent_runtime_unavailable"}
-    assert RefusalCode.UNAVAILABLE.value in caplog.text
+    assert RefusalCode.UNAVAILABLE.value in delivered_text(caplog)

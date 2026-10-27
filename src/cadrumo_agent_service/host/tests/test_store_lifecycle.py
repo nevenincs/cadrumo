@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.tests.log_records import delivered_records
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ..controller import AgentHostError, AgentHostRefusal, AgentLaunch
@@ -235,8 +235,8 @@ def test_a_migrate_that_did_not_succeed_keeps_the_copy_and_is_not_retried(
     assert aside.actions == ["clear_partial", "keep"]
     assert aside.copy
     # The agent's text and its home's path never reach a diagnostic.
-    assert _AGENT_DETAIL not in caplog.text
-    assert _HOME not in caplog.text
+    assert _AGENT_DETAIL not in delivered_text(caplog)
+    assert _HOME not in delivered_text(caplog)
 
 
 def _not_brought_to_current(caplog: pytest.LogCaptureFixture) -> list[str]:
@@ -286,7 +286,7 @@ def test_a_run_that_could_not_complete_logs_the_type_and_closed_reason_of_its_fa
         f"agent stores not brought to current step=preflight outcome=run_failed failed_stage=none {labels}"
     ]
     # Neither the failure's message nor a check outside the closed shape is ever logged.
-    assert _HOME not in caplog.text and _AGENT_DETAIL not in caplog.text
+    assert _HOME not in delivered_text(caplog) and _AGENT_DETAIL not in delivered_text(caplog)
 
 
 def test_a_refusal_that_is_not_a_failed_run_names_no_exception(caplog: pytest.LogCaptureFixture) -> None:

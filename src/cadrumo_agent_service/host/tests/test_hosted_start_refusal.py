@@ -19,6 +19,8 @@ from typing import Final
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_records
+
 from ...adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from ...adapters.agent_programs import AGENT_COMMAND_LINE
 from ...service import service_failure
@@ -119,6 +121,6 @@ def test_a_start_whose_setup_fails_before_ready_is_a_refused_event_with_the_reas
     # The service's own log names the agent's code, and only its own log.
     assert any(
         "agent_code=hosted_start_failed" in record.getMessage()
-        for record in caplog.records
+        for record in delivered_records(caplog)
         if record.name == "cadrumo_agent_service.service"
     )

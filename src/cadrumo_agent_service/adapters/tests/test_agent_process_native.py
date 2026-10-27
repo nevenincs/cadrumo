@@ -14,6 +14,7 @@ from typing import override
 
 import pytest
 
+from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
 
 from ...host.controller import (
@@ -287,7 +288,7 @@ def test_an_exit_with_the_native_hosts_status_is_its_typed_refusal_with_its_code
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
     assert controller.state is AgentHostState.DETACHED
     assert not (tmp_path / "received.json").exists()
-    messages = [record.getMessage() for record in caplog.records if record.name == _CONTROLLER_LOGGER]
+    messages = [record.getMessage() for record in delivered_records(caplog) if record.name == _CONTROLLER_LOGGER]
     assert messages == [
         "agent launch refused by the native host exit=125 native_refusal=launch_value_malformed "
         f"subject={agent_host_fixture.NATIVE_REFUSAL_SUBJECT}"
@@ -304,7 +305,7 @@ def test_a_last_line_that_is_not_the_hosts_is_a_refusal_without_a_code_and_none_
     assert error.reason is AgentHostRefusal.LAUNCH_PROFILE_REFUSED
     assert error.native_refusal == NativeLaunchRefusal(code=None, subject=None)
     assert controller.state is AgentHostState.DETACHED
-    assert "S3CRET" not in " ".join(record.getMessage() for record in caplog.records)
+    assert "S3CRET" not in " ".join(record.getMessage() for record in delivered_records(caplog))
 
 
 def test_the_hosts_line_without_the_hosts_status_is_only_a_failed_launch(
@@ -317,7 +318,7 @@ def test_the_hosts_line_without_the_hosts_status_is_only_a_failed_launch(
     assert error.native_refusal is None
     assert launcher_refusal_for(error) is AgentLauncherRefusal.SERVICE_FAILED
     assert controller.state is AgentHostState.DETACHED
-    assert [record for record in caplog.records if record.name == _CONTROLLER_LOGGER] == []
+    assert [record for record in delivered_records(caplog) if record.name == _CONTROLLER_LOGGER] == []
 
 
 def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_ends_with_its_tree(
@@ -356,7 +357,7 @@ def test_a_tree_that_ignores_the_stop_is_ended_once_it_does_no_work_not_at_the_g
     assert controller.state is AgentHostState.DETACHED
     assert 1.0 <= elapsed < 5.0, f"the stop took {elapsed:.3f} s"
     assert not _alive(grandchild, within=5)
-    retired = [record.getMessage() for record in caplog.records if record.name == _RETIREMENT_LOGGER]
+    retired = [record.getMessage() for record in delivered_records(caplog) if record.name == _RETIREMENT_LOGGER]
     assert len(retired) == 1
     assert retired[0].startswith("agent tree retired: stop stalled after ")
 
@@ -372,7 +373,7 @@ def test_a_tree_that_exits_on_the_stop_is_ended_as_soon_as_it_has(
         elapsed = time.monotonic() - started
     assert (tmp_path / "stopped").read_text(encoding="utf-8") == "stdin closed"
     assert elapsed < 5.0, f"the stop took {elapsed:.3f} s"
-    retired = [record.getMessage() for record in caplog.records if record.name == _RETIREMENT_LOGGER]
+    retired = [record.getMessage() for record in delivered_records(caplog) if record.name == _RETIREMENT_LOGGER]
     assert len(retired) == 1
     assert retired[0].startswith("agent tree retired: stop exited after ")
 
@@ -397,12 +398,14 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
         process.write_input(bytearray(b"{}\n"))
         assert b"agent_ready" in process.read_output_line(limit=4096, timeout=30)
         deadline = time.monotonic() + 10
-        while time.monotonic() < deadline and not any(r.msg == "worker relayed probe" for r in caplog.records):
+        while time.monotonic() < deadline and not any(
+            r.msg == "worker relayed probe" for r in delivered_records(caplog)
+        ):
             time.sleep(0.02)
     finally:
         process.terminate(timeout=10)
-    gateway = [r for r in caplog.records if r.msg == "gateway live probe"]
-    worker = [r for r in caplog.records if r.msg == "worker relayed probe"]
+    gateway = [r for r in delivered_records(caplog) if r.msg == "gateway live probe"]
+    worker = [r for r in delivered_records(caplog) if r.msg == "worker relayed probe"]
     assert len(gateway) == len(worker) == 1
     assert gateway[0].levelno == logging.DEBUG
     assert worker[0].levelno == logging.ERROR
