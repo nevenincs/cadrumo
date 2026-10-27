@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#mcp-parity'
 date: '2026-10-10'
-modified: '2026-10-12'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:7dbd53d89f0c093d3199c710f10159474800c3c8b69c3faaa343c280702ed5aa'
+body_hash: 'sha256:4e4dfb8eab60542adc7a7b02c8630ce104da2ff9e4a925a9bcf21688fd3b03fe'
 related:
   - "[[2026-10-10-mcp-parity-parity-mechanism-options-research]]"
   - "[[2026-10-10-mcp-parity-surfaces-and-registry-reference]]"
@@ -100,7 +100,12 @@ Binding:
 - A surface served to a particular client is named. The name fixes what a client pins:
   the surface's tool names, and its declared properties, which are whether anything on it
   can change the profile's records and whether anything on it reaches the network. A
-  surface whose tool names or declared properties change gets a new name. Its operation
+  surface whose tool names or declared properties change gets a new name from its first
+  consumer-pinned release. Before that first pin, the unreleased `full` surface completes
+  the approved registered-provisioning migration by removing its four dedicated setup
+  tools and updating its exact pre-release tool-list pin; its name and declared properties
+  stay unchanged. This existing pre-release boundary is also stated in
+  `src/cadrumo_mcp/mcp/surfaces.py:9`. No served consumer-pinned contract is redefined. Its operation
   list is held by Cadrumo, is fixed within a Cadrumo release, and may grow between
   releases only within the declared properties. Adding an operation that way keeps the
   name, so admitting a family needs no release of the consuming agent. A surface may

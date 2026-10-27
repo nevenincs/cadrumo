@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9676ab18da2b8601a5653d26d3ef360839b9acf018dc4db9e2c4f07c2fa5adea'
+body_hash: 'sha256:523ad27ad379c051d7544d75623db6127740965629dbb36375a52f175bdb0915'
 related:
   - "[[2026-10-26-rust-component-provisioning-plan]]"
   - "[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]"
@@ -92,3 +92,26 @@ Passing evidence on the frozen shared-worktree source:
 There is no new end-to-end API-key-origin claim test. Coverage combines the new parent key-method refusal with existing native key admission and response-scope regressions; this limit is explicit. The pre-existing cached failed cleanup-task limitation recorded above remains unchanged. No full or conformance-wide suite was run.
 
 The code commit isolates only provisioning hunks in the three shared worker files. Unrelated executor, human-proof offload and Windows transport changes remain in the working tree. The tests and gates describe the shared source snapshot, not an isolated export of the commit. S01 is ready to close; S02, S03 and S04 then proceed in parallel, followed by S05 and the integrated plan-close review.
+## S02 through S04 frontend checkpoint review
+
+Terra 6.1 xhigh reviewed the integrated CLI, TUI and MCP changes at shared source checkpoint `02435c91e9`, with the earlier surface implementation in `f3bb2c7cf7` and host-owned optional repair admission in `6a673fdebc`. No remaining source finding was identified in that bounded review. The final configured import verdict remains pending; the Steps stay open until it is available. The configured type, style, format and operation-manifest checks passed after the focused test assertion correction. Evidence describes the shared worktree, not an isolated export of those commits.
+
+### review-settlement | high | Corrected human review and full checks have no total settlement deadline
+
+Setup and full verification use explicit unbounded settlement with finite per-exchange deadlines. Runtime cues and connection loss wake observation; an idle human review does not poll. Omitted settlement still retains the existing finite default. The controlled-clock and actual signal-wrapper regressions passed 56 cases in 20.81 seconds, log `20261027T114500.040307Z-pytest-11400-6dbf8570`.
+
+### recovery-actions | high | Corrected recovery text preserves the actual component action
+
+Blocked browser rows offer no installation, CHECK_AGAIN directs status, and local AI recovery points to desktop. The generic error renderer performs no hidden status operation. Application and diagnostic facts retain the native recovery action, and structured notices keep their typed action. Focused recovery/ledger cases passed 24 in 180 seconds, log `20261027T114727.269545Z-pytest-64168-54a8b677`; check/repair/preflight cases passed 18, log `20261027T114548.938671Z-pytest-50024-ef0e28f7`.
+
+The final real-runtime CLI and MCP review cases passed together, two tests in 155.23 seconds, log `20261027T115711.047549Z-pytest-53076-b8440e03`. Focused TUI tests passed 35, log `20261027T105648.551154Z-pytest-24984-5118f4d7`; focused MCP tests passed 49, log `20261027T103950.796906Z-pytest-27588-58f6f1c3`. The MCP surface amendment applies its existing exception before any first consumer pin; it grants no MCP response authority.
+
+## S05 review in progress
+
+### uncertain-desktop-answer | high | Corrected desktop uncertainty retains every affected operation
+
+A lost answer originally appeared as an unavailable review, and view closure could discard it. The desktop now retains all unresolved operation IDs in a profile-owned session above Settings, clears response coordinates on uncertainty, prevents local claim or replay for each retained ID, and directs component status without claiming completion. View unsubscription and opening status retain in-flight answers. Distinct guidance covers stale review, another holder and retired authority. The configured frontend check passed and all 12 focused review-session tests passed through CMake, including close during Apply, status return and two lost answers. Integrated native runtime evidence and final source review remain pending.
+
+### native-follower | high | Reproduced cancellation follower can report busy after an activity read fails
+
+The focused native protocol case reproduced a follower returning busy after its owner's cancelled result. Test-only instrumentation identifies Windows PermissionDenied while reading the activity record with the writer lock observed held. The matching cancelled end record exists afterward. The precise filesystem stage and safe correction remain under investigation; passing repetitions do not establish that the defect is fixed. Temporary trace code is not a production correction.

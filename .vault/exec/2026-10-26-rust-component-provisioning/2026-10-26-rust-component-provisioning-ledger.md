@@ -5,7 +5,7 @@ tags:
 date: '2026-10-26'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:248256ef8a1ea9c8d1dd8d1a4364ae3f130e53f17fd807481b95549f1368a21f'
+body_hash: 'sha256:e2fb9c93167cd82851c44669619d6ffcd5eb3c9bee4b31ea097cb99cafef2a37'
 related:
   - "[[2026-10-26-rust-component-provisioning-plan]]"
 ---
@@ -111,6 +111,103 @@ related:
 - `S01` `verify:` `just check-operation-contract-manifest` -> `pass`
 - `S01` `verify:` `just check-import-boundaries` -> `pass`
 - `S01` `by:` `vaultspec-code-reviewer (Terra 6.1 xhigh)`
+- `S02` `A` `dev/runtime_lifecycle/tests/test_provision_registered_role.py`
+- `S02` `A` `src/cadrumo_client/commands/optional_profile_connection.py`
+- `S02` `M` `src/cadrumo_client/commands/registered_operation_contracts.py`
+- `S02` `M` `src/cadrumo_client/commands/registered_operation_deadlines.py`
+- `S02` `M` `src/cadrumo_client/commands/registered_operation_exchange.py`
+- `S02` `M` `src/cadrumo_client/commands/registered_operation_observations.py`
+- `S02` `M` `src/cadrumo_client/commands/registered_operation_reviews.py`
+- `S02` `M` `src/cadrumo_client/commands/registered_operation.py`
+- `S02` `A` `src/cadrumo_client/commands/tests/test_optional_repair_profile.py`
+- `S02` `M` `src/cadrumo_runtime/host/frontend/cli/app.py`
+- `S02` `M` `src/cadrumo/application/preflight.py`
+- `S02` `M` `src/cadrumo/application/tests/test_dependency_health_rows.py`
+- `S02` `D` `src/cadrumo/entrypoints/cli/_component_setup_rendering.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/command_lifecycle.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S02` `A` `src/cadrumo/entrypoints/cli/component_recovery_text.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/_provision_command_specs.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/check_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/provision_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/provision_payloads.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/repair_commands.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/status_rendering.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/test_check_setup_rows.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/test_config_command_specs.py`
+- `S02` `A` `src/cadrumo/entrypoints/cli/config/tests/test_provision_registered_review.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/errors.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/ledger_evidence_batch_commands.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/ledger_import_commands.py`
+- `S02` `D` `src/cadrumo/entrypoints/cli/optional_profile_connection.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_component_setup_refusal_text.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_batch_cli.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_registered_operation.py`
+- `S02` `A` `src/cadrumo/entrypoints/cli/tests/test_optional_repair_profile.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_provision_components_role.py`
+- `S02` `D` `src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_registered_operation_deadlines.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/tests/test_repair_bootstrap_exempt.py`
+- `S02` `M` `src/cadrumo/entrypoints/diagnostics_repair_composition.py`
+- `S02` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S02` `M` `src/cadrumo/locales/en/cli.yml`
+- `S02` `M` `src/cadrumo/locales/es/cli.yml`
+- `S02` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S02` `verify:` `just check-types` -> `pass`
+- `S02` `verify:` `just check-style` -> `pass`
+- `S02` `verify:` `just check-format` -> `pass`
+- `S02` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S03` `M` `dev/runtime_lifecycle/tests/test_components_surface_conformance.py`
+- `S03` `M` `src/cadrumo_client/transport/operation_controller.py`
+- `S03` `A` `src/cadrumo_client/transport/tests/test_operation_controller_review_claim.py`
+- `S03` `M` `src/cadrumo_runtime/host/frontend/tui/runtime_workbench.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/app.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/operations/controller_port.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/operations/interactions.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/operations/logs.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/operations/modal.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_log_view_integrity.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_provision_review.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/operations/tests/test_modal_setup_offer.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/setup/destination.py`
+- `S03` `D` `src/cadrumo/entrypoints/tui/setup/door.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/setup/review.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/setup/screen.py`
+- `S03` `A` `src/cadrumo/entrypoints/tui/setup/tests/operations_fixture.py`
+- `S03` `D` `src/cadrumo/entrypoints/tui/setup/tests/role_replay.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/setup/tests/test_setup_screen.py`
+- `S03` `M` `src/cadrumo/locales/ca/common.yml`
+- `S03` `M` `src/cadrumo/locales/en/common.yml`
+- `S03` `M` `src/cadrumo/locales/es/common.yml`
+- `S03` `M` `src/cadrumo/locales/hu/common.yml`
+- `S03` `verify:` `just check-types` -> `pass`
+- `S03` `verify:` `just check-style` -> `pass`
+- `S03` `verify:` `just check-format` -> `pass`
+- `S03` `verify:` `just check-operation-contract-manifest` -> `pass`
+- `S04` `M` `.vault/adr/2026-10-10-mcp-parity-parity-mechanism-adr.md`
+- `S04` `M` `dev/runtime_lifecycle/tests/test_operation_mcp_surfaces.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/admitted_operations.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/component_setup.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/progress_relay.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/protocol_contract.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/runtime_adapter.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/server.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/surfaces.py`
+- `S04` `D` `src/cadrumo_mcp/mcp/tests/components_role.py`
+- `S04` `A` `src/cadrumo_mcp/mcp/tests/test_component_setup_gate.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/tests/test_mcp_surface_pins.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/tests/test_progress_relay.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/tests/test_result_page_tool.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/tests/test_runtime_protocol.py`
+- `S04` `D` `src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py`
+- `S04` `D` `src/cadrumo_mcp/mcp/tests/test_setup_tools.py`
+- `S04` `M` `src/cadrumo_mcp/mcp/tests/test_tool_annotations.py`
+- `S04` `verify:` `just check-types` -> `pass`
+- `S04` `verify:` `just check-style` -> `pass`
+- `S04` `verify:` `just check-format` -> `pass`
+- `S04` `verify:` `just check-operation-contract-manifest` -> `pass`
 
 ## Notes
 
@@ -118,3 +215,6 @@ related:
 - `S01` Configured import gate passed its unchanged source snapshot before the final retained-cleanup correction; affected-file type/lint and lifecycle tests passed after that correction. These checks cover the checkpoint, not subsequent human-claim work. Existing cached supervisor cleanup failure remains nonterminal UNKNOWN after canonical resource release; no automatic settlement claim.
 - `S01` S01 backend ec51298ef8 passed integrated review with no unresolved high finding. Owner accepted guarded human claim A; all setup responders explicitly claim. Original MCP invocation remains unchanged. Fresh authority25, component/client50 and permit/expiry50 focused cases passed; synchronized permit race uses explicit in-memory admission/I/O ports plus production permit exchange, not an actual native-session race. No new API-key-origin end-to-end claim case; parent key refusal plus existing native key admission/response-scope evidence is the explicit coverage limit.
 - `S01` Final configured types/style/format/manifest/import gates passed on frozen shared-worktree source. Import log 20261027T101035.705132Z-check-import-boundaries-55844-3d5218e6: stable snapshot74e097d3073ae736fec2ee696f33cf70318896d7ec6159411e77fda79e92368c,4948/4948 modules loaded,zero hard findings/debt. ec51298ef8 isolates feature-only hunks in three shared worker files using a reviewed private index and explicit commit pathspec; foreign async/executor/transport work remains uncommitted and preserved. S02,S03,S04 follow in parallel; S05 and plan-close review remain.
+- `S02` Source checkpoint f3bb2c7cf7 and 02435c91e9; final configured import gate and integrated S05 verification remain pending. Steps stay open. Shared-tree evidence is not an isolated commit export.
+- `S03` Source checkpoint f3bb2c7cf7 and 02435c91e9; final configured import gate and integrated S05 verification remain pending. Steps stay open. Shared-tree evidence is not an isolated commit export.
+- `S04` Source checkpoint f3bb2c7cf7 and 02435c91e9; final configured import gate and integrated S05 verification remain pending. Steps stay open. Shared-tree evidence is not an isolated commit export.

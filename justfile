@@ -1420,7 +1420,7 @@ test-powershell-literal:
 [doc('Drive the components role of a built Cadrumo binary from the client, the CLI, the TUI, MCP and the acquisition lane (external_tool marker).')]
 [group('test')]
 test-components-role $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
-    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py src/cadrumo/entrypoints/cli/tests/test_provision_drives_the_real_role.py src/cadrumo_mcp/mcp/tests/test_setup_tools_drive_the_real_role.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py dev/smoke/tests/test_acquisition_lane.py
+    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py dev/runtime_lifecycle/tests/test_provision_registered_role.py dev/runtime_lifecycle/tests/test_components_review.py dev/runtime_lifecycle/tests/test_components_human_claim.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py dev/smoke/tests/test_acquisition_lane.py
 
 [windows]
 [doc('Verify component review authority through the native Windows runtime using a built Cadrumo binary.')]
