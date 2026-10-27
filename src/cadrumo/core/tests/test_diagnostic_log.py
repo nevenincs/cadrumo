@@ -10,6 +10,7 @@ import sys
 import threading
 import tracemalloc
 from io import StringIO
+from pathlib import Path
 from threading import Barrier
 from typing import cast, override
 
@@ -17,6 +18,7 @@ import pytest
 
 from ..diagnostic_log import (
     DiagnosticFormatter,
+    DiagnosticValue,
     diagnostic_event,
     diagnostic_process,
     diagnostic_scope,
@@ -24,6 +26,7 @@ from ..diagnostic_log import (
     stamp_diagnostic_record,
     stamp_diagnostic_scalar_fields,
 )
+from ..log_file_handler import AnnouncingRotatingFileHandler
 from ..logging import LOG_FILE_FORMAT, SecretScrubbingFilter, flush_logging, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -570,6 +573,51 @@ def test_event_fields_reach_the_written_line_only_as_scrubbed_allowed_scalars() 
     assert "password" not in context
     assert _PRIVATE_INPUT_CANARY not in line
     assert iban not in line
+
+
+def test_stall_and_lock_timing_fields_reach_the_log_file_and_unlisted_fields_do_not(tmp_path: Path) -> None:
+    logger = get_logger("cadrumo.tests.stall_timing_fields")
+    log_file = tmp_path / "diagnostic.log"
+    handler = AnnouncingRotatingFileHandler(str(log_file), encoding="utf-8")
+    handler.setFormatter(DiagnosticFormatter(LOG_FILE_FORMAT))
+    logger.addHandler(handler)
+    previous_level, previous_propagate = logger.level, logger.propagate
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+    listed: dict[str, DiagnosticValue] = {
+        "child_process_id": 4321,
+        "definition_id": "ledger.rule.add",
+        "dump_file": "profile-worker-stall-4321.txt",
+        "hold_seconds": 1.25,
+        "job_empty_seconds": 0.5,
+        "members_signalled_seconds": 2.0,
+        "wait_seconds": 0.75,
+    }
+    try:
+        diagnostic_event(
+            logger,
+            "synthetic_stall_timing",
+            fields={
+                **listed,
+                "dump_path": str(tmp_path / "profile-worker-stall-4321.txt"),
+                "session_id": _PRIVATE_INPUT_CANARY,
+            },
+            level=logging.WARNING,
+        )
+        assert flush_logging(timeout=5)
+    finally:
+        logger.removeHandler(handler)
+        handler.close()
+        logger.setLevel(previous_level)
+        logger.propagate = previous_propagate
+    line = log_file.read_text(encoding="utf-8")
+    context: object = json.loads(line.split(" | ", 1)[1])
+    assert isinstance(context, dict)
+
+    assert {name: context[name] for name in listed} == listed
+    assert "dump_path" not in context and "session_id" not in context
+    assert _PRIVATE_INPUT_CANARY not in line
+    assert str(tmp_path) not in line
 
 
 @pytest.mark.parametrize("failure_site", ("clock", "log"))

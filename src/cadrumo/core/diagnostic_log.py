@@ -28,9 +28,15 @@ _LIFECYCLE_FIELDS = tuple(
         {
             "action",
             "call_name",
+            "child_process_id",
+            "definition_id",
+            "dump_file",
             "handler_name",
             "held_call_name",
             "held_elapsed_seconds",
+            "hold_seconds",
+            "job_empty_seconds",
+            "members_signalled_seconds",
             "request_type",
             "operation_channel",
             "budget_seconds",
@@ -106,6 +112,7 @@ _LIFECYCLE_FIELDS = tuple(
             "step_id",
             "timeout_seconds",
             "transition",
+            "wait_seconds",
         }
     )
 )
