@@ -118,6 +118,7 @@
         "cadrumo_client.contracts.submission_payload",
         "cadrumo_client.contracts.transport",
         "cadrumo_client.contracts.view_stream",
+        "cadrumo_client.contracts.view_transfer",
         "cadrumo_client.contracts.worker_identity",
         "cadrumo_client.logging",
         "cadrumo_client.transport",

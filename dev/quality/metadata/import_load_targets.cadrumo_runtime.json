@@ -236,6 +236,7 @@
         "cadrumo_runtime.host.supervised_channel",
         "cadrumo_runtime.host.supervised_protocol",
         "cadrumo_runtime.host.terminated_operations",
+        "cadrumo_runtime.host.view_stream_relay",
         "cadrumo_runtime.host.windows_secret_bootstrap",
         "cadrumo_runtime.host.worker",
         "cadrumo_runtime.host.worker_cleanup",
@@ -243,7 +244,8 @@
         "cadrumo_runtime.host.worker_operation_requests",
         "cadrumo_runtime.host.worker_service",
         "cadrumo_runtime.host.worker_stall_watchdog",
-        "cadrumo_runtime.host.worker_submission_staging"
+        "cadrumo_runtime.host.worker_submission_staging",
+        "cadrumo_runtime.host.worker_view_stream"
       ]
     }
   }
