@@ -205,3 +205,76 @@ print(json.dumps({'done': True}))
 """,
     )
     assert "immediate level probe" in (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+
+
+def test_diagnostic_redaction_never_borrows_a_blocked_application_authority(tmp_path: Path) -> None:
+    _probe(
+        tmp_path,
+        """
+from cadrumo.core.redaction.tax_identity_admission import bind_tax_identity_admission, tax_identity_admission
+from cadrumo.core.redaction.rules import redact_for_log
+logger.info('warm redaction')
+assert project.flush_logging(timeout=10)
+entered, release = threading.Event(), threading.Event()
+class BlockedApplicationAuthority:
+    def admits_spanish_identity(self, normalised):
+        entered.set()
+        assert release.wait(5)
+        return False
+    def admits_nif_iva(self, normalised):
+        return self.admits_spanish_identity(normalised)
+try:
+    application_authority = BlockedApplicationAuthority()
+    with bind_tax_identity_admission(application_authority):
+        logger.warning('diagnostic identity %s', 'B' + '0' * 8)
+        assert project.flush_logging(timeout=0.25), 'logging borrowed application authority'
+        assert not entered.is_set()
+        assert tax_identity_admission() is application_authority
+        release.set()
+        assert redact_for_log('B' + '0' * 8) == 'B' + '0' * 8
+        assert entered.is_set()
+finally:
+    release.set()
+assert project.flush_logging(timeout=10)
+print(json.dumps({'done': True}))
+""",
+    )
+    output = (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    assert "diagnostic identity sha256:" in output
+    assert "B" + "0" * 8 not in output
+
+
+def test_snapshots_never_call_instance_or_metaclass_inspection_hooks(tmp_path: Path) -> None:
+    _probe(
+        tmp_path,
+        """
+class HashHook(type):
+    def __hash__(self):
+        raise AssertionError('metaclass hashing must not run')
+class HashTrap(metaclass=HashHook):
+    pass
+class ClassTrap:
+    @property
+    def __class__(self):
+        raise AssertionError('instance class inspection must not run')
+class NameHook(type):
+    @property
+    def __name__(self):
+        raise AssertionError('exception metaclass name hook must not run')
+class NameTrapFault(Exception, metaclass=NameHook):
+    pass
+logger.warning('hash hook %s', HashTrap())
+logger.warning('class hook %s', ClassTrap())
+try:
+    raise NameTrapFault('safe fault')
+except NameTrapFault:
+    logger.exception('name hook')
+assert project.flush_logging(timeout=10)
+assert project.diagnostic_delivery_status()['records'].dropped == 0
+print(json.dumps({'done': True}))
+""",
+    )
+    output = (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    assert "hash hook <omitted:opaque-value>" in output
+    assert "class hook <omitted:opaque-value>" in output
+    assert "NameTrapFault:" in output

@@ -34,6 +34,8 @@ Producers hand off bounded builtin snapshots before redaction or output. Opaque
 arguments are omitted without invoking application rendering hooks. Independent
 background sinks expose delivery counters and finite flush/shutdown attempts;
 overload rejects diagnostic work rather than blocking application progress.
+Queued redaction uses conservative lexical identity matching without borrowing
+application registry locks; identity-shaped technical references may be hashed.
 """
 
 from __future__ import annotations
@@ -66,6 +68,7 @@ from .redaction.rules import (
     normalise_redaction_key,
     redact_for_log,
 )
+from .redaction.tax_identity_admission import lexical_tax_identity_redaction
 from .type_guards import (
     is_object_list,
     is_object_list_or_tuple,
@@ -614,6 +617,26 @@ def _install_run_context_record_factory() -> None:
     # LogRecord constructor arguments.
     def _factory(*args: Any, **kwargs: Any) -> logging.LogRecord:
         nonlocal cached_vars
+        # The stdlib probes a lone operand as a Mapping before logger filters.
+        # An opaque object's class/metaclass hooks must not run in that probe.
+        if len(args) > 5 and type(args[5]) is tuple:
+            arguments = cast(tuple[object, ...], args[5])
+            if len(arguments) == 1:
+                candidate = arguments[0]
+                kind = type(candidate)
+                if not (
+                    kind is str
+                    or kind is int
+                    or kind is float
+                    or kind is bool
+                    or kind is bytes
+                    or kind is bytearray
+                    or kind is tuple
+                    or kind is list
+                    or kind is dict
+                    or candidate is None
+                ):
+                    args = (*args[:5], (_snapshot_value(candidate),), *args[6:])
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
             from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
@@ -1165,10 +1188,10 @@ def _snapshot_value(value: object, *, depth: int = 0, budget: list[int] | None =
     if type(value) is int:
         integer = value
         return integer if integer.bit_length() <= 4096 else "<omitted:oversized-number>"
-    if type(value) in {float, bool, type(None)}:
+    if type(value) is float or type(value) is bool or value is None:
         return value
-    if type(value) in {bytes, bytearray}:
-        binary = cast(bytes | bytearray, value)
+    if type(value) is bytes or type(value) is bytearray:
+        binary = value
         return bytes(binary) if len(binary) <= 256 else "<redacted:payload>"
     if type(value) is dict:
         mapping = cast(dict[object, object], value)
@@ -1179,11 +1202,12 @@ def _snapshot_value(value: object, *, depth: int = 0, budget: list[int] | None =
             for key, item in islice(mapping.items(), 64)
             if type(key) is str and len(key) <= 256
         }
-    if type(value) in {tuple, list}:
+    if type(value) is tuple or type(value) is list:
         sequence = cast(tuple[object, ...] | list[object], value)
         return tuple(_snapshot_value(item, depth=depth + 1, budget=budget) for item in sequence[:64])
-    if isinstance(value, Enum):
-        return _snapshot_value(object.__getattribute__(value, "_value_"), depth=depth + 1, budget=budget)
+    if issubclass(type(value), Enum):
+        members = cast(dict[object, object], Enum.__dict__["__dict__"].__get__(value))
+        return _snapshot_value(dict[object, object].get(members, "_value_"), depth=depth + 1, budget=budget)
     # Opaque arguments may hide documents or execute arbitrary __str__/__repr__.
     return "<omitted:opaque-value>"
 
@@ -1208,7 +1232,7 @@ def _snapshot_exception(error: BaseException, budget: list[int]) -> tuple[object
     seen: set[int] = set()
     while id(error) not in seen and len(chain) < 8:
         seen.add(id(error))
-        name = type.__getattribute__(type(error), "__name__")
+        name = _snapshot_value(type.__dict__["__name__"].__get__(type(error)), budget=budget)
         arguments = _snapshot_value(BaseException.__dict__["args"].__get__(error), budget=budget)
         frames: list[tuple[str, int, str]] = []
         traceback = BaseException.__dict__["__traceback__"].__get__(error)
@@ -1289,7 +1313,8 @@ def _deliver_work(work: logging.LogRecord | Callable[[], None]) -> None:
                 sections.append(f"Traceback (most recent call last):\n{stack}{name}: {arguments}")
             work.exc_text = "\n".join(sections)
         _bound_format(work)
-        SecretScrubbingFilter().filter(work)
+        with lexical_tax_identity_redaction():
+            SecretScrubbingFilter().filter(work)
         scrubbed = _scrubbed_record.set(work)
         try:
             logging.getLogger(work.name).handle(work)

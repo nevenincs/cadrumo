@@ -8,7 +8,7 @@ related:
   - '[[2026-10-27-robust-logging-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:29b75cd9c2bdd97948504c24eba94334ebdf1d57750674a6239e8623aec0fee4'
+body_hash: 'sha256:3d2b8af78f5c19868a7b840144a287246cdb0d01db752487fcf0565bb45fc006'
 ---
 
 # Robust logging implementation
@@ -21,7 +21,7 @@ Approved 2026-10-27. The user explicitly instructed fixing logging defects throu
 
 - [x] `S01` - Implement bounded Python diagnostic dispatch with adversarial tests; `src/cadrumo/core/logging.py, diagnostic_dispatch.py, log_file_handler.py, core logging tests, dev/ci/logging_benchmark.py and scoped import metadata`.
 - [x] `S02` - Isolate native diagnostics and restore worker debug enrollment with responsiveness tests; `native/application/src/diagnostics, native/application/tests, src/cadrumo_runtime/host/worker.py and worker tests`.
-- [ ] `S03` - Benchmark, profile and harden integrated logging and review the completed work; `logging benchmark and worker probes, py-spy and handle evidence, scoped corrections, shared verification gates`.
+- [ ] `S03` - Benchmark, profile and harden integrated logging and review the completed work; `logging benchmark and worker probes, py-spy and handle evidence, src/cadrumo/core/redaction/tax_identity_admission.py diagnostic scoping, shared verification gates and integrated review`.
 
 ## Parallelization
 
