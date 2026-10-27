@@ -30,7 +30,8 @@ function sameStatus(left: SignInStatus | null, right: SignInStatus): boolean {
     left.refusal?.retryAfterSeconds === right.refusal?.retryAfterSeconds &&
     left.refusal?.operation === right.refusal?.operation &&
     left.refusal?.ioKind === right.refusal?.ioKind &&
-    left.refusal?.osCode === right.refusal?.osCode
+    left.refusal?.osCode === right.refusal?.osCode &&
+    left.reconnecting?.passwordRequired === right.reconnecting?.passwordRequired
   );
 }
 
@@ -855,6 +856,8 @@ export function useSignIn(host: Host) {
 
   return {
     manager,
+    /** The session waits for a fresh proof; the person is not signed out. */
+    reconnecting: status?.reconnecting ?? null,
     recoveringServices:
       manager?.state === "recovering" || manager?.state === "waiting",
     status,

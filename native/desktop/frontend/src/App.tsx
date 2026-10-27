@@ -46,6 +46,7 @@ import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn, type AgentColumnControl } from "./components/AgentColumn";
 import { NavigationPrompt } from "./components/NavigationPrompt";
 import { AttendanceRequests } from "./components/AttendanceRequests";
+import { ReconnectingNotice } from "./components/ReconnectingNotice";
 import { HostRecordList } from "./components/HostRecordList";
 import type { RecordMenuRequest } from "./components/RecordList";
 import {
@@ -554,6 +555,9 @@ export function App({ host }: { host: Host }) {
   const gated = account.gated;
   const phase = account.phase;
   const signedIn = phase === "signed-in";
+  // The sign-in form is asked for by a gate that withholds the TUI, and by a
+  // session the runtime keeps suspended that only the password can bring back.
+  const signInAsked = gated || account.reconnecting?.passwordRequired === true;
   usePersonActivity(host, signedIn);
   // Setup reviews belong to the verified profile: a new profile starts with
   // none, and an unconfirmed answer is never offered again while it lasts.
@@ -586,12 +590,12 @@ export function App({ host }: { host: Host }) {
     });
   }, [guardNavigation]);
   useEffect(() => {
-    if (gated) return;
+    if (signInAsked) return;
     // Admitted: the next time the gate closes, the dialog opens again, and
     // as the sign-in, whatever it was last asked to be.
     setSignInDismissed(false);
     setCreatingProfile(false);
-  }, [gated]);
+  }, [signInAsked]);
   const signOutFailed = account.signOutFailure !== null;
   useEffect(() => {
     // A sign-out that failed leaves the person signed in: the next time the
@@ -2367,7 +2371,8 @@ export function App({ host }: { host: Host }) {
   modal.current = {
     palette: paletteOpen,
     other:
-      menu !== null || (gated && !signInDismissed && account.status !== null),
+      menu !== null ||
+      (signInAsked && !signInDismissed && account.status !== null),
   };
   const chordAllowed = useCallback(
     (id: string) =>
@@ -3775,6 +3780,10 @@ export function App({ host }: { host: Host }) {
               />
             )}
             <Toast>{toast}</Toast>
+            <ReconnectingNotice
+              reconnecting={account.reconnecting}
+              onSignIn={askSignIn}
+            />
             {nav.prompt && <NavigationPrompt prompt={nav.prompt} />}
             {setupOffered && (
               <>
@@ -3821,7 +3830,7 @@ export function App({ host }: { host: Host }) {
             )}
             <SignInDialog
               account={account}
-              open={account.gated && !signInDismissed && !managingProfiles}
+              open={signInAsked && !signInDismissed && !managingProfiles}
               onOpenChange={(open) => {
                 setSignInDismissed(!open);
                 if (!open) accountRef.current.settle();

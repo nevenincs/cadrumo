@@ -35,6 +35,7 @@ export function accountFixture(
   const refusal = rest.refusal ?? status?.refusal ?? null;
   return {
     manager: null,
+    reconnecting: status?.reconnecting ?? null,
     recoveringServices: false,
     refusal,
     retrySeconds: 0,

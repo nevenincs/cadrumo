@@ -170,6 +170,8 @@ export function listRefusalWords(t: Translate, code: string): string {
     case "agent_service_busy":
     case "agent_service_not_ready":
       return t("desktop.agent.service_starting");
+    case "agent_reconnecting":
+      return t("desktop.account.reconnecting");
     default:
       return t("desktop.providers.local_models_refused_unknown");
   }

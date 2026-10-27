@@ -491,6 +491,55 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "reconnecting",
+    title: "Reconnecting",
+    summary:
+      "The window's session was suspended after the profile's worker was lost and waits for the saved sign-in. The person is not signed out.",
+    signIn: {
+      status: {
+        ...signedOut,
+        state: "present",
+        reconnecting: { passwordRequired: false },
+      },
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "reconnecting-password",
+    title: "Reconnecting, password needed",
+    summary:
+      "The saved sign-in could not bring the session back: the password form opens, and any password brings it back on the same session.",
+    signIn: {
+      status: {
+        ...signedOut,
+        state: "present",
+        reconnecting: { passwordRequired: true },
+      },
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "reconnecting-wrong-password",
+    title: "Reconnecting, wrong password",
+    summary:
+      "The session waits for the password; every submission is refused with CREDENTIAL_REJECTED, and the session keeps waiting.",
+    signIn: {
+      status: {
+        ...signedOut,
+        state: "present",
+        reconnecting: { passwordRequired: true },
+      },
+      submit: {
+        kind: "refuse",
+        code: "CREDENTIAL_REJECTED",
+        retryAfterSeconds: null,
+      },
+    },
+  },
+  {
+    ...base,
     id: "signed-in-keys-issued",
     title: "Signed in, keys issued",
     summary:

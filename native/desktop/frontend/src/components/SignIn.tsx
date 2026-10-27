@@ -120,6 +120,9 @@ export function SignInDialog({
   const seconds = account.retrySeconds;
   const rejected =
     account.refusal?.code.toUpperCase() === "CREDENTIAL_REJECTED";
+  // A session the runtime keeps suspended returns by the password typed
+  // here, on the connection that holds it: the form is that password's.
+  const reconnect = account.reconnecting?.passwordRequired === true;
   // Where a password cannot help, the form is not offered: with no profile
   // and a host that cannot make one, the dialog says there is none, and with
   // no services running it says so in its title, as the rest of the window
@@ -128,7 +131,8 @@ export function SignInDialog({
   const servicesDown = account.phase === "services-down";
   const waitingForServices =
     account.startingServices && !status.runtimeAvailable;
-  const answerable = !creating && status.runtimeAvailable && account.canSignIn;
+  const answerable =
+    !creating && status.runtimeAvailable && (account.canSignIn || reconnect);
   // The choice is offered only while nobody is signed in, from a list
   // that was read coherently.
   const choices =
@@ -148,17 +152,21 @@ export function SignInDialog({
       ? t("desktop.account.no_profile_lead")
       : servicesDown
         ? null
-        : answerable
-          ? t("desktop.signin.lead")
-          : null;
+        : reconnect
+          ? t("desktop.signin.reconnect_lead")
+          : answerable
+            ? t("desktop.signin.lead")
+            : null;
   // Titled as a sign-in only where there is something to sign in with.
   const title = waitingForServices
     ? "desktop.signin.starting_services"
     : creating
       ? "desktop.account.create.title"
-      : answerable
-        ? "desktop.signin.title"
-        : (accountLabel(account.phase) ?? "desktop.signin.title");
+      : reconnect
+        ? "desktop.signin.reconnect_title"
+        : answerable
+          ? "desktop.signin.title"
+          : (accountLabel(account.phase) ?? "desktop.signin.title");
 
   return (
     <Dialog

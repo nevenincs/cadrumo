@@ -195,6 +195,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_failed");
     case "agent_service_busy":
       return t("desktop.agent.service_starting");
+    case "agent_reconnecting":
+      return t("desktop.account.reconnecting");
     case "agent_reply_in_progress":
       return t("desktop.agent.reply_in_progress");
     case "agent_conversation_delete_incomplete":
@@ -578,9 +580,12 @@ export function AgentColumn({
   // A service still busy starting the agent answers the catalog late. The
   // column says the agent is still starting and asks again at the service's
   // next published status; a few reads, each after a longer pause, are the
-  // bounded fallback when it publishes none.
+  // bounded fallback when it publishes none. A session the runtime keeps
+  // suspended is the same wait: it is not a sign-out and it comes back.
   const catalogBusy =
-    catalog.kind === "failed" && catalog.code === "agent_service_busy";
+    catalog.kind === "failed" &&
+    (catalog.code === "agent_service_busy" ||
+      catalog.code === "agent_reconnecting");
   const busyCatalogReads = useRef(0);
   const statusAtBusyRead = useRef(status);
   useEffect(() => {
