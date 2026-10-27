@@ -3678,6 +3678,7 @@ desktop:
     palette_local_ai: Configura la IA local
     palette_open: Configura els components
     palette_retry: Torna a provar la configuració
+    part_download: Descàrrega del model
     part_model: Model {role}
     part_program: El programa que executa els models
     plan_destination: 'Es desa a: {folder}'

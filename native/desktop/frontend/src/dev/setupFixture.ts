@@ -11,6 +11,8 @@ import type {
   SetupSnapshot,
 } from "../ipc/contract";
 import type { Setup } from "../shell/host";
+import { roleLanes } from "../shell/agentModelRoles";
+import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
 
 // The scenario host's component setup: a made-up computer with the browser
 // and the local AI (its program and its models, one item), each in the state
@@ -605,14 +607,43 @@ export function setupFixture({
       if (refused) return refused;
       if (shape === "busy") return refuse("busy");
       if (run && run.stage !== "settled") return Promise.resolve(state());
-      const chosen = items.filter(
-        (seed) =>
-          (wanted === null
-            ? !usable(seed.row)
-            : wanted.includes(seed.row.item)) &&
-          seed.row.recovery !== null &&
-          seed.row.recovery !== "check_again",
-      );
+      const download = options?.download;
+      const model = download
+        ? roleLanes(FIXTURE_CATALOG)
+            .find((lane) => lane.id === download.lane)
+            ?.models.find((model) => model.id === download.model)
+        : null;
+      if (download && (!model || !model.sizeBytes))
+        return refuse("model_size_unstated");
+      const chosen = items
+        .filter((seed) =>
+          download
+            ? seed.row.item === "local_ai"
+            : (wanted === null
+                ? !usable(seed.row)
+                : wanted.includes(seed.row.item)) &&
+              seed.row.recovery !== null &&
+              seed.row.recovery !== "check_again",
+        )
+        .map((seed) =>
+          download && model
+            ? {
+                ...seed,
+                plan: {
+                  ...seed.plan,
+                  download_bytes: model.sizeBytes,
+                  parts: [
+                    {
+                      part: "download",
+                      model: model.id,
+                      download_bytes: model.sizeBytes,
+                    },
+                  ],
+                },
+              }
+            : seed,
+        );
+      if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
       const plan = chosen.length === 0 ? null : review(chosen);
       run = {

@@ -65,6 +65,7 @@ export function retryWords(t: Translate, retry: SetupRetry): string {
 
 /** One part of the local AI's plan: its program, or the model selected for one role. */
 export function partName(t: Translate, part: string): string {
+  if (part === "download") return t("desktop.setup.part_download");
   return part === "program"
     ? t("desktop.setup.part_program")
     : t("desktop.setup.part_model", { role: t(`desktop.setup.role.${part}`) });

@@ -888,12 +888,15 @@ export type SetupCheck = {
   refusal: SetupRefusalCode | null;
 };
 
-/** One part of the local AI's plan: `program`, or a role the person selected
- * a local model for, whose pull it is. Its size is the one the model's
- * catalogue entry states. A part sharing an earlier part's download has
- * size 0. */
+/** One model explicitly requested for download, independently of task configuration. */
+export type SetupModelDownload = { lane: string; model: string };
+
+/** A local AI plan part: the program, a configured task, or an explicit download.
+ * A part sharing an earlier part's download has size 0. */
 export type SetupPlanPart = {
   part: string;
+  /** The exact model in an explicit download plan. */
+  model?: string | null;
   /** Null when the size is not known before the download starts. */
   download_bytes: number | null;
 };
@@ -1426,9 +1429,9 @@ export interface HostCommands {
     result: DesktopSetup;
   };
   /** Plans setup of `items`, or of every item not ready when null; the plan
-   * then awaits an answer in `setup.review`. A setup names no model: the host
-   * reads the person's selection of local models from the agent service and
-   * refuses the start when it cannot admit it. A setup already running is
+   * then awaits an answer in `setup.review`. An explicit download is validated against the current
+   * catalogue independently of document tasks; otherwise the host reads saved
+   * model selections. Admission failure refuses the start. A setup already running is
    * joined.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
@@ -1437,6 +1440,7 @@ export interface HostCommands {
     args: Authorized<{
       items: SetupItemId[] | null;
       resume: boolean;
+      download?: SetupModelDownload;
     }>;
     result: DesktopSetup;
   };

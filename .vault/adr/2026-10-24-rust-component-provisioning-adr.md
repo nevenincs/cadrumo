@@ -5,7 +5,7 @@ tags:
 date: '2026-10-24'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:9af29a0ca0a5f84bdeb012ccad996ebf01c21b039ec0a7df18b6534a3dbdf90c'
+body_hash: 'sha256:d418e099de97da4586541b96004567a44e1e679c9c18dc655d69858a6c9a4ce2'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
@@ -118,3 +118,12 @@ Basis: the owner's first-hand answers of 2026-10-26 in conversation, given while
 - **Constraint 2 (exposure).** The desktop host may also remove one named local model the person picked, beside removing the whole `local_ai` item. It is a desktop command over a new engine operation that runs under the `local_ai` writer lock. It deletes that model's manifest and only the layers no remaining manifest uses, and it keeps the program, the receipt and every other model. When any remaining manifest cannot be read, every layer stays. The `components` role and every Python surface still cannot remove a model.
 - **Constraint 8 (models).** Removing a model does not change the selection. The desktop clears every role selection that names the model before it asks the engine to remove it, so the next setup does not pull it again.
 - **Admission.** The desktop admits the engine only with the selections whose keyless lane is turned on. A lane the person turned off (`mode` `disabled`) hands the engine none of its models, so setup pulls nothing for it, and with no other local selection the `local_ai` item is the program alone.
+
+### Amendment 2026-10-27: download independently of document tasks
+
+Accepted 2026-10-27. Basis: the owner's first-hand instruction in conversation: "there shoudl be be no tickbox for LLMs - privide normal download for the models and let them be configured". This refines the local download and selection interaction, replacing the 2026-10-26 requirement to pick document roles before download.
+
+- The Ollama provider settings offer Download and Remove without document-task checkboxes. Download never writes or clears a model-role selection. The existing model configuration dialog continues to own explicit per-role configuration and its vision validation.
+- A desktop download request names one catalogue lane and model. The native host admits that request only for a turned-on keyless lane and resolves the positive size from the current catalogue. Neither model names nor download sizes are invented by the frontend. The engine receives this explicit model for this run, independently of stored document roles; the ephemeral download part is not a persisted role selection.
+- The existing native engine owns transfer, sizing, locking, review and digest-bound approval. CLI, TUI, Python and cadrumo-agent gain no provisioning capability. Ordinary setup and model calls retain their existing selection rules. Remove retains the existing clear-selections-before-removal behavior.
+- Evidence: `native/desktop/frontend/src/components/settings/LocalModels.tsx` couples its Download action to checkbox selection and `useModelRoles.change`; `native/desktop/src-tauri/src/shell/setup/admission.rs` currently admits only saved role selections. Implementation removes the checkbox editor, passes a typed optional lane/model download request through desktop setup, and validates it in native admission without reading or writing roles. Focused native admission and browser scenarios verify download with no selection, unchanged selections, catalogue refusals and preserved review.

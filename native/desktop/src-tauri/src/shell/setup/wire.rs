@@ -20,8 +20,9 @@ const DETAILS_LIMIT: usize = 16 * 1024;
 
 /// The parts a local AI plan is made of: its program, then the model the
 /// person selected for each local role.
-pub const PARTS: [&str; 5] = [
+pub const PARTS: [&str; 6] = [
     "program",
+    "download",
     "vision_transcription",
     "text_extraction",
     "column_role_mapping",
@@ -289,6 +290,8 @@ pub struct Check {
 #[serde(deny_unknown_fields)]
 pub struct PlanPart {
     pub part: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
     pub download_bytes: Option<u64>,
 }
 
@@ -469,10 +472,16 @@ impl PlanEntry {
             && (self.parts.is_empty() || self.item == "local_ai")
             && self.parts.len() <= PARTS.len()
             && unique(self.parts.iter().map(|part| &part.part))
-            && self
-                .parts
-                .iter()
-                .all(|part| PARTS.contains(&part.part.as_str()))
+            && self.parts.iter().all(|part| {
+                PARTS.contains(&part.part.as_str())
+                    && if part.part == "download" {
+                        part.model
+                            .as_deref()
+                            .is_some_and(|model| ModelName::parse(model).is_ok())
+                    } else {
+                        part.model.is_none()
+                    }
+            })
             && self
                 .shares_download_with
                 .as_deref()
@@ -567,6 +576,14 @@ pub(super) fn is_drive_folder_id(id: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || c == b'_' || c == b'-')
 }
 
+/// A catalogue model the person requested without assigning a document task.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct ModelDownload {
+    pub lane: String,
+    pub model: String,
+}
+
 /// One setup action the window asked for, in its closed form.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Action {
@@ -576,6 +593,7 @@ pub enum Action {
     Start {
         items: Option<Vec<String>>,
         resume: bool,
+        download: Option<ModelDownload>,
     },
     Answer {
         operation_id: String,
@@ -618,15 +636,24 @@ pub fn verify_request(selected: Option<Vec<String>>) -> Result<Action, Applicati
     Ok(Action::Verify(items(selected)?))
 }
 
-/// Setup of `items`, or of every item not ready, planned first. A setup names no
-/// model: the engine is handed the person's selection when the command runs.
+/// Plans ordinary setup or one explicitly requested catalogue model download.
 pub fn start_request(
     selected: Option<Vec<String>>,
     resume: bool,
+    download: Option<ModelDownload>,
 ) -> Result<Action, ApplicationError> {
+    let selected = items(selected)?;
+    if let Some(download) = &download
+        && (selected.as_deref() != Some(&["local_ai".to_owned()])
+            || !plain(&download.lane, NAME_LIMIT)
+            || ModelName::parse(&download.model).is_err())
+    {
+        return Err(invalid());
+    }
     Ok(Action::Start {
-        items: items(selected)?,
+        items: selected,
         resume,
+        download,
     })
 }
 
@@ -818,6 +845,46 @@ mod tests {
     }
 
     #[test]
+    fn a_model_download_requires_the_local_ai_item_and_valid_catalogue_identifiers() {
+        let request = || {
+            Some(ModelDownload {
+                lane: "synthetic_local_api".into(),
+                model: "synthetic-model:test".into(),
+            })
+        };
+        assert!(start_request(Some(vec!["local_ai".into()]), false, request()).is_ok());
+        for items in [
+            None,
+            Some(vec!["browser".into()]),
+            Some(vec!["browser".into(), "local_ai".into()]),
+        ] {
+            assert!(start_request(items, false, request()).is_err());
+        }
+        assert!(
+            start_request(
+                Some(vec!["local_ai".into()]),
+                false,
+                Some(ModelDownload {
+                    lane: "".into(),
+                    model: "synthetic-model:test".into()
+                })
+            )
+            .is_err()
+        );
+        assert!(
+            start_request(
+                Some(vec!["local_ai".into()]),
+                false,
+                Some(ModelDownload {
+                    lane: "synthetic_local_api".into(),
+                    model: "../outside".into()
+                })
+            )
+            .is_err()
+        );
+    }
+
+    #[test]
     fn actions_name_only_items_and_choices_in_their_closed_forms() {
         assert_eq!(
             check_request("full").unwrap(),
@@ -826,13 +893,14 @@ mod tests {
         assert!(check_request("deep").is_err());
         assert_eq!(verify_request(None).unwrap(), Action::Verify(None));
         assert_eq!(
-            start_request(Some(vec!["local_ai".into()]), true).unwrap(),
+            start_request(Some(vec!["local_ai".into()]), true, None).unwrap(),
             Action::Start {
                 items: Some(vec!["local_ai".into()]),
                 resume: true,
+                download: None,
             }
         );
-        assert!(start_request(Some(vec![]), false).is_err());
+        assert!(start_request(Some(vec![]), false, None).is_err());
         for selected in [
             vec![],
             vec!["printer".to_owned()],

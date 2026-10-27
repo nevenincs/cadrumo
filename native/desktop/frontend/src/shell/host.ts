@@ -20,6 +20,7 @@ import type {
   SignOutResult,
   SetupCheckMode,
   SetupItemId,
+  SetupModelDownload,
   WindowAction,
   WindowPresentation,
   PresentationOutcome,
@@ -91,7 +92,7 @@ export type Setup = {
    * the person approved before needs no second approval. */
   start(
     items: SetupItemId[] | null,
-    options?: { resume?: boolean },
+    options?: { resume?: boolean; download?: SetupModelDownload },
   ): Promise<DesktopSetup>;
   /** Answers the plan whose `plan_digest` the review showed. */
   answer(

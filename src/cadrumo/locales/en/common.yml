@@ -3621,6 +3621,7 @@ desktop:
     palette_local_ai: Set up the local AI
     palette_open: Set up components
     palette_retry: Retry setup
+    part_download: Model download
     part_model: Model {role}
     part_program: The program that runs the models
     plan_destination: 'Saved in: {folder}'

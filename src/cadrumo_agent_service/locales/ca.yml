@@ -323,21 +323,15 @@ desktop:
     key_note: Es desa xifrada en aquest ordinador i no es torna a mostrar.
     load_failed: No s’han pogut carregar els proveïdors. Torna-ho a provar.
     local_model_absent: Sense baixar
-    local_model_choose_roles: Fes-lo servir per llegir documents
     local_model_download: Baixa
     local_model_installed: Baixat
-    local_model_pick_roles: Llegeix documents amb aquest model
     local_model_recommended: Recomanat per llegir {capability}
     local_model_remove: Treu
     local_model_remove_failed: Cadrumo no ha pogut treure el model. Torna-ho a provar.
     local_model_remove_still_selected: Cadrumo encara llegeix documents amb aquest
       model. Tria'n un altre per a aquesta lectura i després treu aquest.
-    local_model_unused: Encara no el fas servir per llegir documents.
-    local_model_use: Fes-lo servir
-    local_model_used_by: Llegeix documents {roles}
-    local_models_lead: Cadrumo llegeix els teus documents amb els models que triïs
-      aquí, com ara pàgines escanejades i text de documents. Un model només es baixa
-      quan tries què llegeix als teus documents.
+    local_models_lead: Descarrega models en aquest ordinador. Tria quins llegeixen
+      els teus documents a Models per llegir documents.
     local_models_none: L'agent encara no ofereix models per a aquesta connexió.
     local_models_title: Models en aquest ordinador
     reason_check_settings: Revisa aquesta configuració i torna-ho a provar.

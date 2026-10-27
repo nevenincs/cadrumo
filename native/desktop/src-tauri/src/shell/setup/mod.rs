@@ -210,9 +210,13 @@ impl SetupHost {
                     .verify(item_ids(items.clone()).unwrap_or_default());
                 Ok(())
             }
-            Action::Start { items, resume } => {
+            Action::Start {
+                items,
+                resume,
+                download,
+            } => {
                 self.components
-                    .start(item_ids(items.clone()), *resume)
+                    .start(item_ids(items.clone()), *resume, download.clone())
                     .await
             }
             Action::Answer {
@@ -487,8 +491,9 @@ async fn desktop_setup_start(
     host: State<'_, Arc<SetupHost>>,
     items: Option<Vec<String>>,
     resume: bool,
+    download: Option<wire::ModelDownload>,
 ) -> std::result::Result<DesktopSetup, CommandFailure> {
-    host.exchange(wire::start_request(items, resume)?, true)
+    host.exchange(wire::start_request(items, resume, download)?, true)
         .await
 }
 

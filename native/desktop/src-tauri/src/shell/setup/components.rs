@@ -96,10 +96,19 @@ enum Unready {
 
 /// An engine of this installation admitted with the local models the person
 /// selected, as the agent service states them now. Every check and setup runs
-/// on one, so no engine plans, pulls or checks a model nobody selected.
-fn admitted(engines: &Engines, admission: &Admission) -> Result<Engine, Unready> {
+/// on one; an explicit download supplies its catalogue model for this run.
+fn admitted(
+    engines: &Engines,
+    admission: &Admission,
+    download: Option<&wire::ModelDownload>,
+) -> Result<Engine, Unready> {
     let Installation { mut engine } = engines().map_err(Unready::Engine)?;
-    engine.admit_local_ai(admission.local_models().map_err(Unready::Refused)?);
+    let models = match download {
+        Some(request) => admission.download(request),
+        None => admission.local_models(),
+    }
+    .map_err(Unready::Refused)?;
+    engine.admit_local_ai(models);
     Ok(engine)
 }
 
@@ -152,6 +161,7 @@ struct CheckTrack {
 
 struct SetupTrack {
     operation_id: String,
+    download: Option<wire::ModelDownload>,
     stage: RunStage,
     /// The plan awaiting the person's answer, by its digest.
     review: Option<(String, wire::Review)>,
@@ -346,7 +356,7 @@ impl Components {
         let shared = self.shared.clone();
         let cancellation = window.checks.clone();
         self.spawn(window, "setup-check", move || {
-            let report = admitted(&*engines, &admission).map(|mut engine| {
+            let report = admitted(&*engines, &admission, None).map(|mut engine| {
                 let engine = &mut engine;
                 match kind {
                     CheckKind::StatusQuick => {
@@ -393,7 +403,12 @@ impl Components {
     /// `None`, and waits until it asks for an answer, runs or settles. A setup
     /// already running is joined. With `resume`, a plan this window approved
     /// before applies without asking again.
-    pub async fn start(&self, items: Option<Vec<ItemId>>, resume: bool) -> Result<(), Refusal> {
+    pub async fn start(
+        &self,
+        items: Option<Vec<ItemId>>,
+        resume: bool,
+        download: Option<wire::ModelDownload>,
+    ) -> Result<(), Refusal> {
         let mut changes = self.changes();
         let id = {
             let mut window = lock(&self.shared.window);
@@ -404,10 +419,26 @@ impl Components {
                 // One setup at a time: a second start joins the running one.
                 return Ok(());
             }
+            // Resume retains the explicit download; it never substitutes document roles.
+            let download = download.or_else(|| {
+                ((resume
+                    || window.setup.as_ref().is_some_and(|track| {
+                        matches!(track.outcome, Some(Outcome::Failed | Outcome::Interrupted))
+                    }))
+                    && items.as_deref() == Some(&[ItemId::LocalAi]))
+                .then(|| {
+                    window
+                        .setup
+                        .as_ref()
+                        .and_then(|track| track.download.clone())
+                })
+                .flatten()
+            });
             let id = operation_id();
             let cancellation = Arc::new(Cancellation::default());
             let mut track = SetupTrack {
                 operation_id: id.clone(),
+                download: download.clone(),
                 stage: RunStage::Planning,
                 review: None,
                 answers: None,
@@ -671,7 +702,12 @@ fn run_setup(
     resume: bool,
     cancellation: &Cancellation,
 ) {
-    let mut engine = match admitted(engines, admission) {
+    let download = lock(&shared.window)
+        .setup
+        .as_ref()
+        .filter(|track| track.operation_id == id)
+        .and_then(|track| track.download.clone());
+    let mut engine = match admitted(engines, admission, download.as_ref()) {
         Ok(engine) => engine,
         Err(Unready::Engine(error)) => {
             // A setting the engine cannot use is a classified refusal of its own; the
@@ -907,6 +943,9 @@ fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
                         .is_some_and(|key| !seen.insert(key));
                     wire::PlanPart {
                         part: part.part_id.clone(),
+                        model: (part.part_id == "download")
+                            .then(|| part.target_version.clone())
+                            .flatten(),
                         download_bytes: part
                             .download_bytes
                             .map(|bytes| if shared { 0 } else { bytes }),

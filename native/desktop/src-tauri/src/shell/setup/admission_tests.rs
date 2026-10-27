@@ -385,3 +385,51 @@ fn a_profile_that_is_signed_out_is_told_so() {
         );
     }
 }
+
+#[test]
+fn explicit_download_uses_catalogue_size_without_reading_document_roles() {
+    for catalogue in [
+        served(&[(VISION, Some(3 * GB))]),
+        declared(&[(VISION, Some(3 * GB))]),
+    ] {
+        let (admission, replies) = watched(
+            Replies::default()
+                .answering("status", status())
+                .answering("catalog", catalogue),
+        );
+        let requested = super::super::wire::ModelDownload {
+            lane: LOCAL.into(),
+            model: VISION.into(),
+        };
+        assert_eq!(
+            admission.download(&requested).unwrap(),
+            models(&[("download", VISION, 3 * GB)])
+        );
+        assert_eq!(replies.asked(), vec!["status", "catalog"]);
+    }
+}
+
+#[test]
+fn explicit_download_refuses_hosted_disabled_unknown_lanes_and_unlisted_or_unsized_models() {
+    let mut disabled = status();
+    disabled["providers"][0]["mode"] = json!("disabled");
+    for (lanes, lane, name, cards) in [
+        (status(), HOSTED, VISION, vec![(VISION, Some(GB))]),
+        (disabled, LOCAL, VISION, vec![(VISION, Some(GB))]),
+        (status(), "unknown", VISION, vec![(VISION, Some(GB))]),
+        (status(), LOCAL, TEXT, vec![(VISION, Some(GB))]),
+        (status(), LOCAL, VISION, vec![(VISION, None)]),
+        (status(), LOCAL, VISION, vec![(VISION, Some(0))]),
+    ] {
+        let admission = admission_of(
+            Replies::default()
+                .answering("status", lanes)
+                .answering("catalog", served(&cards)),
+        );
+        let requested = super::super::wire::ModelDownload {
+            lane: lane.into(),
+            model: name.into(),
+        };
+        assert!(admission.download(&requested).is_err(), "{lane}/{name}");
+    }
+}

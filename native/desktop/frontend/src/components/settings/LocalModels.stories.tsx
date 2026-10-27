@@ -7,6 +7,7 @@ import { useSetup } from "../../shell/setup";
 import { SetupDialog } from "../setup/SetupDialog";
 import { roleLanes } from "../../shell/agentModelRoles";
 import type { ModelRoleHost } from "../../shell/modelRoles";
+import { ModelRolesDialog } from "../agent/ModelRolesDialog";
 import { LocalModels } from "./LocalModels";
 import { ProviderSettings } from "./ProviderSettings";
 import { PROVIDERS } from "./ProviderSettings.stories";
@@ -14,7 +15,7 @@ import type { ProviderStatus } from "./types";
 
 // The real provider settings of the made-up lane that runs on this computer,
 // opened, with the real model list. The switch turns the lane off and on;
-// choosing roles stores them with the scenario host's agent; Download opens the
+// document configuration is separate; Download opens the
 // shared setup review and marks the model as here only after approved setup, and
 // Remove takes it off again. Everything is kept in memory and forgotten on
 // reload, and nothing is downloaded. Every lane and model is made up.
@@ -100,20 +101,14 @@ function Settings(scene: Scene) {
   );
   const setup = useSetup(setupHost, "Demo profile", true);
   const [setupOpen, setSetupOpen] = useState(false);
+  const [rolesOpen, setRolesOpen] = useState(false);
+  const requested = useRef<string | null>(null);
   const run = setup.snapshot?.setup;
   useEffect(() => {
     if (run?.stage !== "settled" || run.outcome !== "completed") return;
-    void host.read().then((roles) => {
-      if (roles.state !== "readable") return;
-      const pulled = roles.roles.flatMap((role) =>
-        role.lane === LANE && role.model ? [role.model] : [],
-      );
-      setHeld((now) => ({
-        ...now,
-        ...Object.fromEntries(pulled.map((model) => [model, true])),
-      }));
-    });
-  }, [host, run?.operation_id, run?.stage, run?.outcome]);
+    const model = requested.current;
+    if (model) setHeld((now) => ({ ...now, [model]: true }));
+  }, [run?.operation_id, run?.stage, run?.outcome]);
   useEffect(() => {
     root.current
       ?.querySelectorAll("details")
@@ -141,12 +136,15 @@ function Settings(scene: Scene) {
         onRefresh={() => undefined}
         localModels={() => (
           <LocalModels
+            key={`${rolesOpen}`}
             lane={lane}
             host={host}
             locale="en"
-            onSetUp={() => {
+            onConfigure={() => setRolesOpen(true)}
+            onSetUp={(model) => {
+              requested.current = model;
               setSetupOpen(true);
-              setup.start(["local_ai"]);
+              setup.start(["local_ai"], { download: { lane: LANE, model } });
             }}
             onRemove={(model) => {
               const refusal = scene.removal ?? null;
@@ -156,6 +154,14 @@ function Settings(scene: Scene) {
           />
         )}
       />
+      {rolesOpen && (
+        <ModelRolesDialog
+          host={host}
+          catalog={FIXTURE_CATALOG}
+          locale="en"
+          onClose={() => setRolesOpen(false)}
+        />
+      )}
       <SetupDialog
         open={setupOpen}
         onOpenChange={setSetupOpen}

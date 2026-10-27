@@ -3656,6 +3656,7 @@ desktop:
     palette_local_ai: A helyi MI beállítása
     palette_open: Összetevők beállítása
     palette_retry: Beállítás újrapróbálása
+    part_download: Modell letöltése
     part_model: Modell {role}
     part_program: A modelleket futtató program
     plan_destination: 'Hely: {folder}'

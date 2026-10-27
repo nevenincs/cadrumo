@@ -143,7 +143,10 @@ function PlanDetail({
                   data-setup-part={part.part}
                   className="flex flex-wrap justify-between gap-x-2"
                 >
-                  <span>{partName(t, part.part)}</span>
+                  <span>
+                    {partName(t, part.part)}
+                    {part.model && <>: {part.model}</>}
+                  </span>
                   {part.download_bytes !== 0 && (
                     <span>{size(part.download_bytes)}</span>
                   )}

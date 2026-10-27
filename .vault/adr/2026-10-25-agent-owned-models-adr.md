@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-10-26'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:731ab770e89f02b84c4666e8066778c1cf239e83587a3413a4bd54739bae9c19'
+body_hash: 'sha256:4101f00c57b2d5d8a1ad235a95ed30a36fdedc830db35be56d3ec8e011542b66'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -179,3 +179,12 @@ Basis: the owner's first-hand rulings of 2026-10-26 in conversation: "the actual
 - **Implementation, the selection control.** A keyless local lane's row in the desktop provider settings carries its model controls. The lane switch turns the local lane on or off. While it is on, the row lists the lane's catalogue models in the order cadrumo-agent serves them, with each model's size, vision capability, licence, installed state and the roles that use it. The catalogue's recommended entries, vision first, lead the list as offers and are never applied silently. Cadrumo adds no ranking of its own.
 - **Download.** Download asks which roles the model serves. The desktop names no role and so offers every role the service lists; the service refuses a role the model cannot serve, such as the vision role for a model the catalogue does not mark vision-capable (`agent_model_role_vision_required`), and the row says so. Download stores those selections through the per-role selection and then opens the existing setup review, so a model is pulled only once it is selected and only after the person approves the plan.
 - **Remove.** Remove clears the roles that name the model and then removes that model through the desktop's engine. The per-role dialog in the agent column stays and uses the same selection record.
+
+### Amendment 2026-10-27: download independently of document tasks
+
+Accepted 2026-10-27. Basis: the owner's first-hand instruction in conversation: "there shoudl be be no tickbox for LLMs - privide normal download for the models and let them be configured". This refines the local download and selection interaction, replacing the 2026-10-26 requirement to pick document roles before download.
+
+- The Ollama provider settings offer Download and Remove without document-task checkboxes. Download never writes or clears a model-role selection. The existing model configuration dialog continues to own explicit per-role configuration and its vision validation.
+- A desktop download request names one catalogue lane and model. The native host admits that request only for a turned-on keyless lane and resolves the positive size from the current catalogue. Neither model names nor download sizes are invented by the frontend. The engine receives this explicit model for this run, independently of stored document roles; the ephemeral download part is not a persisted role selection.
+- The existing native engine owns transfer, sizing, locking, review and digest-bound approval. CLI, TUI, Python and cadrumo-agent gain no provisioning capability. Ordinary setup and model calls retain their existing selection rules. Remove retains the existing clear-selections-before-removal behavior.
+- Evidence: `native/desktop/frontend/src/components/settings/LocalModels.tsx` couples its Download action to checkbox selection and `useModelRoles.change`; `native/desktop/src-tauri/src/shell/setup/admission.rs` currently admits only saved role selections. Implementation removes the checkbox editor, passes a typed optional lane/model download request through desktop setup, and validates it in native admission without reading or writing roles. Focused native admission and browser scenarios verify download with no selection, unchanged selections, catalogue refusals and preserved review.

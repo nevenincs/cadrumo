@@ -4,12 +4,8 @@ import { localModelOrder, roleLanes } from "../../src/shell/agentModelRoles";
 import { scenarioOnly } from "../support/agent";
 import { label } from "../support/strings";
 
-// The models of a lane on this computer, in its provider settings: listed in
-// the order the agent's catalog serves them with what it recommends leading,
-// each with what it is and whether it is here. A model is downloaded by
-// choosing what it reads for, which stores the selection, and then by setup's
-// own review. Turned off, the lane shows no models. Every lane and model is
-// the scenario host's made-up catalog.
+// Presentation evidence for catalogue downloads independent of document-task
+// configuration. The scenario host performs no real transfer.
 
 test.beforeEach(() => {
   scenarioOnly("The scenario host stands in for the agent service.");
@@ -83,7 +79,7 @@ test("the lane's models are listed with the agent's recommendations leading, vis
   expect(await storedRoles(target)).toEqual([]);
 });
 
-test("downloading a model stores the roles chosen for it and opens setup on the local AI", async ({
+test("Download opens model setup directly without changing document configuration", async ({
   page: target,
 }) => {
   await open(target);
@@ -94,20 +90,6 @@ test("downloading a model stores the roles chosen for it and opens setup on the 
       name: label("desktop.providers.local_model_download"),
     })
     .click();
-  // Downloading waits until a role is chosen.
-  const confirm = vision.getByRole("button", {
-    name: label("desktop.providers.local_model_download"),
-  });
-  await expect(confirm).toBeDisabled();
-  await vision
-    .getByRole("checkbox", {
-      name: label("desktop.setup.role.vision_transcription"),
-    })
-    .check();
-  // The selected model is missing, but the window still has its earlier
-  // ready snapshot. Planning must re-read the host rather than trust it.
-  await target.evaluate(() => window.__scenarioSetup?.setAbsent("local_ai"));
-  await confirm.click();
   const review = target.getByRole("dialog", {
     name: label("desktop.setup.title"),
   });
@@ -123,12 +105,15 @@ test("downloading a model stores the roles chosen for it and opens setup on the 
   expect(
     await target.evaluate(() => window.__scenarioHostCalls ?? []),
   ).not.toContain("setup.answer apply");
-  expect(await storedRoles(target)).toEqual([
-    { role: "vision_transcription", lane: LOCAL, model: "synthetic-vision:1" },
-  ]);
+  expect(await storedRoles(target)).toEqual([]);
+  expect(
+    await target.evaluate(() => window.__scenarioHostCalls ?? []),
+  ).toContain("setup.download local_api synthetic-vision:1");
+  await expect(review).toContainText(label("desktop.setup.part_download"));
+  await expect(review).toContainText("synthetic-vision:1");
   await review
     .getByRole("button", {
-      name: label("desktop.setup.approve_at_least", { size: "3.4 GB" }),
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
     })
     .click();
   await expect(review).toContainText(label("desktop.setup.lead_running"));
@@ -185,29 +170,24 @@ test("setup leads to the same local model controls without starting a download",
   ).not.toContain("setup.start local_ai");
 });
 
-test("a role the model cannot serve is refused by the service and said in words", async ({
+test("download settings have no task checkboxes and open document model configuration", async ({
   page: target,
 }) => {
   await open(target);
   const lane = await openLane(target);
-  const plain = lane.locator('li[data-model="synthetic-text:1"]');
-  await plain
-    .getByRole("button", {
-      name: label("desktop.providers.local_model_choose_roles"),
-    })
+  await expect(lane.getByRole("checkbox")).toHaveCount(0);
+  await lane
+    .getByRole("button", { name: label("desktop.agent.model_roles_title") })
     .click();
-  await plain
-    .getByRole("checkbox", {
-      name: label("desktop.setup.role.vision_transcription"),
-    })
-    .check();
-  await plain
-    .getByRole("button", { name: label("desktop.providers.local_model_use") })
-    .click();
-  await expect(plain.getByRole("alert")).toHaveText(
-    label("desktop.agent.model_role_refused_vision_required"),
-  );
+  const dialog = target.getByRole("dialog", {
+    name: label("desktop.agent.model_roles_title"),
+  });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("combobox")).not.toHaveCount(0);
   expect(await storedRoles(target)).toEqual([]);
+  expect(
+    await target.evaluate(() => window.__scenarioHostCalls ?? []),
+  ).not.toContain("setup.start local_ai");
 });
 
 test("a lane turned off shows no models", async ({ page: target }) => {
@@ -224,33 +204,33 @@ test("removing a model clears the roles that read with it first, then removes it
   await open(target);
   const lane = await openLane(target);
   const text = lane.locator('li[data-model="synthetic-text:1"]');
-  await text
-    .getByRole("button", {
-      name: label("desktop.providers.local_model_choose_roles"),
-    })
+  await lane
+    .getByRole("button", { name: label("desktop.agent.model_roles_title") })
     .click();
-  await text
-    .getByRole("checkbox", {
-      name: label("desktop.setup.role.text_extraction"),
-    })
-    .check();
-  await text
-    .getByRole("button", { name: label("desktop.providers.local_model_use") })
+  const dialog = target.getByRole("dialog", {
+    name: label("desktop.agent.model_roles_title"),
+  });
+  const section = dialog.locator('section[data-role="text_extraction"]');
+  await section.getByRole("combobox").first().selectOption(LOCAL);
+  await section.getByRole("combobox").nth(1).selectOption("synthetic-text:1");
+  await section
+    .getByRole("button", { name: label("desktop.agent.model_role_save") })
     .click();
-  await expect(text).toContainText(
-    label("desktop.providers.local_model_used_by", {
-      roles: label("desktop.setup.role.text_extraction"),
-    }),
+  await expect(section.getByRole("status")).toContainText(
+    label("desktop.agent.model_role_saved"),
   );
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.agent.model_roles_close"),
+      exact: true,
+    })
+    .click();
   await text
     .getByRole("button", {
       name: label("desktop.providers.local_model_remove"),
     })
     .click();
-  await expect(text).toContainText(
-    label("desktop.providers.local_model_unused"),
-  );
-  expect(await storedRoles(target)).toEqual([]);
+  await expect.poll(() => storedRoles(target)).toEqual([]);
   await expect
     .poll(() => target.evaluate(() => window.__scenarioHostCalls ?? []))
     .toContain("setup.removeModel synthetic-text:1");

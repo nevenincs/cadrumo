@@ -318,7 +318,7 @@ fn review(snapshot: &Snapshot) -> (String, wire::Review) {
 }
 
 async fn reviewing(components: &Components) -> (String, wire::Review) {
-    components.start(None, false).await.unwrap();
+    components.start(None, false, None).await.unwrap();
     review(&until(components, |view| stage(view) == Some(RunStage::Review)).await)
 }
 
@@ -475,7 +475,7 @@ async fn resume_applies_a_plan_this_window_approved_without_a_second_review() {
     until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
     // Resume of the approved plan runs at once: the start comes back running,
     // or already settled, never waiting on a review.
-    components.start(None, true).await.unwrap();
+    components.start(None, true, None).await.unwrap();
     assert_ne!(stage(&components.view()), Some(RunStage::Review));
     let resumed = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
     let run = resumed.setup.unwrap();
@@ -489,7 +489,7 @@ async fn resume_applies_a_plan_this_window_approved_without_a_second_review() {
     );
     // A window that approved nothing yet still asks.
     let other = window(&fixture);
-    other.start(None, true).await.unwrap();
+    other.start(None, true, None).await.unwrap();
     until(&other, |view| stage(view) == Some(RunStage::Review)).await;
     other.close().await;
 }
@@ -559,7 +559,7 @@ async fn running(fixture: &Fixture) -> Components {
 /// A second window of the same installation, following the setup the first runs.
 async fn following(fixture: &Fixture) -> (Components, wire::Run) {
     let follower = window(fixture);
-    follower.start(None, false).await.unwrap();
+    follower.start(None, false, None).await.unwrap();
     let run = until(&follower, moving).await.setup.unwrap();
     (follower, run)
 }
@@ -658,14 +658,14 @@ async fn a_second_start_joins_the_setup_that_waits() {
     let fixture = Fixture::new(Serving::Whole);
     let components = window(&fixture);
     let (operation, _) = reviewing(&components).await;
-    components.start(None, false).await.unwrap();
+    components.start(None, false, None).await.unwrap();
     assert_eq!(components.view().setup.unwrap().operation_id, operation);
     components.close().await;
     // Closing the window declines the plan and waits for its worker.
     let run = components.view().setup.unwrap();
     assert_eq!(run.outcome, Some(Outcome::Cancelled));
     assert_eq!(
-        components.start(None, false).await,
+        components.start(None, false, None).await,
         Err(Refusal::Unavailable)
     );
 }
@@ -675,7 +675,7 @@ async fn too_little_space_and_no_network_refuse_before_anything_is_asked() {
     let mut fixture = Fixture::new(Serving::Whole);
     fixture.free_bytes = Some(1);
     let components = window(&fixture);
-    components.start(None, false).await.unwrap();
+    components.start(None, false, None).await.unwrap();
     let full = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
     assert_eq!(full.setup.unwrap().outcome, Some(Outcome::NotEnoughSpace));
 
@@ -683,7 +683,7 @@ async fn too_little_space_and_no_network_refuse_before_anything_is_asked() {
     fixture.reachable = false;
     let components = window(&fixture);
     components
-        .start(Some(vec![ItemId::Browser]), false)
+        .start(Some(vec![ItemId::Browser]), false, None)
         .await
         .unwrap();
     let offline = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
@@ -704,7 +704,7 @@ async fn an_item_this_build_cannot_set_up_settles_with_its_refusal() {
     let fixture = Fixture::new(Serving::Whole);
     let components = window(&fixture);
     components
-        .start(Some(vec![ItemId::LocalAi]), false)
+        .start(Some(vec![ItemId::LocalAi]), false, None)
         .await
         .unwrap();
     let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
@@ -805,7 +805,7 @@ fn a_download_two_roles_share_is_counted_once_in_the_review() {
 async fn local_ai_plan(fixture: &Fixture, replies: Replies) -> (Components, String, wire::Review) {
     let (components, _) = selecting(fixture, replies);
     components
-        .start(Some(vec![ItemId::LocalAi]), false)
+        .start(Some(vec![ItemId::LocalAi]), false, None)
         .await
         .unwrap();
     let asked = until(&components, |view| {
@@ -918,10 +918,18 @@ async fn a_selection_that_cannot_be_admitted_refuses_the_start_and_runs_nothing(
     for (name, replies, refusal) in cases {
         let fixture = Fixture::new(Serving::Whole);
         let (components, _) = selecting(&fixture, replies);
-        assert_eq!(components.start(None, false).await, Err(refusal), "{name}");
+        assert_eq!(
+            components.start(None, false, None).await,
+            Err(refusal),
+            "{name}"
+        );
         assert!(components.view().setup.is_none(), "{name}: no run is shown");
         // The refusal is the start's own: asking again is refused the same way.
-        assert_eq!(components.start(None, false).await, Err(refusal), "{name}");
+        assert_eq!(
+            components.start(None, false, None).await,
+            Err(refusal),
+            "{name}"
+        );
         assert_eq!(fixture.downloads(), 0, "{name}");
     }
 }
@@ -981,7 +989,7 @@ async fn stopping_a_setup_another_window_runs_reads_no_selection() {
     let fixture = Fixture::new(Serving::Gated(gate.clone()));
     let owner = running(&fixture).await;
     let (follower, replies) = selecting(&fixture, Replies::without_selection());
-    follower.start(None, false).await.unwrap();
+    follower.start(None, false, None).await.unwrap();
     let run = until(&follower, moving).await.setup.unwrap();
     let before = replies.asked();
     // Asking another setup to stop builds an engine for nothing but that request.
@@ -1062,4 +1070,51 @@ async fn a_name_the_engine_cannot_pull_is_refused_before_any_engine_runs() {
         Err(Refusal::ModelSelectionUnusable)
     );
     assert!(replies.asked().is_empty());
+}
+
+#[tokio::test]
+async fn explicit_download_plans_only_that_model_without_reading_or_writing_roles() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let replies = Replies::selecting(
+        &[("text_extraction", LOCAL, TEXT)],
+        &[(TEXT, Some(2 * GB)), (VISION, Some(3 * GB))],
+    );
+    let (components, replies) = selecting(&fixture, replies);
+    components
+        .start(
+            Some(vec![ItemId::LocalAi]),
+            false,
+            Some(wire::ModelDownload {
+                lane: LOCAL.into(),
+                model: VISION.into(),
+            }),
+        )
+        .await
+        .unwrap();
+    let asked = until(&components, |view| stage(view) == Some(RunStage::Review)).await;
+    let (operation, plan) = review(&asked);
+    assert_eq!(plan.entries.len(), 1);
+    let parts = &plan.entries[0].parts;
+    assert!(asked.valid());
+    assert_eq!(parts[1].model.as_deref(), Some(VISION));
+    assert_eq!(
+        parts
+            .iter()
+            .map(|part| (part.part.as_str(), part.download_bytes))
+            .collect::<Vec<_>>(),
+        [("program", Some(PROGRAM_BYTES)), ("download", Some(3 * GB))]
+    );
+    assert_eq!(plan.entries[0].download_bytes, Some(PROGRAM_BYTES + 3 * GB));
+    assert_eq!(fixture.downloads(), 0);
+    assert_eq!(replies.asked(), vec!["status", "catalog"]);
+    decline(&components, &operation, &plan).await;
+    // A resumed request uses the same download and digest, without substituting TEXT.
+    components
+        .start(Some(vec![ItemId::LocalAi]), true, None)
+        .await
+        .unwrap();
+    let asked = until(&components, |view| stage(view) == Some(RunStage::Review)).await;
+    let (operation, resumed) = review(&asked);
+    assert_eq!(resumed.plan_digest, plan.plan_digest);
+    decline(&components, &operation, &resumed).await;
 }

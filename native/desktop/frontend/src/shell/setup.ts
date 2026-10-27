@@ -3,6 +3,7 @@ import type {
   DesktopSetup,
   SetupCheckMode,
   SetupItemId,
+  SetupModelDownload,
   SetupItemKind,
   SetupRow,
   SetupRun,
@@ -34,7 +35,10 @@ export type SetupControl = {
   verify(items: SetupItemId[] | null): void;
   /** `resume` after an interruption: a plan unchanged from the one this
    * window approved runs again without a second approval. */
-  start(items: SetupItemId[] | null, options?: { resume?: boolean }): void;
+  start(
+    items: SetupItemId[] | null,
+    options?: { resume?: boolean; download?: SetupModelDownload },
+  ): void;
   /** Answers the plan on screen, bound to the digest it was shown with. */
   answer(decision: "apply" | "reject"): void;
   cancel(): void;
@@ -239,10 +243,7 @@ export function useSetup(
       refusal,
       check: (mode) => send((served) => served.check(mode)),
       verify: (items) => send((served) => served.verify(items)),
-      start: (items, options) =>
-        send((served) =>
-          served.start(items, options?.resume ? { resume: true } : undefined),
-        ),
+      start: (items, options) => send((served) => served.start(items, options)),
       answer: (decision) => {
         const run = current.current?.setup;
         if (!run || run.stage !== "review" || !run.review) return;

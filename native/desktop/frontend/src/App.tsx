@@ -828,10 +828,13 @@ export function App({ host }: { host: Host }) {
   }, []);
   // Setup on the local AI's row, which a model chosen in the provider settings
   // is downloaded through.
-  const setUpLocalAi = useCallback(() => {
-    openSetup("local_ai");
-    setup.start(["local_ai"]);
-  }, [openSetup, setup]);
+  const setUpLocalAi = useCallback(
+    (lane: string, model: string) => {
+      openSetup("local_ai");
+      setup.start(["local_ai"], { download: { lane, model } });
+    },
+    [openSetup, setup],
+  );
   const setupShown = useRef(false);
   useEffect(() => {
     if (!setupIncomplete || setupShown.current) return;

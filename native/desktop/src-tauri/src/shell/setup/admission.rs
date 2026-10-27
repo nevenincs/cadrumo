@@ -105,6 +105,27 @@ impl Admission {
         LocalModels::new(models).map_err(|_| Refusal::ModelSelectionUnusable)
     }
 
+    /// Admits only the requested catalogue model, without reading or changing roles.
+    pub fn download(&self, request: &super::wire::ModelDownload) -> Result<LocalModels, Refusal> {
+        let lanes = self.lanes()?;
+        let lane = lanes
+            .iter()
+            .find(|lane| {
+                lane.id == request.lane
+                    && lane.auth_kind == AuthKind::Keyless
+                    && lane.mode != Mode::Disabled
+            })
+            .ok_or(Refusal::ModelSelectionUnusable)?;
+        let catalogue = self.catalogue()?;
+        let size = stated_size(&catalogue, lane, &request.model)
+            .filter(|size| *size > 0)
+            .ok_or(Refusal::ModelSizeUnstated)?;
+        // This part identifies the transfer in the engine plan, never a stored task.
+        let model = SelectedModel::new("download", &request.model, size)
+            .map_err(|_| Refusal::ModelSelectionUnusable)?;
+        LocalModels::new(vec![model]).map_err(|_| Refusal::ModelSelectionUnusable)
+    }
+
     /// Every role the person selected a lane and model for.
     fn picks(&self) -> Result<Vec<Pick>, Refusal> {
         let answer = self

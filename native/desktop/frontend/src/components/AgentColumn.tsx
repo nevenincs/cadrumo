@@ -236,7 +236,7 @@ export function AgentColumn({
    * `opened` is told the register view that opened, once it is shown. */
   onOpenView?: (url: string, opened?: (view: string) => void) => void;
   /** Opens setup on the local AI, where this window offers setup. */
-  onSetUpLocalAi?: () => void;
+  onSetUpLocalAi?: (lane: string, model: string) => void;
   /** Removes one local model no role selects, answering the refusal's code
    * or null, where this window offers setup. */
   onRemoveLocalModel?: (model: string) => Promise<string | null>;
@@ -1109,6 +1109,7 @@ export function AgentColumn({
                             <div className="grid gap-3">
                               {lane.id === localProvider?.id && localAiSetup}
                               <LocalModels
+                                key={`${lane.id}/${rolesShown}`}
                                 lane={
                                   localLanes.find(
                                     (held) => held.id === lane.id,
@@ -1116,7 +1117,12 @@ export function AgentColumn({
                                 }
                                 host={roleHost}
                                 locale={locale}
-                                onSetUp={onSetUpLocalAi}
+                                onConfigure={() => setRolesShown(true)}
+                                onSetUp={
+                                  onSetUpLocalAi
+                                    ? (model) => onSetUpLocalAi(lane.id, model)
+                                    : undefined
+                                }
                                 onRemove={
                                   onRemoveLocalModel
                                     ? (model) =>
