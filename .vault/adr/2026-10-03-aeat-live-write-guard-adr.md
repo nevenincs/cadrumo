@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#aeat-live-write-guard'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:38922e51d7351b3788e0ce4e66283644520e1c1309f4c1a026561ea11888edf1'
+body_hash: 'sha256:1b9e5469a1cb1cf32819d64e8782f01447c8ee6c66e9fd4ba6ea341697a57473'
 related:
   - "[[2026-08-02-adjacent-domain-deduplication-write-verb-substring-matching-adr]]"
   - "[[2026-07-10-clave-permanente-idp-guard-host-adr]]"
@@ -14,6 +14,7 @@ related:
   - "[[2026-09-24-aeat-live-write-guard-plan]]"
   - '[[2026-08-01-adjacent-domain-deduplication-wave-two-audit]]'
   - '[[2026-07-10-clave-permanente-idp-guard-host-research]]'
+  - '[[2026-10-27-sede-browser-adr]]'
 ---
 
 # `aeat-live-write-guard` adr: `Browser-context request guard semantics` | (**status:** `accepted`)
@@ -114,3 +115,13 @@ The knockout for ruling 1 is the 2026-08-02 measurement: any matcher change lose
 - Cost: third-party or unexpected AEAT sub-resources not covered by the capture are refused after enablement. Each one needs a grounded declaration, and a refusal is visible, not silent.
 - Cost: Cl@ve Permanente login stays unavailable behind the context guard until it is grounded.
 - Reconsider if Playwright routing cannot observe a class of requests the readers issue (for example service-worker or WebSocket traffic). A guarantee stated for every request must then name what it does not see.
+
+## Amendment 2026-10-27: the operator view policy
+
+Accepted 2026-10-27 under `2026-10-27-sede-browser-adr`, on the user's choice of an in-app Sede browser streamed from the worker's Chromium ("implement 1)").
+
+- **A new member policy.** The person-driven Sede view adds one read-only operator-view policy to the context's union under ruling 4. It is classified `authenticated_read_surface` with `allows_gov_idp_hosts`, admits the AEAT hosts of `[aeat.domains]` and the Cl@ve IdP apex, admits GET and HEAD on any path of those hosts, and admits POST only as exact declared read requests already grounded under ruling 5. The token sets, the substring matcher, the token-before-allow-list order and the absence of a bypass are unchanged, so a GET whose URL carries a forbidden token is refused there as everywhere.
+- **First installation.** The composition module of ruling 4 lands with the view and is installed fail-closed on the view's own new context, with the operator-view policy and the configured provider's auth policy as its union. Ruling 5's condition, shipping fail-closed only after grounding, protects existing readers and logins from breaking. A new context that reports every refusal to the person and offers the external browser breaks nothing that worked before, so the view does not wait for it. Installation on every other context remains S02 of `2026-09-24-aeat-live-write-guard-plan`, after grounding.
+- **What the view adds around the route.** Its context blocks service workers and closes WebSockets, which answers the reconsideration this record names for traffic the route cannot see. It issues no Playwright API requests. Person input reaches the page only as CDP input events, so every request it causes is a page request the route sees.
+- **Refusal reporting.** A refusal on the view's context is also reported to the person's panel as a closed notice code, with an external-browser offer where one applies. Logs keep the redaction constraint above.
+- **No write path.** Person use does not change the no-write line: form submissions, uploads, signing and presentation stay refused. Admitting them would need a separate amendment on the user's approval, together with `AeatAccessGate.require_live_write`.

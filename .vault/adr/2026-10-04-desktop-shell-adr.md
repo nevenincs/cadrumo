@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-26'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f10b9026ef79f213fe947dd17018cd6594b0de53bd2626cd88c57feac6299bb0'
+body_hash: 'sha256:62690c9198ed19ea1f02056ab468926bc06e4b6509ef32ef38d53e3e87bc7553'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -17,6 +17,7 @@ related:
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-15-language-sync-reference]]'
+  - '[[2026-10-27-sede-browser-adr]]'
 ---
 
 # `desktop-shell` adr: `Desktop shell` | (**status:** `accepted`)
@@ -432,3 +433,14 @@ Accepted by the user on 2026-10-27, who ruled that the frontend is not to contai
 - **One owner for all frontends.** A value the window needs is served through the same operation or contract the CLI and TUI use. Where none exists yet, the backend gains it before the window drops its copy; the window does not keep a copy while waiting.
 
 Evidence: the inventory in `2026-10-27-profile-field-remap-plan` (Steps S07 to S10), including `native/desktop/frontend/src/shell/ledgerVocabulary.ts`, `native/desktop/frontend/src/shell/ledgerCommands.ts`, `native/desktop/frontend/src/shell/ledgerPlan.ts`, `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts` and `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
+
+### Amendment 2026-10-27: the in-app Sede browser
+
+Accepted by the user on 2026-10-27, who chose an in-app browser that streams Cadrumo's own Chromium page into a panel ("implement 1)"). The commitments are in `2026-10-27-sede-browser-adr`. For this record:
+
+- **Nothing remote loads in the webview** still holds. The Browser page draws images, received as bytes, on a canvas. The webview fetches no remote resource, and the CSP is unchanged. The page shows the remote page's origin and path, never its query, and has no URL entry.
+- **Rail and palette.** The rail gains a Browser item that opens the Browser page. A click on the AEAT item opens the Browser page at the Sede, and its context menu offers "Open in external browser", the existing `link.aeat` action through `open_external`. The palette offers both actions. The register gains a `gui` element for the page.
+- **Host.** The host gains closed, token-checked commands to open, close, give input to, navigate, resize and credit a view, answer a page dialog and open the current offer externally. The window names an offer by id only; the host holds the URL and revalidates it through the existing `open_external` admission. Beside its person session, the host opens one view connection per open view, attached with the single-use token of `2026-10-04-application-sign-in-adr` (amendment 2026-10-27), and relays it on one Tauri `Channel` delivered to the top document only. Frames, titles, URLs and input never enter host logs, diagnostics, the log view, window storage or the documentation frame.
+- **Keys.** While the canvas has focus it receives keys as a terminal does, and the shell reserves only its everywhere chords.
+- **Lifetime.** Leaving the page keeps the view running without frames. Closing the page or the window cancels it, and the navigation guard reports the page `busy` only while the view publishes its session.
+- The shell still holds no session beyond its own person session, and no receipt, cookie, storage state, credential or DEK.
