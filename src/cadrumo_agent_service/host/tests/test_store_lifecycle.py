@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.logging import flush_logging
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ..controller import AgentHostError, AgentHostRefusal, AgentLaunch
@@ -240,11 +240,10 @@ def test_a_migrate_that_did_not_succeed_keeps_the_copy_and_is_not_retried(
 
 
 def _not_brought_to_current(caplog: pytest.LogCaptureFixture) -> list[str]:
-    assert flush_logging(timeout=5)
     return [
         record.getMessage()
-        for record in caplog.records
-        if record.name == _LOGGER_NAME and record.getMessage().startswith("agent stores not brought to current")
+        for record in delivered_records(caplog, _LOGGER_NAME)
+        if record.getMessage().startswith("agent stores not brought to current")
     ]
 
 

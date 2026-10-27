@@ -17,7 +17,7 @@ import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.async_cleanup import close_async_resources
-from cadrumo.core.logging import flush_logging
+from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
 
 from ...contracts.contracts import RefusalCode, RefusalError
@@ -494,8 +494,7 @@ async def test_owner_loss_after_native_creation_before_process_publication(tmp_p
 
 
 def _events(caplog: pytest.LogCaptureFixture, name: str) -> list[logging.LogRecord]:
-    assert flush_logging(timeout=5)
-    return [record for record in caplog.records if record.name == _LOGGER_NAME and record.getMessage() == name]
+    return [record for record in delivered_records(caplog, _LOGGER_NAME) if record.getMessage() == name]
 
 
 def _sleeping_child(scope: WindowsProcessScope, tmp_path: Path, code: str) -> windows_process.WindowsOwnedProcess:

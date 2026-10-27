@@ -21,7 +21,8 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.core.config import override_settings
-from cadrumo.core.logging import default_log_file_path, flush_logging
+from cadrumo.core.logging import default_log_file_path
+from cadrumo.tests.log_records import delivered_records
 
 from ...adapters.worker_transport import WorkerChannel
 from .. import worker_service
@@ -61,8 +62,7 @@ def _hold_the_interpreter_lock(seconds: float) -> None:
 
 
 def _events(caplog: pytest.LogCaptureFixture, name: str) -> list[logging.LogRecord]:
-    assert flush_logging(timeout=5)
-    return [record for record in caplog.records if record.name == _LOGGER_NAME and record.getMessage() == name]
+    return [record for record in delivered_records(caplog, _LOGGER_NAME) if record.getMessage() == name]
 
 
 @pytest.mark.asyncio

@@ -15,9 +15,9 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
-from cadrumo.core.logging import flush_logging
 from cadrumo.core.time.clock import now
 from cadrumo.core.time.utc import UtcInstant
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
@@ -32,11 +32,10 @@ _SLOW = 0.05
 
 
 def _slow_events(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
-    assert flush_logging(timeout=5)
     return [
         record
-        for record in caplog.records
-        if record.name == _LOGGER_NAME and record.getMessage() == "profile_worker_custody_lock_slow"
+        for record in delivered_records(caplog, _LOGGER_NAME)
+        if record.getMessage() == "profile_worker_custody_lock_slow"
     ]
 
 

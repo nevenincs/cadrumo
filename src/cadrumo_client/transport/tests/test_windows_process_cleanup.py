@@ -14,7 +14,7 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
-from cadrumo.core.logging import flush_logging
+from cadrumo.tests.log_records import delivered_records
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from .. import windows_process
@@ -285,11 +285,10 @@ async def test_unproven_termination_retains_job_and_exact_primary_until_proven_r
 
 
 def _termination_events(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
-    assert flush_logging(timeout=5)
     return [
         record
-        for record in caplog.records
-        if record.name == windows_process.__name__ and record.getMessage() == "windows_job_termination_observed"
+        for record in delivered_records(caplog, windows_process.__name__)
+        if record.getMessage() == "windows_job_termination_observed"
     ]
 
 
