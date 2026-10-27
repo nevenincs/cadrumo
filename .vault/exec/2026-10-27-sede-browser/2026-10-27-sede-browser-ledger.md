@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:3fa13d0fc3c3cb73043240744a53cf245e79d13b7e7486daceb7b2afdb5b6be2'
+body_hash: 'sha256:3396abf34149acdb975bed37aff0c3c80eb3df08aec347bd67282aefd41182ce'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -167,6 +167,20 @@ related:
 - `S07` `verify:` `just check-types` -> `pass`
 - `S07` `verify:` `just check-import-boundaries` -> `fail`
 - `S07` `by:` `implementation-engineer-high`
+- `S03` `M` `native/application/src/runtime_client.rs`
+- `S03` `M` `native/application/src/lib.rs`
+- `S03` `A` `native/application/src/view_stream.rs`
+- `S03` `A` `native/application/src/view_stream/attach.rs`
+- `S03` `A` `native/application/src/view_stream/chunks.rs`
+- `S03` `A` `native/application/src/view_stream/decoder.rs`
+- `S03` `A` `native/application/src/view_stream/documents.rs`
+- `S03` `A` `native/application/src/view_stream/lane.rs`
+- `S03` `A` `native/application/src/view_stream/transfer.rs`
+- `S03` `A` `native/application/src/view_stream/vectors.rs`
+- `S03` `verify:` `just check-rust` -> `pass`
+- `S03` `verify:` `ctest --preset debug -R ^application.rust$ (cargo test of cadrumo-application, 56 view_stream tests over the shared vectors)` -> `pass`
+- `S03` `verify:` `just test-native-bundle Debug` -> `fail`
+- `S03` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -185,3 +199,4 @@ related:
 - `S15` `dev.quality.import_gate` reported zero hard findings after the `VIEW_MAX_TRANSFER_ID` alias was removed, then a tool failure from other sessions' concurrent changes (stale cadrumo load-target metadata, source tree changed during the run). The aggregate `dev/quality/metadata/import_load_targets.json` carries the `view_transfer` line beside other sessions' lines and is left for the orchestrator to commit.
 - `S07` `contract_manifest.json` and the import load target sets were regenerated but not committed: they carry other sessions' uncommitted edits
 - `S07` check-import-boundaries ended unavailable only because the shared source tree changed while it ran; 30 of 30 contracts kept, 0 hard findings, 4965 of 4965 modules load
+- `S03` P01.S03 just test-native-bundle Debug stops before any test at the `registry_authority` target: Registry authority is unavailable or stale (the legal sources changed since the indexed generation was published); the target fails alone, apart from this Step; rerun after the registry owner runs just registry-publish-authority
