@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:3a6171edc51d32353e50e196e71b3e9b752aea262b8984bc39645b77a45d55a6'
+body_hash: 'sha256:8db126891143e0fce8efdb690af9573d9b8e8576a7322cbe784e4e0b4f6e2083'
 related:
   - '[[2026-10-27-robust-logging-plan]]'
   - '[[2026-10-27-robust-logging-adr]]'
@@ -49,3 +49,6 @@ Final review update: repository-wide just check-code passed every configured gat
 
 
 Handoff receipt: the contract fallback passed217 tests, and the harness passed4 worker-count checks. Only2 sequence-corpus documentation checks refused execution because published registry authority is stale. The calendar session owns its running registry-wide parity assessment, publication and the targeted two-test rerun. S03 remains open and final integrated verdict PENDING that receipt; no logging critical/high finding remains. Debug rebuild has been explicitly cleared and source is stable. All102 logging tests pass on local temporary storage; 32 concurrent producers also delivered8000/8000 with zero losses, p99 64.3us and stable162 handles across100queue lifetimes.
+
+
+Workspace-storage follow-up: after the competing exhaustive global matrix stopped, the identical complete logging suite passed all102 on the original Y-volume in16.15seconds, with no source or timeout change. Receipt: `var/storage/development/.logs/logging-core-workspace-after-matrix.log`, test-run `20261027T141815.419352Z-pytest-42304-87f6e2c4`. Both C and Y final logging verification now pass. This establishes recovery of the earlier storage-delivery condition without asserting that the competing process alone caused it.

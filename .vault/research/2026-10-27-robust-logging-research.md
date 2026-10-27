@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:014576f0625fa336b4fbc3b66ea9e6545426f41c4d134438b90d1f31cd59f92c'
+body_hash: 'sha256:8297c908a735cba9e3f3a107147f60c4f82c8fa63d7eaa0d2f54f5c73e32b55e'
 related: []
 ---
 # Logging stalls and shared producer paths
@@ -49,3 +49,6 @@ A later heavily loaded full logging rerun reported five startup/drain timeouts (
 Final controlled storage comparison used the configured `CADRUMO_LOCAL_STORAGE_ROOT`, `CADRUMO_TEMP_DIR`, `CADRUMO_TEST_LOG_ROOT` and `CADRUMO_DEV_CACHE_ROOT` overrides to the local C temporary filesystem. Identical source, tests and finite timeouts passed all 102 logging tests in 19.22s; receipt `var/storage/development/.logs/logging-core-local-disk.log`. The concurrent Y rerun passed 101 and timed out one rotation subprocess, while the earlier Y rerun captured the actual metadata syscall stall. This distinguishes storage-delivery latency from producer or queue deadlock without relaxing assertions.
 
 The large-record benchmark passed 400 synthetic records across four producers, each including about 10.8KiB text and a mapping: all delivered, zero drops/failures, median31.7us/p95 41.5us/p99 86.0us, maximum sampled4.43ms. Queue retention stayed bounded and handles remained162 before/after100lifetimes. The receipt is `logging-benchmark-large-current.json` beside the other benchmark artifacts.
+
+
+Workspace-storage follow-up: after the competing exhaustive global matrix stopped, the identical complete logging suite passed all102 on the original Y-volume in16.15seconds, with no source or timeout change. Receipt: `var/storage/development/.logs/logging-core-workspace-after-matrix.log`, test-run `20261027T141815.419352Z-pytest-42304-87f6e2c4`. Both C and Y final logging verification now pass. This establishes recovery of the earlier storage-delivery condition without asserting that the competing process alone caused it.
