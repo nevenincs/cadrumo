@@ -125,6 +125,10 @@ def test_unsupported_drive_content_refuses_without_leaving_the_queue() -> None:
     assert extracted.exit_code != 0, extracted.output
     error = json.loads(extracted.output)["error"]
     assert error["code"] == "REFUSED_LEDGER_EVIDENCE_INPUT", extracted.output
-    assert error["context"]["reason"] == "REFUSED_LEDGER_EVIDENCE_INPUT"
+    # The executor's own refusal crosses the runtime: its typed verdict names the unreadable shape.
+    assert error["context"]["terminal_condition"] == "refused"
+    assert error["context"]["effect"] == "none"
+    assert error["action"]["failed_condition_id"] == "ledger.evidence.bytes_readable"
+    assert error["action"]["evidence"][0]["values"] == {"document_shape_recognized": False}
     queued = _invoke(["--format", "json", "app", "ledger", "evidence", "attachment-queue"])
     assert json.loads(queued.output)["result"]["rows"][0]["attachment_id"] == attachment_id
