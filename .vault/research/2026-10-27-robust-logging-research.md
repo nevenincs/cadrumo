@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:8297c908a735cba9e3f3a107147f60c4f82c8fa63d7eaa0d2f54f5c73e32b55e'
+body_hash: 'sha256:afb1e0c3d3187a83fc1f79eb4649d9c0997cf763a35cda1044faeed09036bb31'
 related: []
 ---
 # Logging stalls and shared producer paths
@@ -50,5 +50,34 @@ Final controlled storage comparison used the configured `CADRUMO_LOCAL_STORAGE_R
 
 The large-record benchmark passed 400 synthetic records across four producers, each including about 10.8KiB text and a mapping: all delivered, zero drops/failures, median31.7us/p95 41.5us/p99 86.0us, maximum sampled4.43ms. Queue retention stayed bounded and handles remained162 before/after100lifetimes. The receipt is `logging-benchmark-large-current.json` beside the other benchmark artifacts.
 
-
 Workspace-storage follow-up: after the competing exhaustive global matrix stopped, the identical complete logging suite passed all102 on the original Y-volume in16.15seconds, with no source or timeout change. Receipt: `var/storage/development/.logs/logging-core-workspace-after-matrix.log`, test-run `20261027T141815.419352Z-pytest-42304-87f6e2c4`. Both C and Y final logging verification now pass. This establishes recovery of the earlier storage-delivery condition without asserting that the competing process alone caused it.
+
+## Shared-authority lock follow-up
+
+Fresh post-publication documentation checks showed new worker timeouts during the concurrent Debug build. They do not provide historical child stacks identifying a logging cause. Direct logging review nevertheless found an indirect dependency: RegistryTaxIdentityAdmission._with_authority uses the process-shared bundled indexed authority, whose _authority_for_operation holds _reader_lock while reading the descriptor. Cold admission also holds the process-wide factory lock during SQLite admission. Moving a blocked read to the log daemon alone therefore does not isolate callers needing those locks.
+
+A deterministic regression binds an admission object that blocks when queried. Before correction, a queued diagnostic borrows it and a bounded drain fails (`logging-authority-isolation-before.log`). Queued redaction now enters lexical_tax_identity_redaction, a context-only None override using the existing conservative fallback. The log hashes an identity shape without querying the blocked authority; the calling application's binding and ordinary redaction remain intact. The focused regression passes. This establishes the logging dependency defect independently without claiming it caused the retired documentation worker failures.
+
+A fresh py-spy capture (`logging-authority-profile-stacks.txt`) records8789 samples, zero sampling errors:6392 producer samples, zero producer redaction/file/flush frames, and zero authority frames on the record dispatcher. The 60-second blocked-sink benchmark completes1018265 calls, producer p99 63.4us, bounded queue weights, explicit985840 record and24110 file-admission drops under deliberate overload, zero callback failures and successful final drain. Handles remain157 before/after100queue lifetimes. The artifact is `logging-authority-blocked-benchmark.json`.
+
+The five native worker integration tests pass after the correction (112.84s). Expanded logging plus redaction coverage passed416 with one workspace-volume configuration-drain timeout; identical local-storage rerun and final shared code gates are in progress. All three modified source/test paths pass Ruff lint/format and ty.
+
+## Opaque inspection and final verification
+
+Additional adversarial probes reproduced two early input defects. Type-set membership could call an opaque instance's metaclass __hash__, isinstance could consult its __class__, and exception name lookup could call a metaclass property. More seriously, the stdlib LogRecord constructor's lone-argument Mapping probe calls the same hooks before logger filters; the constructor regression shows an AssertionError escaping the caller (`logging-record-constructor-hooks-before.log`). The installed factory now snapshots lone opaque operands before delegating, and snapshot checks use type identity and builtin descriptors. The final single-argument hostile-object test verifies delivered omission markers, preserved exception type and zero record drops.
+
+The final expanded418 logging/redaction tests pass (`logging-final-verified-core.log`); five post-isolation native worker integration tests pass. Full just check-code passed before the final method-body refinements; no import changes followed. Fresh all-platform just check-types and scoped Ruff/format pass after explicit tuple/dictionary reflection typing. No native source changed; prior full native337/panic/clippy evidence remains applicable. Supported local temporary roots were used without changing time limits; workspace-volume metadata stalls and previous failures remain preserved.
+
+Final normal32-writer8000-record benchmarks deliver every record with zero failure/loss and stable157 handles across100queue lifetimes. Under concurrent host load, producer latency varies: `logging-final-verified-benchmark.json` median49.2us/p992128us and `logging-final-quiet-benchmark.json` median84.65us/p994710.7us, maximum8.75ms. Earlier same-sized post-isolation run p99 was67.7us. No hard real-time guarantee is inferred from these scheduling-sensitive measurements. The blocked60-second run completed over1million calls with bounded deliberate overload loss, p9963.4us and no handle growth. Fresh py-spy sample analysis confirms no producer sink/redaction frames and no application authority frames on diagnostic dispatch.
+
+Canonical registry publication, validity, runtime loading and integrity passed generation1c28cf7f after the calendar change. Fresh documentation checks now require expected generation/derived-ID/modelo360 golden updates and separate worker-timeout triage. Those failures do not establish a historical logging cause; their owner is executing serial canonical refresh and quiet checks. The original Debug bundle completed and verified installer bootstrap, and its owner will refresh the product payload after this logging commit.
+
+## Buffered stderr finalization correction
+
+An unread stderr pipe reproduced a second shutdown seam: shutdown_logging returned in0.063s, but buffered CPython remained stuck until the20s probe deadline. The unbuffered control exited0 in3.207s. An isolated-interpreter repeat confirmed BufferedWriter and97 pending sink records. No py-spy stack was recoverable after interpreter finalization began; this causal comparison and the regression establish the defect without attributing historical crash stacks.
+
+The diagnostic stream sink now encodes to the existing raw stream, bypassing the BufferedWriter lock that CPython needs during finalization. Independent diagnostic-only locking preserves complete record writes, with a child-fork reset. The stdlib default fallback is replaced by the same lazy asynchronous safe sink; caller-installed fallback handlers remain caller-owned. Configured and fallback unread-pipe subprocesses both exit normally within the unchanged20s test bound. CLI result streams retain their existing objects and buffering. Legacy recording-test helpers explicitly serialize event models and drain before detaching handlers; opaque production snapshots stay bounded.
+
+Normal32-writer8000-record measurement delivered every record, zero drops/failures, producer p9990.9us, stable156 handles over100queue lifetimes. A25-second blocked-sink run completed703142 calls, p9963.2us, bounded observable overload loss, subsequent drain and stable handles. These are measurements, not real-time guarantees; profiler scheduling can create large sampled maxima. Artifacts: logging-stderr-normal-benchmark.json, logging-stderr-blocked20-benchmark.json. The initial100Hz profile lagged11s and is not used for timing claims. A20Hz --idle repeat captured1309samples, zero errors and no lag warning:952producer samples,96dispatcher,119blocked file sink,142other; no producer sink/redaction work and no shared registry authority frames. Two dispatcher samples were lexical ContextVar scope exit, not authority access. Raw frames and counts are logging-stderr-idle-stacks.txt and logging-stderr-idle-analysis.json. A further measurement held154handles before/after100queue lifetimes.
+
+Fresh scoped Ruff, formatting, ty and strict basedpyright pass. The initial broadened474 test selection passed472 and exposed two legacy recording assumptions; the migrated recording checks pass5/5. The identical full selection is rerunning without exclusions or extended deadlines. No new builds are authorized; the existing Debug image does not yet include this correction. S03 and integrated review remain open for final shared-gate evidence.

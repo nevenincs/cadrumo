@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:a3599fa3ee45b86b710106b474e946d9a3c1498360c0c52228e30cd156c3f1ea'
+body_hash: 'sha256:9aebb6dc5034ff700588af9e3fad093408a587b94952eede118dc6475182a5a3'
 related:
   - "[[2026-10-27-robust-logging-research]]"
   - "[[2026-10-04-runtime-manager-architecture-supervisor-contract-adr]]"
@@ -43,7 +43,6 @@ Use one worker per owned output, bounded retained record data, observable refusa
 ## Implementation
 
 Shared Python diagnostic dispatch owns snapshots and redaction; each configured sink owns a background queue. Native diagnostics retain immediate in-memory facts and enqueue bounded file work outside status locks; observers run independently. Worker first-party namespaces enroll before startup DEBUG records. Benchmark and adversarial coverage calibrate limits.
-
 
 Diagnostic redaction must not borrow application registry authority, cache or admission locks. Queued diagnostic processing uses a context-only conservative lexical identity-admission scope: identity-shaped lookalikes may be hashed in logs rather than validated against live authority. Other threads, domain validation and command-result redaction keep their existing host-bound admission. This is an authorized implementation refinement of the operator's explicit prohibition on logging-induced application failures, demonstrated by the blocked-admission regression. It avoids adding a second database owner or service.
 
