@@ -7,7 +7,6 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
-from threading import RLock
 from uuid import UUID
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -27,6 +26,7 @@ from ..custody.paths import profile_custody_path
 from .active_session import bind_active_bucket_session, close_active_bucket_session, current_active_bucket_session
 from .bucket_session import BucketSession
 from .profile_worker_binding import profile_worker_binding
+from .timed_lock import TimedRLock
 
 _ENDED_MEMORY = 256
 """How many ended lease ids custody remembers, so a late request hears how its session ended."""
@@ -66,7 +66,7 @@ class ProfileWorkerCustody:
         self.identity, self.root, self.clock, self.monotonic = identity, storage_root, clock, monotonic
         self._leases: dict[UUID, AccessSession] = {}
         self._ended: dict[UUID, AccessDenialCode] = {}
-        self._lock = RLock()
+        self._lock = TimedRLock()
         self._closed = False
         self._sections = 0
         self._material_update_pending = False
@@ -115,7 +115,7 @@ class ProfileWorkerCustody:
 
     def install(self, lease: AccessSession, dek: bytearray) -> None:
         """Copy authenticated material from the verified runtime's borrowed buffer."""
-        with self._lock:
+        with self._lock.held("install"):
             self.expire()
             self._validate(lease)
             validate_automation_profile_binding(self.identity.binding, root=self.root, dek=bytes(dek))
@@ -125,7 +125,7 @@ class ProfileWorkerCustody:
 
     def share(self, lease: AccessSession) -> None:
         """Attach a runtime-authorized child without extending its parent custody."""
-        with self._lock:
+        with self._lock.held("share"):
             if lease.parent_session_id is None:
                 raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
             parent = self.require(lease.parent_session_id)
@@ -142,7 +142,7 @@ class ProfileWorkerCustody:
 
     def refresh(self, lease: AccessSession) -> None:
         """Replace only a live root human or API deadline after runtime reauthorization."""
-        with self._lock:
+        with self._lock.held("refresh"):
             previous = self.require(lease.session_id)
             self._validate(lease)
             if lease.kind not in {SessionKind.HUMAN, SessionKind.API_KEY} or lease.parent_session_id is not None:
@@ -162,7 +162,7 @@ class ProfileWorkerCustody:
 
     def require(self, session_id: UUID) -> AccessSession:
         """Revalidate exact custody and local lease lifetime before worker access."""
-        with self._lock:
+        with self._lock.held("require"):
             binding_validated = self._expire_locked()
             lease = self._leases.get(session_id)
             if lease is None:
@@ -186,13 +186,13 @@ class ProfileWorkerCustody:
         if the permit expires before release. Retirements remove logical access
         immediately and defer physical replacement until the last body settles.
         """
-        with self._lock:
+        with self._lock.held("section"):
             self.require(session_id)
             self._sections += 1
         try:
             yield
         finally:
-            with self._lock:
+            with self._lock.held("section_exit"):
                 self._sections -= 1
                 if not self._sections:
                     self.expire()
@@ -209,7 +209,7 @@ class ProfileWorkerCustody:
 
     def expire(self) -> None:
         """Release expired custody during idle polling as well as before requests."""
-        with self._lock:
+        with self._lock.held("expire"):
             self._expire_locked()
 
     def _expire_locked(self) -> bool:
@@ -236,7 +236,7 @@ class ProfileWorkerCustody:
 
     def retire(self, session_id: UUID) -> frozenset[UUID]:
         """Drop one lineage and name the leases it held; the process remains pinned after its last lease ends."""
-        with self._lock:
+        with self._lock.held("retire"):
             dropped: set[UUID] = set()
             pending = {session_id}
             while pending:
@@ -311,13 +311,13 @@ class ProfileWorkerCustody:
 
     def live_sessions(self) -> tuple[UUID, ...]:
         """Observe only revalidated lease identifiers, never key material."""
-        with self._lock:
+        with self._lock.held("live_sessions"):
             self.expire()
             return tuple(sorted(self._leases))
 
     def seconds_until_expiry(self) -> float | None:
         """Seconds until the earliest held lease lapses on either clock, or ``None`` while none is held."""
-        with self._lock:
+        with self._lock.held("seconds_until_expiry"):
             instant, elapsed = self.clock(), self.monotonic()
             remaining = [
                 min(
@@ -336,7 +336,7 @@ class ProfileWorkerCustody:
         authority: the worker remains permanently bound to its old identity.
         Physical material survives only until its already-held sections exit.
         """
-        with self._lock:
+        with self._lock.held("retire_password_successor"):
             if (
                 self._closed
                 or not self._sections
@@ -356,7 +356,7 @@ class ProfileWorkerCustody:
 
     def close(self) -> None:
         """Fence further installation and release all process custody."""
-        with self._lock:
+        with self._lock.held("close"):
             self._closed = True
             self._leases.clear()
             self._capsule.close()
