@@ -3,36 +3,70 @@
 The runtime, the native transport, the session authority, the profile workers
 and the stored sign-in are real. The worker is lost by terminating its process;
 the runtime learns of the loss through its own health check. Only the clock
-that measures the recovery window and the repeat-loss interval is the test's.
+that measures the recovery window and the repeat-loss interval is the test's,
+and one test holds the runtime's answer to a commit so that work is in flight
+when the worker is lost.
 """
 
 from __future__ import annotations
 
+import asyncio
 import os
 import signal
 import sys
 import time
 from collections.abc import Generator
 from contextlib import contextmanager
+from dataclasses import dataclass, field
 from pathlib import Path
+from threading import Event
 from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID
+from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
+from cadrumo.application.operations.frontend_requests import (
+    OperationObservationRequestV1,
+    OperationObservationSuccessV1,
+)
+from cadrumo.application.operations.models import OperationId
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import OsLockState
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+    ProfileFieldMutationOperationRequest,
+)
+from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.config import override_settings
+from cadrumo.core.operations import OperationEffect, OperationLifecycle, profile_operation_subject
+from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
-from cadrumo_client.contracts.operation_access import OperationContract, OperationContractReply
+from cadrumo_client.contracts.operation_access import (
+    OperationAcknowledged,
+    OperationContract,
+    OperationContractReply,
+    OperationControl,
+    OperationObserve,
+    OperationObserved,
+    OperationSubmit,
+    OperationSubmitted,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus
 from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest, WorkerAuthorizationRequest
 
 from ...application.session_authority_core import CustodyRecoveryPolicy
+from ..profile_host import RuntimeProfileHost
 from .stored_sign_in_runtime import SessionReply, StoredSignInRuntime, stored_sign_in_runtime
 
 pytestmark = [
@@ -308,3 +342,187 @@ def test_work_of_the_lost_worker_is_never_carried_to_its_replacement(
         while host.owner._worker is None:
             assert time.monotonic() < deadline, "the replacement worker never started"
             time.sleep(0.1)
+
+
+@dataclass
+class _CommitHold:
+    """What the held COMMIT saw: the operations that asked, and the runtime's answer to each."""
+
+    entered: list[OperationId] = field(default_factory=list)
+    entered_event: Event = field(default_factory=Event)
+    release: Event = field(default_factory=Event)
+    answered: list[BaseException | None] = field(default_factory=list)
+
+
+@contextmanager
+def _commit_held(monkeypatch: pytest.MonkeyPatch, definition_id: str) -> Generator[_CommitHold]:
+    """Hold the runtime's answer to a worker's COMMIT request for ``definition_id`` until released.
+
+    The hold waits before the runtime's own authority runs, so no profile guard
+    is held meanwhile; the worker's executor has already entered and waits for
+    the answer. The runtime's decision, once released, is the real one.
+    """
+    hold = _CommitHold()
+    original = RuntimeProfileHost.authorize
+
+    @contextmanager
+    def held(host: RuntimeProfileHost, request: WorkerAuthorityRequest) -> Generator[object]:
+        if not (
+            isinstance(request, WorkerAuthorizationRequest)
+            and request.request.action is AccessAction.COMMIT
+            and request.request.definition_id == definition_id
+        ):
+            with original(host, request) as allowed:
+                yield allowed
+            return
+        hold.entered.append(request.operation_id)
+        hold.entered_event.set()
+        if not hold.release.wait(timeout=60):
+            raise TimeoutError("the held COMMIT was never released")
+        try:
+            with original(host, request) as allowed:
+                hold.answered.append(None)
+                yield allowed
+        except BaseException as error:
+            hold.answered.append(error)
+            raise
+
+    monkeypatch.setattr(RuntimeProfileHost, "authorize", held)
+    try:
+        yield hold
+    finally:
+        hold.release.set()
+
+
+def _profile_view(reader: FrontendClient) -> tuple[int, str, dict[str, str]]:
+    page = reader.read_profile_view((ProfileViewPageKind.FACTS,), timeout=90)
+    facts = {
+        item.path: item.value for item in page.items(ProfileViewPageKind.FACTS) if isinstance(item, ProfileViewFactItem)
+    }
+    return page.record_revision, page.content_digest, facts
+
+
+def _observe(
+    runtime: StoredSignInRuntime, connection: VerifiedConnection, session_id: UUID, operation_id: OperationId
+) -> OperationPublicProjectionV1:
+    observed = connection.operation(
+        OperationObserve(
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=session_id,
+            observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32),
+        ),
+        deadline=exchange_deadline(),
+    )
+    assert isinstance(observed, OperationObserved), observed
+    assert isinstance(observed.observation, OperationObservationSuccessV1), observed.observation
+    return observed.observation.projection
+
+
+def _field_mutation(
+    runtime: StoredSignInRuntime, session_id: UUID, *, revision: int, digest: str, language: str
+) -> OperationSubmit:
+    return OperationSubmit(
+        request_id=uuid4(),
+        profile_id=runtime.profile_id,
+        session_id=session_id,
+        definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(runtime.profile_id)),
+        payload_json=ProfileFieldMutationOperationRequest(
+            profile_id=runtime.profile_id,
+            expected_revision=revision,
+            expected_content_digest=digest,
+            path=PROFILE_OUTPUT_LANGUAGE_PATH,
+            value=language,
+        ).model_dump_json(),
+    )
+
+
+def _start(
+    runtime: StoredSignInRuntime, connection: VerifiedConnection, session_id: UUID, operation_id: OperationId
+) -> object:
+    return connection.operation(
+        OperationControl(
+            action="operation_start",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=session_id,
+            operation_id=operation_id,
+        ),
+        deadline=exchange_deadline(),
+    )
+
+
+def _journal(runtime: StoredSignInRuntime, operation_id: OperationId) -> OperationPersistedSnapshot:
+    return asyncio.run(OperationJournalRepository(storage_root=runtime.root).load(operation_id))
+
+
+def _reader(runtime: StoredSignInRuntime) -> FrontendClient:
+    """A person's own reader session on a connection of its own."""
+    reader = FrontendClient(runtime.connect(), profile_id=runtime.profile_id, frontend=OperationFrontendProjection.TUI)
+    reader.resume_receipt()
+    return reader
+
+
+def test_work_in_flight_at_the_loss_stays_unknown_after_the_same_connection_rebinds(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with (
+        _runtime(tmp_path, monkeypatch) as (runtime, _clock),
+        _commit_held(monkeypatch, PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID) as hold,
+    ):
+        person = runtime.connect()
+        session_id = _signed_in(runtime, person).status.session_id
+        assert session_id is not None
+        revision, digest, facts = _profile_view(_reader(runtime))
+        language = "hu" if facts.get(PROFILE_OUTPUT_LANGUAGE_PATH) == "es" else "es"
+        submitted = person.operation(
+            _field_mutation(runtime, session_id, revision=revision, digest=digest, language=language),
+            deadline=exchange_deadline(),
+        )
+        assert isinstance(submitted, OperationSubmitted), submitted
+        operation_id = submitted.receipt.operation_id
+        assert isinstance(_start(runtime, person, session_id, operation_id), OperationAcknowledged)
+        assert hold.entered_event.wait(timeout=60), "the operation never reached its commit"
+        in_flight = _journal(runtime, operation_id)
+        assert in_flight.executor_entered_at is not None and in_flight.terminal_condition is None
+
+        _recovering(_lose_worker(runtime, person, session_id))
+        # The lost worker's own commit request is answered only now, while its session is suspended.
+        hold.release.set()
+        deadline = time.monotonic() + 15
+        while not hold.answered:
+            assert time.monotonic() < deadline, "the held commit was never answered"
+            time.sleep(0.05)
+        assert isinstance(hold.answered[0], ProfileAccessRefusedError), hold.answered
+
+        rebound = runtime.resume(person, OperationFrontendProjection.TUI)
+        assert isinstance(rebound, ProfileStatus) and rebound.status.session_id == session_id, rebound
+
+        # The rebound session sees the same operation, unresolved: neither completed nor failed.
+        projection = _observe(runtime, person, session_id, operation_id)
+        assert (projection.operation_id, projection.definition_id, projection.subject_ref) == (
+            in_flight.identity.operation_id,
+            in_flight.identity.definition_id,
+            in_flight.identity.subject_ref,
+        )
+        assert projection.terminal_condition is None and projection.lifecycle is not OperationLifecycle.TERMINAL
+        assert projection.effect is OperationEffect.UNKNOWN
+        assert projection.result_ref is None and projection.failure_error_code is None
+        # Starting it again resumes nothing, and a new change to the subject names it as the holder.
+        assert isinstance(restart := _start(runtime, person, session_id, operation_id), AccessRefusal), restart
+        busy = person.operation(
+            _field_mutation(runtime, session_id, revision=revision, digest=digest, language="ca"),
+            deadline=exchange_deadline(),
+        )
+        assert isinstance(busy, AccessRefusal), busy
+        assert busy.code is AccessDenialCode.SUBJECT_BUSY and busy.holder_operation_id == operation_id, busy
+
+        # The replacement worker never executed it: no commit was asked again, the
+        # journal did not move and the profile record is the one before the loss.
+        assert hold.entered == [operation_id] and len(hold.answered) == 1
+        after = _journal(runtime, operation_id)
+        assert after.identity == in_flight.identity and after.revision == in_flight.revision
+        assert after.executor_entered_at == in_flight.executor_entered_at and after.terminal_condition is None
+        assert after.effect is OperationEffect.UNKNOWN
+        assert _profile_view(_reader(runtime))[:2] == (revision, digest)
