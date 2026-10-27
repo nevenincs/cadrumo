@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-10-26'
+modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:f32c16da7cfa38d7d321193f5d241029918ea5565b90aa305f87d549de87b424'
+body_hash: 'sha256:d65b4bbcd819ebe96818d7d00b909171cd683a1969993e9557edc50395f5d3bf'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1422,6 +1422,13 @@ related:
 - `S31` `verify:` `uv run --no-sync pytest src/cadrumo/core/tests/test_field_origin.py src/cadrumo/core/tests/test_image_media_type.py src/cadrumo/domain/transactions/tests/test_llm_evidence_prompt.py src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_gate.py src/cadrumo/adapters/outbound/llm/tests/test_preconditions.py -n 0` -> `pass`
 - `S31` `verify:` `just check-style` -> `pass`
 - `S31` `verify:` `just check-format` -> `pass`
+- `S31` `M` `native/desktop/frontend/tests/ledger-documents-model.spec.ts`
+- `S31` `M` `docs/technical/articles/027-local-reader-provisioning-workstation-health-and-application-contracts.md`
+- `S31` `M` `docs/technical/articles/168-profile-custody-provisioning-and-runtime-configuration.md`
+- `S31` `M` `docs/technical/topics/application-orchestration-and-diagnostics.md`
+- `S31` `verify:` `uv run --no-sync pytest src/cadrumo/application/tests/test_local_reader.py -n 0 -q` -> `pass`
+- `S31` `verify:` `uv run --no-sync ruff check src/cadrumo/application/local_reader.py src/cadrumo/application/local_reader_report.py src/cadrumo/application/provisioning.py src/cadrumo/application/provisioning_contracts.py src/cadrumo/application/tests/test_local_reader.py` -> `pass`
+- `S31` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/local_reader.py src/cadrumo/application/local_reader_report.py src/cadrumo/application/provisioning.py src/cadrumo/application/provisioning_contracts.py src/cadrumo/application/tests/test_local_reader.py` -> `pass`
 
 ## Notes
 
@@ -1519,3 +1526,4 @@ related:
 - `S31` desktop.fmt fails on rustfmt drift already in HEAD at native/desktop/src-tauri/src/shell/ledger/tests.rs and shell/setup/components.rs `remove_model;` no reported diff is in a line this commit changed.
 - `S31` The components role bytes are unchanged: the engine never serialised a note, so `PROTOCOL_VERSION` 1 and `PLAN_CONTRACT_VERSION` 3 stay. The desktop wire row drops its always-null note field and is read only by the same-build window.
 - `S31` native/CONTRACT.md names no row field, so it needed no change.
+- `S31` Committed checkpoint 5645a4f9a8 at owner request. TUI fixture migration and its focused test plus just check-types remain pending; foreign `_Controller` hunks were excluded. P05.S31 stays open.
