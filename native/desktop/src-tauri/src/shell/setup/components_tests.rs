@@ -1061,10 +1061,9 @@ async fn a_size_the_catalogue_states_differently_is_a_plan_the_person_approves_a
 
 #[tokio::test]
 async fn a_download_that_cannot_be_admitted_refuses_the_start_and_runs_nothing() {
-    let unreadable =
-        serde_json::json!({
-            "unreadable": true, "models": [], "reading": null, "local_lanes": [], "revision": "a".repeat(64),
-        });
+    let unreadable = serde_json::json!({
+        "unreadable": true, "models": [], "reading": null, "local_lanes": [], "revision": "a".repeat(64),
+    });
     let cases = [
         (
             "a model on no list",

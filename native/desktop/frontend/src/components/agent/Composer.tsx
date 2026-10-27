@@ -102,6 +102,7 @@ export function Composer({
   onAddFiles,
   onSelectionChange,
   pickerRequests,
+  onPickerClosed,
   onRemoveAttachment,
   onRemoveAllAttachments,
   onShowAllAttachments,
@@ -125,6 +126,8 @@ export function Composer({
   onSelectionChange?: (selection: AgentSelection) => void;
   /** Counts the asks from elsewhere to open the model picker. */
   pickerRequests?: number;
+  /** Called when the person closes the model picker. */
+  onPickerClosed?: () => void;
   onRemoveAttachment?: (id: string) => void;
   onRemoveAllAttachments?: () => void;
   onShowAllAttachments?: () => void;
@@ -294,6 +297,7 @@ export function Composer({
               selection={selection}
               onChange={onSelectionChange}
               openRequests={pickerRequests}
+              onClosed={onPickerClosed}
             >
               {settingsButton}
             </AgentSettingsPopover>

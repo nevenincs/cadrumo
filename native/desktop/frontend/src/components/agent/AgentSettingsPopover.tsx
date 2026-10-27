@@ -28,6 +28,7 @@ export function AgentSettingsPopover({
   onChange,
   children,
   openRequests = 0,
+  onClosed,
 }: {
   providers: readonly ProviderOption[];
   /** Each way's models, by way id. */
@@ -36,12 +37,16 @@ export function AgentSettingsPopover({
   onChange: (selection: AgentSelection) => void;
   /** The one element that opens the popover. */
   children: ReactElement;
-  /** Counts the asks from elsewhere to open the popover; each new one opens it. */
+  /** Counts the asks from elsewhere to open the popover that no close has
+   * answered yet. A new one opens it, and so does one waiting when the
+   * popover mounts, as it does when the column it is in is first shown. */
   openRequests?: number;
+  /** Called when the person closes the popover. */
+  onClosed?: () => void;
 }) {
   const t = useStrings();
   const [open, setOpen] = useState(false);
-  const [requestsSeen, setRequestsSeen] = useState(openRequests);
+  const [requestsSeen, setRequestsSeen] = useState(0);
   if (requestsSeen !== openRequests) {
     setRequestsSeen(openRequests);
     if (openRequests > 0) setOpen(true);
@@ -87,7 +92,13 @@ export function AgentSettingsPopover({
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) onClosed?.();
+      }}
+    >
       <PopoverTrigger asChild>{children}</PopoverTrigger>
       <PopoverContent
         side="top"

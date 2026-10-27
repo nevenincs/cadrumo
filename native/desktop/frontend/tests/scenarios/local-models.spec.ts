@@ -141,6 +141,12 @@ test("the model picker offers the local lane's list, and a model added to it joi
   await expect(
     lane.locator('[data-slot=local-models] li[data-model="synthetic-plain:1"]'),
   ).toBeVisible();
+  // Settings cover the composer; closing them brings the picker back.
+  await target
+    .locator(".pane-agent")
+    .getByRole("button", { name: label("desktop.agent.settings") })
+    .click();
+  await expect(settings(target)).toBeHidden();
   picker = await openModelPicker(target);
   expect(await offeredModels(picker)).toContain("synthetic-plain:1");
 });

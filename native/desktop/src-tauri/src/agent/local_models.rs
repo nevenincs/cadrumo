@@ -144,7 +144,11 @@ fn lanes(value: &Value) -> Option<Vec<String>> {
     }
     let lanes = held
         .iter()
-        .map(|lane| lane.as_str().filter(|text| is_lane(text)).map(str::to_owned))
+        .map(|lane| {
+            lane.as_str()
+                .filter(|text| is_lane(text))
+                .map(str::to_owned)
+        })
         .collect::<Option<Vec<_>>>()?;
     let mut unique = lanes.clone();
     unique.sort_unstable();
@@ -158,7 +162,10 @@ fn listed(entry: &Value) -> Option<ListedModel> {
         return None;
     }
     let lane = object.get("lane")?.as_str().filter(|text| is_lane(text))?;
-    let model = object.get("model")?.as_str().filter(|text| is_model(text))?;
+    let model = object
+        .get("model")?
+        .as_str()
+        .filter(|text| is_model(text))?;
     Some(ListedModel {
         lane: lane.to_owned(),
         model: model.to_owned(),
@@ -280,7 +287,9 @@ mod tests {
         };
         let none = || json!([]);
         let lanes = || json!(["local_api"]);
-        let many_lanes: Vec<Value> = (0..65).map(|index| json!(format!("lane_{index}"))).collect();
+        let many_lanes: Vec<Value> = (0..65)
+            .map(|index| json!(format!("lane_{index}")))
+            .collect();
         let mut extra = snapshot(false, none(), Value::Null, lanes());
         extra["extra"] = json!(1);
         let mut missing_reading = snapshot(false, none(), Value::Null, lanes());
@@ -289,23 +298,71 @@ mod tests {
         null_revision["revision"] = Value::Null;
         for answer in [
             null_revision,
-            snapshot(false, json!([model("Local", json!("m"))]), Value::Null, lanes()),
-            snapshot(false, json!([model("local_api", json!("tab\there"))]), Value::Null, lanes()),
-            snapshot(false, json!([model("local_api", json!("m".repeat(513)))]), Value::Null, lanes()),
-            snapshot(false, json!([model("local_api", json!(""))]), Value::Null, lanes()),
-            snapshot(false, json!([model("local_api", json!(null))]), Value::Null, lanes()),
-            snapshot(false, json!([model("local_api", json!("m")), model("local_api", json!("m"))]), Value::Null, lanes()),
-            snapshot(true, json!([model("local_api", json!("m"))]), Value::Null, lanes()),
+            snapshot(
+                false,
+                json!([model("Local", json!("m"))]),
+                Value::Null,
+                lanes(),
+            ),
+            snapshot(
+                false,
+                json!([model("local_api", json!("tab\there"))]),
+                Value::Null,
+                lanes(),
+            ),
+            snapshot(
+                false,
+                json!([model("local_api", json!("m".repeat(513)))]),
+                Value::Null,
+                lanes(),
+            ),
+            snapshot(
+                false,
+                json!([model("local_api", json!(""))]),
+                Value::Null,
+                lanes(),
+            ),
+            snapshot(
+                false,
+                json!([model("local_api", json!(null))]),
+                Value::Null,
+                lanes(),
+            ),
+            snapshot(
+                false,
+                json!([
+                    model("local_api", json!("m")),
+                    model("local_api", json!("m"))
+                ]),
+                Value::Null,
+                lanes(),
+            ),
+            snapshot(
+                true,
+                json!([model("local_api", json!("m"))]),
+                Value::Null,
+                lanes(),
+            ),
             snapshot(true, none(), model("local_api", json!("m")), lanes()),
             snapshot(false, none(), model("local_api", json!("")), lanes()),
             snapshot(false, none(), json!("local_api"), lanes()),
             snapshot(false, none(), Value::Null, json!(["Local"])),
-            snapshot(false, none(), Value::Null, json!(["local_api", "local_api"])),
+            snapshot(
+                false,
+                none(),
+                Value::Null,
+                json!(["local_api", "local_api"]),
+            ),
             snapshot(false, none(), Value::Null, Value::Null),
             snapshot(false, none(), Value::Null, json!(many_lanes)),
             extra,
             missing_reading,
-            snapshot(false, json!([{"lane": "local_api", "model": "m", "role": "x"}]), Value::Null, lanes()),
+            snapshot(
+                false,
+                json!([{"lane": "local_api", "model": "m", "role": "x"}]),
+                Value::Null,
+                lanes(),
+            ),
             snapshot(false, json!(many), Value::Null, lanes()),
         ] {
             assert_eq!(parse(&answer), None, "{answer}");

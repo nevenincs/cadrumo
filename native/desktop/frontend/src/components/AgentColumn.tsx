@@ -611,8 +611,9 @@ export function AgentColumn({
     lane: string;
     model: string;
   } | null>(null);
+  // Read only where the catalog is: a profile is signed in and the agent runs.
   const stored = useReadingModel(
-    readingHost,
+    readCatalog ? readingHost : null,
     rememberedRecord,
     catalogAgain + settings.changes + opened + listChanges,
   );
@@ -1642,6 +1643,7 @@ export function AgentColumn({
                 : undefined
             }
             pickerRequests={pickerRequests}
+            onPickerClosed={() => setPickerRequests(0)}
           />
         </div>
       )}
