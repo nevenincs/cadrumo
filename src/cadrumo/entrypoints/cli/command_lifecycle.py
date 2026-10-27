@@ -23,6 +23,7 @@ def dispatch_cli_behavior(
     behavior: Callable[[], object],
     *,
     load_connection_activator: Callable[[], ProfileConnectionActivator] | None = None,
+    bind_optional_profile: Callable[[typer.Context], None] | None = None,
 ) -> object:
     """Apply AEAT profile admission, governed scope, provisioning and cleanup."""
     context_parameter = spec.invocation.context_parameter
@@ -55,6 +56,7 @@ def dispatch_cli_behavior(
                     spec=spec,
                     arguments=bound.arguments,
                     load_connection_activator=load_connection_activator,
+                    bind_optional_profile=bind_optional_profile,
                 )
                 return behavior()
         except Exception as error:

@@ -28,6 +28,13 @@ def _load_connection_activator() -> ProfileConnectionActivator:
     return activate_profile
 
 
+def _bind_optional_current_profile(ctx: typer.Context) -> None:
+    """Supply optional native admission only when repair requests it."""
+    from cadrumo_client.commands.optional_profile_connection import bind_optional_current_profile
+
+    bind_optional_current_profile(ctx)
+
+
 def _dispatch(
     graph: CommandSpecGraph,
     spec: CommandSpec,
@@ -41,7 +48,14 @@ def _dispatch(
         bind_invocation_services(
             cast(typer.Context, context), CliInvocationServices(launch_tui=launch_tui, delete_profile=delete_profile)
         )
-    return dispatch_cli_behavior(graph, spec, bound, behavior, load_connection_activator=_load_connection_activator)
+    return dispatch_cli_behavior(
+        graph,
+        spec,
+        bound,
+        behavior,
+        load_connection_activator=_load_connection_activator,
+        bind_optional_profile=_bind_optional_current_profile,
+    )
 
 
 @cache

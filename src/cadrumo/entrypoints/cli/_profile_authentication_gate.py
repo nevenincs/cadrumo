@@ -640,6 +640,7 @@ def preflight_parsed_leaf(
     spec: CommandSpec,
     arguments: Mapping[str, object],
     load_connection_activator: Callable[[], ProfileConnectionActivator] | None = None,
+    bind_optional_profile: Callable[[typer.Context], None] | None = None,
 ) -> None:
     """Preflight parsed root/leaf sources, then run the ordinary root gate."""
     node = graph.node(spec.key)
@@ -694,10 +695,8 @@ def preflight_parsed_leaf(
     # governed-fact scope, so an argument-only parse reads the generation the
     # command itself will.
     refuse_on_arguments_alone(spec, arguments)
-    if spec.key == "config_repair":
-        from .optional_profile_connection import bind_optional_current_profile
-
-        bind_optional_current_profile(ctx)
+    if spec.key == "config_repair" and bind_optional_profile is not None:
+        bind_optional_profile(ctx)
     if _activate_profile_connection_leaf(
         ctx,
         spec,

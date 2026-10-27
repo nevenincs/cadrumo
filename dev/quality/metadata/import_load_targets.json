@@ -3297,6 +3297,7 @@
         "cadrumo_client.commands.graph",
         "cadrumo_client.commands.language_options",
         "cadrumo_client.commands.leaf_specs",
+        "cadrumo_client.commands.optional_profile_connection",
         "cadrumo_client.commands.output",
         "cadrumo_client.commands.parameters",
         "cadrumo_client.commands.payloads",
