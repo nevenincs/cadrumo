@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:07fd9b71f446eeec5e00378c4c743bc0f1bc56806bc5cc56035a777042417a74'
+body_hash: 'sha256:75ccc2c576bd452a5cef450ea45f76f259243e86eefe580b11eb59eb8470d55a'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -81,6 +81,56 @@ related:
 - `S04` `verify:` `uv run --no-sync ty check on scope` -> `pass`
 - `S04` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S04` `by:` `implementation-engineer-high`
+- `S02` `A` `src/cadrumo_runtime/host/view_stream_relay.py`
+- `S02` `A` `src/cadrumo_runtime/host/worker_view_stream.py`
+- `S02` `A` `src/cadrumo_runtime/host/tests/test_view_stream_relay.py`
+- `S02` `M` `src/cadrumo_runtime/host/worker.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connections.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_sessions.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_access.py`
+- `S02` `M` `src/cadrumo_runtime/host/profile_connection_drain.py`
+- `S02` `M` `src/cadrumo_runtime/adapters/server_connection_handling.py`
+- `S02` `M` `src/cadrumo_runtime/adapters/worker_native_identity.py`
+- `S02` `M` `src/cadrumo_runtime/adapters/profile_worker_lifetime.py`
+- `S02` `M` `src/cadrumo_runtime/contracts/profile_host.py`
+- `S02` `M` `src/cadrumo_client/contracts/view_stream.py`
+- `S02` `M` `src/cadrumo_client/contracts/profile_access.py`
+- `S02` `M` `dev/quality/metadata/import_load_targets.cadrumo_runtime.json`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/test_view_stream_relay.py -m '' -n 0` -> `pass`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests -k view -m 'integration and not windows_only'` -> `fail`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests -k view` -> `fail`
+- `S02` `verify:` `just check-style` -> `pass`
+- `S02` `verify:` `just check-format` -> `pass`
+- `S02` `verify:` `just check-types` -> `fail`
+- `S02` `verify:` `just check-import-boundaries` -> `fail`
+- `S02` `by:` `implementation-engineer-high`
+- `S06` `A` `src/cadrumo/adapters/outbound/aeat/browser/screencast.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/aeat/browser/view_input.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_screencast.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_input.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_adapters_no_script.py`
+- `S06` `A` `src/cadrumo/adapters/outbound/aeat/browser/tests/view_page_support.py`
+- `S06` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S06` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/browser/tests -k "screencast or input"` -> `pass`
+- `S06` `verify:` `ruff check and ruff format --check on the six files` -> `pass`
+- `S06` `verify:` `ty check on the six files` -> `pass`
+- `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S06` `by:` `sonnet-executor`
+- `S15` `A` `src/cadrumo_client/contracts/view_transfer.py`
+- `S15` `M` `src/cadrumo_client/transport/view_stream.py`
+- `S15` `M` `src/cadrumo_client/contracts/tests/view_stream_vector_source.py`
+- `S15` `M` `src/cadrumo_client/contracts/tests/view_stream_vectors.json`
+- `S15` `M` `src/cadrumo_client/contracts/tests/test_view_stream_documents.py`
+- `S15` `M` `src/cadrumo_client/transport/tests/test_view_stream.py`
+- `S15` `M` `dev/quality/metadata/import_load_targets.cadrumo_client.json`
+- `S15` `verify:` `uv run --no-sync pytest src/cadrumo_client/transport/tests src/cadrumo_client/contracts/tests` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m cadrumo_client.contracts.tests.view_stream_vector_source --check` -> `pass`
+- `S15` `verify:` `ruff check and ruff format --check on the five source and test files` -> `pass`
+- `S15` `verify:` `ty check on the five files; basedpyright and pyrefly on contracts/view_transfer.py` -> `pass`
+- `S15` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/test_view_stream_relay.py -m ''` -> `pass`
+- `S15` `by:` `implementation-engineer-standard`
 
 ## Notes
 
@@ -89,3 +139,11 @@ related:
 - `S05` Most S05 source landed in another session commit 93775feb30, which swept the shared worktree; the S05 commit carries the remaining test change.
 - `S05` just check-types: 5 diagnostics outside S05 scope `(browser/request_guard.py,` runtime worker startup test); just check-import-boundaries kept 30 of 30 contracts but reported unavailable because the tree changed during the run.
 - `S04` Scope change from the user 2026-10-27 (its a browser, free usage): no request guard, operator-view policy, service worker or WebSocket block on the view context. Guard code first written for this Step was swept into 93775feb30 by another session and removed in a061b2cbce. Step left open for the orchestrator.
+- `S02` Relay tests are integration-marked (real native pipes and a child process), so the default unit lane of the plan command selects none of them; they pass under -m ''.
+- `S02` Failures outside this Step, reproduced without its changes or in untouched code: `test_runtime_evidence` `(_Controller` test double lacks deadline), `test_drive_attachment_review_journey_cli` KeyError reason, `test_session_hold_presentation` param 4 (passes alone), `test_server_cleanup` `runtime_connection_closed` caplog (fails with HEAD `server_connection_handling` too).
+- `S02` check-types: 4 ty diagnostics in untouched `adapters/tests/test_profile_worker_startup.py.` check-import-boundaries: 30/30 contracts kept; 2 REEXPORT findings in another session's `view_transfer` work and a stale aggregate `import_load_targets.json,` not committed here.
+- `S02` Person input counting as person activity (application-sign-in amendment 2026-10-27) is not wired in the relay; the window's existing activity path carries it.
+- `S06` Rate bound dropped by the user's scope change of 2026-10-27 (free use, no usage limits): the adapter applies no rate limit, throttle or pointer-move coalescing; only the contract's closed variants, size bounds and viewport clamping validate input.
+- `S06` Full import gate (python -m `dev.quality.import_gate)` fails outside this Step: `REEXPORT_OR_ALIAS` at `src/cadrumo_client/transport/view_stream.py:79` and load-target metadata files for `cadrumo_client,` `cadrumo_runtime` and the aggregate hold other Steps' modules and stay uncommitted.
+- `S15` Transfer documents live in the new `contracts/view_transfer.py` because `contracts/view_stream.py` carried uncommitted P01.S02 hunks; every existing symbol and signature of both codec modules is unchanged and the P01.S02 relay tests pass against the extended codec.
+- `S15` `dev.quality.import_gate` reported zero hard findings after the `VIEW_MAX_TRANSFER_ID` alias was removed, then a tool failure from other sessions' concurrent changes (stale cadrumo load-target metadata, source tree changed during the run). The aggregate `dev/quality/metadata/import_load_targets.json` carries the `view_transfer` line beside other sessions' lines and is left for the orchestrator to commit.
