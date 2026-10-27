@@ -1,3 +1,4 @@
+mod dispatch;
 pub mod helper;
 pub mod lifecycle;
 pub mod logging;
@@ -22,9 +23,9 @@ use crate::{
 use serde::{Deserialize, Serialize};
 use std::{
     collections::VecDeque,
-    io::Write,
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, MutexGuard, TryLockError},
+    sync::{Arc, Mutex, MutexGuard, OnceLock, TryLockError, mpsc},
+    time::Duration,
 };
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize)]
@@ -126,8 +127,6 @@ pub struct Snapshot {
 struct State {
     first_event_ms: Option<u64>,
     file: Option<LogFile>,
-    // One incomplete configuration attempt; the ring remains the replay source.
-    pending_replay: Option<Replay>,
     log_failure: Option<ApplicationError>,
     events: VecDeque<Event>,
     tracker: Tracker,
@@ -149,21 +148,38 @@ struct Context {
     helper_result: Option<HelperResult>,
     service: Option<ServiceFact>,
 }
+type RecordedObserver = Arc<Mutex<Option<Arc<dyn Fn() + Send + Sync>>>>;
+
 #[derive(Default)]
 pub struct Diagnostics {
-    state: Mutex<State>,
+    state: Arc<Mutex<State>>,
     source: DiagnosticSource,
-    // The panic path reads this without the state lock, which the panicking
-    // code may hold; configuration is its only writer.
-    panic_log: Mutex<Option<PathBuf>>,
-    recorded: Mutex<Option<Arc<dyn Fn() + Send + Sync>>>,
+    writer: OnceLock<dispatch::LogWriter>,
+    recorded: RecordedObserver,
+    notifications: OnceLock<mpsc::SyncSender<()>>,
 }
 impl Diagnostics {
-    /// Calls `notify` after each event recorded from now on, outside the
-    /// state lock, in place of any earlier one. A reader of
+    /// Schedules a coalesced `notify` outside event recording and its locks,
+    /// in place of any earlier one. A reader of
     /// [`Diagnostics::snapshot`] learns of events without polling.
     pub fn on_recorded(&self, notify: Arc<dyn Fn() + Send + Sync>) {
         *self.recorded.lock().unwrap_or_else(|e| e.into_inner()) = Some(notify);
+        self.notifications.get_or_init(|| {
+            let (sender, receiver) = mpsc::sync_channel(1);
+            let recorded = self.recorded.clone();
+            let _ = std::thread::Builder::new()
+                .name("diagnostic-notify".into())
+                .spawn(move || {
+                    for () in receiver {
+                        let notify = recorded.lock().unwrap_or_else(|e| e.into_inner()).clone();
+                        if let Some(notify) = notify {
+                            let _ =
+                                std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| notify()));
+                        }
+                    }
+                });
+            sender
+        });
     }
     /// The first event of this process, retained even after the event ring wraps.
     pub fn started_ms(&self) -> u64 {
@@ -174,10 +190,9 @@ impl Diagnostics {
             .unwrap_or_else(timestamp_ms)
     }
     pub fn new(source: DiagnosticSource) -> Self {
-        Self {
-            source,
-            ..Self::default()
-        }
+        let mut diagnostics = Self::default();
+        diagnostics.source = source;
+        diagnostics
     }
     pub fn configure(&self, directory: &Path, max_bytes: u64, backups: u32) -> Result<()> {
         let file = LogFile::new(directory, max_bytes, backups)?;
@@ -188,43 +203,25 @@ impl Diagnostics {
     }
     fn configure_log(&self, file: LogFile) -> Result<()> {
         let mut state = self.state.lock().map_err(|_| poisoned())?;
-        if state
-            .file
-            .as_ref()
-            .is_some_and(|active| active.paths.current == file.paths.current)
-        {
-            // Final environment projection may repeat the early startup sink.
-            // Update its rotation policy without replaying records already written.
-            *self.panic_log.lock().unwrap_or_else(|e| e.into_inner()) =
-                Some(file.paths.current.clone());
-            state.file = Some(file);
-            state.pending_replay = None;
-            return Ok(());
+        let writer = self
+            .writer
+            .get_or_init(|| dispatch::LogWriter::new(self.state.clone()));
+        if !writer.configure(file, state.events.iter().cloned().collect()) {
+            state.log_failure = Some(dispatch::unavailable());
         }
-        let State {
-            events,
-            pending_replay,
-            ..
-        } = &mut *state;
-        let replay = pending_replay.get_or_insert_with(|| Replay {
-            current: file.paths.current.clone(),
-            through: 0,
-        });
-        if replay.current != file.paths.current {
-            replay.current = file.paths.current.clone();
-            replay.through = 0;
-        }
-        for event in events {
-            if event.sequence > replay.through {
-                file.append(event)?;
-                replay.through = event.sequence;
-            }
-        }
-        let current = file.paths.current.clone();
-        state.file = Some(file);
-        state.pending_replay = None;
-        *self.panic_log.lock().unwrap_or_else(|e| e.into_inner()) = Some(current);
         Ok(())
+    }
+
+    /// Attempt delivery within a caller-supplied shutdown or test bound.
+    pub fn flush_logs(&self, timeout: Duration) -> bool {
+        self.writer.get().is_none_or(|writer| writer.flush(timeout))
+    }
+
+    /// Delivery health is independent of file and event-ring locks.
+    pub fn log_delivery_status(&self) -> dispatch::DeliveryStatus {
+        self.writer
+            .get()
+            .map_or_else(dispatch::DeliveryStatus::default, |writer| writer.status())
     }
     pub fn event(&self, kind: EventKind, process: Option<u64>, failure: Option<ApplicationError>) {
         self.record(kind, process, failure, Context::default());
@@ -268,28 +265,21 @@ impl Diagnostics {
             panic: None,
         };
         state.first_event_ms.get_or_insert(event.timestamp_ms);
-        if let Some(file) = &state.file {
-            state.log_failure = file.append(&event).err();
+        if let Some(writer) = self.writer.get()
+            && !writer.append(event.clone())
+        {
+            state.log_failure = Some(dispatch::unavailable());
         }
         if state.events.len() == 512 {
             state.events.pop_front();
         }
         state.events.push_back(event);
         drop(state);
-        let notify = self
-            .recorded
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .clone();
-        if let Some(notify) = notify {
-            notify();
+        if let Some(notify) = self.notifications.get() {
+            let _ = notify.try_send(());
         }
     }
-    /// The panic hook's record. It runs on the panicking thread before unwinding,
-    /// so it never waits for a diagnostics lock: the event ring is joined only when its lock
-    /// is free, and the line is appended straight to the configured file without
-    /// rotation. Without a file, or when the file refuses, the line goes to
-    /// standard error, which never carries the payload.
+    /// Record a panic without waiting for locks, file I/O or a blocked stderr.
     pub fn panicked(&self, fact: PanicFact) {
         let mut event = Event {
             sequence: 0,
@@ -320,14 +310,8 @@ impl Diagnostics {
             }
             state.events.push_back(event.clone());
         }
-        let mut line = serde_json::to_vec(&event)
-            .unwrap_or_else(|_| br#"{"kind":"panic","panic":null}"#.to_vec());
-        line.push(b'\n');
-        let written = try_guard(&self.panic_log)
-            .and_then(|current| current.clone())
-            .is_some_and(|current| logging::append_unrotated(&current, &line).is_ok());
-        if !written {
-            let _ = std::io::stderr().write_all(&line);
+        if let Some(writer) = self.writer.get() {
+            writer.append(event);
         }
     }
     /// A panic that a boundary contained; the hook has already recorded where it
@@ -569,6 +553,13 @@ impl Diagnostics {
         }
     }
 }
+impl Drop for Diagnostics {
+    fn drop(&mut self) {
+        // Healthy pending diagnostics get a final opportunity; blocked I/O is detached.
+        self.flush_logs(Duration::from_millis(100));
+    }
+}
+
 /// A guard only when it is free now; a poisoned lock still yields its data.
 fn try_guard<T>(lock: &Mutex<T>) -> Option<MutexGuard<'_, T>> {
     match lock.try_lock() {
@@ -603,11 +594,13 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let diagnostics = Arc::new(Diagnostics::default());
         diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         {
             // The panicking code itself may hold the state lock.
             let _held = diagnostics.state.lock().unwrap();
             diagnostics.panicked(fact());
         }
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         assert_eq!(panic_lines(directory.path()), 1);
         assert!(diagnostics.snapshot(0).events.is_empty());
         let poisoner = diagnostics.clone();
@@ -618,6 +611,7 @@ mod tests {
         .join()
         .unwrap_err();
         diagnostics.panicked(fact());
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         assert_eq!(panic_lines(directory.path()), 2);
         let events = diagnostics.snapshot(0).events;
         assert!(matches!(

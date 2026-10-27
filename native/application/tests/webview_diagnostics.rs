@@ -7,7 +7,7 @@ use cadrumo_application::{
     process::status::{ProcessRole, Stream},
 };
 use serde_json::{Value, json};
-use std::fs;
+use std::{fs, time::Duration};
 
 #[test]
 fn browser_failure_persists_only_closed_numeric_metadata() {
@@ -27,6 +27,7 @@ fn browser_failure_persists_only_closed_numeric_metadata() {
         ReadFailures::default(),
     );
     diagnostics.webview_failure(fact);
+    assert!(diagnostics.flush_logs(Duration::from_secs(2)));
     let snapshot = diagnostics.snapshot(u64::MAX);
     let event = snapshot.events.last().unwrap();
     assert!(matches!(event.kind, EventKind::Failure));

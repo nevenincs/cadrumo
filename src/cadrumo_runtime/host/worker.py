@@ -19,7 +19,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.async_cleanup import AsyncCloseable, AsyncResourceCleanupError, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
-from cadrumo.core.logging import configure_logging, get_logger
+from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.storage_environment import withheld_child_settings
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
@@ -246,6 +246,8 @@ def run(
     composition_factory: Callable[[], AbstractContextManager[None]] | None = None,
 ) -> int:
     """Admit only an exact native runtime parent and a contained current-cohort worker."""
+    register_first_party_logger("cadrumo_runtime")
+    register_first_party_logger("cadrumo_client")
     with diagnostic_process("profile_worker"), diagnostic_scope():
         diagnostic_event(_LOGGER, "profile_worker_process_started", level=10)
         try:

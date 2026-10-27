@@ -47,6 +47,7 @@ fn failure() -> ApplicationError {
     ApplicationError::new(ErrorCode::LogUnavailable, Operation::Logging)
 }
 
+#[derive(Clone)]
 pub struct LogFile {
     pub paths: LogPaths,
     max_bytes: u64,
@@ -70,56 +71,56 @@ impl LogFile {
         })
     }
     pub fn append(&self, record: &crate::diagnostics::Event) -> Result<()> {
+        self.append_batch(std::slice::from_ref(record))
+    }
+    pub(super) fn append_batch(&self, records: &[crate::diagnostics::Event]) -> Result<()> {
         let directory = self.paths.current.parent().ok_or_else(failure)?;
         filesystem::absolute_root(directory).map_err(|e| failure().caused_by(e))?;
         fs::create_dir_all(directory).map_err(|e| failure().caused_by(e))?;
         let lock = open(&self.paths.lock)?;
         lock.try_lock().map_err(|e| failure().caused_by(e))?;
-        let mut bytes = serde_json::to_vec(record).map_err(|e| failure().caused_by(e))?;
-        bytes.push(b'\n');
-        if bytes.len() as u64 > self.max_bytes {
-            return Err(failure());
+        let mut file = open(&self.paths.current)?;
+        let mut size = file.metadata().map_err(|e| failure().caused_by(e))?.len();
+        for record in records {
+            let mut bytes = serde_json::to_vec(record).map_err(|e| failure().caused_by(e))?;
+            bytes.push(b'\n');
+            if bytes.len() as u64 > self.max_bytes {
+                return Err(failure());
+            }
+            if size + bytes.len() as u64 > self.max_bytes {
+                drop(file);
+                self.rotate()?;
+                file = open(&self.paths.current)?;
+                size = 0;
+            }
+            file.write_all(&bytes).map_err(|e| failure().caused_by(e))?;
+            size += bytes.len() as u64;
         }
-        let existing = open(&self.paths.current)?;
-        let size = existing
-            .metadata()
-            .map_err(|e| failure().caused_by(e))?
-            .len();
-        drop(existing);
-        if size + bytes.len() as u64 > self.max_bytes {
-            if self.backups == 0 {
-                fs::remove_file(&self.paths.current).map_err(|e| failure().caused_by(e))?;
-            } else {
-                for index in (1..=self.backups).rev() {
-                    let destination = self.paths.backup(index);
-                    filesystem::absolute_root(&destination).map_err(|e| failure().caused_by(e))?;
-                    if destination.exists() {
-                        fs::remove_file(&destination).map_err(|e| failure().caused_by(e))?;
-                    }
-                    let source = if index == 1 {
-                        self.paths.current.clone()
-                    } else {
-                        self.paths.backup(index - 1)
-                    };
-                    filesystem::absolute_root(&source).map_err(|e| failure().caused_by(e))?;
-                    if source.exists() {
-                        fs::rename(source, destination).map_err(|e| failure().caused_by(e))?;
-                    }
+        file.flush().map_err(|e| failure().caused_by(e))
+    }
+    fn rotate(&self) -> Result<()> {
+        if self.backups == 0 {
+            fs::remove_file(&self.paths.current).map_err(|e| failure().caused_by(e))?;
+        } else {
+            for index in (1..=self.backups).rev() {
+                let destination = self.paths.backup(index);
+                filesystem::absolute_root(&destination).map_err(|e| failure().caused_by(e))?;
+                if destination.exists() {
+                    fs::remove_file(&destination).map_err(|e| failure().caused_by(e))?;
+                }
+                let source = if index == 1 {
+                    self.paths.current.clone()
+                } else {
+                    self.paths.backup(index - 1)
+                };
+                filesystem::absolute_root(&source).map_err(|e| failure().caused_by(e))?;
+                if source.exists() {
+                    fs::rename(source, destination).map_err(|e| failure().caused_by(e))?;
                 }
             }
         }
-        let mut file = open(&self.paths.current)?;
-        file.write_all(&bytes)
-            .and_then(|()| file.flush())
-            .map_err(|e| failure().caused_by(e))
+        Ok(())
     }
-}
-/// One complete line appended without the writer lock or rotation, for a
-/// process that may abort next. Append-mode writes land whole at the end even
-/// beside a locked writer; a concurrent rotation can move the line into a backup.
-pub(crate) fn append_unrotated(current: &Path, line: &[u8]) -> Result<()> {
-    let mut file = open(current)?;
-    file.write_all(line).map_err(|e| failure().caused_by(e))
 }
 fn open(path: &Path) -> Result<File> {
     filesystem::absolute_root(path).map_err(|e| failure().caused_by(e))?;

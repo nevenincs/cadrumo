@@ -69,6 +69,54 @@ def _no_activity_authority(_: object) -> NoReturn:
     raise AssertionError("activity observation must not request credentials or authority")
 
 
+def test_activity_replies_continue_while_the_real_diagnostic_file_sink_is_blocked(tmp_path: Path) -> None:
+    """A stalled log flush cannot consume the native worker's control deadline."""
+    import win32api
+    import win32event
+
+    entered_name, release_name = f"Local\\cadrumo-log-test-{uuid4()}", f"Local\\cadrumo-log-test-{uuid4()}"
+    entered = win32event.CreateEvent(None, True, False, entered_name)
+    release = win32event.CreateEvent(None, True, False, release_name)
+    script = tmp_path / "blocked_log_worker.py"
+    script.write_text(
+        "import win32event\n"
+        "from cadrumo.core.log_file_handler import AnnouncingRotatingFileHandler\n"
+        "from cadrumo_runtime.host.worker import run\n"
+        f"entered = win32event.OpenEvent(2, False, {entered_name!r})\n"
+        f"release = win32event.OpenEvent(0x100000, False, {release_name!r})\n"
+        "original = AnnouncingRotatingFileHandler.emit\n"
+        "held = False\n"
+        "def blocked(self, record):\n"
+        "    global held\n"
+        "    if not held:\n"
+        "        held = True\n"
+        "        win32event.SetEvent(entered)\n"
+        "        win32event.WaitForSingleObject(release, 15000)\n"
+        "    original(self, record)\n"
+        "AnnouncingRotatingFileHandler.emit = blocked\n"
+        "raise SystemExit(run())\n",
+        encoding="utf-8",
+    )
+    try:
+        with worker_profiles(tmp_path) as profiles:
+            root, ((identity, _), _) = profiles
+            worker = ProfileWorkerProcess(identity, storage_root=root, worker_script=script)
+            try:
+                assert win32event.WaitForSingleObject(entered, 5000) == win32event.WAIT_OBJECT_0
+                started = time.monotonic()
+                for _ in range(16):
+                    assert worker.activity().in_flight_operations == 0
+                    assert not worker.status().sessions
+                assert time.monotonic() - started < 3
+                assert not worker.stopping
+            finally:
+                win32event.SetEvent(release)
+                worker.close()
+    finally:
+        win32api.CloseHandle(entered)
+        win32api.CloseHandle(release)
+
+
 def _activity_owner(worker: ProfileWorkerProcess, root: Path) -> ProfileWorkerSessionOwner:
     owner = ProfileWorkerSessionOwner(
         worker.identity,
