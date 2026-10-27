@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....core.period import Period
 from ....domain.calculations.registry.errors import RegistryValidationError
+from ....tests.log_records import delivered_records
 from ..binding_readiness import profile_resolvable_binding_ids
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -32,7 +33,7 @@ def test_unresolvable_registry_scope_is_logged_as_conservative_unresolved(caplog
         assert any(
             "binding-readiness: annual period unavailable" in record.message
             and "treating profile bindings as unresolved" in record.message
-            for record in caplog.records
+            for record in delivered_records(caplog, "cadrumo.application.modelo.binding_readiness")
         )
 
 
@@ -54,7 +55,7 @@ def test_unresolvable_typed_period_scope_is_logged_as_conservative_unresolved(
         assert resolved == frozenset()
         assert any(
             "binding-readiness: registry snapshot unavailable" in record.message and "period=1T" in record.message
-            for record in caplog.records
+            for record in delivered_records(caplog, "cadrumo.application.modelo.binding_readiness")
         )
 
 

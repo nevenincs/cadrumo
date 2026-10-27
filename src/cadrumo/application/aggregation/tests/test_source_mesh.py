@@ -17,6 +17,7 @@ from ....domain.calculations.registry.ids import RevisionId
 from ....domain.calculations.row_casilla import DirectRowMaterializationProvenance
 from ....domain.calculations.row_source_identity import RowSourceIdentity
 from ....tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
+from ....tests.log_records import delivered_records
 from ...persistence_errors import PersistenceDegradationError
 from ..errors import AggregationValidationError
 from ..source_mesh import (
@@ -1162,4 +1163,7 @@ def test_storage_degradation_resolution_emits_diagnostic_and_debug_log(
     assert resolution.diagnostics[0].reason == "storage_degraded"
     assert resolution.diagnostics[0].source_kind == "ledger_iva_aggregation"
     assert resolution.diagnostics[0].message
-    assert any("source mesh resolver storage degradation" in record.message for record in caplog.records)
+    assert any(
+        "source mesh resolver storage degradation" in record.message
+        for record in delivered_records(caplog, "cadrumo.application.aggregation.source_resolution_operations")
+    )

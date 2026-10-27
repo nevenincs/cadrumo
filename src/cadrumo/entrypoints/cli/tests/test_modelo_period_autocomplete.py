@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -91,15 +92,17 @@ class TestDeclaredPeriodTokensAutocomplete:
         with caplog.at_level(logging.DEBUG, logger=logger.name):
             assert _declared_period_tokens("303", operation=operation) == ()
 
+        delivered = delivered_records(caplog, logger.name)
         debug_records = [
             record
-            for record in caplog.records
+            for record in delivered
             if record.levelno == logging.DEBUG and "_declared_period_tokens" in record.message
         ]
-        assert len(debug_records) == 1, [record.message for record in caplog.records]
-        exc_info = debug_records[0].exc_info
-        assert isinstance(exc_info, tuple), exc_info
-        assert exc_info[0] is RuntimeError
+        assert len(debug_records) == 1, [record.message for record in delivered]
+        # Handlers receive the traceback as text; the live exception is not kept on the record.
+        traceback_text = debug_records[0].exc_text
+        assert traceback_text is not None and "Traceback" in traceback_text
+        assert "RuntimeError" in traceback_text
 
     def test_cadrumo_error_subtype_is_swallowed_not_propagated(self) -> None:
         """Any CadrumoError subclass raised by the authority is caught and swallowed.

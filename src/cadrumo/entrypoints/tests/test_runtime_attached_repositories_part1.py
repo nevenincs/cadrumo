@@ -86,6 +86,7 @@ from ...domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.usage_ratios.model import UsageRatioProfile
+from ...tests.log_records import delivered_text
 from ..adapter_composition import build_borrador_100_snapshot_repository
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
@@ -315,8 +316,9 @@ def test_diagnostics_secure_object_total_degrades_on_missing_session(
 
         assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
 
-    assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "errors.storage.runtime.not_ready" in caplog.text
+    logged = delivered_text(caplog)
+    assert "secure objects engine unreachable for repair probe" in logged
+    assert "errors.storage.runtime.not_ready" in logged
 
 
 def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
@@ -338,8 +340,9 @@ def test_diagnostics_secure_object_total_degrades_on_route_session_mismatch(
 
         assert secure_object_unreadable_total(ports=_diagnostics_ports()) == 0
 
-    assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "errors.storage.runtime.not_ready" in caplog.text
+    logged = delivered_text(caplog)
+    assert "secure objects engine unreachable for repair probe" in logged
+    assert "errors.storage.runtime.not_ready" in logged
 
 
 def test_workflow_state_default_isolates_active_profile_writes(tmp_path: Path) -> None:

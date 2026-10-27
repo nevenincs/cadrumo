@@ -29,6 +29,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
+from cadrumo.tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -95,6 +96,8 @@ def test_bulk_classify_270_rows_persists_catalogue_once(
     lines += [f"{txn.transaction_id},BUSINESS,material_oficina" for txn in transactions]
     csv_text = "\n".join(lines) + "\n"
 
+    # The seeding save logged its own record; let it arrive so the clear below drops it.
+    delivered_records(caplog)
     caplog.clear()
     with caplog.at_level(logging.INFO, logger="cadrumo.adapters.persistence.profile.transactions"):
         start = time.perf_counter()
@@ -113,9 +116,8 @@ def test_bulk_classify_270_rows_persists_catalogue_once(
 
     atomic_save_events = [
         record
-        for record in caplog.records
-        if record.name == "cadrumo.adapters.persistence.profile.transactions"
-        and record.getMessage().startswith(("saved transaction catalogue", "saved guarded transaction catalogue"))
+        for record in delivered_records(caplog, "cadrumo.adapters.persistence.profile.transactions")
+        if record.getMessage().startswith(("saved transaction catalogue", "saved guarded transaction catalogue"))
     ]
     assert len(atomic_save_events) == 1
     assert atomic_save_events[0].getMessage().startswith("saved guarded transaction catalogue")

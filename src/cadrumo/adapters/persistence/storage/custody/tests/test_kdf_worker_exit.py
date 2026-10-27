@@ -18,6 +18,7 @@ from argon2.low_level import Type, hash_secret_raw
 from ......core.config import Settings, override_settings
 from ......core.diagnostic_log import DiagnosticFormatter
 from ......core.logging import LOG_FILE_FORMAT
+from ......tests.log_records import delivered_records
 from ...crypto.aes_gcm import open_sealed, seal
 from .. import _kdf_process as process_boundary
 from .. import _kdf_worker_supervision as supervision
@@ -119,7 +120,7 @@ def _operate(
 def _summary(caplog: pytest.LogCaptureFixture) -> dict[str, object]:
     records = [
         record
-        for record in caplog.records
+        for record in delivered_records(caplog)
         if record.name == supervision.__name__ and record.msg == "kdf_worker_lifecycle"
     ]
     assert len(records) == 1

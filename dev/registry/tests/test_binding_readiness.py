@@ -15,6 +15,7 @@ from cadrumo.application.modelo.binding_readiness import annual_period_for_year
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.tests.log_records import delivered_records
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues
@@ -273,7 +274,7 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
     assert annual_period_for_year(authority, modelo="999", filing_year=2025) is None
     assert any(
         "binding-readiness: filing_year=2025 for modelo=999 is covered by revisions 2025-1t, 2025-2t" in record.message
-        for record in caplog.records
+        for record in delivered_records(caplog, "cadrumo.application.modelo.binding_readiness")
     )
 
 

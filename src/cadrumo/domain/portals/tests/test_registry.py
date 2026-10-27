@@ -23,6 +23,7 @@ from types import MappingProxyType
 
 import pytest
 
+from ....tests.log_records import delivered_records
 from ..categories import PortalCategory
 from ..codes import Portal
 from ..errors import PortalIntegrityError, UnknownPortalError
@@ -181,7 +182,7 @@ def test_finalise_registry_logs_info_on_success(
         mapping = _finalise_registry(tuple(PORTAL_REGISTRY.values()))
     assert len(mapping) == 41
     debug_records = [
-        r for r in caplog.records if r.name == "cadrumo.domain.portals.registry" and r.levelno == logging.DEBUG
+        r for r in delivered_records(caplog, "cadrumo.domain.portals.registry") if r.levelno == logging.DEBUG
     ]
     assert len(debug_records) == 1
     assert "loaded 41 portal entries" in debug_records[0].getMessage()

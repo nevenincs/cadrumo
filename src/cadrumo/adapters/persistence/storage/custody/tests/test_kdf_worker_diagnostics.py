@@ -17,6 +17,7 @@ import pytest
 from ......core.config import Settings
 from ......core.diagnostic_log import DiagnosticFormatter, diagnostic_scope
 from ......core.logging import LOG_FILE_FORMAT
+from ......tests.log_records import delivered_records
 from .. import _kdf_worker_supervision as supervision
 from .._kdf_codec import KDF_FAILED_FRAME, KDF_FRAME_CONTROL, calibration_frame_bytes
 from .._kdf_worker_supervision import _SupervisedKdfWorker
@@ -59,12 +60,11 @@ def simulated_worker(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> _Superv
 
 
 def _summary(caplog: pytest.LogCaptureFixture) -> tuple[logging.LogRecord, dict[str, object]]:
+    delivered = delivered_records(caplog)
     records = [
-        record
-        for record in caplog.records
-        if record.name == supervision.__name__ and record.msg == "kdf_worker_lifecycle"
+        record for record in delivered if record.name == supervision.__name__ and record.msg == "kdf_worker_lifecycle"
     ]
-    assert len(records) == 1, [(r.name, r.msg) for r in caplog.records]
+    assert len(records) == 1, [(r.name, r.msg) for r in delivered]
     record = records[0]
     rendered = DiagnosticFormatter(LOG_FILE_FORMAT).format(record)
     _, suffix = rendered.split(" | ", 1)
@@ -87,15 +87,15 @@ def test_success_emits_once_after_cleanup_with_monotonic_spans_and_existing_scop
 
     def close(worker: _SupervisedKdfWorker, *, failed: bool) -> None:
         nonlocal cleanup_complete
-        assert not caplog.records
+        assert not delivered_records(caplog)
         original_close(worker, failed=failed)
         cleanup_complete = True
 
     monkeypatch.setattr(_SupervisedKdfWorker, "_close", close)
     with diagnostic_scope() as identifier, simulated_worker as worker:
-        assert not caplog.records
+        assert not delivered_records(caplog)
         assert worker.calibrate(_kdf()) == 0.000000125
-        assert not caplog.records
+        assert not delivered_records(caplog)
     assert cleanup_complete
     _, context = _summary(caplog)
     assert context["diagnostic_id"] == identifier

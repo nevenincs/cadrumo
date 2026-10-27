@@ -17,6 +17,7 @@ from .....domain.transactions.enums import BusinessClassification, TransactionDi
 from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerStorageError
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from .....tests.log_records import delivered_records
 from ...storage.sql import orm as _orm
 from ...storage.sql.session import session_scope
 from ...storage.tests.secure_sql import TestRuntimeProfile
@@ -106,7 +107,9 @@ def test_transaction_repository_logs_bucket_fields(
     with caplog.at_level("INFO", logger="cadrumo.adapters.persistence.profile.transactions"):
         repo.save(repo.load())
 
-    messages = [record.getMessage() for record in caplog.records]
+    messages = [
+        record.getMessage() for record in delivered_records(caplog, "cadrumo.adapters.persistence.profile.transactions")
+    ]
     # Per-row catalogue: the save log carries the bucket id and the diff counts
     # (rewritten / deleted rows) rather than a single catalogue object_key.
     assert any(

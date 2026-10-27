@@ -19,6 +19,7 @@ import pytest
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo.core.diagnostic_log import DiagnosticFormatter, diagnostic_process
 from cadrumo.core.logging import LOG_FILE_FORMAT
+from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_environment, native_python
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ExitReason, RefusalCode
@@ -160,7 +161,7 @@ def test_login_witness_loss_logs_only_counts_and_measured_spans_without_changing
     assert remaining[0] is unknown and remaining[1] is stale and remaining[2] is peer
     assert stop.is_set() and not profiles._private_work_available()
     assert stop.reason is (earlier or ExitReason.LOGIN_WITNESS_LOSS)
-    records = [record for record in caplog.records if record.name == profile_connections.__name__]
+    records = delivered_records(caplog, profile_connections.__name__)
     assert len(records) == 1
     record = records[0]
     assert record.getMessage() == "no eligible login witness remains; stopping the runtime"

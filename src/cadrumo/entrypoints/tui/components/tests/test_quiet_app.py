@@ -15,6 +15,7 @@ from textual.widgets import Input
 from textual.worker import WorkerFailed
 
 from .....core.errors.error_codes import ErrorCategory, build_error_envelope, get_registered_error_code
+from .....tests.log_records import delivered_records
 from ...tests.settling import settle
 from ..host import ScreenHostApp
 from ..quiet_app import QuietApp, TuiRunFailedError
@@ -162,7 +163,7 @@ async def test_production_async_run_raises_event_and_worker_failures(
         assert caught.value is error
     assert app.return_code == 1
     assert not app.is_running
-    diagnostic = next(record for record in caplog.records if record.getMessage() == "tui_application_failed")
+    diagnostic = next(record for record in delivered_records(caplog) if record.getMessage() == "tui_application_failed")
     assert diagnostic.__dict__["error_type"] == ("WorkerFailed" if worker else "ValueError")
     assert diagnostic.__dict__["exit_code"] == 1
     assert diagnostic.__dict__["outcome"] == "failed"

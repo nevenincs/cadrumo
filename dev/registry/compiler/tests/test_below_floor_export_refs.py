@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.schema_references import (
     PeriodSelector,
     SourceReference,
 )
+from cadrumo.tests.log_records import delivered_records
 
 from ...conformance.stamp import bundled_registry_root
 from ...pipeline.export_fragment_provenance import export_fragment_provenance_path
@@ -483,9 +484,12 @@ def test_the_logging_entry_point_reports_each_honoured_row_and_returns_what_stil
 
     assert kept == [line for line in failures if _DANGLING_MARKER not in line]
     assert len(kept) == 1
-    warnings = [record.getMessage() for record in caplog.records if record.levelno == logging.WARNING]
+    # The validator logs through a stdlib logger, so the capture handler receives the
+    # call itself and then the dispatch's redelivery of it: one advisory is one message.
+    warnings = {record.getMessage() for record in delivered_records(caplog) if record.levelno == logging.WARNING}
     assert len(warnings) == 1
-    assert f"{len(_DANGLING_BINDINGS)} references to superseded binding spellings are not a refusal" in warnings[0]
+    (warning,) = warnings
+    assert f"{len(_DANGLING_BINDINGS)} references to superseded binding spellings are not a refusal" in warning
 
 
 def _carrier_rows(carrier: _Carrier) -> list[GeneratedTreeBelowSupportedFilingYearsDisposition]:

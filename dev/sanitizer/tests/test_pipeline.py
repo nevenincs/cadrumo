@@ -21,6 +21,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.tests.inventory import FIXTURES_DIR
+from cadrumo.tests.log_records import delivered_records
 
 from .. import fixtures
 from .._pipeline import sanitize_pdf
@@ -220,7 +221,7 @@ class TestSourceParseErrorHygiene:
             # ``getMessage()``: ``exc_info`` carries the parser traceback - and
             # the unredacted source path inside it - past a message-only window.
             formatter = logging.Formatter()
-            log_text = "\n".join(formatter.format(record) for record in caplog.records)
+            log_text = "\n".join(formatter.format(record) for record in delivered_records(caplog))
             for fragment in forbidden_fragments:
                 assert fragment not in log_text, case_id
             assert "source=<input-pdf>" in log_text, case_id

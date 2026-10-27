@@ -71,6 +71,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.tests.log_records import delivered_records
 
 from ....adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
 from ....adapters.persistence.profile.tests.operator_scope_fakes import (
@@ -899,7 +900,7 @@ def test_auth_probe_unknown_requested_provider_log_omits_raw_selector(
         )
 
     assert projection.auth.available is False
-    assert any("unknown provider" in record.getMessage() for record in caplog.records)
+    assert any("unknown provider" in record.getMessage() for record in delivered_records(caplog))
     assert sensitive_provider not in caplog.text
 
 

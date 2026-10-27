@@ -21,6 +21,7 @@ from datetime import date
 
 import pytest
 
+from ....tests.log_records import delivered_records
 from ..dates import (
     _date_shape,
     parse_ddmmyyyy_date,
@@ -105,7 +106,7 @@ def test_refused_dates_are_diagnosed_by_shape_and_never_logged_in_clear_text(
         with pytest.raises(ValueError):
             parse_ddmmyyyy_date(censo_date_canary)
 
-    logged = "\n".join(record.getMessage() for record in caplog.records)
+    logged = "\n".join(record.getMessage() for record in delivered_records(caplog))
 
     # No digit of either value survives into the log.
     assert birth_date_canary not in logged

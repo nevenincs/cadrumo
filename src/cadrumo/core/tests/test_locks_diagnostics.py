@@ -16,6 +16,7 @@ from pathlib import Path
 
 import pytest
 
+from ...tests.log_records import delivered_records
 from .. import locks
 from ..locks import exclusive_file_lock, held_descriptor_lock
 from ..locks_errors import LockAcquisitionError
@@ -34,7 +35,7 @@ _TIMED_OUT = re.compile(r"exclusive_file_lock: timed out waiting for .*resource\
 
 
 def _lock_messages(caplog: pytest.LogCaptureFixture) -> list[tuple[int, str]]:
-    return [(record.levelno, record.getMessage()) for record in caplog.records if record.name == _LOGGER]
+    return [(record.levelno, record.getMessage()) for record in delivered_records(caplog, _LOGGER)]
 
 
 def test_uncontended_short_holds_record_nothing(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:

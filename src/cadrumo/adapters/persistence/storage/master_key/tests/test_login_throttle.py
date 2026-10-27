@@ -23,6 +23,7 @@ from pathlib import Path
 
 import pytest
 
+from ......tests.log_records import delivered_records
 from ...storage_path_definitions import LOGIN_THROTTLE_FILENAME
 from ..login_throttle import (
     LOGIN_THROTTLE_SCHEMA_VERSION,
@@ -241,7 +242,9 @@ def test_unreadable_sidecar_emits_bounded_diagnostic_without_path_or_payload(
     path.write_text(payload, encoding="utf-8")
     with caplog.at_level(logging.WARNING):
         assert not _evaluate(tmp_path, _NOW).throttled
-    messages = [record.getMessage() for record in caplog.records if "sidecar unreadable" in record.getMessage()]
+    messages = [
+        record.getMessage() for record in delivered_records(caplog) if "sidecar unreadable" in record.getMessage()
+    ]
     assert messages == ["login throttle sidecar unreadable; treating as cleared"]
     assert str(path) not in messages[0] and payload not in messages[0]
     assert path.read_text(encoding="utf-8") == payload

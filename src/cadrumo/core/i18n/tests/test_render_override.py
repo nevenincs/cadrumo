@@ -12,6 +12,7 @@ import logging
 
 import pytest
 
+from ....tests.log_records import delivered_records
 from ...config import override_settings
 from ...external_constants import DEFAULT_OUTPUT_LANGUAGE, SUPPORTED_OUTPUT_LANGUAGES
 from .. import render as _render
@@ -119,11 +120,14 @@ def test_locale_load_failure_is_logged_with_traceback(caplog: pytest.LogCaptureF
     assert rendered == "fallback"
     records = [
         record
-        for record in caplog.records
-        if record.name == "cadrumo.core.i18n.render" and "unable to load locale" in record.getMessage()
+        for record in delivered_records(caplog, "cadrumo.core.i18n.render")
+        if "unable to load locale" in record.getMessage()
     ]
     assert records
-    assert records[-1].exc_info is not None
+    # Handlers receive the traceback as text; the live exception is not kept on the record.
+    traceback_text = records[-1].exc_text
+    assert traceback_text is not None and "Traceback" in traceback_text
+    assert "FileNotFoundError" in traceback_text
     assert "FileNotFoundError" in records[-1].getMessage()
 
 
@@ -171,11 +175,14 @@ def test_profile_language_resolver_failure_logs_type_not_secret_message(
     assert resolved is None
     records = [
         record
-        for record in caplog.records
-        if record.name == "cadrumo.core.i18n.render" and "active-profile output language" in record.getMessage()
+        for record in delivered_records(caplog, "cadrumo.core.i18n.render")
+        if "active-profile output language" in record.getMessage()
     ]
     assert records
     message = records[-1].getMessage()
     assert "RuntimeError" in message
     assert "abc-secret-xyz" not in message
-    assert records[-1].exc_info is not None
+    traceback_text = records[-1].exc_text
+    assert traceback_text is not None and "Traceback" in traceback_text
+    assert "RuntimeError" in traceback_text
+    assert "abc-secret-xyz" not in traceback_text

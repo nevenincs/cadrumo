@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ......core.external_constants import OutputLanguage
+from ......tests.log_records import delivered_records
 from ..output_language_hint import (
     bucket_output_language_hint_path,
     clear_bucket_output_language_hint,
@@ -32,7 +33,7 @@ def test_absent_output_language_hint_uses_the_normal_fallback(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) is None
 
-    assert not [record for record in caplog.records if record.name == logger_name]
+    assert not delivered_records(caplog, logger_name)
 
 
 @pytest.mark.parametrize(
@@ -66,7 +67,7 @@ def test_unexpected_hint_read_error_preserves_exception_diagnostics(
     with caplog.at_level(logging.DEBUG, logger=logger_name):
         assert read_bucket_output_language_hint(storage_root=tmp_path, bucket_id=bucket_id) is None
 
-    records = [record for record in caplog.records if record.name == logger_name]
+    records = delivered_records(caplog, logger_name)
     assert len(records) == 1
     assert type(error).__name__ in records[0].getMessage()
     assert records[0].exc_info is not None or records[0].exc_text is not None

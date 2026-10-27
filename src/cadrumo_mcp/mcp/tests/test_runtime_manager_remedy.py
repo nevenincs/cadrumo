@@ -5,6 +5,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.core.config import override_settings
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.contracts import RefusalCode
 
 from ..runtime_adapter import RuntimeMcpAdapter
@@ -28,14 +29,16 @@ async def test_unavailable_adapter_returns_remedy_without_automatic_request(capl
     # Finding an operation needs the session too, so it is refused the same way and names the manager.
     assert found["outcome"] == "refused" and found["code"] == "runtime_unavailable" and "manager" in found["remedy"]
     assert adapter.client is None
-    records = [record.getMessage() for record in caplog.records if "MCP tool refused:" in record.getMessage()]
+    records = [
+        record.getMessage() for record in delivered_records(caplog) if "MCP tool refused:" in record.getMessage()
+    ]
     assert records == [
         "MCP tool refused: tool=status reason=runtime_unavailable",
         "MCP tool refused: tool=observe reason=runtime_unavailable",
         "MCP tool refused: tool=search reason=runtime_unavailable",
     ]
     assert "remedy" not in await adapter.call("unknown_tool", {})
-    assert "MCP tool refused: reason=unknown_tool" in caplog.text
+    assert "MCP tool refused: reason=unknown_tool" in delivered_text(caplog)
     await adapter.close()
 
 
@@ -48,5 +51,5 @@ async def test_scope_refusal_is_logged_without_claiming_the_person_is_signed_out
     reply = await adapter.call("status", {})
     assert reply["denial"] == "privilege_expansion"
     assert "does not mean the person is signed out" in reply["remedy"]
-    assert "MCP tool refused: tool=status reason=privilege_expansion" in caplog.text
+    assert "MCP tool refused: tool=status reason=privilege_expansion" in delivered_text(caplog)
     await adapter.close()

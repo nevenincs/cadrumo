@@ -22,6 +22,7 @@ import pytest
 
 from ......core.errors.error_codes import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
+from ......tests.log_records import delivered_text
 from ..directory_layout import (
     BucketPaths,
     bucket_paths,
@@ -349,9 +350,10 @@ def test_malformed_lockfile_pid_is_reclaimed_with_debug_log(
     finally:
         release_lock(paths)
 
-    assert "bucket lockfile pid malformed; treating lock as stale" in caplog.text
-    assert str(target) not in caplog.text
-    assert str(tmp_path) not in caplog.text
+    logged = delivered_text(caplog)
+    assert "bucket lockfile pid malformed; treating lock as stale" in logged
+    assert str(target) not in logged
+    assert str(tmp_path) not in logged
 
 
 def test_release_is_idempotent_when_lock_absent(
@@ -363,8 +365,9 @@ def test_release_is_idempotent_when_lock_absent(
     with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.persistence.storage.bucket.lockfile"):
         release_lock(paths)  # No-op; must not raise.
 
-    assert "bucket lockfile release skipped missing lockfile" in caplog.text
-    assert str(tmp_path) not in caplog.text
+    logged = delivered_text(caplog)
+    assert "bucket lockfile release skipped missing lockfile" in logged
+    assert str(tmp_path) not in logged
 
 
 def test_release_leaves_foreign_lockfile_alone(tmp_path: Path) -> None:

@@ -13,6 +13,7 @@ import pytest
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.core.bucket_pointer import BucketPointer
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport import installed_client
@@ -61,7 +62,7 @@ def _invoke(monkeypatch: pytest.MonkeyPatch) -> dict[str, object]:
 
 
 def _boundary_records(caplog: pytest.LogCaptureFixture, boundary: str) -> list[logging.LogRecord]:
-    return [record for record in caplog.records if getattr(record, "failure_boundary", None) == boundary]
+    return [record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == boundary]
 
 
 def test_internal_failure_names_its_root_cause_on_the_console_and_in_the_log(

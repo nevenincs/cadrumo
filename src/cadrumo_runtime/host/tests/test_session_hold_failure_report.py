@@ -9,6 +9,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_runtime.host import session_hold
 
@@ -48,7 +49,9 @@ def test_refused_hold_logs_and_answers_with_the_refusal_report(
     )
     assert "desktop_holder_descriptor_absent" not in captured.err
 
-    (record,) = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "session_hold"]
+    (record,) = [
+        record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "session_hold"
+    ]
     assert record.levelno == logging.ERROR
     assert record.__dict__["trace_id"] == error["trace_id"] == error["context"]["trace_id"]
     assert record.__dict__["reason"] == "desktop_holder_descriptor_absent"

@@ -24,6 +24,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.errors.hierarchy import InternalInvariantError
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.storage_taxonomy import StorageArea
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
@@ -399,9 +400,10 @@ def test_an_unexpected_fault_fails_one_act_privately_and_the_door_keeps_serving(
 
     assert [type(document) for document in documents] == [InstallationFailed]
     assert _FAULT_TEXT.encode() not in bytes(channel.written)
-    assert _FAULT_TEXT not in caplog.text
-    assert all(_FAULT_TEXT not in repr(record.__dict__) for record in caplog.records)
-    failures = [record for record in caplog.records if record.getMessage() == "installation act failed"]
+    delivered = delivered_records(caplog)
+    assert _FAULT_TEXT not in delivered_text(caplog)
+    assert all(_FAULT_TEXT not in repr(record.__dict__) for record in delivered)
+    failures = [record for record in delivered if record.getMessage() == "installation act failed"]
     assert len(failures) == 1
     assert failures[0].__dict__["act"] == "storage_check"
     assert failures[0].__dict__["error_type"] == "ValueError"
@@ -486,8 +488,8 @@ def test_an_inbound_secret_arrives_in_one_secret_frame_and_nowhere_else(
     assert received == [_PROOF]
     assert [type(document) for document in documents] == [SecretReady, ArchiveImportReply]
     assert _PROOF.encode() not in bytes(channel.written)
-    assert _PROOF not in caplog.text
-    assert all(_PROOF not in repr(record.__dict__) for record in caplog.records)
+    assert _PROOF not in delivered_text(caplog)
+    assert all(_PROOF not in repr(record.__dict__) for record in delivered_records(caplog))
 
 
 def test_a_secret_frame_that_is_not_the_declared_document_is_an_invalid_frame_without_its_bytes(
@@ -522,7 +524,7 @@ def test_a_secret_frame_that_is_not_the_declared_document_is_an_invalid_frame_wi
     assert refusal.code is RefusalCode.INVALID_FRAME
     for private in (_PROOF, _FAULT_TEXT):
         assert private.encode() not in bytes(channel.written)
-        assert private not in caplog.text
+        assert private not in delivered_text(caplog)
 
 
 def test_a_handler_cannot_take_a_secret_its_act_does_not_declare(tmp_path: Path) -> None:
@@ -655,7 +657,7 @@ def test_an_access_error_raised_after_the_change_began_fails_the_act_with_its_ef
     failed = documents[0]
     assert isinstance(failed, InstallationFailed)
     assert failed.act is InstallationAct.STORAGE_INIT
-    failures = [record for record in caplog.records if record.getMessage() == "installation act failed"]
+    failures = [record for record in delivered_records(caplog) if record.getMessage() == "installation act failed"]
     assert [record.__dict__["error_type"] for record in failures] == [type(error).__name__]
     assert door._drain_guard._owner is None
 

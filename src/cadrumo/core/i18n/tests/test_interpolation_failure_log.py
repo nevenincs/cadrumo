@@ -6,6 +6,7 @@ import logging
 
 import pytest
 
+from ....tests.log_records import delivered_records, delivered_text
 from ..render import UnmatchedPlaceholderError, tr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -26,11 +27,9 @@ def test_a_failed_format_logs_the_key_and_traceback_without_the_value(caplog: py
 
     assert _PRIVATE_VALUE not in str(refused.value)
     (record,) = [
-        record
-        for record in caplog.records
-        if record.name == _RENDER_LOGGER and "unable to interpolate" in record.getMessage()
+        record for record in delivered_records(caplog, _RENDER_LOGGER) if "unable to interpolate" in record.getMessage()
     ]
     assert "tests.i18n.synthetic_unformattable" in record.getMessage()
     assert "ValueError" in record.getMessage()
     assert record.exc_text is not None and "Traceback" in record.exc_text
-    assert _PRIVATE_VALUE not in caplog.text
+    assert _PRIVATE_VALUE not in delivered_text(caplog)

@@ -63,7 +63,6 @@ _SAMPLE_ROW: Mapping[str, object] = {
     # stop covering it.
     "participe_clave": "2",
     "country_of_residence": "US",
-    "role": "comunero",
     # clave D / subclave 03 is the one combination that exercises the
     # estimación-objetiva rendimiento-neto-previo field alongside the
     # shared clave-C/clave-D reducción field, without tripping the row
