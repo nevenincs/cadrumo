@@ -29,6 +29,11 @@ Logging is a diagnostic channel, not the CLI result contract. Operator-facing
 success payloads and typed :class:`~cadrumo.core.json_contract.Notice` values are
 rendered through the JSON/text output stack; this module only prepares redacted
 log records and plaintext diagnostic log files rooted by settings.
+
+Producers hand off bounded builtin snapshots before redaction or output. Opaque
+arguments are omitted without invoking application rendering hooks. Independent
+background sinks expose delivery counters and finite flush/shutdown attempts;
+overload rejects diagnostic work rather than blocking application progress.
 """
 
 from __future__ import annotations
@@ -1037,7 +1042,7 @@ def _defer_record_if_placeholder(
     if record.levelno >= logging.WARNING:
         _handle_as_last_resort(record)
     else:
-        _pending_records.append(record)
+        _hold_pending_record(record)
     return True
 
 
@@ -1062,11 +1067,17 @@ def _forward_first_record(
 
 def _handle_as_last_resort(record: logging.LogRecord) -> None:
     if _operator_document_record(record):
-        _pending_records.append(record)
+        _hold_pending_record(record)
         return
     last_resort = logging.lastResort
     if last_resort is not None and record.levelno >= last_resort.level:
         last_resort.handle(record)
+
+
+def _hold_pending_record(record: logging.LogRecord) -> None:
+    if len(_pending_records) == _PENDING_RECORD_LIMIT:
+        _dispatch.discard()
+    _pending_records.append(record)
 
 
 def _flush_pending_records() -> None:
@@ -1299,6 +1310,15 @@ class _AsyncDiagnosticHandler(logging.Handler):
             finish=sink.close,
         )
         _sink_workers.append(self._worker)
+
+    @override
+    def handle(self, record: logging.LogRecord) -> bool:
+        # Foreign loggers bypass logger-attached filters during propagation.
+        # Intercept before handler filters can enter redaction or registry I/O.
+        if _active_record.get() is not record:
+            _enqueue_record(record)
+            return True
+        return bool(super().handle(record))
 
     def _write(self, record: logging.LogRecord) -> None:
         token = _active_record.set(record)

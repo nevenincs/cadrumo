@@ -42,6 +42,13 @@ if removal != "native":
 
 from cadrumo.core import logging as project_logging
 
+def drain():
+    if not project_logging.flush_logging(timeout=10):
+        import faulthandler
+        faulthandler.dump_traceback()
+        print(project_logging.diagnostic_delivery_status(), file=sys.stderr)
+        raise AssertionError('bounded diagnostic drain did not complete')
+
 mode = sys.argv[2]
 if mode in {"deferred", "late", "document-deferred"}:
     project_logging.defer_logging_configuration()
@@ -57,7 +64,7 @@ else:
         logger.info("info record %s", "before-warning")
         if mode == "document-deferred":
             logger.warning("first record %s", "probe")
-assert project_logging.flush_logging(timeout=10)
+drain()
 after_info = {"exists": log_file.exists(), "configured": project_logging._configured}
 if mode in {"late", "document-deferred"}:
     project_logging.resume_logging_configuration()
@@ -66,9 +73,10 @@ if mode in {"late", "document-deferred"}:
         logger.warning("outside document scope")
 elif mode != "overflow":
     logger.warning("first record %s", "probe")
-assert project_logging.flush_logging(timeout=10)
+drain()
 project_logging.shutdown_logging()
-print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging._configured}))
+print(json.dumps({"before": before, "after_info": after_info, "configured": project_logging._configured,
+                  "dropped": project_logging.diagnostic_delivery_status()['records'].dropped}))
 """
 
 _STAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"
@@ -92,6 +100,7 @@ def _run_probe(tmp_path: Path, mode: str, *, removal: str = "native") -> tuple[d
         capture_output=True,
         text=True,
         check=False,
+        timeout=30,
     )
     assert completed.returncode == 0, completed.stderr
     loaded: object = json.loads(str(completed.stdout))
@@ -136,10 +145,11 @@ def test_a_host_that_configures_late_still_writes_its_earlier_info_record(tmp_pa
 
 
 def test_held_records_keep_only_the_newest_when_the_buffer_overflows(tmp_path: Path) -> None:
-    _, _, log_file = _run_probe(tmp_path, "overflow")
+    report, _, log_file = _run_probe(tmp_path, "overflow")
 
     held = re.findall(r"held record (\d+)", log_file.read_text(encoding="utf-8"))
     assert [int(index) for index in held] == list(range(5, 205))
+    assert report["dropped"] == 5
 
 
 def test_a_deferred_process_keeps_the_log_file_closed_and_reports_on_stderr(tmp_path: Path) -> None:

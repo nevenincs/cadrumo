@@ -47,10 +47,12 @@ def _probe(tmp_path: Path, body: str) -> dict[str, float | int]:
     return result
 
 
-def test_blocked_redaction_does_not_block_logging_or_grow_the_queue(tmp_path: Path) -> None:
+@pytest.mark.parametrize("foreign", (False, True))
+def test_blocked_redaction_does_not_block_logging_or_grow_the_queue(tmp_path: Path, foreign: bool) -> None:
     result = _probe(
         tmp_path,
-        """
+        ("logger = logging.getLogger('synthetic.third_party')\n" if foreign else "")
+        + """
 entered, release = threading.Event(), threading.Event()
 original = project._scrub_record_message_and_args
 def scrub(record):

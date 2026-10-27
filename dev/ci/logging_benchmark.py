@@ -51,7 +51,7 @@ def _percentile(values: list[int], fraction: float) -> float:
 def main() -> None:
     """Emit a bounded benchmark report, never diagnostic payloads."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--mode", choices=("normal", "slow", "blocked"), default="normal")
+    parser.add_argument("--mode", choices=("normal", "slow", "blocked", "large"), default="normal")
     parser.add_argument("--threads", type=int, default=8)
     parser.add_argument("--records", type=int, default=5000)
     parser.add_argument("--duration", type=float, default=0)
@@ -95,6 +95,7 @@ def main() -> None:
             if options.ready is not None:
                 options.ready.write_text(json.dumps({"pid": os.getpid(), "mode": options.mode}), encoding="utf-8")
             barrier = threading.Barrier(options.threads + 1)
+            large_value = "synthetic diagnostic text / " * 400
 
             def produce(writer: int) -> tuple[int, list[int]]:
                 samples: list[int] = []
@@ -103,7 +104,10 @@ def main() -> None:
                 count = 0
                 while count < options.records or (options.duration > 0 and time.monotonic() < deadline):
                     started = time.perf_counter_ns()
-                    logger.info("logging benchmark writer=%d record=%d", writer, count)
+                    if options.mode == "large":
+                        logger.info("large diagnostic %s %s", large_value, {"writer": writer, "record": count})
+                    else:
+                        logger.info("logging benchmark writer=%d record=%d", writer, count)
                     elapsed = time.perf_counter_ns() - started
                     if len(samples) < 8192:
                         samples.append(elapsed)

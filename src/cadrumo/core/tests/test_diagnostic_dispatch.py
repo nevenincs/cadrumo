@@ -152,3 +152,18 @@ def test_nonfinite_timeouts_never_wait_on_a_stuck_callback() -> None:
     finally:
         release.set()
         assert queue.close(timeout=2)
+
+
+def test_process_change_replaces_inherited_lock_and_daemon_state() -> None:
+    received: list[int] = []
+    queue = DiagnosticDispatch[int](received.append, name="process-reset-test")
+    assert queue.submit(1) and queue.close(timeout=2)
+    inherited_guard = queue._guard
+    inherited_guard.acquire()
+    try:
+        queue._pid = -1
+        assert queue.submit(2) and queue.close(timeout=2)
+        assert queue.status().accepted == queue.status().completed == 1
+        assert received == [1, 2]
+    finally:
+        inherited_guard.release()
