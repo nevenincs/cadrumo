@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:0459a4aa94b3dbe621993280f53671fbbeb5e6e189743e0f8b3d84759d8e97d7'
+body_hash: 'sha256:07fd9b71f446eeec5e00378c4c743bc0f1bc56806bc5cc56035a777042417a74'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -66,6 +66,21 @@ related:
 - `S05` `verify:` `just check-format` -> `pass`
 - `S05` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S05` `by:` `implementation-engineer-high`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/session.py`
+- `S04` `A` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_context.py`
+- `S04` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_terminal_preconditions.py`
+- `S04` `D` `src/cadrumo/adapters/outbound/aeat/browser/request_guard.py`
+- `S04` `D` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_request_guard.py`
+- `S04` `D` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_context_guard.py`
+- `S04` `M` `src/cadrumo/core/remote_authority.py`
+- `S04` `M` `src/cadrumo/domain/calculations/registry/tests/test_remote_authority_canonicalisation.py`
+- `S04` `M` `dev/quality/metadata/import_load_targets.json`
+- `S04` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S04` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/browser/tests src/cadrumo/domain/calculations/registry/tests -k "guard or view"` -> `pass`
+- `S04` `verify:` `uv run --no-sync ruff check and ruff format --check on scope` -> `pass`
+- `S04` `verify:` `uv run --no-sync ty check on scope` -> `pass`
+- `S04` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S04` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -73,3 +88,4 @@ related:
 - `S01` The aggregate `dev/quality/metadata/import_load_targets.json` was regenerated with the two new modules but left uncommitted because it carries other sessions' pending changes
 - `S05` Most S05 source landed in another session commit 93775feb30, which swept the shared worktree; the S05 commit carries the remaining test change.
 - `S05` just check-types: 5 diagnostics outside S05 scope `(browser/request_guard.py,` runtime worker startup test); just check-import-boundaries kept 30 of 30 contracts but reported unavailable because the tree changed during the run.
+- `S04` Scope change from the user 2026-10-27 (its a browser, free usage): no request guard, operator-view policy, service worker or WebSocket block on the view context. Guard code first written for this Step was swept into 93775feb30 by another session and removed in a061b2cbce. Step left open for the orchestrator.
