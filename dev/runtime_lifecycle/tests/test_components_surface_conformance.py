@@ -103,6 +103,7 @@ async def test_registered_status_projection_keeps_native_rows_and_refusal_wordin
                 assert tr(dependency_failure_key(recorded.failure_category)) in screen.status_text
 
 
+@pytest.mark.unit
 def test_all_surfaces_share_the_registered_component_contracts() -> None:
     group = build_components_operations()
     registry = OperationRegistry(definitions=group.definitions, public_registrations=group.registrations)
