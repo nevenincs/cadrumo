@@ -47,6 +47,14 @@ Starting a run on a lane whose model runs on this computer loads the model
 first, which the service allows 90 s; the run's deadline counts from its start.
 """
 
+_TRANSFER_SECONDS = 10
+"""How long a request's frames may take, counted from when they are due, never from dispatch.
+
+Waiting for the guards and the peer recheck is the runtime's queueing, not the service's time.
+"""
+
+_REPLY_WRITE_SECONDS = 5
+
 
 @dataclass
 class PendingModelRun:
@@ -153,7 +161,6 @@ class ProfileConnectionModelRunsMixin:
         be the service's exact lease after the profile and peer are rechecked, and
         its withdrawal waits until the bounded header and body writes end.
         """
-        deadline = time.monotonic() + 10
         with self._guard:
             pending = self._model_runs.get(request.run_id)
             service = self._services.get(context.connection_id)
@@ -179,6 +186,7 @@ class ProfileConnectionModelRunsMixin:
             service.disclosing += 1
         try:
             command = pending.command
+            deadline = time.monotonic() + _TRANSFER_SECONDS
             write_document(
                 channel,
                 ModelRunFetched(
@@ -211,7 +219,6 @@ class ProfileConnectionModelRunsMixin:
         the peer and the exact lease are checked again once it is in, and the
         answer is recorded under the guard that a lease withdrawal holds.
         """
-        deadline = time.monotonic() + 10
         with self._guard:
             pending = self._model_runs.get(request.run_id)
             service = self._services.get(context.connection_id)
@@ -222,6 +229,7 @@ class ProfileConnectionModelRunsMixin:
             return _refuse(self, context, channel, request.request_id)
         text = bytearray()
         if outcome.text_byte_count:
+            deadline = time.monotonic() + _TRANSFER_SECONDS
             write_document(
                 channel,
                 SecretReady(
@@ -262,7 +270,7 @@ class ProfileConnectionModelRunsMixin:
                 run_id=request.run_id,
                 accepted=accepted,
             ),
-            deadline=deadline,
+            deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
         )
 
 
@@ -354,7 +362,7 @@ def _refuse(
             connection_id=context.connection_id,
             code=AccessDenialCode.OPERATION_DENIED,
         ),
-        deadline=time.monotonic() + 5,
+        deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
     )
 
 

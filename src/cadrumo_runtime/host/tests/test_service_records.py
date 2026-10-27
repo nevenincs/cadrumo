@@ -27,7 +27,7 @@ from cadrumo_client.contracts.extension_records import (
     ExtensionRecordReply,
     ExtensionRecordRequest,
 )
-from cadrumo_client.contracts.profile_access import ProfileStatus, SessionRequest, SessionsLocked
+from cadrumo_client.contracts.profile_access import ProfileStatus, SecretReady, SessionRequest, SessionsLocked
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
     ServiceAdmission,
@@ -44,6 +44,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, NativeRuntimeFixtureOwner, owner_id, worker_profiles
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
+from .. import profile_connection_extension_records as extension_records
 from ..profile_connections import RuntimeProfileConnections
 from .test_profile_connections import LoginObservation, connect, login
 
@@ -447,3 +448,68 @@ def test_service_refresh_tolerates_lease_retirement_before_profile_guard(
 
         assert service.connected is not None and service.connected.lease is None
         assert retained.lease is None
+
+
+def test_service_record_reply_is_not_bounded_by_the_client_input_window(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        assert service.claim() is not None
+        stored = bytearray(b"synthetic payload read after a long queue")
+        written = service.record_write(
+            RECORD_CAPABILITY, "synthetic-record", stored, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+        )
+        assert written.state == "written"
+
+        # Serving a read always outlasts a client input window this short, as waiting on the guards does a long one.
+        with monkeypatch.context() as patch:
+            patch.setattr(extension_records, "_CLIENT_INPUT_SECONDS", 0.001)
+            present, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+        try:
+            assert present.state == "present" and present.revision == written.revision
+            assert material == b"synthetic payload read after a long queue"
+        finally:
+            material[:] = bytes(len(material))
+
+        # The connection survived and serves the next request.
+        generation = service.observe_generation(RECORD_CAPABILITY)
+        assert generation.state == "generation" and generation.records_generation is not None
+        assert not service.connection.closed
+
+
+def test_service_record_write_input_is_bounded_and_waited_for_outside_the_profile_guard(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        lease = service.claim()
+        assert lease is not None
+        host = runtime.profiles._profiles[runtime.profile_id]
+        request = ExtensionRecordRequest(
+            action="extension_record_write",
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=lease.session_id,
+            lease_id=lease.lease_id,
+            capability=RECORD_CAPABILITY,
+            object_key="synthetic-record",
+            expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+            byte_count=16,
+        )
+
+        with monkeypatch.context() as patch:
+            patch.setattr(extension_records, "_CLIENT_INPUT_SECONDS", 5.0)
+            with service.connection.held_exchange(request, request.request_id, deadline=time.monotonic() + 30) as held:
+                assert isinstance(held.reply().root, SecretReady)
+                waiting_since = time.monotonic()
+                # A service that withholds its secret must not keep the profile fenced meanwhile.
+                assert host.guard.acquire(timeout=2)
+                host.guard.release()
+                # The runtime, not this client, ends the wait: the connection closes when the window does.
+                with pytest.raises(RefusalError) as closed:
+                    held.reply()
+        assert closed.value.reason is RefusalCode.CONNECTION_CLOSED
+        assert time.monotonic() - waiting_since < 20

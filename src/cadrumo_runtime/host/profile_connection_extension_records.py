@@ -20,6 +20,11 @@ from cadrumo_client.transport.frame_io import read_secret, write_document, write
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
 
+# Both budgets start when their frames are due, never at dispatch: the client
+# controls only its own input, and queueing for a fence or a worker is not its time.
+_CLIENT_INPUT_SECONDS = 10
+_REPLY_WRITE_SECONDS = 5
+
 
 class ProfileConnectionExtensionRecordsMixin:
     """Serve lease-bound extension-record operations on profile connections."""
@@ -33,7 +38,6 @@ class ProfileConnectionExtensionRecordsMixin:
         """Read, write, delete, or report a record generation for one request."""
         material = bytearray()
         payload = bytearray()
-        deadline = time.monotonic() + 10
         refusal = ExtensionRecordRefusal.LEASE_INACTIVE
         try:
             with self._guard:
@@ -73,6 +77,7 @@ class ProfileConnectionExtensionRecordsMixin:
                         return self._extension_refused(context, request, channel, refusal)
                     if not self._service_verifier.recheck_service(context, channel, service.peer):
                         return self._extension_refused(context, request, channel, refusal)
+                    deadline = time.monotonic() + _CLIENT_INPUT_SECONDS
                     write_document(
                         channel,
                         SecretReady(
@@ -82,8 +87,7 @@ class ProfileConnectionExtensionRecordsMixin:
                         ),
                         deadline=deadline,
                     )
-            # Slow input never keeps profile retirement or locking behind its socket.
-            if action == "write":
+                # Slow input never keeps profile retirement or locking behind its socket.
                 with read_secret(channel, deadline=deadline) as incoming:
                     if len(incoming) != request.byte_count:
                         return self._extension_refused(context, request, channel, ExtensionRecordRefusal.INVALID)
@@ -109,9 +113,10 @@ class ProfileConnectionExtensionRecordsMixin:
                         channel,
                         ExtensionRecordRefusal.OUTCOME_UNKNOWN if action in {"write", "delete"} else refusal,
                     )
-                write_document(channel, result, deadline=deadline)
+                reply_deadline = time.monotonic() + _REPLY_WRITE_SECONDS
+                write_document(channel, result, deadline=reply_deadline)
                 if material:
-                    write_secret(channel, material, deadline=deadline)
+                    write_secret(channel, material, deadline=reply_deadline)
         finally:
             material[:] = bytes(len(material))
             payload[:] = bytes(len(payload))
@@ -126,5 +131,5 @@ class ProfileConnectionExtensionRecordsMixin:
                 state="refused",
                 refusal=refusal,
             ),
-            deadline=time.monotonic() + 5,
+            deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
         )
