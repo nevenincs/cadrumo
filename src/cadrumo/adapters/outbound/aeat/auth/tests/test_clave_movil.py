@@ -18,6 +18,7 @@ from ......core.i18n.render import tr
 from ......core.operator_progress import OperatorProgress, operator_progress_sink
 from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.remote_state_guard import RemoteOperation, assert_remote_operation_allowed
+from ......tests.log_records import delivered_records
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ..clave_movil import ClaveMovilAuthProvider
 from ..clave_movil_support import (
@@ -318,4 +319,4 @@ def test_render_progress_banner_uses_structured_log_not_stdio(
     captured = capsys.readouterr()
     assert captured.out == ""
     assert captured.err == ""
-    assert any("auth.waiting_banner" in record.message for record in caplog.records)
+    assert any("auth.waiting_banner" in record.message for record in delivered_records(caplog))

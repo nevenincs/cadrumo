@@ -16,6 +16,7 @@ from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config import Settings
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.errors.hierarchy import AeatLoginAssertionError
+from ......tests.log_records import delivered_records
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...browser.factory import DefaultBrowserSession
 from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
@@ -173,7 +174,9 @@ async def test_navigation_failure_redacts_redirect_payload_from_assertion_and_lo
     assert assertion.is_valid is False
     assert assertion.error_message in {"Error", "protected_resource_mismatch"}
     assert boundary.sensitive_token not in assertion.model_dump_json()
-    assert boundary.sensitive_token not in "\n".join(record.getMessage() for record in caplog.records)
+    logged = "\n".join(record.getMessage() for record in delivered_records(caplog))
+    assert "login probe navigation failed" in logged
+    assert boundary.sensitive_token not in logged
 
 
 @pytest.mark.asyncio

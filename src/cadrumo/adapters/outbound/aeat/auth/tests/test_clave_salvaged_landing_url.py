@@ -31,6 +31,7 @@ from ......core.config import Settings
 from ......tests.aeat_literal_fixtures import (
     DOTTED_AEAT_HOST_SUFFIX_FIXTURE,
 )
+from ......tests.log_records import delivered_records
 from ..clave_movil import ClaveMovilAuthProvider
 from ._clave_movil_support import _CLAVE_SURFACE, _DOMAINS, _aeat_url, _settings_for
 
@@ -154,6 +155,6 @@ def test_an_unapproved_login_is_not_logged_as_an_authenticated_session(
         )
 
     assert len(persisted) == 1
-    messages = [record.getMessage() for record in caplog.records]
+    messages = [record.getMessage() for record in delivered_records(caplog)]
     assert any("authenticated_landing_observed=False" in message for message in messages)
     assert not any("authenticated session" in message for message in messages)
