@@ -32,6 +32,7 @@ import {
   partName,
   refusalWords,
   retryWords,
+  rowTone,
   stepWords,
 } from "./setupWords";
 
@@ -40,7 +41,10 @@ import {
 // while it runs; what each component is, the plan's detail per component and
 // each one's progress stay in a "Details" disclosure, closed until opened.
 // The dialog never holds the window: closing it leaves a running setup
-// running, and Settings keeps saying so.
+// running, and Settings keeps saying so. Opened on the browser, it is the
+// browser's own flow: its rows, its plan and its progress only, and a setup
+// of anything else that is running is named as that rather than shown as
+// the browser's.
 
 /** The items a start asks for: the one the dialog was opened on, or every
  * item not ready. */
@@ -328,6 +332,7 @@ export function SetupDialog({
   onAct,
   onCopyDetails,
   onLocalAi,
+  onShowAll,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -340,29 +345,52 @@ export function SetupDialog({
   onAct: (row: SetupRow) => void;
   onCopyDetails: (details: string) => void;
   onLocalAi?: () => void;
+  /** Shows setup as a whole, for a setup of other items running while the
+   * browser's flow is open. */
+  onShowAll?: () => void;
 }) {
   const t = useStrings();
   const snapshot: SetupSnapshot | null = control.snapshot;
-  const run = snapshot?.setup ?? null;
-  const stage = run?.stage ?? null;
   const rows = (snapshot?.rows ?? []).filter(
     (row) => focus === null || row.item === focus,
   );
-  const main = snapshot ? mainAction(t, run, rows) : null;
+  // An item's id is its kind, so the flow is known before its row is read.
+  const browserFlow =
+    focus !== null &&
+    (rows.find((row) => row.item === focus)?.kind ?? focus) === "browser";
+  // A setup this window joined that plans more than the browser is not the
+  // browser's: while it runs it is named, and once settled it says nothing
+  // here.
+  const joined = snapshot?.setup ?? null;
+  const foreign =
+    browserFlow &&
+    joined !== null &&
+    joined.items.some((item) => item.item !== focus);
+  const elsewhere = foreign && joined.stage !== "settled";
+  const run = foreign ? null : joined;
+  const stage = run?.stage ?? null;
+  const main = snapshot && !elsewhere ? mainAction(t, run, rows) : null;
+  const usable =
+    rows.length > 0 && rows.every((row) => rowTone(row) === "ready");
   // A check the engine refused under a category of its own, such as a setting
   // it cannot use, or that was refused because the person's selection of local
   // models could not be admitted: it reports no row, so its sentence is the
   // only thing to say.
   const checkFailure =
     snapshot?.check?.stage === "failed" ? snapshot.check.failure : null;
+  // Only the local AI's selection of models is refused this way.
   const checkRefusal =
-    snapshot?.check?.stage === "failed" ? snapshot.check.refusal : null;
+    snapshot?.check?.stage === "failed" && !browserFlow
+      ? snapshot.check.refusal
+      : null;
   const description =
     stage === "review"
       ? t("desktop.setup.lead_review")
       : stage === "running" || stage === "planning"
         ? t("desktop.setup.lead_running")
-        : t("desktop.setup.lead");
+        : browserFlow
+          ? t("desktop.setup.browser_lead")
+          : t("desktop.setup.lead");
   const rowList = (
     <ul className="grid gap-2">
       {rows.map((row) => (
@@ -384,7 +412,11 @@ export function SetupDialog({
         className="setup-dialog overflow-y-auto"
       >
         <DialogHeader>
-          <DialogTitle>{t("desktop.setup.title")}</DialogTitle>
+          <DialogTitle>
+            {browserFlow
+              ? t("desktop.setup.browser_title")
+              : t("desktop.setup.title")}
+          </DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
 
@@ -410,6 +442,13 @@ export function SetupDialog({
           <p className="text-sm text-foreground">
             {t("desktop.setup.unavailable")}
           </p>
+        ) : elsewhere ? (
+          <>
+            <p role="status" className="text-sm text-foreground">
+              {t("desktop.setup.browser_other_running")}
+            </p>
+            {rowList}
+          </>
         ) : stage === "planning" ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner />
@@ -449,24 +488,31 @@ export function SetupDialog({
                 {outcomeWords(t, run.outcome, run.failure)}
               </Alert>
             ) : (
-              <p data-setup-summary className="text-sm text-foreground">
-                {summaryWords(t, snapshot)}
-              </p>
+              !browserFlow && (
+                <p data-setup-summary className="text-sm text-foreground">
+                  {summaryWords(t, snapshot)}
+                </p>
+              )
             )}
-            <Details>
-              {stage === "settled" && run && run.items.length > 0 && (
-                <ul className="grid gap-2">
-                  {run.items.map((progress) => (
-                    <ItemProgress
-                      key={progress.item}
-                      progress={progress}
-                      locale={locale}
-                    />
-                  ))}
-                </ul>
-              )}
-              {rowList}
-            </Details>
+            {/* The browser's one row is its summary, said once. */}
+            {browserFlow && rowList}
+            {(!browserFlow ||
+              (stage === "settled" && run && run.items.length > 0)) && (
+              <Details>
+                {stage === "settled" && run && run.items.length > 0 && (
+                  <ul className="grid gap-2">
+                    {run.items.map((progress) => (
+                      <ItemProgress
+                        key={progress.item}
+                        progress={progress}
+                        locale={locale}
+                      />
+                    ))}
+                  </ul>
+                )}
+                {!browserFlow && rowList}
+              </Details>
+            )}
           </>
         )}
 
@@ -512,6 +558,21 @@ export function SetupDialog({
                 </Button>
               )}
             </>
+          ) : elsewhere ? (
+            <>
+              {onShowAll && (
+                <Button variant="outline" size="sm" onClick={onShowAll}>
+                  {t("desktop.setup.show_running")}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+              >
+                {t("desktop.setup.hide")}
+              </Button>
+            </>
           ) : (
             <>
               {(stage === "running" || stage === "planning") && run && (
@@ -533,10 +594,29 @@ export function SetupDialog({
               >
                 {stage === "running" || stage === "planning"
                   ? t("desktop.setup.hide")
-                  : snapshot?.complete
+                  : (browserFlow ? usable : snapshot?.complete)
                     ? t("desktop.setup.close")
                     : t("desktop.setup.not_now")}
               </Button>
+              {/* A browser row with no button of its own is checked again
+                  from the flow's footer. */}
+              {browserFlow &&
+                !main &&
+                stage !== "running" &&
+                stage !== "planning" &&
+                rows.length > 0 &&
+                rows.every((row) => row.recovery === null) && (
+                  <Button
+                    size="sm"
+                    disabled={control.pending}
+                    onClick={() => {
+                      control.clearRefusal();
+                      control.verify(rows.map((row) => row.item));
+                    }}
+                  >
+                    {t("desktop.setup.action.check_again")}
+                  </Button>
+                )}
               {main && (
                 <Button
                   size="sm"

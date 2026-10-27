@@ -93,7 +93,15 @@ export function setupTargetOf(
 ): SetupRow | "general" | null {
   if (GENERAL_SETUP_ACTIONS.has(action)) return "general";
   const kind = SETUP_ACTION_KINDS.get(action);
-  if (kind === undefined) return null;
+  return kind === undefined ? null : rowOfKind(kind, rows);
+}
+
+/** The row that speaks for one kind of item: the first that is not ready,
+ * else the first; null while the snapshot has none of that kind. */
+export function rowOfKind(
+  kind: SetupItemKind,
+  rows: readonly SetupRow[],
+): SetupRow | null {
   const ofKind = rows.filter((row) => row.kind === kind);
   return ofKind.find((row) => row.state !== "ready") ?? ofKind[0] ?? null;
 }

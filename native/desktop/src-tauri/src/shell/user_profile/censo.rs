@@ -37,6 +37,10 @@ pub struct Snapshot {
     can_cancel: bool,
     review_digest: Option<String>,
     fields: Vec<ReviewField>,
+    /// The operator action that sets up what a pull that stopped lacked, as
+    /// its recorded verdict names it; an identifier for routing, never shown.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    recovery_action_id: Option<String>,
 }
 pub(super) struct Session {
     person: HeldPerson,
@@ -104,11 +108,29 @@ impl Session {
                     can_cancel: false,
                     review_digest: None,
                     fields: vec![],
+                    recovery_action_id: None,
                 };
                 self.snapshot = Some(snapshot.clone());
                 snapshot
             }
         }
+    }
+    /// The setup action a refused pull's recorded verdict names, where its
+    /// detail can be read; a pull without one is still shown as failed.
+    async fn recovery_action(&self) -> Option<String> {
+        let result = ProfileHost::call(
+            &self.person,
+            json!({"action":"operation_result","operation_id":self.operation}),
+        )
+        .await
+        .ok()?;
+        if result["kind"] != "operation_result"
+            || result["operation_id"] != self.operation
+            || result["definition_id"] != DEFINITION
+        {
+            return None;
+        }
+        verdict_action(&result["document"]["projection"])
     }
     async fn status(&mut self) -> Result<Snapshot> {
         let p = self.observe().await?;
@@ -118,6 +140,7 @@ impl Session {
             can_cancel: p["cancellable_now"] == true,
             review_digest: None,
             fields: vec![],
+            recovery_action_id: None,
         };
         if p["lifecycle"] == "terminal" {
             snapshot.state = if p["terminal_condition"] == "succeeded" {
@@ -130,6 +153,9 @@ impl Session {
             } else if p["effect"] == "none" && p["terminal_condition"] == "cancelled" {
                 "stopped"
             } else if p["effect"] == "none" {
+                if p["terminal_condition"] == "refused" {
+                    snapshot.recovery_action_id = self.recovery_action().await;
+                }
                 "failed"
             } else {
                 "unknown"
@@ -161,6 +187,19 @@ impl Session {
         self.snapshot = Some(snapshot.clone());
         Ok(snapshot)
     }
+}
+/// The action an error detail's precondition verdict names, when it is a
+/// setup action.
+fn verdict_action(detail: &Value) -> Option<String> {
+    let verdict: Value =
+        serde_json::from_str(detail["precondition_verdict_json"].as_str()?).ok()?;
+    verdict["action"]["action_id"]
+        .as_str()
+        .filter(|action| {
+            super::super::setup::wire::is_action_id(action)
+                && action.starts_with("operator.provision.")
+        })
+        .map(str::to_owned)
 }
 fn settled_state(result: &Value, operation: &str) -> Result<&'static str> {
     if result["kind"] != "operation_result"
@@ -565,6 +604,61 @@ mod tests {
         };
         assert_eq!(session.status().await.unwrap().state, "failed");
         assert_eq!(session.status().await.unwrap().state, "stopped");
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_pull_refused_for_a_missing_component_names_its_setup_action() {
+        use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
+        let verdict = |action: &str| {
+            json!({"detail_version":1,"kind":"registered_error","error_code":null,"message_key":null,
+                "context":[],"context_entries_omitted":0,
+                "precondition_verdict_json": json!({"action":{"action_id":action}}).to_string()})
+        };
+        let refused = || {
+            observed(
+                DEFINITION,
+                PROFILE,
+                "terminal",
+                json!({"terminal_condition":"refused", "effect":"none"}),
+            )
+        };
+        let held = holder(|_| {
+            vec![
+                step("operation_observe", json!([]), refused(), false),
+                step(
+                    "operation_result",
+                    json!([["operation_id", OPERATION]]),
+                    resulted(DEFINITION, verdict("operator.provision.browser")),
+                    false,
+                ),
+                step("operation_observe", json!([]), refused(), false),
+                step(
+                    "operation_result",
+                    json!([["operation_id", OPERATION]]),
+                    resulted(DEFINITION, verdict("operator.profile.edit")),
+                    false,
+                ),
+            ]
+        });
+        let mut session = Session {
+            person: held.person,
+            profile: PROFILE.into(),
+            operation: OPERATION.into(),
+            effective: json!([]),
+            review: None,
+            snapshot: None,
+        };
+        let stopped = session.status().await.unwrap();
+        assert_eq!(stopped.state, "failed");
+        assert_eq!(
+            stopped.recovery_action_id.as_deref(),
+            Some("operator.provision.browser")
+        );
+        // An action that is not about setup is not passed on.
+        let other = session.status().await.unwrap();
+        assert_eq!(other.state, "failed");
+        assert_eq!(other.recovery_action_id, None);
     }
 
     #[cfg(windows)]

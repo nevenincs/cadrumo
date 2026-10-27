@@ -57,17 +57,22 @@ import {
 } from "./shell/records";
 import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
-import { SetupReview } from "./components/setup/SetupReview";
-import { SetupReviewSession } from "./shell/setupReview";
 import { SetupAdvisory } from "./components/setup/SetupAdvisory";
 import { SetupDialog } from "./components/setup/SetupDialog";
 import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { SetupRowItem } from "./components/setup/SetupRowItem";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
-import { liveRun, needsSetup, setupTargetOf, useSetup } from "./shell/setup";
+import {
+  liveRun,
+  needsSetup,
+  rowOfKind,
+  setupTargetOf,
+  useSetup,
+} from "./shell/setup";
 import {
   provisionActionOf,
   ProvisioningRecoveryContext,
+  routeCensoRefusals,
   routeProvisioningRefusals,
   type ProvisioningRecovery,
 } from "./shell/provisioningRecovery";
@@ -548,19 +553,6 @@ export function App({ host }: { host: Host }) {
   const gated = account.gated;
   const phase = account.phase;
   const signedIn = phase === "signed-in";
-  // The verified profile owns the review lifetime; opening Settings or the
-  // status dialog only subscribes to it and never abandons an in-flight answer.
-  const setupReviewProfile = signedIn
-    ? (account.status?.active_profile ?? null)
-    : null;
-  const setupReviewSession = useMemo(
-    () =>
-      setupReviewProfile && host.setupReview
-        ? new SetupReviewSession(host.setupReview)
-        : null,
-    [setupReviewProfile, host.setupReview],
-  );
-  useEffect(() => () => setupReviewSession?.clear(), [setupReviewSession]);
   usePersonActivity(host, signedIn);
   const accountRef = useRef(account);
   accountRef.current = account;
@@ -857,10 +849,16 @@ export function App({ host }: { host: Host }) {
     },
     [openSetup, setup],
   );
+  // A refusal that arrives before this window can say where it leads -- its
+  // setup status not read yet -- is offered once the status is read: the
+  // latest such refusal, for the profile it arrived for.
+  const deferredOffer = useRef<string | null>(null);
   const setupShown = useRef(false);
   useEffect(() => {
     if (!setupIncomplete || setupShown.current) return;
     setupShown.current = true;
+    // A refusal waiting on this same read opens its own prompt instead.
+    if (deferredOffer.current !== null) return;
     setSetupDialog({ open: true, focus: null });
   }, [setupIncomplete]);
   // One toast for a setup this window watched run, once it settles.
@@ -938,26 +936,64 @@ export function App({ host }: { host: Host }) {
     },
     [openSetup],
   );
-  // A tool call's refusal opens it once per refusal.
+  const raiseSetup = useCallback(
+    (action: string) => {
+      if (
+        setupOfferedRef.current &&
+        (setupRowsRef.current.length > 0 || setupTargetOf(action, []) !== null)
+      )
+        offerSetup(action);
+      else deferredOffer.current = action;
+    },
+    [offerSetup],
+  );
+  const setupRows = setupSnapshot?.rows;
+  useEffect(() => {
+    deferredOffer.current = null;
+  }, [reader]);
+  useEffect(() => {
+    const action = deferredOffer.current;
+    if (action === null || !setupOffered || !setupRows?.length) return;
+    deferredOffer.current = null;
+    offerSetup(action);
+  }, [setupOffered, setupRows, offerSetup]);
+  // A tool call's refusal opens it once per refusal: each new call that is
+  // refused opens it again, and a conversation read again raises none twice.
   const toolRefusalsSeen = useRef(new Set<string>());
   const onToolRefused = useCallback(
     (key: string, refusal: AgentToolRefusal) => {
       if (toolRefusalsSeen.current.has(key)) return;
       toolRefusalsSeen.current.add(key);
       const action = provisionActionOf(refusal);
-      if (action !== null) offerSetup(action);
+      if (action !== null) raiseSetup(action);
     },
-    [offerSetup],
+    [raiseSetup],
   );
   // A ledger operation's refusal opens it once per operation, and the page
   // still shows the refusal itself.
   const routedLedger = useMemo(
-    () => host.ledger && routeProvisioningRefusals(host.ledger, offerSetup),
-    [host.ledger, offerSetup],
+    () => host.ledger && routeProvisioningRefusals(host.ledger, raiseSetup),
+    [host.ledger, raiseSetup],
   );
+  // So does a Censo pull that stopped for want of a component.
+  const profileHost = useMemo(
+    () =>
+      host.censo
+        ? { ...host, censo: routeCensoRefusals(host.censo, raiseSetup) }
+        : host,
+    [host, raiseSetup],
+  );
+  // The browser's own setup flow, whatever state the browser is in; a
+  // browser that can be set up is started on, and nothing else is.
+  const browserRow = rowOfKind("browser", setupRows ?? []);
+  const openBrowserSetup = useCallback(() => {
+    const row = rowOfKind("browser", setupRowsRef.current);
+    openSetup(row?.item ?? "browser");
+    if (row && needsSetup(row) && liveRun(setupSnapshot) === null)
+      setup.start([row.item], { resume: row.recovery === "resume" });
+  }, [openSetup, setup, setupSnapshot]);
   // What the ledger's own surfaces offer beside a refusal or a reader that
   // is not ready: the same prompt, on the same item.
-  const setupRows = setupSnapshot?.rows;
   const provisioning = useMemo<ProvisioningRecovery>(
     () => ({
       targetOf: (action) =>
@@ -1738,14 +1774,9 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.setup.palette_browser"),
         group: "setup",
         icon: "download",
-        enabled: () =>
-          setupOffered &&
-          setupLive === null &&
-          (setupSnapshot?.rows.some((row) => row.kind === "browser") ?? false),
-        run: () =>
-          setUpRows(
-            (setupSnapshot?.rows ?? []).filter((row) => row.kind === "browser"),
-          ),
+        keywords: "browser chromium playwright aeat sync sede censo",
+        enabled: () => setupOffered,
+        run: openBrowserSetup,
       },
       {
         id: "setup.local_ai",
@@ -2226,6 +2257,7 @@ export function App({ host }: { host: Host }) {
       setupRun,
       setupLive,
       openSetup,
+      openBrowserSetup,
       setUpRows,
     ],
   );
@@ -3049,7 +3081,7 @@ export function App({ host }: { host: Host }) {
             onViewChange={changeProfileView}
             page={profilePage}
             key={reader}
-            host={host}
+            host={profileHost}
             reader={reader}
             language={locale}
             shown={firstPaneShown}
@@ -3627,16 +3659,6 @@ export function App({ host }: { host: Host }) {
 
             {settingsOpen && (
               <Settings
-                setupReview={
-                  setupReviewSession ? (
-                    <SetupReview
-                      key={account.status?.active_profile}
-                      session={setupReviewSession}
-                      locale={locale}
-                      onCheckStatus={() => openSetup(null)}
-                    />
-                  ) : undefined
-                }
                 prefs={prefs}
                 setPrefs={setPrefs}
                 language={languageControl}
@@ -3671,6 +3693,14 @@ export function App({ host }: { host: Host }) {
                       onOpen={() => openSetup(null)}
                     />
                   ) : undefined
+                }
+                browser={
+                  setupOffered
+                    ? {
+                        row: setupSnapshot ? browserRow : null,
+                        onOpen: openBrowserSetup,
+                      }
+                    : undefined
                 }
                 onLocalAi={
                   setupOffered &&
@@ -3738,6 +3768,7 @@ export function App({ host }: { host: Host }) {
                       ? openLocalAi
                       : undefined
                   }
+                  onShowAll={() => openSetup(null)}
                 />
                 <SetupPrompt
                   row={setupPrompt}

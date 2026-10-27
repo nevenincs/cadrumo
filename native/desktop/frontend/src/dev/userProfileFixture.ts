@@ -1,4 +1,5 @@
 import fixtures from "./fixtures/userProfile.json";
+import type { CensoMode } from "./censoFixture";
 import type {
   ProfileChange,
   UserProfile,
@@ -27,9 +28,7 @@ declare global {
 
 /** Synthetic values, but the complete production schema and localized projection.
  * Regenerate with dev.desktop_profile_fixture; never invent fields here. */
-export function userProfileFixture(
-  censoSetup?: "ready" | "nie" | "uncertain" | "refused" | "initial_unknown",
-): UserProfilePort & {
+export function userProfileFixture(censoSetup?: CensoMode): UserProfilePort & {
   /** A saved value, as the fixture's other ports read it: not a page read. */
   peek(path: string): string | null;
 } {

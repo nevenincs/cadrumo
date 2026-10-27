@@ -20,16 +20,26 @@ declare global {
     };
   }
 }
+/** How the scenario's Censo pull goes. */
+export type CensoMode =
+  | "ready"
+  | "nie"
+  | "uncertain"
+  | "refused"
+  | "initial_unknown"
+  | "browser_missing";
+
 /** Browser-only Censo outcomes. Never contacts AEAT. */
 export function censoFixture(
   profile: UserProfilePort & { peek(path: string): string | null },
-  mode?: "ready" | "nie" | "uncertain" | "refused" | "initial_unknown",
+  mode?: CensoMode,
 ): CensoPort {
   let ready =
       mode === "ready" ||
       mode === "uncertain" ||
       mode === "refused" ||
-      mode === "initial_unknown",
+      mode === "initial_unknown" ||
+      mode === "browser_missing",
     failure = mode === "uncertain",
     starts = 0,
     answers = 0;
@@ -131,6 +141,19 @@ export function censoFixture(
       if (failure) throw { code: "unknown" };
       if (mode === "refused")
         throw { code: "refused", reason: "profile_mismatch" };
+      // Each pull stops at once for want of the browser, as its recorded
+      // verdict says.
+      if (mode === "browser_missing") {
+        snapshot = {
+          operation: String(starts).padStart(64, "c"),
+          state: "failed",
+          can_cancel: false,
+          review_digest: null,
+          recovery_action_id: "operator.provision.browser",
+          fields: [],
+        };
+        return structuredClone(snapshot);
+      }
       snapshot = {
         operation: "a".repeat(64),
         state: "review",

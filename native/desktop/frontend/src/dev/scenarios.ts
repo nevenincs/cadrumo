@@ -5,6 +5,7 @@
 // in the locale catalogues.
 
 import type { LedgerShape } from "./ledgerFixture";
+import type { CensoMode } from "./censoFixture";
 import type { SetupShape } from "./setupFixture";
 import type {
   HostErrorCode,
@@ -25,7 +26,7 @@ export type SubmitOutcome =
   | { kind: "fail"; code: HostErrorCode };
 
 export type Scenario = {
-  censo?: "ready" | "nie" | "uncertain" | "refused" | "initial_unknown";
+  censo?: CensoMode;
   id: string;
   title: string;
   summary: string;
@@ -185,6 +186,20 @@ export const SCENARIOS: readonly Scenario[] = [
     title: "Censo: Profile refused",
     summary: "Simulates a profile mismatch without contacting AEAT.",
     censo: "refused",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "censo-browser-missing",
+    title: "Censo: Browser not set up",
+    summary:
+      "Open Your profile, then Sync from AEAT: each pull stops for want of the browser and offers its setup. No AEAT request is sent.",
+    censo: "browser_missing",
+    setup: "fresh",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "Ana Soler",

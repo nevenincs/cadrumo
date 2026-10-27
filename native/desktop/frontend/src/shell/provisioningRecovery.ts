@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import type { SetupRow } from "../ipc/contract";
 import type { LedgerOutcome, LedgerPort } from "./ledger";
+import type { CensoPort, CensoSnapshot } from "./profileCenso";
 
 // A refusal the product recovers by setting a component up names that setup
 // as an `operator.provision.<item>` action: on an agent tool's refusal, on a
@@ -114,6 +115,19 @@ export function pausedActionOf(result: unknown): string | null {
     : provisionActionOf(pause);
 }
 
+/** Hands `offer` the setup action an operation names, once per operation,
+ * however many reads observe it: each new operation offers again. */
+function oncePerOperation(
+  offer: (action: string) => void,
+): (operation: string, action: string | null) => void {
+  const offered = new Set<string>();
+  return (operation, action) => {
+    if (action === null || offered.has(operation)) return;
+    offered.add(operation);
+    offer(action);
+  };
+}
+
 /**
  * The ledger port, with every refused outcome whose verdict names a setup
  * action, and every settled batch whose reading pause names one, handed to
@@ -124,24 +138,15 @@ export function routeProvisioningRefusals(
   port: LedgerPort,
   offer: (action: string) => void,
 ): LedgerPort {
-  const offered = new Set<string>();
+  const once = oncePerOperation(offer);
   const watched = <Outcome extends LedgerOutcome<unknown>>(
     answer: Promise<Outcome>,
   ): Promise<Outcome> =>
     answer.then((outcome) => {
-      if (
-        (outcome.kind === "refused" || outcome.kind === "settled") &&
-        !offered.has(outcome.operation_id)
-      ) {
-        const action =
-          outcome.kind === "refused"
-            ? provisionActionOf(outcome.detail)
-            : pausedActionOf(outcome.result);
-        if (action !== null) {
-          offered.add(outcome.operation_id);
-          offer(action);
-        }
-      }
+      if (outcome.kind === "refused")
+        once(outcome.operation_id, provisionActionOf(outcome.detail));
+      else if (outcome.kind === "settled")
+        once(outcome.operation_id, pausedActionOf(outcome.result));
       return outcome;
     });
   return {
@@ -151,5 +156,34 @@ export function routeProvisioningRefusals(
     answer: (operation, reviewDigest, decision) =>
       watched(port.answer(operation, reviewDigest, decision)),
     cancel: (operation, revision) => watched(port.cancel(operation, revision)),
+  };
+}
+
+/**
+ * The Censo port, with every pull that stopped for want of a component
+ * handed to `offer` once per pull, whichever call observed it: a second pull
+ * that stops the same way offers again. The snapshot reaches the page
+ * unchanged.
+ */
+export function routeCensoRefusals(
+  port: CensoPort,
+  offer: (action: string) => void,
+): CensoPort {
+  const once = oncePerOperation(offer);
+  const watched = (answer: Promise<CensoSnapshot>): Promise<CensoSnapshot> =>
+    answer.then((snapshot) => {
+      if (snapshot.state === "failed")
+        once(
+          snapshot.operation,
+          provisionAction(snapshot.recovery_action_id ?? null),
+        );
+      return snapshot;
+    });
+  return {
+    ...port,
+    start: (profile) => watched(port.start(profile)),
+    status: (profile, operation) => watched(port.status(profile, operation)),
+    answer: (profile, operation, reviewDigest, decision) =>
+      watched(port.answer(profile, operation, reviewDigest, decision)),
   };
 }

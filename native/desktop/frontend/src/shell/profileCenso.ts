@@ -24,6 +24,9 @@ export type CensoSnapshot = {
     | "unsupported";
   can_cancel: boolean;
   review_digest: string | null;
+  /** On a pull that stopped for want of a component, the operator action
+   * that sets it up; an identifier for routing, never shown. */
+  recovery_action_id?: string;
   fields: {
     path: string;
     current: string | null;

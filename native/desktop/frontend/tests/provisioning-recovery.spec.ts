@@ -3,6 +3,7 @@ import {
   LOCAL_AI_SETUP_ACTION,
   pausedActionOf,
   provisionActionOf,
+  routeCensoRefusals,
   routeProvisioningRefusals,
 } from "../src/shell/provisioningRecovery";
 import type { LedgerPort } from "../src/shell/ledger";
@@ -22,6 +23,12 @@ stand.window = {
   setTimeout: globalThis.setTimeout,
 };
 const { ledgerFixture } = await import("../src/dev/ledgerFixture");
+const { censoFixture } = await import("../src/dev/censoFixture");
+/** The scenario Censo pull reads the profile only to check readiness and to
+ * apply a review, neither of which a start or a status read does. */
+const unreadProfile = {
+  peek: () => null,
+} as unknown as Parameters<typeof censoFixture>[0];
 
 /** A verdict as the product serializes it, recovered by `action`. */
 const verdict = (action: string | null) => ({
@@ -206,6 +213,36 @@ test("a ledger refusal that names no setup offers nothing", async () => {
     evidence_id: "0".repeat(64),
   });
   expect(missing.kind).toBe("refused");
+  expect(offered).toEqual([]);
+});
+
+test("each Censo pull that stops for a missing component reaches the prompt once, unchanged", async () => {
+  const offered: string[] = [];
+  const routed = routeCensoRefusals(
+    censoFixture(unreadProfile, "browser_missing"),
+    (action) => offered.push(action),
+  );
+  const first = await routed.start("profile");
+  expect(first.state).toBe("failed");
+  expect(offered).toEqual(["operator.provision.browser"]);
+  // Read again, the same pull is not offered twice; a new pull is.
+  await routed.status("profile", first.operation);
+  expect(offered).toHaveLength(1);
+  const second = await routed.start("profile");
+  expect(second.operation).not.toBe(first.operation);
+  expect(offered).toEqual([
+    "operator.provision.browser",
+    "operator.provision.browser",
+  ]);
+});
+
+test("a Censo pull that reaches its review offers nothing", async () => {
+  const offered: string[] = [];
+  const routed = routeCensoRefusals(
+    censoFixture(unreadProfile, "ready"),
+    (action) => offered.push(action),
+  );
+  expect((await routed.start("profile")).state).toBe("review");
   expect(offered).toEqual([]);
 });
 

@@ -12,6 +12,7 @@ import { label } from "../support/strings";
 // strings: no closed value, code or internal name reaches the screen.
 
 type Controls = {
+  readRows(): void;
   step(): void;
   retry(attempt: number, delaySeconds: number): void;
   fail(category: string): void;
@@ -65,6 +66,13 @@ async function open(target: Page, setup: string, scenario = "signed-in") {
 
 const dialog = (target: Page) =>
   target.getByRole("dialog", { name: label("desktop.setup.title") });
+
+/** The browser's own setup flow. */
+const browserDialog = (target: Page) =>
+  target.getByRole("dialog", { name: label("desktop.setup.browser_title") });
+
+const hostCalls = (target: Page) =>
+  target.evaluate(() => window.__scenarioHostCalls ?? []);
 
 /** Calls one of the fixture's controls in the page. */
 const act = <Name extends keyof Controls>(
@@ -671,7 +679,207 @@ test("the prompt a refused tool opens leads into setting the component up", asyn
   // The host's own words for the row's button.
   await prompt.getByRole("button", { name: "Set up", exact: true }).click();
   await expect(prompt).toBeHidden();
-  await expect(dialog(target)).toBeVisible();
+  // The browser's own flow, planning the browser alone.
+  const shown = browserDialog(target);
+  await expect(shown).toBeVisible();
+  await expect(shown.locator("[data-setup-plan]")).toHaveCount(1);
+  await expect(shown.locator("[data-setup-plan=browser]")).toHaveCount(1);
+  await expect(shown).not.toContainText("Local AI");
+  expect(await hostCalls(target)).toContain("setup.start browser");
+});
+
+test("each new sync refused for the missing browser opens the prompt again", async ({
+  page: target,
+}) => {
+  await refusedTool(target, "Captura el censo, aunque falta el navegador.");
+  const prompt = browserPrompt(target);
+  await expect(prompt).toBeVisible();
+  await prompt
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await expect(prompt).toBeHidden();
+  // Another call, refused the same way, is a refusal of its own.
+  await send(target, "Sincroniza otra vez, aunque falta el navegador.");
+  await settled(target);
+  await expect(prompt).toBeVisible();
+  await prompt
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await expect(prompt).toBeHidden();
+  await target.locator("[data-rail=docs]").click();
+  await expect(target.getByRole("dialog")).toHaveCount(0);
+});
+
+test("a refusal that arrives before the setup status is read opens its prompt once it is", async ({
+  page: target,
+}) => {
+  scenarioOnly("the scenario host holds the first status read");
+  await open(target, "unread");
+  await send(target, "Captura el censo, aunque falta el navegador.");
+  await settled(target);
+  const prompt = browserPrompt(target);
+  await expect(prompt).toBeHidden();
+  await act(target, "readRows");
+  await expect(prompt).toBeVisible();
+  await expect(prompt).toContainText("Not set up yet.");
+  // The prompt stands in for the dialog that opens once per launch.
+  await expect(dialog(target)).toHaveCount(0);
+});
+
+test("a Censo pull that stops for the missing browser opens its prompt, each pull again", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=censo-browser-missing&latency=0&bar=off",
+  );
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await target
+    .locator(".rail")
+    .getByRole("button", { name: label("desktop.profile.title"), exact: true })
+    .click();
+  const band = target.getByRole("region", {
+    name: label("desktop.profile.censo.band"),
+    exact: true,
+  });
+  const pull = band.getByRole("button", {
+    name: label("desktop.profile.censo.pull"),
+    exact: true,
+  });
+  const prompt = browserPrompt(target);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await pull.click();
+    await expect(prompt).toBeVisible();
+    await prompt
+      .getByRole("button", { name: label("desktop.setup.not_now") })
+      .click();
+    await expect(prompt).toBeHidden();
+    // The band still says the pull failed, beside the prompt it raised.
+    await expect(band).toContainText(label("desktop.profile.censo.failed"));
+  }
+  await expect(target.locator("body")).not.toContainText("operator.");
+});
+
+test("the palette opens the browser's own flow, which sets up the browser alone", async ({
+  page: target,
+}) => {
+  await open(target, "fresh");
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  // Found by what a person looking for it types, too.
+  await target.keyboard.press("Control+KeyK");
+  await target
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill("chromium");
+  await target
+    .getByRole("listbox")
+    .getByRole("option", { name: label("desktop.setup.palette_browser") })
+    .click();
+  const shown = browserDialog(target);
+  await expect(shown).toBeVisible();
+  await expect(shown).toContainText(label("desktop.setup.lead_review"));
+  await expect(shown.locator("[data-setup-plan]")).toHaveCount(1);
+  await expect(shown).not.toContainText("Local AI");
+  expect(await hostCalls(target)).toContain("setup.start browser");
+  expect(await hostCalls(target)).not.toContain("setup.start all");
+  await shown
+    .getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "180 MB" }),
+    })
+    .click();
+  await expect(shown.locator("[data-setup-overall]")).toContainText("1 of 1");
+  await expect(shown).not.toContainText("Local AI");
+  await steps(target, 8);
+  await expect(shown).toContainText(label("desktop.setup.outcome_completed"));
+  await expect(shown.locator("[data-setup-row=browser]")).toContainText(
+    label("desktop.setup.state.ready"),
+  );
+  await expect(shown.locator("[data-setup-row=local_ai]")).toHaveCount(0);
+  await noInternalWords(target);
+});
+
+test("the palette opens the browser's flow on a ready browser, to check it again", async ({
+  page: target,
+}) => {
+  await open(target, "ready");
+  await (await palette(target, label("desktop.setup.palette_browser"))).click();
+  const shown = browserDialog(target);
+  await expect(shown).toBeVisible();
+  await expect(shown).toContainText(label("desktop.setup.browser_lead"));
+  await expect(shown.locator("[data-setup-row=browser]")).toContainText(
+    label("desktop.setup.state.ready"),
+  );
+  await expect(shown).not.toContainText("Local AI");
+  await shown
+    .getByRole("button", { name: label("desktop.setup.action.check_again") })
+    .click();
+  expect(await hostCalls(target)).toContain("setup.verify browser");
+  expect(
+    (await hostCalls(target)).filter((call) => call.startsWith("setup.start")),
+  ).toEqual([]);
+});
+
+test("the browser's flow names a local AI setup that is running instead of showing it", async ({
+  page: target,
+}) => {
+  await open(target, "fresh");
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await (
+    await palette(target, label("desktop.setup.palette_local_ai"))
+  ).click();
+  await approveButton(dialog(target), "3.4 GB").click();
+  await expect(dialog(target)).toContainText(
+    label("desktop.setup.lead_running"),
+  );
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.setup.hide") })
+    .click();
+  await (await palette(target, label("desktop.setup.palette_browser"))).click();
+  const shown = browserDialog(target);
+  await expect(shown).toBeVisible();
+  await expect(shown).toContainText(
+    label("desktop.setup.browser_other_running"),
+  );
+  await expect(shown).not.toContainText("Local AI");
+  await expect(shown.locator("[data-setup-overall]")).toHaveCount(0);
+  await expect(shown.locator("[data-setup-row=browser]")).toHaveCount(1);
+  // Joining the running setup is not setting the browser up.
+  expect(await hostCalls(target)).not.toContain("setup.start browser");
+  await shown
+    .getByRole("button", { name: label("desktop.setup.show_running") })
+    .click();
+  await expect(dialog(target)).toContainText(
+    label("desktop.setup.lead_running"),
+  );
+});
+
+test("Settings has a Browser section of its own that opens the browser's flow", async ({
+  page: target,
+}) => {
+  await open(target, "partial");
+  await dialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  const settings = await openSettings(target);
+  const section = settings.getByRole("region", {
+    name: label("desktop.setup.item.browser"),
+  });
+  await expect(section).toContainText(label("desktop.setup.state.ready"));
+  // Apart from the local AI, which keeps its own entry.
+  await expect(section).not.toContainText("Local AI");
+  await section
+    .getByRole("button", { name: label("desktop.setup.browser_open") })
+    .click();
+  const shown = browserDialog(target);
+  await expect(shown).toBeVisible();
+  await expect(shown).not.toContainText("Local AI");
+  await expect(shown).not.toContainText(
+    label("desktop.setup.failure.damaged_download"),
+  );
 });
 
 test("a tool refused for something setup does not recover opens nothing", async ({

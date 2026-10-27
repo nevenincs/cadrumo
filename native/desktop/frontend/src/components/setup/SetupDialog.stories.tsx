@@ -14,10 +14,12 @@ function Screen({
   shape,
   latencyMs,
   settings,
+  focus,
 }: {
   shape: SetupShape;
   latencyMs: number;
   settings: boolean;
+  focus: string | null;
 }) {
   const host = useMemo(
     () =>
@@ -42,21 +44,28 @@ function Screen({
         open={open}
         onOpenChange={setOpen}
         control={control}
-        focus={null}
+        focus={focus}
         locale="en"
         onAct={(row) => control.verify([row.item])}
         onCopyDetails={noop}
+        onShowAll={noop}
       />
     </>
   );
 }
 
-type Args = { shape: SetupShape; latencyMs: number; settings: boolean };
+type Args = {
+  shape: SetupShape;
+  latencyMs: number;
+  settings: boolean;
+  /** The item the dialog is opened for; the browser has a flow of its own. */
+  focus: string | null;
+};
 
 const meta = {
   title: "Shell/Setup",
   parameters: { fill: true },
-  args: { shape: "fresh", latencyMs: 600, settings: false },
+  args: { shape: "fresh", latencyMs: 600, settings: false, focus: null },
   render: (args: Args) => <Screen {...args} />,
 } satisfies Meta<Args>;
 export default meta;
@@ -70,6 +79,10 @@ export const BelowHardware: Story = { args: { shape: "hardware" } };
 export const TooLittleSpace: Story = { args: { shape: "low_space" } };
 export const Unavailable: Story = { args: { shape: "unavailable" } };
 export const SettingsIncomplete: Story = { args: { settings: true } };
+export const BrowserFlow: Story = { args: { focus: "browser" } };
+export const BrowserReady: Story = {
+  args: { focus: "browser", shape: "partial" },
+};
 export const SettingsComplete: Story = {
   args: { settings: true, shape: "ready" },
 };

@@ -34,6 +34,8 @@ export const SETUP_SHAPES = [
   "busy",
   "unavailable",
   "google_signed_out",
+  /** Nothing set up, and no status read settled until `readRows`. */
+  "unread",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -52,6 +54,8 @@ export type SetupFixtureControls = {
   /** Google's own page answers the sign-in this window started. */
   finishGoogle(succeeded: boolean): void;
   setGoogle(account: GoogleAccount): void;
+  /** The first status read settles: an `unread` setup has its rows. */
+  readRows(): void;
 };
 
 declare global {
@@ -253,6 +257,7 @@ export function setupFixture({
   };
   let check: SetupSnapshot["check"] = null;
   let mode: SetupSnapshot["rows_mode"] = "quick";
+  let unread = shape === "unread";
   const listeners = new Set<(state: DesktopSetup) => void>();
   const timers = new Set<number>();
   let pendingCancel = false;
@@ -265,12 +270,14 @@ export function setupFixture({
 
   const rows = () => items.map((seed) => seed.row);
   const snapshot = (): SetupSnapshot => {
-    const now = rows();
+    const now = unread ? [] : rows();
     return {
       rows: now,
-      rows_mode: mode,
-      complete: now.every(usable),
-      hardware_limited: now.some((held) => held.blocked_reason === "hardware"),
+      rows_mode: unread ? null : mode,
+      complete: unread ? null : now.every(usable),
+      hardware_limited: unread
+        ? null
+        : now.some((held) => held.blocked_reason === "hardware"),
       check,
       setup: run,
       google,
@@ -542,6 +549,10 @@ export function setupFixture({
     },
     setGoogle(account) {
       google = account;
+      publish();
+    },
+    readRows() {
+      unread = false;
       publish();
     },
     finishGoogle(succeeded) {
