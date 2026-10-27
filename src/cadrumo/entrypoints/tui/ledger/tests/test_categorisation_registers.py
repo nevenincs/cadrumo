@@ -14,7 +14,13 @@ from ..categorisation_ratios import LedgerRatiosScreen
 from .categorisation_fixtures import CATEGORISATION_REFUSAL_KEY, MemoryDoor
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .categorisation_pilot import keys, press, review_and_confirm, text, type_into
-from .categorisation_register_fixtures import SYNTHETIC_RATIO_CATEGORIES, SYNTHETIC_TAX_ID, diagnostics_report
+from .categorisation_register_fixtures import (
+    SYNTHETIC_RATIO_CATEGORIES,
+    SYNTHETIC_TAX_ID,
+    diagnostics_report,
+    ratio_label,
+    ratio_notes,
+)
 from .workspace_fixtures import WorkspaceHostApp
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
@@ -119,11 +125,16 @@ async def test_usage_ratios_set_list_and_unset_round_trip() -> None:
             )
 
             eligible = screen.query_one("#categorisation-ratios-eligible", DataTable)
+            # The registry's label rides beside the token, said in the language the window shows.
+            assert [row[0] for row in map(eligible.get_row_at, range(2))] == [
+                f"{ratio_label(category, 'en')} ({category})" for category in SYNTHETIC_RATIO_CATEGORIES
+            ]
             eligible.focus()
             eligible.move_cursor(row=1)
             await pilot.press("enter")
             await settle(pilot)
             assert screen.query_one("#categorisation-ratios-category", Input).value == "vehiculo"
+            assert text(screen, "#categorisation-outcome") == ratio_notes("vehiculo", "en")
             type_into(screen, "#categorisation-ratios-ratio", "0.5")
             await review_and_confirm(pilot, screen, "categorisation-ratios-set")
             assert profile.ratios.overrides == {"vehiculo": "0.5"}

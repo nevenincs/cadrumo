@@ -65,6 +65,27 @@ def test_ledger_ratios_eligible_returns_envelope_on_empty_bucket() -> None:
     assert result.exit_code == 0, result.output
 
 
+def test_ledger_ratios_eligible_lists_the_registry_wording_in_the_chosen_language() -> None:
+    """Each eligible category is printed with the registry's label, kind and notes,
+    said in the language the invocation asked for rather than the worker's."""
+
+    english = _invoke(["app", "ledger", "ratios", "eligible", "--output-language", "en"])
+    spanish = _invoke(["app", "ledger", "ratios", "eligible", "--output-language", "es"])
+
+    assert english.exit_code == 0, english.output
+    assert spanish.exit_code == 0, spanish.output
+    assert (
+        "vehiculo_combustible\tVehicle fuel\tusage_ratio_personal\toverride=.\t"
+        "Deductible on proof of exclusive business use "
+        "(Reglamento IRPF art. 22, exclusive affectation of the vehicle)."
+    ) in english.output.splitlines()
+    assert (
+        "vehiculo_combustible\tCombustible del vehículo\tusage_ratio_personal\toverride=.\t"
+        "Deducible con prueba de afectación exclusiva a la actividad "
+        "(Reglamento IRPF art. 22, afectación exclusiva del vehículo)."
+    ) in spanish.output.splitlines()
+
+
 def test_ledger_ratios_validate_on_empty_bucket_succeeds() -> None:
     """`aeat app ledger ratios validate` runs the engine validation on
     the persisted override set (empty here). No errors surface when no
@@ -105,11 +126,19 @@ def test_ratio_keys_are_grounded_before_the_frontend_projects_bounded_worker_tok
             RatiosRowPayload(category=category, ratio="0.5")
     for kind in ("", "x" * 97):
         with pytest.raises(ValidationError):
-            RatiosEligibleRowPayload(category="worker-category", proportionality_kind=kind, override_present=False)
+            RatiosEligibleRowPayload(
+                category="worker-category",
+                label="Worker category",
+                notes="Worker notes.",
+                proportionality_kind=kind,
+                override_present=False,
+            )
 
     with outside_governed_fact_validation():
         projected = RatiosEligibleRowPayload(
             category="worker-pinned-category",
+            label="Worker pinned category",
+            notes="Worker pinned notes.",
             proportionality_kind="worker-pinned-kind",
             override_present=False,
         )
@@ -121,6 +150,8 @@ def test_ratio_keys_are_grounded_before_the_frontend_projects_bounded_worker_tok
     assert row.model_dump(mode="json")["category"] == "suministros_home_office_luz"
     eligible = RatiosEligibleRowPayload(
         category=SpendingCategory.from_registry("suministros_home_office_luz"),
+        label="Home-office electricity",
+        notes="Deductible in proportion to the home's business-use floor area.",
         proportionality_kind=require_proportionality_kind("usage_ratio_home_area").value,
         override_present=False,
     )

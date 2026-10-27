@@ -47,6 +47,16 @@ SYNTHETIC_TAX_ID = "B00000000"
 SYNTHETIC_RATIO_CATEGORIES = ("suministros_vivienda", "vehiculo")
 
 
+def ratio_label(category: str, language: str) -> str:
+    """Say a synthetic category's served label, naming the language the request asked for."""
+    return f"{category} label ({language})"
+
+
+def ratio_notes(category: str, language: str) -> str:
+    """Say a synthetic category's served notes, naming the language the request asked for."""
+    return f"{category} notes ({language})"
+
+
 @dataclass
 class MemoryCounterparties:
     """Confirmed establishment facts keyed by tax identifier."""
@@ -103,7 +113,7 @@ class MemoryCounterparties:
 
 @dataclass
 class MemoryRatios:
-    """Eligible ratio categories with their defaults and the profile's overrides."""
+    """Eligible ratio categories with their wording and the profile's overrides."""
 
     overrides: dict[str, str] = field(default_factory=dict)
     censo_mismatch: bool = False
@@ -122,6 +132,8 @@ class MemoryRatios:
         rows = tuple(
             LedgerRatiosEligibleRow(
                 category=category,
+                label=ratio_label(category, request.output_language.value),
+                notes=ratio_notes(category, request.output_language.value),
                 proportionality_kind="surface_share" if index == 0 else "usage_share",
                 override_present=category in self.overrides,
             )

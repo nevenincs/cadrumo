@@ -344,10 +344,13 @@ class LedgerRatiosEligibleExecutor:
                 bucket_id=bucket_id,
                 year=payload.year,
                 operation=context.authority_operation,
+                language=payload.output_language,
             )
             projected = tuple(
                 LedgerRatiosEligibleRow(
                     category=row.category.value,
+                    label=row.label,
+                    notes=row.notes,
                     proportionality_kind=row.proportionality_kind.value,
                     override_present=row.override_present,
                 )

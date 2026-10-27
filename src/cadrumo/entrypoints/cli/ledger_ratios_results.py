@@ -72,10 +72,13 @@ class RatiosEligibleRowPayload(OutputSchema):
     """One ``ledger ratios eligible`` row (D2).
 
     ``category`` and ``proportionality_kind`` are bounded tokens projected
-    by the selected worker's pinned authority.
+    by the selected worker's pinned authority. ``label`` and ``notes`` are the
+    registry's wording for the category, said in the invocation's language.
     """
 
     category: _CategoryValue
+    label: NonEmptyStr
+    notes: NonEmptyStr
     proportionality_kind: _ProportionalityKindValue
     override_present: bool
 

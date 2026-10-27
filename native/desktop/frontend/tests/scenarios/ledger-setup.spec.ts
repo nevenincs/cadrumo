@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { RATIO_ELIGIBLE_FIXTURE } from "../../src/dev/fixtures/ledgerRatios";
 import { label } from "../support/strings";
 
 // The Ledger page's Setup sections over the scenario host's made-up ledger:
@@ -196,11 +197,15 @@ test("ratios are set and unset for the year chosen", async ({
   await openLedger(target);
   await openSetup(target, "rules");
   await area(target, "desktop.ledger.rules.area.ratios");
-  const category = label(
-    "desktop.ledger.category.suministros_home_office_internet",
-  );
+  // The pane names a category by the label the backend serves for it, and
+  // explains it by the notes served beside it.
+  const served = RATIO_ELIGIBLE_FIXTURE.suministros_home_office_internet!;
+  const category = served.label;
   const table = target.locator(".ledger-ratios-table");
   await expect(table).toBeVisible();
+  await expect(table.locator("tr", { hasText: category })).toContainText(
+    served.notes,
+  );
   await target
     .getByRole("button", {
       name: `${label("desktop.ledger.ratios.set")} ${category}`,

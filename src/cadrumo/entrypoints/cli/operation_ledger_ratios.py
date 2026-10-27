@@ -34,6 +34,8 @@ from ...application.ledger.ratios_contracts import (
     LedgerRatiosValidateProjection,
     LedgerRatiosValidateRequest,
 )
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import output_language
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
 
@@ -151,11 +153,15 @@ def list_eligible_ratios(
     *,
     year: int,
 ) -> RegisteredOperationCompletion[LedgerRatiosEligibleProjection]:
-    """Read eligible ratio rows and dated defaults from the pinned authority."""
+    """Read eligible ratio rows, said in this invocation's language, from the pinned authority."""
     client = _client(ctx)
     completed = run_registered_operation(
         client,
-        LedgerRatiosEligibleRequest(profile_id=client.profile_id, year=year),
+        LedgerRatiosEligibleRequest(
+            profile_id=client.profile_id,
+            year=year,
+            output_language=OutputLanguage(output_language()),
+        ),
         definition_id=LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),
         result_type=LedgerRatiosEligibleProjection,

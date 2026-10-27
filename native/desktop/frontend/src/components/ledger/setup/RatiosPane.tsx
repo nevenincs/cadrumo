@@ -13,6 +13,7 @@ import {
   parsePercent,
   percentOf,
 } from "../../../shell/ledgerGrammar";
+import type { OutputLanguage } from "../../../shell/ledger";
 import type {
   LedgerRatiosEligibleResult,
   LedgerRatiosListResult,
@@ -20,7 +21,7 @@ import type {
 } from "../../../shell/ledgerSetup";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
-import { categoryLabel, percentText } from "../movements/movementWords";
+import { percentText } from "../movements/movementWords";
 import { PeriodSelector } from "../PeriodSelector";
 import {
   CallLine,
@@ -42,8 +43,8 @@ type Eligible = LedgerRatiosEligibleResult["rows"][number];
 
 /**
  * The share of a category used for the activity, set per year: the
- * categories that take one and the override the person set. Each set and
- * unset is its own write.
+ * categories that take one, named and explained in the backend's own words,
+ * and the override the person set. Each set and unset is its own write.
  */
 export function RatiosPane({
   port,
@@ -65,8 +66,8 @@ export function RatiosPane({
     port,
     reader,
     "ledger.ratios.eligible",
-    { year },
-    `y${year}`,
+    { year, output_language: locale as OutputLanguage },
+    `y${year}-${locale}`,
   );
   const write = useSetupWrite(t("desktop.ledger.ratios.title"));
   const [editing, setEditing] = useState<Record<string, string>>({});
@@ -84,6 +85,14 @@ export function RatiosPane({
   );
   const mismatch =
     list.read?.kind === "done" && list.read.result.outcome === "censo_mismatch";
+  // A category is named by the label the backend served for it; one it did
+  // not serve is shown by its token.
+  const served = new Map(
+    eligible.read?.kind === "done"
+      ? eligible.read.result.rows.map((row) => [row.category, row.label])
+      : [],
+  );
+  const nameOf = (category: string) => served.get(category) ?? category;
   // A ratio typed but not saved differs from the one its editor opened on.
   useSetupDraft(
     Object.entries(editing).some(([category, text]) => {
@@ -149,8 +158,13 @@ export function RatiosPane({
     {
       key: "category",
       label: t("desktop.ledger.ratios.column.category"),
-      sort: (row) => categoryLabel(t, row.category),
-      cell: (row) => categoryLabel(t, row.category),
+      sort: (row) => row.label,
+      cell: (row) => (
+        <span className="flex flex-col">
+          <span>{row.label}</span>
+          <span className="text-xs text-muted-foreground">{row.notes}</span>
+        </span>
+      ),
     },
     {
       key: "kind",
@@ -164,7 +178,7 @@ export function RatiosPane({
       numeric: true,
       sort: (row) => rankDecimal(overrides.get(row.category)),
       cell: (row) => {
-        const name = categoryLabel(t, row.category);
+        const name = row.label;
         if (row.category in editing)
           return (
             <span className="flex flex-col items-end gap-1">
@@ -219,7 +233,7 @@ export function RatiosPane({
       hidden: true,
       resizable: false,
       cell: (row) => {
-        const name = categoryLabel(t, row.category);
+        const name = row.label;
         if (row.category in editing)
           return (
             <span className="flex justify-end gap-1">
@@ -334,7 +348,7 @@ export function RatiosPane({
             ? t("desktop.ledger.ratios.findings", {
                 count: validationResult.findings.length,
                 categories: validationResult.findings
-                  .map((finding) => categoryLabel(t, finding.category))
+                  .map((finding) => nameOf(finding.category))
                   .join(", "),
               })
             : t("desktop.ledger.ratios.valid", {

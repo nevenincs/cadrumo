@@ -10,6 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from typing import cast, override
+from uuid import UUID
 
 from textual.widget import Widget
 from textual.widgets import DataTable, Input, Static
@@ -24,7 +25,8 @@ from ....application.ledger.ratios_contracts import (
     LedgerRatiosValidateProjection,
     LedgerRatiosValidateRequest,
 )
-from ....core.i18n.render import tr
+from ....core.external_constants import OutputLanguage
+from ....core.i18n.render import output_language, tr
 from ....core.time.clock import now
 from ..components.widgets import ContentDataTable
 from .categorisation_common import CategorisationScreen, StagedChangeV1, action, action_row, field, heading, line
@@ -65,6 +67,15 @@ def validation_text(report: LedgerRatiosValidateProjection) -> str:
     if report.profile_present and not report.missing_overrides and not report.findings:
         lines.append(tr("tui.ledger.categorisation.ratios.validation_clean"))
     return "\n".join(lines)
+
+
+def eligible_request(profile_id: UUID, year: int) -> LedgerRatiosEligibleRequest:
+    """Ask for the eligible categories said in the language this window shows."""
+    return LedgerRatiosEligibleRequest(
+        profile_id=profile_id,
+        year=year,
+        output_language=OutputLanguage(output_language()),
+    )
 
 
 class LedgerRatiosScreen(CategorisationScreen):
@@ -145,7 +156,7 @@ class LedgerRatiosScreen(CategorisationScreen):
             )
         overrides.clear()
         for row in self.overrides:
-            overrides.add_row(row.category, row.ratio, key=row.category)
+            overrides.add_row(self._category_name(row.category), row.ratio, key=row.category)
         eligible = cast("DataTable[str]", self.query_one("#categorisation-ratios-eligible", DataTable))
         if not eligible.columns:
             eligible.add_columns(
@@ -156,7 +167,7 @@ class LedgerRatiosScreen(CategorisationScreen):
         eligible.clear()
         for row in self.eligible:
             eligible.add_row(
-                row.category,
+                self._category_name(row.category),
                 row.proportionality_kind,
                 tr(
                     "tui.ledger.categorisation.ratios.override_present"
@@ -165,6 +176,11 @@ class LedgerRatiosScreen(CategorisationScreen):
                 ),
                 key=row.category,
             )
+
+    def _category_name(self, category: str) -> str:
+        """Name a category as the registry words it, beside its token, once the eligible rows are read."""
+        served = next((row for row in self.eligible if row.category == category), None)
+        return category if served is None else f"{served.label} ({category})"
 
     def _typed_year(self) -> int:
         text = self.query_one("#categorisation-ratios-year", Input).value.strip()
@@ -175,9 +191,7 @@ class LedgerRatiosScreen(CategorisationScreen):
     async def _read(self) -> None:
         year = self._typed_year()
         listed = await self.list_door(LedgerRatiosListRequest(profile_id=self.list_door.profile_id, year=year))
-        eligible = await self.eligible_door(
-            LedgerRatiosEligibleRequest(profile_id=self.eligible_door.profile_id, year=year)
-        )
+        eligible = await self.eligible_door(eligible_request(self.eligible_door.profile_id, year))
         self.year = year
         self.overrides = listed.rows
         self.eligible = eligible.rows
@@ -217,6 +231,9 @@ class LedgerRatiosScreen(CategorisationScreen):
         table_id = event.data_table.id
         if table_id not in {"categorisation-ratios-overrides", "categorisation-ratios-eligible"}:
             return
+        served = next((row for row in self.eligible if row.category == category), None)
+        if served is not None:
+            self.show_outcome(lambda: served.notes)
         self.query_one("#categorisation-ratios-category", Input).value = category
         current = next((row for row in self.overrides if row.category == category), None)
         self.query_one("#categorisation-ratios-ratio", Input).value = "" if current is None else current.ratio
@@ -288,9 +305,7 @@ class LedgerRatiosScreen(CategorisationScreen):
 
     async def _reread(self, year: int) -> None:
         listed = await self.list_door(LedgerRatiosListRequest(profile_id=self.list_door.profile_id, year=year))
-        eligible = await self.eligible_door(
-            LedgerRatiosEligibleRequest(profile_id=self.eligible_door.profile_id, year=year)
-        )
+        eligible = await self.eligible_door(eligible_request(self.eligible_door.profile_id, year))
         self.year = year
         self.overrides = listed.rows
         self.eligible = eligible.rows

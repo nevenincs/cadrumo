@@ -397,6 +397,8 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
             "rows": [
                 {
                     "category": "vehiculo_combustible",
+                    "label": "Vehicle fuel",
+                    "notes": "Deductible on proof of exclusive business use.",
                     "proportionality_kind": "usage_ratio_personal",
                     "override_present": False,
                 },

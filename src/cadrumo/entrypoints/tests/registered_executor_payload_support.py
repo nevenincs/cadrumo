@@ -257,8 +257,10 @@ def _payload(
                     operation=operation,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 )
-        case "ledger.ratios.list" | "ledger.ratios.eligible":
+        case "ledger.ratios.list":
             values = {"profile_id": profile_id, "year": 2025}
+        case "ledger.ratios.eligible":
+            values = {"profile_id": profile_id, "year": 2025, "output_language": OutputLanguage.EN}
         case "ledger.ratios.validate":
             values = {"profile_id": profile_id}
         case "ledger.ratios.set":

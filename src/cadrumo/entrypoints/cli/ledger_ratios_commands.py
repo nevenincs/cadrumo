@@ -140,7 +140,9 @@ def ratios_eligible(
     lines = [f"bucket\t{bucket_id}", f"count\t{projection.count}"]
     for row in projection.rows:
         override_marker = "X" if row.override_present else "."
-        lines.append(f"{row.category}\t{row.proportionality_kind}\toverride={override_marker}")
+        lines.append(
+            f"{row.category}\t{row.label}\t{row.proportionality_kind}\toverride={override_marker}\t{row.notes}"
+        )
     emit_envelope(
         ctx,
         command="ledger.ratios.eligible",
@@ -149,6 +151,8 @@ def ratios_eligible(
             rows=[
                 RatiosEligibleRowPayload(
                     category=row.category,
+                    label=row.label,
+                    notes=row.notes,
                     proportionality_kind=row.proportionality_kind,
                     override_present=row.override_present,
                 )

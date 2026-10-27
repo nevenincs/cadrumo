@@ -13,6 +13,7 @@ import type {
   LedgerDefinitionId,
 } from "../shell/ledger";
 import { isSpendingCategory } from "../shell/ledgerVocabulary";
+import { RATIO_ELIGIBLE_FIXTURE } from "./fixtures/ledgerRatios";
 import type {
   FixtureLedger,
   FixtureMovement,
@@ -74,16 +75,6 @@ const CLASSIFICATIONS = [
 ];
 const fromKeys = (request: JsonObject, allowed: readonly string[]) => {
   if (Object.keys(request).some((key) => !allowed.includes(key))) invalid();
-};
-
-/** The categories whose business use a ratio states, and the kind of
- * proportion each is. */
-const RATIO_ELIGIBLE: Record<string, { kind: string }> = {
-  suministros_home_office_internet: { kind: "usage_ratio_home_area" },
-  suministros_home_office_luz: { kind: "usage_ratio_home_area" },
-  telefonia_movil: { kind: "usage_ratio_personal" },
-  vehiculo_combustible: { kind: "usage_ratio_personal" },
-  vehiculo_mantenimiento: { kind: "usage_ratio_personal" },
 };
 
 const PROVENANCES = ["aeat_autorizada", "inicio_actividad"];
@@ -1512,13 +1503,17 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
     },
     "ledger.ratios.eligible": (request) => {
-      fromKeys(request, ["year"]);
+      fromKeys(request, ["year", "output_language"]);
       const year = yearOf(request);
-      const rows = Object.entries(RATIO_ELIGIBLE).map(([category, found]) => ({
-        category,
-        proportionality_kind: found.kind,
-        override_present: ratios.has(category),
-      }));
+      const rows = Object.entries(RATIO_ELIGIBLE_FIXTURE).map(
+        ([category, found]) => ({
+          category,
+          label: found.label,
+          notes: found.notes,
+          proportionality_kind: found.kind,
+          override_present: ratios.has(category),
+        }),
+      );
       return { profile_id: profileId, year, rows, count: rows.length };
     },
     "ledger.ratios.validate": (request) => {
@@ -1526,7 +1521,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       return {
         profile_id: profileId,
         profile_present: true,
-        eligible_count: Object.keys(RATIO_ELIGIBLE).length,
+        eligible_count: Object.keys(RATIO_ELIGIBLE_FIXTURE).length,
         overrides_count: ratios.size,
         missing_overrides: [],
         findings: [],
@@ -1639,7 +1634,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       const category = required(request.category);
       const ratio = unitRatio(request.ratio);
       yearOf(request);
-      if (!(category in RATIO_ELIGIBLE))
+      if (!(category in RATIO_ELIGIBLE_FIXTURE))
         throw new SetupStopped("REFUSED_CLI_VALIDATION_BOUNDARY");
       const prior = ratios.get(category) ?? null;
       ratios.set(category, ratio);

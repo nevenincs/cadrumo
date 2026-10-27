@@ -7,7 +7,7 @@
 // fills. A result is the operation's public projection; a refused one comes
 // back as the refusal's detail, in the same shape.
 
-import type { JsonObject, PublicDecimal } from "./ledger";
+import type { JsonObject, OutputLanguage, PublicDecimal } from "./ledger";
 
 // ---- Rules ---------------------------------------------------------------
 
@@ -87,6 +87,12 @@ export type LedgerRuleApplyResult = {
 // ---- Business-use ratios -------------------------------------------------
 
 export type LedgerRatiosYearRequest = { year: number };
+/** The eligible categories of a year, their wording said in the language
+ * the window shows. */
+export type LedgerRatiosEligibleRequest = {
+  year: number;
+  output_language: OutputLanguage;
+};
 export type LedgerRatiosListResult = {
   profile_id: string;
   year: number;
@@ -101,6 +107,11 @@ export type LedgerRatiosEligibleResult = {
   year: number;
   rows: {
     category: string;
+    /** The registry's name for the category, in the requested language. */
+    label: string;
+    /** The registry's notes on how the category is deducted, in the
+     * requested language. */
+    notes: string;
     proportionality_kind: string;
     override_present: boolean;
   }[];

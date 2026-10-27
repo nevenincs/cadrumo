@@ -10,7 +10,7 @@ related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:f9bb1589c1ea3da5e4e5288ab44b35ba36db7638fdd78d0c56c04c1ae47ff3f8'
+body_hash: 'sha256:5b62a21cf8159e00f61143b7a94f3b17dbaee5b7e79c588fa9e59dc3f95e55cc'
 ---
 
 # `profile-field-remap` plan
@@ -38,7 +38,7 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 - [x] `S01` - delete the audited dead and collected-only profile fields and every consumer (wizard questions, setup mapping, deadline hydration, labels, locales, fixtures, tests); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
 - [x] `S02` - delete unread deadline-model attributes and the retired default_ratio concept, including the desktop standard-ratio column; `src/cadrumo/domain/deadlines/models.py`.
 - [x] `S03` - remap profile field help from the setup-wizard question copy keyed by profile_key, replacing the eight-path help allowlist for TUI, CLI and desktop; `src/cadrumo/domain/user_profile/labels.py`.
-- [ ] `S04` - serve category label, notes and proportionality kind from the registry in ledger.ratios responses and render them in the Ratios pane; `src/cadrumo/application/ledger/ratios.py`.
+- [x] `S04` - serve category label, notes and proportionality kind from the registry in ledger.ratios responses and render them in the Ratios pane; `src/cadrumo/application/ledger/ratios.py`.
 - [x] `S05` - apply the usage ratio exactly once through the category rule evaluator for annual Renta and Modelo 130 (user ruling 2026-10-27: the ledger usage-ratio store and registry rule own the ratio; a row business_pct no longer scales usage-ratio categories), proven by tests through the real resolvers; `src/cadrumo/application/aggregation/renta_ledger.py`.
 - [x] `S06` - amend the desktop shell ADR: the window holds no domain data or domain logic and only remaps values the backend serves to CLI and TUI; `.vault/adr/2026-10-04-desktop-shell-adr.md`.
 - [ ] `S07` - replace frontend ledger vocabularies and usage-ratio category lists with served backend vocabularies; `native/desktop/frontend/src/shell/ledgerVocabulary.ts`.
@@ -46,6 +46,7 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 - [ ] `S09` - replace frontend invoice arithmetic, retention, validation facts and the IVA rate table with a backend invoice preview operation; `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`.
 - [ ] `S10` - replace frontend rule-pattern matching, percent and period grammar with backend previews and served grammar; `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
 - [ ] `S11` - ground the IVA deductibility of home-office suministros in official AEAT or DGT criteria and correct the IVA share, which today carries the IRPF-only 0.30 factor (user ruling 2026-10-27: ground first); `src/cadrumo/application/aggregation/iva_ledger.py`.
+- [ ] `S12` - audit every category deductibility rule (IRPF proportionality, statutory multiplier, IVA treatment, citations, locale notes) against bundled official sources and correct each wrong rule (user instruction 2026-10-27: fix all deductibility rules); `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`.
 
 ## Parallelization
 

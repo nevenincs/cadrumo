@@ -37,6 +37,7 @@ import type {
   LedgerOwnAccountRequest,
   LedgerOwnAccountResult,
   LedgerParticipationRebuildResult,
+  LedgerRatiosEligibleRequest,
   LedgerRatiosEligibleResult,
   LedgerRatiosListResult,
   LedgerRatiosSetRequest,
@@ -1882,7 +1883,7 @@ export interface LedgerRequests {
   "ledger.rule.add": LedgerRuleAddRequest;
   "ledger.rule.apply": LedgerRuleApplyRequest;
   "ledger.ratios.list": LedgerRatiosYearRequest;
-  "ledger.ratios.eligible": LedgerRatiosYearRequest;
+  "ledger.ratios.eligible": LedgerRatiosEligibleRequest;
   "ledger.ratios.validate": Record<string, never>;
   "ledger.ratios.set": LedgerRatiosSetRequest;
   "ledger.ratios.unset": LedgerRatiosUnsetRequest;

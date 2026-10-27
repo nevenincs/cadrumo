@@ -5,7 +5,8 @@ the application-layer ledger actions backed by the domain
 ``usage_ratios`` module. This module adds two read-only verbs that
 close the discoverability and pre-calculate readiness gaps:
 
-  ``eligible``  enumerate categories that may carry a user ratio
+  ``eligible``  enumerate categories that may carry a user ratio, each with
+                its registry label, notes and proportionality kind
   ``validate``  inspect the persisted profile against eligibility and
                 bound rules; report missing categories per modelo
 """
@@ -19,9 +20,12 @@ from typing import Annotated, Self
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.i18n.render import tr
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
+from ...core.text_bounds import NonEmptyStr
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -42,12 +46,18 @@ class EligibleCategoryRow(BaseModel):
     No category ships a statutory ratio: the operator must supply an
     override, or the censo must declare the area, before the modelo
     pre-calculate readiness check passes.
+
+    ``label`` and ``notes`` are the registry's wording for the category, said
+    in the requested language: every frontend shows these rather than keeping
+    a vocabulary of its own.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
     proportionality_kind: ProportionalityKind
+    label: NonEmptyStr
+    notes: NonEmptyStr
     override_present: bool
 
 
@@ -87,8 +97,9 @@ def eligible_ratio_categories(
     *,
     year: int,
     operation: PinnedAuthorityOperation,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> tuple[EligibleCategoryRow, ...]:
-    """Return all eligible categories with their proportionality kind + override flag.
+    """Return all eligible categories with their registry wording, kind + override flag.
 
     The output is sorted by canonical category value so callers can
     diff snapshots without ordering noise. Each row is an :class:`EligibleCategoryRow`.
@@ -101,6 +112,7 @@ def eligible_ratio_categories(
             every filing.
         operation: The caller-owned authority generation used for every
             category and governed-fact query in this projection.
+        language: The language the registry's label and notes keys are said in.
     """
     rows: list[EligibleCategoryRow] = []
     year_profiles = resolve_category_profiles(year, operation=operation)
@@ -113,6 +125,8 @@ def eligible_ratio_categories(
             EligibleCategoryRow(
                 category=category,
                 proportionality_kind=rule.kind,
+                label=tr(str(category_profile.display_label), locale=language.value),
+                notes=tr(str(rule.notes), locale=language.value),
                 override_present=category in profile.ratios,
             ),
         )
@@ -189,7 +203,11 @@ def validate_ratios_profile(
 
 
 def list_eligible_ratios_for_bucket(
-    *, bucket_id: str, year: int, operation: PinnedAuthorityOperation
+    *,
+    bucket_id: str,
+    year: int,
+    operation: PinnedAuthorityOperation,
+    language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE,
 ) -> tuple[EligibleCategoryRow, ...]:
     """Convenience: load the bucket's profile and project the eligibility report.
 
@@ -202,9 +220,10 @@ def list_eligible_ratios_for_bucket(
             kind.
         operation: The caller-owned authority generation used to decode the
             stored profile.
+        language: The language the registry's label and notes keys are said in.
     """
     profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-    return eligible_ratio_categories(profile, year=year, operation=operation)
+    return eligible_ratio_categories(profile, year=year, operation=operation, language=language)
 
 
 def validate_ratios_for_bucket(

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:c677b37e88632b65154498576870c0ad694b25cd42cabb172c5f9c0afaea5d35'
+body_hash: 'sha256:94f7f4ce0afac3bc308ad6da9a8265145c25088893acfcc3b8bbc3310d73a358'
 related:
   - "[[2026-10-27-profile-field-remap-plan]]"
 ---
@@ -244,6 +244,41 @@ related:
 - `S03` `M` `src/cadrumo_runtime/host/tests/frontend/tui/profile/test_runtime_overview.py`
 - `S03` `verify:` `uv run --no-sync pytest src/cadrumo/application/user_profile/tests/test_field_help.py src/cadrumo/entrypoints/tui/profile/tests/test_field_help_text.py` -> `pass`
 - `S03` `verify:` `python -m dev.desktop_profile_fixture --check` -> `pass`
+- `S04` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S04` `M` `src/cadrumo/application/ledger/ratios_contracts.py`
+- `S04` `M` `src/cadrumo/application/ledger/ratios_operation.py`
+- `S04` `M` `src/cadrumo/application/ledger/tests/test_ratios.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/operation_ledger_ratios.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/ledger_ratios_results.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/ledger_ratios_commands.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_ratios_verbs.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/categorisation_ratios.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/tests/categorisation_register_fixtures.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_categorisation_registers.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_support.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/registered_executor_outcome_assertions.py`
+- `S04` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S04` `M` `src/cadrumo/locales/en/common.yml`
+- `S04` `M` `src/cadrumo/locales/es/common.yml`
+- `S04` `M` `src/cadrumo/locales/ca/common.yml`
+- `S04` `M` `src/cadrumo/locales/hu/common.yml`
+- `S04` `M` `docs/technical/articles/060-ledger-contracts-attribution-readiness-and-ratios.md`
+- `S04` `M` `native/desktop/frontend/src/components/ledger/setup/RatiosPane.tsx`
+- `S04` `M` `native/desktop/frontend/src/shell/ledger.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S04` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S04` `A` `native/desktop/frontend/src/dev/fixtures/ledgerRatios.ts`
+- `S04` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S04` `verify:` `pytest ledger ratios, CLI ratio verbs with every lane, TUI ledger, runtime categorisation (927 passed)` -> `pass`
+- `S04` `verify:` `pytest test_registered_executor_conformance -k ledger.ratios.eligible (1 passed before the module stopped importing under the sede view work)` -> `pass`
+- `S04` `verify:` `ruff check and format --check on touched python` -> `pass`
+- `S04` `verify:` `lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S04` `verify:` `dev.quality.types (3 diagnostics, all in application/auth/sessions.py which S04 did not touch)` -> `fail`
+- `S04` `verify:` `cmake --target desktop-frontend-test ledger-setup.spec (17 passed)` -> `pass`
+- `S04` `verify:` `cmake --target desktop-frontend-check` -> `pass`
+- `S04` `verify:` `dev.operation_contract_manifest.generate (manifest regenerated)` -> `pass`
+- `S04` `by:` `vaultspec-standard-executor`
 
 ## Notes
 
@@ -256,3 +291,7 @@ related:
 - `S02` dev.quality.types reports 15 diagnostics, all in files S02 did not touch `(cadrumo_runtime` worker tests, tui profile `edit_screens,` `user_profile` overview).
 - `S02` desktop-frontend-check fails only at its last step: prettier flags src/dev/fixtures/userProfile.json, a file S02 did not touch; tsc, eslint and node tests pass.
 - `S02` Docs sequence goldens that print ratios eligible stay stale until the registry authority is republished and dev.docs.sequences refresh runs.
+- `S04` dev.quality.types reports 3 diagnostics, all in src/cadrumo/application/auth/sessions.py, a file S04 did not touch.
+- `S04` `test_registered_executor_conformance` no longer imports because `application/live/sede_view_operation` imports `close_live_view_session,` which application/live/session.py does not define yet; the ledger.ratios.eligible case passed before that.
+- `S04` The category note cleanup in `src/cadrumo/locales/*/common.yml` is not committed with S04: those files also hold another session's uncommitted hunks.
+- `S04` Docs sequence goldens that print ratios eligible stay stale until the registry authority is republished and dev.docs.sequences refresh runs.

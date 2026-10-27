@@ -758,6 +758,17 @@ def _assert_registered_executor_conformance_outcome(
                 )
             else:
                 assert (ratios_after, events_after) == ratios_before
+            if case.definition_id == "ledger.ratios.eligible":
+                served = {row["category"]: row for row in document["rows"]}
+                assert document["count"] == len(served) > 0
+                assert served["vehiculo_combustible"]["label"] == "Vehicle fuel"
+                assert served["vehiculo_combustible"]["notes"] == (
+                    "Deductible on proof of exclusive business use "
+                    "(Reglamento IRPF art. 22, exclusive affectation of the vehicle)."
+                )
+                assert served["vehiculo_combustible"]["proportionality_kind"] == "usage_ratio_personal"
+                assert served["suministros_home_office_luz"]["label"] == "Home-office electricity"
+                assert served["suministros_home_office_luz"]["proportionality_kind"] == "usage_ratio_home_area"
     if case.expected_terminal is OperationTerminalCondition.FAILED:
         assert observed.projection.diagnostic_ref is not None
     if case.definition_id == "modelo.work.create":
