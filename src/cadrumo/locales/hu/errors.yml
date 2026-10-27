@@ -1327,6 +1327,9 @@ errors:
       a felülbíráláshoz.'
     refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` paramétert nem sikerült
       elemezni. Ellenőrizd a megadott szűrő szintaxisát.
+    refused_runtime_custody_recovering: A profilhoz való hozzáférés helyreállítása
+      folyamatban van. Ismételd meg a kérést egy kis idő múlva; ha újra elutasításra
+      kerül, jelentkezz be újra.
     refused_runtime_frontend: A profil futtatókörnyezete elutasította a kérést.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.

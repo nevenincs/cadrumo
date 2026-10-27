@@ -1304,6 +1304,8 @@ errors:
       or re-run with --override-retention and --reason to override.'
     refused_review_filter_parse: '`--filter KEY=VALUE` could not be parsed. Check
       the syntax of the filter provided.'
+    refused_runtime_custody_recovering: Access to this profile is being restored.
+      Repeat the request in a moment; if it is refused again, sign in again.
     refused_runtime_frontend: The profile runtime refused this request.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: A bucket with that identifier already

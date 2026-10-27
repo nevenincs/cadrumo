@@ -12,7 +12,7 @@ from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
 from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import CustodyRecoveringError, FrontendRefusedError
 from cadrumo_client.transport.frontend_operation_client import OperationFrontend
 
 from ....core.config import override_settings
@@ -166,3 +166,48 @@ def test_an_unrelated_refusal_keeps_its_runtime_code() -> None:
     error = _wire_refusal(AccessDenialCode.OPERATION_DENIED, None)
     rendered = _rendered(error)
     assert rendered["message"] == AccessDenialCode.OPERATION_DENIED.value
+
+
+def test_a_session_waiting_for_custody_to_recover_is_rendered_as_retryable_with_its_window() -> None:
+    reply = AccessRefusal(
+        request_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        code=AccessDenialCode.CUSTODY_RECOVERING,
+        recovery_remaining_seconds=42,
+    )
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal) and decoded.recovery_remaining_seconds == 42
+    with pytest.raises(CustodyRecoveringError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
+    assert raised.value.remaining_seconds == 42
+    # The sign-in projection leaves it alone: repeating the command is the remedy, not a new sign-in.
+    with pytest.raises(CustodyRecoveringError) as projected:
+        raise_connection_refusal(raised.value)
+    assert projected.value is raised.value
+
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        payload = json.loads(render_error_payload(projected.value, as_json=True))["error"]
+        expected = tr("errors.refused.refused_runtime_custody_recovering", locale="en")
+    assert payload["code"] == "REFUSED_RUNTIME_CUSTODY_RECOVERING"
+    assert payload["retryable"] is True
+    assert payload["message"] == expected != "errors.refused.refused_runtime_custody_recovering"
+    assert payload["context"]["reason"] == AccessDenialCode.CUSTODY_RECOVERING.value
+    assert payload["context"]["seconds"] == "42"
+
+
+@pytest.mark.parametrize("language", tuple(OutputLanguage))
+def test_the_recovering_refusal_is_translated_in_every_language(language: OutputLanguage) -> None:
+    key = "errors.refused.refused_runtime_custody_recovering"
+    assert tr(key, locale=language.value) != key
+
+
+def test_a_window_is_refused_on_any_other_code() -> None:
+    with pytest.raises(ValueError, match="recovery window"):
+        AccessRefusal(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            code=AccessDenialCode.SESSION_EXPIRED,
+            recovery_remaining_seconds=42,
+        )

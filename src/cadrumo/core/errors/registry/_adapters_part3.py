@@ -78,6 +78,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo_client.transport.frontend_client_contracts.CustodyRecoveringError",
+        ErrorCode(
+            code="REFUSED_RUNTIME_CUSTODY_RECOVERING",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_runtime_custody_recovering",
+            retryable=True,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo_client.transport.modelo_metadata.ModeloMetadataRunError",
         ErrorCode(
             code="ERROR_MODELO_METADATA_RUN",

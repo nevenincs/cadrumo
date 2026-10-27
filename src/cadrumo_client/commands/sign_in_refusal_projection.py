@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 
-from ..transport.frontend_client_contracts import FrontendRefusedError
+from ..transport.frontend_client_contracts import CustodyRecoveringError, FrontendRefusedError
 from .errors import CliRefusedBoundaryError
 
 
@@ -47,6 +47,9 @@ def raise_connection_refusal(error: FrontendRefusedError) -> None:
     """Project a wire admission refusal into its operator-facing boundary error."""
     from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+    if isinstance(error, CustodyRecoveringError):
+        # Repeating the same command can succeed once custody recovers; it keeps its own retryable code.
+        raise error
     sign_in = error.sign_in
     key: str | None = None
     if sign_in is not None and sign_in.reason == "throttled":

@@ -89,7 +89,7 @@ from ..contracts.session_events import (
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from ..contracts.sign_in_outcomes import ProfileLoginThrottledError, ProfileReceiptRefusedError
 from .framing import VerifiedConnection
-from .frontend_client_contracts import FrontendRefusedError
+from .frontend_client_contracts import FrontendRefusedError, frontend_refusal
 from .frontend_profile_view_client import ProfileViewFrontend
 from .startup import LaunchDoor
 from .transport_cleanup import TransportCleanup
@@ -658,7 +658,9 @@ class FrontendClient(ProfileViewFrontend):
         """Report explicit person input; never call from polling or automation."""
         reply = self._session_status("session_activity", timeout=timeout)
         if reply.status.denial is not None:
-            raise FrontendRefusedError(reply.status.denial.value)
+            raise frontend_refusal(
+                reply.status.denial.value, recovery_remaining_seconds=reply.status.recovery_remaining_seconds
+            )
         return reply
 
     def disclosure_page(

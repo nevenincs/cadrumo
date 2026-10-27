@@ -1416,6 +1416,9 @@ errors:
       per forçar-ho.'
     refused_review_filter_parse: No s'ha pogut interpretar `--filter CLAU=VALOR`.
       Comprova la sintaxi del filtre indicat.
+    refused_runtime_custody_recovering: S'està restablint l'accés a aquest perfil.
+      Repeteix la sol·licitud d'aquí a un moment; si es torna a rebutjar, torna a
+      iniciar la sessió.
     refused_runtime_frontend: L'entorn d'execució del perfil ha rebutjat aquesta sol·licitud.
     refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
     refused_storage_bucket_already_present: Ja existeix un bucket amb aquest identificador.

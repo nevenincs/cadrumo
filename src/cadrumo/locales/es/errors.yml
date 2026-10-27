@@ -1409,6 +1409,9 @@ errors:
       para forzarlo.'
     refused_review_filter_parse: No se pudo interpretar `--filter CLAVE=VALOR`. Comprueba
       la sintaxis del filtro indicado.
+    refused_runtime_custody_recovering: Se está restableciendo el acceso a este perfil.
+      Repite la solicitud en un momento; si se rechaza de nuevo, vuelve a iniciar
+      sesión.
     refused_runtime_frontend: El entorno de ejecución del perfil rechazó esta solicitud.
     refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
     refused_storage_bucket_already_present: Ya existe un bucket con ese identificador.

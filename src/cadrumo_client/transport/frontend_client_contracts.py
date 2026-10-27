@@ -13,6 +13,7 @@ from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.request_faults import RequestFault, request_faults_text
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
+from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.sign_in_outcomes import SignInRefusal
 
@@ -67,6 +68,37 @@ class FrontendRefusedError(CadrumoError):
     def holder_operation_id(self) -> str | None:
         """The unsettled operation that holds a busy subject, when the runtime named one."""
         return self._holder_operation_id
+
+
+class CustodyRecoveringError(FrontendRefusedError):
+    """The profile's worker was lost and this session waits, granting nothing, for custody to recover.
+
+    The identical request can succeed once the session is signed in again on
+    the same connection within the recovery window, so it may be repeated.
+    """
+
+    def __init__(self, *, remaining_seconds: int | None) -> None:
+        """Retain the whole seconds left in the recovery window, when the runtime said."""
+        super().__init__(AccessDenialCode.CUSTODY_RECOVERING.value)
+        self.remaining_seconds = remaining_seconds
+        if remaining_seconds is not None and self.context is not None:
+            self.context["seconds"] = remaining_seconds
+
+
+def frontend_refusal(
+    code: str,
+    *,
+    sign_in: SignInRefusal | None = None,
+    request_faults: tuple[RequestFault, ...] = (),
+    holder_operation_id: str | None = None,
+    recovery_remaining_seconds: int | None = None,
+) -> FrontendRefusedError:
+    """Return the typed refusal for a runtime denial: a recovering session's carries its remaining window."""
+    if code == AccessDenialCode.CUSTODY_RECOVERING.value:
+        return CustodyRecoveringError(remaining_seconds=recovery_remaining_seconds)
+    return FrontendRefusedError(
+        code, sign_in=sign_in, request_faults=request_faults, holder_operation_id=holder_operation_id
+    )
 
 
 def frontend_failure_code(error: Exception) -> str:

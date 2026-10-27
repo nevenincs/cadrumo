@@ -33,7 +33,7 @@ from ..contracts.operation_access import (
 from ..contracts.profile_access import AccessRefusal
 from ..contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES, ProjectionPage, ProjectionPageRequest
 from .framing import VerifiedConnection
-from .frontend_client_contracts import FrontendRefusedError
+from .frontend_client_contracts import FrontendRefusedError, frontend_refusal
 
 
 class OperationFrontend:
@@ -92,11 +92,12 @@ class OperationFrontend:
         """Keep runtime failure provenance distinct from an authoritative access denial."""
         if isinstance(reply.code, RefusalCode):
             raise RefusalError(reply.code)
-        raise FrontendRefusedError(
+        raise frontend_refusal(
             reply.code.value,
             sign_in=reply.sign_in,
             request_faults=reply.request_faults,
             holder_operation_id=reply.holder_operation_id,
+            recovery_remaining_seconds=reply.recovery_remaining_seconds,
         )
 
     @staticmethod
