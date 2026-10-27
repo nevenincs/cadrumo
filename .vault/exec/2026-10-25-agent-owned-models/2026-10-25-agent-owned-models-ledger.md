@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:a8c5896f29856419cb2eb7187516f38b3ac79e08a227669f9c75d511029110d1'
+body_hash: 'sha256:d8c3bcaddad41d1aac406cc9fb909c3364e95dab87a1cc2ff02cd1ebcd389c55'
 related:
   - "[[2026-10-25-agent-owned-models-plan]]"
 ---
@@ -1446,6 +1446,66 @@ related:
 - `S28` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py -n 0 -q -m integration` -> `pass`
 - `S28` `verify:` `uv run --no-sync ty check src/cadrumo_runtime/host/tests/frontend/test_saved_model_role_selection.py` -> `pass`
 - `S28` `verify:` `ctest --test-dir build/windows-x64 -C Debug -R '^application\.rust$' --output-on-failure` -> `pass`
+- `S27` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S27` `M` `docs/_sequences/how-to/file-at-aeat/file-at-aeat-chain.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-address-by-id.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-chain.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-exact-ids.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-file.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-history.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-revision-by-id.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-select.json`
+- `S27` `M` `docs/_sequences/how-to/filing-spine/filing-spine-visible-target.json`
+- `S27` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-expenses-exceed-income.json`
+- `S27` `M` `docs/_sequences/how-to/first-quarterly-filing/first-quarter-export-file.json`
+- `S27` `M` `docs/_sequences/how-to/first-quarterly-filing/modelo-130-first-quarter.json`
+- `S27` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q1.json`
+- `S27` `M` `docs/_sequences/how-to/irpf-lifecycle/irpf-lifecycle-q2.json`
+- `S27` `M` `docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1.json`
+- `S27` `M` `docs/_sequences/how-to/manage-invoices/invoices-catalogue-and-349.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-130/modelo-130-export-file.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-130/modelo-130-manual-casilla.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-130/modelo-130-quarterly.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-130/modelo-130-review-chain.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-303/modelo-303-first-quarter.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-303/modelo-303-revision.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-349/modelo-349-export.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-349/modelo-349-file.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-349/modelo-349-first-quarter.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-390/modelo-390-annual-2025.json`
+- `S27` `M` `docs/_sequences/how-to/modelo-390/modelo-390-supply-binding.json`
+- `S27` `M` `docs/_sequences/how-to/quickstart/quickstart-export.json`
+- `S27` `M` `docs/_sequences/how-to/quickstart/quickstart-file.json`
+- `S27` `M` `docs/_sequences/how-to/quickstart/quickstart-modelo-130.json`
+- `S27` `M` `docs/_sequences/how-to/quickstart/quickstart-revision.json`
+- `S27` `M` `docs/_sequences/how-to/review-calculation-values/review-values-manual-casilla.json`
+- `S27` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S27` `M` `docs/_sequences/how-to/review-calculation-values/review-values-review-saved.json`
+- `S27` `M` `docs/_sequences/how-to/review-calculation-values/review-values-rows.json`
+- `S27` `M` `docs/_sequences/how-to/troubleshooting/troubleshooting-period-grammar.json`
+- `S27` `M` `docs/_sequences/how-to/verification-reports/verification-reports-blocked.json`
+- `S27` `M` `docs/_sequences/how-to/verification-reports/verification-reports-export-check.json`
+- `S27` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete-report.json`
+- `S27` `M` `docs/_sequences/how-to/verification-reports/verification-reports-incomplete.json`
+- `S27` `M` `docs/_sequences/how-to/verification-reports/verification-reports-modelo-303.json`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page explanation/how-renta-is-assembled --timeout 180` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/file-at-aeat --timeout 180` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/filing-spine --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/first-quarterly-filing --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/irpf-lifecycle --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/iva-lifecycle --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/manage-invoices --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/modelo-100 --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/modelo-130 --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/modelo-303 --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/modelo-349 --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/modelo-390 --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/quickstart --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/review-calculation-values --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/troubleshooting --timeout 480` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.docs.sequences check --page how-to/verification-reports --timeout 480` -> `pass`
 
 ## Notes
 
@@ -1548,3 +1608,4 @@ related:
 - `S28` 91e8fc23f3: 5 acceptance cases pass, log 20261027T060257.547036Z-pytest-48860-d68ee754. CLI covers all four locales using production absent-selection lookup. Authenticated admin-to-encrypted-store-to-runtime-relay read-back passes; desktop UI and separate CLI/TUI/MCP submission/START fences remain pending.
 - `S28` 81098fa394 adds optional CMake application test filter; generated CTest argv contains the selected substring. The initial parallel provisioning run reported 142 passed and 1 cancelled-follower failure (busy instead of cancelled). The failing test passes alone and in 10 bounded repeats; diagnostics yielded no cause and were removed. Full provisioning group rerun serially remains pending. Repeat check used full failing-test name as cache filter.
 - `S28` 24a05453f7: 3 operation-frontend acceptance cases pass with notification-based waits; log 20261027T062124.042235Z-pytest-24360-e8068654. Authenticated desktop admin choice is read through real CLI registered runner, TUI controller and MCP SDK execute/observe/result; MCP attendance is approved by password holder, both service and worker authority enforced, encrypted record unchanged. Native CTest provisioning filter with `RUST_TEST_THREADS=1` passes143 tests (93 unrelated filtered out), 246.62s, LastTest.log. Prior concurrent cancellation failure remains unreproduced after10 isolated passes; no speculative product change.
+- `S27` af1b02d498 commits44 goldens across16 changed pages; reviewed JSON changes are215 digest-only scalar replacements. Every changed page passed serially after5645a4f9a8; no additional refresh required. Initial filing-spine180s bound expired and full15-sequence page passed480s. Initial modelo390 attempt hit an inner CLI deadline during native check; isolated rerun passed unchanged. No refusal output accepted as a golden.
