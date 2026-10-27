@@ -25,8 +25,9 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
-from cadrumo_client.transport.service_client import SERVICE_EXCHANGE_TIMEOUT_SECONDS, InstalledServiceClient
+from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from .adapters.agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
 from .adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
@@ -623,7 +624,7 @@ class AgentService:
                     profile_id=lease.profile_id,
                     session_id=lease.session_id,
                 ),
-                deadline=monotonic() + SERVICE_EXCHANGE_TIMEOUT_SECONDS,
+                deadline=monotonic() + MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
             )
         except RefusalError:
             # A connection that is gone ends the claim that follows, as it always did.
