@@ -71,7 +71,7 @@ class LedgerRatiosUnsetRequest(BaseModel):
 
 
 class LedgerRatiosEligibleRequest(CredentialFreeOperationRequest):
-    """Read eligible ratio categories and defaults for one filing year."""
+    """Read the eligible ratio categories for one filing year."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -139,14 +139,7 @@ class LedgerRatiosEligibleRow(BaseModel):
 
     category: _CategoryToken
     proportionality_kind: _CategoryToken
-    default_ratio: _RatioText | None = None
     override_present: bool
-
-    @field_validator("default_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _default_is_unit_ratio(cls, value: str | None) -> str | None:
-        return None if value is None else _validate_ratio_text(value, require_unit=True)
 
 
 class _LedgerRatiosEligibleFacts(BaseModel):

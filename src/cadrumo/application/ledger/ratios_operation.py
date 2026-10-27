@@ -349,7 +349,6 @@ class LedgerRatiosEligibleExecutor:
                 LedgerRatiosEligibleRow(
                     category=row.category.value,
                     proportionality_kind=row.proportionality_kind.value,
-                    default_ratio=None if row.default_ratio is None else str(row.default_ratio),
                     override_present=row.override_present,
                 )
                 for row in rows

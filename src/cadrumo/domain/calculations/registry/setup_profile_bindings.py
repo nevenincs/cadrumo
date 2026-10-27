@@ -80,16 +80,6 @@ def setup_answer_declarations(
     return declarations
 
 
-def profile_field_bindings(*, authority: GovernedFactSource | None = None) -> dict[str, str]:
-    """Return profile-field names and their canonical persisted paths."""
-    prefix = "profile.field."
-    return {
-        key.removeprefix(prefix): value
-        for key, value in mapping_fact_entries(_SETUP_FACT_ID, authority=authority).items()
-        if key.startswith(prefix)
-    }
-
-
 def wizard_page_declarations(*, authority: GovernedFactSource | None = None) -> dict[str, dict[str, str]]:
     """Return page format/widget declarations keyed by page ID."""
     prefix = "wizard.page."
@@ -117,7 +107,6 @@ def legal_source_kind_declarations(*, authority: GovernedFactSource | None = Non
 __all__ = [
     "legal_source_kind_declarations",
     "mapping_fact_entries",
-    "profile_field_bindings",
     "setup_answer_declarations",
     "wizard_page_declarations",
 ]

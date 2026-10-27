@@ -42,8 +42,8 @@ type Eligible = LedgerRatiosEligibleResult["rows"][number];
 
 /**
  * The share of a category used for the activity, set per year: the
- * categories that take one, their standard share where the law gives one,
- * and the override the person set. Each set and unset is its own write.
+ * categories that take one and the override the person set. Each set and
+ * unset is its own write.
  */
 export function RatiosPane({
   port,
@@ -157,14 +157,6 @@ export function RatiosPane({
       label: t("desktop.ledger.ratios.column.kind"),
       sort: (row) => tokenText(t, "ratios.kind", row.proportionality_kind),
       cell: (row) => tokenText(t, "ratios.kind", row.proportionality_kind),
-    },
-    {
-      key: "standard",
-      label: t("desktop.ledger.ratios.column.standard"),
-      numeric: true,
-      sort: (row) => rankDecimal(row.default_ratio),
-      cell: (row) =>
-        row.default_ratio ? percentText(locale, row.default_ratio) : "—",
     },
     {
       key: "ratio",

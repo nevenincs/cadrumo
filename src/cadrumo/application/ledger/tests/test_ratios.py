@@ -39,12 +39,6 @@ class TestEligible:
         others = [row for row in rows if row.category is not sample_category]
         assert all(row.override_present is False for row in others)
 
-    def test_eligible_default_ratios_are_in_range_when_present(self, operation: PinnedAuthorityOperation) -> None:
-        rows = eligible_ratio_categories(UsageRatioProfile(), year=2025, operation=operation)
-        for row in rows:
-            if row.default_ratio is not None:
-                assert Decimal("0") <= row.default_ratio <= Decimal("1")
-
 
 class TestValidate:
     def test_validate_empty_profile_is_clean(self, operation: PinnedAuthorityOperation) -> None:

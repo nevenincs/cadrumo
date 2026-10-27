@@ -1,9 +1,9 @@
 """Usage ratios: the eligible categories, the profile's overrides, their validation, set and unset.
 
-A ratio override replaces the statutory default share of business use for one
-category. The eligible categories and the overrides are read for one filing
-year; an override is set from typed values after review, and removing one asks
-once more before it is sent.
+A ratio override states the share of business use of one category. The
+eligible categories and the overrides are read for one filing year; an override
+is set from typed values after review, and removing one asks once more before
+it is sent.
 """
 
 from __future__ import annotations
@@ -151,7 +151,6 @@ class LedgerRatiosScreen(CategorisationScreen):
             eligible.add_columns(
                 tr("tui.ledger.categorisation.ratios.column.category"),
                 tr("tui.ledger.categorisation.ratios.column.kind"),
-                tr("tui.ledger.categorisation.ratios.column.default"),
                 tr("tui.ledger.categorisation.ratios.column.override"),
             )
         eligible.clear()
@@ -159,7 +158,6 @@ class LedgerRatiosScreen(CategorisationScreen):
             eligible.add_row(
                 row.category,
                 row.proportionality_kind,
-                row.default_ratio or "-",
                 tr(
                     "tui.ledger.categorisation.ratios.override_present"
                     if row.override_present

@@ -206,9 +206,6 @@ class _RemoteNotification(Protocol):
 
 
 _log = _get_logger(__name__)
-_LOCAL_WORK_UNIT_APPLIES_BECAUSE = (
-    "Local modelo work unit created by the operator; registry deadline window unavailable or not surfaced."
-)
 
 
 def _window_intersects_range(
@@ -425,7 +422,6 @@ def _calendar_entry_from_work_unit(
         closes_on=closes_on,
         payment_cutoff_on=payment_cutoff_on,
         status=_local_work_unit_status(unit, closes_on, today, due_soon_days),
-        applies_because=_LOCAL_WORK_UNIT_APPLIES_BECAUSE,
         boe_references=(),
         recovery=None,
     )

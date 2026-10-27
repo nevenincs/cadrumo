@@ -147,7 +147,6 @@ def _profile_from_authority_fact(
         "notes": tr(str(values["notes"])),
         "citations": citations,
         "fixed_pct": values.get("fixed_pct"),
-        "default_ratio": values.get("default_ratio"),
         "statutory_multiplier": values.get("statutory_multiplier"),
         "statutory_cap_eur_per_day": values.get("statutory_cap_eur_per_day"),
         "statutory_cap_eur": cap,

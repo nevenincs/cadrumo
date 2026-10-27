@@ -473,11 +473,11 @@ def _evaluate_fixed_percentage_rule(
 
 def _evaluate_usage_ratio_rule(
     fact: RentaDeductibleExpenseFact,
-    rule: ProportionalityRule,
+    _rule: ProportionalityRule,
     context: RentaDeductibilityContext,
     deductible_basis: Decimal,
 ) -> _RentaDeductibilityDecision:
-    ratio = context.usage_ratios.get(fact.category, rule.default_ratio)
+    ratio = context.usage_ratios.get(fact.category)
     if ratio is None:
         return _RentaDeductibilityDecision(
             status=RentaDeductibilityStatus.INELIGIBLE,

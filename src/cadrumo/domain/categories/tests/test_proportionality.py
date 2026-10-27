@@ -2,9 +2,8 @@
 
 Verifies the cross-field invariants on the rule shape: fixed-percentage
 rules require ``fixed_pct``; statutory-cap rules require a cap value
-and reject the daily / generic mix; usage-ratio rules reject
-statutory-cap fields; and full-deductible rules reject
-``default_ratio``.
+and reject the daily / generic mix; and usage-ratio rules reject
+statutory-cap fields.
 """
 
 from __future__ import annotations
@@ -80,26 +79,6 @@ def test_statutory_cap_requires_cap() -> None:
         )
 
 
-def test_full_deductible_rejects_default_ratio() -> None:
-    """Default ratios are only valid for usage-ratio rules."""
-
-    with pytest.raises(ValidationError, match=r"default_ratio is only valid for usage_ratio rules"):
-        ProportionalityRule(
-            kind=ProportionalityKind.from_registry(
-                "full_deductible",
-                is_full_deductible=True,
-                is_usage_ratio=False,
-                is_statutory_cap=False,
-                requires_fixed_pct=False,
-                is_non_deductible=False,
-                requires_exclusive_use=False,
-            ),
-            default_ratio=Decimal("0.30"),
-            citations=(_citation(),),
-            notes=tr("Valor incompatible."),
-        )
-
-
 def test_usage_ratio_rejects_statutory_cap_fields() -> None:
     """Usage-ratio rules must reject statutory-cap fields."""
 
@@ -114,7 +93,6 @@ def test_usage_ratio_rejects_statutory_cap_fields() -> None:
                 is_non_deductible=False,
                 requires_exclusive_use=True,
             ),
-            default_ratio=Decimal("0.30"),
             statutory_cap_eur_per_day=Decimal("50"),
             citations=(_citation(),),
             notes=tr("Forma incompatible."),
@@ -269,14 +247,12 @@ def test_statutory_multiplier_accepts_home_area_suministros_legal_factor() -> No
             is_non_deductible=False,
             requires_exclusive_use=False,
         ),
-        default_ratio=Decimal("0.30"),
         statutory_multiplier=Decimal("0.30"),
         citations=(_citation(),),
         notes=tr("Suministros 0.30 multiplier per LIRPF Art. 30.2 rule 5"),
     )
 
     assert rule.statutory_multiplier == Decimal("0.30")
-    assert rule.default_ratio == Decimal("0.30")
 
 
 def test_effective_usage_ratio_applies_multiplier_to_chosen_ratio() -> None:

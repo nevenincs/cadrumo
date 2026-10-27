@@ -33,6 +33,7 @@ from ....domain.deadlines.models import (
 from ....domain.deadlines.tests.withdrawn_deadline_window_authority import withdrawn_deadline_window_operation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....tests.log_records import delivered_records
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notification_ports import RemoteNotification
@@ -290,7 +291,6 @@ def _corporate_profile() -> TaxpayerProfile:
         legal_entity_form=LegalEntityForm.from_registry("SL"),
         iva_regime=IVARegime("GENERAL"),
         incn_prior_12_months=Decimal("7500000.00"),
-        new_entity_first_two_profit_periods=False,
     )
 
 
@@ -375,11 +375,12 @@ def test_invalid_pagadores_values_are_debug_logged_without_raw_value(
         advisories = build_filing_obligation_advisories(profile_values, operation=authority_operation)
 
     assert advisories == ()
-    relevant = [record for record in caplog.records if record.getMessage() == expected_message]
+    delivered = delivered_records(caplog)
+    relevant = [record for record in delivered if record.getMessage() == expected_message]
     assert len(relevant) == 1
     assert relevant[0].__dict__["profile_field"] == expected_field
     assert relevant[0].__dict__["error_type"] == expected_error_type
-    assert all(raw_value not in record.getMessage() for record in caplog.records)
+    assert all(raw_value not in record.getMessage() for record in delivered)
 
 
 _MULTIPLE_PAGADORES_OBLIGATION_KEY = "cli.overview.status.filing_obligation_multiple_pagadores"
@@ -1159,7 +1160,6 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
         closes_on=date(2025, 4, 20),
         payment_cutoff_on=date(2025, 4, 15),
         status=ObligationStatus.OVERDUE,
-        applies_because="synthetic shifted-boundary obligation",
         boe_references=(),
         recovery=None,
     )
@@ -1198,7 +1198,6 @@ def _obligation(modelo: str, closes_on: date) -> ModeloDeadline:
         closes_on=closes_on,
         payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
-        applies_because="synthetic holiday-coverage obligation",
         boe_references=(),
         recovery=None,
     )
@@ -1529,7 +1528,6 @@ def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
         closes_on=_SATURDAY_CLOSE,
         payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
-        applies_because="synthetic weekend-close obligation",
         boe_references=(),
         recovery=None,
     )

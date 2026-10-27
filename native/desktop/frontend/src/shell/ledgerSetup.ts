@@ -102,7 +102,6 @@ export type LedgerRatiosEligibleResult = {
   rows: {
     category: string;
     proportionality_kind: string;
-    default_ratio: string | null;
     override_present: boolean;
   }[];
   count: number;

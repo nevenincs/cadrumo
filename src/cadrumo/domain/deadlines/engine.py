@@ -345,12 +345,14 @@ class DeadlineEngine:
             period=registry_period,
         ):
             return None
-        condition_text = self._evaluate_conditions(
-            profile,
-            window.applicability_conditions,
-            mode=window.applicability_condition_mode,
-        )
-        if condition_text is None:
+        if (
+            self._evaluate_conditions(
+                profile,
+                window.applicability_conditions,
+                mode=window.applicability_condition_mode,
+            )
+            is None
+        ):
             return None
         if _window_outside_activity_period(
             period=window.period,
@@ -372,7 +374,6 @@ class DeadlineEngine:
             closes_on=window.closes_on,
             payment_cutoff_on=window.payment_cutoff_on,
             status=obligation_status,
-            applies_because=condition_text,
             boe_references=window.legal_refs,
             recovery=_overdue_recovery_or_none(
                 obligation_status=obligation_status,

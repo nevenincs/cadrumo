@@ -91,6 +91,4 @@ entries = [
   { key = "setup.field.taxpayer_marriage_date", value = "renta_taxpayer.marriage_date|str|" },
   { key = "setup.field.taxpayer_sex", value = "renta_taxpayer.sex|str|" },
   { key = "setup.field.third_party_transactions_above_347_threshold", value = "obligations.third_party_transactions_above_347_threshold|bool|" },
-
-  { key = "profile.field.new_entity_first_two_profit_periods", value = "taxpayer_type.new_entity_first_two_profit_periods" },
 ]

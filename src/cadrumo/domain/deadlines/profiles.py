@@ -24,7 +24,6 @@ from typing import TypedDict
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_date as _parse_date_canonical
-from ...core.parsing.utils import parse_bool as _parse_bool
 from ...core.period import Period
 from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ..calculations.registry.ccaa_catalogue import require_ccaa
@@ -205,7 +204,6 @@ class _ProfileRelationshipFields(TypedDict):
 
 
 class _ProfileAddressFields(TypedDict):
-    fiscal_address_cadastral_reference: str
     holiday_territory: CalendarCCAA | None
 
 
@@ -215,13 +213,7 @@ class _ProfileActivityFields(TypedDict):
     incn_prior_12_months: Decimal | None
 
 
-class _ProfileCorporateFields(TypedDict):
-    new_entity_first_two_profit_periods: bool | None
-
-
 class _ProfileEstablishmentFields(TypedDict):
-    vivienda_office_total_m2: Decimal | None
-    vivienda_office_office_m2: Decimal | None
     iae_epigraph: str
 
 
@@ -235,12 +227,6 @@ class _ProfileRegimeFields(TypedDict):
 class _ProfileRepresentativeFields(TypedDict):
     representante_fiscal_nif: str | None
     representante_fiscal_nombre: str | None
-
-
-class _ProfilePagadoresFields(TypedDict):
-    irpf_pagadores_count: int | None
-    irpf_pagadores_secondary_income: Decimal | None
-    irpf_pagadores_total_work_income: Decimal | None
 
 
 def _objective_estimation_fields(canonical: Mapping[str, str]) -> _ObjectiveEstimationFields:
@@ -287,11 +273,9 @@ def _build_taxpayer_profile(
         **_resolve_profile_relationship_fields(canonical, typed),
         **_resolve_profile_address_fields(canonical, typed),
         **_resolve_profile_activity_fields(canonical),
-        **_resolve_profile_corporate_fields(canonical),
         **_resolve_profile_establishment_fields(canonical),
         **_resolve_profile_regime_fields(canonical, typed),
         **_resolve_profile_representative_fields(canonical),
-        **_resolve_profile_pagadores_fields(canonical),
     )
 
 
@@ -384,11 +368,8 @@ def _resolve_profile_relationship_fields(
 
 
 def _resolve_profile_address_fields(canonical: Mapping[str, str], typed: SetupAnswers) -> _ProfileAddressFields:
-    """Resolve the fiscal-address cadastral reference and the holiday territory."""
-    return {
-        "fiscal_address_cadastral_reference": canonical.get("address.cadastral_reference", ""),
-        "holiday_territory": _resolve_holiday_territory(canonical, typed),
-    }
+    """Resolve the holiday territory that extends this taxpayer's deadlines."""
+    return {"holiday_territory": _resolve_holiday_territory(canonical, typed)}
 
 
 def _resolve_holiday_territory(canonical: Mapping[str, str], typed: SetupAnswers) -> CalendarCCAA | None:
@@ -427,29 +408,9 @@ def _resolve_profile_activity_fields(canonical: Mapping[str, str]) -> _ProfileAc
     }
 
 
-def _resolve_profile_corporate_fields(canonical: Mapping[str, str]) -> _ProfileCorporateFields:
-    """Resolve the corporate declarations the registry binds to profile paths."""
-    from ..calculations.registry.setup_profile_bindings import profile_field_bindings
-
-    corporate_bindings = profile_field_bindings()
-    if set(corporate_bindings) != set(_ProfileCorporateFields.__annotations__):
-        raise ProfileError(
-            "registry setup profile catalogue does not declare the complete corporate field set",
-        )
-    return _ProfileCorporateFields(
-        new_entity_first_two_profit_periods=_parse_optional_bool(
-            canonical.get(corporate_bindings["new_entity_first_two_profit_periods"]),
-        ),
-    )
-
-
 def _resolve_profile_establishment_fields(canonical: Mapping[str, str]) -> _ProfileEstablishmentFields:
-    """Resolve the home-office measurements and the activity epigraph."""
-    return {
-        "vivienda_office_total_m2": _parse_decimal(canonical.get("vivienda_office.total_m2")),
-        "vivienda_office_office_m2": _parse_decimal(canonical.get("vivienda_office.office_m2")),
-        "iae_epigraph": canonical.get("activities.iae_epigraph", ""),
-    }
+    """Resolve the activity epigraph."""
+    return {"iae_epigraph": canonical.get("activities.iae_epigraph", "")}
 
 
 def _resolve_profile_regime_fields(
@@ -481,31 +442,6 @@ def _resolve_profile_representative_fields(canonical: Mapping[str, str]) -> _Pro
         "representante_fiscal_nif": canonical.get("taxpayer_type.representante_fiscal_nif") or None,
         "representante_fiscal_nombre": canonical.get("taxpayer_type.representante_fiscal_nombre") or None,
     }
-
-
-def _resolve_profile_pagadores_fields(canonical: Mapping[str, str]) -> _ProfilePagadoresFields:
-    """Resolve the multiple-payer work-income facts."""
-    return {
-        "irpf_pagadores_count": _parse_optional_int(canonical.get("irpf.pagadores_count")),
-        "irpf_pagadores_secondary_income": _parse_decimal(canonical.get("irpf.pagadores_secondary_income")),
-        "irpf_pagadores_total_work_income": _parse_decimal(canonical.get("irpf.pagadores_total_work_income")),
-    }
-
-
-def _parse_optional_bool(raw: str | None) -> bool | None:
-    """Three-state boolean: undeclared (``None``), affirmative, or negative.
-
-    Distinguishes an absent fact from a positively-declared ``False``.
-    The new-entity first-two-profit-periods state is opt-in: a profile
-    that has not declared the fact must remain outside the LIS Art. 29
-    15 percent override, which requires telling ``None`` apart from
-    ``False`` at the typed boundary.
-
-    The three-state shape is exactly what the canonical parser already
-    returns, so this delegates rather than restating the token sets --
-    which is what it used to do, while importing that same parser.
-    """
-    return _parse_bool(raw)
 
 
 def _resolve_m303_tax_territory(raw: str) -> M303TaxTerritory:
@@ -670,15 +606,6 @@ def _parse_decimal(raw: str | None) -> Decimal | None:
         return Decimal(raw.strip())
     except InvalidOperation as exc:
         raise ProfileError(f"invalid censo decimal {raw!r}") from exc
-
-
-def _parse_optional_int(raw: str | None) -> int | None:
-    if not (raw is not None and raw):
-        return None
-    try:
-        return int(raw.strip())
-    except ValueError:
-        return None
 
 
 def _parse_cross_period_group_member_rosters(canonical: Mapping[str, str]) -> tuple[CrossPeriodGroupMemberRoster, ...]:

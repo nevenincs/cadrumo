@@ -5,8 +5,7 @@ the application-layer ledger actions backed by the domain
 ``usage_ratios`` module. This module adds two read-only verbs that
 close the discoverability and pre-calculate readiness gaps:
 
-  ``eligible``  enumerate categories that may carry a user ratio,
-                annotated with their statutory default ratio
+  ``eligible``  enumerate categories that may carry a user ratio
   ``validate``  inspect the persisted profile against eligibility and
                 bound rules; report missing categories per modelo
 """
@@ -40,17 +39,15 @@ from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_p
 class EligibleCategoryRow(BaseModel):
     """One row in the ``ratios eligible`` listing.
 
-    ``default_ratio`` is None for eligible categories whose
-    proportionality rule does not ship a statutory default; the
-    operator must supply an override before the modelo pre-calculate
-    readiness check passes.
+    No category ships a statutory ratio: the operator must supply an
+    override, or the censo must declare the area, before the modelo
+    pre-calculate readiness check passes.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
     category: SpendingCategory
     proportionality_kind: ProportionalityKind
-    default_ratio: Decimal | None = Field(default=None)
     override_present: bool
 
 
@@ -91,17 +88,17 @@ def eligible_ratio_categories(
     year: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[EligibleCategoryRow, ...]:
-    """Return all eligible categories with their default ratio + override flag.
+    """Return all eligible categories with their proportionality kind + override flag.
 
     The output is sorted by canonical category value so callers can
     diff snapshots without ordering noise. Each row is an :class:`EligibleCategoryRow`.
 
     Args:
         profile: The operator's persisted per-category overrides.
-        year: Filing year whose category profiles supply the statutory
-            default ratio. Required rather than defaulted: the default ratio
-            is year-versioned regulatory data, and a pinned year would apply
-            one year's law to every filing.
+        year: Filing year whose category profiles supply the proportionality
+            kind. Required rather than defaulted: the rule is year-versioned
+            regulatory data, and a pinned year would apply one year's law to
+            every filing.
         operation: The caller-owned authority generation used for every
             category and governed-fact query in this projection.
     """
@@ -116,7 +113,6 @@ def eligible_ratio_categories(
             EligibleCategoryRow(
                 category=category,
                 proportionality_kind=rule.kind,
-                default_ratio=rule.default_ratio,
                 override_present=category in profile.ratios,
             ),
         )
@@ -202,8 +198,8 @@ def list_eligible_ratios_for_bucket(
 
     Args:
         bucket_id: The bucket whose persisted profile is projected.
-        year: Filing year whose category profiles supply the statutory
-            default ratio.
+        year: Filing year whose category profiles supply the proportionality
+            kind.
         operation: The caller-owned authority generation used to decode the
             stored profile.
     """

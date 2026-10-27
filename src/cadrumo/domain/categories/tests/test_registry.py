@@ -6,8 +6,7 @@ carries at least one citation, and that the registry-backed entry point returns
 the curated registry surface.
 
 Locks the conservative encodings for known edge categories
-(hardware as full-deductible, vehicle fuel without a default ratio,
-health insurance as a statutory annual cap) so a future cleanup pass
+(hardware as full-deductible, health insurance as a statutory annual cap) so a future cleanup pass
 cannot silently relax them.
 """
 
@@ -78,7 +77,7 @@ def test_proportionality_kinds_carry_kind_specific_fields(
         }
     ]
 
-    assert all(rule.fixed_pct is not None and rule.default_ratio is None for rule in fixed_percentage_rules)
+    assert all(rule.fixed_pct is not None for rule in fixed_percentage_rules)
     assert usage_ratio_rules, (
         "registry must keep at least one usage-ratio category — operator-defined "
         "proportionality cannot be replaced by fixed-percentage rules alone"
@@ -108,11 +107,9 @@ def test_registry_preserves_conservative_semantics_for_special_categories(
     """Known edge categories must keep the intended non-numeric rule encoding."""
 
     hardware = profiles_2025[SpendingCategory.from_registry("hardware_amortizable")]
-    vehicle = profiles_2025[SpendingCategory.from_registry("vehiculo_combustible")]
     health = profiles_2025[SpendingCategory.from_registry("seguros_salud_autonomo")]
 
     assert hardware.proportionality.kind.value == "full_deductible"
-    assert vehicle.proportionality.default_ratio is None
     assert health.proportionality.kind.value == "statutory_cap"
     assert health.proportionality.statutory_cap_eur_per_day is None
     # LIRPF art. 30.2.5.a states TWO limits -- 500 per person, 1.500 for a person with

@@ -78,21 +78,12 @@ const fromKeys = (request: JsonObject, allowed: readonly string[]) => {
 
 /** The categories whose business use a ratio states, and the kind of
  * proportion each is. */
-const RATIO_ELIGIBLE: Record<
-  string,
-  { kind: string; standard: string | null }
-> = {
-  suministros_home_office_internet: {
-    kind: "usage_ratio_home_area",
-    standard: "0.3",
-  },
-  suministros_home_office_luz: {
-    kind: "usage_ratio_home_area",
-    standard: "0.3",
-  },
-  telefonia_movil: { kind: "usage_ratio_personal", standard: null },
-  vehiculo_combustible: { kind: "usage_ratio_personal", standard: null },
-  vehiculo_mantenimiento: { kind: "usage_ratio_personal", standard: null },
+const RATIO_ELIGIBLE: Record<string, { kind: string }> = {
+  suministros_home_office_internet: { kind: "usage_ratio_home_area" },
+  suministros_home_office_luz: { kind: "usage_ratio_home_area" },
+  telefonia_movil: { kind: "usage_ratio_personal" },
+  vehiculo_combustible: { kind: "usage_ratio_personal" },
+  vehiculo_mantenimiento: { kind: "usage_ratio_personal" },
 };
 
 const PROVENANCES = ["aeat_autorizada", "inicio_actividad"];
@@ -1526,28 +1517,19 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       const rows = Object.entries(RATIO_ELIGIBLE).map(([category, found]) => ({
         category,
         proportionality_kind: found.kind,
-        default_ratio: found.standard,
         override_present: ratios.has(category),
       }));
       return { profile_id: profileId, year, rows, count: rows.length };
     },
     "ledger.ratios.validate": (request) => {
       fromKeys(request, []);
-      const missing = Object.keys(RATIO_ELIGIBLE).filter(
-        (category) =>
-          RATIO_ELIGIBLE[category]!.standard === null && !ratios.has(category),
-      );
       return {
         profile_id: profileId,
         profile_present: true,
         eligible_count: Object.keys(RATIO_ELIGIBLE).length,
         overrides_count: ratios.size,
-        missing_overrides: missing,
-        findings: missing.map((category) => ({
-          category,
-          kind: "missing_override",
-          detail: "",
-        })),
+        missing_overrides: [],
+        findings: [],
       };
     },
     "ledger.llm-diagnostics": (request) => {

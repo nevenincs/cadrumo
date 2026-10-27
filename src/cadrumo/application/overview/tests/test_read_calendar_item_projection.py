@@ -50,7 +50,6 @@ def test_a_resident_s_holiday_territory_survives_the_snapshot_round_trip(
         closes_on=closes_on,
         payment_cutoff_on=None,
         status=ObligationStatus.UPCOMING,
-        applies_because="synthetic resident obligation",
         boe_references=(),
         recovery=None,
     )

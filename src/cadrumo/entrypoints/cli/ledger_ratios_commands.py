@@ -21,9 +21,9 @@ def _resolved_ratio_year(year: int | None) -> int:
     """Return the filing year whose category profiles govern this invocation.
 
     Defaults to the calendar year the one clock authority reports rather than
-    a pinned literal: the statutory multipliers and default ratios these verbs
-    read are year-versioned, so a pinned year would apply one year's law to
-    every invocation. An operator replaying an earlier year passes ``--year``.
+    a pinned literal: the statutory multipliers these verbs read are
+    year-versioned, so a pinned year would apply one year's law to every
+    invocation. An operator replaying an earlier year passes ``--year``.
     """
     from ...core.time.clock import today_madrid
 
@@ -139,12 +139,8 @@ def ratios_eligible(
     bucket_id = str(projection.profile_id)
     lines = [f"bucket\t{bucket_id}", f"count\t{projection.count}"]
     for row in projection.rows:
-        default = "" if row.default_ratio is None else row.default_ratio
         override_marker = "X" if row.override_present else "."
-        kind_text = row.proportionality_kind
-        lines.append(
-            f"{row.category}\t{kind_text}\tdefault={default or '-'}\toverride={override_marker}",
-        )
+        lines.append(f"{row.category}\t{row.proportionality_kind}\toverride={override_marker}")
     emit_envelope(
         ctx,
         command="ledger.ratios.eligible",
@@ -154,7 +150,6 @@ def ratios_eligible(
                 RatiosEligibleRowPayload(
                     category=row.category,
                     proportionality_kind=row.proportionality_kind,
-                    default_ratio=row.default_ratio,
                     override_present=row.override_present,
                 )
                 for row in projection.rows

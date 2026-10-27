@@ -163,43 +163,30 @@ def test_eligible_categories_are_exactly_the_usage_ratio_rows(operation: PinnedA
     assert len(ELIGIBLE_USAGE_RATIO_CATEGORIES) == 15
 
 
-def test_an_undeclared_usage_ratio_has_no_registry_fallback(operation: PinnedAuthorityOperation) -> None:
+@pytest.mark.usefixtures("operation")
+def test_an_undeclared_usage_ratio_resolves_to_nothing() -> None:
     """Reference example of the deductibility-compute consumer pattern.
 
-    This test previously pinned the OPPOSITE pattern -- prefer the operator's
-    ratio and "fall back to the statutory ``default_ratio``" -- and called that
-    value statutory. It is not. LIRPF art. 30.2.5.b fixes the deductible share of
-    a suministro as the statutory 30 per cent applied to "la proporción existente
-    entre los metros cuadrados de la vivienda destinados a la actividad respecto a
-    su superficie total". The article supplies the first factor and nothing
-    supplies the second: it is a measurement of one dwelling, which is why the
-    sentence ends inviting proof of a different figure rather than naming a
-    fallback.
-
-    Five categories carried ``default_ratio = "0.30"`` in the same slot the
-    evaluator reads a STORED ratio from, and stored ratios are already effective,
-    so the fallback asserted an effective thirty per cent -- reachable only at a
-    raw afectación of 1.00, the whole dwelling as office. The correct pattern is
-    that an undeclared proportion resolves to nothing and the deduction is
+    LIRPF art. 30.2.5.b fixes the deductible share of a suministro as the
+    statutory 30 per cent applied to "la proporción existente entre los metros
+    cuadrados de la vivienda destinados a la actividad respecto a su superficie
+    total". The article supplies the first factor and nothing supplies the
+    second: it is a measurement of one dwelling, which is why the sentence ends
+    inviting proof of a different figure rather than naming a fallback. An
+    undeclared proportion therefore resolves to nothing and the deduction is
     ineligible until the operator declares one.
     """
     profile = UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.21")})
 
-    def resolve_for_compute(category: SpendingCategory) -> Decimal | None:
-        user_value = resolve_user_ratio(profile, category)
-        if user_value is not None:
-            return user_value
-        return resolve_category_profiles(2025, operation=operation)[category].proportionality.default_ratio
-
-    assert resolve_for_compute(SpendingCategory.from_registry("suministros_home_office_luz")) == Decimal("0.21")
-    assert resolve_for_compute(SpendingCategory.from_registry("suministros_home_office_agua")) is None
-    assert resolve_for_compute(SpendingCategory.from_registry("telefonia_movil")) is None
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_luz")) == Decimal("0.21")
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("suministros_home_office_agua")) is None
+    assert resolve_user_ratio(profile, SpendingCategory.from_registry("telefonia_movil")) is None
 
 
 def test_resolve_user_ratio_on_ineligible_category_returns_none() -> None:
     """Compute may look up any category; ineligible ones return ``None``
-    gracefully rather than raise — the caller then falls back to the
-    statutory default or non-``USAGE_RATIO`` semantics without special-casing.
+    gracefully rather than raise — the caller then applies non-``USAGE_RATIO``
+    semantics without special-casing.
     """
     profile = UsageRatioProfile()
     assert resolve_user_ratio(profile, SpendingCategory.from_registry("material_oficina")) is None

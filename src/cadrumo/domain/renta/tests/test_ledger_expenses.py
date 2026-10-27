@@ -316,17 +316,12 @@ def test_iva_deduction_ratio_is_inert_without_an_invoice_evidenced_base_split(
 def test_arrendamiento_vivienda_afecto_is_ineligible_until_user_ratio_exists(
     category_profiles: Mapping[SpendingCategory, CategoryProfile],
 ) -> None:
-    """arrendamiento_vivienda_afecto carries no registry default_ratio.
+    """arrendamiento_vivienda_afecto is ineligible until the operator declares a ratio.
 
     It is the renter's parallel to amortizacion / ibi / comunidad
-    vivienda_afecto (HOME_OFFICE_OWNERSHIP siblings, none of which carry a
-    default_ratio either): the raw affectación ratio must come from the
-    operator, at no statutory multiplier, exactly like TELEFONIA_MOVIL below.
-    A registry-supplied ``default_ratio = "0.30"`` here used to fabricate a
-    30% deduction with zero operator input -- not a legally established
-    default, just an arbitrary guess that happened to double as the
-    suministros-only art. 30.2.5.b figure this category was wrongly grounded
-    on.
+    vivienda_afecto (HOME_OFFICE_OWNERSHIP siblings): the raw affectación
+    ratio must come from the operator, at no statutory multiplier, exactly
+    like TELEFONIA_MOVIL below. No registry value stands in for it.
     """
     fact = _fact(
         category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),

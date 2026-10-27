@@ -585,26 +585,6 @@ class TestMultiplePagadoresObligation:
                 secondary_income,
             )
 
-    def test_taxpayer_profile_roundtrip_pagadores_fields(self) -> None:
-        # TaxpayerProfile must carry the pagadores axes through construction unchanged.
-        profile = TaxpayerProfile(
-            tax_id="12345678Z",
-            iva_regime=IVARegime("GENERAL"),
-            irpf_pagadores_count=3,
-            irpf_pagadores_secondary_income=Decimal("2000"),
-            irpf_pagadores_total_work_income=Decimal("19000"),
-        )
-        assert profile.irpf_pagadores_count == 3
-        assert profile.irpf_pagadores_secondary_income == Decimal("2000")
-        assert profile.irpf_pagadores_total_work_income == Decimal("19000")
-
-    def test_taxpayer_profile_pagadores_fields_default_none(self) -> None:
-        # Existing profiles without pagadores fields must load cleanly.
-        profile = TaxpayerProfile(tax_id="12345678Z", iva_regime=IVARegime("GENERAL"))
-        assert profile.irpf_pagadores_count is None
-        assert profile.irpf_pagadores_secondary_income is None
-        assert profile.irpf_pagadores_total_work_income is None
-
 
 class TestMultiplePagadoresReducedLimitSchedule:
     """Art. 96.3 LIRPF per-year reduced work-income exemption limit.

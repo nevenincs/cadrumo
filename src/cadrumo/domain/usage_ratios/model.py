@@ -3,15 +3,15 @@
 Defines :class:`UsageRatioProfile` — the strict, frozen pydantic v2 record
 that captures the operator's persisted business / personal split coefficients
 — plus :func:`resolve_user_ratio`, the pure helper consumed by
-``cadrumo.domain.deductibility`` to look up an override before falling back to
-the statutory :attr:`domain.categories.proportionality.ProportionalityRule.default_ratio`.
+``cadrumo.domain.deductibility`` to look up an override. No registry value
+stands in for an absent one: the proportion is a fact about the taxpayer.
 The eligibility set :data:`ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived lazily
 from the current pinned generation's complete category-profile corpus, never
 from one filing year. Each decoded profile retains only that immutable set so
 later pure edits perform no hidden authority read. Eligibility gates what a
 persisted profile may STORE, so a year-scoped set would invalidate an operator's
 stored overrides the moment the filing year rolled over. The year-versioned half -- the statutory multiplier
-and default ratio the law fixes per year -- is read at use time from
+the law fixes per year -- is read at use time from
 :func:`domain.categories.registry.resolve_category_profiles`, which takes the year
 explicitly.
 """
@@ -222,9 +222,8 @@ def resolve_user_ratio(profile: UsageRatioProfile, category: SpendingCategory) -
     """Return the operator's persisted ratio for ``category``, or ``None`` if unset.
 
     Pure helper consumed by ``cadrumo.domain.deductibility``. When the return
-    value is ``None`` the caller falls back to
-    :attr:`domain.categories.proportionality.ProportionalityRule.default_ratio` and
-    records the resolution source in the transaction trace fields.
+    value is ``None`` the proportion is undeclared and the caller treats the
+    deduction as unresolved rather than substituting a registry value.
 
     Args:
         profile: The operator's currently persisted :class:`UsageRatioProfile`.

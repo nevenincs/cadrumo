@@ -152,7 +152,6 @@ def workflow_profile(incn: Decimal | None) -> TaxpayerProfile:
         iva_regime=IVARegime("GENERAL"),
         activity_start_date=date(2020, 1, 1),
         incn_prior_12_months=incn,
-        new_entity_first_two_profit_periods=False,
         iva=ModeloIVAProfile(
             tax_territory=M303TaxTerritory.from_registry("common_regime"),
             regime_composition=M303RegimeComposition.from_registry("general"),

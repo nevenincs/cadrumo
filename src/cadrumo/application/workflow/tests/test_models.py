@@ -371,7 +371,7 @@ class TestWorkflowResultTerminal:
         assert reconstructed == original
 
 
-def test_workflow_obligation_projection_excludes_source_language_and_raw_recovery_command() -> None:
+def test_workflow_obligation_projection_carries_stable_recovery_facts() -> None:
     """The real domain deadline projects to stable persisted facts only."""
     deadline = ModeloDeadline(
         modelo=Modelo("303"),
@@ -380,7 +380,6 @@ def test_workflow_obligation_projection_excludes_source_language_and_raw_recover
         closes_on=date(2025, 4, 20),
         payment_cutoff_on=date(2025, 4, 15),
         status=ObligationStatus.OVERDUE,
-        applies_because="Régimen general de IVA.",
         boe_references=("orden-hfp-105-2017:art-1",),
         recovery=Recovery(
             still_filable=True,
@@ -408,6 +407,4 @@ def test_workflow_obligation_projection_excludes_source_language_and_raw_recover
     assert projected.recovery.surcharge_pct == Decimal("3.00")
     assert projected.recovery.interest_applies is False
     assert projected.recovery.legal_ref == "ley-58-2003:art-27.2"
-    assert "applies_because" not in payload
     assert isinstance(payload["recovery"], dict)
-    assert "Régimen general de IVA." not in projected.model_dump_json()

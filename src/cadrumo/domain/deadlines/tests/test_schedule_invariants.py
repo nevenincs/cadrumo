@@ -49,7 +49,6 @@ def _obligation(*, filing_year: int, code: str = "1T") -> ModeloDeadline:
         opens_on=date(filing_year, 4, 1),
         closes_on=date(filing_year, 4, 20),
         status=ObligationStatus.UPCOMING,
-        applies_because="probe",
     )
 
 
@@ -168,7 +167,6 @@ def _obligation_with_modelo(raw: object) -> ModeloDeadline:
         opens_on=date(2026, 4, 1),
         closes_on=date(2026, 4, 20),
         status=ObligationStatus.UPCOMING,
-        applies_because="probe",
     )
 
 

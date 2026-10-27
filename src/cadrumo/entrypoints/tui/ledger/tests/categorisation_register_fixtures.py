@@ -123,7 +123,6 @@ class MemoryRatios:
             LedgerRatiosEligibleRow(
                 category=category,
                 proportionality_kind="surface_share" if index == 0 else "usage_share",
-                default_ratio="0.3" if index == 0 else None,
                 override_present=category in self.overrides,
             )
             for index, category in enumerate(SYNTHETIC_RATIO_CATEGORIES)

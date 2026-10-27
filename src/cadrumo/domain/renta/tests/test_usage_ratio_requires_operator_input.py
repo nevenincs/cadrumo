@@ -14,22 +14,21 @@ the taxpayer's own measured area proportion. The article supplies the first and
 nothing supplies the second -- it is a fact about one dwelling, which is why the
 sentence ends by inviting proof of a different figure rather than naming a fallback.
 
-Five categories shipped ``default_ratio = "0.30"`` alongside their
-``statutory_multiplier = "0.30"``. The evaluator reads ``default_ratio`` in the same
-slot as a STORED ratio, and stored ratios are already effective -- the censo
-derivation multiplies the raw area proportion by the statutory factor before saving.
-So the default asserted an EFFECTIVE thirty per cent, which under this article is
-reachable only at a raw afectación of 1.00: the entire dwelling as office. A taxpayer
-who had declared nothing at all deducted the maximum the article can ever allow.
+A registry value standing in for the second factor would be read in the same slot
+as a STORED ratio, and stored ratios are already effective -- the censo derivation
+multiplies the raw area proportion by the statutory factor before saving. A stand-in
+of thirty per cent would therefore assert an EFFECTIVE thirty per cent, which under
+this article is reachable only at a raw afectación of 1.00: the entire dwelling as
+office. A taxpayer who had declared nothing at all would deduct the maximum the
+article can ever allow.
 
 Direction of error: OVER-deduction, and therefore under-declared tax. A room of
 15 m² in a 90 m² flat is a 16.7 per cent proportion, so the lawful figure is about
-5 per cent of the utility bill against the 30 per cent that shipped -- roughly six
-times over, silently, on a return the taxpayer signs.
+5 per cent of the utility bill against the 30 per cent such a stand-in would give --
+roughly six times over, silently, on a return the taxpayer signs.
 
-The same stray ``default_ratio`` was already removed from the HOME_OFFICE_OWNERSHIP
-siblings for the same reason: "not a legally established default, just an arbitrary
-guess". These tests hold the whole usage-ratio family to that ruling.
+These tests hold the whole usage-ratio family to the ruling that an undeclared
+proportion deducts nothing.
 
 No mocks: the real shipped registry and the real evaluator.
 """
@@ -92,27 +91,6 @@ def _fact(category: SpendingCategory) -> RentaDeductibleExpenseFact:
 def test_the_family_is_not_empty(operation: PinnedAuthorityOperation) -> None:
     """SUPPORTING. Without this the assertions below would pass vacuously."""
     assert _usage_ratio_categories(operation)
-
-
-def test_no_usage_ratio_rule_ships_a_stand_in_proportion(operation: PinnedAuthorityOperation) -> None:
-    """DISCRIMINATING. The defect in its data shape.
-
-    Asserted as a property of every usage-ratio rule rather than as a list of the
-    five that carried it: a sixth category added tomorrow with the same stand-in
-    is the same defect, and a pinned list would not see it.
-    """
-    profiles = resolve_category_profiles(_YEAR, operation=operation)
-    with_default = [
-        category
-        for category in _usage_ratio_categories(operation)
-        if profiles[category].proportionality.default_ratio is not None
-    ]
-
-    assert not with_default, (
-        "these usage-ratio categories supply a proportion the taxpayer did not declare. "
-        "The percentage is a fact about one dwelling or one device; no provision defaults "
-        f"it, so a registry value here is deducted on the operator's behalf: {with_default}"
-    )
 
 
 def test_every_usage_ratio_category_is_ineligible_until_the_operator_declares(

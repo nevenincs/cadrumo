@@ -10,7 +10,7 @@ related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:69c3be101ec719767c305c207db06035337df590564fb428a6ff81b714a60825'
+body_hash: 'sha256:6715328eea7d8f2ec73ca4809d781b4d0a248b3a85eb313fbf958797a3e9bced'
 ---
 
 # `profile-field-remap` plan
@@ -35,8 +35,8 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 
 ## Steps
 
-- [ ] `S01` - delete the audited dead and collected-only profile fields and every consumer (wizard questions, setup mapping, deadline hydration, labels, locales, fixtures, tests); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
-- [ ] `S02` - delete unread deadline-model attributes and the retired default_ratio concept, including the desktop standard-ratio column; `src/cadrumo/domain/deadlines/models.py`.
+- [x] `S01` - delete the audited dead and collected-only profile fields and every consumer (wizard questions, setup mapping, deadline hydration, labels, locales, fixtures, tests); `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`.
+- [x] `S02` - delete unread deadline-model attributes and the retired default_ratio concept, including the desktop standard-ratio column; `src/cadrumo/domain/deadlines/models.py`.
 - [ ] `S03` - remap profile field help from the setup-wizard question copy keyed by profile_key, replacing the eight-path help allowlist for TUI, CLI and desktop; `src/cadrumo/domain/user_profile/labels.py`.
 - [ ] `S04` - serve category label, notes and proportionality kind from the registry in ledger.ratios responses and render them in the Ratios pane; `src/cadrumo/application/ledger/ratios.py`.
 - [x] `S05` - apply the usage ratio exactly once through the category rule evaluator for annual Renta and Modelo 130 (user ruling 2026-10-27: the ledger usage-ratio store and registry rule own the ratio; a row business_pct no longer scales usage-ratio categories), proven by tests through the real resolvers; `src/cadrumo/application/aggregation/renta_ledger.py`.

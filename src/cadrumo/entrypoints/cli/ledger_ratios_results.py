@@ -77,16 +77,7 @@ class RatiosEligibleRowPayload(OutputSchema):
 
     category: _CategoryValue
     proportionality_kind: _ProportionalityKindValue
-    default_ratio: str | None = None
     override_present: bool
-
-    @field_validator("default_ratio")
-    @classmethod
-    @pydantic_validation_boundary
-    def _check_default_ratio(cls, value: str | None) -> str | None:
-        if value is None or value == "":
-            return value
-        return _validated_ratio_text(value, field="default_ratio")
 
 
 class RatiosValidateFindingPayload(OutputSchema):

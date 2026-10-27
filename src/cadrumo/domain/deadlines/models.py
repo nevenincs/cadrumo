@@ -604,15 +604,10 @@ class TaxpayerProfile(BaseModel):
     iva: ModeloIVAProfile | None = None
     cross_period_group_member_rosters: tuple[CrossPeriodGroupMemberRoster, ...] = Field(default_factory=tuple)
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
-    fiscal_address_cadastral_reference: str = ""
     holiday_territory: CalendarCCAA | None = None
     activity_start_date: date | None = None
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None
-    new_entity_first_two_profit_periods: bool | None = None
-    tributacion_estado_porcentaje: Decimal | None = None
-    vivienda_office_total_m2: Decimal | None = None
-    vivienda_office_office_m2: Decimal | None = None
     iae_epigraph: str = ""
     irpf_special_regime: IrpfSpecialRegime | None = None
     special_regime_start_date: date | None = None
@@ -628,30 +623,6 @@ class TaxpayerProfile(BaseModel):
     """Full name of the fiscal representative in Spain.
 
     Required together with ``representante_fiscal_nif`` for the same cases.
-    """
-    irpf_pagadores_count: int | None = None
-    """Number of pagadores (income payers) the taxpayer received income from.
-
-    When ``>= 2`` and ``irpf_pagadores_secondary_income > 1500``, filing
-    Modelo 100 is mandatory under Art. 96.3 LIRPF regardless of the total
-    income threshold. ``None`` when not declared (treated as "not known").
-    """
-    irpf_pagadores_secondary_income: Decimal | None = None
-    """Sum of income received from the 2nd and subsequent pagadores.
-
-    Art. 96.3 LIRPF: when ``irpf_pagadores_count >= 2`` and this value
-    exceeds €1,500, the work-income filing-exemption limit drops from the
-    general €22,000 to the per-year reduced limit. Only meaningful when
-    ``irpf_pagadores_count >= 2``; ``None`` when not declared.
-    """
-    irpf_pagadores_total_work_income: Decimal | None = None
-    """Total rendimientos íntegros del trabajo for the year (all pagadores).
-
-    Art. 96.2.a)/96.3 LIRPF: a Modelo 100 filing obligation arises when this
-    total exceeds the applicable exemption limit — the general €22,000, or the
-    per-year reduced limit (€15,876 for 2024 onward) when the multiple-pagadores
-    condition is met. ``None`` when not declared, in which case a triggered
-    multiple-pagadores condition surfaces a conservative advisory.
     """
 
     @field_validator(
@@ -937,9 +908,6 @@ class ModeloDeadline(BaseModel):
             applicable. ``None`` when there is no payment leg.
         status: The :class:`ObligationStatus` against the reference
             ``today`` used by :meth:`DeadlineEngine.compute`.
-        applies_because: Human-readable explanation of why the profile
-            is obliged to file this modelo, resolved from the registry
-            deadline applicability rule.
         boe_references: Tuple of opaque BOE / Manual práctico citation
             keys. Stable identifiers, never URLs.
         recovery: Resolved :class:`Recovery` payload when ``status`` is
@@ -956,7 +924,6 @@ class ModeloDeadline(BaseModel):
     closes_on: date
     payment_cutoff_on: date | None = None
     status: ObligationStatus
-    applies_because: str = Field(min_length=1)
     boe_references: tuple[str, ...] = Field(default_factory=tuple)
     recovery: Recovery | None = None
 

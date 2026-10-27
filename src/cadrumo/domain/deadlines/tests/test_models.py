@@ -11,7 +11,6 @@ trip.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
-from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -165,23 +164,6 @@ class TestTaxpayerProfile:
         )
         assert profile.enrollment == ModeloEnrollment(large_company=True)
 
-    def test_mapping_projection_reads_pagadores_axes(self) -> None:
-        # The three Art. 96 LIRPF pagadores axes flow from the canonical mapping
-        # into the typed profile, including the total-work-income leg.
-        profile = taxpayer_profile_from_mapping(
-            {
-                "tax.id": "12345678Z",
-                "irpf.pagadores_count": "2",
-                "irpf.pagadores_secondary_income": "1600",
-                "irpf.pagadores_total_work_income": "18000",
-            },
-            tax_id_default="00000000T",
-        )
-
-        assert profile.irpf_pagadores_count == 2
-        assert profile.irpf_pagadores_secondary_income == Decimal("1600")
-        assert profile.irpf_pagadores_total_work_income == Decimal("18000")
-
 
 class TestModeloDeadline:
     """Window-order and field invariants for :class:`ModeloDeadline`."""
@@ -195,7 +177,6 @@ class TestModeloDeadline:
                 closes_on=date(2026, 4, 20),
                 payment_cutoff_on=None,
                 status=ObligationStatus.UPCOMING,
-                applies_because="x",
             )
 
     def test_payment_after_closes_rejected(self) -> None:
@@ -207,7 +188,6 @@ class TestModeloDeadline:
                 closes_on=date(2026, 4, 20),
                 payment_cutoff_on=date(2026, 4, 25),
                 status=ObligationStatus.UPCOMING,
-                applies_because="x",
             )
 
 
@@ -222,7 +202,6 @@ class TestScheduleRoundTrip:
             closes_on=date(2026, 4, 20),
             payment_cutoff_on=date(2026, 4, 15),
             status=ObligationStatus.UPCOMING,
-            applies_because="Régimen general de IVA.",
             boe_references=("BOE-Orden-IVA-autoliquidacion",),
         )
         schedule = Schedule(

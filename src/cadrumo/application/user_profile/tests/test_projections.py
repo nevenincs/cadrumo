@@ -265,27 +265,18 @@ def test_crypto_abroad_threshold_projects_to_taxpayer_profile() -> None:
     assert profile.monedas_virtuales_extranjero_above_threshold is True
 
 
-def test_projection_for_taxpayer_populates_selector_aliased_direct_reads() -> None:
-    """Selector-aliased fields must survive the record projection.
-
-    ``taxpayer_profile_from_mapping`` reads the fiscal-address family at its
-    declared ``model_selectors`` alias (``address.cadastral_reference``) while
-    the wizard projection resolves path keys. The record branch must therefore feed BOTH key spaces; a
-    path-only projection silently blanks this family.
-    """
+def test_projection_for_taxpayer_reads_path_keyed_facts_from_a_record() -> None:
+    """Path-keyed facts survive the record projection beside the selector overlay."""
     record = _record(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id="11111111-1111-4111-8111-111111111111",
         facts=(
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="contact.fiscal_address_cadastral_reference", value="9872023VH5797S0001WX"),
             UserProfileFact(path="taxpayer_type.incn_prior_12_months", value="50000.00"),
         ),
     )
     profile = projection_for_taxpayer(record, schema=_SCHEMA)
-    # Selector-aliased direct reads.
-    assert profile.fiscal_address_cadastral_reference == "9872023VH5797S0001WX"
-    # Path-keyed direct read carried by the same merged mapping.
+    # Path-keyed direct read carried by the merged mapping.
     assert profile.incn_prior_12_months == Decimal("50000.00")
     # Path-keyed typed projection unaffected by the selector overlay.
     assert profile.tax_id == "12345678Z"
@@ -314,7 +305,6 @@ def test_projection_for_taxpayer_is_the_single_state_projection_authority() -> N
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="withholding.has_employees", value=True),
-            UserProfileFact(path="contact.fiscal_address_cadastral_reference", value="9872023VH5797S0001WX"),
         ),
     )
     via_record = projection_for_taxpayer(record, schema=_SCHEMA)

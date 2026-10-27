@@ -5,7 +5,7 @@ encode how a spending category is deducted on the autónomo filings, plus the
 citation chain back to the relevant authority that makes each rule
 explainable. Every :class:`ProportionalityRule` carries at least one
 :class:`CategoryCitation`; the consistency rules between
-``kind``-specific fields (``fixed_pct``, ``default_ratio``,
+``kind``-specific fields (``fixed_pct``, ``statutory_multiplier``,
 ``statutory_cap_*``) are enforced by the model validator.
 """
 
@@ -767,8 +767,6 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         kind: One of :class:`ProportionalityKind`.
         fixed_pct: Required when the projected kind declares a fixed-percent
             evaluator role; otherwise must be ``None``.
-        default_ratio: Optional default usage ratio; only valid for
-            usage-ratio kinds.
         statutory_multiplier: Optional statutory factor applied on
             top of the operator-chosen usage ratio. Only valid for
             usage-ratio kinds. The canonical example is the LIRPF
@@ -801,7 +799,6 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
 
     kind: ProportionalityKind
     fixed_pct: UnitProportion | None = None
-    default_ratio: UnitProportion | None = None
     statutory_multiplier: UnitProportion | None = None
     statutory_cap_eur_per_day: Decimal | None = Field(default=None, ge=Decimal("0"))
     statutory_cap_eur: Decimal | None = Field(default=None, ge=Decimal("0"))
@@ -833,11 +830,8 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             raise CategoryValidationError("fixed_pct is only valid for fixed-percentage rules")
 
     def _validate_usage_ratio_invariants(self) -> None:
-        """``default_ratio`` and ``statutory_multiplier`` are only valid on usage-ratio rules."""
-        is_usage_ratio = self.kind.is_usage_ratio
-        if not is_usage_ratio and self.default_ratio is not None:
-            raise CategoryValidationError("default_ratio is only valid for usage_ratio rules")
-        if not is_usage_ratio and self.statutory_multiplier is not None:
+        """``statutory_multiplier`` is only valid on usage-ratio rules."""
+        if not self.kind.is_usage_ratio and self.statutory_multiplier is not None:
             raise CategoryValidationError(
                 "statutory_multiplier is only valid for usage_ratio rules",
             )

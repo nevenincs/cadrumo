@@ -398,7 +398,6 @@ def test_ratios_payloads_use_typed_rows_and_findings() -> None:
                 {
                     "category": "vehiculo_combustible",
                     "proportionality_kind": "usage_ratio_personal",
-                    "default_ratio": None,
                     "override_present": False,
                 },
             ],
