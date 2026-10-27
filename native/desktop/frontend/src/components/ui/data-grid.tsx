@@ -1455,6 +1455,19 @@ function DataGrid<R>({
       ? { insetInlineStart: placed.inset }
       : { insetInlineEnd: placed.inset };
   };
+  // These depend on the column and layout, not the row. Build them once
+  // rather than merging the same classes for every visible cell.
+  const cellPresentation = ordered.map((column, position) => ({
+    className: cn(
+      CELL,
+      position === 0 && LEADING_EDGE,
+      column.align === "end" && "justify-end text-end tabular-nums",
+      pinned(column.id) && STICKY_CELL,
+      pinnedEdge(column.id),
+    ),
+    width: layout.byId.get(column.id)?.width,
+    sticky: stickyStyle(column.id),
+  }));
   const isStop = (at: number, column: string) =>
     resolvedIndex === at && resolved?.column === column;
   // Columns scrolled out of view under the pinned end group, which the
@@ -1735,15 +1748,9 @@ function DataGrid<R>({
                 data-column={column.id}
                 data-active={activeHere || undefined}
                 data-in-range={ranged || undefined}
-                className={cn(
-                  CELL,
-                  position === 0 && LEADING_EDGE,
-                  column.align === "end" && "justify-end text-end tabular-nums",
-                  pinned(column.id) && STICKY_CELL,
-                  pinnedEdge(column.id),
-                )}
+                className={cellPresentation[position]!.className}
                 style={{
-                  width: layout.byId.get(column.id)?.width,
+                  width: cellPresentation[position]!.width,
                   boxShadow:
                     ranged && box
                       ? rangeShadow(
@@ -1753,7 +1760,7 @@ function DataGrid<R>({
                           position === box.end,
                         )
                       : undefined,
-                  ...stickyStyle(column.id),
+                  ...cellPresentation[position]!.sticky,
                 }}
                 onPointerDown={(event) => pointerCell(event, row, column.id)}
                 onClick={(event) => clickCell(event, row)}

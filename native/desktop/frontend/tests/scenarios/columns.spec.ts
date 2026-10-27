@@ -6,8 +6,8 @@ import { label } from "../support/strings";
 // documentation. Each is shown and put away on its own, and with none of
 // them shown the main area says so.
 
-const open = (target: Page, scenario = "signed-in") =>
-  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off`);
+const open = (target: Page, scenario = "signed-in", query = "") =>
+  target.goto(`/scenarios.html?scenario=${scenario}&latency=0&bar=off${query}`);
 
 const rail = (target: Page) =>
   target.getByRole("navigation", { name: label("desktop.rail.label") });
@@ -266,7 +266,7 @@ const agentButton = (target: Page, key: string) =>
 test("the agent's history lists the host's conversations and opens one", async ({
   page: target,
 }) => {
-  await open(target);
+  await open(target, "signed-in", "&documents=unavailable");
   await agentButton(target, "desktop.agent.history").click();
   const body = target.locator(".agent-body");
   await expect(body.getByText("IVA del tercer trimestre")).toBeVisible();
@@ -284,7 +284,7 @@ test("the agent's history lists the host's conversations and opens one", async (
   await expect(log).toContainText("¿Me preparas el 303?");
   await expect(log).toContainText("ledger_register_invoice");
   await expect(log).toContainText("He leído 42 apuntes del trimestre.");
-  // Its documents are Cadrumo's custody's, which serves none yet.
+  // The document service is unavailable in this scenario.
   await expect(agentButton(target, "desktop.agent.documents")).toHaveAttribute(
     "aria-disabled",
     "true",

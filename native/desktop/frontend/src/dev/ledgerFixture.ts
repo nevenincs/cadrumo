@@ -150,6 +150,9 @@ declare global {
        * as a runtime that did not answer them; with `where`, only reads
        * whose request carries each of its values. */
       nextReads(definition: string, count: number, where?: JsonObject): void;
+      holdTracks(): void;
+      releaseTracks(): void;
+      pendingTracks(): number;
       /** Changes a stored movement's field, as another window saving it
        * would. */
       editElsewhere(id: string, field: string, value: string | null): void;
@@ -684,6 +687,9 @@ export function ledgerFixture(options: Options): LedgerPort {
   const queued: ("unknown" | "lost" | "saved_unread" | "refused")[] = [];
   // How many of the next reads of a definition answer nothing.
   const failingReads = new Map<string, number>();
+  let tracksHeld: Promise<void> | null = null;
+  let releaseTracks = () => {};
+  let pendingTracks = 0;
   // Reads that fail only where their request carries these values.
   const failingWhere: {
     definition: string;
@@ -774,6 +780,16 @@ export function ledgerFixture(options: Options): LedgerPort {
           (failingReads.get(definition) ?? 0) + count,
         );
     },
+    holdTracks() {
+      tracksHeld ??= new Promise<void>((resolve) => {
+        releaseTracks = () => {
+          tracksHeld = null;
+          resolve();
+        };
+      });
+    },
+    releaseTracks: () => releaseTracks(),
+    pendingTracks: () => pendingTracks,
     editElsewhere(id, field, value) {
       const movement = transactionOf(id);
       if (!movement) return;
@@ -809,6 +825,10 @@ export function ledgerFixture(options: Options): LedgerPort {
     nextWrites: (next) => ledgers.forEach((made) => made.nextWrites(next)),
     nextReads: (definition, count, where) =>
       ledgers.forEach((made) => made.nextReads(definition, count, where)),
+    holdTracks: () => ledgers.forEach((made) => made.holdTracks()),
+    releaseTracks: () => ledgers.forEach((made) => made.releaseTracks()),
+    pendingTracks: () =>
+      [...ledgers].reduce((total, made) => total + made.pendingTracks(), 0),
     editElsewhere: (id, field, value) =>
       ledgers.forEach((made) => made.editElsewhere(id, field, value)),
     waitingReviews: () => [...ledgers].flatMap((made) => made.waitingReviews()),
@@ -2012,6 +2032,14 @@ export function ledgerFixture(options: Options): LedgerPort {
   ): Promise<LedgerOutcome> {
     say(`ledger ${definition}`);
     await answer();
+    if (definition === "ledger.track" && tracksHeld) {
+      pendingTracks++;
+      try {
+        await tracksHeld;
+      } finally {
+        pendingTracks--;
+      }
+    }
     if (!isLedgerDefinition(definition)) return reject("not_admitted");
     if (
       typeof payload !== "object" ||

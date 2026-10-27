@@ -187,11 +187,19 @@ test("providers start collapsed and keep each connection separately accessible",
 
   // The row label names the kind of connection; nothing merges two lanes' status.
   await expect(settings(target).getByRole("radio")).toHaveCount(0);
-  const words = await settings(target).innerText();
-  expect(words).not.toMatch(/\bCLI\b/i);
-  expect(words).not.toMatch(/command[- ]line/i);
-  expect(words).not.toMatch(/over the internet/i);
-  expect(words).not.toMatch(/on this computer/i);
+  const words: string[] = [];
+  for (const declared of FIXTURE_SETTINGS_LANES) {
+    const card = lane(target, declared.id);
+    words.push(await card.getByRole("heading", { level: 5 }).innerText());
+    if (declared.auth_kind !== "none")
+      words.push(...(await card.locator(":scope > p").allInnerTexts()));
+  }
+  for (const laneWords of words) {
+    expect(laneWords).not.toMatch(/\bCLI\b/i);
+    expect(laneWords).not.toMatch(/command[- ]line/i);
+    expect(laneWords).not.toMatch(/over the internet/i);
+    expect(laneWords).not.toMatch(/on this computer/i);
+  }
 
   const credits = settings(target).locator("details").last();
   await expect(credits.locator("summary")).toHaveText(

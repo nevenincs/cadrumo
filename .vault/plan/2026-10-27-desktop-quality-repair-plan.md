@@ -9,7 +9,7 @@ related:
   - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:bb0481467928004d98e4d03ea13e45e351843c0575a1ee4bdf3b922e3f516b79'
+body_hash: 'sha256:2b4bdb6df35d21660c7d9cee6e70650240b92db4083cef61c54c2c2042cc42a2'
 ---
 
 # Desktop and repository quality repair
@@ -22,7 +22,7 @@ Repair current browser and Python quality failures under the accepted desktop le
 
 ## Steps
 
-- [ ] `S01` - Repair ledger read-state behavior and failing frontend scenarios; `native/desktop/frontend`.
+- [x] `S01` - Repair ledger read-state behavior and failing frontend scenarios; `native/desktop/frontend`.
 - [x] `S02` - Repair Python type and import boundaries and remove obsolete unused exports; `src/cadrumo, src/cadrumo_runtime tests and dev/quality metadata`.
 
 ## Parallelization

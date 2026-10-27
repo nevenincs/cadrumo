@@ -582,6 +582,68 @@ test("a change staged again while writes were paused survives the re-read that f
   await expect(target.locator(".ledger-tray")).toBeVisible();
 });
 
+test("selected movements remain unread until their seal reads answer", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await target.evaluate(() => window.__scenarioLedger!.holdTracks());
+  try {
+    await dataRows(target).nth(0).locator("input[type=checkbox]").click();
+    await dataRows(target).nth(1).locator("input[type=checkbox]").click();
+    if (!(await panel(target).isVisible()))
+      await target.keyboard.press("Alt+KeyI");
+    await expect
+      .poll(() =>
+        target.evaluate(() => window.__scenarioLedger!.pendingTracks()),
+      )
+      .toBeGreaterThan(0);
+    const form = panel(target)
+      .locator("form")
+      .filter({
+        has: target.getByText(label("desktop.ledger.column.notes"), {
+          exact: true,
+        }),
+      });
+    await form.locator("input").fill("Test note");
+    await expect(form.getByRole("button")).toBeDisabled();
+    await target.evaluate(() => window.__scenarioLedger!.releaseTracks());
+    await expect(form.getByRole("button")).toBeEnabled();
+  } finally {
+    await target.evaluate(() => window.__scenarioLedger?.releaseTracks());
+  }
+});
+
+test("a changed selection can read without spending the old queue's budget", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=ledger&latency=0&bar=off&ledgerRows=1200",
+  );
+  await target.locator("[data-rail=ledger]").click();
+  await expect(dataRows(target).first()).toBeVisible();
+  await target.evaluate(() => window.__scenarioLedger!.holdTracks());
+  try {
+    const selectShown = grid(target).getByRole("checkbox", {
+      name: label("desktop.ledger.select.shown"),
+    });
+    await selectShown.click();
+    await expect
+      .poll(() =>
+        target.evaluate(() => window.__scenarioLedger!.pendingTracks()),
+      )
+      .toBe(4);
+    await selectShown.click();
+    await dataRows(target).nth(8).locator("input[type=checkbox]").click();
+    await expect
+      .poll(() =>
+        target.evaluate(() => window.__scenarioLedger!.pendingTracks()),
+      )
+      .toBe(5);
+  } finally {
+    await target.evaluate(() => window.__scenarioLedger?.releaseTracks());
+  }
+});
+
 test("a staged movement whose sealed state was not read is held as unread until it is read again", async ({
   page: target,
 }) => {

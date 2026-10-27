@@ -47,6 +47,7 @@ export function HostRecordList({
   useEffect(
     () => () => {
       if (pending.current !== null) window.clearTimeout(pending.current);
+      pending.current = null;
     },
     [],
   );

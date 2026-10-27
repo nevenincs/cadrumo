@@ -154,7 +154,7 @@ test("a scan refused for a local AI this computer cannot set up says why and off
   page: target,
 }) => {
   // The refusal still names the local AI's setup, but its row is blocked:
-  // the prompt says the row's own sentence and offers only to close.
+  // the prompt says the row's sentence and offers model management, not setup.
   await openDocuments(target, "hardware");
   await choose(target, PLENOIL);
   await draft(target)
@@ -166,6 +166,7 @@ test("a scan refused for a local AI this computer cannot set up says why and off
     "This computer does not have enough memory for this.",
   );
   await expect(shown.getByRole("button")).toHaveText([
+    label("desktop.providers.local_models_title"),
     label("desktop.setup.close"),
   ]);
   await shown
@@ -223,6 +224,7 @@ test("a folder paused for a local AI this computer cannot set up says why and of
     "This computer does not have enough memory for this.",
   );
   await expect(shown.getByRole("button")).toHaveText([
+    label("desktop.providers.local_models_title"),
     label("desktop.setup.close"),
   ]);
   await shown
@@ -321,20 +323,28 @@ test("a PDF statement while the setup status cannot be read offers nothing", asy
   await expect(setupDialog(target)).toHaveCount(0);
 });
 
-test("a reader held back by memory offers no setup, though the local AI is not set up", async ({
+test("a reader without a chosen model offers model settings, not setup", async ({
   page: target,
 }) => {
-  // The vision role is not ready because this computer has less memory than
-  // its model needs; its row names no setup, so none is offered even while
-  // the local AI's setup is unfinished.
-  await openDocuments(target, "fresh", "documents");
+  await openDocuments(target, "fresh", "reader_unselected");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");
   await expect(readers.locator(".ledger-reader-role")).toHaveCount(2);
-  await expect(readers.locator(".ledger-reader-role").nth(1)).toContainText(
+  const vision = readers.locator(".ledger-reader-role").nth(1);
+  await expect(vision).toContainText(
     label("desktop.ledger.documents.reader.not_ready"),
   );
   await expect(readers.locator(".setup-offer")).toHaveCount(0);
+  await vision
+    .getByRole("button", {
+      name: label("desktop.ledger.documents.reader.choose_model"),
+    })
+    .click();
+  await expect(
+    target.getByRole("dialog", {
+      name: label("desktop.agent.model_roles_title"),
+    }),
+  ).toBeVisible();
 });
 
 test("a window that offers no setup offers nothing and opens nothing", async ({

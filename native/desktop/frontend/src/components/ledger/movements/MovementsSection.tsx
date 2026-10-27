@@ -915,10 +915,12 @@ export function MovementsSection({
 
   // ---- Commands --------------------------------------------------------------
   const [asking, setAsking] = useState<Asking | null>(null);
+  const selectedTarget = useMemo(
+    () => ({ ids: [...selected], hidden: hiddenSelected.length, partial }),
+    [selected, hiddenSelected.length, partial],
+  );
   const classifyTarget = (scope?: ClassifyScope) =>
-    scope?.ids
-      ? { ids: scope.ids, hidden: 0, partial }
-      : { ids: [...selected], hidden: hiddenSelected.length, partial };
+    scope?.ids ? { ids: scope.ids, hidden: 0, partial } : selectedTarget;
 
   /** Of `ids`, how many classifying as `kind` would change from another
    * classification, stored or staged. */

@@ -595,6 +595,12 @@ test("the years with movements are read with the page, so the period list does n
   const periods = await openPeriods(target);
   const years = periods.locator(".ledger-period-years");
   await expect(years).toBeVisible();
+  // The opening scale animation must finish before measuring its height.
+  await periods.evaluate(async (element) => {
+    await Promise.allSettled(
+      element.getAnimations().map((animation) => animation.finished),
+    );
+  });
   const height = (await periods.boundingBox())!.height;
   await target.waitForTimeout(800);
   expect((await periods.boundingBox())!.height).toBe(height);

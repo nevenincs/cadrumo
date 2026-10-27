@@ -116,10 +116,9 @@ export function classifyAvailability(
   target: ClassifyTarget,
   rows: ReadonlyMap<string, LedgerRow>,
 ): ClassifyAvailability {
-  const named = target.ids.filter((id) => rows.has(id));
-  if (named.length === 0)
-    return { kind: "blocked", block: { kind: "nothing_selected" } };
-  if (target.hidden > 0)
+  if (target.hidden > 0) {
+    if (!target.ids.some((id) => rows.has(id)))
+      return { kind: "blocked", block: { kind: "nothing_selected" } };
     return {
       kind: "blocked",
       block: {
@@ -128,6 +127,10 @@ export function classifyAvailability(
         selected: target.ids.length,
       },
     };
+  }
+  const named = target.ids.filter((id) => rows.has(id));
+  if (named.length === 0)
+    return { kind: "blocked", block: { kind: "nothing_selected" } };
   const active = named.filter(
     (id) => rows.get(id)!.transaction.lifecycle_state === "ACTIVE",
   );

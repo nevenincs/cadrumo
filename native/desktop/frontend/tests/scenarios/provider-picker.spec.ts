@@ -475,15 +475,21 @@ for (const mode of ["light", "dark", "forced colours"] as const) {
         return {
           provider: mark?.getAttribute("data-provider") ?? "",
           text: mark ? getComputedStyle(mark).color : "",
-          fills: [...(mark?.querySelectorAll("path") ?? [])].map(
-            (piece) => getComputedStyle(piece).fill,
-          ),
+          pieces: [...(mark?.querySelectorAll("path") ?? [])].map((piece) => ({
+            fill: getComputedStyle(piece).fill,
+            stroke: getComputedStyle(piece).stroke,
+          })),
         };
       }),
     );
     expect(marks).toHaveLength(lanes.length);
-    // The ring has no drawn pieces, so nothing carries a colour of its own.
-    for (const mark of marks) expect(mark.fills, mark.provider).toEqual([]);
+    // Mask marks have no SVG paths; generic outlines inherit the text colour.
+    for (const mark of marks) {
+      for (const piece of mark.pieces) {
+        expect(piece.fill, mark.provider).toBe("none");
+        expect(piece.stroke, mark.provider).toBe(mark.text);
+      }
+    }
     // The text colour is the theme's: dark ink on the light list, light on
     // the dark one, so a mark drawn in it can be seen on either.
     const plain = marks.find((mark) => mark.provider === "beta");

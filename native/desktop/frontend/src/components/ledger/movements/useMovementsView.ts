@@ -5,7 +5,7 @@
 // person typed in storage: the search and the filters' values stay in
 // memory, and a saved view is kept by its id only.
 
-import { useCallback, useState, type RefObject } from "react";
+import { useCallback, useMemo, useState, type RefObject } from "react";
 import type { LedgerView } from "../../../shell/layout";
 import type { LedgerWindowScope } from "../../../shell/ledgerWindow";
 import {
@@ -77,6 +77,8 @@ export function useMovementsView(
       }),
     [memory],
   );
+  const selection = useMemo(() => new Set(state.selection), [state.selection]);
+  const collapsed = useMemo(() => new Set(state.collapsed), [state.collapsed]);
   return {
     filters: state.filters,
     setFilters: (filters) => {
@@ -88,9 +90,9 @@ export function useMovementsView(
     setSearch: (search) => update({ search }),
     sort: state.sort,
     setSort: (sort) => update({ sort }),
-    collapsed: new Set(state.collapsed),
+    collapsed,
     setCollapsed: (collapsed) => update({ collapsed: [...collapsed] }),
-    selection: new Set(state.selection),
+    selection,
     setSelection: (selection) => update({ selection: [...selection] }),
     savedView,
     chooseView: (next) => {

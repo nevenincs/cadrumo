@@ -401,6 +401,17 @@ test("classifying asks for what each kind needs and stages it as one step", () =
       block: { kind: "hidden", hidden: 2, selected: 5 },
     },
   );
+  // Unknown ids remain nothing selected, even when the caller says hidden.
+  expect(
+    classifyAvailability(
+      "business",
+      { ids: ["missing"], hidden: 1, partial: false },
+      byId,
+    ),
+  ).toEqual({
+    kind: "blocked",
+    block: { kind: "nothing_selected" },
+  });
   const business = classifyAvailability("business", all, byId);
   // The transfer and the archived movement are left as they are.
   expect(business).toEqual({

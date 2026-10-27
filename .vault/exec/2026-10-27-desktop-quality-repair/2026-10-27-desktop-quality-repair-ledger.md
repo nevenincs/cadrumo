@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:ab6e57ab8da03d999175436373516a7f94e5e6a00741d912e1f9eccc24d1211c'
+body_hash: 'sha256:5851611f7a942c097639a8632ac3d74236c02f7806b85e1c65f13e1d09dd4a0b'
 related:
   - "[[2026-10-27-desktop-quality-repair-plan]]"
 ---
@@ -59,9 +59,47 @@ related:
 - `S02` `verify:` `pytest corrected lane-reachability selectors` -> `pass`
 - `S02` `verify:` `pytest affected consent catalogue and components tests` -> `pass`
 - `S02` `by:` `Terra 6.1 High; Luna Max review`
+- `S01` `M` `native/desktop/frontend/src/components/HostRecordList.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/ledger/movements/useMovementsView.ts`
+- `S01` `M` `native/desktop/frontend/src/components/ledger/useSealedMovements.ts`
+- `S01` `M` `native/desktop/frontend/src/components/setup/SetupPrompt.tsx`
+- `S01` `M` `native/desktop/frontend/src/components/ui/data-grid.tsx`
+- `S01` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/agent-documents-panel.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/columns.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/ledger-provisioning.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/ledger-shell.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/provider-picker.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/scenarios.spec.ts`
+- `S01` `M` `native/desktop/frontend/tests/scenarios/providers.spec.ts`
+- `S01` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-ca.json`
+- `S01` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-en.json`
+- `S01` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-es.json`
+- `S01` `A` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-again-hu.json`
+- `S01` `A` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-again-stale.json`
+- `S01` `A` `native/desktop/frontend/src/dev/fixtures/modelo/renew-130-1T-moving.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-ca.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-en.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-es.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/modelo-130-1T-moving-hu.json`
+- `S01` `M` `native/desktop/frontend/src/dev/fixtures/modelo/preflight-130-1T-moving-stale.json`
+- `S01` `M` `native/desktop/frontend/src/components/ledger/movements/MovementsSection.tsx`
+- `S01` `M` `native/desktop/frontend/src/shell/ledgerCommands.ts`
+- `S01` `M` `native/desktop/frontend/tests/ledger-movements.spec.ts`
+- `S01` `verify:` `npm run check` -> `pass`
+- `S01` `verify:` `npm test -- --config playwright.scenarios.config.ts --workers=2 (998 scenario population)` -> `fail`
+- `S01` `verify:` `npm test -- --config playwright.scenarios.config.ts --workers=1 tests/scenarios/ledger-benchmark.spec.ts tests/scenarios/ledger-movements.spec.ts tests/scenarios/ledger-pause.spec.ts` -> `pass`
+- `S01` `verify:` `npm test -- --project product --workers=2` -> `pass`
+- `S01` `verify:` `just check-rust Debug` -> `pass`
+- `S01` `verify:` `desktop-host-unit-test Debug (594 cases and one existing ignored fixture)` -> `pass`
+- `S01` `verify:` `just build-native Debug desktop-host-build` -> `pass`
+- `S01` `by:` `Terra 6.1 High; Luna Max review`
 
 ## Notes
 
 - `S02` The aggregate ran during concurrent runtime edits; its formatting, type and source-stability failures are resolved by current canonical format/type passes and the stable clean import run 20261027T101035.705132Z-check-import-boundaries-55844-3d5218e6. Ten remaining aggregate gates passed.
 - `S02` Component type fixes, test relocations and generated load metadata were committed by the component workstream in 8679cc2016 during execution. Human-claim fixture import/type fixes remain with that workstream; this commit omits its untracked test and related lane references.
 - `S02` During checkpoint the component workstream committed the human-claim test and authority backend in ec51298ef8. The final S02 commit therefore includes both Windows lane references; its earlier isolation note records the pre-commit staging boundary.
+- `S01` The complete scenario run passed 988 with nine existing skips and failed only the filter benchmark. After the final scheduling correction, all 48 affected ledger scenarios passed with standard retain-on-failure tracing and unchanged budgets; final production coverage is 436 passing cases. Unchanged remaining scenario evidence is reused.
+- `S01` Canonical generation supplied six missing fixtures plus five moving-baseline dependencies. Other dirty generated fixtures and provider sign-in additions belong to concurrent work and are excluded from this commit.

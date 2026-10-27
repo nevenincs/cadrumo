@@ -204,8 +204,48 @@ test("the document picker enforces the message reference limit and frees a slot 
 }) => {
   await open(page);
   await expect(rows(page)).toHaveCount(244);
-  for (let at = 0; at < 32; at++)
-    await rows(page).nth(at).getByRole("button", { name: /^Use / }).click();
+  // The scenario upload holds the first 31 files already in this conversation.
+  // One Add files action delivers the same stored events as ordinary uploads.
+  await page.evaluate(async () => {
+    const session = window.__fixtureAgentSession;
+    const views = window.__fixtureAgentViews;
+    if (!session || !views?.documents) throw new Error("Missing fixture agent");
+    const held = (
+      await views.documents({ conversation_id: "c-iva-t3" })
+    ).documents.slice(0, 31);
+    if (held.length !== 31) throw new Error("Missing fixture documents");
+    session.attach = async (conversationId, _filterLabel, onEvent) => {
+      if (conversationId !== "c-iva-t3") throw new Error("Wrong conversation");
+      const picks = held.map((document, at) => ({
+        id: `limit-setup-${at}`,
+        name: document.name,
+        size_bytes: document.size_bytes,
+        state: "queued" as const,
+        code: null,
+      }));
+      picks.forEach((pick, at) =>
+        onEvent({ kind: "stored", id: pick.id, document: held[at]! }),
+      );
+      return picks;
+    };
+  });
+  // Refresh the rendered attach handler after installing the fixture answer.
+  await toggle(page).click();
+  await toggle(page).click();
+  await panel(page)
+    .getByRole("button", {
+      name: label("desktop.agent.add_files"),
+      exact: true,
+    })
+    .click();
+  await expect(rows(page).nth(30)).toContainText(
+    label("desktop.agent.document_selected"),
+  );
+  const last = rows(page).nth(31).getByRole("button", { name: /^Use / });
+  await last.click();
+  await expect(rows(page).nth(31)).toContainText(
+    label("desktop.agent.document_selected"),
+  );
   const next = rows(page).nth(32).getByRole("button", { name: /^Use / });
   await expect(next).toHaveAttribute("aria-disabled", "true");
   await staged(page)

@@ -9,7 +9,14 @@
 // sealed or as not sealed. One whose index was never built is not known to
 // be sealed; the product refuses a change to a sealed one regardless.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  startTransition,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type { LedgerPort } from "../../shell/ledger";
 import { readAnswer } from "../../shell/ledgerWindow";
 import { seals } from "./inspector/inspectorWords";
@@ -19,6 +26,25 @@ import { seals } from "./inspector/inspectorWords";
 export const SEALED_READS = 400;
 /** Reads in flight at once. */
 const AT_ONCE = 4;
+const NO_RESULTS: ReadonlyMap<string, boolean | null> = new Map();
+
+// Page reads may cover hundreds of movements. Give input and paint work
+// priority between them; explicit review reads do not use this queue.
+function yieldPageRead(): Promise<void> {
+  const scheduler = (
+    globalThis as typeof globalThis & {
+      scheduler?: {
+        postTask(
+          callback: () => void,
+          options: { priority: "background" },
+        ): Promise<void>;
+      };
+    }
+  ).scheduler;
+  return scheduler
+    ? scheduler.postTask(() => {}, { priority: "background" })
+    : new Promise((resolve) => window.setTimeout(resolve, 0));
+}
 
 /** Whether one movement is sealed; null where it could not be read. */
 async function readSealed(
@@ -67,12 +93,18 @@ export function useSealedMovements(
     progress?: SealedProgress,
   ) => Promise<SealedRead>;
 } {
-  const [sealed, setSealed] = useState<ReadonlySet<string>>(new Set());
-  const [unread, setUnread] = useState<ReadonlySet<string>>(new Set());
+  const [projection, setProjection] = useState<{
+    reader: string | null;
+    generation: number | string | null;
+    values: ReadonlyMap<string, boolean | null>;
+  }>(() => ({ reader, generation, values: NO_RESULTS }));
+  // Only completed reads establish either sealed or unsealed. Pending,
+  // failed, and unrequested movements must be treated as unread immediately.
+  const resolved = useRef(new Map<string, boolean | null>());
   // What was read, or is being read, for this window and profile.
   const known = useRef(new Map<string, Promise<boolean | null>>());
-  // How much of the page's budget its reads have taken, counted when a read
-  // is planned: reads that overlap share one budget.
+  // How much of the page's budget has actually started. Overlapping reads
+  // share the same map and spend once per newly started page read.
   const spent = useRef(0);
   const scope = useRef({ reader, generation });
   if (
@@ -81,49 +113,75 @@ export function useSealedMovements(
   ) {
     scope.current = { reader, generation };
     known.current = new Map();
+    resolved.current = new Map();
     spent.current = 0;
   }
-  useEffect(() => {
-    setSealed(new Set());
-    setUnread(new Set());
-  }, [reader, generation]);
+  const values =
+    projection.reader === reader && projection.generation === generation
+      ? projection.values
+      : NO_RESULTS;
+  const { sealed, unread } = useMemo(() => {
+    const sealed = new Set<string>();
+    const unread = new Set<string>();
+    for (const id of wanted) {
+      const value = values.get(id);
+      if (value === true) sealed.add(id);
+      else if (value !== false) unread.add(id);
+    }
+    return { sealed, unread };
+  }, [wanted, values]);
 
   const read = useCallback(
     async (
       ids: readonly string[],
       review: boolean,
       progress?: SealedProgress,
+      signal?: AbortSignal,
     ): Promise<SealedRead> => {
       const map = known.current;
-      // The review asks again what failed; the page asks once.
-      const settled = await Promise.all(
-        ids.map(
-          async (id) =>
-            [id, map.has(id) ? await map.get(id)! : undefined] as const,
-        ),
-      );
-      const asking = settled
-        .filter(
-          ([, value]) => value === undefined || (review && value === null),
-        )
-        .map(([id]) => id);
-      // The review reads every one it is asked; the page what is left of
-      // its budget, taken now so that a read started meanwhile cannot take
-      // it too.
-      const room = review
-        ? asking.length
-        : Math.max(0, SEALED_READS - spent.current);
-      const queue = asking.slice(0, room);
-      if (!review && map === known.current) spent.current += queue.length;
+      // Admission and budget are checked immediately before a host read.
+      // Queues for an old selection can stop without reserving the budget
+      // for reads they never started.
+      const queue = [...ids];
       const total = ids.length;
-      let done = total - queue.length;
+      let done = 0;
       progress?.(done, total);
       const run = async () => {
         for (let id = queue.shift(); id !== undefined; id = queue.shift()) {
-          // Another read may have started it since this one looked.
-          if (!review && map.has(id)) {
-            done += 1;
-            continue;
+          if (!review) {
+            if (
+              signal?.aborted ||
+              map !== known.current ||
+              spent.current >= SEALED_READS
+            )
+              return;
+            await yieldPageRead();
+            if (signal?.aborted || map !== known.current) return;
+          }
+          // Wait for an existing read; a review retries only failed reads.
+          const existing = map.get(id);
+          if (existing) {
+            const value = await existing;
+            if (!review || value !== null) {
+              done += 1;
+              progress?.(done, total);
+              continue;
+            }
+            // Another caller may already have retried this failed read.
+            if (map.get(id) !== existing) {
+              await map.get(id);
+              done += 1;
+              progress?.(done, total);
+              continue;
+            }
+          }
+          if (!review) {
+            if (signal?.aborted || map !== known.current) return;
+            if (spent.current >= SEALED_READS) {
+              done += 1;
+              continue;
+            }
+            spent.current += 1;
           }
           const found = readSealed(port, id);
           map.set(id, found);
@@ -135,27 +193,33 @@ export function useSealedMovements(
       await Promise.all(Array.from({ length: AT_ONCE }, run));
       const out = new Set<string>();
       const missed = new Set<string>();
+      let changed = false;
       for (const id of ids) {
-        const value = map.has(id) ? await map.get(id) : null;
+        const entry = map.get(id);
+        const value = entry ? await entry : null;
         if (value === true) out.add(id);
         else if (value !== false) missed.add(id);
+        // Never publish an older answer over a newer review, or treat an
+        // unstarted read as a settled result.
+        if (
+          entry &&
+          known.current === map &&
+          map.get(id) === entry &&
+          (!resolved.current.has(id) || resolved.current.get(id) !== value)
+        ) {
+          resolved.current.set(id, value);
+          changed = true;
+        }
       }
-      if (known.current === map) {
-        if (out.size > 0)
-          setSealed((before) => {
-            const missing = [...out].some((id) => !before.has(id));
-            return missing ? new Set([...before, ...out]) : before;
-          });
-        setUnread((before) => {
-          const next = new Set(before);
-          for (const id of ids)
-            if (missed.has(id)) next.add(id);
-            else next.delete(id);
-          const same =
-            next.size === before.size &&
-            [...next].every((id) => before.has(id));
-          return same ? before : next;
-        });
+      if (changed && known.current === map) {
+        const next = {
+          reader: scope.current.reader,
+          generation: scope.current.generation,
+          values: new Map(resolved.current),
+        };
+        // Background results may wait behind input; review answers may not.
+        if (review) setProjection(next);
+        else startTransition(() => setProjection(next));
       }
       return { sealed: out, unread: missed };
     },
@@ -170,7 +234,21 @@ export function useSealedMovements(
   const key = wanted.join(" ");
   useEffect(() => {
     if (reader === null || generation === null || key === "") return;
-    void read(key.split(" "), false);
+    // Pending movements are already unread. Let the selection paint before
+    // starting the page's background reads; review reads remain immediate.
+    let task: number | undefined;
+    const controller = new AbortController();
+    const frame = window.requestAnimationFrame(() => {
+      task = window.setTimeout(
+        () => void read(key.split(" "), false, undefined, controller.signal),
+        0,
+      );
+    });
+    return () => {
+      controller.abort();
+      window.cancelAnimationFrame(frame);
+      if (task !== undefined) window.clearTimeout(task);
+    };
   }, [read, reader, generation, key]);
 
   return { sealed, unread, sealedOf };
