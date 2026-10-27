@@ -39,6 +39,7 @@ from . import worker_cleanup as _worker_cleanup
 from . import worker_service as _worker_service
 from .operation_host import ProfileWorkerOperationHost
 from .profile_login import ProfileWorkerHumanLogin
+from .worker_stall_watchdog import watch_event_loop
 
 _LOGGER = get_logger(__name__)
 
@@ -144,6 +145,18 @@ def _open_operation_channel(
     write_document(operation_channel, identity, deadline=deadline)
 
 
+async def _serve_watched(
+    channel: WorkerChannel,
+    operation_channel: WorkerChannel,
+    custody: ProfileWorkerCustody,
+    human: ProfileWorkerHumanLogin,
+    operations: ProfileWorkerOperationHost,
+) -> None:
+    """Serve both channels while a stalled event loop leaves every thread's stack on disk."""
+    async with watch_event_loop():
+        await _worker_service._serve(channel, operation_channel, custody, human, operations)
+
+
 def _serve_connected_worker(
     options: argparse.Namespace,
     resources: _WorkerRunResources,
@@ -172,7 +185,7 @@ def _serve_connected_worker(
             ),
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)
-        asyncio.run(_worker_service._serve(channel, operation_channel, custody, human, operations))
+        asyncio.run(_serve_watched(channel, operation_channel, custody, human, operations))
 
 
 def _run_worker(
