@@ -67,7 +67,6 @@ from ...domain.deadlines.models import Schedule as _Schedule
 from ...domain.deadlines.models import TaxpayerProfile as _TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_window
 from ...domain.deadlines.recargo import build_recovery_for_overdue as _build_recovery_for_overdue
-from ...domain.deadlines.recargo import load_recargo_bands as _load_recargo_bands
 from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
 from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
 from ..modelo.effective_deadline import effective_filing_deadline as _effective_filing_deadline
@@ -992,7 +991,6 @@ def _calendar_entry_from_obligation(
                 reference_today=today,
                 modelo=str(obligation.modelo),
                 period=period,
-                bands=_load_recargo_bands(operation=operation),
                 operation=operation,
             )
         except (FileNotFoundError, ValueError) as exc:

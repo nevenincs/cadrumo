@@ -86,6 +86,7 @@ def test_overdue_deadline_posture_exposes_unassessed_rate_preview() -> None:
             period=period,
             operation=_authority_operation_for_test,
         )
+        assert expected is not None
         assert preview.band_id == expected.recargo_band.id
         assert preview.surcharge_pct == expected.recargo_band.surcharge_pct
         assert preview.interest_applies is expected.recargo_band.interest_applies
@@ -124,6 +125,8 @@ def test_preview_preserves_exact_twelve_month_rate_boundary_without_assessment()
             period=period,
             operation=_authority_operation_for_test,
         )
+        assert anniversary_recovery is not None
+        assert day_after_recovery is not None
         assert anniversary_preview.band_id == anniversary_recovery.recargo_band.id
         assert anniversary_preview.interest_applies is anniversary_recovery.recargo_band.interest_applies
         assert day_after_preview.band_id == day_after_recovery.recargo_band.id

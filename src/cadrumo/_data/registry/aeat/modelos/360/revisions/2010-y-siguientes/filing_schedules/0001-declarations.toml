@@ -1,6 +1,8 @@
+# The 0A identity represents a full-calendar-year request only. Shorter
+# request periods and their opening dates are not represented by this schedule.
 [[revisions."2010-y-siguientes".filing_schedules]]
 id = "modelo-360-anual"
-period_kind = "annual"
+period_kind = "event"
 periods = ["0A"]
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-4"]
 source_refs = ["boe-modelo-360-2010-form", "aeat-modelo-360-procedure"]

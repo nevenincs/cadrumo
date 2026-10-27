@@ -125,6 +125,7 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
                 period=period,
                 operation=_authority_operation_for_test,
             )
+            assert expected is not None
             assert preview.band_id == expected.recargo_band.id, case_id
             assert preview.surcharge_pct == expected.recargo_band.surcharge_pct, case_id
             assert preview.interest_applies is expected.recargo_band.interest_applies, case_id

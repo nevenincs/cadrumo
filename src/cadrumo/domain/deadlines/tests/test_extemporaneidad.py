@@ -76,6 +76,7 @@ def test_after_12_months_recovery_payload(operation: PinnedAuthorityOperation) -
         period=Period.from_year_and_code(2024, "4T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.still_filable is True
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.interest_applies is True

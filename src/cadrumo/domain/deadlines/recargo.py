@@ -35,6 +35,11 @@ from weakref import WeakKeyDictionary
 from pydantic import TypeAdapter, ValidationError
 
 from ...core.period import Period
+from ...core.result_disposition import (
+    derive_result_disposition,
+    result_disposition_casilla_ids,
+    result_disposition_is_refund,
+)
 from .errors import DeadlineValidationError
 from .models import RecargoBand, Recovery
 
@@ -242,7 +247,7 @@ def build_recovery_for_overdue(
     period: Period,
     operation: PinnedAuthorityOperation,
     bands: Sequence[RecargoBand] | None = None,
-) -> Recovery:
+) -> Recovery | None:
     """Resolve the :class:`Recovery` payload for an OVERDUE obligation.
 
     The recargo percentage is computed precisely per Art. 27.2 LGT: 1% + 1% per
@@ -266,8 +271,13 @@ def build_recovery_for_overdue(
             runtime authority is adapted.
 
     Returns:
-        A :class:`Recovery` carrying the resolved band and legal reference.
+        A :class:`Recovery` carrying the resolved band and legal reference, or
+        ``None`` when the modelo has a fixed refund disposition.
     """
+    if result_disposition_casilla_ids(modelo) is None:
+        disposition = derive_result_disposition(modelo, {}, period=period)
+        if disposition is not None and result_disposition_is_refund(disposition):
+            return None
     band_table = bands if bands is not None else load_recargo_bands(operation=operation)
     if more_than_twelve_months_elapsed(closes_on, reference_today):
         resolved = _interest_bearing_tail_band(band_table)

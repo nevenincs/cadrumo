@@ -19,7 +19,7 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ..errors import DeadlineValidationError
-from ..models import Recovery
+from ..models import RecargoBand, Recovery
 from ..recargo import (
     build_recovery_for_overdue,
     completed_months_late,
@@ -140,6 +140,7 @@ def test_build_recovery_uses_completed_months_not_day_bracket(operation: PinnedA
         period=Period.from_year_and_code(2026, "1T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.still_filable is True
     assert recovery.recargo_band.surcharge_pct == Decimal("2.00")
     assert recovery.recargo_band.interest_applies is False
@@ -203,6 +204,7 @@ def test_exact_twelve_month_anniversary_stays_in_graduated_band(
         period=Period.from_year_and_code(2026, "1T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.recargo_band.id == "completed_months_12"
     assert recovery.recargo_band.surcharge_pct == Decimal("13.00")
     assert recovery.recargo_band.interest_applies is False
@@ -225,6 +227,7 @@ def test_day_after_twelve_month_anniversary_enters_interest_tail(
         period=Period.from_year_and_code(2026, "1T"),
         operation=operation,
     )
+    assert recovery is not None
     assert recovery.recargo_band.id == "after_12_months"
     assert recovery.recargo_band.surcharge_pct == Decimal("15.00")
     assert recovery.recargo_band.interest_applies is True
@@ -253,6 +256,7 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
         operation=operation,
     )
 
+    assert recovery is not None
     # The grounding is still reachable, and from one place only.
     assert "ley-58-2003" in recovery.recargo_band.legal_ref
     assert not hasattr(recovery, "legal_ref")
@@ -263,3 +267,40 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
             recargo_band=recovery.recargo_band,
             legal_ref="not-canonical",
         )
+
+
+def test_fixed_refund_has_no_recovery_and_never_loads_bands(
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def unexpected_load(*, operation: PinnedAuthorityOperation) -> tuple[RecargoBand, ...]:
+        raise AssertionError("fixed refund must not load surcharge bands")
+
+    monkeypatch.setattr("cadrumo.domain.deadlines.recargo.load_recargo_bands", unexpected_load)
+    assert (
+        build_recovery_for_overdue(
+            closes_on=date(2026, 9, 30),
+            reference_today=date(2026, 11, 1),
+            modelo="360",
+            period=Period.from_year_and_code(2025, "0A"),
+            operation=operation,
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize(("modelo", "period_code"), (("303", "1T"), ("210", "EVENT-1")))
+def test_variable_disposition_still_has_conditional_recovery(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    period_code: str,
+) -> None:
+    recovery = build_recovery_for_overdue(
+        closes_on=date(2026, 4, 20),
+        reference_today=date(2026, 5, 20),
+        modelo=modelo,
+        period=Period.from_year_and_code(2026, period_code),
+        operation=operation,
+    )
+    assert recovery is not None
+    assert recovery.recargo_band.surcharge_pct == Decimal("2.00")

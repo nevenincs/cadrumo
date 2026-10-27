@@ -55,20 +55,19 @@ A projection endpoint's projection_ref accepts only FilingProjectionRef, which i
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 [revisions."2010-y-siguientes".family_dispositions.bindings]
-reason = "A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. Every value of this solicitud de devolucion is entered by the non-established claimant for its own request -- its activity, annexes and the invoices that bore the Spanish IVA it asks back -- and each design position is a manual casilla, so no ledger, profile or earlier-filing source is declared for any of them."
+reason = "A binding resolves a casilla's value from a declared source, and only a BOUND casilla requires one. This solicitud's values are entered for the specific refund request, including the claimant's activity, annexes and invoices. Each design position is a manual casilla, so no ledger, profile or earlier-filing source is declared for any of them."
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
 [revisions."2010-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
-Modelo 360 is a SOLICITUD DE DEVOLUCION, not a self-assessment. Under Ley 37/1992 art. 117 bis an empresario o profesional not established in the territory of application of the tax asks to recover the Spanish input VAT it bore, by listing the invoices that bore it. A dependency classification declares a source modelo this one depends on in an earlier or enclosing period. A non-established claimant files no Spanish periodic IVA self-assessment -- that is precisely why the refund is claimed \
-through this procedure rather than deducted on a Modelo 303 -- so there is no source modelo in this taxpayer's own filing chain for the clean-state gate to reason about."""
+Modelo 360 is a refund request. An empresario o profesional established in the Spanish VAT territory may request VAT incurred in other Member States; an applicant established in Canarias, Ceuta or Melilla may also request VAT incurred in that territory. Filing Modelo 303 does not by itself exclude this request. No earlier or enclosing source modelo dependency has been declared for this request, so there is no source modelo for the clean-state gate to reason about."""
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 
 
 [revisions."2010-y-siguientes".family_dispositions.extraction_profiles]
-reason = "The application's surface for modelo 360 is the operator-entered annual refund request, not a periodic declaracion PDF replay, and no inbound parser for a 360 artefact exists to name. Empty by the application's surface rather than omitted."
+reason = "The application's surface for modelo 360 is an operator-entered refund request, and no inbound parser for a 360 artefact exists to name. Empty by the application's surface rather than omitted."
 legal_refs = ["ley-37-1992:art-117-bis", "orden-eha-789-2010:art-1", "orden-eha-789-2010:art-4"]
 source_refs = ["aeat-dr-360-2010", "aeat-modelo-360-procedure"]
 

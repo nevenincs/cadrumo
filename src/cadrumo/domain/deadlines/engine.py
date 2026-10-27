@@ -49,7 +49,7 @@ from .models import (
     Schedule,
     TaxpayerProfile,
 )
-from .recargo import build_recovery_for_overdue, load_recargo_bands
+from .recargo import build_recovery_for_overdue
 
 _logger = get_logger(__name__)
 
@@ -581,7 +581,6 @@ def _overdue_recovery_or_none(
             reference_today=reference_today,
             modelo=modelo,
             period=window.period,
-            bands=load_recargo_bands(operation=operation),
             operation=operation,
         )
     except (FileNotFoundError, ValueError) as exc:
