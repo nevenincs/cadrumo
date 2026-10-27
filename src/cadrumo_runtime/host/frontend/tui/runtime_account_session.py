@@ -80,6 +80,8 @@ def read_runtime_account_session(
         AccessDenialCode.AUTHORITY_UNAVAILABLE,
         AccessDenialCode.STORAGE_UNAVAILABLE,
         AccessDenialCode.CUSTODY_UNAVAILABLE,
+        # Suspended while a lost worker is replaced: unavailable for now, not expired.
+        AccessDenialCode.CUSTODY_RECOVERING,
     }:
         raise AccountSessionUnavailableError()
     if (

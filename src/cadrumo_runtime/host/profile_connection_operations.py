@@ -93,6 +93,17 @@ def _require_scope_admits(connection: ProfileConnection, definition_id: str) -> 
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
+def _admitted_status(status: ProfileStatus | AccessDenied) -> ProfileStatus:
+    """Return a session status that grants access; refuse a denied one, with a suspended session's window."""
+    if isinstance(status, AccessDenied):
+        raise ProfileAccessRefusedError(status.code, recovery_remaining_seconds=status.recovery_remaining_seconds)
+    if status.status.denial is not None:
+        raise ProfileAccessRefusedError(
+            status.status.denial, recovery_remaining_seconds=status.status.recovery_remaining_seconds
+        )
+    return status
+
+
 def _session_mismatch(connection: ProfileConnection) -> AccessDenialCode:
     """Name why a request's session is not this connection's: a retirement such as a sign-out leaves none."""
     return (
@@ -213,6 +224,9 @@ class ProfileConnectionOperationMixin:
                     sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
                     request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
                     holder_operation_id=error.holder_operation_id
+                    if isinstance(error, ProfileAccessRefusedError)
+                    else None,
+                    recovery_remaining_seconds=error.recovery_remaining_seconds
                     if isinstance(error, ProfileAccessRefusedError)
                     else None,
                 )
@@ -421,11 +435,7 @@ class ProfileConnectionOperationMixin:
         request: OperationContract,
     ) -> ProfileStatus:
         """Observe, under the caller's profile fence, that the session may see this definition now."""
-        status = self._status(connection, host, request.request_id, request.session_id)
-        if isinstance(status, AccessDenied):
-            raise ProfileAccessRefusedError(status.code)
-        if status.status.denial is not None:
-            raise ProfileAccessRefusedError(status.status.denial)
+        status = _admitted_status(self._status(connection, host, request.request_id, request.session_id))
         if request.definition_id not in status.status.effective_scope.operations:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         return status
@@ -483,11 +493,7 @@ class ProfileConnectionOperationMixin:
         if connection.session_id != request.session_id:
             raise ProfileAccessRefusedError(_session_mismatch(connection))
         with host.guard:
-            status = self._status(connection, host, request.request_id, request.session_id)
-            if isinstance(status, AccessDenied):
-                raise ProfileAccessRefusedError(status.code)
-            if status.status.denial is not None:
-                raise ProfileAccessRefusedError(status.status.denial)
+            status = _admitted_status(self._status(connection, host, request.request_id, request.session_id))
             scope = status.status.effective_scope
             if request.definition_id not in scope.operations or AccessAction.SUBMIT not in scope.actions:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -581,11 +587,7 @@ class ProfileConnectionOperationMixin:
         if host is None:
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         with host.guard:
-            status = self._status(connection, host, request.request_id, request.session_id)
-        if isinstance(status, AccessDenied):
-            raise ProfileAccessRefusedError(status.code)
-        if status.status.denial is not None:
-            raise ProfileAccessRefusedError(status.status.denial)
+            _admitted_status(self._status(connection, host, request.request_id, request.session_id))
         return connection, host
 
     def _view_refusal(

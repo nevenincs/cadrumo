@@ -117,7 +117,11 @@ class ProfileConnectionSessionMixin:
         # An uncertain native observation denies work but preserves the live
         # lease. Keep its wire identity so a fresh observation can recover;
         # every later request still reauthorizes against the runtime authority.
-        if status.denial not in {None, AccessDenialCode.OS_SESSION_UNAVAILABLE}:
+        if status.denial not in {
+            None,
+            AccessDenialCode.OS_SESSION_UNAVAILABLE,
+            AccessDenialCode.CUSTODY_RECOVERING,
+        }:
             connection.session_id = None
         return ProfileStatus(
             request_id=request_id,
@@ -434,7 +438,7 @@ class ProfileConnectionSessionMixin:
         request: SessionRequest,
     ) -> HumanSignedOut:
         # Signing the person out is theirs alone: a session of the human kind, on any frontend.
-        host.authority.human_administration_facts(connection_id=context.connection_id, session_id=request.session_id)
+        host.authority.require_human_sign_out(connection_id=context.connection_id, session_id=request.session_id)
         try:
             automation_enabled = host.store.enrollment_state().automation_enabled
         except AutomationCustodyError:
@@ -567,6 +571,7 @@ class ProfileConnectionSessionMixin:
     ):
         """Keep credentials out of request/response documents and refuse unknown authority."""
         sign_in = None
+        recovery: int | None = None
         try:
             if context.runtime_boot_id != self.boot or context.peer != channel.peer:
                 raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="session_context_rebound")
@@ -621,10 +626,12 @@ class ProfileConnectionSessionMixin:
                 return result
             code = result.code
             sign_in = result.sign_in
+            recovery = result.recovery_remaining_seconds
         except (AutomationCustodyError, ProfileAccessRefusedError) as error:
             code = error.reason
             if isinstance(error, ProfileAccessRefusedError):
                 sign_in = error.sign_in
+                recovery = error.recovery_remaining_seconds
             log_boundary_failure(_LOGGER, "profile_request_refused", error, level=logging.INFO)
         except RefusalError as error:
             code = error.reason
@@ -638,6 +645,7 @@ class ProfileConnectionSessionMixin:
             connection_id=context.connection_id,
             code=code,
             sign_in=sign_in,
+            recovery_remaining_seconds=recovery,
         )
 
     def disconnect(self: RuntimeProfileConnections, context: ConnectionContext) -> None:

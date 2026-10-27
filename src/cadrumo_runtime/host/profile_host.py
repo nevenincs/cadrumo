@@ -42,6 +42,7 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
+    AccessSession,
     LoginEligibility,
     OsLockState,
     ProfileAccessState,
@@ -105,6 +106,7 @@ from ..application.approval_binding import RuntimeApprovalBinding
 from ..application.approval_sessions import RuntimeApprovalSessions
 from ..application.session_authority import ProfileSessionAuthority
 from ..application.session_authority_contracts import SessionAuthorityFacts
+from ..application.session_authority_core import CustodyRecoveryPolicy
 from .session_owner import ProfileWorkerSessionOwner
 
 _GUARD_SLOW_SECONDS: Final = 1.0
@@ -230,8 +232,16 @@ class RuntimeProfileHost:
         retired: Callable[[SessionEvent], None] | None = None,
         operations_advanced: Callable[[tuple[OperationId, ...], bool], None] | None = None,
         model_runs: Callable[[WorkerModelRun, bytearray], tuple[ModelRunOutcome, bytearray]] | None = None,
+        suspended: Callable[[tuple[AccessSession, ...]], None] | None = None,
+        rebound: Callable[[tuple[AccessSession, ...]], None] | None = None,
+        recovery: CustodyRecoveryPolicy | None = None,
     ) -> None:
-        """Compose existing authorities without opening keys or selecting a profile."""
+        """Compose existing authorities without opening keys or selecting a profile.
+
+        A positive worker loss suspends this profile's leases under a fresh
+        worker owner; ``suspended`` and ``rebound`` hear which leases wait and
+        which returned after a fresh proof.
+        """
         self.store, self._registry = store, registry
         self._contracts = registry.public_contract_set
         self._connected, self._logins, self._admitting = connected, logins, admitting
@@ -247,25 +257,71 @@ class RuntimeProfileHost:
         self._model_runs = model_runs
         self._sign_in_generation: SignInGeneration | None = None
         self.issuer = CustodyAutomationKeyIssuer()
-        self.owner = ProfileWorkerSessionOwner(
-            ProfileWorkerIdentity(worker_id=uuid4(), runtime_boot_id=runtime_boot_id, binding=store.binding),
-            storage_root=store.root,
+        self._runtime_boot_id, self._worker_script = runtime_boot_id, worker_script
+        # Owners of lost workers, kept until their containment and callbacks settle.
+        self._lost_owners: list[ProfileWorkerSessionOwner] = []
+        self._owner = self._new_owner()
+        self.authority = ProfileSessionAuthority(
+            binding=store.binding,
+            runtime_boot_id=runtime_boot_id,
+            owner=self._owner,
+            custody=store,
+            issuer=self.issuer,
+            retired=self._session_retired,
+            replace_lost_owner=self._replace_lost_owner,
+            suspended=suspended,
+            rebound=rebound,
+            recovery=recovery,
+        )
+        self.approvals = RuntimeApprovalSessions(worker=self._owner.identity, service=self._approval_service)
+
+    @property
+    def owner(self) -> ProfileWorkerSessionOwner:
+        """The owner of this profile's current worker incarnation."""
+        return self._owner
+
+    def _new_owner(self) -> ProfileWorkerSessionOwner:
+        return ProfileWorkerSessionOwner(
+            ProfileWorkerIdentity(worker_id=uuid4(), runtime_boot_id=self._runtime_boot_id, binding=self.store.binding),
+            storage_root=self.store.root,
             observe=self.facts,
             human_secret=self._human_proof,
             guard=self.guard,
             authorization=self,
-            worker_script=worker_script,
-            wall_clock=wall_clock,
+            worker_script=self._worker_script,
+            wall_clock=self._wall_clock,
         )
-        self.authority = ProfileSessionAuthority(
-            binding=store.binding,
-            runtime_boot_id=runtime_boot_id,
-            owner=self.owner,
-            custody=store,
-            issuer=self.issuer,
-            retired=self._session_retired,
+
+    def _replace_lost_owner(self) -> ProfileWorkerSessionOwner:
+        """Start a fresh, empty worker incarnation after a positive worker loss; the caller holds the guard.
+
+        Approval proof of the lost worker is fenced: work in flight at the
+        loss never resumes under the replacement.
+        """
+        self._lost_owners.append(self._owner)
+        self._owner = self._new_owner()
+        lost_approvals, self.approvals = (
+            self.approvals,
+            RuntimeApprovalSessions(worker=self._owner.identity, service=self._approval_service),
         )
-        self.approvals = RuntimeApprovalSessions(worker=self.owner.identity, service=self._approval_service)
+        lost_approvals.close()
+        return self._owner
+
+    def settle_lost_owners(self, *, deadline: float) -> None:
+        """Prove containment of lost worker incarnations; one that cannot settle yet is kept for a later pass."""
+        with self.guard:
+            lost = tuple(self._lost_owners)
+        failures: list[Exception] = []
+        for owner in lost:
+            try:
+                owner.settle(deadline=deadline)
+            except Exception as error:
+                failures.append(error)
+            else:
+                with self.guard:
+                    self._lost_owners.remove(owner)
+        if failures:
+            raise ExceptionGroup("lost worker settlement failed", failures)
 
     def _session_retired(self, retirement: SessionRetirement) -> None:
         """Publish committed retirement metadata; the queue never performs transport I/O."""
@@ -754,6 +810,9 @@ class RuntimeProfileHost:
             finally:
                 try:
                     self.owner.settle()
+                    for lost in tuple(self._lost_owners):
+                        lost.settle()
+                        self._lost_owners.remove(lost)
                 finally:
                     self.approvals.close()
                     self.store.custody_witness.close()

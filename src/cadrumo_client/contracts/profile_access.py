@@ -285,6 +285,8 @@ class AccessRefusal(BaseModel):
     request_faults: Annotated[tuple[RequestFault, ...], Field(max_length=MAX_REQUEST_FAULTS)] = ()
     #: The unsettled operation that holds the subject of a ``subject_busy`` refusal.
     holder_operation_id: OperationId | None = None
+    #: Whole seconds left in the recovery window of a ``custody_recovering`` refusal.
+    recovery_remaining_seconds: int | None = Field(default=None, ge=0)
 
     @model_validator(mode="after")
     def _only_an_invalid_request_has_faults(self) -> AccessRefusal:
@@ -292,6 +294,8 @@ class AccessRefusal(BaseModel):
             raise ValueError("only an invalid request carries request faults")
         if self.holder_operation_id is not None and self.code is not AccessDenialCode.SUBJECT_BUSY:
             raise ValueError("only a busy subject names the operation that holds it")
+        if self.recovery_remaining_seconds is not None and self.code is not AccessDenialCode.CUSTODY_RECOVERING:
+            raise ValueError("only a session suspended for custody recovery carries a recovery window")
         return self
 
 

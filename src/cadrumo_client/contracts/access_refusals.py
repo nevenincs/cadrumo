@@ -9,7 +9,7 @@ from enum import StrEnum
 from typing import Annotated, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
@@ -43,6 +43,8 @@ class AccessDenialCode(StrEnum):
     OS_LOCKED = "os_locked"
     STORAGE_UNAVAILABLE = "storage_unavailable"
     CUSTODY_UNAVAILABLE = "custody_unavailable"
+    CUSTODY_RECOVERING = "custody_recovering"
+    """The profile's worker was lost; the session is suspended and grants nothing until a fresh proof rebinds it."""
     OPERATION_UNAVAILABLE = "operation_unavailable"
     SUBJECT_BUSY = "subject_busy"
     """An earlier operation of the same definition on the same subject has not settled."""
@@ -72,6 +74,13 @@ class AccessDenied(BaseModel):
     outcome: Literal["denied"] = "denied"
     code: AccessDenialCode
     sign_in: SignInRefusal | None = None
+    recovery_remaining_seconds: int | None = Field(default=None, ge=0)
+    """Whole seconds left in a suspended session's recovery window; only a ``custody_recovering`` refusal has it."""
+
+    @model_validator(mode="after")
+    def _only_recovering_has_a_window(self) -> AccessDenied:
+        _require_recovery_window(self.code, self.recovery_remaining_seconds)
+        return self
 
 
 class AccessAllowed(BaseModel):
@@ -120,3 +129,15 @@ class ProfileAccessStatus(BaseModel):
     effective_scope: EffectiveScopeSummary
     denial: AccessDenialCode | None
     human_resume_refusal: ProfileSessionRefusalReason | None = None
+    recovery_remaining_seconds: int | None = Field(default=None, ge=0)
+    """Whole seconds left in the recovery window of a session suspended by ``custody_recovering``."""
+
+    @model_validator(mode="after")
+    def _only_recovering_has_a_window(self) -> ProfileAccessStatus:
+        _require_recovery_window(self.denial, self.recovery_remaining_seconds)
+        return self
+
+
+def _require_recovery_window(code: object, remaining_seconds: int | None) -> None:
+    if remaining_seconds is not None and code is not AccessDenialCode.CUSTODY_RECOVERING:
+        raise ValueError("only a session suspended for custody recovery carries a recovery window")

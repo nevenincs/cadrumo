@@ -21,14 +21,15 @@ class SessionAuthorityActivity(SessionAuthorityCore):
         if idle_window <= timedelta(0):
             raise ValueError("human activity requires a positive idle window")
         with self.owner.admission_guard():
-            session = self._sessions.get(session_id)
-            if session is None:
-                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-            if session.kind is not SessionKind.HUMAN or session.parent_session_id is not None:
-                return AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
+            # Observe first: this very observation may be the one that suspends the session.
             facts = self._facts(connection_id)
             if isinstance(facts, AccessDenied):
                 return facts
+            session = self._sessions.get(session_id)
+            if session is None:
+                return self._absent_session(session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
+            if session.kind is not SessionKind.HUMAN or session.parent_session_id is not None:
+                return AccessDenied(code=AccessDenialCode.PERSON_ACT_REQUIRED)
             decision = self._evaluate(session, facts, None, None)
             if isinstance(decision, AccessDenied):
                 return decision

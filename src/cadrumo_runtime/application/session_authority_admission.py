@@ -36,7 +36,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, SignInRefusal
 
 from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
-from .session_authority_core import SessionAuthorityCore
+from .session_authority_rebind import SessionAuthorityRebind
 
 
 class _ProspectiveSessionRetirement:
@@ -90,6 +90,7 @@ class _ApiKeyAdmissionCandidate:
     grant: AutomationGrant
     key: ApiKeyRecord
     session: AccessSession
+    rebinding: bool = False
 
 
 @dataclass(frozen=True)
@@ -97,10 +98,11 @@ class _HumanAdmissionCandidate:
     deadline: float
     session: AccessSession
     generation: int
+    rebinding: bool = False
 
 
-class SessionAuthorityAdmission(SessionAuthorityCore):
-    """Authenticate and publish human or API-key session leases."""
+class SessionAuthorityAdmission(SessionAuthorityRebind):
+    """Authenticate and publish human or API-key session leases, or rebind a suspended one."""
 
     def _revalidate_admission(
         self: SessionAuthorityAdmission,
@@ -168,6 +170,11 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             grant, key = self._records(snapshot, key_id=key_id)
             if grant is None or key is None:
                 return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+            held = self._held_suspended(connection_id, SessionKind.API_KEY)
+            if isinstance(held, AccessDenied):
+                return held
+            if held is not None:
+                return self._api_key_rebind_candidate(held, connection_id, facts, snapshot, grant, key, scope)
             expires = min(facts.context.now + ACCESS_LEASE_MAXIMUM, grant.expires_at, key.expires_at)
             if expires <= facts.context.now:
                 return AccessDenied(code=AccessDenialCode.KEY_EXPIRED)
@@ -194,10 +201,43 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 return decision
             return _ApiKeyAdmissionCandidate(connection_id, facts, snapshot, grant, key, session)
 
+    def _api_key_rebind_candidate(
+        self: SessionAuthorityAdmission,
+        held: AccessSession,
+        connection_id: UUID,
+        facts: SessionAuthorityFacts,
+        snapshot: AutomationCustodySnapshot,
+        grant: AutomationGrant,
+        key: ApiKeyRecord,
+        scope: AccessScope,
+    ) -> _ApiKeyAdmissionCandidate | AccessDenied:
+        """Rebind the connection's suspended key lease when the same key is presented again.
+
+        The grant's validity, scope and unattended and lock policy are
+        evaluated afresh; the lease keeps its identity and is not renewed.
+        """
+        if held.key_id != key.key_id:
+            return self._absent_session(held.session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
+        session = self._reissued(
+            held,
+            facts,
+            expires_at=min(grant.expires_at, key.expires_at),
+            scope=intersect_scopes((held.scope, scope, grant.scope, facts.profile.scope)),
+        )
+        if isinstance(session, AccessDenied):
+            return session
+        decision = self._evaluate(session, facts, grant, key)
+        if isinstance(decision, AccessDenied):
+            return decision
+        return _ApiKeyAdmissionCandidate(connection_id, facts, snapshot, grant, key, session, rebinding=True)
+
     def _publish_api_key_candidate(
         self: SessionAuthorityAdmission, candidate: _ApiKeyAdmissionCandidate, credential: SecretBytes
     ) -> AccessSession | AccessDenied:
-        retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({candidate.session.session_id}))
+        identity = candidate.session.session_id
+        retirement = _ProspectiveSessionRetirement(
+            self.owner, self._release_rebind(identity) if candidate.rebinding else lambda: self._retire({identity})
+        )
         primary: BaseException | None = None
         try:
             with ExitStack() as preparation:
@@ -205,7 +245,15 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 refusal = self._activate_api_key_candidate(candidate, credential, deadline, preparation, retirement)
                 if isinstance(refusal, AccessDenied):
                     return refusal
-                self._sessions[candidate.session.session_id] = candidate.session
+                if candidate.rebinding:
+                    with self.owner.admission_guard():
+                        refusal = self._publish_rebound(candidate.session)
+                        if refusal is not None:
+                            return refusal
+                        retirement.committed = True
+                        self._restore_suspended_descendants(candidate.session)
+                        return candidate.session
+                self._sessions[identity] = candidate.session
                 retirement.committed = True
                 return candidate.session
         except BaseException as error:
@@ -278,11 +326,16 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             if isinstance(facts, AccessDenied):
                 return facts
             generation = self._human_admission_generation
-        identity = uuid4()
-        retirement = _ProspectiveSessionRetirement(self.owner, lambda: self._retire({identity}))
+            held = self._held_suspended(connection_id, SessionKind.HUMAN)
+            if isinstance(held, AccessDenied):
+                return held
+        identity = uuid4() if held is None else held.session_id
+        retirement = _ProspectiveSessionRetirement(
+            self.owner, self._release_rebind(identity) if held is not None else lambda: self._retire({identity})
+        )
         primary: BaseException | None = None
         try:
-            candidate = self._authenticate_human_candidate(connection_id, identity, facts, retirement, generation)
+            candidate = self._authenticate_human_candidate(connection_id, identity, facts, retirement, generation, held)
             if isinstance(candidate, AccessDenied):
                 return candidate
             return self._publish_human_candidate(connection_id, candidate, retirement)
@@ -299,6 +352,7 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         baseline: SessionAuthorityFacts,
         retirement: _ProspectiveSessionRetirement,
         generation: int,
+        held: AccessSession | None,
     ) -> _HumanAdmissionCandidate | AccessDenied:
         with self.owner.authenticate_human(connection_id) as authenticated:
             if authenticated is None:
@@ -321,13 +375,35 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 refusal = self._human_admission_denial(baseline, current, deadline, outcome)
                 if refusal is not None:
                     return refusal
-                session = self._human_admission_session(connection_id, identity, current, outcome, login_id)
+                session = (
+                    self._human_admission_session(connection_id, identity, current, outcome, login_id)
+                    if held is None
+                    else self._human_rebind_session(held, current, outcome, login_id)
+                )
+                if isinstance(session, AccessDenied):
+                    return session
                 decision = self._evaluate(session, current, None, None)
                 if isinstance(decision, AccessDenied):
                     return decision
                 retirement.binding_attempted = True
                 self.owner.bind_human(session)
-                return _HumanAdmissionCandidate(deadline, session, generation)
+                return _HumanAdmissionCandidate(deadline, session, generation, rebinding=held is not None)
+
+    def _human_rebind_session(
+        self: SessionAuthorityAdmission,
+        held: AccessSession,
+        facts: SessionAuthorityFacts,
+        outcome: ProfileLoginOutcome,
+        login_id: str,
+    ) -> AccessSession | AccessDenied:
+        """Reissue the held person's lease under its identity, bounded by its own and the proof's deadlines."""
+        if held.session_id not in self._suspended:
+            return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+        if login_id != held.originating_login_id or facts.context.authenticated_client_id != held.client_id:
+            return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        return self._reissued(
+            held, facts, expires_at=min(outcome.idle_deadline, outcome.absolute_deadline), scope=held.scope
+        )
 
     def _human_admission_denial(
         self: SessionAuthorityAdmission,
@@ -393,11 +469,18 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
             decision = self._evaluate(candidate.session, current, None, None)
             if isinstance(decision, AccessDenied):
                 return decision
-            self._sessions[candidate.session.session_id] = candidate.session
+            if candidate.rebinding:
+                refusal = self._publish_rebound(candidate.session)
+                if refusal is not None:
+                    return refusal
+            else:
+                self._sessions[candidate.session.session_id] = candidate.session
             refusal = self._mint_published_human_receipt(connection_id, candidate.session)
             if refusal is not None:
                 return refusal
             retirement.committed = True
+            if candidate.rebinding:
+                self._restore_suspended_descendants(candidate.session)
             return candidate.session
 
     def _mint_published_human_receipt(
@@ -446,14 +529,15 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
     def _api_key_refresh_context(
         self: SessionAuthorityAdmission, connection_id: UUID, session_id: UUID
     ) -> tuple[AccessSession, SessionAuthorityFacts, AutomationGrant, ApiKeyRecord] | AccessDenied:
-        session = self._sessions.get(session_id)
-        if session is None:
-            return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-        if session.kind is not SessionKind.API_KEY or session.parent_session_id is not None:
-            return AccessDenied(code=AccessDenialCode.PARENT_INVALID)
+        # Observe first: this very observation may be the one that suspends the lease.
         facts = self._facts(connection_id)
         if isinstance(facts, AccessDenied):
             return facts
+        session = self._sessions.get(session_id)
+        if session is None:
+            return self._absent_session(session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
+        if session.kind is not SessionKind.API_KEY or session.parent_session_id is not None:
+            return AccessDenied(code=AccessDenialCode.PARENT_INVALID)
         snapshot = self._snapshot(facts)
         if isinstance(snapshot, AccessDenied):
             self._retire({session_id})
@@ -522,6 +606,13 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         later than the parent. Retiring the parent retires the child.
         """
         with self.owner.admission_guard():
+            # Observe first: this very observation may be the one that suspends the parent.
+            facts = self._facts(connection_id)
+            if isinstance(facts, AccessDenied):
+                return facts
+            recovering = self._recovering(parent_session_id)
+            if recovering is not None:
+                return recovering
             parent = self._sessions.get(parent_session_id)
             if (
                 parent is None
@@ -530,9 +621,6 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
                 or parent.connection_id != connection_id
             ):
                 return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-            facts = self._facts(connection_id)
-            if isinstance(facts, AccessDenied):
-                return facts
             decision = self._evaluate(parent, facts, None, None)
             if isinstance(decision, AccessDenied):
                 return decision
@@ -604,15 +692,16 @@ class SessionAuthorityAdmission(SessionAuthorityCore):
         parent_session_id: UUID,
         grant_id: UUID,
     ) -> tuple[AccessSession, SessionAuthorityFacts, AutomationGrant, ApiKeyRecord | None] | AccessDenied:
-        parent = self._sessions.get(parent_session_id)
-        if parent is None:
-            return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
         facts = self._facts(connection_id)
         recipient = self._facts(recipient_connection_id)
         if isinstance(facts, AccessDenied):
             return facts
         if isinstance(recipient, AccessDenied):
             return recipient
+        # Looked up after the observations: either may be the one that suspends it.
+        parent = self._sessions.get(parent_session_id)
+        if parent is None:
+            return self._absent_session(parent_session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
         snapshot = self._snapshot(recipient)
         if isinstance(snapshot, AccessDenied):
             return snapshot

@@ -18,7 +18,12 @@ from cadrumo.adapters.persistence.storage.custody.automation_store_composition i
 from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
+from cadrumo.application.user_profile.access_contracts import (
+    AccessSession,
+    LoginEligibility,
+    OsLockState,
+    OsLoginContext,
+)
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
 from cadrumo.core.diagnostic_log import diagnostic_event
@@ -46,6 +51,7 @@ from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 
 from ..adapters.login import capture_runtime_login
 from ..adapters.service_verification import InstalledNativeServiceVerifier, installed_service_descriptors
+from ..application.session_authority_core import CustodyRecoveryPolicy
 from .access_management import RuntimeAccessManagement
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
 from .bootstrap_reset import RuntimeBootstrapMixin
@@ -145,6 +151,7 @@ class RuntimeProfileConnections(
         installation_acts: InstallationActRegistry | None = None,
         service_descriptors: tuple[InstalledServiceDescriptor, ...] | None = None,
         service_verifier: NativeServiceVerifier | None = None,
+        custody_recovery: CustodyRecoveryPolicy | None = None,
     ) -> None:
         """Defer installation/profile/store access until an eligible peer requests login.
 
@@ -158,6 +165,7 @@ class RuntimeProfileConnections(
         self._eligible_login_seen = False
         self._login_lifecycle_available = False
         self._worker_script, self._wall_clock = worker_script, wall_clock
+        self._custody_recovery = custody_recovery
         self._guard = RLock()
         self._human_handover_guard = RLock()
         self._drain_guard = RuntimeLifecycleGuard()
@@ -724,6 +732,17 @@ class RuntimeProfileConnections(
                 host.close()
                 self._remove_retired_host(host)
                 continue
+            try:
+                host.settle_lost_owners(deadline=time.monotonic() + 2)
+            except ExceptionGroup as failure:
+                # The lost incarnation stays owned; a later pass, or the host's close, settles it.
+                diagnostic_event(
+                    _LOGGER,
+                    "lost_worker_settlement_pending",
+                    fields={"failures": len(failure.exceptions)},
+                    level=logging.WARNING,
+                )
+                self._owe_lifecycle_pass()
             due = host.lifecycle_due()
             if due is not None:
                 dues[host.store.binding.profile_id] = due
@@ -731,6 +750,42 @@ class RuntimeProfileConnections(
             self._host_dues = dues
         # Any other way a session stopped being held still ends its view on this pass.
         self._views.unbind_unheld()
+
+    def _sessions_suspended(self, profile_id: UUID, leases: tuple[AccessSession, ...]) -> None:
+        """A lost worker suspended these leases: end its views and offers, and have each holder read its status.
+
+        The holders hear a sign-in cue: their status names the suspended
+        session and the time left to present a fresh proof on the same
+        connection. The replacement worker starts now, holding no key, so a
+        rebind finds it ready.
+        """
+        self._views.unbind_profile(profile_id)
+        self._enrollments.retire_profile(profile_id)
+        self._cue_lease_holders(leases)
+        with self._guard:
+            host = self._profiles.get(profile_id)
+        if host is None or not self._admitting():
+            return
+
+        def prepare() -> None:
+            try:
+                host.owner.prepare()
+            except (RefusalError, AutomationCustodyError, ProfileAccessRefusedError, OSError) as error:
+                diagnostic_event(
+                    _LOGGER,
+                    "replacement profile worker not started",
+                    level=logging.DEBUG,
+                    fields={"error_type": type(error).__name__},
+                )
+
+        Thread(target=prepare, name="profile-worker-replace", daemon=True).start()
+
+    def _cue_lease_holders(self, leases: tuple[AccessSession, ...]) -> None:
+        """Ask every connection holding one of these leases to read its status again."""
+        for connection_id in {lease.connection_id for lease in leases}:
+            self._events.publish_cue(SignInChanged(runtime_boot_id=self.boot, connection_id=connection_id))
+        self._sign_in_changed()
+        self.lifecycle_changed()
 
     def _remove_retired_host(self, host: RuntimeProfileHost) -> None:
         """Forget only the contained incarnation; old connections gain no new lease."""

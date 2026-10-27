@@ -78,7 +78,8 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             raise ProfileAccessRefusedError(facts.code)
         session = self._sessions.get(session_id)
         if session is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
+            refusal = self._absent_session(session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
+            raise ProfileAccessRefusedError(refusal.code, recovery_remaining_seconds=refusal.recovery_remaining_seconds)
         grant, key = None, None
         if session_requires_grant(session):
             snapshot = self._snapshot(facts)
@@ -107,6 +108,28 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             if grant is None or key is None:
                 raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
             return session
+
+    def require_human_sign_out(self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID) -> None:
+        """Admit a person's sign-out from their live human session, or from their own suspended one.
+
+        A sign-out only ends authority, so a person whose session waits for
+        custody to recover may still sign out from the connection that holds it.
+        """
+        with self.owner.admission_guard():
+            # Observe first: this very observation may be the one that suspends the session.
+            facts = self._facts(connection_id)
+            if isinstance(facts, AccessDenied):
+                raise ProfileAccessRefusedError(facts.code)
+            suspended = self._suspended.get(session_id)
+            if suspended is None:
+                self._human_administration_facts_locked(connection_id, session_id)
+                return
+            if (
+                suspended.kind is not SessionKind.HUMAN
+                or suspended.connection_id != connection_id
+                or suspended.client_id != facts.context.authenticated_client_id
+            ):
+                raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
 
     def human_administration_facts(
         self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID
@@ -204,6 +227,13 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             if isinstance(facts, AccessDenied):
                 return facts
             session = self._sessions.get(session_id)
+            own = self._suspended.get(session_id)
+            if session is None and own is not None:
+                # A suspended session grants nothing, but its holder may still end it.
+                if target_session_id != session_id or own.connection_id != connection_id:
+                    return self._absent_session(session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
+                self._retire({session_id})
+                return (session_id,)
             grant, key = None, None
             if session is not None and session_requires_grant(session):
                 snapshot = self._snapshot(facts)
@@ -228,9 +258,9 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             )
             if isinstance(decision, AccessDenied):
                 return decision
-            before = set(self._sessions)
+            before = set(self._sessions) | set(self._suspended)
             self._retire({target_session_id} & before)
-            return tuple(sorted(before - self._sessions.keys()))
+            return tuple(sorted(before - self._sessions.keys() - self._suspended.keys()))
 
     def status(
         self: SessionAuthorityAccess,
@@ -249,7 +279,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             if isinstance(context, AccessDenied):
                 return context
             session, grant, key = context
-            return project_access_status(
+            status = project_access_status(
                 session=session,
                 ancestors=() if session is None else self._ancestors(session),
                 grant=grant,
@@ -258,6 +288,20 @@ class SessionAuthorityAccess(SessionAuthorityCore):
                 context=facts.context,
                 published_authority=published_authority,
                 provider=provider,
+            )
+            suspended = self._suspended.get(session_id) if session is None else None
+            if suspended is None:
+                return status
+            # The suspended lease is named so its own frontend knows to present a fresh proof on this connection.
+            return status.model_copy(
+                update={
+                    "profile_id": suspended.binding.profile_id,
+                    "session_id": suspended.session_id,
+                    "session_expires_at": suspended.expires_at,
+                    "profile_bound": suspended.binding == facts.profile.binding,
+                    "denial": AccessDenialCode.CUSTODY_RECOVERING,
+                    "recovery_remaining_seconds": self._recovery_remaining_seconds(),
+                }
             )
 
     def disclosure_page(
@@ -272,6 +316,9 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             facts = self._facts(connection_id)
             if isinstance(facts, AccessDenied):
                 return facts
+            recovering = self._recovering(session_id)
+            if recovering is not None:
+                return recovering
             context = self._status_context(facts, connection_id, session_id)
             if isinstance(context, AccessDenied):
                 return context
@@ -289,6 +336,9 @@ class SessionAuthorityAccess(SessionAuthorityCore):
     def _status_context(
         self: SessionAuthorityAccess, facts: SessionAuthorityFacts, connection_id: UUID, session_id: UUID
     ) -> tuple[AccessSession | None, AutomationGrant | None, ApiKeyRecord | None] | AccessDenied:
+        suspended = self._suspended.get(session_id)
+        if suspended is not None and suspended.connection_id != connection_id:
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         session = self._sessions.get(session_id)
         if session is not None and session.connection_id != connection_id:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)

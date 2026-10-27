@@ -10,7 +10,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable, Generator, Iterator
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import contextmanager
+from contextlib import AbstractContextManager, contextmanager
 from contextvars import copy_context
 from datetime import timedelta
 from pathlib import Path
@@ -59,7 +59,7 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_definitions,
     build_user_profile_operation_registrations,
 )
-from cadrumo.application.user_profile.session_retirement import SessionRetirement
+from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.core.profile_session import ReceiptBindingRefusal
 from cadrumo.core.time.utc import UtcInstant
@@ -80,6 +80,7 @@ from ..automation_lifecycle_service import (
 )
 from ..session_authority import ProfileSessionAuthority
 from ..session_authority_contracts import SessionAuthorityFacts
+from ..session_authority_core import CustodyRecoveryPolicy
 
 pytestmark = [
     pytest.mark.integration,
@@ -140,6 +141,7 @@ class AdmissionOwner:
         self.after_capture: Callable[[UUID], None] = lambda _session_id: None
         self.facts_failure: AutomationCustodyError | None = None
         self.lost = False
+        self.worker_lost = False
 
     @contextmanager
     def admission_guard(self) -> Generator[None]:
@@ -2059,5 +2061,389 @@ def test_briefly_unobservable_worker_keeps_every_session_until_it_answers(subjec
 
     subject.owner.facts_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
     subject.owner.lost = True
+    assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
+    assert {item.reason for item in retired} == {AccessDenialCode.CUSTODY_UNAVAILABLE}
+
+
+class RecoveryClock:
+    """The monotonic clock that measures only the recovery window and the repeat-loss interval."""
+
+    def __init__(self) -> None:
+        self.now = 5_000.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+class Recovery:
+    """An authority whose positive worker loss suspends leases under a fresh, empty owner."""
+
+    def __init__(self, subject: Subject) -> None:
+        self.subject = subject
+        self.clock = RecoveryClock()
+        self.retired: list[SessionRetirement] = []
+        self.suspended: list[tuple[AccessSession, ...]] = []
+        self.rebound: list[tuple[AccessSession, ...]] = []
+        subject.authority = ProfileSessionAuthority(
+            binding=subject.owner.current.profile.binding,
+            runtime_boot_id=subject.owner.current.context.runtime_boot_id,
+            owner=subject.owner,
+            custody=subject.store,
+            issuer=CustodyAutomationKeyIssuer(),
+            retired=self.retired.append,
+            replace_lost_owner=self._replace_lost_owner,
+            suspended=self.suspended.append,
+            rebound=self.rebound.append,
+            recovery=CustodyRecoveryPolicy(monotonic=self.clock),
+        )
+
+    def _replace_lost_owner(self) -> AdmissionOwner:
+        # The fresh incarnation holds no custody of any lease.
+        owner = self.subject.owner
+        owner.worker_lost = False
+        owner.active.clear()
+        owner.human_bound.clear()
+        return owner
+
+    def lose_worker(self) -> tuple[UUID, ...]:
+        self.subject.owner.worker_lost = True
+        return self.subject.authority.revalidate_sessions()
+
+    def status(self, session: AccessSession) -> ProfileAccessStatus | AccessDenied:
+        return self.subject.authority.status(
+            connection_id=session.connection_id,
+            session_id=session.session_id,
+            published_authority=Availability.UNAVAILABLE,
+            provider=Availability.NOT_REQUIRED,
+        )
+
+    def live(self, session: AccessSession) -> bool:
+        status = self.status(session)
+        return (
+            isinstance(status, ProfileAccessStatus)
+            and status.denial is None
+            and status.session_id == session.session_id
+            and status.credential_authenticated
+        )
+
+
+@pytest.fixture
+def recovery(subject: Subject) -> Recovery:
+    return Recovery(subject)
+
+
+def _read_guard(subject: Subject, session: AccessSession) -> AbstractContextManager[object]:
+    definitions = build_user_profile_operation_definitions()
+    registry = OperationRegistry(
+        definitions=definitions, public_registrations=build_user_profile_operation_registrations(definitions)
+    )
+    definition_id = "user-profile.field-mutation"
+    return subject.authority.operation_guard(
+        connection_id=session.connection_id,
+        session_id=session.session_id,
+        request=OperationAccessRequest(
+            profile_id=session.binding.profile_id,
+            definition_id=definition_id,
+            action=AccessAction.COMMIT,
+            frontend=OperationFrontendProjection.CLI,
+            periods=frozenset(),
+            period_independent=True,
+            destination_id=uuid4(),
+        ),
+        policy=OperationAccessPolicy(
+            definition_id=definition_id,
+            definition_contract_digest=registry.lookup_public_contract(definition_id).definition_contract_digest,
+            actions=frozenset({AccessAction.COMMIT}),
+            disclosures=frozenset(),
+            periods=None,
+            allow_period_independent=True,
+            backend=Availability.AVAILABLE,
+            published_authority=Availability.AVAILABLE,
+            provider=Availability.NOT_REQUIRED,
+            transaction_authority_required=False,
+        ),
+        registry=registry,
+    )
+
+
+def test_worker_loss_suspends_every_lease_and_refuses_with_the_remaining_window(
+    subject: Subject, recovery: Recovery
+) -> None:
+    api, human, child, _ = _attended_tree(subject)
+
+    assert recovery.lose_worker() == ()
+    assert not recovery.retired
+    assert {lease.session_id for batch in recovery.suspended for lease in batch} == {
+        api.session_id,
+        human.session_id,
+        child.session_id,
+    }
+    status = recovery.status(human)
+    assert isinstance(status, ProfileAccessStatus)
+    assert status.session_id == human.session_id and status.session_expires_at == human.expires_at
+    assert status.denial is AccessDenialCode.CUSTODY_RECOVERING
+    assert status.recovery_remaining_seconds == 120 and not status.credential_authenticated
+
+    recovery.clock.now += 30.5
+    refused = subject.authority.refresh_api_key(connection_id=subject.connection, session_id=api.session_id)
+    assert refused == AccessDenied(code=AccessDenialCode.CUSTODY_RECOVERING, recovery_remaining_seconds=90)
+    with pytest.raises(ProfileAccessRefusedError) as raised, _read_guard(subject, api):
+        pytest.fail("a suspended lease granted an operation")
+    assert raised.value.reason is AccessDenialCode.CUSTODY_RECOVERING
+    assert raised.value.recovery_remaining_seconds == 90
+
+
+def test_unrebound_leases_retire_as_custody_unavailable_when_the_window_ends(
+    subject: Subject, recovery: Recovery
+) -> None:
+    api, human, child, _ = _attended_tree(subject)
+    recovery.lose_worker()
+
+    recovery.clock.now += 119
+    assert subject.authority.revalidate_sessions() == ()
+    recovery.clock.now += 1
+    assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
+    assert {item.reason for item in recovery.retired} == {AccessDenialCode.CUSTODY_UNAVAILABLE}
+    status = recovery.status(human)
+    assert not isinstance(status, ProfileAccessStatus) or status.denial is not AccessDenialCode.CUSTODY_RECOVERING
+    fresh = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(fresh, AccessSession) and fresh.session_id != human.session_id
+
+
+def test_a_lease_whose_own_deadline_passes_in_the_window_retires_at_that_deadline(
+    subject: Subject, recovery: Recovery
+) -> None:
+    api = subject.admit()
+    assert isinstance(api, AccessSession)
+    recovery.lose_worker()
+    subject.advance((api.expires_at - subject.owner.current.context.now).total_seconds())
+
+    assert subject.authority.revalidate_sessions() == (api.session_id,)
+    assert [item.reason for item in recovery.retired] == [AccessDenialCode.SESSION_EXPIRED]
+
+
+def test_human_rebind_on_the_same_connection_keeps_the_identity_and_never_renews(
+    subject: Subject, recovery: Recovery
+) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    subject.advance(100)
+    recovery.lose_worker()
+    subject.advance(10)
+
+    rebound = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(rebound, AccessSession)
+    assert rebound.session_id == human.session_id and rebound.client_id == human.client_id
+    assert rebound.expires_at <= human.expires_at
+    assert rebound.issued_at == subject.owner.current.context.now
+    assert human.session_id in subject.owner.human_bound
+    assert recovery.live(rebound)
+    assert not recovery.retired
+
+
+def test_a_proof_from_another_connection_is_an_ordinary_sign_in_and_rebinds_nothing(
+    subject: Subject, recovery: Recovery
+) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+    other = uuid4()
+    subject.owner.connections[other] = human.client_id
+
+    fresh = subject.authority.admit_human(connection_id=other)
+
+    assert isinstance(fresh, AccessSession) and fresh.session_id != human.session_id
+    status = recovery.status(human)
+    assert isinstance(status, ProfileAccessStatus) and status.denial is AccessDenialCode.CUSTODY_RECOVERING
+
+
+def test_attended_child_returns_with_its_parent_while_its_connection_is_open(
+    subject: Subject, recovery: Recovery
+) -> None:
+    api, human, child, recipient = _attended_tree(subject)
+    recovery.lose_worker()
+    # The API lease's connection is the person's; only the key can rebind it.
+    rebound = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(rebound, AccessSession) and rebound.session_id == human.session_id
+    assert recovery.live(child)
+    assert child.session_id in subject.owner.active
+    assert {lease.session_id for batch in recovery.rebound for lease in batch} >= {child.session_id}
+    status = recovery.status(api)
+    assert isinstance(status, ProfileAccessStatus) and status.denial is AccessDenialCode.CUSTODY_RECOVERING
+    assert recipient in subject.owner.connections
+
+
+def test_attended_child_whose_connection_closed_does_not_return(subject: Subject, recovery: Recovery) -> None:
+    _, human, child, recipient = _attended_tree(subject)
+    recovery.lose_worker()
+    subject.authority.disconnect(recipient)
+
+    rebound = subject.authority.admit_human(connection_id=subject.connection)
+
+    assert isinstance(rebound, AccessSession) and rebound.session_id == human.session_id
+    assert child.session_id in {item.session_id for item in recovery.retired}
+    assert child.session_id not in subject.owner.active
+
+
+def test_children_of_a_parent_that_never_rebinds_retire_with_it(subject: Subject, recovery: Recovery) -> None:
+    _, human, child, _ = _attended_tree(subject)
+    recovery.lose_worker()
+    recovery.clock.now += 120
+
+    retired = set(subject.authority.revalidate_sessions())
+
+    assert {human.session_id, child.session_id} <= retired
+
+
+def test_api_key_lease_rebinds_only_when_its_key_is_presented_again(subject: Subject, recovery: Recovery) -> None:
+    api = subject.admit()
+    assert isinstance(api, AccessSession)
+    recovery.lose_worker()
+
+    refused = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(refused, AccessDenied) and refused.code is AccessDenialCode.CUSTODY_RECOVERING
+    status = recovery.status(api)
+    assert isinstance(status, ProfileAccessStatus) and status.denial is AccessDenialCode.CUSTODY_RECOVERING
+
+    rebound = subject.admit()
+
+    assert isinstance(rebound, AccessSession)
+    assert rebound.session_id == api.session_id and rebound.expires_at <= api.expires_at
+    assert api.session_id in subject.owner.active
+    assert recovery.live(rebound)
+
+
+def test_api_key_rebind_rechecks_the_grant(subject: Subject, recovery: Recovery) -> None:
+    api = subject.admit()
+    assert isinstance(api, AccessSession)
+    recovery.lose_worker()
+    LifecycleOwner(subject, api).set_profile_lock(generation=subject.owner.current.profile.lock_generation, locked=True)
+
+    refused = subject.admit()
+
+    assert isinstance(refused, AccessDenied)
+    assert api.session_id not in subject.owner.active
+
+
+def test_a_second_loss_within_the_repeat_interval_retires_everything_at_once(
+    subject: Subject, recovery: Recovery
+) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+    rebound = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(rebound, AccessSession) and rebound.session_id == human.session_id
+    recovery.clock.now += 599
+
+    assert recovery.lose_worker() == (human.session_id,)
+    assert len(recovery.suspended) == 1
+    assert [item.reason for item in recovery.retired] == [AccessDenialCode.CUSTODY_UNAVAILABLE]
+    status = recovery.status(human)
+    assert not isinstance(status, ProfileAccessStatus) or status.denial is not AccessDenialCode.CUSTODY_RECOVERING
+
+
+def test_a_loss_after_the_repeat_interval_opens_a_new_window(subject: Subject, recovery: Recovery) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+    assert isinstance(subject.authority.admit_human(connection_id=subject.connection), AccessSession)
+    recovery.clock.now += 600
+
+    assert recovery.lose_worker() == ()
+    assert len(recovery.suspended) == 2
+
+
+def test_sign_out_during_suspension_ends_the_session_with_no_rebind(subject: Subject, recovery: Recovery) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+
+    subject.authority.require_human_sign_out(connection_id=subject.connection, session_id=human.session_id)
+    assert subject.authority.retire_human_sessions() == (human.session_id,)
+
+    assert [item.kind for item in recovery.retired] == [SessionRetirementKind.SIGNED_OUT]
+    fresh = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(fresh, AccessSession) and fresh.session_id != human.session_id
+
+
+def test_another_connection_cannot_sign_out_a_suspended_session(subject: Subject, recovery: Recovery) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+    other = uuid4()
+    subject.owner.connections[other] = human.client_id
+
+    with pytest.raises(ProfileAccessRefusedError) as raised:
+        subject.authority.require_human_sign_out(connection_id=other, session_id=human.session_id)
+    assert raised.value.reason is AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+
+
+def test_positive_os_lock_during_suspension_ends_the_session_with_no_rebind(
+    subject: Subject, recovery: Recovery
+) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+
+    assert subject.authority.retire_human_sessions(
+        reason=AccessDenialCode.OS_LOCKED, kind=SessionRetirementKind.REVOKED
+    ) == (human.session_id,)
+
+    assert [item.reason for item in recovery.retired] == [AccessDenialCode.OS_LOCKED]
+    fresh = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(fresh, AccessSession) and fresh.session_id != human.session_id
+
+
+def test_own_session_lock_during_suspension_ends_it_with_no_rebind(subject: Subject, recovery: Recovery) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+
+    locked = subject.authority.lock_session(
+        connection_id=subject.connection, session_id=human.session_id, target_session_id=human.session_id
+    )
+
+    assert locked == (human.session_id,)
+    fresh = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(fresh, AccessSession) and fresh.session_id != human.session_id
+
+
+def test_profile_lock_generation_advance_retires_suspended_leases_at_once(subject: Subject, recovery: Recovery) -> None:
+    api, human, child, _ = _attended_tree(subject)
+    recovery.lose_worker()
+    LifecycleOwner(subject, human).set_profile_lock(
+        generation=subject.owner.current.profile.lock_generation + 1, locked=False
+    )
+
+    assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
+    assert AccessDenialCode.PROFILE_LOCKED in {item.reason for item in recovery.retired}
+
+
+def test_logout_of_the_originating_os_login_retires_suspended_human_leases(
+    subject: Subject, recovery: Recovery
+) -> None:
+    human = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(human, AccessSession)
+    recovery.lose_worker()
+    subject.owner.current = SessionAuthorityFacts(
+        subject.owner.current.profile,
+        changed(subject.owner.current.context, login_contexts=()),
+    )
+
+    assert subject.authority.revalidate_sessions() == (human.session_id,)
+    fresh = subject.authority.admit_human(connection_id=subject.connection)
+    assert isinstance(fresh, AccessDenied)
+
+
+def test_without_a_replacement_owner_a_lost_worker_still_retires_every_lease(subject: Subject) -> None:
+    retired: list[SessionRetirement] = []
+    subject.authority._retired = retired.append
+    api, human, child, _ = _attended_tree(subject)
+    subject.owner.worker_lost = True
+    subject.owner.facts_failure = AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+    subject.owner.lost = True
+
     assert set(subject.authority.revalidate_sessions()) == {api.session_id, human.session_id, child.session_id}
     assert {item.reason for item in retired} == {AccessDenialCode.CUSTODY_UNAVAILABLE}

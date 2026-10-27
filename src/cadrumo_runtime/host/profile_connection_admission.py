@@ -95,6 +95,9 @@ class ProfileConnectionAdmissionMixin:
                         retired=self._publish_retirement,
                         operations_advanced=partial(self._operations_advanced, profile_id),
                         model_runs=partial(self._relay_model_run, profile_id),
+                        suspended=partial(self._sessions_suspended, profile_id),
+                        rebound=self._cue_lease_holders,
+                        recovery=self._custody_recovery,
                     )
                     if not self._admitting():
                         raise RefusalError(RefusalCode.DRAINING)
@@ -209,13 +212,14 @@ class ProfileConnectionAdmissionMixin:
     ) -> None:
         if not self._admitting():
             raise RefusalError(RefusalCode.DRAINING)
-        self._retire_invalid_prior_session(connection, host, context, request)
+        rebinding = self._retire_invalid_prior_session(connection, host, context, request)
         observation = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
         if not observation.active or (request.method in {"password", "receipt"} and not observation.unlocked):
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
         connection.method = request.method
         connection.persist_human_receipt = request.persist_receipt
-        if request.method in {"password", "receipt"}:
+        if request.method in {"password", "receipt"} and not rebinding:
+            # A rebind keeps the client the suspended lease was issued to.
             connection.client_id = uuid4()
         with self._guard:
             if not self._admitting():
@@ -229,18 +233,23 @@ class ProfileConnectionAdmissionMixin:
         host: RuntimeProfileHost,
         context: ConnectionContext,
         request: ProfileLogin,
-    ) -> None:
+    ) -> bool:
+        """Retire a prior session this login replaces; return whether it is a suspended one the login may rebind."""
         if connection.session_id is None:
-            return
+            return False
         try:
             prior = self._status(connection, host, request.request_id, connection.session_id)
-            valid = isinstance(prior, ProfileStatus) and prior.status.denial is None
+            denial = prior.status.denial if isinstance(prior, ProfileStatus) else prior.code
         except AutomationCustodyError:
-            valid = False
-        if valid:
+            denial = AccessDenialCode.CUSTODY_UNAVAILABLE
+        if denial is None:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+        if denial is AccessDenialCode.CUSTODY_RECOVERING:
+            # The session waits for exactly this connection's fresh proof; the authority decides whether it fits.
+            return True
         host.authority.disconnect(context.connection_id)
         connection.session_id = None
+        return False
 
     def _prepare_enrollment(
         self: RuntimeProfileConnections,

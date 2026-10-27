@@ -230,21 +230,23 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
                 assert isinstance(fresh, ProfileStatus) and fresh.status.session_id != api_id
                 assert fresh.status.session_id is not None
                 # Abruptly lose the actual test-owned worker job, leaving both
-                # frontend channels connected. A replacement needs new proof.
-                lost_worker = profiles._profiles[profile].owner._worker
+                # frontend channels connected. Each lease waits, granting nothing,
+                # for its own connection to present its proof again.
+                host = profiles._profiles[profile]
+                lost_worker = host.owner._worker
                 assert lost_worker is not None
                 lost_worker.close()
+                suspended = {fresh.status.session_id, human_id}
                 deadline = time.monotonic() + 3
-                while profile in profiles._profiles and time.monotonic() < deadline:
+                while not suspended <= host.authority._suspended.keys() and time.monotonic() < deadline:
                     profiles.poll()
                     time.sleep(0.02)
-                assert profile not in profiles._profiles
-                fresh = login(api, profile, "api_key", secret.get_secret_value())
-                assert isinstance(fresh, ProfileStatus) and fresh.status.session_id is not None
+                assert suspended <= host.authority._suspended.keys()
+                assert profiles._profiles[profile] is host and host.owner._worker is not lost_worker
+                rebound = login(api, profile, "api_key", secret.get_secret_value())
+                assert isinstance(rebound, ProfileStatus) and rebound.status.session_id == fresh.status.session_id
                 resumed_human = login(human, profile, "password", PROFILE_INPUT.encode())
-                assert isinstance(resumed_human, ProfileStatus)
-                human_id = resumed_human.status.session_id
-                assert human_id is not None
+                assert isinstance(resumed_human, ProfileStatus) and resumed_human.status.session_id == human_id
                 enrollment.native.unavailable = True
                 api_lost = api.session(
                     SessionRequest(

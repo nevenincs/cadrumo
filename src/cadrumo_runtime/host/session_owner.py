@@ -54,6 +54,8 @@ class ProfileWorkerSessionOwner:
         self._observe, self._human_secret, self._guard = observe, human_secret, guard
         self._worker: ProfileWorkerProcess | None = None
         self._lost = False
+        self._worker_lost = False
+        self._drained = False
         self._authorization = authorization
         self._worker_script = worker_script
         self._wall_clock = wall_clock
@@ -95,7 +97,7 @@ class ProfileWorkerSessionOwner:
             except RefusalError as error:
                 if error.reason is RefusalCode.DEADLINE_EXCEEDED:
                     raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
-                self.close()
+                self._contain_lost_worker()
                 raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
         facts = self._observe(connection_id)
         with self._lifecycle_guard:
@@ -113,6 +115,21 @@ class ProfileWorkerSessionOwner:
     def lost(self) -> bool:
         """Whether this worker incarnation has irreversibly lost its authority."""
         return self._lost
+
+    @property
+    def worker_lost(self) -> bool:
+        """Whether the worker failed, exited or disconnected, as opposed to a drain the runtime began."""
+        return self._worker_lost and not self._drained
+
+    def _contain_lost_worker(self) -> None:
+        self._note_worker_lost()
+        self.close()
+
+    def _note_worker_lost(self) -> None:
+        # A failure after a drain began belongs to that drain, not to a worker loss.
+        with self._lifecycle_guard:
+            if not self._stopping.is_set():
+                self._worker_lost = True
 
     def operation_worker(self) -> ProfileWorkerProcess:
         """Borrow an already admitted worker without holding the guard during callbacks."""
@@ -215,7 +232,8 @@ class ProfileWorkerSessionOwner:
                     self._retiring.append(candidate)
             # The constructor has attempted immediate containment. Keep failed
             # releases and callbacks owned even after a wire refusal.
-            self.begin_drain()
+            self._note_worker_lost()
+            self._fence()
         if constructing and self._stopping.is_set() and candidate is None and worker is None:
             self._construction_failure = True
         return candidate
@@ -238,7 +256,7 @@ class ProfileWorkerSessionOwner:
         # A queue timeout leaves the exact healthy worker untouched; every
         # other failed dispatched exchange fences custody.
         if not undispatched_timeout:
-            self.close()
+            self._contain_lost_worker()
 
     def prepare(self) -> None:
         """Start this profile's worker before any sign-in, holding no key or lease, so the sign-in finds it ready."""
@@ -251,7 +269,9 @@ class ProfileWorkerSessionOwner:
         if not self._api_guard.acquire(blocking=False):
             raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
         try:
-            with self._custody() as worker:
+            # Outside the fence a key may wait for a launch already under way, as a sign-in does:
+            # a replacement for a lost worker starts before the key that rebinds to it arrives.
+            with self._custody(await_construction=True) as worker:
                 # This is the existing 30-second preparation/install budget,
                 # captured after bounded native construction and never renewed.
                 deadline = time.monotonic() + 30
@@ -420,7 +440,16 @@ class ProfileWorkerSessionOwner:
             raise ExceptionGroup("worker containment failed", failures)
 
     def begin_drain(self) -> ProfileWorkerProcess | None:
-        """Fence construction and take the published worker without a profile guard."""
+        """Fence construction and take the published worker without a profile guard.
+
+        A drain ends this incarnation on purpose: an earlier failure no longer
+        counts as a worker loss.
+        """
+        with self._lifecycle_guard:
+            self._drained = True
+            return self._fence()
+
+    def _fence(self) -> ProfileWorkerProcess | None:
         with self._lifecycle_guard:
             self._stopping.set()
             self._lost = True

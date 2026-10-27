@@ -28,7 +28,7 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
         with self.owner.admission_guard():
             return frozenset(
                 session.originating_login_id
-                for session in self._sessions.values()
+                for session in self._leases()
                 if session.kind is not SessionKind.API_KEY and session.originating_login_id is not None
             )
 
@@ -45,16 +45,14 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
         """
         with self.owner.admission_guard():
             self._human_admission_generation += 1
-            retired = {
-                session.session_id for session in self._sessions.values() if session.kind is not SessionKind.API_KEY
-            }
+            retired = {session.session_id for session in self._leases() if session.kind is not SessionKind.API_KEY}
             self._retire(retired, reason=reason, kind=kind)
             return tuple(sorted(retired))
 
     def disconnect(self: SessionAuthorityLifecycle, connection_id: UUID) -> None:
         """Irreversibly retire this connection and all of its dependent leases."""
         with self.owner.admission_guard():
-            retired = {item.session_id for item in self._sessions.values() if item.connection_id == connection_id}
+            retired = {item.session_id for item in self._leases() if item.connection_id == connection_id}
             self._retire(retired)
 
     def revalidate_sessions(self: SessionAuthorityLifecycle) -> tuple[UUID, ...]:
@@ -76,16 +74,17 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
         with self.owner.admission_guard():
             if self._pending_retirements:
                 return monotonic_now
-            return min(
-                (
-                    min(
-                        session.issued_monotonic + (session.expires_at - session.issued_at).total_seconds(),
-                        monotonic_now + (session.expires_at - wall_now).total_seconds(),
-                    )
-                    for session in self._sessions.values()
-                ),
-                default=None,
-            )
+            lapses = [
+                min(
+                    session.issued_monotonic + (session.expires_at - session.issued_at).total_seconds(),
+                    monotonic_now + (session.expires_at - wall_now).total_seconds(),
+                )
+                for session in self._leases()
+            ]
+            if self._suspended and self._recovery_deadline is not None:
+                # The window is measured on the recovery clock; translate what is left of it.
+                lapses.append(monotonic_now + self._recovery_deadline - self._recovery.monotonic())
+            return min(lapses, default=None)
 
     def invalidate_automation(self: SessionAuthorityLifecycle, change: AutomationDenial) -> None:
         """Trusted lifecycle hook: fence matching leases before durable denial.
@@ -98,7 +97,7 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
                 raise ValueError("denial does not name this session authority")
             retired = {
                 session.session_id
-                for session in self._sessions.values()
+                for session in self._leases()
                 if change.kind is AutomationDenialKind.PROFILE_LOCK
                 or (change.kind is AutomationDenialKind.ALL and session.kind is not SessionKind.HUMAN)
                 or (change.kind is AutomationDenialKind.KEY and session.key_id == change.target_id)
@@ -126,4 +125,4 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
     def _close(self: SessionAuthorityLifecycle, *, reason: AccessDenialCode = AccessDenialCode.RUNTIME_CHANGED) -> None:
         with self.owner.admission_guard():
             self._closed = True
-            self._retire(set(self._sessions) | self._pending_retirements, reason=reason)
+            self._retire(set(self._sessions) | set(self._suspended) | self._pending_retirements, reason=reason)

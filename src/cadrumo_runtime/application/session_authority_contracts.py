@@ -35,6 +35,15 @@ class SessionAuthorityOwner(Protocol):
         """Whether custody was irreversibly lost, as opposed to briefly unobservable."""
         ...
 
+    @property
+    def worker_lost(self) -> bool:
+        """Whether the worker itself was positively lost: contained after a failure, exited or disconnected.
+
+        A worker the runtime drained on purpose is lost to its owner too, but
+        is not a worker loss.
+        """
+        ...
+
     def prepare_api_admission(self, connection_id: UUID) -> AbstractContextManager[float]:
         """Prepare the exact worker without keys or leases; lend its original deadline.
 
