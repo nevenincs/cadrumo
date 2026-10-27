@@ -15,7 +15,9 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, ValidationError
 
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.model_runs import MODEL_RUN_MODEL_ID_PATTERN
+from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from .host.credential_frame import wipe
 from .providers.application.ports import ProviderCatalogUnavailableError
@@ -262,6 +264,10 @@ class AdminServer:
             result = {"kind": "refused", "code": "catalog_unavailable"}
         except (ValueError, UnicodeDecodeError):
             result = {"kind": "refused", "code": "invalid_request"}
+        except FrontendRefusedError as error:
+            # A lease the runtime keeps suspended returns by itself and nothing was done: ask again.
+            recovering = error.reason == AccessDenialCode.CUSTODY_RECOVERING.value
+            result = {"kind": "refused", "code": "busy" if recovering else "service_failed"}
         except Exception:
             result = {"kind": "refused", "code": "service_failed"}
         finally:

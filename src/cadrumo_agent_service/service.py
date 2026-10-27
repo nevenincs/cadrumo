@@ -15,6 +15,7 @@ from threading import Event, Lock, RLock, Thread
 from time import monotonic
 from typing import Any, override
 from urllib.parse import urlencode
+from uuid import uuid4
 
 from pydantic import SecretStr
 
@@ -22,8 +23,10 @@ from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_environment import storage_mode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.transport.service_client import InstalledServiceClient
+from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
+from cadrumo_client.transport.service_client import SERVICE_EXCHANGE_TIMEOUT_SECONDS, InstalledServiceClient
 
 from .adapters.agent_background_runs import BackgroundRunEndpoint, HostedBackgroundRuns
 from .adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
@@ -175,6 +178,7 @@ class AgentService:
         self._root = storage_root
         self._guard = RLock()
         self._closing = Event()
+        self._reconnecting = Event()
         self._start_request_guard = Lock()
         self._start_thread: Thread | None = None
         self._stop_thread: Thread | None = None
@@ -585,12 +589,60 @@ class AgentService:
         self._forget_reads()
         return attempt.observe()
 
+    def hold_for_recovery(self) -> int | None:
+        """Say whether the runtime keeps this service's lease suspended, and for how many more whole seconds.
+
+        A lost profile worker suspends every lease of the profile for a
+        window, and the runtime restores a service's lease when its parent
+        returns. Until then the service waits as it is: its tree and
+        conversations stay, what needs the lease is answered as busy, and
+        nothing claims, because a claim made meanwhile would withdraw the very
+        lease that is waited for. The lease's own status is read instead.
+        """
+        remaining = self._recovery_seconds()
+        if remaining is None:
+            if self._reconnecting.is_set():
+                self._reconnecting.clear()
+                _LOGGER.info("agent service reconnected")
+            return None
+        if not self._reconnecting.is_set():
+            self._reconnecting.set()
+            _LOGGER.info("agent service reconnecting seconds=%d", remaining)
+        return remaining
+
+    def _recovery_seconds(self) -> int | None:
+        """Read the lease's own status; the window's seconds when it is suspended, otherwise ``None``."""
+        lease = self.client.lease
+        if lease is None or self._closing.is_set():
+            return None
+        try:
+            reply = self.client.connection.session(
+                SessionRequest(
+                    action="session_status",
+                    request_id=uuid4(),
+                    profile_id=lease.profile_id,
+                    session_id=lease.session_id,
+                ),
+                deadline=monotonic() + SERVICE_EXCHANGE_TIMEOUT_SECONDS,
+            )
+        except RefusalError:
+            # A connection that is gone ends the claim that follows, as it always did.
+            return None
+        if isinstance(reply, ProfileStatus) and reply.status.denial is AccessDenialCode.CUSTODY_RECOVERING:
+            return reply.status.recovery_remaining_seconds or 0
+        if isinstance(reply, AccessRefusal) and reply.code is AccessDenialCode.CUSTODY_RECOVERING:
+            return reply.recovery_remaining_seconds or 0
+        return None
+
     def start(self) -> dict[str, Any]:
         """Prepare stores and launch one tree under an exclusive cross-process reservation."""
         with self._guard:
             started = monotonic()
             if self._closing.is_set():
                 return {"event": "refused", "code": "service_stopping"}
+            if self._reconnecting.is_set():
+                # The credentials cannot be read until the lease returns, which is no sign-out: ask again.
+                return {"event": "refused", "code": "busy"}
             if self._auth_attempt is not None and self._auth_attempt.active:
                 return {"event": "refused", "code": "busy"}
             lease = self.client.lease

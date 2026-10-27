@@ -29,6 +29,8 @@ _LOGGER = get_logger(__name__)
 _OUTPUT_GUARD = Lock()
 _MAX_STARTUP_FRAME_BYTES = 64 * 1024
 _CLAIM_RETRY_SECONDS = 1.0
+_RECOVERY_SLACK_SECONDS = 1.0
+"""How long past a recovery window the service waits for the runtime's cue before it reads its lease again."""
 
 
 def _process_uptime() -> float:
@@ -50,6 +52,19 @@ def _read_startup_frame(stdin_fd: int) -> bytearray:
         if part == b"\n":
             break
     return line
+
+
+def _wait_out_recovery(service: AgentService, wake: Event) -> bool:
+    """Wait for a suspended lease to return, and say whether it was suspended.
+
+    The runtime cues this connection when its parent rebinds and again if the
+    window ends; only then is the lease claimed, read or replaced.
+    """
+    remaining = service.hold_for_recovery()
+    if remaining is None:
+        return False
+    wake.wait(remaining + _RECOVERY_SLACK_SECONDS)
+    return True
 
 
 def _publish(document: dict[str, object]) -> None:
@@ -162,6 +177,8 @@ def _serve() -> None:
         while not stop.is_set():
             # Clear before claiming, so a push that lands during the claim wakes the next turn.
             wake.clear()
+            if _wait_out_recovery(service, wake):
+                continue
             try:
                 lease = client.claim()
             except RefusalError as error:

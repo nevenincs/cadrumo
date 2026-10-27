@@ -142,6 +142,9 @@ class FakeService:
         self.emit({"event": "test_agent_started"})
         return {"event": "agent_ready"}
 
+    def hold_for_recovery(self):
+        return None
+
     def observe(self):
         return True
 
@@ -304,6 +307,9 @@ class FakeService:
 
     def start(self):
         return {"event": "agent_ready"}
+
+    def hold_for_recovery(self):
+        return None
 
     def observe(self):
         FakeService.observes += 1
