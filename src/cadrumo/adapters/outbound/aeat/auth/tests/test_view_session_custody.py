@@ -10,7 +10,7 @@ that supplies them is not the behaviour under test.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Iterator, Mapping
+from collections.abc import AsyncGenerator, Generator, Mapping
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 
@@ -89,7 +89,7 @@ class _OperationHost:
 @contextmanager
 def _certificate_profile(
     tmp_path: Path, operation: PinnedAuthorityOperation, *, tax_id: str = _CERTIFICATE_NIF
-) -> Iterator[None]:
+) -> Generator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(

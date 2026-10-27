@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:e5c248357095e368ec51c0eb1f32a6fac0ba0e4ba61c958c1cca44b2761f4351'
+body_hash: 'sha256:0459a4aa94b3dbe621993280f53671fbbeb5e6e189743e0f8b3d84759d8e97d7'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -54,8 +54,22 @@ related:
 - `S01` `verify:` `ty check on touched files` -> `pass`
 - `S01` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S01` `by:` `high-implementation`
+- `S05` `M` `src/cadrumo/application/auth/sessions.py`
+- `S05` `M` `src/cadrumo/application/auth/protocols.py`
+- `S05` `M` `src/cadrumo/application/live/session.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/authenticator.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/session_store.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_session_custody.py`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo/application/auth/tests src/cadrumo/application/live/tests -k view-or-session` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_session_custody.py -m all` -> `pass`
+- `S05` `verify:` `just check-style` -> `pass`
+- `S05` `verify:` `just check-format` -> `pass`
+- `S05` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S05` `by:` `implementation-engineer-high`
 
 ## Notes
 
 - `S01` just check-types reports 32 findings in other sessions' files, none in `cadrumo_client;` just check-import-boundaries kept all 30 contracts but was unavailable because the tree changed during the run and the cadrumo load-target set was stale from other sessions' modules
 - `S01` The aggregate `dev/quality/metadata/import_load_targets.json` was regenerated with the two new modules but left uncommitted because it carries other sessions' pending changes
+- `S05` Most S05 source landed in another session commit 93775feb30, which swept the shared worktree; the S05 commit carries the remaining test change.
+- `S05` just check-types: 5 diagnostics outside S05 scope `(browser/request_guard.py,` runtime worker startup test); just check-import-boundaries kept 30 of 30 contracts but reported unavailable because the tree changed during the run.
