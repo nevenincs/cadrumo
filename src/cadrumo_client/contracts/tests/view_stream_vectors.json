@@ -1,0 +1,1591 @@
+{
+  "schema": 1,
+  "about": "Conformance vectors for the Sede view stream. A B frame payload is a 16-byte network-order header (u8 version 1, u8 flags with bit 0 the last chunk and no other bit, u16 reserved zero, u32 image sequence, u16 chunk index, u16 chunk count = ceil(image length / 65520), u32 image length 1..2097152) and a body of exactly 65520 bytes for every chunk but the last. headers: accepted headers with their fields and the body length each must carry. header_refusals: headers refused with the given body length; check is the Python diagnostic name. streams: frames read in order on a downstream view connection; announce is a view.image J document, document any other J document, chunk a B payload whose body is the image bytes from offset for length, where image byte k is k mod 251. expect lists what the reader returns in order, or refused_at names the step that refuses and closes the connection. documents: control documents each direction must accept or refuse, in their closed sets.",
+  "layout": {
+    "frame_kind": "B",
+    "control_frame_kind": "J",
+    "refused_frame_kinds": [
+      "E",
+      "S"
+    ],
+    "frame_max_bytes": 65536,
+    "chunk_header_bytes": 16,
+    "chunk_body_bytes": 65520,
+    "image_max_bytes": 2097152,
+    "version": 1,
+    "last_flag": 1,
+    "credit_max_images": 2,
+    "image_pattern_modulus": 251
+  },
+  "headers": [
+    {
+      "name": "one_byte_image",
+      "header": "01010000000000000000000100000001",
+      "sequence": 0,
+      "chunk_index": 0,
+      "chunk_count": 1,
+      "image_length": 1,
+      "last": true,
+      "body_length": 1
+    },
+    {
+      "name": "one_full_chunk",
+      "header": "0101000000000001000000010000fff0",
+      "sequence": 1,
+      "chunk_index": 0,
+      "chunk_count": 1,
+      "image_length": 65520,
+      "last": true,
+      "body_length": 65520
+    },
+    {
+      "name": "first_of_two",
+      "header": "0100000000000007000000020000fff1",
+      "sequence": 7,
+      "chunk_index": 0,
+      "chunk_count": 2,
+      "image_length": 65521,
+      "last": false,
+      "body_length": 65520
+    },
+    {
+      "name": "last_of_two",
+      "header": "0101000000000007000100020000fff1",
+      "sequence": 7,
+      "chunk_index": 1,
+      "chunk_count": 2,
+      "image_length": 65521,
+      "last": true,
+      "body_length": 1
+    },
+    {
+      "name": "largest_image_first",
+      "header": "01000000ffffffff0000002100200000",
+      "sequence": 4294967295,
+      "chunk_index": 0,
+      "chunk_count": 33,
+      "image_length": 2097152,
+      "last": false,
+      "body_length": 65520
+    },
+    {
+      "name": "largest_image_last",
+      "header": "01010000ffffffff0020002100200000",
+      "sequence": 4294967295,
+      "chunk_index": 32,
+      "chunk_count": 33,
+      "image_length": 2097152,
+      "last": true,
+      "body_length": 512
+    }
+  ],
+  "header_refusals": [
+    {
+      "name": "short_header",
+      "header": "010100000000000000000001000000",
+      "body_length": 0,
+      "check": "view_chunk_header_length"
+    },
+    {
+      "name": "version_two",
+      "header": "02010000000000000000000100000001",
+      "body_length": 1,
+      "check": "view_chunk_version"
+    },
+    {
+      "name": "unknown_flag_bit",
+      "header": "01030000000000000000000100000001",
+      "body_length": 1,
+      "check": "view_chunk_reserved"
+    },
+    {
+      "name": "reserved_nonzero",
+      "header": "01010001000000000000000100000001",
+      "body_length": 1,
+      "check": "view_chunk_reserved"
+    },
+    {
+      "name": "last_flag_missing",
+      "header": "01000000000000000000000100000001",
+      "body_length": 1,
+      "check": "view_chunk_last_flag"
+    },
+    {
+      "name": "last_flag_early",
+      "header": "0101000000000000000000020000fff1",
+      "body_length": 65520,
+      "check": "view_chunk_last_flag"
+    },
+    {
+      "name": "index_beyond_count",
+      "header": "0100000000000000000200020000fff1",
+      "body_length": 1,
+      "check": "view_chunk_index"
+    },
+    {
+      "name": "count_mismatch",
+      "header": "0101000000000000000000010000fff1",
+      "body_length": 65520,
+      "check": "view_chunk_count"
+    },
+    {
+      "name": "zero_length",
+      "header": "01000000000000000000000000000000",
+      "body_length": 0,
+      "check": "view_image_length"
+    },
+    {
+      "name": "oversize_image",
+      "header": "01000000000000000000002100200001",
+      "body_length": 65520,
+      "check": "view_image_length"
+    },
+    {
+      "name": "body_short",
+      "header": "0100000000000000000000020000fff1",
+      "body_length": 65519,
+      "check": "view_chunk_body_length"
+    },
+    {
+      "name": "body_long",
+      "header": "01010000000000000000000100000001",
+      "body_length": 2,
+      "check": "view_chunk_body_length"
+    }
+  ],
+  "streams": [
+    {
+      "name": "one_byte_image",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 1,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "01010000000000010000000100000001",
+            "body_offset": 0,
+            "body_length": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "image": {
+            "sequence": 1,
+            "byte_length": 1,
+            "sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d"
+          }
+        }
+      ]
+    },
+    {
+      "name": "one_full_chunk",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 65520,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000001000000010000fff0",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        }
+      ],
+      "expect": [
+        {
+          "image": {
+            "sequence": 1,
+            "byte_length": 65520,
+            "sha256": "38d7e626d639f497cc84c66f2b6e1a191bb287a9d3c4415dc9b20fd4f695de85"
+          }
+        }
+      ]
+    },
+    {
+      "name": "two_chunks",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 3,
+            "byte_length": 65521,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000003000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000003000100020000fff1",
+            "body_offset": 65520,
+            "body_length": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "image": {
+            "sequence": 3,
+            "byte_length": 65521,
+            "sha256": "35871025fdceefab9e08861628c81f41010683f32763fb6dec2161611472c6b6"
+          }
+        }
+      ]
+    },
+    {
+      "name": "largest_image",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 4,
+            "byte_length": 2097152,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040000002100200000",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040001002100200000",
+            "body_offset": 65520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040002002100200000",
+            "body_offset": 131040,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040003002100200000",
+            "body_offset": 196560,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040004002100200000",
+            "body_offset": 262080,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040005002100200000",
+            "body_offset": 327600,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040006002100200000",
+            "body_offset": 393120,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040007002100200000",
+            "body_offset": 458640,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040008002100200000",
+            "body_offset": 524160,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040009002100200000",
+            "body_offset": 589680,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004000a002100200000",
+            "body_offset": 655200,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004000b002100200000",
+            "body_offset": 720720,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004000c002100200000",
+            "body_offset": 786240,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004000d002100200000",
+            "body_offset": 851760,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004000e002100200000",
+            "body_offset": 917280,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004000f002100200000",
+            "body_offset": 982800,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040010002100200000",
+            "body_offset": 1048320,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040011002100200000",
+            "body_offset": 1113840,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040012002100200000",
+            "body_offset": 1179360,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040013002100200000",
+            "body_offset": 1244880,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040014002100200000",
+            "body_offset": 1310400,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040015002100200000",
+            "body_offset": 1375920,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040016002100200000",
+            "body_offset": 1441440,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040017002100200000",
+            "body_offset": 1506960,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040018002100200000",
+            "body_offset": 1572480,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000040019002100200000",
+            "body_offset": 1638000,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004001a002100200000",
+            "body_offset": 1703520,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004001b002100200000",
+            "body_offset": 1769040,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004001c002100200000",
+            "body_offset": 1834560,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004001d002100200000",
+            "body_offset": 1900080,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004001e002100200000",
+            "body_offset": 1965600,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000004001f002100200000",
+            "body_offset": 2031120,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "01010000000000040020002100200000",
+            "body_offset": 2096640,
+            "body_length": 512
+          }
+        }
+      ],
+      "expect": [
+        {
+          "image": {
+            "sequence": 4,
+            "byte_length": 2097152,
+            "sha256": "1e075c8d478ad21844e33e830a695ef03a4d2488b69ee275bd8947618bb1be1e"
+          }
+        }
+      ]
+    },
+    {
+      "name": "latest_wins_skips_sequences",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 10,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000001000000010000000a",
+            "body_offset": 0,
+            "body_length": 10
+          }
+        },
+        {
+          "document": {
+            "kind": "view.state",
+            "origin": "https://sede.agenciatributaria.gob.es",
+            "path": "/Sede/inicio.html",
+            "title": "Sede electrónica",
+            "can_go_back": false,
+            "can_go_forward": false,
+            "loading": false,
+            "phase": "browsing"
+          }
+        },
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 9,
+            "byte_length": 20,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "01010000000000090000000100000014",
+            "body_offset": 0,
+            "body_length": 20
+          }
+        }
+      ],
+      "expect": [
+        {
+          "image": {
+            "sequence": 1,
+            "byte_length": 10,
+            "sha256": "1f825aa2f0020ef7cf91dfa30da4668d791c5d4824fc8e41354b89ec05795ab3"
+          }
+        },
+        {
+          "document": "view.state"
+        },
+        {
+          "image": {
+            "sequence": 9,
+            "byte_length": 20,
+            "sha256": "e7aebf577f60412f0312d442c70a1fa6148c090bf5bab404caec29482ae779e8"
+          }
+        }
+      ]
+    },
+    {
+      "name": "chunk_without_announcement",
+      "steps": [
+        {
+          "chunk": {
+            "header": "0101000000000001000000010000000a",
+            "body_offset": 0,
+            "body_length": 10
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "out_of_order_chunk",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 65521,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000001000100020000fff1",
+            "body_offset": 65520,
+            "body_length": 1
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "repeated_chunk",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 65521,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        }
+      ],
+      "refused_at": 2
+    },
+    {
+      "name": "interleaved_announcement",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 65521,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 2,
+            "byte_length": 10,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        }
+      ],
+      "refused_at": 2
+    },
+    {
+      "name": "interleaved_chunk",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 65521,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000002000100020000fff1",
+            "body_offset": 65520,
+            "body_length": 1
+          }
+        }
+      ],
+      "refused_at": 2
+    },
+    {
+      "name": "document_inside_image",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 65521,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0100000000000001000000020000fff1",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        },
+        {
+          "document": {
+            "kind": "view.state",
+            "origin": "https://sede.agenciatributaria.gob.es",
+            "path": "/Sede/inicio.html",
+            "title": "Sede electrónica",
+            "can_go_back": false,
+            "can_go_forward": false,
+            "loading": false,
+            "phase": "browsing"
+          }
+        }
+      ],
+      "refused_at": 2
+    },
+    {
+      "name": "oversize_announcement",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 2097153,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        }
+      ],
+      "refused_at": 0
+    },
+    {
+      "name": "oversize_chunk_header",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 2097152,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "01000000000000010000002100200001",
+            "body_offset": 0,
+            "body_length": 65520
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "length_differs_from_announcement",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 1,
+            "byte_length": 10,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000001000000010000000b",
+            "body_offset": 0,
+            "body_length": 11
+          }
+        }
+      ],
+      "refused_at": 1
+    },
+    {
+      "name": "sequence_not_increasing",
+      "steps": [
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 5,
+            "byte_length": 10,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        },
+        {
+          "chunk": {
+            "header": "0101000000000005000000010000000a",
+            "body_offset": 0,
+            "body_length": 10
+          }
+        },
+        {
+          "announce": {
+            "kind": "view.image",
+            "sequence": 5,
+            "byte_length": 10,
+            "pixel_width": 1600,
+            "pixel_height": 1000,
+            "css_width": 1280,
+            "css_height": 800,
+            "scale": 1.25
+          }
+        }
+      ],
+      "refused_at": 2
+    }
+  ],
+  "documents": {
+    "accepted": [
+      {
+        "name": "image",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 1,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25
+        }
+      },
+      {
+        "name": "state",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_acquiring",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": true,
+          "phase": "acquiring"
+        }
+      },
+      {
+        "name": "notice_refused",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "request_refused"
+        }
+      },
+      {
+        "name": "notice_offer",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "navigation_offered",
+          "offer": {
+            "offer_id": "0123456789abcdef0123456789abcdef",
+            "url": "https://www.example.org/form?id=1"
+          }
+        }
+      },
+      {
+        "name": "notice_login_unavailable",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "login_unavailable",
+          "offer": {
+            "offer_id": "0123456789abcdef0123456789abcdef",
+            "url": "https://www.example.org/form?id=1"
+          }
+        }
+      },
+      {
+        "name": "notice_dialog",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "dialog_opened",
+          "dialog": {
+            "dialog_id": 1,
+            "dialog_kind": "prompt",
+            "message": "¿Seguro?",
+            "default_prompt": "sí"
+          }
+        }
+      },
+      {
+        "name": "closed",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.closed",
+          "reason": "session_retired"
+        }
+      },
+      {
+        "name": "credit_two",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.credit",
+          "images": 2
+        }
+      },
+      {
+        "name": "input_pointer_down",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 10,
+            "y": 20,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "input_pointer_move",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "move",
+            "x": 10,
+            "y": 20,
+            "button": "none",
+            "click_count": 0,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "input_pointer_edge",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 4095,
+            "y": 4095,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "input_wheel",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "wheel",
+            "x": 0,
+            "y": 0,
+            "delta_x": 0,
+            "delta_y": -10000,
+            "modifiers": 8
+          }
+        }
+      },
+      {
+        "name": "input_key",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "key",
+            "action": "down",
+            "key": "Enter",
+            "code": "Enter",
+            "modifiers": 2
+          }
+        }
+      },
+      {
+        "name": "input_text",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "text",
+            "text": "ññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññññ"
+          }
+        }
+      },
+      {
+        "name": "navigate_home",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.navigate",
+          "verb": "home"
+        }
+      },
+      {
+        "name": "resize",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.resize",
+          "css_width": 4096,
+          "css_height": 1,
+          "scale": 0.5
+        }
+      },
+      {
+        "name": "dialog_accept",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.dialog",
+          "dialog_id": 1,
+          "accept": true,
+          "prompt_text": "sí"
+        }
+      },
+      {
+        "name": "dialog_dismiss",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.dialog",
+          "dialog_id": 4294967295,
+          "accept": false
+        }
+      }
+    ],
+    "refused": [
+      {
+        "name": "unknown_kind",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.frame"
+        }
+      },
+      {
+        "name": "image_extra_member",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 1,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25,
+          "url": "https://x"
+        }
+      },
+      {
+        "name": "image_empty",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 0,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25
+        }
+      },
+      {
+        "name": "image_oversize",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 2097153,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25
+        }
+      },
+      {
+        "name": "image_sequence_beyond_u32",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 4294967296,
+          "byte_length": 1,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25
+        }
+      },
+      {
+        "name": "image_scale_beyond_bound",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 1,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 4.5
+        }
+      },
+      {
+        "name": "image_pixels_beyond_bound",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 1,
+          "pixel_width": 8193,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25
+        }
+      },
+      {
+        "name": "state_origin_with_path",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es/Sede",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_origin_http",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "http://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_path_with_query",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/x.html?nif=1",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_unknown_phase",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "submitting"
+        }
+      },
+      {
+        "name": "notice_offer_code_without_offer",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "popup_offered"
+        }
+      },
+      {
+        "name": "notice_refusal_with_offer",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "request_refused",
+          "offer": {
+            "offer_id": "0123456789abcdef0123456789abcdef",
+            "url": "https://www.example.org/form?id=1"
+          }
+        }
+      },
+      {
+        "name": "notice_offer_javascript",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "download_offered",
+          "offer": {
+            "offer_id": "0123456789abcdef0123456789abcdef",
+            "url": "javascript:alert(1)"
+          }
+        }
+      },
+      {
+        "name": "notice_offer_userinfo",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "download_offered",
+          "offer": {
+            "offer_id": "0123456789abcdef0123456789abcdef",
+            "url": "https://a:b@example.org/"
+          }
+        }
+      },
+      {
+        "name": "notice_offer_id_shape",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "popup_offered",
+          "offer": {
+            "offer_id": "ABC",
+            "url": "https://www.example.org/form?id=1"
+          }
+        }
+      },
+      {
+        "name": "notice_unknown_code",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "form_submitted"
+        }
+      },
+      {
+        "name": "closed_unknown_reason",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.closed",
+          "reason": "crashed"
+        }
+      },
+      {
+        "name": "credit_on_downstream",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.credit",
+          "images": 1
+        }
+      },
+      {
+        "name": "image_on_upstream",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.image",
+          "sequence": 0,
+          "byte_length": 1,
+          "pixel_width": 1600,
+          "pixel_height": 1000,
+          "css_width": 1280,
+          "css_height": 800,
+          "scale": 1.25
+        }
+      },
+      {
+        "name": "credit_zero",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.credit",
+          "images": 0
+        }
+      },
+      {
+        "name": "credit_three",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.credit",
+          "images": 3
+        }
+      },
+      {
+        "name": "pointer_beyond_panel",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 4096,
+            "y": 20,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "pointer_negative",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 10,
+            "y": -1,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "pointer_press_without_button",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 10,
+            "y": 20,
+            "button": "none",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "pointer_move_with_clicks",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "move",
+            "x": 10,
+            "y": 20,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "pointer_float_coordinate",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 1.5,
+            "y": 20,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "modifiers_beyond_mask",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "pointer",
+            "action": "down",
+            "x": 10,
+            "y": 20,
+            "button": "left",
+            "click_count": 1,
+            "modifiers": 16
+          }
+        }
+      },
+      {
+        "name": "text_too_long",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "text",
+            "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      },
+      {
+        "name": "text_control_character",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "text",
+            "text": "a\nb"
+          }
+        }
+      },
+      {
+        "name": "text_empty",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "text",
+            "text": ""
+          }
+        }
+      },
+      {
+        "name": "unknown_input_type",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "script",
+            "source": "1"
+          }
+        }
+      },
+      {
+        "name": "key_unknown_action",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "key",
+            "action": "press",
+            "key": "a",
+            "code": "KeyA",
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "wheel_beyond_bound",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.input",
+          "event": {
+            "type": "wheel",
+            "x": 0,
+            "y": 0,
+            "delta_x": 10001,
+            "delta_y": 0,
+            "modifiers": 0
+          }
+        }
+      },
+      {
+        "name": "navigate_url",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.navigate",
+          "verb": "url"
+        }
+      },
+      {
+        "name": "navigate_with_url_member",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.navigate",
+          "verb": "home",
+          "url": "https://x"
+        }
+      },
+      {
+        "name": "resize_zero",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.resize",
+          "css_width": 0,
+          "css_height": 1,
+          "scale": 1.0
+        }
+      },
+      {
+        "name": "dialog_dismiss_with_text",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.dialog",
+          "dialog_id": 1,
+          "accept": false,
+          "prompt_text": "x"
+        }
+      },
+      {
+        "name": "dialog_id_zero",
+        "direction": "upstream",
+        "document": {
+          "kind": "view.dialog",
+          "dialog_id": 0,
+          "accept": true
+        }
+      }
+    ]
+  }
+}

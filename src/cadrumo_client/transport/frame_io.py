@@ -48,16 +48,36 @@ SESSION_EVENT_FRAME_KIND = b"E"
 _SECRET = b"S"
 
 
+_REPLY_OR_EVENT_KINDS = frozenset({DOCUMENT_FRAME_KIND, SESSION_EVENT_FRAME_KIND})
+
+
 type SecretBearingRequest = ProfileLogin | ProfileResume | PasswordReset | OperationSecret | EnrollmentSubmit
 
 
 def read_frame_payload(channel: ByteChannel, *, kind: bytes, deadline: float) -> bytes:
     """Read exactly one kind-checked bounded frame before interpreting its content."""
+    return read_frame_of_kinds(channel, kinds=frozenset({kind}), deadline=deadline)[1]
+
+
+def read_frame_of_kinds(channel: ByteChannel, *, kinds: frozenset[bytes], deadline: float) -> tuple[bytes, bytes]:
+    """Read one bounded frame whose kind the caller's connection admits, returning kind and payload.
+
+    The kind and size are checked before any payload byte is read. The caller
+    owns closing the channel when this refuses.
+    """
     header = channel.read_exact(5, deadline=deadline)
+    kind = header[:1]
     size = struct.unpack("!I", header[1:])[0]
-    if header[:1] != kind or not 0 < size <= MAXIMUM_FRAME_BYTES:
+    if kind not in kinds or not 0 < size <= MAXIMUM_FRAME_BYTES:
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    return channel.read_exact(size, deadline=deadline)
+    return kind, channel.read_exact(size, deadline=deadline)
+
+
+def encode_frame(kind: bytes, payload: bytes) -> bytes:
+    """Frame one bounded payload under a one-byte kind and its network-order size."""
+    if len(kind) != 1 or not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return kind + struct.pack("!I", len(payload)) + payload
 
 
 def _read_frame(channel: ByteChannel, *, kind: bytes, deadline: float) -> bytes:
@@ -95,12 +115,8 @@ def read_reply_or_event[Model: BaseModel](
 ) -> Model | ConnectionEvent:
     """Demultiplex only at a complete reply boundary, never inside a secret or transfer."""
     try:
-        header = channel.read_exact(5, deadline=deadline)
-        size = struct.unpack("!I", header[1:])[0]
-        if header[:1] not in {DOCUMENT_FRAME_KIND, SESSION_EVENT_FRAME_KIND} or not 0 < size <= MAXIMUM_FRAME_BYTES:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        payload = channel.read_exact(size, deadline=deadline)
-        if header[:1] == SESSION_EVENT_FRAME_KIND:
+        kind, payload = read_frame_of_kinds(channel, kinds=_REPLY_OR_EVENT_KINDS, deadline=deadline)
+        if kind == SESSION_EVENT_FRAME_KIND:
             return decode_document(payload, EventFrame).root
         return decode_document(payload, model)
     except BaseException as error:
@@ -136,7 +152,7 @@ def document_frame(document: BaseModel) -> bytes:
     payload = canonical_json_bytes(document.model_dump(mode="json", exclude=_unnamed_optional_members(document)))
     if not 0 < len(payload) <= MAXIMUM_FRAME_BYTES:
         raise RefusalError(RefusalCode.INVALID_FRAME)
-    return DOCUMENT_FRAME_KIND + struct.pack("!I", len(payload)) + payload
+    return encode_frame(DOCUMENT_FRAME_KIND, payload)
 
 
 def write_document(channel: ByteChannel, document: BaseModel, *, deadline: float) -> None:

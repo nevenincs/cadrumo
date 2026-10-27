@@ -12,7 +12,7 @@ related:
   - '[[2026-06-04-live-auth-decomposition-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:010052b05782c621bba23756f090fae9675f759a4266e2a187ed4af72242fc30'
+body_hash: 'sha256:561e1974c2cd384575a39a8d8a2ef960851c9101ffd791321ac1476f034a036b'
 ---
 
 # `sede-browser` plan
@@ -31,7 +31,7 @@ Decision coverage: `2026-10-27-sede-browser-adr` (accepted) governs every Step. 
 
 Deliver the view stream lane on both legs: the B frame kind and control documents, the runtime host relay with attach binding, and the Rust client lane.
 
-- [ ] `P01.S01` - add the B frame kind confined to a view-connection codec, the 16-byte chunk header, the image assembler with latest-wins and violation refusal, the closed view.* control document models and shared test vectors, while every existing document reader keeps refusing B; `src/cadrumo_client/transport/frame_io.py, new src/cadrumo_client/transport/view_stream.py, new src/cadrumo_client/contracts/view_stream.py, new src/cadrumo_client/contracts/tests/view_stream_vectors.json, src/cadrumo_client/transport/tests`.
+- [x] `P01.S01` - add the B frame kind confined to a view-connection codec, the 16-byte chunk header, the image assembler with latest-wins and violation refusal, the closed view.* control document models and shared test vectors, while every existing document reader keeps refusing B; `src/cadrumo_client/transport/frame_io.py, new src/cadrumo_client/transport/view_stream.py, new src/cadrumo_client/contracts/view_stream.py, new src/cadrumo_client/contracts/tests/view_stream_vectors.json, src/cadrumo_client/transport/tests`.
 - [ ] `P01.S02` - add the runtime host view relay: the worker view channel endpoint beside control and operation channels, the person-connection attach request with a single-use 10 s attach token, view connection admission on the same native peer, two-image credit relay, and immediate unbinding on operation end, session retirement, connection close or violation; `src/cadrumo_runtime/host/worker.py, new src/cadrumo_runtime/host/view_stream_relay.py, src/cadrumo_runtime/host/profile_connection_operations.py, src/cadrumo_runtime/host/profile_connections.py, src/cadrumo_runtime/host/session_events.py, src/cadrumo_runtime/host/tests`.
 - [ ] `P01.S03` - add the Rust view stream client: attach on the person connection, a dedicated verified view connection, B header validation against the shared vectors, image assembly, credit and upstream control writers, and zeroized buffers; `native/application/src/runtime_client.rs, new native/application/src/view_stream.rs, native/application/src/lib.rs`.
 

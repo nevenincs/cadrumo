@@ -1,0 +1,453 @@
+"""Closed control documents and bounds of the Sede view stream.
+
+A view stream runs on its own verified connection on each leg: profile worker
+to runtime host, and runtime host to window. On those connections ``J`` frames
+carry exactly the documents declared here and ``B`` frames carry image chunks
+whose 16-byte header the transport's view codec owns.
+
+Downstream, toward the window: ``view.image`` announces the next image and is
+immediately followed by all of that image's chunks, in order; ``view.state``,
+``view.notice`` and ``view.closed`` report the page. Upstream, from the window:
+``view.credit``, ``view.input``, ``view.navigate``, ``view.resize`` and
+``view.dialog``. Every set is closed: an unknown kind, member or value refuses
+the frame, and a refused frame ends the view connection.
+
+Images, page titles, URLs, dialog text and input are private taxpayer data.
+These documents live in memory only; they are never logged, persisted,
+journaled or projected.
+"""
+
+from __future__ import annotations
+
+from enum import StrEnum
+from typing import Annotated, Literal, Self
+from urllib.parse import urlsplit
+
+from pydantic import BaseModel, Field, RootModel, model_validator
+
+from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+VIEW_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+"""The largest encoded JPEG one image may carry."""
+
+VIEW_CREDIT_MAX_IMAGES = 2
+"""The most images a producer may have sent and not yet had credited back, per leg."""
+
+VIEW_MAX_CSS_EXTENT = 4096
+"""The largest panel width or height, in CSS pixels."""
+
+VIEW_MAX_PIXEL_EXTENT = 8192
+"""The largest image width or height, in device pixels."""
+
+VIEW_MIN_SCALE = 0.5
+VIEW_MAX_SCALE = 4.0
+"""Bounds of the device pixel ratio the panel draws at."""
+
+VIEW_MAX_SEQUENCE = 2**32 - 1
+"""Image sequences and dialog ids are unsigned 32-bit numbers."""
+
+VIEW_MAX_URL_LENGTH = 2048
+VIEW_MAX_PATH_LENGTH = 2048
+VIEW_MAX_TITLE_LENGTH = 1024
+VIEW_MAX_DIALOG_MESSAGE_LENGTH = 2048
+VIEW_MAX_PROMPT_TEXT_LENGTH = 1024
+VIEW_MAX_TEXT_INPUT_LENGTH = 256
+VIEW_MAX_KEY_LENGTH = 32
+VIEW_MAX_WHEEL_DELTA = 10_000
+VIEW_MAX_MODIFIERS = 15
+"""Modifier bitmask as CDP spells it: Alt 1, Control 2, Meta 4, Shift 8."""
+
+VIEW_MAX_CLICK_COUNT = 3
+
+type _Extent = Annotated[int, Field(ge=1, le=VIEW_MAX_CSS_EXTENT)]
+type _PixelExtent = Annotated[int, Field(ge=1, le=VIEW_MAX_PIXEL_EXTENT)]
+type _Coordinate = Annotated[int, Field(ge=0, le=VIEW_MAX_CSS_EXTENT - 1)]
+type _Scale = Annotated[float, Field(ge=VIEW_MIN_SCALE, le=VIEW_MAX_SCALE, allow_inf_nan=False)]
+type _Modifiers = Annotated[int, Field(ge=0, le=VIEW_MAX_MODIFIERS)]
+type _DialogId = Annotated[int, Field(ge=1, le=VIEW_MAX_SEQUENCE)]
+
+
+def _has_control_character(value: str) -> bool:
+    return any(ord(character) < 0x20 or ord(character) == 0x7F for character in value)
+
+
+class ViewPhase(StrEnum):
+    """Where the view's operation is: logging in, browsing, or publishing on close."""
+
+    ACQUIRING = "acquiring"
+    """A login runs in the view; input is refused and the panel only watches."""
+    BROWSING = "browsing"
+    """The person browses; input reaches the page."""
+    CLOSING = "closing"
+    """The view captures, verifies and publishes its session; the panel is busy."""
+
+
+class ViewNoticeCode(StrEnum):
+    """Every notice the view may show; offer codes carry an external-browser offer."""
+
+    REQUEST_REFUSED = "request_refused"
+    """The guard aborted a request the page made."""
+    NAVIGATION_OFFERED = "navigation_offered"
+    """A refused top-level navigation, offered in the external browser."""
+    POPUP_OFFERED = "popup_offered"
+    """A popup to another host, offered in the external browser."""
+    DOWNLOAD_OFFERED = "download_offered"
+    """A download, offered in the external browser."""
+    FILE_CHOOSER_OFFERED = "file_chooser_offered"
+    """A file upload, offered in the external browser."""
+    LOGIN_UNAVAILABLE = "login_unavailable"
+    """The configured login cannot run in the view, offered in the external browser."""
+    INPUT_REFUSED = "input_refused"
+    """Input arrived while the view only watches a login."""
+    DIALOG_OPENED = "dialog_opened"
+    """The page opened a dialog the person answers with ``view.dialog``."""
+
+
+VIEW_OFFER_NOTICE_CODES = frozenset(
+    {
+        ViewNoticeCode.NAVIGATION_OFFERED,
+        ViewNoticeCode.POPUP_OFFERED,
+        ViewNoticeCode.DOWNLOAD_OFFERED,
+        ViewNoticeCode.FILE_CHOOSER_OFFERED,
+        ViewNoticeCode.LOGIN_UNAVAILABLE,
+    }
+)
+"""The notice codes that carry an offer, and only they."""
+
+
+class ViewDialogKind(StrEnum):
+    """The page dialog kinds, spelled as CDP and Playwright spell them."""
+
+    ALERT = "alert"
+    CONFIRM = "confirm"
+    PROMPT = "prompt"
+    BEFOREUNLOAD = "beforeunload"
+
+
+class ViewClosedReason(StrEnum):
+    """Why a view connection ended; the operation's own result says how it settled."""
+
+    CANCELLED = "cancelled"
+    """The person closed the page or the window."""
+    IDLE_EXPIRED = "idle_expired"
+    """No person input arrived within the idle bound."""
+    LIFETIME_EXPIRED = "lifetime_expired"
+    """The view reached its absolute bound."""
+    SESSION_RETIRED = "session_retired"
+    """The window's person session was signed out, locked, expired or replaced."""
+    OPERATION_ENDED = "operation_ended"
+    """The view's operation settled for another reason."""
+    REPLACED = "replaced"
+    """A later attach bound a new view connection to the operation."""
+    PROTOCOL_VIOLATION = "protocol_violation"
+    """A peer sent a frame or document this contract refuses."""
+    RUNTIME_STOPPING = "runtime_stopping"
+    """The runtime is shutting down."""
+    FAILED = "failed"
+    """The view's browser failed."""
+
+
+class ViewImage(BaseModel):
+    """Announce the next image; its chunks follow at once, contiguous and in order.
+
+    ``sequence`` strictly increases on a view connection and may skip values,
+    because a producer without credit replaces its pending image.
+    ``byte_length`` equals the image length in every chunk header.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.image"] = "view.image"
+    sequence: int = Field(ge=0, le=VIEW_MAX_SEQUENCE)
+    byte_length: int = Field(ge=1, le=VIEW_IMAGE_MAX_BYTES)
+    pixel_width: _PixelExtent
+    pixel_height: _PixelExtent
+    css_width: _Extent
+    css_height: _Extent
+    scale: _Scale
+
+
+class ViewState(BaseModel):
+    """The page as the toolbar shows it: origin and path only, never a query or fragment."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.state"] = "view.state"
+    origin: str = Field(min_length=1, max_length=VIEW_MAX_URL_LENGTH)
+    path: str = Field(min_length=1, max_length=VIEW_MAX_PATH_LENGTH)
+    title: str = Field(max_length=VIEW_MAX_TITLE_LENGTH)
+    can_go_back: bool
+    can_go_forward: bool
+    loading: bool
+    phase: ViewPhase
+
+    @model_validator(mode="after")
+    def _origin_and_path_only(self) -> Self:
+        parts = urlsplit(self.origin)
+        if (
+            parts.scheme != "https"
+            or parts.hostname in {None, ""}
+            or parts.username is not None
+            or parts.password is not None
+            or parts.path
+            or parts.query
+            or parts.fragment
+            or self.origin != f"https://{parts.netloc}"
+            or parts.netloc != parts.netloc.lower()
+        ):
+            raise ValueError("origin must be a lower-case https origin alone")
+        if not self.path.startswith("/") or "?" in self.path or "#" in self.path:
+            raise ValueError("path must be an absolute path without query or fragment")
+        if _has_control_character(self.origin + self.path):
+            raise ValueError("origin and path must not carry control characters")
+        return self
+
+
+class ViewOffer(BaseModel):
+    """A URL the person may open in the external browser, never a session.
+
+    ``offer_id`` is 32 lower-case hex characters minted by the worker. The
+    desktop host keeps ``url`` and gives the page only ``offer_id``; opening
+    sends the id back and the host revalidates the URL before handing it to
+    the system browser.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    offer_id: str = Field(pattern=r"^[0-9a-f]{32}$")
+    url: str = Field(min_length=1, max_length=VIEW_MAX_URL_LENGTH)
+
+    @model_validator(mode="after")
+    def _web_url(self) -> Self:
+        parts = urlsplit(self.url)
+        if (
+            parts.scheme not in {"https", "http"}
+            or parts.hostname in {None, ""}
+            or parts.username is not None
+            or parts.password is not None
+            or _has_control_character(self.url)
+            or " " in self.url
+        ):
+            raise ValueError("offer url must be a credential-free http or https URL")
+        return self
+
+
+class ViewDialogPrompt(BaseModel):
+    """A page dialog waiting for the person's answer under its ``dialog_id``."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    dialog_id: _DialogId
+    dialog_kind: ViewDialogKind
+    message: str = Field(max_length=VIEW_MAX_DIALOG_MESSAGE_LENGTH)
+    default_prompt: str | None = Field(default=None, max_length=VIEW_MAX_PROMPT_TEXT_LENGTH)
+
+    @model_validator(mode="after")
+    def _prompt_default_only_for_prompts(self) -> Self:
+        if self.default_prompt is not None and self.dialog_kind is not ViewDialogKind.PROMPT:
+            raise ValueError("only a prompt dialog carries a default answer")
+        return self
+
+
+class ViewNotice(BaseModel):
+    """One closed notice; an offer code carries exactly one offer, ``dialog_opened`` one dialog."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.notice"] = "view.notice"
+    code: ViewNoticeCode
+    offer: ViewOffer | None = None
+    dialog: ViewDialogPrompt | None = None
+
+    @model_validator(mode="after")
+    def _members_follow_code(self) -> Self:
+        if (self.offer is not None) != (self.code in VIEW_OFFER_NOTICE_CODES):
+            raise ValueError("an offer accompanies exactly the offer codes")
+        if (self.dialog is not None) != (self.code is ViewNoticeCode.DIALOG_OPENED):
+            raise ValueError("a dialog accompanies exactly dialog_opened")
+        return self
+
+
+class ViewClosed(BaseModel):
+    """The last document on a view connection."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.closed"] = "view.closed"
+    reason: ViewClosedReason
+
+
+class ViewCredit(BaseModel):
+    """Grant the producer more images after drawing; outstanding credit never exceeds two.
+
+    A view connection starts with no credit, so the window grants its first
+    credit after attaching.
+    """
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.credit"] = "view.credit"
+    images: int = Field(ge=1, le=VIEW_CREDIT_MAX_IMAGES)
+
+
+class PointerAction(StrEnum):
+    """Pointer actions, translated to CDP ``mousePressed``, ``mouseReleased`` and ``mouseMoved``."""
+
+    DOWN = "down"
+    UP = "up"
+    MOVE = "move"
+
+
+class PointerButton(StrEnum):
+    """Pointer buttons as CDP spells them."""
+
+    NONE = "none"
+    LEFT = "left"
+    MIDDLE = "middle"
+    RIGHT = "right"
+
+
+class KeyAction(StrEnum):
+    """Key actions, translated to CDP ``keyDown`` and ``keyUp``."""
+
+    DOWN = "down"
+    UP = "up"
+
+
+class PointerInput(BaseModel):
+    """A pointer event at CSS pixel coordinates within the panel."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    type: Literal["pointer"] = "pointer"
+    action: PointerAction
+    x: _Coordinate
+    y: _Coordinate
+    button: PointerButton
+    click_count: int = Field(ge=0, le=VIEW_MAX_CLICK_COUNT)
+    modifiers: _Modifiers
+
+    @model_validator(mode="after")
+    def _press_names_a_button(self) -> Self:
+        if self.action is PointerAction.MOVE:
+            if self.click_count != 0:
+                raise ValueError("a move carries no click count")
+        elif self.button is PointerButton.NONE or self.click_count < 1:
+            raise ValueError("a press or release names a button and a click count")
+        return self
+
+
+class WheelInput(BaseModel):
+    """A wheel scroll at CSS pixel coordinates, with deltas in CSS pixels."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    type: Literal["wheel"] = "wheel"
+    x: _Coordinate
+    y: _Coordinate
+    delta_x: int = Field(ge=-VIEW_MAX_WHEEL_DELTA, le=VIEW_MAX_WHEEL_DELTA)
+    delta_y: int = Field(ge=-VIEW_MAX_WHEEL_DELTA, le=VIEW_MAX_WHEEL_DELTA)
+    modifiers: _Modifiers
+
+
+class KeyInput(BaseModel):
+    """A key event with its DOM ``key`` and ``code`` values; printable text arrives as text input."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    type: Literal["key"] = "key"
+    action: KeyAction
+    key: str = Field(min_length=1, max_length=VIEW_MAX_KEY_LENGTH)
+    code: str = Field(max_length=VIEW_MAX_KEY_LENGTH)
+    modifiers: _Modifiers
+
+    @model_validator(mode="after")
+    def _printable_names(self) -> Self:
+        if _has_control_character(self.key + self.code):
+            raise ValueError("key names carry no control characters")
+        return self
+
+
+class TextInput(BaseModel):
+    """Text inserted at the focus, translated to CDP ``Input.insertText``."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    type: Literal["text"] = "text"
+    text: str = Field(min_length=1, max_length=VIEW_MAX_TEXT_INPUT_LENGTH)
+
+    @model_validator(mode="after")
+    def _printable_text(self) -> Self:
+        if _has_control_character(self.text):
+            raise ValueError("text input carries no control characters")
+        return self
+
+
+type ViewInputEvent = Annotated[PointerInput | WheelInput | KeyInput | TextInput, Field(discriminator="type")]
+
+
+class ViewInput(BaseModel):
+    """One person input event for the view's page."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.input"] = "view.input"
+    event: ViewInputEvent
+
+
+class ViewNavigateVerb(StrEnum):
+    """The toolbar's navigation verbs; ``home`` opens the Sede start page."""
+
+    BACK = "back"
+    FORWARD = "forward"
+    RELOAD = "reload"
+    HOME = "home"
+
+
+class ViewNavigate(BaseModel):
+    """A toolbar navigation; the view never accepts a URL from the window."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.navigate"] = "view.navigate"
+    verb: ViewNavigateVerb
+
+
+class ViewResize(BaseModel):
+    """The panel's new CSS size and device pixel ratio."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.resize"] = "view.resize"
+    css_width: _Extent
+    css_height: _Extent
+    scale: _Scale
+
+
+class ViewDialog(BaseModel):
+    """The person's answer to the dialog announced under ``dialog_id``."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["view.dialog"] = "view.dialog"
+    dialog_id: _DialogId
+    accept: bool
+    prompt_text: str | None = Field(default=None, max_length=VIEW_MAX_PROMPT_TEXT_LENGTH)
+
+    @model_validator(mode="after")
+    def _text_only_when_accepting(self) -> Self:
+        if self.prompt_text is not None and not self.accept:
+            raise ValueError("a dismissed dialog carries no answer text")
+        return self
+
+
+type ViewDownstreamDocument = ViewImage | ViewState | ViewNotice | ViewClosed
+type ViewUpstreamDocument = ViewCredit | ViewInput | ViewNavigate | ViewResize | ViewDialog
+
+
+class ViewDownstreamFrame(RootModel[Annotated[ViewDownstreamDocument, Field(discriminator="kind")]]):
+    """The closed set of control documents sent toward the window."""
+
+
+class ViewUpstreamFrame(RootModel[Annotated[ViewUpstreamDocument, Field(discriminator="kind")]]):
+    """The closed set of control documents sent from the window."""
