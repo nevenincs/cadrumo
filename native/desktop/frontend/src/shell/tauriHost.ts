@@ -32,6 +32,7 @@ import type {
 } from "./providerSettings";
 import { tauriLedger } from "./tauriLedger";
 import { tauriModelo } from "./tauriModelo";
+import { tauriSedeView } from "./tauriSedeView";
 import { openTauriTerminal } from "./tauriTerminal";
 
 const TOKEN_PATTERN = /^[0-9a-f]{64}$/;
@@ -147,6 +148,7 @@ export function tauriHost(): Host {
     },
     ledger: tauriLedger(token, call),
     modelo: tauriModelo(token, call),
+    sedeView: tauriSedeView(call),
     attendance: {
       async inventory() {
         const reply = (await call("runtime_attendance_inventory", {})) as {

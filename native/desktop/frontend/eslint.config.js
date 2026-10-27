@@ -64,6 +64,7 @@ const adapter = [
   "src/shell/tauriHost.ts",
   "src/shell/tauriLedger.ts",
   "src/shell/tauriModelo.ts",
+  "src/shell/tauriSedeView.ts",
   "src/shell/tauriStartup.ts",
   "src/shell/tauriTerminal.ts",
   "src/shell/hostCall.ts",

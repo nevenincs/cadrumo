@@ -78,7 +78,7 @@ export type LedgerView = {
 };
 
 export type Layout = {
-  page: "docs" | "calendar" | "profile" | "ledger" | "declarations";
+  page: "docs" | "calendar" | "profile" | "ledger" | "declarations" | "browser";
   maximized: Maximized;
   /** Null follows the host default until the person chooses a level. */
   logLevel: number | null;

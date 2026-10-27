@@ -688,6 +688,16 @@ export type SignInRefusal = {
   osCode?: number;
 };
 
+/**
+ * The session this window holds waits for a fresh proof after the profile's
+ * worker was lost. It grants nothing until then, and the person is not signed
+ * out. The window presents the saved sign-in by itself, once.
+ */
+export type Reconnecting = {
+  /** The saved sign-in did not bring the session back: only the password can. */
+  passwordRequired: boolean;
+};
+
 /** Presence only: reading this never resumes or extends a sign-in. */
 export type SignInStatus = {
   supported: boolean;
@@ -695,6 +705,8 @@ export type SignInStatus = {
   active_profile: string | null;
   runtimeAvailable: boolean;
   refusal: SignInRefusal | null;
+  /** Present only while the window's own session waits. */
+  reconnecting?: Reconnecting;
 };
 
 /** Public presence and runtime/profile changes; never session authority. */
@@ -1079,6 +1091,192 @@ export type AgentLocalModels =
       revision: string;
     }
   | { state: "unreadable"; local_lanes: string[]; revision: string };
+
+// ---------------------------------------------------------------------------
+// The Sede view
+// ---------------------------------------------------------------------------
+
+/** What the view's page is doing: a login runs in it, the person browses, or
+ * it publishes the session and ends. */
+export type SedeViewPhase = "acquiring" | "browsing" | "closing";
+
+/** Every notice the view may raise. The codes that carry an offer name it by
+ * `offer_id`; the link itself stays in the host. */
+export type SedeViewNoticeCode =
+  "download_offered" | "file_chooser_offered" | "dialog_opened";
+
+export type SedeViewDialogKind =
+  "alert" | "confirm" | "prompt" | "beforeunload";
+
+/** A page dialog waiting for the person's answer. */
+export type SedeViewDialog = {
+  dialog_id: number;
+  dialog_kind: SedeViewDialogKind;
+  message: string;
+  default_prompt: string | null;
+};
+
+/** How a download or an upload ended. */
+export type SedeViewTransfer = "done" | "cancelled" | "failed";
+
+/** Why a view ended, as the host says it. */
+export type SedeViewEndReason =
+  | "closed"
+  | "session_lost"
+  | "cancelled"
+  | "operation_ended"
+  | "replaced"
+  | "protocol_violation"
+  | "runtime_stopping"
+  | "failed"
+  | "unavailable"
+  | "refused";
+
+/** What became of the session when the view ended. */
+export type SedeViewPublication =
+  "published" | "unchanged" | "kept-newer" | "verification-failed" | "unknown";
+
+/** How the view's operation settled, where the host could observe it. */
+export type SedeViewOutcome = {
+  condition:
+    | "succeeded"
+    | "refused"
+    | "failed"
+    | "cancelled"
+    | "timed_out"
+    | "interrupted";
+  end:
+    | "closed"
+    | "page_lost"
+    | "stream_ended"
+    | "stopped"
+    | "protocol_violation"
+    | null;
+  publication: SedeViewPublication | null;
+};
+
+/**
+ * A JSON message on the view's channel. Every message names its `view`, so a
+ * late message of an earlier view is told apart. An `image` is followed by
+ * one raw message holding that image's JPEG bytes.
+ */
+export type SedeViewMessage =
+  | { kind: "opened"; view: number }
+  | {
+      kind: "image";
+      view: number;
+      sequence: number;
+      byte_length: number;
+      pixel_width: number;
+      pixel_height: number;
+      css_width: number;
+      css_height: number;
+      scale: number;
+    }
+  | {
+      kind: "state";
+      view: number;
+      origin: string;
+      path: string;
+      title: string;
+      can_go_back: boolean;
+      can_go_forward: boolean;
+      loading: boolean;
+      phase: SedeViewPhase;
+    }
+  | {
+      kind: "notice";
+      view: number;
+      code: SedeViewNoticeCode;
+      offer_id: string | null;
+      dialog: SedeViewDialog | null;
+    }
+  | {
+      kind: "download";
+      view: number;
+      transfer_id: number;
+      filename: string;
+      size: number | null;
+      mime: string | null;
+    }
+  | {
+      kind: "download_ended";
+      view: number;
+      transfer_id: number;
+      outcome: SedeViewTransfer;
+    }
+  | {
+      kind: "file_chooser";
+      view: number;
+      chooser_id: number;
+      accept: string[];
+      multiple: boolean;
+    }
+  | {
+      kind: "upload_ended";
+      view: number;
+      chooser_id: number;
+      outcome: SedeViewTransfer;
+    }
+  | { kind: "closing"; view: number }
+  | {
+      kind: "ended";
+      view: number;
+      reason: SedeViewEndReason;
+      code: string | null;
+      outcome: SedeViewOutcome | null;
+    };
+
+/** What the channel carries: JSON messages, and the bytes an image announces. */
+export type SedeViewDelivery = SedeViewMessage | ArrayBuffer;
+
+/** One input event of the person, in CSS pixels of the view's page. The
+ * modifier mask is Alt 1, Control 2, Meta 4, Shift 8. */
+export type SedeViewInput =
+  | {
+      type: "pointer";
+      action: "down" | "up" | "move";
+      x: number;
+      y: number;
+      button: "none" | "left" | "middle" | "right";
+      click_count: number;
+      modifiers: number;
+    }
+  | {
+      type: "wheel";
+      x: number;
+      y: number;
+      delta_x: number;
+      delta_y: number;
+      modifiers: number;
+    }
+  | {
+      type: "key";
+      action: "down" | "up";
+      key: string;
+      code: string;
+      modifiers: number;
+    }
+  | { type: "text"; text: string };
+
+export type SedeViewVerb = "back" | "forward" | "reload" | "home";
+
+/** `code` of a refused view command; `operation_id` is for diagnostics and
+ * the window never shows it. */
+export type SedeViewFailureCode =
+  | "invalid"
+  | "not_admitted"
+  | "conflict"
+  | "unavailable"
+  | "file_unavailable"
+  | "refused"
+  | "unknown"
+  | "not_signed_in";
+export type SedeViewFailure = {
+  code: SedeViewFailureCode;
+  operation_id: string | null;
+  reason?: string;
+};
 
 export interface HostCommands {
   user_profile_read: {
@@ -1807,6 +2005,62 @@ export interface HostCommands {
   agent_access_revoke: {
     args: Authorized<{ grantId: string }>;
     result: { cleanup_pending: boolean };
+  };
+  // The Sede view: one view at a time, relayed on the channel `sede_view_open`
+  // is given. The window never names an address; `sede_view_open_external`
+  // opens the page the host holds, or the link an `offer_id` names.
+  sede_view_open: {
+    args: Authorized<{
+      cssWidth: number;
+      cssHeight: number;
+      scale: number;
+      messages: Channel<SedeViewDelivery>;
+    }>;
+    result: { view: number };
+  };
+  sede_view_close: { args: Authorized<{ view: number }>; result: null };
+  sede_view_input: {
+    args: Authorized<{ view: number; event: SedeViewInput }>;
+    result: null;
+  };
+  sede_view_navigate: {
+    args: Authorized<{ view: number; verb: SedeViewVerb }>;
+    result: null;
+  };
+  sede_view_resize: {
+    args: Authorized<{
+      view: number;
+      cssWidth: number;
+      cssHeight: number;
+      scale: number;
+    }>;
+    result: null;
+  };
+  /** One for each image message received, drawn or not. */
+  sede_view_credit: { args: Authorized<{ view: number }>; result: null };
+  sede_view_dialog: {
+    args: Authorized<{
+      view: number;
+      dialogId: number;
+      accept: boolean;
+      promptText?: string;
+    }>;
+    result: null;
+  };
+  /** With `save`, the native save dialog asks where; the answer waits for it. */
+  sede_view_download_answer: {
+    args: Authorized<{ view: number; transferId: number; save: boolean }>;
+    result: { saving: boolean };
+  };
+  /** With `choose`, the native open dialog asks which files; the answer
+   * waits for it. */
+  sede_view_file_chooser_answer: {
+    args: Authorized<{ view: number; chooserId: number; choose: boolean }>;
+    result: { supplied: number };
+  };
+  sede_view_open_external: {
+    args: Authorized<{ view: number; offerId?: string }>;
+    result: null;
   };
 }
 

@@ -191,6 +191,10 @@ export interface Host {
    * write, where this host offers them. Without it the shell shows no
    * Declarations page. */
   readonly modelo?: import("./modelo").ModeloPort;
+  /** The Sede in a browser page of the profile's own worker, streamed to the
+   * window as images, where this host offers it. Without it the shell shows
+   * no Browser page. */
+  readonly sedeView?: import("./sedeView").SedeViewPort;
   /** What the agent column reads, where this host serves the agent.
    * Without it each of the column's views says it is not available yet. */
   readonly agent?: AgentViews;

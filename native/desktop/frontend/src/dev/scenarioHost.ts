@@ -22,6 +22,7 @@ import type {
 import { censoFixture } from "./censoFixture";
 import { ledgerFixture, type LedgerShape } from "./ledgerFixture";
 import { modeloFixture, type ModeloShape } from "./modeloFixture";
+import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
@@ -263,6 +264,8 @@ export function scenarioHost(
   const say = (call: string) => options.onCall?.(call);
   let presence = scenario.signIn.status.state;
   let runtimeAvailable = scenario.signIn.status.runtimeAvailable;
+  // The session waits for a fresh proof until a sign-in or a sign-out ends it.
+  let reconnecting = scenario.signIn.status.reconnecting;
   let managerDispatched = scenario.manager?.autoDispatched ?? false;
   let managerReads = 0;
   let clipboard = "";
@@ -298,6 +301,7 @@ export function scenarioHost(
     state: presence,
     active_profile: active,
     runtimeAvailable,
+    reconnecting,
   });
 
   const manager = scenario.manager;
@@ -647,6 +651,7 @@ export function scenarioHost(
           views,
           ledger,
           modelo,
+          sedeView: sedeViewFixture({ say }),
           agent,
           agentSession,
           providerSettings,
@@ -815,6 +820,7 @@ export function scenarioHost(
       // A sign-in that is accepted is what selects the profile.
       if (named >= 0) active = accounts[named] ?? active;
       presence = "present";
+      reconnecting = undefined;
       return { kind: "signed-in", status: acknowledged ?? status() };
     },
 
@@ -824,6 +830,7 @@ export function scenarioHost(
       if (scenario.signIn.signOutFailure)
         throw failure(scenario.signIn.signOutFailure, "cli");
       presence = "absent";
+      reconnecting = undefined;
       // The product's reply: the saved setting, which a sign-out keeps, and
       // whether an issued key can still admit.
       const access = scenario.signIn.signOutAccess;
