@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+import sys
 import time
 from collections.abc import AsyncGenerator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, asynccontextmanager
-from typing import TypeGuard
+from typing import Final, TypeGuard
 from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
@@ -19,6 +21,7 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import await_cancellation_complete
+from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_event
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.request_faults import registered_error_fault
@@ -33,6 +36,8 @@ from cadrumo_client.transport.frame_io import read_document, read_secret, write_
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import close_transport_after_failure
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerClaimableReviews,
+    ProfileWorkerClaimableReviewsRequest,
     ProfileWorkerContractRequest,
     ProfileWorkerLeaseTransferRequest,
     ProfileWorkerManageRequest,
@@ -66,6 +71,48 @@ from .operation_host import ProfileWorkerOperationHost
 from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 
 _LOGGER = get_logger(__name__)
+
+_OPERATION_REQUEST_SLOW_SECONDS: Final = 2.0
+"""An operation-channel request that takes this long to answer is logged as slow."""
+
+
+def _operation_request_fields(request: object) -> dict[str, DiagnosticValue]:
+    """Project only a request's class name and, where its contract carries one, its validated definition id.
+
+    The class name is closed because only classes the worker contract defines
+    are named. Nothing from the request's payload, session or operation is read.
+    """
+    defined_here = type(request).__module__ == ProfileWorkerRequest.__module__
+    fields: dict[str, DiagnosticValue] = {
+        "request_type": type(request).__name__ if defined_here else "UnknownWorkerRequest"
+    }
+    if isinstance(
+        request, ProfileWorkerSubmitRequest | ProfileWorkerSubmissionBeginRequest | ProfileWorkerContractRequest
+    ):
+        fields["definition_id"] = request.definition_id
+    return fields
+
+
+def _record_operation_started(fields: dict[str, DiagnosticValue]) -> None:
+    """Mark which request is active, so a handler that never answers still leaves its name."""
+    diagnostic_event(_LOGGER, "profile_worker_operation_request_started", fields={**fields, "outcome": "started"})
+
+
+def _record_operation_elapsed(fields: dict[str, DiagnosticValue], *, started: float, outcome: str) -> None:
+    """Log how long one request took: at WARNING from the slow bound, at DEBUG below it."""
+    elapsed = max(0.0, time.monotonic() - started)
+    diagnostic_event(
+        _LOGGER,
+        "profile_worker_operation_request_elapsed",
+        fields={
+            **fields,
+            "elapsed_seconds": round(elapsed, 3),
+            "budget_seconds": _OPERATION_REQUEST_SLOW_SECONDS,
+            "outcome": outcome,
+        },
+        level=logging.WARNING if elapsed >= _OPERATION_REQUEST_SLOW_SECONDS else logging.DEBUG,
+        primary_error=sys.exception(),
+    )
 
 
 async def receive(
@@ -128,6 +175,10 @@ async def operate(
         while True:
             request = (await receive(channel, failed, input_executor)).root
             expiry_needed = True
+            fields = _operation_request_fields(request)
+            _record_operation_started(fields)
+            started = time.monotonic()
+            outcome = "raised"
             try:
                 await _dispatch_request(channel, operations, request, uploads)
                 # Reads already validate custody. A staged upload still needs
@@ -136,7 +187,9 @@ async def operate(
                     (_is_read(request) or isinstance(request, ProfileWorkerContractRequest))
                     and uploads.seconds_until_expiry() is None
                 )
+                outcome = "completed"
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
+                outcome = "refused"
                 if failed.is_set():
                     raise
                 if isinstance(refusal, ProfileAccessRefusedError):
@@ -159,6 +212,7 @@ async def operate(
             finally:
                 if expiry_needed:
                     changed.set()
+                _record_operation_elapsed(fields, started=started, outcome=outcome)
                 del request
     except Exception:
         failed.set()
@@ -171,6 +225,17 @@ async def _dispatch_request(
     request: object,
     uploads: WorkerSubmissionStaging,
 ) -> None:
+    if isinstance(request, ProfileWorkerClaimableReviewsRequest):
+        write_document(
+            channel,
+            ProfileWorkerClaimableReviews(
+                identity=operations.custody.identity,
+                request_id=request.request_id,
+                operation_ids=await operations.claimable_reviews(request.attestation),
+            ),
+            deadline=time.monotonic() + 5,
+        )
+        return
     if isinstance(request, ProfileWorkerReviewClaimRequest):
         async with operations.claim_review(
             request.attestation, request.reference, request.reviewed_document_digest
