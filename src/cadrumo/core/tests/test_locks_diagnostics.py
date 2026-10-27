@@ -26,12 +26,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _LOGGER = "cadrumo.core.locks"
 
 
-# The scrubbing filter may shorten the home directory in a path, so messages are matched by the sidecar's name.
+# Messages name the sidecar by file name only; the directory it sits in stays out of the log.
 _ACQUIRED = re.compile(
-    r"exclusive_file_lock: acquired .*resource\.json\.lock after waiting \d+\.\d{3}s over \d+ attempts"
+    r"exclusive_file_lock: acquired resource\.json\.lock after waiting \d+\.\d{3}s over \d+ attempts"
 )
-_RELEASED = re.compile(r"exclusive_file_lock: released .*resource\.json\.lock after holding it \d+\.\d{3}s")
-_TIMED_OUT = re.compile(r"exclusive_file_lock: timed out waiting for .*resource\.json\.lock after 0\.05s")
+_RELEASED = re.compile(r"exclusive_file_lock: released resource\.json\.lock after holding it \d+\.\d{3}s")
+_TIMED_OUT = re.compile(r"exclusive_file_lock: timed out waiting for resource\.json\.lock after 0\.05s")
 
 
 def _lock_messages(caplog: pytest.LogCaptureFixture) -> list[tuple[int, str]]:
@@ -186,7 +186,7 @@ def test_contended_diagnostic_io_runs_only_after_exclusive_ownership_ends(
     released_message, released_arguments = messages[1]
     assert acquired_message == "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts"
     assert released_message == "exclusive_file_lock: released %s after holding it %.3fs"
-    assert acquired_arguments[0] == released_arguments[0] == locks.sidecar_lock_path(target)
+    assert acquired_arguments[0] == released_arguments[0] == locks.sidecar_lock_path(target).name
     assert isinstance(acquired_arguments[1], float) and acquired_arguments[1] >= 0
     assert isinstance(acquired_arguments[2], int) and acquired_arguments[2] >= 2
     assert isinstance(released_arguments[1], float) and released_arguments[1] >= 0

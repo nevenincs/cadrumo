@@ -186,7 +186,7 @@ def _lock_acquired_before_deadline(
         if log_events:
             _log.warning(
                 "exclusive_file_lock: timed out waiting for %s after %.2fs",
-                lock_path,
+                lock_path.name,
                 timeout,
             )
         raise LockAcquisitionError(
@@ -305,9 +305,9 @@ def held_descriptor_lock(
             if contended:
                 _log.debug(
                     "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts",
-                    lock_path,
+                    lock_path.name,
                     acquired - requested,
                     attempts,
                 )
             if contended or held >= SLOW_LOCK_HOLD_SECONDS:
-                _log.debug("exclusive_file_lock: released %s after holding it %.3fs", lock_path, held)
+                _log.debug("exclusive_file_lock: released %s after holding it %.3fs", lock_path.name, held)

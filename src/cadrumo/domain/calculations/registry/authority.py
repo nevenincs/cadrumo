@@ -1146,7 +1146,7 @@ def release_bundled_indexed_authority() -> bool:
         try:
             _bundled_indexed_authority.close()
         except AuthorityStoreError as refusal:
-            _LOGGER.warning("the shared registry authority stayed open: %s", refusal)
+            _LOGGER.warning("the shared registry authority stayed open: %s", str(refusal))
             return False
         _bundled_indexed_authority = None
         return True
