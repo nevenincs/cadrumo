@@ -51,7 +51,7 @@ class _AdminRecorder:
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
-        method: Literal["browser", "device"] | None = None,
+        method: Literal["browser", "browser-code", "device"] | None = None,
         attempt_id: str | None = None,
         role: str | None = None,
         model: str | None = None,
