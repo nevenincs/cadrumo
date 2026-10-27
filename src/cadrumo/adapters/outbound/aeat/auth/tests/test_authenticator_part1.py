@@ -24,6 +24,7 @@ from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.auth_provider import AuthProviderKind
 from ......core.errors.hierarchy import AeatLoginAssertionError
 from ......core.i18n.render import tr
+from ......tests.log_records import delivered_records
 from .. import authenticator as authenticator
 from ..authenticator import AEAT_SESSION_IDLE_TTL, AeatAuthenticator, _require_exact_active_certificate_session
 from ..certificate import CertificateError, CertificateNifParseError, extract_nif_from_subject
@@ -291,7 +292,7 @@ def test_invalid_persisted_session_redacts_path_and_reason(
     }
     assert exc_info.value.translated_message == "errors.auth.auth_auth_authenticator_persisted_session_invalid"
 
-    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    log_text = "\n".join(record.getMessage() for record in delivered_records(caplog))
     assert _SENSITIVE_STORAGE_BASENAME not in log_text
     assert str(storage_state_path) not in log_text
     assert "<persisted-aeat-session>" in log_text
@@ -349,7 +350,7 @@ def test_describe_redacts_certificate_health_error(
     assert description.available is False
     assert description.health_summary == tr("application.auth.certificate.health.unavailable")
 
-    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    log_text = "\n".join(record.getMessage() for record in delivered_records(caplog))
     assert _SENSITIVE_HEALTH_PAYLOAD not in log_text
     assert "failure=CertificateError" in log_text
 
@@ -379,7 +380,7 @@ def test_describe_redacts_unexpected_certificate_health_error(
     assert exc_info.value.__cause__ is None
     assert exc_info.value.__context__ is None
 
-    log_text = "\n".join(record.getMessage() for record in caplog.records)
+    log_text = "\n".join(record.getMessage() for record in delivered_records(caplog))
     assert _SENSITIVE_HEALTH_PAYLOAD not in log_text
     assert "failure=RuntimeError" in log_text
 
