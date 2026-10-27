@@ -1955,7 +1955,10 @@ fn claimable_reviews(held: &Held, deadline: Instant) -> Outcome<Map<String, Valu
         .ok_or_else(Failure::frame)?;
     let mut operation_ids = Vec::with_capacity(listed.len());
     for id in listed {
-        let id = id.as_str().filter(|id| is_hex64(id)).ok_or_else(Failure::frame)?;
+        let id = id
+            .as_str()
+            .filter(|id| is_hex64(id))
+            .ok_or_else(Failure::frame)?;
         if operation_ids.contains(&id) {
             return Err(Failure::frame());
         }

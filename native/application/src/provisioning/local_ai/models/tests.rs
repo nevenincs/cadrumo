@@ -780,7 +780,10 @@ fn a_model_of_unknown_size_is_planned_unsized_and_pulled_against_the_streamed_to
             _ => None,
         })
         .collect();
-    assert!(progress.iter().all(|(completed, total)| completed <= total), "{progress:?}");
+    assert!(
+        progress.iter().all(|(completed, total)| completed <= total),
+        "{progress:?}"
+    );
     assert_eq!(progress.last(), Some(&(stored.size(), stored.size())));
     assert_eq!(models.download_bytes(model), Some(stored.size()));
 }
