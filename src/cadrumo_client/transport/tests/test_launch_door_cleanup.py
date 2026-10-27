@@ -6,14 +6,13 @@ import asyncio
 import threading
 import time
 from collections.abc import Callable, Generator
-from logging import DEBUG, Handler, LogRecord
+from logging import DEBUG, Handler, Logger, LogRecord
 from typing import override
 from uuid import uuid4
 
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
-from cadrumo.core.logging import get_logger
 
 from ...contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
 from .. import startup
@@ -302,10 +301,14 @@ type _FaultHandlerFactory = Callable[[BaseException, Callable[[], bool]], _Diagn
 
 @pytest.fixture
 def fault_handler(monkeypatch: pytest.MonkeyPatch) -> Generator[_FaultHandlerFactory]:
-    """Keep handler faults local to this module-boundary port, never root logging."""
-    logger = get_logger("cadrumo.tests.launch_door_diagnostic_fault")
-    previous_level, previous_propagate = logger.level, logger.propagate
-    logger.setLevel(DEBUG)
+    """Keep handler faults local to this module-boundary port, never root logging.
+
+    The fault must surface on the calling thread, as a keyboard interrupt in a
+    diagnostic call does. A registered project logger hands its records to the
+    background dispatch, which contains every handler fault by design, so this
+    port uses a logger outside that dispatch.
+    """
+    logger = Logger("cadrumo.tests.launch_door_diagnostic_fault", level=DEBUG)
     logger.propagate = False
     handlers: list[_DiagnosticFailureHandler] = []
 
@@ -322,8 +325,6 @@ def fault_handler(monkeypatch: pytest.MonkeyPatch) -> Generator[_FaultHandlerFac
         for handler in handlers:
             logger.removeHandler(handler)
             handler.close()
-        logger.setLevel(previous_level)
-        logger.propagate = previous_propagate
 
 
 @pytest.mark.asyncio

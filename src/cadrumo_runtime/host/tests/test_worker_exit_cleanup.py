@@ -23,6 +23,7 @@ from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody impo
 from cadrumo.application.operations.drain import OperationDrainResult
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError, ServerHello
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import write_document
@@ -53,7 +54,11 @@ def test_password_dispatch_budget_allows_derivation_without_hiding_other_slow_co
     monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: 10.0 + elapsed))
     caplog.set_level(logging.DEBUG, logger=worker_service._log.name)
     worker_service._record_control_dispatch_elapsed(request, handler_started=10.0, outcome="completed")
-    records = [record for record in caplog.records if record.msg == "profile_worker_control_dispatch_slow"]
+    records = [
+        record
+        for record in delivered_records(caplog, worker_service._log.name)
+        if record.msg == "profile_worker_control_dispatch_slow"
+    ]
     assert bool(records) is warns
     if warns:
         assert records[0].__dict__["budget_seconds"] == (1.5 if action == "password" else 0.5)
@@ -488,10 +493,9 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     assert forgotten == [True]
     assert output
     assert context.changed.is_set(), "a handled command must wake idle custody expiry"
-    started = next(
-        record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_started"
-    )
-    slow = next(record for record in caplog.records if record.getMessage() == "profile_worker_control_dispatch_slow")
+    delivered = delivered_records(caplog, worker_service._log.name)
+    started = next(record for record in delivered if record.getMessage() == "profile_worker_control_dispatch_started")
+    slow = next(record for record in delivered if record.getMessage() == "profile_worker_control_dispatch_slow")
     assert {
         "handler_name": started.__dict__["handler_name"],
         "request_type": started.__dict__["request_type"],

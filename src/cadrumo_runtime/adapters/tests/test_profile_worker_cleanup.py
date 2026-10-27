@@ -29,6 +29,7 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionState,
 )
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
@@ -956,7 +957,11 @@ def test_native_guard_slow_call_emits_only_closed_call_metadata(
             caplog.set_level(logging.DEBUG, logger=profile_worker_lifetime._log.name)
             assert worker._owns_native_process(1234)
 
-        record = next(item for item in caplog.records if item.getMessage() == "profile_worker_native_guard_call_slow")
+        record = next(
+            item
+            for item in delivered_records(caplog, profile_worker_lifetime._log.name)
+            if item.getMessage() == "profile_worker_native_guard_call_slow"
+        )
         assert record.__dict__["call_name"] == "process_membership"
         assert record.__dict__["elapsed_seconds"] == 1.25
         assert record.__dict__["outcome"] == "completed"
@@ -986,7 +991,11 @@ def test_native_guard_wait_failure_names_held_call_without_private_identifiers(
         with pytest.raises(RefusalError) as caught:
             worker._contain_native_process(timeout=0.05)
         assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
-        record = next(item for item in caplog.records if item.getMessage() == "profile_worker_native_guard_wait_failed")
+        record = next(
+            item
+            for item in delivered_records(caplog, profile_worker_lifetime._log.name)
+            if item.getMessage() == "profile_worker_native_guard_wait_failed"
+        )
         assert record.__dict__["call_name"] == "containment"
         assert record.__dict__["held_call_name"] == "process_membership"
         assert record.__dict__["elapsed_seconds"] >= 0.03
