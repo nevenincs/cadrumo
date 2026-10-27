@@ -56,6 +56,9 @@ async def test_fresh_adapter_orients_without_claiming_profile_access() -> None:
             "session",
             "installation",
         } & set(names)
+        for removed in ("setup_status", "setup_plan", "setup", "setup_remove"):
+            assert removed not in names
+            assert await adapter.call(removed, {}) == {"outcome": "refused", "code": "unknown_tool"}
 
         status = await client.call_tool("status", {})
         assert status.is_error is False

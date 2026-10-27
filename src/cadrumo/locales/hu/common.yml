@@ -548,6 +548,13 @@ core:
     errors:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
+dependencies:
+  setup:
+    cancel_requested: A telepítés leállítása…
+    following: Egy már futó telepítés követése…
+    input_refused: A telepítési kérés nem fogadható el.
+    retrying: A letöltés újrapróbálása…
+    waiting_for_server: Várakozás a letöltési kiszolgálóra…
 desktop:
   about:
     agent: Ügynök
@@ -4173,9 +4180,18 @@ operation:
     action:
       apply: Alkalmaz
       cancel: Megszakít
+      claim: Áttekintés és válasz
       close: Bezár
       detach: Leválaszt
       reject: Elutasít
+    claim:
+      already_claimed: Ezt a telepítést valaki más tekinti át. Itt nem válaszolhatsz
+        rá.
+      authority_lost: Erre az áttekintésre már nem válaszolhatsz. Indíts új telepítést.
+      stale: A telepítés áttekintése megváltozott. Indíts új telepítést az aktuális
+        terv áttekintéséhez.
+      unavailable: Ez az áttekintés már nem érhető el. Jelentkezz be, és indíts új
+        telepítést.
     detail:
       action_refused: Elutasított művelet
       cleanup_deadline: Lezárási határidő
@@ -7309,8 +7325,11 @@ tui:
     progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
     review:
       decline: Most nem
+      open: A telepítés áttekintésének megnyitása
+      reference: A telepítés hivatkozása
       title: Előkészíted?
     set_up_all: Mindent előkészít
+    sign_in_first: Jelentkezz be az összetevők ellenőrzéséhez vagy telepítéséhez.
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
@@ -7324,8 +7343,7 @@ tui:
     stop: Leállítás
     stopping: Az előkészítés leállítása…
     title: Összetevők
-    unavailable: A Cadrumo nem tudta elindítani az összetevő-motorját, ezért az összetevők
-      most nem ellenőrizhetők és nem készíthetők elő.
+    unavailable: Az összetevőket nem sikerült ellenőrizni. Próbáld újra.
     waiting_for_program: '%{name}: várakozás a program indulására'
     working: A terv készül…
 workspace:

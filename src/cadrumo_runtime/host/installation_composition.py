@@ -68,8 +68,9 @@ def production_installation_acts() -> InstallationActRegistry:
         InternalInvariantError: The families leave an act of the table without
             a handler.
     """
-    # Each family registers on the registry this module defines, so a family
-    # loads only once the registry exists.
+    # Registration imports declarations only. Each handler loads its own
+    # services before effects or profile reservations, so a profile listing
+    # never imports archive restoration, reset or tax-document verification.
     from .installation_artefacts import register_artefact_acts
     from .installation_profiles import register_profile_acts
     from .installation_repair import register_repair_acts

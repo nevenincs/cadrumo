@@ -47,10 +47,9 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ....core.bucket_pointer import resolve_repository_bucket_id
 from ....core.diagnostic_log import diagnostic_timing_event
-from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.modelo import Modelo
-from ....core.secure_object_write import SecureObjectWrite
+from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -95,8 +94,8 @@ class CalculationRevisionCatalogueRepository:
     contract for the encrypted :class:`CalculationRevisionCatalogue` row. The
     write path (``to_secure_object_write`` / ``save`` / ``exists``) composes
     :class:`~adapters.persistence.profile._secure_enveloped_document.ProfileEnvelopedModelSecurePersistence`
-    for the shared Envelope-construction mechanic; ``load`` stays hand-rolled
-    here because it translates a classification or schema-version mismatch
+    for the shared Envelope-construction mechanic; both read doors share
+    one decoder here because it translates a classification or schema-version mismatch
     into :class:`CalculationRevisionPersistenceError` via
     :func:`~domain.modelos.errors.raise_catalogue_integrity_error`, and runs the
     post-load ledger-evidence coverage gate
@@ -185,7 +184,11 @@ class CalculationRevisionCatalogueRepository:
         if operation is None:
             with bundled_indexed_authority().operation() as indexed_operation:
                 return self.load(operation=indexed_operation)
+        catalogue, _revision_id = self._load_revisioned(operation=operation)
+        return catalogue
 
+    def _load_revisioned(self, *, operation: PinnedAuthorityOperation) -> tuple[CalculationRevisionCatalogue, str]:
+        """Validate one fresh record with one captured parent catalogue for either read door."""
         from ..storage.envelope.contract import Envelope
         from ..storage.errors import ClassificationError, EnvelopeVersionError
         from ..storage.schema_lineage import (
@@ -211,14 +214,14 @@ class CalculationRevisionCatalogueRepository:
             )
         _catalogue_phase("load_store_end")
         if record is None:
-            return CalculationRevisionCatalogue()
+            return CalculationRevisionCatalogue(), ABSENT_SECURE_OBJECT_REVISION_ID
         _catalogue_phase("load_validation_begin")
         aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
         envelope: Envelope[CalculationRevisionCatalogue] | None = None
         validation_failed = False
         try:
             envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(
-                record.payload.decode(UTF_8_ENCODING),
+                record.payload,
                 context={
                     CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
                     CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope(),
@@ -279,7 +282,7 @@ class CalculationRevisionCatalogueRepository:
             assert_revision_snapshot_evidence_coverage(revision)
         self._require_parent_coordinates(envelope.payload, work_units=aggregate_context.work_units)
         _catalogue_phase("load_validation_end")
-        return envelope.payload
+        return envelope.payload, record.revision_id
 
     def _require_parent_coordinates(
         self,
@@ -386,31 +389,10 @@ class CalculationRevisionCatalogueRepository:
         if operation is None:
             with bundled_indexed_authority().operation() as indexed_operation:
                 return self.load_revisioned(operation=indexed_operation)
-        # A stored rectificativa revalidates against its evidence chain, so the
-        # guarded read carries the same aggregate context as :meth:`load`.
         _catalogue_phase("revisioned_begin")
-        aggregate_context = self._calculation_revision_aggregate_context(operation=operation)
-        loaded: tuple[CalculationRevisionCatalogue, str] | None = None
-        try:
-            loaded = self._storage.load_revisioned(
-                validation_context={
-                    CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: aggregate_context,
-                    CALCULATION_RENDERING_SERIALIZER_CONTEXT_KEY: CalculationRenderingSerializerScope(),
-                    "secure_calculation_revision": True,
-                },
-            )
-        except ValidationError:
-            loaded = None
-        if loaded is None:
-            raise CalculationRevisionPersistenceError(
-                "calculation-revision catalogue payload is invalid",
-                translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
-                context={"reason": "invalid_payload"},
-            )
-        catalogue, revision_id = loaded
-        self._require_parent_coordinates(catalogue)
+        loaded = self._load_revisioned(operation=operation)
         _catalogue_phase("revisioned_end")
-        return catalogue, revision_id
+        return loaded
 
     def to_secure_object_write(
         self,

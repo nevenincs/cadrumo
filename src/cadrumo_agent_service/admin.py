@@ -44,6 +44,7 @@ type AdminAction = Literal[
     "connect",
     "connect_status",
     "connect_cancel",
+    "connect_submit_code",
     "model_roles",
     "model_role_set",
     "model_role_clear",
@@ -62,7 +63,7 @@ class AdminTarget(Protocol):
         expected_revision: str | None = None,
         base_url: str | None = None,
         choice: Literal["direct_api", "provider_sign_in"] | None = None,
-        method: Literal["browser", "device"] | None = None,
+        method: Literal["browser", "browser-code", "device"] | None = None,
         attempt_id: str | None = None,
         role: str | None = None,
         model: str | None = None,
@@ -83,7 +84,7 @@ class AdminRequest(BaseModel):
     expected_revision: Annotated[str, Field(pattern=r"^[0-9a-f]{64}$")] | None = None
     base_url: Annotated[str, Field(max_length=2048)] | None = None
     choice: Literal["direct_api", "provider_sign_in"] | None = None
-    method: Literal["browser", "device"] | None = None
+    method: Literal["browser", "browser-code", "device"] | None = None
     attempt_id: UUID | None = None
     role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")] | None = None
     model: Annotated[str, Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)] | None = None
@@ -233,11 +234,14 @@ class AdminServer:
         secret: bytearray | None = None
         result: JsonValue
         try:
-            if request.action == "set":
+            if request.action in {"set", "connect_submit_code"}:
                 if request.secret_bytes is None:
                     raise ValueError("missing_secret_length")
+                if request.action == "connect_submit_code" and request.secret_bytes > 2048:
+                    raise ValueError("invalid_secret_length")
                 _write_document(stream, {"event": "secret_ready", "request_id": str(request.request_id)})
-                secret = _read_frame(stream, ADMIN_SECRET_MAX_BYTES, deadline=deadline)
+                maximum = 2048 if request.action == "connect_submit_code" else ADMIN_SECRET_MAX_BYTES
+                secret = _read_frame(stream, maximum, deadline=deadline)
                 if len(secret) != request.secret_bytes:
                     raise ValueError("secret_length_mismatch")
             elif request.secret_bytes is not None:

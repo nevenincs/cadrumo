@@ -15,7 +15,6 @@ from cadrumo.application.user_profile.custody_transactions import (
     ProfileCustodyTransactionError,
     ProfileCustodyTransactionOperation,
 )
-from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo_client.contracts.access_vocabulary import Availability
@@ -73,6 +72,10 @@ class RuntimeBootstrapDeleteMixin:
         channel: ByteChannel,
         request: ProfileDeletePrepare | ProfileDelete,
     ) -> None:
+        # Deletion alone owns the capsule lifecycle and its SQL record graph.
+        # Load it before reserving a profile or acquiring its pointer lock.
+        from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+
         coordinates = dict(
             request_id=request.request_id,
             runtime_boot_id=self.boot,

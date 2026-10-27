@@ -7,8 +7,8 @@ on it reaches the network. Its operation list may grow between releases, and
 only within those properties.
 
 No release has yet been pinned by a consumer, so the default surface lost the
-tools that signed in, administered sessions and keys, and served the
-installation, in this release under the name ``full``: an agent works only
+tools that signed in, administered sessions and keys, served the
+installation, and ran component setup separately, under the name ``full``: an agent works only
 inside the one profile the person signed in to or issued a key for. From the
 first release a consumer pins, a name moves with its tool list: a
 surface whose tools or properties change takes a new name, the name it had
@@ -115,21 +115,12 @@ _EVERY_TOOL: Final = frozenset(
         "review",
         "respond",
         "control",
-        "setup_status",
-        "setup_plan",
-        "setup",
-        "setup_remove",
     }
 )
 
 # A review is the step a person takes before an operation commits. No read
 # declares one, so the two tools that serve reviews have nothing to act on.
 _REVIEW_TOOLS: Final = frozenset({"review", "respond"})
-
-# Setting a component up downloads it, a full check reaches the download hosts
-# and a removal deletes component files, so a surface that reaches no other host
-# and changes nothing serves none of the setup tools.
-_SETUP_TOOLS: Final = frozenset({"setup_status", "setup_plan", "setup", "setup_remove"})
 
 
 def _local_reads() -> frozenset[str]:
@@ -154,7 +145,7 @@ MCP_SURFACES: Final[Mapping[McpSurfaceName, McpSurface]] = MappingProxyType(
             ),
             McpSurface(
                 name=McpSurfaceName.READ_ONLY_LOCAL,
-                tools=_EVERY_TOOL - _REVIEW_TOOLS - _SETUP_TOOLS,
+                tools=_EVERY_TOOL - _REVIEW_TOOLS,
                 changes_records=False,
                 reaches_network=False,
                 operations=_local_reads(),

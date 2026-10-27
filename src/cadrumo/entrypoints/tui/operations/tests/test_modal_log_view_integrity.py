@@ -200,3 +200,70 @@ def test_a_resynchronizing_page_cannot_reach_the_fold_without_a_restart_cursor()
     """
     with pytest.raises(ValueError, match="requires one restart cursor"):
         _page(status=OperationReplayStatus.EXPIRED, anchor_cursor=7, next_cursor=7)
+
+
+def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> None:
+    from .....application.operations.frontend_requests import (
+        OperationPublicPhaseEventV1,
+        OperationPublicProgressEventV1,
+    )
+    from .....core.config import override_settings
+    from ..modal import _log_row_text
+
+    phase = OperationPublicPhaseEventV1(
+        sequence=1,
+        revision=1,
+        timestamp=datetime(2026, 1, 1, tzinfo=UTC),
+        code="operation.phase",
+        phase_code="dependencies.setup.browser.download",
+    )
+    progress = OperationPublicProgressEventV1(
+        sequence=2,
+        revision=1,
+        timestamp=phase.timestamp,
+        code="operation.progress",
+        completed=25,
+        total=100,
+        unit_code="bytes",
+        subject_code="browser",
+    )
+    page = OperationPublicEventPageV1(
+        operation_id=_OPERATION_ID,
+        anchor_cursor=2,
+        requested_cursor=0,
+        next_cursor=2,
+        restart_cursor=None,
+        status=OperationReplayStatus.PAGE,
+        events=(phase, progress),
+    )
+    view = fold_event_page(build_initial_log_view(_OPERATION_ID), page)
+    assert view.rows[0].phase_code == phase.phase_code
+    assert (view.rows[1].completed, view.rows[1].total, view.rows[1].unit_code, view.rows[1].subject_code) == (
+        25,
+        100,
+        "bytes",
+        "browser",
+    )
+    with override_settings(cadrumo_output_language="en"):
+        assert "25 B" in _log_row_text(view.rows[1])
+        assert "Browser for the tax agency website" in _log_row_text(view.rows[1])
+        assert "25%" in _log_row_text(view.rows[1])
+        assert _log_row_text(view.rows[0]) != "Operation phase"
+
+
+@pytest.mark.parametrize(
+    ("locale", "expected"),
+    [
+        ("en", "Following a setup that is already running…"),
+        ("es", "Siguiendo una instalación que ya está en curso…"),
+        ("ca", "Seguint una instal·lació que ja està en curs…"),
+        ("hu", "Egy már futó telepítés követése…"),
+    ],
+)
+def test_setup_notice_renders_the_localized_event_sentence(locale: str, expected: str) -> None:
+    from .....core.config import override_settings
+    from ..modal import _log_row_text
+
+    row = _row(1).model_copy(update={"notice_code": "dependencies.setup.following"})
+    with override_settings(cadrumo_output_language=locale):
+        assert _log_row_text(row) == expected

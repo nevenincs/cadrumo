@@ -1,6 +1,6 @@
 {
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-  "calculation_revision_id": "f609c1d27d695e223567a8fc1c903421cdffe6ab6590d4d0b5376a39ac0b9312",
+  "calculation_revision_id": "4e6bfe8d425e4aed9205ee6b51980e6f0d0985f24e199e48f9c3a0ac85d661cb",
   "bucket_id": "13000000-0000-4000-8000-000000000730",
   "source_kind": "justificante",
   "source_path": "modelo_130_2026Q1.pdf",
@@ -33,6 +33,6 @@
       ]
     }
   ],
-  "reconciled_at": "2026-10-24T23:22:18.826240Z",
+  "reconciled_at": "2026-10-27T08:33:43.330974Z",
   "narrative": "reconciled modelo 130 for ejercicio 2026 against work unit 66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3; verdict=mismatches; diffs=1; advisories=1"
 }

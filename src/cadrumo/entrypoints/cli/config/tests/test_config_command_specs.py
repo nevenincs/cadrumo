@@ -159,7 +159,7 @@ def test_fiscal_residency_reaches_the_handler_as_the_documented_token(token: str
 @pytest.mark.parametrize(
     ("token", "parameters", "identity", "capabilities"),
     [
-        ("setup", ("yes",), "config.provision.setup", frozenset({"components", "network"})),
+        ("setup", ("yes",), "config.provision.setup", frozenset({"components", "network", "profile-custody"})),
     ],
 )
 def test_provision_setup_extends_the_provision_cluster(
@@ -174,8 +174,7 @@ def test_provision_setup_extends_the_provision_cluster(
     assert spec in CONFIG_PROVISION_COMMAND_SPECS
     assert spec.parent_key == "config_provision"
     assert tuple(parameter.name for parameter in spec.parameters) == parameters
-    # Setup runs the component engine's role, which reaches nothing a profile holds,
-    # so it declares the network and the installation-wide component storage it writes.
+    # Setup binds the profile session and changes installation-wide component storage.
     assert spec.policy.capabilities == capabilities
     assert spec.policy.side_effects == frozenset({"network", "local-state"})
     assert spec.policy.performance == "external-io"

@@ -63,7 +63,6 @@ from .credential_operations import (
     AuthCredentialSaveResult,
     resolve_auth_credential_access,
 )
-from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
 from .operator_probe_ports import OperatorProbePorts
 from .operator_results import AuthConfigureResult, AuthLoginResult, AuthLogoutResult, AuthResetResult
 from .operator_scope_ports import OperatorScopePorts
@@ -256,8 +255,12 @@ class AuthConfigureOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
+        configure: Callable[..., AuthConfigureResult] | None = None,
     ) -> None:
+        if configure is None:
+            from .operator import configure_operator_auth
+
+            configure = configure_operator_auth
         self._ports = ports
         self._configure = configure
 
@@ -301,8 +304,12 @@ class AuthSessionAcquireOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth,
+        acquire: Callable[..., Awaitable[AuthLoginResult]] | None = None,
     ) -> None:
+        if acquire is None:
+            from .operator import login_operator_auth
+
+            acquire = login_operator_auth
         self._ports = ports
         self._acquire = acquire
 
@@ -361,8 +368,12 @@ class AuthLogoutOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        logout: Callable[..., AuthLogoutResult] = logout_operator_auth,
+        logout: Callable[..., AuthLogoutResult] | None = None,
     ) -> None:
+        if logout is None:
+            from .operator import logout_operator_auth
+
+            logout = logout_operator_auth
         self._ports = ports
         self._logout = logout
 
@@ -402,8 +413,12 @@ class AuthResetOperationExecutor:
         self,
         *,
         ports: AuthOperationPorts,
-        reset: Callable[..., AuthResetResult] = reset_operator_auth,
+        reset: Callable[..., AuthResetResult] | None = None,
     ) -> None:
+        if reset is None:
+            from .operator import reset_operator_auth
+
+            reset = reset_operator_auth
         self._ports = ports
         self._reset = reset
 
@@ -510,12 +525,22 @@ def build_auth_operation_definitions(
     ports: AuthOperationPorts,
     rotate_passphrase: Callable[..., ProfilePassphraseRotationOutcome] = rotate_profile_passphrase,
     finalize_rotation: ProfileRotationFinalizer | None = None,
-    configure: Callable[..., AuthConfigureResult] = configure_operator_auth,
-    acquire: Callable[..., Awaitable[AuthLoginResult]] = login_operator_auth,
-    logout: Callable[..., AuthLogoutResult] = logout_operator_auth,
-    reset: Callable[..., AuthResetResult] = reset_operator_auth,
+    configure: Callable[..., AuthConfigureResult] | None = None,
+    acquire: Callable[..., Awaitable[AuthLoginResult]] | None = None,
+    logout: Callable[..., AuthLogoutResult] | None = None,
+    reset: Callable[..., AuthResetResult] | None = None,
 ) -> tuple[OperationDefinition, ...]:
     """Build the owner registrations over the composed outer authority ports."""
+    # The runtime and clients import these request schemas and identities too.
+    # Only composing auth execution needs the operator's service graph; resolve
+    # it here, before an executor enters any operation effect or storage lock.
+    if configure is None or acquire is None or logout is None or reset is None:
+        from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
+
+        configure = configure_operator_auth if configure is None else configure
+        acquire = login_operator_auth if acquire is None else acquire
+        logout = logout_operator_auth if logout is None else logout
+        reset = reset_operator_auth if reset is None else reset
     return (
         _definition(
             definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,

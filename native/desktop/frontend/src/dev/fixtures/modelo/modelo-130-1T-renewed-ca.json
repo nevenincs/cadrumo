@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+      "calculation_revision_id": "c97f842f24bbb703a0f5d7223b5da565080749c9177a51fac458c1e89381a3bc",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1558,9 +1558,9 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-25",
+        "reference_on": "2026-10-27",
         "days_remaining": null,
-        "days_overdue": 188
+        "days_overdue": 190
       },
       "aeat_data": null,
       "filing": null,
@@ -1579,7 +1579,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
+      "contract_set_digest": "63eefbfa612f9215a940ebbec16d4aa1b9fd502a84be98eee12245ef14879246",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -1614,9 +1614,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "87bac3d419e5adc7c67d017b134d03f0bdd935523f43d3c3966bda5fa5a4fbde",
-    "calculation_head_digest": "f64f41f9056bf79ec6a78905df8154b9333b1b1b41b2aa1c0cb39a0beeeaddfd",
-    "current_calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+    "work_unit_record_digest": "5fea965af7e8b0b925367da08d34dd042cdd72c28f70a8f15df38ff9809b8d94",
+    "calculation_head_digest": "84a3ad74404ec9952ecfcff77b9c81bbbefbc40921279f6c75dc8f4c658e473b",
+    "current_calculation_revision_id": "c97f842f24bbb703a0f5d7223b5da565080749c9177a51fac458c1e89381a3bc",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1919,9 +1919,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T23:02:33.695850Z",
-    "expires_at": "2026-10-24T23:07:33.695850Z",
-    "baseline_id": "9ea1de08d51ebb087e20b886bb7d24fcd6644e2fba3fd083ac9a16b47cb05974"
+    "issued_at": "2026-10-27T08:13:53.820867Z",
+    "expires_at": "2026-10-27T08:18:53.820867Z",
+    "baseline_id": "1f0b1e401c2894580d5235e5c312b9873ec499ab9590b23fe9c04bb5d5149065"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2000,7 +2000,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "2e95f02dbe5b7a8f6f685c956d141f00ff76cbe748039e8d5f3b35c331522ca2",
+  "calculation_revision_id": "c97f842f24bbb703a0f5d7223b5da565080749c9177a51fac458c1e89381a3bc",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

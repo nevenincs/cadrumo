@@ -8,6 +8,7 @@ import sys
 import time
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
@@ -100,7 +101,6 @@ from cadrumo_client.transport.installation_client import InstallationClient as R
 from cadrumo_client.transport.windows import WindowsEndpoint as WindowsRuntimeEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel as WindowsRuntimeChannel
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.host import installation_reset
 from cadrumo_runtime.host.installation_reset import register_reset_acts
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import invoke_cached_cli, semantic_cli_output
@@ -290,13 +290,38 @@ def _document(reply: object) -> dict[str, Any]:
 
 
 def _forbid_the_in_process_reset(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Fail any reset the command line would do in its own process, leaving the runtime's own handlers alone."""
+    """Allow real reset work only inside the real runtime's installation dispatch.
 
-    def refuse(*_arguments: object, **_keywords: object) -> ConfigResetOperation:
-        raise AssertionError("the command line must never reset in its own process; the reset is the runtime's act")
+    Client and server share this test process. Observe the serving context,
+    rather than relying on an eager imported function escaping a monkeypatch.
+    The dispatcher, handlers and application reset all still run for real.
+    """
+    serving: ContextVar[bool] = ContextVar("serving_installation_reset", default=False)
+    settle = RuntimeProfileConnections._settle_installation_act
+    start = config_reset.start_config_reset
+    resume = config_reset.resume_config_reset
 
-    monkeypatch.setattr(config_reset, "start_config_reset", refuse)
-    monkeypatch.setattr(config_reset, "resume_config_reset", refuse)
+    def settle_in_serving_context(self: RuntimeProfileConnections, *arguments: Any, **keywords: Any) -> object:
+        token = serving.set(True)
+        try:
+            return settle(self, *arguments, **keywords)
+        finally:
+            serving.reset(token)
+
+    def require_serving() -> None:
+        assert serving.get(), "the command line must never reset in its own process; the reset is the runtime's act"
+
+    def served_start(*arguments: Any, **keywords: Any) -> ConfigResetOperation:
+        require_serving()
+        return start(*arguments, **keywords)
+
+    def served_resume(*arguments: Any, **keywords: Any) -> ConfigResetOperation:
+        require_serving()
+        return resume(*arguments, **keywords)
+
+    monkeypatch.setattr(RuntimeProfileConnections, "_settle_installation_act", settle_in_serving_context)
+    monkeypatch.setattr(config_reset, "start_config_reset", served_start)
+    monkeypatch.setattr(config_reset, "resume_config_reset", served_resume)
 
 
 def test_a_reset_drains_every_hosted_profile_before_storage_is_touched_and_keeps_them_fenced_until_it_settles(
@@ -312,7 +337,7 @@ def test_a_reset_drains_every_hosted_profile_before_storage_is_touched_and_keeps
         seen["capsules"] = [_capsule(installation, profile).exists() for profile in installation.profiles]
         return real_start(**arguments)
 
-    monkeypatch.setattr(installation_reset, "start_config_reset", observe_then_start)
+    monkeypatch.setattr(config_reset, "start_config_reset", observe_then_start)
     with _installed(tmp_path) as installation, ExitStack() as hosts, _client(installation.endpoint) as client:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]
         for profile in installation.profiles:
@@ -535,7 +560,7 @@ def test_the_start_command_beside_a_running_runtime_sends_the_act_and_prints_its
         seen["capsules"] = [_capsule(installation, profile).exists() for profile in installation.profiles]
         return real_start(**arguments)
 
-    monkeypatch.setattr(installation_reset, "start_config_reset", observe_then_start)
+    monkeypatch.setattr(config_reset, "start_config_reset", observe_then_start)
     _forbid_the_in_process_reset(monkeypatch)
     with _installed(tmp_path) as installation, ExitStack() as hosts, _client(installation.endpoint) as client:
         capsules = [_capsule(installation, profile) for profile in installation.profiles]

@@ -6,9 +6,11 @@ import asyncio
 import logging
 import sys
 import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import suppress
 from dataclasses import dataclass
 from typing import Literal
+from uuid import UUID
 
 from pydantic import ValidationError
 
@@ -24,6 +26,7 @@ from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import ProfileWorkerExtensionRecordRequest
+from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerActivity,
@@ -203,9 +206,15 @@ async def _expire_custody(
 async def _handle_custody_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
     if isinstance(request, ProfileWorkerLeaseRequest):
         if request.action == "install":
-            with read_secret(context.channel, deadline=time.monotonic() + 5) as secret:
-                context.custody.install(request.lease, secret)
-            context.operations.prepare()
+
+            def install() -> None:
+                with read_secret(context.channel, deadline=time.monotonic() + 5) as secret:
+                    context.custody.install(request.lease, secret)
+
+            await await_cancellation_complete(asyncio.to_thread(install), task_name="worker-lease-install")
+            await await_cancellation_complete(
+                asyncio.to_thread(context.operations.prepare), task_name="worker-install-prepare"
+            )
         elif request.action == "refresh":
             if request.lease.kind is SessionKind.HUMAN:
                 await await_cancellation_complete(
@@ -238,8 +247,14 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
             context.operations.forget_settled_ephemeral()
         return "status"
     if isinstance(request, ProfileWorkerHumanBindingRequest):
-        receipt, pending = context.human.bind(
-            request.candidate_id, request.lease, persist_receipt=request.persist_receipt
+        receipt, pending = await await_cancellation_complete(
+            asyncio.to_thread(
+                context.human.bind,
+                request.candidate_id,
+                request.lease,
+                persist_receipt=request.persist_receipt,
+            ),
+            task_name="worker-human-bind",
         )
         write_document(
             context.channel,
@@ -254,9 +269,13 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
         )
         return "handled"
     if isinstance(request, ProfileWorkerHumanReceiptRequest):
-        receipt = context.human.mint_receipt(
-            request.session_id,
-            SignInGeneration(lineage=request.sign_in_lineage, generation=request.sign_in_generation),
+        receipt = await await_cancellation_complete(
+            asyncio.to_thread(
+                context.human.mint_receipt,
+                request.session_id,
+                SignInGeneration(lineage=request.sign_in_lineage, generation=request.sign_in_generation),
+            ),
+            task_name="worker-human-receipt",
         )
         write_document(
             context.channel,
@@ -292,14 +311,22 @@ async def _handle_metadata_control(context: _WorkerControl, request: object) -> 
 async def _handle_human_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
     if not isinstance(request, ProfileWorkerControlRequest) or request.action not in {"password", "receipt"}:
         return None
-    with (
-        startup_phase(_log, "worker_human_proof", expected_refusals=(ProfileAccessRefusedError,)),
-        read_secret(context.channel, deadline=time.monotonic() + 5) as secret,
-    ):
-        if request.action == "password":
-            candidate, login = context.human.authenticate(secret)
-        else:
-            candidate, login = context.human.resume(secret, login_id=request.originating_login_id)
+
+    def authenticate() -> tuple[UUID, ProfileLoginOutcome]:
+        # Password derivation, receipt storage and custody locks must leave the
+        # service loop free to settle operations and answer native guard calls.
+        # Keep secret consumption and wiping inside the retained thread.
+        with (
+            startup_phase(_log, "worker_human_proof", expected_refusals=(ProfileAccessRefusedError,)),
+            read_secret(context.channel, deadline=time.monotonic() + 5) as secret,
+        ):
+            if request.action == "password":
+                return context.human.authenticate(secret)
+            return context.human.resume(secret, login_id=request.originating_login_id)
+
+    candidate, login = await await_cancellation_complete(
+        asyncio.to_thread(authenticate), task_name="worker-human-proof"
+    )
     write_document(
         context.channel,
         ProfileWorkerHumanOutcome(
@@ -329,10 +356,10 @@ async def _handle_action_control(context: _WorkerControl, request: object) -> _C
         )
         return "handled"
     if request.action == "prepare_api":
-        context.operations.prepare()
+        await await_cancellation_complete(asyncio.to_thread(context.operations.prepare), task_name="worker-api-prepare")
         return "status"
     if request.action == "cancel_human":
-        context.human.cancel()
+        await await_cancellation_complete(asyncio.to_thread(context.human.cancel), task_name="worker-human-cancel")
         return "status"
     if request.action != "stop":
         return None
@@ -462,9 +489,9 @@ def _record_control_dispatch_elapsed(
         return
 
 
-async def _serve_control_requests(context: _WorkerControl) -> None:
+async def _serve_control_requests(context: _WorkerControl, input_executor: ThreadPoolExecutor) -> None:
     while not context.failed.is_set():
-        request = (await _worker_requests.receive(context.channel, context.failed, control=True)).root
+        request = (await _worker_requests.receive(context.channel, context.failed, input_executor, control=True)).root
         if context.failed.is_set():
             raise RefusalError(RefusalCode.UNAVAILABLE)
         observed = False
@@ -582,6 +609,9 @@ async def _serve(
     operations: ProfileWorkerOperationHost,
 ) -> None:
     stop, failed, changed = asyncio.Event(), asyncio.Event(), asyncio.Event()
+    # The two channels may wait concurrently without occupying the executor
+    # used by application work or creating a new thread for every request.
+    input_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="profile-worker-input")
     uploads = WorkerSubmissionStaging()
     operation_release = _worker_cleanup.WorkerRelease(operations.close)
     human_release = _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(human.close))
@@ -601,20 +631,23 @@ async def _serve(
         _expire_custody(stop, failed, custody, uploads, human, changed, operations), name="profile-custody-expiry"
     )
     executing = asyncio.create_task(
-        _worker_requests.operate(operation_channel, operations, failed, uploads, changed),
+        _worker_requests.operate(operation_channel, operations, failed, uploads, changed, input_executor),
         name="profile-operation-requests",
     )
     warming = asyncio.create_task(asyncio.to_thread(operations.warm_imports), name="profile-operation-imports")
     try:
-        await _serve_control_requests(context)
+        await _serve_control_requests(context, input_executor)
     finally:
-        await _finish_service(
-            stop,
-            expiry,
-            executing,
-            warming,
-            operation_release,
-            human_release,
-            upload_release,
-            sys.exception(),
-        )
+        try:
+            await _finish_service(
+                stop,
+                expiry,
+                executing,
+                warming,
+                operation_release,
+                human_release,
+                upload_release,
+                sys.exception(),
+            )
+        finally:
+            input_executor.shutdown(wait=True)

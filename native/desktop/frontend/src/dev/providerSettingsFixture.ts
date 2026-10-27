@@ -109,6 +109,7 @@ export type ProviderSignInFixtureControls = {
   failNextStart: (reason: ProviderSignInFixtureFailure) => void;
   setMethods: (methods: readonly ProviderSignInMethod[]) => void;
   failNextStatus: () => void;
+  failNextSubmit: () => void;
   deferNextStatus: () => void;
   completeStatus: () => void;
   deferNextCancel: () => void;
@@ -126,6 +127,7 @@ let failNextStart: ProviderSignInFixtureFailure | null = null;
 let deferNextStart = false;
 let completeDeferredStart: (() => void) | null = null;
 let failNextStatus = false;
+let failNextSubmit = false;
 let deferNextStatus = false;
 let completeDeferredStatus: (() => void) | null = null;
 let deferNextCancel = false;
@@ -281,6 +283,9 @@ export function providerSettingsFixture({
     setMethods(methods) {
       fixtureSignInMethods = [...methods];
     },
+    failNextSubmit() {
+      failNextSubmit = true;
+    },
     failNextStatus() {
       failNextStatus = true;
     },
@@ -328,7 +333,7 @@ export function providerSettingsFixture({
   };
   const makeAttempt = async (
     provider: string,
-    method: "browser" | "device",
+    method: ProviderSignInMethod,
   ): Promise<ProviderSignInSnapshot> => {
     const record = records.get(provider);
     if (
@@ -365,8 +370,13 @@ export function providerSettingsFixture({
       : {
           attempt_id: attemptId,
           provider,
-          event: method === "browser" ? "browser_action" : "started",
-          ...(method === "browser"
+          event:
+            method === "browser-code"
+              ? "authorization_code_required"
+              : method === "browser"
+                ? "browser_action"
+                : "started",
+          ...(method !== "device"
             ? { url: AUTH_URL }
             : { user_code: "EXAMPLE-1234" }),
         };
@@ -407,7 +417,8 @@ export function providerSettingsFixture({
         fixtureCancelRequestedFor === fixtureAttempt.attempt_id &&
         (fixtureAttempt.event === "starting" ||
           fixtureAttempt.event === "started" ||
-          fixtureAttempt.event === "browser_action")
+          fixtureAttempt.event === "browser_action" ||
+          fixtureAttempt.event === "authorization_code_required")
       ) {
         fixtureAttempt = {
           attempt_id: fixtureAttempt.attempt_id,
@@ -416,6 +427,26 @@ export function providerSettingsFixture({
         };
         return fixtureAttempt;
       }
+      return fixtureAttempt;
+    },
+    async submitCode({ attemptId, code }) {
+      if (
+        !fixtureAttempt ||
+        fixtureAttempt.attempt_id !== attemptId ||
+        fixtureAttempt.event !== "authorization_code_required" ||
+        !/^[!-~]{1,2048}$/.test(code)
+      )
+        throw coded("invalid_request");
+      say("providerSignInSubmitCode");
+      if (failNextSubmit) {
+        failNextSubmit = false;
+        throw coded("busy");
+      }
+      fixtureAttempt = {
+        attempt_id: attemptId,
+        provider: fixtureAttempt.provider,
+        event: "started",
+      };
       return fixtureAttempt;
     },
     async cancel({ attemptId }) {

@@ -75,8 +75,8 @@ from .navigation import (
 from .operations.palette import WorkbenchOperationProviderV1
 from .presentation import PagePresentationRequested, presentation_target
 from .search import WorkbenchCommandProviderV1, WorkbenchSearchDoorV1, WorkbenchSearchProviderV1
-from .setup.door import SetupStatusReaderPort
 from .setup.focus import SetupItemRequested, setup_item_target
+from .setup.screen import SetupStatusReaderPort
 
 if TYPE_CHECKING:
     from textual.timer import Timer
@@ -472,11 +472,10 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
         self.navigate_to(presentation_target(message.view))
 
     async def read_setup_row(self, item_id: str) -> DependencyStatusRow | None:
-        """Read ``item_id``'s current row from the components role's quick check, the setup page's own read.
+        """Read the item's current row through the profile-bound status operation.
 
-        ``None`` when this session reads no setup status, the role cannot be
-        started or breaks its protocol, or the status has no row for the item:
-        a surface then offers nothing.
+        Missing status authority, an unavailable operation or an absent row
+        offers no setup action.
         """
         door = self._setup_status
         if door is None:
@@ -485,7 +484,7 @@ class CadrumoTuiApp(RootNavigationMixin, QuietApp[AccountRecomposeRequiredV1 | N
             status = await door.read_status()
         except (RefusalError, CadrumoError):
             return None
-        return next((row for row in status.status_rows() if row.item_id == item_id), None)
+        return next((row for row in status.rows if row.item_id == item_id), None)
 
     def on_setup_item_requested(self, message: SetupItemRequested) -> None:
         """Open the setup page on the item a refused operation needs, as any other navigation.

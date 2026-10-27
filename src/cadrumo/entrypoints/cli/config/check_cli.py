@@ -16,6 +16,7 @@ from collections.abc import Mapping
 
 import typer
 
+from cadrumo_client.commands.errors import CliOperationStillRunningError, CliRefusedBoundaryError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ....application.dependency_contracts import DependencyStatusRow
@@ -115,13 +116,18 @@ def _check_text_lines(
     return tuple(lines)
 
 
-def read_setup_rows() -> tuple[DependencyStatusRow, ...] | None:
+def read_setup_rows(ctx: typer.Context) -> tuple[DependencyStatusRow, ...] | None:
     """Read every setup item's quick check from the components role, or ``None`` when the role cannot answer."""
     from .provision_cli import read_quick_setup_rows
 
     try:
-        return read_quick_setup_rows()
-    except RefusalError:
+        return read_quick_setup_rows(ctx)
+    except (RefusalError, CliOperationStillRunningError, CliRefusedBoundaryError) as error:
+        if any(
+            error.__dict__.get(field) is not None
+            for field in ("async_cleanup_error", "cleanup_error", "_transport_cleanup")
+        ):
+            raise
         return None
 
 
@@ -174,7 +180,7 @@ def _present_report(
 def config_check(ctx: typer.Context) -> None:
     """Report the authenticated profile's canonical workstation health facts."""
     projection = read_workstation_check_for_cli(ctx)
-    setup_rows = read_setup_rows()
+    setup_rows = read_setup_rows(ctx)
     result, lines = _present_report(projection, setup_rows)
     notices = () if setup_rows is not None else (_setup_unavailable_notice(),)
     emit_envelope(ctx, command="config.check", result=result, lines=lines, notices=notices)

@@ -5,9 +5,8 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import AsyncGenerator
-from concurrent.futures import Future
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack, asynccontextmanager
-from threading import Thread
 from typing import TypeGuard
 from uuid import UUID
 
@@ -69,7 +68,9 @@ from .worker_submission_staging import StagedSubmission, WorkerSubmissionStaging
 _LOGGER = get_logger(__name__)
 
 
-async def receive(channel: WorkerChannel, failed: asyncio.Event, *, control: bool = False) -> ProfileWorkerRequest:
+async def receive(
+    channel: WorkerChannel, failed: asyncio.Event, input_executor: ThreadPoolExecutor, *, control: bool = False
+) -> ProfileWorkerRequest:
     """Read one bounded worker request, consuming lease transfers only on control."""
 
     def read() -> ProfileWorkerRequest:
@@ -84,30 +85,20 @@ async def receive(channel: WorkerChannel, failed: asyncio.Event, *, control: boo
         return request
 
     while not failed.is_set():
-        if await _input_ready(channel, failed):
+        if await _input_ready(channel, failed, input_executor):
             return await await_cancellation_complete(asyncio.to_thread(read), task_name="profile-worker-read")
     raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-async def _input_ready(channel: WorkerChannel, failed: asyncio.Event) -> bool:
+async def _input_ready(channel: WorkerChannel, failed: asyncio.Event, input_executor: ThreadPoolExecutor) -> bool:
     """Block one thread on the channel until input, the worker's failure, or cancellation.
 
-    The thread is the waiter's own, so an idle channel holds no shared executor
-    thread, and it has returned before the channel is read or released.
+    The service owns its input executor separately from application work. Each
+    wait has returned before the channel is read or released; later requests
+    reuse the same threads instead of starting one for every exchange.
     """
     wake = NativeWake()
-    waited: Future[bool] = Future()
-    # Running from here on, so nothing can cancel it before the thread answers.
-    waited.set_running_or_notify_cancel()
-
-    def wait() -> None:
-        try:
-            waited.set_result(channel.wait_readable(wake))
-        except BaseException as error:
-            waited.set_exception(error)
-
-    Thread(target=wait, name="profile-worker-input", daemon=True).start()
-    outcome = asyncio.wrap_future(waited)
+    outcome = asyncio.wrap_future(input_executor.submit(channel.wait_readable, wake))
     stopping = asyncio.ensure_future(failed.wait())
     try:
         await asyncio.wait((outcome, stopping), return_when=asyncio.FIRST_COMPLETED)
@@ -127,16 +118,24 @@ async def operate(
     failed: asyncio.Event,
     uploads: WorkerSubmissionStaging,
     changed: asyncio.Event,
+    input_executor: ThreadPoolExecutor,
 ) -> None:
     """Dispatch operation-channel requests and serialize refusals on that channel.
 
-    ``changed`` wakes custody expiry after each request, which may have staged an upload.
+    ``changed`` wakes custody expiry after acts that may change staged uploads.
     """
     try:
         while True:
-            request = (await receive(channel, failed)).root
+            request = (await receive(channel, failed, input_executor)).root
+            expiry_needed = True
             try:
                 await _dispatch_request(channel, operations, request, uploads)
+                # Reads already validate custody. A staged upload still needs
+                # the pass if that validation retired any of its sessions.
+                expiry_needed = not (
+                    (_is_read(request) or isinstance(request, ProfileWorkerContractRequest))
+                    and uploads.seconds_until_expiry() is None
+                )
             except (AutomationCustodyError, ProfileAccessRefusedError, ValidationError) as refusal:
                 if failed.is_set():
                     raise
@@ -158,8 +157,9 @@ async def operate(
                     deadline=time.monotonic() + 5,
                 )
             finally:
+                if expiry_needed:
+                    changed.set()
                 del request
-                changed.set()
     except Exception:
         failed.set()
         raise
@@ -270,7 +270,10 @@ async def _handle_submission(
         )
         return
     if isinstance(request, ProfileWorkerSubmissionBeginRequest):
-        contract = operations.contract(request.session_id, request.definition_id)
+        contract = await await_cancellation_complete(
+            asyncio.to_thread(operations.contract, request.session_id, request.definition_id),
+            task_name="profile-worker-upload-contract",
+        )
         if isinstance(request.descriptor, FinancialOperandInputDescriptor) != (
             contract.transient_financial_operand is not None
         ):

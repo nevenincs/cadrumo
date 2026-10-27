@@ -200,10 +200,11 @@ impl Status {
 
 /// The attended sign-in route the person selected.
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "kebab-case")]
 pub enum SignInMethod {
     Browser,
     Device,
+    BrowserCode,
 }
 
 impl SignInMethod {
@@ -211,6 +212,7 @@ impl SignInMethod {
         match text {
             "browser" => Some(Self::Browser),
             "device" => Some(Self::Device),
+            "browser-code" => Some(Self::BrowserCode),
             _ => None,
         }
     }
@@ -223,6 +225,7 @@ pub enum SignInEvent {
     Starting,
     Started,
     BrowserAction,
+    AuthorizationCodeRequired,
     Succeeded,
     Cancelled,
     Failed,
@@ -331,7 +334,8 @@ fn valid_user_code(text: &str) -> bool {
 
 impl SignInSnapshot {
     fn checked(self) -> Result<Self, ApplicationError> {
-        let active_event = self.event == SignInEvent::BrowserAction;
+        let browser_event = self.event == SignInEvent::BrowserAction;
+        let url_event = browser_event || self.event == SignInEvent::AuthorizationCodeRequired;
         let terminal_event = matches!(
             self.event,
             SignInEvent::Succeeded | SignInEvent::Cancelled | SignInEvent::Failed
@@ -343,11 +347,11 @@ impl SignInSnapshot {
             && (self
                 .url
                 .as_ref()
-                .is_none_or(|url| active_event && is_https_url(url)))
+                .is_none_or(|url| url_event && is_https_url(url)))
             && (self
                 .user_code
                 .as_ref()
-                .is_none_or(|code| active_event && valid_user_code(code)))
+                .is_none_or(|code| browser_event && valid_user_code(code)))
             && (!terminal_event || self.url.is_none() && self.user_code.is_none());
         if valid { Ok(self) } else { Err(protocol()) }
     }
@@ -448,8 +452,8 @@ pub fn status(outcome: Outcome) -> Result<Status, CommandFailure> {
         && status.sign_in_methods.iter().all(|(provider, methods)| {
             seen_sign_in.contains(provider)
                 && !methods.is_empty()
-                && methods.len() <= 2
-                && (methods.len() == 1 || methods[0] != methods[1])
+                && methods.len() <= 3
+                && methods.iter().enumerate().all(|(index, method)| !methods[..index].contains(method))
         })
         && status
             .providers
@@ -890,6 +894,15 @@ mod tests {
         assert_eq!(sent["url"], active["url"]);
         assert_eq!(sent["user_code"], "A1-B2");
 
+        let mut code_required = active.clone();
+        code_required["event"] = json!("authorization_code_required");
+        code_required.as_object_mut().unwrap().remove("user_code");
+        let parsed = sign_in_snapshot(success(code_required.clone()), None, None).unwrap();
+        assert_eq!(parsed.event, SignInEvent::AuthorizationCodeRequired);
+        assert!(parsed.url.is_some());
+        code_required["user_code"] = json!("DEVICE-1234");
+        assert!(sign_in_snapshot(success(code_required), None, None).is_err());
+
         let cancellation_pending = json!({
             "attempt_id":"123e4567-e89b-42d3-a456-426614174000",
             "provider":"codex_cli",
@@ -963,6 +976,10 @@ mod tests {
     fn sign_in_method_and_attempt_identifiers_have_closed_forms() {
         assert_eq!(SignInMethod::parse("browser"), Some(SignInMethod::Browser));
         assert_eq!(SignInMethod::parse("device"), Some(SignInMethod::Device));
+        assert_eq!(
+            SignInMethod::parse("browser-code"),
+            Some(SignInMethod::BrowserCode)
+        );
         for method in ["", "Browser", "terminal", "browser "] {
             assert_eq!(SignInMethod::parse(method), None);
         }

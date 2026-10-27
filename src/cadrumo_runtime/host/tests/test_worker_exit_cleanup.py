@@ -8,6 +8,7 @@ import struct
 import sys
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import nullcontext, suppress
 from dataclasses import dataclass
 from pathlib import Path
@@ -477,8 +478,8 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     monkeypatch.setattr(worker_service, "time", SimpleNamespace(monotonic=lambda: next(clock)))
     caplog.set_level(logging.DEBUG, logger=worker_service._log.name)
 
-    with pytest.raises(RefusalError) as caught:
-        asyncio.run(worker_service._serve_control_requests(context))
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError) as caught:
+        asyncio.run(worker_service._serve_control_requests(context, input_executor))
 
     assert caught.value.reason is RefusalCode.UNAVAILABLE
     assert retired == discarded == [session_id]
@@ -553,8 +554,8 @@ def test_a_status_request_is_answered_without_waking_idle_custody_expiry(monkeyp
 
     monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
 
-    with pytest.raises(RefusalError):
-        asyncio.run(worker_service._serve_control_requests(context))
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError):
+        asyncio.run(worker_service._serve_control_requests(context, input_executor))
 
     assert b'"in_flight_operations":2' in b"".join(output), "the status was not answered"
     assert not context.changed.is_set(), "a heartbeat's status read woke idle custody expiry"
@@ -602,8 +603,8 @@ def test_an_activity_read_reads_no_custody_and_leaves_idle_custody_expiry_asleep
 
     monkeypatch.setattr(worker_service._worker_requests, "receive", receive)
 
-    with pytest.raises(RefusalError):
-        asyncio.run(worker_service._serve_control_requests(context))
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(RefusalError):
+        asyncio.run(worker_service._serve_control_requests(context, input_executor))
 
     written = b"".join(output)
     assert b'"kind":"activity"' in written and b'"in_flight_operations":3' in written
@@ -703,6 +704,60 @@ def test_retirement_keeps_worker_loop_responsive(phase: str) -> None:
         request = ProfileWorkerRetireRequest(request_id=uuid4(), session_id=uuid4())
         assert await worker_service._handle_custody_control(context, request) == "status"
         assert progressed.is_set()
+
+    asyncio.run(exercise())
+
+
+@pytest.mark.parametrize("action", ["prepare_api", "cancel_human"])
+def test_blocking_control_keeps_loop_responsive_and_owns_cancelled_work(action: str) -> None:
+    async def exercise() -> None:
+        loop = asyncio.get_running_loop()
+        loop_thread = threading.get_ident()
+        entered = asyncio.Event()
+        release = threading.Event()
+        finished = threading.Event()
+
+        def blocking_control() -> None:
+            assert threading.get_ident() != loop_thread
+            loop.call_soon_threadsafe(entered.set)
+            assert release.wait(5), "test did not release the control handler"
+            finished.set()
+
+        class Operations:
+            def prepare(self) -> None:
+                blocking_control()
+
+        class Human:
+            def cancel(self) -> None:
+                blocking_control()
+
+        context = worker_service._WorkerControl(
+            channel=cast(WorkerChannel, object()),
+            custody=cast(ProfileWorkerCustody, object()),
+            human=cast(ProfileWorkerHumanLogin, Human()),
+            operations=cast(ProfileWorkerOperationHost, Operations()),
+            uploads=worker_service.WorkerSubmissionStaging(),
+            failed=asyncio.Event(),
+            operation_release=cast(worker_service._worker_cleanup.WorkerRelease[OperationDrainResult], object()),
+            upload_release=cast(worker_service._worker_cleanup.WorkerRelease[None], object()),
+            changed=asyncio.Event(),
+        )
+        request = ProfileWorkerControlRequest.model_validate({"request_id": uuid4(), "action": action})
+        handler = asyncio.create_task(worker_service._handle_action_control(context, request))
+        try:
+            await asyncio.wait_for(entered.wait(), 2)
+            handler.cancel()
+            await asyncio.sleep(0)
+            assert not handler.done()
+            assert not finished.is_set()
+            release.set()
+            with pytest.raises(asyncio.CancelledError):
+                await handler
+            assert finished.is_set()
+        finally:
+            release.set()
+            with suppress(asyncio.CancelledError):
+                await handler
 
     asyncio.run(exercise())
 

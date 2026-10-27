@@ -559,6 +559,13 @@ core:
     errors:
       output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
         admès en forma de text.
+dependencies:
+  setup:
+    cancel_requested: Aturant la instal·lació…
+    following: Seguint una instal·lació que ja està en curs…
+    input_refused: No s’ha pogut acceptar la sol·licitud d’instal·lació.
+    retrying: Tornant a provar la descàrrega…
+    waiting_for_server: Esperant el servidor de descàrrega…
 desktop:
   about:
     agent: Agent
@@ -4191,9 +4198,19 @@ operation:
     action:
       apply: Aplica
       cancel: Cancelar
+      claim: Revisa i respon
       close: Tanca
       detach: Desvincula
       reject: Rebutja
+    claim:
+      already_claimed: Una altra persona està revisant aquesta instal·lació. No pots
+        respondre aquí.
+      authority_lost: Ja no pots respondre a aquesta revisió. Inicia una instal·lació
+        nova.
+      stale: La revisió d’aquesta instal·lació ha canviat. Inicia una instal·lació
+        nova per revisar el pla actual.
+      unavailable: Aquesta revisió ja no està disponible. Inicia la sessió i comença
+        una instal·lació nova.
     detail:
       action_refused: Acció rebutjada
       cleanup_deadline: Termini de tancament
@@ -7338,8 +7355,11 @@ tui:
     progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
     review:
       decline: Ara no
+      open: Obre la revisió de la instal·lació
+      reference: Referència de la instal·lació
       title: Vols preparar-ho?
     set_up_all: Prepara-ho tot
+    sign_in_first: Inicia la sessió per comprovar o instal·lar els components.
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
@@ -7353,8 +7373,7 @@ tui:
     stop: Atura
     stopping: S'està aturant la preparació…
     title: Components
-    unavailable: Cadrumo no ha pogut iniciar el seu motor de components, així que
-      ara no es poden comprovar ni preparar els components.
+    unavailable: No s’han pogut comprovar els components. Torna-ho a provar.
     waiting_for_program: '%{name}: s''està esperant que s''iniciï el programa'
     working: Preparant el pla…
 workspace:

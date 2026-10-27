@@ -367,6 +367,10 @@ desktop:
     sign_in_cancelled: Se canceló el inicio de sesión.
     sign_in_cleanup_failed: Reinicia Cadrumo antes de volver a iniciar sesión.
     sign_in_close: Cerrar el inicio de sesión
+    sign_in_code_label: Código de autorización
+    sign_in_code_prompt: Introduce el código de autorización que aparece en la página
+      del proveedor.
+    sign_in_code_submit: Enviar código
     sign_in_done: Listo
     sign_in_failure: No se pudo completar el inicio de sesión. Vuelve a intentarlo
       más tarde.

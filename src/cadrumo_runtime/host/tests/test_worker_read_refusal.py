@@ -8,7 +8,10 @@ a subject can be made to vanish.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
+from typing import cast
 from uuid import uuid4
 
 import pytest
@@ -39,16 +42,25 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import OperationManagementRequest
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
+from cadrumo_client.contracts.submission_payload import SubmissionPayloadDescriptor
 from cadrumo_runtime.contracts.profile_worker import (
+    ProfileWorkerContractRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObserveRequest,
     ProfileWorkerOperationRequest,
     ProfileWorkerProjectPageRequest,
     ProfileWorkerProjectRequest,
+    ProfileWorkerRequest,
     ProfileWorkerResumeRequest,
+    ProfileWorkerSubmissionAbortRequest,
+    ProfileWorkerSubmissionBeginRequest,
 )
 
+from ...adapters.worker_transport import WorkerChannel
+from .. import worker_operation_requests
+from ..operation_host import ProfileWorkerOperationHost
 from ..worker_operation_requests import _is_read, read_refusal
+from ..worker_submission_staging import WorkerSubmissionStaging
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -69,6 +81,73 @@ def _schema() -> OperationSchemaIdentityV1:
 
 
 _EXTERNAL_CLIENT = OperationFrontendProjection.EXTERNAL_CLIENT
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("action", ["contract", "observe", "abort"])
+@pytest.mark.parametrize("staged", [False, True])
+async def test_read_dispatch_does_not_schedule_custody_expiry_but_upload_changes_do(
+    monkeypatch: pytest.MonkeyPatch, action: str, staged: bool
+) -> None:
+    request = (
+        ProfileWorkerContractRequest(request_id=uuid4(), session_id=uuid4(), definition_id="synthetic.read")
+        if action == "contract"
+        else ProfileWorkerObserveRequest(
+            request_id=uuid4(),
+            session_id=uuid4(),
+            frontend=_EXTERNAL_CLIENT,
+            observation=OperationObservationRequestV1(operation_id=_OPERATION, after_cursor=0, page_limit=8),
+        )
+        if action == "observe"
+        else ProfileWorkerSubmissionAbortRequest(
+            request_id=uuid4(), session_id=uuid4(), connection_id=uuid4(), upload_id=uuid4()
+        )
+    )
+    changed, failed = asyncio.Event(), asyncio.Event()
+    uploads = WorkerSubmissionStaging()
+    if staged:
+        uploads.begin(
+            ProfileWorkerSubmissionBeginRequest(
+                request_id=uuid4(),
+                upload_id=uuid4(),
+                connection_id=uuid4(),
+                session_id=uuid4(),
+                frontend=_EXTERNAL_CLIENT,
+                definition_id="synthetic.read",
+                subject_ref="profile:exact",
+                descriptor=SubmissionPayloadDescriptor(byte_count=2, payload_digest=sha256_hex(b"{}")),
+            )
+        )
+    received = False
+    dispatched = False
+
+    async def receive(*_args: object) -> ProfileWorkerRequest:
+        nonlocal received
+        if received:
+            raise asyncio.CancelledError
+        received = True
+        return ProfileWorkerRequest(request)
+
+    async def dispatch(*_args: object) -> None:
+        nonlocal dispatched
+        dispatched = True
+
+    # Isolate scheduling from the operation's effects; request classification
+    # and the real dispatch loop determine whether the expiry task is woken.
+    monkeypatch.setattr(worker_operation_requests, "receive", receive)
+    monkeypatch.setattr(worker_operation_requests, "_dispatch_request", dispatch)
+    with ThreadPoolExecutor(max_workers=2) as input_executor, pytest.raises(asyncio.CancelledError):
+        await worker_operation_requests.operate(
+            cast(WorkerChannel, object()),
+            cast(ProfileWorkerOperationHost, object()),
+            failed,
+            uploads,
+            changed,
+            input_executor,
+        )
+    assert dispatched and not failed.is_set()
+    assert changed.is_set() is (staged or action == "abort")
+    uploads.close()
 
 
 def _manage(management: OperationManagementRequest) -> ProfileWorkerManageRequest:

@@ -150,11 +150,15 @@ def handle_registered_review[ReviewT: BaseModel](
     review = registered_review_projection(reply.document, handler, contract)
     if handler.validate_reference is not None:
         handler.validate_reference(review, pending.review_reference)
+    if handler.present_document is not None:
+        handler.present_document(reply.document)
     decision = handler.decide(review)
     if decision is None:
         return detach_registered_review(review, pending, profile_id, session_id, exchange)
     if decision not in ("apply", "reject"):
         raise RefusalError(RefusalCode.INVALID_FRAME)
+    if handler.claim is not None:
+        pending = handler.claim(pending, reply.document, profile_id, session_id, exchange)
     actor_ref = require_registered_response_control(pending, profile_id, session_id, decision, exchange)
     if decision == "apply":
         mutation = OperationResponseApplyRequestV1(

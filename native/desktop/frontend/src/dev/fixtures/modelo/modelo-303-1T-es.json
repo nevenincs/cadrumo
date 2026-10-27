@@ -17983,9 +17983,9 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-25",
+        "reference_on": "2026-10-27",
         "days_remaining": null,
-        "days_overdue": 188
+        "days_overdue": 190
       },
       "aeat_data": null,
       "filing": null,
@@ -18004,7 +18004,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
+      "contract_set_digest": "63eefbfa612f9215a940ebbec16d4aa1b9fd502a84be98eee12245ef14879246",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -21120,9 +21120,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T23:20:45.440039Z",
-    "expires_at": "2026-10-24T23:25:45.440039Z",
-    "baseline_id": "093c82f2b018760f38e2dc516b8daeb9378bacfc53b7c4f673bec46481b8ff40"
+    "issued_at": "2026-10-27T08:32:26.695295Z",
+    "expires_at": "2026-10-27T08:37:26.695295Z",
+    "baseline_id": "c561597f130bc4040bec983c8316b08560fab02c9e370e05b0e4590502a6303a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

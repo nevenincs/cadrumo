@@ -1,28 +1,24 @@
-"""``config provision`` leaves declare what they reach, and the component leaves need no profile session.
-
-The component leaves run the native component engine, which reaches only
-installation-wide components no profile holds: its quick check reads local
-files only, its full check reaches the network, its setup also writes
-component storage and its removal deletes from component storage without the
-network. The local reader's leaves still submit operations in the signed-in
-profile, so they declare installation storage and stay behind the session. How
-each check answers offline is proved by the engine's own suites.
-"""
+"""Provision commands declare their effects and require a signed-in profile."""
 
 from __future__ import annotations
 
 import pytest
 
+from cadrumo.tests.english_locale_fixture import english_locale_fixture
+
 from ..command_specs import COMMAND_GRAPH
 from ..profile_authentication_policy import command_is_profile_free
+from .cli_runner import invoke_cached_cli, semantic_cli_text
+from .sessionless_root_fixtures import _sessionless_root
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+__all__ = ["_sessionless_root", "english_locale_fixture"]
 
 
 def test_the_quick_status_reads_only_local_files() -> None:
     status = COMMAND_GRAPH.spec("config_provision_status")
 
-    assert status.policy.capabilities == frozenset({"state-free"})
+    assert status.policy.capabilities == frozenset({"profile-custody"})
     assert status.policy.side_effects == frozenset({"none"})
     assert status.parameters == ()
 
@@ -31,7 +27,7 @@ def test_the_quick_status_reads_only_local_files() -> None:
 def test_a_full_check_declares_the_network_it_reaches_and_writes_nothing(key: str) -> None:
     policy = COMMAND_GRAPH.spec(key).policy
 
-    assert policy.capabilities == frozenset({"network"})
+    assert policy.capabilities == frozenset({"network", "profile-custody"})
     assert policy.side_effects == frozenset({"network"})
 
 
@@ -39,23 +35,41 @@ def test_a_full_check_declares_the_network_it_reaches_and_writes_nothing(key: st
 def test_a_setup_declares_its_download_and_its_component_storage(key: str) -> None:
     policy = COMMAND_GRAPH.spec(key).policy
 
-    assert policy.capabilities == frozenset({"components", "network"})
+    assert policy.capabilities == frozenset({"components", "network", "profile-custody"})
     assert policy.side_effects == frozenset({"network", "local-state"})
 
 
 def test_a_removal_declares_the_component_storage_it_deletes_from_and_no_network() -> None:
     policy = COMMAND_GRAPH.spec("config_provision_remove").policy
 
-    assert policy.capabilities == frozenset({"components"})
+    assert policy.capabilities == frozenset({"components", "profile-custody"})
     assert policy.side_effects == frozenset({"local-state"})
     assert policy.destructive
 
 
-@pytest.mark.parametrize("leaf", ["status", "probe", "verify", "setup", "browser", "report", "remove"])
-def test_only_the_component_leaves_run_without_a_profile_session(leaf: str) -> None:
+@pytest.mark.parametrize("leaf", ["status", "probe", "verify", "setup", "browser", "report", "remove", "review"])
+def test_component_leaves_require_a_profile_session(leaf: str) -> None:
     profile_free = command_is_profile_free(COMMAND_GRAPH.spec(f"config_provision_{leaf}"))
 
-    assert profile_free is (leaf in {"status", "probe", "verify", "setup", "browser", "remove"})
+    assert profile_free is False
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["status"],
+        ["probe"],
+        ["verify"],
+        ["setup"],
+        ["browser"],
+        ["remove", "browser", "--yes"],
+        ["review", "a" * 64, "--yes"],
+    ],
+)
+def test_provision_verbs_say_sign_in_first_without_a_profile(_sessionless_root, arguments: list[str]) -> None:
+    result = invoke_cached_cli(["config", "provision", *arguments])
+    assert result.exit_code != 0
+    assert "sign in" in semantic_cli_text(result.output).lower()
 
 
 def test_the_local_ai_server_has_no_start_leaf_because_the_manager_runs_it() -> None:

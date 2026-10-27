@@ -362,6 +362,9 @@ desktop:
     sign_in_cancelled: Sign-in was cancelled.
     sign_in_cleanup_failed: Restart Cadrumo before signing in again.
     sign_in_close: Close sign-in
+    sign_in_code_label: Authorization code
+    sign_in_code_prompt: Enter the authorization code shown on the provider page.
+    sign_in_code_submit: Submit code
     sign_in_done: Done
     sign_in_failure: Sign-in couldn't be completed. Try again later.
     sign_in_host_disconnected: Cadrumo lost contact with this sign-in and cancelled

@@ -118,8 +118,9 @@ def test_an_idle_connection_waits_once_and_stop_ends_it_promptly(tmp_path: Path)
                 stop.set()
                 serving.result(timeout=10)
                 assert time.monotonic() - stopping < server.DRAIN_SECONDS / 3
-                # The stop itself ended the wait; it was not left to the drain's close.
-                assert listener.accepted[0].endings == [False]
+                # Shutdown signals the stop wake and closes owned channels. Either
+                # may win; both must end the one idle wait without a timer retry.
+                assert listener.accepted[0].endings in ([False], [RefusalCode.CONNECTION_CLOSED])
             finally:
                 client.close()
         finally:

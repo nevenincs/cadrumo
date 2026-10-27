@@ -4,15 +4,21 @@ from __future__ import annotations
 
 import asyncio
 import json
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
+from .....application.operations.persistence.leases import operation_conflict_scope_reference
 from .....core.json_shapes import model_json_object
+from .....core.locks import exclusive_file_lock
 from ...storage.errors import RepositoryError
-from ..financial_journal_purge import FinancialEditJournalPurgeRefusedError
+from .. import journal as journal_module
+from .._journal_validation import OperationJournalRecord
+from ..financial_journal_purge import FinancialEditJournalPurgeRefusedError, purge_legacy_financial_edit_journal
 from ..journal import OperationJournalRepository
-from .test_journal import _snapshot
+from .test_journal import _claim_lease, _lease, _snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 _SENTINEL = "93847562.19"
@@ -137,6 +143,57 @@ def test_successor_amount_free_request_is_unchanged(tmp_path: Path) -> None:
     original = path.read_bytes()
     asyncio.run(repository.load("a" * 64))
     assert path.read_bytes() == original
+
+
+def test_paused_legacy_purge_cannot_overwrite_a_concurrent_journal_commit(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A replacement derived from captured legacy bytes cannot restore an old revision."""
+    repository, path = _write_legacy(tmp_path, policy="credential_free_journal")
+    replacement = purge_legacy_financial_edit_journal(path.read_text(encoding="utf-8"), operation_id="a" * 64)
+    assert replacement is not None
+    initial = OperationJournalRecord.model_validate_json(replacement).snapshot
+    template = _snapshot(revision=1, sequence=2)
+    event = template.events[0].model_copy(update={"identity": initial.identity})
+    successor = initial.model_copy(
+        update={
+            "revision": template.revision,
+            "updated_at": template.updated_at,
+            "event_cursor": template.event_cursor,
+            "phase_code": template.phase_code,
+            "events": (event,),
+        }
+    )
+    lease = _lease().model_copy(
+        update={
+            "scope_ref": operation_conflict_scope_reference(
+                definition_id=initial.identity.definition_id, subject_ref=initial.identity.subject_ref
+            )
+        }
+    )
+    entered, release = threading.Event(), threading.Event()
+    original_purge = journal_module.purge_legacy_financial_edit_journal
+
+    def paused_purge(raw: str, *, operation_id: str) -> str | None:
+        if not entered.is_set():
+            entered.set()
+            assert release.wait(10), "reader was not released"
+        return original_purge(raw, operation_id=operation_id)
+
+    monkeypatch.setattr(journal_module, "purge_legacy_financial_edit_journal", paused_purge)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reading = pool.submit(lambda: asyncio.run(repository.load(initial.operation_id)))
+        try:
+            assert entered.wait(10), "reader never reached purge analysis"
+            with exclusive_file_lock(repository._repository.lock_target, timeout=0):
+                pass
+            _claim_lease(tmp_path, lease)
+            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=lease))
+        finally:
+            release.set()
+        assert reading.result(timeout=10) in (initial, successor)
+    assert asyncio.run(repository.load(initial.operation_id)) == successor
+    assert _SENTINEL.encode() not in path.read_bytes()
 
 
 def test_purge_preserves_an_already_committed_terminal_outcome(tmp_path: Path) -> None:

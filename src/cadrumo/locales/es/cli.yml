@@ -2734,11 +2734,17 @@ cli:
         yes_help: Lo borra sin preguntar.
       report:
         help: Indica la memoria de este ordenador y el modelo elegido para cada rol.
+      review:
+        help: Revisa y responde a una operación de instalación pendiente.
+        operation_help: Identificador de la operación pendiente de revisión.
+        reject_help: Rechaza el plan de instalación mostrado.
       setup:
         help: 'Prepara lo que esta línea de comandos puede preparar: el navegador.
           Muestra qué se va a descargar, cuánto ocupa y dónde se guarda, y te pregunta
           antes de descargar nada. La IA local se configura en la aplicación de escritorio
           de Cadrumo.'
+      sign_in_first: Inicia sesión primero con 'aeat config login NOMBRE' para consultar
+        o cambiar los componentes.
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'

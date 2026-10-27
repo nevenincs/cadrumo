@@ -367,6 +367,9 @@ desktop:
     sign_in_cancelled: A bejelentkezés megszakadt.
     sign_in_cleanup_failed: Indítsd újra a Cadrumót, mielőtt ismét bejelentkezel.
     sign_in_close: Bejelentkezés bezárása
+    sign_in_code_label: Engedélyezési kód
+    sign_in_code_prompt: Add meg a szolgáltató oldalán látható engedélyezési kódot.
+    sign_in_code_submit: Kód elküldése
     sign_in_done: Kész
     sign_in_failure: Nem sikerült befejezni a bejelentkezést. Próbáld meg később újra.
     sign_in_host_disconnected: A Cadrumo elvesztette a kapcsolatot ezzel a bejelentkezéssel,

@@ -1,10 +1,9 @@
-"""Relay progress as MCP ``notifications/progress``: an observed operation's, and a running setup's.
+"""Relay observed operation progress as MCP ``notifications/progress``.
 
 The ``observe`` tool returns one page of the operation's public events. When
 the client asked for progress by sending a ``progressToken``, each progress
 event on that page is also sent as one progress notification, so a client
-can draw a bar while it observes. The setup tools relay each byte figure the
-components role sends while the call runs, in the same way. A figure that
+can draw a bar while it observes. A figure that
 belongs to a setup item names it in ``subject_code``; the notification's
 message then names that item in plain words from the setup registry, never by
 its code.
@@ -20,12 +19,11 @@ from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from cadrumo.adapters.outbound.components.protocol import ComponentsProgressLine
 from cadrumo.application.dependency_contracts import dependency_item_kind
 from cadrumo.application.dependency_registry import dependency_item_declarations
 from cadrumo.core.i18n.render import tr
 
-__all__ = ["ProgressSink", "RelayedProgress", "component_progress", "relayed_progress"]
+__all__ = ["ProgressSink", "RelayedProgress", "relayed_progress"]
 
 _OBSERVE_TOOL = "observe"
 
@@ -83,12 +81,3 @@ def relayed_progress(tool: str, result: Mapping[str, Any]) -> tuple[RelayedProgr
             )
         )
     return tuple(relayed)
-
-
-def component_progress(event: object) -> RelayedProgress | None:
-    """Return the figure a components role event carries, or ``None`` for an event that carries none."""
-    if not isinstance(event, ComponentsProgressLine):
-        return None
-    return RelayedProgress(
-        progress=float(event.completed), total=float(event.total), message=_subject_message(event.subject_code)
-    )

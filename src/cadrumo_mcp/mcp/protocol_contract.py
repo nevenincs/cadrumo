@@ -11,7 +11,6 @@ from typing import Any, Final, NotRequired, TypedDict, cast
 from pydantic import BaseModel, ValidationError
 
 from cadrumo.application.corpus_search.errors import CorpusSearchError
-from cadrumo.application.dependency_contracts import DependencyItemKind
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationResultProjectionRefusalV1,
@@ -76,14 +75,6 @@ def _observation_arguments_schema() -> _ToolSchema:
 
 
 _TEXT: _FieldSchema = {"type": "string"}
-_SETUP_ITEMS: _FieldSchema = {
-    "type": "array",
-    "items": {"type": "string", "enum": [kind.value for kind in DependencyItemKind]},
-}
-_SETUP_BROWSER_ONLY: _FieldSchema = {
-    "type": "array",
-    "items": {"type": "string", "enum": [DependencyItemKind.BROWSER.value]},
-}
 _DOC: _FieldSchema = {"type": "object"}
 _FLAG: _FieldSchema = {"type": "boolean"}
 SEARCH_PAGE_DEFAULT = 10
@@ -365,7 +356,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "Every call submits a new operation, so two identical calls run twice. "
         "Use wait_seconds=2 for short work: wait on runtime cues and include completion (the authorized "
         "result envelope) when settled. Otherwise retain the receipt and follow next_call; pending human "
-        "interaction is never answered automatically. The wait bounds idle waiting, not an in-flight "
+        "interaction is never answered automatically. For config.provision.setup, ask the person to claim "
+        "and answer the current review in Cadrumo; MCP cannot inspect response authority or answer it. "
+        "The wait bounds idle waiting, not an in-flight "
         "runtime exchange. start=false does not wait. Never resubmit to obtain a result. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
@@ -429,7 +422,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     ),
     (
         "respond",
-        "Inspect, apply, or reject a pending review owned by this admitted session",
+        "Inspect, apply, or reject a pending review owned by this admitted session. Component setup reviews "
+        "require a verified human claim and cannot be answered by MCP",
         _schema(
             {
                 "action": {"type": "string", "enum": ["inspect", "apply", "reject"]},
@@ -451,75 +445,6 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         ),
         # Starting an operation lets it do whatever execute could have started.
         _acts("Control an operation", destructive=True, open_world=True),
-    ),
-    (
-        "setup_status",
-        "Read whether what Cadrumo needs on this computer is set up: the browser for the tax agency website "
-        "(item browser) and the local AI (item local_ai). Each row carries the item's state (ready, absent, "
-        "stale, failed, blocked, unknown and so on), the reason its state names, recovery, the one action its "
-        "row offers, and recovery_action_id, operator.provision.browser or operator.provision.local_ai when "
-        "setup can act; words carries the item's name, the row's sentence and the action's label in the "
-        "profile's language. Only the Cadrumo desktop app sets up the local AI, so its row offers "
-        "set_up_in_desktop wherever a set-up would be offered: tell the person to set it up in the desktop "
-        "app, and do not try to set it up. setup_complete says whether everything is set up. The default "
-        "quick check reads this computer only and answers within seconds; full=true also checks the network "
-        "and exercises each "
-        "item, one browser launch and one generated word for each local AI model, which can take minutes, and "
-        "sends progress notifications when the call carries a progressToken. items narrows to the named items. "
-        "Nothing is downloaded or changed. Where this build has no component engine every item reads blocked "
-        "with blocked_reason not_in_this_build",
-        _schema({}, {"full": _FLAG, "items": _SETUP_ITEMS}),
-        # A full check reaches the download hosts; no call changes anything.
-        ToolHints(title="Check setup", read_only=True, destructive=False, idempotent=True, open_world=True),
-    ),
-    (
-        "setup_plan",
-        "Read the plan that setting up the browser, the only item this tool plans and by default the only item "
-        "whose row offers setup here, asks the person to approve: the download size in bytes, the hosts it "
-        "comes from, where it is stored, whether it installs a program, and the free space it needs. "
-        "plan_digest identifies exactly this plan. Show the plan to the person and set up only once they "
-        "approved it, by calling setup with that plan_digest. The local AI is not planned here: only the "
-        "Cadrumo desktop app sets it up. Outcome nothing_to_do means nothing can be set up now, and the rows "
-        "say why. Nothing is downloaded or changed",
-        _schema({}, {"items": _SETUP_BROWSER_ONLY}),
-        _reads("Plan a setup"),
-    ),
-    (
-        "setup",
-        "Set up the browser, the only item this tool sets up and by default the only item whose row offers "
-        "setup here, exactly as the plan the person approved: plan_digest is the digest setup_plan returned, "
-        "and nothing is set up without it. The plan is "
-        "computed again first; if it changed, outcome plan_changed carries the new plan and its plan_digest, "
-        "nothing moved, and the person approves the new plan before you call again. An offline computer, an "
-        "unreachable or blocking network, or too little free space is refused before anything moves, with "
-        "failure_category and failure, the sentence in the profile's language. The call returns when the setup "
-        "ends, which can take minutes; it sends progress notifications when the call "
-        "carries a progressToken, and progress carries each item's last figure in bytes. Cancelling the request "
-        "stops the setup at its next download chunk. A setup that was interrupted reads failed interrupted and "
-        "resumes when set up again: under an unchanged plan_digest the person's earlier approval still holds. "
-        "If the item is already being set up by another process, the call follows that setup instead: nothing is "
-        "asked, its progress is relayed the same way, the reply is that setup's result and followed names the item "
-        "and the plan_digest that setup runs under; cancelling the request then stops only the following, which "
-        "ends busy, and the other setup goes on. "
-        "Outcomes: completed, nothing_to_do, plan_changed, busy (another setup is changing the item, or this call "
-        "stopped following it), refused, failed and cancelled; rows carry every item's row after the setup",
-        _schema({"plan_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}, {"items": _SETUP_BROWSER_ONLY}),
-        # It downloads from the declared hosts and replaces a superseded build once the new one checks.
-        _acts("Set up components", destructive=True, open_world=True),
-    ),
-    (
-        "setup_remove",
-        "Delete the browser, the only item this tool removes, from this computer: the browser's builds. Name "
-        "it in items. Ask the person first and call only once they confirmed the removal: "
-        "confirmed must be true, and a call without it is refused before anything is touched. Nothing is "
-        "downloaded and no other host is reached; an item that is not set up is removed as a no-op. The local AI "
-        "is removed only in the Cadrumo desktop app. Outcome removed names in removed the items "
-        "it removed; busy means a setup is changing the item right now; failed carries failure_category and "
-        "failure, the sentence in the profile's language. rows carry every item's row afterwards, and an item "
-        "removed can be set up again with setup_plan and setup",
-        _schema({"items": _SETUP_BROWSER_ONLY, "confirmed": _FLAG}),
-        # It deletes component files on this computer and reaches no other host.
-        _acts("Remove components", destructive=True, open_world=False),
     ),
 )
 MCP_TOOL_CATALOGUE = tuple((name, description, schema) for name, description, schema, _hints in _DECLARED_TOOLS)

@@ -252,7 +252,13 @@ def test_browser_handoff_executable_is_scoped_to_gui_auth_and_dropped_from_provi
         for vector in _DECLARATION.launch_vectors
         if vector["profile"] == "agent-auth" and variable in vector["ambient"]
     ]
-    assert len(auth_vectors) == 2
+    assert len(auth_vectors) == 4
+    browser_code = [vector for vector in auth_vectors if "browser-code" in vector["arguments"]]
+    assert {vector["platform"] for vector in browser_code} == {"windows", "posix"}
+    assert all(
+        vector["environment"]["CADRUMO_AGENT_HOSTED_ROOT"] == vector["ambient"]["CADRUMO_AGENT_HOSTED_ROOT"]
+        for vector in browser_code
+    )
     for vector in auth_vectors:
         assert vector["environment"].get(variable) == vector["ambient"][variable]
 

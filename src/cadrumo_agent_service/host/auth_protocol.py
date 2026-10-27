@@ -19,7 +19,9 @@ class AuthEvent(BaseModel):
     version: Literal[1]
     attempt_id: UUID
     provider: str
-    event: Literal["ready", "started", "browser_action", "succeeded", "cancelled", "failed"]
+    event: Literal[
+        "ready", "started", "browser_action", "authorization_code_required", "succeeded", "cancelled", "failed"
+    ]
     reason: (
         Literal[
             "invalid_request",
@@ -54,6 +56,7 @@ class AuthProtocol:
         self.provider = provider
         self.attempt_id: UUID | None = None
         self.previous: str | None = None
+        self.code_submitted = False
 
     def read(self, raw: bytes) -> AuthEvent:
         """Accept one framed event or raise a content-free protocol failure."""
@@ -75,7 +78,21 @@ class AuthProtocol:
                 raise ValueError
             if event.event == "started" and self.previous != "ready":
                 raise ValueError
-            if event.event in {"browser_action", "succeeded"} and self.previous not in {"started", "browser_action"}:
+            if event.event == "browser_action" and self.previous not in {"started", "browser_action"}:
+                raise ValueError
+            if event.event == "authorization_code_required" and self.previous != "browser_action":
+                raise ValueError
+            if event.event == "succeeded" and self.previous not in {
+                "started",
+                "browser_action",
+                "authorization_code_required",
+            }:
+                raise ValueError
+            if (
+                event.event == "succeeded"
+                and self.previous == "authorization_code_required"
+                and not self.code_submitted
+            ):
                 raise ValueError
             if event.event == "browser_action":
                 if event.url is None or any(ord(c) < 33 or ord(c) == 127 for c in event.url):

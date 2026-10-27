@@ -21,6 +21,9 @@ use wire::{Overview, Pages};
 // Bound the complete read, including admission, queueing and every page.
 // A per-operation timeout alone leaves admission and queue waits unbounded.
 const PROFILE_READ_LIMIT: Duration = Duration::from_secs(140);
+// Queueing is not submission: refuse an edit promptly if another operation
+// owns the relay, without inventing an uncertain mutation outcome.
+const PROFILE_CHANGE_ADMISSION_LIMIT: Duration = Duration::from_secs(15);
 
 pub struct ProfileHost {
     sign_in: Arc<SignIn>,
@@ -191,8 +194,10 @@ impl ProfileHost {
         Ok(overview)
     }
     async fn change(&self, change: Change) -> Result<()> {
-        let _serial = self.operation.lock().await;
-        let person = self.person(Some(&change.profile_id)).await?;
+        self.change_with_admission_budget(change, PROFILE_CHANGE_ADMISSION_LIMIT)
+            .await
+    }
+    async fn change_with_admission_budget(&self, change: Change, budget: Duration) -> Result<()> {
         if change.expected_revision == 0
             || !super::setup::wire::is_hex64(&change.expected_content_digest)
         {
@@ -205,6 +210,13 @@ impl ProfileHost {
             .as_object_mut()
             .ok_or_else(protocol)?
             .extend(fields.as_object().ok_or_else(protocol)?.clone());
+        let (_serial, person) = tokio::time::timeout(budget, async {
+            let serial = self.operation.lock().await;
+            let person = self.person(Some(&change.profile_id)).await?;
+            Ok::<_, Failure>((serial, person))
+        })
+        .await
+        .map_err(|_| protocol())??;
         let result = self.run(&person, definition, payload, true).await?;
         if result["profile_id"] != change.profile_id
             || result["record_revision"]
@@ -378,6 +390,32 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_queued_profile_change_expires_before_submission() {
+        let host = ProfileHost::new(Arc::new(
+            SignIn::new(&crate::terminal::tests::unit_launch()),
+        ));
+        let serial = host.operation.lock().await;
+        let change = Change {
+            profile_id: "profile".into(),
+            expected_revision: 1,
+            expected_content_digest: "a".repeat(64),
+            edit: Edit::Field {
+                path: "identity.email".into(),
+                value: "person@example.com".into(),
+            },
+        };
+        let result = host
+            .change_with_admission_budget(change, Duration::from_millis(1))
+            .await;
+        let failure = result.unwrap_err();
+        assert_eq!(failure.code, "unavailable");
+        assert!(failure.operation_id.is_none());
+        drop(serial);
+        assert!(host.operation.try_lock().is_ok());
+        host.close();
+    }
 
     #[tokio::test]
     async fn a_queued_profile_read_expires_without_waiting_for_the_previous_operation() {

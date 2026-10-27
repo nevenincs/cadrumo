@@ -18,8 +18,6 @@ from contextlib import ExitStack, contextmanager
 from typing import TYPE_CHECKING
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo.application.diagnostics import build_config_repair_report
-from cadrumo.application.diagnostics_repair import read_log_tail
 from cadrumo.application.diagnostics_repair_documents import (
     PreconditionActionResolver,
     printed,
@@ -29,8 +27,6 @@ from cadrumo.application.diagnostics_repair_documents import (
 )
 from cadrumo.application.operator_surface.action_targets import resolve_recorded_precondition_action
 from cadrumo.core.bucket_pointer import corrupt_pointer_reads_as_unselected
-from cadrumo.entrypoints.adapter_composition import build_diagnostics_ports
-from cadrumo.entrypoints.diagnostics_repair_composition import read_component_setup_checks, read_session_profile_record
 from cadrumo_client.contracts.installation_requests import (
     InstallationCompleted,
     RepairLogsReply,
@@ -91,6 +87,10 @@ class _RepairActs:
 
     def report(self, request: RepairReportRequest, exchange: InstallationActExchange, /) -> RepairReportReply:
         """Diagnose local configuration, profile, sign-in, setup and log state, changing nothing."""
+        from cadrumo.application.diagnostics import build_config_repair_report
+        from cadrumo.entrypoints.adapter_composition import build_diagnostics_ports
+        from cadrumo.entrypoints.diagnostics_repair_composition import read_component_setup_checks
+
         del request
         with _profile_stores(exchange):
             report = build_config_repair_report(
@@ -101,6 +101,8 @@ class _RepairActs:
 
     def logs(self, request: RepairLogsRequest, exchange: InstallationActExchange, /) -> RepairLogsReply:
         """Return the configured log file's path and its most recent lines."""
+        from cadrumo.application.diagnostics_repair import read_log_tail
+
         with _served_root(exchange):
             tail = read_log_tail(request.lines)
         return _reply_with(exchange, RepairLogsReply, tail)
@@ -121,6 +123,7 @@ class _RepairActs:
             resolve_repair_profile,
         )
         from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+        from cadrumo.entrypoints.diagnostics_repair_composition import read_session_profile_record
 
         with _profile_stores(exchange, repairs_pointer=True):
             pointer = None if request.profile is None else resolve_repair_profile(request.profile)

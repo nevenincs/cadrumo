@@ -741,6 +741,22 @@ arguments = [
   { literal = "300" },
 ]
 
+[[invocations]]
+profile = "agent-auth"
+platform = "all"
+arguments = [
+  { literal = "-m" },
+  { literal = "cadrumo_agent.cli.main" },
+  { literal = "auth" },
+  { literal = "connect" },
+  { literal = "--provider" },
+  { slot = "provider", kind = "identifier" },
+  { literal = "--method" },
+  { literal = "browser-code" },
+  { literal = "--timeout" },
+  { literal = "300" },
+]
+
 # The Windows supervisor starts the worker without site (-S): that is the exact
 # invocation it sends, so it is the exact invocation declared here.
 [[invocations]]
@@ -1466,6 +1482,26 @@ environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT 
 path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
 
 [[launch_vectors]]
+name = "windows-agent-auth-admits-browser-code-connect-in-its-profile"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "300"]
+ambient = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", CADRUMO_LOCAL_STORAGE_ROOT = "C:\\elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TEMP = "C:\\elsewhere", PATH = "C:\\elsewhere" }
+profile = "agent-auth"
+environment = { SYSTEMROOT = "C:\\Windows", USERPROFILE = "C:\\Users\\ada", CADRUMO_AGENT_HOSTED_ROOT = "C:\\profile\\agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "C:\\profile\\browser.exe", TEMP = "C:\\launch-vector\\state\\tmp", TMP = "C:\\launch-vector\\state\\tmp", TMPDIR = "C:\\launch-vector\\state\\tmp" }
+path = ["C:\\launch-vector\\package", "C:\\launch-vector\\package\\bin", "C:\\Windows\\System32"]
+
+[[launch_vectors]]
+name = "posix-agent-auth-admits-browser-code-connect-in-its-profile"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "300"]
+ambient = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", CADRUMO_LOCAL_STORAGE_ROOT = "/elsewhere", CADRUMO_AGENT_PORT = "0", ANTHROPIC_API_KEY = "must-not-cross", TMPDIR = "/elsewhere", PATH = "/elsewhere" }
+profile = "agent-auth"
+environment = { HOME = "/home/ada", LANG = "C.UTF-8", CADRUMO_AGENT_HOSTED_ROOT = "/profile/agent", CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE = "/profile/browser", TEMP = "/launch-vector/state/tmp", TMP = "/launch-vector/state/tmp", TMPDIR = "/launch-vector/state/tmp" }
+path = ["/launch-vector/package", "/launch-vector/package/bin", "/usr/bin", "/bin"]
+
+[[launch_vectors]]
 name = "windows-agent-auth-keeps-the-legacy-login-invocation"
 platform = "windows"
 image = "cadrumo-agent"
@@ -1561,6 +1597,22 @@ platform = "windows"
 image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "codex", "--method", "device", "--timeout", "301"]
 ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "windows-agent-refuses-browser-code-connect-with-a-different-timeout"
+platform = "windows"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "antigravity", "--method", "browser-code", "--timeout", "301"]
+ambient = { SYSTEMROOT = "C:\\Windows" }
+refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+[[launch_vectors]]
+name = "posix-agent-refuses-browser-code-connect-with-an-unsafe-provider"
+platform = "posix"
+image = "cadrumo-agent"
+arguments = ["-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider", "../other", "--method", "browser-code", "--timeout", "300"]
+ambient = { HOME = "/home/ada" }
 refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
 
 # A refused launch parameter is named and its value is not: the refusal carries the

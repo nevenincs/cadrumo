@@ -111,7 +111,7 @@ _INVOCATIONS = [
                 *_literals("--method", method, "--timeout", "300"),
             ],
         )
-        for method in ("browser", "device")
+        for method in ("browser", "device", "browser-code")
     ],
 ]
 

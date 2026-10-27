@@ -129,22 +129,56 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
 
     @override
     def load(self, operation_id: str) -> OperationJournalRecord:
-        """Purge legacy values under the same exclusion as every journal writer."""
+        """Capture one generation, purge legacy operands exclusively, then validate."""
+        record = self.read_existing(operation_id)
+        if record is None:
+            raise RepositoryError(operation_id)
+        return record
+
+    def read_existing(self, operation_id: str) -> OperationJournalRecord | None:
+        """Report absence only at capture; later filesystem changes cannot hide corruption."""
         if not self._validate_existing_root():
-            return super().load(operation_id)
+            return None
         with exclusive_file_lock(self.lock_target):
-            return self._load_unlocked(operation_id)
+            try:
+                raw = self._read_payload(operation_id)
+            except RepositoryError:
+                if self.is_absent(operation_id):
+                    return None
+                raise
+        replacement = purge_legacy_financial_edit_journal(raw, operation_id=operation_id)
+        if replacement is not None:
+            with exclusive_file_lock(self.lock_target):
+                if self._read_payload(operation_id) == raw:
+                    self._write_purged_payload_unlocked(operation_id, replacement)
+                    raw = replacement
+                else:
+                    # Another writer may already have purged and advanced this
+                    # record. Resolve that generation once under exclusion,
+                    # rather than overwriting it or retrying without a bound.
+                    raw = self._read_purged_payload_unlocked(operation_id)
+        # Validation depends only on the captured text. A slow decoder must not
+        # exclude writers, and corruption cannot be reclassified by a later deletion.
+        return self._decode_payload(operation_id, raw)
 
     def _load_unlocked(self, operation_id: str) -> OperationJournalRecord:
+        return self._decode_payload(operation_id, self._read_purged_payload_unlocked(operation_id))
+
+    def _read_purged_payload_unlocked(self, operation_id: str) -> str:
+        """Capture one complete generation; legacy repair remains a locked write."""
         raw = self._read_payload(operation_id)
         replacement = purge_legacy_financial_edit_journal(raw, operation_id=operation_id)
         if replacement is not None:
-            try:
-                self._write_payload(self.path_for(operation_id), replacement)
-            except (OSError, RepositoryError, JournalBusyError):
-                raise FinancialEditJournalPurgeRefusedError from None
+            self._write_purged_payload_unlocked(operation_id, replacement)
             raw = replacement
-        return self._decode_payload(operation_id, raw)
+        return raw
+
+    def _write_purged_payload_unlocked(self, operation_id: str, replacement: str) -> None:
+        """Publish operand disposal only under journal exclusion, with a bounded refusal."""
+        try:
+            self._write_payload(self.path_for(operation_id), replacement)
+        except (OSError, RepositoryError, JournalBusyError):
+            raise FinancialEditJournalPurgeRefusedError from None
 
     def resolve_idempotency(self, claim: OperationIdempotencyClaim) -> str | None:
         """Resolve a durable retry key from a complete operation journal only."""
@@ -157,16 +191,10 @@ class _SnapshotJournalRepository(JournalRepositoryBase[OperationJournalRecord]):
         operation_id: str,
         request: OperationReplayRequest,
     ) -> OperationObservationMaterialization | None:
-        """Read one complete record and its observation under the journal lock."""
-        if not self._validate_existing_root():
+        """Capture one locked generation, then decode and materialize that exact text."""
+        record = self.read_existing(operation_id)
+        if record is None:
             return None
-        with exclusive_file_lock(self.lock_target):
-            try:
-                record = self._load_unlocked(operation_id)
-            except RepositoryError:
-                if self.is_absent(operation_id):
-                    return None
-                raise
         return observation_materialization_from_record(record, request)
 
     def is_absent(self, operation_id: str) -> bool:
@@ -434,17 +462,14 @@ class OperationJournalRepository(OperationJournal, OperationEventStream, Operati
         return await asyncio.to_thread(self._read_after_blocking, operation_id, request)
 
     def _read_after_blocking(self, operation_id: str, request: OperationReplayRequest) -> OperationReplayPage:
-        try:
-            record = self._repository.load(operation_id)
-        except RepositoryError:
-            if self.is_absent(operation_id):
-                return OperationReplayPage(
-                    status=OperationReplayStatus.UNKNOWN_OPERATION,
-                    requested_cursor=request.cursor,
-                    events=(),
-                    next_cursor=request.cursor,
-                )
-            raise
+        record = self._repository.read_existing(operation_id)
+        if record is None:
+            return OperationReplayPage(
+                status=OperationReplayStatus.UNKNOWN_OPERATION,
+                requested_cursor=request.cursor,
+                events=(),
+                next_cursor=request.cursor,
+            )
         return replay_page_from_record(record, request)
 
     @override

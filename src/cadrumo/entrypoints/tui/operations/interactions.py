@@ -20,6 +20,7 @@ from typing import Literal, assert_never
 
 from pydantic import BaseModel
 
+from ....application.components_operations import COMPONENTS_SETUP_OPERATION_ID
 from ....application.operations.frontend_contracts import OperationReviewProjectionResultV1
 from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
@@ -34,7 +35,7 @@ from ....application.operations.frontend_requests import (
 from ....application.operations.interactions import OperationResponseIntentValue
 from ....core.i18n.render import tr
 from ....core.operations import OperationInteractionKind
-from .controller_port import OperationControllerPort, OperationResponseControlPort
+from .controller_port import OperationControllerPort, OperationResponseControlPort, OperationReviewClaimPort
 
 
 @dataclass(frozen=True, slots=True)
@@ -55,9 +56,10 @@ class OperationModalReviewInteractionV1[ReviewProjectionT: BaseModel]:
 
     interaction: OperationReviewAvailableInteractionV1
     projection: ReviewProjectionT
-    control: OperationResponseControlPort
+    control: OperationResponseControlPort | None
     apply_enabled: bool
     reject_enabled: bool
+    reviewed_document_digest: str | None = None
     disposition: Literal["review_available"] = field(default="review_available", init=False)
 
     def __post_init__(self) -> None:
@@ -117,13 +119,11 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
             pass
         case _:
             assert_never(projection.pending_interaction)
-    if (
-        isinstance(current, OperationModalReviewInteractionV1)
-        and current.interaction.interaction_id == pending.interaction_id
-        and current.interaction.revision == pending.revision
-    ):
+    if isinstance(current, OperationModalReviewInteractionV1) and current.interaction == pending:
         # Keep the original bearer binding, but never cache its permission.
         # Inspection is non-consuming and rechecks expiry/current authority.
+        if current.control is None:
+            return current
         availability = await current.control.inspect()
         permitted = (
             availability.permitted_intents
@@ -131,6 +131,20 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
             else frozenset[OperationResponseIntentValue]()
         )
         return replace(current, apply_enabled="apply" in permitted, reject_enabled="reject" in permitted)
+    if projection.definition_id == COMPONENTS_SETUP_OPERATION_ID:
+        if not isinstance(controller, OperationReviewClaimPort):
+            return OperationModalReviewUnavailableV1(interaction=pending)
+        resolved, digest = await controller.resolve_review_document(pending.review_reference, projection_type)
+        if not isinstance(resolved, OperationReviewProjectionSuccessV1):
+            return OperationModalReviewUnavailableV1(interaction=pending)
+        return OperationModalReviewInteractionV1(
+            interaction=pending,
+            projection=resolved.projection,
+            control=None,
+            apply_enabled=False,
+            reject_enabled=False,
+            reviewed_document_digest=digest,
+        )
     resolved: OperationReviewProjectionResultV1[ReviewProjectionT] = await controller.resolve_review(
         pending.review_reference,
         projection_type,

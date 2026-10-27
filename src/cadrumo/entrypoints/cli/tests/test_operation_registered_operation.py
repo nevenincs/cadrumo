@@ -16,6 +16,21 @@ from uuid import UUID, uuid4
 import pytest
 import typer
 
+from cadrumo.application.components_operations import (
+    COMPONENTS_OPERATION_SUBJECT,
+    COMPONENTS_SETUP_OPERATION_ID,
+    PROVISION_RESPONSE_SCHEMA,
+    PROVISION_REVIEW_SCHEMA,
+    ProvisionMutationRequest,
+    ProvisionOutcome,
+    ProvisionPlan,
+    ProvisionPlanEntry,
+    ProvisionPlanSpace,
+    ProvisionResult,
+    ProvisionReviewProjection,
+    build_components_definitions,
+    build_components_registration,
+)
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -91,6 +106,8 @@ from cadrumo_client.contracts.operation_access import (
     OperationReply,
     OperationRequest,
     OperationReview,
+    OperationReviewClaim,
+    OperationReviewClaimed,
     OperationSubmit,
     OperationSubmitted,
 )
@@ -416,6 +433,264 @@ def test_review_reference_validation_precedes_decision_and_response_control(refu
         assert isinstance(completion, RegisteredOperationCompletion)
         assert calls == ["validate", "decide"]
         assert wire.action == "apply" and wire.result_reads == 1
+
+
+def test_optional_review_hooks_present_then_decide_then_claim_before_response_control() -> None:
+    wire = ReviewWire()
+    calls: list[str] = []
+
+    def present(document: Any) -> None:
+        assert document["outcome"] == "success"
+        calls.append("present")
+
+    def decide(_: CensalReviewProjectionV1) -> Literal["apply"]:
+        calls.append("decide")
+        return "apply"
+
+    def claim(pending: Any, document: Any, profile: UUID, session: UUID, exchange: Any) -> Any:
+        assert document["outcome"] == "success"
+        assert profile == _PROFILE and session == _SESSION
+        assert not any(isinstance(item, OperationManage) for item in wire.requests)
+        calls.append("claim")
+        return pending
+
+    handler = replace(_handler("apply"), present_document=present, decide=decide, claim=claim)
+    completion = _run(wire, handler)
+    assert isinstance(completion, RegisteredOperationCompletion)
+    assert calls == ["present", "decide", "claim"]
+
+
+class ProvisionReviewWire(ReviewWire):
+    """Typed setup transport exercising the actual CLI runner and claim callback."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        definition = next(
+            item
+            for item in build_components_definitions(cast(Any, None))
+            if item.definition_id == COMPONENTS_SETUP_OPERATION_ID
+        )
+        self.public_contract = build_components_registration(definition).contract
+        self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
+        self.provision_review = ProvisionReviewProjection(
+            reviewed_proposal_digest="f" * 64,
+            plan_digest="e" * 64,
+            plan=ProvisionPlan(
+                contract_version=3,
+                entries=(
+                    ProvisionPlanEntry(
+                        item_id="browser",
+                        download_bytes=100,
+                        source_hosts=("example.com",),
+                        destination="playwright-browsers",
+                        installs_outside_program=False,
+                        target_version=None,
+                        parts=(),
+                    ),
+                ),
+                known_download_bytes=100,
+                has_unknown_size=False,
+                installs_outside_program=False,
+                space=ProvisionPlanSpace(free_bytes=1000, required_bytes=100, sufficient=True),
+            ),
+        )
+        self.displayed_document: dict[str, Any] | None = None
+        self.claimed = False
+
+    def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
+        assert definition_id == COMPONENTS_SETUP_OPERATION_ID
+        return self.public_contract
+
+    def read_result_document(
+        self, request: OperationResultProjectionRequestV1, *, timeout: float, deadline: float
+    ) -> dict[str, Any]:
+        assert request.terminal_revision == 6
+        schema = self.public_contract.result_schema
+        assert schema is not None
+        outcome = ProvisionOutcome.COMPLETED if self.action == "apply" else ProvisionOutcome.REJECTED
+        return json.loads(
+            OperationResultProjectionSuccessV1[ProvisionResult](
+                result_schema=schema,
+                definition_contract_digest=self.public_contract.definition_contract_digest,
+                projection=ProvisionResult(outcome=outcome, plan_digest=self.provision_review.plan_digest),
+            ).model_dump_json()
+        )
+
+    def _provision_observation(self) -> OperationObservationSuccessV1:
+        terminal = self.action is not None
+        reference = OperationReviewProjectionReferenceV1(
+            operation_id=_OPERATION,
+            interaction_id=_INTERACTION,
+            revision=4,
+            review_projection_schema=PROVISION_REVIEW_SCHEMA.identity,
+            definition_contract_digest=self.public_contract.definition_contract_digest,
+            expires_at=None,
+        )
+        pending = OperationReviewAvailableInteractionV1(
+            operation_id=_OPERATION,
+            interaction_id=_INTERACTION,
+            revision=4,
+            presentation_code="config.provision.review",
+            response_schema=PROVISION_RESPONSE_SCHEMA.identity,
+            expires_at=None,
+            review_reference=reference,
+        )
+        projection = OperationPublicProjectionV1(
+            operation_id=_OPERATION,
+            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            revision=6 if terminal else 4,
+            anchor_cursor=0,
+            definition_contract=self.public_contract,
+            contract_set_digest=self.contract_set_digest,
+            lifecycle=OperationLifecycle.TERMINAL if terminal else OperationLifecycle.WAITING_FOR_INTERACTION,
+            terminal_condition=OperationTerminalCondition.SUCCEEDED if terminal else None,
+            effect=OperationEffect.UPDATED if terminal and self.action == "apply" else OperationEffect.NONE,
+            phase_code="config.provision.setup",
+            started_at=_NOW,
+            updated_at=_NOW,
+            progress=None,
+            close_policy=self.public_contract.close_policy,
+            cancellation=self.public_contract.cancellation,
+            cancellable_now=not terminal,
+            cancellation_requested=False,
+            cancellation_acknowledged=False,
+            execution_deadline_at=None,
+            cleanup_deadline_at=None,
+            pending_interaction=OperationNoPendingInteractionV1() if terminal else pending,
+            result_ref="d" * 64 if terminal else None,
+            refusal_ref=None,
+            failure_error_code=None,
+            diagnostic_ref=None,
+        )
+        page = OperationPublicEventPageV1(
+            operation_id=_OPERATION,
+            anchor_cursor=0,
+            requested_cursor=0,
+            status=OperationReplayStatus.CAUGHT_UP,
+            events=(),
+            next_cursor=0,
+            restart_cursor=None,
+        )
+        return OperationObservationSuccessV1(projection=projection, event_page=page)
+
+    def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
+        from cadrumo.core.hashing import content_hash_hex
+
+        self.requests.append(request)
+        common = {"request_id": request.request_id, "runtime_boot_id": _PROFILE, "connection_id": _SESSION}
+        if isinstance(request, OperationSubmit):
+            assert request.definition_id == COMPONENTS_SETUP_OPERATION_ID
+            assert ProvisionMutationRequest.model_validate_json(request.payload_json) == ProvisionMutationRequest()
+            return OperationSubmitted(
+                **common, receipt=OperationSubmissionReceiptV1(operation_id=_OPERATION, secret_requirement=None)
+            )
+        if isinstance(request, OperationControl):
+            return OperationAcknowledged(**common, operation_id=_OPERATION)
+        if isinstance(request, OperationObserve):
+            return OperationObserved(**common, observation=self._provision_observation())
+        if isinstance(request, OperationReview):
+            document = OperationReviewProjectionSuccessV1[ProvisionReviewProjection](
+                projection_schema=PROVISION_REVIEW_SCHEMA.identity,
+                definition_contract_digest=self.public_contract.definition_contract_digest,
+                projection=self.provision_review,
+            )
+            self.displayed_document = json.loads(document.model_dump_json())
+            return OperationProjected(
+                **common, operation_id=_OPERATION, projection_kind="review", document=self.displayed_document
+            )
+        if isinstance(request, OperationReviewClaim):
+            assert self.displayed_document is not None
+            assert request.reviewed_document_digest == content_hash_hex(self.displayed_document)
+            self.claimed = True
+            return OperationReviewClaimed(
+                **common,
+                reference=request.reference.model_copy(update={"revision": 5}),
+                reviewed_document_digest=request.reviewed_document_digest,
+                allowed_intents=frozenset({"apply", "reject"}),
+            )
+        assert isinstance(request, OperationManage) and self.claimed
+        management = request.management
+        assert management.revision == 5 and management.interaction_id == _INTERACTION
+        if isinstance(management, OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1):
+            self.action = management.response_action
+            document = OperationResponseMutationSuccessV1(
+                operation_id=_OPERATION, interaction_id=_INTERACTION, revision=5, response_action=self.action
+            )
+            self._cue()
+        else:
+            assert isinstance(management, OperationResponseControlRequestV1)
+            document = OperationResponseControlSuccessV1(
+                operation_id=_OPERATION,
+                interaction_id=_INTERACTION,
+                revision=5,
+                available=True,
+                permitted_intents=frozenset({"apply", "reject"}),
+            )
+        return OperationManaged(**common, operation_id=_OPERATION, document=json.loads(document.model_dump_json()))
+
+
+@pytest.mark.parametrize("yes", [True, False])
+def test_provision_cli_uses_actual_registered_runner_and_claims_before_response(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    yes: bool,
+) -> None:
+    from ..config import provision_cli
+
+    wire = ProvisionReviewWire()
+    monkeypatch.setattr(provision_cli, "bound_profile_client", lambda _ctx: wire)
+    app = typer.Typer()
+
+    @app.command()
+    def noop() -> None: ...
+
+    ctx = typer.Context(typer.main.get_command(app), obj={"format": "json"})
+    if yes:
+        provision_cli.provision_setup(ctx, yes=True)
+    else:
+        with pytest.raises(typer.Exit):
+            provision_cli.provision_setup(ctx, yes=False)
+    output = capsys.readouterr()
+    assert wire.displayed_document is not None and json.loads(output.err.splitlines()[0]) == wire.displayed_document
+    assert wire.action == ("apply" if yes else "reject")
+    assert [type(item) for item in wire.requests] == [
+        OperationSubmit,
+        OperationControl,
+        OperationObserve,
+        OperationReview,
+        OperationReviewClaim,
+        OperationManage,
+        OperationManage,
+        OperationObserve,
+    ]
+
+
+@pytest.mark.parametrize("yes", [True, False])
+def test_existing_setup_review_claims_the_observed_document_before_answering(
+    monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], yes: bool
+) -> None:
+    from ..config import provision_cli
+
+    wire = ProvisionReviewWire()
+    monkeypatch.setattr(provision_cli, "bound_profile_client", lambda _ctx: wire)
+    app = typer.Typer()
+
+    @app.command()
+    def noop() -> None: ...
+
+    ctx = typer.Context(typer.main.get_command(app), obj={"format": "json"})
+    provision_cli.provision_review(ctx, _OPERATION, yes=yes, reject=not yes)
+    output = capsys.readouterr()
+    assert wire.displayed_document is not None and json.loads(output.err.splitlines()[0]) == wire.displayed_document
+    assert json.loads(output.out)["result"] == {"operation_id": _OPERATION, "decision": "apply" if yes else "reject"}
+    assert [type(item) for item in wire.requests] == [
+        OperationObserve,
+        OperationReview,
+        OperationReviewClaim,
+        OperationManage,
+        OperationManage,
+    ]
 
 
 @pytest.mark.parametrize("fault", ["review-schema", "reply-id", "session", "control-revision", "no-authority"])

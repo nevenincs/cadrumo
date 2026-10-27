@@ -15,7 +15,6 @@ action record unchanged.
 from __future__ import annotations
 
 import json
-import sys
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
@@ -41,7 +40,6 @@ from ....core.config import Settings
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.model_roles import ModelRole
-from ....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from .._component_setup_rendering import setup_status_source
 from ..common import resolve_cli_precondition_action
 from ..config.check_cli import dependency_payload, dependency_text_lines
@@ -224,12 +222,8 @@ def test_an_unreadable_setup_status_prints_the_sentence_alone() -> None:
     _assert_no_action_record(output)
 
 
-def test_every_command_reads_the_components_roles_status_and_a_build_without_it_says_so(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """The boundary reads the status from the components role, which needs no profile connection."""
-    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
-    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
+def test_error_before_sign_in_preserves_the_refusal_without_inventing_setup_status() -> None:
+    """An error needs no profile session just to render its original refusal."""
     error = _reader_refusal()
     app = typer.Typer()
 
@@ -245,7 +239,7 @@ def test_every_command_reads_the_components_roles_status_and_a_build_without_it_
     output = semantic_cli_output(result)
     lines = output.splitlines()
     assert resolve_error_message(error) in lines[0]
-    assert lines[-1] == f"  {_LOCAL_AI_HELD}"
+    assert len(lines) == 1
     assert "To fix it" not in output
     _assert_no_action_record(output)
 

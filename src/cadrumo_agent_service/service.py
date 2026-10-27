@@ -256,6 +256,18 @@ class AgentService:
         secret: bytearray | None = None,
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
+        if action == "connect_submit_code":
+            if self._closing.is_set():
+                return {"kind": "refused", "code": "service_stopping"}
+            if self.client.lease is None:
+                return {"kind": "refused", "code": "signed_out"}
+            attempt = self._auth_attempt
+            if attempt is None or attempt.id != attempt_id or secret is None:
+                return {"kind": "refused", "code": "invalid_request"}
+            try:
+                return attempt.submit_code(secret)
+            except ValueError:
+                return {"kind": "refused", "code": "invalid_request"}
         if action in {"connect_status", "connect_cancel"}:
             return self._observe_sign_in(attempt_id, cancel=action == "connect_cancel")
         if action == "model_roles":
@@ -348,7 +360,7 @@ class AgentService:
             return {"kind": "refused", "code": "invalid_request"}
         if action == "sign_in":
             return self._prepare_sign_in(provider, expected_revision=expected_revision)
-        if action == "connect" and method in {"browser", "device"}:
+        if action == "connect" and method in {"browser", "browser-code", "device"}:
             return self._connect(provider, expected_revision=expected_revision, method=method)
         if action == "set" and secret is not None:
             result = self._providers.set_credential(
@@ -534,6 +546,9 @@ class AgentService:
 
     def _connect(self, provider: str, *, expected_revision: str, method: str) -> dict[str, Any]:
         """Start a profile-bound helper; its provider owns OAuth and credential storage."""
+        lane = self._catalog.catalog().entry(provider)
+        if lane is None or method not in self._catalog.gui_sign_in_methods().get(lane.provider, ()):
+            return {"kind": "refused", "code": "sign_in_unavailable"}
         self._auth_resume_valid = None
         lease = self.client.lease
         prepared = self._prepare_sign_in(provider, expected_revision=expected_revision, gui=True)

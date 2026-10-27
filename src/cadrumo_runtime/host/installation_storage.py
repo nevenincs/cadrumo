@@ -11,21 +11,10 @@ runtime's own process settings name.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from pydantic import BaseModel
 
-from cadrumo.application.storage_management.documents import (
-    ConfigStorageCheckResult,
-    ConfigStorageInitResult,
-    ConfigStorageListResult,
-    ConfigStorageReclaimResult,
-    ConfigStorageViewResult,
-)
-from cadrumo.application.storage_management.service import (
-    collect_storage_area_inventory,
-    inspect_storage_tree,
-    materialise_storage_tree,
-    reclaim_storage_area,
-)
 from cadrumo_client.contracts.installation_requests import (
     StorageCheckReply,
     StorageCheckRequest,
@@ -37,8 +26,9 @@ from cadrumo_client.contracts.installation_requests import (
     StorageReclaimRequest,
 )
 
-from .installation_composition import InstallationActRegistry
-from .installation_door import InstallationActExchange
+if TYPE_CHECKING:
+    from .installation_composition import InstallationActRegistry
+    from .installation_door import InstallationActExchange
 
 
 def _members(document: BaseModel) -> dict[str, object]:
@@ -47,6 +37,9 @@ def _members(document: BaseModel) -> dict[str, object]:
 
 
 def _serve_inventory(request: StorageInventoryRequest, exchange: InstallationActExchange) -> StorageInventoryReply:
+    from cadrumo.application.storage_management.documents import ConfigStorageListResult, ConfigStorageViewResult
+    from cadrumo.application.storage_management.service import collect_storage_area_inventory
+
     with exchange.served_settings():
         report = collect_storage_area_inventory()
     document = (
@@ -58,6 +51,9 @@ def _serve_inventory(request: StorageInventoryRequest, exchange: InstallationAct
 
 
 def _serve_check(request: StorageCheckRequest, exchange: InstallationActExchange) -> StorageCheckReply:
+    from cadrumo.application.storage_management.documents import ConfigStorageCheckResult
+    from cadrumo.application.storage_management.service import inspect_storage_tree
+
     del request
     with exchange.served_settings():
         report = inspect_storage_tree()
@@ -65,6 +61,9 @@ def _serve_check(request: StorageCheckRequest, exchange: InstallationActExchange
 
 
 def _serve_init(request: StorageInitRequest, exchange: InstallationActExchange) -> StorageInitReply:
+    from cadrumo.application.storage_management.documents import ConfigStorageInitResult
+    from cadrumo.application.storage_management.service import materialise_storage_tree
+
     del request
     exchange.require_login()
     with exchange.served_settings():
@@ -74,6 +73,9 @@ def _serve_init(request: StorageInitRequest, exchange: InstallationActExchange) 
 
 
 def _serve_reclaim(request: StorageReclaimRequest, exchange: InstallationActExchange) -> StorageReclaimReply:
+    from cadrumo.application.storage_management.documents import ConfigStorageReclaimResult
+    from cadrumo.application.storage_management.service import reclaim_storage_area
+
     exchange.require_login()
     with exchange.served_settings():
         if request.confirmed:

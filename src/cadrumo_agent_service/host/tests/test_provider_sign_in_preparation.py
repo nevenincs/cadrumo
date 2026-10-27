@@ -24,6 +24,7 @@ from ...providers.application.contracts import (
 )
 from ...providers.application.tests.synthetic_catalog import synthetic_catalog
 from ...service import AgentService
+from ..auth_attempt import AuthAttempt
 from ..launch_environment import EXTERNAL_BIN_DIRECTORIES_VARIABLE, HOSTED_ROOT_VARIABLE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -65,6 +66,7 @@ def _entry() -> ProviderStatusEntry:
         "keyless_lane",
         "gui_keyless_lane",
         "gui_unsupported",
+        "gui_method_unsupported",
     ),
 )
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
@@ -105,6 +107,18 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     monkeypatch.setattr(
         service._catalog, "gui_sign_in_providers", lambda: () if outcome == "gui_unsupported" else ("example", "local")
     )
+    monkeypatch.setattr(
+        service._catalog,
+        "gui_sign_in_methods",
+        lambda: (
+            {}
+            if outcome == "gui_unsupported"
+            else {
+                "example": ("device",) if outcome == "gui_method_unsupported" else ("browser",),
+                "local": ("browser",),
+            }
+        ),
+    )
     calls: list[str] = []
 
     def select_mode(provider: str, **_kwargs: object) -> ProviderSettingsActionAccepted | ProviderSettingsRefusal:
@@ -129,7 +143,14 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
         expected_revision="0" * 64,
         method="browser",
     )
-    if outcome in {"unsupported", "api_lane", "keyless_lane", "gui_keyless_lane", "gui_unsupported"}:
+    if outcome in {
+        "unsupported",
+        "api_lane",
+        "keyless_lane",
+        "gui_keyless_lane",
+        "gui_unsupported",
+        "gui_method_unsupported",
+    }:
         assert calls == []
         assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
         assert not (tmp_path / "agent").exists()
@@ -169,6 +190,29 @@ def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
         "kind": "refused",
         "code": "signed_out",
     }
+
+
+def test_submit_code_rejects_stale_attempt_and_retired_owner(tmp_path: Path) -> None:
+    service = AgentService(
+        client=cast(InstalledServiceClient, SimpleNamespace(lease=object())),
+        storage_root=tmp_path,
+        gateway_bearer=bytearray(),
+        emit=lambda _event: None,
+    )
+    attempt = AuthAttempt(
+        provider="example",
+        lane="example_cli",
+        executable=tmp_path / "absent.exe",
+        arguments=(),
+        directory=tmp_path,
+        environment={},
+        valid=lambda: False,
+    )
+    attempt.close()
+    service._auth_attempt = attempt
+    for attempt_id in (str(uuid4()), attempt.id):
+        result = service.admin("connect_submit_code", attempt_id=attempt_id, secret=bytearray(b"synthetic-code"))
+        assert result == {"kind": "refused", "code": "invalid_request"}
 
 
 @pytest.mark.parametrize("code", list(ProviderSettingsRefusalCode))

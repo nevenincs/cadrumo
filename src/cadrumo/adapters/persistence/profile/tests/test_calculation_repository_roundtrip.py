@@ -35,6 +35,7 @@ from .....application.calculations.tests.filing_evidence import regimen_simplifi
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass
 from .....core.period import Period
+from .....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import CasillaObservation
 from .....domain.calculations.registry.formula_runtime import RegistryCalculationUnresolvedOutcome
@@ -59,7 +60,7 @@ from .....domain.modelos.calculation_revision import (
 from .....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from .....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from .....domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
-from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
@@ -320,7 +321,8 @@ def test_calculation_revision_catalogue_survives_encrypted_storage_roundtrip(
     assert profile.paths.database_file.is_file()
 
 
-def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_path: Path) -> None:
+@pytest.mark.parametrize("revisioned", (False, True))
+def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_path: Path, revisioned: bool) -> None:
     operation = published_authority_operation()
     snapshot = operation.snapshot("303", filing_year=2026, period="1T")
     rendering = CalculationRenderingSnapshot.capture(snapshot, authority_generation=operation.pin().logical_generation)
@@ -330,7 +332,8 @@ def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_pa
         _seed_parent_work_unit(profile)
         repo = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
         repo.save(original)
-        loaded = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        reader = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+        loaded = reader.load_revisioned()[0] if revisioned else reader.load()
 
     assert loaded == original
     (revision,) = loaded.values()
@@ -338,6 +341,93 @@ def test_saved_rendering_snapshot_survives_encrypted_calculation_readback(tmp_pa
     assert revision.rendering_snapshot is not None
     assert revision.rendering_snapshot.registry_snapshot.revision.predecessor == snapshot.revision.predecessor
     assert revision.rendering_snapshot.registry_snapshot.revision.localization_key == snapshot.revision.localization_key
+
+
+def test_guarded_reads_join_each_fresh_parent_catalogue_once(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    operation = published_authority_operation()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        original = _populated_catalogue()
+        repo.save(original)
+        parent_reads: list[WorkUnitCatalogue] = []
+        original_load = WorkUnitCatalogueRepository.load
+
+        def load_parent(repository: WorkUnitCatalogueRepository) -> WorkUnitCatalogue:
+            loaded = original_load(repository)
+            parent_reads.append(loaded)
+            return loaded
+
+        monkeypatch.setattr(WorkUnitCatalogueRepository, "load", load_parent)
+        first, first_revision_id = repo.load_revisioned(operation=operation)
+        second, second_revision_id = repo.load_revisioned(operation=operation)
+
+        assert first == second == original
+        assert first_revision_id == second_revision_id
+        assert len(parent_reads) == 2
+        WorkUnitCatalogueRepository(objects=profile.repository).save(build_work_unit_catalogue(()))
+        with pytest.raises(CalculationRevisionPersistenceError) as raised:
+            repo.load_revisioned(operation=operation)
+        assert raised.value.context == {"reason": "missing_parent_work_unit", "work_unit_id": _work_unit_id()}
+        assert len(parent_reads) == 3
+
+
+def test_absent_guarded_read_does_not_load_unneeded_parent_authorities(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    operation = published_authority_operation()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+
+        def unexpected_parent_read(_repository: WorkUnitCatalogueRepository) -> WorkUnitCatalogue:
+            pytest.fail("an absent calculation catalogue needs no parent authority")
+
+        monkeypatch.setattr(WorkUnitCatalogueRepository, "load", unexpected_parent_read)
+        loaded, revision_id = CalculationRevisionCatalogueRepository(objects=profile.repository).load_revisioned(
+            operation=operation
+        )
+
+    assert len(loaded) == 0
+    assert revision_id == ABSENT_SECURE_OBJECT_REVISION_ID
+
+
+def test_guarded_read_observes_another_repository_replacing_the_catalogue(tmp_path: Path) -> None:
+    operation = published_authority_operation()
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_parent_work_unit(profile)
+        repo = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        original = _populated_catalogue()
+        repo.save(original)
+        first, first_revision_id = repo.load_revisioned(operation=operation)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(CalculationRevisionCatalogue())
+        second, second_revision_id = repo.load_revisioned(operation=operation)
+
+    assert first == original
+    assert len(second) == 0
+    assert first_revision_id != second_revision_id
+
+
+@pytest.mark.parametrize("revisioned", (False, True))
+@pytest.mark.parametrize("payload", (b"\xff", b'{"private-taxpayer-marker":', b"{}"))
+def test_invalid_catalogue_bytes_have_the_same_redacted_refusal(
+    tmp_path: Path, revisioned: bool, payload: bytes
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        profile.repository.save(
+            namespace=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+            object_key=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key(),
+            classification=SensitivityClass.FINANCIAL,
+            schema_version=MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version,
+            written_at=_CORRUPT_ENVELOPE_WRITTEN_AT,
+            payload=payload,
+        )
+        reader = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        with pytest.raises(CalculationRevisionPersistenceError) as raised:
+            reader.load_revisioned() if revisioned else reader.load()
+
+    assert raised.value.context == {"reason": "invalid_payload"}
+    assert raised.value.translated_message == "errors.fail.fail_modelo_calculation_revision_persistence"
+    assert "private-taxpayer-marker" not in str(raised.value)
+    assert raised.value.__context__ is None
 
 
 def test_changed_filing_evidence_persists_as_a_distinct_revision_without_replacing_the_original(
@@ -510,8 +600,10 @@ def test_calculation_revision_catalogue_dropped_registry_snapshot_ref_refuses_at
             CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
 
 
+@pytest.mark.parametrize("revisioned", (False, True))
 def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_refuses_at_load(
     tmp_path: Path,
+    revisioned: bool,
 ) -> None:
     """A revision coordinate that disagrees with its parent WorkUnit is refused."""
 
@@ -541,7 +633,8 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
         )
 
         with pytest.raises(CalculationRevisionPersistenceError) as raised:
-            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            reader = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+            reader.load_revisioned() if revisioned else reader.load()
 
     assert raised.value.context == {
         "reason": "parent_registry_coordinate_mismatch",
@@ -549,8 +642,10 @@ def test_calculation_revision_catalogue_mismatched_parent_registry_snapshot_ref_
     }
 
 
+@pytest.mark.parametrize("revisioned", (False, True))
 def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
     tmp_path: Path,
+    revisioned: bool,
 ) -> None:
     """A corrupted envelope classification raises a translated persistence error."""
 
@@ -573,7 +668,8 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
         )
 
         with pytest.raises(CalculationRevisionPersistenceError) as raised:
-            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            reader = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+            reader.load_revisioned() if revisioned else reader.load()
 
     assert raised.value.translated_message == "errors.fail.fail_modelo_calculation_revision_persistence"
     assert raised.value.context == {
@@ -583,8 +679,10 @@ def test_calculation_revision_catalogue_wrong_inner_classification_is_localized(
     }
 
 
+@pytest.mark.parametrize("revisioned", (False, True))
 def test_calculation_revision_catalogue_unsupported_storage_version_is_localized(
     tmp_path: Path,
+    revisioned: bool,
 ) -> None:
     """A future inner envelope schema version raises a translated persistence error."""
 
@@ -608,7 +706,8 @@ def test_calculation_revision_catalogue_unsupported_storage_version_is_localized
         )
 
         with pytest.raises(CalculationRevisionPersistenceError) as raised:
-            CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID).load()
+            reader = CalculationRevisionCatalogueRepository(bucket_id=_BUCKET_ID)
+            reader.load_revisioned() if revisioned else reader.load()
 
     assert raised.value.translated_message == "errors.fail.fail_modelo_calculation_revision_persistence"
     assert raised.value.context == {

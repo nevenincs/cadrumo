@@ -567,6 +567,13 @@ core:
     errors:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
+dependencies:
+  setup:
+    cancel_requested: Deteniendo la instalación…
+    following: Siguiendo una instalación que ya está en curso…
+    input_refused: No se ha podido aceptar la solicitud de instalación.
+    retrying: Reintentando la descarga…
+    waiting_for_server: Esperando al servidor de descarga…
 desktop:
   about:
     agent: Agente
@@ -4197,9 +4204,19 @@ operation:
     action:
       apply: Aplicar
       cancel: Cancelar
+      claim: Revisar y responder
       close: Cerrar
       detach: Desvincular
       reject: Rechazar
+    claim:
+      already_claimed: Otra persona está revisando esta instalación. No puedes responder
+        aquí.
+      authority_lost: Ya no puedes responder a esta revisión. Inicia una instalación
+        nueva.
+      stale: La revisión de esta instalación ha cambiado. Inicia una instalación nueva
+        para revisar el plan actual.
+      unavailable: Esta revisión ya no está disponible. Inicia sesión y empieza una
+        instalación nueva.
     detail:
       action_refused: Acción rechazada
       cleanup_deadline: Plazo de cierre
@@ -7359,8 +7376,11 @@ tui:
     progress_bytes: '%{name}: descargando %{done} de %{total} (%{percent}%)'
     review:
       decline: Ahora no
+      open: Abrir revisión de la instalación
+      reference: Referencia de la instalación
       title: ¿Quieres prepararlo?
     set_up_all: Preparar todo
+    sign_in_first: Inicia sesión para comprobar o instalar los componentes.
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
@@ -7374,8 +7394,7 @@ tui:
     stop: Detener
     stopping: Deteniendo la preparación…
     title: Componentes
-    unavailable: Cadrumo no ha podido iniciar su motor de componentes, así que ahora
-      no se pueden comprobar ni preparar los componentes.
+    unavailable: No se han podido comprobar los componentes. Inténtalo de nuevo.
     waiting_for_program: '%{name}: esperando a que se inicie el programa'
     working: Preparando el plan…
 workspace:

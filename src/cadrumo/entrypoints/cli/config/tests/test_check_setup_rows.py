@@ -1,20 +1,8 @@
-"""``aeat config check`` and ``aeat config repair`` show the setup rows the components role reports.
-
-The workstation report comes from the profile worker, which does not read
-component state, so ``config check`` reads the role's quick check itself.
-``config repair`` reads the same rows with no profile session. The report is a
-recorded worker reply and the role's side is a conversation the real role
-recorded, replayed on a real pipe; what is checked is each command's own
-composition: one row per row the role reported, graded, and one typed notice,
-with no rows, when the role cannot answer.
-"""
+"""Config check and repair grade the admitted component status rows and unavailable reads."""
 
 from __future__ import annotations
 
 import json
-import sys
-from collections.abc import Mapping, Sequence
-from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -22,17 +10,16 @@ import pytest
 import typer
 import typer.main
 
-from cadrumo.tests.components_role_replay import ReplayLauncher
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
+from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from .....adapters.outbound.components import client as components_client
-from .....adapters.outbound.components.client import ComponentsLaunch
+from .....adapters.outbound.components.tests.recorded_rows import recorded_absent_row, set_up_row
 from .....application.workstation_check import WorkstationCheckReport
 from .....application.workstation_check_operation import WorkstationCheckProjection
 from .....core.json_contract import ResolvedNoticeAction
-from .....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from ...tests.cli_runner import invoke_cached_cli
-from .. import check_cli, repair_commands
+from .. import check_cli, provision_cli, repair_commands
 
 __all__ = ["english_locale_fixture"]
 
@@ -50,30 +37,21 @@ def _context(output_format: str) -> typer.Context:
     return typer.Context(typer.main.get_command(app), obj={"format": output_format})
 
 
-def _unavailable(
-    image: Path, arguments: Sequence[str], environment: Mapping[str, str], directory: Path
-) -> ComponentsLaunch:
-    del image, arguments, environment, directory
-    raise FileNotFoundError("the binary went away")
-
-
 @pytest.fixture
-def role(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
-    """Answer the role's start with a recorded conversation, or with a start that fails."""
-    image = tmp_path / "cadrumo.exe"
-    image.write_bytes(b"")
-    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
-    monkeypatch.setenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, str(image))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "root"))
+def role(monkeypatch: pytest.MonkeyPatch) -> Any:
+    """Supply registered status rows, or the refusal of an unavailable read."""
     report = WorkstationCheckReport(profile_id=_PROFILE, capabilities=(), dependencies=(), preflight=(), issues=())
     monkeypatch.setattr(
         check_cli, "read_workstation_check_for_cli", lambda ctx: WorkstationCheckProjection.from_report(report)
     )
 
-    def choose(name: str | None) -> ReplayLauncher | None:
-        launcher = None if name is None else ReplayLauncher(name)
-        monkeypatch.setattr(components_client, "launch_components_role", _unavailable if launcher is None else launcher)
-        return launcher
+    def choose(name: str | None) -> None:
+        def read(_ctx: typer.Context):
+            if name is None:
+                raise RefusalError(RefusalCode.UNAVAILABLE)
+            return (set_up_row("browser"), recorded_absent_row("local_ai"))
+
+        monkeypatch.setattr(provision_cli, "read_quick_setup_rows", read)
 
     return choose
 
@@ -81,12 +59,11 @@ def role(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
 def test_config_check_renders_one_setup_row_per_row_the_role_reports(
     role: Any, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    launcher = role("status_quick_browser_ready")
+    role("status_quick_browser_ready")
 
     check_cli.config_check(_context("json"))
     envelope = json.loads(capsys.readouterr().out)
 
-    assert launcher.launch.arguments == ("--role", "components", "status")
     rows = {row["check"]: row for row in envelope["result"]["preflight"]}
     assert list(rows) == ["setup:browser", "setup:local_ai"]
     assert rows["setup:browser"]["healthy"] is True
@@ -107,7 +84,23 @@ def test_a_role_that_cannot_answer_shows_a_typed_notice_and_no_setup_rows(
     assert "notice\tconfig.check.setup_unavailable\tSetup could not be checked right now." in output
 
 
-def test_repair_reports_each_setup_row_with_no_session(role: Any) -> None:
+def test_recorded_status_refusal_is_unavailable_without_hiding_unsettled_cleanup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    error = CliRefusedBoundaryError("status unavailable")
+
+    def fail(_ctx: typer.Context):
+        raise error
+
+    monkeypatch.setattr(provision_cli, "read_quick_setup_rows", fail)
+    assert check_cli.read_setup_rows(_context("text")) is None
+    error.__dict__["async_cleanup_error"] = object()
+    with pytest.raises(CliRefusedBoundaryError) as caught:
+        check_cli.read_setup_rows(_context("text"))
+    assert caught.value is error
+
+
+def test_repair_reports_each_registered_setup_row_when_available(role: Any) -> None:
     role("status_quick_browser_ready")
 
     result = invoke_cached_cli(["--format", "json", "config", "repair"])

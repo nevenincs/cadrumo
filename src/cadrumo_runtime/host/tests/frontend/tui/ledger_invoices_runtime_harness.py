@@ -185,14 +185,17 @@ class FakeClient:
         self.session_id = SESSION_ID
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
+    client: FakeClient
+    _settled: Settled
+    _reads: list[tuple[type[BaseModel], bool]]
+    deadline: float | None = None
 
-    def __init__(self, client: FakeClient, settled: Settled, reads: list[tuple[type[BaseModel], bool]]) -> None:
-        self.client = client
-        self.definition_contract = settled.contract
-        self._settled = settled
-        self._reads = reads
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self._settled.contract
 
     async def start(self) -> str:
         return self.operation_id

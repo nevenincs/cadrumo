@@ -1,510 +1,198 @@
-"""``config provision`` runs the native component engine's role, prints its plan, answers it and words its codes.
-
-The component leaves run through the real command line with no profile
-session. The role's side is a conversation the real role recorded, replayed on
-a real pipe (:mod:`cadrumo.tests.components_role_replay`), so these cases check
-the command line's own part: the command line it starts, what it prints, the
-answer it sends, the envelope and the exit code. The real role is driven by
-the client's ``test_client_drives_the_real_role``.
-"""
+"""CLI component commands submit registered operations and render their public results."""
 
 from __future__ import annotations
 
 import json
-import sys
-from pathlib import Path
+from collections.abc import Callable
 from typing import Any
 
 import pytest
-from click.testing import Result
-from pydantic import BaseModel
+import typer
+import typer.main
 
-from cadrumo.tests.components_role_replay import ReplayLauncher, transcript_lines
 from cadrumo.tests.english_locale_fixture import english_locale_fixture
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 
-from ....adapters.outbound.components import client as components_client
-from ....adapters.outbound.components.protocol import ComponentsNoticeCode, ComponentsNoticeLine
+from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row, set_up_row
+from ....application.components_operations import (
+    COMPONENTS_OPERATION_SUBJECT,
+    COMPONENTS_REMOVE_OPERATION_ID,
+    COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_STATUS_OPERATION_ID,
+    COMPONENTS_VERIFY_OPERATION_ID,
+    ProvisionMutationRequest,
+    ProvisionOutcome,
+    ProvisionPlan,
+    ProvisionPlanEntry,
+    ProvisionPlanSpace,
+    ProvisionReadRequest,
+    ProvisionResult,
+    ProvisionReviewProjection,
+)
+from ....application.dependency_contracts import DependencyItemKind
 from ....application.dependency_registry import dependency_item_declarations
-from ....application.local_reader_report import LocalReaderReportRequest
-from ....core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
-from ..command_operation_table import COMMAND_OPERATION_ROWS
+from ....core.operations import OperationEffect
 from ..config import provision_cli
-from .cli_runner import invoke_cached_cli, semantic_cli_text
 
 __all__ = ["english_locale_fixture"]
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_COMPONENT_LEAVES = ("browser", "probe", "remove", "setup", "status", "verify")
-_BROWSER = "Browser for the tax agency website"
-_INTERNAL_TERMS = ("runtime", "playwright", "headless", "digest", "ollama", "role")
+
+def _context(output_format: str = "json") -> typer.Context:
+    app = typer.Typer()
+
+    @app.command()
+    def noop() -> None: ...
+
+    return typer.Context(typer.main.get_command(app), obj={"format": output_format})
+
+
+def _plan() -> ProvisionPlan:
+    return ProvisionPlan(
+        contract_version=3,
+        entries=(
+            ProvisionPlanEntry(
+                item_id="browser",
+                download_bytes=100,
+                source_hosts=("example.com",),
+                destination="playwright-browsers",
+                installs_outside_program=False,
+                target_version=None,
+                parts=(),
+            ),
+        ),
+        known_download_bytes=100,
+        has_unknown_size=False,
+        installs_outside_program=False,
+        space=ProvisionPlanSpace(free_bytes=1000, required_bytes=100, sufficient=True),
+    )
 
 
 @pytest.fixture
-def replay(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Any:
-    """Answer each role start with a recorded conversation: ``replay("name")`` picks it."""
-    image = tmp_path / "cadrumo.exe"
-    image.write_bytes(b"")
-    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
-    monkeypatch.setenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, str(image))
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "root"))
+def submitted(monkeypatch: pytest.MonkeyPatch) -> list[tuple[object, dict[str, Any]]]:
+    calls: list[tuple[object, dict[str, Any]]] = []
+    monkeypatch.setattr(provision_cli, "bound_profile_client", lambda _ctx: object())
 
-    def choose(name: str) -> ReplayLauncher:
-        launcher = ReplayLauncher(name)
-        monkeypatch.setattr(components_client, "launch_components_role", launcher)
-        return launcher
+    def run(_client: object, payload: object, **options: Any) -> RegisteredOperationCompletion[ProvisionResult]:
+        calls.append((payload, options))
+        definition = options["definition_id"]
+        rows = (recorded_absent_row("browser"), recorded_absent_row("local_ai"))
+        if definition == COMPONENTS_SETUP_OPERATION_ID:
+            review = ProvisionReviewProjection(reviewed_proposal_digest="b" * 64, plan=_plan(), plan_digest="c" * 64)
+            handler = options["review"]
+            decision = handler.decide(review)
+            result = ProvisionResult(
+                outcome=ProvisionOutcome.COMPLETED if decision == "apply" else ProvisionOutcome.REJECTED,
+                rows=(set_up_row("browser"),) if decision == "apply" else (),
+                plan_digest=review.plan_digest,
+            )
+        elif definition == COMPONENTS_REMOVE_OPERATION_ID:
+            result = ProvisionResult(outcome=ProvisionOutcome.REMOVED, rows=rows, items=("browser",))
+        else:
+            result = ProvisionResult(outcome=ProvisionOutcome.OK, rows=rows, setup_complete=False)
+        return RegisteredOperationCompletion(operation_id="a" * 64, projection=result, effect=OperationEffect.NONE)
 
-    return choose
-
-
-def _json(result: Result) -> dict[str, Any]:
-    document = json.loads(result.stdout)
-    assert isinstance(document, dict)
-    return document
-
-
-def _relayed(name: str, *, kinds: set[str]) -> list[dict[str, Any]]:
-    lines = [json.loads(line) for line in transcript_lines(name)]
-    return [line for line in lines if line["type"] in kinds]
-
-
-def test_the_component_leaves_submit_no_registered_operation() -> None:
-    rows = {path[2]: operation for path, operation in COMMAND_OPERATION_ROWS if path[:2] == ("config", "provision")}
-
-    assert {leaf: rows[leaf] for leaf in _COMPONENT_LEAVES} == dict.fromkeys(_COMPONENT_LEAVES)
-    assert not any(operation and operation.startswith("dependencies.") for _path, operation in COMMAND_OPERATION_ROWS)
-
-
-def test_status_renders_every_row_the_role_reports_with_what_fixes_it(replay: Any) -> None:
-    launcher = replay("status_quick_browser_ready")
-
-    result = invoke_cached_cli(["config", "provision", "status"])
-
-    assert result.exit_code == 0, result.output
-    assert launcher.launch.arguments == ("--role", "components", "status")
-    lines = semantic_cli_text(result.stdout).splitlines()
-    assert f"{_BROWSER}\tReady." in lines
-    assert "Local AI\tNot set up yet." in lines
-    assert "\tSet it up in the Cadrumo desktop app." in lines
-    assert not any("To fix it" in line for line in lines)
-    assert lines[-1] == "Some components are not ready yet."
-    assert not any(term in result.stdout.lower() for term in _INTERNAL_TERMS)
-
-
-def test_status_json_carries_each_row_as_the_role_reported_it(replay: Any) -> None:
-    replay("status_quick_browser_ready")
-
-    result = invoke_cached_cli(["--format", "json", "config", "provision", "status"])
-
-    assert result.exit_code == 0, result.output
-    document = _json(result)["result"]
-    (role_result,) = _relayed("status_quick_browser_ready", kinds={"result"})
-    assert document["mode"] == "quick"
-    assert document["complete"] is False
-    assert [(item["item_id"], item["state"], item["recovery"]) for item in document["items"]] == [
-        (row["item_id"], row["state"], row.get("recovery")) for row in role_result["rows"]
-    ]
-    local_ai = document["items"][1]
-    assert local_ai["recovery"] == "set_up_in_desktop"
-    assert local_ai["recovery_action_id"] == "operator.provision.local_ai"
-    assert local_ai["command"] is None
-
-
-def test_verify_exits_2_with_the_rows_category_and_refuses_an_unknown_item(replay: Any) -> None:
-    launcher = replay("verify_browser_blocked_by_network")
-
-    result = invoke_cached_cli(["config", "provision", "verify", "--item", "browser"])
-
-    assert result.exit_code == 2, result.output
-    assert launcher.launch.arguments == ("--role", "components", "verify", "--item", "browser")
-    assert f"{_BROWSER}\tYour network blocked the download." in semantic_cli_text(result.stdout).splitlines()
-    refused = invoke_cached_cli(["config", "provision", "verify", "--item", "printer"])
-    assert refused.exit_code == 2
-    assert "choose one of: browser, local_ai" in semantic_cli_text(refused.output)
-    assert len(launcher.launches) == 1
-
-
-def test_a_setting_the_engine_refuses_is_worded_as_that_refusal_not_a_broken_protocol(replay: Any) -> None:
-    replay("status_refused_blocked_by_network")
-
-    result = invoke_cached_cli(["config", "provision", "status"])
-
-    assert result.exit_code == 2, result.output
-    assert semantic_cli_text(result.stdout).splitlines()[-1] == "Your network blocked the download."
-    assert "invalid_frame" not in result.output
-
-    replay("status_refused_blocked_by_network")
-    as_json = invoke_cached_cli(["--format", "json", "config", "provision", "status"])
-    document = _json(as_json)["result"]
-    assert (document["failure_category"], document["complete"], document["items"]) == ("blocked_by_network", False, [])
-    assert as_json.exit_code == 2, "a refused check is not a computer with nothing set up"
-
-
-def test_setup_with_yes_prints_the_plan_then_approves_exactly_its_digest(replay: Any) -> None:
-    launcher = replay("setup_browser_completed")
-    (review,) = _relayed("setup_browser_completed", kinds={"review"})
-
-    result = invoke_cached_cli(["config", "provision", "browser", "--yes"])
-
-    assert result.exit_code == 0, result.output
-    assert launcher.launch.arguments == ("--role", "components", "setup", "--item", "browser")
-    assert json.loads(launcher.launch.written) == {"type": "approve", "plan_digest": review["plan_digest"]}
-    errors = semantic_cli_text(result.stderr).splitlines()
-    plan_at = errors.index("Cadrumo will set up:")
-    assert errors[plan_at + 1].startswith(f"{_BROWSER}: 317 MB from cdn.playwright.dev")
-    assert any(line == "Total download: 317 MB." for line in errors)
-    assert f"{_BROWSER}: downloading" in errors
-    assert f"{_BROWSER}: checking that it works" in errors
-    output = semantic_cli_text(result.stdout).splitlines()
-    assert f"{_BROWSER}\tReady." in output
-    assert output[-1] == "Setup finished."
-
-
-def test_a_setup_of_every_component_sets_up_the_browser_and_leaves_the_local_ai_to_the_desktop(
-    replay: Any,
-) -> None:
-    launcher = replay("setup_browser_completed")
-
-    result = invoke_cached_cli(["config", "provision", "setup", "--yes"])
-
-    assert result.exit_code == 0, result.output
-    assert launcher.launch.arguments == ("--role", "components", "setup")
-    output = semantic_cli_text(result.stdout).splitlines()
-    assert f"{_BROWSER}\tReady." in output
-    assert "Local AI\tNot set up yet." in output
-    assert "\tSet it up in the Cadrumo desktop app." in output
-    assert output[-1] == "Setup finished."
-
-
-def test_the_local_ai_has_no_command_that_pulls_it() -> None:
-    names = {name for name in invoke_cached_cli(["config", "provision", "--help"]).stdout.split() if name.isalpha()}
-
-    assert {"browser", "setup", "remove", "status", "verify", "probe", "report"} <= names
-    refused = invoke_cached_cli(["config", "provision", "pull", "--yes"])
-    assert refused.exit_code == 2
-    assert "No such command" in refused.output
+    monkeypatch.setattr(provision_cli, "run_registered_operation", run)
+    return calls
 
 
 @pytest.mark.parametrize(
-    "arguments",
+    ("name", "definition"),
     [
-        ["setup", "--yes", "--model", "synthetic-text:test"],
-        ["setup", "--yes", "local_ai"],
-        ["browser", "--yes", "--model", "synthetic-text:test"],
-        ["browser", "--yes", "local_ai"],
-        ["remove", "browser", "--yes", "--model", "synthetic-text:test"],
-        ["status", "--model", "synthetic-text:test"],
-        ["verify", "--model", "synthetic-text:test"],
-        ["probe", "--model", "synthetic-text:test"],
-    ],
-    ids=[
-        "setup-model",
-        "setup-local-ai",
-        "browser-model",
-        "browser-local-ai",
-        "remove-model",
-        "status-model",
-        "verify-model",
-        "probe-model",
+        ("status", COMPONENTS_STATUS_OPERATION_ID),
+        ("probe", COMPONENTS_VERIFY_OPERATION_ID),
+        ("verify", COMPONENTS_VERIFY_OPERATION_ID),
     ],
 )
-def test_no_provision_command_takes_a_model_or_names_the_local_ai_to_set_up_and_none_starts_the_role(
-    replay: Any, arguments: list[str]
+def test_status_probe_and_verify_route_and_keep_distinct_exit_rules(
+    submitted: list[tuple[object, dict[str, Any]]], capsys: pytest.CaptureFixture[str], name: str, definition: str
 ) -> None:
-    launcher = replay("setup_browser_completed")
-
-    result = invoke_cached_cli(["config", "provision", *arguments])
-
-    assert result.exit_code == 2, result.output
-    assert launcher.launches == [], "a command line that is not the command's own started the engine"
-
-
-def test_without_yes_and_without_a_terminal_the_plan_is_shown_declined_and_approval_asked(replay: Any) -> None:
-    launcher = replay("setup_declined")
-
-    result = invoke_cached_cli(["config", "provision", "browser"])
-
-    assert result.exit_code == 2, result.output
-    assert launcher.launch.written == b'{"type":"decline"}\n'
-    assert "Cadrumo will set up:" in semantic_cli_text(result.stderr)
-    assert semantic_cli_text(result.stdout).splitlines()[-1] == (
-        "This needs your approval. Run the command again with --yes to approve the plan above."
-    )
+    command: Callable[..., None] = getattr(provision_cli, f"provision_{name}")
+    if name == "verify":
+        with pytest.raises(typer.Exit) as exited:
+            command(_context())
+        assert exited.value.exit_code == 2
+    else:
+        command(_context())
+    result = json.loads(capsys.readouterr().out)["result"]
+    assert result["mode"] == ("quick" if name == "status" else "full")
+    assert [row["item_id"] for row in result["items"]] == ["browser", "local_ai"]
+    assert result["items"][1]["command"] is None
+    payload, options = submitted[0]
+    assert payload == ProvisionReadRequest()
+    assert options["definition_id"] == definition and options["subject_ref"] == COMPONENTS_OPERATION_SUBJECT
+    assert callable(options["on_events"]) is (name != "status")
 
 
-def test_json_mode_relays_every_line_the_role_sends_while_it_works(replay: Any) -> None:
-    replay("setup_browser_completed")
-
-    result = invoke_cached_cli(["--format", "json", "config", "provision", "browser", "--yes"])
-
-    assert result.exit_code == 0, result.output
-    relayed = [json.loads(line) for line in result.stderr.splitlines()]
-    assert relayed == _relayed("setup_browser_completed", kinds={"phase", "progress", "notice", "review"})
-    document = _json(result)["result"]
-    (role_result,) = _relayed("setup_browser_completed", kinds={"result"})
-    assert document["outcome"] == "completed"
-    assert document["approved"] is True
-    assert document["plan_digest"] == role_result["plan_digest"]
-    assert document["space"]["sufficient"] is True
-    assert document["item_id"] is None
-
-
-@pytest.mark.parametrize(
-    ("name", "summary"),
-    [
-        ("setup_refused_blocked_by_network", f"{_BROWSER}: Your network blocked the download."),
-        (
-            "setup_plan_changed",
-            "The plan changed after you approved it, so nothing was downloaded. "
-            "Run the command again to see the new plan.",
+def test_selected_verify_and_refused_check_preserve_public_failure(
+    monkeypatch: pytest.MonkeyPatch, submitted: list[tuple[object, dict[str, Any]]], capsys: pytest.CaptureFixture[str]
+) -> None:
+    with pytest.raises(typer.Exit):
+        provision_cli.provision_verify(_context(), item="browser")
+    assert submitted[0][0] == ProvisionReadRequest(items=(DependencyItemKind.BROWSER,))
+    capsys.readouterr()
+    monkeypatch.setattr(
+        provision_cli,
+        "_read",
+        lambda *_args, **_kwargs: ProvisionResult(
+            outcome=ProvisionOutcome.REFUSED, failure_category=DependencyFailureCategory.BLOCKED_BY_NETWORK
         ),
-    ],
-)
-def test_a_setup_that_did_not_complete_says_why_and_exits_2(replay: Any, name: str, summary: str) -> None:
-    replay(name)
-
-    result = invoke_cached_cli(["config", "provision", "browser", "--yes"])
-
-    assert result.exit_code == 2, result.output
-    assert semantic_cli_text(result.stdout).splitlines()[-1] == summary
-
-
-def test_the_refusal_json_names_the_item_and_its_category(replay: Any) -> None:
-    replay("setup_refused_blocked_by_network")
-
-    result = invoke_cached_cli(["--format", "json", "config", "provision", "setup", "--yes"])
-
-    assert result.exit_code == 2, result.output
-    document = _json(result)["result"]
-    assert (document["outcome"], document["item_id"], document["failure_category"]) == (
-        "refused",
-        "browser",
-        "blocked_by_network",
     )
-    assert document["approved"] is False
+    with pytest.raises(typer.Exit) as exited:
+        provision_cli.provision_probe(_context())
+    assert exited.value.exit_code == 2
+    assert json.loads(capsys.readouterr().out)["result"]["failure_category"] == "blocked_by_network"
 
 
-def test_a_build_without_the_role_reads_every_item_as_not_in_this_build(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+@pytest.mark.parametrize(("yes", "expected"), [(True, "completed"), (False, "rejected")])
+def test_setup_uses_browser_only_and_prompts_or_rejects(
+    submitted: list[tuple[object, dict[str, Any]]], capsys: pytest.CaptureFixture[str], yes: bool, expected: str
 ) -> None:
-    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
-    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "root"))
-
-    status = invoke_cached_cli(["config", "provision", "status"])
-    setup = invoke_cached_cli(["config", "provision", "setup", "--yes"])
-    browser = invoke_cached_cli(["config", "provision", "browser", "--yes"])
-
-    assert status.exit_code == 0, status.output
-    held = "This version of Cadrumo does not include this."
-    assert semantic_cli_text(status.stdout).splitlines()[:2] == [f"{_BROWSER}\t{held}", f"Local AI\t{held}"]
-    assert "To fix it" not in status.stdout
-    assert setup.exit_code == 2
-    assert semantic_cli_text(setup.stdout).splitlines()[-1] == "Some components are not ready yet."
-    assert browser.exit_code == 2
-    assert semantic_cli_text(browser.stdout).splitlines()[-1] == f"{_BROWSER}: {held}"
-    assert not (tmp_path / "root").exists()
+    if yes:
+        provision_cli.provision_setup(_context(), yes=True)
+    else:
+        with pytest.raises(typer.Exit):
+            provision_cli.provision_setup(_context(), yes=False)
+    output = capsys.readouterr()
+    document = json.loads(output.out)["result"]
+    assert document["outcome"] == expected and document["approved"] is yes
+    payload, options = submitted[0]
+    assert payload == ProvisionMutationRequest() and options["definition_id"] == COMPONENTS_SETUP_OPERATION_ID
+    assert options["review"].claim is provision_cli._claim_review
+    assert options["review"].present_document is not None
 
 
-@pytest.mark.parametrize("arguments", [["config", "provision", "browser"], ["config", "provision", "browser", "--yes"]])
-def test_a_setup_that_follows_one_already_running_asks_nothing_and_reports_its_result(
-    replay: Any, arguments: list[str]
-) -> None:
-    launcher = replay("setup_followed_completed")
-
-    result = invoke_cached_cli(arguments)
-
-    assert result.exit_code == 0, result.output
-    assert launcher.launch.written == b""
-    errors = semantic_cli_text(result.stderr).splitlines()
-    assert errors[0] == f"{_BROWSER}: another setup is already setting this up, so this one follows it."
-    assert "Cadrumo will set up:" not in errors
-    assert f"{_BROWSER}: checking that it works" in errors
-    output = semantic_cli_text(result.stdout).splitlines()
-    assert f"{_BROWSER}	Ready." in output
-    assert output[-1] == "Setup finished."
+def test_remove_only_submits_after_confirmation(submitted: list[tuple[object, dict[str, Any]]]) -> None:
+    with pytest.raises(typer.Exit):
+        provision_cli.provision_remove(_context(), "browser")
+    assert submitted == []
+    provision_cli.provision_remove(_context(), "browser", yes=True)
+    assert submitted[0][0] == ProvisionMutationRequest()
+    assert submitted[0][1]["definition_id"] == COMPONENTS_REMOVE_OPERATION_ID
+    with pytest.raises(typer.BadParameter):
+        provision_cli.remove_item("local_ai")
 
 
-def test_a_followed_setup_relays_the_following_notice_in_json_and_records_no_approval(replay: Any) -> None:
-    replay("setup_followed_completed")
-
-    result = invoke_cached_cli(["--format", "json", "config", "provision", "browser", "--yes"])
-
-    assert result.exit_code == 0, result.output
-    relayed = [json.loads(line) for line in result.stderr.splitlines()]
-    assert relayed[0] == _relayed("setup_followed_completed", kinds={"notice"})[0]
-    assert relayed[0]["notice_code"] == "following"
-    document = _json(result)["result"]
-    assert (document["outcome"], document["approved"], document["plan_digest"]) == ("completed", False, None)
-
-
-def test_a_stopped_follow_says_another_setup_is_still_running_and_exits_2(replay: Any) -> None:
-    replay("setup_follow_stopped")
-
-    result = invoke_cached_cli(["config", "provision", "browser"])
-
-    assert result.exit_code == 2, result.output
-    errors = semantic_cli_text(result.stderr).splitlines()
-    assert errors[0] == f"{_BROWSER}: another setup is already setting this up, so this one follows it."
-    assert "Stopping the setup." in errors
-    assert semantic_cli_text(result.stdout).splitlines()[-1] == (
-        "Another setup is changing this right now. Try again when it has finished."
-    )
-    assert "approval" not in result.stdout
-
-
-def test_remove_with_yes_runs_the_roles_removal_and_reports_every_row(replay: Any) -> None:
-    launcher = replay("remove_absent_browser")
-
-    result = invoke_cached_cli(["config", "provision", "remove", "browser", "--yes"])
-
-    assert result.exit_code == 0, result.output
-    assert launcher.launch.arguments == ("--role", "components", "remove", "--item", "browser")
-    assert launcher.launch.written == b""
-    errors = semantic_cli_text(result.stderr).splitlines()
-    assert f"{_BROWSER}: tidying up" in errors
-    output = semantic_cli_text(result.stdout).splitlines()
-    assert f"{_BROWSER}	Not set up yet." in output
-    assert "	To fix it, run: aeat config provision browser" in output
-    assert output[-1] == f"{_BROWSER}: deleted from this computer."
-
-
-def test_remove_json_carries_the_roles_outcome_and_rows(replay: Any) -> None:
-    replay("remove_absent_browser")
-
-    result = invoke_cached_cli(["--format", "json", "config", "provision", "remove", "browser", "--yes"])
-
-    assert result.exit_code == 0, result.output
-    document = _json(result)["result"]
-    (role_result,) = _relayed("remove_absent_browser", kinds={"result"})
-    assert (document["item"], document["confirmed"], document["outcome"]) == ("browser", True, "removed")
-    assert document["removed"] == role_result["items"] == ["browser"]
-    assert [(item["item_id"], item["state"]) for item in document["items"]] == [
-        (row["item_id"], row["state"]) for row in role_result["rows"]
-    ]
-    assert [json.loads(line) for line in result.stderr.splitlines()] == _relayed(
-        "remove_absent_browser", kinds={"phase"}
-    )
-
-
-def test_remove_without_yes_and_without_a_terminal_removes_nothing_and_asks_for_confirmation(replay: Any) -> None:
-    launcher = replay("remove_absent_browser")
-
-    result = invoke_cached_cli(["config", "provision", "remove", "browser"])
-    document = invoke_cached_cli(["--format", "json", "config", "provision", "remove", "browser"])
-
-    assert result.exit_code == 2, result.output
-    assert launcher.launches == []
-    assert semantic_cli_text(result.stdout).splitlines() == [
-        f"{_BROWSER}: nothing was deleted. Run the command again with --yes to delete it."
-    ]
-    assert document.exit_code == 2, document.output
-    assert _json(document)["result"] == {
-        "item": "browser",
-        "confirmed": False,
-        "outcome": None,
-        "removed": [],
-        "item_id": None,
-        "failure_category": None,
-        "items": [],
-    }
-
-
-def test_remove_refuses_an_unknown_component_before_starting_the_role(replay: Any) -> None:
-    launcher = replay("remove_absent_browser")
-
-    result = invoke_cached_cli(["config", "provision", "remove", "printer", "--yes"])
-    missing = invoke_cached_cli(["config", "provision", "remove"])
-
-    assert result.exit_code == 2
-    assert "choose one of: browser" in semantic_cli_text(result.output)
-    assert missing.exit_code == 2
-    assert launcher.launches == []
-
-
-def test_remove_refuses_the_local_ai_before_starting_the_role(replay: Any) -> None:
-    launcher = replay("remove_absent_browser")
-
-    result = invoke_cached_cli(["config", "provision", "remove", "local_ai", "--yes"])
-    unconfirmed = invoke_cached_cli(["config", "provision", "remove", "local_ai"])
-
-    for refused in (result, unconfirmed):
-        assert refused.exit_code == 2
-        assert "choose one of: browser" in semantic_cli_text(refused.output)
-        assert "local_ai," not in semantic_cli_text(refused.output)
-    assert launcher.launches == []
-
-
-def test_remove_in_a_build_without_the_role_says_it_is_not_in_this_build(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(sys, "_xoptions", {}, raising=False)
-    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
-    monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "root"))
-
-    result = invoke_cached_cli(["--format", "json", "config", "provision", "remove", "browser", "--yes"])
-
-    assert result.exit_code == 2, result.output
-    document = _json(result)["result"]
-    assert (document["outcome"], document["item_id"], document["failure_category"]) == (
-        "refused",
-        "browser",
-        "not_in_this_build",
-    )
-    assert document["removed"] == []
-
-
-def test_the_progress_line_words_a_retry_and_a_wait_for_the_program(capsys: pytest.CaptureFixture[str]) -> None:
-    line = provision_cli.SetupProgressLine(json_mode=False, interactive=False)
-    line.observe(
-        ComponentsNoticeLine(
-            type="notice", notice_code=ComponentsNoticeCode.RETRYING, subject_code="browser", attempt=2, delay_ms=3500
-        )
-    )
-    line.observe(
-        ComponentsNoticeLine(
-            type="notice", notice_code=ComponentsNoticeCode.WAITING_FOR_SERVER, subject_code="local_ai"
-        )
-    )
-    line.observe(ComponentsNoticeLine(type="notice", notice_code=ComponentsNoticeCode.CANCEL_REQUESTED))
-    line.observe(ComponentsNoticeLine(type="notice", notice_code=ComponentsNoticeCode.INPUT_REFUSED))
-
-    assert capsys.readouterr().err.splitlines() == [
-        f"{_BROWSER}: Connection problem. Trying again in 4 seconds (attempt 2).",
-        "Local AI: waiting for the program to start",
-        "Stopping the setup.",
-    ]
-
-
-def test_every_recovery_action_names_the_leaf_that_drives_the_role_or_reads_the_local_ai() -> None:
+def test_recovery_actions_keep_their_real_command() -> None:
     commands = {
-        declaration.item_id: provision_cli.recovery_command(declaration.recovery_action_id)
-        for declaration in dependency_item_declarations()
+        row.item_id: provision_cli.recovery_command(row.recovery_action_id) for row in dependency_item_declarations()
     }
-
-    # Only the desktop sets up the local AI, so its action resolves to the leaf that reports its row.
     assert commands == {"browser": "aeat config provision browser", "local_ai": "aeat config provision status"}
 
 
-class _StopError(Exception):
-    """Ends a recorded submission before any result is rendered."""
-
-
-def test_the_local_reader_report_still_submits_its_registered_operation(monkeypatch: pytest.MonkeyPatch) -> None:
-    submitted: list[tuple[str, BaseModel]] = []
-
-    def record(client: object, payload: BaseModel, **options: Any) -> Any:
-        del client
-        submitted.append((options["definition_id"], payload))
-        raise _StopError
-
-    monkeypatch.setattr(provision_cli, "run_registered_operation", record)
-    monkeypatch.setattr(provision_cli, "bound_profile_client", lambda ctx: object())
-    for leaf in ("report",):
-        with pytest.raises(_StopError):
-            getattr(provision_cli, f"provision_{leaf}")(object())
-
-    rows = {path[2]: operation for path, operation in COMMAND_OPERATION_ROWS if path[:2] == ("config", "provision")}
-    assert [definition for definition, _ in submitted] == [rows["report"]]
-    assert "load" not in rows, "the local reader no longer loads a model directly"
-    assert isinstance(submitted[-1][1], LocalReaderReportRequest)
+def test_unclassified_read_refusal_is_not_rendered_as_empty_status(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(provision_cli, "bound_profile_client", lambda _ctx: object())
+    monkeypatch.setattr(
+        provision_cli,
+        "run_registered_operation",
+        lambda *_args, **_kwargs: RegisteredOperationCompletion(
+            operation_id="a" * 64,
+            projection=ProvisionResult(outcome=ProvisionOutcome.FAILED),
+            effect=OperationEffect.NONE,
+        ),
+    )
+    with pytest.raises(RefusalError) as refused:
+        provision_cli.provision_status(_context())
+    assert refused.value.reason is RefusalCode.INVALID_FRAME

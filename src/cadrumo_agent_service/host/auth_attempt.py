@@ -22,6 +22,7 @@ from cadrumo_client.transport.windows_process import (
 )
 
 from .auth_protocol import MAX_AUTH_LINE, TERMINAL_EVENTS, AuthProtocol, snapshot
+from .credential_frame import wipe
 
 _LOGGER = get_logger(__name__)
 
@@ -64,8 +65,10 @@ class AuthAttempt:
         self._done = Event()
         self._clean = False
         self._scope: WindowsProcessScope | None = None
+        self._input: BinaryIO | None = None
         self._readers: list[Thread] = []
         self._observed = time.monotonic()
+        self._deadline: float | None = None
         self._snapshot = snapshot(self.id, lane, "starting")
         self._thread = Thread(target=self._run, name="provider-sign-in", daemon=True)
         self._thread.start()
@@ -86,10 +89,52 @@ class AuthAttempt:
 
     def cancel(self) -> None:
         """Request bounded cleanup and immediately withdraw any browser action."""
-        self._cancel.set()
         with self._lock:
+            self._cancel.set()
             self._snapshot.pop("url", None)
             self._snapshot.pop("user_code", None)
+
+    def submit_code(self, code: bytearray) -> dict[str, JsonValue]:
+        """Submit once to this live attempt, never retaining or returning the code."""
+        if not code or len(code) > 2048 or any(byte < 33 or byte > 126 for byte in code):
+            raise ValueError("invalid_request")
+        # JSON escaping can make a printable code exceed the helper's line limit.
+        line = bytearray(b'{"version":1,"action":"auth_code","code":"')
+        try:
+            for byte in code:
+                if byte in (34, 92):
+                    line.append(92)
+                line.append(byte)
+            line.extend(b'"}\n')
+            if len(line) > 4096:
+                raise ValueError("invalid_request")
+            with self._lock:
+                valid = self._valid()
+                now = time.monotonic()
+                if (
+                    self._cancel.is_set()
+                    or not valid
+                    or self._deadline is None
+                    or now >= self._deadline
+                    or now - self._observed > 15
+                    or self._snapshot.get("event") != "authorization_code_required"
+                    or self._input is None
+                ):
+                    raise ValueError("invalid_request")
+                # Consume the opportunity before writing: a partial write cannot be replayed.
+                self._snapshot = snapshot(self.id, self._lane, "started")
+                self._protocol.code_submitted = True
+                try:
+                    if self._input.write(line) != len(line):
+                        raise OSError("short_auth_write")
+                    self._input.flush()
+                except (OSError, ValueError):
+                    self._cancel.set()
+                    raise ValueError("invalid_request") from None
+                self._observed = time.monotonic()
+                return dict(self._snapshot)
+        finally:
+            wipe(line)
 
     def close(self) -> None:
         """Confirm cleanup before the caller releases the profile reservation."""
@@ -159,6 +204,8 @@ class AuthAttempt:
 
     def _exchange(self, input_stream: BinaryIO, queue: Queue[bytes | None]) -> tuple[str, str | None]:
         deadline = time.monotonic() + 305
+        with self._lock:
+            self._deadline = deadline
         checked = 0.0
         while True:
             now = time.monotonic()
@@ -169,16 +216,28 @@ class AuthAttempt:
                     self.cancel()
                 checked = now + 1
             if self._cancel.is_set() or now - observed > 15:
+                with self._lock, contextlib.suppress(OSError, ValueError):
+                    input_stream.write(b'{"version":1,"action":"cancel"}\n')
+                    input_stream.flush()
                 return "cancelled", "host_disconnected" if not self._cancel.is_set() else None
             if now >= deadline:
+                self._publish(snapshot(self.id, self._lane, "started"))
                 return "failed", "timeout"
             try:
                 raw = queue.get(timeout=0.25)
             except Empty:
                 continue
-            if raw is None:
-                raise ValueError("helper_ended")
-            event = self._protocol.read(raw)
+            with self._lock:
+                try:
+                    # EOF follows the same invalidation path as malformed output.
+                    event = self._protocol.read(raw if raw is not None else b"")
+                except BaseException:
+                    self._cancel.set()
+                    self._snapshot = snapshot(self.id, self._lane, "started")
+                    raise
+                if event.event in TERMINAL_EVENTS:
+                    # A submitter must not see code-entry state after terminal input.
+                    self._snapshot = snapshot(self.id, self._lane, "started")
             if event.event == "ready":
                 input_stream.write(b'{"version":1,"action":"start"}\n')
                 input_stream.flush()
@@ -190,6 +249,11 @@ class AuthAttempt:
                     value["url"] = event.url
                 if event.user_code is not None:
                     value["user_code"] = event.user_code
+                if event.event == "authorization_code_required":
+                    with self._lock:
+                        url = self._snapshot.get("url")
+                    if url is not None:
+                        value["url"] = url
                 # Never disclose a stale profile action, including a queued one.
                 if not self._valid():
                     self.cancel()
@@ -224,6 +288,8 @@ class AuthAttempt:
                 directory=self._directory,
                 environment=self._environment,
             )
+            with self._lock:
+                self._input = input_stream
             queue: Queue[bytes | None] = Queue(maxsize=8)
             self._readers = [
                 Thread(target=self._read, args=(output, queue), daemon=True),
@@ -239,6 +305,8 @@ class AuthAttempt:
             try:
                 try:
                     if input_stream is not None:
+                        with self._lock:
+                            self._input = None
                         with contextlib.suppress(OSError, ValueError):
                             input_stream.close()
                     if process is not None:

@@ -21,3 +21,16 @@ def test_runtime_process_bootstrap_import_loads_only_its_shell() -> None:
         f"importing {module} gained lower tax modules outside its launch shell. Defer the import "
         "until after the bootstrap has entered isolated dispatch."
     )
+
+
+def test_runtime_server_import_excludes_mutation_services() -> None:
+    """Serving login and status must not compose provider edits or capsule deletion."""
+    names = imported_modules("cadrumo_runtime.host.main")
+    mutation_services = {
+        "cadrumo.application.auth.operator",
+        "cadrumo.application.user_profile.fact_write",
+        "cadrumo.application.user_profile.lifecycle",
+        "sqlalchemy",
+    }
+
+    assert mutation_services.isdisjoint(names), sorted(mutation_services.intersection(names))

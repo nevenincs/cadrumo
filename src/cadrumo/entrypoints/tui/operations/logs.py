@@ -20,6 +20,8 @@ from ....application.operations.frontend_requests import (
     OperationPublicEventV1,
     OperationPublicLogEventV1,
     OperationPublicNoticeEventV1,
+    OperationPublicPhaseEventV1,
+    OperationPublicProgressEventV1,
     OperationPublicTerminalEventV1,
 )
 from ....application.operations.models import OperationDiagnosticReference, OperationId
@@ -43,6 +45,11 @@ class OperationModalLogRowV1(BaseModel):
     code: OperationEventCode
     severity: OperationLogSeverity | None
     diagnostic_ref: OperationDiagnosticReference | None
+    phase_code: OperationEventCode | None = None
+    completed: int | None = None
+    total: int | None = None
+    unit_code: OperationEventCode | None = None
+    subject_code: OperationEventCode | None = None
     notice_code: OperationEventCode | None = None
     display_code: OperatorDisplayCode | None = None
 
@@ -134,11 +141,17 @@ def _project_row(event: OperationPublicEventV1) -> OperationModalLogRowV1:
     severity = event.severity if isinstance(event, OperationPublicLogEventV1) else None
     diagnostic_ref = event.diagnostic_ref if isinstance(event, _DIAGNOSTIC_CARRYING_EVENTS) else None
     notice = event if isinstance(event, OperationPublicNoticeEventV1) else None
+    progress = event if isinstance(event, OperationPublicProgressEventV1) else None
     return OperationModalLogRowV1(
         sequence=event.sequence,
         timestamp=event.timestamp,
         kind=event.kind,
         code=event.code,
+        phase_code=event.phase_code if isinstance(event, OperationPublicPhaseEventV1) else None,
+        completed=None if progress is None else progress.completed,
+        total=None if progress is None else progress.total,
+        unit_code=None if progress is None else progress.unit_code,
+        subject_code=None if progress is None else progress.subject_code,
         severity=severity,
         diagnostic_ref=diagnostic_ref,
         notice_code=None if notice is None else notice.notice_code,

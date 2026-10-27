@@ -1096,3 +1096,147 @@ test("without a profile signed in here, the agent and its settings are not offer
   const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
   expect(calls.filter((call) => /^(agent|provider)/.test(call))).toEqual([]);
 });
+
+test("browser-code sign-in opens the coalesced URL and submits a transient code once", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.setMethods(["browser-code"]),
+  );
+  await openSettings(target);
+  await lane(target, signInCapableLane.id)
+    .getByRole("button", { name: label("desktop.providers.sign_in_action") })
+    .click();
+  const dialog = target.getByRole("dialog");
+  const input = dialog.getByLabel(
+    label("desktop.providers.sign_in_code_label"),
+  );
+  await expect(input).toBeVisible();
+  await expect
+    .poll(
+      async () =>
+        (await hostCalls(target)).filter(
+          (call) => call === "providerSignInOpenExternal",
+        ).length,
+    )
+    .toBe(1);
+  await input.fill("bad code");
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.providers.sign_in_code_submit"),
+    }),
+  ).toBeDisabled();
+  const secret = "FAKE-authorization-code-9876";
+  await input.fill(secret);
+  await dialog
+    .getByRole("button", {
+      name: label("desktop.providers.sign_in_code_submit"),
+    })
+    .click();
+  await expect(input).toHaveCount(0);
+  await expect
+    .poll(
+      async () =>
+        (await hostCalls(target)).filter(
+          (call) => call === "providerSignInSubmitCode",
+        ).length,
+    )
+    .toBe(1);
+  await expect(dialog).toContainText(
+    label("desktop.providers.sign_in_waiting"),
+  );
+  expect((await hostCalls(target)).join("\n")).not.toContain(secret);
+  expect(
+    await target.evaluate(
+      (value) =>
+        document.documentElement.outerHTML.includes(value) ||
+        location.href.includes(value) ||
+        JSON.stringify(localStorage).includes(value),
+      secret,
+    ),
+  ).toBe(false);
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.succeedCurrentAttempt(),
+  );
+  await expect(dialog).toHaveCount(0);
+});
+
+test("cancelling browser-code sign-in clears an unsubmitted code", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(() =>
+    window.__scenarioProviderSignIn!.setMethods(["browser-code"]),
+  );
+  await openSettings(target);
+  await lane(target, signInCapableLane.id)
+    .getByRole("button", { name: label("desktop.providers.sign_in_action") })
+    .click();
+  const dialog = target.getByRole("dialog");
+  const input = dialog.getByLabel(
+    label("desktop.providers.sign_in_code_label"),
+  );
+  const secret = "FAKE-cancel-code-4231";
+  await input.fill(secret);
+  await dialog
+    .getByRole("button", { name: label("desktop.providers.sign_in_cancel") })
+    .click();
+  await expect(input).toHaveCount(0);
+  await expect(dialog).toContainText(
+    label("desktop.providers.sign_in_cancelled"),
+  );
+  expect((await hostCalls(target)).join("\n")).not.toContain(secret);
+  expect(
+    await target.evaluate(
+      (value) =>
+        document.documentElement.outerHTML.includes(value) ||
+        location.href.includes(value) ||
+        JSON.stringify(localStorage).includes(value),
+      secret,
+    ),
+  ).toBe(false);
+  expect(await hostCalls(target)).not.toContain("providerSignInSubmitCode");
+});
+
+test("a refused code submission settles the attempt and offers an explicit retry", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(() => {
+    window.__scenarioProviderSignIn!.setMethods(["browser-code"]);
+    window.__scenarioProviderSignIn!.failNextSubmit();
+  });
+  await openSettings(target);
+  await lane(target, signInCapableLane.id)
+    .getByRole("button", { name: label("desktop.providers.sign_in_action") })
+    .click();
+  const dialog = target.getByRole("dialog");
+  const input = dialog.getByLabel(
+    label("desktop.providers.sign_in_code_label"),
+  );
+  const submit = dialog.getByRole("button", {
+    name: label("desktop.providers.sign_in_code_submit"),
+  });
+  await input.fill('"'.repeat(2048));
+  await expect(submit).toBeDisabled();
+  await input.fill("FAKE-refused-code-123");
+  await submit.click();
+  await expect(input).toHaveCount(0);
+  await expect(dialog.getByRole("alert")).toContainText(
+    label("desktop.providers.sign_in_busy", {
+      provider: nameOf(signInCapableLane.id),
+    }),
+  );
+  await expect(
+    dialog.getByRole("button", {
+      name: label("desktop.providers.sign_in_retry"),
+    }),
+  ).toBeVisible();
+  expect(
+    (await hostCalls(target)).filter(
+      (call) => call === "providerSignInSubmitCode",
+    ),
+  ).toHaveLength(1);
+  expect(await hostCalls(target)).toContain("providerSignInCancel");
+});

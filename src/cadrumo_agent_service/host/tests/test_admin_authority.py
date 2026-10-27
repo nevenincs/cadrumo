@@ -77,6 +77,7 @@ def _read(stream: socket.socket) -> dict[str, object]:
         "connect",
         "connect_status",
         "connect_cancel",
+        "connect_submit_code",
         "model_roles",
         "model_role_set",
         "model_role_clear",
@@ -102,7 +103,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
         request.update(provider="synthetic", expected_revision="0" * 64)
     if action == "connect":
         request["method"] = "browser"
-    if action in {"connect_status", "connect_cancel"}:
+    if action in {"connect_status", "connect_cancel", "connect_submit_code"}:
         request["attempt_id"] = str(uuid4())
     if action == "auth":
         request["choice"] = "provider_sign_in"
@@ -113,7 +114,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
     if action == "model_role_set":
         request.update(provider="synthetic_api", model="synthetic-model-1")
     secret = b"synthetic-provider-secret"
-    if action == "set":
+    if action in {"set", "connect_submit_code"}:
         request["secret_bytes"] = len(secret)
     try:
         with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
@@ -123,7 +124,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
         with socket.create_connection(("127.0.0.1", server.port), timeout=5) as stream:
             _send(stream, parent)
             _send(stream, json.dumps(request).encode())
-            if action == "set":
+            if action in {"set", "connect_submit_code"}:
                 assert _read(stream) == {"event": "secret_ready", "request_id": request["request_id"]}
                 _send(stream, secret)
             assert _read(stream) == {
@@ -132,7 +133,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
                 "result": {"kind": "served", "action": action},
             }
         assert target.actions == [action]
-        if action == "set":
+        if action in {"set", "connect_submit_code"}:
             assert target.secret == bytearray()
     finally:
         server.close()

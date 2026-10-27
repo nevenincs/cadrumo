@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal, cast
@@ -129,6 +129,7 @@ from cadrumo.application.operations.persistence.replay import OperationReplaySta
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import (
     OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -253,21 +254,19 @@ class _Client:
         """The thread of each blocking session read: at composition, then around each operation."""
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
-    client: _Client
+    observation: OperationObservationSuccessV1
+    result: BaseModel | None
+    detail: OperationErrorDetailV1 | None = None
+    client: _Client = field(default_factory=_Client)
+    deadline: float | None = None
+    result_reads: list[tuple[type[BaseModel], bool]] = field(default_factory=list)
 
-    def __init__(
-        self,
-        *,
-        observation: OperationObservationSuccessV1,
-        result: BaseModel | None,
-        detail: OperationErrorDetailV1 | None = None,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.detail = detail
-        self.result_reads: list[tuple[type[BaseModel], bool]] = []
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         return self.operation_id

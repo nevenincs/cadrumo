@@ -1,15 +1,9 @@
 """Import-light production authority for the ``config provision`` commands.
 
-The component leaves (status, probe, verify, setup, browser, remove) run
-the native component engine's role, which reaches only installation-wide
-components no profile holds, so they declare only profile-free capabilities and
-run without a session: the quick check reads local files, a full check reaches
-the network, a setup downloads into component storage and a removal deletes
-from it. None of them sets up or removes the local AI; only the desktop does.
-The local reader's report submits a registered operation through the runtime
-in the signed-in profile's session, so its policy declares installation
-storage beside the network rather than the profile-free set that would skip
-the session.
+Component leaves submit operations through the signed-in profile's runtime
+session. The quick check reads local files, full checks reach the network,
+setup downloads into installation-wide storage and removal deletes from it.
+Only the desktop sets up or removes the local AI.
 """
 
 from __future__ import annotations
@@ -30,21 +24,31 @@ from cadrumo_client.contracts.command_ports import Capability, CommandNodeKind, 
 
 _STORAGE_AND_NETWORK: frozenset[Capability] = frozenset({"local-storage", "network"})
 _PROFILE_FREE: frozenset[Capability] = frozenset({"network"})
+_PROFILE: frozenset[Capability] = frozenset({"profile-custody"})
 # Installation-wide component storage, which the engine changes and no profile holds.
 _COMPONENT_STORAGE: frozenset[Capability] = frozenset({"components"})
 # The engine's quick check: local files only, no network and no model load.
 _COMPONENT_READ = ExecutionPolicySpec(
-    frozenset({"state-free"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE
+    frozenset({"profile-custody"}), frozenset({"none"}), "local-io", CommandWriteRoute.NONE
 )
 # The engine's full check reaches each item's hosts, launches the browser and asks each model one token.
-_COMPONENT_CHECK = ExecutionPolicySpec(_PROFILE_FREE, frozenset({"network"}), "external-io", CommandWriteRoute.NONE)
+_COMPONENT_CHECK = ExecutionPolicySpec(
+    _PROFILE_FREE | _PROFILE, frozenset({"network"}), "external-io", CommandWriteRoute.NONE
+)
 # The engine's setup downloads and installs into installation-wide component storage.
 _COMPONENT_SETUP = ExecutionPolicySpec(
-    _PROFILE_FREE | _COMPONENT_STORAGE, frozenset({"network", "local-state"}), "external-io", CommandWriteRoute.NONE
+    _PROFILE_FREE | _COMPONENT_STORAGE | _PROFILE,
+    frozenset({"network", "local-state"}),
+    "external-io",
+    CommandWriteRoute.PROFILE_BOUND,
 )
 # The engine's removal deletes an item from component storage and reaches no network.
 _COMPONENT_REMOVE = ExecutionPolicySpec(
-    _COMPONENT_STORAGE, frozenset({"local-state"}), "local-io", CommandWriteRoute.NONE, destructive=True
+    _COMPONENT_STORAGE | _PROFILE,
+    frozenset({"local-state"}),
+    "local-io",
+    CommandWriteRoute.PROFILE_BOUND,
+    destructive=True,
 )
 # Reads installation storage and the network and changes nothing.
 _SETUP_READ = ExecutionPolicySpec(_STORAGE_AND_NETWORK, frozenset({"none"}), "external-io", CommandWriteRoute.NONE)
@@ -77,6 +81,20 @@ _REMOVE_YES = OptionSpec(
     help_key=TranslationKey("cli.config.provision.remove.yes_help"),
 )
 
+_REVIEW_OPERATION = ArgumentSpec(
+    name="operation_id",
+    value=ValueContract(DeferredTarget("builtins", "str")),
+    default=ParameterDefault.required(),
+    help_key=TranslationKey("cli.config.provision.review.operation_help"),
+)
+_REJECT = OptionSpec(
+    name="reject",
+    declarations=("--reject",),
+    value=ValueContract(DeferredTarget("builtins", "bool")),
+    default=ParameterDefault.value(False),
+    help_key=TranslationKey("cli.config.provision.review.reject_help"),
+)
+
 
 def _handler(name: str) -> LazyBinding:
     return LazyBinding.available(DeferredTarget(".provision_cli", name, __package__))
@@ -103,6 +121,19 @@ CONFIG_PROVISION_COMMAND_SPECS = (
         policy=STATE_FREE,
         handler=None,
         result_schema=ResultSchemaSpec(SchemaState.NOT_SUPPORTED),
+    ),
+    CommandSpec(
+        "config_provision_review",
+        "config_provision",
+        "review",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.config.provision.review.help"),
+        short_help_key=None,
+        invocation=InvocationSpec(context_parameter="ctx"),
+        parameters=(_REVIEW_OPERATION, _YES, _REJECT),
+        policy=_COMPONENT_SETUP,
+        handler=_handler("provision_review"),
+        result_schema=_schema("ProvisionReviewResult", "config.provision.review"),
     ),
     CommandSpec(
         "config_provision_report",

@@ -7,15 +7,17 @@ costs a scrub and an append to the shared log file under its own lock.
 from __future__ import annotations
 
 import logging
+import os
 import re
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
 
 from .. import locks
-from ..locks import exclusive_file_lock
+from ..locks import exclusive_file_lock, held_descriptor_lock
 from ..locks_errors import LockAcquisitionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -115,3 +117,116 @@ def test_a_logging_sink_records_nothing_even_when_contended(tmp_path: Path, capl
     ):
         pytest.fail("the second acquire cannot succeed while the first holds")
     assert _lock_messages(caplog) == []
+
+
+@pytest.mark.parametrize("retained_descriptor", (False, True))
+@pytest.mark.parametrize("body_raises", (False, True))
+def test_contended_diagnostic_io_runs_only_after_exclusive_ownership_ends(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, retained_descriptor: bool, body_raises: bool
+) -> None:
+    """A blocked acquisition diagnostic cannot prevent the next real lock owner."""
+    target = tmp_path / "resource.json"
+    contended, logging_started, release_logging, body_entered = (threading.Event() for _ in range(4))
+    original_try = locks._try_lock
+    messages: list[tuple[str, tuple[object, ...]]] = []
+    body_error = RuntimeError("synthetic protected body failure")
+
+    def observed_try(fd: int) -> bool:
+        acquired = original_try(fd)
+        if not acquired:
+            contended.set()
+        return acquired
+
+    def blocked_debug(message: object, *arguments: object) -> None:
+        messages.append((str(message), arguments))
+        if str(message).startswith("exclusive_file_lock: acquired"):
+            logging_started.set()
+            assert release_logging.wait(10), "diagnostic was not released"
+
+    def protected_body() -> None:
+        body_entered.set()
+        if body_raises:
+            raise body_error
+
+    def contend() -> None:
+        if retained_descriptor:
+            fd, lock_path = locks._open_lock_fd(target)
+            try:
+                with held_descriptor_lock(fd, lock_path, timeout=10, retry_backoff=0.001):
+                    protected_body()
+            finally:
+                os.close(fd)
+        else:
+            with exclusive_file_lock(target, timeout=10, retry_backoff=0.001):
+                protected_body()
+
+    monkeypatch.setattr(locks, "_try_lock", observed_try)
+    monkeypatch.setattr(locks._log, "debug", blocked_debug)
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        try:
+            with exclusive_file_lock(target, timeout=0, log_events=False):
+                waiter = pool.submit(contend)
+                assert contended.wait(10), "waiter never encountered the held lock"
+            assert logging_started.wait(10), "acquisition diagnostic never started"
+            with exclusive_file_lock(target, timeout=0, log_events=False):
+                pass
+            assert body_entered.is_set()
+        finally:
+            release_logging.set()
+        if body_raises:
+            with pytest.raises(RuntimeError) as raised:
+                waiter.result(timeout=10)
+            assert raised.value is body_error
+        else:
+            waiter.result(timeout=10)
+
+    assert len(messages) == 2
+    acquired_message, acquired_arguments = messages[0]
+    released_message, released_arguments = messages[1]
+    assert acquired_message == "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts"
+    assert released_message == "exclusive_file_lock: released %s after holding it %.3fs"
+    assert acquired_arguments[0] == released_arguments[0] == locks.sidecar_lock_path(target)
+    assert isinstance(acquired_arguments[1], float) and acquired_arguments[1] >= 0
+    assert isinstance(acquired_arguments[2], int) and acquired_arguments[2] >= 2
+    assert isinstance(released_arguments[1], float) and released_arguments[1] >= 0
+
+
+def test_failing_contended_diagnostic_does_not_leak_a_retained_descriptor_lock(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A logging exception propagates only after the retained descriptor is unlocked."""
+    target = tmp_path / "resource.json"
+    fd, lock_path = locks._open_lock_fd(target)
+    contended, body_entered = threading.Event(), threading.Event()
+    original_try = locks._try_lock
+    diagnostic_error = RuntimeError("synthetic diagnostic failure")
+
+    def observed_try(candidate: int) -> bool:
+        acquired = original_try(candidate)
+        if not acquired:
+            contended.set()
+        return acquired
+
+    def failed_debug(message: object, *arguments: object) -> None:
+        del message, arguments
+        raise diagnostic_error
+
+    def contend() -> None:
+        with held_descriptor_lock(fd, lock_path, timeout=10, retry_backoff=0.001):
+            body_entered.set()
+
+    monkeypatch.setattr(locks, "_try_lock", observed_try)
+    monkeypatch.setattr(locks._log, "debug", failed_debug)
+    try:
+        with ThreadPoolExecutor(max_workers=1) as pool:
+            with exclusive_file_lock(target, timeout=0, log_events=False):
+                waiter = pool.submit(contend)
+                assert contended.wait(10), "waiter never encountered the held lock"
+            with pytest.raises(RuntimeError) as raised:
+                waiter.result(timeout=10)
+            assert raised.value is diagnostic_error
+            with exclusive_file_lock(target, timeout=0, log_events=False):
+                pass
+            assert body_entered.is_set()
+    finally:
+        os.close(fd)

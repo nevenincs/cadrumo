@@ -269,7 +269,8 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         token = _ACTIVE_COMMAND_ID.set(_resolve_active_command_id(*args, *kwargs.values()))
         try:
-            with setup_status_source(_quick_setup_rows):
+            context = next((value for value in (*args, *kwargs.values()) if isinstance(value, typer.Context)), None)
+            with setup_status_source(lambda: _quick_setup_rows(context)):
                 try:
                     return callback(*args, **kwargs)
                 except Exception as error:
@@ -611,16 +612,20 @@ def _active_command_identifier() -> str | None:
     return _ACTIVE_COMMAND_ID.get()
 
 
-def _quick_setup_rows() -> tuple[DependencyStatusRow, ...]:
+def _quick_setup_rows(ctx: typer.Context | None) -> tuple[DependencyStatusRow, ...]:
     """Read every setup item's row from the components role's quick check.
 
     A component setup line is printed only from the item's current row. The
     role needs no profile session, so every command reads the same rows; nothing
     is read until a line needs a row.
     """
+    from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
     from .config.provision_cli import read_quick_setup_rows
 
-    return read_quick_setup_rows()
+    if ctx is None:
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    return read_quick_setup_rows(ctx)
 
 
 def _resolve_active_command_id(*values: object) -> str | None:

@@ -29,7 +29,6 @@ from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .certificate_sources import active_certificate_source
-from .credentials import CLAVE_PERMANENTE_PASSWORD_SECRET_NAME, UNNAMED_CERTIFICATE_PASSWORD_SECRET_NAME
 from .operator_scope import active_profile_storage_span, assert_auth_recovery_not_in_progress, auth_mutation_span
 
 if TYPE_CHECKING:
@@ -87,6 +86,8 @@ class AuthCredentialSaveExecutor:
         self, request: OperationRequest[AuthCredentialSaveRequest], context: OperationExecutorContext
     ) -> str:
         """Consume the protected frame and publish the profile-scoped secret."""
+        from .credentials import CLAVE_PERMANENTE_PASSWORD_SECRET_NAME, UNNAMED_CERTIFICATE_PASSWORD_SECRET_NAME
+
         try:
             profile_id = str(UUID(request.subject_ref.removeprefix("profile:")))
         except ValueError:

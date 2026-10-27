@@ -35,6 +35,23 @@ def test_valid_browser_and_device_actions_follow_correlated_handshake(query: str
         protocol.read(_event(attempt, "started"))
 
 
+def test_code_request_requires_a_browser_action_and_allows_terminal_success() -> None:
+    attempt = str(uuid4())
+    protocol = AuthProtocol("example")
+    protocol.read(_event(attempt, "ready"))
+    protocol.read(_event(attempt, "started"))
+    with pytest.raises(ValueError, match=r"^invalid_auth_event$"):
+        protocol.read(_event(attempt, "authorization_code_required"))
+    protocol.read(_event(attempt, "browser_action", url="https://example.org/login"))
+    protocol.read(_event(attempt, "authorization_code_required"))
+    with pytest.raises(ValueError, match=r"^invalid_auth_event$"):
+        protocol.read(_event(attempt, "authorization_code_required"))
+    with pytest.raises(ValueError, match=r"^invalid_auth_event$"):
+        protocol.read(_event(attempt, "succeeded"))
+    protocol.code_submitted = True
+    assert protocol.read(_event(attempt, "succeeded")).event == "succeeded"
+
+
 @pytest.mark.parametrize(
     "fields",
     [

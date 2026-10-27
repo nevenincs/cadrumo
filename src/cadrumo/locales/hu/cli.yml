@@ -2702,10 +2702,16 @@ cli:
         yes_help: Kérdés nélkül törli.
       report:
         help: Jelzi a számítógép memóriáját és az egyes szerepekhez választott modellt.
+      review:
+        help: Tekintsd át és válaszold meg a függőben lévő telepítést.
+        operation_help: Az áttekintésre váró művelet azonosítója.
+        reject_help: A megjelenített telepítési terv elutasítása.
       setup:
         help: 'Előkészíti, amit ez a parancssor elő tud készíteni: a böngészőt. Megmutatja,
           mi töltődik le, mekkora és hová kerül, és megkérdez, mielőtt bármit letöltene.
           A helyi MI-t a Cadrumo asztali alkalmazásában kell beállítani.'
+      sign_in_first: Az összetevők ellenőrzéséhez vagy módosításához előbb jelentkezz
+        be az 'aeat config login NÉV' paranccsal.
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'

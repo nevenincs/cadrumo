@@ -2713,10 +2713,16 @@ cli:
         yes_help: L'esborra sense preguntar.
       report:
         help: Indica la memòria d'aquest ordinador i el model triat per a cada rol.
+      review:
+        help: Revisa i respon a una operació d'instal·lació pendent.
+        operation_help: Identificador de l'operació pendent de revisió.
+        reject_help: Rebutja el pla d'instal·lació mostrat.
       setup:
         help: 'Prepara el que aquesta línia d''ordres pot preparar: el navegador.
           Mostra què es baixarà, quant ocupa i on es desa, i et pregunta abans de
           baixar res. La IA local es configura a l''aplicació d''escriptori de Cadrumo.'
+      sign_in_first: Inicia sessió primer amb 'aeat config login NOM' per consultar
+        o canviar els components.
       size:
         gigabytes: '%{value} GB'
         megabytes: '%{value} MB'

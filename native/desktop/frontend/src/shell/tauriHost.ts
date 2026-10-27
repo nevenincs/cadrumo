@@ -416,6 +416,24 @@ function tauriProviderSettings(
         command<ProviderSignInSnapshot>("provider_sign_in_cancel", {
           attemptId,
         }),
+      async submitCode({ attemptId, code }) {
+        if (!token) return unavailable();
+        const bytes = new TextEncoder().encode(code);
+        try {
+          return await invoke<ProviderSignInSnapshot>(
+            "provider_sign_in_submit_code",
+            bytes,
+            {
+              headers: {
+                [TOKEN_HEADER]: token,
+                "x-cadrumo-attempt-id": attemptId,
+              },
+            },
+          );
+        } finally {
+          bytes.fill(0);
+        }
+      },
       openExternal,
     },
   };

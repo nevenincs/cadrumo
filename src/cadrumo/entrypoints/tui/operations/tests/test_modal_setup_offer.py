@@ -16,7 +16,6 @@ opens the setup page on that item's row.
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import NoReturn
@@ -26,8 +25,6 @@ from pydantic import BaseModel
 from textual.app import App
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Static
-
-from cadrumo.tests.components_role_dispatch import RoleReplay
 
 from .....adapters.outbound.aeat.browser.session import require_browser_ready
 from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
@@ -73,17 +70,14 @@ from ...navigation import (
     TuiScreenContextV1,
     build_destination_catalogue,
 )
-from ...setup.door import ComponentsSetupDoor
 from ...setup.focus import SetupItemRequested, setup_item_focus, setup_item_target
 from ...setup.screen import SetupScreen
-from ...setup.tests.role_replay import role_replay_fixture
+from ...setup.tests.operations_fixture import SetupFixture
 from ...tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from ...tests.settling import settle, settle_until
 from ..controller_port import OperationResponseControlPort
 from ..modal import OperationModal, OperationModalSettledOutcomeV1
 from ..refusal_explanation import operation_error_explanation, recorded_setup_item
-
-__all__ = ["role_replay_fixture"]
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -386,7 +380,7 @@ class _Page(Screen[None]):
     """A destination body the modal is opened over."""
 
 
-def _root_catalogue(door: ComponentsSetupDoor, contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
+def _root_catalogue(door: SetupFixture, contexts: list[TuiScreenContextV1]) -> TuiDestinationCatalogueV1:
     def page(context: TuiScreenContextV1) -> Screen[None]:
         return _Page()
 
@@ -406,12 +400,9 @@ def _root_catalogue(door: ComponentsSetupDoor, contexts: list[TuiScreenContextV1
 
 
 @pytest.mark.asyncio
-async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs(
-    role_replay: Callable[..., RoleReplay], tmp_path: Path
-) -> None:
-    # The root and the setup page read the components role's quick check, here a recorded one with every item absent.
-    replay = role_replay(status=["status_quick"])
-    door = ComponentsSetupDoor()
+async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs(tmp_path: Path) -> None:
+    # The root and setup page consume the same typed application status rows.
+    door = SetupFixture()
     contexts: list[TuiScreenContextV1] = []
     app = CadrumoTuiApp(
         destination_catalogue=_root_catalogue(door, contexts),
@@ -446,4 +437,3 @@ async def test_the_root_opens_the_setup_page_on_the_item_the_refusal_needs(
             assert screen.focused is table
             assert len(app.screen_stack) == 2
             # The offer read the item's row first; the setup page then read every row.
-            assert replay.commands() == [("status",), ("status",)]

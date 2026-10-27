@@ -11,7 +11,7 @@ related:
   - '[[2026-10-22-startup-performance-authority-observation-adr]]'
 modified: '2026-10-26'
 body_schema: body-v2
-body_hash: 'sha256:7b78ecd7d1d436e7c3cc9afafc5249e0821be2032c0fc21d35de37c54ae398ea'
+body_hash: 'sha256:24a6894c121e0c22f2f5c45b8f2c347854d6576a87853735a69387f38f70e49a'
 ---
 
 # `runtime-concurrency-review` plan
@@ -32,6 +32,5 @@ The user requested benchmarking, review and fixes for runtime threads, sessions,
 The principal agent implements sequentially and owns benchmarks and checks. Luna agents independently summarize runtime, Python client and Rust client code without edits.
 
 ## Verification
-
 
 Run native IPC latency, idle, disconnect, contention and shutdown checks before and after fixes. Regressions must fail before fixes. Run configured formatting, lint, typing and applicable gates, distinguishing unrelated failures. Review session authority, cancellation and cleanup across both client languages; record findings and benchmark limits in an audit.

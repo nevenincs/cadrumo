@@ -14,9 +14,11 @@ resolver; this schema does not own an instruction.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Literal
 
 from pydantic import Field, NonNegativeInt
 
+from ....application.operations.models import OperationId
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
 
@@ -145,6 +147,13 @@ class ProvisionBrowserResult(ProvisionSetupResult):
     """JSON envelope for ``aeat config provision browser``: the setup of the browser alone."""
 
 
+class ProvisionReviewResult(OutputSchema):
+    """A response accepted for the current setup review; settlement may still be pending."""
+
+    operation_id: OperationId
+    decision: Literal["apply", "reject"]
+
+
 __all__ = [
     "ProvisionBrowserResult",
     "ProvisionItemPayload",
@@ -152,6 +161,7 @@ __all__ = [
     "ProvisionProbeResult",
     "ProvisionRemoveResult",
     "ProvisionReportResult",
+    "ProvisionReviewResult",
     "ProvisionSetupResult",
     "ProvisionSpacePayload",
     "ProvisionStatusResult",

@@ -45,7 +45,7 @@ from cadrumo.application.operations.persistence.replay import OperationReplayLim
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.async_cleanup import await_cancellation_complete
-from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
 
 from ..contracts.contracts import RefusalCode, RefusalError
@@ -63,6 +63,8 @@ from ..contracts.operation_access import (
     OperationReply,
     OperationRequest,
     OperationReview,
+    OperationReviewClaim,
+    OperationReviewClaimed,
     OperationSubmit,
     OperationSubmitted,
 )
@@ -531,6 +533,13 @@ class OperationController:
         self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
     ) -> OperationReviewProjectionResultV1[ReviewT]:
         """Resolve only the original reference's registered schema and contract."""
+        resolved, _digest = await self.resolve_review_document(reference, projection_type)
+        return resolved
+
+    async def resolve_review_document[ReviewT: BaseModel](
+        self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
+    ) -> tuple[OperationReviewProjectionResultV1[ReviewT], str]:
+        """Resolve and fingerprint the same complete runtime review envelope."""
         if reference.operation_id != self.operation_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         reply = await self._exchange(
@@ -550,7 +559,7 @@ class OperationController:
         raw = canonical_json_bytes(reply.document)
         try:
             if reply.document.get("outcome") == "refused":
-                return OperationReviewProjectionRefusalV1.model_validate_json(raw)
+                return OperationReviewProjectionRefusalV1.model_validate_json(raw), content_hash_hex(reply.document)
             model = RuntimeReviewDocument if projection_type is BaseModel else projection_type
             resolved = OperationReviewProjectionSuccessV1[model].model_validate_json(raw)
         except ValidationError:
@@ -562,7 +571,31 @@ class OperationController:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         # When the caller explicitly asks for BaseModel, retain all registered
         # JSON fields in its transport RootModel rather than discard them.
-        return cast("OperationReviewProjectionResultV1[ReviewT]", resolved)
+        return cast("OperationReviewProjectionResultV1[ReviewT]", resolved), content_hash_hex(reply.document)
+
+    async def claim_review(
+        self, reference: OperationReviewProjectionReferenceV1, reviewed_document_digest: str
+    ) -> OperationReviewClaimed:
+        """Explicitly claim the exact displayed document; retain no inferred authority."""
+        if reference.operation_id != self.operation_id:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        reply = await self._exchange(
+            OperationReviewClaim(
+                request_id=uuid4(),
+                profile_id=self.client.profile_id,
+                session_id=self.session_id,
+                reference=reference,
+                reviewed_document_digest=reviewed_document_digest,
+            )
+        )
+        if (
+            not isinstance(reply, OperationReviewClaimed)
+            or reply.reviewed_document_digest != reviewed_document_digest
+            or reply.reference.model_copy(update={"revision": reference.revision}) != reference
+            or reply.reference.revision not in (reference.revision, reference.revision + 1)
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return reply
 
     async def manage(self, request: OperationManagementRequest) -> dict[str, JsonValue]:
         """Use canonical controls under this operation's original session binding."""

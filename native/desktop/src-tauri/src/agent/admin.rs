@@ -82,6 +82,7 @@ fn action_reason(action: &str) -> &'static str {
         "connect" => "admin_connect_provider",
         "connect_status" => "admin_connect_status",
         "connect_cancel" => "admin_connect_cancel",
+        "connect_submit_code" => "admin_connect_submit_code",
         "model_roles" => "admin_model_roles",
         "model_role_set" => "admin_model_role_set",
         "model_role_clear" => "admin_model_role_clear",

@@ -1,10 +1,8 @@
 """``aeat config provision`` -- set up and check what Cadrumo needs on this computer.
 
-The component verbs run one command of the native component engine, the
-Cadrumo binary's ``components`` role, which alone decides each component's
-state, plans its setup and performs it. This command line starts the role,
-words its codes from the canonical catalogues and relays its events; it holds
-no state of its own and needs no signed-in profile:
+The component verbs submit registered operations in the signed-in profile.
+The native component engine decides each component's state and setup plan;
+the command line words the public results and relays operation events:
 
 * **status** -- the quick check of every component: local facts only, no
   network, no model load.
@@ -31,7 +29,7 @@ as a registered operation in the signed-in profile: it reports the measured
 hardware and the lane the person selected for each role.
 
 While a setup runs, text mode draws one progress line on standard error and
-JSON mode writes each line the role sends there as one JSON object, so
+JSON mode writes public operation events there as JSON objects, so
 standard output carries only the closing envelope. A row's text names its
 plain sentence and, when the row offers a recovery, the exact command that
 performs it, or the pointer to the desktop app for the local AI.
@@ -43,38 +41,52 @@ Core types:
 from __future__ import annotations
 
 import json
-import math
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Literal
+from uuid import UUID, uuid4
 
 import typer
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter, ValidationError
 
 from cadrumo_client.commands.output import write_stderr
 from cadrumo_client.commands.profile_binding import bound_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
-from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.commands.registered_operation_admission import require_registered_review_contract
+from cadrumo_client.commands.registered_operation_contracts import (
+    RegisteredOperationCompletion,
+    RegisteredOperationProgress,
+    RegisteredOperationReviewHandler,
+)
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.commands.registered_operation_exchange import RegisteredOperationExchange
+from cadrumo_client.commands.registered_operation_observations import observe_registered_operation
+from cadrumo_client.commands.registered_operation_reviews import respond_registered_pending_review
 from cadrumo_client.contracts.command_program import CommandProgram
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import bounded_deadline_after
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
+from cadrumo_client.contracts.operation_access import (
+    OperationReply,
+    OperationRequest,
+    OperationReviewClaim,
+    OperationReviewClaimed,
+)
 
-from ....adapters.outbound.components.client import ComponentsRequest, run_components_role
-from ....adapters.outbound.components.protocol import (
-    ComponentsAnswer,
-    ComponentsApprove,
-    ComponentsCommand,
-    ComponentsDecline,
-    ComponentsEvent,
-    ComponentsNoticeCode,
-    ComponentsNoticeLine,
-    ComponentsOutcome,
-    ComponentsPhaseLine,
-    ComponentsPlan,
-    ComponentsProgressLine,
-    ComponentsResultLine,
-    ComponentsReviewLine,
+from ....application.components_operations import (
+    COMPONENTS_OPERATION_SUBJECT,
+    COMPONENTS_REMOVE_OPERATION_ID,
+    COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_STATUS_OPERATION_ID,
+    COMPONENTS_VERIFY_OPERATION_ID,
+    PROVISION_RESPONSE_SCHEMA,
+    PROVISION_REVIEW_SCHEMA,
+    ProvisionMutationRequest,
+    ProvisionOutcome,
+    ProvisionPlan,
+    ProvisionReadRequest,
+    ProvisionResult,
+    ProvisionReviewProjection,
 )
 from ....application.dependency_contracts import (
     DependencyBlockedReason,
@@ -89,7 +101,6 @@ from ....application.dependency_registry import dependency_item_declarations
 from ....application.dependency_wording import (
     dependency_desktop_pointer,
     dependency_failure_key,
-    dependency_retry_sentence,
     dependency_row_wording,
     dependency_space_sentence,
 )
@@ -98,8 +109,16 @@ from ....application.local_reader_report import (
     LocalReaderReportPublicResultV1,
     LocalReaderReportRequest,
 )
+from ....application.operations.frontend_projection import OperationReviewAvailableInteractionV1
+from ....application.operations.frontend_requests import (
+    OperationPublicEventPageV1,
+    OperationPublicPhaseEventV1,
+    OperationPublicProgressEventV1,
+)
+from ....application.operations.models import OperationId
 from ....application.operator_actions.catalogue import lookup_action
 from ....application.operator_surface.action_targets import ACTION_TARGETS
+from ....core.hashing import content_hash_hex
 from ....core.i18n.render import tr
 from ....core.json_contract import ResolvedPreconditionAction
 from ....core.operations import OperationTerminalCondition
@@ -117,6 +136,7 @@ from .provision_payloads import (
     ProvisionProbeResult,
     ProvisionRemoveResult,
     ProvisionReportResult,
+    ProvisionReviewResult,
     ProvisionSetupResult,
     ProvisionSpacePayload,
     ProvisionStatusResult,
@@ -152,22 +172,21 @@ _CALL_TIMEOUT_S: Final = 120.0
 # Each settlement wait is at least the call timeout, which the client requires.
 _QUICK_SETTLEMENT_S: Final = _CALL_TIMEOUT_S
 _PENDING_CHECK_COMMAND: Final = "aeat config provision status"
-_QUICK_STATUS_TIMEOUT_S: Final = 30.0
-"""A quick check answers within its 2 s bound; this only stops a role that hangs."""
 _MIB: Final = 1024**2
 _GIB: Final = 1024**3
 
 _OUTCOME_LOCALE_KEYS: Final = {
-    ComponentsOutcome.COMPLETED: "cli.config.provision.outcome.completed",
-    ComponentsOutcome.NOTHING_TO_DO: "cli.config.provision.outcome.nothing_to_do",
-    ComponentsOutcome.NEEDS_APPROVAL: "cli.config.provision.outcome.rejected",
-    ComponentsOutcome.PLAN_CHANGED: "cli.config.provision.outcome.plan_changed",
-    ComponentsOutcome.CANCELLED: "cli.config.provision.outcome.cancelled",
-    ComponentsOutcome.BUSY: "cli.config.provision.outcome.busy",
+    ProvisionOutcome.COMPLETED: "cli.config.provision.outcome.completed",
+    ProvisionOutcome.NOTHING_TO_DO: "cli.config.provision.outcome.nothing_to_do",
+    ProvisionOutcome.NEEDS_APPROVAL: "cli.config.provision.outcome.rejected",
+    ProvisionOutcome.REJECTED: "cli.config.provision.outcome.rejected",
+    ProvisionOutcome.PLAN_CHANGED: "cli.config.provision.outcome.plan_changed",
+    ProvisionOutcome.CANCELLED: "cli.config.provision.outcome.cancelled",
+    ProvisionOutcome.BUSY: "cli.config.provision.outcome.busy",
 }
 """The summary of each setup outcome that names no failure; a refusal or failure says its category's sentence."""
 
-_SETUP_SUCCEEDED: Final = frozenset({ComponentsOutcome.COMPLETED, ComponentsOutcome.NOTHING_TO_DO})
+_SETUP_SUCCEEDED: Final = frozenset({ProvisionOutcome.COMPLETED, ProvisionOutcome.NOTHING_TO_DO})
 
 
 # ── Item selection ──────────────────────────────────────────────────────────
@@ -254,7 +273,7 @@ def _row_lines(rows: Iterable[DependencyStatusRow]) -> list[str]:
     return lines
 
 
-def _space_sentence(plan: ComponentsPlan) -> str:
+def _space_sentence(plan: ProvisionPlan) -> str:
     free = "?" if plan.space.free_bytes is None else _size(plan.space.free_bytes)
     return dependency_space_sentence(required=_size(plan.space.required_bytes), free=free)
 
@@ -270,7 +289,7 @@ def _destination_line(destination: str | None) -> str | None:
     return tr("cli.config.provision.plan.destination", path=str(storage_path(category)))
 
 
-def _plan_lines(plan: ComponentsPlan) -> list[str]:
+def _plan_lines(plan: ProvisionPlan) -> list[str]:
     unknown = tr("cli.config.provision.plan.size_unknown")
     lines = [tr("cli.config.provision.plan.heading")]
     for entry in plan.entries:
@@ -283,7 +302,7 @@ def _plan_lines(plan: ComponentsPlan) -> list[str]:
                 hosts=", ".join(entry.source_hosts),
             )
         )
-        destination = _destination_line(None if entry.destination is None else entry.destination.value)
+        destination = _destination_line(entry.destination)
         if destination is not None:
             lines.append(destination)
         if entry.installs_outside_program:
@@ -301,7 +320,7 @@ def _plan_lines(plan: ComponentsPlan) -> list[str]:
 
 
 def _relayed(line: BaseModel) -> str:
-    """Spell one line the role sent as the JSON object it was, for JSON mode's standard error."""
+    """Encode a public operation event for JSON mode's standard error."""
     return json.dumps(
         line.model_dump(mode="json", exclude_unset=True), ensure_ascii=False, sort_keys=True, separators=(",", ":")
     )
@@ -310,48 +329,54 @@ def _relayed(line: BaseModel) -> str:
 # ── Reading every item's state ──────────────────────────────────────────────
 
 
-def _read(request: ComponentsRequest, *, timeout: float | None) -> ComponentsResultLine:
-    """Return a read the role answered, keeping a classified refusal for its caller to word.
-
-    A refusal the engine classified itself, such as a proxy setting it cannot
-    use, is that category's refusal and not a broken protocol: it comes back as
-    the result it is, with no rows. Only an answer this client cannot use at
-    all, a failure with no category, is a broken frame.
-    """
-    result = run_components_role(request, timeout=timeout)
-    if result.outcome is not ComponentsOutcome.OK and result.failure_category is None:
+def _read(ctx: typer.Context, items: tuple[DependencyItemKind, ...] = (), *, full: bool = False) -> ProvisionResult:
+    progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=stderr_is_tty())
+    try:
+        completed = run_registered_operation(
+            bound_profile_client(ctx),
+            ProvisionReadRequest(items=items),
+            definition_id=COMPONENTS_VERIFY_OPERATION_ID if full else COMPONENTS_STATUS_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            result_type=ProvisionResult,
+            request_version=1,
+            result_version=1,
+            timeout=_CALL_TIMEOUT_S,
+            settlement_timeout=_QUICK_SETTLEMENT_S,
+            pending_check_command=_PENDING_CHECK_COMMAND,
+            on_events=progress.observe if full else None,
+        )
+    finally:
+        progress.finish()
+    _require_settled(completed)
+    result = completed.projection
+    if result.outcome is not ProvisionOutcome.OK and result.failure_category is None:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     return result
 
 
-def read_quick_setup_rows() -> tuple[DependencyStatusRow, ...]:
-    """Read every setup item's row from the components role's quick check.
-
-    Raises:
-        RefusalError: The role could not be started, broke its protocol, did not
-            answer in time, or refused the check so that it reported no row.
-    """
-    result = _read(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S)
-    if result.outcome is not ComponentsOutcome.OK:
+def read_quick_setup_rows(ctx: typer.Context) -> tuple[DependencyStatusRow, ...]:
+    """Read component status through the invocation's signed-in profile."""
+    result = _read(ctx)
+    if result.outcome is not ProvisionOutcome.OK:
         raise RefusalError(RefusalCode.UNAVAILABLE, check="components_role_refused_the_check")
-    return result.status_rows()
+    return result.rows
 
 
 def provision_status(ctx: typer.Context) -> None:
     """Report every setup item's state from what this computer already has; exit 2 on a refused check."""
-    status = _read(ComponentsRequest(ComponentsCommand.STATUS), timeout=_QUICK_STATUS_TIMEOUT_S)
-    emit_provision_status(ctx, status, command="config.provision.status", result_type=ProvisionStatusResult)
+    status = _read(ctx)
+    emit_provision_status(ctx, status, command="config.provision.status", result_type=ProvisionStatusResult, full=False)
     _exit_on_refused_check(status)
 
 
 def provision_probe(ctx: typer.Context) -> None:
     """Report every setup item's state from its full check; exit 2 on a refused check."""
-    status = _checked(ctx, ComponentsRequest(ComponentsCommand.STATUS, full=True))
-    emit_provision_status(ctx, status, command="config.provision.probe", result_type=ProvisionProbeResult)
+    status = _read(ctx, full=True)
+    emit_provision_status(ctx, status, command="config.provision.probe", result_type=ProvisionProbeResult, full=True)
     _exit_on_refused_check(status)
 
 
-def _exit_on_refused_check(status: ComponentsResultLine) -> None:
+def _exit_on_refused_check(status: ProvisionResult) -> None:
     """Leave a check the engine refused itself with the status its refusal path uses.
 
     A reading command exits 0, but a check that could not be read is not a
@@ -364,27 +389,11 @@ def _exit_on_refused_check(status: ComponentsResultLine) -> None:
 
 def provision_verify(ctx: typer.Context, item: str | None = None) -> None:
     """Fully check the named item, or every item; exit 2 unless each is usable."""
-    status = _checked(ctx, ComponentsRequest(ComponentsCommand.VERIFY, items=verify_items(item)))
-    emit_provision_status(ctx, status, command="config.provision.verify", result_type=ProvisionVerifyResult)
-    usable = all(row.state in {DependencyState.READY, DependencyState.STALE} for row in status.status_rows())
+    status = _read(ctx, verify_items(item), full=True)
+    emit_provision_status(ctx, status, command="config.provision.verify", result_type=ProvisionVerifyResult, full=True)
+    usable = all(row.state in {DependencyState.READY, DependencyState.STALE} for row in status.rows)
     if status.failure_category is not None or not usable:
         raise typer.Exit(code=2)
-
-
-def _checked(ctx: typer.Context, request: ComponentsRequest) -> ComponentsResultLine:
-    """Run a full check, relaying its progress as a setup's is relayed.
-
-    A refusal the engine classified itself comes back as that result, as
-    :func:`_read` keeps it; only an answer with no category is a broken frame.
-    """
-    progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=stderr_is_tty())
-    try:
-        result = run_components_role(request, on_event=progress.observe)
-    finally:
-        progress.finish()
-    if result.outcome is not ComponentsOutcome.OK and result.failure_category is None:
-        raise RefusalError(RefusalCode.INVALID_FRAME)
-    return result
 
 
 # ── Setting up ──────────────────────────────────────────────────────────────
@@ -415,7 +424,7 @@ class SetupReview:
     """Print the plan the role asks to approve, then answer it: ``--yes``, a terminal answer, or decline.
 
     The plan is always written on standard error first: plain lines in text
-    mode, the role's own review line in JSON mode. ``--yes`` approves exactly
+    mode, the public review document in JSON mode. ``--yes`` approves exactly
     the printed plan's digest. Without ``--yes`` and without a terminal to ask on, the plan is
     declined, so nothing moves and the command says approval is needed.
     """
@@ -423,23 +432,123 @@ class SetupReview:
     yes: bool
     ask: bool
     json_mode: bool = False
-    reviewed: ComponentsReviewLine | None = None
+    reviewed: ProvisionReviewProjection | None = None
     approved: bool = False
     needed_approval: bool = False
 
-    def __call__(self, review: ComponentsReviewLine) -> ComponentsAnswer:
+    def decide(self, review: ProvisionReviewProjection) -> Literal["apply", "reject"]:
         """Answer one review."""
         self.reviewed = review
-        if self.json_mode:
-            write_stderr(_relayed(review))
-        else:
+        if not self.json_mode:
             for line in _plan_lines(review.plan):
                 write_stderr(line)
         if self.yes or (self.ask and typer.confirm(tr("cli.config.provision.approve_prompt"), default=False, err=True)):
             self.approved = True
-            return ComponentsApprove(plan_digest=review.plan_digest)
+            return "apply"
         self.needed_approval = not self.ask
-        return ComponentsDecline()
+        return "reject"
+
+
+def _claim_review(
+    pending: OperationReviewAvailableInteractionV1,
+    document: Mapping[str, object],
+    profile_id: UUID,
+    session_id: UUID,
+    exchange: Callable[[OperationRequest], OperationReply],
+) -> OperationReviewAvailableInteractionV1:
+    """Claim the exact displayed review and use only its returned successor coordinates."""
+    reference = pending.review_reference
+    digest = content_hash_hex(document)
+    reply = exchange(
+        OperationReviewClaim(
+            request_id=uuid4(),
+            profile_id=profile_id,
+            session_id=session_id,
+            reference=reference,
+            reviewed_document_digest=digest,
+        )
+    )
+    if not isinstance(reply, OperationReviewClaimed) or reply.reviewed_document_digest != digest:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    successor = reply.reference
+    if (
+        successor.operation_id != reference.operation_id
+        or successor.interaction_id != reference.interaction_id
+        or successor.review_projection_schema != reference.review_projection_schema
+        or successor.definition_contract_digest != reference.definition_contract_digest
+        or successor.expires_at != reference.expires_at
+        or successor.revision not in (reference.revision, reference.revision + 1)
+        or not {"apply", "reject"}.issubset(reply.allowed_intents)
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return pending.model_copy(update={"revision": successor.revision, "review_reference": successor})
+
+
+def _review_handler(review: SetupReview) -> RegisteredOperationReviewHandler[ProvisionReviewProjection]:
+    return RegisteredOperationReviewHandler(
+        review_type=ProvisionReviewProjection,
+        review_schema=PROVISION_REVIEW_SCHEMA.identity,
+        response_schema=PROVISION_RESPONSE_SCHEMA.identity,
+        decide=review.decide,
+        claim=_claim_review,
+        present_document=lambda document: write_stderr(json.dumps(document, ensure_ascii=False, sort_keys=True)),
+    )
+
+
+def provision_review(ctx: typer.Context, operation_id: str, yes: bool = False, reject: bool = False) -> None:
+    """Display, claim and answer the current review of an existing setup operation."""
+    if yes and reject:
+        raise typer.BadParameter("--yes and --reject cannot be combined")
+    if not yes and not reject and not _can_ask(ctx):
+        raise typer.BadParameter("use --yes or --reject when a prompt is unavailable")
+    try:
+        target = TypeAdapter(OperationId).validate_python(operation_id, strict=True)
+    except ValidationError:
+        raise typer.BadParameter("invalid operation ID", param_hint="OPERATION_ID") from None
+    client = bound_profile_client(ctx)
+    deadline = bounded_deadline_after(_CALL_TIMEOUT_S, subject="component setup review")
+    contract = client.contract(COMPONENTS_SETUP_OPERATION_ID, deadline=deadline)
+    if contract.definition_id != COMPONENTS_SETUP_OPERATION_ID:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    progress = RegisteredOperationProgress()
+    exchange = RegisteredOperationExchange(
+        client, client.profile_id, client.session_id, client.frontend, deadline, lambda: deadline, progress
+    )
+    observed = observe_registered_operation(
+        client,
+        target,
+        client.profile_id,
+        client.session_id,
+        COMPONENTS_SETUP_OPERATION_ID,
+        COMPONENTS_OPERATION_SUBJECT,
+        contract,
+        deadline,
+        None,
+        progress,
+        exchange,
+    )
+    review = SetupReview(yes=yes, ask=not reject and _can_ask(ctx), json_mode=format_of(ctx) is OutputFormat.JSON)
+    handler = _review_handler(review)
+    require_registered_review_contract(contract, handler)
+    result = respond_registered_pending_review(
+        observed.projection,
+        target,
+        handler,
+        contract,
+        client.profile_id,
+        client.session_id,
+        set(),
+        exchange,
+    )
+    if result is not None or review.reviewed is None:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    decision = "apply" if review.approved else "reject"
+    emit_envelope(
+        ctx,
+        command="config.provision.review",
+        result=ProvisionReviewResult(operation_id=target, decision=decision),
+        lines=[f"{target}\t{decision}"],
+    )
 
 
 def _setup(
@@ -454,18 +563,31 @@ def _setup(
     review = SetupReview(yes=yes, ask=_can_ask(ctx), json_mode=json_mode)
     progress = SetupProgressLine(json_mode=json_mode, interactive=stderr_is_tty())
     try:
-        result = run_components_role(
-            ComponentsRequest(ComponentsCommand.SETUP, items=items),
-            on_event=progress.observe,
-            review=review,
+        completed = run_registered_operation(
+            bound_profile_client(ctx),
+            ProvisionMutationRequest(),
+            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            result_type=ProvisionResult,
+            request_version=1,
+            result_version=1,
+            timeout=_CALL_TIMEOUT_S,
+            settlement_timeout=_QUICK_SETTLEMENT_S,
+            pending_check_command=_PENDING_CHECK_COMMAND,
+            on_events=progress.observe,
+            review=_review_handler(review),
         )
     finally:
         progress.finish()
+    if not isinstance(completed, RegisteredOperationCompletion):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    _require_settled(completed)
+    result = completed.projection
     reviewed = review.reviewed
     if (
         reviewed is not None
         and result.plan_digest is not None
-        and result.outcome is ComponentsOutcome.COMPLETED
+        and result.outcome is ProvisionOutcome.COMPLETED
         and result.plan_digest != reviewed.plan_digest
     ):
         # A completed setup ran exactly the plan approved here, or the exchange is broken.
@@ -498,54 +620,38 @@ class SetupProgressLine:
     _drawn: bool = False
     _last: dict[str, str] = field(default_factory=dict)
 
-    def observe(self, event: ComponentsEvent) -> None:
-        """Render one event."""
-        if self.json_mode:
-            write_stderr(_relayed(event))
-            return
-        if isinstance(event, ComponentsPhaseLine):
-            self._step(event)
-        elif isinstance(event, ComponentsProgressLine):
-            self._bytes(event)
-        else:
-            self._notice(event)
-
-    def _step(self, event: ComponentsPhaseLine) -> None:
-        text = tr(
-            "cli.config.provision.progress",
-            name=_name_of(event.item_id),
-            step=tr(f"cli.config.provision.step.{event.step.value}"),
-        )
-        if self._last.get(event.item_id) == text:
-            return
-        self._last[event.item_id] = text
-        self._draw(text, settled=not self.interactive)
-
-    def _bytes(self, event: ComponentsProgressLine) -> None:
-        if not self.interactive:
-            return
-        self._draw(
-            tr(
-                "cli.config.provision.progress_bytes",
-                name=_name_of(event.subject_code),
-                done=_size(event.completed),
-                total=_size(event.total),
-                percent=min(100, event.completed * 100 // event.total),
-            ),
-            settled=False,
-        )
-
-    def _notice(self, event: ComponentsNoticeLine) -> None:
-        if event.notice_code is ComponentsNoticeCode.RETRYING and event.subject_code is not None:
-            seconds = math.ceil((event.delay_ms or 0) / 1000)
-            sentence = dependency_retry_sentence(attempt=event.attempt or 1, delay_s=seconds)
-            self._draw(f"{_name_of(event.subject_code)}: {sentence}", settled=True)
-        elif event.notice_code is ComponentsNoticeCode.FOLLOWING and event.subject_code is not None:
-            self._draw(tr("cli.config.provision.following", name=_name_of(event.subject_code)), settled=True)
-        elif event.notice_code is ComponentsNoticeCode.WAITING_FOR_SERVER and event.subject_code is not None:
-            self._draw(tr("cli.config.provision.waiting_for_program", name=_name_of(event.subject_code)), settled=True)
-        elif event.notice_code is ComponentsNoticeCode.CANCEL_REQUESTED:
-            self._draw(tr("cli.config.provision.stopping"), settled=True)
+    def observe(self, page: OperationPublicEventPageV1) -> None:
+        """Render public phase and byte progress without deciding settlement."""
+        for event in page.events:
+            if self.json_mode:
+                write_stderr(_relayed(event))
+            elif isinstance(event, OperationPublicPhaseEventV1):
+                parts = event.phase_code.split(".")
+                if len(parts) == 4 and parts[:2] == ["dependencies", "setup"]:
+                    item, step = parts[2:]
+                    text = tr(
+                        "cli.config.provision.progress",
+                        name=_name_of(item),
+                        step=tr(f"cli.config.provision.step.{step}"),
+                    )
+                    if self._last.get(item) != text:
+                        self._last[item] = text
+                        self._draw(text, settled=not self.interactive)
+            elif (
+                isinstance(event, OperationPublicProgressEventV1)
+                and self.interactive
+                and event.subject_code is not None
+            ):
+                self._draw(
+                    tr(
+                        "cli.config.provision.progress_bytes",
+                        name=_name_of(event.subject_code),
+                        done=_size(event.completed),
+                        total=_size(event.total),
+                        percent=min(100, event.completed * 100 // event.total),
+                    ),
+                    settled=False,
+                )
 
     def _draw(self, text: str, *, settled: bool) -> None:
         if not self.interactive:
@@ -568,16 +674,17 @@ class SetupProgressLine:
 
 def emit_provision_status(
     ctx: typer.Context,
-    status: ComponentsResultLine,
+    status: ProvisionResult,
     *,
     command: str,
     result_type: type[ProvisionStatusResult],
+    full: bool = False,
 ) -> None:
     """Emit every reported item's row under ``command``."""
-    rows = status.status_rows()
+    rows = status.rows
     hardware_limited = any(row.blocked_reason is DependencyBlockedReason.HARDWARE for row in rows)
     result = result_type(
-        mode=(status.mode or DependencyCheckMode.QUICK).value,
+        mode=(DependencyCheckMode.FULL if full else DependencyCheckMode.QUICK).value,
         complete=status.setup_complete is True,
         hardware_limited=hardware_limited,
         failure_category=None if status.failure_category is None else status.failure_category.value,
@@ -607,10 +714,10 @@ def _usable(rows: Iterable[DependencyStatusRow], items: tuple[DependencyItemKind
     )
 
 
-def _setup_summary(result: ComponentsResultLine, *, needed_approval: bool, usable: bool) -> str:
-    if result.outcome is ComponentsOutcome.NEEDS_APPROVAL and needed_approval:
+def _setup_summary(result: ProvisionResult, *, needed_approval: bool, usable: bool) -> str:
+    if result.outcome in {ProvisionOutcome.NEEDS_APPROVAL, ProvisionOutcome.REJECTED} and needed_approval:
         return tr("cli.config.provision.approval_needed")
-    if result.outcome is ComponentsOutcome.NOTHING_TO_DO and not usable:
+    if result.outcome is ProvisionOutcome.NOTHING_TO_DO and not usable:
         # Nothing could be set up, so the rows above say what holds each item.
         return tr("cli.config.provision.incomplete")
     key = _OUTCOME_LOCALE_KEYS.get(result.outcome)
@@ -627,7 +734,7 @@ def _setup_summary(result: ComponentsResultLine, *, needed_approval: bool, usabl
 
 def emit_provision_setup(
     ctx: typer.Context,
-    outcome: ComponentsResultLine,
+    outcome: ProvisionResult,
     *,
     command: str,
     result_type: type[ProvisionSetupResult],
@@ -637,7 +744,7 @@ def emit_provision_setup(
 ) -> None:
     """Emit a settled setup of ``items``, every item when empty; exit 2 unless each of them is usable."""
     plan = outcome.plan
-    rows = outcome.status_rows()
+    rows = outcome.rows
     result = result_type(
         outcome=outcome.outcome.value,
         approved=approved,
@@ -680,27 +787,37 @@ def provision_remove(ctx: typer.Context, item: str, yes: bool = False) -> None:
         return
     progress = SetupProgressLine(json_mode=format_of(ctx) is OutputFormat.JSON, interactive=stderr_is_tty())
     try:
-        result = run_components_role(
-            ComponentsRequest(ComponentsCommand.REMOVE, items=(kind,)), on_event=progress.observe
+        completed = run_registered_operation(
+            bound_profile_client(ctx),
+            ProvisionMutationRequest(),
+            definition_id=COMPONENTS_REMOVE_OPERATION_ID,
+            subject_ref=COMPONENTS_OPERATION_SUBJECT,
+            result_type=ProvisionResult,
+            request_version=1,
+            result_version=1,
+            timeout=_CALL_TIMEOUT_S,
+            settlement_timeout=_QUICK_SETTLEMENT_S,
+            pending_check_command=_PENDING_CHECK_COMMAND,
+            on_events=progress.observe,
         )
+        _require_settled(completed)
+        result = completed.projection
     finally:
         progress.finish()
     emit_provision_remove(ctx, result, item=kind)
 
 
-def _remove_summary(result: ComponentsResultLine, item: DependencyItemKind) -> str:
-    if result.outcome is ComponentsOutcome.REMOVED:
+def _remove_summary(result: ProvisionResult, item: DependencyItemKind) -> str:
+    if result.outcome is ProvisionOutcome.REMOVED:
         return tr("cli.config.provision.remove.removed", name=_name_of(item.value))
-    if result.outcome is ComponentsOutcome.BUSY:
+    if result.outcome is ProvisionOutcome.BUSY:
         return tr("cli.config.provision.outcome.busy")
     category = result.failure_category
     sentence = tr(dependency_failure_key(category)) if category is not None else tr("cli.config.provision.incomplete")
     return f"{_name_of(result.item_id or item.value)}: {sentence}"
 
 
-def emit_provision_remove(
-    ctx: typer.Context, outcome: ComponentsResultLine | None, *, item: DependencyItemKind
-) -> None:
+def emit_provision_remove(ctx: typer.Context, outcome: ProvisionResult | None, *, item: DependencyItemKind) -> None:
     """Emit the removal of ``item``, ``None`` when it was not confirmed; exit 2 unless the role removed it."""
     if outcome is None:
         unconfirmed = ProvisionRemoveResult(item=item.value, confirmed=False)
@@ -711,7 +828,7 @@ def emit_provision_remove(
             lines=[tr("cli.config.provision.remove.needs_confirmation", name=_name_of(item.value))],
         )
         raise typer.Exit(code=2)
-    rows = outcome.status_rows()
+    rows = outcome.rows
     result = ProvisionRemoveResult(
         item=item.value,
         confirmed=True,
@@ -727,7 +844,7 @@ def emit_provision_remove(
         result=result,
         lines=[*_row_lines(rows), _remove_summary(outcome, item)],
     )
-    if outcome.outcome is not ComponentsOutcome.REMOVED:
+    if outcome.outcome is not ProvisionOutcome.REMOVED:
         raise typer.Exit(code=2)
 
 

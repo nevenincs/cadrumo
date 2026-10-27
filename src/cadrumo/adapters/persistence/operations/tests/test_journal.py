@@ -8,6 +8,7 @@ import multiprocessing
 import os
 import sys
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime, timedelta
 from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
@@ -48,7 +49,7 @@ from .....application.operations.persistence.leases import (
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
-from .....application.operations.persistence.replay import OperationReplayStatus
+from .....application.operations.persistence.replay import OperationReplayPage, OperationReplayStatus
 from .....core.directory_scan import (
     scan_directory,
 )
@@ -61,6 +62,8 @@ from .....core.operations import (
 )
 from .....tests.thread_file_io_probe import recording_file_io
 from ...storage.errors import RepositoryError
+from .. import journal as journal_module
+from .._journal_validation import OperationJournalRecord
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
@@ -441,6 +444,173 @@ def test_operation_journal_replays_full_history_by_exclusive_bounded_cursor(tmp_
     assert caught_up.status is OperationReplayStatus.CAUGHT_UP
     assert caught_up.events == ()
     assert caught_up.next_cursor == second_page.next_cursor
+
+
+@pytest.mark.parametrize("read_mode", ["load", "observation", "replay"])
+def test_journal_purge_analysis_releases_the_lock_and_keeps_its_captured_revision(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, read_mode: str
+) -> None:
+    """A current record's JSON purge inspection cannot exclude an unrelated writer."""
+    repository, snapshots = _create_history(tmp_path)
+    initial = snapshots[-1]
+    successor = _snapshot(revision=3, sequence=4)
+    entered, release = threading.Event(), threading.Event()
+    original_purge = journal_module.purge_legacy_financial_edit_journal
+
+    def paused_purge(raw: str, *, operation_id: str) -> str | None:
+        if not entered.is_set():
+            entered.set()
+            assert release.wait(10), "reader was not released"
+        return original_purge(raw, operation_id=operation_id)
+
+    monkeypatch.setattr(journal_module, "purge_legacy_financial_edit_journal", paused_purge)
+
+    async def read() -> OperationPersistedSnapshot:
+        if read_mode == "load":
+            return await repository.load(initial.operation_id)
+        if read_mode == "observation":
+            observed = await repository.read_observation(initial.operation_id, 0, limit=10)
+            assert observed.anchor_cursor == initial.event_cursor
+            return observed.snapshot
+        replay = await repository.read_after(initial.operation_id, 0, limit=10)
+        assert tuple(event.sequence for event in replay.events) == (1, 2, 3)
+        return initial
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reading = pool.submit(lambda: asyncio.run(read()))
+        try:
+            assert entered.wait(10), "reader never reached purge analysis"
+            with exclusive_file_lock(repository._repository.lock_target, timeout=0):
+                pass
+            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=_lease()))
+        finally:
+            release.set()
+        assert reading.result(timeout=10) == initial
+    assert asyncio.run(repository.load(initial.operation_id)) == successor
+
+
+@pytest.mark.parametrize("read_mode", ["load", "observation", "replay"])
+def test_journal_decode_releases_the_lock_and_keeps_its_captured_revision(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, read_mode: str
+) -> None:
+    repository, snapshots = _create_history(tmp_path)
+    initial = snapshots[-1]
+    successor = _snapshot(revision=3, sequence=4)
+    expected = (
+        asyncio.run(repository.read_after(initial.operation_id, 0, limit=10)) if read_mode == "replay" else initial
+    )
+    storage = repository._repository
+    entered, release = threading.Event(), threading.Event()
+    original_decode = storage._decode_payload
+
+    def paused_decode(operation_id: str, raw: str) -> OperationJournalRecord:
+        if not entered.is_set():
+            entered.set()
+            assert release.wait(10), "reader was not released"
+        return original_decode(operation_id, raw)
+
+    monkeypatch.setattr(storage, "_decode_payload", paused_decode)
+
+    async def read() -> OperationPersistedSnapshot | OperationReplayPage:
+        if read_mode == "load":
+            return await repository.load(initial.operation_id)
+        if read_mode == "replay":
+            return await repository.read_after(initial.operation_id, 0, limit=10)
+        observed = await repository.read_observation(initial.operation_id, 0, limit=10)
+        assert observed.anchor_cursor == initial.event_cursor
+        assert tuple(event.sequence for event in observed.replay.events) == (1, 2, 3)
+        return observed.snapshot
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reading = pool.submit(lambda: asyncio.run(read()))
+        try:
+            assert entered.wait(10), "reader never reached validation"
+            # A slow decoder must not exclude another journal writer. The
+            # nonblocking probe makes this a lock-ownership proof, not a timing race.
+            with exclusive_file_lock(storage.lock_target, timeout=0):
+                pass
+            asyncio.run(repository.commit(successor, expected_revision=initial.revision, lease=_lease()))
+        finally:
+            release.set()
+        assert reading.result(timeout=10) == expected
+    assert asyncio.run(repository.load(initial.operation_id)) == successor
+
+
+@pytest.mark.parametrize("read_mode", ["observation", "replay"])
+def test_captured_invalid_json_is_not_hidden_by_deletion_during_purge_analysis(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, read_mode: str
+) -> None:
+    """Purge analysis reports the captured corruption even if its file disappears."""
+    repository, snapshots = _create_history(tmp_path)
+    operation_id = snapshots[-1].operation_id
+    storage = repository._repository
+    path = storage.path_for(operation_id)
+    path.write_text("{", encoding="utf-8")
+    entered, release = threading.Event(), threading.Event()
+    original_purge = journal_module.purge_legacy_financial_edit_journal
+
+    def paused_purge(raw: str, *, operation_id: str) -> str | None:
+        entered.set()
+        assert release.wait(10), "reader was not released"
+        return original_purge(raw, operation_id=operation_id)
+
+    monkeypatch.setattr(journal_module, "purge_legacy_financial_edit_journal", paused_purge)
+
+    async def read() -> None:
+        if read_mode == "replay":
+            await repository.read_after(operation_id, 0, limit=10)
+        else:
+            await repository.read_observation(operation_id, 0, limit=10)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reading = pool.submit(lambda: asyncio.run(read()))
+        try:
+            assert entered.wait(10), "reader never reached purge analysis"
+            with exclusive_file_lock(storage.lock_target, timeout=0):
+                path.unlink()
+        finally:
+            release.set()
+        with pytest.raises(RepositoryError, match="invalid operation journal"):
+            reading.result(timeout=10)
+
+
+@pytest.mark.parametrize("read_mode", ["observation", "replay"])
+def test_captured_journal_corruption_is_not_hidden_by_a_later_deletion(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, read_mode: str
+) -> None:
+    repository, snapshots = _create_history(tmp_path)
+    operation_id = snapshots[-1].operation_id
+    storage = repository._repository
+    path = storage.path_for(operation_id)
+    document = json.loads(path.read_text(encoding="utf-8"))
+    document["snapshot"]["revision"] = -1
+    path.write_text(json.dumps(document), encoding="utf-8")
+    entered, release = threading.Event(), threading.Event()
+    original_decode = storage._decode_payload
+
+    def paused_decode(selected_id: str, raw: str) -> OperationJournalRecord:
+        entered.set()
+        assert release.wait(10), "reader was not released"
+        return original_decode(selected_id, raw)
+
+    monkeypatch.setattr(storage, "_decode_payload", paused_decode)
+
+    async def read() -> None:
+        if read_mode == "replay":
+            await repository.read_after(operation_id, 0, limit=10)
+        else:
+            await repository.read_observation(operation_id, 0, limit=10)
+
+    with ThreadPoolExecutor(max_workers=1) as pool:
+        reading = pool.submit(lambda: asyncio.run(read()))
+        try:
+            assert entered.wait(10), "reader never reached validation"
+            with exclusive_file_lock(storage.lock_target, timeout=0):
+                path.unlink()
+        finally:
+            release.set()
+        with pytest.raises(RepositoryError, match="invalid operation journal"):
+            reading.result(timeout=10)
 
 
 def test_operation_observation_is_one_locked_record_under_a_real_interleaved_transition(tmp_path: Path) -> None:

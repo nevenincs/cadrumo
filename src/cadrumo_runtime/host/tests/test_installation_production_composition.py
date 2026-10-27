@@ -10,6 +10,7 @@ harness use.
 from __future__ import annotations
 
 import asyncio
+import json
 import sys
 from collections.abc import Generator
 from contextlib import contextmanager
@@ -22,6 +23,7 @@ from cadrumo.application.modelo.review_package import ReviewPackageIntegrityErro
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.errors.hierarchy import InternalInvariantError
+from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.env_scope import derived_storage_settings
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -61,6 +63,39 @@ def test_the_installed_registry_serves_every_act_of_the_table_and_nothing_else()
 
     assert served == frozenset(INSTALLATION_ACT_CONTRACTS)
     assert served == frozenset(InstallationAct)
+
+
+@pytest.mark.unit
+def test_registration_does_not_load_the_services_of_unrequested_acts() -> None:
+    """A first listing registers every act without loading reset, repair or tax execution."""
+    script = """
+import json, sys
+from cadrumo_runtime.host.installation_composition import production_installation_acts
+from cadrumo_client.contracts.installation_requests import INSTALLATION_ACT_CONTRACTS
+registry = production_installation_acts()
+assert registry.served_acts == frozenset(INSTALLATION_ACT_CONTRACTS)
+print(json.dumps(sorted(sys.modules)))
+"""
+    completed = run_audited_process(
+        [sys.executable, "-I", "-B", "-c", script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    modules = frozenset(json.loads(completed.stdout))
+    unrelated_services = {
+        "cadrumo.application.config_reset",
+        "cadrumo.application.diagnostics",
+        "cadrumo.application.storage_management.service",
+        "cadrumo.application.user_profile.registration",
+        "cadrumo.application.user_profile.capsule_restore",
+        "cadrumo.application.modelo.calculation_report_verification",
+        "cadrumo.application.modelo.review_package",
+        "cadrumo.entrypoints.adapter_composition",
+        "sqlalchemy",
+    }
+
+    assert unrelated_services.isdisjoint(modules), sorted(unrelated_services.intersection(modules))
 
 
 @pytest.mark.unit

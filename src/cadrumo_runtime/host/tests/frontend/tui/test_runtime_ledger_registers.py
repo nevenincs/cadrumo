@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -81,7 +81,11 @@ from cadrumo.application.operations.frontend_projection import (
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.application.prorrata_register.operation_requests import (
     PRORRATA_ELECT_GENERAL_OPERATION_DEFINITION_ID,
     PRORRATA_LIST_OPERATION_DEFINITION_ID,
@@ -215,15 +219,19 @@ class _Client:
         """The thread of each blocking session read: at composition, then around each operation."""
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
-    client: _Client
+    observation: OperationObservationSuccessV1
+    result: BaseModel | None
+    client: _Client = field(default_factory=_Client)
+    deadline: float | None = None
+    result_reads: list[tuple[type[BaseModel], bool]] = field(default_factory=list)
+    detail_reads: int = 0
 
-    def __init__(self, observation: OperationObservationSuccessV1, result: BaseModel | None) -> None:
-        self.observation = observation
-        self.result = result
-        self.result_reads: list[tuple[type[BaseModel], bool]] = []
-        self.detail_reads = 0
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         return self.operation_id

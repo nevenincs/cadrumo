@@ -51,13 +51,11 @@ _READ_ONLY = {
     "result",
     "result_page",
     "review",
-    "setup_status",
-    "setup_plan",
 }
 """The tools that cannot change a record or a file, written here apart from the catalogue."""
 
-_READS_THE_NETWORK = {"setup_status"}
-"""The read-only tools some call of which reaches another host: a full setup check reaches the download hosts."""
+_READS_THE_NETWORK: set[str] = set()
+"""The read-only tools some call of which reaches another host."""
 
 _READING_EXCHANGES = (OperationObserve, OperationReview)
 """The operation requests that only read; every other one submits, starts, resumes or manages."""
@@ -145,9 +143,6 @@ def _read_only_calls() -> dict[str, dict[str, object]]:
         },
         "review": {"review": review.model_dump(mode="json")},
         "views": {"query": "ledger"},
-        # Without a built binary the components role is not started: these read the session and language alone.
-        "setup_status": {},
-        "setup_plan": {},
     }
 
 
@@ -159,7 +154,7 @@ def test_every_tool_in_the_catalogue_declares_its_hints_and_the_read_only_set_is
     assert {name for name, hints in MCP_TOOL_HINTS.items() if hints.read_only} == _READ_ONLY
     for name, hints in MCP_TOOL_HINTS.items():
         if hints.read_only:
-            # A tool that only reads destroys nothing and is harmless to repeat; only a full setup check reaches out.
+            # A tool that only reads destroys nothing and is harmless to repeat.
             reaches = name in _READS_THE_NETWORK
             assert hints == ToolHints(
                 hints.title, read_only=True, destructive=False, idempotent=True, open_world=reaches
@@ -172,9 +167,8 @@ def test_the_hints_of_the_tools_that_act_state_the_widest_thing_each_can_do() ->
     reaching = {name for name, hints in MCP_TOOL_HINTS.items() if hints.open_world}
     additive = {name for name, hints in MCP_TOOL_HINTS.items() if not hints.read_only and not hints.destructive}
 
-    # Only a tool that runs or releases a registered operation, or sets up or fully checks a component, can
-    # reach another host.
-    assert reaching == {"execute", "control", "respond", "setup", "setup_status"}
+    # Only a tool that runs or releases a registered operation can reach another host.
+    assert reaching == {"execute", "control", "respond"}
     # Every tool that acts can overwrite or delete: none only adds, now that no tool admits a session.
     assert additive == set()
 

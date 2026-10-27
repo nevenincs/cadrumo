@@ -1731,7 +1731,7 @@ export interface HostCommands {
     args: Authorized<{
       provider: string;
       revision: string;
-      method: "browser" | "device";
+      method: "browser" | "device" | "browser-code";
     }>;
     result: ProviderSignInSnapshot;
   };
@@ -1741,6 +1741,11 @@ export interface HostCommands {
   };
   provider_sign_in_cancel: {
     args: Authorized<{ attemptId: string }>;
+    result: ProviderSignInSnapshot;
+  };
+  // provider_sign_in_submit_code takes a raw secret body and attempt-id header.
+  provider_sign_in_submit_code: {
+    args: Authorized;
     result: ProviderSignInSnapshot;
   };
   // The keys issued to agents outside Cadrumo. None carries a password or a

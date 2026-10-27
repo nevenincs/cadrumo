@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "0A" },
       "registry_revision_id": "2025-y-siguientes",
       "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-      "calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
+      "calculation_revision_id": "84f84d99e791a1021e3828f7c39fd8fcbdae79c2dd690a4569e5b51bbafb4646",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1284,8 +1284,8 @@
         "closes_on": "2027-02-28",
         "nominal_closes_on": "2027-02-28",
         "holiday_coverage": "calendar_unavailable",
-        "reference_on": "2026-10-25",
-        "days_remaining": 126,
+        "reference_on": "2026-10-27",
+        "days_remaining": 124,
         "days_overdue": null
       },
       "aeat_data": null,
@@ -1305,7 +1305,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "8f3a0ed245e324f7fc4528e7ab661d4bcbb04840ac0747e418525584826751e5",
+      "contract_set_digest": "63eefbfa612f9215a940ebbec16d4aa1b9fd502a84be98eee12245ef14879246",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "007cac2c7aaf032edde6b8d860a1ad2ba98b80c18c2967c4ebf8f08044834d57",
       "request_schema": {
@@ -1340,9 +1340,9 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "d30eae19b63b44740a6d73d4e4d041658cfbf02b56d7f5b79b58d7a3fce1cd7d",
-    "calculation_head_digest": "f8e0e6ef156a6aa2ae19abe76b60efe6413a189f3b893a733be980ac216d37db",
-    "current_calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
+    "work_unit_record_digest": "ba1de14d5cd3e680c1751a0e1418bbb40afe821d1a51a176a1c20226a8c1b48e",
+    "calculation_head_digest": "36ec46390aa026991fe0b0eb59b17502cc6f2258c875ad083ae195af481489dc",
+    "current_calculation_revision_id": "84f84d99e791a1021e3828f7c39fd8fcbdae79c2dd690a4569e5b51bbafb4646",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-347-2025-y-siguientes",
@@ -2063,9 +2063,9 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-24T23:20:52.086452Z",
-    "expires_at": "2026-10-24T23:25:52.086452Z",
-    "baseline_id": "d6fdaf42cfceb5f66666973bf374b6ff6acc5321df90c8c6ed63ecd0f0397c3d"
+    "issued_at": "2026-10-27T08:32:32.192415Z",
+    "expires_at": "2026-10-27T08:37:32.192415Z",
+    "baseline_id": "86f8363af599e45293df7c70ea26244d79d666221f2815d8b3632828bdf7f223"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2082,8 +2082,8 @@
     "attention": [],
     "result": null,
     "deadline": {
-      "text": "Deadline 28/02/2027 · days left: 126",
-      "short_text": "Deadline 28/02/2027 · days left: 126",
+      "text": "Deadline 28/02/2027 · days left: 124",
+      "short_text": "Deadline 28/02/2027 · days left: 124",
       "tone": "normal",
       "help": null
     },
@@ -2100,7 +2100,7 @@
     "words": "The declaration has not been checked yet.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "dc9237336b941c64608900d0cfeef932ad43e214dc01145e517c49747bd42353",
+  "calculation_revision_id": "84f84d99e791a1021e3828f7c39fd8fcbdae79c2dd690a4569e5b51bbafb4646",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

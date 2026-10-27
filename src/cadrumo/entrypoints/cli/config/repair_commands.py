@@ -53,10 +53,12 @@ def repair(ctx: typer.Context) -> None:
         return
     from cadrumo_client.commands.payloads import ConfigRepairResult
 
-    from ...diagnostics_repair_composition import read_component_setup_checks
+    from ...diagnostics_repair_composition import component_setup_checks
     from ..state_projection_support import diagnostics_ports
+    from .check_cli import read_setup_rows
 
-    setup_checks = read_component_setup_checks()
+    setup_rows = read_setup_rows(ctx)
+    setup_checks = None if setup_rows is None else component_setup_checks(setup_rows)
     report = _build_config_repair_report(ports=diagnostics_ports(ctx), setup_checks=setup_checks or ())
     document = _repair_report_document(report, resolve_action=resolve_cli_precondition_action)
     result = strict_round_trip(ConfigRepairResult, document)

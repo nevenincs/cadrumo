@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from typing import Any, Final, Protocol
 from uuid import UUID, uuid4
 
+from cadrumo.application.components_operations import COMPONENTS_STATUS_OPERATION_ID
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -508,7 +509,16 @@ def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     # A verdict is offered as every surface offers it: a setup action only while the item's row can act.
     actions = (stopped_action,) if stopped_action is not None else published_recovery_actions(document)
     if actions:
-        named, held = gate_setup_actions(actions, language=lambda: _profile_language(client))
+        if request.result_schema.schema_id == COMPONENTS_STATUS_OPERATION_ID + ".result":
+            named, held = list(actions), []
+        else:
+            named, held = gate_setup_actions(
+                client,
+                actions,
+                language=lambda: _profile_language(client),
+                deadline=deadline,
+                status_allowed=binding.surface.admits(COMPONENTS_STATUS_OPERATION_ID),
+            )
         if named and stopped_action is not None:
             reply["recovery_action_id"] = named[0]
         elif named:

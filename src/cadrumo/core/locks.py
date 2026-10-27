@@ -294,18 +294,20 @@ def held_descriptor_lock(
     # long holds, timeouts and release failures are recorded.
     contended = attempts > 1
     acquired = time.monotonic()
-    if log_events and contended:
-        _log.debug(
-            "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts",
-            lock_path,
-            acquired - requested,
-            attempts,
-        )
     try:
         yield
     finally:
         _release_lock(fd, log_events=log_events)
         if log_events:
             held = time.monotonic() - acquired
+            # Diagnostic sinks may acquire their own file lock. Publish both
+            # events after release, using the captured ownership durations.
+            if contended:
+                _log.debug(
+                    "exclusive_file_lock: acquired %s after waiting %.3fs over %d attempts",
+                    lock_path,
+                    acquired - requested,
+                    attempts,
+                )
             if contended or held >= SLOW_LOCK_HOLD_SECONDS:
                 _log.debug("exclusive_file_lock: released %s after holding it %.3fs", lock_path, held)

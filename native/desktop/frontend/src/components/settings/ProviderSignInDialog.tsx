@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +23,7 @@ const EVENTS: readonly ProviderSignInEvent[] = [
   "starting",
   "started",
   "browser_action",
+  "authorization_code_required",
   "succeeded",
   "cancelled",
   "failed",
@@ -30,6 +32,7 @@ const ACTIVE = new Set<ProviderSignInEvent>([
   "starting",
   "started",
   "browser_action",
+  "authorization_code_required",
 ]);
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -124,6 +127,14 @@ function hasControlCharacter(value: string): boolean {
   });
 }
 
+function validAuthorizationCode(code: string): boolean {
+  if (!/^[!-~]{1,2048}$/.test(code)) return false;
+  let length =
+    JSON.stringify({ version: 1, action: "auth_code", code: "" }).length + 1;
+  for (const char of code) length += char === '"' || char === "\\" ? 2 : 1;
+  return length <= 4096;
+}
+
 type Props = {
   open: boolean;
   identity: string | null;
@@ -193,7 +204,10 @@ function snapshotOf(
   // During cancellation the service may still report browser_action while it
   // finishes helper cleanup, but it has already removed the one-time URL.
   // Treat that as active progress with no browser action available.
-  const url = event === "browser_action" ? safeUrl(raw.url) : undefined;
+  const url =
+    event === "browser_action" || event === "authorization_code_required"
+      ? safeUrl(raw.url)
+      : undefined;
   const userCode =
     typeof raw.user_code === "string" &&
     raw.user_code.length <= 128 &&
@@ -291,6 +305,8 @@ function activeWords(
       return method === "device" && snapshot.user_code
         ? t("desktop.providers.sign_in_waiting_device")
         : t("desktop.providers.sign_in_waiting");
+    case "authorization_code_required":
+      return t("desktop.providers.sign_in_code_prompt");
     case "succeeded":
     case "cancelled":
     case "failed":
@@ -319,6 +335,9 @@ export function ProviderSignInDialog({
   );
   const [method, setMethod] = useState<ProviderSignInMethod | null>(null);
   const [starting, setStarting] = useState(false);
+  const [code, setCode] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const submittedAttempt = useRef<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [retryRevision, setRetryRevision] = useState<string | null>(null);
   const [retryState, setRetryState] = useState<
@@ -404,6 +423,7 @@ export function ProviderSignInDialog({
       if (Date.now() >= deadline.current) {
         currentAttempt.current = null;
         setSnapshot(null);
+        setCode("");
         setFailure("timeout");
         setCancelling(false);
         cancelQuietly(attemptId, generation.current);
@@ -425,6 +445,7 @@ export function ProviderSignInDialog({
           setFailure(null);
         } else {
           currentAttempt.current = null;
+          setCode("");
           setSnapshot(next);
           setFailure(
             next.event === "failed" ? snapshotFailureCode(next) : null,
@@ -446,6 +467,7 @@ export function ProviderSignInDialog({
           return;
         }
         currentAttempt.current = null;
+        setCode("");
         setSnapshot(null);
         setFailure(
           Date.now() >= deadline.current ? "timeout" : safeFailureCode(error),
@@ -472,6 +494,7 @@ export function ProviderSignInDialog({
   useEffect(
     () => () => {
       generation.current += 1;
+      setCode("");
       const attemptId = currentAttempt.current;
       currentAttempt.current = null;
       if (attemptId) cancelQuietly(attemptId);
@@ -497,6 +520,7 @@ export function ProviderSignInDialog({
       return;
     }
     currentAttempt.current = null;
+    setCode("");
     openedAttempt.current = null;
     clearedAttempt.current = null;
     setSnapshot(next);
@@ -519,6 +543,9 @@ export function ProviderSignInDialog({
     const mine = ++generation.current;
     openedAttempt.current = null;
     clearedAttempt.current = null;
+    submittedAttempt.current = null;
+    setCode("");
+    setSubmitting(false);
     setMethod(nextMethod);
     setStarting(true);
     setFailure(null);
@@ -568,9 +595,10 @@ export function ProviderSignInDialog({
     // Deferring one task prevents StrictMode's setup/cleanup replay from
     // starting an abandoned authentication attempt.
     const timer = setTimeout(() => {
-      void startCurrent.current(
-        methodsCurrent.current.includes("browser") ? "browser" : "device",
-      );
+      const next = methodsCurrent.current.includes("browser")
+        ? "browser"
+        : methodsCurrent.current[0];
+      if (next) void startCurrent.current(next);
     }, 0);
     return () => clearTimeout(timer);
   }, [open, identity]);
@@ -580,12 +608,14 @@ export function ProviderSignInDialog({
   }, [snapshot?.event]);
 
   const cancel = async () => {
+    setCode("");
     const attemptId = currentAttempt.current;
     if (!attemptId) {
       close.current(false);
       return;
     }
     const mine = generation.current;
+    clearedAttempt.current = attemptId;
     setCancelling(true);
     setFailure(null);
     try {
@@ -660,7 +690,11 @@ export function ProviderSignInDialog({
   // Open it once as soon as the host supplies a validated address; the URL is
   // cleared from React state before the native browser handoff begins.
   useEffect(() => {
-    if (snapshot?.event === "browser_action" && snapshot.url) {
+    if (
+      (snapshot?.event === "browser_action" ||
+        snapshot?.event === "authorization_code_required") &&
+      snapshot.url
+    ) {
       if (!api.current.openExternal) {
         const attemptId = snapshot.attempt_id;
         const mine = generation.current;
@@ -675,6 +709,49 @@ export function ProviderSignInDialog({
       void continueInBrowser(snapshot);
     }
   }, [cancelQuietly, continueInBrowser, snapshot]);
+
+  const submitCode = async () => {
+    const attemptId = currentAttempt.current;
+    if (
+      !attemptId ||
+      snapshot?.event !== "authorization_code_required" ||
+      submittedAttempt.current === attemptId ||
+      !validAuthorizationCode(code)
+    )
+      return;
+    const mine = generation.current;
+    const submitted = code;
+    submittedAttempt.current = attemptId;
+    setCode("");
+    setSubmitting(true);
+    setFailure(null);
+    try {
+      const next = snapshotOf(
+        await signIn.submitCode({ attemptId, code: submitted }),
+        provider.id,
+        attemptId,
+      );
+      if (
+        generation.current === mine &&
+        currentAttempt.current === attemptId &&
+        clearedAttempt.current !== attemptId
+      )
+        accept(next, mine);
+    } catch (error) {
+      if (
+        generation.current === mine &&
+        currentAttempt.current === attemptId &&
+        clearedAttempt.current !== attemptId
+      ) {
+        currentAttempt.current = null;
+        setSnapshot(null);
+        setFailure(safeFailureCode(error));
+        cancelQuietly(attemptId, mine);
+      }
+    } finally {
+      if (generation.current === mine) setSubmitting(false);
+    }
+  };
 
   const active = snapshot !== null && ACTIVE.has(snapshot.event);
   const terminalSuccess = snapshot?.event === "succeeded";
@@ -720,6 +797,32 @@ export function ProviderSignInDialog({
 
         {active && snapshot && (
           <div className="grid gap-2">
+            {method === "browser-code" &&
+              snapshot.event === "authorization_code_required" &&
+              submittedAttempt.current !== snapshot.attempt_id &&
+              clearedAttempt.current !== snapshot.attempt_id && (
+                <div className="grid gap-2">
+                  <label htmlFor="provider-authorization-code">
+                    {t("desktop.providers.sign_in_code_label")}
+                  </label>
+                  <Input
+                    id="provider-authorization-code"
+                    value={code}
+                    onChange={(event) => setCode(event.target.value)}
+                    autoComplete="off"
+                    maxLength={2048}
+                  />
+                  <Button
+                    size="sm"
+                    disabled={
+                      submitting || cancelling || !validAuthorizationCode(code)
+                    }
+                    onClick={() => void submitCode()}
+                  >
+                    {t("desktop.providers.sign_in_code_submit")}
+                  </Button>
+                </div>
+              )}
             {method === "device" && snapshot.user_code && (
               <p className="grid justify-items-start gap-1 text-sm">
                 <span className="text-muted-foreground">
@@ -764,13 +867,14 @@ export function ProviderSignInDialog({
           {retryRevision &&
             retryState === "ready" &&
             !active &&
-            methods.includes(method ?? "browser") && (
+            method !== null &&
+            methods.includes(method) && (
               <Button
                 variant="primary"
                 size="sm"
                 disabled={starting}
                 pending={starting}
-                onClick={() => void start(method ?? "browser", retryRevision)}
+                onClick={() => void start(method!, retryRevision)}
               >
                 {t("desktop.providers.sign_in_retry")}
               </Button>

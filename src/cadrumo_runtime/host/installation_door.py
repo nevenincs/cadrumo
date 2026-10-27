@@ -484,9 +484,16 @@ class RuntimeInstallationDoorMixin:
     def _installation_registry(self: RuntimeProfileConnections) -> InstallationActRegistry:
         with self._guard:
             registry = self._installation_acts
-            if registry is None:
-                from .installation_composition import production_installation_acts
-
-                registry = production_installation_acts()
-                self._installation_acts = registry
+        if registry is not None:
             return registry
+        from .installation_composition import production_installation_acts
+
+        # Registration imports the handler declarations. Do not hold the host's
+        # admission/session guard across Python's import lock or filesystem I/O.
+        # Competing first requests may build equivalent pure registries; only
+        # the first publication becomes this host's registry.
+        registry = production_installation_acts()
+        with self._guard:
+            if self._installation_acts is None:
+                self._installation_acts = registry
+            return self._installation_acts

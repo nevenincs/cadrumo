@@ -28,21 +28,9 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
-from cadrumo.application.user_profile.capsule_archive import (
-    inspect_profile_capsule_archive,
-    read_restorable_profile_capsule,
-)
-from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
 from cadrumo.application.user_profile.custody_ports import ProfileCustodyRecordIntegrityError
 from cadrumo.application.user_profile.profile_summary import profile_listing, selected_profile_id
-from cadrumo.application.user_profile.recovery_custody import (
-    ProfileRecoveryError,
-    enroll_profile_recovery,
-    revoke_profile_recovery,
-)
-from cadrumo.application.user_profile.registration import ProfileRegistrationError, create_profile_signed_out
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
-from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.installation_requests import (
     ArchiveImportPrepareReply,
@@ -120,6 +108,9 @@ def _serve_profile_create(request: ProfileCreateRequest, exchange: InstallationA
     The two copies are compared before anything is derived or written, as
     every frontend that asks for a new passphrase compares them.
     """
+    from cadrumo.application.user_profile.registration import ProfileRegistrationError, create_profile_signed_out
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
     with _installation_scope(exchange, changes_custody=True):
         secrets = exchange.receive_secret(InstallationNewPassphrase)
         try:
@@ -152,6 +143,8 @@ def _serve_profile_create(request: ProfileCreateRequest, exchange: InstallationA
 
 
 def _serve_archive_inspect(request: ArchiveInspectRequest, exchange: InstallationActExchange) -> ArchiveInspectReply:
+    from cadrumo.application.user_profile.capsule_archive import inspect_profile_capsule_archive
+
     with _installation_scope(exchange):
         return _result_reply(exchange, ArchiveInspectReply, inspect_profile_capsule_archive(Path(request.path)))
 
@@ -160,6 +153,8 @@ def _serve_archive_import_prepare(
     request: ArchiveImportPrepareRequest, exchange: InstallationActExchange
 ) -> ArchiveImportPrepareReply:
     """Read the source before any credential is asked for, as the command reads it before prompting."""
+    from cadrumo.application.user_profile.capsule_archive import read_restorable_profile_capsule
+
     with _installation_scope(exchange):
         capsule = read_restorable_profile_capsule(Path(request.path))
     return exchange.reply(ArchiveImportPrepareReply, source_digest=capsule.digest)
@@ -172,6 +167,10 @@ def _serve_archive_import(request: ArchiveImportRequest, exchange: InstallationA
     before the passphrase is asked for, and the members that were digested are
     the ones published, so replacing the path afterwards changes nothing.
     """
+    from cadrumo.application.user_profile.capsule_archive import read_restorable_profile_capsule
+    from cadrumo.application.user_profile.capsule_restore import restore_profile_capsule_with_password
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
     with _installation_scope(exchange, changes_custody=True):
         capsule = read_restorable_profile_capsule(Path(request.path))
         if not compare_digest(capsule.digest, request.source_digest):
@@ -202,6 +201,8 @@ def _read_back_code(read_back: bytes) -> str:
     that refusal is raised outside the decoder's scope so nothing that could
     retain the rejected bytes is chained to it.
     """
+    from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError
+
     canonical: str | None = None
     with suppress(UnicodeError, StorageValidationError):
         canonical = canonical_recovery_code(read_back.decode("utf-8"))
@@ -228,6 +229,7 @@ def _serve_recovery_enroll(request: RecoveryEnrollRequest, exchange: Installatio
     The profile is settled before the passphrase is asked for, as the command
     settles it before it reads its secret channel.
     """
+    from cadrumo.application.user_profile.recovery_custody import enroll_profile_recovery
 
     def handover(enrollment: ProfileRecoveryEnrollment) -> str:
         read_back = exchange.deliver_secret(bytearray(enrollment.recovery_key.code, "utf-8"))
@@ -259,6 +261,8 @@ def _serve_recovery_disable(request: RecoveryDisableRequest, exchange: Installat
     enrolment. The passphrase is proved before anything is removed, so a
     refused proof changes nothing.
     """
+    from cadrumo.application.user_profile.recovery_custody import revoke_profile_recovery
+
     with _installation_scope(exchange, changes_custody=True):
         profile_id = _profile_to_enrol(request, exchange)
         secrets = exchange.receive_secret(InstallationPassphrase)

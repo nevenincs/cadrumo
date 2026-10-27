@@ -66,7 +66,7 @@ def build_server(adapter: RuntimeMcpAdapter) -> Server:
         )
 
     async def call_tool(context: ServerRequestContext[Any], params: CallToolRequestParams) -> CallToolResult:
-        result = await adapter.call(params.name, params.arguments or {}, progress=_progress_sink(context))
+        result = await adapter.call(params.name, params.arguments or {})
         await _relay_progress(context, params.name, result)
         instruction = unknown_outcome_instruction(result)
         if instruction is not None:

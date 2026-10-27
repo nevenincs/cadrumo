@@ -173,7 +173,25 @@ def finish_windows_io(
     except BaseException:
         # Cancellation must complete before releasing the OVERLAPPED/read buffer.
         # The operation and CancelIo run on the same thread.
-        win32file.CancelIo(int(handle))
+        with contextlib.suppress(pywintypes.error):
+            win32file.CancelIo(int(handle))
         with contextlib.suppress(pywintypes.error):
             win32file.GetOverlappedResult(int(handle), overlapped, True)
         raise
+
+
+def cancel_windows_io(handle: int) -> None:
+    """Request cancellation across threads while the caller retains the pipe."""
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    from ctypes import wintypes
+
+    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
+    cancel = kernel.CancelIoEx
+    cancel.argtypes = (wintypes.HANDLE, ctypes.c_void_p)
+    cancel.restype = wintypes.BOOL
+    if not cancel(handle, None):
+        error = ctypes.get_last_error()
+        # No pending operation remains when completion wins the race.
+        if error != 1168:
+            raise ctypes.WinError(error)

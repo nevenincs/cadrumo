@@ -6,6 +6,8 @@ from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
+from cadrumo_client.contracts.operation_access import OperationReviewClaimed
+
 from ....application.operations.error_detail import OperationErrorDetailV1
 from ....application.operations.event_replay import OperationEventCursor
 from ....application.operations.frontend_contracts import (
@@ -86,6 +88,23 @@ class OperationControllerPort(Protocol):
 
     async def detach(self, *, expected_revision: OperationRevision) -> OperationDetachResultV1:
         """Request the definition's supported detach behavior."""
+        ...
+
+
+@runtime_checkable
+class OperationReviewClaimPort(Protocol):
+    """Explicit runtime claim of the exact review document displayed to a person."""
+
+    async def resolve_review_document[ReviewT: BaseModel](
+        self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
+    ) -> tuple[OperationReviewProjectionResultV1[ReviewT], str]:
+        """Read a typed review and the digest of that same complete envelope."""
+        ...
+
+    async def claim_review(
+        self, reference: OperationReviewProjectionReferenceV1, reviewed_document_digest: str
+    ) -> OperationReviewClaimed:
+        """Claim only after the person has seen the document."""
         ...
 
 

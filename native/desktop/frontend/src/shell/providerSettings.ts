@@ -59,11 +59,12 @@ export type ProviderSettingsAnswer = {
   sign_in_methods?: Record<string, ProviderSignInMethod[]>;
 };
 
-export type ProviderSignInMethod = "browser" | "device";
+export type ProviderSignInMethod = "browser" | "device" | "browser-code";
 export type ProviderSignInEvent =
   | "starting"
   | "started"
   | "browser_action"
+  | "authorization_code_required"
   | "succeeded"
   | "cancelled"
   | "failed";
@@ -89,6 +90,10 @@ export interface ProviderSignIn {
   }): Promise<ProviderSignInSnapshot>;
   status(change: { attemptId: string }): Promise<ProviderSignInSnapshot>;
   cancel(change: { attemptId: string }): Promise<ProviderSignInSnapshot>;
+  submitCode(change: {
+    attemptId: string;
+    code: string;
+  }): Promise<ProviderSignInSnapshot>;
   /** Same user-gesture-only operation as Host.openExternal. */
   openExternal?(url: string): Promise<void>;
 }
@@ -230,7 +235,9 @@ export function useProviderSettings(
                               ...new Set(
                                 methods.filter(
                                   (method): method is ProviderSignInMethod =>
-                                    method === "browser" || method === "device",
+                                    method === "browser" ||
+                                    method === "device" ||
+                                    method === "browser-code",
                                 ),
                               ),
                             ],

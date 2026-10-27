@@ -105,7 +105,8 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         provider_settings_reset,
         provider_sign_in_start,
         provider_sign_in_status,
-        provider_sign_in_cancel
+        provider_sign_in_cancel,
+        provider_sign_in_submit_code
     ]
 }
 #[tauri::command]
@@ -225,6 +226,39 @@ pub async fn provider_sign_in_cancel(
     )
 }
 
+fn code_submission(attempt_id: &str, bytes: &[u8]) -> Result<Value, CommandFailure> {
+    if !wire::is_attempt_id(attempt_id)
+        || bytes.is_empty()
+        || bytes.len() > 2048
+        || !bytes.iter().all(|byte| (33..=126).contains(byte))
+    {
+        return Err(invalid().into());
+    }
+    Ok(json!({"action":"connect_submit_code","attempt_id":attempt_id}))
+}
+
+#[tauri::command]
+pub async fn provider_sign_in_submit_code(
+    state: State<'_, Arc<AgentHost>>,
+    request: Request<'_>,
+) -> Result<SignInSnapshot, CommandFailure> {
+    let attempt_id = request
+        .headers()
+        .get("x-cadrumo-attempt-id")
+        .and_then(|value| value.to_str().ok())
+        .ok_or_else(invalid)?;
+    let InvokeBody::Raw(bytes) = request.body() else {
+        return Err(invalid().into());
+    };
+    let document = code_submission(attempt_id, bytes)?;
+    let secret = Zeroizing::new(bytes.clone());
+    wire::sign_in_snapshot(
+        execute(&state, document, Some(secret)).await?,
+        None,
+        Some(attempt_id),
+    )
+}
+
 async fn change(
     state: &State<'_, Arc<AgentHost>>,
     action: &str,
@@ -239,6 +273,26 @@ async fn change(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn code_submission_requires_a_bounded_printable_code_and_attempt() {
+        let id = "123e4567-e89b-42d3-a456-426614174000";
+        let document = code_submission(id, b"one-time-code").unwrap();
+        assert_eq!(
+            document,
+            json!({"action":"connect_submit_code","attempt_id":id})
+        );
+        for bytes in [
+            Vec::new(),
+            vec![b'x'; 2049],
+            b"space bad".to_vec(),
+            vec![0x80],
+        ] {
+            assert!(code_submission(id, &bytes).is_err());
+        }
+        assert!(code_submission("stale-id", b"code").is_err());
+        assert!(code_submission(id, &vec![b'!'; 2048]).is_ok());
+    }
 
     #[test]
     fn a_slow_status_read_is_collected_without_restarting_its_work() {

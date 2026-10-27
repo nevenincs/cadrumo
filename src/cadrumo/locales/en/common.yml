@@ -537,6 +537,13 @@ core:
     errors:
       output_language_type: The profile output language must be a supported language
         code in text form.
+dependencies:
+  setup:
+    cancel_requested: Stopping setup…
+    following: Following a setup that is already running…
+    input_refused: The setup request could not be accepted.
+    retrying: Retrying the download…
+    waiting_for_server: Waiting for the download server…
 desktop:
   about:
     agent: Agent
@@ -4122,9 +4129,16 @@ operation:
     action:
       apply: Apply
       cancel: Cancel
+      claim: Review and answer
       close: Close
       detach: Detach
       reject: Reject
+    claim:
+      already_claimed: Someone else is reviewing this setup. You cannot answer it
+        here.
+      authority_lost: You can no longer answer this review. Start a new setup.
+      stale: This setup review changed. Start a new setup to review the current plan.
+      unavailable: This review is no longer available. Sign in and start a new setup.
     detail:
       action_refused: Action refused
       cleanup_deadline: Cleanup deadline
@@ -7214,8 +7228,11 @@ tui:
     progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
     review:
       decline: Not now
+      open: Open setup review
+      reference: Setup reference
       title: Set this up?
     set_up_all: Set up everything
+    sign_in_first: Sign in first to check or set up components.
     size:
       gigabytes: '%{value} GB'
       megabytes: '%{value} MB'
@@ -7229,8 +7246,7 @@ tui:
     stop: Stop
     stopping: Stopping the setup…
     title: Components
-    unavailable: Cadrumo could not start its component engine, so components cannot
-      be checked or set up right now.
+    unavailable: Components could not be checked. Try again.
     waiting_for_program: '%{name}: waiting for the program to start'
     working: Preparing the plan…
 workspace:

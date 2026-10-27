@@ -110,6 +110,20 @@ def test_operator_sign_in_accepts_metadata_but_not_flags_or_paths(family: str) -
         reference_select(declaration, family, "cadrumo-agent", prefix)
 
 
+@pytest.mark.parametrize("family", ("windows", "posix"))
+def test_browser_code_connect_is_exact_and_uses_the_profile_auth_environment(family: str) -> None:
+    declaration = load_for_build(REPO_ROOT)
+    prefix = ("-m", "cadrumo_agent.cli.main", "auth", "connect", "--provider")
+    suffix = ("--method", "browser-code", "--timeout", "300")
+    assert reference_select(declaration, family, "cadrumo-agent", (*prefix, "antigravity", *suffix)) == "agent-auth"
+    for provider in ("", "../other", "--help", "a/b", "A", "a" * 65):
+        with pytest.raises(LaunchRefusedError):
+            reference_select(declaration, family, "cadrumo-agent", (*prefix, provider, *suffix))
+    for bad in (suffix[:-2], (*suffix[:-1], "301"), (*suffix, "--extra"), ("--method", "browser_code", *suffix[2:])):
+        with pytest.raises(LaunchRefusedError):
+            reference_select(declaration, family, "cadrumo-agent", (*prefix, "antigravity", *bad))
+
+
 def test_the_declaration_validates_and_covers_every_built_image() -> None:
     declaration = load_for_build(REPO_ROOT)
     for target in ("windows-x86-64", "linux-x86-64", "macos-arm64"):

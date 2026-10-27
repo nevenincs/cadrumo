@@ -132,6 +132,11 @@ def _setup_item_check(row: DependencyStatusRow) -> DiagnosticCheck:
     return DiagnosticCheck(name=name, status=DiagnosticStatus.WARN, summary=summary, precondition_verdict=verdict)
 
 
+def component_setup_checks(rows: tuple[DependencyStatusRow, ...]) -> tuple[DiagnosticCheck, ...]:
+    """Grade component status rows supplied by the caller's admitted reader."""
+    return tuple(_setup_item_check(row) for row in rows)
+
+
 def read_component_setup_checks() -> tuple[DiagnosticCheck, ...] | None:
     """Grade every setup item's quick check from the components role, or ``None`` when the role cannot answer.
 
@@ -150,7 +155,7 @@ def read_component_setup_checks() -> tuple[DiagnosticCheck, ...] | None:
         return None
     if result.outcome is not ProvisionOutcome.OK:
         return None
-    return tuple(_setup_item_check(row) for row in result.rows)
+    return component_setup_checks(result.rows)
 
 
 def build_diagnostics_repair_operations(

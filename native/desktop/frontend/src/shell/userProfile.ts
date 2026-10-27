@@ -114,6 +114,7 @@ export function useUserProfile(
       saving = false,
       again = false;
     let unsubscribe: (() => void) | undefined;
+    let readFinished = Promise.resolve();
     let state = EMPTY;
     const update = (patch: Partial<State>) => {
       if (!alive) return;
@@ -127,6 +128,10 @@ export function useUserProfile(
         return;
       }
       reading = true;
+      let finishRead!: () => void;
+      readFinished = new Promise<void>((resolve) => {
+        finishRead = resolve;
+      });
       do {
         again = false;
         update({ loading: true });
@@ -134,11 +139,16 @@ export function useUserProfile(
           const data = await port.read(language);
           update({ data, error: state.error === "unknown" ? "unknown" : null });
         } catch (error) {
-          update({ data: null, error: failure(error) });
+          const code = failure(error);
+          update({
+            data: code === "not_signed_in" ? null : state.data,
+            error: state.error === "unknown" ? "unknown" : code,
+          });
         }
       } while (alive && again && !saving);
       reading = false;
       update({ loading: false });
+      finishRead();
     };
     control.current = {
       refresh: async () => {
@@ -149,22 +159,29 @@ export function useUserProfile(
         if (
           !alive ||
           saving ||
-          reading ||
           state.error === "unknown" ||
           state.data?.profile_id !== base.profile_id
         )
           return false;
-        if (
-          base.record_revision !== state.data.record_revision ||
-          base.content_digest !== state.data.content_digest
-        ) {
-          update({ error: "conflict" });
-          return false;
-        }
         saving = true;
         update({ saving: true, error: null, saved: false });
         let committed = false;
         try {
+          // Reserve the save before waiting, so observation pushes cannot
+          // repeatedly overtake the edit. The draft retains its original CAS.
+          await readFinished;
+          if (!alive) return false;
+          if (state.data?.profile_id !== base.profile_id) {
+            update({ error: "not_signed_in" });
+            return false;
+          }
+          if (
+            base.record_revision !== state.data.record_revision ||
+            base.content_digest !== state.data.content_digest
+          ) {
+            update({ error: "conflict" });
+            return false;
+          }
           await port.change({
             profile_id: base.profile_id,
             expected_revision: base.record_revision,
@@ -183,7 +200,8 @@ export function useUserProfile(
           if (committed || again || state.error === "conflict") {
             const writeError = state.error;
             await refresh();
-            if (committed && !state.data) update({ error: "saved_unread" });
+            if (committed && (!state.data || state.error === "unavailable"))
+              update({ error: "saved_unread" });
             else if (writeError && writeError !== "saved_unread")
               update({ error: writeError });
           }

@@ -183,7 +183,12 @@ def test_gui_methods_are_read_from_the_agent_and_cannot_be_mutated_by_callers(tm
     assert len(runner.calls) == 1
 
 
-@pytest.mark.parametrize("methods", [[], ["browser", "browser"], ["password"], "browser"])
+def test_schema_three_admits_discovered_browser_code(tmp_path: Path) -> None:
+    source, _runner = _source(tmp_path, _ok('{"schema_version":3,"providers":{"antigravity":["browser-code"]}}'))
+    assert source.gui_sign_in_methods() == {"antigravity": ("browser-code",)}
+
+
+@pytest.mark.parametrize("methods", [[], ["browser", "browser"], ["browser-code"], ["password"], "browser"])
 def test_invalid_gui_method_declarations_are_refused(tmp_path: Path, methods: object) -> None:
     source, _runner = _source(tmp_path, _ok(json.dumps({"schema_version": 2, "providers": {"example": methods}})))
     with pytest.raises(ProviderCatalogUnavailableError):
