@@ -157,7 +157,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "6a9ceac195365256c81356bbd8957d7ddeac1d08c2e8c915a3cb51ecad73d1b1"
+          "value": "f1d11b304c02b67919ca0bcf8bcef65bc82e18d11b534aab203ea9ca73f4eff0"
         }
       ],
       "envelope": {
@@ -180,7 +180,7 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-rectificaciones": "0"
           },
-          "calculation_revision_id": "6a9ceac195365256c81356bbd8957d7ddeac1d08c2e8c915a3cb51ecad73d1b1",
+          "calculation_revision_id": "f1d11b304c02b67919ca0bcf8bcef65bc82e18d11b534aab203ea9ca73f4eff0",
           "casilla_values": {
             "decl.importe-operaciones": "8000.00",
             "decl.importe-rectificaciones": "0",
@@ -331,7 +331,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 6a9ceac195365256c81356bbd8957d7ddeac1d08c2e8c915a3cb51ecad73d1b1 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision f1d11b304c02b67919ca0bcf8bcef65bc82e18d11b534aab203ea9ca73f4eff0 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "collectible_invoice",
@@ -381,7 +381,7 @@
         "modelo",
         "work",
         "verify",
-        "6a9ceac195365256c81356bbd8957d7ddeac1d08c2e8c915a3cb51ecad73d1b1"
+        "f1d11b304c02b67919ca0bcf8bcef65bc82e18d11b534aab203ea9ca73f4eff0"
       ],
       "captures": [],
       "envelope": {
@@ -397,7 +397,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "6a9ceac195365256c81356bbd8957d7ddeac1d08c2e8c915a3cb51ecad73d1b1",
+          "calculation_revision_id": "f1d11b304c02b67919ca0bcf8bcef65bc82e18d11b534aab203ea9ca73f4eff0",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
@@ -421,7 +421,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "5c3e3ec1e658aeaf232704ba11654aec03b0bb6cc40ba132b6ca2a79f44c5618",
+          "verification_report_id": "cd6958bb60d0686f6600e5e0b79e4fd73c86ad432ac98b4f4299c83a7d0dbfd9",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
