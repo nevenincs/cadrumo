@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:15744389e358f65271628b0230ca6056d2e5e6e171bcd40ea6a0d6bbc572be70'
+body_hash: 'sha256:42aced340f3b6d9f7fe59f00fa302548e4860c781e2aade5303f4e8e95c784f8'
 related:
   - "[[2026-10-04-application-sign-in-reference]]"
   - "[[2026-09-26-mcp-purpose-authentication-profile-access-adr]]"
@@ -326,6 +326,6 @@ Accepted under the user's instruction of 2026-10-24 to implement native desktop 
 
 Accepted 2026-10-27 under `2026-10-27-sede-browser-adr`, on the user's choice of an in-app Sede browser streamed into the window ("implement 1)"). The consideration "The transport is strictly request-then-response. Pushed events are new protocol" is kept as accepted history and now reads together with this amendment.
 
-- The runtime gains one pushed binary lane, the view stream, used only by the `live.sede.view` operation. It runs on a dedicated verified connection on each leg, worker to host and host to window, never on the person connection or an operation channel. On those connections only, a new frame kind `B` carries image chunks and `J` carries control documents; `S` and `E` never appear there, and every other connection keeps refusing `B`. The frame layout, credit and bounds are ruled in `2026-10-27-sede-browser-adr`.
+- The runtime gains one pushed binary lane, the view stream, used only by the `live.sede.view` operation. It runs on a dedicated verified connection on each leg, worker to host and host to window, never on the person connection or an operation channel. On those connections only, a new frame kind `B` carries image chunks and the bytes of a download or upload the person chose, and `J` carries control documents; `S` and `E` never appear there, and every other connection keeps refusing `B`. The frame layout, credit and bounds are ruled in `2026-10-27-sede-browser-adr`.
 - The window attaches to a view by asking on its own person connection, receiving a single-use attach token valid for 10 seconds, and presenting it as the first document of the view connection from the same native peer. The token binds the lane to the exact admitted desktop session that submitted the operation; it is never journaled, logged or persisted.
 - Retiring the window's person session (sign-out, lock, idle or absolute deadline, generation change, lock-down) unbinds the lane at once and cancels the view. The lane grants no other authority and never extends the idle deadline by itself. Person input sent on it counts as the person's activity under the 2026-10-15 amendment, at the window's existing bounded rate, because it is the person's keyboard and pointer input on an admitted person frontend.
