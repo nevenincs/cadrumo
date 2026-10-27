@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import ctypes
 import json
+import logging
 import math
 import os
 import re
@@ -16,9 +17,11 @@ import pytest
 from pydantic import BaseModel, ConfigDict, ValidationError
 
 from cadrumo.core.async_cleanup import close_async_resources
+from cadrumo.core.logging import flush_logging
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
 
 from ...contracts.contracts import RefusalCode, RefusalError
+from .. import windows_process
 from ..windows_process import WindowsProcessScope
 
 pytestmark = [
@@ -29,6 +32,7 @@ pytestmark = [
 ]
 
 _FIXTURE = "cadrumo_client.transport.tests.job_fixture"
+_LOGGER_NAME = "cadrumo_client.transport.windows_process"
 
 
 @pytest.mark.asyncio
@@ -487,3 +491,86 @@ async def test_owner_loss_after_native_creation_before_process_publication(tmp_p
         raise
     finally:
         await close_async_resources(owner, task_name="native-launch-owner-loss-cleanup", primary_error=primary)
+
+
+def _events(caplog: pytest.LogCaptureFixture, name: str) -> list[logging.LogRecord]:
+    assert flush_logging(timeout=5)
+    return [record for record in caplog.records if record.name == _LOGGER_NAME and record.getMessage() == name]
+
+
+def _sleeping_child(scope: WindowsProcessScope, tmp_path: Path, code: str) -> windows_process.WindowsOwnedProcess:
+    return scope.launch(
+        executable=native_python(),
+        arguments=("-c", code),
+        directory=tmp_path,
+        environment={"SYSTEMROOT": os.environ["SYSTEMROOT"]},
+    )
+
+
+def test_termination_reports_when_the_job_emptied_and_the_status_the_child_exited_with(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = _sleeping_child(scope, tmp_path, "import time; time.sleep(30)")
+        with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+            scope.terminate(timeout=5)
+    finally:
+        scope.terminate()
+
+    (terminated,) = _events(caplog, "windows_job_termination_observed")
+    (child,) = _events(caplog, "windows_job_child_exit_observed")
+    assert terminated.levelno == logging.DEBUG
+    assert terminated.__dict__["outcome"] == "completed"
+    assert terminated.__dict__["timeout_seconds"] == 5
+    emptied, signalled = terminated.__dict__["job_empty_seconds"], terminated.__dict__["members_signalled_seconds"]
+    assert 0 <= emptied <= signalled <= terminated.__dict__["elapsed_seconds"] < 5
+    # The Job is ended with status 1, which is how a contained worker that was killed reads afterwards.
+    assert child.__dict__["child_process_id"] == process.pid
+    assert child.__dict__["exit_code"] == 1
+    assert child.__dict__["outcome"] == "exited"
+
+
+def test_a_child_that_outlives_its_bound_is_watched_until_it_exits_and_the_total_time_is_reported(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = _sleeping_child(scope, tmp_path, "import time; time.sleep(0.5); raise SystemExit(23)")
+        with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+            started = time.monotonic()
+            watcher = windows_process._watch_late_exit([process], started=started, seconds=30)
+            assert watcher is not None and watcher.daemon
+            watcher.join(timeout=30)
+            assert not watcher.is_alive()
+        # The watcher holds its own handle: the scope's child stays waitable afterwards.
+        assert process.wait(timeout=5) == 23
+    finally:
+        scope.terminate()
+
+    (late,) = _events(caplog, "windows_job_child_exit_observed_late")
+    assert late.__dict__["child_process_id"] == process.pid
+    assert late.__dict__["exit_code"] == 23
+    assert late.__dict__["outcome"] == "exited"
+    assert late.__dict__["timeout_seconds"] == 30
+    assert 0.4 <= late.__dict__["elapsed_seconds"] <= time.monotonic() - started + 0.1
+
+
+def test_the_late_watch_gives_up_at_its_bound_and_reports_the_child_still_running(
+    tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    scope = WindowsProcessScope()
+    try:
+        process = _sleeping_child(scope, tmp_path, "import time; time.sleep(30)")
+        with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
+            watcher = windows_process._watch_late_exit([process], started=time.monotonic(), seconds=0.3)
+            assert watcher is not None
+            watcher.join(timeout=10)
+            assert not watcher.is_alive()
+    finally:
+        scope.terminate()
+
+    (late,) = _events(caplog, "windows_job_child_exit_observed_late")
+    assert late.levelno == logging.WARNING
+    assert late.__dict__["exit_code"] is None
+    assert late.__dict__["outcome"] == "observation_expired"

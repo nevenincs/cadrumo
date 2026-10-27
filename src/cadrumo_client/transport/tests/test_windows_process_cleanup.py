@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import ctypes.wintypes
+import logging
 import sys
 from collections import Counter
 from pathlib import Path
@@ -13,6 +14,7 @@ from types import ModuleType, SimpleNamespace
 import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.logging import flush_logging
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from .. import windows_process
@@ -280,6 +282,68 @@ async def test_unproven_termination_retains_job_and_exact_primary_until_proven_r
     assert scope.active_process_ids() == ()
     scope.terminate()
     assert native.terminations == 2
+
+
+def _termination_events(caplog: pytest.LogCaptureFixture) -> list[logging.LogRecord]:
+    assert flush_logging(timeout=5)
+    return [
+        record
+        for record in caplog.records
+        if record.name == windows_process.__name__ and record.getMessage() == "windows_job_termination_observed"
+    ]
+
+
+def test_a_missed_bound_is_reported_as_expired_and_starts_the_watch_of_the_late_exit(
+    native: _Native, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    watched: list[tuple[int, float]] = []
+
+    def watch(children: object, *, started: float, seconds: float) -> None:
+        assert isinstance(children, list)
+        watched.append((len(children), seconds))
+
+    monkeypatch.setattr(windows_process, "_watch_late_exit", watch)
+    scope = WindowsProcessScope()
+    _children(scope, tmp_path)
+    native.active = 3
+    with caplog.at_level(logging.DEBUG, logger=windows_process.__name__):
+        with pytest.raises(RefusalError) as caught:
+            scope.terminate(timeout=0)
+        native.active = 0
+        scope.terminate()
+
+    assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    expired, settled = _termination_events(caplog)
+    assert expired.levelno == logging.WARNING
+    assert expired.__dict__["outcome"] == "deadline_expired"
+    assert expired.__dict__["timeout_seconds"] == 0
+    assert expired.__dict__["job_empty_seconds"] is None
+    assert expired.__dict__["members_signalled_seconds"] is None
+    assert (settled.__dict__["outcome"], settled.levelno) == ("completed", logging.DEBUG)
+    # Only the missed bound is watched, and with the original children.
+    assert watched == [(3, windows_process._LATE_EXIT_OBSERVATION_SECONDS)]
+
+
+def test_another_termination_failure_is_reported_with_its_error_and_is_not_watched(
+    native: _Native, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    watched: list[object] = []
+    monkeypatch.setattr(windows_process, "_watch_late_exit", lambda *args, **kwargs: watched.append(args))
+    scope = WindowsProcessScope()
+    _children(scope, tmp_path, count=1)
+    native.terminate_error = RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+    native.active = 1
+    with caplog.at_level(logging.DEBUG, logger=windows_process.__name__), pytest.raises(RefusalError):
+        scope.terminate()
+
+    (failed,) = _termination_events(caplog)
+    assert failed.levelno == logging.ERROR
+    assert failed.__dict__["outcome"] == "failed"
+    assert failed.__dict__["error_type"] == "RefusalError"
+    assert watched == []
+    native.terminate_error = None
+    native.active = 0
+    scope.terminate()
 
 
 @pytest.mark.asyncio

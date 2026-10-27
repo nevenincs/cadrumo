@@ -10,14 +10,26 @@ import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
+from contextlib import suppress
+from dataclasses import dataclass
+from logging import DEBUG, WARNING
 from pathlib import Path
-from threading import Lock
-from typing import BinaryIO, cast
+from threading import Lock, Thread
+from typing import BinaryIO, Final, cast
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
+from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_error_fields, diagnostic_event
+from cadrumo.core.logging import get_logger
 
 from ..contracts.contracts import RefusalCode, RefusalError
 from .windows_native_io import NativeWindowsHandle, native_windows_call, owned_windows_handle
+
+_LOGGER = get_logger(__name__)
+
+_STILL_ACTIVE: Final = 259
+"""The status ``GetExitCodeProcess`` reports for a process that has not exited."""
+_LATE_EXIT_OBSERVATION_SECONDS: Final = 60.0
+"""How long, after a termination missed its bound, a child that had not yet exited is still watched."""
 
 if sys.platform == "win32":
     from ctypes import wintypes
@@ -203,7 +215,6 @@ class WindowsOwnedProcess:
     def wait(self, *, timeout: float | None) -> int:
         """Wait for this exact child; ``None`` waits for exit without polling."""
         import win32event
-        import win32process
 
         if self._handle is None or (timeout is not None and (not math.isfinite(timeout) or timeout < 0)):
             raise RefusalError(RefusalCode.UNAVAILABLE)
@@ -213,9 +224,18 @@ class WindowsOwnedProcess:
             raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
         if result != win32event.WAIT_OBJECT_0:
             raise RefusalError(RefusalCode.UNAVAILABLE)
-        # pywin32 reports the DWORD as a signed C long, so NTSTATUS-style
-        # crash codes such as 0xC0000005 would otherwise read as negative.
-        return win32process.GetExitCodeProcess(self._handle) & 0xFFFFFFFF
+        return _native_exit_status(self._handle)
+
+    def exit_code(self) -> int | None:
+        """This child's exit status read without waiting; ``None`` while it runs or once its handle is released.
+
+        A process that exits with status 259 reads as still running: that is
+        the value Windows itself reports for a live process.
+        """
+        if self._handle is None:
+            return None
+        status = _native_exit_status(self._handle)
+        return None if status == _STILL_ACTIVE else status
 
     def close(self) -> None:
         """Attempt both handles, retaining each until its native release succeeds."""
@@ -238,6 +258,14 @@ class WindowsOwnedProcess:
                 self._handle = None
         if failures:
             raise failures[0]
+
+
+def _native_exit_status(handle: int) -> int:
+    import win32process
+
+    # pywin32 reports the DWORD as a signed C long, so NTSTATUS-style
+    # crash codes such as 0xC0000005 would otherwise read as negative.
+    return win32process.GetExitCodeProcess(handle) & 0xFFFFFFFF
 
 
 def unreturned_windows_process_scope(error: BaseException) -> WindowsProcessScope | None:
@@ -391,12 +419,16 @@ class WindowsProcessScope:
             native_cause: BaseException | None = None
             failures: list[BaseException] = []
             if self._job is not None and not self._terminated:
+                observed = _JobTermination(started=time.monotonic(), timeout=timeout)
                 try:
-                    _terminate_windows_job(self._job, deadline)
+                    _terminate_windows_job(self._job, deadline, observed)
                     self._terminated = True
                     self._termination_failure = None
                 except BaseException as error:
                     primary, native_cause = self._record_termination_failure(error)
+                    observed.failure = error
+                with suppress(Exception):
+                    self._report_termination(observed)
             failures.extend(self._release_terminated_job())
             failures.extend(self._release_children())
             if primary is not None:
@@ -408,6 +440,47 @@ class WindowsProcessScope:
                 raise AsyncResourceCleanupError(
                     (self,), tuple(failures), retry_task_name="windows-process-scope-release", close_attempts=1
                 ) from failures[0]
+
+    def _report_termination(self, observed: _JobTermination) -> None:
+        """Log how long the Job took to end and how each child exited, before the child handles are released.
+
+        A child still running after a missed bound is watched in the
+        background. Reporting never changes the termination outcome.
+        """
+        failure = observed.failure
+        expired = isinstance(failure, RefusalError) and failure.reason is RefusalCode.DEADLINE_EXCEEDED
+        fields: dict[str, DiagnosticValue] = {
+            "elapsed_seconds": round(max(0.0, time.monotonic() - observed.started), 3),
+            "timeout_seconds": observed.timeout,
+            "job_empty_seconds": observed.job_empty,
+            "members_signalled_seconds": observed.members_signalled,
+            "outcome": "completed" if failure is None else "deadline_expired" if expired else "failed",
+        }
+        if failure is not None and not expired:
+            fields.update(diagnostic_error_fields(failure))
+        diagnostic_event(
+            _LOGGER,
+            "windows_job_termination_observed",
+            fields=fields,
+            level=DEBUG if failure is None else WARNING,
+            primary_error=failure,
+        )
+        for child in self._children:
+            with suppress(Exception):
+                code = child.exit_code()
+                diagnostic_event(
+                    _LOGGER,
+                    "windows_job_child_exit_observed",
+                    fields={
+                        "child_process_id": child.pid,
+                        "exit_code": code,
+                        "outcome": "running" if code is None else "exited",
+                    },
+                    level=DEBUG if code is not None else WARNING,
+                    primary_error=failure,
+                )
+        if expired:
+            _watch_late_exit(self._children, started=observed.started, seconds=_LATE_EXIT_OBSERVATION_SECONDS)
 
     def _record_termination_failure(self, error: BaseException) -> tuple[BaseException, BaseException | None]:
         """Retain the exact native termination refusal for later health and retry."""
@@ -650,7 +723,18 @@ def _require_launch_environment(arguments: Sequence[str], environment: Mapping[s
         raise RefusalError(RefusalCode.UNAVAILABLE)
 
 
-def _terminate_windows_job(job: int, deadline: float) -> None:
+@dataclass(slots=True)
+class _JobTermination:
+    """What one termination observed: seconds after the kill request, or ``None`` for what the bound did not reach."""
+
+    started: float
+    timeout: float
+    job_empty: float | None = None
+    members_signalled: float | None = None
+    failure: BaseException | None = None
+
+
+def _terminate_windows_job(job: int, deadline: float, observed: _JobTermination) -> None:
     """Observe this exact Job empty and its members' process objects signaled within the original budget.
 
     The kernel removes an exiting process from its Job's active count before
@@ -672,15 +756,75 @@ def _terminate_windows_job(job: int, deadline: float) -> None:
         raise
     try:
         terminate_job(job, 1)
+        requested = time.monotonic()
         while cast("dict[str, object]", query_job(job, win32job.JobObjectBasicAccountingInformation))[
             "ActiveProcesses"
         ]:
             if time.monotonic() >= deadline:
                 raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
             time.sleep(min(0.01, max(0, deadline - time.monotonic())))
+        observed.job_empty = round(time.monotonic() - requested, 3)
         _await_job_members(members, deadline)
+        observed.members_signalled = round(time.monotonic() - requested, 3)
     finally:
         _release_job_members(members)
+
+
+def _watch_late_exit(children: Sequence[WindowsOwnedProcess], *, started: float, seconds: float) -> Thread | None:
+    """Report from a daemon thread when each child that outlived its termination bound exits.
+
+    The thread waits on duplicated handles, so it neither depends on the scope
+    releasing its own nor keeps the process alive. It starts nothing when no
+    child can be duplicated, and a failure here is never the caller's.
+    """
+    waiters: list[WindowsOwnedProcess] = []
+    for child in children:
+        with suppress(Exception):
+            waiters.append(child.retain_waiter())
+    if not waiters:
+        return None
+    watcher = Thread(
+        target=_report_late_exit, args=(tuple(waiters), started, seconds), name="windows-job-late-exit", daemon=True
+    )
+    try:
+        watcher.start()
+    except BaseException:
+        for waiter in waiters:
+            with suppress(Exception):
+                waiter.close()
+        return None
+    return watcher
+
+
+def _report_late_exit(waiters: tuple[WindowsOwnedProcess, ...], started: float, seconds: float) -> None:
+    """Wait up to ``seconds`` after ``started`` for each child's exit and log its status and the total time."""
+    deadline = started + seconds
+    try:
+        for waiter in waiters:
+            code: int | None = None
+            outcome = "exited"
+            try:
+                code = waiter.wait(timeout=max(0.0, deadline - time.monotonic()))
+            except RefusalError as error:
+                outcome = "observation_expired" if error.reason is RefusalCode.DEADLINE_EXCEEDED else "unavailable"
+            except Exception:
+                outcome = "unavailable"
+            diagnostic_event(
+                _LOGGER,
+                "windows_job_child_exit_observed_late",
+                fields={
+                    "child_process_id": waiter.pid,
+                    "exit_code": code,
+                    "elapsed_seconds": round(max(0.0, time.monotonic() - started), 3),
+                    "timeout_seconds": seconds,
+                    "outcome": outcome,
+                },
+                level=DEBUG if code is not None else WARNING,
+            )
+    finally:
+        for waiter in waiters:
+            with suppress(Exception):
+                waiter.close()
 
 
 def _await_job_members(members: tuple[NativeWindowsHandle, ...], deadline: float) -> None:
