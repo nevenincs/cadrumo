@@ -92,7 +92,7 @@ class ViewPhase(StrEnum):
     """Where the view's operation is: logging in, browsing, or publishing on close."""
 
     ACQUIRING = "acquiring"
-    """A login runs in the view; input is refused and the panel only watches."""
+    """A login runs in the view; the person's input still reaches the page and interrupts an assisted step."""
     BROWSING = "browsing"
     """The person browses; input reaches the page."""
     CLOSING = "closing"
@@ -102,33 +102,15 @@ class ViewPhase(StrEnum):
 class ViewNoticeCode(StrEnum):
     """Every notice the view may show; offer codes carry an external-browser offer."""
 
-    REQUEST_REFUSED = "request_refused"
-    """The guard aborted a request the page made."""
-    NAVIGATION_OFFERED = "navigation_offered"
-    """A refused top-level navigation, offered in the external browser."""
-    POPUP_OFFERED = "popup_offered"
-    """A popup to another host, offered in the external browser."""
     DOWNLOAD_OFFERED = "download_offered"
     """A download, offered in the external browser."""
     FILE_CHOOSER_OFFERED = "file_chooser_offered"
     """A file upload, offered in the external browser."""
-    LOGIN_UNAVAILABLE = "login_unavailable"
-    """The configured login cannot run in the view, offered in the external browser."""
-    INPUT_REFUSED = "input_refused"
-    """Input arrived while the view only watches a login."""
     DIALOG_OPENED = "dialog_opened"
     """The page opened a dialog the person answers with ``view.dialog``."""
 
 
-VIEW_OFFER_NOTICE_CODES = frozenset(
-    {
-        ViewNoticeCode.NAVIGATION_OFFERED,
-        ViewNoticeCode.POPUP_OFFERED,
-        ViewNoticeCode.DOWNLOAD_OFFERED,
-        ViewNoticeCode.FILE_CHOOSER_OFFERED,
-        ViewNoticeCode.LOGIN_UNAVAILABLE,
-    }
-)
+VIEW_OFFER_NOTICE_CODES = frozenset({ViewNoticeCode.DOWNLOAD_OFFERED, ViewNoticeCode.FILE_CHOOSER_OFFERED})
 """The notice codes that carry an offer, and only they."""
 
 

@@ -155,10 +155,11 @@ macro_rules! redacted_debug {
 }
 
 /// Where the view's operation is: logging in, browsing, or publishing on close.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ViewPhase {
-    /// A login runs in the view; input is refused and the panel only watches.
+    /// A login runs in the view; the person's input still reaches the page and
+    /// interrupts an assisted step.
     Acquiring,
     /// The person browses; input reaches the page.
     Browsing,
@@ -167,35 +168,23 @@ pub enum ViewPhase {
 }
 
 /// Every notice the view may show; offer codes carry an external-browser offer.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ViewNoticeCode {
-    RequestRefused,
-    NavigationOffered,
-    PopupOffered,
     DownloadOffered,
     FileChooserOffered,
-    LoginUnavailable,
-    InputRefused,
     DialogOpened,
 }
 
 impl ViewNoticeCode {
     /// Whether this code carries an offer, and only these do.
     pub fn carries_offer(self) -> bool {
-        matches!(
-            self,
-            Self::NavigationOffered
-                | Self::PopupOffered
-                | Self::DownloadOffered
-                | Self::FileChooserOffered
-                | Self::LoginUnavailable
-        )
+        matches!(self, Self::DownloadOffered | Self::FileChooserOffered)
     }
 }
 
 /// The page dialog kinds, spelled as CDP and Playwright spell them.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ViewDialogKind {
     Alert,

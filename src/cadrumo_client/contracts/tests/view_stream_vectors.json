@@ -935,19 +935,11 @@
         }
       },
       {
-        "name": "notice_refused",
-        "direction": "downstream",
-        "document": {
-          "kind": "view.notice",
-          "code": "request_refused"
-        }
-      },
-      {
         "name": "notice_offer",
         "direction": "downstream",
         "document": {
           "kind": "view.notice",
-          "code": "navigation_offered",
+          "code": "download_offered",
           "offer": {
             "offer_id": "0123456789abcdef0123456789abcdef",
             "url": "https://www.example.org/form?id=1"
@@ -955,11 +947,11 @@
         }
       },
       {
-        "name": "notice_login_unavailable",
+        "name": "notice_chooser_offer",
         "direction": "downstream",
         "document": {
           "kind": "view.notice",
-          "code": "login_unavailable",
+          "code": "file_chooser_offered",
           "offer": {
             "offer_id": "0123456789abcdef0123456789abcdef",
             "url": "https://www.example.org/form?id=1"
@@ -1678,15 +1670,20 @@
         "direction": "downstream",
         "document": {
           "kind": "view.notice",
-          "code": "popup_offered"
+          "code": "download_offered"
         }
       },
       {
-        "name": "notice_refusal_with_offer",
+        "name": "notice_dialog_with_offer",
         "direction": "downstream",
         "document": {
           "kind": "view.notice",
-          "code": "request_refused",
+          "code": "dialog_opened",
+          "dialog": {
+            "dialog_id": 1,
+            "dialog_kind": "alert",
+            "message": ""
+          },
           "offer": {
             "offer_id": "0123456789abcdef0123456789abcdef",
             "url": "https://www.example.org/form?id=1"
@@ -1722,7 +1719,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.notice",
-          "code": "popup_offered",
+          "code": "download_offered",
           "offer": {
             "offer_id": "ABC",
             "url": "https://www.example.org/form?id=1"

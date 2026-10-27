@@ -122,7 +122,7 @@ def test_every_notice_code_and_closed_reason_has_one_valid_spelling() -> None:
         document: dict[str, Any] = {"kind": "view.notice", "code": code.value}
         if code is ViewNoticeCode.DIALOG_OPENED:
             document["dialog"] = dialog
-        elif code not in {ViewNoticeCode.REQUEST_REFUSED, ViewNoticeCode.INPUT_REFUSED}:
+        else:
             document["offer"] = offer
         assert _validate({"direction": "downstream", "document": document}) == document
     for reason in ViewClosedReason:

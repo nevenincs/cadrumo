@@ -895,13 +895,8 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("image", "downstream", _image_document(0, 1)),
         ("state", "downstream", _STATE),
         ("state_acquiring", "downstream", {**_STATE, "phase": "acquiring", "loading": True, "title": ""}),
-        ("notice_refused", "downstream", {"kind": "view.notice", "code": "request_refused"}),
-        ("notice_offer", "downstream", {"kind": "view.notice", "code": "navigation_offered", "offer": offer}),
-        (
-            "notice_login_unavailable",
-            "downstream",
-            {"kind": "view.notice", "code": "login_unavailable", "offer": offer},
-        ),
+        ("notice_offer", "downstream", {"kind": "view.notice", "code": "download_offered", "offer": offer}),
+        ("notice_chooser_offer", "downstream", {"kind": "view.notice", "code": "file_chooser_offered", "offer": offer}),
         (
             "notice_dialog",
             "downstream",
@@ -956,8 +951,17 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("state_origin_http", "downstream", {**_STATE, "origin": "http://sede.agenciatributaria.gob.es"}),
         ("state_path_with_query", "downstream", {**_STATE, "path": "/Sede/x.html?nif=1"}),
         ("state_unknown_phase", "downstream", {**_STATE, "phase": "submitting"}),
-        ("notice_offer_code_without_offer", "downstream", {"kind": "view.notice", "code": "popup_offered"}),
-        ("notice_refusal_with_offer", "downstream", {"kind": "view.notice", "code": "request_refused", "offer": offer}),
+        ("notice_offer_code_without_offer", "downstream", {"kind": "view.notice", "code": "download_offered"}),
+        (
+            "notice_dialog_with_offer",
+            "downstream",
+            {
+                "kind": "view.notice",
+                "code": "dialog_opened",
+                "dialog": {"dialog_id": 1, "dialog_kind": "alert", "message": ""},
+                "offer": offer,
+            },
+        ),
         (
             "notice_offer_javascript",
             "downstream",
@@ -971,7 +975,7 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         (
             "notice_offer_id_shape",
             "downstream",
-            {"kind": "view.notice", "code": "popup_offered", "offer": {**offer, "offer_id": "ABC"}},
+            {"kind": "view.notice", "code": "download_offered", "offer": {**offer, "offer_id": "ABC"}},
         ),
         ("notice_unknown_code", "downstream", {"kind": "view.notice", "code": "form_submitted"}),
         ("closed_unknown_reason", "downstream", {"kind": "view.closed", "reason": "crashed"}),
