@@ -89,24 +89,6 @@ def aeat_host_suffixes() -> tuple[str, ...]:
     return (domains.host_suffix, domains.legacy_host_suffix)
 
 
-def aeat_origin_hosts() -> tuple[str, ...]:
-    """Return the exact hostnames of the AEAT origins declared in ``[aeat.domains]``.
-
-    Only origins under an AEAT-owned suffix are returned, in declaration
-    order. The Cl@ve identity provider and BOE are other authorities, and the
-    legacy ``www`` origin is outside both AEAT suffixes, so none of them is an
-    AEAT origin here.
-    """
-    domains = load_external_constants().aeat.domains
-    origins = (domains.sede, domains.www1, domains.www2, domains.www3, domains.www6, domains.www12, domains.aeat_gob)
-    hosts: list[str] = []
-    for origin in origins:
-        host = canonical_remote_hostname(origin)
-        if host is not None and is_aeat_host(host) and host not in hosts:
-            hosts.append(host)
-    return tuple(hosts)
-
-
 def is_aeat_host(host: str) -> bool:
     """Return whether ``host`` is under an AEAT-owned suffix."""
     return host_is_under_suffixes(host, aeat_host_suffixes())

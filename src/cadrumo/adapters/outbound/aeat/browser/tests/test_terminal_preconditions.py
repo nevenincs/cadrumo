@@ -75,12 +75,12 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         (("playwright_runtime_startable", "False"),),
         NoRecoveryOutcome.SAFETY,
     ),
-    "session:BrowserSession.create_context:BrowserError:Browser session already owns a live browser": _contract(
+    "session:BrowserSession._create_context:BrowserError:Browser session already owns a live browser": _contract(
         BrowserPreconditionCondition.SESSION_AVAILABLE,
         (("browser_session_available", "False"),),
         NoRecoveryOutcome.OPERATOR_DECISION,
     ),
-    "session:BrowserSession.create_context:BrowserError:Browser context preparation failed": _contract(
+    "session:BrowserSession._create_context:BrowserError:Browser context preparation failed": _contract(
         BrowserPreconditionCondition.CONTEXT_CREATABLE,
         (("browser_context_creatable", "False"),),
         NoRecoveryOutcome.SAFETY,
