@@ -43,12 +43,18 @@ endif()
 if(BUILD_TESTING)
   set(CADRUMO_APPLICATION_TEST_PACKAGE_ROOT "${CADRUMO_PATH_STAGE}/$<CONFIG>/app"
     CACHE STRING "Package root for Rust compatibility acceptance; defaults to the staged configuration")
+  set(CADRUMO_APPLICATION_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for application tests")
+  set(application_test_arguments)
+  if(NOT CADRUMO_APPLICATION_TEST_FILTER STREQUAL "")
+    list(APPEND application_test_arguments "${CADRUMO_APPLICATION_TEST_FILTER}")
+  endif()
   if(NOT IS_ABSOLUTE "${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}")
     message(FATAL_ERROR "CADRUMO_APPLICATION_TEST_PACKAGE_ROOT must be absolute")
   endif()
   add_test(NAME application.rust
     COMMAND ${application_cargo} test --locked --manifest-path "${application_manifest}"
-      --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}" --features platform)
+      --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}" --features platform
+      ${application_test_arguments})
   set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
   cadrumo_cargo_command(application_package_cargo
     --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs"
