@@ -111,11 +111,8 @@ review for your answer; the terminal interface has an explicit claim action. A c
 cannot be taken over by another session. If the review expires or either
 session loses its authority, start a new setup run and review its new plan.
 
-In the signed-in desktop app, open **Settings → Review setup operation**, enter
-the operation ID, and choose **Read current review**. After reading the plan,
-choose **Claim this review**, then **Apply** or **Reject**. If an Apply reply
-cannot be confirmed, setup may already have started: check component status
-before starting again.
+The desktop app does not yet show a setup review that an assistant started.
+Answer it with the command or the terminal interface described above.
 
 To set up the browser alone:
 

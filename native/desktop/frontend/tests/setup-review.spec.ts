@@ -156,7 +156,7 @@ test("a late read cannot display a previous profile's review after the session i
       finish = resolve;
     });
   const pending = session.read(review.operation_id);
-  session.clear(); // The mounted review is cleared on profile change or unmount.
+  session.clear(); // The owner clears the review on profile change.
   finish(review);
   await pending;
   expect(session.state).toEqual({
@@ -244,11 +244,11 @@ test("claim refusals retain distinct stale, held-elsewhere and retired recovery 
   );
 });
 
-test("closing Settings during apply preserves the owned session's eventual uncertain answer", async () => {
+test("closing the view during apply preserves the owned session's eventual uncertain answer", async () => {
   const { session, port } = fixture();
   let rejectAnswer!: (reason: unknown) => void;
   let notifications = 0;
-  const closeSettings = session.subscribe(() => {
+  const closeView = session.subscribe(() => {
     notifications++;
   });
   port.answer = () =>
@@ -259,7 +259,7 @@ test("closing Settings during apply preserves the owned session's eventual uncer
   await session.claim();
   const pending = session.answer("apply");
   expect(session.getSnapshot().busy).toBe(true);
-  closeSettings(); // The view unsubscribes; the App-owned session remains live.
+  closeView(); // The view unsubscribes; the owned session remains live.
   const before = notifications;
   rejectAnswer(new Error("apply outcome lost"));
   await pending;
@@ -276,7 +276,7 @@ test("closing Settings during apply preserves the owned session's eventual uncer
   reopened();
 });
 
-test("unknown answer survives the status dialog and return to Settings without restoring authority", async () => {
+test("unknown answer survives leaving and returning to the view without restoring authority", async () => {
   const { session, port } = fixture();
   let answers = 0;
   port.answer = async () => {
@@ -286,9 +286,9 @@ test("unknown answer survives the status dialog and return to Settings without r
   await session.read(review.operation_id);
   await session.claim();
   await session.answer("apply");
-  const closeSettings = session.subscribe(() => undefined);
-  closeSettings(); // Opening component status unmounts Settings, not its owner.
-  const returnToSettings = session.subscribe(() => undefined);
+  const closeView = session.subscribe(() => undefined);
+  closeView(); // Leaving unmounts the view, not the session that owns the answer.
+  const returnToView = session.subscribe(() => undefined);
   expect(session.getSnapshot().unknownOperationIds).toEqual([
     review.operation_id,
   ]);
@@ -300,7 +300,7 @@ test("unknown answer survives the status dialog and return to Settings without r
     review.operation_id,
   ]);
   expect(session.getSnapshot().claimed).toBe(false);
-  returnToSettings();
+  returnToView();
 });
 
 test("two lost operation answers retain both uncertainties and both local replay fences", async () => {
@@ -324,8 +324,8 @@ test("two lost operation answers retain both uncertainties and both local replay
     await session.answer("apply");
   }
   expect(session.getSnapshot().unknownOperationIds).toEqual(ids);
-  const closeSettings = session.subscribe(() => undefined);
-  closeSettings();
+  const closeView = session.subscribe(() => undefined);
+  closeView();
   const reopened = session.subscribe(() => undefined);
   for (const operationId of ids) {
     await session.read(operationId);
