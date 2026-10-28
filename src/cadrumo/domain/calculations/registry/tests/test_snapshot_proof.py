@@ -1,7 +1,8 @@
 """Snapshot cross-check proofs: the validator closure, proof keys and the proof-bearing build.
 
-Every case runs against the published generation through the real reader,
-selector and validator. The cross-checks a proof replaces are observed by
+Every case runs against a proofless copy of the published generation, so
+each build runs the full validator, through the real reader, selector and
+validator. The cross-checks a proof replaces are observed by
 wrapping each entry of the validator's own check registry so it counts its
 calls while still running the original check.
 """
@@ -22,7 +23,6 @@ from .....core.time.clock import today_madrid
 from .. import snapshot as snapshot_module
 from .. import snapshot_proof as snapshot_proof_module
 from ..authority import PinnedAuthorityOperation
-from ..authority_location import bundled_authority_descriptor_path
 from ..authority_store import SQLiteAuthorityReader
 from ..errors import RegistryValidationError
 from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
@@ -43,7 +43,7 @@ from ..snapshot_proof import (
     validator_digest,
 )
 from ..temporal import ModeloRevisionDirectory, select_revision_metadata
-from .snapshot_proof_support import count_cross_checks
+from .snapshot_proof_support import count_cross_checks, republished_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -51,8 +51,9 @@ _EVENT_SELECTOR = "EVENT-N"
 
 
 @pytest.fixture(scope="module")
-def reader() -> Iterator[SQLiteAuthorityReader]:
-    reader = SQLiteAuthorityReader(bundled_authority_descriptor_path())
+def reader(tmp_path_factory: pytest.TempPathFactory) -> Iterator[SQLiteAuthorityReader]:
+    """Admit the published generation without the proofs publication records in it."""
+    reader = SQLiteAuthorityReader(republished_authority(tmp_path_factory.mktemp("proofless") / "authority"))
     try:
         yield reader
     finally:
@@ -356,7 +357,7 @@ def test_a_proof_never_covers_an_explicit_date_or_revision(
         inputs.build(revision_id=full.revision.id, proof=proof)
 
 
-def test_the_published_proofless_generation_reports_no_proofs_and_validates_fully(
+def test_a_proofless_generation_reports_no_proofs_and_validates_fully(
     reader: SQLiteAuthorityReader,
     operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
