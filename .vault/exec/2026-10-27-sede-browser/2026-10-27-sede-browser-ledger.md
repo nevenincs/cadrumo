@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:9ad5a7b6815e8e24c057735f35564c6a4017aee0d118f34911ef5e68f61d49b9'
+body_hash: 'sha256:a7531bd54bed0c933ee6ecac6180bfe2801ecd1a4afa7f5f9989a2a714b67d2e'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -408,6 +408,10 @@ related:
 - `S13` `verify:` `pytest test_view_stream_integration+test_view_session_custody+test_view_sign_in` -> `pass`
 - `S13` `verify:` `ruff+ty` -> `pass`
 - `S13` `by:` `implementer`
+- `S08` `M` `.vault/adr/2026-10-27-sede-browser-adr.md`
+- `S08` `verify:` `just check-rust` -> `pass`
+- `S08` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S08` `by:` `high-implementation-engineer`
 
 ## Notes
 
