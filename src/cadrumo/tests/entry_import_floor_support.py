@@ -29,6 +29,7 @@ LOGGING_IMPORT_CLOSURE: frozenset[str] = frozenset(
         "cadrumo",
         "cadrumo.core",
         "cadrumo.core.cli_metadata",
+        "cadrumo.core.diagnostic_dispatch",
         "cadrumo.core.diagnostic_log",
         "cadrumo.core.hashing",
         "cadrumo.core.iban",
