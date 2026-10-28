@@ -58,7 +58,10 @@ export class FocusRegister {
         // Laid out means shown: a hidden pane's content has no offset parent.
         if (!element?.isConnected || element.offsetParent === null) continue;
         this.wish = null;
-        element.focus();
+        // Focus already inside the element is more specific than the element:
+        // whatever put it there came after the navigation asked for the
+        // element, and moving it out would undo that.
+        if (!element.contains(document.activeElement)) element.focus();
         return true;
       }
     }

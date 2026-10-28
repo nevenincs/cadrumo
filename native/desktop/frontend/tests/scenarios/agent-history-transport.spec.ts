@@ -17,10 +17,7 @@ test("document removal distinguishes a stored name from the whole store, and pol
         },
       },
     });
-    const modulePath = "/src/shell/tauriHost.ts";
-    const { tauriHost } = (await import(
-      modulePath
-    )) as typeof import("../../src/shell/tauriHost");
+    const { tauriHost } = await window.__scenarioModules!.tauriHost();
     const session = tauriHost().agentSession!;
     await session.removeDocuments!("r-docs", "factura ñ.pdf");
     await session.removeDocuments!("r-docs");
@@ -67,10 +64,7 @@ test("the Tauri session forwards archive and delete, including refusals", async 
         },
       },
     });
-    const modulePath = "/src/shell/tauriHost.ts";
-    const { tauriHost } = (await import(
-      modulePath
-    )) as typeof import("../../src/shell/tauriHost");
+    const { tauriHost } = await window.__scenarioModules!.tauriHost();
     const session = tauriHost().agentSession!;
     await session.archive!("r-archive");
     await session.delete!("r-delete");

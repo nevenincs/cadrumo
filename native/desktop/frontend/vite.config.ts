@@ -52,9 +52,13 @@ export default defineConfig(({ command, mode }) => {
     : { server: ports.devPort, preview: ports.previewPort };
   // The product has a workspace and a lightweight loading entry. The development entry beside it is never an
   // input of the product build, and the boundary plugin refuses its modules
-  // by any route.
+  // by any route. The scenario build has the pages the browser tests open:
+  // the shell on the scenario host, and one primitive over made-up data.
   const input: Record<string, string> = scenarios
-    ? { scenarios: resolve(root, "scenarios.html") }
+    ? {
+        scenarios: resolve(root, "scenarios.html"),
+        primitives: resolve(root, "primitives.html"),
+      }
     : {
         index: resolve(root, "index.html"),
         startup: resolve(root, "startup.html"),

@@ -106,8 +106,15 @@ declare global {
   interface Window {
     /** Every host call of the current run, in order, for the scenario tests. */
     __scenarioHostCalls?: string[];
+    /** Product modules the specs drive directly. A build has no module
+     * addresses to import them from, so the entry hands them over. */
+    __scenarioModules?: {
+      tauriHost(): Promise<typeof import("../shell/tauriHost")>;
+    };
   }
 }
+
+window.__scenarioModules = { tauriHost: () => import("../shell/tauriHost") };
 
 /** One mounted shell: a new run remounts it on a fresh host. */
 type Run = { id: number; scenario: Scenario; language: string };

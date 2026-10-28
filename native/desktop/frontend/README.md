@@ -564,6 +564,9 @@ and that must not already be running:
   directory's `desktop/testing/scenarios` and served by
   `vite preview --mode scenarios`. Nothing in it watches the source tree, so a
   file saved while the tests run cannot reload a page in the middle of a test.
+  The build also carries `/primitives.html`, and a build has no module
+  addresses, so a spec that drives a product module directly gets it from
+  `window.__scenarioModules` (`src/dev/main.tsx`).
 - `hot-reload` (`tests/hot-reload/`) is the one spec that needs Vite's own
   client: it checks that the development entry disposes its shell when Vite
   hot-updates it. It runs on a development server started in
