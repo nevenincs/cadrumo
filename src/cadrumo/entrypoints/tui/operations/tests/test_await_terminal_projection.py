@@ -5,6 +5,7 @@ from __future__ import annotations
 import threading
 import time
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import cast
 from uuid import UUID
@@ -122,21 +123,26 @@ class _Client:
             threading.Thread(target=receive).start()
 
 
+@dataclass(frozen=True)
 class _Controller:
-    """Answers scripted observations; with ``cue``, each answer is a committed change that cues its observers."""
+    """Answers scripted observations; with ``cue``, each answer is a committed change that cues its observers.
 
-    def __init__(self, *observations: OperationObservationResultV1, cue: bool = True) -> None:
-        self.operation_id = _OPERATION_ID
-        self._observations = list(observations)
-        self.requests: list[tuple[int, int]] = []
-        self.client = _Client()
-        self._cue = cue
+    A dataclass like the controller it stands in for: the await narrows its deadline
+    through ``replace``, and the copy shares these scripted lists and client.
+    """
+
+    observations: list[OperationObservationResultV1]
+    cue: bool = True
+    operation_id: str = _OPERATION_ID
+    requests: list[tuple[int, int]] = field(default_factory=list)
+    client: _Client = field(default_factory=_Client)
+    deadline: float | None = None
 
     async def observe(self, after_cursor: int, *, page_limit: int) -> OperationObservationResultV1:
         self.requests.append((after_cursor, page_limit))
-        if self._cue:
+        if self.cue:
             self.client.cue()
-        return self._observations.pop(0)
+        return self.observations.pop(0)
 
 
 async def _await(controller: _Controller, *, deadline: float | None = None) -> OperationPublicProjectionV1:
@@ -152,7 +158,7 @@ async def _await(controller: _Controller, *, deadline: float | None = None) -> O
 @pytest.mark.asyncio
 async def test_observes_the_latest_projection_until_terminal() -> None:
     terminal = _projection(terminal=True)
-    controller = _Controller(_observed(_projection(terminal=False)), _observed(terminal))
+    controller = _Controller([_observed(_projection(terminal=False)), _observed(terminal)])
 
     assert await _await(controller) == terminal
     assert controller.requests == [(0, 1), (0, 1)]
@@ -167,7 +173,7 @@ async def test_a_projection_for_another_request_schema_is_an_invalid_frame() -> 
     )
 
     with pytest.raises(RefusalError) as refused:
-        await _await(_Controller(_observed(foreign)))
+        await _await(_Controller([_observed(foreign)]))
     assert refused.value.reason is RefusalCode.INVALID_FRAME
 
 
@@ -178,13 +184,13 @@ async def test_an_observation_refusal_keeps_its_code() -> None:
     )
 
     with pytest.raises(FrontendRefusedError) as refused:
-        await _await(_Controller(refusal))
+        await _await(_Controller([refusal]))
     assert refused.value.reason == OperationObservationRefusalCode.UNKNOWN_OPERATION.value
 
 
 @pytest.mark.asyncio
 async def test_an_expired_deadline_refuses_before_observing() -> None:
-    controller = _Controller(_observed(_projection(terminal=True)))
+    controller = _Controller([_observed(_projection(terminal=True))])
 
     with pytest.raises(RefusalError) as refused:
         await _await(controller, deadline=time.monotonic() - 1)
@@ -196,11 +202,11 @@ async def test_an_expired_deadline_refuses_before_observing() -> None:
 async def test_a_running_operation_is_observed_again_only_on_a_cue() -> None:
     running = _observed(_projection(terminal=False))
     terminal = _projection(terminal=True)
-    cued = _Controller(running, running, running, _observed(terminal))
+    cued = _Controller([running, running, running, _observed(terminal)])
     assert await _await(cued) == terminal
     assert len(cued.requests) == 4
 
-    silent = _Controller(running, running, running, cue=False)
+    silent = _Controller([running, running, running], cue=False)
     with pytest.raises(RefusalError) as expired:
         await _await(silent, deadline=time.monotonic() + 0.5)
     assert expired.value.reason is RefusalCode.TIMEOUT

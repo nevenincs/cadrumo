@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import cast
@@ -87,23 +88,23 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass(kw_only=True)
 class _Controller:
-    operation_id = _OPERATION_ID
+    """A dataclass like the controller it stands in for, whose deadline the await narrows through ``replace``."""
 
-    def __init__(
-        self,
-        *,
-        observation: OperationObservationSuccessV1,
-        result: InvoiceAddResult,
-        client: _Client,
-        expire_after_result: bool = False,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.client = client
-        self.expire_after_result = expire_after_result
-        self.started = False
-        self.result_reads: list[tuple[type[BaseModel], int, bool]] = []
+    observation: OperationObservationSuccessV1
+    result: InvoiceAddResult
+    client: _Client
+    expire_after_result: bool = False
+    started: bool = False
+    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
+    operation_id: str = _OPERATION_ID
+    deadline: float | None = None
+
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        """The contract the submission was admitted under: the one its projection carries."""
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         self.started = True
