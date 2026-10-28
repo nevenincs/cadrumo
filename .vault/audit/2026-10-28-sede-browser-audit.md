@@ -118,6 +118,8 @@ Re-review at HEAD `12b15b83af` on `feature/tui`, clean worktree, of the changed 
 
 `native/desktop/frontend/src/components/browser/useSedeView.ts:62-71` credits every image, and `BrowserSurface.tsx:122-127` keeps it aside while the page is hidden. The worker therefore keeps encoding JPEG frames and relaying them over both legs and the shell channel for as long as the page is put aside, which is continuous on animated pages. The ADR's Window constraint says "Leaving the Browser page keeps the view running without frames". Fix: grant no credit while the page is hidden. The producer then holds only its newest pending image, and granting credit again on show delivers it, so the put-aside image path is no longer needed.
 
+Resolved: 09c314ebb4
+
 ### identity-probe-representado | medium | The identity probe asks the consulta for the expected NIF as `nifRepresentado`
 
 `src/cadrumo/adapters/outbound/aeat/auth/view_capture_identity.py:38` reads the consulta through `censal_datos_url` (`src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py:482`), which requests `nifRepresentado=<expected NIF>`. A person who signs in as a representative holding an apoderamiento for the profile's taxpayer may be served that taxpayer's consulta. The check would then pass and publish a representative's session, while every other Sede reader, none of which passes `nifRepresentado`, reads the signed-in identity's own data. The refusal relies on AEAT answering with its representation dialog; nothing in the repository grounds that. Fix: read the signed-in identity from a surface that does not take the expected NIF as input. Alternatively, ground the dialog answer with a specimen in P06.S14 and record it.

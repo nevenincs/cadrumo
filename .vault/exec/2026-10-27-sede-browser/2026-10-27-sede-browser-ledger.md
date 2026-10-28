@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:a7531bd54bed0c933ee6ecac6180bfe2801ecd1a4afa7f5f9989a2a714b67d2e'
+body_hash: 'sha256:4400d3c71e78dba8163d4e7f5e3c486e752964a1fc713100c78cea57d7bed118'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -412,6 +412,10 @@ related:
 - `S08` `verify:` `just check-rust` -> `pass`
 - `S08` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
 - `S08` `by:` `high-implementation-engineer`
+- `S09` `M` `native/desktop/frontend/src/components/browser/BrowserSurface.tsx`
+- `S09` `verify:` `npm run check` -> `pass`
+- `S09` `verify:` `playwright sede-browser.spec.ts` -> `pass`
+- `S09` `by:` `implementer`
 
 ## Notes
 
