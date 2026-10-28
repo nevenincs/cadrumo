@@ -25,6 +25,7 @@ from cadrumo.core.logging import (
     get_logger,
     shutdown_logging,
 )
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 
 def _handles() -> int | None:
@@ -80,17 +81,17 @@ def main() -> None:
             cadrumo_log_file_max_bytes=10 * 1024 * 1024,
         ):
             configure_logging()
-        if not flush_logging(timeout=10):
+        if not flush_logging(timeout=HANG_GUARD_SECONDS):
             raise RuntimeError("logging configuration did not settle")
         logger = get_logger("cadrumo.benchmarks.logging")
         logger.info("benchmark warmup")
-        if not flush_logging(timeout=10):
+        if not flush_logging(timeout=HANG_GUARD_SECONDS):
             raise RuntimeError("logging warmup did not settle")
         warm_handles = _handles()
         AnnouncingRotatingFileHandler.emit = emit
         try:
             logger.warning("benchmark sink admission")
-            if not entered.wait(5):
+            if not entered.wait(HANG_GUARD_SECONDS):
                 raise RuntimeError("file sink did not receive its probe")
             if options.ready is not None:
                 options.ready.write_text(json.dumps({"pid": os.getpid(), "mode": options.mode}), encoding="utf-8")
@@ -122,7 +123,7 @@ def main() -> None:
                 elapsed = time.monotonic() - started
             blocked_status = {name: asdict(status) for name, status in diagnostic_delivery_status().items()}
             release.set()
-            drained = flush_logging(timeout=15)
+            drained = flush_logging(timeout=HANG_GUARD_SECONDS)
             final_status = {name: asdict(status) for name, status in diagnostic_delivery_status().items()}
         finally:
             release.set()
@@ -133,7 +134,7 @@ def main() -> None:
     for _ in range(100):
         queue = DiagnosticDispatch[int](lambda _: None, name="diagnostic-handle-probe")
         queue.submit(1)
-        if not queue.close(timeout=1):
+        if not queue.close(timeout=HANG_GUARD_SECONDS):
             raise RuntimeError("diagnostic queue did not terminate")
     time.sleep(0.05)
     after_churn = _handles()

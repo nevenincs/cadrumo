@@ -8,11 +8,15 @@ step that can never complete into a failure.
 
 from __future__ import annotations
 
+import time
 from collections.abc import Callable
 from threading import Event, Thread
 
 HANG_GUARD_SECONDS = 60.0
 """What only a hung step reaches; it is never a duration a healthy step is expected to approach."""
+
+PROCESS_HANG_GUARD_SECONDS = HANG_GUARD_SECONDS * 3
+"""What only a hung child process reaches: past the guarded waits inside it, so those fail first and say why."""
 
 
 def finishes[T](step: Callable[[], T], *, what: str, within: float = HANG_GUARD_SECONDS) -> T:
@@ -42,3 +46,19 @@ def finishes[T](step: Callable[[], T], *, what: str, within: float = HANG_GUARD_
     if failure:
         raise failure[0]
     return outcome[0]
+
+
+def eventually(
+    condition: Callable[[], bool], *, what: str, within: float = HANG_GUARD_SECONDS, interval: float = 0.01
+) -> None:
+    """Poll ``condition`` until it holds, failing with ``what`` only if it never does within the hang guard.
+
+    For something that has to happen whose time is the machine's to decide, such
+    as a line from a drain thread reaching the log file. Success is the
+    condition holding, never the time it took.
+    """
+    deadline = time.monotonic() + within
+    while not condition():
+        if time.monotonic() >= deadline:
+            raise AssertionError(f"{what} did not happen within the {within:g} s hang guard")
+        time.sleep(interval)

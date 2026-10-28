@@ -33,6 +33,7 @@ from cadrumo.core.logging import (
 )
 from cadrumo.core.observability.tests.sink_scope import attach_run_sink, detach_run_sink
 from cadrumo.core.tests.log_sinks import delivery_sinks
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -69,7 +70,7 @@ def _render_info(message: str, *args: object) -> str:
                 "region": "es",
             },
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -82,7 +83,7 @@ def _force_configure_logging() -> None:
     try:
         _logging_mod.configure_logging()
         # Configuration runs on the dispatch thread: restoring the latch first would make it a no-op.
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         _logging_mod._configured = original_configured or True
 
@@ -115,7 +116,7 @@ def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, caps
 
             logger.warning(marker)
             # The warning is written by the dispatch thread and the file sink: read neither before they finish.
-            assert flush_logging(timeout=5)
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
 
             captured = capsys.readouterr()
             assert marker not in captured.err
@@ -172,7 +173,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
         )
 
         # The degrade diagnostic is logged by the configuration step itself, so it is admitted after the first drain.
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
         captured = capsys.readouterr()
         assert "stderr-only" in captured.err
         assert "CADRUMO_LOCAL_STORAGE_ROOT" in captured.err
@@ -202,7 +203,7 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:
                     "region": "es",
                 },
             )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -234,7 +235,7 @@ def test_secret_scrubbing_redacts_inline_message_text_when_tuple_args_exist() ->
                 "region": "es",
             },
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -303,7 +304,7 @@ def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> Non
                 "region": "es",
             },
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -402,7 +403,7 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
                 "region": "es",
             },
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)

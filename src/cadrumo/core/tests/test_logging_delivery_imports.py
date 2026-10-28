@@ -19,6 +19,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, PROCESS_HANG_GUARD_SECONDS
 
 from ..type_guards import is_object_mapping
 
@@ -55,7 +56,7 @@ for thread, module in imports:
 logger.warning('record made while configuration runs %s', 'x')
 logger.info('second record made while configuration runs')
 producer_imports = [module for thread, module in imports[returned:] if thread == 'MainThread']
-assert project.flush_logging(timeout=60), project.diagnostic_delivery_status()
+assert project.flush_logging(timeout=HANG), project.diagnostic_delivery_status()
 
 settled = len(imports)
 logger.warning(
@@ -69,7 +70,7 @@ try:
 except ValueError:
     logger.exception('exception record')
 logger.info('structured %s', {'key': [1, 2]})
-assert project.flush_logging(timeout=60), project.diagnostic_delivery_status()
+assert project.flush_logging(timeout=HANG), project.diagnostic_delivery_status()
 print(json.dumps({
     'loaded_by': {module: loaded_by.get(module) for module in sys.argv[1:]},
     'producer_imports': producer_imports,
@@ -83,14 +84,14 @@ sys.argv = ['aeat', '--version']
 from cadrumo.core import logging as project
 
 project.configure_logging()
-assert project.flush_logging(timeout=60), project.diagnostic_delivery_status()
+assert project.flush_logging(timeout=HANG), project.diagnostic_delivery_status()
 print(json.dumps({'settings_loaded': 'cadrumo.core.config' in sys.modules}))
 """
 
 
 def _run(tmp_path: Path, script: str, *arguments: str) -> dict[str, object]:
     completed = run_audited_process(
-        [sys.executable, "-c", script, *arguments],
+        [sys.executable, "-c", f"HANG = {HANG_GUARD_SECONDS!r}\n{script}", *arguments],
         env={
             **os.environ,
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
@@ -99,7 +100,7 @@ def _run(tmp_path: Path, script: str, *arguments: str) -> dict[str, object]:
         },
         capture_output=True,
         text=True,
-        timeout=120,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
     )
     assert completed.returncode == 0, completed.stderr
     loaded: object = json.loads(str(completed.stdout))

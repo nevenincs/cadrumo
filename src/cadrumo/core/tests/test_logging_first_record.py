@@ -16,14 +16,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
-from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
 
 from ..type_guards import is_object_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-# A probe waits for its own delivery, which no test times; this bounds only a hung one.
-_PROCESS_HANG_SECONDS = HANG_GUARD_SECONDS * 3
 
 _PROBE = """
 import json, sys
@@ -126,7 +123,7 @@ def _run_probe(
         capture_output=True,
         text=True,
         check=False,
-        timeout=_PROCESS_HANG_SECONDS,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
     )
     assert completed.returncode == 0, completed.stderr
     loaded: object = json.loads(str(completed.stdout))

@@ -34,6 +34,7 @@ import pytest
 from cadrumo.core import logging as _logging_mod
 from cadrumo.core.config import override_settings
 from cadrumo.core.logging import configure_logging, flush_logging, register_first_party_logger
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -75,20 +76,20 @@ def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
         ):
             configure_logging()
             # Configuration runs on the dispatch thread; drain it before records or the latch depend on it.
-            assert flush_logging(timeout=5)
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
             yield log_dir / "cadrumo.log"
     finally:
         _logging_mod._configured = False
         try:
             configure_logging()
-            assert flush_logging(timeout=5)
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
         finally:
             _logging_mod._configured = original_configured or True
 
 
 def _written_log_text(log_file: Path) -> str:
     """Drain the asynchronous dispatch, flush every handler and return what actually reached the disk."""
-    assert flush_logging(timeout=5)
+    assert flush_logging(timeout=HANG_GUARD_SECONDS)
     for handler in logging.getLogger().handlers:
         handler.flush()
     if not log_file.exists():

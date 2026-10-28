@@ -38,6 +38,7 @@ from cadrumo.core.logging import flush_logging
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.core.time.clock import now
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
@@ -191,7 +192,7 @@ def _exercise(tmp_path: Path) -> None:
                 try:
                     assert custody.retire(admitted.session_id) == frozenset({admitted.session_id})
                     # Records reach handlers from a dispatch thread.
-                    assert flush_logging(timeout=5)
+                    assert flush_logging(timeout=HANG_GUARD_SECONDS)
                 finally:
                     logging.getLogger().removeHandler(recorder)
                     logging.getLogger().setLevel(previous_level)

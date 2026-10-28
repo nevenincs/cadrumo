@@ -77,11 +77,13 @@ def _deliver_queued_diagnostics_between_tests() -> Iterator[None]:
     it to every root handler present when delivery happens. A test that logs and
     ends without draining can therefore have its records land in the capture
     handler the next test has just attached, and a count of that test's own
-    records is wrong. The drain is bounded and never fails a test: a sink that
-    cannot deliver is that test's own defect to report.
+    records is wrong. The drain waits for the delivery, not for a speed of it,
+    so only a sink that can never deliver outlasts the hang guard; it never
+    fails a test, which leaves that sink as its own test's defect to report.
     """
     from ..core.logging import flush_logging
+    from .hang_guard import HANG_GUARD_SECONDS
 
-    flush_logging()
+    flush_logging(timeout=HANG_GUARD_SECONDS)
     yield
-    flush_logging()
+    flush_logging(timeout=HANG_GUARD_SECONDS)

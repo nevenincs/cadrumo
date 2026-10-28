@@ -10,17 +10,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
-from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
 
 from ..storage_taxonomy import StorageCategory
 from ..storage_taxonomy_locations import storage_location
 from ..type_guards import is_object_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-# A probe waits for events and for work held behind a sink; none of that is timed. A probe
-# holds several such waits one after another, so its process bound is a multiple of one.
-_PROCESS_HANG_SECONDS = HANG_GUARD_SECONDS * 3
 
 _SETUP = """
 import json, logging, threading, time
@@ -52,7 +48,7 @@ def _probe(tmp_path: Path, body: str) -> dict[str, float | int]:
         },
         capture_output=True,
         text=True,
-        timeout=_PROCESS_HANG_SECONDS,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
     )
     assert completed.returncode == 0, completed.stderr
     loaded: object = json.loads(str(completed.stdout))
@@ -106,7 +102,7 @@ print(json.dumps({{'returned': True, 'still_blocked': blocked()}}), flush=True)
         },
         capture_output=True,
         text=True,
-        timeout=_PROCESS_HANG_SECONDS,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
     )
     assert completed.returncode == 0, completed.stderr
     # Shutdown returned while the sink was still held, so it did not wait for the sink, and

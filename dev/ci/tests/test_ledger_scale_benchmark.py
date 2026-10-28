@@ -115,7 +115,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -126,6 +126,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 
 from ..perf_measurement import wall_advisory_message
@@ -702,7 +703,7 @@ def quarterly_iva_samples(
             assert isinstance(partitioned_result.observations, tuple)
     finally:
         # Records reach the collector asynchronously; take it off only once they have.
-        flushed = flush_logging(timeout=30)
+        flushed = flush_logging(timeout=HANG_GUARD_SECONDS)
         logger.removeHandler(collector)
         logger.setLevel(previous_level)
     assert flushed, "diagnostic dispatch did not drain before the partition records were read"

@@ -18,15 +18,12 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
-from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.hang_guard import PROCESS_HANG_GUARD_SECONDS
 
 from ..directory_scan import scan_directory
 from ..log_file_handler import AnnouncingRotatingFileHandler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-# A child process waits for its own delivery, which no test times; this bounds only a hung one.
-_PROCESS_HANG_SECONDS = HANG_GUARD_SECONDS * 3
 
 
 def test_idle_writer_does_not_prevent_another_writer_rotating(
@@ -76,14 +73,14 @@ finally:
                 )
             )
         for child in children:
-            stdout, stderr = child.communicate(timeout=_PROCESS_HANG_SECONDS)
+            stdout, stderr = child.communicate(timeout=PROCESS_HANG_GUARD_SECONDS)
             assert child.returncode == 0, (stdout, stderr)
             assert not stderr, stderr
     finally:
         for child in children:
             if child.poll() is None:
                 child.kill()
-                child.communicate(timeout=_PROCESS_HANG_SECONDS)
+                child.communicate(timeout=PROCESS_HANG_GUARD_SECONDS)
     records = [
         line
         for path in tmp_path.glob("shared.log*")
@@ -117,7 +114,7 @@ shutdown_logging(timeout=2)
         [sys.executable, "-c", script, str(log_dir), str(max_bytes), str(backups), str(records)],
         capture_output=True,
         text=True,
-        timeout=_PROCESS_HANG_SECONDS,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
     )
     assert result.returncode == 0, result.stderr
 
@@ -181,7 +178,7 @@ shutdown_logging(timeout=2)
         [sys.executable, "-c", script, str(log_dir), entry],
         capture_output=True,
         text=True,
-        timeout=_PROCESS_HANG_SECONDS,
+        timeout=PROCESS_HANG_GUARD_SECONDS,
     )
     assert result.returncode == 0, result.stderr
     output = (log_dir / "cadrumo.log").read_text(encoding="utf-8")
