@@ -135,7 +135,9 @@ def test_ledger_add_accepts_and_persists_counterparty_country() -> None:
 
 
 def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
-    ratios_set = _invoke(["app", "ledger", "ratios", "set", "telefonia_movil", "0.60"])
+    # The profile holds the IRPF-effective share: the row's 0.60 degree of use
+    # times the fixed line's 0.30 home-office multiplier.
+    ratios_set = _invoke(["app", "ledger", "ratios", "set", "telefonia_fija", "0.18"])
     assert ratios_set.exit_code == 0, ratios_set.output
 
     added = _invoke(
@@ -158,9 +160,9 @@ def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
             "--business-pct",
             "0.60",
             "--category-id",
-            "telefonia_movil",
+            "telefonia_fija",
             "--usage-ratio-id",
-            "telefonia_movil",
+            "telefonia_fija",
             "--taxable-base",
             "50.00",
             "--iva-rate",
@@ -172,8 +174,8 @@ def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
     assert added.exit_code == 0, added.output
     transaction = _json(added)["transaction"]
     assert Decimal(transaction["business_pct"]) == Decimal("0.60")
-    assert transaction["usage_ratio_id"] == "telefonia_movil"
+    assert transaction["usage_ratio_id"] == "telefonia_fija"
 
     viewed = _invoke(["--language", "en", "app", "ledger", "view", _json(added)["transaction_id"]])
     assert viewed.exit_code == 0, viewed.output
-    assert "Usage ratio id\ttelefonia_movil" in viewed.output
+    assert "Usage ratio id\ttelefonia_fija" in viewed.output
