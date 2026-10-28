@@ -2322,6 +2322,8 @@ application:
         máximo {maximum_scalars} caracteres; se recibieron {scalar_count}.
       profile_password_too_many_utf8_bytes: La contraseña del perfil debe ocupar como
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
+      profile_proof_cancelled: Se canceló la comprobación de la contraseña del perfil
+        antes de terminar.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo
         primero para emitir uno nuevo.
       recovery_code_rejected: El código de recuperación no es correcto; la contraseña

@@ -2277,6 +2277,8 @@ application:
         karakterből állhat; a kapott érték {scalar_count}.
       profile_password_too_many_utf8_bytes: A profiljelszó UTF-8 kódolása legfeljebb
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
+      profile_proof_cancelled: A profiljelszó ellenőrzése megszakadt, mielőtt befejeződött
+        volna.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.
         Új kiadásához először kapcsold ki.
       recovery_code_rejected: A helyreállítási kód nem helyes; a jelszó változatlan.

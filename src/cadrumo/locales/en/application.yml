@@ -2191,6 +2191,8 @@ application:
         characters; {scalar_count} received.
       profile_password_too_many_utf8_bytes: The profile password must use at most
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
+      profile_proof_cancelled: The profile password check was cancelled before it
+        finished.
       recovery_already_enrolled: This profile already has a recovery code. Disable
         it first to issue a new one.
       recovery_code_rejected: The recovery code is not correct; the passphrase is

@@ -6,8 +6,10 @@ from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from threading import Event, RLock
 
+from ...core.errors.hierarchy import CadrumoError
 
-class ProfileProofCancelledError(RuntimeError):
+
+class ProfileProofCancelledError(CadrumoError):
     """The exact proof owner withdrew its attempt; no credential failure occurred."""
 
 
