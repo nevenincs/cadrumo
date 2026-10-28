@@ -659,7 +659,12 @@ class ProfileConnectionSessionMixin:
             host = None if connection is None else self._profiles.get(connection.profile_id)
         try:
             if host is not None:
-                host.authority.disconnect(context.connection_id)
+                with host.guard:
+                    # End admission before fallible cleanup, on the same fence as lease publication.
+                    with self._guard:
+                        if connection is not None:
+                            connection.disconnecting = True
+                    host.authority.disconnect(context.connection_id)
         finally:
             if host is not None:
                 host.approvals.retire_connection(context.connection_id)

@@ -132,6 +132,7 @@ class ProfileConnection:
     owner_scope: tuple[OperationPublicContractSetV1, UUID, AccessScope] | None = field(
         default=None, repr=False, compare=False
     )
+    disconnecting: bool = False
 
 
 @dataclass(frozen=True)
@@ -666,6 +667,8 @@ class RuntimeProfileHost:
     def facts(self, connection_id: UUID) -> SessionAuthorityFacts:
         """Observe committed profile fencing and native dependencies as their OS-invalidated observations stand."""
         connection = self._connected(connection_id)
+        if connection.disconnecting:
+            raise ProfileAccessRefusedError(AccessDenialCode.CONNECTION_MISMATCH)
         if connection.profile_id != self.store.binding.profile_id:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         available, enabled = Availability.UNAVAILABLE, False

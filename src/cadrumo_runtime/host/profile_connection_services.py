@@ -242,16 +242,33 @@ class ProfileConnectionServicesMixin:
             host = self._profiles.get(request.profile_id)
         if service is None or recipient is None or host is None or service.descriptor.service_id != request.service_id:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+        # Native process inspection can stall; it must not fence unrelated profile work.
+        if not self._service_verifier.recheck_service(recipient.context, service.channel, service.peer):
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         with host.guard:
+            with self._guard:
+                if (
+                    self._closed
+                    or self._connections.get(context.connection_id) is not holder
+                    or holder.disconnecting
+                    or holder.context != context
+                    or holder.profile_id != request.profile_id
+                    or holder.session_id != request.session_id
+                    or not is_persons_frontend(holder.frontend)
+                ):
+                    return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+                if (
+                    self._services.get(request.recipient_connection_id) is not service
+                    or self._connections.get(request.recipient_connection_id) is not recipient
+                    or self._profiles.get(request.profile_id) is not host
+                    or recipient.disconnecting
+                    or recipient.profile_id != request.profile_id
+                    or service.lease is not None
+                ):
+                    return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
             host.authority.human_administration_facts(
                 connection_id=context.connection_id, session_id=request.session_id
             )
-            if (
-                not self._service_verifier.recheck_service(recipient.context, service.channel, service.peer)
-                or recipient.profile_id != request.profile_id
-                or service.lease is not None
-            ):
-                return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
             recipient.client_id = holder.client_id
             child = host.authority.attend(
                 connection_id=context.connection_id,

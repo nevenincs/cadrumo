@@ -19,9 +19,10 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.extension_records import (
@@ -399,6 +400,202 @@ def test_service_records_recheck_peer_before_access_or_accepting_secret_input(tm
         )
         assert written.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
         assert payload == bytearray(len(payload))
+
+
+@contextmanager
+def _paused_service_recheck(
+    runtime: ServiceRecordRuntime, monkeypatch: pytest.MonkeyPatch, *, check_number: int = 1
+) -> Generator[tuple[Event, Event]]:
+    entered, release = Event(), Event()
+    original = runtime.verifier.recheck_service
+    checks = 0
+
+    def paused(context: ConnectionContext, channel: ByteChannel, peer: VerifiedServicePeer) -> bool:
+        nonlocal checks
+        verified = original(context, channel, peer)
+        checks += 1
+        if checks == check_number:
+            entered.set()
+            assert release.wait(20), "test did not release native service verification"
+        return verified
+
+    with monkeypatch.context() as patch:
+        patch.setattr(runtime.verifier, "recheck_service", paused)
+        try:
+            yield entered, release
+        finally:
+            release.set()
+
+
+@pytest.mark.parametrize(
+    ("action", "check_number"), [("read", 1), ("generation", 1), ("delete", 1), ("write", 1), ("write", 2)]
+)
+def test_service_record_verification_allows_profile_status_and_lock_without_stale_access(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, action: str, check_number: int
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert isinstance(runtime.admit(service), ServiceConnected)
+        assert service.claim() is not None
+        payload = bytearray(b"synthetic blocked write")
+
+        def request_record() -> tuple[ExtensionRecordReply, bytearray]:
+            if action == "read":
+                return service.record_read(RECORD_CAPABILITY, "synthetic-record")
+            if action == "generation":
+                return service.observe_generation(RECORD_CAPABILITY), bytearray()
+            if action == "delete":
+                return service.record_delete(
+                    RECORD_CAPABILITY, "synthetic-record", expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+                ), bytearray()
+            return service.record_write(
+                RECORD_CAPABILITY, "synthetic-record", payload, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
+            ), bytearray()
+
+        host = runtime.profiles._profiles[runtime.profile_id]
+        original_access = host.owner.extension_record
+        accesses: list[UUID] = []
+
+        def record_access(request, material):
+            accesses.append(request.request_id)
+            return original_access(request, material)
+
+        monkeypatch.setattr(host.owner, "extension_record", record_access)
+        with (
+            _paused_service_recheck(runtime, monkeypatch, check_number=check_number) as (entered, release),
+            ThreadPoolExecutor(max_workers=1) as pool,
+        ):
+            pending = pool.submit(request_record)
+            try:
+                assert entered.wait(5), "record request did not reach native verification"
+                status = runtime.human.session(
+                    SessionRequest(
+                        action="session_status",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 3,
+                )
+                assert isinstance(status, ProfileStatus) and status.status.denial is None
+                locked = runtime.human.session(
+                    SessionRequest(
+                        action="session_lock",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 5,
+                )
+                assert isinstance(locked, SessionsLocked)
+                assert runtime.person_session_id in locked.session_ids
+            finally:
+                release.set()
+            reply, material = pending.result(timeout=10)
+        assert reply.refusal is ExtensionRecordRefusal.LEASE_INACTIVE
+        assert material == bytearray()
+        assert accesses == []
+        if action == "write":
+            assert payload == bytearray(len(payload))
+
+
+@pytest.mark.parametrize("retirement", ["holder_lock", "recipient_disconnect", "recipient_disconnecting"])
+def test_service_admission_verification_allows_profile_work_and_refuses_retired_connections(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, retirement: str
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert service.connected is not None
+        recipient_id = service.connected.connection_id
+        recipient = runtime.profiles._connections[recipient_id]
+        retained = runtime.profiles._services[recipient_id]
+        host = runtime.profiles._profiles[runtime.profile_id]
+        retiring, finish_cleanup = Event(), Event()
+        original_retire = host.approvals.retire_connection
+
+        def paused_retirement(connection_id: UUID) -> None:
+            original_retire(connection_id)
+            if connection_id == recipient_id:
+                retiring.set()
+                assert finish_cleanup.wait(20), "test did not release disconnect cleanup"
+
+        if retirement == "recipient_disconnecting":
+            monkeypatch.setattr(host.approvals, "retire_connection", paused_retirement)
+        holder = next(
+            item for item in runtime.profiles._connections.values() if item.session_id == runtime.person_session_id
+        )
+        admission = ServiceAdmission(
+            request_id=uuid4(),
+            profile_id=runtime.profile_id,
+            session_id=runtime.person_session_id,
+            recipient_connection_id=recipient_id,
+            service_id=SERVICE_ID,
+        )
+        with (
+            _paused_service_recheck(runtime, monkeypatch) as (entered, release),
+            ThreadPoolExecutor(max_workers=2) as pool,
+        ):
+            # Invoke the owning admission handler so the human's transport can
+            # exercise another real profile request while verification waits.
+            pending = pool.submit(runtime.profiles._admit_service, holder.context, admission)
+            disconnect = None
+            try:
+                assert entered.wait(5), "admission did not reach native verification"
+                status = runtime.human.session(
+                    SessionRequest(
+                        action="session_status",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 3,
+                )
+                assert isinstance(status, ProfileStatus) and status.status.denial is None
+                if retirement == "holder_lock":
+                    locked = runtime.human.session(
+                        SessionRequest(
+                            action="session_lock",
+                            request_id=uuid4(),
+                            profile_id=runtime.profile_id,
+                            session_id=runtime.person_session_id,
+                        ),
+                        deadline=time.monotonic() + 5,
+                    )
+                    assert isinstance(locked, SessionsLocked)
+                elif retirement == "recipient_disconnect":
+                    runtime.profiles.disconnect(recipient.context)
+                else:
+                    disconnect = pool.submit(runtime.profiles.disconnect, recipient.context)
+                    assert retiring.wait(5), "disconnect did not reach post-authority cleanup"
+                    assert runtime.profiles._connections.get(recipient_id) is recipient
+                    # Registry membership alone cannot resurrect a recipient whose
+                    # authority has ended but whose cleanup has not returned.
+                    with pytest.raises(ProfileAccessRefusedError) as ended:
+                        host.authority.attend(
+                            connection_id=holder.context.connection_id,
+                            parent_session_id=runtime.person_session_id,
+                            recipient_connection_id=recipient_id,
+                            scope=retained.descriptor.operation_scope,
+                        )
+                    assert ended.value.reason is AccessDenialCode.CONNECTION_MISMATCH
+                    release.set()
+                    refused = pending.result(timeout=10)
+                    assert isinstance(refused, AccessDenied)
+                    assert retained.lease is None
+            finally:
+                release.set()
+                finish_cleanup.set()
+            refused = pending.result(timeout=10)
+            if disconnect is not None:
+                disconnect.result(timeout=10)
+        assert isinstance(refused, AccessDenied)
+        assert refused.code is (
+            AccessDenialCode.HUMAN_AUTHORITY_REQUIRED
+            if retirement == "holder_lock"
+            else AccessDenialCode.CONNECTION_MISMATCH
+        )
+        assert retained.lease is None
+        assert recipient.session_id is None
 
 
 def test_service_refresh_tolerates_lease_retirement_before_profile_guard(

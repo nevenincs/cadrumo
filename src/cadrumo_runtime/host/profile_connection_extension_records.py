@@ -71,11 +71,27 @@ class ProfileConnectionExtensionRecordsMixin:
             # and process identity twice without intervening input adds a
             # worker round trip and peer inspection to every provider read.
             if action == "write":
+                if not self._service_verifier.recheck_service(context, channel, service.peer):
+                    return self._extension_refused(context, request, channel, refusal)
                 with host.guard:
-                    status = self._status(connection, host, request.request_id, request.session_id)
-                    if not isinstance(status, ProfileStatus) or status.status.denial is not None:
+                    with self._guard:
+                        current = (
+                            not self._closed
+                            and self._services.get(context.connection_id) is service
+                            and self._connections.get(context.connection_id) is connection
+                            and self._profiles.get(request.profile_id) is host
+                            and not connection.disconnecting
+                            and service.lease is lease
+                            and connection.session_id == request.session_id
+                        )
+                    if not current:
                         return self._extension_refused(context, request, channel, refusal)
-                    if not self._service_verifier.recheck_service(context, channel, service.peer):
+                    status = self._status(connection, host, request.request_id, request.session_id)
+                    if (
+                        not isinstance(status, ProfileStatus)
+                        or status.status.denial is not None
+                        or service.lease is not lease
+                    ):
                         return self._extension_refused(context, request, channel, refusal)
                     deadline = time.monotonic() + _CLIENT_INPUT_SECONDS
                     write_document(
@@ -92,13 +108,27 @@ class ProfileConnectionExtensionRecordsMixin:
                     if len(incoming) != request.byte_count:
                         return self._extension_refused(context, request, channel, ExtensionRecordRefusal.INVALID)
                     payload.extend(incoming)
+            # Recheck after input, outside the profile fence; authority is checked again inside it.
+            if not self._service_verifier.recheck_service(context, channel, service.peer):
+                return self._extension_refused(context, request, channel, refusal)
             with host.guard:
+                with self._guard:
+                    current = (
+                        not self._closed
+                        and self._services.get(context.connection_id) is service
+                        and self._connections.get(context.connection_id) is connection
+                        and self._profiles.get(request.profile_id) is host
+                        and not connection.disconnecting
+                        and service.lease is lease
+                        and connection.session_id == request.session_id
+                    )
+                if not current:
+                    return self._extension_refused(context, request, channel, refusal)
                 status = self._status(connection, host, request.request_id, request.session_id)
                 if (
                     not isinstance(status, ProfileStatus)
                     or status.status.denial is not None
-                    or service.lease != lease
-                    or not self._service_verifier.recheck_service(context, channel, service.peer)
+                    or service.lease is not lease
                 ):
                     return self._extension_refused(context, request, channel, refusal)
                 result, material = host.owner.extension_record(
