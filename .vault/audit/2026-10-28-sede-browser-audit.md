@@ -130,6 +130,8 @@ Resolved: 509b6b5646 (reads Mis Expedientes, which names no taxpayer in its requ
 
 `src/cadrumo_runtime/host/worker_view_stream.py:424-436` holds the reader once 1024 inputs wait. The runtime's `_write_worker` (`src/cadrumo_runtime/host/view_stream_relay.py:506`) then blocks, and once the pipe buffer is full and the stall exceeds `_FRAME_SECONDS`, it ends the view `FAILED`. A page hung for several seconds under sustained input therefore loses the view instead of being paced. The new relay test stalls for only 1 s. Fix: let the upstream worker write wait while the worker leg is alive, bounded by liveness rather than a per-frame deadline, and test a stall longer than 5 s.
 
+Resolved: 5ff0a8ad19
+
 ### signed-out-jar-rotation | low | The refused-jar memo counts every cookie value in the context
 
 `src/cadrumo/application/live/sede_view_operation.py:207-229` digests every cookie's domain, path, name and value, including other sites' cookies and any rotating load-balancer or WAF cookie on the AEAT hosts. If AEAT rotates such a value per response, each signed-out AEAT load still launches a provider Chromium under the acquisition lock, which the original finding meant to stop. Fix: measure it during P06.S14. If it recurs, key the memo on the cookies of the AEAT and Cl@ve authentication hosts.

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:b874d8c2dbd08b5856d6c1b232dde1aad5f11f21d79ae94b1c2a0f97601b9fb0'
+body_hash: 'sha256:614f57fa9113d8860af793e3cd6cdf6c75441cbd739624493f2067c5501c3d7b'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -422,6 +422,14 @@ related:
 - `S05` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests src/cadrumo/adapters/outbound/aeat/sede/tests src/cadrumo/application/auth/tests -k "view or censal or identity" -m "not aeat_live"` -> `pass`
 - `S05` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
 - `S05` `by:` `vaultspec-high-executor`
+- `S02` `M` `src/cadrumo_runtime/host/view_stream_relay.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_view_stream_relay.py`
+- `S02` `M` `src/cadrumo_runtime/host/tests/test_view_stream_integration.py`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests -k view -m ''` -> `pass`
+- `S02` `verify:` `uv run --no-sync ruff check src/cadrumo_runtime/host` -> `pass`
+- `S02` `verify:` `uv run --no-sync ty check src/cadrumo_runtime/host/view_stream_relay.py src/cadrumo_runtime/host/tests/test_view_stream_relay.py src/cadrumo_runtime/host/tests/test_view_stream_integration.py` -> `pass`
+- `S02` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S02` `by:` `vaultspec-high-executor`
 
 ## Notes
 
