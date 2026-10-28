@@ -58,6 +58,7 @@ export function ProfileCompletionNotice({
         {hasDetails && (
           <Button
             variant="link"
+            className="min-h-control-xs"
             aria-expanded={expanded}
             aria-controls={expanded ? detailsId : undefined}
             onClick={() => setExpanded(!expanded)}
@@ -70,7 +71,7 @@ export function ProfileCompletionNotice({
           </Button>
         )}
         {onNavigate && (
-          <Button variant="link" asChild>
+          <Button variant="link" className="min-h-control-xs" asChild>
             <a
               href={href}
               onClick={(event) => {
