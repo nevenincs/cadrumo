@@ -18,7 +18,12 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
 
 from ..contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
-from ..contracts.deadline_budget import deadline_after, remaining_budget
+from ..contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    TimeoutDeadline,
+    deadline_after,
+    remaining_budget,
+)
 from .framing import VerifiedConnection
 from .transport_cleanup import TransportCleanup
 
@@ -61,7 +66,7 @@ class LaunchDoor:
 
     async def _connect(self, deadline: float) -> VerifiedConnection:
         def connect() -> VerifiedConnection:
-            channel = self._endpoint.connect(timeout=min(0.5, remaining_budget(deadline)))
+            channel = self._endpoint.connect(timeout=remaining_budget(deadline))
             return VerifiedConnection(channel, expected=self._expected, deadline=deadline)
 
         task = asyncio.create_task(asyncio.to_thread(connect))
@@ -86,14 +91,23 @@ class LaunchDoor:
                 raise
             raise
 
-    async def open(self, *, timeout: float = 10) -> VerifiedConnection:
+    async def open(
+        self, *, timeout: float | None = None, timeout_deadline: TimeoutDeadline | None = None
+    ) -> VerifiedConnection:
         """Return a peer/cohort-verified connection without transmitting credentials."""
         with diagnostic_scope():
+            deadline = (
+                timeout_deadline.instant
+                if timeout_deadline is not None
+                else DEFAULT_TIMEOUT_POLICY.deadline().instant
+                if timeout is None
+                else deadline_after(timeout)
+            )
             started = time.monotonic()
             diagnostic_event(_LOGGER, "runtime_connect_started", fields={"timeout_seconds": timeout})
             opened: VerifiedConnection | None = None
             try:
-                opened = await self._open_connection(timeout=timeout)
+                opened = await self._open_connection(deadline=deadline)
                 diagnostic_event(
                     _LOGGER,
                     "runtime_connect_finished",
@@ -135,11 +149,10 @@ class LaunchDoor:
                 raise
             return opened
 
-    async def _open_connection(self, *, timeout: float) -> VerifiedConnection:
-        deadline = deadline_after(timeout)
+    async def _open_connection(self, *, deadline: float) -> VerifiedConnection:
         opened: VerifiedConnection | None = None
         try:
-            async with asyncio.timeout(timeout):
+            async with asyncio.timeout(remaining_budget(deadline)):
                 try:
                     with startup_phase(_LOGGER, "existing_connect"):
                         opened = await self._connect(deadline)
@@ -149,7 +162,7 @@ class LaunchDoor:
                         raise
                     raise RefusalError(RefusalCode.UNAVAILABLE) from error
         except TimeoutError as error:
-            refusal = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            refusal = RefusalError(RefusalCode.TIMEOUT)
             if isinstance(error.__cause__, asyncio.CancelledError):
                 _carry_cleanup_owner(refusal, error.__cause__)
             raise refusal from error

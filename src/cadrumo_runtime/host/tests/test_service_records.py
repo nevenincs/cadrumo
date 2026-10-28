@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import EXTENSION_SETTINGS_NAMESPACE
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
@@ -35,12 +36,16 @@ from cadrumo_client.contracts.profile_access import ProfileStatus, SecretReady, 
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
     ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
     ServiceCapability,
     ServiceConnected,
     VerifiedServicePeer,
 )
+from cadrumo_client.contracts.session_events import ServiceAdmissionChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
@@ -138,16 +143,9 @@ class ServiceRecordRuntime:
 
     def admit(self, service: InstalledServiceClient):
         assert service.connected is not None
-        return self.human.service_access(
-            ServiceAdmission(
-                request_id=uuid4(),
-                profile_id=self.profile_id,
-                session_id=self.person_session_id,
-                recipient_connection_id=service.connected.connection_id,
-                service_id=service.service_id,
-            ),
-            deadline=time.monotonic() + 10,
-        )
+        person = FrontendClient(self.human, profile_id=self.profile_id, frontend=OperationFrontendProjection.CLI)
+        person._session_id = self.person_session_id
+        return person.service_admission(service.connected.connection_id, service.service_id)
 
 
 def _retained_connections_for_cleanup(
@@ -425,6 +423,80 @@ def _paused_service_recheck(
             yield entered, release
         finally:
             release.set()
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+def test_pending_service_admission_frees_the_person_slot_and_cannot_publish_after_cancel(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel: bool
+) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        service = runtime.connect_service()
+        assert service.connected is not None
+        finished = Event()
+        unsubscribe = runtime.human.subscribe_session_events(
+            lambda event: finished.set() if isinstance(event, ServiceAdmissionChanged) else None
+        )
+        try:
+            with _paused_service_recheck(runtime, monkeypatch) as (entered, release):
+                pending = runtime.human.service_access(
+                    ServiceAdmission(
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                        recipient_connection_id=service.connected.connection_id,
+                        service_id=service.service_id,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+                assert isinstance(pending, ServiceAdmissionPending)
+                assert entered.wait(20), "verification did not reach its controlled barrier"
+                # This is the same native person connection, not a second
+                # frontend that happens to hold a sibling human session.
+                status = runtime.human.session(
+                    SessionRequest(
+                        action="session_status",
+                        request_id=uuid4(),
+                        profile_id=runtime.profile_id,
+                        session_id=runtime.person_session_id,
+                    ),
+                    deadline=time.monotonic() + 30,
+                )
+                assert isinstance(status, ProfileStatus) and status.status.denial is None
+                query = ServiceAdmissionStatusQuery(
+                    action="service_admission_cancel" if cancel else "service_admission_status",
+                    request_id=uuid4(),
+                    profile_id=runtime.profile_id,
+                    session_id=runtime.person_session_id,
+                    recipient_connection_id=service.connected.connection_id,
+                    service_id=service.service_id,
+                    admission_id=pending.admission_id,
+                )
+                waiting = runtime.human.service_access(query, deadline=time.monotonic() + 30)
+                assert isinstance(waiting, ServiceAdmissionPending) and waiting.cancelled is cancel
+                release.set()
+                assert finished.wait(30), "verification completion did not cue its exact holder"
+            if cancel:
+                assert service.claim() is None
+            else:
+                answer = runtime.human.service_access(
+                    query.model_copy(update={"request_id": uuid4()}), deadline=time.monotonic() + 30
+                )
+                assert isinstance(answer, ServiceConnected) and answer.lease is not None
+                assert service.claim() == answer.lease
+                stored = service.record_write(
+                    RECORD_CAPABILITY,
+                    "synthetic-record",
+                    bytearray(b"synthetic typed profile projection"),
+                    expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
+                )
+                assert stored.state == "written"
+                present, material = service.record_read(RECORD_CAPABILITY, "synthetic-record")
+                try:
+                    assert present.state == "present" and material == b"synthetic typed profile projection"
+                finally:
+                    material[:] = bytes(len(material))
+        finally:
+            unsubscribe()
 
 
 @pytest.mark.parametrize(

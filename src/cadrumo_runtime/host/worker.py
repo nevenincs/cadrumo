@@ -5,7 +5,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import sys
-import time
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, ExitStack, contextmanager
 from dataclasses import dataclass, field
@@ -25,13 +24,14 @@ from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
-from ..adapters.worker_native_identity import worker_operation_namespace
+from ..adapters.worker_native_identity import worker_operation_namespace, worker_proof_namespace
 from ..adapters.worker_transport import WorkerChannel, worker_endpoint
 from . import worker_cleanup as _worker_cleanup
 from . import worker_service as _worker_service
@@ -56,11 +56,14 @@ class _WorkerRunResources:
 
     channel: WorkerChannel | None = None
     operation_channel: WorkerChannel | None = None
+    proof_channel: WorkerChannel | None = None
     custody: ProfileWorkerCustody | None = None
     channel_release: TransportCleanup | None = None
     operation_channel_release: TransportCleanup | None = None
+    proof_channel_release: TransportCleanup | None = None
     handshake_release: TransportCleanup | None = None
     endpoint_releases: list[AsyncCloseable] = field(default_factory=list)
+    timeout: TimeoutDeadline = field(default_factory=DEFAULT_TIMEOUT_POLICY.deadline)
 
 
 def _parse_worker_arguments(arguments: list[str] | None) -> argparse.Namespace:
@@ -75,12 +78,12 @@ def _parse_worker_arguments(arguments: list[str] | None) -> argparse.Namespace:
 def _open_control_channel(options: argparse.Namespace, resources: _WorkerRunResources) -> ProfileWorkerIdentity:
     endpoint = worker_endpoint(storage_root=options.storage_root, worker_namespace=options.worker_id)
     resources.endpoint_releases.append(_worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(endpoint.close)))
-    channel = endpoint.connect()
+    channel = endpoint.connect(timeout=resources.timeout.remaining_seconds())
     resources.channel = channel
     channel_release = TransportCleanup(channel)
     resources.channel_release = channel_release
     require_native_parent(channel, options.parent_pid)
-    deadline = time.monotonic() + 10
+    deadline = resources.timeout.instant
     resources.handshake_release = channel_release
     connection = VerifiedConnection(
         channel,
@@ -102,23 +105,30 @@ def _open_control_channel(options: argparse.Namespace, resources: _WorkerRunReso
 
 
 def _open_operation_channel(
-    options: argparse.Namespace, resources: _WorkerRunResources, identity: ProfileWorkerIdentity
+    options: argparse.Namespace, resources: _WorkerRunResources, identity: ProfileWorkerIdentity, *, proof: bool = False
 ) -> None:
     channel = cast(WorkerChannel, resources.channel)
     operation_endpoint = worker_endpoint(
-        storage_root=options.storage_root, worker_namespace=worker_operation_namespace(identity.worker_id)
+        storage_root=options.storage_root,
+        worker_namespace=(worker_proof_namespace if proof else worker_operation_namespace)(identity.worker_id),
     )
     resources.endpoint_releases.append(
         _worker_cleanup.WorkerRelease(lambda: asyncio.to_thread(operation_endpoint.close))
     )
-    operation_channel = operation_endpoint.connect()
-    resources.operation_channel = operation_channel
+    operation_channel = operation_endpoint.connect(timeout=resources.timeout.remaining_seconds())
+    if proof:
+        resources.proof_channel = operation_channel
+    else:
+        resources.operation_channel = operation_channel
     operation_channel_release = TransportCleanup(operation_channel)
-    resources.operation_channel_release = operation_channel_release
+    if proof:
+        resources.proof_channel_release = operation_channel_release
+    else:
+        resources.operation_channel_release = operation_channel_release
     if operation_channel.peer != channel.peer:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
     require_native_parent(operation_channel, options.parent_pid)
-    deadline = time.monotonic() + 10
+    deadline = resources.timeout.instant
     resources.handshake_release = operation_channel_release
     verified = VerifiedConnection(
         operation_channel,
@@ -139,13 +149,14 @@ def _open_operation_channel(
 async def _serve_watched(
     channel: WorkerChannel,
     operation_channel: WorkerChannel,
+    proof_channel: WorkerChannel,
     custody: ProfileWorkerCustody,
     human: ProfileWorkerHumanLogin,
     operations: ProfileWorkerOperationHost,
 ) -> None:
-    """Serve both channels while a stalled event loop leaves every thread's stack on disk."""
+    """Serve private channels while a stalled loop leaves every thread's stack on disk."""
     async with watch_event_loop():
-        await _worker_service._serve(channel, operation_channel, custody, human, operations)
+        await _worker_service._serve(channel, operation_channel, proof_channel, custody, human, operations)
 
 
 def _serve_connected_worker(
@@ -156,6 +167,7 @@ def _serve_connected_worker(
 ) -> None:
     channel = cast(WorkerChannel, resources.channel)
     operation_channel = cast(WorkerChannel, resources.operation_channel)
+    proof_channel = cast(WorkerChannel, resources.proof_channel)
     custody = cast(ProfileWorkerCustody, resources.custody)
     with ExitStack() as composition:
         composition.enter_context(
@@ -182,7 +194,7 @@ def _serve_connected_worker(
             ),
         )
         human = ProfileWorkerHumanLogin(custody, decode=operations.profile_decode_context)
-        asyncio.run(_serve_watched(channel, operation_channel, custody, human, operations))
+        asyncio.run(_serve_watched(channel, operation_channel, proof_channel, custody, human, operations))
 
 
 def _run_worker(
@@ -194,6 +206,7 @@ def _run_worker(
         raise RefusalError(RefusalCode.VERSION_MISMATCH)
     identity = _open_control_channel(options, resources)
     _open_operation_channel(options, resources, identity)
+    _open_operation_channel(options, resources, identity, proof=True)
     _serve_connected_worker(options, resources, identity, composition_factory)
 
 
@@ -223,6 +236,11 @@ def _release_attempted_handshakes(resources: _WorkerRunResources, failures: tupl
             or displaced.resource is resources.operation_channel
         ):
             resources.operation_channel_release = None
+        if (
+            resources.proof_channel_release is resources.handshake_release
+            or displaced.resource is resources.proof_channel
+        ):
+            resources.proof_channel_release = None
 
 
 async def _close_worker_resources(resources: _WorkerRunResources, primary_error: BaseException | None) -> None:
@@ -235,6 +253,7 @@ async def _close_worker_resources(resources: _WorkerRunResources, primary_error:
             custody_release,
             resources.channel_release,
             resources.operation_channel_release,
+            resources.proof_channel_release,
             *resources.endpoint_releases,
             task_name="profile-worker-exit-close",
             primary_error=primary_error,

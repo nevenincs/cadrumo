@@ -20,6 +20,7 @@ from uuid import uuid4
 import pytest
 
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_process import WindowsAgentProcessLauncher
@@ -51,10 +52,10 @@ class _CredentialSource:
     def __init__(self) -> None:
         self.generations = AgentGenerations(sign_in="login-1", provider_settings="settings-1")
 
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         return ResolvedAgentCredentials(generations=self.generations, credentials={})
 
-    def current_generations(self) -> AgentGenerations | None:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations | None:
         return self.generations
 
 

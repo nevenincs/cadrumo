@@ -13,6 +13,7 @@ from cadrumo_client.contracts.session_events import (
     LifecycleNotice,
     OperationChanged,
     ProfileRecordsChanged,
+    ServiceAdmissionChanged,
     ServiceLeaseChanged,
     SignInChanged,
 )
@@ -24,6 +25,7 @@ SESSION_EVENT_QUEUE_LIMIT = 64
 type InvalidationCue = (
     SignInChanged
     | ServiceLeaseChanged
+    | ServiceAdmissionChanged
     | AttendanceChanged
     | AttendanceAnswered
     | OperationChanged

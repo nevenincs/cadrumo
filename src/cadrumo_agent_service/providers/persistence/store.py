@@ -8,7 +8,8 @@ from typing import Final
 from pydantic import ValidationError
 
 from cadrumo.core.hashing import sha256_hex
-from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply
 from cadrumo_client.contracts.service_access import ServiceLease
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -66,12 +67,18 @@ class SecureProviderSettingsStore:
         with self._generations_guard:
             self._generations_epoch += 1
 
-    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+    def read(
+        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
+    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         """Decode bounded records while preserving absent and unreadable states."""
         values: list[ProviderRecordRead] = []
         try:
             for provider_id in provider_ids:
-                reply, material = self._client.record_read(PROVIDER_RECORD_CAPABILITY, provider_id)
+                reply, material = (
+                    self._client.record_read(PROVIDER_RECORD_CAPABILITY, provider_id)
+                    if deadline is None
+                    else self._client.record_read(PROVIDER_RECORD_CAPABILITY, provider_id, timeout_deadline=deadline)
+                )
                 try:
                     refusal = _refusal(reply)
                     if refusal is not None:
@@ -95,7 +102,11 @@ class SecureProviderSettingsStore:
                     )
                 finally:
                     material[:] = b"\0" * len(material)
-        except (RefusalError, FrontendRefusedError, OSError):
+        except RefusalError as error:
+            if deadline is not None and error.reason is RefusalCode.TIMEOUT:
+                raise
+            return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
+        except (FrontendRefusedError, OSError):
             return StoreRefusal(code=StoreRefusalCode.UNKNOWN)
         return tuple(values)
 
@@ -120,7 +131,7 @@ class SecureProviderSettingsStore:
         finally:
             self.invalidate_generations()
 
-    def observe_generations(self) -> StoreGenerations | None:
+    def observe_generations(self, *, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
         """Observe the live lease and record generations without touching idle time.
 
         An observation stands until :meth:`invalidate_generations`: this store's own
@@ -132,19 +143,23 @@ class SecureProviderSettingsStore:
             epoch, kept = self._generations_epoch, self._generations
         if kept is not None and kept[0] == epoch:
             return kept[1]
-        observed = self._observe_generations()
+        observed = self._observe_generations(deadline)
         with self._generations_guard:
             if observed is not None and self._generations_epoch == epoch:
                 self._generations = epoch, observed
         return observed
 
-    def _observe_generations(self) -> StoreGenerations | None:
+    def _observe_generations(self, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
         try:
-            lease = self._client.claim()
+            lease = self._client.claim() if deadline is None else self._client.claim(timeout_deadline=deadline)
             if lease is None:
                 return None
             binding = _lease_binding(lease)
-            reply = self._client.observe_generation(PROVIDER_RECORD_CAPABILITY)
+            reply = (
+                self._client.observe_generation(PROVIDER_RECORD_CAPABILITY)
+                if deadline is None
+                else self._client.observe_generation(PROVIDER_RECORD_CAPABILITY, timeout_deadline=deadline)
+            )
             if (
                 reply.state != "generation"
                 or _refusal(reply) is not None
@@ -156,7 +171,11 @@ class SecureProviderSettingsStore:
                 return None
             sign_in = sha256_hex("\x1f".join((reply.custody_generation, *binding)).encode("utf-8"))
             return StoreGenerations(sign_in=sign_in, provider_settings=reply.records_generation)
-        except (RefusalError, FrontendRefusedError, OSError, ValidationError):
+        except RefusalError as error:
+            if deadline is not None and error.reason is RefusalCode.TIMEOUT:
+                raise
+            return None
+        except (FrontendRefusedError, OSError, ValidationError):
             return None
 
 

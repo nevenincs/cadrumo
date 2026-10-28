@@ -369,3 +369,41 @@ def test_an_interrupted_accept_settles_its_io_before_the_next_accept(
             server.close()
     finally:
         endpoint.close()
+
+
+def test_connection_close_cancels_a_held_native_reply_without_claiming_its_exchange(
+    pair: tuple[WindowsChannel, WindowsChannel],
+) -> None:
+    server, client = pair
+    pool = ThreadPoolExecutor(max_workers=2)
+    try:
+        connecting = pool.submit(
+            VerifiedConnection,
+            client,
+            expected=ClientHello(product_version="test", storage_identity=_IDENTITY),
+            deadline=time.monotonic() + 5,
+        )
+        read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
+        write_document(
+            server,
+            ServerHello(product_version="test", storage_identity=_IDENTITY, boot_id=uuid4()),
+            deadline=time.monotonic() + 5,
+        )
+        connection = connecting.result(timeout=5)
+        pending = pool.submit(
+            connection.session,
+            SessionRequest(action="session_status", request_id=uuid4(), profile_id=uuid4(), session_id=uuid4()),
+            deadline=time.monotonic() + 120,
+        )
+        read_frame_payload(server, kind=DOCUMENT_FRAME_KIND, deadline=time.monotonic() + 5)
+        closing = pool.submit(connection.close)
+        closing.result(timeout=2)
+        with pytest.raises(RefusalError) as refused:
+            pending.result(timeout=2)
+        assert refused.value.reason is RefusalCode.CONNECTION_CLOSED
+        assert connection.closed
+        connection.close()
+    finally:
+        server.close()
+        client.close()
+        pool.shutdown(wait=True)

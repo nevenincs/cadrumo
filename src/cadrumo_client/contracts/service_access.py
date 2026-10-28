@@ -141,6 +141,33 @@ class ServiceAdmission(BaseModel):
     service_id: Annotated[str, Field(min_length=1, max_length=64)]
 
 
+class ServiceAdmissionStatusQuery(BaseModel):
+    """Observe or cancel one exact pending service admission, never repeat it."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["service_admission_status", "service_admission_cancel"]
+    request_id: UUID
+    profile_id: UUID
+    session_id: UUID
+    recipient_connection_id: UUID
+    service_id: Annotated[str, Field(min_length=1, max_length=64)]
+    admission_id: UUID
+
+
+class ServiceAdmissionPending(BaseModel):
+    """A bounded admission handle, with no lease or authority."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["service_admission_pending"] = "service_admission_pending"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    service_id: str
+    admission_id: UUID
+    cancelled: bool = False
+
+
 class ServiceConnected(BaseModel):
     """Report a service connection and its optional profile lease."""
 

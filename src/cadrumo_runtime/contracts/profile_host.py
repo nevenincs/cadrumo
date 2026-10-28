@@ -33,6 +33,8 @@ from cadrumo_client.contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     SessionRequest,
     SessionsLocked,
@@ -43,7 +45,7 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetReply,
     LoginTargetRequest,
 )
-from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceConnect
+from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceAdmissionStatusQuery, ServiceConnect
 from cadrumo_client.contracts.session_events import ConnectionEvent
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -95,6 +97,7 @@ class ProfileHandler(Protocol):
         context: ConnectionContext,
         channel: ByteChannel,
         request: ProfileLogin
+        | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
         | PresentationRequest
@@ -105,6 +108,7 @@ class ProfileHandler(Protocol):
         | AttendanceDecide,
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | PresentationDelivered
         | SessionsLocked
@@ -166,7 +170,10 @@ class ProfileHandler(Protocol):
         ...
 
     def service(
-        self, context: ConnectionContext, channel: ByteChannel, request: ServiceConnect | ServiceAdmission
+        self,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: ServiceConnect | ServiceAdmission | ServiceAdmissionStatusQuery,
     ) -> None:
         """Register or human-admit an exact installed service peer."""
         ...

@@ -6,7 +6,7 @@ import asyncio
 import hmac
 import time
 from collections.abc import Callable, Mapping
-from threading import RLock
+from threading import Event, RLock
 from typing import TYPE_CHECKING, Final, Literal, Self, override
 from uuid import UUID, uuid4
 
@@ -57,7 +57,12 @@ from ..contracts.bootstrap_delete import (
     ProfileDeleteRefused,
 )
 from ..contracts.contracts import RefusalCode, RefusalError
-from ..contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, deadline_after
+from ..contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+    TimeoutDeadline,
+    deadline_after,
+)
 from ..contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared, EnrollmentReconcile, EnrollmentRecorded
 from ..contracts.model_runs import ModelRunRequested
 from ..contracts.navigation import ViewLink
@@ -73,7 +78,12 @@ from ..contracts.profile_access import (
     SessionsLocked,
 )
 from ..contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest
-from ..contracts.service_access import ServiceAdmission, ServiceConnected
+from ..contracts.service_access import (
+    ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
+    ServiceConnected,
+)
 from ..contracts.session_events import (
     AttendanceAnswered,
     AttendanceChanged,
@@ -82,7 +92,9 @@ from ..contracts.session_events import (
     OperationChanged,
     PresentationRequested,
     ProfileLanguageChanged,
+    ProfileLoginChanged,
     ProfileRecordsChanged,
+    ServiceAdmissionChanged,
     ServiceLeaseChanged,
     SignInChanged,
 )
@@ -164,6 +176,8 @@ class FrontendClient(ProfileViewFrontend):
         self._presentation_receivers: list[Callable[[ViewLink], None]] = []
 
     def _session_retired(self, event: ConnectionEvent) -> None:
+        if isinstance(event, ProfileLoginChanged):
+            return
         if isinstance(event, LifecycleNotice):
             with self._event_guard:
                 self._lifecycle_notice = event
@@ -180,6 +194,8 @@ class FrontendClient(ProfileViewFrontend):
         if event.profile_id != self.profile_id or isinstance(event, ServiceLeaseChanged | ModelRunRequested):
             # A frontend never holds a service lease, so no model run is ever announced to it.
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        if isinstance(event, ServiceAdmissionChanged):
+            return
         if isinstance(event, AttendanceAnswered):
             # The asker holds no session until its approved ask is read.
             with self._event_guard:
@@ -329,11 +345,17 @@ class FrontendClient(ProfileViewFrontend):
         *,
         profile_id: UUID,
         frontend: OperationFrontendProjection,
-        timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+        timeout: float | None = None,
+        timeout_deadline: TimeoutDeadline | None = None,
         scope: AccessScope | None = None,
     ) -> Self:
         """Use the canonical owner-verified launch door before any credential."""
-        return cls(await launch.open(timeout=timeout), profile_id=profile_id, frontend=frontend, scope=scope)
+        return cls(
+            await launch.open(timeout=timeout, timeout_deadline=timeout_deadline),
+            profile_id=profile_id,
+            frontend=frontend,
+            scope=scope,
+        )
 
     def __enter__(self) -> Self:
         """Retain this owned connection for a synchronous frontend scope."""
@@ -515,20 +537,55 @@ class FrontendClient(ProfileViewFrontend):
         service_id: str,
         *,
         request_id: UUID | None = None,
-        timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+        timeout: float | None = None,
     ) -> ServiceConnected:
-        """Approve an exact verified installed peer under this held human session."""
-        reply = self._connection.service_access(
-            ServiceAdmission(
-                request_id=request_id or uuid4(),
-                profile_id=self.profile_id,
-                session_id=self._session(),
-                recipient_connection_id=recipient_connection_id,
-                service_id=service_id,
-            ),
-            deadline=deadline_after(timeout),
+        """Start once, then claim on a cue without occupying this person's wire slot."""
+        owner_deadline = (
+            DEFAULT_TIMEOUT_POLICY.deadline() if timeout is None else TimeoutDeadline(deadline_after(timeout))
         )
-        return self._reply(reply, ServiceConnected)
+        changed = Event()
+        session_id = self._session()
+
+        def observed(event: ConnectionEvent) -> None:
+            if (
+                isinstance(event, ServiceAdmissionChanged)
+                and event.profile_id == self.profile_id
+                and event.session_id == session_id
+            ):
+                changed.set()
+
+        unsubscribe = self._connection.subscribe_session_events(observed, disconnected=changed.set)
+        try:
+            reply = self._connection.service_access(
+                ServiceAdmission(
+                    request_id=request_id or uuid4(),
+                    profile_id=self.profile_id,
+                    session_id=session_id,
+                    recipient_connection_id=recipient_connection_id,
+                    service_id=service_id,
+                ),
+                deadline=owner_deadline.instant,
+            )
+            while isinstance(reply, ServiceAdmissionPending):
+                admission_id = reply.admission_id
+                changed.clear()
+                reply = self._connection.service_access(
+                    ServiceAdmissionStatusQuery(
+                        action="service_admission_status",
+                        request_id=uuid4(),
+                        profile_id=self.profile_id,
+                        session_id=session_id,
+                        recipient_connection_id=recipient_connection_id,
+                        service_id=service_id,
+                        admission_id=admission_id,
+                    ),
+                    deadline=owner_deadline.instant,
+                )
+                if isinstance(reply, ServiceAdmissionPending) and not changed.wait(owner_deadline.remaining_seconds()):
+                    raise RefusalError(RefusalCode.TIMEOUT)
+            return self._reply(reply, ServiceConnected)
+        finally:
+            unsubscribe()
 
     def attendance_inventory(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> AttendanceInventory:
         """List the asks pending for this person's profile, as the holder of its live sign-in."""

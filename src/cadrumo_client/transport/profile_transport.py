@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from uuid import UUID
+from collections.abc import Callable
+from threading import Event
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
@@ -38,6 +40,7 @@ from ..contracts.bootstrap_delete import (
     ProfileDeleteRefused,
 )
 from ..contracts.contracts import RefusalCode, RefusalError
+from ..contracts.deadline_budget import OrchestrationTimeoutError, TimeoutDeadline
 from ..contracts.extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from ..contracts.model_runs import ModelRunCompleted, ModelRunCompleteRequest, ModelRunFetched, ModelRunFetchRequest
 from ..contracts.operation_access import OperationAcknowledged, OperationSecret
@@ -47,13 +50,22 @@ from ..contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     SecretReady,
     SessionRequest,
     SessionsLocked,
 )
 from ..contracts.profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
-from ..contracts.service_access import ServiceAdmission, ServiceConnect, ServiceConnected
+from ..contracts.service_access import (
+    ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
+    ServiceConnect,
+    ServiceConnected,
+)
+from ..contracts.session_events import ConnectionEvent, ProfileLoginChanged
 from ..contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .frame_io import read_secret, write_document, write_secret
 from .model_run_frames import read_secret_chunks, write_secret_chunks
@@ -196,8 +208,21 @@ class ProfileTransport(VerifiedTransport):
 
     def login(self, request: ProfileLogin, secret: bytearray, *, deadline: float) -> ProfileStatus | AccessRefusal:
         """Consume credentials only after the exact peer accepts this login request."""
-        with self._exchange(deadline=deadline, secret=secret):
-            try:
+        changed = Event()
+        timeout = TimeoutDeadline(deadline)
+
+        def receive(event: ConnectionEvent) -> None:
+            if (
+                isinstance(event, ProfileLoginChanged)
+                and event.login_request_id == request.request_id
+                and event.profile_id == request.profile_id
+            ):
+                changed.set()
+
+        unsubscribe: Callable[[], None] | None = None
+        try:
+            with self._exchange(deadline=deadline, secret=secret):
+                unsubscribe = self.subscribe_session_events(receive, disconnected=changed.set)
                 if self._closed:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
                 delivered = self._deliver_secret(request, secret, deadline=deadline)
@@ -205,17 +230,50 @@ class ProfileTransport(VerifiedTransport):
                     return delivered
                 ready, reply_document = delivered
                 result = reply_document.root
+            while isinstance(result, ProfileLoginPending):
                 if (
-                    not isinstance(result, (ProfileStatus, AccessRefusal))
-                    or result.connection_id != ready.connection_id
+                    result.connection_id != ready.connection_id
+                    or result.profile_id != request.profile_id
+                    or result.login_request_id != request.request_id
                 ):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
-                return result
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
-            finally:
-                secret[:] = bytes(len(secret))
+                changed.clear()
+                query = ProfileLoginStatusQuery(
+                    action="profile_login_status",
+                    request_id=uuid4(),
+                    profile_id=request.profile_id,
+                    login_request_id=request.request_id,
+                )
+                result = self._sessionless(query, query.request_id, deadline=deadline)
+                if isinstance(result, ProfileLoginPending) and not changed.wait(timeout.remaining_seconds()):
+                    raise OrchestrationTimeoutError("orchestration_timeout")
+            if not isinstance(result, (ProfileStatus, AccessRefusal)) or result.connection_id != ready.connection_id:
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return result.model_copy(update={"request_id": request.request_id})
+        except OrchestrationTimeoutError as error:
+            refusal = RefusalError(RefusalCode.TIMEOUT)
+            self._close_after_failure(refusal)
+            raise refusal from error
+        except BaseException as error:
+            self._close_after_failure(error)
+            raise
+        finally:
+            secret[:] = bytes(len(secret))
+            if unsubscribe is not None:
+                unsubscribe()
+
+    def login_status(
+        self, request: ProfileLoginStatusQuery, *, deadline: float
+    ) -> ProfileLoginPending | ProfileStatus | AccessRefusal:
+        """Claim or cancel an exact owned attempt without re-sending its proof."""
+        result = self._sessionless(request, request.request_id, deadline=deadline)
+        if not isinstance(result, (ProfileLoginPending, ProfileStatus, AccessRefusal)):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        if isinstance(result, ProfileLoginPending) and (
+            result.login_request_id != request.login_request_id or result.profile_id != request.profile_id
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        return result
 
     def session(
         self, request: SessionRequest, *, deadline: float
@@ -405,14 +463,14 @@ class ProfileTransport(VerifiedTransport):
                 secret[:] = bytes(len(secret))
 
     def service_access(
-        self, request: ServiceConnect | ServiceAdmission, *, deadline: float
-    ) -> ServiceConnected | AccessRefusal:
+        self, request: ServiceConnect | ServiceAdmission | ServiceAdmissionStatusQuery, *, deadline: float
+    ) -> ServiceConnected | ServiceAdmissionPending | AccessRefusal:
         """Submit a typed service-admission request over this verified connection."""
         with self._exchange(deadline=deadline):
             try:
                 write_document(self._channel, request, deadline=deadline)
                 reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, ServiceConnected | AccessRefusal):
+                if not isinstance(reply, ServiceConnected | ServiceAdmissionPending | AccessRefusal):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 return reply
             except BaseException as error:

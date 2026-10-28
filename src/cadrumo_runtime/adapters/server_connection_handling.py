@@ -59,6 +59,8 @@ from cadrumo_client.contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     Request,
     SessionRequest,
@@ -70,7 +72,7 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetReply,
     LoginTargetRequest,
 )
-from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceConnect
+from cadrumo_client.contracts.service_access import ServiceAdmission, ServiceAdmissionStatusQuery, ServiceConnect
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.view_stream import ViewAttachRequest, ViewConnect
@@ -84,6 +86,7 @@ _LOGGER = get_logger(__name__)
 
 type _ProfileConnectionRequest = (
     ProfileLogin
+    | ProfileLoginStatusQuery
     | ProfileDeletePrepare
     | ProfileDelete
     | PasswordResetPrepare
@@ -102,6 +105,7 @@ type _ProfileConnectionRequest = (
     | InstallationActRequest
     | ServiceConnect
     | ServiceAdmission
+    | ServiceAdmissionStatusQuery
     | ExtensionRecordRequest
     | ModelRunFetchRequest
     | ModelRunCompleteRequest
@@ -264,6 +268,7 @@ class RuntimeConnectionHandling:
         self, channel: ByteChannel, context: ConnectionContext, request: _ProfileConnectionRequest
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | PresentationDelivered
         | SessionsLocked
@@ -288,7 +293,7 @@ class RuntimeConnectionHandling:
         if isinstance(request, ProfileDeletePrepare | ProfileDelete):
             self.profiles.bootstrap_delete(context, channel, request)
             return None
-        if isinstance(request, ServiceConnect | ServiceAdmission):
+        if isinstance(request, ServiceConnect | ServiceAdmission | ServiceAdmissionStatusQuery):
             return self.profiles.service(context, channel, request)
         if isinstance(request, ViewAttachRequest):
             self.profiles.view_attach(context, channel, request)
@@ -338,6 +343,7 @@ class RuntimeConnectionHandling:
         if isinstance(
             request,
             ProfileLogin
+            | ProfileLoginStatusQuery
             | SessionRequest
             | ProfileDisclosurePageRequest
             | PresentationRequest

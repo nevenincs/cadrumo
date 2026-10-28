@@ -388,7 +388,7 @@ print(f"claims={client.claims} observes={FakeService.observes} stops={FakeServic
     assert exit_code == 0, (output, errors)
     assert b'"event":"stopped"' in output
     if connection_closed:
-        assert b'"event":"refused","code":"service_failed"' in output
+        assert b'"event":"refused","code":"agent_timeout"' in output
         assert b"claims=2 observes=0 stops=0" in errors
     else:
         assert b'"event":"refused"' not in output

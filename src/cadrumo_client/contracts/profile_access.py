@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, RootModel, model_validator
 
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from cadrumo.core.operations import OperationEffect
@@ -46,6 +47,7 @@ from .bootstrap_delete import (
     ProfileDeleteRefused,
 )
 from .contracts import RefusalCode
+from .deadline_budget import DEFAULT_TIMEOUT_POLICY
 from .enrollment_access import EnrollmentReply, EnrollmentRequest
 from .extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from .installation_requests import InstallationActRequest, InstallationReply, InstallationReplyTransfer
@@ -53,7 +55,13 @@ from .model_runs import ModelRunCompleted, ModelRunCompleteRequest, ModelRunFetc
 from .operation_access import OperationReply, OperationRequest
 from .presentation import PresentationDelivered, PresentationRequest
 from .profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
-from .service_access import ServiceAdmission, ServiceConnect, ServiceConnected
+from .service_access import (
+    ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
+    ServiceConnect,
+    ServiceConnected,
+)
 from .sign_in import HumanSignedOut, SignInStatusReply, SignInStatusRequest
 from .sign_in_outcomes import SignInRefusal
 from .view_stream import ViewAttachRequest, ViewConnect
@@ -64,7 +72,7 @@ type HumanProofMethod = Literal["password", "receipt"]
 # run its supervised password KDF, before its first reply; on a loaded host each
 # takes many seconds. The same budget covers human proof and protected
 # references, and uses the whole of the runtime's single-exchange maximum.
-PROFILE_ADMISSION_TIMEOUT_SECONDS = 120.0
+PROFILE_ADMISSION_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_POLICY.timeout_seconds
 
 _SIGN_IN_FRONTENDS = frozenset(
     {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.DESKTOP}
@@ -79,6 +87,9 @@ class HumanProof:
     secret: bytearray = field(repr=False)
     originating_login_id: str
     persist_receipt: bool = False
+    timeout_deadline: float | None = None
+    attempt_id: UUID | None = None
+    cancellation: ProfileProofCancellation | None = field(default=None, repr=False)
 
 
 class ProfileLogin(BaseModel):
@@ -103,6 +114,28 @@ class ProfileLogin(BaseModel):
         if self.hand_over and (self.method != "receipt" or self.frontend not in _SIGN_IN_FRONTENDS):
             raise ValueError("a handover resumes a saved sign-in at a person's frontend")
         return self
+
+
+class ProfileLoginStatusQuery(BaseModel):
+    """Claim or cancel only this verified connection's exact pending login."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    action: Literal["profile_login_status", "profile_login_cancel"]
+    request_id: UUID
+    profile_id: UUID
+    login_request_id: UUID
+
+
+class ProfileLoginPending(BaseModel):
+    """The runtime owns this proof attempt; this handle grants no session."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+    kind: Literal["profile_login_pending"] = "profile_login_pending"
+    request_id: UUID
+    runtime_boot_id: UUID
+    connection_id: UUID
+    profile_id: UUID
+    login_request_id: UUID
 
 
 class SessionRequest(BaseModel):
@@ -135,6 +168,7 @@ class Request(
     RootModel[
         Annotated[
             ProfileLogin
+            | ProfileLoginStatusQuery
             | ProfileDeletePrepare
             | ProfileDelete
             | PasswordResetPrepare
@@ -153,6 +187,7 @@ class Request(
             | InstallationActRequest
             | ServiceConnect
             | ServiceAdmission
+            | ServiceAdmissionStatusQuery
             | ExtensionRecordRequest
             | ModelRunFetchRequest
             | ModelRunCompleteRequest
@@ -315,6 +350,7 @@ class Reply(
     RootModel[
         Annotated[
             SecretReady
+            | ProfileLoginPending
             | ProfileDeletePrepared
             | ProfileDeleted
             | ProfileDeleteRefused
@@ -340,6 +376,7 @@ class Reply(
             | InstallationReply
             | InstallationReplyTransfer
             | ServiceConnected
+            | ServiceAdmissionPending
             | ExtensionRecordReply
             | ModelRunFetched
             | ModelRunCompleted

@@ -30,6 +30,7 @@ import pytest
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import storage_mode
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
@@ -82,7 +83,7 @@ def _interpreter(checkout: Path) -> Path:
 
 
 class _FixedCredentials:
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         return ResolvedAgentCredentials(
             _GENERATIONS,
             {},
@@ -90,7 +91,7 @@ class _FixedCredentials:
             host_token=bytearray(secrets.token_urlsafe(32), "ascii"),
         )
 
-    def current_generations(self) -> AgentGenerations:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations:
         return _GENERATIONS
 
 
@@ -98,7 +99,7 @@ class _SignedInStore(MemoryProviderSettingsStore):
     """The in-memory settings of a profile whose sign-in and settings are current."""
 
     @override
-    def observe_generations(self) -> StoreGenerations | None:
+    def observe_generations(self, *, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
         return StoreGenerations(sign_in="a" * 64, provider_settings="b" * 64)
 
 

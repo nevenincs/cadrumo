@@ -7,14 +7,17 @@ import time
 from collections.abc import Generator
 from contextlib import contextmanager
 from logging import WARNING
-from threading import Event, RLock
-from typing import Literal
+from queue import Queue
+from threading import RLock, Thread
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
@@ -23,6 +26,9 @@ from .worker_authorization import WorkerAuthorizationServer
 from .worker_native_identity import verify_worker_native_pid
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 from .worker_transport import WorkerChannel
+
+if TYPE_CHECKING:
+    from .worker_proof_control import _ProofCommand
 
 _WORKER_NATIVE_HEALTH_WAIT_SECONDS = 2.0
 _NATIVE_GUARD_SLOW_SECONDS = 0.5
@@ -50,11 +56,16 @@ class ProfileWorkerNativeLifetime:
     _scope: WindowsProcessScope | LinuxProcessScope | MacosProcessScope
     _process: WindowsOwnedProcess | LinuxOwnedProcess | MacosOwnedProcess
     _authorization: WorkerAuthorizationServer | None
-    _stopping: Event
+    _stopping: NativeWake
     _channel: WorkerChannel | None
     _operation_channel: WorkerChannel | None
+    _proof_channel: WorkerChannel | None = None
+    _proof_dispatch_thread: Thread | None = None
+    _proof_commands: Queue[_ProofCommand | None] | None = None
+    _human_cancellation: ProfileProofCancellation | None = None
     _human_candidate: UUID | None
     _human_deadline: float | None
+    _human_transaction_deadline: float | None
     _listener_cleanup: tuple[WorkerResourceCleanup, ...]
     _pending_channel_cleanup: list[WorkerResourceCleanup]
 
@@ -65,7 +76,7 @@ class ProfileWorkerNativeLifetime:
             try:
                 self._process.wait(timeout=0)
             except RefusalError as error:
-                if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason is RefusalCode.TIMEOUT:
                     return
                 raise
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
@@ -102,7 +113,7 @@ class ProfileWorkerNativeLifetime:
             timeout = max(0.0, deadline - time.monotonic())
         if not acquired:
             self._log_native_guard_wait_failure("containment", wait_started)
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         try:
             with self._native_call("containment"):
                 self._scope.terminate(timeout=timeout)
@@ -126,7 +137,7 @@ class ProfileWorkerNativeLifetime:
         wait_started = time.monotonic()
         if not self._native_guard.acquire(timeout=_WORKER_NATIVE_HEALTH_WAIT_SECONDS):
             self._log_native_guard_wait_failure("health_check", wait_started)
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         try:
             with self._native_call("health_check"):
                 if self._stopping.is_set() or self._channel is None:
@@ -195,6 +206,7 @@ class ProfileWorkerNativeLifetime:
             self._contain_native_process(timeout=2.0 if deadline is None else max(0.0, deadline - time.monotonic()))
         except BaseException as error:
             failures.append(error)
+        self._close_proof_channel(failures)
         self._close_worker_channel(self._lock, False, deadline, failures)
         self._close_worker_channel(self._operation_lock, True, deadline, failures)
         if retire_listeners:
@@ -209,11 +221,32 @@ class ProfileWorkerNativeLifetime:
 
     def settle(self, *, deadline: float | None = None) -> None:
         """Join authorization callbacks after releasing the profile admission guard."""
+        self._settle_proof_dispatcher(deadline=deadline)
         if self._authorization is not None:
             if deadline is None:
                 self._authorization.settle()
             else:
                 self._authorization.settle(timeout=max(0.0, deadline - time.monotonic()))
+
+    def _close_proof_channel(self, failures: list[BaseException]) -> None:
+        """The already contained worker cannot retain a sideband callback."""
+        if self._proof_commands is not None:
+            self._proof_commands.put_nowait(None)
+        channel = self._proof_channel
+        if channel is not None:
+            try:
+                channel.close()
+            except BaseException as error:
+                failures.append(error)
+            else:
+                self._proof_channel = None
+
+    def _settle_proof_dispatcher(self, *, deadline: float | None) -> None:
+        thread = self._proof_dispatch_thread
+        if thread is not None:
+            thread.join(timeout=None if deadline is None else max(0.0, deadline - time.monotonic()))
+            if thread.is_alive():
+                raise RefusalError(RefusalCode.TIMEOUT)
 
     def _close_worker_channel(
         self,
@@ -240,7 +273,7 @@ class ProfileWorkerNativeLifetime:
             finally:
                 lock.release()
         else:
-            failures.append(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+            failures.append(RefusalError(RefusalCode.TIMEOUT))
 
 
 def _safe_diagnostic_event(

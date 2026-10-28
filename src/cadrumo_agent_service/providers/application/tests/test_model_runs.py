@@ -12,6 +12,7 @@ from pydantic import SecretStr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import StorageMode
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
     ModelRunBody,
@@ -520,7 +521,9 @@ class _CountingProviderRecords(MemoryProviderSettingsStore):
         self.lanes_read: list[str] = []
 
     @override
-    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+    def read(
+        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
+    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         self.lanes_read.extend(provider_ids)
         return super().read(provider_ids)
 
@@ -531,7 +534,7 @@ class _CountingCatalogSource(ProvidedProviderCatalogSource):
         self.fetches = 0
 
     @override
-    def catalog(self) -> ProviderCatalog:
+    def catalog(self, *, deadline: TimeoutDeadline | None = None) -> ProviderCatalog:
         self.fetches += 1
         return super().catalog()
 

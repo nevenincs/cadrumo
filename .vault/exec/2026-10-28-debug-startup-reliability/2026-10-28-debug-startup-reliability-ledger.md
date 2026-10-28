@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:c174bfae363a6584085cc58363f9b0ff7837f116b7a8f5393a04d63c099257ca'
+body_hash: 'sha256:ee10810ef27bf65abac6bc35764478f4d9bdf59fc67e30dff8221c59d83781e5'
 related:
   - "[[2026-10-28-debug-startup-reliability-plan]]"
 ---
@@ -93,6 +93,20 @@ related:
 - `S08` `verify:` `WSL Linux same-domain leases and exact-child cancellation` -> `pass`
 - `S08` `verify:` `Ruff format and ty Windows Linux macOS` -> `pass`
 - `S08` `by:` `Sol6.1 high`
+- `S09` `M` `src/cadrumo_agent_service/service.py`
+- `S09` `M` `src/cadrumo_agent_service/host/store_lifecycle.py`
+- `S09` `M` `src/cadrumo_agent_service/adapters/agent_provider_catalog.py`
+- `S09` `M` `src/cadrumo_agent_service/adapters/agent_provider_auth_status.py`
+- `S09` `M` `src/cadrumo_agent_service/providers/application/agent_credentials.py`
+- `S09` `M` `src/cadrumo_client/transport/service_client.py`
+- `S09` `M` `src/cadrumo_client/transport/verified_transport.py`
+- `S09` `A` `src/cadrumo_client/transport/tests/test_connection_close_signal.py`
+- `S09` `A` `src/cadrumo_agent_service/adapters/tests/test_invocation_ownership.py`
+- `S09` `verify:` `focused startup ownership and deadline graph plus HTTP positive cancel` -> `pass`
+- `S09` `verify:` `real Windows pipe held-reply close` -> `pass`
+- `S09` `verify:` `affected unit418 plus fixture82 and final timeout7 across corrected runs` -> `pass`
+- `S09` `verify:` `independent S09 review and scoped Ruff format ty` -> `pass`
+- `S09` `by:` `Sol6.1 medium`
 
 ## Notes
 

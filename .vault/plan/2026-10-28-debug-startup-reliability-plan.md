@@ -10,7 +10,7 @@ related:
   - '[[2026-10-28-debug-startup-reliability-adr]]'
 modified: '2026-10-28'
 body_schema: body-v2
-body_hash: 'sha256:b688d6fcac5340b892f98df1c6685774d073b9e31f3727660ff941c7238682af'
+body_hash: 'sha256:b81758f3a6f1cd80f207dcc058eed210b8165ce4e66aa74df34d128b14147e4c'
 ---
 
 # `debug-startup-reliability` plan
@@ -28,7 +28,7 @@ Approved 2026-10-28. The user authorizes diagnosis/fixes for current Debug-build
 - [x] `S05` - Centralize timeout policy and make hosted agent ready/stop waits respond to readiness, exit and cancellation signals; `neutral timeout policy and native projection, agent service controller/process/service/launcher, desktop agent timeout presentation/locales and owning tests`.
 - [x] `S07` - Carry the first-login absolute timeout deadline through supervised KDF proof without resetting queue, attestation or launch budgets; `canonical profile candidate/proof custody/KDF adapters, runtime profile proof seam and owning tests`.
 - [x] `S08` - Replace KDF permit polling with cancellable same-domain OS lock signaling while preserving legacy worker interoperation and containment; `custody KDF lease adapter and private leaf helper, generated module inventory and owning cross-process tests`.
-- [ ] `S09` - Make agent preflight, store lifecycle and catalogue reads consume one startup timeout and cancellation owner without per-phase failure timers; `agent service composition/controller/store lifecycle, provider catalogues, contained invocation runner and owning tests`.
+- [x] `S09` - Make agent preflight, store lifecycle and catalogue reads consume one startup timeout and cancellation owner without per-phase failure timers; `agent service composition/controller/store lifecycle, provider catalogues, contained invocation runner and owning tests`.
 - [ ] `S10` - Make GUI helper orchestration wait on capacity and child exit signals under the shared timeout policy; `native desktop managed child/process helper owners and tests`.
 - [ ] `S11` - Consolidate orchestration naming, protocol codes and user wording on timeout and cut over the current wire cohort; `neutral/native/runtime/agent timeout consumers, transport contracts, UI locale owners and affected documentation`.
 - [x] `S12` - Propagate exact proof-attempt cancellation independently of the busy proof channel and settle queued KDF work promptly; `private worker cancellation channel and token registry, canonical proof/KDF cancellation plumbing and real held-permit regressions`.
@@ -36,7 +36,7 @@ Approved 2026-10-28. The user authorizes diagnosis/fixes for current Debug-build
 
 ## Parallelization
 
-Completed S01/S02 were independent with disjoint ownership. S04, S05 and S06 may run concurrently under the accepted signal-driven decision. Sol6.1 high owns S04 runtime worker readiness, pending human login, exact candidate controls, Python login client and GUI sign-in/frontend paths. Sol6.1 high owns S06 native agent supervision/person/runtime exchange slots, manager readiness, correlated service admission and their contracts/tests. Sol6.1 medium owns S05 neutral timeout policy/native projection and hosted-agent controller/process/service; root owns its desktop timeout wording and catalogue enrollment. Workers coordinate shared service/login cue contracts, generators and separate method regions in frontend/native runtime clients before editing; serialize overlapping writes. Root owns all vault metadata, commits and broad checks. S06 owner runs one isolated native build/lint after both native lanes are stable. Focused Python/frontend checks may run independently with bounded resources. Preserve Claude edits and commit only owned paths/hunks. S03 integrated review follows every implementation Step.
+Sol6.1 high owns S04 runtime worker readiness, pending human login and native GUI sign-in, S06 pending service admission and native agent supervision, and S07/S08 custody deadline propagation and cancellable same-domain leases. The runtime and custody lanes coordinate S12 exact-proof cancellation and shared construction/admission joins. Sol6.1 medium owns S05 timeout policy and hosted-agent waits, S09 preflight/catalogue/credential ownership and S10 helper signal orchestration. Shared contracts and transport methods have one active writer at a time; native opening-cancellation corrections remain with the high native lane. One native builder runs isolated compile/test/lint checks after shared source is stable. Root owns S11 naming, catalogue enrollment, vault metadata, commits and broad gates. Luna6 supplies code/log summaries, while independent Sol6.1 reviewers evaluate completed changes and corrections. Preserve Claude edits, serialize overlapping writes and commit owned paths/hunks. S03 records integrated review and the final verification limits.
 
 ## Verification
 

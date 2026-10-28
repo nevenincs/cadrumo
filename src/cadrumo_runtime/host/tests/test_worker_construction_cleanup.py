@@ -22,10 +22,12 @@ from cadrumo.application.user_profile.access_contracts import (
     ProfileAccessBinding,
     ProfileAccessState,
 )
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
-from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ChannelWake, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.profile_access import AccessRefusal, HumanProof, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -216,6 +218,88 @@ def test_a_sign_in_meeting_a_pending_construction_uses_the_worker_it_builds(
     owner.settle()
 
 
+def test_cancelled_proof_leaves_shared_construction_and_its_next_joiner_untouched(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    guard = RLock()
+    owner = _owner(tmp_path, guard)
+    candidate = _Candidate(owner.identity, guard, failures=0)
+    entered, release, joined = Event(), Event(), Event()
+    cancellation = ProfileProofCancellation()
+    deadline = time.monotonic() + 100
+    secret = bytearray(b"owned-pending-construction-proof")
+    constructed = []
+    wait = owner._construction_changed.wait
+
+    def paused_constructor(identity: ProfileWorkerIdentity, **kwargs: object) -> ProfileWorkerProcess:
+        constructed.append(identity)
+        entered.set()
+        assert release.wait(10), "test did not release the shared key-free constructor"
+        return candidate
+
+    @contextmanager
+    def proof(connection_id: UUID) -> Generator[HumanProof]:
+        yield HumanProof(
+            method="password",
+            secret=secret,
+            originating_login_id="synthetic-login",
+            timeout_deadline=deadline,
+            attempt_id=uuid4(),
+            cancellation=cancellation,
+        )
+
+    def waiting(*, timeout: float | None = None) -> bool:
+        joined.set()
+        return wait(timeout=timeout)
+
+    def authenticate() -> None:
+        with owner.authenticate_human(uuid4()):
+            pytest.fail("a cancelled construction join must not dispatch a protected proof")
+
+    def next_join() -> ProfileWorkerProcess:
+        with owner._custody(await_construction=True, timeout=TimeoutDeadline(deadline)) as worker:
+            return worker
+
+    monkeypatch.setattr(session_owner, "ProfileWorkerProcess", paused_constructor)
+    monkeypatch.setattr(owner, "_human_secret", proof)
+    monkeypatch.setattr(owner._construction_changed, "wait", waiting)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        prepared = pool.submit(owner.prepare)
+        try:
+            assert entered.wait(3)
+            # Any restarted orchestration policy would extend the owner's
+            # original absolute deadline and is forbidden for this join.
+            monkeypatch.setattr(
+                session_owner,
+                "DEFAULT_TIMEOUT_POLICY",
+                SimpleNamespace(deadline=lambda: pytest.fail("construction join restarted the owner's timeout")),
+            )
+            pending = pool.submit(authenticate)
+            assert joined.wait(3), "the proof did not join the shared constructor"
+            cancellation.cancel()
+            with pytest.raises(AutomationCustodyError) as refused:
+                pending.result(timeout=3)
+            assert refused.value.reason is AutomationCustodyCode.REQUESTER_DISCONNECTED
+            assert secret == bytearray(len(secret))
+            assert owner._human_slot_owner is None
+            assert not owner.lost and not owner._stopping.is_set()
+            assert not prepared.done() and not owner._construction_done.is_set()
+            assert candidate.close_calls == 0 and not owner._retiring
+            joined.clear()
+            following = pool.submit(next_join)
+            assert joined.wait(3), "the next attempt could not join the retained construction"
+            assert not following.done()
+            release.set()
+            prepared.result(timeout=3)
+            assert following.result(timeout=3) is candidate
+            assert constructed == [owner.identity]
+        finally:
+            release.set()
+            prepared.result(timeout=3)
+    owner.close()
+    owner.settle()
+
+
 def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_path: Path) -> None:
     guard = RLock()
     owner = _owner(tmp_path, guard)
@@ -256,7 +340,7 @@ def test_busy_native_observation_does_not_retire_the_original_session_owner(tmp_
         @override
         def require_alive(self) -> None:
             if self.busy:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
 
     worker = ObservedWorker(owner.identity, guard, failures=0)
     owner._worker = worker
@@ -312,7 +396,7 @@ def test_api_preparation_queue_timeout_preserves_only_the_nonstopping_original_w
     guard = RLock()
     owner = _owner(tmp_path, guard)
     connection_id = uuid4()
-    primary = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    primary = RefusalError(RefusalCode.TIMEOUT)
 
     class QueuedWorker(_Candidate):
         """Represent the adapter's exact pre-dispatch versus fenced timeout outcome."""
@@ -380,7 +464,7 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
         @override
         def retire(self, session_id: UUID) -> None:
             if outcome == "queue_timeout":
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     worker = FencedWorker(owner.identity, guard, failures=1 if outcome == "containment_failure" else 0)
@@ -400,7 +484,7 @@ def test_retiring_into_a_fenced_worker_completes_once_the_worker_is_contained(tm
         else:
             with pytest.raises(RefusalError) as caught:
                 owner.retire(session_id)
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
             assert not owner.lost and owner._worker is worker and worker.close_calls == 0
     finally:
         owner.close()

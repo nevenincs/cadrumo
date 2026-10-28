@@ -7,24 +7,26 @@ import sys
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from queue import Empty, Full, Queue
-from threading import Lock, Thread
+from threading import Event, Lock, Thread
 from typing import BinaryIO, Final
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, TimeoutDeadline, TimeoutPolicy
 from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
 
 from ..host.controller import AgentHostError, AgentHostRefusal, AgentProcess
 from ..host.native_refusal import STANDARD_ERROR_TAIL_BYTES
-from ..host.store_lifecycle import AgentInvocationResult
+from ..host.store_lifecycle import (
+    INVOCATION_TERMINATION_TIMEOUT_SECONDS,
+    AgentInvocationResult,
+    InvocationCancellation,
+)
 from .agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
 
 _STANDARD_ERROR_CHUNK_BYTES: Final = 4096
 _STANDARD_ERROR_RELEASE_SECONDS: Final = 1.0
 _DIAGNOSTIC_BACKLOG_BYTES: Final = 1024 * 1024
 """Agent output the application log may fall behind by before the excess is dropped."""
-_OUTPUT_SETTLE_SECONDS: Final = 2.0
-"""How long an invocation that has exited is given to finish delivering its standard output."""
-_INVOCATION_TERMINATE_SECONDS: Final = 10.0
 
 
 class _StandardErrorTail:
@@ -208,7 +210,7 @@ class WindowsAgentProcess:
         try:
             return self._process.wait(timeout=timeout)
         except RefusalError as error:
-            if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is RefusalCode.TIMEOUT:
                 return None
             raise
 
@@ -325,6 +327,8 @@ class _StandardOutput:
     def collected(self, *, timeout: float) -> bytes:
         """Wait for the output to end, up to the bound, and return what arrived."""
         self._thread.join(timeout)
+        if self._thread.is_alive():
+            raise OrchestrationTimeoutError("orchestration_timeout")
         return bytes(self._data)
 
     def _read(self) -> None:
@@ -344,7 +348,54 @@ class _StandardOutput:
 class WindowsAgentInvocationRunner:
     """Run one agent invocation in a fresh kill-on-close job and end the whole job afterwards."""
 
+    def __init__(
+        self, *, deadline: TimeoutDeadline | None = None, cancellation: InvocationCancellation | None = None
+    ) -> None:
+        """Bind an invocation sequence to its owner deadline and cancellation signal."""
+        self._deadline = deadline
+        self._cancellation = cancellation
+        self._scope: WindowsProcessScope | None = None
+        self._scope_guard = Lock()
+        self._running = False
+
+    @property
+    def settled(self) -> bool:
+        """Whether every launched tree's termination has been confirmed."""
+        return self._scope is None and not self._running
+
+    def settle(self) -> None:
+        """Retry containment confirmation while retaining the exact unresolved scope."""
+        with self._scope_guard:
+            scope = self._scope
+            if scope is not None:
+                scope.terminate(timeout=INVOCATION_TERMINATION_TIMEOUT_SECONDS)
+                self._scope = None
+
     def run(
+        self,
+        *,
+        executable: Path,
+        arguments: Sequence[str],
+        directory: Path,
+        environment: Mapping[str, str],
+        timeout: float,
+        output_limit: int,
+    ) -> AgentInvocationResult:
+        """Keep owner settlement distinct from the native scope's termination proof."""
+        self._running = True
+        try:
+            return self._run(
+                executable=executable,
+                arguments=arguments,
+                directory=directory,
+                environment=environment,
+                timeout=timeout,
+                output_limit=output_limit,
+            )
+        finally:
+            self._running = False
+
+    def _run(
         self,
         *,
         executable: Path,
@@ -363,13 +414,25 @@ class WindowsAgentInvocationRunner:
         """
         if sys.platform != "win32":
             raise AgentHostError(AgentHostRefusal.LAUNCH_FAILED)
-        scope = WindowsProcessScope()
+        deadline = TimeoutPolicy(timeout).deadline() if self._deadline is None else self._deadline
+        if self._cancellation is not None and self._cancellation.is_set():
+            raise AgentHostError(AgentHostRefusal.CANCELLED)
+        deadline.remaining_seconds()
         try:
-            process, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
-                executable=executable, arguments=arguments, directory=directory, environment=environment
-            )
+            with self._scope_guard:
+                if self._scope is not None:
+                    raise AgentHostError(AgentHostRefusal.STORES_UNPREPARED)
+                if self._cancellation is not None and self._cancellation.is_set():
+                    raise AgentHostError(AgentHostRefusal.CANCELLED)
+                scope = WindowsProcessScope()
+                self._scope = scope
+                if self._cancellation is not None and self._cancellation.is_set():
+                    raise AgentHostError(AgentHostRefusal.CANCELLED)
+                process, standard_input, standard_output, standard_error = scope.launch_with_standard_pipes(
+                    executable=executable, arguments=arguments, directory=directory, environment=environment
+                )
         except BaseException:
-            scope.terminate()
+            self.settle()
             raise
         streams = (standard_input, standard_output, standard_error)
         try:
@@ -380,20 +443,44 @@ class WindowsAgentInvocationRunner:
                 diagnostics=AgentDiagnosticLines(AgentDiagnosticSink(), pid=process.pid, cli=True),
             )
             output = _StandardOutput(standard_output, limit=output_limit)
+            changed = Event()
+            statuses: list[int] = []
+            failures: list[BaseException] = []
+            waiter = process.retain_waiter()
+
+            def exited() -> None:
+                try:
+                    statuses.append(waiter.wait(timeout=None))
+                except BaseException as error:
+                    failures.append(error)
+                finally:
+                    waiter.close()
+                    changed.set()
+
+            observer = Thread(target=exited, name="agent-invocation-exit", daemon=True)
+            release = self._cancellation.subscribe(changed.set) if self._cancellation is not None else lambda: None
             try:
-                status: int | None = process.wait(timeout=timeout)
-            except RefusalError as error:
-                if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                try:
+                    observer.start()
+                except BaseException:
+                    waiter.close()
                     raise
-                status = None
+                completed = changed.wait(deadline.remaining_seconds())
+                if self._cancellation is not None and self._cancellation.is_set():
+                    raise AgentHostError(AgentHostRefusal.CANCELLED)
+                if failures:
+                    raise failures[0]
+                status = statuses[0] if completed and statuses else None
+            finally:
+                release()
             # The job ends whether or not the invocation exited: a descendant may still hold the stores.
-            scope.terminate(timeout=_INVOCATION_TERMINATE_SECONDS)
-            collected = output.collected(timeout=_OUTPUT_SETTLE_SECONDS)
+            self.settle()
+            collected = output.collected(timeout=INVOCATION_TERMINATION_TIMEOUT_SECONDS)
             errors.release(timeout=_STANDARD_ERROR_RELEASE_SECONDS)
             return AgentInvocationResult(status=status, standard_output=collected if status is not None else b"")
         except BaseException:
             try:
-                scope.terminate(timeout=_INVOCATION_TERMINATE_SECONDS)
+                self.settle()
             finally:
                 for stream in streams:
                     with contextlib.suppress(OSError):

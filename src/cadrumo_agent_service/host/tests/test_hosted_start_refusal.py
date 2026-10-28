@@ -20,6 +20,7 @@ from typing import Final
 import pytest
 
 from cadrumo.tests.log_records import delivered_records
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ...adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from ...adapters.agent_programs import AGENT_COMMAND_LINE
@@ -56,7 +57,7 @@ _IMPORT_ERROR: Final = "import of mcp halted"
 
 
 class _FixedCredentials:
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         return ResolvedAgentCredentials(
             _GENERATIONS,
             {},
@@ -64,7 +65,7 @@ class _FixedCredentials:
             host_token=bytearray(secrets.token_urlsafe(32), "ascii"),
         )
 
-    def current_generations(self) -> AgentGenerations:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations:
         return _GENERATIONS
 
 

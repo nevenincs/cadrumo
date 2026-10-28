@@ -11,6 +11,7 @@ import secrets
 from typing import override
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ...domain.record import LocalModelListRecord, ProviderSettingsRecord
 from ..ports import (
@@ -46,7 +47,9 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         return revision
 
     @override
-    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+    def read(
+        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
+    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         if self.refusal is not None:
             return self.refusal
         reads: list[ProviderRecordRead] = []
@@ -82,7 +85,7 @@ class MemoryProviderSettingsStore(ProviderSettingsStore):
         return None
 
     @override
-    def observe_generations(self) -> StoreGenerations | None:
+    def observe_generations(self, *, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
         return None
 
 

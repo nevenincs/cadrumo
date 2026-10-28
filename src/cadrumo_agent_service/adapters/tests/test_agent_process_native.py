@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import logging
@@ -19,7 +20,7 @@ import pytest
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually
 from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
-from cadrumo_client.contracts.deadline_budget import TimeoutPolicy
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline, TimeoutPolicy
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...host.controller import (
@@ -65,7 +66,7 @@ class _CredentialSource:
         self.handed_out: list[AgentCredential] = []
         self.on_resolve: list[AgentGenerations] = []
 
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         credentials: Mapping[str, AgentCredential] = {
             "anthropic": AgentCredential(bytearray(_FAKE)),
             "zai": AgentCredential(bytearray(_GATEWAY_FAKE), _ZAI_URL),
@@ -76,7 +77,7 @@ class _CredentialSource:
             self.generations = self.on_resolve.pop()
         return resolved
 
-    def current_generations(self) -> AgentGenerations | None:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations | None:
         return self.generations
 
 
@@ -165,13 +166,13 @@ def test_imports_can_run_during_resolution_but_failed_credentials_retire_the_wai
 
     class WaitingCredentials(_CredentialSource):
         @override
-        def resolve_for_agent(self) -> ResolvedAgentCredentials:
+        def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
             # A real child must reach its input gate while resolution is still
             # in progress. No frame or ready publication can precede it.
             marker = tmp_path / "awaiting-frame"
-            deadline = time.monotonic() + 30
+            marker_deadline = time.monotonic() + 30
             while not marker.exists():
-                assert time.monotonic() < deadline, "gateway did not start beside credential resolution"
+                assert time.monotonic() < marker_deadline, "gateway did not start beside credential resolution"
                 time.sleep(0.05)
             pid = int(marker.read_text(encoding="utf-8"))
             observed_pids.append(pid)
@@ -341,7 +342,7 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
 
 
 def test_a_tree_that_ignores_stop_is_ended_only_at_timeout(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> None:
-    """A sleeping tree is allowed to finish until the injected timeout timeout."""
+    """A sleeping tree is allowed to finish until the injected timeout."""
     controller = _controller(tmp_path, "deaf", _CredentialSource(), timeout=3)
     controller.start()
     grandchild = _received(tmp_path)["grandchild"]
@@ -461,7 +462,7 @@ def test_cancel_wakes_readiness_and_startup_owner_retires_the_tree(
         else:
             controller.cancel_start()
         owner.join(HANG_GUARD_SECONDS)
-        assert not owner.is_alive(), "cancel must wake readiness without waiting for its timeout timeout"
+        assert not owner.is_alive(), "cancel must wake readiness without waiting for its timeout"
         assert [error.reason for error in errors] == [AgentHostRefusal.CANCELLED]
         assert controller.state is AgentHostState.DETACHED
         assert controller.published() is None
@@ -540,7 +541,7 @@ def test_contained_preparation_reports_timeout_and_confirms_termination(tmp_path
         arguments=fixture_arguments(_FIXTURE, "silent", str(tmp_path)),
         directory=tmp_path,
         environment=fixture_environment(),
-        timeout=0.2,
+        timeout=1.0,
         output_limit=4096,
     )
     assert result.status is None
@@ -548,19 +549,23 @@ def test_contained_preparation_reports_timeout_and_confirms_termination(tmp_path
     assert runner.settled
 
 
-def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path) -> None:
+@pytest.mark.parametrize("cancel", [False, True])
+def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path, cancel: bool) -> None:
     reading = threading.Event()
     release = threading.Event()
+    document = {"api_version": "v1", "providers": []}
+    body = json.dumps(document).encode()
 
     class Handler(BaseHTTPRequestHandler):
-        @override
         def do_GET(self) -> None:
             self.send_response(200)
-            self.send_header("Content-Length", "256")
+            self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.flush()
             reading.set()
-            release.wait(10)
+            if release.wait(120):
+                with contextlib.suppress(OSError):
+                    self.wfile.write(body)
 
         @override
         def log_message(self, format: str, *args: object) -> None:
@@ -588,10 +593,11 @@ def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path) -> 
         ),
     )
     errors: list[AgentHostError] = []
+    results: list[dict[str, object]] = []
 
     def read() -> None:
         try:
-            service._served_catalog(ready)
+            results.append(service._served_catalog(ready))
         except AgentHostError as error:
             errors.append(error)
 
@@ -599,10 +605,14 @@ def test_service_close_wakes_a_pending_served_catalogue_body(tmp_path: Path) -> 
     owner.start()
     try:
         assert reading.wait(10)
-        service.request_close()
-        owner.join(2)
+        if cancel:
+            service.request_close()
+        else:
+            release.set()
+        owner.join(10)
         assert not owner.is_alive()
-        assert [error.reason for error in errors] == [AgentHostRefusal.CANCELLED]
+        assert [error.reason for error in errors] == ([AgentHostRefusal.CANCELLED] if cancel else [])
+        assert results == ([] if cancel else [document])
     finally:
         release.set()
         owner.join(10)

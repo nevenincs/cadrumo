@@ -4,13 +4,12 @@ from __future__ import annotations
 
 import os
 import sys
-import time
 from collections.abc import Callable
 from datetime import datetime
 from importlib.metadata import version
 from logging import WARNING
 from pathlib import Path
-from threading import Event, RLock, Thread
+from threading import RLock, Thread, Timer
 from uuid import UUID
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
@@ -19,32 +18,31 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.core.time.clock import now
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    OrchestrationTimeoutError,
+    TimeoutDeadline,
+)
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.windows_process import (
     WindowsOwnedProcess,
     WindowsProcessScope,
     unreturned_windows_process_scope,
 )
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
+from cadrumo_runtime.contracts.profile_worker import ProfileWorkerReady
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOwner
 
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
 from .macos_worker_process import MacosOwnedProcess, MacosProcessScope
 from .profile_worker_human_admission import ProfileWorkerHumanAdmission
 from .worker_authorization import WorkerAuthorizationServer
-from .worker_native_identity import worker_operation_namespace
+from .worker_native_identity import worker_operation_namespace, worker_proof_namespace
 from .worker_resource_cleanup import WorkerResourceCleanup, release_worker_resources
 from .worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
-
-_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
-
-
-_WORKER_STARTUP_ACCEPT_POLL_SECONDS = 0.1
-
-_EXIT_WATCH_SLICE_SECONDS = 1.0
-"""How long one wait for the worker's exit lasts before the watch looks whether its owner stopped it."""
 
 _LOGGER = get_logger(__name__)
 
@@ -78,6 +76,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
         exited: Callable[[ProfileWorkerProcess], None] | None = None,
+        stopping: ChannelWake | None = None,
     ) -> None:
         """Launch and authenticate a contained installed worker before key access.
 
@@ -95,19 +94,29 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         self._native_guard = RLock()
         self._native_activity_lock = RLock()
         self._native_activity = None
-        self._stopping = Event()
+        self._stopping = NativeWake()
+        self._owner_stopping = stopping
+        self._process_exited = NativeWake()
+        self._startup_expired = NativeWake()
+        self._startup_deadline = DEFAULT_TIMEOUT_POLICY.deadline()
         self._channel: WorkerChannel | None = None
         self._operation_channel: WorkerChannel | None = None
+        self._proof_channel = None
         self._human_candidate: UUID | None = None
         self._human_deadline: float | None = None
+        self._human_transaction_deadline: float | None = None
         self._authorization = None
         endpoint = worker_endpoint(storage_root=storage_root, worker_namespace=identity.worker_id)
         operation_endpoint = worker_endpoint(
             storage_root=storage_root, worker_namespace=worker_operation_namespace(identity.worker_id)
         )
+        proof_endpoint = worker_endpoint(
+            storage_root=storage_root, worker_namespace=worker_proof_namespace(identity.worker_id)
+        )
         endpoint_owner = WorkerResourceCleanup(endpoint.close)
         operation_endpoint_owner = WorkerResourceCleanup(operation_endpoint.close)
-        self._listener_cleanup = (endpoint_owner, operation_endpoint_owner)
+        proof_endpoint_owner = WorkerResourceCleanup(proof_endpoint.close)
+        self._listener_cleanup = (endpoint_owner, operation_endpoint_owner, proof_endpoint_owner)
         self._pending_channel_cleanup: list[WorkerResourceCleanup] = []
         try:
             self._scope = (
@@ -132,6 +141,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         try:
             endpoint.listen()
             operation_endpoint.listen()
+            proof_endpoint.listen()
             environment = _worker_launch_environment(storage_root=storage_root, profile_id=identity.binding.profile_id)
             environment["PYDANTIC_DISABLE_PLUGINS"] = "__all__"
             product_version = version("cadrumo")
@@ -160,50 +170,53 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 directory=storage_root,
                 environment=environment,
             )
-            # A cold isolated worker imports the registered operation catalogue
-            # before opening its first pipe. Keep that bounded startup budget
-            # separate from the short handshakes after the pipe is connected.
-            self._open_worker_channels(
-                endpoint,
-                operation_endpoint,
-                storage_root,
-                identity,
-                authorization,
-                wall_clock,
-                product_version,
-            )
-            # Construction transfers the child only after both native listeners
+            self._watch_exit(exited)
+            startup_watchdog = Timer(self._startup_deadline.remaining_seconds(), self._startup_expired.set)
+            startup_watchdog.daemon = True
+            startup_watchdog.start()
+            try:
+                self._open_worker_channels(
+                    endpoint,
+                    operation_endpoint,
+                    proof_endpoint,
+                    storage_root,
+                    identity,
+                    authorization,
+                    wall_clock,
+                    product_version,
+                )
+            finally:
+                startup_watchdog.cancel()
+            self._require_process_alive()
+            # Construction transfers the child only after all native listeners
             # have retired. A release failure must not lose the unreturned owner.
             retiring_listeners = True
             try:
-                release_worker_resources(endpoint_owner, operation_endpoint_owner)
+                release_worker_resources(endpoint_owner, operation_endpoint_owner, proof_endpoint_owner)
             except AsyncResourceCleanupError as cleanup:
                 error = RefusalError(RefusalCode.UNAVAILABLE)
                 error.__dict__["async_cleanup_error"] = cleanup
                 raise error from cleanup
+            self._start_proof_dispatcher()
         except BaseException as error:
             # Callback settlement needs the caller's profile guard released.
             # Retain this candidate for adoption before a refusal is projected.
             error.__dict__["_profile_worker_candidate"] = self
             owners = (WorkerResourceCleanup(lambda: self._close_resources(deadline=None, retire_listeners=False)),)
             if not retiring_listeners:
-                owners += (endpoint_owner, operation_endpoint_owner)
+                owners += (endpoint_owner, operation_endpoint_owner, proof_endpoint_owner)
             release_worker_resources(*owners, primary_error=error)
             raise
-        if exited is not None:
-            self._watch_exit(exited)
 
-    def _watch_exit(self, exited: Callable[[ProfileWorkerProcess], None]) -> None:
+    def _watch_exit(self, exited: Callable[[ProfileWorkerProcess], None] | None) -> None:
         """Report an unrequested exit as soon as the process ends, not when a later exchange fails.
 
         Only a Windows process offers a wait handle independent of the scope's
         own; elsewhere the health checks of later exchanges establish the loss.
         """
         process = self._process
-        if not isinstance(process, WindowsOwnedProcess):
-            return
         try:
-            waiter = process.retain_waiter()
+            waiter = process.retain_waiter() if isinstance(process, WindowsOwnedProcess) else process
         except Exception as error:
             diagnostic_event(_LOGGER, "profile_worker_exit_watch_unavailable", primary_error=error, level=WARNING)
             return
@@ -211,58 +224,87 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         try:
             watch.start()
         except BaseException as error:
-            waiter.close()
+            if isinstance(waiter, WindowsOwnedProcess):
+                waiter.close()
             diagnostic_event(_LOGGER, "profile_worker_exit_watch_unavailable", primary_error=error, level=WARNING)
 
-    def _await_exit(self, waiter: WindowsOwnedProcess, exited: Callable[[ProfileWorkerProcess], None]) -> None:
+    def _await_exit(
+        self,
+        waiter: WindowsOwnedProcess | LinuxOwnedProcess | MacosOwnedProcess,
+        exited: Callable[[ProfileWorkerProcess], None] | None,
+    ) -> None:
         try:
-            # Waiting in slices ends the watch within one slice of a close, even when containment fails.
-            while not self._stopping.is_set():
-                try:
-                    waiter.wait(timeout=_EXIT_WATCH_SLICE_SECONDS)
-                except RefusalError as error:
-                    if error.reason is RefusalCode.DEADLINE_EXCEEDED:
-                        continue
-                    return
-                if not self._stopping.is_set():
-                    exited(self)
-                return
+            if isinstance(waiter, WindowsOwnedProcess):
+                waiter.wait(timeout=None)
+            else:
+                waiter.wait(timeout=self._startup_deadline.remaining_seconds())
+            self._process_exited.set()
+            if not self._stopping.is_set() and exited is not None:
+                exited(self)
+        except (RefusalError, OrchestrationTimeoutError):
+            return
         finally:
-            waiter.close()
+            if isinstance(waiter, WindowsOwnedProcess):
+                waiter.close()
 
     def _accept_startup_channel(
         self,
         endpoint: WorkerEndpoint,
         *,
-        timeout: float,
-        monotonic: Callable[[], float] = time.monotonic,
+        deadline: TimeoutDeadline,
     ) -> WorkerChannel:
-        deadline = monotonic() + timeout
-        while True:
+        wakes = self._startup_wakes()
+        try:
             self._require_process_alive()
-            remaining = deadline - monotonic()
-            if remaining <= 0:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            self._require_startup_wait()
+            deadline.remaining_seconds()
+            channel = endpoint.accept(timeout=None, wakes=wakes)
+        except RefusalError as error:
+            self._require_startup_wait()
+            raise error
+        except OrchestrationTimeoutError as error:
+            raise RefusalError(RefusalCode.TIMEOUT) from error
+        try:
+            self._require_process_alive()
+            self._require_startup_wait()
             try:
-                channel = endpoint.accept(timeout=min(_WORKER_STARTUP_ACCEPT_POLL_SECONDS, remaining))
-            except RefusalError as error:
-                if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
-                    raise
-                self._require_process_alive()
-                continue
-            try:
-                self._require_process_alive()
-            except BaseException as error:
-                owner = WorkerResourceCleanup(channel.close)
-                self._pending_channel_cleanup.append(owner)
-                release_worker_resources(owner, primary_error=error)
-                raise
-            return channel
+                deadline.remaining_seconds()
+            except OrchestrationTimeoutError as error:
+                raise RefusalError(RefusalCode.TIMEOUT) from error
+        except BaseException as error:
+            owner = WorkerResourceCleanup(channel.close)
+            self._pending_channel_cleanup.append(owner)
+            release_worker_resources(owner, primary_error=error)
+            raise
+        return channel
+
+    def _startup_wakes(self) -> tuple[ChannelWake, ...]:
+        wakes: tuple[ChannelWake, ...] = (self._stopping, self._process_exited, self._startup_expired)
+        if self._owner_stopping is not None:
+            wakes += (self._owner_stopping,)
+        return wakes
+
+    def _require_startup_wait(self) -> None:
+        if self._startup_expired.is_set():
+            raise RefusalError(RefusalCode.TIMEOUT)
+        if (
+            self._stopping.is_set()
+            or self._process_exited.is_set()
+            or (self._owner_stopping is not None and self._owner_stopping.is_set())
+        ):
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+
+    def _wait_startup_input(self, channel: WorkerChannel) -> None:
+        self._require_startup_wait()
+        if not channel.wait_readable(*self._startup_wakes()):
+            self._require_startup_wait()
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
 
     def _open_worker_channels(
         self,
         endpoint: WorkerEndpoint,
         operation_endpoint: WorkerEndpoint,
+        proof_endpoint: WorkerEndpoint,
         storage_root: Path,
         identity: ProfileWorkerIdentity,
         authorization: WorkerAuthorizationOwner | None,
@@ -270,10 +312,11 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         product_version: str,
     ) -> None:
         """Authenticate both retained channels before listener ownership is transferred."""
-        channel = self._accept_startup_channel(endpoint, timeout=_WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS)
+        channel = self._accept_startup_channel(endpoint, deadline=self._startup_deadline)
         self._channel = channel
         worker_process_id = self._verify_native_peer(channel)
-        deadline = time.monotonic() + 10
+        deadline = self._startup_deadline.instant
+        self._wait_startup_input(channel)
         accept_connection_handshake(
             channel,
             identity=ServerHello(
@@ -284,6 +327,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             deadline=deadline,
         )
         write_document(channel, identity, deadline=deadline)
+        self._wait_startup_input(channel)
         accepted = read_document(channel, ProfileWorkerIdentity, deadline=deadline)
         if accepted != identity:
             raise RefusalError(RefusalCode.INVALID_FRAME)
@@ -296,12 +340,13 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             owner=authorization,
             wall_clock=wall_clock,
         )
-        operation_channel = self._accept_startup_channel(operation_endpoint, timeout=10)
+        operation_channel = self._accept_startup_channel(operation_endpoint, deadline=self._startup_deadline)
         self._operation_channel = operation_channel
         if operation_channel.peer != channel.peer:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         self._verify_native_peer(operation_channel)
-        deadline = time.monotonic() + 10
+        deadline = self._startup_deadline.instant
+        self._wait_startup_input(operation_channel)
         accept_connection_handshake(
             operation_channel,
             identity=ServerHello(
@@ -312,8 +357,32 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
             deadline=deadline,
         )
         write_document(operation_channel, identity, deadline=deadline)
+        self._wait_startup_input(operation_channel)
         if read_document(operation_channel, ProfileWorkerIdentity, deadline=deadline) != identity:
             raise RefusalError(RefusalCode.INVALID_FRAME)
+        proof_channel = self._accept_startup_channel(proof_endpoint, deadline=self._startup_deadline)
+        self._proof_channel = proof_channel
+        if proof_channel.peer != channel.peer:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        self._verify_native_peer(proof_channel)
+        self._wait_startup_input(proof_channel)
+        accept_connection_handshake(
+            proof_channel,
+            identity=ServerHello(
+                product_version=product_version,
+                storage_identity=proof_endpoint.storage_identity,
+                boot_id=identity.runtime_boot_id,
+            ),
+            deadline=deadline,
+        )
+        write_document(proof_channel, identity, deadline=deadline)
+        self._wait_startup_input(proof_channel)
+        if read_document(proof_channel, ProfileWorkerIdentity, deadline=deadline) != identity:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        self._wait_startup_input(channel)
+        ready = read_document(channel, ProfileWorkerReady, deadline=deadline)
+        if ready.identity != identity:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="worker_ready_identity")
 
 
 def _worker_launch_environment(*, storage_root: Path, profile_id: UUID) -> dict[str, str]:

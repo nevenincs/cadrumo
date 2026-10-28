@@ -29,6 +29,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.contracts.operation_access import operation_management_action
 from cadrumo_client.contracts.projection_pages import PROJECTION_PAGE_BYTES, project_document_page
 from cadrumo_client.contracts.submission_payload import FinancialOperandInputDescriptor
@@ -121,7 +122,7 @@ async def receive(
     """Read one bounded worker request, consuming lease transfers only on control."""
 
     def read() -> ProfileWorkerRequest:
-        deadline = time.monotonic() + 5
+        deadline = DEFAULT_TIMEOUT_POLICY.deadline().instant
         request = read_document(channel, ProfileWorkerRequest, deadline=deadline)
         if isinstance(request.root, ProfileWorkerLeaseTransferRequest):
             if not control:
@@ -166,11 +167,14 @@ async def operate(
     uploads: WorkerSubmissionStaging,
     changed: asyncio.Event,
     input_executor: ThreadPoolExecutor,
+    ready: asyncio.Event | None = None,
 ) -> None:
     """Dispatch operation-channel requests and serialize refusals on that channel.
 
     ``changed`` wakes custody expiry after acts that may change staged uploads.
     """
+    if ready is not None:
+        ready.set()
     try:
         while True:
             request = (await receive(channel, failed, input_executor)).root

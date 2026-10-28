@@ -19,6 +19,11 @@ def worker_operation_namespace(worker_id: UUID) -> UUID:
     return uuid5(worker_id, "cadrumo-profile-operations")
 
 
+def worker_proof_namespace(worker_id: UUID) -> UUID:
+    """Keep exact-attempt cancellation independent of a busy proof channel."""
+    return uuid5(worker_id, "cadrumo-profile-proof-control")
+
+
 def worker_view_namespace(worker_id: UUID) -> UUID:
     """Keep a view's pushed image stream off both the control and the execution channel."""
     return uuid5(worker_id, "cadrumo-profile-view")

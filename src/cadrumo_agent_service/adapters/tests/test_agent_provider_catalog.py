@@ -3,14 +3,18 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
+from threading import Event, Thread
+from types import SimpleNamespace
 from typing import override
 
 import pytest
 
+from cadrumo_client.contracts import deadline_budget
+
 from ...host.controller import AgentHostError, AgentHostRefusal
-from ...host.store_lifecycle import AgentInvocationResult, AgentInvocationRunner
+from ...host.store_lifecycle import AgentInvocationResult, AgentInvocationRunner, InvocationCancellation
 from ...providers.application.ports import ProviderCatalogUnavailableError, ProviderCatalogUnavailableReason
 from ...providers.application.tests.synthetic_catalog import KEY_LANE, synthetic_document
 from ..agent_process import WindowsAgentInvocationRunner
@@ -29,6 +33,7 @@ class _Runner(AgentInvocationRunner):
     def __init__(self, result: AgentInvocationResult | Exception) -> None:
         self.result = result
         self.calls: list[dict[str, object]] = []
+        self.before_return: Callable[[], None] | None = None
 
     @override
     def run(
@@ -41,7 +46,16 @@ class _Runner(AgentInvocationRunner):
         timeout: float,
         output_limit: int,
     ) -> AgentInvocationResult:
-        self.calls.append({"executable": executable, "arguments": tuple(arguments), "environment": dict(environment)})
+        self.calls.append(
+            {
+                "executable": executable,
+                "arguments": tuple(arguments),
+                "environment": dict(environment),
+                "timeout": timeout,
+            }
+        )
+        if self.before_return is not None:
+            self.before_return()
         if isinstance(self.result, Exception):
             raise self.result
         return self.result
@@ -87,9 +101,6 @@ def test_the_agent_is_asked_for_its_offline_declaration_in_a_credential_free_env
     [
         pytest.param(
             AgentInvocationResult(status=1, standard_output=b""), ProviderCatalogUnavailableReason.AGENT_FAILED
-        ),
-        pytest.param(
-            AgentInvocationResult(status=None, standard_output=b""), ProviderCatalogUnavailableReason.AGENT_TIMED_OUT
         ),
         pytest.param(AgentHostError(AgentHostRefusal.LAUNCH_FAILED), ProviderCatalogUnavailableReason.AGENT_FAILED),
         pytest.param(OSError("denied"), ProviderCatalogUnavailableReason.AGENT_FAILED),
@@ -210,3 +221,62 @@ def test_malformed_sign_in_metadata_is_refused_without_caching(tmp_path: Path, d
         source.sign_in_providers()
     runner.result = _ok('{"schema_version":1,"providers":[]}')
     assert source.sign_in_providers() == ()
+
+
+def test_startup_catalog_uses_the_remaining_owner_deadline(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(deadline_budget, "time", SimpleNamespace(monotonic=lambda: 1000.0))
+    source, runner = _source(tmp_path, _ok(synthetic_document()))
+    source.catalog(deadline=deadline_budget.TimeoutDeadline(1017.0))
+    assert runner.calls[0]["timeout"] == 17.0
+
+
+def test_cancelled_catalog_joiner_releases_its_wait_without_starting_another_process(tmp_path: Path) -> None:
+    source, runner = _source(tmp_path, _ok(synthetic_document()))
+    reading = Event()
+    release = Event()
+    cancellation = InvocationCancellation()
+    errors: list[BaseException] = []
+
+    def retained_read() -> None:
+        reading.set()
+        assert release.wait(5)
+
+    runner.before_return = retained_read
+
+    def read(*, joined: bool) -> None:
+        try:
+            source.catalog(cancellation=cancellation if joined else None)
+        except BaseException as error:
+            errors.append(error)
+
+    leader = Thread(target=read, kwargs={"joined": False})
+    follower = Thread(target=read, kwargs={"joined": True})
+    leader.start()
+    try:
+        assert reading.wait(5)
+        follower.start()
+        cancellation.cancel()
+        follower.join(2)
+        assert not follower.is_alive()
+        assert leader.is_alive()
+        assert len(errors) == 1 and isinstance(errors[0], AgentHostError)
+        assert errors[0].reason is AgentHostRefusal.CANCELLED
+        assert len(runner.calls) == 1
+    finally:
+        release.set()
+        leader.join(5)
+        if follower.ident is not None:
+            follower.join(5)
+    assert not leader.is_alive()
+    assert source.catalog().entry(KEY_LANE) is not None
+    assert len(runner.calls) == 1
+
+
+def test_catalog_timeout_retains_the_startup_timeout_reason_and_is_not_cached(tmp_path: Path) -> None:
+    source, runner = _source(tmp_path, AgentInvocationResult(status=None, standard_output=b""))
+    with pytest.raises(AgentHostError) as refused:
+        source.catalog()
+    assert refused.value.reason is AgentHostRefusal.TIMEOUT
+    runner.result = _ok(synthetic_document())
+    assert source.catalog().entry(KEY_LANE) is not None
+    assert len(runner.calls) == 2

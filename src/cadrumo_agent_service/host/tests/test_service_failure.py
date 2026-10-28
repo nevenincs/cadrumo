@@ -22,8 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
     [
         (AgentHostError(AgentHostRefusal.STORES_NEWER), "agent_service_incompatible"),
         (AgentHostError(AgentHostRefusal.SIGNED_OUT), "agent_signed_out"),
-        (AgentHostError(AgentHostRefusal.EMERGENCY_CUTOFF), "agent_emergency_cutoff"),
-        (RefusalError(RefusalCode.EMERGENCY_CUTOFF), "agent_emergency_cutoff"),
+        (AgentHostError(AgentHostRefusal.TIMEOUT), "agent_timeout"),
+        (RefusalError(RefusalCode.TIMEOUT), "agent_timeout"),
         (AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE), "agent_provider_credential_missing"),
         (AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT), "agent_service_absent"),
     ],
@@ -49,9 +49,9 @@ def test_unexpected_failure_never_serializes_or_logs_the_exception(caplog: pytes
 
 def test_runtime_refusal_keeps_its_closed_reason_in_diagnostics(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.WARNING, logger="cadrumo_agent_service.service"):
-        result = service_failure(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
-    assert result == {"event": "refused", "code": "service_failed"}
-    assert RefusalCode.DEADLINE_EXCEEDED.value in delivered_text(caplog)
+        result = service_failure(RefusalError(RefusalCode.TIMEOUT))
+    assert result == {"event": "refused", "code": "agent_timeout"}
+    assert RefusalCode.TIMEOUT.value in delivered_text(caplog)
 
 
 def test_an_absent_runtime_is_reported_as_typed_unavailability(caplog: pytest.LogCaptureFixture) -> None:

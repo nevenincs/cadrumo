@@ -17,6 +17,7 @@ from pydantic import BaseModel
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.model_runs import ModelRunMediaKind
 
 from ..domain.catalog import BackgroundOption, LaneId, LiveCatalogModel, ProviderCatalog
@@ -143,7 +144,7 @@ class ProviderCatalogSource(Protocol):
     providers makes provider settings unavailable.
     """
 
-    def catalog(self) -> ProviderCatalog:
+    def catalog(self, *, deadline: TimeoutDeadline | None = None) -> ProviderCatalog:
         """Return the catalog the agent reports.
 
         Raises:
@@ -196,7 +197,9 @@ class LiveCatalogModels(Protocol):
 class ProviderSettingsStore(Protocol):
     """Encrypted per-profile provider-settings records for one admitted profile."""
 
-    def read(self, provider_ids: tuple[str, ...]) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
+    def read(
+        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
+    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
         """Return one read per requested provider, in request order, or a refusal."""
         ...
 
@@ -208,7 +211,7 @@ class ProviderSettingsStore(Protocol):
         """Remove the provider's record only if its revision still equals ``expected_revision``."""
         ...
 
-    def observe_generations(self) -> StoreGenerations | None:
+    def observe_generations(self, *, deadline: TimeoutDeadline | None = None) -> StoreGenerations | None:
         """Return the current generations, or ``None`` when the profile is not usable.
 
         Never extends the session's idle time, so a background observer cannot

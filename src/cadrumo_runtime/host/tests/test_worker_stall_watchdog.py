@@ -202,6 +202,7 @@ async def test_the_worker_serves_both_channels_inside_the_watchdog(
         await _serve_watched(
             cast(WorkerChannel, object()),
             cast(WorkerChannel, object()),
+            cast(WorkerChannel, object()),
             cast(ProfileWorkerCustody, object()),
             cast(ProfileWorkerHumanLogin, object()),
             cast(ProfileWorkerOperationHost, object()),

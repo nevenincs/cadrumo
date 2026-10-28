@@ -166,8 +166,6 @@ desktop:
     sent_skills: Habilitats carregades
     service_absent: L'agent no està instal·lat. Reinstal·la Cadrumo per afegir-lo.
     service_credential_missing: Configura un proveïdor als ajustos per començar.
-    service_emergency_cutoff: L’agent ha arribat al límit de temps d’emergència i
-      s’ha aturat.
     service_failed: L'agent ha deixat de funcionar.
     service_incompatible: Aquesta versió de l'agent no funciona amb aquesta versió
       de Cadrumo. Reinstal·la Cadrumo.
@@ -176,6 +174,7 @@ desktop:
     service_signed_out: Inicia la sessió per parlar amb l'agent.
     service_starting: S'està iniciant l'agent…
     service_stopped: L'agent no està en marxa.
+    service_timeout: L’agent ha superat el temps d’espera i s’ha aturat.
     set_up_providers: Configura els proveïdors d'IA
     settings: Configuració de l'agent
     settings_label: 'Model: {current}'

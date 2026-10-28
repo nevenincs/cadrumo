@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 from contextlib import AbstractContextManager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from threading import Event
 from typing import Protocol
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from cadrumo.application.user_profile.access_contracts import AccessEvaluationContext, AccessSession, ProfileAccessState
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 
@@ -17,6 +19,24 @@ class SessionAuthorityFacts:
 
     profile: ProfileAccessState
     context: AccessEvaluationContext
+
+
+@dataclass
+class HumanAdmissionControl:
+    """One owner's cancellation and commit state, changed only on the admission fence."""
+
+    cancelled: bool = False
+    committed: bool = False
+    cancelled_event: Event = field(default_factory=Event, repr=False)
+    attempt_id: UUID = field(default_factory=uuid4)
+    cancellation: ProfileProofCancellation = field(default_factory=ProfileProofCancellation, repr=False)
+
+    def cancel(self) -> None:
+        """Cancel an unpublished attempt without undoing a published sign-in."""
+        if not self.committed and not self.cancelled:
+            self.cancelled = True
+            self.cancelled_event.set()
+            self.cancellation.cancel()
 
 
 class SessionAuthorityOwner(Protocol):

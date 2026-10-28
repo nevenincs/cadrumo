@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
@@ -39,14 +38,16 @@ from cadrumo_client.contracts.attendance import (
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
-    SecretReady,
     SessionRequest,
     SessionsLocked,
 )
@@ -59,8 +60,8 @@ from cadrumo_client.contracts.profile_selection import (
 from cadrumo_client.contracts.session_events import PresentationRequested
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
-from cadrumo_client.transport.frame_io import read_secret, write_document
 
+from ..application.session_authority_contracts import HumanAdmissionControl
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .sign_in_status import observe_active_profile, observe_sign_in, resolve_login_target
 from .sign_in_sweep import revoke_other_saved_sign_ins
@@ -130,32 +131,34 @@ class ProfileConnectionSessionMixin:
             status=status,
         )
 
-    def _login(
+    def _login_proof(
         self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
         context: ConnectionContext,
-        channel: ByteChannel,
         request: ProfileLogin,
+        secret: bytearray,
+        control: HumanAdmissionControl,
+        deadline: TimeoutDeadline,
     ) -> ProfileStatus | AccessDenied:
-        connection, host = self._prepare(context, channel, request)
-        write_document(
-            channel,
-            SecretReady(request_id=request.request_id, runtime_boot_id=self.boot, connection_id=context.connection_id),
-            deadline=time.monotonic() + 5,
-        )
-        # Slow/unresponsive secret senders do not hold any profile admission guard.
-        with read_secret(channel, deadline=time.monotonic() + 10) as secret:
-            if request.method in {"password", "receipt"}:
-                admitted = self._admit_human_login(connection, host, context, secret)
-            else:
-                api_login = self._prepare_api_key_login(connection, host, secret, request)
-                if isinstance(api_login, AccessDenied):
-                    return api_login
-                admitted = host.authority.admit_api_key(
-                    connection_id=context.connection_id,
-                    target=host.store.binding,
-                    credential=api_login.credential,
-                    scope=api_login.scope,
-                )
+        with host.guard:
+            if control.cancelled or connection.disconnecting:
+                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+        if request.method in {"password", "receipt"}:
+            admitted = self._admit_human_login(connection, host, context, secret, control, deadline)
+        else:
+            api_login = self._prepare_api_key_login(connection, host, secret, request)
+            if isinstance(api_login, AccessDenied):
+                return api_login
+            with host.guard:
+                if control.cancelled:
+                    return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+            admitted = host.authority.admit_api_key(
+                connection_id=context.connection_id,
+                target=host.store.binding,
+                credential=api_login.credential,
+                scope=api_login.scope,
+            )
         if request.method == "api_key" or (request.method == "receipt" and not request.hand_over):
             # Only a person's sign-in hands the profile over: a password, or a
             # saved sign-in the person logs in with. A command, a terminal start
@@ -242,16 +245,24 @@ class ProfileConnectionSessionMixin:
         host: RuntimeProfileHost,
         context: ConnectionContext,
         secret: bytearray,
+        control: HumanAdmissionControl,
+        deadline: TimeoutDeadline,
     ) -> AccessSession | AccessDenied:
         with host.guard:
             if not self._admitting():
                 raise RefusalError(RefusalCode.DRAINING)
             connection.human_secret = secret
+            connection.human_admission_deadline = deadline.instant
+            connection.human_proof_attempt_id = control.attempt_id
+            connection.human_proof_cancellation = control.cancellation
         try:
-            return host.authority.admit_human(connection_id=context.connection_id)
+            return host.authority.admit_human(connection_id=context.connection_id, control=control)
         finally:
             with host.guard:
                 connection.human_secret = None
+                connection.human_admission_deadline = None
+                connection.human_proof_attempt_id = None
+                connection.human_proof_cancellation = None
 
     def _prepare_api_key_login(
         self: RuntimeProfileConnections,
@@ -547,6 +558,7 @@ class ProfileConnectionSessionMixin:
         context: ConnectionContext,
         channel: ByteChannel,
         request: ProfileLogin
+        | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
         | PresentationRequest
@@ -557,6 +569,7 @@ class ProfileConnectionSessionMixin:
         | AttendanceDecide,
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | PresentationDelivered
         | SessionsLocked
@@ -611,6 +624,8 @@ class ProfileConnectionSessionMixin:
                 result = self._attendance_ask(context, channel, request)
             elif isinstance(request, AttendanceDecide):
                 result = self._attendance_decide(context, request)
+            elif isinstance(request, ProfileLoginStatusQuery):
+                result = self._login_status(context, request)
             elif isinstance(request, ProfileLogin):
                 result = self._login(context, channel, request)
                 if not isinstance(result, AccessDenied):
@@ -650,6 +665,8 @@ class ProfileConnectionSessionMixin:
 
     def disconnect(self: RuntimeProfileConnections, context: ConnectionContext) -> None:
         """Release only this connection's authority; keep native login provenance separate."""
+        self._cancel_connection_login(context)
+        self._cancel_service_admissions(context.connection_id)
         self._events.disconnect(context)
         self._views.disconnect(context.connection_id)
         self._enrollments.disconnect(context.connection_id)

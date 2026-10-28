@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
+from threading import Thread
 from typing import TYPE_CHECKING, Protocol
 from uuid import UUID, uuid4
 
@@ -15,12 +16,14 @@ from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, R
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
     ServiceAdmission,
+    ServiceAdmissionPending,
+    ServiceAdmissionStatusQuery,
     ServiceConnect,
     ServiceConnected,
     ServiceLease,
     VerifiedServicePeer,
 )
-from cadrumo_client.contracts.session_events import ServiceLeaseChanged
+from cadrumo_client.contracts.session_events import ServiceAdmissionChanged, ServiceLeaseChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from .profile_host import ProfileConnection
@@ -122,6 +125,23 @@ class ServiceConnection:
     disclosing: int = 0
 
 
+@dataclass(slots=True)
+class PendingServiceAdmission:
+    """One retained verification job; its handle grants no authority."""
+
+    admission_id: UUID
+    context: ConnectionContext
+    request: ServiceAdmission
+    cancelled: bool = False
+    started: bool = False
+    complete: bool = False
+    result: ServiceConnected | AccessDenied | None = None
+
+    def active(self) -> bool:
+        """Read cancellation afresh after work that can run beside the owner."""
+        return not self.cancelled
+
+
 class ProfileConnectionServicesMixin:
     """Handle installed-service connections owned by the runtime profile host."""
 
@@ -129,11 +149,13 @@ class ProfileConnectionServicesMixin:
         self: RuntimeProfileConnections,
         context: ConnectionContext,
         channel: ByteChannel,
-        request: ServiceConnect | ServiceAdmission,
+        request: ServiceConnect | ServiceAdmission | ServiceAdmissionStatusQuery,
     ):
         """Register a verified peer or approve it from an exact live human session."""
+        if isinstance(request, ServiceAdmissionStatusQuery):
+            return self._service_admission_status(context, request)
         if isinstance(request, ServiceAdmission):
-            return self._admit_service(context, request)
+            return self._begin_service_admission(context, request)
         descriptor = self._service_descriptors.get(request.service_id)
         if descriptor is None:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="service_descriptor_unknown")
@@ -227,7 +249,166 @@ class ProfileConnectionServicesMixin:
             service_id=request.service_id,
         )
 
-    def _admit_service(self: RuntimeProfileConnections, context: ConnectionContext, request: ServiceAdmission):
+    def _begin_service_admission(
+        self: RuntimeProfileConnections, context: ConnectionContext, request: ServiceAdmission
+    ):
+        holder = self._connected(context.connection_id)
+        if (
+            holder.context != context
+            or holder.profile_id != request.profile_id
+            or holder.session_id != request.session_id
+            or not is_persons_frontend(holder.frontend)
+        ):
+            return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        with self._guard:
+            if self._closed:
+                return AccessDenied(code=AccessDenialCode.RUNTIME_CHANGED)
+            # One pending admission per human connection, and bounded work for
+            # the runtime as a whole. A busy answer did not start any mutation.
+            if any(
+                item.context.connection_id == context.connection_id and item.active()
+                for item in self._service_admissions.values()
+            ):
+                return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
+            if len(self._service_admissions) >= 32:
+                return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
+            pending = PendingServiceAdmission(uuid4(), context, request)
+            self._service_admissions[pending.admission_id] = pending
+        self._start_service_admission_jobs()
+        return self._pending_service_reply(pending, request.request_id)
+
+    def _start_service_admission_jobs(self: RuntimeProfileConnections) -> None:
+        """Take available verification slots; their completions dispatch queued work."""
+        while True:
+            with self._guard:
+                if self._closed:
+                    return
+                pending = next(
+                    (item for item in self._service_admissions.values() if not item.started and item.active()), None
+                )
+                if pending is None or not self._service_admission_slots.acquire(blocking=False):
+                    return
+                pending.started = True
+            try:
+                Thread(
+                    target=self._verify_pending_service_admission,
+                    args=(pending,),
+                    name="service-admission",
+                    daemon=True,
+                ).start()
+            except BaseException:
+                with self._guard:
+                    self._service_admissions.pop(pending.admission_id, None)
+                self._service_admission_slots.release()
+                raise
+
+    def _verify_pending_service_admission(self: RuntimeProfileConnections, pending: PendingServiceAdmission) -> None:
+        context, request = pending.context, pending.request
+        try:
+            result = self._admit_service(context, request, pending=pending)
+        except Exception:
+            result = AccessDenied(code=AccessDenialCode.AUTHORITY_UNAVAILABLE)
+        with self._guard:
+            pending.complete = True
+            pending.result = result
+            if not pending.active() or self._closed:
+                self._service_admissions.pop(pending.admission_id, None)
+        self._service_admission_slots.release()
+        self._events.publish_cue(
+            ServiceAdmissionChanged(
+                runtime_boot_id=self.boot,
+                connection_id=context.connection_id,
+                profile_id=request.profile_id,
+                session_id=request.session_id,
+            )
+        )
+        self._start_service_admission_jobs()
+
+    def _pending_service_reply(self: RuntimeProfileConnections, pending: PendingServiceAdmission, request_id: UUID):
+        return ServiceAdmissionPending(
+            request_id=request_id,
+            runtime_boot_id=self.boot,
+            connection_id=pending.context.connection_id,
+            profile_id=pending.request.profile_id,
+            service_id=pending.request.service_id,
+            admission_id=pending.admission_id,
+        )
+
+    def _service_admission_status(
+        self: RuntimeProfileConnections, context: ConnectionContext, request: ServiceAdmissionStatusQuery
+    ):
+        with self._guard:
+            pending = self._service_admissions.get(request.admission_id)
+            holder = self._connections.get(context.connection_id)
+            if (
+                pending is None
+                or not pending.active()
+                or pending.context != context
+                or pending.request.profile_id != request.profile_id
+                or pending.request.session_id != request.session_id
+                or pending.request.recipient_connection_id != request.recipient_connection_id
+                or pending.request.service_id != request.service_id
+                or holder is None
+                or holder.session_id != request.session_id
+                or holder.disconnecting
+            ):
+                return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+            host = self._profiles.get(request.profile_id)
+        if host is None:
+            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+        with host.guard:
+            # A queued or completed result belongs to the exact still-live
+            # authority, never merely to someone holding its nonsecret id.
+            host.authority.human_administration_facts(
+                connection_id=context.connection_id, session_id=request.session_id
+            )
+            with self._guard:
+                if not pending.active() or self._service_admissions.get(request.admission_id) is not pending:
+                    return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+                if request.action == "service_admission_cancel":
+                    if isinstance(pending.result, ServiceConnected):
+                        self._service_admissions.pop(request.admission_id, None)
+                        return pending.result.model_copy(update={"request_id": request.request_id})
+                    pending.cancelled = True
+                    if pending.complete or not pending.started:
+                        self._service_admissions.pop(request.admission_id, None)
+                    return self._pending_service_reply(pending, request.request_id).model_copy(
+                        update={"cancelled": True}
+                    )
+                if not pending.complete:
+                    return self._pending_service_reply(pending, request.request_id)
+                self._service_admissions.pop(request.admission_id, None)
+                result = pending.result
+            if isinstance(result, ServiceConnected):
+                service = self._services.get(request.recipient_connection_id)
+                if service is None or service.lease != result.lease:
+                    return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+                return result.model_copy(update={"request_id": request.request_id})
+            return result or AccessDenied(code=AccessDenialCode.AUTHORITY_UNAVAILABLE)
+
+    def _cancel_service_admissions(
+        self: RuntimeProfileConnections, connection_id: UUID | None = None, session_id: UUID | None = None
+    ) -> None:
+        """Fence late verification after either peer or its exact parent ends."""
+        with self._guard:
+            for admission_id, pending in tuple(self._service_admissions.items()):
+                if (
+                    connection_id is None
+                    or pending.context.connection_id == connection_id
+                    or pending.request.recipient_connection_id == connection_id
+                    or (session_id is not None and pending.request.session_id == session_id)
+                ):
+                    pending.cancelled = True
+                    if pending.complete or not pending.started:
+                        self._service_admissions.pop(admission_id, None)
+
+    def _admit_service(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        request: ServiceAdmission,
+        *,
+        pending: PendingServiceAdmission | None = None,
+    ):
         holder = self._connected(context.connection_id)
         if (
             holder.context != context
@@ -255,6 +436,10 @@ class ProfileConnectionServicesMixin:
                     or holder.profile_id != request.profile_id
                     or holder.session_id != request.session_id
                     or not is_persons_frontend(holder.frontend)
+                    or (
+                        pending is not None
+                        and (pending.cancelled or self._service_admissions.get(pending.admission_id) is not pending)
+                    )
                 ):
                     return AccessDenied(code=AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
                 if (
@@ -297,7 +482,7 @@ class ProfileConnectionServicesMixin:
                     profile_id=request.profile_id,
                 )
             )
-            return ServiceConnected(
+            result = ServiceConnected(
                 request_id=request.request_id,
                 runtime_boot_id=self.boot,
                 connection_id=context.connection_id,
@@ -305,6 +490,11 @@ class ProfileConnectionServicesMixin:
                 service_id=request.service_id,
                 lease=service.lease,
             )
+            if pending is not None:
+                with self._guard:
+                    pending.result = result
+                    pending.complete = True
+            return result
 
     def _service_tree_owner(
         self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel

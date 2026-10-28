@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 import contextlib
 import json
 import os
 import secrets
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 from contextlib import ExitStack
 from dataclasses import replace
-from http.client import HTTPConnection, HTTPException
 from pathlib import Path
 from threading import Event, Lock, RLock, Thread
 from time import monotonic
 from typing import Any, override
-from urllib.parse import urlencode
 from uuid import uuid4
 
+import httpx
 from pydantic import SecretStr
 
 from cadrumo.core.locks import exclusive_file_lock
@@ -25,7 +25,12 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+    OrchestrationTimeoutError,
+    TimeoutDeadline,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
@@ -71,7 +76,11 @@ from .host.launch_environment import (
     system_environment,
 )
 from .host.launcher_protocol import launcher_refusal_for, runtime_launcher_refusal_for
-from .host.store_lifecycle import AgentStoreLifecycle
+from .host.store_lifecycle import (
+    INVOCATION_TERMINATION_TIMEOUT_SECONDS,
+    AgentStoreLifecycle,
+    InvocationCancellation,
+)
 from .providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from .providers.application.contracts import ProviderSettingsRefusal
 from .providers.application.local_model_list import LocalModelListService
@@ -98,6 +107,8 @@ ADMIN_READ_FRESH_SECONDS = 5.0
 
 def service_failure(error: Exception) -> dict[str, Any]:
     """Keep typed launch refusals and log only bounded operational metadata."""
+    if isinstance(error, OrchestrationTimeoutError):
+        return {"event": "refused", "code": "agent_timeout"}
     if isinstance(error, AgentHostError):
         code = launcher_refusal_for(error).value
         _LOGGER.warning(
@@ -140,26 +151,56 @@ def _without_lanes(
 
 class _GatewayCredentials(AgentCredentialSource):
     def __init__(
-        self, source: AgentCredentialSource, gateway_bearer: bytearray, host_token: bytearray, closing: Event
+        self,
+        source: AgentCredentialSource,
+        gateway_bearer: bytearray,
+        host_token: bytearray,
+        closing: Event,
+        *,
+        startup_cancellation: Callable[[], InvocationCancellation | None] | None = None,
+        close_read: Callable[[], None] | None = None,
     ) -> None:
         self._source = source
         self._gateway_bearer = gateway_bearer
         self._host_token = host_token
         self._closing = closing
+        self._startup_cancellation = startup_cancellation
+        self._close_read = close_read
+
+    @contextlib.contextmanager
+    def _read(self, deadline: TimeoutDeadline | None) -> Generator[None]:
+        cancellation = self._startup_cancellation() if deadline is not None and self._startup_cancellation else None
+        release = (
+            cancellation.subscribe(self._close_read) if cancellation is not None and self._close_read else lambda: None
+        )
+        try:
+            if cancellation is not None and cancellation.is_set():
+                raise AgentHostError(AgentHostRefusal.CANCELLED)
+            yield
+        except BaseException as error:
+            if cancellation is not None and cancellation.is_set():
+                raise AgentHostError(AgentHostRefusal.CANCELLED) from error
+            raise
+        finally:
+            release()
 
     @override
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         if self._closing.is_set():
             raise AgentHostError(AgentHostRefusal.SIGNED_OUT)
-        return replace(
-            self._source.resolve_for_agent(),
-            gateway_bearer=bytearray(self._gateway_bearer),
-            host_token=bytearray(self._host_token),
-        )
+        with self._read(deadline):
+            return replace(
+                self._source.resolve_for_agent(deadline=deadline),
+                gateway_bearer=bytearray(self._gateway_bearer),
+                host_token=bytearray(self._host_token),
+            )
 
     @override
-    def current_generations(self) -> AgentGenerations | None:
-        return None if self._closing.is_set() else self._source.current_generations()
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations | None:
+        if self._closing.is_set():
+            return None
+        with self._read(deadline):
+            return self._source.current_generations(deadline=deadline)
 
 
 class AgentService:
@@ -179,6 +220,9 @@ class AgentService:
         self._root = storage_root
         self._guard = RLock()
         self._closing = Event()
+        self._startup_cancellation: InvocationCancellation | None = None
+        self._preparation_runner: WindowsAgentInvocationRunner | None = None
+        self._read_cancellation = InvocationCancellation()
         self._reconnecting = Event()
         self._start_request_guard = Lock()
         self._start_thread: Thread | None = None
@@ -195,6 +239,8 @@ class AgentService:
             gateway_bearer,
             self._host_token,
             self._closing,
+            startup_cancellation=lambda: self._startup_cancellation,
+            close_read=client.connection.close,
         )
         model_list = SecureLocalModelListStore(client=client)
         live_models = ServedCatalogModels(self._live_catalog)
@@ -207,7 +253,9 @@ class AgentService:
                 endpoint=self._background_endpoint, bearer=gateway_bearer, host_token=self._host_token
             ),
         )
-        self._login_status = AgentProviderAuthStatusProbe(context=self._login_context)
+        self._login_status = AgentProviderAuthStatusProbe(
+            context=self._login_context, cancellation=self._read_cancellation
+        )
         self._providers = ProviderSettingsService(
             store=self._store,
             catalog_source=self._catalog,
@@ -636,6 +684,26 @@ class AgentService:
         return None
 
     def start(self) -> dict[str, Any]:
+        """Own one timeout and cancellation signal across the entire startup attempt."""
+        with self._guard:
+            deadline = DEFAULT_TIMEOUT_POLICY.deadline()
+            if self._preparation_runner is not None and not self._preparation_runner.settled:
+                raise AgentHostError(AgentHostRefusal.STORES_UNPREPARED)
+            cancellation = self._startup_cancellation or InvocationCancellation()
+            self._startup_cancellation = cancellation
+            try:
+                return self._start_owned(deadline, cancellation)
+            except BaseException as error:
+                if self._has_unsettled_tree():
+                    raise AgentHostError(AgentHostRefusal.STORES_UNPREPARED) from error
+                if isinstance(error, OrchestrationTimeoutError):
+                    raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
+                raise
+            finally:
+                if self._startup_cancellation is cancellation:
+                    self._startup_cancellation = None
+
+    def _start_owned(self, deadline: TimeoutDeadline, cancellation: InvocationCancellation) -> dict[str, Any]:
         """Prepare stores and launch one tree under an exclusive cross-process reservation."""
         with self._guard:
             started = monotonic()
@@ -647,13 +715,13 @@ class AgentService:
             if self._auth_attempt is not None and self._auth_attempt.active:
                 return {"event": "refused", "code": "busy"}
             lease = self.client.lease
-            if lease is None or self._credentials.current_generations() is None:
+            if lease is None or self._credentials.current_generations(deadline=deadline) is None:
                 return {"event": "refused", "code": "signed_out"}
             if self._controller is not None:
-                ready = self._controller.published()
+                ready = self._controller.published(deadline=deadline)
                 if ready is not None:
                     return self._ready_event(ready)
-                self.stop()
+                self.stop(deadline=deadline)
             agent_root = profile_agent_root(self._root, lease.profile_id)
             if not self._owned:
                 try:
@@ -661,10 +729,6 @@ class AgentService:
                 except LockAcquisitionError:
                     return {"event": "refused", "code": "already_running"}
                 self._owned = True
-            # The launch resolves credentials against the agent's own catalog,
-            # whose first read runs the agent once; it runs beside the stores'
-            # invocations instead of after them.
-            Thread(target=self._prefetch_catalog, name="agent-service-catalog-prefetch", daemon=True).start()
             owned = monotonic()
             self._workspace = profile_agent_workspace(agent_root)
             image = agent_image(agent_root=agent_root)
@@ -682,29 +746,65 @@ class AgentService:
                     profile_id=lease.profile_id,
                 ),
             )
-            AgentStoreLifecycle(
-                runner=WindowsAgentInvocationRunner(),
-                launch=launch,
-                command_line=AGENT_COMMAND_LINE,
-                aside=HostedStoresAside(agent_root),
-                quiesced=lambda: self._owned and self._controller is None,
-            ).prepare()
+            failures: list[BaseException] = []
+
+            def prefetch() -> None:
+                try:
+                    self._catalog.catalog(deadline=deadline, cancellation=cancellation)
+                except BaseException as error:
+                    failures.append(error)
+                    cancellation.cancel()
+
+            preparation_runner = WindowsAgentInvocationRunner(deadline=deadline, cancellation=cancellation)
+            self._preparation_runner = preparation_runner
+            catalog_owner = Thread(target=prefetch, name="agent-service-catalog-prefetch")
+            catalog_owner.start()
+            try:
+                AgentStoreLifecycle(
+                    runner=preparation_runner,
+                    launch=launch,
+                    command_line=AGENT_COMMAND_LINE,
+                    aside=HostedStoresAside(agent_root),
+                    quiesced=lambda: self._owned and self._controller is None,
+                    deadline=deadline,
+                    cancellation=cancellation,
+                ).prepare()
+                catalog_owner.join(deadline.remaining_seconds())
+                if catalog_owner.is_alive():
+                    raise AgentHostError(AgentHostRefusal.TIMEOUT)
+                if failures:
+                    raise failures[0]
+                if cancellation.is_set():
+                    raise AgentHostError(AgentHostRefusal.CANCELLED)
+            except BaseException as error:
+                if failures and failures[0] is not error:
+                    raise failures[0] from error
+                raise
+            finally:
+                if catalog_owner.is_alive():
+                    cancellation.cancel()
+                    catalog_owner.join(INVOCATION_TERMINATION_TIMEOUT_SECONDS)
+                    if catalog_owner.is_alive():
+                        raise AgentHostError(AgentHostRefusal.STORES_UNPREPARED)
             prepared = monotonic()
             controller = AgentHostController(
                 launcher=WindowsAgentProcessLauncher(on_exit=self._wake), credentials=self._credentials, launch=launch
             )
             self._clear_hosted_certifications()
             self._controller = controller
-            if self._closing.is_set():
+            if self._closing.is_set() or cancellation.is_set():
                 controller.cancel_start()
+            release_cancel = cancellation.subscribe(controller.cancel_start)
             try:
-                ready = controller.start()
+                ready = controller.start(deadline=deadline)
             except AgentHostError as error:
                 if controller.state is AgentHostState.DETACHED:
                     self._controller = None
                 return service_failure(error)
-            if self._closing.is_set():
-                controller.stop()
+            finally:
+                release_cancel()
+            if self._closing.is_set() or cancellation.is_set():
+                controller.stop(deadline=deadline)
                 self._controller = None
                 return {"event": "refused", "code": "service_stopping"}
             finished = monotonic()
@@ -721,17 +821,13 @@ class AgentService:
             self._emit(event)
             return event
 
-    def _prefetch_catalog(self) -> None:
-        """Read the agent's catalog once, so the launch finds it read; a failure is the launch's to report."""
-        with contextlib.suppress(ProviderCatalogUnavailableError):
-            self._catalog.catalog()
-
     def _schedule_start(self) -> bool:
         """Hand a start to the start thread unless one is running; ``False`` once the service is closing."""
         with self._start_request_guard:
             if self._closing.is_set():
                 return False
             if self._start_thread is None or not self._start_thread.is_alive():
+                self._startup_cancellation = InvocationCancellation()
                 self._start_thread = Thread(target=self._background_start, name="agent-service-start")
                 self._start_thread.start()
         return True
@@ -745,11 +841,20 @@ class AgentService:
         self._auth_resume_valid = None
         if self._auth_attempt is not None:
             self._auth_attempt.cancel()
+        cancellation = self._startup_cancellation
+        if cancellation is not None:
+            cancellation.cancel()
         controller = self._controller
         if controller is not None:
             controller.cancel_start()
         start = self._start_thread
-        if self._controller is None and (start is None or not start.is_alive()):
+        preparation = self._preparation_runner
+        if (
+            self._controller is None
+            and (start is None or not start.is_alive())
+            and self._startup_cancellation is None
+            and (preparation is None or preparation.settled)
+        ):
             return {"kind": "stopped"}
         if not self._schedule_stop():
             return {"kind": "refused", "code": "busy"}
@@ -764,12 +869,23 @@ class AgentService:
             self._stop_thread.start()
         return True
 
+    def _has_unsettled_tree(self) -> bool:
+        controller = self._controller
+        preparation = self._preparation_runner
+        return (controller is not None and controller.state is AgentHostState.STOPPING) or (
+            preparation is not None and not preparation.settled
+        )
+
     def _background_stop(self) -> None:
         try:
             self.stop()
         except Exception as error:
             if not self._closing.is_set():
-                self._emit(service_failure(error))
+                self._emit(
+                    service_failure(
+                        AgentHostError(AgentHostRefusal.STORES_UNPREPARED) if self._has_unsettled_tree() else error
+                    )
+                )
 
     def _replace_superseded(self) -> bool:
         """Start a replacement for a ready tree whose generations moved on while the profile stays signed in.
@@ -824,36 +940,76 @@ class AgentService:
         return _without_lanes(document, turned_off, provider_field="provider_id")
 
     def _served_catalog(self, ready: AgentReady) -> dict[str, Any]:
-        """Relay the admitted agent's actual bounded catalogue without projecting fields."""
-        connection = HTTPConnection("127.0.0.1", ready.gateway_port, timeout=5)
+        """Read one bounded declaration under the current tree, waking on close or timeout."""
+        deadline = DEFAULT_TIMEOUT_POLICY.deadline()
+        if self._read_cancellation.is_set():
+            raise AgentHostError(AgentHostRefusal.CANCELLED)
         try:
-            path = "/v1/provider-catalog?" + urlencode({"workspace_root": str(self._workspace)})
-            connection.request(
-                "GET",
-                path,
-                headers={
-                    "Authorization": "Bearer " + self._gateway_bearer.decode("ascii"),
-                    "Accept": "application/json",
-                },
-            )
-            response = connection.getresponse()
-            payload = response.read(256 * 1024 + 1)
-            if response.status != 200 or len(payload) > 256 * 1024:
-                raise ValueError("catalog_unavailable")
-            document = json.loads(payload)
-            if (
-                not isinstance(document, dict)
-                or document.get("api_version") != "v1"
-                or not isinstance(document.get("providers"), list)
-            ):
-                raise ValueError("catalog_malformed")
+            document = asyncio.run(self._read_served_catalog(ready, deadline))
+            if self._read_cancellation.is_set():
+                raise AgentHostError(AgentHostRefusal.CANCELLED)
             if self._controller is None or self._controller.published() != ready:
                 raise ValueError("catalog_generation_changed")
             return document
-        except (HTTPException, OSError, ValueError) as error:
+        except asyncio.CancelledError as error:
+            raise AgentHostError(AgentHostRefusal.CANCELLED) from error
+        except TimeoutError as error:
+            raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
+        except (httpx.HTTPError, OSError, ValueError) as error:
+            if self._read_cancellation.is_set():
+                raise AgentHostError(AgentHostRefusal.CANCELLED) from error
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED) from error
+
+    async def _read_served_catalog(self, ready: AgentReady, deadline: TimeoutDeadline) -> dict[str, Any]:
+        """Own cancellable socket I/O; no blocked reader thread survives a closed service."""
+        loop = asyncio.get_running_loop()
+        task = asyncio.current_task()
+        if task is None:
+            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED)
+
+        def cancelled() -> None:
+            with contextlib.suppress(RuntimeError):
+                loop.call_soon_threadsafe(task.cancel)
+
+        release = self._read_cancellation.subscribe(cancelled)
+        try:
+            if self._read_cancellation.is_set():
+                raise asyncio.CancelledError
+            async with asyncio.timeout(deadline.remaining_seconds()):
+                # The public transport avoids client-level URL logging of the private workspace.
+                async with httpx.AsyncHTTPTransport(trust_env=False, retries=0) as transport:
+                    request = httpx.Request(
+                        "GET",
+                        f"http://127.0.0.1:{ready.gateway_port}/v1/provider-catalog",
+                        params={"workspace_root": str(self._workspace)},
+                        headers={
+                            "Authorization": "Bearer " + self._gateway_bearer.decode("ascii"),
+                            "Accept": "application/json",
+                            "Accept-Encoding": "identity",
+                        },
+                        extensions={"timeout": {"connect": None, "read": None, "write": None, "pool": None}},
+                    )
+                    response = await transport.handle_async_request(request)
+                    try:
+                        if response.status_code != 200:
+                            raise ValueError("catalog_unavailable")
+                        payload = bytearray()
+                        async for chunk in response.aiter_raw(chunk_size=4096):
+                            payload += chunk
+                            if len(payload) > 256 * 1024:
+                                raise ValueError("catalog_unavailable")
+                    finally:
+                        await response.aclose()
+                document = json.loads(payload)
+                if (
+                    not isinstance(document, dict)
+                    or document.get("api_version") != "v1"
+                    or not isinstance(document.get("providers"), list)
+                ):
+                    raise ValueError("catalog_malformed")
+                return document
         finally:
-            connection.close()
+            release()
 
     def _live_catalog(self) -> dict[str, Any] | None:
         """Return the ready agent's served catalogue, or ``None`` when no agent is ready or it does not answer.
@@ -969,13 +1125,20 @@ class AgentService:
                 return self._store.observe_generations() is not None
             return self._controller.published() is not None or self._replace_superseded()
 
-    def stop(self) -> None:
+    def stop(self, *, deadline: TimeoutDeadline | None = None) -> None:
         """Confirm contained shutdown before releasing the tree's ownership."""
         with self._guard:
+            preparation = self._preparation_runner
+            if preparation is not None:
+                preparation.settle()
+                self._preparation_runner = None
             controller = self._controller
             if controller is not None:
                 self._clear_hosted_certifications()
-                controller.stop()
+                if deadline is None:
+                    controller.stop()
+                else:
+                    controller.stop(deadline=deadline)
                 self._controller = None
                 self._forget_reads()
                 self._emit({"event": "stopped", "code": "agent_retired"})
@@ -986,7 +1149,14 @@ class AgentService:
             self.request_close()
         finally:
             try:
-                self.stop()
+                failure: BaseException | None = None
+                for settle in (self.stop, self._catalog.close, self._login_status.close):
+                    try:
+                        settle()
+                    except BaseException as error:
+                        failure = error if failure is None else failure
+                if failure is not None:
+                    raise failure
                 if self._auth_attempt is not None:
                     self._auth_attempt.close()
                 for thread in (self._start_thread, self._stop_thread):
@@ -1001,6 +1171,11 @@ class AgentService:
     def request_close(self) -> None:
         """Invalidate startup publication immediately without waiting on lifecycle work."""
         self._closing.set()
+        cancellation = self._startup_cancellation
+        if cancellation is not None:
+            cancellation.cancel()
+        self._catalog.request_close()
+        self._read_cancellation.cancel()
         controller = self._controller
         if controller is not None:
             controller.cancel_start()

@@ -66,6 +66,7 @@ from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
@@ -133,6 +134,9 @@ class ProfileConnection:
         default=None, repr=False, compare=False
     )
     disconnecting: bool = False
+    human_admission_deadline: float | None = None
+    human_proof_attempt_id: UUID | None = None
+    human_proof_cancellation: ProfileProofCancellation | None = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -804,6 +808,9 @@ class RuntimeProfileHost:
             secret=connection.human_secret,
             originating_login_id=connection.login.login_id,
             persist_receipt=connection.persist_human_receipt,
+            timeout_deadline=connection.human_admission_deadline,
+            attempt_id=connection.human_proof_attempt_id,
+            cancellation=connection.human_proof_cancellation,
         )
 
     def close(self) -> None:

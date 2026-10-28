@@ -20,7 +20,7 @@ _EXPECTED = {
     AgentHostRefusal.LAUNCH_FAILED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.LAUNCH_PROFILE_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.CANCELLED: AgentLauncherRefusal.SERVICE_FAILED,
-    AgentHostRefusal.EMERGENCY_CUTOFF: AgentLauncherRefusal.EMERGENCY_CUTOFF,
+    AgentHostRefusal.TIMEOUT: AgentLauncherRefusal.TIMEOUT,
     AgentHostRefusal.NOT_READY: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.AGENT_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.ALREADY_RUNNING: AgentLauncherRefusal.SERVICE_FAILED,
@@ -62,7 +62,7 @@ def test_the_launcher_protocol_stays_the_desktops_closed_set() -> None:
         "agent_service_incompatible",
         "agent_provider_credential_missing",
         "agent_service_failed",
-        "agent_emergency_cutoff",
+        "agent_timeout",
     }
 
 
@@ -85,10 +85,11 @@ def test_a_runtime_that_is_not_there_to_serve_is_runtime_unavailable(code: Refus
         RefusalCode.ENDPOINT_UNTRUSTED,
         RefusalCode.PEER_UNTRUSTED,
         RefusalCode.VERSION_MISMATCH,
-        RefusalCode.DEADLINE_EXCEEDED,
+        RefusalCode.TIMEOUT,
         RefusalCode.CONTAINMENT_UNAVAILABLE,
     ],
     ids=str,
 )
 def test_an_untrusted_or_failed_runtime_exchange_is_not_mistaken_for_absence(code: RefusalCode) -> None:
-    assert runtime_launcher_refusal_for(RefusalError(code)) is None
+    expected = AgentLauncherRefusal.TIMEOUT if code is RefusalCode.TIMEOUT else None
+    assert runtime_launcher_refusal_for(RefusalError(code)) is expected

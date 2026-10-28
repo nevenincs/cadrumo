@@ -11,6 +11,7 @@ from time import monotonic
 from pydantic import BaseModel, ConfigDict
 
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 
 from ..host.controller import AgentHostError
 from ..host.launch_environment import (
@@ -19,6 +20,7 @@ from ..host.launch_environment import (
     agent_binary_directories,
     system_environment,
 )
+from ..host.store_lifecycle import InvocationCancellation
 from ..providers.application.contracts import CliState
 from ..providers.domain.catalog import ProviderCatalogEntry
 from .agent_process import WindowsAgentInvocationRunner
@@ -35,11 +37,38 @@ class _Statuses(BaseModel):
 class AgentProviderAuthStatusProbe:
     """Cache bounded, masked observations under the exact live profile authority."""
 
-    def __init__(self, *, context: Callable[[], tuple[Path, str] | None]) -> None:
+    def __init__(
+        self, *, context: Callable[[], tuple[Path, str] | None], cancellation: InvocationCancellation | None = None
+    ) -> None:
         """Bind the supplier invocation to a current profile authority callback."""
         self._context = context
+        self._cancellation = InvocationCancellation() if cancellation is None else cancellation
+        self._runner_lock = Lock()
+        self._active_runner: WindowsAgentInvocationRunner | None = None
+        self._unsettled_runner: WindowsAgentInvocationRunner | None = None
         self._lock = Lock()
         self._cached: tuple[tuple[Path, str], float, dict[str, CliState]] | None = None
+
+    def close(self) -> None:
+        """Cancel reads and confirm every retained supplier scope before releasing ownership."""
+        self._cancellation.cancel()
+        with self._runner_lock:
+            retained = tuple({runner for runner in (self._active_runner, self._unsettled_runner) if runner is not None})
+        failure: BaseException | None = None
+        for runner in retained:
+            try:
+                runner.settle()
+            except BaseException as error:
+                failure = error if failure is None else failure
+            finally:
+                if runner.settled:
+                    with self._runner_lock:
+                        if self._active_runner is runner:
+                            self._active_runner = None
+                        if self._unsettled_runner is runner:
+                            self._unsettled_runner = None
+        if failure is not None:
+            raise failure
 
     def probe(self, entry: ProviderCatalogEntry) -> CliState:
         """Read masked provider status, rejecting results from a retired context."""
@@ -67,14 +96,26 @@ class AgentProviderAuthStatusProbe:
             external = agent_binary_directories(python=hosted_python(), received=os.environ)
             if external is not None and external != "":
                 environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] = external
-            completed = WindowsAgentInvocationRunner().run(
-                executable=image.executable,
-                arguments=(*AGENT_COMMAND_LINE, "auth", "status", "--json"),
-                directory=image.directory,
-                environment=environment,
-                timeout=5,
-                output_limit=4096,
-            )
+            with self._runner_lock:
+                if self._unsettled_runner is not None:
+                    return {}
+                runner = WindowsAgentInvocationRunner(cancellation=self._cancellation)
+                self._active_runner = runner
+            try:
+                completed = runner.run(
+                    executable=image.executable,
+                    arguments=(*AGENT_COMMAND_LINE, "auth", "status", "--json"),
+                    directory=image.directory,
+                    environment=environment,
+                    timeout=DEFAULT_TIMEOUT_POLICY.timeout_seconds,
+                    output_limit=4096,
+                )
+            finally:
+                with self._runner_lock:
+                    if self._active_runner is runner:
+                        self._active_runner = None
+                    if not runner.settled:
+                        self._unsettled_runner = runner
             if completed.status != 0:
                 return {}
             result = _Statuses.model_validate_json(completed.standard_output)

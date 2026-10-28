@@ -35,7 +35,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDen
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome, SignInRefusal
 
-from .session_authority_contracts import SessionAuthorityFacts, SessionAuthorityOwner
+from .session_authority_contracts import HumanAdmissionControl, SessionAuthorityFacts, SessionAuthorityOwner
 from .session_authority_rebind import SessionAuthorityRebind
 
 
@@ -99,6 +99,7 @@ class _HumanAdmissionCandidate:
     session: AccessSession
     generation: int
     rebinding: bool = False
+    control: HumanAdmissionControl | None = None
 
 
 class SessionAuthorityAdmission(SessionAuthorityRebind):
@@ -319,9 +320,13 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
         decision = self._evaluate(candidate.session, current, candidate.grant, candidate.key)
         return decision if isinstance(decision, AccessDenied) else None
 
-    def admit_human(self: SessionAuthorityAdmission, *, connection_id: UUID) -> AccessSession | AccessDenied:
+    def admit_human(
+        self: SessionAuthorityAdmission, *, connection_id: UUID, control: HumanAdmissionControl | None = None
+    ) -> AccessSession | AccessDenied:
         """Bind existing password admission without consulting automation custody."""
         with self.owner.admission_guard():
+            if control is not None and control.cancelled:
+                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
             facts = self._facts(connection_id)
             if isinstance(facts, AccessDenied):
                 return facts
@@ -335,7 +340,9 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
         )
         primary: BaseException | None = None
         try:
-            candidate = self._authenticate_human_candidate(connection_id, identity, facts, retirement, generation, held)
+            candidate = self._authenticate_human_candidate(
+                connection_id, identity, facts, retirement, generation, held, control
+            )
             if isinstance(candidate, AccessDenied):
                 return candidate
             return self._publish_human_candidate(connection_id, candidate, retirement)
@@ -353,6 +360,7 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
         retirement: _ProspectiveSessionRetirement,
         generation: int,
         held: AccessSession | None,
+        control: HumanAdmissionControl | None,
     ) -> _HumanAdmissionCandidate | AccessDenied:
         with self.owner.authenticate_human(connection_id) as authenticated:
             if authenticated is None:
@@ -362,6 +370,8 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
             if outcome.bucket_id != str(self.binding.profile_id):
                 return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
             with self.owner.admission_guard():
+                if control is not None and control.cancelled:
+                    return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
                 if generation != self._human_admission_generation:
                     return AccessDenied(
                         code=AccessDenialCode.AUTHENTICATION_REQUIRED,
@@ -387,7 +397,9 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
                     return decision
                 retirement.binding_attempted = True
                 self.owner.bind_human(session)
-                return _HumanAdmissionCandidate(deadline, session, generation, rebinding=held is not None)
+                return _HumanAdmissionCandidate(
+                    deadline, session, generation, rebinding=held is not None, control=control
+                )
 
     def _human_rebind_session(
         self: SessionAuthorityAdmission,
@@ -454,6 +466,8 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
         retirement: _ProspectiveSessionRetirement,
     ) -> AccessSession | AccessDenied:
         with self.owner.admission_guard():
+            if candidate.control is not None and candidate.control.cancelled:
+                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
             if candidate.generation != self._human_admission_generation:
                 return AccessDenied(
                     code=AccessDenialCode.AUTHENTICATION_REQUIRED,
@@ -479,6 +493,8 @@ class SessionAuthorityAdmission(SessionAuthorityRebind):
             if refusal is not None:
                 return refusal
             retirement.committed = True
+            if candidate.control is not None:
+                candidate.control.committed = True
             if candidate.rebinding:
                 self._restore_suspended_descendants(candidate.session)
             return candidate.session

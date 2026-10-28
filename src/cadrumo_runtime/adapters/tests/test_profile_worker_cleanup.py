@@ -21,6 +21,7 @@ from typing import override
 from uuid import uuid4
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
@@ -28,13 +29,16 @@ from cadrumo.application.user_profile.access_contracts import (
     SessionKind,
     SessionState,
 )
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete, close_async_resources
 from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, TimeoutDeadline
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
-from cadrumo_client.transport.frame_io import read_document, read_secret, write_document
+from cadrumo_client.transport.frame_io import document_frame, read_document, read_secret, write_document
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
@@ -43,6 +47,11 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerHumanOutcome,
     ProfileWorkerLeaseRequest,
     ProfileWorkerLeaseTransferRequest,
+    ProfileWorkerProofAcknowledged,
+    ProfileWorkerProofControl,
+    ProfileWorkerProofTransfer,
+    ProfileWorkerReady,
+    ProfileWorkerRefusal,
     ProfileWorkerRequest,
     ProfileWorkerStatus,
 )
@@ -96,7 +105,11 @@ class _Release:
 
 
 class _Channel(WindowsChannel):
-    def __init__(self, identity: ProfileWorkerIdentity, *, foreign_version: bool = False) -> None:
+    def __init__(
+        self, identity: ProfileWorkerIdentity, *, foreign_version: bool = False, proof_control: bool = False
+    ) -> None:
+        self.identity = identity
+        self.proof_control = proof_control
         self.release = _Release()
         self.inbound = bytearray()
         self.writes: list[bytes] = []
@@ -153,6 +166,20 @@ class _Channel(WindowsChannel):
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         assert deadline > time.monotonic()
         self.writes.append(bytes(payload))
+        if self.proof_control:
+            try:
+                request = ProfileWorkerProofControl.model_validate_json(payload[5:])
+            except ValidationError:
+                return
+            self.inbound.extend(
+                document_frame(
+                    ProfileWorkerProofAcknowledged(
+                        identity=self.identity,
+                        request_id=request.request_id,
+                        proof_attempt_id=request.proof_attempt_id,
+                    )
+                )
+            )
 
     @override
     def close(self) -> None:
@@ -174,9 +201,10 @@ class _Endpoint(WindowsEndpoint):
 
     @override
     def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> WindowsChannel:
-        # Worker startup always bounds its wait and passes no wake.
-        assert timeout is not None and timeout > 0
-        assert wakes == ()
+        # Startup waits on actual connection, process exit, owner stop, or the
+        # separately armed timeout watchdog; no polling budget is supplied.
+        assert timeout is None
+        assert len(wakes) >= 3
         if self.before_accept is not None:
             self.before_accept()
         return self.channel
@@ -197,7 +225,7 @@ class _Child(WindowsOwnedProcess):
         self.wait_calls += 1
         if self.exited:
             return 1
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
 
 class _Scope(WindowsProcessScope):
@@ -246,7 +274,7 @@ class _Scope(WindowsProcessScope):
         assert timeout >= 0
         self.timeouts.append(timeout)
         if self.refuse_zero_timeout and timeout == 0:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         self.release()
 
 
@@ -282,7 +310,14 @@ class _Fixture:
                 dek_epoch=uuid4(),
             ),
         )
-        self.channels = (_Channel(self.identity, foreign_version=foreign_version), _Channel(self.identity))
+        self.channels = (
+            _Channel(self.identity, foreign_version=foreign_version),
+            _Channel(self.identity),
+            _Channel(self.identity, proof_control=True),
+        )
+        write_document(self.channels[0], ProfileWorkerReady(identity=self.identity), deadline=time.monotonic() + 5)
+        self.channels[0].inbound.extend(b"".join(self.channels[0].writes))
+        self.channels[0].writes.clear()
         self.endpoints = tuple(_Endpoint(channel) for channel in self.channels)
         self.scope = _Scope()
         self.authorization = _Authorization()
@@ -347,9 +382,9 @@ def test_successful_construction_transfers_worker_after_both_listeners_retire(
         assert environment["TEMP"] == environment["TMP"] == environment["TMPDIR"]
         assert Path(environment["TEMP"]).is_absolute()
         assert worker.identity == fixture.identity
-        assert fixture.native_process.opened == fixture.native_process.closed == 2
-        assert [channel.peer_checks for channel in fixture.channels] == [1, 1]
-        assert fixture.scope.membership_checks == 2
+        assert fixture.native_process.opened == fixture.native_process.closed == 3
+        assert [channel.peer_checks for channel in fixture.channels] == [1, 1, 1]
+        assert fixture.scope.membership_checks == 3
         assert all(endpoint.release.released for endpoint in fixture.endpoints)
         assert fixture.scope.launched and not fixture.scope.release.released
         assert all(not channel.release.released for channel in fixture.channels)
@@ -359,7 +394,7 @@ def test_successful_construction_transfers_worker_after_both_listeners_retire(
     assert all(channel.release.released for channel in fixture.channels)
 
 
-@pytest.mark.parametrize("channel_index", [0, 1], ids=["control", "operation"])
+@pytest.mark.parametrize("channel_index", [0, 1, 2], ids=["control", "operation", "proof"])
 @pytest.mark.parametrize("failure", ["owner", "process", "incarnation", "membership"])
 def test_native_peer_refusal_contains_unreturned_worker_and_releases_query_handles(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, channel_index: int, failure: str
@@ -384,7 +419,7 @@ def test_native_peer_refusal_contains_unreturned_worker_and_releases_query_handl
     assert all(accepted.release.released for accepted in fixture.channels[: channel_index + 1])
 
 
-@pytest.mark.parametrize("failed_listener", [0, 1])
+@pytest.mark.parametrize("failed_listener", [0, 1, 2])
 @pytest.mark.parametrize("persistent_listener", [False, True])
 @pytest.mark.parametrize("failed_channel", [False, True])
 def test_failed_listener_transfer_contains_unreturned_worker_and_retains_release_owners(
@@ -417,7 +452,9 @@ def test_failed_listener_transfer_contains_unreturned_worker_and_retains_release
     assert all(endpoint.release.released for endpoint in fixture.endpoints)
     assert all(channel.release.released for channel in fixture.channels)
     assert listener.calls == listener.failures + 1
-    assert fixture.endpoints[1 - failed_listener].release.calls == 1
+    assert all(
+        endpoint.release.calls == 1 for index, endpoint in enumerate(fixture.endpoints) if index != failed_listener
+    )
     assert fixture.channels[0].release.calls == int(failed_channel) + 1
     assert fixture.channels[1].release.calls == 1
 
@@ -501,7 +538,7 @@ def test_protocol_cleanup_retry_gets_fresh_bound_after_original_request_deadline
         clock.instant += 6
 
     fixture.channels[0].before_read = finish_request_budget
-    for owner in (profile_worker, profile_worker_lifetime, profile_worker_transport, profile_worker_human_admission):
+    for owner in (profile_worker_lifetime, profile_worker_transport, profile_worker_human_admission):
         monkeypatch.setattr(owner, "time", SimpleNamespace(monotonic=lambda: clock.instant))
     with pytest.raises(OSError) as caught:
         worker._exchange(
@@ -543,6 +580,39 @@ def test_post_accept_child_death_keeps_failed_temporary_channel_on_unreturned_ca
     assert channel.release.calls == 2
 
 
+def test_worker_ready_from_another_incarnation_never_completes_construction(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    channel = fixture.channels[0]
+    valid = document_frame(ProfileWorkerReady(identity=fixture.identity))
+    foreign = ProfileWorkerReady(identity=fixture.identity.model_copy(update={"worker_id": uuid4()}))
+    assert channel.inbound.endswith(valid)
+    channel.inbound[-len(valid) :] = document_frame(foreign)
+    with pytest.raises(RefusalError) as refused:
+        fixture.open()
+    assert refused.value.reason is RefusalCode.PEER_UNTRUSTED
+    assert fixture.scope.release.released
+    assert all(endpoint.release.released for endpoint in fixture.endpoints)
+
+
+def test_worker_timeout_contains_original_owner_without_readiness(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    monkeypatch.setattr(
+        profile_worker,
+        "DEFAULT_TIMEOUT_POLICY",
+        SimpleNamespace(
+            deadline=lambda: TimeoutDeadline(time.monotonic() - 1),
+        ),
+    )
+    with pytest.raises(OrchestrationTimeoutError):
+        fixture.open()
+    assert fixture.scope.launched and fixture.scope.release.released
+    assert all(endpoint.release.released for endpoint in fixture.endpoints)
+
+
 def _control_request(channel: _Channel, identity: ProfileWorkerIdentity) -> ProfileWorkerRequest:
     """Decode the actual emitted request through the canonical frame reader."""
     reader = _Channel(identity)
@@ -551,11 +621,96 @@ def _control_request(channel: _Channel, identity: ProfileWorkerIdentity) -> Prof
     return read_document(reader, ProfileWorkerRequest, deadline=time.monotonic() + 5)
 
 
-def _control_reply(channel: _Channel, reply: ProfileWorkerStatus | ProfileWorkerHumanOutcome) -> None:
+def _control_reply(
+    channel: _Channel, reply: ProfileWorkerStatus | ProfileWorkerHumanOutcome | ProfileWorkerRefusal
+) -> None:
     """Queue actual canonical reply bytes at the explicit native channel port."""
     write_document(channel, reply, deadline=time.monotonic() + 5)
     channel.inbound.extend(b"".join(channel.writes))
     channel.writes.clear()
+
+
+@pytest.mark.parametrize("stage", ["before_header", "after_header"])
+def test_cancelled_owned_proof_never_sends_its_secret_and_keeps_the_stream_aligned(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, stage: str
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    worker = fixture.open()
+    channel = fixture.channels[0]
+    channel.writes.clear()
+    token, secret = ProfileProofCancellation(), bytearray(b"original-protected-proof")
+    native_write = channel.write_all
+    actions: list[str] = []
+
+    def write(payload, *, deadline):
+        native_write(payload, deadline=deadline)
+        if stage == "after_header":
+            try:
+                request = ProfileWorkerRequest.model_validate_json(payload[5:]).root
+            except ValidationError:
+                return
+            if isinstance(request, ProfileWorkerControlRequest) and request.action == "password":
+                token.cancel()
+
+    def respond() -> None:
+        if channel.inbound:
+            return
+        reader = _Channel(fixture.identity)
+        reader.inbound = bytearray(b"".join(channel.writes))
+        channel.writes.clear()
+        request = read_document(reader, ProfileWorkerRequest, deadline=time.monotonic() + 5).root
+        assert isinstance(request, ProfileWorkerControlRequest)
+        actions.append(request.action)
+        if request.action == "password":
+            transfer = read_document(reader, ProfileWorkerProofTransfer, deadline=time.monotonic() + 5)
+            assert transfer.proof_attempt_id == request.proof_attempt_id and transfer.cancelled
+            assert not reader.inbound, "an abandoned proof sent a protected secret frame"
+            _control_reply(
+                channel,
+                ProfileWorkerRefusal(
+                    identity=fixture.identity,
+                    request_id=request.request_id,
+                    reason=AutomationCustodyCode.REQUESTER_DISCONNECTED,
+                ),
+            )
+        else:
+            assert request.action == "cancel_human" and not reader.inbound
+            _control_reply(
+                channel, ProfileWorkerStatus(identity=fixture.identity, request_id=request.request_id, sessions=())
+            )
+
+    monkeypatch.setattr(channel, "write_all", write)
+    channel.before_read = respond
+    if stage == "before_header":
+        token.cancel()
+    try:
+        with pytest.raises(AutomationCustodyError) as refused, worker.authenticate_human(secret, cancellation=token):
+            pytest.fail("a cancelled proof produced a human outcome")
+        assert refused.value.reason is AutomationCustodyCode.REQUESTER_DISCONNECTED
+        assert actions == (["cancel_human"] if stage == "before_header" else ["password", "cancel_human"])
+        assert secret == bytearray(len(secret))
+        assert not worker.stopping
+        assert all(not owned.release.released for owned in fixture.channels)
+    finally:
+        worker.close()
+        worker._settle_proof_dispatcher(deadline=time.monotonic() + 5)
+
+
+def test_foreign_proof_acknowledgement_contains_the_exact_worker(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    worker = fixture.open()
+    fixture.channels[2].identity = fixture.identity.model_copy(update={"worker_id": uuid4()})
+    try:
+        with pytest.raises(RefusalError) as refused:
+            worker._proof_command("register", uuid4(), deadline=time.monotonic() + 5)
+        assert refused.value.reason is RefusalCode.PEER_UNTRUSTED
+        assert fixture.scope.release.released
+        assert all(channel.release.released for channel in fixture.channels)
+    finally:
+        worker.close()
+        worker._settle_proof_dispatcher(deadline=time.monotonic() + 5)
 
 
 def _api_lease(identity: ProfileWorkerIdentity) -> AccessSession:
@@ -643,7 +798,7 @@ def test_api_prepare_and_install_reuse_original_deadline_and_wipe_material(
     material = bytearray(b"s" * 32)
     original_deadline = time.monotonic() + 30
     clock = SimpleNamespace(instant=time.monotonic())
-    for owner in (profile_worker, profile_worker_lifetime, profile_worker_transport, profile_worker_human_admission):
+    for owner in (profile_worker_lifetime, profile_worker_transport, profile_worker_human_admission):
         monkeypatch.setattr(owner, "time", SimpleNamespace(monotonic=lambda: clock.instant))
     outbound_deadlines: list[float] = []
     actions: list[str] = []
@@ -732,7 +887,7 @@ def test_api_original_deadline_includes_queue_without_writing_or_retiring_worker
                 worker.prepare_api_admission(deadline=original_deadline)
             else:
                 worker.install(_api_lease(fixture.identity), material, deadline=original_deadline)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         assert not channel.writes and actions == ["status"]
         assert fixture.scope.release.calls == 0
         assert all(owned.release.calls == 0 for owned in fixture.channels)
@@ -850,6 +1005,62 @@ def test_human_admission_yield_allows_control_status_and_retirement_without_repl
         worker.close()
 
 
+def test_delayed_human_proof_uses_original_timeout_without_a_phase_failure(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    fixture = _Fixture(monkeypatch, tmp_path)
+    worker = fixture.open()
+    channel = fixture.channels[0]
+    channel.writes.clear()
+    clock = SimpleNamespace(instant=time.monotonic())
+    monkeypatch.setattr(profile_worker_human_admission, "time", SimpleNamespace(monotonic=lambda: clock.instant))
+    timeout = clock.instant + 600
+    instant = datetime(2026, 10, 1, tzinfo=UTC)
+    login = ProfileLoginOutcome(
+        bucket_id=str(fixture.identity.binding.profile_id),
+        label="Synthetic slow proof",
+        authenticated_at=instant,
+        idle_deadline=instant + timedelta(minutes=15),
+        absolute_deadline=instant + timedelta(hours=4),
+        session_persisted=False,
+        already_authenticated=False,
+    )
+    actions = []
+
+    def respond() -> None:
+        if channel.inbound:
+            return
+        request = _control_request(channel, fixture.identity)
+        actions.append(request.root.action)
+        if request.root.action == "password":
+            assert request.root.timeout_deadline == timeout
+            clock.instant += 100
+            _control_reply(
+                channel,
+                ProfileWorkerHumanOutcome(
+                    identity=fixture.identity,
+                    request_id=request.root.request_id,
+                    candidate_id=uuid4(),
+                    login=login,
+                ),
+            )
+        else:
+            _control_reply(
+                channel, ProfileWorkerStatus(identity=fixture.identity, request_id=request.root.request_id, sessions=())
+            )
+
+    channel.before_read = respond
+    proof = bytearray(b"synthetic slow proof")
+    try:
+        with worker.authenticate_human(proof, timeout_deadline=timeout) as outcome:
+            assert outcome == login
+            assert worker.human_admission_deadline > clock.instant
+        assert actions == ["password", "cancel_human"]
+        assert not any(proof) and not worker.stopping
+    finally:
+        worker.close()
+
+
 @pytest.mark.parametrize("state", ["healthy", "stopped", "dead", "unhealthy"])
 def test_worker_native_guard_released_contention_rechecks_current_health(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, state: str
@@ -928,7 +1139,7 @@ def test_worker_native_guard_unreleased_contention_refuses_without_retiring_live
         started = time.monotonic()
         with pytest.raises(RefusalError) as caught:
             worker.require_alive()
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         assert 1.8 <= time.monotonic() - started < 4
         assert not release.is_set()
         assert fixture.scope.release.calls == fixture.authorization.release.calls == 0
@@ -990,7 +1201,7 @@ def test_native_guard_wait_failure_names_held_call_without_private_identifiers(
         assert held.wait(2), "native membership call did not acquire the guard"
         with pytest.raises(RefusalError) as caught:
             worker._contain_native_process(timeout=0.05)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         record = next(
             item
             for item in delivered_records(caplog, profile_worker_lifetime._log.name)

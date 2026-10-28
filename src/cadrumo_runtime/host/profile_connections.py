@@ -64,10 +64,11 @@ from .profile_connection_admission import ProfileConnectionAdmissionMixin
 from .profile_connection_attendance import AttendedConnection, PendingAttendance, ProfileConnectionAttendanceMixin
 from .profile_connection_drain import ProfileConnectionDrainMixin, ProfileDrainRecord
 from .profile_connection_extension_records import ProfileConnectionExtensionRecordsMixin
+from .profile_connection_login import PendingProfileLogin, ProfileConnectionLoginMixin
 from .profile_connection_model_runs import PendingModelRun, ProfileConnectionModelRunsMixin
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_person_acts import ProfileConnectionPersonActMixin
-from .profile_connection_services import ProfileConnectionServicesMixin, ServiceConnection
+from .profile_connection_services import PendingServiceAdmission, ProfileConnectionServicesMixin, ServiceConnection
 from .profile_connection_sessions import ProfileConnectionSessionMixin
 from .profile_host import ProfileConnection, RuntimeProfileHost
 from .session_events import RuntimeSessionEvents
@@ -124,6 +125,7 @@ class RuntimeProfileConnections(
     RuntimeInstallationDoorMixin,
     ProfileConnectionPersonActMixin,
     ProfileConnectionServicesMixin,
+    ProfileConnectionLoginMixin,
     ProfileConnectionExtensionRecordsMixin,
     ProfileConnectionModelRunsMixin,
     ProfileConnectionAdmissionMixin,
@@ -178,6 +180,8 @@ class RuntimeProfileConnections(
         self._custody_mutations: set[UUID] = set()
         self._submission_slots = BoundedSemaphore(4)
         self._connections: dict[UUID, ProfileConnection] = {}
+        self._pending_logins: dict[UUID, PendingProfileLogin] = {}
+        self._login_slots = BoundedSemaphore(4)
         self._attendance: dict[UUID, PendingAttendance] = {}
         self._attendance_holders: dict[UUID, UUID] = {}
         # Per connection, the non-terminal operations it observed and the session it observed them under.
@@ -197,6 +201,8 @@ class RuntimeProfileConnections(
         }
         self._service_verifier = InstalledNativeServiceVerifier() if service_verifier is None else service_verifier
         self._services: dict[UUID, ServiceConnection] = {}
+        self._service_admissions: dict[UUID, PendingServiceAdmission] = {}
+        self._service_admission_slots = BoundedSemaphore(4)
         # Worker model runs waiting for the service that was told about them, by run id.
         self._model_runs: dict[UUID, PendingModelRun] = {}
         # Signalled as each model-run disclosure ends, for a lease withdrawal waiting on it.
@@ -242,6 +248,7 @@ class RuntimeProfileConnections(
 
     def _publish_retirement(self, event: SessionEvent) -> None:
         """Publish exact retirement; services own shutdown of their native descendants."""
+        self._cancel_service_admissions(event.connection_id, event.session_id)
         # A retired session's views unbind before anyone hears of the retirement.
         self._views.unbind_sessions((event.session_id,))
         withdrawn: list[ServiceLeaseChanged] = []

@@ -13,12 +13,17 @@ from pydantic import BaseModel
 from cadrumo.application.operations.models import OperationIdentity
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancelledError
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, remaining_budget
+from cadrumo_client.contracts.deadline_budget import (
+    DEFAULT_TIMEOUT_POLICY,
+    MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+    remaining_budget,
+)
 from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document, write_secret
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
@@ -29,6 +34,7 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerExtensionRecordReply,
     ProfileWorkerHumanBindingRequest,
     ProfileWorkerLeaseRequest,
+    ProfileWorkerProofTransfer,
     ProfileWorkerRefusal,
     ProfileWorkerReply,
     ProfileWorkerRequest,
@@ -52,11 +58,9 @@ from .worker_transport import WorkerChannel
 #: single-exchange budget, so this wait matches it: a missed reply contains the
 #: whole worker, and a shorter wait would stop it while it still waits its turn.
 _OPERATION_EXCHANGE_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
-#: A missed control reply contains the worker and ends every session it holds,
-#: so a worker the host starves of CPU must not count as hung: its replies have
-#: arrived 13 s late under load. Containment still comes well inside the runtime
-#: supervisor's 30 s busy hang bound, which control callers can hold up.
-_CONTROL_EXCHANGE_SECONDS = 20
+#: Control waits end on the reply or actual channel/process loss. The remaining
+#: finite bound is timeout containment, never a readiness or performance test.
+_CONTROL_EXCHANGE_SECONDS = DEFAULT_TIMEOUT_POLICY.timeout_seconds
 #: How often an owed activity reply is looked for. Readiness is observed without
 #: consuming bytes, so a probe can stop waiting without desynchronising the stream.
 _PROBE_POLL_SECONDS = 0.02
@@ -96,7 +100,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
                     if not operation and not self._settle_unanswered_probe(channel, wire_deadline):
                         # Nothing of this request was sent; the worker has not answered an earlier probe yet.
                         dispatched = False
-                        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                        raise RefusalError(RefusalCode.TIMEOUT)
                     return self._read_exchange_reply(channel, request, response, secret, wire_deadline)
                 except (AutomationCustodyError, ProfileAccessRefusedError):
                     raise
@@ -292,7 +296,7 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
             channel = self._exchange_channel(False)
             if not self._settle_unanswered_probe(channel, deadline):
                 undispatched = True
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             reply = self._read_exchange_reply(
                 channel, ProfileWorkerRequest(request), ProfileWorkerExtensionRecordReply, payload, deadline
             ).result
@@ -330,10 +334,30 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         wire_deadline: float,
     ) -> Result:
         """Exchange one addressed request and preserve exact application refusals."""
+        proof = request.root if isinstance(request.root, ProfileWorkerControlRequest) else None
+        if proof is not None and proof.proof_attempt_id is not None and self._human_cancellation is not None:
+            try:
+                self._human_cancellation.raise_if_cancelled()
+            except ProfileProofCancelledError:
+                raise AutomationCustodyError(AutomationCustodyCode.REQUESTER_DISCONNECTED) from None
         if isinstance(request.root, ProfileWorkerLeaseRequest | ProfileWorkerHumanBindingRequest):
             write_worker_lease(channel, request, deadline=wire_deadline)
         else:
             write_document(channel, request, deadline=wire_deadline)
+        if proof is not None and proof.proof_attempt_id is not None:
+            cancelled = False
+            if self._human_cancellation is not None:
+                try:
+                    self._human_cancellation.raise_if_cancelled()
+                except ProfileProofCancelledError:
+                    cancelled = True
+            write_document(
+                channel,
+                ProfileWorkerProofTransfer(proof_attempt_id=proof.proof_attempt_id, cancelled=cancelled),
+                deadline=wire_deadline,
+            )
+            if cancelled:
+                secret = None
         if secret is not None:
             write_secret(channel, secret, deadline=wire_deadline)
         result = read_document(channel, ProfileWorkerReply, deadline=wire_deadline).root
@@ -388,6 +412,8 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
 
 def _raise_worker_refusal(result: ProfileWorkerRefusal) -> NoReturn:
     """Preserve the worker's exact application refusal."""
+    if result.reason is RefusalCode.TIMEOUT:
+        raise RefusalError(RefusalCode.TIMEOUT)
     if isinstance(result.reason, AccessDenialCode):
         raise ProfileAccessRefusedError(
             result.reason, sign_in=result.sign_in, holder_operation_id=result.holder_operation_id
@@ -411,7 +437,7 @@ def _acquire_exchange_lock(
     try:
         remaining = remaining_budget(deadline)
         if not lock.acquire(timeout=remaining):
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
     except RefusalError as error:
         _log_queue_timeout(request, error, operation=operation, started=started, deadline=deadline, level=level)
         raise

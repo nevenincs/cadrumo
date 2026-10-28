@@ -11,6 +11,8 @@ from uuid import uuid4
 import pytest
 from pydantic import JsonValue, ValidationError
 
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
+
 from ...admin import AdminRequest, AdminServer
 from ...contracts import ServiceStartupFrame
 from ...service import _GatewayCredentials
@@ -21,10 +23,10 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 class _CredentialSource:
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         return ResolvedAgentCredentials(AgentGenerations("synthetic-session", "synthetic-settings"), {})
 
-    def current_generations(self) -> AgentGenerations:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations:
         return AgentGenerations("synthetic-session", "synthetic-settings")
 
 

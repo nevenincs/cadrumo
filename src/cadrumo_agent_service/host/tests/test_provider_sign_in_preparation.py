@@ -72,7 +72,7 @@ def _entry() -> ProviderStatusEntry:
 def test_sign_in_preparation_preserves_authority_and_never_claims_login(
     outcome: str, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
-    client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))
+    client = SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,
@@ -181,7 +181,9 @@ def test_sign_in_preparation_preserves_authority_and_never_claims_login(
 
 def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=None)),
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
@@ -194,7 +196,9 @@ def test_signed_out_person_cannot_prepare_a_login(tmp_path: Path) -> None:
 
 def test_submit_code_rejects_stale_attempt_and_retired_owner(tmp_path: Path) -> None:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=object())),
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
@@ -220,7 +224,10 @@ def test_status_preserves_refusal_without_adding_success_metadata(
     code: ProviderSettingsRefusalCode, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
+        client=cast(
+            InstalledServiceClient,
+            SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None)),
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,

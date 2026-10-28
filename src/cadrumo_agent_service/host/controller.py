@@ -5,7 +5,7 @@ profile's provider credentials while the agent imports, writes them once as a
 standard-input frame, and waits for a single ready line. It publishes the agent only while the
 sign-in and provider-settings generations it started under are still current.
 Closing the agent's standard input is the stop signal. The tree is terminated
-whole once its agent has exited, or at the central last-resort emergency cutoff. A tree that ends before its
+whole once its agent has exited, or at the central last-resort timeout. A tree that ends before its
 ready line with the native host's launch-profile refusal status is a typed
 refusal that records the host's own code and subject.
 """
@@ -27,10 +27,10 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import NATIVE_HOST_LAUNCH_PROFILE_REFUSED_EXIT_CODE
 from cadrumo_client.contracts.deadline_budget import (
-    DEFAULT_EMERGENCY_WAIT_POLICY,
-    EmergencyWaitCutoffError,
-    EmergencyWaitDeadline,
-    EmergencyWaitPolicy,
+    DEFAULT_TIMEOUT_POLICY,
+    OrchestrationTimeoutError,
+    TimeoutDeadline,
+    TimeoutPolicy,
 )
 
 from .credential_frame import AgentCredential, CredentialFrameError, build_credential_frame, wipe
@@ -68,7 +68,7 @@ class AgentHostRefusal(StrEnum):
     LAUNCH_PROFILE_REFUSED = "launch_profile_refused"
     NOT_READY = "not_ready"
     CANCELLED = "cancelled"
-    EMERGENCY_CUTOFF = "emergency_cutoff"
+    TIMEOUT = "timeout"
     AGENT_REFUSED = "agent_refused"
     STALE_GENERATION = "stale_generation"
     ALREADY_RUNNING = "already_running"
@@ -122,11 +122,11 @@ class ResolvedAgentCredentials:
 class AgentCredentialSource(Protocol):
     """Resolve the signed-in profile's credentials for the hosted assistant."""
 
-    def resolve_for_agent(self) -> ResolvedAgentCredentials:
+    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
         """Return fresh credential buffers, or raise ``AgentHostError``."""
         ...
 
-    def current_generations(self) -> AgentGenerations | None:
+    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations | None:
         """Return the current generations without refreshing the session's idle time."""
         ...
 
@@ -192,8 +192,8 @@ class AgentLaunch:
     arguments: tuple[str, ...]
     directory: Path
     environment: Mapping[str, str]
-    emergency_wait_policy: EmergencyWaitPolicy = DEFAULT_EMERGENCY_WAIT_POLICY
-    emergency_termination_confirmation_seconds: float = 10.0
+    timeout_policy: TimeoutPolicy = DEFAULT_TIMEOUT_POLICY
+    termination_timeout_seconds: float = 10.0
     """Final containment confirmation after termination has already been ordered."""
 
 
@@ -244,7 +244,7 @@ class AgentHostController:
         """The controller's current state."""
         return self._state
 
-    def start(self) -> AgentReady:
+    def start(self, *, deadline: TimeoutDeadline | None = None) -> AgentReady:
         """Start the agent for the current generations and return it once ready.
 
         Any failure leaves no process behind and the controller detached.
@@ -253,11 +253,11 @@ class AgentHostController:
             if self._state is not AgentHostState.DETACHED:
                 raise AgentHostError(AgentHostRefusal.ALREADY_RUNNING)
             self._state = AgentHostState.STARTING
-        deadline = self._launch.emergency_wait_policy.deadline()
+        deadline = self._launch.timeout_policy.deadline() if deadline is None else deadline
         try:
             ready = self._start(deadline)
             # Runtime IPC remains outside the lock, but inside the startup owner's cleanup boundary.
-            generations = self._credentials.current_generations()
+            generations = self._credentials.current_generations(deadline=deadline)
             deadline.remaining_seconds()
             with self._lock:
                 if self._cancelled.is_set():
@@ -270,14 +270,14 @@ class AgentHostController:
         except BaseException as error:
             self._retire(
                 deadline=deadline,
-                emergency=isinstance(error, EmergencyWaitCutoffError)
-                or (isinstance(error, AgentHostError) and error.reason is AgentHostRefusal.EMERGENCY_CUTOFF),
+                timeout=isinstance(error, OrchestrationTimeoutError)
+                or (isinstance(error, AgentHostError) and error.reason is AgentHostRefusal.TIMEOUT),
             )
-            if isinstance(error, EmergencyWaitCutoffError):
-                raise AgentHostError(AgentHostRefusal.EMERGENCY_CUTOFF) from error
+            if isinstance(error, OrchestrationTimeoutError):
+                raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
             raise
 
-    def published(self) -> AgentReady | None:
+    def published(self, *, deadline: TimeoutDeadline | None = None) -> AgentReady | None:
         """Return the running agent only while its generations are still current.
 
         A tree whose generations went stale is withheld, not retired: retiring
@@ -295,7 +295,7 @@ class AgentHostController:
             except Exception:
                 # Readers withhold an unobservable tree; only its owner retires it.
                 return None
-        if self._credentials.current_generations() != ready.generations:
+        if self._credentials.current_generations(deadline=deadline) != ready.generations:
             return None
         with self._lock:
             return ready if self._ready is ready and self._process is process else None
@@ -314,8 +314,8 @@ class AgentHostController:
         if process is not None:
             process.cancel_output_wait()
 
-    def stop(self) -> None:
-        """Signal a starting owner, or retire a running tree until exit or emergency termination."""
+    def stop(self, *, deadline: TimeoutDeadline | None = None) -> None:
+        """Signal a starting owner, or retire a running tree until exit or timeout termination."""
         with self._lock:
             starting = self._state is AgentHostState.STARTING
             if starting:
@@ -323,7 +323,7 @@ class AgentHostController:
         if starting:
             self.cancel_start()
             return
-        self._retire()
+        self._retire(deadline=deadline)
 
     def contains_process_id(self, process_id: int) -> bool:
         """Whether the process is a member of this controller's agent tree, starting or running.
@@ -340,7 +340,7 @@ class AgentHostController:
         except Exception:
             return True
 
-    def _start(self, deadline: EmergencyWaitDeadline) -> AgentReady:
+    def _start(self, deadline: TimeoutDeadline) -> AgentReady:
         started = time.monotonic()
         if self._cancelled.is_set():
             raise AgentHostError(AgentHostRefusal.CANCELLED)
@@ -364,7 +364,7 @@ class AgentHostController:
         if self._cancelled.is_set():
             raise AgentHostError(AgentHostRefusal.CANCELLED)
         spawned = time.monotonic()
-        resolved = self._credentials.resolve_for_agent()
+        resolved = self._credentials.resolve_for_agent(deadline=deadline)
         credentials_ready = time.monotonic()
         try:
             frame = build_credential_frame(
@@ -397,7 +397,7 @@ class AgentHostController:
         except InterruptedError as error:
             raise AgentHostError(AgentHostRefusal.CANCELLED) from error
         except TimeoutError as error:
-            raise AgentHostError(AgentHostRefusal.EMERGENCY_CUTOFF) from error
+            raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
         except (EOFError, OSError) as error:
             if self._cancelled.is_set():
                 raise AgentHostError(AgentHostRefusal.CANCELLED) from error
@@ -417,7 +417,7 @@ class AgentHostController:
         )
         return ready
 
-    def _retire(self, *, deadline: EmergencyWaitDeadline | None = None, emergency: bool = False) -> None:
+    def _retire(self, *, deadline: TimeoutDeadline | None = None, timeout: bool = False) -> None:
         with self._lock:
             process = self._process
             self._process = None
@@ -426,18 +426,18 @@ class AgentHostController:
         if process is None:
             return
         if deadline is None:
-            deadline = self._launch.emergency_wait_policy.deadline()
+            deadline = self._launch.timeout_policy.deadline()
         signalled = time.monotonic()
         ended_by = "unobserved"
         stopped = signalled
         try:
             with contextlib.suppress(OSError):
                 process.close_input()
-            # Wait for completion or the last-resort cutoff, then end the whole
+            # Wait for completion or the last-resort timeout, then end the whole
             # tree: an exited agent can leave descendants running.
-            ended_by = "emergency_cutoff" if emergency else self._await_stop(process, deadline)
+            ended_by = "timeout" if timeout else self._await_stop(process, deadline)
             stopped = time.monotonic()
-            process.terminate(timeout=self._launch.emergency_termination_confirmation_seconds)
+            process.terminate(timeout=self._launch.termination_timeout_seconds)
         except BaseException:
             failed = time.monotonic()
             _RETIREMENT_LOGGER.warning(
@@ -462,18 +462,18 @@ class AgentHostController:
             with self._lock:
                 self._state = AgentHostState.DETACHED
 
-    def _await_stop(self, process: AgentProcess, deadline: EmergencyWaitDeadline) -> str:
+    def _await_stop(self, process: AgentProcess, deadline: TimeoutDeadline) -> str:
         """Wait for the agent to exit; say how the wait ended.
 
-        Exit is the completion signal. Only the central emergency cutoff can
+        Exit is the completion signal. Only the central timeout can
         end an unresponsive tree; lack of CPU or I/O activity is not failure.
         """
         try:
             if process.wait(timeout=deadline.remaining_seconds()) is not None:
                 return "exited"
-        except EmergencyWaitCutoffError:
+        except OrchestrationTimeoutError:
             pass
-        return "emergency_cutoff"
+        return "timeout"
 
 
 def _ended_before_ready(process: AgentProcess, refusal: AgentHostRefusal, *, observe: float) -> AgentHostError:

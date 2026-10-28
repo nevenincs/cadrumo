@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 from uuid import UUID
 
 from cadrumo_client.contracts.contracts import ExitReason, ShutdownIncompleteError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerDrained
 
@@ -58,6 +59,7 @@ class ProfileConnectionDrainMixin:
         with self._guard:
             self._closed = True
             hosts = tuple(self._profiles.items())
+        self._cancel_service_admissions()
         self._views.close()
         self._enrollments.close()
         failures: list[Exception] = []
@@ -70,6 +72,8 @@ class ProfileConnectionDrainMixin:
                 with self._guard:
                     if self._profiles.get(profile_id) is host:
                         self._profiles.pop(profile_id)
+        if self._settle_pending_logins(deadline=DEFAULT_TIMEOUT_POLICY.deadline().instant):
+            failures.append(ShutdownIncompleteError())
         with self._guard:
             self._connections.clear()
             self._logins.clear()
@@ -260,6 +264,7 @@ class ProfileConnectionDrainMixin:
             if running or (record.worker is not None and not contained):
                 continue
             self._settle_drained_record(profile_id, record, unsettled, deadline=deadline)
+        unsettled.extend(self._settle_pending_logins(deadline=deadline))
         return self._build_drain_result(records, received, uncontained, unsettled)
 
     @staticmethod

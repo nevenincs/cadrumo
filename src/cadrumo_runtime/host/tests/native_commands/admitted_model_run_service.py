@@ -19,8 +19,9 @@ from collections.abc import Generator
 from concurrent.futures import Future, ThreadPoolExecutor
 from contextlib import ExitStack, contextmanager
 from typing import Protocol
-from uuid import UUID, uuid4
+from uuid import UUID
 
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.contracts import ClientHello
 from cadrumo_client.contracts.model_runs import (
@@ -39,11 +40,11 @@ from cadrumo_client.contracts.model_runs import (
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.contracts.service_access import (
     InstalledServiceDescriptor,
-    ServiceAdmission,
     ServiceCapability,
     ServiceConnected,
 )
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -180,16 +181,9 @@ def admitted_model_run_service(
         service = InstalledServiceClient(connection, profile_id=profile_id, service_id=MODEL_RUN_SERVICE_ID)
         assert service.claim() is None
         assert service.connected is not None
-        admitted = human.service_access(
-            ServiceAdmission(
-                request_id=uuid4(),
-                profile_id=profile_id,
-                session_id=signed_in.status.session_id,
-                recipient_connection_id=service.connected.connection_id,
-                service_id=MODEL_RUN_SERVICE_ID,
-            ),
-            deadline=time.monotonic() + 10,
-        )
+        person = FrontendClient(human, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
+        person._session_id = signed_in.status.session_id
+        admitted = person.service_admission(service.connected.connection_id, MODEL_RUN_SERVICE_ID)
         assert isinstance(admitted, ServiceConnected), admitted
         assert service.claim() is not None
         # The event reader that delivers an announcement must not wait on itself.

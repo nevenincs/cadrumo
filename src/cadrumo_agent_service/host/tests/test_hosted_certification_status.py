@@ -37,7 +37,7 @@ def _ready() -> AgentReady:
 
 
 def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> AgentService:
-    client = SimpleNamespace(lease=object())
+    client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,

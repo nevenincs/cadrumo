@@ -19,7 +19,7 @@ def test_settlement_consumes_resume_only_under_original_authority(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ending: str
 ) -> None:
     lease = object()
-    client = SimpleNamespace(lease=lease)
+    client = SimpleNamespace(lease=lease, connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,

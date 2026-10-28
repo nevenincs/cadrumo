@@ -30,6 +30,7 @@ from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG as _STRICT_FROZEN_HIDDEN_INPUT
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ..domain.catalog import LaneId, ProviderAuthKind, ProviderCatalogEntry, ProviderConsumer
 from ..domain.record import (
@@ -236,10 +237,14 @@ class ProviderCredentialResolver:
         self._store = store
         self._catalog_source = catalog_source
 
-    def resolve(self, provider_id: str, consumer: ProviderConsumer) -> ProviderCredentialResolution:
+    def resolve(
+        self, provider_id: str, consumer: ProviderConsumer, *, deadline: TimeoutDeadline | None = None
+    ) -> ProviderCredentialResolution:
         """Return the effective credential, the sign-in choice, or a typed unavailability."""
         try:
-            catalog = self._catalog_source.catalog()
+            catalog = (
+                self._catalog_source.catalog() if deadline is None else self._catalog_source.catalog(deadline=deadline)
+            )
         except ProviderCatalogUnavailableError:
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.CATALOG_UNAVAILABLE)
         entry = catalog.entry(provider_id)
@@ -247,7 +252,7 @@ class ProviderCredentialResolver:
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.UNKNOWN_PROVIDER)
         if not entry.serves(consumer):
             return _unavailable(provider_id, consumer, ProviderCredentialUnavailableReason.CONSUMER_NOT_SUPPORTED)
-        reads = self._store.read((entry.id,))
+        reads = self._store.read((entry.id,)) if deadline is None else self._store.read((entry.id,), deadline=deadline)
         if isinstance(reads, StoreRefusal):
             return _unavailable(provider_id, consumer, _unavailable_reason_for_store(reads.code))
         (read,) = reads

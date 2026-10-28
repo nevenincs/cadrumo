@@ -17,8 +17,9 @@ from cadrumo.domain.calculations.registry.authority_location import published_au
 from ..contracts.access_vocabulary import AccessScope
 from ..contracts.contracts import ClientHello, RefusalCode, RefusalError
 from ..contracts.deadline_budget import (
-    MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
-    bounded_deadline_after,
+    DEFAULT_TIMEOUT_POLICY,
+    TimeoutDeadline,
+    deadline_after,
     remaining_budget,
 )
 from .frontend_client import FrontendClient
@@ -64,7 +65,8 @@ async def open_installed_client(
     *,
     profile_id: UUID,
     frontend: OperationFrontendProjection,
-    timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
+    timeout: float | None = None,
+    timeout_deadline: TimeoutDeadline | None = None,
     scope: AccessScope | None = None,
     presents_pages: bool = False,
 ) -> FrontendClient:
@@ -77,13 +79,16 @@ async def open_installed_client(
     pages declares ``presents_pages`` so a page the person chooses elsewhere
     is delivered to this connection.
     """
-    deadline = bounded_deadline_after(timeout, subject="installed client")
+    timeout_deadline = timeout_deadline or (
+        DEFAULT_TIMEOUT_POLICY.deadline() if timeout is None else TimeoutDeadline(deadline_after(timeout))
+    )
+    deadline = timeout_deadline.instant
     try:
         root, product_version, authority_generation = await asyncio.wait_for(
             asyncio.to_thread(_connection_metadata), timeout=remaining_budget(deadline)
         )
     except TimeoutError:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+        raise RefusalError(RefusalCode.TIMEOUT) from None
     remaining_budget(deadline)
     endpoint = (
         WindowsEndpoint(storage_root=root)
@@ -103,7 +108,7 @@ async def open_installed_client(
             ),
         )
         client = await FrontendClient.open(
-            launch, profile_id=profile_id, frontend=frontend, timeout=remaining_budget(deadline), scope=scope
+            launch, profile_id=profile_id, frontend=frontend, timeout_deadline=timeout_deadline, scope=scope
         )
     except BaseException as error:
         await _close_owned_resource(endpoint_cleanup, task_name="installed-runtime-endpoint-close", primary_error=error)

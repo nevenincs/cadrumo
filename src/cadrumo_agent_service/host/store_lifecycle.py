@@ -12,8 +12,8 @@ invocations, with the gateway's program, directory and environment:
 * ``stores-state`` again, which must read ``current``.
 
 Each invocation writes one JSON object on standard output, parsed whole and
-strictly; its standard error is diagnostic only and is never read. Each has a
-hard time bound, after which its whole tree is ended. A ``setup`` or
+strictly; its standard error is diagnostic only. Each invocation shares the
+startup owner timeout and responds to cancellation and process exit. A ``setup`` or
 ``migrate`` whose outcome is not known is never retried within the start.
 
 The copy taken before ``migrate`` is the agent's rollback snapshot. While it is
@@ -33,6 +33,7 @@ from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
+from threading import Lock
 from time import monotonic
 from typing import Final, Literal, Protocol
 
@@ -40,6 +41,7 @@ from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, TimeoutDeadline
 
 from .controller import AgentHostError, AgentHostRefusal, AgentLaunch
 
@@ -47,6 +49,8 @@ _LOGGER = get_logger(__name__)
 
 AGENT_COMMAND_LINE_API: Final = "v1"
 """The one version of the agent's command-line contract this host speaks."""
+INVOCATION_TERMINATION_TIMEOUT_SECONDS: Final = 10.0
+"""Existing final containment and owner-thread settlement confirmation bound."""
 STORE_OUTPUT_MAX_BYTES: Final = 64 * 1024
 """More standard output than any of the four invocations writes; a longer output is malformed."""
 
@@ -86,14 +90,41 @@ class StoreOutcome(StrEnum):
     NOT_CURRENT = "not_current"
 
 
-@dataclass(frozen=True, slots=True)
-class StoreLifecycleBounds:
-    """The hard time bound of each invocation, in seconds."""
+class InvocationCancellation:
+    """Wake contained work without doing cleanup on the thread requesting cancellation."""
 
-    preflight: float = 20.0
-    stores_state: float = 20.0
-    setup: float = 45.0
-    migrate: float = 90.0
+    def __init__(self) -> None:
+        """Start an uncancelled operation with no registered waiters."""
+        self._lock = Lock()
+        self._cancelled = False
+        self._subscribers: set[Callable[[], None]] = set()
+
+    def is_set(self) -> bool:
+        """Whether this exact operation was cancelled."""
+        with self._lock:
+            return self._cancelled
+
+    def cancel(self) -> None:
+        """Invalidate this operation and notify its waiters; owners perform cleanup."""
+        with self._lock:
+            self._cancelled = True
+            subscribers = tuple(self._subscribers)
+        for notify in subscribers:
+            notify()
+
+    def subscribe(self, notify: Callable[[], None]) -> Callable[[], None]:
+        """Register a wake, including cancellation already received; return its release."""
+        with self._lock:
+            self._subscribers.add(notify)
+            cancelled = self._cancelled
+        if cancelled:
+            notify()
+
+        def release() -> None:
+            with self._lock:
+                self._subscribers.discard(notify)
+
+        return release
 
 
 @dataclass(frozen=True, slots=True)
@@ -207,7 +238,8 @@ class AgentStoreLifecycle:
         command_line: tuple[str, ...],
         aside: AgentStoresAside,
         quiesced: Callable[[], bool],
-        bounds: StoreLifecycleBounds | None = None,
+        deadline: TimeoutDeadline | None = None,
+        cancellation: InvocationCancellation | None = None,
     ) -> None:
         """Bind the gateway's own launch, the agent's command-line prefix, the copy and the quiescence check.
 
@@ -220,10 +252,12 @@ class AgentStoreLifecycle:
         self._command_line = command_line
         self._aside = aside
         self._quiesced = quiesced
-        self._bounds = StoreLifecycleBounds() if bounds is None else bounds
+        self._deadline = launch.timeout_policy.deadline() if deadline is None else deadline
+        self._cancellation = cancellation
 
     def prepare(self) -> None:
         """Bring the stores to current, or refuse with the closed reason the launcher maps."""
+        self._checkpoint()
         state = self._preflight()
         self._run_host_action(StoreStep.COPY_ASIDE, self._aside.clear_partial)
         kept = self._run_host_action(StoreStep.COPY_ASIDE, self._aside.kept)
@@ -247,7 +281,7 @@ class AgentStoreLifecycle:
             self._run_host_action(StoreStep.COPY_ASIDE, self._aside.discard)
 
     def _preflight(self) -> _StoresState:
-        result = self._invoke(StoreStep.PREFLIGHT, ("preflight",), self._bounds.preflight)
+        result = self._invoke(StoreStep.PREFLIGHT, ("preflight",))
         if result.status != 0:
             raise _refused(StoreStep.PREFLIGHT, StoreOutcome.FAILED)
         report = _parse(StoreStep.PREFLIGHT, _Preflight, result.standard_output)
@@ -256,14 +290,14 @@ class AgentStoreLifecycle:
         return report.stores
 
     def _stores_state(self, step: StoreStep) -> _StoresState:
-        result = self._invoke(step, ("stores-state",), self._bounds.stores_state)
+        result = self._invoke(step, ("stores-state",))
         if result.status != 0:
             # The verb is read-only and always exits 0: any other status is an agent that did not answer.
             raise _refused(step, StoreOutcome.FAILED)
         return _parse(step, _StoresState, result.standard_output)
 
     def _setup(self) -> None:
-        result = self._invoke(StoreStep.SETUP, ("setup",), self._bounds.setup)
+        result = self._invoke(StoreStep.SETUP, ("setup",))
         _require_step_success(StoreStep.SETUP, result, succeeded=frozenset({"succeeded", "already-initialized"}))
 
     def _migrate(self, state: _StoresState) -> None:
@@ -274,36 +308,53 @@ class AgentStoreLifecycle:
             raise _refused(StoreStep.MIGRATE, StoreOutcome.NOT_QUIESCED)
         self._run_host_action(StoreStep.COPY_ASIDE, self._aside.keep)
         # From here the copy is kept until the stores read current: a failed or unknown migrate leaves it.
-        result = self._invoke(
-            StoreStep.MIGRATE, ("migrate", "--expect-from", found, "--expect-head", expected), self._bounds.migrate
-        )
+        result = self._invoke(StoreStep.MIGRATE, ("migrate", "--expect-from", found, "--expect-head", expected))
         _require_step_success(StoreStep.MIGRATE, result, succeeded=frozenset({"succeeded"}))
 
-    def _invoke(self, step: StoreStep, verb: tuple[str, ...], timeout: float) -> AgentInvocationResult:
+    def _invoke(self, step: StoreStep, verb: tuple[str, ...]) -> AgentInvocationResult:
         started = monotonic()
+        self._checkpoint()
         try:
             result = self._runner.run(
                 executable=self._launch.executable,
                 arguments=(*self._command_line, *verb),
                 directory=self._launch.directory,
                 environment=self._launch.environment,
-                timeout=timeout,
+                timeout=self._deadline.remaining_seconds(),
                 output_limit=STORE_OUTPUT_MAX_BYTES,
             )
+        except AgentHostError as error:
+            if error.reason in {AgentHostRefusal.CANCELLED, AgentHostRefusal.TIMEOUT}:
+                raise
+            raise _refused(step, StoreOutcome.RUN_FAILED, cause=error) from error
+        except OrchestrationTimeoutError as error:
+            raise _refused(step, StoreOutcome.TIMED_OUT, AgentHostRefusal.TIMEOUT, cause=error) from error
         except Exception as error:
             raise _refused(step, StoreOutcome.RUN_FAILED, cause=error) from error
         # Each invocation starts the agent's interpreter afresh; on a loaded host
         # that is seconds of every agent start.
         _LOGGER.info("agent store step=%s took_seconds=%.3f", step.value, monotonic() - started)
         if result.status is None:
-            raise _refused(step, StoreOutcome.TIMED_OUT)
+            raise _refused(step, StoreOutcome.TIMED_OUT, AgentHostRefusal.TIMEOUT)
+        self._checkpoint()
         return result
 
-    def _run_host_action[T](self, step: StoreStep, action: Callable[[], T]) -> T:
+    def _checkpoint(self) -> None:
+        if self._cancellation is not None and self._cancellation.is_set():
+            raise AgentHostError(AgentHostRefusal.CANCELLED)
         try:
-            return action()
+            self._deadline.remaining_seconds()
+        except OrchestrationTimeoutError as error:
+            raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
+
+    def _run_host_action[T](self, step: StoreStep, action: Callable[[], T]) -> T:
+        self._checkpoint()
+        try:
+            result = action()
         except OSError as error:
             raise _refused(step, StoreOutcome.FAILED) from error
+        self._checkpoint()
+        return result
 
 
 def _require_step_success(step: StoreStep, result: AgentInvocationResult, *, succeeded: frozenset[str]) -> None:

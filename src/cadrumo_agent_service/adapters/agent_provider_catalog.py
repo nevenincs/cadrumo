@@ -18,7 +18,7 @@ import os
 import tempfile
 from collections.abc import Mapping
 from pathlib import Path
-from threading import Lock
+from threading import Condition, Lock
 from typing import Final, Literal, override
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,10 +26,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, OrchestrationTimeoutError, TimeoutDeadline
 
-from ..host.controller import AgentHostError
+from ..host.controller import AgentHostError, AgentHostRefusal
 from ..host.launch_environment import system_environment
-from ..host.store_lifecycle import AgentInvocationRunner
+from ..host.store_lifecycle import AgentInvocationRunner, InvocationCancellation
 from ..providers.application.ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -46,7 +47,6 @@ CATALOG_VERB: Final = ("providers", "--declared", "--json")
 CATALOG_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, *CATALOG_VERB)
 AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--json")
 GUI_AUTH_CAPABILITIES_ARGUMENTS: Final = (*AGENT_COMMAND_LINE, "auth", "providers", "--interface", "gui", "--json")
-CATALOG_TIMEOUT_SECONDS: Final = 30.0
 CATALOG_OUTPUT_MAX_BYTES: Final = 256 * 1024
 
 
@@ -80,29 +80,87 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
         self._received = os.environ if received is None else received
         # One lock per document: a first sign-in capability read runs the
         # agent, and the catalog, already read at start, must not wait for it.
-        self._lock = Lock()
+        self._lock = Condition()
+        self._catalog_pending = False
+        self._cancellation = InvocationCancellation()
+        self._runner_lock = Lock()
+        self._active_runners: set[WindowsAgentInvocationRunner] = set()
+        self._unsettled_runners: set[WindowsAgentInvocationRunner] = set()
         self._sign_in_lock = Lock()
         self._gui_sign_in_lock = Lock()
         self._catalog: ProviderCatalog | None = None
         self._sign_ins: tuple[str, ...] | None = None
         self._gui_sign_ins: dict[str, tuple[Literal["browser", "browser-code", "device"], ...]] | None = None
 
+    def request_close(self) -> None:
+        """Wake source-owned invocations without performing cleanup on the request thread."""
+        self._cancellation.cancel()
+
+    def close(self) -> None:
+        """Retain every unresolved tree until its exact scope confirms termination."""
+        self.request_close()
+        with self._runner_lock:
+            retained = tuple(self._active_runners | self._unsettled_runners)
+        failure: BaseException | None = None
+        for runner in retained:
+            try:
+                runner.settle()
+            except BaseException as error:
+                failure = error if failure is None else failure
+            finally:
+                if runner.settled:
+                    with self._runner_lock:
+                        self._active_runners.discard(runner)
+                        self._unsettled_runners.discard(runner)
+        if failure is not None:
+            raise failure
+
     @override
-    def catalog(self) -> ProviderCatalog:
-        """Return the catalog the agent reports, running it once per source.
+    def catalog(
+        self, *, deadline: TimeoutDeadline | None = None, cancellation: InvocationCancellation | None = None
+    ) -> ProviderCatalog:
+        """Read or join one declaration, responding to cancellation and its owner's timeout."""
+        deadline = DEFAULT_TIMEOUT_POLICY.deadline() if deadline is None else deadline
+        cancellation = InvocationCancellation() if cancellation is None else cancellation
 
-        Raises:
-            ProviderCatalogUnavailableError: When the agent cannot be located or run, or its
-                document is refused.
-        """
-        with self._lock:
-            if self._catalog is None:
-                self._catalog = self._fetch()
-            return self._catalog
+        def wake() -> None:
+            with self._lock:
+                self._lock.notify_all()
 
-    def _fetch(self) -> ProviderCatalog:
+        release_source = self._cancellation.subscribe(cancellation.cancel)
+        release_wait = cancellation.subscribe(wake)
         try:
-            return parse_provider_catalog(self._invoke(CATALOG_ARGUMENTS).decode("utf-8"))
+            with self._lock:
+                while self._catalog_pending:
+                    if cancellation.is_set():
+                        raise AgentHostError(AgentHostRefusal.CANCELLED)
+                    self._lock.wait(deadline.remaining_seconds())
+                if cancellation.is_set():
+                    raise AgentHostError(AgentHostRefusal.CANCELLED)
+                if self._catalog is not None:
+                    return self._catalog
+                self._catalog_pending = True
+            try:
+                result = self._fetch(deadline, cancellation)
+                with self._lock:
+                    if cancellation.is_set():
+                        raise AgentHostError(AgentHostRefusal.CANCELLED)
+                    deadline.remaining_seconds()
+                    self._catalog = result
+                    return result
+            finally:
+                with self._lock:
+                    self._catalog_pending = False
+                    self._lock.notify_all()
+        finally:
+            release_wait()
+            release_source()
+
+    def _fetch(self, deadline: TimeoutDeadline, cancellation: InvocationCancellation) -> ProviderCatalog:
+        try:
+            return parse_provider_catalog(
+                self._invoke(CATALOG_ARGUMENTS, deadline=deadline, cancellation=cancellation).decode("utf-8")
+            )
         except (CoreValidationError, UnicodeDecodeError) as error:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED) from error
 
@@ -140,25 +198,55 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
                 self._gui_sign_ins = result.providers
             return dict(self._gui_sign_ins)
 
-    def _invoke(self, arguments: tuple[str, ...]) -> bytes:
+    def _invoke(
+        self,
+        arguments: tuple[str, ...],
+        *,
+        deadline: TimeoutDeadline | None = None,
+        cancellation: InvocationCancellation | None = None,
+    ) -> bytes:
+        deadline = DEFAULT_TIMEOUT_POLICY.deadline() if deadline is None else deadline
+        cancellation = self._cancellation if cancellation is None else cancellation
         directory = Path(tempfile.gettempdir())
         try:
             image = agent_image(agent_root=directory, received=self._received)
         except AgentProgramRefusalError as error:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND) from error
+        runner = self._runner
+        owned: WindowsAgentInvocationRunner | None = None
+        with self._runner_lock:
+            if self._unsettled_runners:
+                raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED)
+            if isinstance(runner, WindowsAgentInvocationRunner):
+                owned = WindowsAgentInvocationRunner(deadline=deadline, cancellation=cancellation)
+                self._active_runners.add(owned)
+                runner = owned
         try:
-            completed = self._runner.run(
-                executable=image.executable,
-                arguments=arguments,
-                directory=image.directory,
-                environment=system_environment(self._received),
-                timeout=CATALOG_TIMEOUT_SECONDS,
-                output_limit=CATALOG_OUTPUT_MAX_BYTES,
-            )
-        except (AgentHostError, OSError, RefusalError) as error:
+            try:
+                completed = runner.run(
+                    executable=image.executable,
+                    arguments=arguments,
+                    directory=image.directory,
+                    environment=system_environment(self._received),
+                    timeout=deadline.remaining_seconds(),
+                    output_limit=CATALOG_OUTPUT_MAX_BYTES,
+                )
+            finally:
+                if owned is not None:
+                    with self._runner_lock:
+                        self._active_runners.discard(owned)
+                        if not owned.settled:
+                            self._unsettled_runners.add(owned)
+        except AgentHostError as error:
+            if error.reason in {AgentHostRefusal.CANCELLED, AgentHostRefusal.TIMEOUT}:
+                raise
+            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED) from error
+        except OrchestrationTimeoutError:
+            raise
+        except (OSError, RefusalError) as error:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED) from error
         if completed.status is None:
-            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_TIMED_OUT)
+            raise AgentHostError(AgentHostRefusal.TIMEOUT)
         if completed.status != 0:
             _LOGGER.warning("agent provider catalog command failed status=%s", completed.status)
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED)

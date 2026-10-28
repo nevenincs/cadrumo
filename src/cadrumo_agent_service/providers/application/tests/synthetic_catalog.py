@@ -9,6 +9,8 @@ from __future__ import annotations
 import json
 from typing import Any, Final, override
 
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
+
 from ...domain.catalog import LiveCatalogModel, ProviderCatalog, parse_provider_catalog
 from ..ports import (
     LiveCatalogModels,
@@ -159,7 +161,7 @@ class ProvidedProviderCatalogSource(ProviderCatalogSource):
         self._catalog = catalog
 
     @override
-    def catalog(self) -> ProviderCatalog:
+    def catalog(self, *, deadline: TimeoutDeadline | None = None) -> ProviderCatalog:
         """Return the parsed catalog."""
         return self._catalog
 
@@ -176,7 +178,7 @@ class UnavailableCatalogSource(ProviderCatalogSource):
     """An agent that cannot report its providers."""
 
     @override
-    def catalog(self) -> ProviderCatalog:
+    def catalog(self, *, deadline: TimeoutDeadline | None = None) -> ProviderCatalog:
         raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND)
 
 

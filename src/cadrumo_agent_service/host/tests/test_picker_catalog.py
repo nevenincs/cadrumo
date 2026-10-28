@@ -84,7 +84,9 @@ class _Controller:
 
 def _service(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, store: MemoryProviderSettingsStore) -> AgentService:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=object())),
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=lambda _event: None,
