@@ -344,9 +344,8 @@ def test_sede_view_state_marks_a_page_it_cannot_state_and_names_no_address() -> 
     ):
         state = view_state(url, "t", back=True, forward=False, loading=False, phase=ViewPhase.BROWSING)
         assert state.security is security, url
-        if security is not ViewPageSecurity.SECURE:
-            assert (state.origin, state.path, state.address) == (None, None, None), url
-            assert state.can_go_back
+        assert (state.origin, state.path, state.address) == (None, None, None), url
+        assert state.can_go_back
 
 
 def test_sede_view_state_carries_the_whole_address_for_the_host() -> None:
