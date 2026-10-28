@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cc7c8a0f719cd0656e6263d7c30fe81b636323db564251874b067665177daf8'
+body_hash: 'sha256:7234af5aa93196448594cf6874b175c1ae20a483eda1553f3858f8bc185b4dde'
 related:
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
   - "[[2026-10-16-idle-churn-adr]]"
@@ -118,4 +118,6 @@ Accepted 2026-10-22 on the operator's approval in this session ("go", in answer 
 
 ## Amendment 2026-10-28: pending GUI orchestration is outside exchange slots
 
-Accepted under the user's signal/slot-driven orchestration instruction, recorded in2026-10-28-debug-startup-reliability-adr. The earlier unchanged exchange-deadline wording preserves authorization permit/lease and effect-settlement semantics; it does not impose a45-second human-proof/preparation cutoff or a normal deadline while a GUI waits for capacity/readiness. Long human login and installed-service admission start once, return correlated pending state and signal terminal completion outside the shared request slot. Claims observe the same attempt and never replay a proof or grant. Native incarnation, fresh authority per stage, resource bounds and UNKNOWN/SETTLING handling are unchanged.
+Accepted under the user's signal/slot-driven orchestration instruction, recorded in2026-10-28-debug-startup-reliability-adr. The earlier unchanged exchange-deadline wording preserves authorization permit/lease and effect-settlement semantics; it does not impose a45-second human-proof/preparation timeout or a normal timeout while a GUI waits for capacity/readiness. Long human login and installed-service admission start once, return correlated pending state and signal terminal completion outside the shared request slot. Claims observe the same attempt and never replay a proof or grant. Native incarnation, fresh authority per stage, resource bounds and UNKNOWN/SETTLING handling are unchanged.
+
+The private worker protocol now includes a third verified connection for exact-proof lifecycle control, bound to the same parent process, owner, boot and WorkerIdentity as control and operations. Registration is acknowledged before the proof header and secret transfer; cancellation and completion address the exact attempt id, and stale controls cannot affect a later proof. Bounded queues retain ownership through settlement. Readiness is published only after all three authenticated dispatchers are installed. This connection wakes queued admission, shared-construction and KDF waits; proof, custody and per-stage authorization remain at their existing typed boundaries.

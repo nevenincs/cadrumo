@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee10810ef27bf65abac6bc35764478f4d9bdf59fc67e30dff8221c59d83781e5'
+body_hash: 'sha256:26326f97b96b3c82db53e6c3b1ba1169b5ec97ffc57dcf93abc12a5cde523975'
 related:
   - "[[2026-10-28-debug-startup-reliability-plan]]"
 ---
@@ -107,9 +107,27 @@ related:
 - `S09` `verify:` `affected unit418 plus fixture82 and final timeout7 across corrected runs` -> `pass`
 - `S09` `verify:` `independent S09 review and scoped Ruff format ty` -> `pass`
 - `S09` `by:` `Sol6.1 medium`
+- `S04` `M` `src/cadrumo_runtime/host/profile_connection_login.py`
+- `S04` `verify:` `pending login worker readiness and fresh restored TUI enrollment negative login acceptance` -> `pass`
+- `S04` `by:` `Sol6.1 lanes and root`
+- `S06` `M` `native/desktop/src-tauri/src/agent/supervisor.rs`
+- `S06` `verify:` `native agent150 runtime client27 and same-connection pending service tests` -> `pass`
+- `S06` `by:` `Sol6.1 lanes and root`
+- `S10` `M` `native/platform/src/runtime_pipe.rs`
+- `S10` `verify:` `platform79 sign-in59 manager33 plus native fmt clippy and independent integrated review` -> `pass`
+- `S10` `by:` `Sol6.1 lanes and root`
+- `S11` `M` `src/cadrumo_client/contracts/deadline_budget.py`
+- `S11` `verify:` `existing contract61 frontend check23 and timeout source migration` -> `pass`
+- `S11` `by:` `Sol6.1 lanes and root`
+- `S03` `M` `.vault/audit/2026-10-28-debug-startup-reliability-audit.md`
+- `S03` `verify:` `independent integrated source review and fresh scoped startup acceptance` -> `pass`
+- `S03` `verify:` `check-code` -> `fail`
+- `S03` `verify:` `test-gate` -> `fail`
+- `S03` `by:` `root and independent Sol6.1 reviewers`
 
 ## Notes
 
 - `S02` Initial owning fixture startup failed twice before regression bodies; final reruns passed, logs125649/130851/131345/132021 under2026-10-28 test-runs. Root aggregate gates remain running.
 - `S05` Initial real-process cohort containment confirmation timed out; repeated targeted real-child runs passed without relaxing containment proof. Locale focused check10pass1fail due two unused browser setup keys outside this change. Original broad code gate failed on types/import/symbol/manifest results while tree was changing; original broad test gate interrupted for expanded protocol scope after unrelated ledger failure. Fresh integrated gates pending S04/S06/S07.
 - `S07` Run20261028T141339.796127Z-pytest-30576-685e7846. Same-domain OS lock signaling is separately sequenced S08; S07 retains legacy permit implementation until that checkpoint.
+- `S03` Broad gate2718passed483failed21errors while source changed; fresh startup5, nativeSignIn59 and scoped protocol/custody/agent checks pass. Remaining failed population not wholly rerun; installed cold launch and historical provider/Sede cause remain unproved.
