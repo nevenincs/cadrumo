@@ -28,8 +28,7 @@ class RefusalCode(StrEnum):
     ROOT_MISMATCH = "runtime_root_mismatch"
     INVALID_FRAME = "runtime_invalid_frame"
     CONNECTION_CLOSED = "runtime_connection_closed"
-    DEADLINE_EXCEEDED = "runtime_deadline_exceeded"
-    EMERGENCY_CUTOFF = "runtime_emergency_cutoff"
+    TIMEOUT = "runtime_timeout"
     DRAINING = "runtime_draining"
     CONTAINMENT_UNAVAILABLE = "runtime_containment_unavailable"
 
@@ -176,7 +175,7 @@ class ClientHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["client_hello"] = "client_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=3, le=3)] = 3
+    protocol_version: Annotated[int, Field(strict=True, ge=4, le=4)] = 4
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     authority_generation: AuthorityGeneration | None = None
@@ -195,7 +194,7 @@ class ServerHello(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["server_hello"] = "server_hello"
-    protocol_version: Annotated[int, Field(strict=True, ge=3, le=3)] = 3
+    protocol_version: Annotated[int, Field(strict=True, ge=4, le=4)] = 4
     product_version: Annotated[str, Field(min_length=1, max_length=64)]
     storage_identity: ContentDigest
     boot_id: UUID

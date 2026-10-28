@@ -37,7 +37,7 @@ def test_remaining_budget_returns_the_positive_time_left() -> None:
 def test_remaining_budget_refuses_expired_and_non_finite_deadlines(deadline: float) -> None:
     with pytest.raises(RefusalError) as refused:
         remaining_budget(deadline)
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
 
 
 @pytest.mark.usefixtures("frozen_clock")
@@ -49,7 +49,7 @@ def test_deadline_after_offsets_the_monotonic_clock() -> None:
 def test_deadline_after_refuses_an_empty_or_non_finite_budget(timeout: float) -> None:
     with pytest.raises(RefusalError) as refused:
         deadline_after(timeout)
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
 
 
 @pytest.mark.usefixtures("frozen_clock")
@@ -68,7 +68,7 @@ def test_bounded_deadline_after_rejects_an_out_of_range_caller_budget(timeout: f
 def test_require_finite_budget_refuses_an_empty_or_non_finite_budget(timeout: float) -> None:
     with pytest.raises(RefusalError) as refused:
         require_finite_budget(timeout)
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
 
 
 @pytest.mark.parametrize("timeout", [0.001, 3.0, 3600.0])
@@ -93,22 +93,22 @@ def test_an_exchange_uses_its_commands_remaining_budget_up_to_the_runtime_maximu
 def test_an_exchange_of_a_command_past_its_deadline_is_refused(deadline: float) -> None:
     with pytest.raises(RefusalError) as refused:
         exchange_timeout(deadline)
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
 
 
-@pytest.mark.parametrize("cutoff", [0.0, -1.0, math.nan, math.inf, -math.inf])
-def test_emergency_policy_requires_a_finite_last_resort_cutoff(cutoff: float) -> None:
+@pytest.mark.parametrize("timeout", [0.0, -1.0, math.nan, math.inf, -math.inf])
+def test_timeout_policy_requires_a_finite_last_resort_timeout(timeout: float) -> None:
     with pytest.raises(ValueError, match="positive and finite"):
-        deadline_budget.EmergencyWaitPolicy(cutoff)
+        deadline_budget.TimeoutPolicy(timeout)
 
 
-def test_emergency_deadline_is_absolute_across_phases(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_timeout_deadline_is_absolute_across_phases(monkeypatch: pytest.MonkeyPatch) -> None:
     now = [1000.0]
     monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
-    deadline = deadline_budget.EmergencyWaitPolicy(15.0).deadline()
+    deadline = deadline_budget.TimeoutPolicy(15.0).deadline()
     assert deadline.remaining_seconds() == 15.0
     now[0] += 14.0
     assert deadline.remaining_seconds() == 1.0
     now[0] += 1.0
-    with pytest.raises(deadline_budget.EmergencyWaitCutoffError, match="emergency_wait_cutoff"):
+    with pytest.raises(deadline_budget.OrchestrationTimeoutError, match="orchestration_timeout"):
         deadline.remaining_seconds()
