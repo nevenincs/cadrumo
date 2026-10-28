@@ -355,12 +355,15 @@ class ProfileConnectionOperationMixin:
             if connection.frontend is not OperationFrontendProjection.DESKTOP:
                 raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
             listed = host.owner.operation_worker().claimable_reviews(host.review_person_attestation(connection))
+            # The listing releases no operation, so the session's own expiry bounds its delivery.
+            release_guard.enter_context(host.guard)
+            status = _admitted_status(self._status(connection, host, request.request_id, request.session_id))
             return OperationClaimableReviewsListed(
                 request_id=request.request_id,
                 runtime_boot_id=self.boot,
                 connection_id=context.connection_id,
                 operation_ids=listed.operation_ids,
-            ), None
+            ), status.status.session_expires_at
         if isinstance(request, OperationReviewClaim):
             proof = host.review_person_attestation(connection)
             claimed = host.owner.operation_worker().claim_review(

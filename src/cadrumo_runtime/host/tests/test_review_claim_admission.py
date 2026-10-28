@@ -12,7 +12,11 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.operation_access import OperationReviewClaim
+from cadrumo_client.contracts.operation_access import (
+    OperationClaimableReviews,
+    OperationClaimableReviewsListed,
+    OperationReviewClaim,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal, SessionRequest
 
 from .test_service_records import service_record_runtime
@@ -92,3 +96,20 @@ def test_public_claim_cannot_target_a_different_profile_with_an_existing_human_s
         )
         assert isinstance(reply, AccessRefusal)
         assert reply.code is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_the_desktop_person_is_answered_which_reviews_it_may_claim(tmp_path: Path) -> None:
+    with service_record_runtime(tmp_path) as runtime:
+        connection = next(
+            item for item in runtime.profiles._connections.values() if item.session_id == runtime.person_session_id
+        )
+        # Only a verified desktop holder is answered; admitting that native peer is not what is under test.
+        connection.frontend = OperationFrontendProjection.DESKTOP
+        reply = runtime.human.operation(
+            OperationClaimableReviews(
+                request_id=uuid4(), profile_id=runtime.profile_id, session_id=runtime.person_session_id
+            ),
+            deadline=time.monotonic() + 10,
+        )
+        assert isinstance(reply, OperationClaimableReviewsListed), reply
+        assert reply.operation_ids == ()
