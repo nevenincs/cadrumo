@@ -21,6 +21,10 @@ sha2 = "0.11"
 base64 = "0.23"
 tokio = { version = "1", features = ["rt", "time", "process"] }
 
+[dev-dependencies]
+# The tests wait for the diagnostic writer through the application's shared helper.
+cadrumo-application = { path = "../application", features = ["diagnostics-test-support"] }
+
 [target.'cfg(unix)'.dependencies]
 # Descriptor-relative, no-follow calls for the custody primitives.
 libc = "0.2"

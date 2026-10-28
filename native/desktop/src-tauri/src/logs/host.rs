@@ -440,8 +440,11 @@ mod tests {
     #[test]
     fn helper_envelope_failure_reaches_persisted_logs_and_view_without_private_payloads() {
         use crate::shell::sign_in::process::Children;
-        use cadrumo_application::diagnostics::helper::{HelperExecutable, HelperIdentity};
-        use std::{sync::Arc, time::Duration};
+        use cadrumo_application::diagnostics::{
+            delivery_wait::delivered,
+            helper::{HelperExecutable, HelperIdentity},
+        };
+        use std::sync::Arc;
         let identity = HelperIdentity {
             command: "config.login",
             executable: HelperExecutable::Cli,
@@ -489,7 +492,7 @@ mod tests {
         );
         let output = children.run(identity, powershell(&script), None).unwrap();
         // The file is written by the diagnostics writer, not by the recording call.
-        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+        delivered(&diagnostics);
         let snapshot = diagnostics.snapshot(0);
         let event = snapshot
             .events
@@ -620,7 +623,7 @@ mod tests {
             .unwrap();
         assert_eq!(record.context["reason_code"], "session_unavailable");
         assert_eq!(record.context["envelope_decode"], "unavailable");
-        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+        delivered(&diagnostics);
         let persisted =
             std::fs::read_to_string(diagnostics.snapshot(0).paths.unwrap().current).unwrap();
         assert!(!persisted.contains("CANARY"));

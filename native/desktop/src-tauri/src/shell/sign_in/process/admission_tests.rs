@@ -1,5 +1,6 @@
 use super::tests::TEST_IDENTITY;
 use super::{tests::powershell, *};
+use cadrumo_application::diagnostics::delivery_wait::delivered;
 use std::{
     fs,
     path::PathBuf,
@@ -168,9 +169,8 @@ fn a_read_completes_while_creation_is_held_and_duplicate_mutations_are_refused()
     let children = Children::default();
     let barrier = BarrierChild::new();
     thread::scope(|scope| {
-        let mutation = scope.spawn(|| {
-            children.run_within(TEST_IDENTITY, barrier.command(), None, CREATION_DEADLINE)
-        });
+        let mutation =
+            scope.spawn(|| children.run_within(TEST_IDENTITY, barrier.command(), None, TIMEOUT));
         barrier.wait_ready();
         let (send, receive) = mpsc::channel();
         let shared = &children;
@@ -306,7 +306,7 @@ fn at_most_two_children_and_eight_pending_reads_are_owned_and_close_wakes_every_
         !read_barrier.directory.join("order").exists()
             && !mutation_barrier.directory.join("order").exists()
     );
-    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(snapshot.processes.len(), 2);
     assert!(
@@ -354,9 +354,8 @@ fn queued_read_measurements_and_timeouts_release_all_waiting_slots() {
                 None,
                 HelperKind::Read,
                 Duration::from_millis(50),
-                DEADLINE,
             );
-            assert_eq!(timed_out.err().unwrap().code, ErrorCode::CliWaitTimedOut);
+            assert_eq!(timed_out.err().unwrap().code, ErrorCode::TimedOut);
             assert_eq!(children.read.active.lock().unwrap().pending_readers, 0);
         }
         let queued = scope.spawn(|| children.read(TEST_IDENTITY, barrier.record("queued-read")));
@@ -704,7 +703,7 @@ fn failed_timing_sink_does_not_change_native_output_or_retry_the_password() {
             .count(),
         1
     );
-    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(
         snapshot.log_failure.as_ref().unwrap().code,
