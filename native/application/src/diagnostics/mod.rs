@@ -577,6 +577,11 @@ mod tests {
     use super::*;
     use std::sync::Arc;
 
+    // Delivery waits on real file I/O, which a loaded Windows host with real-time
+    // scanning can stall for several seconds. These tests assert delivery and its
+    // content, not its latency.
+    const DELIVERY: Duration = Duration::from_secs(60);
+
     fn fact() -> PanicFact {
         PanicFact::new(Some(std::panic::Location::caller()), Some("t"), 1, None)
     }
@@ -594,13 +599,13 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let diagnostics = Arc::new(Diagnostics::default());
         diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
-        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+        assert!(diagnostics.flush_logs(DELIVERY));
         {
             // The panicking code itself may hold the state lock.
             let _held = diagnostics.state.lock().unwrap();
             diagnostics.panicked(fact());
         }
-        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+        assert!(diagnostics.flush_logs(DELIVERY));
         assert_eq!(panic_lines(directory.path()), 1);
         assert!(diagnostics.snapshot(0).events.is_empty());
         let poisoner = diagnostics.clone();
@@ -611,7 +616,7 @@ mod tests {
         .join()
         .unwrap_err();
         diagnostics.panicked(fact());
-        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+        assert!(diagnostics.flush_logs(DELIVERY));
         assert_eq!(panic_lines(directory.path()), 2);
         let events = diagnostics.snapshot(0).events;
         assert!(matches!(
