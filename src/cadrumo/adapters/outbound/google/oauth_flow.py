@@ -63,7 +63,7 @@ from .oauth_callback import LOOPBACK_HOST, OAuthCallbackBindError, OAuthConsentD
 from .records import REQUIRED_SCOPES, OAuthMetadata, OAuthToken, scope_grant_mismatch
 
 if TYPE_CHECKING:
-    from google_auth_oauthlib.flow import OAuthCredentials
+    from google_auth_oauthlib.flow import InstalledAppFlow, OAuthCredentials
 
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -298,19 +298,8 @@ def run_login_flow(
     )
 
 
-def _run_local_server(
-    client: OAuthClient,
-    *,
-    before_handoff: GoogleConfigurationHandoff | None = None,
-    acknowledged: GoogleConfigurationAcknowledgement | None = None,
-) -> tuple[str, str, str, tuple[str, ...]]:
-    """Loopback-IP + PKCE OAuth Desktop flow runner.
-
-    Imports ``google_auth_oauthlib`` lazily so the failure mode of a
-    missing transitive dependency surfaces as a typed
-    :exc:`cadrumo_client.contracts.google_auth.GoogleAuthNetworkError` rather than
-    an opaque ``ImportError``.
-    """
+def _installed_app_flow_class() -> type[InstalledAppFlow]:
+    """Load the Desktop flow SDK lazily and retain the typed missing-library refusal."""
     try:
         from google_auth_oauthlib.flow import InstalledAppFlow
     except ImportError as exc:
@@ -325,12 +314,30 @@ def _run_local_server(
             ),
         ) from exc
 
+    return InstalledAppFlow
+
+
+def _run_local_server(
+    client: OAuthClient,
+    *,
+    before_handoff: GoogleConfigurationHandoff | None = None,
+    acknowledged: GoogleConfigurationAcknowledgement | None = None,
+) -> tuple[str, str, str, tuple[str, ...]]:
+    """Loopback-IP + PKCE OAuth Desktop flow runner.
+
+    Imports ``google_auth_oauthlib`` lazily so the failure mode of a
+    missing transitive dependency surfaces as a typed
+    :exc:`cadrumo_client.contracts.google_auth.GoogleAuthNetworkError` rather than
+    an opaque ``ImportError``.
+    """
+    flow_class = _installed_app_flow_class()
+
     client_config = _oauth_loopback_client_config(client)
 
     state = secrets.token_urlsafe(32)
     nonce = secrets.token_urlsafe(32)
     try:
-        flow = InstalledAppFlow.from_client_config(
+        flow = flow_class.from_client_config(
             client_config, scopes=list(REQUIRED_SCOPES), state=state, autogenerate_code_verifier=True
         )
     except ValueError:
@@ -561,6 +568,11 @@ def _decode_email_from_id_token(
                 outcome=NoRecoveryOutcome.SAFETY,
             ),
         ) from None
+    return _verified_email_claims(payload, audience, expected_nonce)
+
+
+def _verified_email_claims(payload: Mapping[str, object], audience: str, expected_nonce: str) -> str:
+    """Require complete verified identity claims bound to this audience and fresh nonce."""
     email = payload.get("email")
     subject = payload.get("sub")
     if (

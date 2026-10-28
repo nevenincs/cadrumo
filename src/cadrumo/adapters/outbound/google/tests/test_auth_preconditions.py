@@ -105,7 +105,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_run_local_server:GoogleAuthNetworkError:google-auth-oauthlib not importable: {value}": _contract(
+    "oauth_flow:_installed_app_flow_class:GoogleAuthNetworkError:google-auth-oauthlib not importable: {value}": _contract(
         GoogleAuthPreconditionCondition.OAUTHLIB_AVAILABLE,
         (("oauthlib_available", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -165,7 +165,7 @@ _AUTH_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         NoRecoveryOutcome.SAFETY,
     ),
-    "oauth_flow:_decode_email_from_id_token:GoogleAuthValidationError:id_token carries incomplete or uncorrelated identity claims": _contract(
+    "oauth_flow:_verified_email_claims:GoogleAuthValidationError:id_token carries incomplete or uncorrelated identity claims": _contract(
         GoogleAuthPreconditionCondition.IDENTITY_ASSERTION_VERIFIED,
         (("id_token_verified", "False"),),
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
