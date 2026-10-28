@@ -13,7 +13,6 @@ from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession
-from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
@@ -22,6 +21,7 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, TimeoutDeadline
+from cadrumo_client.contracts.extension_records import ExtensionRecordReply, ProfileWorkerExtensionRecordRequest
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -30,6 +30,8 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOw
 
 from ..adapters.profile_worker import ProfileWorkerProcess, unreturned_profile_worker
 from ..application.session_authority_contracts import SessionAuthorityFacts
+from .human_proof_queue import HumanProofQueue
+from .worker_activity import observe_worker_activity
 
 _LOGGER = get_logger(__name__)
 
@@ -82,9 +84,7 @@ class ProfileWorkerSessionOwner:
         self._api_thread: int | None = None
         self._api_connection: UUID | None = None
         self._api_deadline: float | None = None
-        self._human_guard = Condition(RLock())
-        self._human_slot_owner: int | None = None
-        self._human_slot_depth = 0
+        self._human_queue = HumanProofQueue(self._stopping)
         self._prepared_human_worker: ProfileWorkerProcess | None = None
         self._human_thread: int | None = None
         self._human_connection: UUID | None = None
@@ -183,7 +183,9 @@ class ProfileWorkerSessionOwner:
         worker.require_alive()
         return worker
 
-    def extension_record(self, request, payload: bytearray | None = None):
+    def extension_record(
+        self, request: ProfileWorkerExtensionRecordRequest, payload: bytearray | None = None
+    ) -> tuple[ExtensionRecordReply, bytearray]:
         """Borrow admitted worker custody for an exact generic extension request."""
         return self.operation_worker().extension_record(request, payload)
 
@@ -199,19 +201,7 @@ class ProfileWorkerSessionOwner:
             self._lifecycle_guard.release()
         if worker is None:
             return 0
-        try:
-            # An unanswered probe reports unknown and leaves a busy worker
-            # alive. Its late answer is discarded, never reused as proof that a
-            # subsequent admission fence was idle.
-            activity = worker.activity(deadline=deadline)
-        except RefusalError as error:
-            # The probe fences a worker whose channel failed; that is a loss, not an unknown count.
-            if error.reason is not RefusalCode.TIMEOUT and worker.stopping:
-                self._worker_exited(worker)
-            return None
-        except (AutomationCustodyError, ProfileAccessRefusedError):
-            return None
-        return None if activity is None else activity.in_flight_operations
+        return observe_worker_activity(worker, deadline=deadline, worker_exited=self._worker_exited)
 
     @contextmanager
     def _custody(
@@ -399,7 +389,7 @@ class ProfileWorkerSessionOwner:
         # the existing worker constructs, authenticates or releases proof.
         with self._human_secret(connection_id) as proof:
             try:
-                with self._human_admission_slot(proof):
+                with self._human_queue.admit(proof):
                     try:
                         self._persist_human_receipt = proof.persist_receipt
                         with self._custody(
@@ -428,43 +418,6 @@ class ProfileWorkerSessionOwner:
                         self._persist_human_receipt = False
             finally:
                 proof.secret[:] = bytes(len(proof.secret))
-
-    def _notify_human_waiters(self) -> None:
-        with self._human_guard:
-            self._human_guard.notify_all()
-
-    @contextmanager
-    def _human_admission_slot(self, proof: HumanProof) -> Generator[None]:
-        """Cancel a queued proof without releasing the current candidate owner."""
-        cancellation = proof.cancellation or ProfileProofCancellation()
-        timeout = (
-            DEFAULT_TIMEOUT_POLICY.deadline()
-            if proof.timeout_deadline is None
-            else TimeoutDeadline(proof.timeout_deadline)
-        )
-        identity = get_ident()
-        with cancellation.watch(self._notify_human_waiters):
-            with self._human_guard:
-                while True:
-                    try:
-                        cancellation.raise_if_cancelled()
-                    except ProfileProofCancelledError:
-                        raise AutomationCustodyError(AutomationCustodyCode.REQUESTER_DISCONNECTED) from None
-                    if self._stopping.is_set():
-                        raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-                    if self._human_slot_owner is None or self._human_slot_owner == identity:
-                        self._human_slot_owner = identity
-                        self._human_slot_depth += 1
-                        break
-                    self._human_guard.wait(timeout=timeout.remaining_seconds())
-            try:
-                yield
-            finally:
-                with self._human_guard:
-                    self._human_slot_depth -= 1
-                    if self._human_slot_depth == 0:
-                        self._human_slot_owner = None
-                        self._human_guard.notify_all()
 
     def human_admission_deadline(self, connection_id: UUID) -> float:
         """Capture the exact candidate's original bound before releasing its context."""
@@ -561,7 +514,7 @@ class ProfileWorkerSessionOwner:
             if worker is not None:
                 self._retiring.append(worker)
             retiring = tuple(self._retiring)
-        self._notify_human_waiters()
+        self._human_queue.notify()
         self._notify_construction_waiters()
         failures: list[Exception] = []
         for owned in retiring:
@@ -589,7 +542,7 @@ class ProfileWorkerSessionOwner:
             worker, self._worker = self._worker, None
             if worker is not None:
                 self._retiring.append(worker)
-        self._notify_human_waiters()
+        self._human_queue.notify()
         self._notify_construction_waiters()
         return worker
 

@@ -329,7 +329,7 @@ def test_cancelling_a_queued_proof_preserves_the_current_owner_and_releases_its_
         runtime.clients.extend((first, queued_client, following))
         entered, release, queued = Event(), Event(), Event()
         proof_calls = []
-        authenticate, admission_slot = worker.authenticate_human, owner._human_admission_slot
+        authenticate, admission_slot = worker.authenticate_human, owner._human_queue.admit
 
         @contextmanager
         def paused(secret, **options):
@@ -348,7 +348,7 @@ def test_cancelling_a_queued_proof_preserves_the_current_owner_and_releases_its_
                 yield
 
         monkeypatch.setattr(worker, "authenticate_human", paused)
-        monkeypatch.setattr(owner, "_human_admission_slot", waiting)
+        monkeypatch.setattr(owner._human_queue, "admit", waiting)
 
         def begin(client):
             request = ProfileLogin(
