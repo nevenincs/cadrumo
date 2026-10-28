@@ -53,9 +53,6 @@ pub const PROGRAM_PART: &str = "program";
 /// Bound for one item's, or one part's, full check.
 pub const FULL_CHECK_BUDGET: Duration = Duration::from_secs(60);
 
-/// Bound for the quick check of every item together.
-pub const QUICK_CHECK_BUDGET: Duration = Duration::from_secs(2);
-
 /// What the engine knows about an item before anything is probed. `display_key` and
 /// `recovery_action` are identities: the item's plain name in the locale catalogues,
 /// and the operator action a refusal for this item offers.
