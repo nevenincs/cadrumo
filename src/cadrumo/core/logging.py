@@ -56,16 +56,18 @@ import time
 from codecs import getincrementalencoder
 from collections import deque
 from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
-from contextlib import contextmanager
+from contextlib import contextmanager, suppress
 from contextvars import Context, ContextVar, copy_context
 from enum import Enum
 from io import BufferedRandom, BufferedWriter, RawIOBase, TextIOWrapper
 from itertools import islice
 from pathlib import Path
 from threading import Event, Lock, Thread
-from typing import TYPE_CHECKING, Any, TextIO, cast, overload, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TextIO, cast, overload, override
 
 if TYPE_CHECKING:
+    from .config import Settings
+    from .log_file_handler import AnnouncingRotatingFileHandler
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
 from .diagnostic_dispatch import DiagnosticDispatch, DispatchStatus
@@ -588,13 +590,21 @@ class SecretScrubbingFilter(logging.Filter):
         return True
 
 
+def _run_context_variables() -> tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]]:
+    """Return the run and step contextvars, importing their module on first use."""
+    from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
+
+    return RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
+
+
 def _install_run_context_record_factory() -> None:
     """Install a :class:`logging.LogRecord` factory that stamps ``run_id`` / ``step_id``.
 
     The contextvars live in :mod:`cadrumo.core.observability.context`. They are
-    imported lazily inside the closure so this function never triggers
-    a partial import of :mod:`cadrumo.core.observability` (which would create a
-    cycle through :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
+    imported lazily, when the first record is made or :func:`configure_logging`
+    runs, so installing the factory never triggers a partial import of
+    :mod:`cadrumo.core.observability` (which would create a cycle through
+    :mod:`cadrumo.core.config` → :mod:`cadrumo.adapters.outbound.aeat.auth` → this module).
 
     Both fields are EXPECTED to be empty strings on every record a normal CLI
     invocation emits, and that is the accepted design rather than a gap. Wrapping
@@ -613,11 +623,8 @@ def _install_run_context_record_factory() -> None:
     if _factory_installed:
         return
     previous_factory = logging.getLogRecordFactory()
-    # Cache the contextvars across record creations. The `import` statement
-    # is cheap after the first call (``sys.modules`` lookup), but hoisting
-    # it into the closure eliminates the repeated try/except on every
-    # single log record — the factory runs in the hottest path of the
-    # logging subsystem.
+    # Cache the contextvars across record creations: the factory runs in the
+    # hottest path of the logging subsystem, and resolving them is an import.
     cached_vars: tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]] | None = None
 
     # KWARGS-ANY-RATIONALE-LOG-RECORD-FACTORY: signature mirrors the stdlib
@@ -647,9 +654,7 @@ def _install_run_context_record_factory() -> None:
                     args = (*args[:5], (_snapshot_value(candidate),), *args[6:])
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
-            from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
-
-            cached_vars = (RUN_CONTEXT_VAR, STEP_CONTEXT_VAR)
+            cached_vars = _run_context_variables()
         run_var, step_var = cached_vars
         ctx = run_var.get(None)
         record.run_id = ctx.run_id if ctx is not None else ""
@@ -847,8 +852,63 @@ def _install_secret_scrubbing_filters() -> None:
             handler.addFilter(SecretScrubbingFilter())
 
 
+class _ConfigurationParts(NamedTuple):
+    load_settings: Callable[[], Settings]
+    former_state_error: type[Exception]
+    file_handler: type[AnnouncingRotatingFileHandler]
+
+
+def _configuration_parts() -> _ConfigurationParts:
+    """Return what configuration builds its sinks from, importing it on first use."""
+    from .config import load_settings
+    from .config_state_root import FormerProductStateError
+    from .log_file_handler import AnnouncingRotatingFileHandler
+
+    return _ConfigurationParts(load_settings, FormerProductStateError, AnnouncingRotatingFileHandler)
+
+
+#: Synthetic text shaped like each family redaction recognises. Scrubbing it
+#: runs every import the first real record's redaction would otherwise perform.
+_DELIVERY_WARMUP_TEXT = (
+    "B12345678 12345678Z ES9121000418450200051332 Bearer warmup.token "
+    "https://sede.agenciatributaria.gob.es/Sede/warmup?token=warmup password=warmup"
+)
+_delivery_modules_loaded = False
+
+
+def _load_delivery_modules() -> None:
+    """Import, on this thread, what configuration and the first records would import elsewhere.
+
+    The dispatch thread's first work item imports the settings graph, and its
+    first record imports redaction's lazily bound identity and classification
+    modules. A producer's own first record imports the run-context module, which
+    shares pydantic with that graph, so a producer that logs while the dispatch
+    thread is mid-import waits on its import lock. Doing all of it here, before
+    anything is queued, leaves no import for either thread to perform or wait on.
+    """
+    global _delivery_modules_loaded
+    if _delivery_modules_loaded:
+        return
+    _run_context_variables()
+    _configuration_parts()
+    with lexical_tax_identity_redaction():
+        _scrub_text(_DELIVERY_WARMUP_TEXT)
+    _delivery_modules_loaded = True
+
+
 def configure_logging() -> None:
-    """Schedule idempotent diagnostic configuration without entering its I/O."""
+    """Schedule idempotent diagnostic configuration without entering its I/O.
+
+    Module imports are the exception: the host's thread performs them, once,
+    so that neither the dispatch thread nor a producer logging in the meantime
+    stalls behind a cold import. Settings, directories and files are still
+    reached only on the dispatch thread.
+    """
+    if not _configured and not _is_cli_metadata_invocation():
+        # The dispatch thread repeats these imports and counts a failure there;
+        # a host's startup must not raise for a diagnostic channel.
+        with suppress(Exception):
+            _load_delivery_modules()
     _submit_work(_configure_logging)
 
 
@@ -873,13 +933,11 @@ def _configure_logging() -> None:
     if _configured or _is_cli_metadata_invocation():
         return
 
-    from .config import load_settings
-    from .config_state_root import FormerProductStateError
-
+    parts = _configuration_parts()
     try:
         log_file = default_log_file_path()
-        settings = load_settings()
-    except FormerProductStateError:
+        settings = parts.load_settings()
+    except parts.former_state_error:
         # A normal command must reach the typed CLI refusal boundary instead
         # of crashing while its import-time logger tries to open former state.
         # Do not configure a file handler or inspect the rejected root.
@@ -889,14 +947,12 @@ def _configure_logging() -> None:
     log_directory_failure = _prepare_log_directory(log_file)
     file_logging_enabled = log_directory_failure is None
 
-    from .log_file_handler import AnnouncingRotatingFileHandler
-
     stderr = _DiagnosticStreamHandler(sys.stderr)
     stderr.setLevel(settings.cadrumo_log_stderr_level)
     stderr.addFilter(DropOperatorDocumentEchoFilter())
     sinks: list[logging.Handler] = [stderr]
     if file_logging_enabled:
-        file = AnnouncingRotatingFileHandler(
+        file = parts.file_handler(
             str(log_file),
             maxBytes=settings.cadrumo_log_file_max_bytes,
             backupCount=settings.cadrumo_log_file_backup_count,
