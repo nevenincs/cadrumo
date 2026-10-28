@@ -37,6 +37,7 @@ from cadrumo.entrypoints.tui.installation.texts import yes_no
 from cadrumo.entrypoints.tui.secret.registration import RecoveryCodeScreen
 from cadrumo.entrypoints.tui.tests.frame import screen_text
 from cadrumo.entrypoints.tui.tests.settling import settle_until
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.installation_requests import InstallationAct
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.installation_client import InstallationClient
@@ -108,7 +109,7 @@ def _shown(app: App[None]) -> str:
 
 
 def _logged(caplog: pytest.LogCaptureFixture) -> str:
-    return caplog.text + "".join(repr(record.__dict__) for record in caplog.records)
+    return delivered_text(caplog) + "".join(repr(record.__dict__) for record in delivered_records(caplog))
 
 
 async def _enrolling(pilot: Pilot[None], area: InstallationScreen, served: _ServedProfile) -> InstallationActScreen:

@@ -385,6 +385,7 @@ class ProportionalityKind:
     """
 
     _is_full_deductible: bool
+    _is_low_value_asset: bool
     _is_non_deductible: bool
     _is_statutory_cap: bool
     _is_usage_ratio: bool
@@ -394,6 +395,7 @@ class ProportionalityKind:
 
     __slots__ = (
         "_is_full_deductible",
+        "_is_low_value_asset",
         "_is_non_deductible",
         "_is_statutory_cap",
         "_is_usage_ratio",
@@ -412,6 +414,7 @@ class ProportionalityKind:
         requires_fixed_pct: bool,
         is_non_deductible: bool,
         requires_exclusive_use: bool,
+        is_low_value_asset: bool = False,
         _registry_validated: bool = False,
     ) -> Self:
         """Create one registry-projected proportionality token."""
@@ -427,6 +430,7 @@ class ProportionalityKind:
                 requires_fixed_pct,
                 is_non_deductible,
                 requires_exclusive_use,
+                is_low_value_asset,
             )
         ):
             raise ValueError("ProportionalityKind projection must declare an evaluator role")
@@ -438,6 +442,7 @@ class ProportionalityKind:
         self._requires_fixed_pct = requires_fixed_pct
         self._is_non_deductible = is_non_deductible
         self._requires_exclusive_use = requires_exclusive_use
+        self._is_low_value_asset = is_low_value_asset
         return self
 
     @classmethod
@@ -503,6 +508,18 @@ class ProportionalityKind:
     def requires_exclusive_use(self) -> bool:
         """Return whether this role requires exclusive use."""
         return self._requires_exclusive_use
+
+    @property
+    def is_low_value_asset(self) -> bool:
+        """Return whether this role deducts a purchase only as a low-value asset.
+
+        The purchase of an amortizable element is not an expense of the period:
+        the deductible item is the amortization quota (LIS art. 12.1). Only a new
+        element of low unit value may be written off in full, up to an annual
+        limit (LIS art. 12.3.e); any other purchase is deducted through the
+        activity asset register.
+        """
+        return self._is_low_value_asset
 
     @override
     def __str__(self) -> str:
@@ -815,10 +832,22 @@ class IvaMixedUseShare(StrEnum):
         NOT_DEDUCTIBLE: Simultaneous use for the activity and for private
             needs gives no deduction in any measure (LIVA art. 95.Uno and
             Dos.2.º).
+        BIEN_INVERSION_DEGREE_OF_USE: A good whose acquisition value makes it a
+            bien de inversión deducts at the degree of use (LIVA art.
+            95.Tres.1.ª). A good below that value is not a bien de inversión
+            (LIVA art. 108.Dos.5.º) and deducts nothing for mixed use.
+        VEHICLE_PRESUMPTION: Cuotas on a vehicle and on the goods and services
+            that follow it (LIVA art. 95.Cuatro) are presumed deductible in the
+            rule's :attr:`IvaMixedUseRule.presumed_share` (LIVA art.
+            95.Tres.2.ª). The presumption reaches a BUSINESS row too: entering
+            the vehicle in the activity's books is no proof of a higher degree
+            of use (LIVA art. 95.Tres.4.ª).
     """
 
     DEGREE_OF_USE = "degree_of_use"
     NOT_DEDUCTIBLE = "not_deductible"
+    BIEN_INVERSION_DEGREE_OF_USE = "bien_inversion_degree_of_use"
+    VEHICLE_PRESUMPTION = "vehicle_presumption"
 
 
 class IvaMixedUseRule(_ProportionalityStrictFrozenModel):
@@ -832,10 +861,13 @@ class IvaMixedUseRule(_ProportionalityStrictFrozenModel):
 
     Attributes:
         share: The :class:`IvaMixedUseShare` a MIXED row deducts.
+        presumed_share: The statutory presumption of affectation. Required by
+            and only valid for :attr:`IvaMixedUseShare.VEHICLE_PRESUMPTION`.
         citations: At least one citation, every one from an IVA source.
     """
 
     share: IvaMixedUseShare
+    presumed_share: UnitProportion | None = None
     citations: tuple[CategoryCitation, ...] = Field(min_length=1)
 
     @model_validator(mode="after")
@@ -845,6 +877,13 @@ class IvaMixedUseRule(_ProportionalityStrictFrozenModel):
         if foreign:
             raise CategoryValidationError(
                 f"an IVA mixed-use treatment must be grounded in IVA sources only; it cites {foreign}",
+            )
+        presumes = self.share is IvaMixedUseShare.VEHICLE_PRESUMPTION
+        if presumes and self.presumed_share is None:
+            raise CategoryValidationError("a vehicle presumption must state its presumed share")
+        if not presumes and self.presumed_share is not None:
+            raise CategoryValidationError(
+                f"only a vehicle presumption states a presumed share; {self.share.value!r} does not",
             )
         return self
 
@@ -882,6 +921,13 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             ejercicio. Mutually exclusive with the fixed
             :attr:`statutory_cap_eur`: a cap is either law-fixed or
             year-referenced, never both.
+        unit_value_limit_eur: The highest unit value a low-value asset may
+            have to be written off in full. Required by and only valid for a
+            low-value-asset kind, whose annual limit is
+            :attr:`statutory_cap_eur` over :attr:`statutory_cap_period`.
+        requires_ownership_share: Whether the usage ratio also applies to the
+            taxpayer's ownership share of the property, so a co-owned dwelling
+            deducts only the owned part. Only valid for a usage-ratio kind.
         citations: At least one :class:`CategoryCitation` proving
             the rule.
         notes: Translation key for the notes describing the rule.
@@ -896,6 +942,8 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     statutory_cap_period: StatutoryCapPeriod | None = None
     statutory_cap_variants: tuple[StatutoryCapVariant, ...] = Field(default_factory=tuple)
     statutory_cap_schedule: tuple[StatutoryCapAmount, ...] = Field(default_factory=tuple)
+    unit_value_limit_eur: Decimal | None = Field(default=None, gt=Decimal("0"))
+    requires_ownership_share: bool = False
     citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
     notes: tr = Field(description="Translation key for the notes describing the rule.")
 
@@ -909,9 +957,26 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         self._validate_usage_ratio_invariants()
         if self.kind.is_statutory_cap:
             self._validate_statutory_cap_invariants()
+        elif self.kind.is_low_value_asset:
+            self._validate_low_value_asset_invariants()
         else:
             self._reject_statutory_cap_fields_outside_cap_kind()
+        if not self.kind.is_low_value_asset and self.unit_value_limit_eur is not None:
+            raise CategoryValidationError("unit_value_limit_eur is only valid for low-value-asset rules")
         return self
+
+    def _validate_low_value_asset_invariants(self) -> None:
+        """A low-value-asset rule states its unit limit and one annual limit, nothing else."""
+        if self.unit_value_limit_eur is None:
+            raise CategoryValidationError("low-value-asset rules require unit_value_limit_eur")
+        if self.statutory_cap_eur is None or self.statutory_cap_period is None:
+            raise CategoryValidationError(
+                "low-value-asset rules require statutory_cap_eur and statutory_cap_period for their annual limit",
+            )
+        if self.statutory_cap_eur_per_day is not None or self.statutory_cap_variants or self.statutory_cap_schedule:
+            raise CategoryValidationError(
+                "low-value-asset rules carry one annual limit, not a daily, variant or dated cap",
+            )
 
     def _validate_fixed_percentage_invariants(self) -> None:
         """``fixed_pct`` follows the projected fixed-percent evaluator role."""
@@ -925,6 +990,10 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
         if not self.kind.is_usage_ratio and self.statutory_multiplier is not None:
             raise CategoryValidationError(
                 "statutory_multiplier is only valid for usage_ratio rules",
+            )
+        if not self.kind.is_usage_ratio and self.requires_ownership_share:
+            raise CategoryValidationError(
+                "requires_ownership_share is only valid for usage_ratio rules",
             )
 
     def _validate_statutory_cap_invariants(self) -> None:

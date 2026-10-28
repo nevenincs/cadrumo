@@ -19,13 +19,17 @@ modules; this file is the single source of truth for the shared
 strings.
 
 The annual Modelo 100 expense pipeline and the Modelo 130 gasto pipeline both
-evaluate a row through its category's proportionality rule, so the five
-refusals that evaluation can raise are spelled once here as well.
+evaluate a row through its category's proportionality rule, so the
+refusals that evaluation can raise are spelled once here as well. Three of them
+ask the operator for a specific fact and carry the evaluator's own refusal
+token; every other refusal is ``INELIGIBLE_DEDUCTIBILITY``.
 """
 
 from __future__ import annotations
 
 from typing import Final
+
+from ...domain.renta.ledger_expenses import RentaDeductibilityRefusal
 
 UNSUPPORTED_DIRECTION: Final[str] = "unsupported_direction"
 UNSUPPORTED_CURRENCY: Final[str] = "unsupported_currency"
@@ -37,12 +41,18 @@ MISSING_CATEGORY_PROFILE: Final[str] = "missing_category_profile"
 REGION_UNDECLARED_FOR_OVERRIDE: Final[str] = "region_undeclared_for_override"
 INVALID_LEDGER_FACT: Final[str] = "invalid_ledger_fact"
 INELIGIBLE_DEDUCTIBILITY: Final[str] = "ineligible_deductibility"
+EXCLUSIVE_USE_REQUIRED: Final[str] = RentaDeductibilityRefusal.EXCLUSIVE_USE_REQUIRED.value
+MISSING_OWNERSHIP_SHARE: Final[str] = RentaDeductibilityRefusal.MISSING_OWNERSHIP_SHARE.value
+ASSET_REGISTER_REQUIRED: Final[str] = RentaDeductibilityRefusal.ASSET_REGISTER_REQUIRED.value
 
 
 __all__ = [
+    "ASSET_REGISTER_REQUIRED",
+    "EXCLUSIVE_USE_REQUIRED",
     "INELIGIBLE_DEDUCTIBILITY",
     "INVALID_LEDGER_FACT",
     "MISSING_CATEGORY_PROFILE",
+    "MISSING_OWNERSHIP_SHARE",
     "OUTSIDE_PERIOD",
     "PERSONAL_TRANSACTION",
     "REGION_UNDECLARED_FOR_OVERRIDE",

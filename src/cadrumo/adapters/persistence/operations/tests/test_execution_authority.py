@@ -32,6 +32,7 @@ from cadrumo.core.operations import (
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
     _NOW,
@@ -106,7 +107,9 @@ def test_commit_timing_keeps_nested_durable_effect_and_failure_boundaries(
         with caplog.at_level(logging.DEBUG, logger=logger.name):
             asyncio.run(exercise())
         records = [
-            record for record in caplog.records if record.name == logger.name and record.msg == "operation_commit_phase"
+            record
+            for record in delivered_records(caplog)
+            if record.name == logger.name and record.msg == "operation_commit_phase"
         ]
         if fail_diagnostics:
             assert records == []

@@ -59,14 +59,17 @@ class TestEligibleWording:
             )
         }
 
-        assert english["vehiculo_combustible"].label == "Vehicle fuel"
-        assert english["vehiculo_combustible"].notes == (
-            "Deductible on proof of exclusive business use (Reglamento IRPF art. 22, exclusive affectation of the vehicle)."
+        assert english["ibi_vivienda_afecto"].label == "Property tax (IBI) on home used for business"
+        assert english["ibi_vivienda_afecto"].notes == (
+            "Deductible in proportion to the home's floor area used for the business and to your ownership share "
+            "in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, "
+            "property tax on the home used for business)."
         )
-        assert spanish["vehiculo_combustible"].label == "Combustible del vehículo"
-        assert spanish["vehiculo_combustible"].notes == (
-            "Deducible con prueba de afectación exclusiva a la actividad "
-            "(Reglamento IRPF art. 22, afectación exclusiva del vehículo)."
+        assert spanish["ibi_vivienda_afecto"].label == "IBI de la vivienda afecta"
+        assert spanish["ibi_vivienda_afecto"].notes == (
+            "Deducible en proporción a la superficie de la vivienda afecta a la actividad y a tu porcentaje de "
+            "titularidad en ella; no se aplica el 30 % de los suministros (Ley 35/2006 art. 29.2, Reglamento "
+            "IRPF art. 22.3, IBI de la vivienda afecta)."
         )
         # The registry names this category's label under a key that does not follow its token.
         assert english["suministros_home_office_luz"].label == "Home-office electricity"

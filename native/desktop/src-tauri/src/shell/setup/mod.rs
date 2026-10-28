@@ -813,6 +813,7 @@ mod tests {
             state,
             active_profile: profile.map(str::to_owned),
             runtime_available: runtime,
+            reconnecting: None,
             refusal: None,
         }
     }

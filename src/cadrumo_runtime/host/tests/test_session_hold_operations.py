@@ -73,6 +73,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts import deadline_budget
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -682,7 +683,7 @@ def test_relay_logs_transport_cause_without_request_data(
     monkeypatch.setattr(runtime, "operation", refused)
     with caplog.at_level(logging.WARNING), pytest.raises(RelayRefusedError, match="unavailable"):
         _submit(_relay(runtime), GOOGLE_STATUS_OPERATION_DEFINITION_ID, {"private": "private-profile-value"})
-    record = next(record for record in caplog.records if record.message == "session_hold_operation_refused")
+    record = next(record for record in delivered_records(caplog) if record.message == "session_hold_operation_refused")
     assert record.__dict__["reason"] == "runtime_deadline_exceeded"
     assert record.__dict__["action"] == "operation_submit"
     assert "private-profile-value" not in str(record.__dict__)

@@ -20,6 +20,7 @@ from pydantic import ValidationError
 from ......core.classification.policies import SensitivityClass
 from ......core.directory_scan import DirectoryEntryKind, scan_directory
 from ......core.external_constants import UTF_8_ENCODING
+from ......tests.log_records import delivered_records
 from ......tests.path_obstruction import obstructed_path
 from ...blob_store.blob_store import EncryptedBlobStore
 from ...errors import (
@@ -261,7 +262,9 @@ class TestOverwrite:
         caplog.set_level(logging.DEBUG, logger=_STORE_LOGGER_NAME)
         store.put(second, overwrite=True)
 
-        messages = tuple(record.getMessage() for record in caplog.records if record.name == _STORE_LOGGER_NAME)
+        messages = tuple(
+            record.getMessage() for record in delivered_records(caplog) if record.name == _STORE_LOGGER_NAME
+        )
         assert any("stale secret-store blob cleanup skipped because blob is already absent" in msg for msg in messages)
         assert all(first.key not in msg for msg in messages)
         assert all(first_ref.sha256_plaintext_hex not in msg for msg in messages)
@@ -283,7 +286,9 @@ class TestDelete:
         caplog.set_level(logging.DEBUG, logger=_STORE_LOGGER_NAME)
         store.delete(record.key)
 
-        messages = tuple(record.getMessage() for record in caplog.records if record.name == _STORE_LOGGER_NAME)
+        messages = tuple(
+            record.getMessage() for record in delivered_records(caplog) if record.name == _STORE_LOGGER_NAME
+        )
         assert any(
             "secret-store blob cleanup on delete skipped because blob is already absent" in msg for msg in messages
         )

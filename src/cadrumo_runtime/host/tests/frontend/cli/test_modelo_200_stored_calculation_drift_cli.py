@@ -10,6 +10,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
+from cadrumo.tests.log_records import delivered_text
 
 from ._profile_cli_support import invoke_protected_profile
 from .cli_runner import invoke_cached_cli
@@ -98,7 +99,7 @@ def test_verify_after_profile_activity_start_change_reports_scoped_advisories_wi
 
     assert verification.exit_code == 0, verification.output
     assert "Traceback" not in verification.output
-    assert "Traceback" not in caplog.text
+    assert "Traceback" not in delivered_text(caplog)
     response = json.loads(verification.output)
     report = response["result"]
     assert report["registry_snapshot_ref"]["revision_id"] == "2025-y-siguientes"

@@ -26,6 +26,7 @@ from ....core.errors.error_codes import get_registered_error_code
 from ....core.errors.hierarchy import NoActiveProfileError
 from ....core.profile_session import ProfileRecordUnavailability
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....tests.log_records import delivered_text
 from ..active_profile import resolve_active_profile_record
 from ..state_models import WorkflowState
 
@@ -91,7 +92,7 @@ def test_active_profile_record_names_an_absent_capsule_as_the_reason(
 
     assert resolution.record is None
     assert resolution.unavailability is ProfileRecordUnavailability.NO_LIVE_CAPSULE
-    assert "active profile record resolution found no live bucket for the selected profile" in caplog.text
+    assert "active profile record resolution found no live bucket for the selected profile" in delivered_text(caplog)
     # The reason-erasing framing this replaced must not return unnoticed.
-    assert "returned no profile record" not in caplog.text
-    assert bucket_id not in caplog.text
+    assert "returned no profile record" not in delivered_text(caplog)
+    assert bucket_id not in delivered_text(caplog)

@@ -33,6 +33,7 @@ from ....application.modelo.work_form_models import (
 )
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
+from ....tests.log_records import delivered_records
 from ....tests.terminal_sizes import TERMINAL_FLOOR
 from ..components.host import ScreenHostApp
 from ..components.theme import CADRUMO_DARK_THEME_NAME, CADRUMO_LIGHT_THEME_NAME
@@ -241,4 +242,8 @@ async def test_a_typed_value_is_kept_nowhere_once_abandoned(
     assert after_cancel == []
     assert after_discard == 0
     digits = typed.replace(",", "").replace(".", "")
-    assert not [record for record in caplog.records if digits in record.getMessage().replace(",", "").replace(".", "")]
+    assert not [
+        record
+        for record in delivered_records(caplog)
+        if digits in record.getMessage().replace(",", "").replace(".", "")
+    ]

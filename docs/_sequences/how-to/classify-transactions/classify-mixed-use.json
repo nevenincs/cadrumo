@@ -15,7 +15,7 @@
         "--direction",
         "OUTGOING",
         "--description",
-        "Factura movil",
+        "Alquiler vivienda",
         "--idempotency-key",
         "classify-mixed"
       ],
@@ -23,7 +23,7 @@
         {
           "json_path": "result.transaction_id",
           "name": "transaction_id",
-          "value": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
+          "value": "872359bbd47b94e730b14a8e2e1b5bf7033298bd2403bc0d067d076282fd4270"
         }
       ],
       "envelope": null,
@@ -47,7 +47,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ncount\t15\namortizacion_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\narrendamiento_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\ncomunidad_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nibi_vivienda_afecto\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_agua\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_gas\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_internet\tusage_ratio_home_area\tdefault=-\toverride=.\nsuministros_home_office_luz\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_fija\tusage_ratio_home_area\tdefault=-\toverride=.\ntelefonia_movil\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_combustible\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_mantenimiento\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_parking\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_peaje\tusage_ratio_personal\tdefault=-\toverride=.\nvehiculo_seguro\tusage_ratio_personal\tdefault=-\toverride=.\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "bucket\t<profile-id>\ncount\t9\namortizacion_vivienda_afecto\tDepreciation of home used for business\tusage_ratio_home_area\toverride=.\tDeductible in proportion to the home's floor area used for the business and to your ownership share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, depreciation of the home used for business).\narrendamiento_vivienda_afecto\tBusiness-use share of home rent\tusage_ratio_home_area\toverride=.\tDeductible in proportion to the home's business-use floor area (Ley 35/2006 art. 29.2 and art. 28.1, rent of the home used for business).\ncomunidad_vivienda_afecto\tCommunity/condo fees on home used for business\tusage_ratio_home_area\toverride=.\tDeductible in proportion to the home's floor area used for the business and to your ownership share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, community fees of the home used for business).\nibi_vivienda_afecto\tProperty tax (IBI) on home used for business\tusage_ratio_home_area\toverride=.\tDeductible in proportion to the home's floor area used for the business and to your ownership share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, property tax on the home used for business).\nsuministros_home_office_agua\tHome-office water\tusage_ratio_home_area\toverride=.\tIRPF: where you use part of your habitual home for the activity, you deduct 30% of the ratio between the floor area used for the activity and the total floor area, unless you prove a higher or lower share (Ley 35/2006 art. 30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion to the degree of use in the activity, without the 30% factor (Ley 37/1992 art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).\nsuministros_home_office_gas\tHome-office gas\tusage_ratio_home_area\toverride=.\tIRPF: where you use part of your habitual home for the activity, you deduct 30% of the ratio between the floor area used for the activity and the total floor area, unless you prove a higher or lower share (Ley 35/2006 art. 30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion to the degree of use in the activity, without the 30% factor (Ley 37/1992 art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).\nsuministros_home_office_internet\tHome-office internet\tusage_ratio_home_area\toverride=.\tIRPF: where you use part of your habitual home for the activity, you deduct 30% of the ratio between the floor area used for the activity and the total floor area, unless you prove a higher or lower share (Ley 35/2006 art. 30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion to the degree of use in the activity, without the 30% factor (Ley 37/1992 art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).\nsuministros_home_office_luz\tHome-office electricity\tusage_ratio_home_area\toverride=.\tIRPF: where you use part of your habitual home for the activity, you deduct 30% of the ratio between the floor area used for the activity and the total floor area, unless you prove a higher or lower share (Ley 35/2006 art. 30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion to the degree of use in the activity, without the 30% factor (Ley 37/1992 art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).\ntelefonia_fija\tLandline phone expense\tusage_ratio_home_area\toverride=.\tIRPF: where you use part of your habitual home for the activity, you deduct 30% of the ratio between the floor area used for the activity and the total floor area, unless you prove a higher or lower share (Ley 35/2006 art. 30.2, rule 5, letter b). IVA: the input cuota is deductible in proportion to the degree of use in the activity, without the 30% factor (Ley 37/1992 art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -56,7 +56,7 @@
         "ledger",
         "ratios",
         "set",
-        "telefonia_movil",
+        "arrendamiento_vivienda_afecto",
         "0.5"
       ],
       "captures": [],
@@ -65,7 +65,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "bucket\t<profile-id>\ntelefonia_movil\t0.5\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "bucket\t<profile-id>\narrendamiento_vivienda_afecto\t0.5\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -73,13 +73,13 @@
         "app",
         "ledger",
         "allocate",
-        "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e",
+        "872359bbd47b94e730b14a8e2e1b5bf7033298bd2403bc0d067d076282fd4270",
         "--business-pct",
         "0.5",
         "--usage-ratio-id",
-        "telefonia_movil",
+        "arrendamiento_vivienda_afecto",
         "--category-id",
-        "telefonia_movil"
+        "arrendamiento_vivienda_afecto"
       ],
       "captures": [],
       "envelope": null,
@@ -87,7 +87,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "ID\t80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e\nDate\t2026-03-15\nAmount\t60.5\nDescription\tFactura movil\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
+      "text": "ID\t872359bbd47b94e730b14a8e2e1b5bf7033298bd2403bc0d067d076282fd4270\nDate\t2026-03-15\nAmount\t60.5\nDescription\tAlquiler vivienda\nReview status\treviewed\nnotice\tconfig.login.session_not_persisted\tProfile authentication supplied to this command applies to this process only; supply it again to the next process.\n"
     },
     {
       "argv": [
@@ -97,7 +97,7 @@
         "app",
         "ledger",
         "view",
-        "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
+        "872359bbd47b94e730b14a8e2e1b5bf7033298bd2403bc0d067d076282fd4270"
       ],
       "captures": [],
       "envelope": {
@@ -121,7 +121,7 @@
             "booked_date": "2026-03-15",
             "business_classification": "MIXED",
             "business_pct": "0.5",
-            "category_id": "telefonia_movil",
+            "category_id": "arrendamiento_vivienda_afecto",
             "classification_confidence": "1",
             "classification_reason": "aeat app ledger allocate",
             "classified_at": "2026-04-01T09:00:00+00:00",
@@ -132,7 +132,7 @@
             "created_at": "2026-04-01T09:00:00+00:00",
             "currency": "EUR",
             "date": "2026-03-15",
-            "description": "Factura movil",
+            "description": "Alquiler vivienda",
             "direction": "OUTGOING",
             "fx_rate": null,
             "invoice_id": null,
@@ -148,12 +148,12 @@
             "purchase_invoice_evidence_id": null,
             "source_jurisdiction": "ES",
             "taxable_base": null,
-            "transaction_id": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e",
-            "usage_ratio_id": "telefonia_movil",
+            "transaction_id": "872359bbd47b94e730b14a8e2e1b5bf7033298bd2403bc0d067d076282fd4270",
+            "usage_ratio_id": "arrendamiento_vivienda_afecto",
             "value_date": null,
             "value_in_eur": null
           },
-          "transaction_id": "80f1bbebb9176b41674513c8a1c593f2ba8e6304d6fa0a9bfe104dd2f081a73e"
+          "transaction_id": "872359bbd47b94e730b14a8e2e1b5bf7033298bd2403bc0d067d076282fd4270"
         },
         "schema_version": "2",
         "status": "warning"

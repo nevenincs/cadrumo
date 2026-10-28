@@ -64,7 +64,7 @@ type EvidenceFilesSubmitV1 = Callable[[], Awaitable[EvidenceFilesWordingV1]]
 type EvidenceFilesReviewV1 = Callable[[], tuple[str, ...]]
 """Word the staged change in the operator's current language."""
 
-_STATUS_KEYS: Final[dict[LedgerFlowState, str]] = {
+_STATUS_LOCALE_KEYS: Final[dict[LedgerFlowState, str]] = {
     LedgerFlowState.CONFIRMING: "tui.ledger.evidence_files.write.confirming",
     LedgerFlowState.SUBMITTING: "tui.ledger.evidence_files.write.saving",
     LedgerFlowState.FAILED: "tui.ledger.evidence_files.write.failed",
@@ -169,7 +169,7 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         outcome = self.outcome
         refusal = ""
         outcome_text = ""
-        status_key = _STATUS_KEYS.get(self.flow_state)
+        status_key = _STATUS_LOCALE_KEYS.get(self.flow_state)
         if self._failure is not None:
             refusal = door_refusal_text(self._failure)
             if unknown_outcome_of(self._failure) is not None:

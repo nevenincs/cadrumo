@@ -19,6 +19,7 @@ from ....application.user_profile.passphrase_rotation import ProfilePassphraseRo
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.period import Period
+from ....tests.log_records import delivered_records
 from ..account import (
     AccountDirectSessionActionV1,
     AccountFactoriesV1,
@@ -211,7 +212,9 @@ async def test_navigate_to_refuses_a_factory_invocation_failure_without_leaving_
         assert app.is_running
         assert str(app.query_one("#root-navigation-refusal", Static).render()) == tr("tui.root.navigation.unavailable")
         assert str(app.query_one("#root-account-refusal", Static).render()) == ""
-        record = next(record for record in caplog.records if record.getMessage() == "tui_destination_open_failed")
+        record = next(
+            record for record in delivered_records(caplog) if record.getMessage() == "tui_destination_open_failed"
+        )
         if failure_type is TypeError:
             assert record.__dict__["error_type"] == "DestinationFactoryError"
             assert "TypeError" in str(record.__dict__["root_cause"])
@@ -959,7 +962,7 @@ async def test_failed_search_refresh_retains_last_good_and_sanitizes_refusal(
     assert app.workbench_search_service is initial_search
     assert "12345678Z" not in app.workbench_search_refusal_code
     assert "protected" not in app.workbench_search_refusal_code
-    record = next(record for record in caplog.records if record.getMessage() == "tui_search_refresh_failed")
+    record = next(record for record in delivered_records(caplog) if record.getMessage() == "tui_search_refresh_failed")
     assert record.__dict__["error_type"] == "RuntimeError"
     assert str(record.__dict__["error_origin"]).endswith(":fail_refresh")
     assert record.exc_info is None

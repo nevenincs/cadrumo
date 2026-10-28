@@ -33,7 +33,7 @@ A row that declares a spending category is run through that category's
 proportionality rule by the SAME evaluator the annual first-slice pipeline uses
 (:func:`~cadrumo.domain.renta.ledger_expenses.evaluate_renta_deductibility`),
 against rules built by :func:`~.renta_ledger.resolve_category_deduction_rules`.
-A usage-ratio category (home-office suministros, mobile phone) is therefore
+A usage-ratio category (home-office suministros) is therefore
 apportioned once, by the operator's ratio and the rule's statutory multiplier,
 whatever the row's classification; a MIXED row's stored ``business_pct`` scales
 every other category. A row declaring no category has no rule to run and
@@ -71,7 +71,10 @@ from ...domain.renta.ledger_expenses import (
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,
     RentaExpenseDirection,
+    StatutoryCapClaim,
     evaluate_renta_deductibility,
+    normalize_spending_category,
+    statutory_cap_trims,
 )
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
@@ -80,7 +83,11 @@ from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
-from ._renta_business_eligibility import renta_expense_business_proportion, row_scaling_proportion
+from ._renta_business_eligibility import (
+    exclusive_business_use,
+    renta_expense_business_proportion,
+    row_scaling_proportion,
+)
 from .currency_predicates import (
     effective_eur_amount,
     effective_eur_iva_amount,
@@ -95,6 +102,7 @@ from .errors import AggregationValidationError
 from .renta_ledger import (
     CategoryRuleRefusal,
     RentaCategoryDeductionRules,
+    refusal_issue_reason,
     resolve_category_deduction_rules,
     resolve_category_rule,
     resolve_iva_deduction_ratio,
@@ -134,6 +142,9 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     REGION_UNDECLARED_FOR_OVERRIDE = _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE
     INVALID_LEDGER_FACT = _shared_issue_reasons.INVALID_LEDGER_FACT
     INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
+    EXCLUSIVE_USE_REQUIRED = _shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
+    MISSING_OWNERSHIP_SHARE = _shared_issue_reasons.MISSING_OWNERSHIP_SHARE
+    ASSET_REGISTER_REQUIRED = _shared_issue_reasons.ASSET_REGISTER_REQUIRED
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -211,6 +222,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     profile_record: UserProfileRecord | None = None,
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     operation: PinnedAuthorityOperation | None = None,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
 ) -> RentaGastoLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative expense window.
 
@@ -240,6 +253,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
                 profile_record=profile_record,
                 prorrata_register_repository=prorrata_register_repository,
                 operation=indexed_operation,
+                ownership_share=ownership_share,
+                register_owned_transaction_ids=register_owned_transaction_ids,
             )
     repository = transaction_repository
     if repository.bucket_id != bucket_id:
@@ -275,6 +290,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
         ),
         profile_record=profile_record,
         operation=operation,
+        ownership_share=ownership_share,
+        register_owned_transaction_ids=register_owned_transaction_ids,
     )
     out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
         partition.out_of_window,
@@ -299,6 +316,8 @@ def aggregate_renta_gasto_ledger(
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
 ) -> RentaGastoLedgerAggregation:
     """Aggregate OUTGOING deductible-expense transactions into a selected target.
 
@@ -328,6 +347,11 @@ def aggregate_renta_gasto_ledger(
             authority operation.
         operation: Existing generation-pinned authority operation. When omitted,
             one indexed operation is opened at this composition boundary.
+        ownership_share: The taxpayer's ownership share of the partly affected
+            dwelling, applied by the categories whose rule requires it.
+        register_owned_transaction_ids: The ledger rows the activity-asset
+            register declares as an asset's acquisition; the register deducts
+            them through its amortization schedule.
 
     Returns a :class:`RentaGastoLedgerAggregation` covering the cumulative
     fiscal window. ``period`` must be quarterly; the cumulative window extends
@@ -350,6 +374,8 @@ def aggregate_renta_gasto_ledger(
                 profile_record=profile_record,
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
+                ownership_share=ownership_share,
+                register_owned_transaction_ids=register_owned_transaction_ids,
             )
     window = cumulative_year_to_date_window(period)
     rules = resolve_category_deduction_rules(
@@ -363,6 +389,8 @@ def aggregate_renta_gasto_ledger(
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        ownership_share=ownership_share,
+        register_owned_transaction_ids=register_owned_transaction_ids,
     )
 
     observations: list[RentaGastoObservation] = []
@@ -386,6 +414,7 @@ def aggregate_renta_gasto_ledger(
         else:
             observations.append(outcome)
 
+    observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _gasto_casilla_aggregation(
         window.period,
         observations,
@@ -571,6 +600,7 @@ def _category_rule_deductible_amount(
             iva_amount=eur_iva_amount * scaling if eur_iva_amount is not None else None,
             direction=RentaExpenseDirection.OUTGOING_EXPENSE,
             category=category,
+            exclusive_business_use=exclusive_business_use(transaction),
         )
     except ValueError as exc:
         return RentaGastoLedgerAggregationIssue(
@@ -582,10 +612,39 @@ def _category_rule_deductible_amount(
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
         return RentaGastoLedgerAggregationIssue(
             transaction_id=transaction_id,
-            reason=RentaGastoLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY,
+            reason=RentaGastoLedgerAggregationIssueReason(refusal_issue_reason(result)),
             detail=result.reason,
         )
     return result.deductible_amount
+
+
+def _apply_statutory_cap_trims(
+    observations: list[RentaGastoObservation],
+    *,
+    rules: RentaCategoryDeductionRules,
+) -> list[RentaGastoObservation]:
+    """Hold the cumulative-window observations that share one statutory cap to that cap together."""
+    trims = statutory_cap_trims(
+        tuple(
+            StatutoryCapClaim(
+                claim_id=observation.transaction_id,
+                transaction_id=observation.transaction_id,
+                category=normalize_spending_category(observation.category_id),
+                claim_date=observation.filing_date,
+                deductible_amount=observation.deductible_amount,
+            )
+            for observation in observations
+            if observation.category_id is not None
+        ),
+        profiles=rules.profiles,
+        context=rules.context,
+    )
+    return [
+        observation.model_copy(update={"deductible_amount": trims[observation.transaction_id]})
+        if observation.transaction_id in trims
+        else observation
+        for observation in observations
+    ]
 
 
 def _gasto_gate_issue(

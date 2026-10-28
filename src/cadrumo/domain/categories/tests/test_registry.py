@@ -109,7 +109,13 @@ def test_registry_preserves_conservative_semantics_for_special_categories(
     hardware = profiles_2025[SpendingCategory.from_registry("hardware_amortizable")]
     health = profiles_2025[SpendingCategory.from_registry("seguros_salud_autonomo")]
 
-    assert hardware.proportionality.kind.value == "full_deductible"
+    # A computer is amortized (LIS art. 12.1); only a new item of up to 300 EUR may be
+    # written off at once, within 25,000 EUR a period (LIS art. 12.3.e).
+    assert hardware.proportionality.kind.value == "low_value_asset"
+    assert hardware.proportionality.unit_value_limit_eur == Decimal("300")
+    assert hardware.proportionality.statutory_cap_eur == Decimal("25000")
+    assert hardware.proportionality.statutory_cap_period is not None
+    assert not hardware.proportionality.statutory_cap_period.is_per_person
     assert health.proportionality.kind.value == "statutory_cap"
     assert health.proportionality.statutory_cap_eur_per_day is None
     # LIRPF art. 30.2.5.a states TWO limits -- 500 per person, 1.500 for a person with

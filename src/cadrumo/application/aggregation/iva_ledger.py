@@ -64,7 +64,12 @@ from ...domain.bienes_inversion.register import (
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ...domain.calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    ResolvedScalarFact,
+    ScalarFactQuery,
+)
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import (
@@ -89,7 +94,7 @@ from ...domain.calculations.registry.prorrata_vocabulary import (
 )
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.categories.proportionality import IvaMixedUseShare
+from ...domain.categories.proportionality import IvaMixedUseRule, IvaMixedUseShare
 from ...domain.categories.registry import resolve_category_profile
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.classification import territorial_scope_alias
@@ -122,6 +127,7 @@ from ...domain.transactions.protocols import TransactionCatalogueRepositoryProto
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from . import _shared_issue_reasons
 from .business_proportion import business_proportion
+from .currency_predicates import effective_eur_taxable_base
 from .errors import AggregationValidationError, UnacceptedLedgerRegistryValueError
 from .invoice_kind import invoice_kind_for_direction
 
@@ -256,7 +262,8 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # so a contradiction would split the cuota across the wrong periods.
     CASH_ACCOUNTING_EVIDENCE_INCOHERENT = "cash_accounting_evidence_incoherent"
     # A MIXED received row whose spending category grants no IVA deduction for
-    # simultaneous business and private use (LIVA art. 95.Uno and Dos.2.º).
+    # simultaneous business and private use (LIVA art. 95.Uno and Dos.2.º), or
+    # whose good is below the bien de inversión value (art. 108.Dos.5.º).
     # Excluded like a personal row rather than observed with a zero cuota: a
     # cuota the law never lets be deducted has no base in the deductible boxes.
     NON_DEDUCTIBLE_MIXED_USE = "non_deductible_mixed_use"
@@ -1725,29 +1732,65 @@ def business_proportionality_for(transaction: Transaction) -> Decimal | None:
     return business_proportion(transaction.business_classification, transaction.business_pct)
 
 
-def iva_mixed_use_share_for(
+def iva_category_deductible_proportion(
     transaction: Transaction,
+    proportion: Decimal,
     *,
+    operation_date: date,
     year: int,
     operation: PinnedAuthorityOperation,
-) -> IvaMixedUseShare | None:
-    """Return the IVA treatment the row's category declares for MIXED use, or ``None``.
+) -> Decimal | None:
+    """Return the share of a received row's cuota its category lets it deduct, or ``None`` for none.
 
-    Only a MIXED row asks: a BUSINESS row deducts in full and any other
-    classification feeds no deduction. ``None`` also covers a row without a
-    category, a category the pinned authority does not declare, and a category
-    with no IVA treatment; each keeps the row's own business share, which is
-    what the IVA ledger applied before categories carried an IVA rule.
+    ``proportion`` is the row's business share: ``1`` for a BUSINESS row, the
+    stated degree of use for a MIXED one. The category's IVA treatment decides
+    what that share is worth (LIVA art. 95):
+
+    - ``not_deductible``: a MIXED row deducts nothing; a BUSINESS row keeps its share.
+    - ``degree_of_use``: the row's share.
+    - ``bien_inversion_degree_of_use``: a MIXED row deducts its share only when
+      the good's value makes it a bien de inversión (LIVA art. 108.Dos.5.º).
+    - ``vehicle_presumption``: the presumed share of LIVA art. 95.Tres.2.ª,
+      for a BUSINESS row as well, because booking the vehicle in the activity
+      is no proof of a higher degree of use (LIVA art. 95.Tres.4.ª).
+
+    A row without a category, or whose category the pinned authority does not
+    declare, keeps its own share.
 
     Args:
-        transaction: The ledger row.
+        transaction: The received ledger row.
+        proportion: The row's business share.
+        operation_date: The date the bien de inversión threshold is read for.
         year: The filing year whose category profiles apply.
         operation: The caller-owned authority generation.
 
     Returns:
-        The category's :class:`IvaMixedUseShare`, or ``None``.
+        The deductible share, or ``None`` when the category grants no deduction
+        for the row's use.
     """
-    if transaction.business_classification is not BusinessClassification.MIXED or transaction.category_id is None:
+    rule = _category_iva_mixed_use_rule(transaction, year=year, operation=operation)
+    if rule is None:
+        return proportion
+    mixed = transaction.business_classification is BusinessClassification.MIXED
+    if rule.share is IvaMixedUseShare.VEHICLE_PRESUMPTION:
+        return rule.presumed_share
+    if not mixed or rule.share is IvaMixedUseShare.DEGREE_OF_USE:
+        return proportion
+    if rule.share is IvaMixedUseShare.BIEN_INVERSION_DEGREE_OF_USE:
+        base = effective_eur_taxable_base(transaction)
+        threshold = _bien_inversion_threshold(operation_date=operation_date, operation=operation)
+        return proportion if base is not None and base >= threshold else None
+    return None
+
+
+def _category_iva_mixed_use_rule(
+    transaction: Transaction,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> IvaMixedUseRule | None:
+    """Return the IVA treatment the row's category declares, or ``None``."""
+    if transaction.category_id is None:
         return None
     try:
         category = require_spending_category(
@@ -1757,8 +1800,24 @@ def iva_mixed_use_share_for(
         )
     except RegistryValidationError:
         return None
-    rule = resolve_category_profile(category, year, operation=operation).proportionality.iva_mixed_use
-    return None if rule is None else rule.share
+    return resolve_category_profile(category, year, operation=operation).proportionality.iva_mixed_use
+
+
+_BIEN_INVERSION_THRESHOLD_FACT_ID: Final = "iva-bien-inversion-escaso-valor-threshold"
+
+
+def _bien_inversion_threshold(*, operation_date: date, operation: PinnedAuthorityOperation) -> Decimal:
+    """Return the acquisition value below which a good is not a bien de inversión (LIVA art. 108.Dos.5.º)."""
+    resolved = operation.resolve_governed_fact(
+        ScalarFactQuery(
+            fact_id=_BIEN_INVERSION_THRESHOLD_FACT_ID,
+            date_axis=DateAxis.TRANSACTION_DATE,
+            effective_date=operation_date,
+        )
+    )
+    if not isinstance(resolved, ResolvedScalarFact) or not isinstance(resolved.payload.value, Decimal):
+        raise RegistryValidationError(f"{_BIEN_INVERSION_THRESHOLD_FACT_ID} must resolve to one decimal amount")
+    return resolved.payload.value
 
 
 def has_converted_non_eur_amount(transaction: Transaction) -> bool:

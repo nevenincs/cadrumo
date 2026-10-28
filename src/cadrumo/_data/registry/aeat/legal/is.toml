@@ -3220,6 +3220,23 @@ effective_from = 2015-01-01
 section = "3.d"
 required_text = ["3. No obstante, podrán amortizarse libremente:", "d) Los elementos del inmovilizado material o intangible de las entidades que tengan la calificación de explotaciones asociativas prioritarias de acuerdo con lo dispuesto en la Ley 19/1995, de 4 de julio, de modernización de las explotaciones agrarias, adquiridos durante los cinco primeros años a partir de la fecha de su reconocimiento como explotación prioritaria."]
 
+[legal."ley-27-2014:art-12-3-e"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014-art-12-full.html#a12"
+document_id = "BOE-A-2014-12328"
+article = "12"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#a12"
+published_at = 2014-11-28
+review_status = "agent_reviewed"
+reviewed_at = 2026-10-27
+reviewed_by = "agent-authored from bundled ley-27-2014-art-12-full.html#a12; operator review pending"
+notes = "LIS Article 12.3(e): free amortization of new tangible fixed assets whose unit value does not exceed 300 euros, up to 25,000 euros per tax period. LIRPF art. 28.1 applies it to the estimación directa of an economic activity."
+effective_from = 2015-01-01
+section = "3.e"
+required_text = ["3. No obstante, podrán amortizarse libremente:", "e) Los elementos del inmovilizado material nuevos, cuyo valor unitario no exceda de 300 euros, hasta el límite de 25.000 euros referido al período impositivo."]
+
 [legal."ley-27-2014:da-16"]
 evidence_tier = "legal_authority"
 authority = "boe"

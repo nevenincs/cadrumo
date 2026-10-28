@@ -30,7 +30,7 @@
           }
         ],
         "result": {
-          "authority_generation": "3605aa3609a433a039df2154a8f21a1811679b38a0f31f98b32c3d9707399b08",
+          "authority_generation": "4e93241b65ef5ea94a1ba3157b0ac87ce2c09944e90110128f67135a5bc9f523",
           "binding_count": 67,
           "bindings": [
             {"binding_id":"renta-modelo-100-estimacion-directa-es-normal","borrador_capable":false,"encoded_options":[{"boolean_meaning":true,"encoded_value":"1","registry_value":"N"},{"boolean_meaning":false,"encoded_value":"0","registry_value":"S"}],"filing_year":2025,"input_channel":"decimal","legal_refs":["ley-35-2006:art-30"],"modelo":"100","period":"0A","readiness":"manual input","relation_inputs":[],"revision":"2025","source":"manual_input","source_refs":["aeat-dr-100-2025-dictionary","aeat-renta-2025-manual-parte1"],"typed_enum":"EstimacionDirectaModalidad"},

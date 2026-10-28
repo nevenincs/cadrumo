@@ -15,6 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -41,7 +42,9 @@ def test_desktop_frontend_claim_by_a_generic_peer_logs_its_check(
 
     assert refused.value.reason is RefusalCode.PEER_UNTRUSTED
     records = [
-        record for record in caplog.records if getattr(record, "failure_boundary", None) == "profile_request_refused"
+        record
+        for record in delivered_records(caplog)
+        if getattr(record, "failure_boundary", None) == "profile_request_refused"
     ]
     assert [record.__dict__["reason"] for record in records] == ["desktop_holder_descriptor_absent"]
     (record,) = records

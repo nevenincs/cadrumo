@@ -82,6 +82,7 @@ from cadrumo.core.operations import (
 )
 from cadrumo.tests.aeat_literal_fixtures import REDACTION_TOKEN_QUERY_URL_CANARY
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 
 _NOW = datetime(2026, 8, 14, 15, tzinfo=UTC)
@@ -889,7 +890,7 @@ def _start_and_walk_away(tmp_path: Path, caplog: pytest.LogCaptureFixture) -> Op
 
 
 def _failure_logged(caplog: pytest.LogCaptureFixture) -> bool:
-    return any("stopped without settlement" in record.getMessage() for record in caplog.records)
+    return any("stopped without settlement" in record.getMessage() for record in delivered_records(caplog))
 
 
 _SHARED_SUBJECT = "subject:shared"

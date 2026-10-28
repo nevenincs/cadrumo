@@ -24,6 +24,7 @@ from cadrumo.application.user_profile.registration import ProfileRegistrationErr
 from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,
     InstallationRefused,
@@ -122,7 +123,7 @@ def test_a_confirmation_that_differs_is_refused_before_anything_is_written(
     assert listed.profiles == ()
     for secret in (PROFILE_INPUT, other):
         assert secret not in refused.model_dump_json()
-        assert secret not in caplog.text
+        assert secret not in delivered_text(caplog)
 
 
 def test_a_short_passphrase_and_a_taken_label_are_refused_as_the_command_refuses_them(tmp_path: Path) -> None:

@@ -56,6 +56,7 @@ from .....domain.modelos.calculation_revision import (
 )
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE
 from ...storage.sql.orm import SecureObjectRow
 from ...storage.sql.secure_objects import SecureObjectRepository
@@ -301,7 +302,7 @@ def test_changed_closed_rows_are_refused_at_encrypted_load(
     with pytest.raises(CalculationRevisionPersistenceError) as failure:
         repository.load()
     assert "opaque-closed-collection-canary" not in str(failure.value)
-    assert "opaque-closed-collection-canary" not in caplog.text
+    assert "opaque-closed-collection-canary" not in delivered_text(caplog)
 
 
 def test_row_casilla_target_row_must_equal_direct_source_row() -> None:
@@ -452,7 +453,7 @@ def test_row_source_identity_corruption_is_value_free(
     assert exc.__cause__ is None
     assert exc.__context__ is None
     rendered = "".join(traceback.format_exception(exc))
-    exposed = f"{exc!r} {exc} {getattr(exc, 'context', None)!r} {rendered} {caplog.text}"
+    exposed = f"{exc!r} {exc} {getattr(exc, 'context', None)!r} {rendered} {delivered_text(caplog)}"
     for plaintext in (canary, "3" * 64, "120.00", "collectible_invoice:inv-0001"):
         assert plaintext not in exposed
 

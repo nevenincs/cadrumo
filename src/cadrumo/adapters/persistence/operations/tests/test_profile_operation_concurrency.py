@@ -43,6 +43,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
@@ -189,7 +190,7 @@ def test_separately_submitted_edits_cannot_overwrite_a_changed_profile(
                     if request_kind != "row":
                         diagnostics = [
                             record.getMessage()
-                            for record in caplog.records
+                            for record in delivered_records(caplog)
                             if record.name.endswith("user_profile.profile_operation_execution")
                         ]
                         assert diagnostics == [

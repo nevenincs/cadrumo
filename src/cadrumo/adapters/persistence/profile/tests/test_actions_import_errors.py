@@ -13,6 +13,7 @@ from cadrumo.application.ledger.models import LedgerSourceImportCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
+from .....tests.log_records import delivered_records
 from .ledger_action_persistence_support import (
     BUCKET_ID as _BUCKET_ID,
 )
@@ -85,7 +86,7 @@ def test_import_ledger_source_auto_missing_file_is_clean_refusal_without_probe_n
     assert "auto-detection" not in rendered
     probe_errors = [
         record
-        for record in caplog.records
+        for record in delivered_records(caplog)
         if record.levelno >= logging.ERROR and record.name.startswith("cadrumo.adapters.inbound.financial.providers")
     ]
     assert probe_errors == []

@@ -14,6 +14,7 @@ from ...domain.calculations.registry.authority_location import (
 )
 from ...domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
 from ...domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
+from ...tests.log_records import delivered_records
 from ..cli_provisioning import admit_cli_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -31,7 +32,7 @@ def test_normal_authority_admission_retains_generation_and_log_fact_without_crea
         admit_cli_authority()
         assert published_authority_generation() == descriptor.logical_generation
 
-    assert "CLI authority admitted" in caplog.messages
+    assert "CLI authority admitted" in [record.getMessage() for record in delivered_records(caplog)]
     assert not storage.exists()
 
 

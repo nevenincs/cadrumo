@@ -30,6 +30,7 @@ from ....adapters.persistence.storage.master_key.active_session import NoActiveB
 from ....core.errors.error_codes import build_error_envelope, render_error_text
 from ....core.errors.hierarchy import CadrumoError
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+from ....tests.log_records import delivered_records
 from ..errors import (
     _project_validation_error,
     _unwrap_cadrumo_error,
@@ -52,7 +53,7 @@ def test_validation_log_omits_rejected_financial_input(caplog: pytest.LogCapture
     with caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"):
         _project_validation_error(raised.value, lambda: None)
 
-    record = next(record for record in caplog.records if "pydantic ValidationError" in record.message)
+    record = next(record for record in delivered_records(caplog) if "pydantic ValidationError" in record.message)
     assert rejected not in record.message
     assert record.exc_info is None
     assert "int_parsing" in record.message
@@ -186,8 +187,8 @@ def test_boundary_forwards_wrapped_refusal_without_logging_traceback(
     assert exit_info.value.exit_code != 0
     # No "unexpected exception" traceback was logged: that log line is
     # what lands in cadrumo.log and is later echoed by `repair logs`.
-    assert not any("unexpected exception" in record.message for record in caplog.records), [
-        record.message for record in caplog.records
+    assert not any("unexpected exception" in record.message for record in delivered_records(caplog)), [
+        record.message for record in delivered_records(caplog)
     ]
 
 
@@ -212,8 +213,8 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     ):
         wrapped()
 
-    crashes = [record for record in caplog.records if "unexpected exception" in record.message]
-    assert crashes, [record.message for record in caplog.records]
+    crashes = [record for record in delivered_records(caplog) if "unexpected exception" in record.message]
+    assert crashes, [record.message for record in delivered_records(caplog)]
     assert crashes[0].levelno == logging.DEBUG
     assert crashes[0].exc_info is None
     assert "a genuine internal defect" not in crashes[0].message
@@ -258,8 +259,10 @@ def test_terminal_boundary_logs_the_identifier_chain_for_a_genuine_crash(
             _emit_crash(error)
     capsys.readouterr()
 
-    crashes = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "cli_terminal"]
-    assert crashes, [record.message for record in caplog.records]
+    crashes = [
+        record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "cli_terminal"
+    ]
+    assert crashes, [record.message for record in delivered_records(caplog)]
     assert crashes[0].exc_info is None
     assert "a genuine internal defect" not in crashes[0].message
     assert crashes[0].levelno == logging.ERROR
@@ -286,8 +289,10 @@ def test_terminal_boundary_logs_a_typed_refusal_without_a_crash_wrapper(
         _emit_crash(_ProbeRefusal("no active bucket session; run switch"))
     capsys.readouterr()
 
-    refusals = [record for record in caplog.records if getattr(record, "failure_boundary", None) == "cli_terminal"]
-    assert refusals, [record.message for record in caplog.records]
+    refusals = [
+        record for record in delivered_records(caplog) if getattr(record, "failure_boundary", None) == "cli_terminal"
+    ]
+    assert refusals, [record.message for record in delivered_records(caplog)]
     assert refusals[0].levelno == logging.WARNING
     assert refusals[0].exc_info is None
     chain = getattr(refusals[0], "error_chain", None)

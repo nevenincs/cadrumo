@@ -39,6 +39,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from cadrumo.tests.command_line_rendering import Printed, assert_prints, command_result, json_document
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_runtime.commands.tests.config.runtime_cli import invoke_runtime_cli
@@ -147,10 +148,11 @@ def test_revocation_proves_the_passphrase_removes_the_wrapper_and_prints_what_th
     assert_prints(json_document(unchanged), printed_again)
     assert record.profile_id == str(profile.profile_id)
     assert not any(passphrase)
+    assert "operation refused definition=user-profile.recovery.revoke" in delivered_text(caplog)
     for private in (PROFILE_INPUT, _WRONG_INPUT):
         assert private.encode("utf-8") not in stored
-        assert private not in caplog.text
-        assert all(private not in repr(entry.__dict__) for entry in caplog.records)
+        assert private not in delivered_text(caplog)
+        assert all(private not in repr(entry.__dict__) for entry in delivered_records(caplog))
 
 
 def _access_context(

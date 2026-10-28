@@ -16,6 +16,7 @@ from sqlalchemy import text
 from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 
+from ......tests.log_records import delivered_records
 from ...errors import StorageValidationError
 from ...tests.engine_bootstrap import bootstrap_sqlite_engine
 from ..session import session_scope
@@ -63,7 +64,9 @@ def test_session_scope_rolls_back_and_logs_on_exception(
         with engine.connect() as conn:
             count = conn.execute(text("select count(*) from transaction_date_index")).scalar_one()
         assert count == 0
-        messages = tuple(record.getMessage() for record in caplog.records if record.name == _SESSION_LOGGER_NAME)
+        messages = tuple(
+            record.getMessage() for record in delivered_records(caplog) if record.name == _SESSION_LOGGER_NAME
+        )
         assert "session_scope rolling back due to exception" in messages
 
 

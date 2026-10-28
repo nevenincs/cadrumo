@@ -11,7 +11,7 @@ related:
   - '[[2026-10-27-profile-field-remap-iva-usage-share-adr]]'
 modified: '2026-10-27'
 body_schema: body-v2
-body_hash: 'sha256:6ec4dec2d07f6b9782e5743f6dafb9b43eb1440e980711dba40c008d78cf7550'
+body_hash: 'sha256:45bf7a1f024fa243664a572b7676abf74a40f2b763f7b874b7f49a94c0fc2efd'
 ---
 
 # `profile-field-remap` plan
@@ -47,7 +47,7 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 - [ ] `S09` - replace frontend invoice arithmetic, retention, validation facts and the IVA rate table with a backend invoice preview operation; `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`.
 - [ ] `S10` - replace frontend rule-pattern matching, percent and period grammar with backend previews and served grammar; `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
 - [x] `S11` - ground the IVA deductibility of home-office suministros in official AEAT or DGT criteria and correct the IVA share, which today carries the IRPF-only 0.30 factor (user ruling 2026-10-27: ground first); `src/cadrumo/application/aggregation/iva_ledger.py`.
-- [ ] `S12` - audit every category deductibility rule (IRPF proportionality, statutory multiplier, IVA treatment, citations, locale notes) against bundled official sources and correct each wrong rule (user instruction 2026-10-27: fix all deductibility rules); `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`.
+- [x] `S12` - audit every category deductibility rule (IRPF proportionality, statutory multiplier, IVA treatment, citations, locale notes) against bundled official sources and correct each wrong rule (user instruction 2026-10-27: fix all deductibility rules); `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`.
 
 ## Parallelization
 

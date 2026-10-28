@@ -123,13 +123,19 @@ in the ordinary domestic input VAT boxes.
 ## Classify mixed-use transactions
 
 A mixed-use transaction is one you use partly for business and partly
-personally, such as a phone bill, a car cost, or a home-office expense. Record
+personally, such as home internet or a home-office expense. Record
 the business share so the calculation counts only the deductible part. The
 split can come from three places, in rising order of grounding: a percentage
 on a single record, a saved default ratio for a whole category, or a ratio
 worked out from your registered facts (for example, the registered home-office
 area against the size of your home). All three keep only the part of a cost
 that genuinely belongs to the business.
+
+A mobile line and a car are not split. For income tax they count only when you
+use them exclusively for the business: a `MIXED` mobile or car row deducts
+nothing, and the calculation reports it for review. For VAT, a car's running
+costs (fuel, maintenance, tolls, parking) deduct 50 per cent of their VAT, the
+share the law presumes, and a mobile line you also use privately deducts no VAT.
 
 A `MIXED` row needs a proportionality reference before a modelo can calculate
 from it. The reference is a saved category ratio applied through
@@ -147,15 +153,15 @@ categories, saves a ratio, and allocates the share on a row:
 ```
 
 A row's `--usage-ratio-id` must name a ratio-eligible category (the ones
-`ratios eligible` lists, such as `telefonia_movil` or a home-office suministros
+`ratios eligible` lists, such as `arrendamiento_vivienda_afecto` or a home-office suministros
 category), and the same category is passed as `--category-id`. The
 `--business-pct` value must match the saved ratio for that category. The
 classification follows the share automatically: a `0.5` allocation becomes
 `MIXED`, a `1` allocation becomes `BUSINESS`, and a `0` allocation becomes
 `PERSONAL`.
 
-List or check the saved ratios at any time. The sequence saves a ratio, lists
-the saved ratios, and validates them:
+Check the saved ratios at any time. The sequence saves a ratio and validates
+the saved ratios:
 
 ```{cli-sequence} classify-ratios-manage
 :verify: Confirm the saved ratios validate cleanly.
@@ -163,6 +169,11 @@ the saved ratios, and validates them:
 
 Remove a category ratio you no longer want with
 `aeat app ledger ratios unset <category-id>`.
+
+Every ratio-eligible category is a home-office category, so its saved ratio
+must agree with the office and dwelling areas in your profile.
+`aeat app ledger ratios list` shows the saved ratios once the profile declares
+those areas, and refuses while a saved ratio disagrees with them.
 
 For home-office expenses, save a ratio for the relevant home-office category
 and allocate the share on the row. Home-office ratios follow the manual or saved ratio

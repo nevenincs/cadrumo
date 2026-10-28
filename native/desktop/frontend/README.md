@@ -9,8 +9,11 @@ From the repository root, run `just dev`. It generates the shell's inputs in
 the host preset's repository build, `build/<preset>`, and starts the development
 display from that build at `http://localhost:15370/scenarios.html`.
 The fixed listener assignments live in `../development-server.json`: display
-15370, test preview 15371, documentation fixture 15372, and Storybook 6006.
-An occupied port is an error; no server moves to another port.
+15370, product preview 15371, documentation fixture 15372, and Storybook 6006,
+and for the browser tests the scenario preview 15373, its documentation
+fixture 15374 and the hot-reload server 15375. The tests have ports of their
+own, so `just dev` can stay open while they run. An occupied port is an error;
+no server moves to another port.
 
 The packaged app's Logs tab starts at INFO. Set `CADRUMO_LOG_LEVEL` to `DEBUG`,
 `INFO`, `WARNING`, `ERROR`, or `CRITICAL` before launching it to select another
@@ -147,7 +150,9 @@ cursor replies continue flowing while covered, and hiding the pane keeps its
 session.
 
 The documentation pane shows a stand-in documentation site. The development
-server starts it beside itself, on the same address and fixed port 15372.
+server starts it beside itself, on the same address and fixed port 15372; the
+preview server of the browser scenarios starts it on 15374 and hands the port
+to the built page it serves.
 The same host name with another port is a different origin, as
 the documentation is in the desktop window, and it is reachable from wherever
 the page is opened, another device included. Its pages load the real desktop
@@ -545,15 +550,25 @@ npm run check   # type check, lint and formatting
 npm test        # the browser tests, against a fresh production build
 ```
 
-The test run builds the production bundle itself, then runs two Playwright
-projects:
+The test run builds the production bundle and the scenario bundle itself, then
+runs three Playwright projects, each on a server of its own that the run starts
+and that must not already be running:
 
 - `product` drives the production build through `vite preview`, with no host or
   with a faked Tauri transport (`tests/desktop.spec.ts`), under the window's
   own content security policy, and checks the built output
   (`tests/bundle.spec.ts`).
-- `scenarios` drives `/scenarios.html` on the development server
-  (`tests/scenarios/`). It reuses a development server that is already running.
+- `scenarios` drives `/scenarios.html` (`tests/scenarios/`) from
+  `vite build --mode scenarios`, a minified build of the development entry with
+  the scenario host and the documentation fixture, written under the build
+  directory's `desktop/testing/scenarios` and served by
+  `vite preview --mode scenarios`. Nothing in it watches the source tree, so a
+  file saved while the tests run cannot reload a page in the middle of a test.
+- `hot-reload` (`tests/hot-reload/`) is the one spec that needs Vite's own
+  client: it checks that the development entry disposes its shell when Vite
+  hot-updates it. It runs on a development server started in
+  `--mode scenarios`, whose pages have their hot-update socket replaced by a
+  mock.
 
 | File in `tests/scenarios/` | Holds the shell to                                                                         |
 | -------------------------- | ------------------------------------------------------------------------------------------ |
@@ -562,8 +577,10 @@ projects:
 | `keyboard.spec.ts`         | Tab stops, arrow-key patterns, chords, and where focus goes when a surface opens or closes |
 | `touch.spec.ts`            | A phone-sized touch screen: finger-sized controls, no overflow, taps and touch drags       |
 
-Run one project with `npm test -- --project=scenarios`. Both servers start for
-either project, and the build runs each time.
+Run one project with `npm test -- --project=scenarios`. All three servers start
+for any project, and the builds run each time. To run the scenarios alone,
+building only their bundle, use
+`npx playwright test -c playwright.scenarios.config.ts`.
 
 ### Speed and memory
 

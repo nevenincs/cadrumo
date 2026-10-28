@@ -133,6 +133,8 @@ from .modelo_bindings_actividad_assets import (
     activity_asset_expense_observations,
     amortization_labelled_expense_categories,
     classify_ledger_expenses_against_asset_register,
+    dwelling_ownership_share,
+    register_acquisition_transaction_ids,
     register_owned_acquisition_diagnostics,
 )
 from .renta_gasto_ledger import (
@@ -1387,6 +1389,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         )
         target_casilla_id = _renta_gasto_target_casilla(context)
         profile_record = context.profile.record if context.profile is not None else None
+        asset_history = self._activity_asset_history_repository.load()
         try:
             with source_context_operation(context) as operation:
                 aggregation = aggregate_renta_gasto_ledger_from_repositories(
@@ -1406,6 +1409,8 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     profile_record=profile_record,
                     prorrata_register_repository=self._prorrata_register_repository,
                     operation=operation,
+                    ownership_share=dwelling_ownership_share(asset_history.revisions),
+                    register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
                 )
         except STORAGE_DEGRADATION_ERRORS as exc:
             return storage_degradation_resolution(
@@ -1414,7 +1419,6 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
-        asset_history = self._activity_asset_history_repository.load()
         register_owned = classify_ledger_expenses_against_asset_register(
             asset_history.revisions,
             asset_history.claims,

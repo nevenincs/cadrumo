@@ -23,6 +23,7 @@ use profiles::{
     __tauri_command_name_profile_delete_review, profile_delete, profile_delete_review,
 };
 
+use crate::agent::recovery::Custody;
 use crate::environment::Launch;
 use cadrumo_application::{
     binary::{self, BinaryExpectation},
@@ -59,6 +60,48 @@ enum NativeSignIn {
     /// No native session is possible here: the runtime does not admit the
     /// window as the holder, or cannot be reached natively.
     Unavailable(ApplicationError),
+}
+
+#[cfg(windows)]
+impl NativeSignIn {
+    /// Reads the runtime's answer to a sign-in it did not admit. Among the
+    /// refusals that are not its own: the runtime does not admit this process
+    /// as the desktop holder.
+    fn from_refusal(refusal: cadrumo_application::runtime_client::Refusal) -> Self {
+        use cadrumo_application::runtime_client::Refusal;
+
+        match refusal {
+            refusal @ Refusal::Denied { .. } if refusal.code() != "runtime_peer_untrusted" => {
+                match wire::sign_in_refusal(
+                    refusal.code(),
+                    refusal.sign_in_reason(),
+                    refusal.remaining_seconds(),
+                ) {
+                    Ok(refusal) => Self::Refused(refusal),
+                    Err(error) => Self::Unavailable(error),
+                }
+            }
+            refusal => Self::Unavailable(
+                failure(ErrorCode::SessionUnavailable)
+                    .with_reason("native_sign_in_unavailable")
+                    .caused_by(refusal),
+            ),
+        }
+    }
+}
+
+/// The public acknowledgement of a sign-in the window holds for `active`.
+fn signed_in(active: String) -> SignInResult {
+    SignInResult::SignedIn {
+        status: SignInStatus {
+            supported: true,
+            state: Presence::Present,
+            active_profile: Some(active),
+            runtime_available: true,
+            reconnecting: None,
+            refusal: None,
+        },
+    }
 }
 
 /// The header that names a profile by its label, percent-encoded as UTF-8:
@@ -158,6 +201,9 @@ pub struct SignIn {
     signed_in: std::sync::Mutex<Option<crate::agent::person::HeldPerson>>,
     // What every person session of this window was pushed, whichever is held.
     person_events: crate::agent::person::PersonEvents,
+    // Whether the session held waits for a fresh proof after the profile's
+    // worker was lost, as the connection that holds it reports it.
+    custody: Custody,
 }
 
 impl SignIn {
@@ -175,7 +221,23 @@ impl SignIn {
             person: std::sync::Mutex::new(std::sync::Weak::new()),
             signed_in: std::sync::Mutex::new(None),
             person_events: tokio::sync::broadcast::channel(16).0,
+            custody: Custody::default(),
         }
+    }
+
+    /// What keeps a session this window holds through a loss of the profile's
+    /// worker: the stored sign-in it presents once, and the standing it reports.
+    #[cfg(windows)]
+    fn recovery(&self) -> Result<crate::agent::recovery::rebind::Recovery> {
+        use crate::agent::recovery::rebind::{Recovery, StoredReceipt};
+
+        let native = self.native.as_ref().map_err(Clone::clone)?;
+        Ok(Recovery {
+            custody: self.custody.clone(),
+            proof: Arc::new(StoredReceipt {
+                storage_root: native.storage_root.clone(),
+            }),
+        })
     }
 
     /// The window's person session for `profile_id`, shared by every consumer
@@ -215,6 +277,13 @@ impl SignIn {
             return wire::login(self.run(&LOGIN, label, Some(encoded_bytes(&password, false)?))?);
         };
         let _mutation = self.watch.mutation();
+        if let Some(rebound) = self.rebind_held(&profile_id, &password) {
+            return match rebound {
+                Ok(()) => Ok(signed_in(active)),
+                Err(NativeSignIn::Refused(refusal)) => Ok(SignInResult::Refused { refusal }),
+                Err(NativeSignIn::Unavailable(error)) => Err(error),
+            };
+        }
         let mut person = match self.native_sign_in(&profile_id, &password) {
             Ok(person) => person,
             Err(NativeSignIn::Refused(refusal)) => return Ok(SignInResult::Refused { refusal }),
@@ -234,15 +303,40 @@ impl SignIn {
         let held = Arc::new(std::sync::Mutex::new(person));
         *self.person.lock().unwrap_or_else(|e| e.into_inner()) = Arc::downgrade(&held);
         *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = Some(held);
-        Ok(SignInResult::SignedIn {
-            status: SignInStatus {
-                supported: true,
-                state: Presence::Present,
-                active_profile: Some(active),
-                runtime_available: true,
-                refusal: None,
-            },
-        })
+        Ok(signed_in(active))
+    }
+
+    /// Brings the session this window holds for `profile_id` back by its
+    /// password, on the connection that holds it, while the runtime keeps it
+    /// suspended: a password typed on any other connection would sign in
+    /// under a new session instead. `None` when no held session waits for
+    /// one, and the password signs in afresh.
+    #[cfg(windows)]
+    fn rebind_held(
+        &self,
+        profile_id: &str,
+        password: &[u8],
+    ) -> Option<std::result::Result<(), NativeSignIn>> {
+        self.custody.reconnecting()?;
+        let held = self
+            .person
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .upgrade()?;
+        let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
+        if person.identity["profile_id"] != profile_id {
+            return None;
+        }
+        Some(
+            person
+                .rebind_password(password)
+                .map_err(NativeSignIn::from_refusal),
+        )
+    }
+
+    #[cfg(not(windows))]
+    fn rebind_held(&self, _: &str, _: &[u8]) -> Option<std::result::Result<(), NativeSignIn>> {
+        None
     }
 
     /// Every later push to whichever person session this window holds.
@@ -255,7 +349,13 @@ impl SignIn {
     /// Resolves at the next sign-in observation after this call; create it
     /// before reading the status, so an observation meanwhile is not missed.
     pub(crate) fn observation_changed(&self) -> impl Future<Output = ()> + Send + 'static {
-        self.watch.changed()
+        let (watched, waiting) = (self.watch.changed(), self.custody.changed());
+        async move {
+            tokio::select! {
+                () = watched => {},
+                () = waiting => {},
+            }
+        }
     }
 
     pub(crate) fn runtime(&self) -> Result<ChildConfiguration> {
@@ -281,14 +381,21 @@ impl SignIn {
 
     /// The current status if one is already known and fresh; never waits.
     pub(crate) fn current_observation(&self) -> Result<SignInStatus> {
-        Ok(self.watch.latest()?.status)
+        Ok(self.shown(self.watch.latest()?.status))
     }
 
     pub(crate) async fn read_status(self: &Arc<Self>) -> Result<SignInStatus> {
         if !supported() {
             return Ok(SignInStatus::unsupported());
         }
-        Ok(self.watch.current().await?.status)
+        Ok(self.shown(self.watch.current().await?.status))
+    }
+
+    /// `status` with what this window knows that the runtime's stored sign-in
+    /// does not say: that its own session waits for a fresh proof.
+    fn shown(&self, mut status: SignInStatus) -> SignInStatus {
+        status.reconnecting = self.custody.reconnecting();
+        status
     }
 
     pub async fn stop(&self) -> Result<()> {
@@ -312,6 +419,28 @@ impl SignIn {
         joined
     }
 
+    /// The runtime this window's connections reach, and the release it expects there.
+    #[cfg(windows)]
+    pub(crate) fn runtime_target(
+        &self,
+    ) -> std::result::Result<
+        (
+            cadrumo_application::runtime_client::Endpoint,
+            cadrumo_application::runtime_client::Cohort,
+        ),
+        cadrumo_application::runtime_client::Refusal,
+    > {
+        use cadrumo_application::runtime_client::{Cohort, Endpoint, Refusal};
+
+        let native = self.native.as_ref().map_err(|_| Refusal::Unavailable)?;
+        let endpoint = Endpoint::of(&native.storage_root)?;
+        let cohort = Cohort {
+            product_version: native.product_version.clone(),
+            authority_generation: None,
+        };
+        Ok((endpoint, cohort))
+    }
+
     /// A connection of the window's own to its runtime.
     #[cfg(windows)]
     fn connect(
@@ -320,15 +449,8 @@ impl SignIn {
         cadrumo_application::runtime_client::Connection,
         cadrumo_application::runtime_client::Refusal,
     > {
-        use cadrumo_application::runtime_client::{Cohort, Connection, Endpoint, Refusal};
-
-        let native = self.native.as_ref().map_err(|_| Refusal::Unavailable)?;
-        let endpoint = Endpoint::of(&native.storage_root)?;
-        let cohort = Cohort {
-            product_version: native.product_version.clone(),
-            authority_generation: None,
-        };
-        Connection::open(
+        let (endpoint, cohort) = self.runtime_target()?;
+        cadrumo_application::runtime_client::Connection::open(
             &endpoint,
             &cohort,
             std::time::Instant::now() + NATIVE_CONNECT,
@@ -352,37 +474,27 @@ impl SignIn {
                     .caused_by(refusal),
             )
         };
+        let recovery = self.recovery().map_err(NativeSignIn::Unavailable)?;
         let connection = self.connect().map_err(unavailable)?;
         // Subscribed first: a push between the sign-in's reply and the
         // session's router still reaches it.
         let pushed = connection.subscribe_scoped();
-        let admitted = connection.login_password(
-            profile_id,
-            Frontend::Desktop,
-            password,
-            true,
-            std::time::Instant::now() + NATIVE_SIGN_IN,
-        );
-        let admitted = match admitted {
-            Ok(admitted) => admitted,
-            Err(refusal @ Refusal::Denied { .. }) if refusal.code() != "runtime_peer_untrusted" => {
-                let refusal = wire::sign_in_refusal(
-                    refusal.code(),
-                    refusal.sign_in_reason(),
-                    refusal.remaining_seconds(),
-                )
-                .map_err(NativeSignIn::Unavailable)?;
-                return Err(NativeSignIn::Refused(refusal));
-            }
-            // Among them: the runtime does not admit this process as the desktop holder.
-            Err(refusal) => return Err(unavailable(refusal)),
-        };
+        let admitted = connection
+            .login_password(
+                profile_id,
+                Frontend::Desktop,
+                password,
+                true,
+                std::time::Instant::now() + NATIVE_SIGN_IN,
+            )
+            .map_err(NativeSignIn::from_refusal)?;
         let persisted = admitted.session_persisted == Some(true);
         crate::agent::person::Person::native(
             Arc::new(connection),
             pushed,
             admitted,
             Some(persisted),
+            recovery,
         )
         .map_err(NativeSignIn::Unavailable)
     }
@@ -405,6 +517,7 @@ impl SignIn {
         use cadrumo_application::runtime_client::Frontend;
 
         let native = self.native.as_ref().map_err(Clone::clone)?;
+        let recovery = self.recovery()?;
         let connection = self.connect().map_err(|refusal| {
             failure(ErrorCode::SessionUnavailable)
                 .with_reason("person_resume_unavailable")
@@ -423,7 +536,7 @@ impl SignIn {
                     .with_reason("person_resume_refused")
                     .caused_by(refusal)
             })?;
-        crate::agent::person::Person::native(Arc::new(connection), pushed, admitted, None)
+        crate::agent::person::Person::native(Arc::new(connection), pushed, admitted, None, recovery)
     }
 
     #[cfg(not(windows))]
@@ -860,6 +973,7 @@ mod tests {
             },
             active_profile: Some("Test profile".into()),
             runtime_available: available,
+            reconnecting: None,
             refusal: (!available).then(|| wire::Refusal {
                 code: "runtime_unavailable".into(),
                 retry_after_seconds: None,

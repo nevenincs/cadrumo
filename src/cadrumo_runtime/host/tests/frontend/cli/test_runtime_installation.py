@@ -19,6 +19,7 @@ from cadrumo.application.user_profile.access_contracts import OsLockState
 from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.storage_taxonomy import StorageArea
 from cadrumo.entrypoints.cli.operation_installation import run_installation_act
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.commands.errors import (
     CliRecordedOperationError,
     CliRefusedBoundaryError,
@@ -101,7 +102,9 @@ def test_a_failed_act_is_reported_as_unexpected_with_an_unknown_effect_and_witho
     assert failed.value.recorded_code == get_registered_error_code(CliUnexpectedBoundaryError).code
     assert failed.value.context == {"installation_act": "storage_init", "effect": "unknown"}
     assert FAULT_TEXT not in str(failed.value)
-    assert FAULT_TEXT not in caplog.text
+    logged = delivered_text(caplog)
+    assert "installation act failed" in logged
+    assert FAULT_TEXT not in logged
 
 
 @pytest.mark.parametrize("fault", ["another-account", "locked"])

@@ -18,6 +18,7 @@ import pytest
 from sqlalchemy import Engine, create_engine, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column
 
+from ......tests.log_records import delivered_records
 from ...errors import StorageValidationError
 from ...tests.ephemeral_bucket_session import EphemeralBucketSession
 from ..encrypted_columns import HashedLookup
@@ -91,7 +92,7 @@ class TestHashedLookup:
         assert len(digest) == 32
         assert not [
             record
-            for record in caplog.records
+            for record in delivered_records(caplog)
             if record.name == "cadrumo.adapters.persistence.storage.crypto.encrypted_columns"
         ]
 

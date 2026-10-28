@@ -28,6 +28,7 @@ from cadrumo_client.contracts.google_auth import (
     GoogleAuthValidationError,
 )
 
+from .....tests.log_records import delivered_text
 from .. import oauth_callback, oauth_flow
 from ..oauth_callback import OAuthCallbackRefusedError, receive_authorization_code, validate_callback
 from ..records import REQUIRED_SCOPES, OAuthToken
@@ -164,7 +165,7 @@ def test_real_flow_uses_fresh_s256_and_never_logs_callback(
     first, second = [parse_qs(urlsplit(url).query) for url in urls]
     assert first["state"] != second["state"] and first["nonce"] != second["nonce"]
     assert verifiers[0] != verifiers[1]
-    output = caplog.text + capsys.readouterr().out
+    output = delivered_text(caplog) + capsys.readouterr().out
     for secret in ["synthetic-intercepted-code", *verifiers, first["state"][0], second["state"][0]]:
         assert secret not in output
 

@@ -40,9 +40,16 @@ export default defineConfig(({ command, mode }) => {
     .filter(Boolean);
   // `--mode scenarios` builds the development entry instead, minified, into
   // the testing directory. It is what the benchmarks measure, because a
-  // development server's unminified modules are not what ships; it is never
-  // the product and nothing packages it.
+  // development server's unminified modules are not what ships, and what the
+  // browser scenarios run against, served by `vite preview`, because nothing
+  // in a build watches the source tree. It is never the product and nothing
+  // packages it. Every server of this mode belongs to the browser tests and
+  // has ports of its own, so a test run neither meets nor reuses the server
+  // a developer has open.
   const scenarios = mode === "scenarios";
+  const listening = scenarios
+    ? { server: ports.hotPort, preview: ports.scenariosPort }
+    : { server: ports.devPort, preview: ports.previewPort };
   // The product has a workspace and a lightweight loading entry. The development entry beside it is never an
   // input of the product build, and the boundary plugin refuses its modules
   // by any route.
@@ -54,7 +61,13 @@ export default defineConfig(({ command, mode }) => {
       };
   return {
     base: "./",
-    cacheDir: buildPath("desktop_cache"),
+    // A development server keeps its optimized dependencies here, keyed by the
+    // mode among other things, and a server of another mode would discard them.
+    // The test server of mode scenarios has its own, so it cannot make the
+    // display a developer has open reload.
+    cacheDir: scenarios
+      ? resolve(buildPath("desktop_cache"), "scenarios")
+      : buildPath("desktop_cache"),
     build: {
       outDir: scenarios
         ? resolve(buildPath("desktop_testing"), "scenarios")
@@ -67,7 +80,7 @@ export default defineConfig(({ command, mode }) => {
     server: {
       host: ports.host,
       allowedHosts,
-      port: ports.devPort,
+      port: listening.server,
       strictPort: true,
       // The shell's typefaces are the documentation's own files, outside
       // this project, so that directory of public assets is served as well.
@@ -76,7 +89,7 @@ export default defineConfig(({ command, mode }) => {
     preview: {
       host: ports.host,
       allowedHosts,
-      port: ports.previewPort,
+      port: listening.preview,
       strictPort: true,
     },
     resolve: { alias: { "@": source } },
@@ -85,8 +98,8 @@ export default defineConfig(({ command, mode }) => {
         name: "desktop-server-ports",
         configResolved(config) {
           if (
-            config.server.port !== ports.devPort ||
-            config.preview.port !== ports.previewPort ||
+            config.server.port !== listening.server ||
+            config.preview.port !== listening.preview ||
             config.server.strictPort !== true ||
             config.preview.strictPort !== true
           )

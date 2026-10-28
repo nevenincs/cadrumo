@@ -38,6 +38,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.automation_administration_test_support import ThreadedAutomationAdministration
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind
 
@@ -218,7 +219,9 @@ def test_registered_enrollment_lifecycle_uses_real_supervisor_and_protected_oper
                 assert credential is not None
                 secrets.append(credential.get_secret_value())
         captured = capsys.readouterr()
-        rendered = (captured.out + captured.err + caplog.text).encode()
+        logged = delivered_text(caplog)
+        assert "operation settled" in logged
+        rendered = (captured.out + captured.err + logged).encode()
         assert all(value not in rendered for value in secrets)
         for path in subject.store.root.rglob("*"):
             if path.is_file():

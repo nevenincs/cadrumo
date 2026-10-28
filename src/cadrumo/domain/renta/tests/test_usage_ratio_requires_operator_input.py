@@ -132,6 +132,8 @@ def test_a_declared_proportion_is_still_deducted(operation: PinnedAuthorityOpera
             RentaDeductibilityContext(
                 profile_year=_YEAR,
                 usage_ratios={category: Decimal("0.05")},
+                # A sole owner: the dwelling-ownership categories also need the share.
+                ownership_share=Decimal("1"),
             ),
         )
 

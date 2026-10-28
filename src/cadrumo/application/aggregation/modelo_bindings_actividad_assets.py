@@ -19,7 +19,7 @@ from ...domain.renta.actividad_asset.claims import (
     m100_casilla_id,
 )
 from ...domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
-from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetBasisStage
 from ...domain.renta.ledger_expenses import renta_first_slice_expense_routing
 from .source_mesh import CalculationSourceDiagnostic
 from .source_resolution_operations import source_diagnostics_for
@@ -260,12 +260,47 @@ def _current_acquisition_owners(
     name the same transaction both keep their disposition instead of one
     silently displacing the other.
     """
+    current = _current_revisions(assets)
+    return tuple((asset_id, current[asset_id].acquisition.observed_transaction_id) for asset_id in sorted(current))
+
+
+def _current_revisions(assets: tuple[ActivityAssetRevision, ...]) -> dict[str, ActivityAssetRevision]:
+    """Return each asset's highest-numbered revision, the one that states its current facts."""
     current: dict[str, ActivityAssetRevision] = {}
     for revision in assets:
         held = current.get(revision.asset_id)
         if held is None or revision.revision_number > held.revision_number:
             current[revision.asset_id] = revision
-    return tuple((asset_id, current[asset_id].acquisition.observed_transaction_id) for asset_id in sorted(current))
+    return current
+
+
+def register_acquisition_transaction_ids(assets: tuple[ActivityAssetRevision, ...]) -> frozenset[str]:
+    """Return the ledger transactions the register declares as an asset's acquisition.
+
+    Returns:
+        The acquisition transaction id of every asset's current revision.
+    """
+    return frozenset(transaction_id for _asset_id, transaction_id in _current_acquisition_owners(assets))
+
+
+def dwelling_ownership_share(assets: tuple[ActivityAssetRevision, ...]) -> Decimal | None:
+    """Return the taxpayer's ownership share of the partly affected property the register records.
+
+    A mixed-use property is registered with a whole-property basis, which states
+    the taxpayer's direct ownership share of it. That share is the only source
+    of the ownership fact the dwelling's own expenses need.
+
+    Returns:
+        The share when every registered whole-property asset states the same
+        one, or ``None`` when no such asset exists or two state different
+        shares, since the ledger rows do not say which property they belong to.
+    """
+    shares = {
+        revision.basis.ownership_share
+        for revision in _current_revisions(assets).values()
+        if revision.basis.stage is AssetBasisStage.WHOLE_PROPERTY and revision.basis.ownership_share is not None
+    }
+    return next(iter(shares)) if len(shares) == 1 else None
 
 
 __all__ = [
@@ -275,5 +310,7 @@ __all__ = [
     "activity_asset_expense_observations",
     "amortization_labelled_expense_categories",
     "classify_ledger_expenses_against_asset_register",
+    "dwelling_ownership_share",
+    "register_acquisition_transaction_ids",
     "register_owned_acquisition_diagnostics",
 ]

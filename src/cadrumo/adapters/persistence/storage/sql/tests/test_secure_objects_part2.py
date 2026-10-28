@@ -15,6 +15,7 @@ from sqlalchemy import event
 
 from ......core.classification.policies import SensitivityClass
 from ......core.secure_object_write import SecureObjectWrite
+from ......tests.log_records import delivered_records
 from ...errors import SecureObjectRevisionConflictError, StorageValidationError
 from ...namespace_taxonomy import StorageCustodyDisposition, StorageNamespaceScope
 from ...secure_object_namespaces import (
@@ -218,7 +219,7 @@ def test_list_records_only_emits_warning_when_unreadable_rows_exist(
             )
 
         assert len(yielded) == 1
-        assert all("unreadable" not in rec.message for rec in caplog.records)
+        assert all("unreadable" not in rec.message for rec in delivered_records(caplog))
 
 
 def test_iter_all_records_raw_yields_every_row_without_decryption(tmp_path: Path) -> None:

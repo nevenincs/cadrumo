@@ -35,6 +35,7 @@ from typing import Any
 import pytest
 
 from ...tests.attribute_scope import scoped_attribute
+from ...tests.log_records import delivered_records
 from .. import atomic_write
 from ..atomic_write import (
     DurableWriteBatch,
@@ -428,7 +429,7 @@ class TestBestEffortTier:
         with caplog.at_level("DEBUG"), pytest.raises(OSError):
             atomic_write_best_effort_bytes(target, b"would-be payload")
 
-        assert caplog.records == []
+        assert delivered_records(caplog) == []
 
 
 class TestHardenedTier:

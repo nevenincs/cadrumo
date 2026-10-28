@@ -52,6 +52,7 @@ from cadrumo.core.operations import (
     OperationTerminalCondition,
 )
 
+from .....tests.log_records import delivered_records
 from .supervision_support import run_to_settlement
 from .supervisor_test_support import (
     _NOW,
@@ -694,7 +695,7 @@ def test_a_task_failure_nobody_awaits_is_logged_and_never_orphaned(
 
     assert _failure_logged(caplog)
     assert left_running.lifecycle is OperationLifecycle.RUNNING
-    assert not any("never retrieved" in record.getMessage() for record in caplog.records)
+    assert not any("never retrieved" in record.getMessage() for record in delivered_records(caplog))
 
 
 def test_host_close_asks_a_cancellable_operation_to_stop_and_settles_it(tmp_path: Path) -> None:

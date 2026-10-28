@@ -12,6 +12,7 @@ mod gateway;
 mod launcher;
 pub(crate) mod local_models;
 pub(crate) mod person;
+pub(crate) mod recovery;
 pub(crate) mod runner;
 mod session;
 mod sse;
@@ -355,10 +356,14 @@ async fn blocking<T: Send + 'static>(
     .map_err(|_| Refused::new("agent_host_failed".to_owned()))?
 }
 
-/// A service still starting or recovering does not mean the person signed out.
+/// A service still starting or recovering does not mean the person signed out,
+/// and neither does a session the runtime keeps suspended while it recovers.
 fn person_refusal(
     error: &cadrumo_application::error::application::ApplicationError,
 ) -> &'static str {
+    if recovery::is_recovering(error) {
+        return "agent_reconnecting";
+    }
     match error.reason.as_deref() {
         Some("agent_service_unavailable") => "agent_service_busy",
         Some("person_not_signed_in" | "person_request_refused" | "person_session_retired") => {
@@ -1090,6 +1095,18 @@ mod tests {
                 .with_reason(reason);
             assert_eq!(person_refusal(&error), expected, "{reason}");
         }
+    }
+
+    #[test]
+    fn a_session_the_runtime_keeps_suspended_is_reconnecting_and_not_signed_out() {
+        use cadrumo_application::error::application::ChildRefusal;
+        let refused = |code: &str| {
+            ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("person_request_refused")
+                .caused_by(ChildRefusal::answered(&serde_json::json!({"code": code})))
+        };
+        assert_eq!(person_refusal(&refused("recovering")), "agent_reconnecting");
+        assert_eq!(person_refusal(&refused("inactive")), "agent_signed_out");
     }
 
     #[test]

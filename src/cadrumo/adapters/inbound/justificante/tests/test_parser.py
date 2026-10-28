@@ -38,6 +38,7 @@ from .....tests.aeat_literal_fixtures import (
     aeat_url,
 )
 from .....tests.inventory import FIXTURES_DIR as _FIXTURES_ROOT
+from .....tests.log_records import delivered_records
 from .....tests.pdf_fixtures import text_pdf_bytes
 from ...pdf.source_provenance import source_pdf_reference_path
 from .._parsers.text_extraction import TEXT_CACHE, extract_text
@@ -164,7 +165,7 @@ class TestParseJustificante:
         with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.justificante.parser"):
             parse_justificante(modelo_130_pdf)
 
-        rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+        rendered_logs = "\n".join(record.getMessage() for record in delivered_records(caplog))
         assert modelo_130_pdf.name not in rendered_logs
         assert str(modelo_130_pdf) not in rendered_logs
         assert "<input-pdf>" in rendered_logs

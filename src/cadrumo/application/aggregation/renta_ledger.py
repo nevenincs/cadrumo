@@ -63,15 +63,18 @@ from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
+    RentaDeductibilityResult,
     RentaDeductibilityStatus,
     RentaDeductibleExpenseFact,
     RentaDeductibleExpenseObservation,
     RentaExpenseDirection,
+    StatutoryCapClaim,
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
     normalize_spending_category,
     resolve_region_category_profiles,
     select_deductibility_profile,
+    statutory_cap_trims,
 )
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -84,6 +87,7 @@ from ..user_profile.projections import fact_value, profile_fact_index
 from . import _shared_issue_reasons
 from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
+    exclusive_business_use,
     relies_on_activity_marker,
     renta_expense_business_proportion,
     row_scaling_proportion,
@@ -205,6 +209,9 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     AMOUNT_MISMATCH = "amount_mismatch"
     INVALID_LEDGER_FACT = _shared_issue_reasons.INVALID_LEDGER_FACT
     INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
+    EXCLUSIVE_USE_REQUIRED = _shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
+    MISSING_OWNERSHIP_SHARE = _shared_issue_reasons.MISSING_OWNERSHIP_SHARE
+    ASSET_REGISTER_REQUIRED = _shared_issue_reasons.ASSET_REGISTER_REQUIRED
     REGION_UNDECLARED_FOR_OVERRIDE = _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE
 
 
@@ -473,6 +480,8 @@ def resolve_category_deduction_rules(
     profile_record: UserProfileRecord | None,
     profile_decode_context: ProfileDecodeContext | None,
     operation: PinnedAuthorityOperation,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
 ) -> RentaCategoryDeductionRules:
     """Resolve the category profiles and the deductibility context for one filing year.
 
@@ -492,6 +501,10 @@ def resolve_category_deduction_rules(
             the bucket when absent.
         profile_decode_context: Decode context of the caller-held authority operation.
         operation: Generation-pinned authority operation.
+        ownership_share: The taxpayer's ownership share of the partly affected
+            dwelling, or ``None`` when no source states it.
+        register_owned_transaction_ids: The ledger rows the activity-asset
+            register declares as an asset's acquisition.
 
     Returns:
         The rules, ready for :func:`resolve_category_rule` and the evaluator.
@@ -509,6 +522,8 @@ def resolve_category_deduction_rules(
             usage_ratios=dict(usage_ratios or {}),
             residence_ccaa=residence_ccaa,
             iva_deduction_ratio=iva_deduction_ratio,
+            ownership_share=ownership_share,
+            register_owned_transaction_ids=register_owned_transaction_ids,
             statutory_cap_variant_person_counts=_seguro_enfermedad_person_counts(
                 bucket_id=bucket_id,
                 profile_record=profile_record,
@@ -589,6 +604,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -627,6 +644,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
                 prorrata_register_repository=prorrata_register_repository,
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
+                ownership_share=ownership_share,
+                register_owned_transaction_ids=register_owned_transaction_ids,
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
@@ -674,6 +693,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        ownership_share=ownership_share,
+        register_owned_transaction_ids=register_owned_transaction_ids,
     )
 
 
@@ -693,6 +714,8 @@ def aggregate_renta_ledger_expenses(
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation | None = None,
+    ownership_share: Decimal | None = None,
+    register_owned_transaction_ids: frozenset[str] = frozenset(),
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -728,6 +751,11 @@ def aggregate_renta_ledger_expenses(
             authority operation when ``profile_record`` is supplied directly.
         operation: Existing generation-pinned authority operation. When omitted,
             one indexed operation is opened at this composition boundary.
+        ownership_share: The taxpayer's ownership share of the partly affected
+            dwelling, applied by the categories whose rule requires it.
+        register_owned_transaction_ids: The ledger rows the activity-asset
+            register declares as an asset's acquisition; the register deducts
+            them through its amortization schedule.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -749,6 +777,8 @@ def aggregate_renta_ledger_expenses(
                 profile_record=profile_record,
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
+                ownership_share=ownership_share,
+                register_owned_transaction_ids=register_owned_transaction_ids,
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
@@ -765,6 +795,8 @@ def aggregate_renta_ledger_expenses(
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         operation=operation,
+        ownership_share=ownership_share,
+        register_owned_transaction_ids=register_owned_transaction_ids,
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
@@ -792,6 +824,7 @@ def aggregate_renta_ledger_expenses(
         else:
             observations.append(outcome)
 
+    observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
     return RentaLedgerExpenseAggregation(
         modelo=modelo,
@@ -970,6 +1003,7 @@ def _renta_expense_fact_or_issue(
             direction=direction,
             category=category,
             activity_key=activity_key,
+            exclusive_business_use=exclusive_business_use(transaction),
         )
     except ValueError as exc:
         return _renta_transaction_issue(
@@ -998,7 +1032,7 @@ def _renta_observation_or_issue(
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
         return _renta_transaction_issue(
             transaction,
-            RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY,
+            RentaLedgerAggregationIssueReason(refusal_issue_reason(result)),
             result.reason,
         )
     try:
@@ -1009,6 +1043,61 @@ def _renta_observation_or_issue(
             RentaLedgerAggregationIssueReason.INVALID_LEDGER_FACT,
             str(exc),
         )
+
+
+def refusal_issue_reason(result: RentaDeductibilityResult) -> str:
+    """Return the shared issue reason a refused deductibility result reports.
+
+    A refusal that asks the operator for one specific fact keeps its own
+    reason; every other refusal is the generic ineligible-deductibility reason.
+    """
+    if result.refusal is not None:
+        return result.refusal.value
+    return _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
+
+
+def _apply_statutory_cap_trims(
+    observations: list[RentaDeductibleExpenseObservation],
+    *,
+    rules: RentaCategoryDeductionRules,
+) -> list[RentaDeductibleExpenseObservation]:
+    """Hold the observations that share one statutory cap to that cap together."""
+    trims = statutory_cap_trims(
+        tuple(
+            StatutoryCapClaim(
+                claim_id=observation.observation_id,
+                transaction_id=observation.transaction_id,
+                category=observation.category,
+                claim_date=observation.operation_date,
+                deductible_amount=observation.deductible_amount,
+            )
+            for observation in observations
+        ),
+        profiles=rules.profiles,
+        context=rules.context,
+    )
+    if not trims:
+        return observations
+    return [
+        _trimmed_observation(observation, trims[observation.observation_id])
+        if observation.observation_id in trims
+        else observation
+        for observation in observations
+    ]
+
+
+def _trimmed_observation(
+    observation: RentaDeductibleExpenseObservation,
+    deductible_amount: Decimal,
+) -> RentaDeductibleExpenseObservation:
+    gross = observation.gross_amount
+    return observation.model_copy(
+        update={
+            "deductible_amount": deductible_amount,
+            "non_deductible_amount": gross - deductible_amount,
+            "applied_ratio": Decimal("0") if gross == Decimal("0") else deductible_amount / gross,
+        },
+    )
 
 
 def _renta_transaction_issue(

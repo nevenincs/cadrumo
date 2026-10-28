@@ -1034,8 +1034,8 @@ def test_an_operator_stated_share_wins_over_the_censo_area(operation: PinnedAuth
     assert result.observations[0].iva_amount == Decimal("11.55")
 
 
-@pytest.mark.parametrize("category_id", ["suministros_home_office_internet", "telefonia_movil"])
-def test_a_business_only_row_deducts_its_whole_cuota_whatever_its_category(category_id: str) -> None:
+@pytest.mark.parametrize("category_id", ["suministros_home_office_internet", "telefonia_movil", "hardware_amortizable"])
+def test_a_business_only_row_deducts_its_whole_cuota_outside_the_vehicle_presumption(category_id: str) -> None:
     row = _transaction("business-only", category_id=category_id)
 
     result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
@@ -1071,3 +1071,66 @@ def test_a_mixed_use_mobile_phone_deducts_no_iva(year: int) -> None:
         OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE[IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
         is OperatorActionAxis.REVIEW_ADVISORY
     )
+
+
+@pytest.mark.parametrize(
+    ("classification", "business_pct"),
+    [(BusinessClassification.MIXED, Decimal("0.80")), (BusinessClassification.BUSINESS, None)],
+    ids=["mixed", "business"],
+)
+def test_vehicle_fuel_deducts_iva_at_the_fifty_per_cent_presumption(
+    classification: BusinessClassification,
+    business_pct: Decimal | None,
+) -> None:
+    """DISCRIMINATING. LIVA art. 95.Tres.2.ª presumes a turismo 50 per cent affected; 95.Cuatro extends it to fuel.
+
+    A stated 80 per cent is no proof of a higher degree of use, and neither is
+    booking the vehicle in the activity (95.Tres.4.ª): 50 per cent of 21.00 is 10.50
+    for a MIXED row and for a BUSINESS row alike.
+    """
+    row = _transaction(
+        "vehicle-fuel",
+        business_classification=classification,
+        business_pct=business_pct,
+        category_id="vehiculo_combustible",
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("100.00")
+    assert result.observations[0].iva_amount == Decimal("10.50")
+
+
+def test_mixed_use_equipment_below_the_bien_de_inversion_value_deducts_no_iva() -> None:
+    """A 100.00 computer accessory is no bien de inversión (LIVA art. 108.Dos.5.º), so 95.Dos.2.º denies it."""
+    row = _transaction(
+        "mixed-accessory",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.60"),
+        category_id="hardware_amortizable",
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE]
+
+
+def test_mixed_use_equipment_of_bien_de_inversion_value_deducts_iva_by_its_use() -> None:
+    """A 4,000.00 machine is a bien de inversión: 60 per cent of its 840.00 cuota is 504.00 (LIVA art. 95.Tres.1.ª)."""
+    row = _transaction(
+        "mixed-machine",
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.60"),
+        category_id="hardware_amortizable",
+        amount=Decimal("4840.00"),
+        taxable_base=Decimal("4000.00"),
+        iva_amount=Decimal("840.00"),
+    )
+
+    result = aggregate_iva_ledger_observations(TransactionCatalogue.from_transactions((row,)), period=_Q2_2026)
+
+    assert result.issues == ()
+    assert result.observations[0].base_amount == Decimal("4000.00")
+    assert result.observations[0].iva_amount == Decimal("504.00")

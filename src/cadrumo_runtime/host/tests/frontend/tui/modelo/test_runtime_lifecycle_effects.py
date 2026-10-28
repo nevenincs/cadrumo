@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from functools import lru_cache
 from pathlib import Path
@@ -184,15 +185,15 @@ def _terminal_refused_observation() -> OperationObservationSuccessV1:
     return OperationObservationSuccessV1(projection=projection, event_page=event_page)
 
 
+@dataclass
 class _AttestationController:
     operation_id = _OPERATION_ID
+    start_error: RefusalError | None = None
+    started: bool = False
+    observation: OperationObservationSuccessV1 = field(default_factory=_terminal_refused_observation)
     # The client it was submitted through, as the real controller keeps it.
-    client: SimpleNamespace
-
-    def __init__(self, *, start_error: RefusalError | None = None) -> None:
-        self.start_error = start_error
-        self.started = False
-        self.observation = _terminal_refused_observation()
+    client: SimpleNamespace = field(default_factory=SimpleNamespace)
+    deadline: float | None = None
 
     async def start(self) -> None:
         self.started = True

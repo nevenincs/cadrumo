@@ -14,6 +14,7 @@ from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ......core.errors.error_codes import build_error_envelope, resolve_error_message
 from ......core.external_constants import UTF_8_ENCODING
+from ......tests.log_records import delivered_text
 from ......tests.path_obstruction import obstructed_path
 from ...envelope.contract import Envelope
 from ...errors import (
@@ -265,7 +266,9 @@ class TestIterate:
             "surface": "encrypted_blob_store",
             "violation": "manifest_payload",
         }
-        assert str(manifest_path) not in caplog.text
+        logged = delivered_text(caplog)
+        assert "blob_store: invalid manifest" in logged
+        assert str(manifest_path) not in logged
         assert ref.sha256_plaintext_hex not in str(excinfo.value)
 
     def test_manifest_schema_drift_is_refused(self, store: EncryptedBlobStore) -> None:

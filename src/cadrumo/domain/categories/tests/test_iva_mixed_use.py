@@ -13,6 +13,7 @@ No mocks: the real published authority and the real loader.
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
@@ -32,7 +33,12 @@ from ..proportionality import (
     IvaMixedUseShare,
     parse_http_url,
 )
-from ..registry import CATEGORY_PROFILE_FACT_ID, _profile_from_authority_fact, resolve_category_profile
+from ..registry import (
+    CATEGORY_PROFILE_FACT_ID,
+    _profile_from_authority_fact,
+    resolve_category_profile,
+    resolve_category_profiles,
+)
 from ..spending_category_catalogue import require_spending_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -116,6 +122,75 @@ def test_the_bundled_renta_manual_is_cited_as_verified_not_unbundled(operation: 
     assert manual[0].grounding is CitationGrounding.VERIFIED
     assert manual[0].source_ref == "aeat-renta-2025-manual-parte1"
     assert "30 por 100" in manual[0].quote
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+def test_every_category_declares_its_iva_treatment_of_mixed_use(operation: PinnedAuthorityOperation, year: int) -> None:
+    """DISCRIMINATING. No category leaves a MIXED row's IVA to the row's own share by omission."""
+    profiles = resolve_category_profiles(year, operation=operation)
+
+    missing = sorted(
+        category.value for category, profile in profiles.items() if profile.proportionality.iva_mixed_use is None
+    )
+    assert missing == []
+
+
+_VEHICLE_RUNNING_COSTS = ("vehiculo_combustible", "vehiculo_mantenimiento", "vehiculo_peaje", "vehiculo_parking")
+
+
+@pytest.mark.parametrize("year", _SUPPORTED_YEARS)
+@pytest.mark.parametrize("category_id", _VEHICLE_RUNNING_COSTS)
+def test_vehicle_running_costs_carry_the_fifty_per_cent_presumption(
+    operation: PinnedAuthorityOperation,
+    category_id: str,
+    year: int,
+) -> None:
+    """LIVA art. 95.Tres.2.ª presumes a turismo 50 per cent affected; 95.Cuatro extends it to its running costs."""
+    rule = resolve_category_profile(require_spending_category(category_id), year, operation=operation).proportionality
+
+    assert rule.iva_mixed_use is not None
+    assert rule.iva_mixed_use.share is IvaMixedUseShare.VEHICLE_PRESUMPTION
+    assert rule.iva_mixed_use.presumed_share == Decimal("0.50")
+    assert {c.locator for c in rule.iva_mixed_use.citations} >= {"art. 95.Tres.2.ª", "art. 95.Cuatro"}
+
+
+@pytest.mark.parametrize("category_id", ("hardware_amortizable", "mobiliario_amortizable"))
+def test_equipment_deducts_iva_by_use_only_as_a_bien_de_inversion(
+    operation: PinnedAuthorityOperation, category_id: str
+) -> None:
+    rule = resolve_category_profile(require_spending_category(category_id), 2025, operation=operation).proportionality
+
+    assert rule.iva_mixed_use is not None
+    assert rule.iva_mixed_use.share is IvaMixedUseShare.BIEN_INVERSION_DEGREE_OF_USE
+    assert "ley-37-1992:art-108" in {c.legal_ref for c in rule.iva_mixed_use.citations}
+
+
+def test_a_vehicle_presumption_must_state_its_presumed_share() -> None:
+    with pytest.raises(ValidationError, match="must state its presumed share"):
+        IvaMixedUseRule(share=IvaMixedUseShare.VEHICLE_PRESUMPTION, citations=(_liva_citation(),))
+
+
+def test_only_a_vehicle_presumption_states_a_presumed_share() -> None:
+    with pytest.raises(ValidationError, match="only a vehicle presumption states a presumed share"):
+        IvaMixedUseRule(
+            share=IvaMixedUseShare.DEGREE_OF_USE,
+            presumed_share=Decimal("0.50"),
+            citations=(_liva_citation(),),
+        )
+
+
+def test_no_2025_renta_manual_citation_is_excused_as_unbundled(operation: PinnedAuthorityOperation) -> None:
+    """DISCRIMINATING. The Manual de Renta 2025 is bundled, so no category may cite it unread."""
+    profiles = resolve_category_profiles(2025, operation=operation)
+
+    unread = sorted(
+        category.value
+        for category, profile in profiles.items()
+        for citation in profile.proportionality.citations
+        if citation.source is CategoryCitationSource.MANUAL_RENTA
+        and citation.grounding is not CitationGrounding.VERIFIED
+    )
+    assert unread == []
 
 
 def test_an_iva_treatment_grounded_in_an_irpf_source_is_refused() -> None:

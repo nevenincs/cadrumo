@@ -1,7 +1,5 @@
 @step Save a ratio for a ratio-eligible category.
-aeat app ledger ratios set telefonia_movil 0.5
-@step List the saved ratios.
-aeat app ledger ratios list
+aeat app ledger ratios set arrendamiento_vivienda_afecto 0.5
 @step Confirm the saved ratios are internally consistent.
 @result aeat --format json app ledger ratios validate
 @expect result.overrides_count == 1

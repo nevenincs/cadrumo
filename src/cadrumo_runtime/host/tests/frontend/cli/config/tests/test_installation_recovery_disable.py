@@ -16,6 +16,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.recovery_custody import ProfileRecoveryError, profile_recovery_status
 from cadrumo.core.errors.error_codes import get_registered_error_code
+from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.installation_requests import (
     InstallationAct,
     InstallationRefused,
@@ -90,4 +91,4 @@ def test_removal_proves_the_passphrase_removes_the_code_once_and_then_answers_un
     assert not gone
     for private in (PROFILE_INPUT, _WRONG_INPUT):
         assert private not in refused.model_dump_json()
-        assert private not in caplog.text
+        assert private not in delivered_text(caplog)

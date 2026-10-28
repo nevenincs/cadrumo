@@ -34,6 +34,7 @@ from .....application.overview.next_actions import declare_next_action
 from .....core.classification.policies import SensitivityClass
 from .....core.config import override_settings
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.log_records import delivered_text
 from ..errors import StorageValidationError
 from ..master_key.active_session import NoActiveBucketSessionError, activate_session, has_active_bucket_session
 from ..master_key.bucket_session import BucketSession
@@ -450,10 +451,10 @@ def test_secure_object_unreadable_total_logs_missing_active_bucket_session(
         finally:
             dispose_engine(settings)
 
-    assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "StorageValidationError" in caplog.text
-    assert "errors.storage.runtime.not_ready" in caplog.text
-    assert "no active bucket session" not in caplog.text
+    assert "secure objects engine unreachable for repair probe" in delivered_text(caplog)
+    assert "StorageValidationError" in delivered_text(caplog)
+    assert "errors.storage.runtime.not_ready" in delivered_text(caplog)
+    assert "no active bucket session" not in delivered_text(caplog)
 
 
 def test_secure_object_unreadable_total_logs_route_session_mismatch(
@@ -474,10 +475,10 @@ def test_secure_object_unreadable_total_logs_route_session_mismatch(
         finally:
             dispose_engine(settings)
 
-    assert "secure objects engine unreachable for repair probe" in caplog.text
-    assert "StorageValidationError" in caplog.text
-    assert "errors.storage.runtime.not_ready" in caplog.text
-    assert "route does not match the active bucket session" not in caplog.text
+    assert "secure objects engine unreachable for repair probe" in delivered_text(caplog)
+    assert "StorageValidationError" in delivered_text(caplog)
+    assert "errors.storage.runtime.not_ready" in delivered_text(caplog)
+    assert "route does not match the active bucket session" not in delivered_text(caplog)
 
 
 def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path) -> None:

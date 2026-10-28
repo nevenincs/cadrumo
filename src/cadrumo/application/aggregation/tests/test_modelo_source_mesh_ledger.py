@@ -1049,6 +1049,8 @@ def test_renta_source_mesh_refuses_a_separate_depreciation_row_for_a_charged_yea
 
     The register charges 2025 and owns casilla 0208 exclusively, so a second
     amortization-labelled ledger row would deduct the year's depreciation twice.
+    The row is a low-value write-off (LIS art. 12.3.e), the one depreciation
+    treatment a ledger row can still deduct without a register entry.
     """
     revision = _revision("100", "2025")
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
@@ -1061,7 +1063,7 @@ def test_renta_source_mesh_refuses_a_separate_depreciation_row_for_a_charged_yea
     separate_depreciation = _renta_transaction(
         "separate-depreciation-row",
         purchase_invoice_evidence_id=None,
-        amount=Decimal("400.00"),
+        amount=Decimal("250.00"),
         category=SpendingCategory.from_registry("mobiliario_amortizable"),
     )
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))
@@ -1410,9 +1412,9 @@ def test_renta_gasto_source_mesh_still_refuses_a_separate_depreciation_row() -> 
     separate_depreciation = _machine_acquisition_transaction(
         "mobiliario_amortizable",
         provider_id="separate-depreciation-row",
-        amount=Decimal("484.00"),
-        taxable_base=Decimal("400.00"),
-        iva_amount=Decimal("84.00"),
+        amount=Decimal("302.50"),
+        taxable_base=Decimal("250.00"),
+        iva_amount=Decimal("52.50"),
     )
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))

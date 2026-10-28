@@ -58,7 +58,7 @@ def test_create_manual_transaction_validates_and_persists_usage_ratio_reference(
     secure_objects: SecureObjectRepository,
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
-    category = SpendingCategory.from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with _ledger_ports(transaction_repository, event_repository, profile) as ports:
@@ -95,7 +95,7 @@ def test_create_manual_transaction_rejects_usage_ratio_reference_missing_from_pr
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     events_before = event_repository.load()
-    category = SpendingCategory.from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
 
     with (
         pytest.raises(TransactionValidationError, match="not configured"),
@@ -126,7 +126,7 @@ def test_create_manual_transaction_rejects_usage_ratio_alias_and_category_mismat
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     events_before = event_repository.load()
-    category = SpendingCategory.from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with (
@@ -178,7 +178,7 @@ def test_create_manual_transaction_rejects_usage_ratio_business_pct_drift(
 ) -> None:
     transaction_repository, event_repository = _repositories(secure_objects)
     events_before = event_repository.load()
-    category = SpendingCategory.from_registry("telefonia_movil")
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     profile = UsageRatioProfile(ratios={category: Decimal("0.60")})
 
     with (

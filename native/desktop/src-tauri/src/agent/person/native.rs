@@ -8,13 +8,21 @@
 //! runtime ends the session. A refusal the hold ended on ends this session
 //! too: the connection closes, and the runtime ends the session it carried.
 use super::{Bridge, EventSlot, PersonEvent, SignedOut, failed};
+use crate::agent::recovery::{
+    RECOVERING,
+    rebind::{Course, Recovery, follow},
+};
 use cadrumo_application::{
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     person_operations::{
         OperationRelay, PROJECTION_DOCUMENT_MAX_BYTES, ProfileLanguage, RELAY_ACTION_KEYS,
         RelayFailure, read_profile_language, set_profile_language,
     },
-    runtime_client::{Admitted, Event, Pushed, Refusal, SessionExchange, human_sign_out},
+    runtime_client::{
+        Admitted, CUSTODY_RECOVERING, Event, Frontend, Pushed, Refusal, SessionExchange,
+        human_sign_out, rebind_password,
+    },
+    view_stream::attach::{ViewAttachGrant, view_attach},
 };
 use serde_json::{Map, Value, json};
 use std::{
@@ -58,30 +66,38 @@ pub(super) struct NativeSession {
     shared: Arc<Shared>,
     relay: OperationRelay,
     language: Option<ProfileLanguage>,
+    /// What keeps the session through a loss of the profile's worker.
+    recovery: Recovery,
+    /// The losses the session has been through, as the connection's reader sees them.
+    course: Arc<Course>,
 }
 
 impl NativeSession {
     /// Holds `admitted` on `connection` and routes into `events` the pushes
     /// `pushed` receives, subscribed before the sign-in so none in between is
-    /// lost; returns the session and its held line.
+    /// lost; returns the session and its held line. `recovery` is how the
+    /// session is kept when the runtime suspends it.
     pub(super) fn start(
         connection: Arc<dyn SessionExchange>,
         pushed: mpsc::Receiver<Pushed>,
         admitted: Admitted,
         persisted: Option<bool>,
         events: EventSlot,
+        recovery: Recovery,
     ) -> Result<(Self, Value)> {
         let shared = Arc::new(Shared::default());
         shared.language_dirty.store(true, Ordering::Release);
-        let (routed, profile, session, closing) = (
-            shared.clone(),
-            admitted.profile_id.clone(),
-            admitted.session_id.clone(),
-            Arc::downgrade(&connection),
-        );
+        let course = Arc::new(Course::default());
+        let routing = Routing {
+            admitted: admitted.clone(),
+            shared: shared.clone(),
+            course: course.clone(),
+            recovery: recovery.clone(),
+            connection: Arc::downgrade(&connection),
+        };
         thread::Builder::new()
             .name("person-session-events".into())
-            .spawn(move || route(&pushed, &profile, &session, &routed, &events, &closing))
+            .spawn(move || route(&pushed, &routing, &events))
             .map_err(|error| failed("person_events_spawn").caused_by(error))?;
         let mut identity = json!({
             "kind": "session_held",
@@ -100,6 +116,8 @@ impl NativeSession {
                 shared,
                 relay: OperationRelay::new(),
                 language: None,
+                recovery,
+                course,
             },
             identity,
         ))
@@ -170,7 +188,17 @@ impl NativeSession {
         if self.shared.retired.load(Ordering::Acquire) {
             return self.retired();
         }
+        if refusal.is_custody_recovering() {
+            return self.recovering(request_id);
+        }
         self.refuse(request_id, "unavailable", Some(refusal.code()), true)
+    }
+
+    /// The hold's answer to a request while the runtime keeps the session
+    /// suspended: refused, and still held, because the person is not signed
+    /// out and the session can come back on this connection.
+    fn recovering(&mut self, request_id: &str) -> Value {
+        self.refuse(request_id, RECOVERING, Some(CUSTODY_RECOVERING), false)
     }
 
     fn retired(&mut self) -> Value {
@@ -273,7 +301,10 @@ impl NativeSession {
     fn status(&mut self, request_id: &str) -> Value {
         let asked = self.request("session_status", request_id, json!({}));
         match self.ask(&asked, EXCHANGE) {
-            Ok(reply) if self.own_status(&reply) => Value::Object(reply),
+            Ok(reply) if self.own_status(&reply) => match denial(&reply) {
+                Some(CUSTODY_RECOVERING) => self.recovering(request_id),
+                _ => Value::Object(reply),
+            },
             Ok(_) => self.failed_request(request_id, &Refusal::InvalidFrame),
             Err(refusal) => self.failed_request(request_id, &refusal),
         }
@@ -281,23 +312,27 @@ impl NativeSession {
 
     fn activity(&mut self, request_id: &str) -> Value {
         let asked = self.request("session_activity", request_id, json!({}));
-        let denial = match self.ask(&asked, EXCHANGE) {
-            Ok(reply) if self.own_status(&reply) => match reply["status"]["denial"].as_str() {
+        let denied = match self.ask(&asked, EXCHANGE) {
+            Ok(reply) if self.own_status(&reply) => match denial(&reply) {
                 None => return Value::Object(reply),
-                Some(denial) => denial.to_owned(),
+                Some(denied) => denied.to_owned(),
             },
             Ok(_) => return self.failed_request(request_id, &Refusal::InvalidFrame),
             Err(Refusal::Denied { code, .. }) => code,
             Err(refusal) => return self.failed_request(request_id, &refusal),
         };
-        self.denied(request_id, &denial)
+        self.denied(request_id, &denied)
     }
 
     /// The hold's answer to a request the runtime denied for the person: an
-    /// uncertain OS observation keeps the session, anything else ends it.
+    /// uncertain OS observation or a suspension keeps the session, anything
+    /// else ends it.
     fn denied(&mut self, request_id: &str, denial: &str) -> Value {
         if denial == OS_SESSION_UNAVAILABLE {
             return self.refuse(request_id, "unavailable", None, false);
+        }
+        if denial == CUSTODY_RECOVERING {
+            return self.recovering(request_id);
         }
         if self.shared.retired.load(Ordering::Acquire) {
             return self.retired();
@@ -324,11 +359,13 @@ impl NativeSession {
             Ok(_) => return self.failed_request(request_id, &Refusal::InvalidFrame),
             Err(refusal) => return self.failed_request(request_id, &refusal),
         };
-        match current["status"]["denial"].as_str() {
+        match denial(&current) {
             // An uncertain OS observation refuses this admission but keeps the held sign-in.
             Some(OS_SESSION_UNAVAILABLE) => {
                 return self.refuse(request_id, "unavailable", None, false);
             }
+            // A suspended session admits no service until it is back.
+            Some(CUSTODY_RECOVERING) => return self.recovering(request_id),
             Some(_) => return self.refuse(request_id, "inactive", None, true),
             None if current["status"]["session_id"].is_null() => {
                 return self.refuse(request_id, "inactive", None, true);
@@ -505,6 +542,37 @@ impl Bridge for NativeSession {
         self.connection.is_some() && !self.shared.retired.load(Ordering::Acquire)
     }
 
+    fn view_attach(
+        &mut self,
+        operation_id: &str,
+        deadline: Instant,
+    ) -> std::result::Result<ViewAttachGrant, Refusal> {
+        if self.shared.retired.load(Ordering::Acquire) {
+            return Err(Refusal::ConnectionClosed);
+        }
+        let connection = self.connection.as_ref().ok_or(Refusal::ConnectionClosed)?;
+        view_attach(connection.as_ref(), &self.admitted, operation_id, deadline)
+    }
+
+    fn rebind_password(&mut self, password: &[u8]) -> std::result::Result<(), Refusal> {
+        if self.shared.retired.load(Ordering::Acquire) {
+            return Err(Refusal::ConnectionClosed);
+        }
+        let connection = self.connection.as_ref().ok_or(Refusal::ConnectionClosed)?;
+        rebind_password(
+            connection.as_ref(),
+            &self.admitted,
+            Frontend::Desktop,
+            password,
+            Instant::now() + EXCHANGE,
+        )?;
+        // The loss is over: the next one is presented afresh, and the window
+        // stops saying it waits without waiting for the runtime's cue.
+        self.course.ended();
+        self.recovery.custody.clear(&self.admitted.session_id);
+        Ok(())
+    }
+
     fn fence(&mut self) {
         self.end();
     }
@@ -532,17 +600,34 @@ fn is_uuid(text: &str) -> bool {
     crate::shell::agent_access::wire::is_uuid(text)
 }
 
+/// The denial a status reply names, if it names one.
+fn denial(reply: &Map<String, Value>) -> Option<&str> {
+    reply.get("status")?.get("denial")?.as_str()
+}
+
+/// What the router of the held session's pushes works with.
+struct Routing {
+    admitted: Admitted,
+    shared: Arc<Shared>,
+    course: Arc<Course>,
+    recovery: Recovery,
+    connection: std::sync::Weak<dyn SessionExchange>,
+}
+
 /// Routes the runtime's pushes for the held session into person events, as
 /// the hold did: cues only for this session, an operation's cue only while
-/// one it relayed is unsettled, and each only once the window observes.
-fn route(
-    pushed: &mpsc::Receiver<Pushed>,
-    profile: &str,
-    session: &str,
-    shared: &Shared,
-    events: &EventSlot,
-    connection: &std::sync::Weak<dyn SessionExchange>,
-) {
+/// one it relayed is unsettled, and each only once the window observes. A cue
+/// that names no session is the runtime asking this connection to read where
+/// its session stands, which is how a suspended one is found.
+fn route(pushed: &mpsc::Receiver<Pushed>, routing: &Routing, events: &EventSlot) {
+    let Routing {
+        admitted,
+        shared,
+        course,
+        recovery,
+        connection,
+    } = routing;
+    let (profile, session) = (admitted.profile_id.as_str(), admitted.session_id.as_str());
     // A push the runtime could not have meant for this session ends the
     // connection, and the runtime ends the session it carried.
     let violated = || {
@@ -563,7 +648,11 @@ fn route(
     {
         let own = session_id.as_deref() == Some(session);
         let cue = match event {
-            Event::SignInChanged | Event::LifecycleNotice => continue,
+            Event::LifecycleNotice => continue,
+            Event::SignInChanged => {
+                follow(course, connection, admitted, recovery);
+                continue;
+            }
             Event::Disconnected => break,
             // A frontend never holds a service lease, and a push for another
             // profile could not have been meant for it: the connection is not
@@ -596,6 +685,8 @@ fn route(
         }
     }
     shared.retired.store(true, Ordering::Release);
+    // Gone for good: the window no longer waits for a session that cannot come back.
+    recovery.custody.clear(session);
     // As when the hold exited: a session the window gave up retires nobody
     // else's waits on the shared events.
     if !shared.released.load(Ordering::Acquire) {
@@ -607,6 +698,11 @@ fn route(
 mod tests {
     use super::super::{Person, PersonEvent};
     use super::*;
+    use crate::agent::recovery::{
+        Custody, Reconnecting, is_recovering,
+        rebind::{Proof, StoredReceipt},
+    };
+    use cadrumo_application::runtime_client::ResumeRefusal;
     use std::{collections::VecDeque, sync::Mutex};
     use tokio::sync::broadcast::{self, error::TryRecvError};
 
@@ -654,12 +750,19 @@ mod tests {
                 deadline,
             )
             .unwrap();
+        let recovery = Recovery {
+            custody: Custody::default(),
+            proof: Arc::new(StoredReceipt {
+                storage_root: field("storage_root").into(),
+            }),
+        };
         let (mut session, identity) = NativeSession::start(
             connection,
             pushed,
             admitted,
             None,
             Arc::new(Mutex::new(None)),
+            recovery,
         )
         .unwrap();
         let operation = field("operation_id");
@@ -759,6 +862,19 @@ mod tests {
             self.push_for(PROFILE, event, session);
         }
 
+        /// The cue the runtime sends a connection whose session it suspended or
+        /// returned: it names neither profile nor session.
+        fn cue(&self) {
+            let sender = self.pushes.lock().unwrap().clone().unwrap();
+            sender
+                .send(Pushed {
+                    event: Event::SignInChanged,
+                    profile_id: None,
+                    session_id: None,
+                })
+                .unwrap();
+        }
+
         fn push_for(&self, profile: &str, event: Event, session: &str) {
             let sender = self.pushes.lock().unwrap().clone().unwrap();
             sender
@@ -851,9 +967,65 @@ mod tests {
         }
     }
 
-    fn person(runtime: &Arc<Runtime>) -> Person {
+    /// The stored sign-in as the runtime sees it presented: what the window
+    /// shows at the moment each presentation goes out, on the connection it
+    /// is given. The test holds the proof.
+    struct Stored {
+        custody: Custody,
+        shown_when_offered: Mutex<Vec<Option<Reconnecting>>>,
+    }
+
+    impl Proof for Stored {
+        fn present(
+            &self,
+            exchange: &dyn SessionExchange,
+            session: &Admitted,
+            deadline: Instant,
+        ) -> std::result::Result<(), ResumeRefusal> {
+            self.shown_when_offered
+                .lock()
+                .unwrap()
+                .push(self.custody.reconnecting());
+            rebind_password(
+                exchange,
+                session,
+                Frontend::Desktop,
+                b"stored-proof",
+                deadline,
+            )
+            .map(|_| ())
+            .map_err(ResumeRefusal::Runtime)
+        }
+    }
+
+    impl Stored {
+        fn offered(&self) -> Vec<Option<Reconnecting>> {
+            self.shown_when_offered.lock().unwrap().clone()
+        }
+    }
+
+    fn recovery() -> (Recovery, Arc<Stored>) {
+        let custody = Custody::default();
+        let stored = Arc::new(Stored {
+            custody: custody.clone(),
+            shown_when_offered: Mutex::new(Vec::new()),
+        });
+        (
+            Recovery {
+                custody,
+                proof: stored.clone(),
+            },
+            stored,
+        )
+    }
+
+    fn person_recovering(runtime: &Arc<Runtime>, recovery: Recovery) -> Person {
         let pushed = runtime.subscribe_scoped();
-        Person::native(runtime.clone(), pushed, admitted(), Some(true)).unwrap()
+        Person::native(runtime.clone(), pushed, admitted(), Some(true), recovery).unwrap()
+    }
+
+    fn person(runtime: &Arc<Runtime>) -> Person {
+        person_recovering(runtime, recovery().0)
     }
 
     fn status(session: &str, denial: Value) -> Answer {
@@ -869,6 +1041,35 @@ mod tests {
                 "denial": denial,
             },
         }))
+    }
+
+    /// The status of the session while the runtime keeps it suspended.
+    fn suspended() -> Answer {
+        Answer::Reply(json!({
+            "kind": "profile_status",
+            "status": {
+                "profile_id": PROFILE,
+                "session_id": SESSION,
+                "connected": true,
+                "credential_authenticated": false,
+                "profile_bound": true,
+                "session_expires_at": "2026-10-24T12:00:00Z",
+                "denial": "custody_recovering",
+                "recovery_remaining_seconds": 90,
+            },
+        }))
+    }
+
+    fn secret_ready() -> Answer {
+        Answer::Reply(json!({"kind": "secret_ready"}))
+    }
+
+    fn actions(runtime: &Runtime) -> Vec<String> {
+        runtime
+            .asked()
+            .iter()
+            .map(|asked| asked["action"].as_str().unwrap().to_owned())
+            .collect()
     }
 
     /// Waits, within a deadline, until `done` holds.
@@ -916,6 +1117,7 @@ mod tests {
             runtime.subscribe_scoped(),
             admitted(),
             None,
+            recovery().0,
         )
         .unwrap();
         assert!(resumed.identity.get("session_persisted").is_none());
@@ -1158,6 +1360,7 @@ mod tests {
             admitted(),
             None,
             Arc::new(std::sync::Mutex::new(Some(events))),
+            recovery().0,
         )
         .unwrap();
         session
@@ -1540,6 +1743,198 @@ mod tests {
         assert_eq!(error.reason.as_deref(), Some("person_request_refused"));
         assert!(!held.is_open());
         assert_eq!(runtime.asked()[0]["action"], "operation_contract");
+    }
+
+    const WAITING: Option<Reconnecting> = Some(Reconnecting {
+        password_required: false,
+    });
+    const PASSWORD: Option<Reconnecting> = Some(Reconnecting {
+        password_required: true,
+    });
+
+    #[test]
+    fn a_suspended_session_presents_the_stored_sign_in_once_on_its_own_connection() {
+        let runtime = Runtime::answering([
+            suspended(),
+            secret_ready(),
+            status(SESSION, Value::Null),
+            status(SESSION, Value::Null),
+        ]);
+        let (recovery, stored) = recovery();
+        let custody = recovery.custody.clone();
+        let held = person_recovering(&runtime, recovery);
+        // The runtime cues at the suspension and again at the rebind; the
+        // router reads them in order, so the second read begins after the first ended.
+        runtime.cue();
+        runtime.cue();
+        eventually(|| actions(&runtime).len() == 3);
+        assert_eq!(
+            actions(&runtime),
+            ["session_status", "profile_login", "session_status"]
+        );
+        // The proof went out on the connection that holds the session, under its id.
+        let asked = runtime.asked();
+        assert_eq!(asked[0]["session_id"], SESSION);
+        assert_eq!(asked[1]["profile_id"], PROFILE);
+        assert_eq!(asked[1]["method"], "password");
+        assert_eq!(*runtime.secrets.lock().unwrap(), [b"stored-proof".to_vec()]);
+        // The wait was shown before the proof went out, and not after it was accepted.
+        assert_eq!(stored.offered(), [WAITING]);
+        eventually(|| custody.reconnecting().is_none());
+        assert!(held.failures().borrow().is_none());
+    }
+
+    #[test]
+    fn a_refused_stored_sign_in_is_not_offered_again_and_the_password_rebinds_the_same_session() {
+        let runtime = Runtime::answering([
+            suspended(),
+            secret_ready(),
+            Answer::Denied("credential_rejected"),
+            suspended(),
+            secret_ready(),
+            status(SESSION, Value::Null),
+        ]);
+        let (recovery, stored) = recovery();
+        let custody = recovery.custody.clone();
+        let mut held = person_recovering(&runtime, recovery);
+        runtime.cue();
+        // Cued again within the same loss: the window reads and offers nothing.
+        runtime.cue();
+        eventually(|| runtime.script.lock().unwrap().len() == 2);
+        assert_eq!(custody.reconnecting(), PASSWORD);
+        assert_eq!(stored.offered(), [WAITING]);
+        assert!(held.is_open());
+        // The person's password goes out on this same connection, for this same session.
+        held.rebind_password(b"the-password").unwrap();
+        let asked = runtime.asked();
+        assert_eq!(
+            actions(&runtime),
+            [
+                "session_status",
+                "profile_login",
+                "session_status",
+                "profile_login"
+            ]
+        );
+        assert_eq!(asked[3]["method"], "password");
+        assert_eq!(asked[3]["persist_receipt"], true);
+        assert_eq!(asked[3]["profile_id"], PROFILE);
+        assert_eq!(
+            *runtime.secrets.lock().unwrap(),
+            [b"stored-proof".to_vec(), b"the-password".to_vec()]
+        );
+        assert_eq!(custody.reconnecting(), None);
+        assert!(held.is_open());
+        assert!(held.failures().borrow().is_none());
+    }
+
+    #[test]
+    fn a_password_the_runtime_admits_as_another_session_is_no_rebind() {
+        let runtime = Runtime::answering([
+            suspended(),
+            secret_ready(),
+            Answer::Denied("credential_rejected"),
+            secret_ready(),
+            status(OTHER, Value::Null),
+            secret_ready(),
+            Answer::Denied("credential_rejected"),
+        ]);
+        let (recovery, _) = recovery();
+        let custody = recovery.custody.clone();
+        let mut held = person_recovering(&runtime, recovery);
+        runtime.cue();
+        eventually(|| custody.reconnecting() == PASSWORD);
+        let other = held.rebind_password(b"the-password").unwrap_err();
+        assert_eq!(other.code(), "session_mismatch");
+        let rejected = held.rebind_password(b"wrong").unwrap_err();
+        assert_eq!(rejected.code(), "credential_rejected");
+        // Refused, the session stays held and still waits for a password.
+        assert_eq!(custody.reconnecting(), PASSWORD);
+        assert!(held.is_open());
+    }
+
+    #[test]
+    fn requests_while_the_session_is_suspended_are_refused_and_never_end_it() {
+        let runtime = Runtime::answering([
+            suspended(),
+            suspended(),
+            suspended(),
+            Answer::Denied("custody_recovering"),
+            Answer::Denied("custody_recovering"),
+            status(SESSION, Value::Null),
+        ]);
+        let mut held = person(&runtime);
+        for action in ["status", "activity"] {
+            let refused = held.exchange(json!({ "action": action })).unwrap_err();
+            assert_eq!(refused.reason.as_deref(), Some("person_request_refused"));
+            assert!(is_recovering(&refused), "{action}");
+            assert!(held.is_open());
+        }
+        // No service is admitted under a session that grants nothing.
+        let admission = held
+            .exchange(json!({
+                "action": "service_admission",
+                "recipient_connection_id": OTHER,
+                "service_id": "cadrumo-agent-service",
+            }))
+            .unwrap_err();
+        assert!(is_recovering(&admission));
+        assert_eq!(actions(&runtime).last().unwrap(), "session_status");
+        assert!(held.is_open());
+        // A language read the runtime refuses for the same reason is refused alike.
+        let language = held
+            .exchange(json!({"action": "language_observe"}))
+            .unwrap_err();
+        assert!(is_recovering(&language));
+        assert!(held.is_open());
+        // An operation's own refusal is the operation's answer, as for any denial.
+        let relayed = held.exchange(submit()).unwrap();
+        assert_eq!(relayed["kind"], "operation_refused");
+        assert_eq!(relayed["code"], "custody_recovering");
+        assert!(held.is_open());
+        // Once it is back the same session answers again.
+        let back = held.exchange(json!({"action": "status"})).unwrap();
+        assert_eq!(back["status"]["session_id"], SESSION);
+        assert!(held.failures().borrow().is_none());
+    }
+
+    #[test]
+    fn the_end_of_the_window_retires_the_session_and_the_wait_is_over() {
+        let runtime = Runtime::answering([
+            suspended(),
+            secret_ready(),
+            Answer::Denied("credential_rejected"),
+        ]);
+        let (recovery, _) = recovery();
+        let custody = recovery.custody.clone();
+        let mut held = person_recovering(&runtime, recovery);
+        let (events, mut heard) = broadcast::channel(8);
+        held.observe_events(events).unwrap();
+        runtime.cue();
+        eventually(|| custody.reconnecting() == PASSWORD);
+        runtime.push(
+            Event::SessionRetired {
+                kind: "session_retired".into(),
+                reason: "custody_unavailable".into(),
+            },
+            SESSION,
+        );
+        assert_eq!(next(&mut heard), Ok(PersonEvent::Retired));
+        assert_eq!(custody.reconnecting(), None);
+        assert!(!held.is_open());
+    }
+
+    #[test]
+    fn a_status_naming_another_session_is_never_answered_with_a_proof() {
+        let runtime = Runtime::answering([status(OTHER, Value::Null)]);
+        let (recovery, stored) = recovery();
+        let custody = recovery.custody.clone();
+        let mut held = person_recovering(&runtime, recovery);
+        runtime.cue();
+        eventually(|| actions(&runtime).len() == 1);
+        assert_eq!(custody.reconnecting(), None);
+        assert!(stored.offered().is_empty());
+        assert!(held.is_open());
     }
 
     #[test]

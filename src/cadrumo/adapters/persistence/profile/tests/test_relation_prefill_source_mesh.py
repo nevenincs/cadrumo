@@ -39,6 +39,7 @@ from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
 )
+from .....tests.log_records import delivered_records
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from .published_authority_support import published_authority_operation
@@ -393,7 +394,7 @@ def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
 
     operator_manual_records = [
         record
-        for record in caplog.records
+        for record in delivered_records(caplog)
         if record.name == logger_name and "remains operator-manual" in record.getMessage()
     ]
     assert operator_manual_records, (

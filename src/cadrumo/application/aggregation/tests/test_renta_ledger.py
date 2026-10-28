@@ -302,14 +302,11 @@ def test_manual_transaction_tax_fields_feed_renta_observation_without_invoice_ca
     assert result.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("100.00")}
 
 
-def test_raw_amortizable_acquisition_is_currently_deducted_at_full_base_without_a_schedule() -> None:
-    """Pin the pre-asset-schedule behavior at the ledger boundary.
+def test_an_equipment_purchase_above_the_low_value_limit_is_not_deducted_whole() -> None:
+    """DISCRIMINATING. A 2,000 EUR computer is amortized (LIS art. 12.1), not written off in its purchase year.
 
-    This is deliberately a material acquisition whose taxable base is larger
-    than any illustrative annual charge: the current transaction-ledger path
-    has only the raw purchase amount and category.  It therefore routes the
-    whole base to 0208; it neither receives nor validates asset lifecycle,
-    service-date, coefficient, or accumulated-depreciation facts.
+    Only a new item of up to 300 EUR may be written off at once (LIS art. 12.3.e).
+    Without an asset-register entry the purchase deducts nothing and says why.
     """
     equipment = _transaction(
         "unscheduled-equipment-acquisition",
@@ -328,42 +325,147 @@ def test_raw_amortizable_acquisition_is_currently_deducted_at_full_base_without_
         profile_year=2025,
     )
 
+    assert result.observations == ()
+    assert result.casilla_values == {}
+    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.ASSET_REGISTER_REQUIRED]
+
+
+def test_a_low_value_equipment_purchase_is_written_off_in_its_year() -> None:
+    chair = _transaction(
+        "low-value-chair",
+        amount=Decimal("302.50"),
+        category=SpendingCategory.from_registry("mobiliario_amortizable"),
+        taxable_base=Decimal("250.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("52.50"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((chair,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
     assert result.issues == ()
-    assert result.observations[0].target_casilla_id == "0208"
-    assert result.observations[0].deductible_amount == Decimal("2000.00")
-    assert result.casilla_values == {validated_casilla_id("0208", surface="test"): Decimal("2000.00")}
+    assert result.casilla_values == {validated_casilla_id("0208", surface="test"): Decimal("250.00")}
 
 
-def test_usage_ratio_phone_requires_ratio_before_routing_to_other_expenses() -> None:
-    phone = _transaction(
-        "phone",
-        category=SpendingCategory.from_registry("telefonia_movil"),
+def test_low_value_write_offs_of_every_equipment_category_share_one_annual_limit() -> None:
+    """DISCRIMINATING. LIS art. 12.3.e allows 25,000 EUR per period across all such items, not per row.
+
+    Eighty-four items of 300 EUR, split over hardware and furniture, total 25,200 EUR:
+    the latest write-off loses the 200 EUR above the limit.
+    """
+    rows = tuple(
+        _transaction(
+            f"low-value-{index:03d}",
+            amount=Decimal("363.00"),
+            category=SpendingCategory.from_registry(
+                "hardware_amortizable" if index % 2 else "mobiliario_amortizable",
+            ),
+            booked_date=date(2025, 1 + index % 12, 1 + index // 12),
+            value_date=date(2025, 1 + index % 12, 1 + index // 12),
+            taxable_base=Decimal("300.00"),
+            iva_rate=Decimal("0.21"),
+            iva_amount=Decimal("63.00"),
+        )
+        for index in range(84)
     )
 
-    missing_ratio = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((phone,)),
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions(rows),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
     )
 
-    assert missing_ratio.observations == ()
-    assert missing_ratio.issues[0].reason is RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY
-    assert "missing usage ratio" in missing_ratio.issues[0].detail
+    assert result.issues == ()
+    deducted = sum((observation.deductible_amount for observation in result.observations), Decimal("0"))
+    assert deducted == Decimal("25000.00")
+    latest = max(result.observations, key=lambda observation: (observation.filing_date, observation.transaction_id))
+    assert latest.deductible_amount == Decimal("100.00")
 
-    with_ratio = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions((phone,)),
+
+@pytest.mark.parametrize("category_id", ["telefonia_movil", "vehiculo_combustible"])
+def test_a_shared_use_line_or_vehicle_deducts_nothing_and_says_why(category_id: str) -> None:
+    """DISCRIMINATING. A mobile line or a turismo is affected only by exclusive use (RIRPF art. 22).
+
+    A MIXED row states private use, so its stated share is not deducted: the
+    element admits no partial affectation, and the refusal is a review issue.
+    """
+    shared = _transaction(
+        "shared-use",
+        category=SpendingCategory.from_registry(category_id),
+        business_classification=BusinessClassification.MIXED,
+        business_pct=Decimal("0.50"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((shared,)),
         InvoiceCatalogue(),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         period=_ANNUAL_2025,
         profile_year=2025,
-        usage_ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.25")},
     )
 
-    assert with_ratio.issues == ()
-    assert with_ratio.observations[0].deductible_amount == Decimal("30.2500")
-    assert with_ratio.casilla_values == {_M100_ASESORIA_CASILLA: Decimal("30.2500")}
+    assert result.observations == ()
+    assert result.casilla_values == {}
+    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.EXCLUSIVE_USE_REQUIRED]
+
+
+@pytest.mark.parametrize("category_id", ["telefonia_movil", "vehiculo_combustible"])
+def test_an_exclusively_business_line_or_vehicle_deducts_in_full(category_id: str) -> None:
+    business = _transaction(
+        "business-use",
+        category=SpendingCategory.from_registry(category_id),
+        taxable_base=Decimal("100.00"),
+        iva_rate=Decimal("0.21"),
+        iva_amount=Decimal("21.00"),
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions((business,)),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    assert [observation.deductible_amount for observation in result.observations] == [Decimal("100.00")]
+
+
+def test_an_annual_cap_holds_across_the_rows_of_the_year() -> None:
+    """DISCRIMINATING. Two 300 EUR premiums are each under the 500 EUR limit, and together above it.
+
+    LIRPF art. 30.2, regla 5.a a) allows 500 EUR a year for the insured person,
+    so the second premium deducts only the 200 EUR the first left.
+    """
+    premiums = tuple(
+        _transaction(
+            f"premium-{month}",
+            amount=Decimal("300.00"),
+            category=SpendingCategory.from_registry("seguros_salud_autonomo"),
+            booked_date=date(2025, month, 1),
+            value_date=date(2025, month, 1),
+        )
+        for month in (3, 9)
+    )
+
+    result = aggregate_renta_ledger_expenses(
+        TransactionCatalogue.from_transactions(premiums),
+        InvoiceCatalogue(),
+        bucket_id=SECURE_OBJECTS_BUCKET_ID,
+        period=_ANNUAL_2025,
+        profile_year=2025,
+    )
+
+    assert result.issues == ()
+    by_date = sorted(result.observations, key=lambda observation: observation.filing_date)
+    assert [observation.deductible_amount for observation in by_date] == [Decimal("300.00"), Decimal("200.00")]
 
 
 def test_linked_invoice_issue_date_controls_period_filtering() -> None:
@@ -795,14 +897,14 @@ def test_a_40_of_100_m2_home_office_bill_deducts_12_per_cent_in_renta_though_its
     [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
     ids=["business", "mixed"],
 )
-def test_operator_usage_ratio_on_a_phone_bill_applies_once(
+def test_operator_usage_ratio_on_a_dwelling_lease_applies_once(
     classification: BusinessClassification,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A stored 25 per cent mobile-phone ratio deducts 25.00 of a 100.00 base, not 6.25."""
-    category = SpendingCategory.from_registry("telefonia_movil")
+    """A stored 25 per cent dwelling-lease ratio deducts 25.00 of a 100.00 base, not 6.25."""
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     bill = _transaction(
-        "phone-bill",
+        "lease-bill",
         amount=Decimal("121.00"),
         category=category,
         business_classification=classification,
@@ -825,4 +927,4 @@ def test_operator_usage_ratio_on_a_phone_bill_applies_once(
 
     assert result.issues == ()
     deducted = result.observations[0].deductible_amount
-    assert deducted == Decimal("25.00"), f"{classification.value} phone bill deducted {deducted}, expected 25.00"
+    assert deducted == Decimal("25.00"), f"{classification.value} lease deducted {deducted}, expected 25.00"

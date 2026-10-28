@@ -63,6 +63,7 @@ from cadrumo.entrypoints.tui.operations.destination import (
 )
 from cadrumo.entrypoints.tui.operations.palette import WorkbenchOperationProviderV1
 from cadrumo.entrypoints.tui.operations.run_screen import OperationRunScreen
+from cadrumo.tests.log_records import delivered_records
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.transport.framing import VerifiedConnection
@@ -527,6 +528,6 @@ def test_every_registered_operation_is_listed_and_a_read_a_change_and_a_secret_r
                 finally:
                     endpoint.close()
 
-    logged = "\n".join(f"{record.getMessage()} {record.__dict__!r}" for record in caplog.records)
-    assert caplog.records
+    logged = "\n".join(f"{record.getMessage()} {record.__dict__!r}" for record in delivered_records(caplog))
+    assert delivered_records(caplog)
     assert _TYPED_INPUT not in logged

@@ -77,6 +77,7 @@ import pytest
 
 from ......application.auth.protocols import BrowserPagePort
 from ......core.config import Settings, load_settings
+from ......tests.log_records import delivered_records
 from ..._playwright import Page
 from ...auth.clave_movil import ClaveMovilAuthProvider
 from ..iva_compensation_wallet import _dismiss_pre303_alert_modal_if_present as _wallet_dismiss
@@ -269,8 +270,9 @@ def test_wallet_surfaces_a_diagnostic_when_it_declines_the_hidden_modal(
         _run(lambda: _run_wallet(page))
 
     assert any(
-        "declining to dismiss" in record.message and _MODAL_SELECTOR in record.message for record in caplog.records
-    ), f"expected a WARNING naming the declined modal, got: {[r.message for r in caplog.records]}"
+        "declining to dismiss" in record.message and _MODAL_SELECTOR in record.message
+        for record in delivered_records(caplog)
+    ), f"expected a WARNING naming the declined modal, got: {[r.message for r in delivered_records(caplog)]}"
 
 
 def test_auth_falls_back_to_the_generic_modal_footer_button_when_unlabelled() -> None:

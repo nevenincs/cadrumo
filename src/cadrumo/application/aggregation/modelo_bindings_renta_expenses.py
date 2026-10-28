@@ -19,6 +19,7 @@ from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.actividad_asset.claims import M100_AMORTIZATION_CASILLA_IDS
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
+from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
@@ -33,9 +34,14 @@ from .modelo_bindings_actividad_assets import (
     LedgerRentaExpenseTreatment,
     activity_asset_expense_observations,
     classify_ledger_expenses_against_asset_register,
+    dwelling_ownership_share,
+    register_acquisition_transaction_ids,
     register_owned_acquisition_diagnostics,
 )
-from .renta_ledger import RentaLedgerExpenseAggregation, aggregate_renta_ledger_expenses_from_repositories
+from .renta_ledger import (
+    RentaLedgerExpenseAggregation,
+    aggregate_renta_ledger_expenses_from_repositories,
+)
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -83,7 +89,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         self._activity_asset_history_repository = activity_asset_history_repository
 
     def _aggregate(
-        self, context: CalculationSourceContext
+        self,
+        context: CalculationSourceContext,
+        *,
+        asset_history: ActivityAssetHistory,
     ) -> RentaLedgerExpenseAggregation | CalculationSourceResolution:
         try:
             profile = context.profile
@@ -109,6 +118,8 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     prorrata_register_repository=self._prorrata_register_repository,
                     profile_decode_context=profile.profile_decode_context if profile is not None else None,
                     operation=operation,
+                    ownership_share=dwelling_ownership_share(asset_history.revisions),
+                    register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
                 )
         except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
@@ -130,10 +141,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         if not revision_has_binding_source(context.revision, "ledger_renta_gastos_estimacion_directa_aggregation"):
             return empty_source_resolution(self.resolver_id, self.owned_sources)
 
-        aggregation = self._aggregate(context)
+        asset_history = self._activity_asset_history_repository.load()
+        aggregation = self._aggregate(context, asset_history=asset_history)
         if isinstance(aggregation, CalculationSourceResolution):
             return aggregation
-        asset_history = self._activity_asset_history_repository.load()
         register_owned = classify_ledger_expenses_against_asset_register(
             asset_history.revisions,
             asset_history.claims,

@@ -35,6 +35,7 @@ from .....application.modelo.m145_communication_records import (
 )
 from .....core.errors.error_codes import get_registered_error_code
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
+from .....tests.log_records import delivered_records
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..m145_communication_records import build_m145_communication_records_ports
 
@@ -75,7 +76,7 @@ def _command(*, field_values: dict[str, str] | None = None) -> M145Communication
 
 
 def _captured_service_messages(caplog: pytest.LogCaptureFixture) -> tuple[str, ...]:
-    return tuple(record.getMessage() for record in caplog.records if record.name == _LOGGER_NAME)
+    return tuple(record.getMessage() for record in delivered_records(caplog) if record.name == _LOGGER_NAME)
 
 
 def _assert_messages_use_communication_vocabulary(messages: tuple[str, ...]) -> None:

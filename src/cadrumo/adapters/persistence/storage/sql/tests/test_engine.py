@@ -23,6 +23,7 @@ from sqlalchemy.engine import make_url
 from ......core.config import Settings
 from ......tests.env_scope import scoped_env_var
 from ......tests.inventory import REPO_ROOT
+from ......tests.log_records import delivered_records
 from ...errors import StorageError
 from ..engine import _normalize_sqlite_url, create_engine_from_settings, dispose_engine
 
@@ -136,7 +137,7 @@ def test_engine_success_log_does_not_expose_database_path(
     with _engine_for(settings) as engine, engine.connect() as conn:
         conn.execute(text("select 1"))
 
-    messages = tuple(record.getMessage() for record in caplog.records if record.name == _ENGINE_LOGGER_NAME)
+    messages = tuple(record.getMessage() for record in delivered_records(caplog) if record.name == _ENGINE_LOGGER_NAME)
     assert any("created engine route_marker=" in message for message in messages)
     assert all("private-client-storage-root" not in message for message in messages)
     assert all("engine.db" not in message for message in messages)

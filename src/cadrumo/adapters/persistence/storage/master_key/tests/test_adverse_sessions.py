@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from ......core.config import Settings, override_settings
+from ......tests.log_records import delivered_text
 from ...bucket.errors import BucketLockedError
 from ..active_session import (
     NoActiveBucketSessionError,
@@ -101,7 +102,7 @@ def test_bucket_session_close_disposes_by_bucket_identity_under_explicit_databas
         session.close()
 
     assert session.sealed is True
-    assert str(tmp_path) not in caplog.text
+    assert str(tmp_path) not in delivered_text(caplog)
 
 
 def _settings_with_store(tmp_path: Path) -> Settings:

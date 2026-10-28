@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";
 import { buildPath } from "./build-paths.mjs";
-import { developmentServer } from "./development-server.mjs";
+import { developmentServer, PORT_KEYS } from "./development-server.mjs";
 
 export function identity() {
   const value = JSON.parse(
@@ -82,7 +82,7 @@ export function server() {
   if (typeof value.host !== "string" || !value.host.trim())
     throw new Error("Missing frontend bind address");
   const fixed = developmentServer();
-  for (const key of ["devPort", "previewPort", "docsPort", "cataloguePort"])
+  for (const key of PORT_KEYS)
     if (!Number.isInteger(value[key]) || value[key] < 1 || value[key] > 65535)
       throw new Error(`Invalid frontend ${key}`);
     else if (value[key] !== fixed[key])

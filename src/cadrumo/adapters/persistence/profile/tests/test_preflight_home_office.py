@@ -306,48 +306,6 @@ def test_preflight_flags_home_office_ratio_that_disagrees_with_applied_censo(
     assert "censo=0.060" in report.issues[0].detail
 
 
-def test_preflight_does_not_attach_home_office_censo_mismatch_to_unrelated_ratio(
-    tmp_path: Path,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        save_usage_ratios(
-            UsageRatioProfile(
-                ratios={
-                    SpendingCategory.from_registry("suministros_home_office_internet"): Decimal("0.30"),
-                    SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60"),
-                },
-            ),
-            bucket_id=profile.bucket_id,
-        )
-        repository = TransactionCatalogueRepository(bucket_id=profile.bucket_id)
-        repository.save(
-            TransactionCatalogue.from_transactions(
-                (
-                    _transaction(
-                        "row-phone",
-                        business_classification=BusinessClassification.MIXED,
-                        business_pct=Decimal("0.60"),
-                        category_id=SpendingCategory.from_registry("telefonia_movil").value,
-                        usage_ratio_id=SpendingCategory.from_registry("telefonia_movil").value,
-                    ),
-                ),
-            ),
-        )
-
-        report = preflight_ledger_tax_readiness(
-            bucket_id=profile.bucket_id,
-            period=_Q2_2026,
-            usage_ratio_profile_loader=load_usage_ratios,
-            operation=operation,
-            transaction_repository=repository,
-        )
-
-    assert report.ready is True
-    assert report.checked_transaction_count == 1
-    assert report.issues == ()
-
-
 def test_preflight_flags_a_home_office_category_with_no_usage_ratio_id(
     tmp_path: Path,
     operation: PinnedAuthorityOperation,

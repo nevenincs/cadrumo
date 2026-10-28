@@ -68,6 +68,7 @@ from cadrumo.core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from cadrumo.tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -353,7 +354,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
     assert correlation is not None
     records = [
         record
-        for record in caplog.records
+        for record in delivered_records(caplog)
         if record.name == "cadrumo.application.operations._supervisor_execution"
         and f"operation={_OPERATION_ID}" in record.getMessage()
         and correlation in record.getMessage()

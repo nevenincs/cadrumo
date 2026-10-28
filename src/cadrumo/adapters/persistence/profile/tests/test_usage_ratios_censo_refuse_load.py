@@ -46,10 +46,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 def test_load_returns_profile_when_no_home_office_overrides(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.50")}),
-        bucket_id=_BUCKET_ID,
-    )
+    save_usage_ratios(UsageRatioProfile(), bucket_id=_BUCKET_ID)
 
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
@@ -58,7 +55,7 @@ def test_load_returns_profile_when_no_home_office_overrides(
         operation=authority_operation,
     )
 
-    assert profile.ratios == {SpendingCategory.from_registry("telefonia_movil"): Decimal("0.50")}
+    assert profile.ratios == {}
 
 
 def test_refuses_when_censo_unset_but_home_office_override_persisted(

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-27'
 body_schema: 'body-v2'
-body_hash: 'sha256:0f5dfb6fa1478f8e1da3d35dbccf69da518d02db63fe160c2ccea4b573aab25b'
+body_hash: 'sha256:7ce48c7e3cbb0d3ff7ad69cac9686297181649a2570465d543edcb6c3aa38997'
 related:
   - "[[2026-10-27-profile-field-remap-iva-home-office-suministros-research]]"
 ---
@@ -40,17 +40,23 @@ A MIXED ledger row carries one `business_pct`. The IVA ledger multiplies the inp
 - The IRPF `statutory_multiplier` never scales IVA. The IVA treatment is a separate datum, cited only by IVA sources (LIVA, Manual práctico IVA).
 - A row's `business_pct` is the degree of use. The censo default for the home-office families is raw afectación `office_m2 / total_m2`, with no multiplier. An operator-stated share wins.
 - The IRPF factor is applied only by the Renta category rule over the `UsageRatioProfile` store, which keeps `0.30 x afectación` for the suministros family.
-- A BUSINESS row deducts in full whatever its category. The category IVA treatment governs MIXED received rows only.
-- A category without an IVA treatment datum keeps the row share. Auditing the remaining categories belongs to the plan's follow-on deductibility audit Step.
+- A BUSINESS row deducts in full, except under `vehicle_presumption`. The other category IVA treatments govern MIXED received rows only.
+- Every category declares an IVA treatment datum. A category the pinned authority does not declare keeps the row share.
+- The `vehicle_presumption` treatment applies its presumed share (LIVA art. 95.Tres.2.ª, 50 per cent) to MIXED and BUSINESS rows alike, because booking the vehicle in the activity is no proof of a higher degree of use (art. 95.Tres.4.ª). The 100 per cent presumption for the six listed uses and a proved degree of use need an operator statement that no ledger or profile datum records yet; until one exists, the presumed share applies.
 - A verified Manual práctico citation names its bundled edition as a registry source. The registry build gate checks the quotation against that edition's text through the variant's `source_citations`. A Manual citation whose edition is bundled is not `source_not_bundled`.
 
 ## Implementation
 
 We will add an IVA mixed-use treatment to the category proportionality rule and route the IVA ledger through it.
 
-- Registry: each 2022 to 2026 variant of `suministros_home_office_luz`, `_agua`, `_gas`, `_internet`, `telefonia_fija` and `telefonia_movil` in `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml` declares `iva_mixed_use_share` (`degree_of_use` or `not_deductible`) and `iva_citation.N.*` entries. The `degree_of_use` variants cite LIVA art. 95.Tres.1.ª and 95.Cuatro through two new legal entries, `ley-37-1992:art-95-3` and `ley-37-1992:art-95-4`, anchored to the whole bundled article; the existing `ley-37-1992:art-95` excerpt holds only apartados Uno and Dos. The `telefonia_movil` variants cite `ley-37-1992:art-95` (Uno and Dos.2.º). The 2023, 2024 and 2025 variants also cite their own Manual práctico IVA edition, verified against the bundled text.
-- Domain: `IvaMixedUseShare` and `IvaMixedUseRule` in `src/cadrumo/domain/categories/`, held as `ProportionalityRule.iva_mixed_use`. The citation vocabulary gains `ley_iva` (statutory). `CategoryCitation` gains `source_ref` for a verified annual-edition citation.
-- IVA ledger: a MIXED received row whose category declares `not_deductible` is excluded under its own issue reason. A `degree_of_use` category keeps the row share. The new issue reason is a review advisory, not a readiness gap, and is not repeated as a source diagnostic.
+- Registry: each 2022 to 2026 variant of every category in `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml` declares `iva_mixed_use_share` and `iva_citation.N.*` entries. The treatments are:
+  - `degree_of_use`: the home-office suministros, `telefonia_fija`, `arrendamiento_local`, `arrendamiento_vivienda_afecto`, `suministros_local_afecto` and `reparaciones_conservacion`. They cite LIVA art. 95.Tres (the lease of a bien de inversión), 95.Tres.1.ª, and 95.Cuatro or 95.Cuatro.4.º, through the legal entries `ley-37-1992:art-95-3` and `ley-37-1992:art-95-4`.
+  - `bien_inversion_degree_of_use`: `hardware_amortizable` and `mobiliario_amortizable`. A MIXED row deducts its share only when its EUR taxable base reaches the bien de inversión value of the governed fact `iva-bien-inversion-escaso-valor-threshold` (LIVA art. 108.Dos.5.º); below it the row deducts nothing. They cite 95.Tres.1.ª and `ley-37-1992:art-108`.
+  - `vehicle_presumption` with `iva_presumed_share = 0.50`: `vehiculo_combustible`, `vehiculo_mantenimiento`, `vehiculo_peaje` and `vehiculo_parking`. They cite 95.Tres.2.ª, 95.Cuatro and 95.Tres.4.ª.
+  - `not_deductible`: every other category. They cite `ley-37-1992:art-95` (Uno and Dos.2.º). For the exempt and non-subject categories the treatment is moot, since their rows carry no cuota.
+  - The `ley-37-1992:art-95` corpus excerpt holds the whole article. The suministros and fija variants of 2023, 2024 and 2025 also cite their own Manual práctico IVA edition, verified against the bundled text.
+- Domain: `IvaMixedUseShare` and `IvaMixedUseRule` in `src/cadrumo/domain/categories/`, held as `ProportionalityRule.iva_mixed_use`. `IvaMixedUseRule.presumed_share` is required by `vehicle_presumption` and refused by every other treatment. The citation vocabulary gains `ley_iva` (statutory). `CategoryCitation` gains `source_ref` for a verified annual-edition citation.
+- IVA ledger: `iva_category_deductible_proportion` in `src/cadrumo/application/aggregation/iva_ledger.py` returns the share a received row deducts. A MIXED received row whose category grants nothing for its use is excluded under its own issue reason. A `degree_of_use` category keeps the row share. The new issue reason is a review advisory, not a readiness gap, and is not repeated as a source diagnostic.
 - Ledger add: the censo default stamps raw afectación.
 - Usage-ratio reference: a row that carries `usage_ratio_id` and `business_pct` is checked by carrying the row share through the category's IRPF rule (`effective_usage_ratio`) and comparing the result with the stored profile ratio. The row holds the degree of use; the profile holds the IRPF share.
 - The Manual de Renta 2025 citation on the five home-office suministros categories becomes verified against the bundled Parte 1.
@@ -70,5 +76,7 @@ Doctrine citations: TEAC and DGT texts are not bundled, and their origin (hacien
 
 - MIXED suministros rows deduct IVA at the degree of use. 40 m2 of 100 m2 with cuota 21.00 deducts 8.40, not 2.52. Renta still deducts 12 per cent of the base.
 - MIXED mobile rows no longer enter the IVA deduction. They surface as an advisory issue, like a personal row.
+- MIXED rows of the categories that grant nothing for simultaneous use, and MIXED equipment rows below the bien de inversión value, are excluded the same way.
+- Vehicle running-cost rows deduct 50 per cent of their cuota, BUSINESS rows included, until an operator statement of a listed use or a proved degree of use can be recorded.
 - Rows already stamped with `0.30 x afectación` keep that stored share until the operator restates or reclassifies them. This is pre-release data; no migration is provided.
 - Reconsider if the Supreme Court fixes merits doctrine on art. 95.Cuatro, if a source fixes a method other than floor area, or if a source addresses telefonía fija.

@@ -423,21 +423,21 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
     assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("780.00")
 
 
-def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
+def test_renta_filing_aggregation_loads_usage_ratios_for_dwelling_lease_expenses(
     secure_objects: SecureObjectRepository,
 ) -> None:
     """The live source resolver must consume persisted proportionality ratios."""
-    phone = _transaction(
-        "row-phone",
+    lease = _transaction(
+        "row-lease",
         amount=Decimal("121.00"),
-        category=SpendingCategory.from_registry("telefonia_movil"),
+        category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
     )
     TransactionCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(
-        TransactionCatalogue.from_transactions((phone,)),
+        TransactionCatalogue.from_transactions((lease,)),
     )
     InvoiceCatalogueRepository(bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects).save(InvoiceCatalogue())
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.50")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.50")}),
         bucket_id=SECURE_OBJECTS_BUCKET_ID,
         objects=secure_objects,
     )
@@ -468,8 +468,8 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
     )
 
     assert resolution.diagnostics == ()
-    assert resolution.binding_values["renta-ledger-expense-0199-deductible"] == Decimal("60.50")
-    assert resolution.source_transaction_ids == (phone.transaction_id,)
+    assert resolution.binding_values["renta-ledger-expense-0192-deductible"] == Decimal("60.50")
+    assert resolution.source_transaction_ids == (lease.transaction_id,)
 
 
 def test_m100_expense_aggregation_uses_taxable_base_for_iva_bearing_business_expenses(

@@ -63,7 +63,7 @@ _TEXT_FIELDS: Final = (
     "notes",
 )
 """Correctable text fields, in the order the form shows them."""
-_FIELD_LABEL_KEYS: Final = {
+_FIELD_LABEL_LOCALE_KEYS: Final = {
     "counterparty_name": "tui.ledger.invoice.field.counterparty_name",
     "counterparty_country": "tui.ledger.invoice.field.country_code",
     "series": "tui.ledger.invoice.field.series",
@@ -179,7 +179,7 @@ def _decimal_or_none(name: str, text: str) -> Decimal | None:
         return None
     parsed = try_parse_canonical_decimal(text, signed=False)
     if parsed is None:
-        raise ValueError(tr("tui.ledger.records.invalid_decimal", field=tr(_FIELD_LABEL_KEYS[name])))
+        raise ValueError(tr("tui.ledger.records.invalid_decimal", field=tr(_FIELD_LABEL_LOCALE_KEYS[name])))
     return parsed
 
 
@@ -395,10 +395,13 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
                 "tui.ledger.records.correct_heading",
             )
             for name in _TEXT_FIELDS:
-                yield localized(Static(tr(_FIELD_LABEL_KEYS[name]), markup=False), _FIELD_LABEL_KEYS[name])
+                yield localized(
+                    Static(tr(_FIELD_LABEL_LOCALE_KEYS[name]), markup=False), _FIELD_LABEL_LOCALE_KEYS[name]
+                )
                 yield Input(id=f"ledger-invoice-{name.replace('_', '-')}", disabled=True)
             yield localized(
-                Static(tr(_FIELD_LABEL_KEYS["payment_status"]), markup=False), _FIELD_LABEL_KEYS["payment_status"]
+                Static(tr(_FIELD_LABEL_LOCALE_KEYS["payment_status"]), markup=False),
+                _FIELD_LABEL_LOCALE_KEYS["payment_status"],
             )
             yield Select[str](
                 tuple((_payment_label(status), status.value) for status in PaymentStatus),
@@ -407,7 +410,8 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
                 disabled=True,
             )
             yield localized(
-                Static(tr(_FIELD_LABEL_KEYS["operation_type"]), markup=False), _FIELD_LABEL_KEYS["operation_type"]
+                Static(tr(_FIELD_LABEL_LOCALE_KEYS["operation_type"]), markup=False),
+                _FIELD_LABEL_LOCALE_KEYS["operation_type"],
             )
             yield Select[str](
                 tuple((key.value, key.value) for key in IntracomOperationType),
@@ -501,7 +505,7 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
         lines = [
             tr(
                 "tui.ledger.records.change",
-                field=tr(_FIELD_LABEL_KEYS[name]),
+                field=tr(_FIELD_LABEL_LOCALE_KEYS[name]),
                 before=_shown(getattr(baseline, name)) or "-",
                 after=_shown(value) or "-",
             )

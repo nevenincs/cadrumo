@@ -9,6 +9,7 @@ from cadrumo.application.operator_surface.contract import MOUNTED_COMMAND_FAMILI
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_typer_app
+from cadrumo.tests.log_records import delivered_records
 
 from .._ast_scanner import scan_namespace_markers, scan_source_tree
 from .._casilla_keys import is_delta_keyed_leaf
@@ -925,7 +926,7 @@ def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, cap
     assert "wizard.errors.*" in scan_namespace_markers(tmp_path)
     assert any(
         "locale ast scan: parse failure" in record.getMessage() and "broken_surface.py" in record.getMessage()
-        for record in caplog.records
+        for record in delivered_records(caplog)
     )
 
 

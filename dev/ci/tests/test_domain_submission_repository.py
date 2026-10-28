@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimePro
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.period import Period
 from cadrumo.domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus
+from cadrumo.tests.log_records import delivered_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -163,8 +164,8 @@ class TestListAndIter:
         caplog.set_level("WARNING")
 
         assert tuple(repo.iter_submissions()) == (healthy,)
-        assert "skipping unreadable submission" in caplog.text
-        assert "más reciente de lo que admite esta aplicación" in caplog.text
+        assert "skipping unreadable submission" in delivered_text(caplog)
+        assert "más reciente de lo que admite esta aplicación" in delivered_text(caplog)
 
 
 class TestDelete:

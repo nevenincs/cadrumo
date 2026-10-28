@@ -12,6 +12,7 @@ import pytest
 from ......core.classification.policies import SensitivityClass
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.secure_object_write import SecureObjectWrite
+from ......tests.log_records import delivered_records
 from ...errors import (
     ClassificationError,
     DecryptionError,
@@ -647,8 +648,8 @@ def test_list_records_fails_closed_when_any_row_is_unreadable(
 
             assert raised.value.namespace == namespace
             assert raised.value.row_id >= 1
-            assert any("refusing default list" in rec.message for rec in caplog.records), (
-                f"expected debug diagnostics for fail-closed listing; got {[r.message for r in caplog.records]}"
+            assert any("refusing default list" in rec.message for rec in delivered_records(caplog)), (
+                f"expected debug diagnostics for fail-closed listing; got {[r.message for r in delivered_records(caplog)]}"
             )
             explicit = list(
                 repo.iter_records_with_failures(

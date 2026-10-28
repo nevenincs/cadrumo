@@ -232,7 +232,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "23c108fb14f38cad0911001a1ccb939ec101f3ca226f7e46e5aba6afd8a825ef"
+          "value": "345b33cc6e2f78ec1725545b9d2887714b3a775363c56ea7c7aee516f1639972"
         }
       ],
       "envelope": {
@@ -257,7 +257,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "23c108fb14f38cad0911001a1ccb939ec101f3ca226f7e46e5aba6afd8a825ef",
+          "calculation_revision_id": "345b33cc6e2f78ec1725545b9d2887714b3a775363c56ea7c7aee516f1639972",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -393,7 +393,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 23c108fb14f38cad0911001a1ccb939ec101f3ca226f7e46e5aba6afd8a825ef (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 345b33cc6e2f78ec1725545b9d2887714b3a775363c56ea7c7aee516f1639972 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_renta_income_aggregation",
@@ -454,7 +454,7 @@
         "modelo",
         "work",
         "verify",
-        "23c108fb14f38cad0911001a1ccb939ec101f3ca226f7e46e5aba6afd8a825ef"
+        "345b33cc6e2f78ec1725545b9d2887714b3a775363c56ea7c7aee516f1639972"
       ],
       "captures": [],
       "envelope": {
@@ -502,7 +502,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "23c108fb14f38cad0911001a1ccb939ec101f3ca226f7e46e5aba6afd8a825ef",
+          "calculation_revision_id": "345b33cc6e2f78ec1725545b9d2887714b3a775363c56ea7c7aee516f1639972",
           "completeness_status": "complete",
           "findings": [
             {
@@ -548,7 +548,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "bc13789f4ed74d6ddcf36349942bd1df6f1bd1e6dc171e68e966d5bbe57b19eb",
+          "verification_report_id": "90ac8c5960c5b63da9619892380cfcbe6a81e9894121f6aad011391957a299b5",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

@@ -11,6 +11,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionTargetDefinition
+from .....tests.log_records import delivered_records
 from ...pdf.source_provenance import source_pdf_reference_path
 from ..errors import BorradorParseError
 from ..parser import parse_borrador
@@ -255,7 +256,7 @@ class TestObservedValues:
         with caplog.at_level(logging.DEBUG, logger="cadrumo.adapters.inbound.borrador.parser"):
             parse_borrador(sensitive_pdf)
 
-        rendered_logs = "\n".join(record.getMessage() for record in caplog.records)
+        rendered_logs = "\n".join(record.getMessage() for record in delivered_records(caplog))
         assert "12345678Z-renta-borrador.pdf" not in rendered_logs
         assert "source=<input-pdf>" in rendered_logs
 

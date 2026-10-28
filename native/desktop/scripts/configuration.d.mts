@@ -10,6 +10,9 @@ export function server(): {
   previewPort: number;
   docsPort: number;
   cataloguePort: number;
+  scenariosPort: number;
+  scenariosDocsPort: number;
+  hotPort: number;
 };
 export function profile(configuration?: string): {
   directory: string;

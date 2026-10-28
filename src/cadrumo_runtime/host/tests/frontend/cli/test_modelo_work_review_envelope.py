@@ -22,6 +22,7 @@ from cadrumo.entrypoints.cli.tests.review_envelope_support import (
     ROW_FINGERPRINT,
     persist_blocked_review,
 )
+from cadrumo.tests.log_records import delivered_text
 
 from .portable_human_cli_runtime import portable_human_cli_runtime
 
@@ -55,7 +56,7 @@ def test_runtime_review_command_redacts_identity_in_success_and_mutated_record_r
         command_surface = f"{command.stdout} {command.stderr} {command.exception!r}"
         assert RAW_ROW_IDENTITY not in command_surface
         assert ROW_FINGERPRINT not in command.stdout
-        assert RAW_ROW_IDENTITY not in caplog.text
+        assert RAW_ROW_IDENTITY not in delivered_text(caplog)
 
         mutate_encrypted_secure_object_json(
             objects._engine,
@@ -70,7 +71,8 @@ def test_runtime_review_command_redacts_identity_in_success_and_mutated_record_r
             ["--format", "json", "app", "modelo", "work", "review", review.work_unit_id],
         )
         assert failed.exit_code != 0
+        assert "operation failed definition=modelo.work.review" in delivered_text(caplog)
         formatted = "" if failed.exception is None else "".join(traceback.format_exception(failed.exception))
-        failure_surface = f"{failed.stdout} {failed.stderr} {failed.exception!r} {formatted} {caplog.text}"
+        failure_surface = f"{failed.stdout} {failed.stderr} {failed.exception!r} {formatted} {delivered_text(caplog)}"
         assert RAW_ROW_IDENTITY not in failure_surface
         assert ROW_FINGERPRINT not in failure_surface

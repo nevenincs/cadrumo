@@ -16,6 +16,7 @@ from .....core.period import Period
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.schema import ModeloRevision
 from .....domain.contribuyente.inventory.records import InventoryLedgerDocument
+from .....tests.log_records import delivered_text
 from ...storage.secure_object_namespaces import PROFILE_INVENTORY_LEDGER_NAMESPACE
 from ...storage.sql.engine import get_engine
 from ...storage.sql.orm import SecureObjectRow
@@ -89,6 +90,8 @@ def test_real_encrypted_multi_activity_success_absence_conflict_and_corruption(
     assert complete.diagnostics[0].reason == "source_issue"
     assert corrupted.row_binding_values == {}
     assert corrupted.diagnostics[0].reason == "storage_degraded"
-    rendered = f"{corrupted!r} {corrupted.model_dump()!r} {caplog.text}"
+    logged = delivered_text(caplog)
+    assert "inventory ledger load failed" in logged
+    rendered = f"{corrupted!r} {corrupted.model_dump()!r} {logged}"
     for canary in ("alpha", "zeta", "250.00", "reviewer-secret", "inventory-secret-command", "a" * 64):
         assert canary not in rendered

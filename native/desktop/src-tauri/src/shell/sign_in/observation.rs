@@ -217,6 +217,7 @@ mod tests {
             state: Presence::Present,
             active_profile: Some("A".into()),
             runtime_available: true,
+            reconnecting: None,
             refusal: None,
         };
         observer.publish(Ok(status.clone()));

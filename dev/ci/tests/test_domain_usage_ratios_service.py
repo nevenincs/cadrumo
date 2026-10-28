@@ -128,7 +128,7 @@ def test_save_round_trips(tmp_path: Path, operation: PinnedAuthorityOperation) -
         operation,
         {
             _category("suministros_home_office_luz"): Decimal("0.21"),
-            _category("telefonia_movil"): Decimal("0.6"),
+            _category("arrendamiento_vivienda_afecto"): Decimal("0.6"),
         },
     )
     save_usage_ratios(profile, bucket_id=_BUCKET_A_ID)
@@ -137,7 +137,7 @@ def test_save_round_trips(tmp_path: Path, operation: PinnedAuthorityOperation) -
 
 def test_profiles_are_scoped_by_bucket(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     first = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.21")})
-    second = _profile(operation, {_category("telefonia_movil"): Decimal("0.6")})
+    second = _profile(operation, {_category("arrendamiento_vivienda_afecto"): Decimal("0.6")})
     save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_B_ID):
@@ -170,7 +170,7 @@ def test_save_replaces_previous_payload(tmp_path: Path, operation: PinnedAuthori
     """Successive saves replace the payload without leaving ``.tmp`` debris."""
     tmp_path / "ratios.json"
     first = _profile(operation, {_category("suministros_home_office_luz"): Decimal("0.21")})
-    second = first.with_ratio(_category("telefonia_movil"), Decimal("0.6"))
+    second = first.with_ratio(_category("arrendamiento_vivienda_afecto"), Decimal("0.6"))
     save_usage_ratios(first, bucket_id=_BUCKET_A_ID)
     save_usage_ratios(second, bucket_id=_BUCKET_A_ID)
     assert load_usage_ratios(bucket_id=_BUCKET_A_ID, operation=operation) == second

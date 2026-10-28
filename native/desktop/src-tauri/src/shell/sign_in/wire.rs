@@ -1,4 +1,5 @@
 use super::{failure, process::Output};
+use crate::agent::recovery::Reconnecting;
 use cadrumo_application::error::application::{ApplicationError, ErrorCode, Result};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -38,6 +39,10 @@ pub struct SignInStatus {
     #[serde(rename = "runtimeAvailable")]
     pub runtime_available: bool,
     pub refusal: Option<Refusal>,
+    /// The window's own session waits for a fresh proof after the profile's
+    /// worker was lost. Absent while it does not.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reconnecting: Option<Reconnecting>,
 }
 impl SignInStatus {
     pub fn runtime_ready(&self) -> bool {
@@ -54,6 +59,7 @@ impl SignInStatus {
             active_profile: None,
             runtime_available: false,
             refusal: None,
+            reconnecting: None,
         }
     }
 }
@@ -317,6 +323,7 @@ pub fn login(outcome: Outcome) -> Result<SignInResult> {
                         state: Presence::Present,
                         active_profile: Some(result.active_profile),
                         runtime_available: true,
+                        reconnecting: None,
                         refusal: None,
                     },
                 })

@@ -768,15 +768,15 @@ def test_home_office_gasto_without_a_ratio_is_surfaced_not_deducted_in_full(
     [BusinessClassification.BUSINESS, BusinessClassification.MIXED],
     ids=["business", "mixed"],
 )
-def test_operator_usage_ratio_on_a_phone_gasto_applies_once(
+def test_operator_usage_ratio_on_a_dwelling_lease_gasto_applies_once(
     classification: BusinessClassification,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A stored 25 per cent mobile-phone ratio deducts 25.00 of a 100.00 base, not 100.00 or 6.25."""
-    category = SpendingCategory.from_registry("telefonia_movil")
+    """A stored 25 per cent dwelling-lease ratio deducts 25.00 of a 100.00 base, not 100.00 or 6.25."""
+    category = SpendingCategory.from_registry("arrendamiento_vivienda_afecto")
     mixed = classification is BusinessClassification.MIXED
     row = _gasto_transaction(
-        "phone",
+        "lease",
         value_date=date(2025, 2, 1),
         taxable_base=_DWELLING_BASE,
         category_id=category.value,
@@ -789,7 +789,7 @@ def test_operator_usage_ratio_on_a_phone_gasto_applies_once(
 
     assert result.issues == ()
     deducted = result.observations[0].deductible_amount
-    assert deducted == Decimal("25.00"), f"{classification.value} phone gasto deducted {deducted}, expected 25.00"
+    assert deducted == Decimal("25.00"), f"{classification.value} lease gasto deducted {deducted}, expected 25.00"
 
 
 def test_quarterly_and_annual_deduct_the_same_home_office_rows(operation: PinnedAuthorityOperation) -> None:

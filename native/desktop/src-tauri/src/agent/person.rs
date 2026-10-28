@@ -4,12 +4,14 @@ use cadrumo_application::error::application::{
     ApplicationError, ChildRefusal, ErrorCode, Operation, Result,
 };
 use cadrumo_application::person_operations::{PROJECTION_DOCUMENT_MAX_BYTES, wipe};
+use cadrumo_application::{runtime_client::Refusal, view_stream::attach::ViewAttachGrant};
 use serde_json::{Value, json};
 #[cfg(test)]
 use std::time::Duration;
 use std::{
     io::Write,
     sync::{Arc, Mutex},
+    time::Instant,
 };
 
 #[cfg(windows)]
@@ -121,6 +123,23 @@ trait Bridge: Send {
     fn fence(&mut self);
     /// Signs the person out of the profile everywhere through this session.
     fn sign_out(&mut self) -> Result<SignedOut>;
+    /// A single-use token that binds a new view connection to the running Sede
+    /// view `operation_id`, which this session submitted. Only a session on the
+    /// window's own connection can ask; a scripted holder cannot.
+    fn view_attach(
+        &mut self,
+        _operation_id: &str,
+        _deadline: Instant,
+    ) -> std::result::Result<ViewAttachGrant, Refusal> {
+        Err(Refusal::Unavailable)
+    }
+    /// Brings the session back by the profile's `password` on its own
+    /// connection, while the runtime keeps it suspended. A scripted holder
+    /// has no connection of its own to rebind on.
+    #[cfg(windows)]
+    fn rebind_password(&mut self, _password: &[u8]) -> std::result::Result<(), Refusal> {
+        Err(Refusal::Unavailable)
+    }
     #[cfg(test)]
     fn scripted(&self) -> Option<&scripted::ScriptedHold> {
         None
@@ -149,10 +168,17 @@ impl Person {
         pushed: std::sync::mpsc::Receiver<cadrumo_application::runtime_client::Pushed>,
         admitted: cadrumo_application::runtime_client::Admitted,
         persisted: Option<bool>,
+        recovery: super::recovery::rebind::Recovery,
     ) -> Result<Self> {
         let events = EventSlot::default();
-        let (session, identity) =
-            native::NativeSession::start(connection, pushed, admitted, persisted, events.clone())?;
+        let (session, identity) = native::NativeSession::start(
+            connection,
+            pushed,
+            admitted,
+            persisted,
+            events.clone(),
+            recovery,
+        )?;
         let profile = identity["profile_id"]
             .as_str()
             .unwrap_or_default()
@@ -274,6 +300,32 @@ impl Person {
     /// Signs the person out of the profile everywhere through this session.
     pub fn sign_out(&mut self) -> Result<SignedOut> {
         self.bridge.sign_out()
+    }
+
+    /// Asks the runtime, on this session's connection, for the single-use token
+    /// that attaches a view connection to the running Sede view `operation_id`.
+    /// A refusal, such as a view whose browser is not open yet, leaves the
+    /// session held: it is not a lost exchange.
+    pub fn view_attach(
+        &mut self,
+        operation_id: &str,
+        deadline: Instant,
+    ) -> std::result::Result<ViewAttachGrant, Refusal> {
+        if self.failure.borrow().is_some() {
+            return Err(Refusal::ConnectionClosed);
+        }
+        self.bridge.view_attach(operation_id, deadline)
+    }
+
+    /// Brings the session back by the profile's `password`, on the connection
+    /// that holds it, while the runtime keeps it suspended. A refusal leaves
+    /// the session held and waiting, so the password can be typed again.
+    #[cfg(windows)]
+    pub fn rebind_password(&mut self, password: &[u8]) -> std::result::Result<(), Refusal> {
+        if self.failure.borrow().is_some() {
+            return Err(Refusal::ConnectionClosed);
+        }
+        self.bridge.rebind_password(password)
     }
 
     pub fn exchange(&mut self, mut document: Value) -> Result<Value> {

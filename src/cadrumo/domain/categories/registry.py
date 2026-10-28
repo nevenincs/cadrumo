@@ -192,6 +192,8 @@ def _profile_from_authority_fact(
         ),
         "statutory_cap_variants": variants,
         "statutory_cap_schedule": schedule,
+        "unit_value_limit_eur": values.get("unit_value_limit_eur"),
+        "requires_ownership_share": _declared_flag(values, "requires_ownership_share", category=category),
     }
     try:
         proportionality = ProportionalityRule.model_validate(rule)
@@ -229,11 +231,28 @@ def _iva_mixed_use_rule(
             )
         return None
     try:
-        return IvaMixedUseRule(share=IvaMixedUseShare(str(share)), citations=citations)
+        return IvaMixedUseRule.model_validate(
+            {
+                "share": IvaMixedUseShare(str(share)),
+                "presumed_share": values.get("iva_presumed_share"),
+                "citations": citations,
+            }
+        )
     except (ValueError, ValidationError) as exc:
         raise CategoryValidationError(
             f"category authority carries an invalid IVA treatment for {category}: {exc}"
         ) from exc
+
+
+def _declared_flag(values: Mapping[str, object], key: str, *, category: str) -> bool:
+    """Read an optional boolean entry; an absent entry declares ``False``."""
+    raw = values.get(key)
+    if raw is None:
+        return False
+    declared = str(raw).strip().lower()
+    if declared not in {"true", "false"}:
+        raise CategoryValidationError(f"category authority for {category} declares a non-boolean {key}={raw!r}")
+    return declared == "true"
 
 
 def _category_citations(

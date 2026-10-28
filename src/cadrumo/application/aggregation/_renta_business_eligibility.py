@@ -22,7 +22,7 @@ of it, and :func:`relies_on_activity_marker` names the state the annual
 pipeline reports specifically.
 
 It also owns the one rule for WHO apportions a row once its category is known.
-A usage-ratio category (home-office suministros, mobile phone, and the like) is
+A usage-ratio category (home-office suministros and the dwelling's own costs) is
 apportioned by its category rule: the ledger usage-ratio store supplies the
 operator's ratio and the registry rule its statutory multiplier, and the
 deductibility evaluator applies the product once. A MIXED row's stored
@@ -41,7 +41,12 @@ from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
 from .business_proportion import business_proportion
 
-__all__ = ["relies_on_activity_marker", "renta_expense_business_proportion", "row_scaling_proportion"]
+__all__ = [
+    "exclusive_business_use",
+    "relies_on_activity_marker",
+    "renta_expense_business_proportion",
+    "row_scaling_proportion",
+]
 
 _FULL_BUSINESS_PROPORTION = Decimal("1")
 
@@ -126,3 +131,23 @@ def row_scaling_proportion(
     if transaction.business_classification is BusinessClassification.MIXED and rule.kind.is_usage_ratio:
         return _FULL_BUSINESS_PROPORTION
     return proportion
+
+
+def exclusive_business_use(transaction: Transaction) -> bool:
+    """Return whether an eligible row states that its element serves only the activity.
+
+    The row's classification is the operator's statement of use. A MIXED row
+    states shared use with private needs; a BUSINESS row, or a row the
+    actividad marker admits without a split, states use for the activity alone.
+    A category whose rule requires exclusive use (a vehicle, a mobile line)
+    reads this, because an indivisible element admits no partial affectation
+    (RIRPF art. 22.3).
+
+    Args:
+        transaction: A row that already passed
+            :func:`renta_expense_business_proportion`.
+
+    Returns:
+        ``False`` for a MIXED row; ``True`` otherwise.
+    """
+    return transaction.business_classification is not BusinessClassification.MIXED

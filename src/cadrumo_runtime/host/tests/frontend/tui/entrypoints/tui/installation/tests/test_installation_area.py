@@ -29,6 +29,7 @@ from cadrumo.entrypoints.tui.installation.door import InstallationClientOpener
 from cadrumo.entrypoints.tui.installation.texts import act_label, yes_no
 from cadrumo.entrypoints.tui.tests.frame import screen_text
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
@@ -77,7 +78,7 @@ def _shown(app: App[None]) -> str:
 
 
 def _logged(caplog: pytest.LogCaptureFixture) -> str:
-    return caplog.text + "".join(repr(record.__dict__) for record in caplog.records)
+    return delivered_text(caplog) + "".join(repr(record.__dict__) for record in delivered_records(caplog))
 
 
 async def _open(pilot: Pilot[None], area: InstallationScreen, act: InstallationAct) -> InstallationActScreen:
@@ -433,7 +434,9 @@ async def test_a_fault_and_an_unserved_act_are_shown_with_the_runtime_code_and_n
             assert _status(report).tone == "error"
             assert _status(report).message == tr("tui.installation.status.unreachable", code="operation_unavailable")
     assert changed == [True]
-    assert FAULT_TEXT not in _logged(caplog)
+    logged = _logged(caplog)
+    assert "installation act failed" in logged
+    assert FAULT_TEXT not in logged
 
 
 class _WaitRunsOut(InstallationClient):

@@ -24,6 +24,7 @@ from cadrumo.application.user_profile.custody_ports import (
 )
 from cadrumo.application.user_profile.recovery_custody import profile_recovery_status
 from cadrumo.core.storage_taxonomy import StorageArea
+from cadrumo.tests.log_records import delivered_records, delivered_text
 from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_LOG_TAIL_MAX_LINES,
@@ -139,7 +140,9 @@ def test_acts_settle_over_the_native_transport_and_a_large_reply_arrives_whole(
     assert refused.detail.context_mapping()["entry_count"] == "3"
     assert isinstance(failed, InstallationFailed)
     assert FAULT_TEXT not in failed.model_dump_json()
-    assert FAULT_TEXT not in caplog.text
+    logged = delivered_text(caplog)
+    assert "installation act failed" in logged
+    assert FAULT_TEXT not in logged
     assert unavailable.value.reason == "operation_unavailable"
     assert isinstance(again, StorageCheckReply)
 
@@ -248,8 +251,8 @@ def test_recovery_enrolment_takes_the_passphrase_in_and_hands_the_code_out_and_b
     assert not any(passphrase) and not any(document)
     for private in (PROFILE_INPUT, held[0]):
         assert private not in reply.model_dump_json()
-        assert private not in caplog.text
-        assert all(private not in repr(record.__dict__) for record in caplog.records)
+        assert private not in delivered_text(caplog)
+        assert all(private not in repr(record.__dict__) for record in delivered_records(caplog))
 
 
 @pytest.mark.parametrize("case", ["wrong-read-back", "declined", "wrong-passphrase"])
@@ -293,4 +296,4 @@ def test_recovery_enrolment_installs_nothing_unless_the_passphrase_and_the_read_
         assert "recovery_possession_mismatch" in settled
     for private in (supplied, *delivered_codes, _UNHELD_CODE):
         assert private not in settled
-        assert private not in caplog.text
+        assert private not in delivered_text(caplog)

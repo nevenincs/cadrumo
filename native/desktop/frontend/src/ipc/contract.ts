@@ -1227,8 +1227,14 @@ export type SedeViewMessage =
       outcome: SedeViewOutcome | null;
     };
 
-/** What the channel carries: JSON messages, and the bytes an image announces. */
-export type SedeViewDelivery = SedeViewMessage | ArrayBuffer;
+/** A raw frame the host keeps for the shell document, named on its channel.
+ * `shell_channel_frame` hands over its bytes once. */
+export type ChannelRawFrame = { raw_frame: string };
+
+/** What the channel carries: JSON messages, and after each image the name of
+ * the frame holding its bytes. Where the host could not keep the frame, the
+ * bytes themselves arrive. */
+export type SedeViewDelivery = SedeViewMessage | ChannelRawFrame | ArrayBuffer;
 
 /** One input event of the person, in CSS pixels of the view's page. The
  * modifier mask is Alt 1, Control 2, Meta 4, Shift 8. */
@@ -1778,6 +1784,13 @@ export interface HostCommands {
   open_external: {
     args: Authorized<{ url: string }>;
     result: null;
+  };
+  /** The bytes of the raw frame a channel message named, as binary, handed
+   * over once to the document they were sent to. An unknown, taken or dropped
+   * frame is refused with `invalid_arguments`. */
+  shell_channel_frame: {
+    args: Authorized<{ frame: string }>;
+    result: ArrayBuffer;
   };
   /**
    * Refuses with `output_limit` when the clipboard text exceeds 1 MiB in

@@ -106,6 +106,7 @@ from cadrumo.application.modelo.tests.filed_observation_fixture import persist_f
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.logging import flush_logging
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -125,6 +126,7 @@ from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransa
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.tests.log_records import delivered_records
 
 from ..perf_measurement import wall_advisory_message
 
@@ -699,8 +701,11 @@ def quarterly_iva_samples(
             # Real accumulator output, not a mock stand-in.
             assert isinstance(partitioned_result.observations, tuple)
     finally:
+        # Records reach the collector asynchronously; take it off only once they have.
+        flushed = flush_logging(timeout=30)
         logger.removeHandler(collector)
         logger.setLevel(previous_level)
+    assert flushed, "diagnostic dispatch did not drain before the partition records were read"
 
     return _QuarterlyIvaSamples(
         partitioned_wall=tuple(partitioned_wall),
@@ -830,6 +835,8 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     quarters = ("1T", "2T", "3T", "4T")
     wall_samples: list[float] = []
     cpu_samples: list[float] = []
+    # Records from the setup above arrive here, so the clear below drops them.
+    delivered_records(caplog)
     caplog.clear()
     per_quarter: list[tuple[str, float, float]] = []
     with caplog.at_level(logging.DEBUG, logger=_TRANSACTION_REPOSITORY_LOGGER):
@@ -868,7 +875,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
                     iva_compensation_history_repository=ports.iva_compensation_history_repository,
                 )
 
-    calculation_log_messages = tuple(record.getMessage() for record in caplog.records)
+    calculation_log_messages = tuple(record.getMessage() for record in delivered_records(caplog))
     full_catalogue_reads = tuple(
         message for message in calculation_log_messages if message.startswith("loaded transaction catalogue bucket_id=")
     )
@@ -889,7 +896,7 @@ def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     )
     cpu_worst = max(cpu_samples)
     wall_worst = max(wall_samples)
-    partition_messages = _partition_log_messages(caplog.records)
+    partition_messages = _partition_log_messages(delivered_records(caplog))
     partition_read_count = len(partition_messages)
     partition_in_window_rows = _partition_in_window_rows(partition_messages)
     assert partition_read_count >= len(cpu_samples)
