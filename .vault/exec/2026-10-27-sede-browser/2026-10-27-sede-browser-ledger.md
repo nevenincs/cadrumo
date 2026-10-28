@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:46e62882bd2d4ba14a5abed3a00dda692870989cdd3add2a9403f9db993f712c'
+body_hash: 'sha256:048fbed9407c511ce9cb4b6e8576ced5d3347f6951e1947c3b577caf4d2d7f1e'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -283,6 +283,37 @@ related:
 - `S11` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/sede-browser.spec.ts tests/scenarios/navigation-register.spec.ts tests/scenarios/palette.spec.ts` -> `pass`
 - `S11` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/accessibility.spec.ts tests/scenarios/scenarios.spec.ts -g rail-and-browser-subset` -> `pass`
 - `S11` `by:` `vaultspec-standard-executor`
+- `S16` `M` `src/cadrumo_client/contracts/view_stream.py`
+- `S16` `M` `src/cadrumo_client/contracts/tests/view_stream_vector_source.py`
+- `S16` `M` `src/cadrumo_client/contracts/tests/view_stream_vectors.json`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/browser/sede_view.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_sede_view_page.py`
+- `S16` `M` `native/application/src/view_stream/documents.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/channel.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/token.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/sede_view.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/sede_view/tests.rs`
+- `S16` `M` `native/desktop/src-tauri/src/shell/mod.rs`
+- `S16` `M` `native/desktop/src-tauri/src/app.rs`
+- `S16` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S16` `M` `native/desktop/frontend/src/shell/tauriSedeView.ts`
+- `S16` `verify:` `just check-rust` -> `pass`
+- `S16` `verify:` `cmake --build --preset debug --target desktop-host-unit-test` -> `pass`
+- `S16` `verify:` `ctest --preset debug -R ^application.rust$` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest src/cadrumo_client src/cadrumo/adapters/outbound/aeat/browser/tests -k 'view or sede'` -> `pass`
+- `S16` `verify:` `python -m cadrumo_client.contracts.tests.view_stream_vector_source --check` -> `pass`
+- `S16` `verify:` `npm run check (native/desktop/frontend)` -> `pass`
+- `S16` `by:` `implementation-engineer-high`
+- `S13` `A` `src/cadrumo_runtime/host/tests/test_view_stream_integration.py`
+- `S13` `A` `src/cadrumo_runtime/host/tests/view_stream_host_support.py`
+- `S13` `A` `src/cadrumo_runtime/host/tests/view_stream_native_peer.py`
+- `S13` `A` `native/application/tests/view_stream.rs`
+- `S13` `M` `native/application/CMakeLists.txt`
+- `S13` `verify:` `uv run --no-sync pytest src/cadrumo_runtime/host/tests/test_view_stream_integration.py -m ''` -> `pass`
+- `S13` `verify:` `ctest --preset debug -R ^application.rust$` -> `pass`
+- `S13` `verify:` `ctest --preset debug -R ^application.(clippy|features.clippy)$` -> `pass`
+- `S13` `verify:` `just test-native-bundle Debug` -> `fail`
+- `S13` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -313,3 +344,4 @@ related:
 - `S10` `desktop_chrome.py` and the four common.yml catalogues also carry another session's uncommitted reconnecting hunks, so they are left uncommitted by pathspec rule; the browser strings declared by P04.S09 sit in the same uncommitted `desktop_chrome.py` hunk.
 - `S11` the spec reads the desktop.browser strings from the generated chrome catalogue, which holds them from the uncommitted locale files; the spec is correct only once those catalogues are committed
 - `S11` the fixture was extended for the spec: it records inputs and answers, counts images, sends a made-up title, and ends a made-up login when the person's input arrives
+- `S13` test-native-bundle Debug stopped in `user_docs_build:` documentation inputs under `docs/_sequences` changed during the build from another session's concurrent edits; application.fmt fails only on the uncommitted documents.rs edit of P03.S16
