@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import time
 from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from functools import lru_cache
 from typing import cast
@@ -201,23 +202,17 @@ def _observation(
     )
 
 
+@dataclass
 class _Controller:
     operation_id = _OPERATION_ID
+    observation: OperationObservationSuccessV1
+    result: ModeloWorkCreateProjection
+    after_result: Callable[[], None] | None = field(default=None, kw_only=True)
+    started: bool = field(default=False, init=False)
+    result_reads: list[tuple[type[object], int, bool]] = field(default_factory=list, init=False)
     # The client it was submitted through, as the real controller keeps it.
-    client: _Client
-
-    def __init__(
-        self,
-        observation: OperationObservationSuccessV1,
-        result: ModeloWorkCreateProjection,
-        *,
-        after_result: Callable[[], None] | None = None,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.after_result = after_result
-        self.started = False
-        self.result_reads: list[tuple[type[object], int, bool]] = []
+    client: _Client = field(default_factory=_Client, kw_only=True)
+    deadline: float | None = field(default=None, kw_only=True)
 
     async def start(self) -> str:
         self.started = True
