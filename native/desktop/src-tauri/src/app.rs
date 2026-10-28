@@ -229,16 +229,30 @@ pub fn run(
                 return;
             };
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                // The page asks before staged work is dropped; it answers by
-                // closing or keeping the window open.
-                if shell::window_controls::close_held(window) {
+                let view = window
+                    .try_state::<Arc<shell::sede_view::SedeViewHost>>()
+                    .map(|view| view.inner().clone());
+                // A close the hidden window continues was already decided.
+                if !view.as_ref().is_some_and(|view| view.window_closing()) {
+                    // The page asks before staged work is dropped; it answers
+                    // by closing or keeping the window open.
+                    if shell::window_controls::close_held(window) {
+                        api.prevent_close();
+                        return;
+                    }
+                    state
+                        .launch
+                        .diagnostics
+                        .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);
+                }
+                // An open view publishes the person's session before sign-in
+                // ends it; the window goes away meanwhile instead of freezing.
+                if let Some(view) = view
+                    && close_behind(&view, window, &state.launch.diagnostics)
+                {
                     api.prevent_close();
                     return;
                 }
-                state
-                    .launch
-                    .diagnostics
-                    .host_event(EventKind::WindowCloseRequested, HostStage::Shutdown);
                 if let Err(error) = close_clients_and_supervision(window.app_handle()) {
                     api.prevent_close();
                     state.launch.diagnostics.failure(error);
@@ -267,6 +281,35 @@ pub fn run(
         return Ok(1);
     }
     Ok(code)
+}
+
+/// Hides `window` and lets `view` publish behind it, closing the window again
+/// once the view has ended. Says whether the close waits for that. A launch
+/// meanwhile is not answered by the hidden window: it waits for the lock.
+fn close_behind<R: Runtime>(
+    view: &Arc<shell::sede_view::SedeViewHost>,
+    window: &tauri::Window<R>,
+    diagnostics: &Arc<Diagnostics>,
+) -> bool {
+    let hidden = window.clone();
+    let hiding = diagnostics.clone();
+    let closing = window.clone();
+    let continuing = diagnostics.clone();
+    let close = view.close_behind(
+        move || {
+            shell::single_instance::close();
+            if let Err(error) = hidden.hide() {
+                hiding.failure(webview_failure(error));
+            }
+        },
+        move || {
+            if let Err(error) = closing.close() {
+                continuing.failure(webview_failure(error));
+                closing.app_handle().exit(1);
+            }
+        },
+    );
+    close == shell::sede_view::WindowClose::Behind
 }
 
 /// End runtime clients before asking their owned supervisor to drain. Attempt

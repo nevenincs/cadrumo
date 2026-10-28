@@ -882,6 +882,103 @@ fn closing_the_window_stops_waiting_for_a_view_that_never_ends() {
 }
 
 #[test]
+fn closing_the_window_hides_it_at_once_and_ends_the_session_after_the_publication() {
+    let rig = rig();
+    rig.lane().publishing.store(true, Ordering::Release);
+    let events = rig.runtime.events.clone();
+    let hidden = events.clone();
+    let stopped = events.clone();
+    let (continued, closing) = std::sync::mpsc::channel();
+    let close = rig.host.close_behind(
+        move || lock(&hidden).push("hidden"),
+        // What the close does once it continues: sign-in ends the person's session.
+        move || {
+            lock(&stopped).push("session_stopped");
+            continued.send(()).unwrap();
+        },
+    );
+    assert_eq!(close, WindowClose::Behind);
+    assert_eq!(*lock(&events), ["hidden"], "hidden while still publishing");
+    assert!(rig.host.window_closing());
+    rig.wait_for_call("end_view");
+    // A close asked for again while the view publishes waits behind the first.
+    assert_eq!(
+        rig.host
+            .close_behind(|| panic!("hidden twice"), || panic!("continued twice")),
+        WindowClose::Behind
+    );
+    assert!(
+        closing.recv_timeout(Duration::from_millis(300)).is_err(),
+        "the session outlives the publication"
+    );
+    rig.lane().finish(ViewEnd::Closed);
+    closing.recv_timeout(Duration::from_secs(10)).unwrap();
+    assert_eq!(*lock(&events), ["hidden", "settled", "session_stopped"]);
+    assert_eq!(rig.window.last("ended").unwrap()["reason"], "closed");
+    assert!(
+        rig.runtime.cancelled().is_empty(),
+        "closing is not a cancellation"
+    );
+    // The close that continues then proceeds at once.
+    assert_eq!(
+        rig.host
+            .close_behind(|| panic!("hidden again"), || panic!("continued again")),
+        WindowClose::Now
+    );
+    let started = Instant::now();
+    rig.host.close();
+    assert!(started.elapsed() < Duration::from_secs(1));
+}
+
+#[test]
+fn a_hidden_window_continues_its_close_at_the_deadline_and_waits_no_longer() {
+    let rig = rig();
+    rig.lane().publishing.store(true, Ordering::Release);
+    let (continued, closing) = std::sync::mpsc::channel();
+    let started = Instant::now();
+    let close = rig.host.close_behind_within(
+        Duration::from_millis(300),
+        || {},
+        move || continued.send(()).unwrap(),
+    );
+    assert_eq!(close, WindowClose::Behind);
+    closing.recv_timeout(Duration::from_secs(10)).unwrap();
+    assert!(started.elapsed() >= Duration::from_millis(300));
+    assert!(
+        rig.window.last("ended").is_none(),
+        "the view is still publishing"
+    );
+    // The window's own close shares the deadline that already passed.
+    let again = Instant::now();
+    rig.host.close();
+    assert!(again.elapsed() < Duration::from_secs(1));
+    rig.lane().finish(ViewEnd::Closed);
+    rig.wait_for_message("ended");
+}
+
+#[test]
+fn a_window_without_an_open_view_closes_now_and_is_not_hidden() {
+    let (host, _) = host();
+    assert_eq!(
+        host.close_behind(|| panic!("hidden"), || panic!("continued")),
+        WindowClose::Now
+    );
+    assert!(!host.window_closing());
+    let rig = rig();
+    rig.host.close_view(rig.id).unwrap();
+    wait_until("the end", || {
+        lock(&rig.host.current)
+            .as_ref()
+            .is_none_or(|view| view.phase() == Phase::Ended)
+    });
+    assert_eq!(
+        rig.host
+            .close_behind(|| panic!("hidden"), || panic!("continued")),
+        WindowClose::Now
+    );
+}
+
+#[test]
 fn closing_the_window_cancels_a_view_whose_browser_is_not_open_yet() {
     let (host, _) = host();
     let runtime = FakeRuntime::new(u32::MAX);

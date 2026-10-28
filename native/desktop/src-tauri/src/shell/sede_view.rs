@@ -56,7 +56,7 @@ use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::{
-        Arc, Condvar, Mutex,
+        Arc, Condvar, Mutex, OnceLock,
         atomic::{AtomicBool, AtomicU32, Ordering},
     },
     thread,
@@ -1261,7 +1261,31 @@ pub struct SedeViewHost {
     current: Mutex<Option<Arc<View>>>,
     issued: AtomicU32,
     closed: AtomicBool,
+    /// When the window began closing. Every wait for the view ends by then,
+    /// however many times the close is asked for.
+    deadline: OnceLock<Instant>,
+    behind: Mutex<Behind>,
     opener: Box<dyn Opener>,
+}
+
+/// A window close that waits for the view off the window's thread.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum Behind {
+    Idle,
+    /// The window is hidden and the view is publishing.
+    Settling,
+    /// The view has ended, or the deadline passed.
+    Settled,
+}
+
+/// What the window does with a close it was asked for.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum WindowClose {
+    /// Nothing is left to wait for: the window closes now.
+    Now,
+    /// The view is publishing behind the hidden window, which stays until
+    /// the close continues.
+    Behind,
 }
 
 impl SedeViewHost {
@@ -1274,6 +1298,8 @@ impl SedeViewHost {
             current: Mutex::new(None),
             issued: AtomicU32::new(0),
             closed: AtomicBool::new(false),
+            deadline: OnceLock::new(),
+            behind: Mutex::new(Behind::Idle),
             opener,
         }
     }
@@ -1281,19 +1307,80 @@ impl SedeViewHost {
     /// Ends the view when the window closes: it publishes its session and
     /// settles. Returns once the view has ended, so the caller can then end
     /// the person's session, which a publication still in flight needs. The
-    /// wait is bounded by how long any submitted operation is followed.
+    /// wait is bounded by how long any submitted operation is followed,
+    /// counted from the first close, so a repeated close waits no longer.
     pub fn close(&self) {
         self.close_within(relay::SETTLE_LIMIT);
     }
 
     fn close_within(&self, limit: Duration) {
-        let deadline = Instant::now() + limit;
+        let deadline = *self.deadline.get_or_init(|| Instant::now() + limit);
         self.closed.store(true, Ordering::Release);
         let view = lock(&self.current).clone();
         if let Some(view) = view {
             view.request_close(true);
             view.wait_ended(deadline);
         }
+    }
+
+    /// Whether a close of the window has hidden it to wait for the view.
+    pub fn window_closing(&self) -> bool {
+        *lock(&self.behind) != Behind::Idle
+    }
+
+    /// Asks for the window's close without holding the window's thread. While
+    /// a view is open, `hide` runs at once and the view publishes and ends on
+    /// a thread of its own; `then` runs there afterwards, or once the close
+    /// deadline passed, to continue the close. Otherwise, or once that wait
+    /// is over, the window closes now, and [`Self::close`] returns at once.
+    pub fn close_behind(
+        self: &Arc<Self>,
+        hide: impl FnOnce(),
+        then: impl FnOnce() + Send + 'static,
+    ) -> WindowClose {
+        self.close_behind_within(relay::SETTLE_LIMIT, hide, then)
+    }
+
+    fn close_behind_within(
+        self: &Arc<Self>,
+        limit: Duration,
+        hide: impl FnOnce(),
+        then: impl FnOnce() + Send + 'static,
+    ) -> WindowClose {
+        {
+            let mut behind = lock(&self.behind);
+            match *behind {
+                Behind::Settling => return WindowClose::Behind,
+                Behind::Settled => return WindowClose::Now,
+                Behind::Idle => {}
+            }
+            let open = lock(&self.current)
+                .as_ref()
+                .is_some_and(|view| view.phase() != Phase::Ended);
+            if !open {
+                return WindowClose::Now;
+            }
+            *behind = Behind::Settling;
+        }
+        hide();
+        let host = self.clone();
+        let spawned = thread::Builder::new()
+            .name("sede-view-window-close".into())
+            .spawn(move || {
+                // The close continues even if the wait failed: the deadline
+                // bounds shutdown, and a hidden window must not stay behind.
+                let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                    host.close_within(limit);
+                }));
+                *lock(&host.behind) = Behind::Settled;
+                then();
+            });
+        if spawned.is_err() {
+            // The window's own close then waits for the view instead.
+            *lock(&self.behind) = Behind::Settled;
+            return WindowClose::Now;
+        }
+        WindowClose::Behind
     }
 
     /// The top document was replaced: the page that held the view is gone. Runs
