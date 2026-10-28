@@ -1701,7 +1701,12 @@ pub(crate) mod tests {
             &stand_in(&working, &scratch),
             &cancellation,
         );
-        assert_eq!(passed.reading.observation, Observation::Present);
+        assert_eq!(
+            passed.reading.observation,
+            Observation::Present,
+            "{:?}",
+            passed.launch_failure
+        );
         assert_eq!(passed.reading.mode, CheckMode::Full);
         assert_eq!(passed.launched_version.as_deref(), Some(BROWSER_VERSION));
         fixture
