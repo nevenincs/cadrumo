@@ -37,8 +37,6 @@ use std::{
 
 /// The runtime's bound on one exchange, and on each relayed action.
 const EXCHANGE: Duration = Duration::from_secs(120);
-/// The runtime's bound on admitting a service under the person's session.
-const ADMISSION: Duration = Duration::from_secs(10);
 /// The longest reply: the longest document the relay assembles, and one
 /// runtime frame for the reply around it.
 const REPLY_LIMIT: usize = PROJECTION_DOCUMENT_MAX_BYTES + 64 * 1024;
@@ -377,7 +375,7 @@ impl NativeSession {
             request_id,
             json!({"recipient_connection_id": recipient, "service_id": service_id}),
         );
-        self.passed_through(request_id, &asked, ADMISSION)
+        self.passed_through(request_id, &asked, EXCHANGE)
     }
 
     /// The runtime's own reply to `asked`, which names this request.
@@ -844,6 +842,7 @@ mod tests {
         secrets: Mutex<Vec<Vec<u8>>>,
         pushes: Mutex<Option<mpsc::Sender<Pushed>>>,
         closed: AtomicBool,
+        admission_work: Option<Duration>,
     }
 
     impl Runtime {
@@ -907,9 +906,16 @@ mod tests {
         fn exchange(
             &self,
             request: &Value,
-            _: Instant,
+            deadline: Instant,
         ) -> std::result::Result<Map<String, Value>, Refusal> {
             self.asked.lock().unwrap().push(request.clone());
+            if request["action"] == "service_admission"
+                && self
+                    .admission_work
+                    .is_some_and(|work| deadline.saturating_duration_since(Instant::now()) < work)
+            {
+                return Err(Refusal::DeadlineExceeded);
+            }
             self.answer(request)
         }
 
@@ -1192,7 +1198,13 @@ mod tests {
                 "descriptor_digest": "a".repeat(64),
             },
         }));
-        let runtime = Runtime::answering([status(SESSION, Value::Null), connected]);
+        // Model an admission that needs more than ten seconds without making
+        // the test sleep: a short wire budget refuses before doing that work.
+        let runtime = Arc::new(Runtime {
+            script: Mutex::new(VecDeque::from([status(SESSION, Value::Null), connected])),
+            admission_work: Some(Duration::from_secs(11)),
+            ..Runtime::default()
+        });
         let mut held = person(&runtime);
         let reply = held
             .exchange(json!({

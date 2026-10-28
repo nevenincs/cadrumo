@@ -33,8 +33,9 @@ use zeroize::Zeroizing;
 
 /// Initial retry delay; later failures back off, up to three retries.
 pub const RETRY: Duration = Duration::from_secs(30);
-/// How long a started launcher has to report its service before it is refused.
-const START_LIMIT: Duration = Duration::from_secs(30);
+/// Includes the runtime handshake, its 120-second registration exchange and
+/// headroom for cold interpreter startup before the service can report ready.
+const START_LIMIT: Duration = Duration::from_secs(180);
 
 pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
 use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
@@ -1583,6 +1584,7 @@ mod tests {
             profile: &str,
             ignore_end: bool,
             retire_at_gate: Option<&str>,
+            service_at_gate: Option<&str>,
         ) -> (Prepared, HolderFixture) {
             let profile_id = match profile {
                 "A" => "11111111-1111-4111-8111-111111111111",
@@ -1666,9 +1668,12 @@ mod tests {
             }
             let marker = "$grandchild = ";
             assert_eq!(script.matches(marker).count(), 1);
+            let service_gate = service_at_gate
+                .map(|gate| format!("{gate}Wait-Gate 'service'; "))
+                .unwrap_or_default();
             let script = script.replacen(
                 marker,
-                &format!("[Console]::Out.WriteLine('{ready}'); [Console]::Out.Flush(); {marker}"),
+                &format!("{service_gate}[Console]::Out.WriteLine('{ready}'); [Console]::Out.Flush(); {marker}"),
                 1,
             );
             (
@@ -1681,6 +1686,14 @@ mod tests {
         }
 
         fn rig(ignore_end: bool, retire_after_ready: bool) -> Rig {
+            rig_with_service_gate(ignore_end, retire_after_ready, false)
+        }
+
+        fn rig_with_service_gate(
+            ignore_end: bool,
+            retire_after_ready: bool,
+            wait_for_service: bool,
+        ) -> Rig {
             let observation = Arc::new(Mutex::new(observed(true, true, Some("A"))));
             let source = observation.clone();
             let observe: Observe = Arc::new(move || {
@@ -1689,11 +1702,19 @@ mod tests {
             });
             let holders = Arc::new(Mutex::new(Vec::new()));
             let witnesses = holders.clone();
-            let gate = retire_after_ready.then(Gate::new);
-            let gate_script = gate.as_ref().map(Gate::script);
+            let gate = (retire_after_ready || wait_for_service).then(Gate::new);
+            let gate_script = gate
+                .as_ref()
+                .filter(|_| retire_after_ready)
+                .map(Gate::script);
+            let service_gate = gate.as_ref().filter(|_| wait_for_service).map(Gate::script);
             let launch: Launch = Arc::new(move |_, profile| {
-                let (prepared, witness) =
-                    held_protocol_fixture(profile, ignore_end, gate_script.as_deref());
+                let (prepared, witness) = held_protocol_fixture(
+                    profile,
+                    ignore_end,
+                    gate_script.as_deref(),
+                    service_gate.as_deref(),
+                );
                 lock(&witnesses).push(witness);
                 Ok(prepared)
             });
@@ -1708,8 +1729,12 @@ mod tests {
                 diagnostics.clone(),
                 Duration::from_millis(if ignore_end { 500 } else { 10_000 }),
                 Duration::from_secs(60),
-            )
-            .starting_within(HANG_GUARD);
+            );
+            let supervisor = if wait_for_service {
+                supervisor
+            } else {
+                supervisor.starting_within(HANG_GUARD)
+            };
             let statuses = Arc::new(Mutex::new(Vec::new()));
             let sink = statuses.clone();
             let moved = recorded.clone();
@@ -1732,6 +1757,64 @@ mod tests {
                 recorded,
                 gate,
             }
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn cold_service_registration_can_finish_after_the_runtime_exchange_window() {
+            let mut rig = rig_with_service_gate(false, false, true);
+            service_waiting(&mut rig).await;
+            // Account for a ten-second handshake and a 120-second registration
+            // without spending that time asleep in a process fixture.
+            lock(&rig.supervisor.shared.running)
+                .as_mut()
+                .unwrap()
+                .started = Instant::now() - Duration::from_secs(131);
+            let due = next_due(&rig.supervisor.shared, &RetryBudget::default()).unwrap();
+            assert!(due > Instant::now(), "a valid registration still has time");
+            rig.gate.as_mut().unwrap().go();
+            until_seen(&rig, "cold service ready", || {
+                matches!(rig.supervisor.status().state, State::Ready { .. }).then_some(())
+            })
+            .await;
+            assert_eq!(lock(&rig.holders).len(), 1, "no launch was retried");
+            rig.supervisor.close().await.unwrap();
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn a_service_that_never_registers_still_exhausts_its_start_deadline() {
+            let mut rig = rig_with_service_gate(false, false, true);
+            service_waiting(&mut rig).await;
+            lock(&rig.supervisor.shared.running)
+                .as_mut()
+                .unwrap()
+                .started = Instant::now() - Duration::from_secs(181);
+            rig.supervisor.shared.wake.notify_one();
+            until_seen(&rig, "unregistered service stopped", || {
+                (matches!(
+                    rig.supervisor.status().state,
+                    State::Refused {
+                        code: Refusal::ServiceFailed
+                    }
+                ) && lock(&rig.supervisor.shared.running).is_none())
+                .then_some(())
+            })
+            .await;
+            assert!(rig.supervisor.gateway().is_none());
+            assert!(lock(&rig.supervisor.shared.admin).is_none());
+            rig.supervisor.close().await.unwrap();
+        }
+
+        async fn service_waiting(rig: &mut Rig) {
+            tokio::task::block_in_place(|| rig.gate.as_mut().unwrap().reached("service"));
+            // The child can reach its gate before start_child returns to the
+            // supervisor that records ownership of it.
+            tokio::time::timeout(HANG_GUARD, async {
+                while lock(&rig.supervisor.shared.running).is_none() {
+                    tokio::task::yield_now().await;
+                }
+            })
+            .await
+            .unwrap();
         }
 
         /// What `seen` finds once a published status or recorded diagnostic

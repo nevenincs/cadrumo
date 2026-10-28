@@ -510,7 +510,12 @@ class FrontendClient(ProfileViewFrontend):
         return self._attendance(self._attendance_ask("attendance_status", attendance_id), timeout=timeout)
 
     def service_admission(
-        self, recipient_connection_id: UUID, service_id: str, *, request_id: UUID | None = None, timeout: float = 10
+        self,
+        recipient_connection_id: UUID,
+        service_id: str,
+        *,
+        request_id: UUID | None = None,
+        timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
     ) -> ServiceConnected:
         """Approve an exact verified installed peer under this held human session."""
         reply = self._connection.service_access(

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ccfae980ba67745a0ddf7b3f6b1b059cf475ebae79f58b1bc370104988d2de1c'
+body_hash: 'sha256:b7653c0569989cfc37946ee944ac5c08cb96931c1c0b7fe277265e90da3e86f3'
 related:
   - "[[2026-10-28-debug-startup-reliability-plan]]"
 ---
@@ -50,6 +50,18 @@ related:
 - `S02` `verify:` `focused service-record and admission interleavings8 across scoped runs` -> `pass`
 - `S02` `verify:` `independent Sol medium integrated lifecycle source review` -> `pass`
 - `S02` `by:` `Sol 6.1 high; root integration`
+- `S01` `M` `native/desktop/src-tauri/src/agent/supervisor.rs`
+- `S01` `M` `native/desktop/src-tauri/src/agent/person/native.rs`
+- `S01` `M` `src/cadrumo_client/transport/frontend_client.py`
+- `S01` `A` `src/cadrumo_client/transport/tests/test_service_admission_deadline.py`
+- `S01` `verify:` `cmake --build --preset windows-tests-debug --target desktop-host-unit-test with agent:: filter146 tests` -> `pass`
+- `S01` `verify:` `cmake --build --preset windows-tests-debug --target desktop-host-unit-clippy` -> `pass`
+- `S01` `verify:` `ctest desktop.fmt` -> `pass`
+- `S01` `verify:` `pytest test_service_admission_deadline.py2 tests` -> `pass`
+- `S01` `verify:` `Ruff check and format owned Python paths` -> `pass`
+- `S01` `verify:` `ty scoped client paths` -> `pass`
+- `S01` `verify:` `independent integrated source review` -> `pass`
+- `S01` `by:` `Sol 6.1 high; root integration`
 
 ## Notes
 
