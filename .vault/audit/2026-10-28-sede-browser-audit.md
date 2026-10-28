@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:97da38e01bbba29c499229dba44b8a7e0c50a4f6a31c9c1a4914d574da862e23'
+body_hash: 'sha256:d4261df17ec1d64e50dbd22a979f7f5b3dad725a3fc0a5864c0afd9fb53b9fb6'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
   - "[[2026-10-27-sede-browser-adr]]"
@@ -34,6 +34,8 @@ Plan-close integrated review of `2026-10-27-sede-browser-plan` at HEAD `0ebde50b
 
 `native/desktop/frontend/src/App.tsx:3096-3097` mounts `BrowserPage` only while it is the shown page, and `src/components/browser/useSedeView.ts:102-109` closes the view on unmount. Each page switch therefore publishes, closes Chromium and loses the page state and history. The ADR's Window constraint says "Leaving the page keeps the view running without frames". Fix: keep the page mounted while it is hidden, or amend the ADR.
 
+Resolved: dc6ab7705a (ADR amended; leaving the page does not close the view).
+
 ### worker-input-drop | medium | The worker silently drops person input past 64 queued items
 
 `src/cadrumo_runtime/host/worker_view_stream.py:89-95` and `:392-394` discard input once 64 items are waiting, for example while `adapter.input` or an assisted-login cancel is in progress. A dropped key-up leaves a key or modifier held down, and dropped text is lost. This bound conflicts with the free-use ruling, and the host already bounds its queue with a refusal (`sede_view/upstream.rs:16-18`). Fix: never drop key, text or button events; coalesce only pointer moves, and apply backpressure upstream.
@@ -58,6 +60,8 @@ Plan-close integrated review of `2026-10-27-sede-browser-plan` at HEAD `0ebde50b
 
 `2026-07-16-protected-browser-certificate-auth-adr` governs the view's certificate provisioning (`sessions.py:1420-1452`) but is not in the plan's `related:`. No constraint is broken. Fix: add the link with `vaultspec-core vault link add`.
 
+Resolved: ec97843317
+
 ### aeat-click-target | low | The AEAT rail click shows the open view's current page, not the Sede
 
 `App.tsx:749-757` and `:2907-2909` only reveal the page. Fix: send the `home` verb when a view is already open.
@@ -70,9 +74,13 @@ Plan-close integrated review of `2026-10-27-sede-browser-plan` at HEAD `0ebde50b
 
 The S16 address field and the worker's lack of coalescing (`view_input.py:15-16`; the host coalesces at `upstream.rs:36-44`) differ from that wording. Fix: amend the ADR text.
 
+Resolved: dc6ab7705a
+
 ### test-support-import | low | A runtime test imports another package's test support
 
 `src/cadrumo_runtime/host/tests/test_view_stream_integration.py:38-45` imports from `cadrumo.adapters.outbound.aeat.auth.tests`. Fix: use a typed fixture interface at the orchestration seam.
+
+Resolved: d26178dd66
 
 ## Recommendations
 
