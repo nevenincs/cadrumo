@@ -371,7 +371,7 @@ class AuthLogoutOperationExecutor:
         logout: Callable[..., AuthLogoutResult] | None = None,
     ) -> None:
         if logout is None:
-            from .operator import logout_operator_auth
+            from .operator_revocation import logout_operator_auth
 
             logout = logout_operator_auth
         self._ports = ports
@@ -416,7 +416,7 @@ class AuthResetOperationExecutor:
         reset: Callable[..., AuthResetResult] | None = None,
     ) -> None:
         if reset is None:
-            from .operator import reset_operator_auth
+            from .operator_revocation import reset_operator_auth
 
             reset = reset_operator_auth
         self._ports = ports
@@ -535,7 +535,8 @@ def build_auth_operation_definitions(
     # Only composing auth execution needs the operator's service graph; resolve
     # it here, before an executor enters any operation effect or storage lock.
     if configure is None or acquire is None or logout is None or reset is None:
-        from .operator import configure_operator_auth, login_operator_auth, logout_operator_auth, reset_operator_auth
+        from .operator import configure_operator_auth, login_operator_auth
+        from .operator_revocation import logout_operator_auth, reset_operator_auth
 
         configure = configure_operator_auth if configure is None else configure
         acquire = login_operator_auth if acquire is None else acquire

@@ -167,7 +167,7 @@ async def test_a_restored_profile_presents_and_unlocks_on_the_login_screen(
                         )
                         app = _RestoredLoginApp(screen)
                         async with app.run_test(size=_TERMINAL_SIZE) as pilot:
-                            await settle(pilot)
+                            await settle(pilot, workers=False)
                             submit = screen.query_one("#runtime-login-submit", Button)
                             await settle_until(
                                 pilot,

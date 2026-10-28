@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
@@ -10,6 +11,7 @@ import pytest
 from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
 from cadrumo.application.operator_surface.verb_input_contracts import cli_argv_for
@@ -17,6 +19,7 @@ from cadrumo.application.workflow.profile_bucket_scan import read_profile_bucket
 from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.error_codes import ErrorCategory, get_error_exit_code
+from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.verb_input_schema import build_verb_input_schemas
 from cadrumo_runtime.host.tests.frontend.cli.config.tests.isolated_storage_fixture import native_profile_view_server
 
@@ -30,7 +33,7 @@ _ORIGINAL_ARGUMENTS = (
     "ledger",
     "ratios",
     "set",
-    "vehiculo_combustible",
+    "arrendamiento_vivienda_afecto",
     "0.5",
 )
 _ORIGINAL_LEAF_KEY = "ledger.ratios.set"
@@ -176,6 +179,14 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
             assert registered_profile is not None
             assert registered_profile.bucket_id == active_pointer.bucket_id
 
+            # The persisted ratio must match declared home-office facts so the
+            # final protected read exercises recovery rather than a censo refusal.
+            set_active_test_profile_facts(
+                (
+                    UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+                    UserProfileFact(path="vivienda_office.office_m2", value=Decimal("50")),
+                )
+            )
             close_active_bucket_session()
             assert read_pointer(storage_root) == active_pointer
 
@@ -201,7 +212,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
             assert any(notice["code"] == "config.login.session_not_persisted" for notice in notices)
             assert retry_document["result"] == {
                 "bucket_id": "<bucket-id>",
-                "category": "vehiculo_combustible",
+                "category": "arrendamiento_vivienda_afecto",
                 "ratio": "0.5",
             }
 
@@ -216,7 +227,7 @@ def test_clean_root_refusal_executes_projected_profile_recovery_then_retries(
             assert persisted_document["active_profile"] == "recovered"
             assert persisted_document["result"] == {
                 "bucket_id": "<bucket-id>",
-                "rows": [{"category": "vehiculo_combustible", "ratio": "0.5"}],
+                "rows": [{"category": "arrendamiento_vivienda_afecto", "ratio": "0.5"}],
                 "count": 1,
                 "censo_mismatch": None,
             }
