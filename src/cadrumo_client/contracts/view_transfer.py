@@ -273,8 +273,21 @@ class ViewUploadedFile:
     data: bytes = field(repr=False)
 
 
-type ViewTransferEvent = ViewDownloadAnswer | ViewFileChooserAnswer | ViewUploadedFile | ViewTransferCancel
-"""What a view sink hands its executor about transfers: answers, received files and the window's cancels."""
+@dataclass(frozen=True, slots=True)
+class ViewUploadCancelled:
+    """The window stopped a file it was sending for a chooser, so that chooser gets no files."""
+
+    chooser_id: int
+
+
+type ViewTransferEvent = (
+    ViewDownloadAnswer | ViewFileChooserAnswer | ViewUploadedFile | ViewUploadCancelled | ViewTransferCancel
+)
+"""What a view sink hands its executor about transfers: answers, received files and the window's cancels.
+
+A download cancel arrives as the window's ``ViewTransferCancel``; an upload
+cancel arrives as ``ViewUploadCancelled``, naming the chooser its file was for.
+"""
 
 
 class ViewTransferByteSource(Protocol):

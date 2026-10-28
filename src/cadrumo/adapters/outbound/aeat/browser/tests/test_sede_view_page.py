@@ -34,6 +34,7 @@ from cadrumo_client.contracts.view_transfer import (
     ViewFileChooser,
     ViewFileChooserAnswer,
     ViewFileChooserOutcome,
+    ViewUploadCancelled,
     ViewUploadedFile,
 )
 
@@ -211,6 +212,36 @@ async def test_sede_view_hands_an_uploaded_file_to_the_page_from_memory(tmp_path
         page = running.page
         await asyncio.wait_for(_titled(page, f"chosen:{len(upload)}"), timeout=10)
     assert _files_holding(tmp_path, upload) == []
+
+
+@pytest.mark.asyncio
+async def test_sede_view_cancelling_one_upload_leaves_the_other_chooser_waiting(tmp_path: Path) -> None:
+    site = _Site()
+    _home(
+        site,
+        """<input id="a" type="file" onchange="document.title = 'a:' + this.files[0].size">"""
+        """<input id="b" type="file" onchange="document.title = 'b:' + this.files[0].size">""",
+    )
+    upload = b"synthetic aportacion " * 20
+    async with _view(tmp_path, site) as running:
+        page = running.page
+        await page.wait_for_selector("#b")
+        await page.click("#a")
+        await until(lambda: len(running.sink.of(ViewFileChooser)) == 1)
+        await page.click("#b")
+        await until(lambda: len(running.sink.of(ViewFileChooser)) == 2)
+        first, second = running.sink.of(ViewFileChooser)
+        for chooser in (first, second):
+            running.sink.put(
+                ViewFileChooserAnswer(
+                    chooser_id=chooser.chooser_id, outcome=ViewFileChooserOutcome.SUPPLIED, file_count=1
+                )
+            )
+        running.sink.put(ViewUploadCancelled(chooser_id=first.chooser_id))
+        running.sink.put(ViewUploadedFile(chooser_id=first.chooser_id, name="a.txt", mime="text/plain", data=upload))
+        running.sink.put(ViewUploadedFile(chooser_id=second.chooser_id, name="b.txt", mime="text/plain", data=upload))
+        await asyncio.wait_for(_titled(page, f"b:{len(upload)}"), timeout=10)
+        assert await page.evaluate("document.getElementById('a').files.length") == 0
 
 
 async def _titled(page: Page, title: str) -> None:

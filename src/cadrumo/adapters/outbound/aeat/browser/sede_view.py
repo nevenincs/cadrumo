@@ -66,6 +66,7 @@ from cadrumo_client.contracts.view_transfer import (
     ViewFileChooserOutcome,
     ViewTransferCancel,
     ViewTransferDirection,
+    ViewUploadCancelled,
     ViewUploadedFile,
 )
 
@@ -373,6 +374,8 @@ class SedeViewPage:
             return self._answer_chooser(item)
         elif isinstance(item, ViewUploadedFile):
             self._receive_file(item)
+        elif isinstance(item, ViewUploadCancelled):
+            self._cancel_upload(item.chooser_id)
         else:
             self._cancel_transfer(item)
         return None
@@ -407,11 +410,12 @@ class SedeViewPage:
             download = self._downloads.pop(cancel.transfer_id, None)
             if download is not None:
                 self._spawn(self._discard(download))
-            return
+
+    def _cancel_upload(self, chooser_id: int) -> None:
         # A cancelled upload leaves its chooser without all its files; the page keeps no partial set.
-        for chooser_id, pending in tuple(self._choosers.items()):
-            if pending.expected is not None:
-                del self._choosers[chooser_id]
+        pending = self._choosers.get(chooser_id)
+        if pending is not None and pending.expected is not None:
+            del self._choosers[chooser_id]
 
     async def _supply(self, pending: _Chooser) -> None:
         payloads: list[FilePayload] = [

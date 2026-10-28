@@ -60,6 +60,7 @@ from cadrumo_client.contracts.view_transfer import (
     ViewTransferDirection,
     ViewTransferUpstreamDocument,
     ViewUpload,
+    ViewUploadCancelled,
     ViewUploadedFile,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -698,6 +699,21 @@ def test_view_upload_reaches_the_worker_whole_and_checked(lane: _Lane) -> None:
     uploaded = lane.sink.receive(timeout=5)
     assert isinstance(uploaded, ViewUploadedFile)
     assert (uploaded.chooser_id, uploaded.name, uploaded.data) == (1, "a.bin", upload)
+
+
+def test_view_upload_cancel_names_only_the_chooser_its_file_was_for(lane: _Lane) -> None:
+    window = lane.attach()
+    reader, _ = _transfer_window(window)
+    for chooser_id in (1, 2):
+        lane.sink.send(ViewFileChooser(chooser_id=chooser_id, accept=(), multiple=False))
+        assert isinstance(reader.read(deadline=time.monotonic() + 5), ViewFileChooser)
+    _write_upstream(window, ViewUpload(chooser_id=1, transfer_id=7, name="a.bin", size=10))
+    _write_upstream(window, ViewUpload(chooser_id=2, transfer_id=8, name="b.bin", size=10))
+    _write_upstream(window, ViewTransferCancel(direction=ViewTransferDirection.UPLOAD, transfer_id=7))
+    assert lane.sink.receive(timeout=5) == ViewUploadCancelled(chooser_id=1)
+    # A cancel for a file no longer being received names no chooser.
+    _write_upstream(window, ViewTransferCancel(direction=ViewTransferDirection.UPLOAD, transfer_id=7))
+    assert lane.sink.receive(timeout=0.5) is None
 
 
 def test_view_close_from_the_window_reaches_the_worker(lane: _Lane) -> None:

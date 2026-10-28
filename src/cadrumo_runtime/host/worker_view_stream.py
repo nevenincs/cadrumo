@@ -58,6 +58,7 @@ from cadrumo_client.contracts.view_transfer import (
     ViewTransferDirection,
     ViewTransferDownstreamDocument,
     ViewUpload,
+    ViewUploadCancelled,
     ViewUploadedFile,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
@@ -398,11 +399,13 @@ class WorkerViewStream:
             if item.direction is ViewTransferDirection.DOWNLOAD:
                 self._early_credit.pop(item.transfer_id, None)
                 self._cancel_download(item.transfer_id)
+                self._inbox.append(item)
             else:
                 upload = self._receiving.pop(item.transfer_id, None)
                 if upload is not None:
                     upload.wipe()
-            self._inbox.append(item)
+                    # Only this file's chooser loses its files; other choosers keep waiting.
+                    self._inbox.append(ViewUploadCancelled(chooser_id=upload.upload.chooser_id))
         elif isinstance(item, ViewUpload):
             self._uploads.expect(item.transfer_id, size=item.size)
             upload = _Upload(item)
