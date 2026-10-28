@@ -3340,8 +3340,9 @@ test("a month that makes the page scroll when drawn whole does not change the pa
   page: target,
 }) => {
   await target.clock.setFixedTime(new Date(2027, 0, 12, 12));
-  // Tall enough that the months fit without scrolling until one is whole.
-  await target.setViewportSize({ width: 1600, height: 1500 });
+  // Tall enough that the months, under the profile notice, fit without
+  // scrolling until one is whole.
+  await target.setViewportSize({ width: 1600, height: 1600 });
   await open(target, "signed-in", "&calendar=busy");
   await calendarButton(target).click();
   await target
