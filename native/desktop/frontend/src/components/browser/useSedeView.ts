@@ -27,9 +27,10 @@ const sameSize = (a: SedeViewSize | null, b: SedeViewSize | null) =>
 /**
  * Owns the page's view from the first panel size to the page's unmount: it
  * opens the view, keeps what it says in memory, credits every image it is
- * sent whether or not it was drawn, follows the panel's size, and closes the
- * view when the page goes, which publishes the session. Nothing it holds
- * reaches storage, the layout or a log.
+ * sent whether or not it was drawn, including while the page is put aside,
+ * follows the panel's size, and closes the view when the page is unmounted,
+ * which publishes the session. Nothing it holds reaches storage, the layout
+ * or a log.
  */
 export function useSedeView({
   port,
@@ -104,7 +105,7 @@ export function useSedeView({
       window.clearTimeout(timer);
       session.current = null;
       sent.current = null;
-      // Leaving ends the view, which publishes the session.
+      // Unmounting ends the view, which publishes the session.
       void opened?.close().catch(nothing);
     };
   }, [port, sized, attempt]);

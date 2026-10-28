@@ -653,6 +653,17 @@ export function App({ host }: { host: Host }) {
       ? (account.status?.active_profile ?? "")
       : null;
   const recheckAccount = useCallback(() => accountRef.current.recheck(), []);
+  // The browser's view goes on while its page is put aside: the page stays
+  // mounted, hidden, for the profile that opened it, until the person closes
+  // it or that profile is no longer the one signed in.
+  const [browserKeptFor, setBrowserKeptFor] = useState<string | null>(null);
+  const browserReader = browserOn
+    ? reader
+    : reader === browserKeptFor
+      ? browserKeptFor
+      : null;
+  if (browserReader !== browserKeptFor) setBrowserKeptFor(browserReader);
+  const browserMounted = browserOn || browserReader !== null;
   // What the reader has made of the calendar, kept while its page is away:
   // the page is taken down when it is put away, and comes back as it was.
   // A calendar belongs to its profile, and so does what was made of it: a
@@ -3093,42 +3104,7 @@ export function App({ host }: { host: Host }) {
             />
           </ModelListContext.Provider>
         </ProvisioningRecoveryContext.Provider>
-      ) : browserOn && host.sedeView ? (
-        <BrowserPage
-          key={reader ?? ""}
-          port={host.sedeView}
-          withheld={
-            reader === null ? (
-              <SignedOut
-                account={account}
-                lead={t("desktop.browser.failure.not_signed_in")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            ) : undefined
-          }
-          page={browserPage}
-          shown={firstPaneShown}
-          isShellChord={isShellChord}
-          pane={{
-            title: t("desktop.browser.title"),
-            onToggleMaximize: () => toggleMaximize("docs"),
-            controls: [
-              maximizeControl("docs", "desktop.browser.maximize"),
-              ...splitControls.map((control) => ({
-                ...control,
-                yields: true,
-              })),
-              {
-                id: "close",
-                icon: "close",
-                label: t("desktop.browser.close"),
-                run: closePage,
-              },
-            ],
-          }}
-        />
-      ) : (
+      ) : browserOn && host.sedeView ? null : (
         <PaneHeader
           title={t(
             profileOn
@@ -3171,6 +3147,49 @@ export function App({ host }: { host: Host }) {
                   run: () => closeColumn("docs"),
                 },
           ]}
+        />
+      )}
+      {browserMounted && host.sedeView && (
+        <BrowserPage
+          key={reader ?? ""}
+          port={host.sedeView}
+          withheld={
+            reader === null ? (
+              <SignedOut
+                account={account}
+                lead={t("desktop.browser.failure.not_signed_in")}
+                quiet
+                onSignIn={askSignIn}
+              />
+            ) : undefined
+          }
+          page={browserPage}
+          shown={browserOn && firstPaneShown}
+          isShellChord={isShellChord}
+          pane={{
+            title: t("desktop.browser.title"),
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.browser.maximize"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+              {
+                id: "close",
+                icon: "close",
+                label: t("desktop.browser.close"),
+                // Closing the page, unlike leaving it, ends the view.
+                run: () => {
+                  guarded(() => {
+                    setBrowserKeptFor(null);
+                    showPage("docs");
+                  });
+                  setMaximized(null);
+                },
+              },
+            ],
+          }}
         />
       )}
       {profileOn &&

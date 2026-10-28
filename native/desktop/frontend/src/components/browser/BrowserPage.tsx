@@ -51,8 +51,9 @@ export type BrowserPageProps = {
  * It starts at the AEAT Sede, the person browses it freely, and a login made
  * in it is the profile's login for every command that reads from the AEAT.
  * Nothing it holds is kept: the frames, addresses, titles and typed keys live
- * in memory for as long as the page does. Leaving the page closes the view,
- * which publishes its session first.
+ * in memory for as long as the page does. The window keeps the page while
+ * it is put aside, so the view goes on; unmounting it closes the view, which
+ * publishes its session first.
  */
 export function BrowserPage(props: BrowserPageProps) {
   return props.withheld ? <Withheld {...props} /> : <OpenBrowser {...props} />;
@@ -123,7 +124,8 @@ function OpenBrowser({
     if (finished) surface.current?.clear();
   }, [finished]);
 
-  const dialog = state.dialogs[0];
+  // A page dialog waits for the person to come back to the page.
+  const dialog = shown ? state.dialogs[0] : undefined;
   return (
     <div className={shown ? "contents" : "hidden"}>
       <PaneHeader

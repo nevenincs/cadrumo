@@ -133,7 +133,7 @@ const near = (found: number, wanted: number) =>
 // The rail and the AEAT shortcut
 // ---------------------------------------------------------------------------
 
-test("the Browser rail button opens the page at the Sede, and a second click leaves it", async ({
+test("the Browser rail button opens the page at the Sede, and a second click leaves it with the view running", async ({
   page: target,
 }) => {
   await open(target);
@@ -152,7 +152,14 @@ test("the Browser rail button opens the page at the Sede, and a second click lea
   await button.click();
   await expect(button).toHaveAttribute("aria-pressed", "false");
   await expect(browserPage(target)).toHaveCount(0);
-  await expect.poll(() => since(target, at, "sedeViewClose")).toHaveLength(1);
+  // Coming back finds the same view, still at its page.
+  await button.click();
+  await expect(browserPage(target)).toBeVisible();
+  await expect(address(target)).toContainText(
+    `${SEDE_VIEW_ORIGIN}${SEDE_VIEW_HOME}`,
+  );
+  expect(await since(target, at, "sedeViewClose")).toEqual([]);
+  expect(await since(target, at, "sedeViewOpen")).toEqual([]);
 });
 
 test("the AEAT click starts the view, and its menu opens the system browser while the view keeps running", async ({
@@ -751,19 +758,12 @@ test("a view that is saving its session shows it, holds every navigation and tak
 
 const LEAVING = {
   "the Browser rail button": (target: Page) => browserButton(target).click(),
-  "the pane's close control": (target: Page) =>
-    target
-      .getByRole("button", {
-        name: label("desktop.browser.close"),
-        exact: true,
-      })
-      .click(),
   "another page of the rail": (target: Page) =>
     railButton(target, "desktop.calendar.title").click(),
 } as const;
 
 for (const [way, leave] of Object.entries(LEAVING))
-  test(`leaving the page by ${way} closes the view once, and the next page waits for its session to be saved`, async ({
+  test(`leaving the page by ${way} keeps the view running, and coming back finds it`, async ({
     page: target,
   }) => {
     await showBrowser(target);
@@ -771,16 +771,45 @@ for (const [way, leave] of Object.entries(LEAVING))
     await leave(target);
     await expect(browserPage(target)).toHaveCount(0);
 
-    // The view is still saving its session: a new page says so, then opens.
+    // Out of sight, the view goes on and every image is still credited.
+    const sent = await images(target);
+    await target.evaluate(() => window.__scenarioSedeView?.phase("browsing"));
+    await expect.poll(() => images(target)).toBe(sent + 1);
+    await idle(target);
+
     await browserButton(target).click();
-    await expect(
-      browserPage(target).getByText(label("desktop.browser.waiting")),
-    ).toBeVisible();
-    await live(target);
-    expect(await since(target, at, "sedeViewOpen")).toHaveLength(1);
-    // Closing is the only thing the window asked of the first view.
-    expect(await since(target, at, "sedeViewClose")).toHaveLength(1);
+    await expect(browserPage(target)).toBeVisible();
+    await expect(address(target)).toContainText(
+      `${SEDE_VIEW_ORIGIN}${SEDE_VIEW_HOME}`,
+    );
+    expect(await since(target, at, "sedeViewClose")).toEqual([]);
+    expect(await since(target, at, "sedeViewOpen")).toEqual([]);
   });
+
+test("closing the page with its close control closes the view once, and the next page waits for its session to be saved", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  const at = await mark(target);
+  await target
+    .getByRole("button", {
+      name: label("desktop.browser.close"),
+      exact: true,
+    })
+    .click();
+  await expect(browserPage(target)).toHaveCount(0);
+  await expect.poll(() => since(target, at, "sedeViewClose")).toHaveLength(1);
+
+  // The view is still saving its session: a new page says so, then opens.
+  await browserButton(target).click();
+  await expect(
+    browserPage(target).getByText(label("desktop.browser.waiting")),
+  ).toBeVisible();
+  await live(target);
+  expect(await since(target, at, "sedeViewOpen")).toHaveLength(1);
+  // Closing is the only thing the window asked of the first view.
+  expect(await since(target, at, "sedeViewClose")).toHaveLength(1);
+});
 
 test("signing out closes the view and leaves the page without a browser", async ({
   page: target,
