@@ -460,7 +460,7 @@ test("classifying asks for what each kind needs and stages it as one step", () =
   // Mixed stages its share as the fraction the product stores, with an
   // expense's category; leaving Mixed clears the stored share.
   const mixed = classifyCells(
-    { kind: "mixed", ids: [A], share: "60", category: "telefonia_movil" },
+    { kind: "mixed", ids: [A], share: "60", category: "telefonia_fija" },
     byId,
   );
   expect(mixed.kind === "staged" && mixed.event.cells[1]).toEqual({
@@ -577,8 +577,15 @@ test("income takes no spending category, and Mixed only one a share applies to",
       income,
     ),
   ).toEqual({ kind: "needs", field: "category" });
+  // A mobile line is deductible only in exclusive use, so it takes no share.
+  expect(
+    classifyCells(
+      { kind: "mixed", ids: [OUT], share: "30", category: "telefonia_movil" },
+      income,
+    ),
+  ).toEqual({ kind: "needs", field: "category" });
   const phone = classifyCells(
-    { kind: "mixed", ids: [OUT], share: "30", category: "telefonia_movil" },
+    { kind: "mixed", ids: [OUT], share: "30", category: "telefonia_fija" },
     income,
   );
   expect(

@@ -108,13 +108,7 @@ export const USAGE_RATIO_CATEGORIES = [
   "amortizacion_vivienda_afecto",
   "ibi_vivienda_afecto",
   "comunidad_vivienda_afecto",
-  "telefonia_movil",
   "telefonia_fija",
-  "vehiculo_combustible",
-  "vehiculo_mantenimiento",
-  "vehiculo_seguro",
-  "vehiculo_peaje",
-  "vehiculo_parking",
 ] as const satisfies readonly SpendingCategory[];
 
 const TAKES_SHARE = new Set<string>(USAGE_RATIO_CATEGORIES);

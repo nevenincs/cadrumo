@@ -113,7 +113,7 @@ type Asset = {
 /** The scenario ledger's setup answers, held beside the movements. */
 export function setupOperations(ledger: FixtureLedger, tools: Tools) {
   const { profileId, hex64, events, now } = tools;
-  const ratios = new Map<string, string>([["telefonia_movil", "0.5"]]);
+  const ratios = new Map<string, string>([["telefonia_fija", "0.5"]]);
   const counterparties = new Map<string, JsonObject>([
     [
       "LU20260001",

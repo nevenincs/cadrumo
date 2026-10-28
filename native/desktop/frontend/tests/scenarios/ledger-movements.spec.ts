@@ -712,14 +712,20 @@ test("Mixed asks its share and a category a share applies to; Enter stages, and 
       name: label("desktop.ledger.category.software_suscripcion"),
     }),
   ).toHaveCount(0);
-  await target.keyboard.type(label("desktop.ledger.category.telefonia_movil"));
+  // Nor is a mobile line, deductible only in exclusive use.
+  await expect(
+    list.getByRole("option", {
+      name: label("desktop.ledger.category.telefonia_movil"),
+    }),
+  ).toHaveCount(0);
+  await target.keyboard.type(label("desktop.ledger.category.telefonia_fija"));
   await target.keyboard.press("Enter");
   await expect(list).toBeHidden();
   // With both filled in, Enter stages rather than opening the list again.
   await target.keyboard.press("Enter");
   await expect(dialog).toHaveCount(0);
   await expect(toast(target)).toContainText(
-    label("desktop.ledger.category.telefonia_movil"),
+    label("desktop.ledger.category.telefonia_fija"),
   );
   await expect(toast(target)).toContainText("30%");
   const focused = target.locator("[role=gridcell]:focus");
@@ -745,19 +751,20 @@ test("Mixed says which movements get a configured usage ratio, and leads to the 
     await target.keyboard.press("Enter");
     await expect(target.locator("[data-slot=combobox]")).toBeHidden();
   };
-  // The scenario's ledger has a ratio for the mobile phone.
-  await pick("telefonia_movil");
+  // The scenario's ledger has a ratio for the landline.
+  await pick("telefonia_fija");
   await expect(dialog.locator(".ledger-classify-ratio-staged")).toHaveText(
     label("desktop.ledger.classify.ratio_staged", {
-      category: label("desktop.ledger.category.telefonia_movil"),
+      category: label("desktop.ledger.category.telefonia_fija"),
     }),
   );
   await expect(dialog.locator(".ledger-classify-ratio-missing")).toHaveCount(0);
-  // None for vehicle fuel: the dialog says so and offers the ratios.
-  await pick("vehiculo_combustible");
+  // None for home-office electricity: the dialog says so and offers the
+  // ratios.
+  await pick("suministros_home_office_luz");
   await expect(dialog.locator(".ledger-classify-ratio-missing")).toContainText(
     label("desktop.ledger.classify.ratio_missing", {
-      category: label("desktop.ledger.category.vehiculo_combustible"),
+      category: label("desktop.ledger.category.suministros_home_office_luz"),
     }),
   );
   await dialog.locator(".ledger-classify-open-ratios").click();

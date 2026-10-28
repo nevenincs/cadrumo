@@ -846,13 +846,13 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
   const ids = [phone, old, unread, income].map(
     (row) => row.transaction.transaction_id,
   );
-  // 2026 has a ratio for mobile phones, 2025 has none, 2024 was not read.
+  // 2026 has a ratio for fixed lines, 2025 has none, 2024 was not read.
   const ratios = new Map<number, ReadonlySet<string> | null>([
-    [2026, new Set(["telefonia_movil"])],
+    [2026, new Set(["telefonia_fija"])],
     [2025, new Set(["suministros_home_office_luz"])],
     [2024, null],
   ]);
-  expect(ratioCoverage(ids, rows.rows, "telefonia_movil", ratios)).toEqual({
+  expect(ratioCoverage(ids, rows.rows, "telefonia_fija", ratios)).toEqual({
     staged: 1,
     missing: 1,
     unread: 1,
@@ -862,7 +862,7 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
       kind: "mixed",
       ids,
       share: "30",
-      category: "telefonia_movil",
+      category: "telefonia_fija",
       ratios,
     },
     rows.rows,
@@ -873,7 +873,7 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
     (cell) => cell.field === "usage_ratio_id",
   );
   expect(ratioCells.map((cell) => [cell.id, cell.value])).toEqual([
-    [phone.transaction.transaction_id, set("telefonia_movil")],
+    [phone.transaction.transaction_id, set("telefonia_fija")],
   ]);
   // The usage ratio goes in the bulk, beside the classification it needs.
   const plan = planApply(reduceStage(EMPTY_STAGE, outcome.event).content, rows);
@@ -887,12 +887,10 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
     .map((line) => line.split(","))
     .filter((cells) => cells[column] !== "")
     .map((cells) => [cells[0], cells[column]]);
-  expect(named).toEqual([
-    [phone.transaction.transaction_id, "telefonia_movil"],
-  ]);
+  expect(named).toEqual([[phone.transaction.transaction_id, "telefonia_fija"]]);
   // Without the ratios read, Mixed names none and stages the rest.
   const unseen = classifyCells(
-    { kind: "mixed", ids, share: "30", category: "telefonia_movil" },
+    { kind: "mixed", ids, share: "30", category: "telefonia_fija" },
     rows.rows,
   );
   expect(

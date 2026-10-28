@@ -345,7 +345,7 @@ test("classifying is one command: hidden selections are held, Business asks a ca
   ).toHaveCount(0);
   await target
     .getByRole("option", {
-      name: label("desktop.ledger.category.telefonia_movil"),
+      name: label("desktop.ledger.category.telefonia_fija"),
     })
     .click();
   await dialog.getByLabel(label("desktop.ledger.classify.share")).fill("0.5");
