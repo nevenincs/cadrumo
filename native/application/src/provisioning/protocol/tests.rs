@@ -1525,7 +1525,7 @@ fn the_desktop_engine_removes_one_model_and_keeps_the_program_and_the_rest() {
 
     let mut phases = Vec::new();
     let removed = engine(world.admitted.clone()).remove_model(&name, &mut |event| {
-        phases.push(event_value(event));
+        phases.extend(event_value(event));
     });
     assert_eq!(removed.outcome, Outcome::Removed, "{:?}", removed.failure);
     assert_eq!(removed.items, [ItemId::LocalAi]);

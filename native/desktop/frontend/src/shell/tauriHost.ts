@@ -255,9 +255,9 @@ export function tauriHost(): Host {
       read: () => call("desktop_setup_read", {}),
       check: (mode) => call("desktop_setup_check", { mode }),
       verify: (items) => call("desktop_setup_verify", { items }),
-      start: (items, options = {}) =>
+      start: (item, options = {}) =>
         call("desktop_setup_start", {
-          items,
+          item,
           resume: options.resume ?? false,
           ...(options.download ? { download: options.download } : {}),
         }),

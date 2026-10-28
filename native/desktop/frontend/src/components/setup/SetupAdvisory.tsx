@@ -1,6 +1,6 @@
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import { liveRun, type SetupControl } from "../../shell/setup";
+import { anyLive, type SetupControl } from "../../shell/setup";
 import { useStrings } from "../../shell/strings";
 
 /** The one line Settings carries while Cadrumo is not fully set up: what is
@@ -16,7 +16,7 @@ export function SetupAdvisory({
   const t = useStrings();
   const { snapshot } = control;
   if (snapshot === null) return null;
-  const running = liveRun(snapshot) !== null;
+  const running = anyLive(snapshot);
   if (!running && snapshot.complete !== false) return null;
   return (
     <button

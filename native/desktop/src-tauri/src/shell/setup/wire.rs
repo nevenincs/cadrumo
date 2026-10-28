@@ -6,7 +6,7 @@
 //! a host failure, never passed on.
 use cadrumo_application::{
     error::application::{ApplicationError, ErrorCode, Operation},
-    provisioning::local_ai::models::ModelName,
+    provisioning::{items::ItemId, local_ai::models::ModelName},
 };
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeSet, error::Error};
@@ -408,6 +408,21 @@ pub struct ItemResult {
     pub transferred_bytes: u64,
 }
 
+/// How far one part of the local AI's setup came: its program, which names no model,
+/// or the model one part pulls, which it always names so that model's own row finds its
+/// progress. A part sharing an earlier part's model moves no bytes of its own.
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct PartProgress {
+    pub part: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub model: Option<String>,
+    pub step: Option<Step>,
+    pub completed: Option<u64>,
+    pub total: Option<u64>,
+    pub result: Option<ItemResult>,
+}
+
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct ItemProgress {
@@ -417,11 +432,15 @@ pub struct ItemProgress {
     pub total: Option<u64>,
     pub retry: Option<Retry>,
     pub result: Option<ItemResult>,
+    /// The local AI's parts in the order setup carries them out; empty for any other item.
+    pub parts: Vec<PartProgress>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Run {
+    /// The one item this setup sets up.
+    pub item: String,
     pub operation_id: String,
     pub stage: RunStage,
     pub review: Option<Review>,
@@ -456,7 +475,8 @@ pub struct Snapshot {
     pub complete: Option<bool>,
     pub hardware_limited: Option<bool>,
     pub check: Option<Check>,
-    pub setup: Option<Run>,
+    /// Each item's setup, at most one per item, in the engine's item order.
+    pub runs: Vec<Run>,
     pub google: Google,
     pub details: String,
 }
@@ -582,30 +602,56 @@ impl Review {
     }
 }
 
+fn bytes_valid(completed: Option<u64>, total: Option<u64>) -> bool {
+    completed.is_some() == total.is_some()
+        && completed
+            .zip(total)
+            .is_none_or(|(completed, total)| total > 0 && completed <= total)
+}
+
+impl PartProgress {
+    fn valid(&self) -> bool {
+        PARTS.contains(&self.part.as_str())
+            && bytes_valid(self.completed, self.total)
+            && if self.part == "program" {
+                self.model.is_none()
+            } else {
+                self.model
+                    .as_deref()
+                    .is_some_and(|model| ModelName::parse(model).is_ok())
+            }
+    }
+}
+
 impl ItemProgress {
     fn valid(&self) -> bool {
         is_item_id(&self.item)
-            && self.completed.is_some() == self.total.is_some()
-            && self
-                .completed
-                .zip(self.total)
-                .is_none_or(|(completed, total)| total > 0 && completed <= total)
+            && bytes_valid(self.completed, self.total)
             && self
                 .retry
                 .as_ref()
                 .is_none_or(|retry| retry.attempt >= 2 && retry.delay_s >= 1)
+            && (self.parts.is_empty() || self.item == "local_ai")
+            && self.parts.len() <= PARTS.len()
+            && unique(self.parts.iter().map(|part| &part.part))
+            && self.parts.iter().all(PartProgress::valid)
     }
 }
 
 impl Run {
     fn valid(&self) -> bool {
         let settled = self.stage == RunStage::Settled;
-        is_hex64(&self.operation_id)
+        is_item_id(&self.item)
+            && is_hex64(&self.operation_id)
             && (self.stage == RunStage::Review) == self.review.is_some()
-            && self.review.as_ref().is_none_or(Review::valid)
-            && self.items.len() <= MAX_ITEMS
-            && unique(self.items.iter().map(|item| &item.item))
-            && self.items.iter().all(ItemProgress::valid)
+            && self.review.as_ref().is_none_or(|review| {
+                review.valid() && review.entries.iter().all(|entry| entry.item == self.item)
+            })
+            && self.items.len() <= 1
+            && self
+                .items
+                .iter()
+                .all(|item| item.item == self.item && item.valid())
             && settled == self.outcome.is_some()
             && (self.outcome == Some(Outcome::Failed)) == self.failure.is_some()
             && !(settled && self.cancellable)
@@ -622,7 +668,10 @@ impl Snapshot {
             && read == self.complete.is_some()
             && (read || self.rows.is_empty())
             && self.check.as_ref().is_none_or(Check::valid)
-            && self.setup.as_ref().is_none_or(Run::valid)
+            && self.runs.len() <= MAX_ITEMS
+            && unique(self.runs.iter().map(|run| &run.item))
+            && unique(self.runs.iter().map(|run| &run.operation_id))
+            && self.runs.iter().all(Run::valid)
             && (self.google.stage == GoogleStage::Failed) == self.google.failure.is_some()
             && (self.google.email.is_none() || self.google.state == Some(GoogleState::SignedIn))
             && plain_option(self.google.email.as_ref(), NAME_LIMIT)
@@ -661,8 +710,9 @@ pub enum Action {
     Observe,
     Check(CheckMode),
     Verify(Option<Vec<String>>),
+    /// Setting up one item.
     Start {
-        items: Option<Vec<String>>,
+        item: ItemId,
         resume: bool,
         download: Option<ModelDownload>,
     },
@@ -707,22 +757,22 @@ pub fn verify_request(selected: Option<Vec<String>>) -> Result<Action, Applicati
     Ok(Action::Verify(items(selected)?))
 }
 
-/// Plans ordinary setup or one explicitly requested catalogue model download.
+/// Plans the setup of one item, or one explicitly requested catalogue model download.
 pub fn start_request(
-    selected: Option<Vec<String>>,
+    item: &str,
     resume: bool,
     download: Option<ModelDownload>,
 ) -> Result<Action, ApplicationError> {
-    let selected = items(selected)?;
+    let item = ItemId::parse(item).ok_or_else(invalid)?;
     if let Some(download) = &download
-        && (selected.as_deref() != Some(&["local_ai".to_owned()])
+        && (item != ItemId::LocalAi
             || !plain(&download.lane, NAME_LIMIT)
             || ModelName::parse(&download.model).is_err())
     {
         return Err(invalid());
     }
     Ok(Action::Start {
-        items: selected,
+        item,
         resume,
         download,
     })
@@ -801,11 +851,11 @@ mod tests {
 
     fn run(stage: &str) -> Value {
         json!({
-            "operation_id": "b".repeat(64), "stage": stage,
+            "item": "browser", "operation_id": "b".repeat(64), "stage": stage,
             "review": if stage == "review" { review() } else { Value::Null },
             "items": [{
                 "item": "browser", "step": "download", "completed": 40, "total": 100,
-                "retry": {"attempt": 2, "delay_s": 4}, "result": null,
+                "retry": {"attempt": 2, "delay_s": 4}, "result": null, "parts": [],
             }],
             "cancellable": stage == "running", "cancel_requested": false,
             "outcome": if stage == "settled" { json!("completed") } else { Value::Null },
@@ -820,7 +870,7 @@ mod tests {
                 "operation_id": "c".repeat(64), "kind": "status_quick", "stage": "done",
                 "failure": null, "refusal": null,
             },
-            "setup": run("review"),
+            "runs": [run("review")],
             "google": {"state": "signed_out", "email": null, "drive_folder_id": null, "stage": "idle", "failure": null},
             "details": "Cadrumo setup details\nitem: browser; state: absent; check: quick\n",
         })
@@ -833,10 +883,10 @@ mod tests {
     fn a_snapshot_parses_into_the_closed_shapes_and_serializes_as_the_window_reads_it() {
         let shown = parsed(snapshot()).expect("a valid snapshot");
         assert_eq!(serde_json::to_value(&shown).unwrap(), snapshot());
-        assert_eq!(shown.setup.as_ref().unwrap().stage, RunStage::Review);
+        assert_eq!(shown.runs[0].stage, RunStage::Review);
         for stage in ["planning", "running", "settled"] {
             let mut next = snapshot();
-            next["setup"] = run(stage);
+            next["runs"] = json!([run(stage)]);
             assert!(parsed(next).is_some(), "{stage}");
         }
     }
@@ -860,27 +910,29 @@ mod tests {
                 s["rows"].as_array_mut().unwrap().push(copy)
             }),
             ("bad host", |s| {
-                s["setup"]["review"]["entries"][0]["source_hosts"] = json!(["https://x.y"])
+                s["runs"][0]["review"]["entries"][0]["source_hosts"] = json!(["https://x.y"])
             }),
             ("no hosts", |s| {
-                s["setup"]["review"]["entries"][0]["source_hosts"] = json!([])
+                s["runs"][0]["review"]["entries"][0]["source_hosts"] = json!([])
             }),
             ("bad digest", |s| {
-                s["setup"]["review"]["plan_digest"] = json!("A".repeat(64))
+                s["runs"][0]["review"]["plan_digest"] = json!("A".repeat(64))
             }),
             ("space mismatch", |s| {
-                s["setup"]["review"]["space_sufficient"] = json!(false)
+                s["runs"][0]["review"]["space_sufficient"] = json!(false)
             }),
             ("review outside review", |s| {
-                s["setup"]["stage"] = json!("running")
+                s["runs"][0]["stage"] = json!("running")
             }),
             ("progress beyond total", |s| {
-                s["setup"]["items"][0]["completed"] = json!(101)
+                s["runs"][0]["items"][0]["completed"] = json!(101)
             }),
             ("first attempt retry", |s| {
-                s["setup"]["items"][0]["retry"]["attempt"] = json!(1)
+                s["runs"][0]["items"][0]["retry"]["attempt"] = json!(1)
             }),
-            ("unknown outcome", |s| s["setup"]["outcome"] = json!("done")),
+            ("unknown outcome", |s| {
+                s["runs"][0]["outcome"] = json!("done")
+            }),
             ("google failure off a failed act", |s| {
                 s["google"]["failure"] = json!("offline")
             }),
@@ -888,7 +940,7 @@ mod tests {
                 s["google"]["email"] = json!("person@example.com")
             }),
             ("part outside the local AI", |s| {
-                s["setup"]["review"]["entries"][0]["parts"] =
+                s["runs"][0]["review"]["entries"][0]["parts"] =
                     json!([{"part": "program", "download_bytes": null}])
             }),
             ("rows before a read", |s| {
@@ -906,12 +958,12 @@ mod tests {
     #[test]
     fn a_settled_run_carries_its_outcome_and_a_failed_one_its_failure() {
         let mut settled = snapshot();
-        settled["setup"] = run("settled");
-        settled["setup"]["outcome"] = json!("failed");
+        settled["runs"] = json!([run("settled")]);
+        settled["runs"][0]["outcome"] = json!("failed");
         assert!(parsed(settled.clone()).is_none());
-        settled["setup"]["failure"] = json!("unexpected");
+        settled["runs"][0]["failure"] = json!("unexpected");
         assert!(parsed(settled.clone()).is_some());
-        settled["setup"]["cancellable"] = json!(true);
+        settled["runs"][0]["cancellable"] = json!(true);
         assert!(parsed(settled).is_none());
     }
 
@@ -923,17 +975,11 @@ mod tests {
                 model: "synthetic-model:test".into(),
             })
         };
-        assert!(start_request(Some(vec!["local_ai".into()]), false, request()).is_ok());
-        for items in [
-            None,
-            Some(vec!["browser".into()]),
-            Some(vec!["browser".into(), "local_ai".into()]),
-        ] {
-            assert!(start_request(items, false, request()).is_err());
-        }
+        assert!(start_request("local_ai", false, request()).is_ok());
+        assert!(start_request("browser", false, request()).is_err());
         assert!(
             start_request(
-                Some(vec!["local_ai".into()]),
+                "local_ai",
                 false,
                 Some(ModelDownload {
                     lane: "".into(),
@@ -944,7 +990,7 @@ mod tests {
         );
         assert!(
             start_request(
-                Some(vec!["local_ai".into()]),
+                "local_ai",
                 false,
                 Some(ModelDownload {
                     lane: "synthetic_local_api".into(),
@@ -964,14 +1010,16 @@ mod tests {
         assert!(check_request("deep").is_err());
         assert_eq!(verify_request(None).unwrap(), Action::Verify(None));
         assert_eq!(
-            start_request(Some(vec!["local_ai".into()]), true, None).unwrap(),
+            start_request("local_ai", true, None).unwrap(),
             Action::Start {
-                items: Some(vec!["local_ai".into()]),
+                item: ItemId::LocalAi,
                 resume: true,
                 download: None,
             }
         );
-        assert!(start_request(Some(vec![]), false, None).is_err());
+        for item in ["", "printer", "browser,local_ai", "google"] {
+            assert!(start_request(item, false, None).is_err(), "{item}");
+        }
         for selected in [
             vec![],
             vec!["printer".to_owned()],
@@ -1015,7 +1063,9 @@ mod tests {
 
     fn with_parts() -> Value {
         let mut planned = snapshot();
-        let entry = &mut planned["setup"]["review"]["entries"][0];
+        planned["runs"][0]["item"] = json!("local_ai");
+        planned["runs"][0]["items"][0]["item"] = json!("local_ai");
+        let entry = &mut planned["runs"][0]["review"]["entries"][0];
         entry["item"] = json!("local_ai");
         entry["parts"] = json!([
             {"part": "program", "download_bytes": null},
@@ -1029,7 +1079,7 @@ mod tests {
         let shown = parsed(with_parts()).expect("a valid snapshot");
         assert_eq!(serde_json::to_value(&shown).unwrap(), with_parts());
         let cases: [Case; 4] = [
-            ("parts on another item", |e| e["item"] = json!("browser")),
+            ("an entry of another item", |e| e["item"] = json!("browser")),
             ("a part outside the roles", |e| {
                 e["parts"][1]["part"] = json!("weather")
             }),
@@ -1040,7 +1090,82 @@ mod tests {
         ];
         for (name, change) in cases {
             let mut changed = with_parts();
-            change(&mut changed["setup"]["review"]["entries"][0]);
+            change(&mut changed["runs"][0]["review"]["entries"][0]);
+            assert!(parsed(changed).is_none(), "{name}");
+        }
+    }
+
+    /// A snapshot with the browser's setup running beside the local AI's, whose program
+    /// has finished downloading and whose model is on its way.
+    fn side_by_side() -> Value {
+        let mut both = snapshot();
+        let mut local_ai = run("running");
+        local_ai["item"] = json!("local_ai");
+        local_ai["operation_id"] = json!("f".repeat(64));
+        local_ai["items"] = json!([{
+            "item": "local_ai", "step": "download", "completed": 150, "total": 300,
+            "retry": null, "result": null,
+            "parts": [
+                {"part": "program", "step": "install", "completed": 100, "total": 100,
+                 "result": null},
+                {"part": "text_extraction", "model": "synthetic-text:test", "step": "download",
+                 "completed": 50, "total": 200, "result": null},
+            ],
+        }]);
+        both["runs"] = json!([run("running"), local_ai]);
+        both
+    }
+
+    #[test]
+    fn each_item_has_its_own_run_and_the_local_ai_its_parts() {
+        let shown = parsed(side_by_side()).expect("a valid snapshot");
+        assert_eq!(serde_json::to_value(&shown).unwrap(), side_by_side());
+        assert_eq!(
+            shown
+                .runs
+                .iter()
+                .map(|run| run.item.as_str())
+                .collect::<Vec<_>>(),
+            ["browser", "local_ai"]
+        );
+        let cases: [Case; 10] = [
+            ("two runs of one item", |s| {
+                s["runs"][1]["item"] = json!("browser");
+                s["runs"][1]["items"][0]["item"] = json!("browser");
+                s["runs"][1]["items"][0]["parts"] = json!([]);
+            }),
+            ("one operation twice", |s| {
+                s["runs"][1]["operation_id"] = json!("b".repeat(64))
+            }),
+            ("progress of another item", |s| {
+                s["runs"][0]["items"][0]["item"] = json!("local_ai")
+            }),
+            ("parts outside the local AI", |s| {
+                s["runs"][0]["items"][0]["parts"] = s["runs"][1]["items"][0]["parts"].clone()
+            }),
+            ("a part outside the plan's parts", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["part"] = json!("weather")
+            }),
+            ("a part twice", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["part"] = json!("program");
+                s["runs"][1]["items"][0]["parts"][1]["model"] = Value::Null;
+            }),
+            ("a model on the program", |s| {
+                s["runs"][1]["items"][0]["parts"][0]["model"] = json!("synthetic-text:test")
+            }),
+            ("a model part without its model", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["model"] = Value::Null
+            }),
+            ("a model the engine cannot pull", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["model"] = json!("../outside")
+            }),
+            ("a part beyond its total", |s| {
+                s["runs"][1]["items"][0]["parts"][1]["completed"] = json!(201)
+            }),
+        ];
+        for (name, change) in cases {
+            let mut changed = side_by_side();
+            change(&mut changed);
             assert!(parsed(changed).is_none(), "{name}");
         }
     }

@@ -48,7 +48,6 @@ function Screen({
         locale="en"
         onAct={(row) => control.verify([row.item])}
         onCopyDetails={noop}
-        onShowAll={noop}
       />
     </>
   );

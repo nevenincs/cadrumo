@@ -955,8 +955,23 @@ export type SetupItemResult = {
   transferred_bytes: number;
 };
 
-/** One planned item while setup runs: its current step, byte progress and
- * last retry notice, then its result once setup settles. */
+/** One part of the local AI's setup: its program, or the model one part
+ * pulls. A part whose model an earlier part pulls moves no bytes of its own. */
+export type SetupPartProgress = {
+  part: string;
+  /** The model the part pulls, always present for a model part so that
+   * model's row finds its progress; absent for the program (`part` is
+   * "program"). */
+  model?: string;
+  step: SetupStep | null;
+  /** Both null until the part's bytes move or while its size is unknown. */
+  completed: number | null;
+  total: number | null;
+  result: SetupItemResult | null;
+};
+
+/** The item a setup sets up while it runs: its current step, byte progress
+ * and last retry notice, then its result once setup settles. */
 export type SetupItemProgress = {
   item: SetupItemId;
   step: SetupStep | null;
@@ -965,6 +980,9 @@ export type SetupItemProgress = {
   total: number | null;
   retry: SetupRetry | null;
   result: SetupItemResult | null;
+  /** The local AI's parts in the order setup carries them out; empty for any
+   * other item. */
+  parts: SetupPartProgress[];
 };
 
 export type SetupOutcome =
@@ -978,12 +996,15 @@ export type SetupOutcome =
   /** The setup did not finish; see `failure`. */
   | "failed";
 
-/** The setup this window started or joined. */
+/** One item's setup this window started or joined. */
 export type SetupRun = {
+  /** The one item this setup sets up. */
+  item: SetupItemId;
   operation_id: string;
   stage: "planning" | "review" | "running" | "settled";
   /** Present exactly while `stage` is "review". */
   review: SetupReview | null;
+  /** The run's item alone, once setup knows it. */
   items: SetupItemProgress[];
   /** Whether Cancel can be offered now. */
   cancellable: boolean;
@@ -1024,7 +1045,9 @@ export type SetupSnapshot = {
   /** Setup cannot complete on this computer's hardware. */
   hardware_limited: boolean | null;
   check: SetupCheck | null;
-  setup: SetupRun | null;
+  /** Each item's setup, at most one per item, in the rows' item order. Items
+   * set up independently and at the same time. */
+  runs: SetupRun[];
   google: GoogleAccount;
   /** The redacted report "Copy details" puts on the clipboard. */
   details: string;
@@ -1132,7 +1155,10 @@ export type SedeViewEndReason =
   | "runtime_stopping"
   | "failed"
   | "unavailable"
-  | "refused";
+  | "refused"
+  /** A component the view needs is not set up; the ended message's
+   * `recovery_action_id` names its setup. */
+  | "component_not_ready";
 
 /** What became of the session when the view ended. */
 export type SedeViewPublication =
@@ -1235,6 +1261,9 @@ export type SedeViewMessage =
       reason: SedeViewEndReason;
       code: string | null;
       outcome: SedeViewOutcome | null;
+      /** The setup action that readies the missing component, present only
+       * when `reason` is "component_not_ready". */
+      recovery_action_id: string | null;
     };
 
 /** A raw frame the host keeps for the shell document, named on its channel.
@@ -1677,17 +1706,18 @@ export interface HostCommands {
     args: Authorized<{ items: SetupItemId[] | null }>;
     result: DesktopSetup;
   };
-  /** Plans setup of `items`, or of every item not ready when null; the plan
-   * then awaits an answer in `setup.review`. An explicit download is validated against the current
-   * catalogue independently of document tasks; otherwise the host reads saved
-   * model selections. Admission failure refuses the start. A setup already running is
-   * joined.
+  /** Plans setup of one `item`; the plan then awaits an answer in that
+   * item's run's `review`. An explicit download, of the local AI alone, is
+   * validated against the current catalogue independently of document tasks;
+   * otherwise the host reads saved model selections. Admission failure
+   * refuses the start. A setup of the item already running is joined; another
+   * item's setup never refuses it.
    * `resume` is the person's Resume click after an interruption: when the
    * new plan is exactly the one approved before, it is approved again
    * without a second review; any other plan awaits an answer as usual. */
   desktop_setup_start: {
     args: Authorized<{
-      items: SetupItemId[] | null;
+      item: SetupItemId;
       resume: boolean;
       download?: SetupModelDownload;
     }>;

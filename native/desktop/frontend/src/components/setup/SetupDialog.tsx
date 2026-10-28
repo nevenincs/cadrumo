@@ -20,7 +20,12 @@ import type {
   SetupRun,
   SetupSnapshot,
 } from "../../ipc/contract";
-import { needsSetup, type SetupControl } from "../../shell/setup";
+import {
+  liveRuns,
+  needsSetup,
+  runOf,
+  type SetupControl,
+} from "../../shell/setup";
 import { useStrings, type Translate } from "../../shell/strings";
 import { formatSize } from "../agent/files";
 import { SetupRowItem } from "./SetupRowItem";
@@ -36,20 +41,28 @@ import {
   stepWords,
 } from "./setupWords";
 
-// The setup flow: one summary and one primary action. Cadrumo's components
-// are set up in order by one setup, whose overall progress is the summary
-// while it runs; what each component is, the plan's detail per component and
-// each one's progress stay in a "Details" disclosure, closed until opened.
-// The dialog never holds the window: closing it leaves a running setup
-// running, and Settings keeps saying so. Opened on the browser, it is the
-// browser's own flow: its rows, its plan and its progress only, and a setup
-// of anything else that is running is named as that rather than shown as
-// the browser's.
+// The setup flow: one summary and one primary action. Each component has a
+// setup of its own; the dialog shows one of them, whose overall progress is
+// the summary while it runs; what each component is, the plan's detail per
+// component and each one's progress stay in a "Details" disclosure, closed
+// until opened. The dialog never holds the window: closing it leaves a
+// running setup running, and Settings keeps saying so. Opened on the browser,
+// it is the browser's own flow: its rows, its plan and its progress only.
 
-/** The items a start asks for: the one the dialog was opened on, or every
- * item not ready. */
-function startItems(focus: SetupItemId | null): SetupItemId[] | null {
-  return focus === null ? null : [focus];
+/** The setup the dialog shows: the focused item's, else one awaiting an
+ * answer, else one running, else the first. */
+function shownRun(
+  snapshot: SetupSnapshot | null,
+  focus: SetupItemId | null,
+): SetupRun | null {
+  if (focus !== null) return runOf(snapshot, focus);
+  const runs = snapshot?.runs ?? [];
+  return (
+    runs.find((run) => run.stage === "review") ??
+    liveRuns(snapshot)[0] ??
+    runs[0] ??
+    null
+  );
 }
 
 /** The per-component detail, closed until the person opens it. */
@@ -336,7 +349,6 @@ export function SetupDialog({
   onAct,
   onCopyDetails,
   onLocalAi,
-  onShowAll,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -349,9 +361,6 @@ export function SetupDialog({
   onAct: (row: SetupRow) => void;
   onCopyDetails: (details: string) => void;
   onLocalAi?: () => void;
-  /** Shows setup as a whole, for a setup of other items running while the
-   * browser's flow is open. */
-  onShowAll?: () => void;
 }) {
   const t = useStrings();
   const snapshot: SetupSnapshot | null = control.snapshot;
@@ -362,18 +371,9 @@ export function SetupDialog({
   const browserFlow =
     focus !== null &&
     (rows.find((row) => row.item === focus)?.kind ?? focus) === "browser";
-  // A setup this window joined that plans more than the browser is not the
-  // browser's: while it runs it is named, and once settled it says nothing
-  // here.
-  const joined = snapshot?.setup ?? null;
-  const foreign =
-    browserFlow &&
-    joined !== null &&
-    joined.items.some((item) => item.item !== focus);
-  const elsewhere = foreign && joined.stage !== "settled";
-  const run = foreign ? null : joined;
+  const run = shownRun(snapshot, focus);
   const stage = run?.stage ?? null;
-  const main = snapshot && !elsewhere ? mainAction(t, run, rows) : null;
+  const main = snapshot ? mainAction(t, run, rows) : null;
   const usable =
     rows.length > 0 && rows.every((row) => rowTone(row) === "ready");
   // A check the engine refused under a category of its own, such as a setting
@@ -446,13 +446,6 @@ export function SetupDialog({
           <p className="text-sm text-foreground">
             {t("desktop.setup.unavailable")}
           </p>
-        ) : elsewhere ? (
-          <>
-            <p role="status" className="text-sm text-foreground">
-              {t("desktop.setup.browser_other_running")}
-            </p>
-            {rowList}
-          </>
         ) : stage === "planning" ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner />
@@ -548,7 +541,7 @@ export function SetupDialog({
                 variant="outline"
                 size="sm"
                 disabled={control.pending}
-                onClick={() => control.answer("reject")}
+                onClick={() => run && control.answer(run.item, "reject")}
               >
                 {t("desktop.setup.reject")}
               </Button>
@@ -556,26 +549,11 @@ export function SetupDialog({
                 <Button
                   size="sm"
                   disabled={control.pending || !run.review.space_sufficient}
-                  onClick={() => control.answer("apply")}
+                  onClick={() => control.answer(run.item, "apply")}
                 >
                   {approveLabel(t, run.review, locale)}
                 </Button>
               )}
-            </>
-          ) : elsewhere ? (
-            <>
-              {onShowAll && (
-                <Button variant="outline" size="sm" onClick={onShowAll}>
-                  {t("desktop.setup.show_running")}
-                </Button>
-              )}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-              >
-                {t("desktop.setup.hide")}
-              </Button>
             </>
           ) : (
             <>
@@ -586,7 +564,7 @@ export function SetupDialog({
                   disabled={
                     control.pending || !run.cancellable || run.cancel_requested
                   }
-                  onClick={() => control.cancel()}
+                  onClick={() => control.cancel(run.item)}
                 >
                   {t("desktop.setup.cancel")}
                 </Button>
@@ -627,9 +605,14 @@ export function SetupDialog({
                   disabled={control.pending}
                   onClick={() => {
                     control.clearRefusal();
-                    control.start(startItems(focus), {
-                      resume: main.resume,
-                    });
+                    // Each item is set up on its own: the one the dialog was
+                    // opened on, or every one that can be set up.
+                    const wanted =
+                      focus === null
+                        ? rows.filter(needsSetup).map((row) => row.item)
+                        : [focus];
+                    for (const item of wanted)
+                      control.start(item, { resume: main.resume });
                   }}
                 >
                   {main.label}

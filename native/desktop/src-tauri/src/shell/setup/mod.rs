@@ -165,7 +165,7 @@ fn compose(engine: components::View, google: Google) -> Option<Snapshot> {
         complete: engine.complete,
         hardware_limited: engine.hardware_limited,
         check: engine.check,
-        setup: engine.setup,
+        runs: engine.runs,
         google,
         details: engine.details,
     };
@@ -263,12 +263,12 @@ impl SetupHost {
                 Ok(())
             }
             Action::Start {
-                items,
+                item,
                 resume,
                 download,
             } => {
                 self.components
-                    .start(item_ids(items.clone()), *resume, download.clone())
+                    .start(*item, *resume, download.clone())
                     .await
             }
             Action::Answer {
@@ -594,11 +594,11 @@ async fn desktop_setup_verify(
 #[tauri::command]
 async fn desktop_setup_start(
     host: State<'_, Arc<SetupHost>>,
-    items: Option<Vec<String>>,
+    item: String,
     resume: bool,
     download: Option<wire::ModelDownload>,
 ) -> std::result::Result<DesktopSetup, CommandFailure> {
-    host.exchange(wire::start_request(items, resume, download)?, true)
+    host.exchange(wire::start_request(&item, resume, download)?, true)
         .await
 }
 
@@ -723,7 +723,7 @@ mod tests {
     fn snapshot(details: &str) -> Snapshot {
         serde_json::from_value(json!({
             "rows": [], "rows_mode": null, "complete": null, "hardware_limited": null,
-            "check": null, "setup": null,
+            "check": null, "runs": [],
             "google": {"state": null, "email": null, "drive_folder_id": null, "stage": "idle", "failure": null},
             "details": details,
         }))
@@ -883,7 +883,7 @@ mod tests {
             complete: None,
             hardware_limited: None,
             check: None,
-            setup: None,
+            runs: Vec::new(),
             details: "Cadrumo setup details\n".into(),
         };
         let unread = || Google {

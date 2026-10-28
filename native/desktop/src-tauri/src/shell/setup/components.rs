@@ -4,6 +4,11 @@
 //! engine report, event and review becomes the window's setup state, and every
 //! change bumps one counter the observer follows; nothing polls.
 //!
+//! Each item has a setup of its own: a setup names one item, runs under that item's
+//! writer lock on an engine of its own, and is reviewed, cancelled and resumed apart
+//! from any other item's, so the browser and the local AI set up at the same time. A
+//! second start of an item already setting up joins that setup.
+//!
 //! A setup asks for the person's approval through the engine's review: the
 //! worker publishes the plan and waits for `desktop_setup_answer`, which
 //! approves exactly the digest the window showed. The engine checks that
@@ -52,12 +57,12 @@ use cadrumo_application::{
         browser::failure_category,
         engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
         failure::FailureCategory,
-        items::{Destination, ItemId, Locations},
+        items::{Destination, ItemId, Locations, PROGRAM_PART},
         local_ai::{
             hardware::Hardware,
             models::{LocalModels, ModelName},
         },
-        plan::SetupPlan,
+        plan::{PlanEntry, SetupPlan},
         role_host,
         state::{
             BlockedReason, CheckMode, ItemState, RecoveryAction, SetupStep, StaleReason, StatusRow,
@@ -162,12 +167,23 @@ fn operation_id() -> String {
 }
 
 #[derive(Clone, Debug)]
+struct PartTrack {
+    part: String,
+    model: Option<String>,
+    step: Option<SetupStep>,
+    progress: Option<(u64, u64)>,
+    result: Option<wire::ItemResult>,
+}
+
+#[derive(Clone, Debug)]
 struct ItemTrack {
     item: ItemId,
     step: Option<SetupStep>,
     progress: Option<(u64, u64)>,
     retry: Option<(u32, u32)>,
     result: Option<wire::ItemResult>,
+    /// The local AI's parts in the order its plan carries them out.
+    parts: Vec<PartTrack>,
 }
 
 impl ItemTrack {
@@ -178,6 +194,55 @@ impl ItemTrack {
             progress: None,
             retry: None,
             result: None,
+            parts: Vec::new(),
+        }
+    }
+
+    fn part(&mut self, part: &str) -> &mut PartTrack {
+        let index = match self.parts.iter().position(|track| track.part == part) {
+            Some(index) => index,
+            None => {
+                self.parts.push(PartTrack {
+                    part: part.to_owned(),
+                    model: None,
+                    step: None,
+                    progress: None,
+                    result: None,
+                });
+                self.parts.len() - 1
+            }
+        };
+        &mut self.parts[index]
+    }
+
+    /// The results of the item's parts once its setup ended: every part it finished
+    /// changed, and when it stopped while downloading or installing a part, that part
+    /// failed and the parts after it were never reached.
+    fn settle_parts(&mut self, stopped: Option<wire::Failure>) {
+        let began = self.parts.iter().rposition(|part| part.step.is_some());
+        let in_part = matches!(self.step, Some(SetupStep::Download | SetupStep::Install));
+        let at = stopped.and_then(|failure| Some((began.filter(|_| in_part)?, failure)));
+        for (index, part) in self.parts.iter_mut().enumerate() {
+            let transferred_bytes = part.progress.map_or(0, |(completed, _)| completed);
+            let reached = match (stopped, began) {
+                (None, _) => true,
+                (Some(_), Some(began)) => index <= began,
+                (Some(_), None) => false,
+            };
+            part.result = match at {
+                Some((at, failure)) if index == at => Some(wire::ItemResult {
+                    changed: false,
+                    failure: Some(failure),
+                    transferred_bytes,
+                }),
+                Some((at, _)) if index > at => None,
+                _ if reached => Some(wire::ItemResult {
+                    changed: true,
+                    failure: None,
+                    transferred_bytes,
+                }),
+                _ => None,
+            };
         }
     }
 }
@@ -194,6 +259,8 @@ struct CheckTrack {
 }
 
 struct SetupTrack {
+    /// The one item this setup sets up.
+    item: ItemId,
     operation_id: String,
     download: Option<wire::ModelDownload>,
     stage: RunStage,
@@ -215,7 +282,7 @@ struct SetupTrack {
 }
 
 impl SetupTrack {
-    fn item(&mut self, item: ItemId) -> &mut ItemTrack {
+    fn track_of(&mut self, item: ItemId) -> &mut ItemTrack {
         let index = match self.items.iter().position(|track| track.item == item) {
             Some(index) => index,
             None => {
@@ -224,6 +291,17 @@ impl SetupTrack {
             }
         };
         &mut self.items[index]
+    }
+
+    /// The item an entry of the plan sets up, with each of its parts.
+    fn planned(&mut self, entry: &PlanEntry) {
+        let item = self.track_of(entry.item);
+        for part in &entry.parts {
+            let track = item.part(&part.part_id);
+            if track.model.is_none() && part.part_id != PROGRAM_PART {
+                track.model = part.target_version.clone();
+            }
+        }
     }
 
     fn live(&self) -> bool {
@@ -247,12 +325,13 @@ impl SetupTrack {
 struct Window {
     rows: Option<(CheckMode, Vec<StatusRow>)>,
     check: Option<CheckTrack>,
-    setup: Option<SetupTrack>,
-    /// The plans this window approved, by digest.
-    approved: BTreeSet<String>,
-    /// The setup whose engine could not be admitted, by operation id, and why. Its track
-    /// is gone: the start that asked for it is refused with this.
-    refused: Option<(String, Stop)>,
+    /// Each item's latest setup.
+    setups: BTreeMap<ItemId, SetupTrack>,
+    /// The plans this window approved, by item and digest.
+    approved: BTreeMap<ItemId, BTreeSet<String>>,
+    /// The setup of an item whose engine could not be admitted, by operation id, and why.
+    /// Its track is gone: the start that asked for it is refused with this.
+    refused: BTreeMap<ItemId, (String, Stop)>,
     workers: Vec<JoinHandle<()>>,
     /// Stops a check at its next transfer chunk or browser launch once the window closes.
     checks: Arc<Cancellation>,
@@ -261,9 +340,16 @@ struct Window {
 
 impl Window {
     fn setup_of(&mut self, operation_id: &str) -> Option<&mut SetupTrack> {
-        self.setup
-            .as_mut()
-            .filter(|track| track.operation_id == operation_id)
+        self.setups
+            .values_mut()
+            .find(|track| track.operation_id == operation_id)
+    }
+
+    /// Forgets the setup `operation_id`, which set nothing up; the item it named.
+    fn drop_setup(&mut self, operation_id: &str) -> Option<ItemId> {
+        let item = self.setup_of(operation_id).map(|track| track.item)?;
+        self.setups.remove(&item);
+        Some(item)
     }
 
     fn check_running(&self) -> bool {
@@ -297,7 +383,7 @@ pub struct View {
     pub complete: Option<bool>,
     pub hardware_limited: Option<bool>,
     pub check: Option<wire::Check>,
-    pub setup: Option<wire::Run>,
+    pub runs: Vec<wire::Run>,
     pub details: String,
 }
 
@@ -331,26 +417,25 @@ impl Components {
         self.shared.changed.subscribe()
     }
 
-    fn spawn(&self, window: &mut Window, name: &str, work: impl FnOnce() + Send + 'static) {
+    /// Whether the work got a thread. Without one it never starts, and the caller's track
+    /// says it failed.
+    fn spawn(&self, window: &mut Window, name: &str, work: impl FnOnce() + Send + 'static) -> bool {
         window.workers.retain(|worker| !worker.is_finished());
         match std::thread::Builder::new()
             .name(name.to_owned())
             .spawn(work)
         {
-            Ok(worker) => window.workers.push(worker),
-            // Without a thread the work never starts; its track says it failed.
+            Ok(worker) => {
+                window.workers.push(worker);
+                true
+            }
             Err(error) => {
                 self.shared.reports.error(
                     &ApplicationError::new(ErrorCode::SpawnFailed, Operation::Cli)
                         .with_reason("setup_worker_spawn")
                         .caused_by(error),
                 );
-                if let Some(check) = window.check.as_mut().filter(|_| name == "setup-check") {
-                    check.stage = CheckStage::Failed;
-                }
-                if let Some(track) = window.setup.as_mut().filter(|_| name == "setup-run") {
-                    settle_failed(track, wire::Failure::Unexpected);
-                }
+                false
             }
         }
     }
@@ -402,7 +487,7 @@ impl Components {
         let admission = self.admission.clone();
         let shared = self.shared.clone();
         let cancellation = window.checks.clone();
-        self.spawn(window, "setup-check", move || {
+        let spawned = self.spawn(window, "setup-check", move || {
             let report = admitted(&*engines, &admission, None).map(|mut engine| {
                 let engine = &mut engine;
                 match kind {
@@ -455,15 +540,18 @@ impl Components {
                 }
             });
         });
+        if !spawned && let Some(check) = window.check.as_mut() {
+            check.stage = CheckStage::Failed;
+        }
     }
 
-    /// Plans a setup of `items`, every item whose row offers an action when
-    /// `None`, and waits until it asks for an answer, runs or settles. A setup
-    /// already running is joined. With `resume`, a plan this window approved
-    /// before applies without asking again.
+    /// Plans a setup of `item` and waits until it asks for an answer, runs or settles.
+    /// A setup of `item` already running is joined; another item's setup runs beside it.
+    /// With `resume`, a plan this window approved for the item before applies without
+    /// asking again.
     pub async fn start(
         &self,
-        items: Option<Vec<ItemId>>,
+        item: ItemId,
         resume: bool,
         download: Option<wire::ModelDownload>,
     ) -> Result<(), Stop> {
@@ -473,30 +561,30 @@ impl Components {
             if window.closed {
                 return Err(Stop::unavailable("setup_window_closed"));
             }
-            if window.setup.as_ref().is_some_and(SetupTrack::live) {
-                // One setup at a time: a second start joins the running one.
+            if window.setups.get(&item).is_some_and(SetupTrack::live) {
                 return Ok(());
             }
             // Resume retains the explicit download; it never substitutes document roles.
             let download = download.or_else(|| {
-                ((resume
-                    || window.setup.as_ref().is_some_and(|track| {
-                        matches!(track.outcome, Some(Outcome::Failed | Outcome::Interrupted))
-                    }))
-                    && items.as_deref() == Some(&[ItemId::LocalAi]))
-                .then(|| {
-                    window
-                        .setup
-                        .as_ref()
-                        .and_then(|track| track.download.clone())
-                })
-                .flatten()
+                window
+                    .setups
+                    .get(&item)
+                    .filter(|track| {
+                        item == ItemId::LocalAi
+                            && (resume
+                                || matches!(
+                                    track.outcome,
+                                    Some(Outcome::Failed | Outcome::Interrupted)
+                                ))
+                    })
+                    .and_then(|track| track.download.clone())
             });
             let id = operation_id();
             let cancellation = Arc::new(Cancellation::default());
             let mut track = SetupTrack {
+                item,
                 operation_id: id.clone(),
-                download: download.clone(),
+                download,
                 stage: RunStage::Planning,
                 review: None,
                 answers: None,
@@ -510,20 +598,18 @@ impl Components {
                 outcome: None,
                 failure: None,
             };
-            for item in items.iter().flatten() {
-                track.item(*item);
-            }
-            window.setup = Some(track);
-            window.refused = None;
+            track.track_of(item);
+            window.setups.insert(item, track);
+            window.refused.remove(&item);
             let engines = self.engines.clone();
             let admission = self.admission.clone();
             let shared = self.shared.clone();
             let request = SetupRequest {
-                items,
+                items: Some(vec![item]),
                 approved: None,
             };
             let run_id = id.clone();
-            self.spawn(&mut window, "setup-run", move || {
+            let spawned = self.spawn(&mut window, "setup-run", move || {
                 run_setup(
                     &*engines,
                     &admission,
@@ -534,6 +620,9 @@ impl Components {
                     &cancellation,
                 );
             });
+            if !spawned && let Some(track) = window.setup_of(&id) {
+                settle_failed(track, wire::Failure::Unexpected);
+            }
             id
         };
         self.shared
@@ -544,7 +633,11 @@ impl Components {
                 let mut window = lock(&self.shared.window);
                 match window.setup_of(&id) {
                     None => {
-                        let refused = window.refused.take_if(|(refused, _)| *refused == id);
+                        let ours = window
+                            .refused
+                            .get(&item)
+                            .is_some_and(|(refused, _)| *refused == id);
+                        let refused = ours.then(|| window.refused.remove(&item)).flatten();
                         return Err(refused.map_or(Stop::Refused(Refusal::Busy), |(_, stop)| stop));
                     }
                     Some(track) if track.stage != RunStage::Planning => return Ok(()),
@@ -595,8 +688,13 @@ impl Components {
             track.review = None;
             track.answered = true;
             track.stage = RunStage::Planning;
+            let item = track.item;
             if matches!(answer, Answer::Approve(_)) {
-                window.approved.insert(plan_digest.to_owned());
+                window
+                    .approved
+                    .entry(item)
+                    .or_default()
+                    .insert(plan_digest.to_owned());
             }
             Ok(())
         })?;
@@ -632,9 +730,7 @@ impl Components {
             }
             track.cancel_requested = true;
             if track.following {
-                return Ok(Some(
-                    track.items.iter().map(|item| item.item).collect::<Vec<_>>(),
-                ));
+                return Ok(Some(vec![track.item]));
             }
             track.cancellation.cancel();
             track.decline();
@@ -663,13 +759,17 @@ impl Components {
     }
 
     /// Removes the local model `model` and takes the rows the removal reads after it.
-    /// Refused while a setup runs, since that setup holds the local AI's writer lock
-    /// or may pull the model again.
+    /// Refused while the local AI sets up, since that setup holds its writer lock or may
+    /// pull the model again; another item's setup does not stand in its way.
     pub async fn remove_model(&self, model: &str) -> Result<(), Stop> {
         let name = ModelName::parse(model).map_err(|_| Refusal::ModelSelectionUnusable)?;
-        let running = self
-            .shared
-            .update(|window| window.closed || window.setup.as_ref().is_some_and(SetupTrack::live));
+        let running = self.shared.update(|window| {
+            window.closed
+                || window
+                    .setups
+                    .get(&ItemId::LocalAi)
+                    .is_some_and(SetupTrack::live)
+        });
         if running {
             return Err(Refusal::Busy.into());
         }
@@ -698,7 +798,7 @@ impl Components {
         let workers = self.shared.update(|window| {
             window.closed = true;
             window.checks.cancel();
-            if let Some(track) = window.setup.as_mut().filter(|track| track.live()) {
+            for track in window.setups.values_mut().filter(|track| track.live()) {
                 track.cancel_requested = true;
                 track.cancellation.cancel();
                 track.decline();
@@ -723,6 +823,10 @@ impl Components {
             None => (Vec::new(), None),
         };
         let read = window.rows.as_ref().map(|(_, rows)| rows.as_slice());
+        let setups: Vec<&SetupTrack> = ItemId::ALL
+            .iter()
+            .filter_map(|item| window.setups.get(item))
+            .collect();
         View {
             rows,
             rows_mode,
@@ -738,8 +842,8 @@ impl Components {
                 failure: check.failure,
                 refusal: check.refusal,
             }),
-            setup: window.setup.as_ref().map(run),
-            details: details(read.unwrap_or_default(), window.setup.as_ref()),
+            runs: setups.iter().copied().map(run).collect(),
+            details: details(read.unwrap_or_default(), &setups),
         }
     }
 }
@@ -756,9 +860,7 @@ fn run_setup(
     cancellation: &Cancellation,
 ) {
     let download = lock(&shared.window)
-        .setup
-        .as_ref()
-        .filter(|track| track.operation_id == id)
+        .setup_of(id)
         .and_then(|track| track.download.clone());
     let mut engine = match admitted(engines, admission, download.as_ref()) {
         Ok(engine) => engine,
@@ -779,9 +881,8 @@ fn run_setup(
             // for it is refused instead, and the window shows no run. That start returns
             // the stop, so the host that answers the window records its cause.
             shared.update(|window| {
-                if window.setup_of(id).is_some() {
-                    window.setup = None;
-                    window.refused = Some((id.to_owned(), stop));
+                if let Some(item) = window.drop_setup(id) {
+                    window.refused.insert(item, (id.to_owned(), stop));
                 }
             });
             return;
@@ -793,14 +894,21 @@ fn run_setup(
             let digest = plan.digest();
             let (answers, answer) = mpsc::channel();
             let decided = shared.update(|window| {
-                let approved = resume && window.approved.contains(digest.as_str());
+                let item = window.setup_of(id).map(|track| track.item);
+                let approved = resume
+                    && item.is_some_and(|item| {
+                        window
+                            .approved
+                            .get(&item)
+                            .is_some_and(|plans| plans.contains(digest.as_str()))
+                    });
                 let closed = window.closed;
                 let Some(track) = window.setup_of(id) else {
                     return Some(Answer::Decline);
                 };
                 track.hosts.extend(plan_hosts(plan));
                 for entry in &plan.entries {
-                    track.item(entry.item);
+                    track.planned(entry);
                 }
                 if closed || track.cancel_requested {
                     return Some(Answer::Decline);
@@ -847,9 +955,7 @@ fn run_setup(
             if report.outcome == Ended::Busy {
                 // A removal changes the item, or the window stopped following
                 // another setup as it closed; this one set nothing up.
-                if window.setup_of(id).is_some() {
-                    window.setup = None;
-                }
+                window.drop_setup(id);
                 return;
             }
             if let Some(track) = window.setup_of(id) {
@@ -864,7 +970,7 @@ fn take_event(track: &mut SetupTrack, event: Event) {
     if let Event::Following { item, .. } = &event {
         // Another setup holds the item: there is no plan to review here.
         track.following = true;
-        track.item(*item);
+        track.track_of(*item);
     }
     if (track.answered || track.following) && track.stage == RunStage::Planning {
         track.stage = RunStage::Running;
@@ -875,7 +981,7 @@ fn take_event(track: &mut SetupTrack, event: Event) {
             if !track.phases.contains(&code) {
                 track.phases.push(code);
             }
-            let item = track.item(item);
+            let item = track.track_of(item);
             item.step = Some(step);
             item.retry = None;
         }
@@ -885,7 +991,29 @@ fn take_event(track: &mut SetupTrack, event: Event) {
             total,
         } => {
             if total > 0 {
-                track.item(item).progress = Some((completed.min(total), total));
+                track.track_of(item).progress = Some((completed.min(total), total));
+            }
+        }
+        Event::Part {
+            item,
+            part,
+            model,
+            step,
+        } => {
+            let part = track.track_of(item).part(&part);
+            part.step = Some(step);
+            if model.is_some() {
+                part.model = model;
+            }
+        }
+        Event::PartProgress {
+            item,
+            part,
+            completed,
+            total,
+        } => {
+            if total > 0 {
+                track.track_of(item).part(&part).progress = Some((completed.min(total), total));
             }
         }
         Event::Retrying {
@@ -895,7 +1023,7 @@ fn take_event(track: &mut SetupTrack, event: Event) {
         } => {
             if attempt >= 2 {
                 let seconds = u32::try_from(delay.as_millis().div_ceil(1000)).unwrap_or(u32::MAX);
-                track.item(item).retry = Some((attempt, seconds.max(1)));
+                track.track_of(item).retry = Some((attempt, seconds.max(1)));
             }
         }
         Event::WaitingForServer { .. } | Event::Following { .. } => {}
@@ -930,7 +1058,7 @@ fn settle(track: &mut SetupTrack, report: &Report) {
     };
     if let Some(plan) = &report.plan {
         for entry in &plan.entries {
-            track.item(entry.item);
+            track.planned(entry);
         }
     }
     let ran = matches!(
@@ -942,17 +1070,20 @@ fn settle(track: &mut SetupTrack, report: &Report) {
         let transferred = item.progress.map_or(0, |(completed, _)| completed);
         if Some(item.item) == stopped {
             reached = true;
+            let failed = failure.unwrap_or(wire::Failure::Unexpected);
             item.result = Some(wire::ItemResult {
                 changed: false,
-                failure: Some(failure.unwrap_or(wire::Failure::Unexpected)),
+                failure: Some(failed),
                 transferred_bytes: transferred,
             });
+            item.settle_parts(Some(failed));
         } else if ran && !reached {
             item.result = Some(wire::ItemResult {
                 changed: true,
                 failure: None,
                 transferred_bytes: transferred,
             });
+            item.settle_parts(None);
         }
         item.retry = None;
     }
@@ -1039,6 +1170,7 @@ fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
 fn run(track: &SetupTrack) -> wire::Run {
     let settled = track.stage == RunStage::Settled;
     wire::Run {
+        item: track.item.as_str().to_owned(),
         operation_id: track.operation_id.clone(),
         stage: track.stage,
         review: track
@@ -1059,6 +1191,18 @@ fn run(track: &SetupTrack) -> wire::Run {
                     .filter(|_| !settled)
                     .map(|(attempt, delay_s)| wire::Retry { attempt, delay_s }),
                 result: item.result.clone(),
+                parts: item
+                    .parts
+                    .iter()
+                    .map(|part| wire::PartProgress {
+                        part: part.part.clone(),
+                        model: part.model.clone(),
+                        step: part.step.map(step),
+                        completed: part.progress.map(|(completed, _)| completed),
+                        total: part.progress.map(|(_, total)| total),
+                        result: part.result.clone(),
+                    })
+                    .collect(),
             })
             .collect(),
         cancellable: !settled && !track.cancel_requested,
@@ -1070,9 +1214,9 @@ fn run(track: &SetupTrack) -> wire::Run {
 
 /// The redacted report "Copy details" puts on the clipboard: closed values,
 /// versions, the operation id, phase codes and hosts, and nothing else.
-fn details(rows: &[StatusRow], setup: Option<&SetupTrack>) -> String {
+fn details(rows: &[StatusRow], setups: &[&SetupTrack]) -> String {
     let mut lines = vec!["Cadrumo setup details".to_owned()];
-    if let Some(track) = setup {
+    for track in setups {
         lines.push(format!("operation: {}", track.operation_id));
     }
     for row in rows {
@@ -1095,14 +1239,22 @@ fn details(rows: &[StatusRow], setup: Option<&SetupTrack>) -> String {
         }
         lines.push(parts.join("; "));
     }
-    if let Some(track) = setup {
-        if !track.phases.is_empty() {
-            lines.push(format!("phases: {}", track.phases.join(", ")));
-        }
-        if !track.hosts.is_empty() {
-            let hosts: Vec<&str> = track.hosts.iter().map(String::as_str).collect();
-            lines.push(format!("hosts: {}", hosts.join(", ")));
-        }
+    let phases: Vec<&str> = setups
+        .iter()
+        .flat_map(|track| &track.phases)
+        .map(String::as_str)
+        .collect();
+    if !phases.is_empty() {
+        lines.push(format!("phases: {}", phases.join(", ")));
+    }
+    let hosts: BTreeSet<&str> = setups
+        .iter()
+        .flat_map(|track| &track.hosts)
+        .map(String::as_str)
+        .collect();
+    if !hosts.is_empty() {
+        let hosts: Vec<&str> = hosts.into_iter().collect();
+        lines.push(format!("hosts: {}", hosts.join(", ")));
     }
     lines.join("\n") + "\n"
 }

@@ -188,9 +188,11 @@ pub fn plan_value(plan: &SetupPlan) -> Value {
     value
 }
 
-/// The line an engine event is sent as.
-pub fn event_value(event: Event) -> Value {
-    match event {
+/// The line an engine event is sent as. A part's step and bytes have no line: the role
+/// reports each item as a whole, and only the desktop that runs the engine itself shows
+/// the parts.
+pub fn event_value(event: Event) -> Option<Value> {
+    Some(match event {
         Event::Phase { item, step } => json!({
             "type": "phase",
             "phase_code": step.phase_code(item),
@@ -230,7 +232,8 @@ pub fn event_value(event: Event) -> Value {
             "subject_code": item,
             "plan_digest": plan_digest,
         }),
-    }
+        Event::Part { .. } | Event::PartProgress { .. } => return None,
+    })
 }
 
 /// The line a review is sent as.
@@ -357,7 +360,11 @@ pub fn serve(
             return 1;
         }
     };
-    let mut events = |event| lines.send(&event_value(event));
+    let mut events = |event| {
+        if let Some(line) = event_value(event) {
+            lines.send(&line);
+        }
+    };
     let report = match &command {
         Command::Status { mode, items } => engine.status(*mode, items, &mut events, &cancellation),
         Command::Plan { items } => engine.plan(items.as_deref()),

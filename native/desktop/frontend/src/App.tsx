@@ -66,7 +66,9 @@ import { SetupPrompt } from "./components/setup/SetupPrompt";
 import { SetupRowItem } from "./components/setup/SetupRowItem";
 import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
 import {
-  liveRun,
+  liveRunOf,
+  runOf,
+  liveRuns,
   needsSetup,
   rowOfKind,
   setupTargetOf,
@@ -879,8 +881,41 @@ export function App({ host }: { host: Host }) {
     /^[A-Za-z0-9_-]{1,256}$/.test(driveFolder)
       ? `https://drive.google.com/drive/folders/${driveFolder}`
       : null;
-  const setupRun = setupSnapshot?.setup ?? null;
-  const setupLive = liveRun(setupSnapshot);
+  const setupRuns = setupSnapshot?.runs;
+  const setupLive = useMemo(() => liveRuns(setupSnapshot), [setupSnapshot]);
+  // The items the palette sets up again: each whose setup ended short of
+  // done, or whose row failed, while it is not setting up now.
+  const setupRetryable = useMemo(
+    () =>
+      (setupSnapshot?.rows ?? []).flatMap((row) => {
+        const run = runOf(setupSnapshot, row.item);
+        if (run && run.stage !== "settled") return [];
+        const ended = run?.outcome ?? null;
+        const again =
+          ended === "failed" ||
+          ended === "interrupted" ||
+          ended === "cancelled" ||
+          ended === "not_enough_space" ||
+          ended === "plan_changed" ||
+          row.state === "failed";
+        return again
+          ? [{ item: row.item, resume: ended === "interrupted" }]
+          : [];
+      }),
+    [setupSnapshot],
+  );
+  const setupCancellable = useMemo(
+    () => setupLive.filter((run) => run.cancellable && !run.cancel_requested),
+    [setupLive],
+  );
+  // Changes whenever another setup settles, so what depends on a component
+  // reads again.
+  const settledSetups = useMemo(() => {
+    const settled = (setupRuns ?? [])
+      .filter((run) => run.stage === "settled")
+      .map((run) => run.operation_id);
+    return settled.length > 0 ? settled.join(" ") : null;
+  }, [setupRuns]);
   const setupIncomplete = setupOffered && setupSnapshot?.complete === false;
   const [setupDialog, setSetupDialog] = useState<{
     open: boolean;
@@ -900,7 +935,7 @@ export function App({ host }: { host: Host }) {
   const setUpLocalAi = useCallback(
     (lane: string, model: string) => {
       openSetup("local_ai");
-      setup.start(["local_ai"], { download: { lane, model } });
+      setup.start("local_ai", { download: { lane, model } });
     },
     [openSetup, setup],
   );
@@ -916,20 +951,20 @@ export function App({ host }: { host: Host }) {
     if (deferredOffer.current !== null) return;
     setSetupDialog({ open: true, focus: null });
   }, [setupIncomplete]);
-  // One toast for a setup this window watched run, once it settles.
-  const setupWatched = useRef<string | null>(null);
+  // One toast for each setup this window watched run, once it settles.
+  const setupWatched = useRef(new Set<string>());
   useEffect(() => {
-    if (!setupRun) return;
-    if (setupRun.stage !== "settled") {
-      setupWatched.current = setupRun.operation_id;
-      return;
+    for (const run of setupRuns ?? []) {
+      if (run.stage !== "settled") {
+        setupWatched.current.add(run.operation_id);
+        continue;
+      }
+      if (!setupWatched.current.delete(run.operation_id) || !run.outcome)
+        continue;
+      const text = outcomeToast(t, run.outcome);
+      if (text) say(text);
     }
-    if (setupWatched.current !== setupRun.operation_id || !setupRun.outcome)
-      return;
-    setupWatched.current = null;
-    const text = outcomeToast(t, setupRun.outcome);
-    if (text) say(text);
-  }, [setupRun, say, t]);
+  }, [setupRuns, say, t]);
   /** A row's own button: check again, or set it up in the dialog. */
   const actOnSetupRow = useCallback(
     (row: SetupRow) => {
@@ -942,7 +977,7 @@ export function App({ host }: { host: Host }) {
           return;
         default:
           openSetup(row.item);
-          setup.start([row.item], { resume: row.recovery === "resume" });
+          setup.start(row.item, { resume: row.recovery === "resume" });
       }
     },
     [setup, openSetup],
@@ -953,10 +988,8 @@ export function App({ host }: { host: Host }) {
       const wanted = rows.filter(needsSetup);
       if (wanted.length > 0) {
         openSetup(wanted.length === 1 ? (wanted[0]?.item ?? null) : null);
-        setup.start(
-          wanted.map((row) => row.item),
-          { resume: wanted.every((row) => row.recovery === "resume") },
-        );
+        for (const row of wanted)
+          setup.start(row.item, { resume: row.recovery === "resume" });
         return;
       }
       const held = rows.find(
@@ -1044,8 +1077,8 @@ export function App({ host }: { host: Host }) {
   const openBrowserSetup = useCallback(() => {
     const row = rowOfKind("browser", setupRowsRef.current);
     openSetup(row?.item ?? "browser");
-    if (row && needsSetup(row) && liveRun(setupSnapshot) === null)
-      setup.start([row.item], { resume: row.recovery === "resume" });
+    if (row && needsSetup(row) && liveRunOf(setupSnapshot, row.item) === null)
+      setup.start(row.item, { resume: row.recovery === "resume" });
   }, [openSetup, setup, setupSnapshot]);
   // What the ledger's own surfaces offer beside a refusal or a reader that
   // is not ready: the same prompt, on the same item.
@@ -1804,7 +1837,7 @@ export function App({ host }: { host: Host }) {
         group: "setup",
         icon: "check",
         keywords: "components verify status",
-        enabled: () => setupOffered && setupLive === null,
+        enabled: () => setupOffered && setupLive.length === 0,
         run: () => {
           openSetup(null);
           setup.check("full");
@@ -1826,8 +1859,12 @@ export function App({ host }: { host: Host }) {
         icon: "download",
         enabled: () =>
           setupOffered &&
-          setupLive === null &&
-          (setupSnapshot?.rows.some((row) => row.kind === "local_ai") ?? false),
+          (setupSnapshot?.rows.some(
+            (row) =>
+              row.kind === "local_ai" &&
+              liveRunOf(setupSnapshot, row.item) === null,
+          ) ??
+            false),
         run: () =>
           setUpRows(
             (setupSnapshot?.rows ?? []).filter(
@@ -1840,19 +1877,11 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.setup.palette_retry"),
         group: "setup",
         icon: "reset",
-        enabled: () =>
-          setupOffered &&
-          setupLive === null &&
-          (setupRun?.outcome === "failed" ||
-            setupRun?.outcome === "interrupted" ||
-            setupRun?.outcome === "cancelled" ||
-            setupRun?.outcome === "not_enough_space" ||
-            setupRun?.outcome === "plan_changed" ||
-            (setupSnapshot?.rows.some((row) => row.state === "failed") ??
-              false)),
+        enabled: () => setupOffered && setupRetryable.length > 0,
         run: () => {
           openSetup(null);
-          setup.start(null, { resume: setupRun?.outcome === "interrupted" });
+          for (const { item, resume } of setupRetryable)
+            setup.start(item, { resume });
         },
       },
       {
@@ -1860,12 +1889,10 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.setup.palette_cancel"),
         group: "setup",
         icon: "stop",
-        enabled: () =>
-          setupOffered &&
-          setupLive !== null &&
-          setupLive.cancellable &&
-          !setupLive.cancel_requested,
-        run: () => setup.cancel(),
+        enabled: () => setupOffered && setupCancellable.length > 0,
+        run: () => {
+          for (const run of setupCancellable) setup.cancel(run.item);
+        },
       },
       // Every view the register names, each declared once: its label and
       // keywords come from the register, and choosing one by name opens it
@@ -2306,8 +2333,9 @@ export function App({ host }: { host: Host }) {
       setup,
       setupOffered,
       setupSnapshot,
-      setupRun,
       setupLive,
+      setupRetryable,
+      setupCancellable,
       openSetup,
       openBrowserSetup,
       setUpRows,
@@ -2956,7 +2984,7 @@ export function App({ host }: { host: Host }) {
       label: t("desktop.rail.settings"),
       shortcut: primaryChord(byId("settings.open")),
       expanded: settingsOpen,
-      ...(setupLive
+      ...(setupLive.length > 0
         ? { pin: "busy", hint: t("desktop.setup.rail_busy") }
         : setupIncomplete
           ? { pin: "attention", hint: t("desktop.setup.rail_incomplete") }
@@ -3411,9 +3439,7 @@ export function App({ host }: { host: Host }) {
             </ul>
           ) : undefined
         }
-        setupSettled={
-          setupRun?.stage === "settled" ? setupRun.operation_id : null
-        }
+        setupSettled={settledSetups}
         setupApprovals={
           setupApprovals
             ? { approvals: setupApprovals, onCheckSetup: () => openSetup(null) }
@@ -3906,7 +3932,6 @@ export function App({ host }: { host: Host }) {
                       ? openLocalAi
                       : undefined
                   }
-                  onShowAll={() => openSetup(null)}
                 />
                 <SetupPrompt
                   row={setupPrompt}

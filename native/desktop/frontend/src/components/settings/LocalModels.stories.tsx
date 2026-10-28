@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { fixtureAgent } from "@/dev/agentFixtureHost";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
 import { setupFixture } from "@/dev/setupFixture";
-import { useSetup } from "../../shell/setup";
+import { runOf, useSetup } from "../../shell/setup";
 import { SetupDialog } from "../setup/SetupDialog";
 import { catalogLanes } from "../../shell/localModelLanes";
 import type { LocalModelHost } from "../../shell/localModels";
@@ -96,7 +96,7 @@ function Settings(scene: Scene) {
   const setup = useSetup(setupHost, "Demo profile", true);
   const [setupOpen, setSetupOpen] = useState(false);
   const requested = useRef<string | null>(null);
-  const run = setup.snapshot?.setup;
+  const run = runOf(setup.snapshot, "local_ai");
   useEffect(() => {
     if (run?.stage !== "settled" || run.outcome !== "completed") return;
     const model = requested.current;
@@ -135,7 +135,7 @@ function Settings(scene: Scene) {
             onSetUp={(model) => {
               requested.current = model;
               setSetupOpen(true);
-              setup.start(["local_ai"], { download: { lane: LANE, model } });
+              setup.start("local_ai", { download: { lane: LANE, model } });
             }}
             onRemove={(model) => {
               const refusal = scene.removal ?? null;

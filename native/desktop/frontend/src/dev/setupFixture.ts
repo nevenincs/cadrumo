@@ -18,8 +18,11 @@ import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
 // and the local AI (its program and its models, one item), each in the state
 // a shape gives it, and the profile's Google account beside them -- not a
 // setup item. Like the host, it sends codes only, which the window words.
-// Nothing is downloaded: every plan, byte count and receipt is synthetic. With a latency the fixture runs a setup by itself; with none it
-// waits for the scenario tests to move it on through `window.__scenarioSetup`.
+// Nothing is downloaded: every plan, byte count and receipt is synthetic. Each
+// item has a setup of its own, and items set up side by side. With a latency
+// the fixture runs a setup by itself; with none it waits for the scenario
+// tests to move it on through `window.__scenarioSetup`, whose controls act on
+// the first item setting up now.
 
 export const SETUP_SHAPES = [
   "fresh",
@@ -42,14 +45,14 @@ export type SetupShape = (typeof SETUP_SHAPES)[number];
 export type SetupFixtureControls = {
   /** Changes the underlying files; only the next host command observes it. */
   setAbsent(item: SetupItemId): void;
-  /** Moves a running setup on by one step. */
+  /** Moves the first running setup on by one step. */
   step(): void;
-  /** A retry notice on the item now running. */
+  /** A retry notice on the first item now running. */
   retry(attempt: number, delaySeconds: number): void;
-  /** The item now running fails in this way; the setup settles. */
+  /** The first item now running fails in this way; its setup settles. */
   fail(category: SetupFailureCategory): void;
-  /** The setup stops part-way, as when the computer sleeps or Cadrumo
-   * closes. */
+  /** The first running setup stops part-way, as when the computer sleeps or
+   * Cadrumo closes. */
   interrupt(): void;
   /** Google's own page answers the sign-in this window started. */
   finishGoogle(succeeded: boolean): void;
@@ -237,7 +240,8 @@ export function setupFixture({
 }): Setup {
   const items = shaped(shape);
   let revision = 1;
-  let run: SetupRun | null = null;
+  // Each item's latest setup, in the rows' order.
+  let runs: SetupRun[] = [];
   let operations = 0;
   let plans = 0;
   // The digests of the plans this window approved, and whether a setup has
@@ -260,7 +264,8 @@ export function setupFixture({
   let unread = shape === "unread";
   const listeners = new Set<(state: DesktopSetup) => void>();
   const timers = new Set<number>();
-  let pendingCancel = false;
+  // The setups asked to stop, by operation id.
+  const pendingCancel = new Set<string>();
   // Each planned row as it stood before its setup ran, for an item a setup
   // that stopped never reached.
   const before = new Map<SetupItemId, SetupRow>();
@@ -279,7 +284,7 @@ export function setupFixture({
         ? null
         : now.some((held) => held.blocked_reason === "hardware"),
       check,
-      setup: run,
+      runs,
       google,
       details: [
         "Cadrumo component report (simulated)",
@@ -288,7 +293,9 @@ export function setupFixture({
             `${held.item}: ${held.state}${held.failure ? ` (${held.failure})` : ""}`,
         ),
         `google: ${google.state ?? "unread"}`,
-        run ? `setup ${run.operation_id}: ${run.stage}` : "no setup",
+        ...(runs.length > 0
+          ? runs.map((held) => `setup ${held.operation_id}: ${held.stage}`)
+          : ["no setup"]),
       ].join("\n"),
     };
   };
@@ -373,51 +380,70 @@ export function setupFixture({
     total: null,
     retry: null,
     result: null,
+    parts: [],
   });
 
-  const settle = (outcome: NonNullable<SetupRun["outcome"]>) => {
-    if (!run) return;
+  const seedOf = (item: SetupItemId) =>
+    items.find((seed) => seed.row.item === item);
+  const order = (item: SetupItemId) =>
+    items.findIndex((seed) => seed.row.item === item);
+  const runFor = (item: SetupItemId) =>
+    runs.find((held) => held.item === item) ?? null;
+  const runById = (operationId: string) =>
+    runs.find((held) => held.operation_id === operationId) ?? null;
+  /** Keeps `next` as its item's setup, in the rows' order. */
+  const put = (next: SetupRun) => {
+    runs = [...runs.filter((held) => held.item !== next.item), next].sort(
+      (left, right) => order(left.item) - order(right.item),
+    );
+    return next;
+  };
+  /** The first item setting up now, which the scenario controls move on. */
+  const active = () => runs.find((held) => held.stage === "running") ?? null;
+
+  const settle = (
+    run: SetupRun,
+    outcome: NonNullable<SetupRun["outcome"]>,
+  ): SetupRun => {
     for (const entry of run.items) {
       const seed = seedOf(entry.item);
       const held = before.get(entry.item);
       if (seed && held && !entry.result && seed.row.state === "provisioning")
         seed.row = held;
+      before.delete(entry.item);
     }
-    before.clear();
-    run = {
+    pendingCancel.delete(run.operation_id);
+    return put({
       ...run,
       stage: "settled",
       review: null,
       cancellable: false,
       outcome,
       failure: null,
-    };
+    });
   };
 
-  const current = () => run?.items.find((entry) => entry.result === null);
-  const seedOf = (item: SetupItemId) =>
-    items.find((seed) => seed.row.item === item);
+  const current = (run: SetupRun | null) =>
+    run?.items.find((entry) => entry.result === null);
 
-  /** One step of a running setup: connect, download in quarters, check,
-   * then the next item; then the outcome. */
-  const step = () => {
+  /** One step of a running setup: connect, download in quarters, check;
+   * then the outcome. */
+  const stepOf = (run: SetupRun | null) => {
     if (!run || run.stage !== "running") return;
-    if (pendingCancel) {
-      pendingCancel = false;
+    if (pendingCancel.has(run.operation_id)) {
       run.items.forEach((entry) => {
         const seed = seedOf(entry.item);
         const held = before.get(entry.item);
         if (!entry.result && seed && held) seed.row = held;
       });
-      before.clear();
-      settle("cancelled");
+      settle(run, "cancelled");
       publish();
       return;
     }
-    const entry = current();
+    const entry = current(run);
     const seed = entry && seedOf(entry.item);
     if (!entry || !seed) {
-      settle("completed");
+      settle(run, "completed");
       publish();
       return;
     }
@@ -456,18 +482,21 @@ export function setupFixture({
         },
       };
     }
-    run = {
+    let moved = put({
       ...run,
       items: run.items.map((held) => (held.item === entry.item ? next : held)),
-    };
-    if (!current()) settle("completed");
+    });
+    if (!current(moved)) moved = settle(moved, "completed");
     publish();
-    if (run.stage === "running") later(step);
+    if (moved.stage === "running") {
+      const id = moved.operation_id;
+      later(() => stepOf(runById(id)));
+    }
   };
+  const step = () => stepOf(active());
 
   /** The approved plan starts: its rows are being set up from now on. */
-  const begin = () => {
-    if (!run) return publish();
+  const begin = (run: SetupRun) => {
     for (const entry of run.items) {
       const seed = seedOf(entry.item);
       if (!seed) continue;
@@ -479,9 +508,9 @@ export function setupFixture({
         recovery_action_id: null,
       };
     }
-    run = { ...run, stage: "running", review: null };
+    const id = put({ ...run, stage: "running", review: null }).operation_id;
     const next = publish();
-    later(step);
+    later(() => stepOf(runById(id)));
     return next;
   };
 
@@ -493,9 +522,10 @@ export function setupFixture({
     },
     step,
     retry(attempt, delaySeconds) {
-      const entry = current();
+      const run = active();
+      const entry = current(run);
       if (!run || !entry) return;
-      run = {
+      put({
         ...run,
         items: run.items.map((held) =>
           held.item === entry.item
@@ -505,45 +535,49 @@ export function setupFixture({
               }
             : held,
         ),
-      };
+      });
       publish();
     },
     fail(category) {
-      const entry = current();
+      const run = active();
+      const entry = current(run);
       const seed = entry && seedOf(entry.item);
       if (!run || !entry || !seed) return;
       const held = before.get(seed.row.item) ?? seed.row;
       before.delete(seed.row.item);
       seed.row = failed(held, category);
-      run = {
-        ...run,
-        items: run.items.map((held) =>
-          held.item === entry.item
-            ? {
-                ...held,
-                step: null,
-                retry: null,
-                result: {
-                  changed: false,
-                  failure: category,
-                  transferred_bytes: held.completed ?? 0,
-                },
-              }
-            : held,
-        ),
-      };
-      settle("failed");
-      run = { ...run, failure: category };
+      const ended = settle(
+        {
+          ...run,
+          items: run.items.map((held) =>
+            held.item === entry.item
+              ? {
+                  ...held,
+                  step: null,
+                  retry: null,
+                  result: {
+                    changed: false,
+                    failure: category,
+                    transferred_bytes: held.completed ?? 0,
+                  },
+                }
+              : held,
+          ),
+        },
+        "failed",
+      );
+      put({ ...ended, failure: category });
       publish();
     },
     interrupt() {
-      const entry = current();
+      const run = active();
+      const entry = current(run);
       const seed = entry && seedOf(entry.item);
       if (!run || !seed) return;
       const held = before.get(seed.row.item) ?? seed.row;
       if (entry.completed !== null) partial.set(entry.item, entry.completed);
       stopped = true;
-      settle("interrupted");
+      settle(run, "interrupted");
       seed.row = failed(held, "interrupted");
       publish();
     },
@@ -611,13 +645,13 @@ export function setupFixture({
       return Promise.resolve(publish());
     },
     start(wanted, options) {
-      say(
-        `setup.start ${wanted?.join(",") ?? "all"}${options?.resume ? " resume" : ""}`,
-      );
+      say(`setup.start ${wanted}${options?.resume ? " resume" : ""}`);
       const refused = ready();
       if (refused) return refused;
       if (shape === "busy") return refuse("busy");
-      if (run && run.stage !== "settled") return Promise.resolve(state());
+      const running = runFor(wanted);
+      if (running && running.stage !== "settled")
+        return Promise.resolve(state());
       const download = options?.download;
       // A model the catalog does not size, such as one the person named, is
       // planned with an unknown download.
@@ -636,14 +670,12 @@ export function setupFixture({
           }
         : null;
       const chosen = items
-        .filter((seed) =>
-          download
-            ? seed.row.item === "local_ai"
-            : (wanted === null
-                ? !usable(seed.row)
-                : wanted.includes(seed.row.item)) &&
-              seed.row.recovery !== null &&
-              seed.row.recovery !== "check_again",
+        .filter(
+          (seed) =>
+            seed.row.item === wanted &&
+            (download !== undefined ||
+              (seed.row.recovery !== null &&
+                seed.row.recovery !== "check_again")),
         )
         .map((seed) =>
           download && model
@@ -666,7 +698,8 @@ export function setupFixture({
       if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
       const plan = chosen.length === 0 ? null : review(chosen);
-      run = {
+      const run = put({
+        item: wanted,
         operation_id: `setup-${operations}`,
         stage: chosen.length === 0 ? "settled" : "review",
         review: plan,
@@ -675,25 +708,21 @@ export function setupFixture({
         cancel_requested: false,
         outcome: chosen.length === 0 ? "nothing_to_do" : null,
         failure: null,
-      };
+      });
       // Resuming the plan this window approved before is approved already.
       if (options?.resume && plan && approved.has(plan.plan_digest))
-        return Promise.resolve(begin());
+        return Promise.resolve(begin(run));
       return Promise.resolve(publish());
     },
     answer(operationId, planDigest, decision) {
       say(`setup.answer ${decision}`);
       const refused = ready();
       if (refused) return refused;
-      if (
-        !run ||
-        run.operation_id !== operationId ||
-        run.stage !== "review" ||
-        !run.review
-      )
+      const run = runById(operationId);
+      if (!run || run.stage !== "review" || !run.review)
         return refuse("not_pending");
       if (decision === "reject") {
-        settle("rejected");
+        settle(run, "rejected");
         return Promise.resolve(publish());
       }
       if (run.review.plan_digest !== planDigest) return refuse("plan_changed");
@@ -701,39 +730,41 @@ export function setupFixture({
         const chosen = run.items
           .map((entry) => seedOf(entry.item))
           .filter((seed): seed is Seed => seed !== undefined);
-        run = { ...run, review: review(chosen) };
+        put({ ...run, review: review(chosen) });
         publish();
         return refuse("plan_changed");
       }
       if (!run.review.space_sufficient) {
-        settle("not_enough_space");
+        settle(run, "not_enough_space");
         return Promise.resolve(publish());
       }
       approved.add(run.review.plan_digest);
-      return Promise.resolve(begin());
+      return Promise.resolve(begin(run));
     },
     cancel(operationId) {
       say("setup.cancel");
       const refused = ready();
       if (refused) return refused;
-      if (!run || run.operation_id !== operationId || run.stage === "settled")
-        return refuse("not_cancellable");
+      const run = runById(operationId);
+      if (!run || run.stage === "settled") return refuse("not_cancellable");
       if (run.stage === "review") {
-        settle("cancelled");
+        settle(run, "cancelled");
         return Promise.resolve(publish());
       }
-      pendingCancel = true;
-      run = { ...run, cancel_requested: true, cancellable: false };
+      pendingCancel.add(operationId);
+      put({ ...run, cancel_requested: true, cancellable: false });
       const next = publish();
       // Cancellation lands between transfer chunks: at the next step.
-      later(step);
+      later(() => stepOf(runById(operationId)));
       return Promise.resolve(next);
     },
     removeModel(model) {
       say(`setup.removeModel ${model}`);
       const refused = ready();
       if (refused) return refused;
-      if (run && run.stage !== "settled") return refuse("busy");
+      // Only the local AI's own setup holds its models.
+      const localAi = runFor("local_ai");
+      if (localAi && localAi.stage !== "settled") return refuse("busy");
       return Promise.resolve(publish());
     },
     signInGoogle() {

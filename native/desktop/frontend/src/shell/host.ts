@@ -87,11 +87,11 @@ export type Setup = {
   check(mode: SetupCheckMode): Promise<DesktopSetup>;
   /** A full check of `items`, or of every item when null. */
   verify(items: SetupItemId[] | null): Promise<DesktopSetup>;
-  /** Plans setup of `items`, or of every item not ready when null. Resume
-   * after an interruption is a new start with `resume`: the unchanged plan
-   * the person approved before needs no second approval. */
+  /** Plans setup of one `item`, beside any other item's setup. Resume after
+   * an interruption is a new start with `resume`: the unchanged plan the
+   * person approved before needs no second approval. */
   start(
-    items: SetupItemId[] | null,
+    item: SetupItemId,
     options?: { resume?: boolean; download?: SetupModelDownload },
   ): Promise<DesktopSetup>;
   /** Answers the plan whose `plan_digest` the review showed. */

@@ -133,6 +133,22 @@ pub enum Event {
     /// The local AI program is set up and the setup waits for the manager to start its
     /// server; reported once, before the first wait.
     WaitingForServer { item: ItemId },
+    /// A part of `item`'s plan reached `step`: its program, or the part pulling `model`.
+    /// A part whose model an earlier part already pulled reports nothing.
+    Part {
+        item: ItemId,
+        part: String,
+        model: Option<String>,
+        step: SetupStep,
+    },
+    /// Bytes `part` holds so far out of that part's own known download, reported with the
+    /// item's [`Event::Progress`].
+    PartProgress {
+        item: ItemId,
+        part: String,
+        completed: u64,
+        total: u64,
+    },
 }
 
 /// How a command ended, as one closed code.
@@ -381,19 +397,29 @@ struct Reporter<'s, 'e> {
     offset: u64,
     /// The item's whole known download, when it is more than one part's.
     total: Option<u64>,
+    /// The part whose bytes move now, for an item planned in parts.
+    part: Option<String>,
     last: Option<(Instant, u64)>,
 }
 
 impl Reporter<'_, '_> {
     fn transfer(&mut self, event: TransferEvent) {
         match event {
-            TransferEvent::Progress { completed, total } => {
+            TransferEvent::Progress {
+                completed: held,
+                total: whole,
+            } => {
                 if fs::symlink_metadata(&self.cancel_request).is_ok() {
                     self.cancellation.cancel();
                 }
-                let completed = self.offset.saturating_add(completed);
-                let total = self.total.unwrap_or(total).max(completed);
-                if self.due(completed, total) {
+                let completed = self.offset.saturating_add(held);
+                let total = self.total.unwrap_or(whole).max(completed);
+                // A part's last bytes are reported even inside the interval, so a part
+                // that finished never reads as unfinished.
+                let part_done = self.part.is_some()
+                    && held >= whole
+                    && self.last.is_none_or(|(_, reported)| reported != completed);
+                if self.due(completed, total) || part_done {
                     self.last = Some((Instant::now(), completed));
                     // Published for followers on a best effort: a record that cannot be
                     // replaced leaves them the previous figure, and the setup goes on.
@@ -403,6 +429,14 @@ impl Reporter<'_, '_> {
                         completed,
                         total,
                     });
+                    if let Some(part) = self.part.as_ref().filter(|_| whole > 0) {
+                        self.sink.emit(Event::PartProgress {
+                            item: self.item,
+                            part: part.clone(),
+                            completed: held.min(whole),
+                            total: whole,
+                        });
+                    }
                 }
             }
             TransferEvent::Retrying { attempt, delay } => {
@@ -928,7 +962,13 @@ impl Engine {
             ),
         };
         if row.state != ItemState::Ready {
-            row.size_estimate_bytes = survey.entry.as_ref().and_then(|entry| entry.download_bytes);
+            // An entry that totals only the parts whose size is known would state too little,
+            // or nothing at all as zero, so its size is unknown instead.
+            row.size_estimate_bytes = survey
+                .entry
+                .as_ref()
+                .filter(|entry| !entry.has_unknown_size())
+                .and_then(|entry| entry.download_bytes);
         }
         if !self.provisions(item)
             && matches!(
@@ -1391,6 +1431,7 @@ impl Engine {
                 cancellation,
                 offset: 0,
                 total: None,
+                part: None,
                 last: None,
             };
             let mut pacing = SystemPacing::default();
@@ -1440,6 +1481,7 @@ impl Engine {
             cancellation,
             offset: 0,
             total: entry.download_bytes,
+            part: None,
             last: None,
         };
         let mut pacing = SystemPacing::default();
@@ -1453,6 +1495,14 @@ impl Engine {
             let program_part = entry.parts.iter().find(|part| part.part_id == PROGRAM_PART);
             if let Some(part) = program_part {
                 let hosts: BTreeSet<HostName> = part.source_hosts.iter().cloned().collect();
+                let step = |step| Event::Part {
+                    item,
+                    part: PROGRAM_PART.to_owned(),
+                    model: None,
+                    step,
+                };
+                sink.emit(step(SetupStep::Download));
+                reporter.part = Some(PROGRAM_PART.to_owned());
                 let mut on_event = |event| reporter.transfer(event);
                 let mut transfer = Transfer {
                     network: &self.config.network,
@@ -1465,7 +1515,9 @@ impl Engine {
                 // Waits for the manager to stop a server running the old version.
                 program.install(&mut transfer)?;
                 reporter.offset += part.download_bytes.unwrap_or(0);
+                reporter.part = None;
                 writer.step(SetupStep::Install)?;
+                sink.emit(step(SetupStep::Install));
                 if program.observe_quick() != present {
                     return Err(Stop::Failed(FailureCategory::DamagedDownload));
                 }
@@ -1499,6 +1551,13 @@ impl Engine {
                 if !pulled.insert(model.name.to_string()) {
                     continue;
                 }
+                sink.emit(Event::Part {
+                    item,
+                    part: part.part_id.clone(),
+                    model: Some(model.name.to_string()),
+                    step: SetupStep::Download,
+                });
+                reporter.part = Some(part.part_id.clone());
                 let mut on_event = |event| reporter.transfer(event);
                 let observation = models.pull(
                     &server,
@@ -1515,6 +1574,7 @@ impl Engine {
                 }
                 reporter.offset += models.download_bytes(model).unwrap_or(0);
             }
+            reporter.part = None;
             writer.step(SetupStep::Verify)?;
             for model in models.selection().as_slice() {
                 let observation = models.observe_full(&server, model, &hardware);

@@ -821,7 +821,7 @@ test("the palette opens the browser's flow on a ready browser, to check it again
   ).toEqual([]);
 });
 
-test("the browser's flow names a local AI setup that is running instead of showing it", async ({
+test("the browser sets up on its own while a local AI setup runs", async ({
   page: target,
 }) => {
   await open(target, "fresh");
@@ -841,20 +841,10 @@ test("the browser's flow names a local AI setup that is running instead of showi
   await (await palette(target, label("desktop.setup.palette_browser"))).click();
   const shown = browserDialog(target);
   await expect(shown).toBeVisible();
-  await expect(shown).toContainText(
-    label("desktop.setup.browser_other_running"),
-  );
+  // The local AI's setup is not the browser's, and does not hold it back.
   await expect(shown).not.toContainText("Local AI");
-  await expect(shown.locator("[data-setup-overall]")).toHaveCount(0);
-  await expect(shown.locator("[data-setup-row=browser]")).toHaveCount(1);
-  // Joining the running setup is not setting the browser up.
-  expect(await hostCalls(target)).not.toContain("setup.start browser");
-  await shown
-    .getByRole("button", { name: label("desktop.setup.show_running") })
-    .click();
-  await expect(dialog(target)).toContainText(
-    label("desktop.setup.lead_running"),
-  );
+  await expect(shown).toContainText(label("desktop.setup.lead_review"));
+  expect(await hostCalls(target)).toContain("setup.start browser");
 });
 
 test("Settings has a Browser section of its own that opens the browser's flow", async ({

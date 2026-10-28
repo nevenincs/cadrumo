@@ -33,15 +33,18 @@ export type SetupControl = {
   refusal: string | null;
   check(mode: SetupCheckMode): void;
   verify(items: SetupItemId[] | null): void;
-  /** `resume` after an interruption: a plan unchanged from the one this
-   * window approved runs again without a second approval. */
+  /** Sets up one item, beside any other item's setup. `resume` after an
+   * interruption: a plan unchanged from the one this window approved runs
+   * again without a second approval. */
   start(
-    items: SetupItemId[] | null,
+    item: SetupItemId,
     options?: { resume?: boolean; download?: SetupModelDownload },
   ): void;
-  /** Answers the plan on screen, bound to the digest it was shown with. */
-  answer(decision: "apply" | "reject"): void;
-  cancel(): void;
+  /** Answers the plan `item`'s setup shows, bound to the digest it was shown
+   * with. */
+  answer(item: SetupItemId, decision: "apply" | "reject"): void;
+  /** Cancels `item`'s setup while it has not settled. */
+  cancel(item: SetupItemId): void;
   /** Removes one local model no role selects; resolves with the refusal's
    * code, or null once it is removed. */
   removeModel(model: string): Promise<string | null>;
@@ -52,10 +55,31 @@ export type SetupControl = {
   clearRefusal(): void;
 };
 
-/** A setup that has not settled yet. */
-export function liveRun(snapshot: SetupSnapshot | null): SetupRun | null {
-  const run = snapshot?.setup ?? null;
+/** The latest setup of `item`, settled or not. */
+export function runOf(
+  snapshot: SetupSnapshot | null,
+  item: SetupItemId,
+): SetupRun | null {
+  return snapshot?.runs.find((run) => run.item === item) ?? null;
+}
+
+/** The setup of `item` that has not settled yet. */
+export function liveRunOf(
+  snapshot: SetupSnapshot | null,
+  item: SetupItemId,
+): SetupRun | null {
+  const run = runOf(snapshot, item);
   return run && run.stage !== "settled" ? run : null;
+}
+
+/** Every setup that has not settled yet, in the rows' item order. */
+export function liveRuns(snapshot: SetupSnapshot | null): SetupRun[] {
+  return (snapshot?.runs ?? []).filter((run) => run.stage !== "settled");
+}
+
+/** Whether any item is setting up now. */
+export function anyLive(snapshot: SetupSnapshot | null): boolean {
+  return liveRuns(snapshot).length > 0;
 }
 
 /** The rows a person can set up from here: neither usable nor waiting on
@@ -251,16 +275,16 @@ export function useSetup(
       refusal,
       check: (mode) => send((served) => served.check(mode)),
       verify: (items) => send((served) => served.verify(items)),
-      start: (items, options) => send((served) => served.start(items, options)),
-      answer: (decision) => {
-        const run = current.current?.setup;
+      start: (item, options) => send((served) => served.start(item, options)),
+      answer: (item, decision) => {
+        const run = runOf(current.current, item);
         if (!run || run.stage !== "review" || !run.review) return;
         const { operation_id: operationId } = run;
         const { plan_digest: planDigest } = run.review;
         send((served) => served.answer(operationId, planDigest, decision));
       },
-      cancel: () => {
-        const run = liveRun(current.current);
+      cancel: (item) => {
+        const run = liveRunOf(current.current, item);
         if (!run) return;
         send((served) => served.cancel(run.operation_id));
       },
