@@ -34,7 +34,9 @@ class ViewOperationHost(Protocol):
 class ViewHttpBoundary(Protocol):
     """The local HTTP origin a view test's browsers reach in place of the Sede."""
 
-    def close(self) -> None: ...
+    def browser_session_factory(self, *, profile_name: str) -> BrowserSessionFactoryPort:
+        """A factory of production browser sessions that reach this origin instead of the Sede."""
+        ...
 
 
 class ViewSessionWorld(Protocol):
@@ -67,10 +69,6 @@ class ViewSessionWorld(Protocol):
 
     def opened_http_boundary(self) -> AbstractAsyncContextManager[ViewHttpBoundary]:
         """Serve the local HTTP origin for the duration of the context."""
-        ...
-
-    def browser_session_factory(self, *, boundary: ViewHttpBoundary, profile_name: str) -> BrowserSessionFactoryPort:
-        """A factory of production browser sessions that reach ``boundary`` instead of the Sede."""
         ...
 
     async def until(self, condition: Callable[[], bool], *, timeout: float) -> None:

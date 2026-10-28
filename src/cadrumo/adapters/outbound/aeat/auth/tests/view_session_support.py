@@ -8,7 +8,7 @@ that supplies them is not the behaviour under test.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable, Generator
-from contextlib import AbstractAsyncContextManager, AbstractContextManager, asynccontextmanager, contextmanager
+from contextlib import AbstractContextManager, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Final
 from uuid import UUID
@@ -140,6 +140,16 @@ def lock_state(kind: AuthProviderKind = AuthProviderKind.CERTIFICATE) -> AuthAcq
     return inspect_auth_acquisition_lock(load_settings(), kind).state
 
 
+class LocalSedeOrigin:
+    """The local HTTP boundary, offered to a view test as the means to open browsers that reach it."""
+
+    def __init__(self, boundary: LocalHttpBoundary) -> None:
+        self._boundary = boundary
+
+    def browser_session_factory(self, *, profile_name: str) -> BrowserSessionFactoryPort:
+        return real_browser_factory(boundary=self._boundary, profile_name=profile_name)
+
+
 class CertificateViewSessionWorld:
     """The certificate-provider profile and stored session, offered to hosts that drive a Sede view."""
 
@@ -167,11 +177,10 @@ class CertificateViewSessionWorld:
     def stored_cookie_names(self) -> set[str]:
         return stored_cookie_names()
 
-    def opened_http_boundary(self) -> AbstractAsyncContextManager[LocalHttpBoundary]:
-        return opened_http_boundary()
-
-    def browser_session_factory(self, *, boundary: LocalHttpBoundary, profile_name: str) -> BrowserSessionFactoryPort:
-        return real_browser_factory(boundary=boundary, profile_name=profile_name)
+    @asynccontextmanager
+    async def opened_http_boundary(self) -> AsyncGenerator[LocalSedeOrigin]:
+        async with opened_http_boundary() as boundary:
+            yield LocalSedeOrigin(boundary)
 
     async def until(self, condition: Callable[[], bool], *, timeout: float) -> None:
         await until(condition, timeout=timeout)

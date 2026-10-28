@@ -347,7 +347,7 @@ async def _sync(
     result = await ensure_live_authenticated_session(
         load_settings(),
         certificate_secret_backend_factory=world.certificate_secret_backend_factory,
-        browser_session_factory=world.browser_session_factory(boundary=boundary, profile_name=name),
+        browser_session_factory=boundary.browser_session_factory(profile_name=name),
         operation=name,
         target_url=None,
         operator_scope_ports=world.operator_scope_ports,
@@ -385,7 +385,7 @@ async def _running_view(
     root = tmp_path / "operations"
     definition = build_sede_view_definition(
         certificate_secret_backend_factory=world.certificate_secret_backend_factory,
-        browser_session_factory=world.browser_session_factory(boundary=boundary, profile_name="sede-view-provider"),
+        browser_session_factory=boundary.browser_session_factory(profile_name="sede-view-provider"),
         operator_scope_ports=world.operator_scope_ports,
         browser_resources_factory=BrowserRuntimeResourceScope,
         provider_preflight=lambda _profile_id, _operation: None,
