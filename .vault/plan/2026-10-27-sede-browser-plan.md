@@ -10,9 +10,9 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-06-04-live-auth-decomposition-adr]]'
-modified: '2026-10-27'
+modified: '2026-10-28'
 body_schema: body-v2
-body_hash: 'sha256:7831311277cf89fbbb4318736933dc7bec3559485a5a247b5caf2b5bc2af2b39'
+body_hash: 'sha256:bb8c9ca57c41726bfe0573993b7ef18c6452b8a16172e64041bedcc35993bb72'
 ---
 
 # `sede-browser` plan
@@ -50,6 +50,7 @@ Deliver the live.sede.view operation in the profile worker: the unrestricted vie
 Deliver the closed token-checked host commands, the view connection relay onto one Tauri channel, native save and open dialogs for downloads and file choosers, the person's external open of the current page, and cancellation on close or session loss.
 
 - [ ] `P03.S08` - add the closed token-checked sede_view host commands (open, close, input, navigate, resize, credit, dialog, download and file-chooser answers, open the current page externally), native save and open dialogs for downloads and file choosers with bytes kept out of Cadrumo custody, relay the view connection onto one top-document Tauri channel, hold the current page URL in the host for the person's external open through open_external, and cancel the view on page close, window close or person-session loss; `new native/desktop/src-tauri/src/shell/sede_view.rs, native/desktop/src-tauri/src/shell/mod.rs, native/desktop/src-tauri/src/shell/external.rs, native/application/src/person_operations.rs, src-tauri capability and command registration`.
+- [ ] `P03.S16` - deliver view images to the webview as raw binary channel bodies instead of the interceptor's number-array script, and keep the page's full address host-side only so open-externally lands on the exact page including its query, never relayed to the webview, logged or persisted; `native/desktop/src-tauri/src/shell/sede_view.rs, native/desktop/src-tauri/src/shell/channel.rs, native/application/src/view_stream/documents.rs, src/cadrumo_client/contracts/view_stream.py, src/cadrumo/adapters/outbound/aeat/browser/sede_view.py, native/desktop/frontend/src/shell/tauriSedeView.ts`.
 
 ### Phase `P04` - desktop Browser page
 
@@ -69,7 +70,7 @@ Deliver in-panel login: manual login with any provider including Cl@ve Permanent
 
 Prove the lane, unrestricted browsing, session sharing and redaction across all legs, then an attended end-to-end check against the real Sede on a non-installer development build.
 
-- [ ] `P06.S13` - add a cross-leg integration test with a real worker, runtime host and Rust lane against synthetic pages, proving attach binding, credit, latest-wins, unbinding on sign-out, that no request is blocked (POST, off-host, service worker, WebSocket, popup, download and upload all proceed), and that no frame, URL, input or file byte reaches logs, journals or projections; `new src/cadrumo_runtime/host/tests/test_view_stream_integration.py, native/application view stream integration test`.
+- [x] `P06.S13` - add a cross-leg integration test with a real worker, runtime host and Rust lane against synthetic pages, proving attach binding, credit, latest-wins, unbinding on sign-out, that no request is blocked (POST, off-host, service worker, WebSocket, popup, download and upload all proceed), and that no frame, URL, input or file byte reaches logs, journals or projections; `new src/cadrumo_runtime/host/tests/test_view_stream_integration.py, native/application view stream integration test`.
 - [ ] `P06.S14` - run the attended end-to-end check on a non-installer development build against the real Sede: log in in the panel then reuse it from an aeat CLI live read, log in from the CLI then open the panel signed in, log in by hand with Cl@ve Permanente, browse off-AEAT, download and upload a file, open the current page externally, and confirm close-time publication, recording evidence in the ledger; `development build targets and the plan ledger, no product files`.
 
 ## Parallelization
