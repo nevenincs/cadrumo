@@ -695,12 +695,18 @@ class AgentService:
             )
             self._clear_hosted_certifications()
             self._controller = controller
+            if self._closing.is_set():
+                controller.cancel_start()
             try:
                 ready = controller.start()
             except AgentHostError as error:
                 if controller.state is AgentHostState.DETACHED:
                     self._controller = None
                 return service_failure(error)
+            if self._closing.is_set():
+                controller.stop()
+                self._controller = None
+                return {"event": "refused", "code": "service_stopping"}
             finished = monotonic()
             _LOGGER.info(
                 "agent start timing owner_seconds=%.3f stores_seconds=%.3f launch_to_ready_seconds=%.3f "
@@ -739,6 +745,9 @@ class AgentService:
         self._auth_resume_valid = None
         if self._auth_attempt is not None:
             self._auth_attempt.cancel()
+        controller = self._controller
+        if controller is not None:
+            controller.cancel_start()
         start = self._start_thread
         if self._controller is None and (start is None or not start.is_alive()):
             return {"kind": "stopped"}
@@ -992,6 +1001,9 @@ class AgentService:
     def request_close(self) -> None:
         """Invalidate startup publication immediately without waiting on lifecycle work."""
         self._closing.set()
+        controller = self._controller
+        if controller is not None:
+            controller.cancel_start()
         if self._auth_attempt is not None:
             self._auth_attempt.cancel()
         self._clear_hosted_certifications()

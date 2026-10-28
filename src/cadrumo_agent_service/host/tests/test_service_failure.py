@@ -22,6 +22,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
     [
         (AgentHostError(AgentHostRefusal.STORES_NEWER), "agent_service_incompatible"),
         (AgentHostError(AgentHostRefusal.SIGNED_OUT), "agent_signed_out"),
+        (AgentHostError(AgentHostRefusal.EMERGENCY_CUTOFF), "agent_emergency_cutoff"),
+        (RefusalError(RefusalCode.EMERGENCY_CUTOFF), "agent_emergency_cutoff"),
         (AgentHostError(AgentHostRefusal.CREDENTIALS_UNAVAILABLE), "agent_provider_credential_missing"),
         (AgentProgramRefusalError(AgentLauncherRefusal.SERVICE_ABSENT), "agent_service_absent"),
     ],

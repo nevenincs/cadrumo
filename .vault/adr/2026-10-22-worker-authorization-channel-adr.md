@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#worker-authorization-channel'
 date: '2026-10-22'
-modified: '2026-10-22'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:dea63f6f09f0314110bb017787e0f4e90c4e7d8a4fae03543d218ac159f4a594'
+body_hash: 'sha256:8cc7c8a0f719cd0656e6263d7c30fe81b636323db564251874b067665177daf8'
 related:
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
   - "[[2026-10-16-idle-churn-adr]]"
@@ -115,3 +115,7 @@ Applied on acceptance.
   - `2026-10-04-runtime-manager-architecture-adr` and `2026-10-04-runtime-manager-architecture-supervisor-contract-adr`: containment and native peer identity are unchanged.
 
 Accepted 2026-10-22 on the operator's approval in this session ("go", in answer to accept, revise or reject this record). S06 of `2026-10-22-startup-performance-plan`, the sequencing precondition, had closed.
+
+## Amendment 2026-10-28: pending GUI orchestration is outside exchange slots
+
+Accepted under the user's signal/slot-driven orchestration instruction, recorded in2026-10-28-debug-startup-reliability-adr. The earlier unchanged exchange-deadline wording preserves authorization permit/lease and effect-settlement semantics; it does not impose a45-second human-proof/preparation cutoff or a normal deadline while a GUI waits for capacity/readiness. Long human login and installed-service admission start once, return correlated pending state and signal terminal completion outside the shared request slot. Claims observe the same attempt and never replay a proof or grant. Native incarnation, fresh authority per stage, resource bounds and UNKNOWN/SETTLING handling are unchanged.

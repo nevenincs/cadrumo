@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
+from cadrumo_client.contracts.deadline_budget import DEFAULT_EMERGENCY_WAIT_POLICY
 from dev.locales.manager_chrome import manager_chrome_strings
 
 from . import application_environment
@@ -290,7 +291,10 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
         "TEMPORARY_ENV": temporary["name"],
         "TEMPORARY_DEFAULT": temporary["default"],
     }
-    rust = [f"pub const ABI: u32 = {layout['abi']};"]
+    rust = [
+        f"pub const ABI: u32 = {layout['abi']};",
+        f"pub const DEFAULT_EMERGENCY_WAIT_CUTOFF_SECONDS: u64 = {int(DEFAULT_EMERGENCY_WAIT_POLICY.cutoff_seconds)};",
+    ]
     discovery = {"layout": layout, "installation_identity": contract["installation_identity"]}
     rust.append(f"pub const INSTALLATION_CONTRACT: &str = {_rust_string(json.dumps(discovery))};")
     rust.extend(

@@ -166,6 +166,8 @@ desktop:
     sent_skills: Habilidades cargadas
     service_absent: El agente no está instalado. Reinstala Cadrumo para añadirlo.
     service_credential_missing: Configura un proveedor en los ajustes para empezar.
+    service_emergency_cutoff: El agente ha alcanzado el límite de tiempo de emergencia
+      y se ha detenido.
     service_failed: El agente ha dejado de funcionar.
     service_incompatible: Esta versión del agente no funciona con esta versión de
       Cadrumo. Reinstala Cadrumo.

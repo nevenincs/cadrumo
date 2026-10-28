@@ -164,6 +164,7 @@ desktop:
     sent_skills: Skills loaded
     service_absent: The agent isn't installed. Reinstall Cadrumo to add it.
     service_credential_missing: Set up a provider in settings to start.
+    service_emergency_cutoff: The agent reached its emergency time limit and was stopped.
     service_failed: The agent stopped working.
     service_incompatible: This version of the agent doesn't work with this version
       of Cadrumo. Reinstall Cadrumo.

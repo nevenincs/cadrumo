@@ -9,11 +9,50 @@ from __future__ import annotations
 
 import math
 import time
+from dataclasses import dataclass
 
 from .contracts import RefusalCode, RefusalError
 
 #: Longest a single frontend exchange with the runtime may be granted by its caller.
 MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS = 120.0
+
+
+class EmergencyWaitCutoffError(TimeoutError):
+    """The last-resort cutoff ended an owned wait; it says nothing about its outcome."""
+
+
+@dataclass(frozen=True, slots=True)
+class EmergencyWaitDeadline:
+    """One absolute cutoff shared by every phase of an owned operation."""
+
+    instant: float
+
+    def remaining_seconds(self) -> float:
+        """Return time until emergency termination, never a fresh phase budget."""
+        remaining = self.instant - time.monotonic()
+        if not math.isfinite(remaining) or remaining <= 0:
+            raise EmergencyWaitCutoffError("emergency_wait_cutoff")
+        return remaining
+
+
+@dataclass(frozen=True, slots=True)
+class EmergencyWaitPolicy:
+    """Bound a stuck owner as a last resort; readiness and completion remain signals."""
+
+    cutoff_seconds: float = 600.0
+
+    def __post_init__(self) -> None:
+        """Reject cutoffs that could silently disable emergency termination."""
+        if not math.isfinite(self.cutoff_seconds) or self.cutoff_seconds <= 0:
+            raise ValueError("emergency wait cutoff must be positive and finite")
+
+    def deadline(self) -> EmergencyWaitDeadline:
+        """Start one emergency cutoff at the operation owner."""
+        return EmergencyWaitDeadline(time.monotonic() + self.cutoff_seconds)
+
+
+DEFAULT_EMERGENCY_WAIT_POLICY = EmergencyWaitPolicy()
+"""Canonical last-resort wait policy, also projected into native hosts."""
 
 
 def require_finite_budget(timeout: float) -> float:
@@ -74,7 +113,11 @@ def exchange_deadline(deadline: float | None = None) -> float:
 
 
 __all__ = [
+    "DEFAULT_EMERGENCY_WAIT_POLICY",
     "MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS",
+    "EmergencyWaitCutoffError",
+    "EmergencyWaitDeadline",
+    "EmergencyWaitPolicy",
     "bounded_deadline_after",
     "deadline_after",
     "exchange_deadline",

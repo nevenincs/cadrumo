@@ -35,6 +35,7 @@ export type AgentServiceRefusal =
   | "agent_signed_out"
   | "agent_runtime_unavailable"
   | "agent_provider_credential_missing"
+  | "agent_emergency_cutoff"
   /** The agent's root is not marked as the development lane's. */
   | "agent_service_failed";
 

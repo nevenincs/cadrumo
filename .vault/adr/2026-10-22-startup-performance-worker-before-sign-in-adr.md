@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#startup-performance'
 date: '2026-10-22'
-modified: '2026-10-22'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:568df596ace2e138e002dcbf89c0bb4512029553b6a6f62cce07c1605159f7cd'
+body_hash: 'sha256:0031ca1a64ecdcce5bf034f20ac50b08a7a571bee729e1a4aabab91047185204'
 related:
   - "[[2026-10-22-startup-performance-request-path-audit]]"
   - "[[2026-10-16-idle-churn-adr]]"
@@ -52,3 +52,7 @@ The worker a sign-in needs is fully determined before the password exists, and t
 - Tests cover a sign-in meeting a pending construction and a preparation that runs once and is retried after a failure.
 
 Accepted 2026-10-22 under the operator's instruction in this session: "fix the roots causes. if you have to refactor everything." The operator did not answer the follow-up question offering a pre-started worker within five minutes; it is recorded as accepted on that instruction and is open to the operator's veto.
+
+## Amendment 2026-10-28: signal-joined construction and dispatcher readiness
+
+Accepted under the user's explicit signal/slot-driven first-login ruling in2026-10-28-debug-startup-reliability-adr. The earlier bounded wait on a worker under construction is a signal-joined exact construction result with a shared emergency-only backstop, not a60-second normal refusal. A key-free ready result is emitted only after authenticated channels and dispatchers are installed. Concurrent callers join that generation, and child exit, owner stop or cancellation wakes them. Prestarting grants no credential or authority; candidate proof and exact-profile admission remain mandatory.

@@ -143,7 +143,6 @@ def _running_tree(checkout: Path, root: Path) -> AgentHostController:
             arguments=GATEWAY_ARGUMENTS,
             directory=root,
             environment=environment | {GATEWAY_PORT_VARIABLE: "0", WORKER_PORT_VARIABLE: "0"},
-            ready_timeout=120,
         ),
     )
     controller.start()

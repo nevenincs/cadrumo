@@ -97,8 +97,6 @@ def _running_service(
             arguments=fixture_arguments(_FIXTURE, mode, str(record)),
             directory=record,
             environment=fixture_environment(),
-            ready_timeout=30,
-            stop_grace=10,
         ),
     )
     controller.start()

@@ -29,6 +29,7 @@ class RefusalCode(StrEnum):
     INVALID_FRAME = "runtime_invalid_frame"
     CONNECTION_CLOSED = "runtime_connection_closed"
     DEADLINE_EXCEEDED = "runtime_deadline_exceeded"
+    EMERGENCY_CUTOFF = "runtime_emergency_cutoff"
     DRAINING = "runtime_draining"
     CONTAINMENT_UNAVAILABLE = "runtime_containment_unavailable"
 

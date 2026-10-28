@@ -19,6 +19,8 @@ _EXPECTED = {
     AgentHostRefusal.CREDENTIALS_INVALID: AgentLauncherRefusal.PROVIDER_CREDENTIAL_MISSING,
     AgentHostRefusal.LAUNCH_FAILED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.LAUNCH_PROFILE_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
+    AgentHostRefusal.CANCELLED: AgentLauncherRefusal.SERVICE_FAILED,
+    AgentHostRefusal.EMERGENCY_CUTOFF: AgentLauncherRefusal.EMERGENCY_CUTOFF,
     AgentHostRefusal.NOT_READY: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.AGENT_REFUSED: AgentLauncherRefusal.SERVICE_FAILED,
     AgentHostRefusal.ALREADY_RUNNING: AgentLauncherRefusal.SERVICE_FAILED,
@@ -60,6 +62,7 @@ def test_the_launcher_protocol_stays_the_desktops_closed_set() -> None:
         "agent_service_incompatible",
         "agent_provider_credential_missing",
         "agent_service_failed",
+        "agent_emergency_cutoff",
     }
 
 

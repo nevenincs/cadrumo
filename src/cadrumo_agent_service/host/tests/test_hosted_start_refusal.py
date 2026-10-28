@@ -102,7 +102,6 @@ def test_a_start_whose_setup_fails_before_ready_is_a_refused_event_with_the_reas
             arguments=("-c", _SERVE_WITHOUT_MCP),
             directory=root,
             environment=environment | {GATEWAY_PORT_VARIABLE: "0", WORKER_PORT_VARIABLE: "0"},
-            ready_timeout=120,
         ),
     )
 

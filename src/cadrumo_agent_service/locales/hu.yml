@@ -166,6 +166,7 @@ desktop:
     sent_skills: Betöltött készségek
     service_absent: Az ügynök nincs telepítve. Telepítsd újra a Cadrumót a hozzáadásához.
     service_credential_missing: A kezdéshez állíts be egy szolgáltatót a beállításokban.
+    service_emergency_cutoff: Az ügynök elérte a vészhelyzeti időkorlátot, ezért leállt.
     service_failed: Az ügynök leállt.
     service_incompatible: Az ügynök ezen verziója nem működik a Cadrumo ezen verziójával.
       Telepítsd újra a Cadrumót.

@@ -8,14 +8,17 @@ import logging
 import sys
 import threading
 import time
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import override
+from types import SimpleNamespace
+from typing import cast, override
 
 import pytest
 
 from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, native_python
+from cadrumo_client.contracts.deadline_budget import EmergencyWaitPolicy
+from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...host.controller import (
     AgentGenerations,
@@ -24,12 +27,14 @@ from ...host.controller import (
     AgentHostRefusal,
     AgentHostState,
     AgentLaunch,
+    AgentProcess,
     ResolvedAgentCredentials,
 )
 from ...host.credential_frame import AgentCredential, build_credential_frame
 from ...host.launch_environment import HOSTED_ROOT_VARIABLE
 from ...host.launcher_protocol import AgentLauncherRefusal, launcher_refusal_for
 from ...host.native_refusal import NativeLaunchRefusal, NativeLaunchRefusalCode
+from ...service import AgentService
 from ..agent_process import WindowsAgentProcessLauncher
 from . import agent_host_fixture
 
@@ -72,7 +77,7 @@ class _CredentialSource:
 
 
 def _controller(
-    tmp_path: Path, mode: str, source: _CredentialSource, *, ready_timeout: float = 30, stop_grace: float = 10
+    tmp_path: Path, mode: str, source: _CredentialSource, *, emergency_cutoff: float = 30
 ) -> AgentHostController:
     return AgentHostController(
         launcher=WindowsAgentProcessLauncher(),
@@ -82,8 +87,7 @@ def _controller(
             arguments=fixture_arguments(_FIXTURE, mode, str(tmp_path)),
             directory=tmp_path,
             environment=fixture_environment(),
-            ready_timeout=ready_timeout,
-            stop_grace=stop_grace,
+            emergency_wait_policy=EmergencyWaitPolicy(emergency_cutoff),
         ),
     )
 
@@ -191,11 +195,11 @@ def test_imports_can_run_during_resolution_but_failed_credentials_retire_the_wai
     assert all(credential.secret == bytearray() for credential in source.handed_out)
 
 
-def test_an_agent_that_never_answers_is_ended_at_the_ready_bound(tmp_path: Path) -> None:
-    controller = _controller(tmp_path, "silent", _CredentialSource(), ready_timeout=3)
+def test_an_agent_that_never_answers_is_ended_at_the_emergency_cutoff(tmp_path: Path) -> None:
+    controller = _controller(tmp_path, "silent", _CredentialSource(), emergency_cutoff=3)
     with pytest.raises(AgentHostError) as refused:
         controller.start()
-    assert refused.value.reason is AgentHostRefusal.NOT_READY
+    assert refused.value.reason is AgentHostRefusal.EMERGENCY_CUTOFF
     assert controller.state is AgentHostState.DETACHED
 
 
@@ -270,7 +274,7 @@ def test_the_agent_job_knows_its_own_members(tmp_path: Path) -> None:
 
 
 def _refused(tmp_path: Path, mode: str) -> tuple[AgentHostController, AgentHostError]:
-    controller = _controller(tmp_path, mode, _CredentialSource(), ready_timeout=30)
+    controller = _controller(tmp_path, mode, _CredentialSource(), emergency_cutoff=30)
     with pytest.raises(AgentHostError) as refused:
         controller.start()
     return controller, refused.value
@@ -324,7 +328,7 @@ def test_the_hosts_line_without_the_hosts_status_is_only_a_failed_launch(
 def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_ends_with_its_tree(
     tmp_path: Path,
 ) -> None:
-    controller = _controller(tmp_path, "chatty", _CredentialSource(), ready_timeout=30)
+    controller = _controller(tmp_path, "chatty", _CredentialSource(), emergency_cutoff=30)
     ready = controller.start()
     try:
         assert ready.gateway_port == 47001
@@ -334,16 +338,11 @@ def test_an_agent_that_fills_its_standard_error_is_not_blocked_and_its_drain_end
     assert not [thread for thread in threading.enumerate() if thread.name == "agent-standard-error"]
 
 
-def test_a_tree_that_ignores_the_stop_is_ended_once_it_does_no_work_not_at_the_grace_period(
+def test_a_tree_that_ignores_stop_is_ended_only_at_emergency_cutoff(
     tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """The agent never reads the end of its input, and its grandchild only sleeps.
-
-    The stall bound is 1 s and the tree is sampled every 0.1 s, so the stop
-    ends the tree after about 1.1 s; the 30 s grace period would never be
-    reached. The bound of 5 s leaves the job's termination its loaded-host time.
-    """
-    controller = _controller(tmp_path, "deaf", _CredentialSource(), stop_grace=30)
+    """A sleeping tree is allowed to finish until the injected emergency cutoff."""
+    controller = _controller(tmp_path, "deaf", _CredentialSource(), emergency_cutoff=3)
     controller.start()
     grandchild = _received(tmp_path)["grandchild"]
     assert isinstance(grandchild, int)
@@ -355,11 +354,11 @@ def test_a_tree_that_ignores_the_stop_is_ended_once_it_does_no_work_not_at_the_g
     finally:
         controller.stop()
     assert controller.state is AgentHostState.DETACHED
-    assert 1.0 <= elapsed < 5.0, f"the stop took {elapsed:.3f} s"
+    assert 3.0 <= elapsed < 8.0, f"the stop took {elapsed:.3f} s"
     assert not _alive(grandchild, within=5)
     retired = [record.getMessage() for record in delivered_records(caplog) if record.name == _RETIREMENT_LOGGER]
     assert len(retired) == 1
-    assert retired[0].startswith("agent tree retired: stop stalled after ")
+    assert retired[0].startswith("agent tree retired: stop emergency_cutoff after ")
 
 
 def test_a_tree_that_exits_on_the_stop_is_ended_as_soon_as_it_has(
@@ -412,3 +411,65 @@ def test_gateway_and_worker_logs_from_contained_processes_join_application_feed(
     assert gateway[0].process != worker[0].process
     assert gateway[0].__dict__["_cadrumo_process_role"] == "extension_service"
     assert worker[0].__dict__["_cadrumo_process_role"] == "extension_service"
+
+
+@pytest.mark.parametrize("cancel_with", ["controller_cancel", "controller_stop", "service_close"])
+def test_cancel_wakes_readiness_and_startup_owner_retires_the_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, cancel_with: str
+) -> None:
+    waiting = threading.Event()
+    controller = _controller(tmp_path, "waiting_ready", _CredentialSource(), emergency_cutoff=120)
+    launch = controller._launcher.launch
+
+    def observed_launch(
+        *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> AgentProcess:
+        process = launch(executable=executable, arguments=arguments, directory=directory, environment=environment)
+        read = process.read_output_line
+
+        def observed_read(*, limit: int, timeout: float) -> bytes:
+            waiting.set()
+            return read(limit=limit, timeout=timeout)
+
+        monkeypatch.setattr(process, "read_output_line", observed_read)
+        return process
+
+    monkeypatch.setattr(controller._launcher, "launch", observed_launch)
+    service = AgentService(
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
+        ),
+        storage_root=tmp_path / "storage",
+        gateway_bearer=bytearray(b"synthetic-bearer"),
+        emit=lambda event: None,
+    )
+    service._controller = controller
+    errors: list[AgentHostError] = []
+
+    def start() -> None:
+        try:
+            with service._guard:
+                controller.start()
+        except AgentHostError as error:
+            errors.append(error)
+
+    owner = threading.Thread(target=start)
+    owner.start()
+    try:
+        assert waiting.wait(10), "the real child must reach its readiness wait before cancellation"
+        if cancel_with == "service_close":
+            service.request_close()
+        elif cancel_with == "controller_stop":
+            controller.stop()
+        else:
+            controller.cancel_start()
+        owner.join(10)
+        assert not owner.is_alive(), "cancel must wake readiness without waiting for its emergency cutoff"
+        assert [error.reason for error in errors] == [AgentHostRefusal.CANCELLED]
+        assert controller.state is AgentHostState.DETACHED
+        assert controller.published() is None
+    finally:
+        controller.cancel_start()
+        owner.join(10)
+        if not owner.is_alive():
+            service.close()

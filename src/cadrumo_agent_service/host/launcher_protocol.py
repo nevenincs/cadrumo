@@ -28,6 +28,7 @@ class AgentLauncherRefusal(StrEnum):
     SERVICE_INCOMPATIBLE = "agent_service_incompatible"
     PROVIDER_CREDENTIAL_MISSING = "agent_provider_credential_missing"
     SERVICE_FAILED = "agent_service_failed"
+    EMERGENCY_CUTOFF = "agent_emergency_cutoff"
 
 
 # Hosting-protocol refusal codes that mean this agent build does not speak the
@@ -43,6 +44,8 @@ _RUNTIME_UNAVAILABLE_CODES: Final = frozenset(
 
 def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
     """Map a hosting-protocol refusal onto the launcher protocol's closed codes."""
+    if error.reason is AgentHostRefusal.EMERGENCY_CUTOFF:
+        return AgentLauncherRefusal.EMERGENCY_CUTOFF
     if error.reason is AgentHostRefusal.SIGNED_OUT or error.reason is AgentHostRefusal.STALE_GENERATION:
         return AgentLauncherRefusal.SIGNED_OUT
     if error.reason in {AgentHostRefusal.CREDENTIALS_UNAVAILABLE, AgentHostRefusal.CREDENTIALS_INVALID}:
@@ -57,5 +60,7 @@ def launcher_refusal_for(error: AgentHostError) -> AgentLauncherRefusal:
 
 
 def runtime_launcher_refusal_for(error: RefusalError) -> AgentLauncherRefusal | None:
-    """Return ``RUNTIME_UNAVAILABLE`` when the runtime is absent, not ready or draining, else ``None``."""
+    """Retain emergency cutoff or runtime unavailability; other runtime refusals have no launcher mapping."""
+    if error.reason is RefusalCode.EMERGENCY_CUTOFF:
+        return AgentLauncherRefusal.EMERGENCY_CUTOFF
     return AgentLauncherRefusal.RUNTIME_UNAVAILABLE if error.reason in _RUNTIME_UNAVAILABLE_CODES else None

@@ -94,3 +94,21 @@ def test_an_exchange_of_a_command_past_its_deadline_is_refused(deadline: float) 
     with pytest.raises(RefusalError) as refused:
         exchange_timeout(deadline)
     assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+
+
+@pytest.mark.parametrize("cutoff", [0.0, -1.0, math.nan, math.inf, -math.inf])
+def test_emergency_policy_requires_a_finite_last_resort_cutoff(cutoff: float) -> None:
+    with pytest.raises(ValueError, match="positive and finite"):
+        deadline_budget.EmergencyWaitPolicy(cutoff)
+
+
+def test_emergency_deadline_is_absolute_across_phases(monkeypatch: pytest.MonkeyPatch) -> None:
+    now = [1000.0]
+    monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
+    deadline = deadline_budget.EmergencyWaitPolicy(15.0).deadline()
+    assert deadline.remaining_seconds() == 15.0
+    now[0] += 14.0
+    assert deadline.remaining_seconds() == 1.0
+    now[0] += 1.0
+    with pytest.raises(deadline_budget.EmergencyWaitCutoffError, match="emergency_wait_cutoff"):
+        deadline.remaining_seconds()

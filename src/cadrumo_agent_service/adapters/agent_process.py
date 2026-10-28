@@ -6,7 +6,7 @@ import contextlib
 import sys
 from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
-from queue import Empty, Queue
+from queue import Empty, Full, Queue
 from threading import Lock, Thread
 from typing import BinaryIO, Final
 
@@ -144,13 +144,18 @@ class WindowsAgentProcess:
         )
         self._lines: Queue[bytes | BaseException] = Queue(maxsize=1)
         self._reader: Thread | None = None
-        if on_exit is not None:
-            waiter = process.retain_waiter()
-            try:
-                Thread(target=_observe_exit, args=(waiter, on_exit), name="agent-process-exit", daemon=True).start()
-            except BaseException:
-                waiter.close()
-                raise
+
+        def exited() -> None:
+            self._notify_output(EOFError())
+            if on_exit is not None:
+                on_exit()
+
+        waiter = process.retain_waiter()
+        try:
+            Thread(target=_observe_exit, args=(waiter, exited), name="agent-process-exit", daemon=True).start()
+        except BaseException:
+            waiter.close()
+            raise
 
     def write_input(self, data: bytearray) -> None:
         """Write and flush these bytes to the agent's standard input."""
@@ -179,6 +184,14 @@ class WindowsAgentProcess:
         if isinstance(result, BaseException):
             raise result
         return result
+
+    def cancel_output_wait(self) -> None:
+        """Wake readiness immediately; the startup owner closes and retires the tree."""
+        self._notify_output(InterruptedError())
+
+    def _notify_output(self, result: bytes | BaseException) -> None:
+        with contextlib.suppress(Full):
+            self._lines.put_nowait(result)
 
     def settled_standard_error(self, *, timeout: float) -> bytes:
         """Return the retained end of the agent's standard error once it stops writing, or at the bound."""
@@ -238,9 +251,9 @@ class WindowsAgentProcess:
             line = self._output.readline(limit + 1)
             if not line.endswith(b"\n") or len(line) > limit:
                 raise EOFError
-            self._lines.put(line)
+            self._notify_output(line)
         except BaseException as error:
-            self._lines.put(error)
+            self._notify_output(error)
 
 
 class WindowsAgentProcessLauncher:
