@@ -261,6 +261,8 @@ export function modeloFixture(options: Options): ModeloPort {
         return LATER_STATES;
     }
   };
+  /** The written form each admitted baseline was read from. */
+  const admittedBy = new Map<string, string>();
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
     const name = await formName(workUnitId);
     const read = name === LATER_STATES ? laterState() : name;
@@ -269,6 +271,8 @@ export function modeloFixture(options: Options): ModeloPort {
       (await envelope<ModeloWorkbenchFormProjectionV1>(
         `modelo-${read}-${language}`,
       ));
+    const admitted = form ? form.admitted_baseline?.baseline_id : undefined;
+    if (read && admitted) admittedBy.set(admitted, read);
     return form || reject("refused", { reason: "profile_mismatch" });
   };
   /** The envelope `name` of a write the scenario answers, or unserved. */
@@ -286,21 +290,23 @@ export function modeloFixture(options: Options): ModeloPort {
   // Every edit envelope was read on the baseline of one written form and is
   // named after it, so a baseline names the form a write was read for; a
   // baseline no written form admitted names none, and its write is invalid.
-  let admittedBy: Map<string, string> | null = null;
-  const formAdmitting = async (baselineId: unknown): Promise<string> => {
-    if (!admittedBy) {
-      admittedBy = new Map();
-      for (const name of Object.keys(catalogue)) {
-        const read = /^modelo-(.+)-(?:en|es|ca|hu)$/.exec(name)?.[1];
-        if (!read) continue;
-        const form = await envelope<ModeloWorkbenchFormProjectionV1>(name);
-        const admitted = form?.admitted_baseline?.baseline_id;
-        if (admitted) admittedBy.set(admitted, read);
-      }
+  // The forms this port served are known by their baselines as they are
+  // read. Only a baseline from elsewhere reads every written form, whose
+  // envelopes are many and some of them megabytes.
+  let everyForm: Promise<void> | null = null;
+  const readEveryForm = async () => {
+    for (const name of Object.keys(catalogue)) {
+      const read = /^modelo-(.+)-(?:en|es|ca|hu)$/.exec(name)?.[1];
+      if (!read) continue;
+      const form = await envelope<ModeloWorkbenchFormProjectionV1>(name);
+      const admitted = form?.admitted_baseline?.baseline_id;
+      if (admitted) admittedBy.set(admitted, read);
     }
-    const form =
-      typeof baselineId === "string" ? admittedBy.get(baselineId) : undefined;
-    return form ?? reject("invalid");
+  };
+  const formAdmitting = async (baselineId: unknown): Promise<string> => {
+    if (typeof baselineId !== "string") return reject("invalid");
+    if (!admittedBy.has(baselineId)) await (everyForm ??= readEveryForm());
+    return admittedBy.get(baselineId) ?? reject("invalid");
   };
   /** A held change's box as a form field addresses it. */
   const heldBox = (address: ModeloEditHeldChangeV1["address"]) =>
