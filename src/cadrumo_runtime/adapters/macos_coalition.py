@@ -194,7 +194,7 @@ def terminate_macos_coalition(
 
     Args:
         coalition: Resource coalition ID to empty.
-        deadline: Monotonic deadline; exceeding it raises DEADLINE_EXCEEDED.
+        deadline: Monotonic deadline; exceeding it raises TIMEOUT.
         exclude: Exact incarnation that must survive, if any.
         port: Native process facts; defaults to the Darwin kernel.
     """
@@ -214,7 +214,7 @@ def terminate_macos_coalition(
             return
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         time.sleep(min(_PASS_INTERVAL_SECONDS, remaining))
 
 

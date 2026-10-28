@@ -101,7 +101,7 @@ class ModelRunRefusalCode(StrEnum):
     """The run named a reply option its lane does not honour: a caller defect, not a configuration gap."""
     RUN_FAILED = "run_failed"
     OUTPUT_INVALID = "output_invalid"
-    DEADLINE_EXCEEDED = "deadline_exceeded"
+    TIMEOUT = "timeout"
     REFUSED_BY_PROVIDER = "refused_by_provider"
     CONSENT_MISSING = "consent_missing"
 

@@ -143,6 +143,13 @@ class _Release:
         self.closed = True
 
 
+class _Human(_Release):
+    """The human login owner: a release fault port that also settles its proof attempts."""
+
+    def cancel_all_attempts(self) -> None:
+        pass
+
+
 class _Channel(_Release):
     """Real framing runs against this bounded transport fault port."""
 
@@ -195,7 +202,8 @@ class _Endpoint(_Release):
         super().__init__()
         self.channel = channel
 
-    def connect(self) -> WorkerChannel:
+    def connect(self, *, timeout: float | None = None) -> WorkerChannel:
+        assert timeout is None or timeout > 0
         return cast(WorkerChannel, self.channel)
 
 
@@ -218,8 +226,9 @@ class _Entry:
     identity: ProfileWorkerIdentity
     control: _Channel
     operation: _Channel
+    proof: _Channel
     custody: _Release
-    endpoints: tuple[_Endpoint, _Endpoint]
+    endpoints: tuple[_Endpoint, _Endpoint, _Endpoint]
     arguments: list[str]
 
 
@@ -230,9 +239,9 @@ def _entry(
     body_failure: BaseException | None = None,
 ) -> _Entry:
     identity = _identity()
-    control, operation = _Channel(), _Channel()
-    endpoints = _Endpoint(control), _Endpoint(operation)
-    for channel in (control, operation):
+    control, operation, proof = _Channel(), _Channel(), _Channel()
+    endpoints = _Endpoint(control), _Endpoint(operation), _Endpoint(proof)
+    for channel in (control, operation, proof):
         channel.queue(
             ServerHello(
                 product_version="test-cohort",
@@ -271,6 +280,7 @@ def _entry(
         identity,
         control,
         operation,
+        proof,
         custody,
         endpoints,
         [
@@ -309,9 +319,9 @@ def test_run_attempts_all_releases_preserves_primary_and_retains_only_failed_own
         assert caught.value is primary
         cleanup = primary.__dict__.get("async_cleanup_error") or primary.__dict__.get("cleanup_error")
         assert isinstance(cleanup, AsyncResourceCleanupError)
-    assert entry.custody.calls == entry.control.calls == entry.operation.calls == 1
+    assert entry.custody.calls == entry.control.calls == entry.operation.calls == entry.proof.calls == 1
     assert all(endpoint.calls == 1 and endpoint.closed for endpoint in entry.endpoints)
-    assert entry.operation.closed
+    assert entry.operation.closed and entry.proof.closed
     if failures == 2:
         with pytest.raises(AsyncResourceCleanupError) as retry:
             asyncio.run(cleanup.retry_cleanup())
@@ -320,7 +330,7 @@ def test_run_attempts_all_releases_preserves_primary_and_retains_only_failed_own
     asyncio.run(cleanup.retry_cleanup())
     assert entry.custody.closed and entry.control.closed
     assert entry.custody.calls == entry.control.calls == failures + 1
-    assert entry.operation.calls == 1 and all(endpoint.calls == 1 for endpoint in entry.endpoints)
+    assert entry.operation.calls == entry.proof.calls == 1 and all(endpoint.calls == 1 for endpoint in entry.endpoints)
 
 
 @pytest.mark.parametrize("refused", [False, True])
@@ -330,7 +340,7 @@ def test_run_reports_clean_or_typed_exit_only_after_every_owner_releases(
     primary = RefusalError(RefusalCode.INVALID_FRAME) if refused else None
     entry = _entry(monkeypatch, tmp_path, body_failure=primary)
     assert worker.run(entry.arguments) == (2 if refused else 0)
-    assert entry.custody.calls == entry.control.calls == entry.operation.calls == 1
+    assert entry.custody.calls == entry.control.calls == entry.operation.calls == entry.proof.calls == 1
     assert all(endpoint.calls == 1 for endpoint in entry.endpoints)
 
 
@@ -352,8 +362,8 @@ def test_rejected_handshake_retains_first_failed_close_and_does_not_close_channe
     assert caught.value.reason is RefusalCode.VERSION_MISMATCH
     cleanup = caught.value.__dict__.get("async_cleanup_error")
     assert isinstance(cleanup, AsyncResourceCleanupError)
-    assert entry.control.calls == 1 and entry.custody.calls == entry.operation.calls == 0
-    assert entry.endpoints[0].closed and entry.endpoints[1].calls == 0
+    assert entry.control.calls == 1 and entry.custody.calls == entry.operation.calls == entry.proof.calls == 0
+    assert entry.endpoints[0].closed and entry.endpoints[1].calls == entry.endpoints[2].calls == 0
     asyncio.run(cleanup.retry_cleanup())
     asyncio.run(cleanup.retry_cleanup())
     assert entry.control.calls == 2 and entry.control.closed
@@ -906,7 +916,7 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
     custody = _ServeCustody()
     custody.identity = entry.identity
     operations = _Operations(1 if local_failure else 0)
-    human, uploads = _Release(), _Release()
+    human, uploads = _Human(), _Release()
     monkeypatch.setattr(worker, "ProfileWorkerCustody", lambda *_args, **_kwargs: custody)
     monkeypatch.setattr(worker, "ProfileWorkerOperationHost", lambda *_args, **_kwargs: operations)
     monkeypatch.setattr(worker, "ProfileWorkerHumanLogin", lambda *_args, **_kwargs: human)
@@ -955,14 +965,14 @@ def test_operation_frame_failure_keeps_actual_cleanup_owner_after_worker_loop_cl
 async def test_serve_clean_stop_drains_once_and_keeps_native_and_custody_ownership_with_caller(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    class IdleRelease(_Release):
+    class IdleRelease(_Human):
         def expire(self, *, live_sessions: tuple[UUID, ...] = ()) -> None:
             assert live_sessions == ()
 
         def seconds_until_expiry(self) -> float | None:
             return None
 
-    control, operation = _Channel(), _Channel()
+    control, operation, proof = _Channel(), _Channel(), _Channel()
     control.queue(ProfileWorkerRequest(root=ProfileWorkerControlRequest(action="stop", request_id=uuid4())))
     custody, human, uploads = _ServeCustody(), IdleRelease(), IdleRelease()
     operations = _Operations(0)
@@ -970,13 +980,14 @@ async def test_serve_clean_stop_drains_once_and_keeps_native_and_custody_ownersh
     await worker_service._serve(
         cast(WorkerChannel, control),
         cast(WorkerChannel, operation),
+        cast(WorkerChannel, proof),
         cast(ProfileWorkerCustody, custody),
         cast(ProfileWorkerHumanLogin, human),
         cast(ProfileWorkerOperationHost, operations),
     )
     assert operations.calls == human.calls == uploads.calls == 1
     assert operations.closed and human.closed and uploads.closed
-    assert custody.calls == control.calls == operation.calls == 0
+    assert custody.calls == control.calls == operation.calls == proof.calls == 0
 
 
 @pytest.mark.asyncio
@@ -985,14 +996,15 @@ async def test_serve_preserves_control_failure_retires_all_local_owners_and_leav
     monkeypatch: pytest.MonkeyPatch, failures: int
 ) -> None:
     primary = ValueError("synthetic control validation failure")
-    control, operation = _Channel(read_failure=primary), _Channel()
-    custody, human, uploads = _Release(), _Release(failures), _Release(failures)
+    control, operation, proof = _Channel(read_failure=primary), _Channel(), _Channel()
+    custody, human, uploads = _Release(), _Human(failures), _Release(failures)
     operations = _Operations(failures)
     monkeypatch.setattr(worker_service, "WorkerSubmissionStaging", lambda: uploads)
     with pytest.raises(ValueError) as caught:
         await worker_service._serve(
             cast(WorkerChannel, control),
             cast(WorkerChannel, operation),
+            cast(WorkerChannel, proof),
             cast(ProfileWorkerCustody, custody),
             cast(ProfileWorkerHumanLogin, human),
             cast(ProfileWorkerOperationHost, operations),
@@ -1001,7 +1013,7 @@ async def test_serve_preserves_control_failure_retires_all_local_owners_and_leav
     cleanup = primary.__dict__.get("async_cleanup_error")
     assert isinstance(cleanup, AsyncResourceCleanupError)
     assert operations.calls == human.calls == uploads.calls == 1
-    assert custody.calls == control.calls == operation.calls == 0
+    assert custody.calls == control.calls == operation.calls == proof.calls == 0
     if failures == 2:
         with pytest.raises(AsyncResourceCleanupError) as retry:
             await cleanup.retry_cleanup()
@@ -1018,8 +1030,8 @@ async def test_serve_repeated_cancellation_waits_for_cleanup_and_preserves_origi
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     primary = asyncio.CancelledError("original control cancellation")
-    control, operation = _Channel(read_failure=primary), _Channel()
-    custody, human, uploads = _Release(), _Release(1), _Release()
+    control, operation, proof = _Channel(read_failure=primary), _Channel(), _Channel()
+    custody, human, uploads = _Release(), _Human(1), _Release()
     entered, finish = asyncio.Event(), asyncio.Event()
 
     class PendingOperations(_Operations):
@@ -1035,6 +1047,7 @@ async def test_serve_repeated_cancellation_waits_for_cleanup_and_preserves_origi
         worker_service._serve(
             cast(WorkerChannel, control),
             cast(WorkerChannel, operation),
+            cast(WorkerChannel, proof),
             cast(ProfileWorkerCustody, custody),
             cast(ProfileWorkerHumanLogin, human),
             cast(ProfileWorkerOperationHost, operations),

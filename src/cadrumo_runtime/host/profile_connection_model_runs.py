@@ -116,7 +116,7 @@ class ProfileConnectionModelRunsMixin:
         wait = _LOOKUP_ANSWER_SECONDS if command.header is None else command.header.deadline_seconds
         try:
             if not pending.answered.wait(wait + (0 if command.header is None else _ANSWER_MARGIN_SECONDS)):
-                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.DEADLINE_EXCEEDED))
+                pending.answer(ModelRunOutcome(refusal=ModelRunRefusalCode.TIMEOUT))
         finally:
             with self._guard:
                 self._model_runs.pop(run_id, None)

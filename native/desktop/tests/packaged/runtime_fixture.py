@@ -98,7 +98,7 @@ def main() -> None:
                         try:
                             code = process.wait(timeout=0)
                         except RefusalError as waiting:
-                            if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                            if waiting.reason is not RefusalCode.TIMEOUT:
                                 raise
                             time.sleep(0.05)
                         else:
@@ -122,7 +122,7 @@ def main() -> None:
                 try:
                     exit_code = process.wait(timeout=0)
                 except RefusalError as waiting:
-                    if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                    if waiting.reason is not RefusalCode.TIMEOUT:
                         raise
                     emit({"kind": "runtime-alive-before-cleanup", "pid": process.pid})
                 else:

@@ -242,7 +242,7 @@ class _WindowsLaunch:
         try:
             return self._process.wait(timeout=timeout)
         except RefusalError as error:
-            if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is RefusalCode.TIMEOUT:
                 return None
             raise
 
@@ -415,10 +415,10 @@ class _Reader:
             if cancellation is not None:
                 cancel_deadline = cancellation.deadline
                 if cancel_deadline is not None and time.monotonic() >= cancel_deadline:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
             wait = _POLL_S if deadline is None else min(_POLL_S, deadline - time.monotonic())
             if wait <= 0:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             try:
                 item = self.lines.get(timeout=wait)
             except queue.Empty:
@@ -532,7 +532,7 @@ def run_components_role(
     Raises:
         RefusalError: ``UNAVAILABLE`` when the role cannot start or ends without
             a result, ``INVALID_FRAME`` when it breaks the protocol, and
-            ``DEADLINE_EXCEEDED`` when ``timeout`` passes first. The role is
+            ``TIMEOUT`` when ``timeout`` passes first. The role is
             ended in every case.
     """
     located = image if image is not None else components_role_image()
