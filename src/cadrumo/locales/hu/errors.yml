@@ -1332,6 +1332,10 @@ errors:
     refused_runtime_custody_recovering: A profilhoz való hozzáférés helyreállítása
       folyamatban van. Ismételd meg a kérést egy kis idő múlva; ha újra elutasításra
       kerül, jelentkezz be újra.
+    refused_runtime_custody_recovering_effect_unknown: 'A profilhoz való hozzáférés
+      helyreállítása folyamatban van, és a folyamatban lévő módosítás már végbemehetett.
+      Még ne ismételd meg: amikor a hozzáférés visszatér, először ellenőrizd a műveletet
+      vagy azt, amit módosít.'
     refused_runtime_frontend: A profil futtatókörnyezete elutasította a kérést.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.

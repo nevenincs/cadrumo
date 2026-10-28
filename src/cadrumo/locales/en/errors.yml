@@ -1308,6 +1308,10 @@ errors:
       the syntax of the filter provided.'
     refused_runtime_custody_recovering: Access to this profile is being restored.
       Repeat the request in a moment; if it is refused again, sign in again.
+    refused_runtime_custody_recovering_effect_unknown: 'Access to this profile is
+      being restored, and the change in progress when it was lost may already have
+      been made. Do not repeat it yet: once access returns, check the operation, or
+      what it changes, first.'
     refused_runtime_frontend: The profile runtime refused this request.
     refused_source_mesh_invariant: 'Refused: source mesh invariant violation.'
     refused_storage_bucket_already_present: A bucket with that identifier already

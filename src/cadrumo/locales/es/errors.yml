@@ -1414,6 +1414,10 @@ errors:
     refused_runtime_custody_recovering: Se está restableciendo el acceso a este perfil.
       Repite la solicitud en un momento; si se rechaza de nuevo, vuelve a iniciar
       sesión.
+    refused_runtime_custody_recovering_effect_unknown: 'Se está restableciendo el
+      acceso a este perfil y el cambio que estaba en curso puede haberse aplicado
+      ya. No lo repitas todavía: cuando vuelva el acceso, comprueba primero la operación
+      o lo que cambia.'
     refused_runtime_frontend: El entorno de ejecución del perfil rechazó esta solicitud.
     refused_source_mesh_invariant: 'Rechazado: invariante de la malla de fuentes incumplida.'
     refused_storage_bucket_already_present: Ya existe un bucket con ese identificador.

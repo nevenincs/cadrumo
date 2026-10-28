@@ -12,12 +12,17 @@ from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.profile_access import AccessRefusal, Reply
 from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
-from cadrumo_client.transport.frontend_client_contracts import CustodyRecoveringError, FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    CustodyRecoveringError,
+    FrontendRefusedError,
+)
 from cadrumo_client.transport.frontend_operation_client import OperationFrontend
 
 from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
+from ....core.operations import OperationEffect
 from ....core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from .._profile_session_gate import session_refusal_translation_key
 from ..errors import render_error_payload
@@ -196,10 +201,68 @@ def test_a_session_waiting_for_custody_to_recover_is_rendered_as_retryable_with_
     assert payload["context"]["seconds"] == "42"
 
 
+def test_a_change_the_lost_worker_was_serving_is_rendered_as_unknown_and_never_retryable() -> None:
+    operation_id = "3" * 64
+    reply = AccessRefusal(
+        request_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        connection_id=uuid4(),
+        code=AccessDenialCode.CUSTODY_RECOVERING,
+        recovery_remaining_seconds=42,
+        effect=OperationEffect.UNKNOWN,
+        operation_id=operation_id,
+    )
+    decoded = Reply.model_validate_json(reply.model_dump_json()).root
+    assert isinstance(decoded, AccessRefusal) and decoded.effect is OperationEffect.UNKNOWN
+    with pytest.raises(CustodyRecoveringEffectUnknownError) as raised:
+        OperationFrontend._raise_wire_refusal(decoded)
+    assert not isinstance(raised.value, CustodyRecoveringError)
+    assert (raised.value.remaining_seconds, raised.value.operation_id) == (42, operation_id)
+
+    with override_settings(cadrumo_output_language=OutputLanguage.EN):
+        payload = json.loads(render_error_payload(raised.value, as_json=True))["error"]
+        expected = tr("errors.refused.refused_runtime_custody_recovering_effect_unknown", locale="en")
+    assert payload["code"] == "REFUSED_RUNTIME_CUSTODY_RECOVERING_EFFECT_UNKNOWN"
+    assert payload["retryable"] is False
+    assert payload["message"] == expected != "errors.refused.refused_runtime_custody_recovering_effect_unknown"
+    assert payload["context"]["reason"] == AccessDenialCode.CUSTODY_RECOVERING.value
+    assert payload["context"]["effect"] == OperationEffect.UNKNOWN.value
+    assert payload["context"]["operation_id"] == operation_id
+    assert payload["context"]["seconds"] == "42"
+
+
 @pytest.mark.parametrize("language", tuple(OutputLanguage))
-def test_the_recovering_refusal_is_translated_in_every_language(language: OutputLanguage) -> None:
-    key = "errors.refused.refused_runtime_custody_recovering"
+@pytest.mark.parametrize(
+    "key",
+    [
+        "errors.refused.refused_runtime_custody_recovering",
+        "errors.refused.refused_runtime_custody_recovering_effect_unknown",
+    ],
+)
+def test_the_recovering_refusals_are_translated_in_every_language(language: OutputLanguage, key: str) -> None:
     assert tr(key, locale=language.value) != key
+
+
+@pytest.mark.parametrize(
+    ("code", "effect", "operation_id", "match"),
+    [
+        (AccessDenialCode.SESSION_EXPIRED, OperationEffect.UNKNOWN, None, "unknown"),
+        (AccessDenialCode.CUSTODY_RECOVERING, OperationEffect.UPDATED, None, "unknown"),
+        (AccessDenialCode.CUSTODY_RECOVERING, None, "3" * 64, "names its operation"),
+    ],
+)
+def test_only_a_recovering_change_carries_an_unknown_effect_and_its_operation(
+    code: AccessDenialCode, effect: OperationEffect | None, operation_id: str | None, match: str
+) -> None:
+    with pytest.raises(ValueError, match=match):
+        AccessRefusal(
+            request_id=uuid4(),
+            runtime_boot_id=uuid4(),
+            connection_id=uuid4(),
+            code=code,
+            effect=effect,
+            operation_id=operation_id,
+        )
 
 
 def test_a_window_is_refused_on_any_other_code() -> None:

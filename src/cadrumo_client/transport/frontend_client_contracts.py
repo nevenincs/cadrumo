@@ -10,6 +10,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.identity.digest import ContentDigest
+from cadrumo.core.operations import OperationEffect
 from cadrumo.core.request_faults import RequestFault, request_faults_text
 from cadrumo.domain.user_profile.values import ProfileSetupState
 
@@ -85,6 +86,29 @@ class CustodyRecoveringError(FrontendRefusedError):
             self.context["seconds"] = remaining_seconds
 
 
+class CustodyRecoveringEffectUnknownError(FrontendRefusedError):
+    """The profile's worker was lost while it served a change this request carried.
+
+    The session waits for custody to recover, as for
+    :class:`CustodyRecoveringError`, but the change may already have taken
+    effect: its outcome is unknown, so the request is not to be repeated as it
+    stands. Once the session is back, observe the named operation, or the
+    subject it changes, before asking again.
+    """
+
+    def __init__(self, *, remaining_seconds: int | None, operation_id: str | None) -> None:
+        """Retain the recovery window and the operation whose change has an unknown effect, when named."""
+        super().__init__(AccessDenialCode.CUSTODY_RECOVERING.value)
+        self.remaining_seconds = remaining_seconds
+        self.operation_id = operation_id
+        if self.context is not None:
+            self.context["effect"] = OperationEffect.UNKNOWN.value
+            if remaining_seconds is not None:
+                self.context["seconds"] = remaining_seconds
+            if operation_id is not None:
+                self.context["operation_id"] = operation_id
+
+
 def frontend_refusal(
     code: str,
     *,
@@ -92,9 +116,19 @@ def frontend_refusal(
     request_faults: tuple[RequestFault, ...] = (),
     holder_operation_id: str | None = None,
     recovery_remaining_seconds: int | None = None,
+    effect: OperationEffect | None = None,
+    operation_id: str | None = None,
 ) -> FrontendRefusedError:
-    """Return the typed refusal for a runtime denial: a recovering session's carries its remaining window."""
+    """Return the typed refusal for a runtime denial: a recovering session's carries its remaining window.
+
+    A change the lost worker was serving when the session began recovering
+    has an unknown effect, and its refusal is never the retryable one.
+    """
     if code == AccessDenialCode.CUSTODY_RECOVERING.value:
+        if effect is OperationEffect.UNKNOWN:
+            return CustodyRecoveringEffectUnknownError(
+                remaining_seconds=recovery_remaining_seconds, operation_id=operation_id
+            )
         return CustodyRecoveringError(remaining_seconds=recovery_remaining_seconds)
     return FrontendRefusedError(
         code, sign_in=sign_in, request_faults=request_faults, holder_operation_id=holder_operation_id

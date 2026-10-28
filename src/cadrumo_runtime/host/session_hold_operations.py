@@ -80,7 +80,10 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    FrontendRefusedError,
+)
 from cadrumo_client.transport.operation_settlement import PinnedConnection, submit_operation
 
 RELAY_ACTION_KEYS: Final[Mapping[str, frozenset[str]]] = {
@@ -179,6 +182,9 @@ class OperationRelay:
             if action == "operation_cancel":
                 return self._cancel(operation_id, _count(request["expected_revision"]), deadline=deadline)
             raise ValueError("unknown relay action")
+        except CustodyRecoveringEffectUnknownError:
+            # The lost worker may have committed the change: the relay's own unknown, never a refusal to repeat.
+            raise RelayRefusedError("unavailable") from None
         except FrontendRefusedError as error:
             raise RelayRefusedError(error.reason, holder_operation_id=error.holder_operation_id) from None
         except (RefusalError, ValidationError) as error:

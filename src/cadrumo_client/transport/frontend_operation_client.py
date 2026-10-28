@@ -98,6 +98,8 @@ class OperationFrontend:
             request_faults=reply.request_faults,
             holder_operation_id=reply.holder_operation_id,
             recovery_remaining_seconds=reply.recovery_remaining_seconds,
+            effect=reply.effect,
+            operation_id=None if reply.operation_id is None else str(reply.operation_id),
         )
 
     @staticmethod

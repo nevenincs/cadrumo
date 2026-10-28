@@ -95,7 +95,11 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    CustodyRecoveringError,
+    FrontendRefusedError,
+)
 from cadrumo_runtime.host.session_hold_operations import (
     RELAY_ACTION_KEYS,
     OperationRelay,
@@ -256,6 +260,8 @@ class _Runtime:
         self.financial_definitions: set[str] = set()
         self.managed: list[object] = []
         self.busy_holder: str | None = None
+        #: The runtime's refusal of the next submission, as its client raises it.
+        self.submit_refusal: FrontendRefusedError | None = None
         self.stale_cancellation = False
 
     def operation(self, request: OperationRequest, *, deadline: float) -> OperationReply:
@@ -264,6 +270,8 @@ class _Runtime:
         if isinstance(request, OperationSubmit):
             if self.busy_holder is not None:
                 raise FrontendRefusedError(AccessDenialCode.SUBJECT_BUSY.value, holder_operation_id=self.busy_holder)
+            if self.submit_refusal is not None:
+                raise self.submit_refusal
             self.submitted.append(request)
             operation = _Operation(f"{len(self.submitted):064x}", request.definition_id, request.subject_ref)
             self.operations[operation.operation_id] = operation
@@ -498,6 +506,25 @@ def test_a_busy_subject_names_the_operation_that_holds_it() -> None:
         _submit(_relay(runtime), GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
     assert (refused.value.code, refused.value.holder_operation_id) == (AccessDenialCode.SUBJECT_BUSY.value, "7" * 64)
     assert runtime.submitted == []
+
+
+@pytest.mark.parametrize(
+    ("refusal", "code"),
+    [
+        # Refused before the worker took it: nothing was done, and the session comes back by itself.
+        (CustodyRecoveringError(remaining_seconds=90), AccessDenialCode.CUSTODY_RECOVERING.value),
+        # The worker was lost while it served the submission: it may have been made, so the relay's unknown.
+        (CustodyRecoveringEffectUnknownError(remaining_seconds=90, operation_id=None), "unavailable"),
+    ],
+)
+def test_a_submission_refused_while_custody_recovers_is_relayed_as_its_effect_allows(
+    refusal: FrontendRefusedError, code: str
+) -> None:
+    runtime = _Runtime()
+    runtime.submit_refusal = refusal
+    with pytest.raises(RelayRefusedError) as refused:
+        _submit(_relay(runtime), GOOGLE_LOGIN_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
+    assert (refused.value.code, refused.value.holder_operation_id) == (code, None)
 
 
 def test_an_answer_applies_exactly_the_review_it_read_and_a_changed_review_is_refused_unanswered() -> None:

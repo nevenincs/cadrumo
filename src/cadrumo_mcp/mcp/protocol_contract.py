@@ -32,7 +32,10 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.projection_pages import ProjectionPage
 from cadrumo_client.contracts.sign_in_outcomes import SignInRefusal
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
+from cadrumo_client.transport.frontend_client_contracts import (
+    CustodyRecoveringEffectUnknownError,
+    FrontendRefusedError,
+)
 
 from .view_register import VIEW_PAGE_MAX
 
@@ -558,12 +561,17 @@ def sign_in_refusal_facts(sign_in: SignInRefusal | None) -> dict[str, Any]:
 def refusal_facts(error: Exception) -> dict[str, Any]:
     """Return the public facts a refusal carries beside its code, so no sign-in refusal collapses to it.
 
-    A busy subject also names the unsettled operation that holds it, for the person to follow.
+    A busy subject also names the unsettled operation that holds it, for the person to follow. A change
+    the lost worker was serving reports its unknown effect, and its operation when named, so it is not repeated.
     """
     if isinstance(error, FrontendRefusedError):
         facts = sign_in_refusal_facts(error.sign_in)
         if error.holder_operation_id is not None:
             facts["holder_operation_id"] = error.holder_operation_id
+        if isinstance(error, CustodyRecoveringEffectUnknownError):
+            facts["effect"] = OperationEffect.UNKNOWN.value
+            if error.operation_id is not None:
+                facts["operation_id"] = error.operation_id
         return facts
     return {}
 

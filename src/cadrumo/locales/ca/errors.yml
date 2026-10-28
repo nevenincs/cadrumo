@@ -1421,6 +1421,10 @@ errors:
     refused_runtime_custody_recovering: S'està restablint l'accés a aquest perfil.
       Repeteix la sol·licitud d'aquí a un moment; si es torna a rebutjar, torna a
       iniciar la sessió.
+    refused_runtime_custody_recovering_effect_unknown: 'S''està restablint l''accés
+      a aquest perfil i el canvi que estava en curs pot haver-se aplicat ja. No el
+      repeteixis encara: quan torni l''accés, comprova primer l''operació o el que
+      canvia.'
     refused_runtime_frontend: L'entorn d'execució del perfil ha rebutjat aquesta sol·licitud.
     refused_source_mesh_invariant: 'Refusat: invariant de la malla de fonts incomplit.'
     refused_storage_bucket_already_present: Ja existeix un bucket amb aquest identificador.

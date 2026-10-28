@@ -89,6 +89,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo_client.transport.frontend_client_contracts.CustodyRecoveringEffectUnknownError",
+        ErrorCode(
+            code="REFUSED_RUNTIME_CUSTODY_RECOVERING_EFFECT_UNKNOWN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_runtime_custody_recovering_effect_unknown",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo_client.transport.modelo_metadata.ModeloMetadataRunError",
         ErrorCode(
             code="ERROR_MODELO_METADATA_RUN",
