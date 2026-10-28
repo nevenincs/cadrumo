@@ -18,10 +18,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-// Delivery waits on real file I/O, which a loaded Windows host with real-time
-// scanning can stall for several seconds. These tests assert delivery and its
-// content, not its latency.
-const DELIVERY: Duration = Duration::from_secs(60);
+const DELIVERY: Duration = Duration::from_secs(5);
 
 #[test]
 fn terminal_traffic_is_measured_without_retaining_screen_contents() {

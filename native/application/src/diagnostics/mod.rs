@@ -577,10 +577,15 @@ mod tests {
     use super::*;
     use std::sync::Arc;
 
-    // Delivery waits on real file I/O, which a loaded Windows host with real-time
-    // scanning can stall for several seconds. These tests assert delivery and its
-    // content, not its latency.
-    const DELIVERY: Duration = Duration::from_secs(60);
+    const DELIVERY: Duration = Duration::from_secs(5);
+
+    /// A missed delivery fails with the stage the writer is held in and the
+    /// per-stage time of its last batch.
+    fn delivered(diagnostics: &Diagnostics) {
+        let flushed = diagnostics.flush_logs(DELIVERY);
+        let status = diagnostics.log_delivery_status();
+        assert!(flushed, "delivery missed {DELIVERY:?}: {status:?}");
+    }
 
     fn fact() -> PanicFact {
         PanicFact::new(Some(std::panic::Location::caller()), Some("t"), 1, None)
@@ -599,13 +604,13 @@ mod tests {
         let directory = tempfile::tempdir().unwrap();
         let diagnostics = Arc::new(Diagnostics::default());
         diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
-        assert!(diagnostics.flush_logs(DELIVERY));
+        delivered(&diagnostics);
         {
             // The panicking code itself may hold the state lock.
             let _held = diagnostics.state.lock().unwrap();
             diagnostics.panicked(fact());
         }
-        assert!(diagnostics.flush_logs(DELIVERY));
+        delivered(&diagnostics);
         assert_eq!(panic_lines(directory.path()), 1);
         assert!(diagnostics.snapshot(0).events.is_empty());
         let poisoner = diagnostics.clone();
@@ -616,7 +621,7 @@ mod tests {
         .join()
         .unwrap_err();
         diagnostics.panicked(fact());
-        assert!(diagnostics.flush_logs(DELIVERY));
+        delivered(&diagnostics);
         assert_eq!(panic_lines(directory.path()), 2);
         let events = diagnostics.snapshot(0).events;
         assert!(matches!(
