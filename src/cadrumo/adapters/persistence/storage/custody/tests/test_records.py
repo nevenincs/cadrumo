@@ -240,6 +240,7 @@ def test_refusal_taxonomy_carries_the_hard_cutover_and_supervision_outcomes() ->
         ProfileCustodyRefusal.DEK_ROTATION_UNSUPPORTED,
         ProfileCustodyRefusal.KDF_RESOURCE_LIMIT,
         ProfileCustodyRefusal.KDF_SUPERVISION_UNAVAILABLE,
+        ProfileCustodyRefusal.KDF_TIMEOUT,
     }
     assert tuple(ProfileCustodyRecoveryGuidance) == (
         ProfileCustodyRecoveryGuidance.DESTRUCTIVE_RESET,
