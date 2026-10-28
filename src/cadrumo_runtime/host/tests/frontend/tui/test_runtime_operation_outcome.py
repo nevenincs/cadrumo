@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
@@ -240,39 +240,37 @@ class _Client:
         )
 
 
+@dataclass
 class _Controller:
-    """The submitted operation as the real controller reports it, with each exchange scripted."""
+    """The submitted operation as the real controller reports it, with each exchange scripted.
+
+    The terminal wait observes through a copy carrying its deadline, so the
+    observation log is a shared list rather than a counter the copy would own.
+    """
 
     operation_id = _OPERATION_ID
-    client: _Client
+    registered: _Registered
+    observation: OperationObservationSuccessV1 | OperationObservationRefusalV1 = field(kw_only=True)
+    result: BaseModel | None = field(default=None, kw_only=True)
+    detail: OperationErrorDetailV1 | None = field(default=None, kw_only=True)
+    result_refusal: Exception | None = field(default=None, kw_only=True)
+    observe_failure: RefusalError | None = field(default=None, kw_only=True)
+    start_failure: RefusalError | None = field(default=None, kw_only=True)
+    closes_transport: bool = field(default=False, kw_only=True)
+    on_observe: Callable[[], None] = field(default=lambda: None, kw_only=True)
+    on_detail: Callable[[], None] = field(default=lambda: None, kw_only=True)
+    client: _Client = field(default_factory=_Client, kw_only=True)
+    deadline: float | None = field(default=None, kw_only=True)
+    observed: list[None] = field(default_factory=list, kw_only=True)
+    result_reads: int = field(default=0, init=False)
 
-    def __init__(
-        self,
-        registered: _Registered,
-        *,
-        observation: OperationObservationSuccessV1 | OperationObservationRefusalV1,
-        result: BaseModel | None = None,
-        detail: OperationErrorDetailV1 | None = None,
-        result_refusal: Exception | None = None,
-        observe_failure: RefusalError | None = None,
-        start_failure: RefusalError | None = None,
-        closes_transport: bool = False,
-        on_observe: Callable[[], None] = lambda: None,
-        on_detail: Callable[[], None] = lambda: None,
-    ) -> None:
-        self.registered = registered
-        self.definition_contract = registered.contract
-        self.observation = observation
-        self.result = result
-        self.detail = detail
-        self.result_refusal = result_refusal
-        self.observe_failure = observe_failure
-        self.start_failure = start_failure
-        self.closes_transport = closes_transport
-        self.on_observe = on_observe
-        self.on_detail = on_detail
-        self.observations = 0
-        self.result_reads = 0
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.registered.contract
+
+    @property
+    def observations(self) -> int:
+        return len(self.observed)
 
     async def start(self) -> str:
         if self.start_failure is not None:
@@ -283,7 +281,7 @@ class _Controller:
         self, after_cursor: int, *, page_limit: int
     ) -> OperationObservationSuccessV1 | OperationObservationRefusalV1:
         assert (after_cursor, page_limit) == (0, 1)
-        self.observations += 1
+        self.observed.append(None)
         self.on_observe()
         if self.observe_failure is not None:
             # A failed exchange closes the transport before the refusal reaches the caller.

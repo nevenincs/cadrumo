@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import cast
 from uuid import UUID
@@ -26,7 +27,11 @@ from cadrumo.application.operations.frontend_projection import (
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.operations import (
     OperationEffect,
@@ -62,23 +67,21 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass(kw_only=True)
 class _Controller:
     operation_id = _OPERATION_ID
+    observation: OperationObservationSuccessV1
+    result: LedgerOwnAccountResult | None
+    detail: OperationErrorDetailV1 | None = None
     # The client it was submitted through, as the real controller keeps it.
-    client: _Client
+    client: _Client = field(default_factory=_Client)
+    deadline: float | None = None
+    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
+    detail_reads: int = 0
 
-    def __init__(
-        self,
-        *,
-        observation: OperationObservationSuccessV1,
-        result: LedgerOwnAccountResult | None,
-        detail: OperationErrorDetailV1 | None = None,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.detail = detail
-        self.result_reads: list[tuple[type[BaseModel], int, bool]] = []
-        self.detail_reads = 0
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         return self.operation_id

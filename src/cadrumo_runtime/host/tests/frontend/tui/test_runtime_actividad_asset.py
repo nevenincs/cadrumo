@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass, field
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import cast
@@ -29,7 +30,11 @@ from cadrumo.application.operations.frontend_projection import (
 )
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1, OperationPublicEventPageV1
 from cadrumo.application.operations.persistence.replay import OperationReplayStatus
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import (
+    OperationFrontendProjection,
+    OperationPublicDefinitionContractV1,
+    OperationRegistry,
+)
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -75,23 +80,20 @@ class _Client:
         self.session_id = _SESSION_ID
 
 
+@dataclass(kw_only=True)
 class _Controller:
     operation_id = _OPERATION_ID
+    observation: OperationObservationSuccessV1
+    result: ActivityAssetInspectProjection
+    client: _Client
+    expire_after_result: bool
+    deadline: float | None = None
+    started: bool = False
+    result_reads: list[tuple[type[BaseModel], int, bool]] = field(default_factory=list)
 
-    def __init__(
-        self,
-        *,
-        observation: OperationObservationSuccessV1,
-        result: ActivityAssetInspectProjection,
-        client: _Client,
-        expire_after_result: bool,
-    ) -> None:
-        self.observation = observation
-        self.result = result
-        self.client = client
-        self.expire_after_result = expire_after_result
-        self.started = False
-        self.result_reads: list[tuple[type[BaseModel], int, bool]] = []
+    @property
+    def definition_contract(self) -> OperationPublicDefinitionContractV1:
+        return self.observation.projection.definition_contract
 
     async def start(self) -> str:
         self.started = True
