@@ -907,31 +907,38 @@ class ProfileWorkerOperationHost:
         submission = self._submissions.get(request.operation_id)
         capability = None if submission is None else submission[1].response_capability
         claim = self._review_claims.get(request.operation_id)
+        response_request = request if isinstance(request, OperationResponseControlRequestV1) else None
         # Only a response to a submission this host holds reads its record: without one, every
         # response is refused for authority alone, whether or not the operation exists.
         invocation = (
-            await self._stored_invocation(request.operation_id)
-            if isinstance(request, OperationResponseControlRequestV1) and submission is not None
+            await self._stored_invocation(response_request.operation_id)
+            if response_request is not None and submission is not None
             else None
         )
-        provisioning_response = invocation is not None and invocation.identity.definition_id == "config.provision.setup"
-        if provisioning_response:
+        # Cancellation and detach carry no interaction to answer, so they never take the
+        # setup-review path and keep the ordinary release guard.
+        setup_response = (
+            response_request
+            if invocation is not None and invocation.identity.definition_id == "config.provision.setup"
+            else None
+        )
+        if setup_response is not None:
             if not is_persons_frontend(frontend):
                 raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
             if (
                 claim is None
                 or claim[0].session_id != session_id
                 or claim[0].frontend != frontend
-                or request.actor_ref != f"session:{session_id}"
-                or request.revision != claim[1].revision
-                or request.interaction_id != claim[1].interaction_id
+                or setup_response.actor_ref != f"session:{session_id}"
+                or setup_response.revision != claim[1].revision
+                or setup_response.interaction_id != claim[1].interaction_id
             ):
                 raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
             capability = claim[3]
         if isinstance(request, OperationResponseControlRequestV1) and (
             request.actor_ref != f"session:{session_id}"
             or submission is None
-            or (not provisioning_response and submission[0] != session_id)
+            or (setup_response is None and submission[0] != session_id)
             or capability is None
         ):
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
@@ -955,14 +962,14 @@ class ProfileWorkerOperationHost:
             response = await services.inspect_response(request, capability)
             return await response.inspect(request)
 
-        if provisioning_response:
+        if setup_response is not None:
             if claim is None or self._execution is None or submission is None or invocation is None:
                 raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
             guard = self._execution.human_review_guard(invocation.identity, claim[0], submission[0])
         else:
             guard = self.release(session_id, request.operation_id, frontend, operation_management_action(request))
         async with guard as authorization:
-            if provisioning_response and isinstance(
+            if setup_response is not None and isinstance(
                 request, OperationResponseApplyRequestV1 | OperationResponseRejectRequestV1
             ):
                 request = request.model_copy(update={"responded_at": now()})

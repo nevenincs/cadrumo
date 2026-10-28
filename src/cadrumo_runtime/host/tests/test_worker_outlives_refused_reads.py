@@ -16,6 +16,7 @@ from collections.abc import Callable, Generator
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 from threading import Event
 from uuid import UUID, uuid4
@@ -40,9 +41,13 @@ from cadrumo.application.modelo.work_change_contracts import (
 )
 from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
+    OperationCancellationRequestV1,
+    OperationDetachRequestV1,
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
+    OperationResponseApplyRequestV1,
     OperationResponseControlRequestV1,
+    OperationResponseRejectRequestV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
     OperationReviewProjectionRequestV1,
@@ -54,6 +59,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.errors.error_codes import build_error_envelope
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
 from cadrumo.core.request_faults import RequestFault
+from cadrumo.core.time.clock import now
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
@@ -65,6 +71,8 @@ from cadrumo_client.contracts.operation_access import (
     OperationContractReply,
     OperationControl,
     OperationManage,
+    OperationManaged,
+    OperationManagementRequest,
     OperationObserve,
     OperationObserved,
     OperationPage,
@@ -176,6 +184,31 @@ class _Session:
             "inspect": lambda: self.ask(OperationManage, management=inspection),
         }
 
+    def mutations(self, operation_id: OperationId, revision: int) -> dict[str, Callable[[], _Answer]]:
+        """Return each management request that acts on an operation, which `reads` leaves out."""
+        actor_ref, responded_at = f"session:{self.session_id}", now()
+        requests: dict[str, OperationManagementRequest] = {
+            "apply": OperationResponseApplyRequestV1(
+                operation_id=operation_id,
+                interaction_id=_NO_INTERACTION,
+                revision=revision,
+                actor_ref=actor_ref,
+                responded_at=responded_at,
+            ),
+            "reject": OperationResponseRejectRequestV1(
+                operation_id=operation_id,
+                interaction_id=_NO_INTERACTION,
+                revision=revision,
+                actor_ref=actor_ref,
+                responded_at=responded_at,
+            ),
+            "cancel": OperationCancellationRequestV1(operation_id=operation_id, expected_revision=revision),
+            "detach": OperationDetachRequestV1(operation_id=operation_id, expected_revision=revision),
+        }
+        return {
+            name: partial(self.ask, OperationManage, management=management) for name, management in requests.items()
+        }
+
 
 def _refusal_codes(answers: dict[str, _Answer]) -> dict[str, object]:
     return {
@@ -258,6 +291,14 @@ async def test_a_read_of_an_operation_that_does_not_exist_or_is_another_sessions
         for name, read in other.reads(submitted.receipt.operation_id, contract, 0).items():
             foreign[name] = read()
             other.contract(definition_id)
+        unknown_mutations: dict[str, _Answer] = {}
+        for name, manage in owner.mutations(_UNKNOWN_OPERATION, 0).items():
+            unknown_mutations[name] = manage()
+            owner.contract(definition_id)
+        foreign_mutations: dict[str, _Answer] = {}
+        for name, manage in other.mutations(submitted.receipt.operation_id, 0).items():
+            foreign_mutations[name] = manage()
+            other.contract(definition_id)
 
     assert _refusal_codes(unknown) == {
         "observe": AccessDenialCode.OPERATION_UNAVAILABLE,
@@ -273,6 +314,23 @@ async def test_a_read_of_an_operation_that_does_not_exist_or_is_another_sessions
         "result_page": OperationPage.__name__,
         "review": AccessDenialCode.OPERATION_DENIED,
         "inspect": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+    }
+    # A response without a submission this host holds is refused for authority alone, so it tells
+    # nothing about whether the operation exists; cancellation and detach carry no response proof
+    # and take the ordinary release, which does.
+    assert _refusal_codes(unknown_mutations) == {
+        "apply": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "reject": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "cancel": AccessDenialCode.OPERATION_UNAVAILABLE,
+        "detach": AccessDenialCode.OPERATION_UNAVAILABLE,
+    }
+    # Only the submitting session holds the response capability; sessions of one profile may still
+    # cancel or detach what another submitted.
+    assert _refusal_codes(foreign_mutations) == {
+        "apply": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "reject": AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED,
+        "cancel": OperationManaged.__name__,
+        "detach": OperationManaged.__name__,
     }
 
 
