@@ -1,7 +1,6 @@
 import type {
   SedeViewEndReason,
   SedeViewFailureCode,
-  SedeViewNoticeCode,
   SedeViewPublication,
   SedeViewTransfer,
 } from "../../ipc/contract";
@@ -23,15 +22,6 @@ const FAILURES: Record<SedeViewFailureCode, string> = {
 
 export const failureText = (t: Translate, code: SedeViewFailureCode) =>
   t(FAILURES[code]);
-
-const NOTICES: Record<SedeViewNoticeCode, string> = {
-  download_offered: "desktop.browser.notice.download_offered",
-  file_chooser_offered: "desktop.browser.notice.file_chooser_offered",
-  dialog_opened: "desktop.browser.notice.dialog_opened",
-};
-
-export const noticeText = (t: Translate, code: SedeViewNoticeCode) =>
-  t(NOTICES[code]);
 
 const ENDS: Record<SedeViewEndReason, string> = {
   closed: "desktop.browser.ended.closed",

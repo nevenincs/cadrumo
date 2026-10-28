@@ -804,10 +804,7 @@ desktop:
     home: Az AEAT kezdőoldala
     maximize: Böngésző teljes méretben
     notice:
-      dialog_opened: Az oldal megnyitott egy párbeszédablakot.
       dismiss: Elvetés
-      download_offered: A letöltést megnyithatod a saját böngésződben.
-      file_chooser_offered: A fájlfeltöltést megnyithatod a saját böngésződben.
       more: még {count} vár
     opening: A böngésző megnyitása…
     publication:

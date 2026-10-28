@@ -824,10 +824,7 @@ desktop:
     home: Pàgina d'inici de l'AEAT
     maximize: Maximitza el navegador
     notice:
-      dialog_opened: La pàgina ha obert un diàleg.
       dismiss: Descarta
-      download_offered: Una baixada es pot obrir al teu propi navegador.
-      file_chooser_offered: Una pujada de fitxer es pot obrir al teu propi navegador.
       more: '{count} més en espera'
     opening: Obrint el navegador…
     publication:

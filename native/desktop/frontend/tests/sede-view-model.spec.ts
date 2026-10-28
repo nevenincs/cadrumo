@@ -115,7 +115,7 @@ test("a login that runs takes the person's input; a page that closes does not", 
   expect(publishing(closing)).toBe(true);
 });
 
-test("a dialog is answered as a dialog; notices keep their order and bound", () => {
+test("a dialog is answered as a dialog, and waiting prompts keep their bound", () => {
   const dialog = {
     dialog_id: 7,
     dialog_kind: "confirm",
@@ -127,37 +127,10 @@ test("a dialog is answered as a dialog; notices keep their order and bound", () 
       kind: "notice",
       view: 1,
       code: "dialog_opened",
-      offer_id: null,
       dialog,
-    },
-    {
-      kind: "notice",
-      view: 1,
-      code: "download_offered",
-      offer_id: "offer-1",
-      dialog: null,
-    },
-    {
-      kind: "notice",
-      view: 1,
-      code: "file_chooser_offered",
-      offer_id: "offer-2",
-      dialog: null,
     },
   ]);
   expect(state.dialogs).toEqual([dialog]);
-  expect(state.notices.map((each) => each.offerId)).toEqual([
-    "offer-1",
-    "offer-2",
-  ]);
-  const keys = new Set(state.notices.map((each) => each.key));
-  expect(keys.size).toBe(2);
-
-  state = reduceBrowser(state, {
-    type: "notice-dismissed",
-    key: state.notices[0]!.key,
-  });
-  expect(state.notices.map((each) => each.offerId)).toEqual(["offer-2"]);
   state = reduceBrowser(state, { type: "dialog-answered", dialogId: 7 });
   expect(state.dialogs).toEqual([]);
 

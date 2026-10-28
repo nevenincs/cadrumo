@@ -1,6 +1,6 @@
 use super::*;
 use cadrumo_application::view_stream::documents::{
-    PointerAction, PointerButton, PointerInput, TextInput, ViewImage, ViewOffer,
+    PointerAction, PointerButton, PointerInput, TextInput, ViewImage,
 };
 use serde_json::{Value, json};
 use std::{path::PathBuf, sync::Condvar};
@@ -463,7 +463,6 @@ fn the_window_receives_closed_documents_with_stable_names() {
     let notice = Message::Notice {
         view: 3,
         code: ViewNoticeCode::DialogOpened,
-        offer_id: None,
         dialog: Some(Dialog {
             dialog_id: 7,
             dialog_kind: ViewDialogKind::Beforeunload,
@@ -473,7 +472,7 @@ fn the_window_receives_closed_documents_with_stable_names() {
     };
     assert_eq!(
         serde_json::to_value(notice).unwrap(),
-        json!({"kind":"notice","view":3,"code":"dialog_opened","offer_id":null,
+        json!({"kind":"notice","view":3,"code":"dialog_opened",
             "dialog":{"dialog_id":7,"dialog_kind":"beforeunload","message":"m","default_prompt":null}})
     );
     let ended = Message::Ended {
@@ -621,7 +620,7 @@ fn a_command_for_a_view_the_host_did_not_issue_is_refused() {
     assert_eq!(code(rig.host.credit(other)), "not_admitted");
     assert_eq!(code(rig.host.dialog(other, 1, true, None)), "not_admitted");
     assert_eq!(code(rig.host.close_view(other)), "not_admitted");
-    assert_eq!(code(rig.host.open_external(other, None)), "not_admitted");
+    assert_eq!(code(rig.host.open_external(other)), "not_admitted");
     let dialogs = Dialogue::default();
     assert_eq!(
         code(rig.host.download_answer(other, 1, true, &dialogs)),
@@ -648,10 +647,6 @@ fn an_identifier_the_host_never_issued_is_refused_and_asks_no_dialog() {
         code(rig.host.chooser_answer(rig.id, 3, true, &dialogs)),
         "invalid"
     );
-    assert_eq!(
-        code(rig.host.open_external(rig.id, Some(&"a".repeat(32)))),
-        "invalid"
-    );
     assert!(lock(&dialogs.asked).is_empty());
     assert!(lock(&rig.opened).is_empty());
     assert_eq!(rig.calls(), ["credit:2"]);
@@ -662,7 +657,6 @@ fn a_page_dialog_is_answered_once_and_only_as_the_page_asked() {
     let rig = rig();
     rig.lane().push(ViewEvent::Notice(ViewNotice {
         code: ViewNoticeCode::DialogOpened,
-        offer: None,
         dialog: Some(ViewDialogPrompt {
             dialog_id: 7,
             dialog_kind: ViewDialogKind::Prompt,
@@ -687,53 +681,10 @@ fn a_page_dialog_is_answered_once_and_only_as_the_page_asked() {
 }
 
 #[test]
-fn an_offered_link_is_named_without_its_address_and_opens_only_when_the_person_asks() {
-    let rig = rig();
-    let offer_id = "0123456789abcdef0123456789abcdef";
-    rig.lane().push(ViewEvent::Notice(ViewNotice {
-        code: ViewNoticeCode::DownloadOffered,
-        offer: Some(ViewOffer {
-            offer_id: offer_id.into(),
-            url: "https://other.example/page?token=1".into(),
-        }),
-        dialog: None,
-    }));
-    rig.wait_for_message("notice");
-    let shown = serde_json::to_string(&rig.window.last("notice").unwrap()).unwrap();
-    assert!(
-        shown.contains(offer_id) && !shown.contains("other.example"),
-        "{shown}"
-    );
-    assert!(lock(&rig.opened).is_empty(), "nothing opens by itself");
-    rig.host.open_external(rig.id, Some(offer_id)).unwrap();
-    assert_eq!(*lock(&rig.opened), ["https://other.example/page?token=1"]);
-}
-
-#[test]
-fn a_link_that_open_external_would_refuse_is_refused_here_too() {
-    let rig = rig();
-    let offer_id = "fedcba9876543210fedcba9876543210";
-    rig.lane().push(ViewEvent::Notice(ViewNotice {
-        code: ViewNoticeCode::FileChooserOffered,
-        offer: Some(ViewOffer {
-            offer_id: offer_id.into(),
-            url: "http://plain.example/".into(),
-        }),
-        dialog: None,
-    }));
-    rig.wait_for_message("notice");
-    assert_eq!(
-        code(rig.host.open_external(rig.id, Some(offer_id))),
-        "invalid"
-    );
-    assert!(lock(&rig.opened).is_empty());
-}
-
-#[test]
 fn the_current_page_opens_from_the_hosts_own_address_and_the_window_sends_none() {
     let rig = rig();
     assert_eq!(
-        code(rig.host.open_external(rig.id, None)),
+        code(rig.host.open_external(rig.id)),
         "unavailable",
         "no page yet"
     );
@@ -748,7 +699,7 @@ fn the_current_page_opens_from_the_hosts_own_address_and_the_window_sends_none()
         !relayed.contains("ejercicio") && !relayed.contains("address"),
         "the window gets no query: {relayed}"
     );
-    rig.host.open_external(rig.id, None).unwrap();
+    rig.host.open_external(rig.id).unwrap();
     assert_eq!(
         *lock(&rig.opened),
         [ADDRESS],
@@ -776,7 +727,7 @@ fn a_page_whose_address_was_not_stated_opens_no_earlier_page() {
             .last("state")
             .is_some_and(|shown| shown["path"] == "/otra")
     });
-    assert_eq!(code(rig.host.open_external(rig.id, None)), "unavailable");
+    assert_eq!(code(rig.host.open_external(rig.id)), "unavailable");
     assert!(lock(&rig.opened).is_empty());
 }
 

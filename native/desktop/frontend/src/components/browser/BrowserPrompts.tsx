@@ -5,13 +5,8 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import type { SedeViewFailureCode } from "../../ipc/contract";
 import { useStrings } from "../../shell/strings";
-import type {
-  ChooserOffer,
-  DownloadOffer,
-  PageNotice,
-  TransferNote,
-} from "./browserModel";
-import { failureText, noticeText, transferText } from "./browserWords";
+import type { ChooserOffer, DownloadOffer, TransferNote } from "./browserModel";
+import { failureText, transferText } from "./browserWords";
 
 type Tone = "neutral" | "success" | "warning" | "danger";
 
@@ -92,12 +87,9 @@ export function BrowserPrompts({
   problem,
   downloads,
   choosers,
-  notices,
   note,
   onAnswerDownload,
   onAnswerChooser,
-  onOpenExternal,
-  onDismissNotice,
   onDismissNote,
   onDismissProblem,
 }: {
@@ -105,19 +97,15 @@ export function BrowserPrompts({
   problem: SedeViewFailureCode | null;
   downloads: readonly DownloadOffer[];
   choosers: readonly ChooserOffer[];
-  notices: readonly PageNotice[];
   note: TransferNote | null;
   onAnswerDownload: (transferId: number, save: boolean) => Promise<void>;
   onAnswerChooser: (chooserId: number, choose: boolean) => Promise<void>;
-  onOpenExternal: (offerId: string) => void;
-  onDismissNotice: (key: number) => void;
   onDismissNote: () => void;
   onDismissProblem: () => void;
 }) {
   const t = useStrings();
   const download = downloads[0];
   const chooser = choosers[0];
-  const notice = notices[0];
   const dismiss = (run: () => void) => (
     <Button size="xs" variant="ghost" onClick={run}>
       {t("desktop.browser.notice.dismiss")}
@@ -185,31 +173,6 @@ export function BrowserPrompts({
           {chooser.multiple
             ? t("desktop.browser.upload.prompt_many")
             : t("desktop.browser.upload.prompt")}
-        </Line>
-      )}
-      {notice && (
-        <Line
-          key={`notice-${notice.key}`}
-          icon="info"
-          more={notices.length - 1}
-          actions={
-            <>
-              {notice.offerId !== null && (
-                <Button
-                  size="xs"
-                  onClick={() => {
-                    if (notice.offerId !== null) onOpenExternal(notice.offerId);
-                    onDismissNotice(notice.key);
-                  }}
-                >
-                  {t("desktop.browser.external")}
-                </Button>
-              )}
-              {dismiss(() => onDismissNotice(notice.key))}
-            </>
-          }
-        >
-          {noticeText(t, notice.code)}
         </Line>
       )}
       {note && (

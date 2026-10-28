@@ -793,10 +793,7 @@ desktop:
     home: AEAT start page
     maximize: Maximize the browser
     notice:
-      dialog_opened: The page opened a dialog.
       dismiss: Dismiss
-      download_offered: A download can open in your own browser.
-      file_chooser_offered: An upload can open in your own browser.
       more: '{count} more waiting'
     opening: Opening the browser…
     publication:

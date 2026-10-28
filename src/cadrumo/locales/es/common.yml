@@ -829,10 +829,7 @@ desktop:
     home: Página de inicio de la AEAT
     maximize: Maximizar el navegador
     notice:
-      dialog_opened: La página abrió un cuadro de diálogo.
       dismiss: Descartar
-      download_offered: Una descarga puede abrirse en tu propio navegador.
-      file_chooser_offered: Una subida de archivo puede abrirse en tu propio navegador.
       more: '{count} más en espera'
     opening: Abriendo el navegador…
     publication:

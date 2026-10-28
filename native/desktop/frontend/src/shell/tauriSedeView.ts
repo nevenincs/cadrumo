@@ -73,11 +73,8 @@ export function tauriSedeView(call: HostCall): SedeViewPort {
             chooserId,
             choose,
           }),
-        openExternal: (offerId) =>
-          call("sede_view_open_external", {
-            view: id,
-            ...(offerId === undefined ? {} : { offerId }),
-          }).then(() => undefined),
+        openExternal: () =>
+          call("sede_view_open_external", { view: id }).then(() => undefined),
         close: () =>
           call("sede_view_close", { view: id }).then(() => undefined),
       };

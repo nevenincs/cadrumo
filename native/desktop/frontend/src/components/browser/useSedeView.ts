@@ -163,12 +163,8 @@ export function useSedeView({
       dispatch({ type: "chooser-answered", chooserId });
     }, []),
     openExternal: useCallback(
-      (offerId?: string) => refused(session.current?.openExternal(offerId)),
+      () => refused(session.current?.openExternal()),
       [refused],
-    ),
-    dismissNotice: useCallback(
-      (key: number) => dispatch({ type: "notice-dismissed", key }),
-      [],
     ),
     dismissNote: useCallback(() => dispatch({ type: "note-dismissed" }), []),
     dismissProblem: useCallback(

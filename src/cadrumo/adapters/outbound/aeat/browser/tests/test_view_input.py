@@ -458,7 +458,6 @@ async def test_dialog_alert_reaches_the_window_and_the_answer_releases_the_page(
         await until(lambda: len(notices.received) == 1)
         notice = notices.received[0]
         assert notice.code is ViewNoticeCode.DIALOG_OPENED
-        assert notice.offer is None
         assert notice.dialog is not None
         assert (notice.dialog.dialog_id, notice.dialog.dialog_kind) == (1, ViewDialogKind.ALERT)
         assert notice.dialog.message == "hola"

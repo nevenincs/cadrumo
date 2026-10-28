@@ -107,21 +107,6 @@ fn is_address_of(address: &str, origin: &str) -> bool {
         && !address.contains(' ')
 }
 
-/// A credential-free `http` or `https` URL naming a host.
-fn is_web_url(url: &str) -> bool {
-    let Some((scheme, rest)) = url.split_once("://") else {
-        return false;
-    };
-    if !(scheme.eq_ignore_ascii_case("https") || scheme.eq_ignore_ascii_case("http")) {
-        return false;
-    }
-    let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
-    !authority.contains('@')
-        && hostname(authority).is_some()
-        && !has_control_character(url)
-        && !url.contains(' ')
-}
-
 fn is_file_name(name: &str) -> bool {
     (1..=MAX_FILENAME_LENGTH).contains(&char_count(name))
         && !name
@@ -178,20 +163,11 @@ pub enum ViewPhase {
     Closing,
 }
 
-/// Every notice the view may show; offer codes carry an external-browser offer.
+/// Every notice the view may show.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ViewNoticeCode {
-    DownloadOffered,
-    FileChooserOffered,
     DialogOpened,
-}
-
-impl ViewNoticeCode {
-    /// Whether this code carries an offer, and only these do.
-    pub fn carries_offer(self) -> bool {
-        matches!(self, Self::DownloadOffered | Self::FileChooserOffered)
-    }
 }
 
 /// The page dialog kinds, spelled as CDP and Playwright spell them.
@@ -296,28 +272,6 @@ impl ViewState {
     }
 }
 
-/// A URL the person may open in the external browser, never a session.
-///
-/// `offer_id` is 32 lower-case hex characters the worker minted. The desktop
-/// host keeps `url` and gives the page only `offer_id`; opening sends the id
-/// back and the host revalidates the URL before it reaches the system browser.
-#[derive(Clone, PartialEq, Eq, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub struct ViewOffer {
-    pub offer_id: String,
-    pub url: String,
-}
-
-impl ViewOffer {
-    pub fn validate(&self) -> Result<(), Violation> {
-        require(
-            is_lower_hex(&self.offer_id, 32)
-                && (1..=MAX_URL_LENGTH).contains(&char_count(&self.url))
-                && is_web_url(&self.url),
-        )
-    }
-}
-
 /// A page dialog waiting for the person's answer under its `dialog_id`.
 #[derive(Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -343,24 +297,18 @@ impl ViewDialogPrompt {
     }
 }
 
-/// One closed notice; an offer code carries exactly one offer, `dialog_opened` one dialog.
+/// One closed notice; `dialog_opened` carries exactly one dialog.
 #[derive(Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ViewNotice {
     pub code: ViewNoticeCode,
-    #[serde(default)]
-    pub offer: Option<ViewOffer>,
     #[serde(default)]
     pub dialog: Option<ViewDialogPrompt>,
 }
 
 impl ViewNotice {
     pub fn validate(&self) -> Result<(), Violation> {
-        require(
-            self.offer.is_some() == self.code.carries_offer()
-                && self.dialog.is_some() == (self.code == ViewNoticeCode::DialogOpened),
-        )?;
-        self.offer.as_ref().map_or(Ok(()), ViewOffer::validate)?;
+        require(self.dialog.is_some() == (self.code == ViewNoticeCode::DialogOpened))?;
         self.dialog
             .as_ref()
             .map_or(Ok(()), ViewDialogPrompt::validate)
@@ -934,7 +882,6 @@ impl ViewUpstream {
 
 redacted_debug!(
     ViewState,
-    ViewOffer,
     ViewDialogPrompt,
     ViewNotice,
     ViewDownload,
@@ -1039,7 +986,7 @@ mod tests {
     }
 
     #[test]
-    fn origins_and_urls_follow_the_python_checks() {
+    fn origins_follow_the_python_checks() {
         for origin in [
             "https://sede.agenciatributaria.gob.es",
             "https://localhost:8443",
@@ -1058,24 +1005,6 @@ mod tests {
             "https://sede .example",
         ] {
             assert!(!is_origin(origin), "{origin}");
-        }
-        for url in [
-            "https://www.example.org/form?id=1",
-            "HTTP://example.org",
-            "https://[::1]/",
-        ] {
-            assert!(is_web_url(url), "{url}");
-        }
-        for url in [
-            "javascript:alert(1)",
-            "https:example.org",
-            "https:///x",
-            "https://a:b@example.org/",
-            "https://@example.org/",
-            "ftp://example.org/",
-            "https://example.org/a b",
-        ] {
-            assert!(!is_web_url(url), "{url}");
         }
     }
 

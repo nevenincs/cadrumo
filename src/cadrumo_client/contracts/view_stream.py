@@ -111,18 +111,10 @@ class ViewPhase(StrEnum):
 
 
 class ViewNoticeCode(StrEnum):
-    """Every notice the view may show; offer codes carry an external-browser offer."""
+    """Every notice the view may show."""
 
-    DOWNLOAD_OFFERED = "download_offered"
-    """A download, offered in the external browser."""
-    FILE_CHOOSER_OFFERED = "file_chooser_offered"
-    """A file upload, offered in the external browser."""
     DIALOG_OPENED = "dialog_opened"
     """The page opened a dialog the person answers with ``view.dialog``."""
-
-
-VIEW_OFFER_NOTICE_CODES = frozenset({ViewNoticeCode.DOWNLOAD_OFFERED, ViewNoticeCode.FILE_CHOOSER_OFFERED})
-"""The notice codes that carry an offer, and only they."""
 
 
 class ViewDialogKind(StrEnum):
@@ -223,35 +215,6 @@ class ViewState(BaseModel):
         return self
 
 
-class ViewOffer(BaseModel):
-    """A URL the person may open in the external browser, never a session.
-
-    ``offer_id`` is 32 lower-case hex characters minted by the worker. The
-    desktop host keeps ``url`` and gives the page only ``offer_id``; opening
-    sends the id back and the host revalidates the URL before handing it to
-    the system browser.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    offer_id: str = Field(pattern=r"^[0-9a-f]{32}$")
-    url: str = Field(min_length=1, max_length=VIEW_MAX_URL_LENGTH)
-
-    @model_validator(mode="after")
-    def _web_url(self) -> Self:
-        parts = urlsplit(self.url)
-        if (
-            parts.scheme not in {"https", "http"}
-            or parts.hostname in {None, ""}
-            or parts.username is not None
-            or parts.password is not None
-            or _has_control_character(self.url)
-            or " " in self.url
-        ):
-            raise ValueError("offer url must be a credential-free http or https URL")
-        return self
-
-
 class ViewDialogPrompt(BaseModel):
     """A page dialog waiting for the person's answer under its ``dialog_id``."""
 
@@ -270,19 +233,16 @@ class ViewDialogPrompt(BaseModel):
 
 
 class ViewNotice(BaseModel):
-    """One closed notice; an offer code carries exactly one offer, ``dialog_opened`` one dialog."""
+    """One closed notice; ``dialog_opened`` carries exactly one dialog."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["view.notice"] = "view.notice"
     code: ViewNoticeCode
-    offer: ViewOffer | None = None
     dialog: ViewDialogPrompt | None = None
 
     @model_validator(mode="after")
     def _members_follow_code(self) -> Self:
-        if (self.offer is not None) != (self.code in VIEW_OFFER_NOTICE_CODES):
-            raise ValueError("an offer accompanies exactly the offer codes")
         if (self.dialog is not None) != (self.code is ViewNoticeCode.DIALOG_OPENED):
             raise ValueError("a dialog accompanies exactly dialog_opened")
         return self

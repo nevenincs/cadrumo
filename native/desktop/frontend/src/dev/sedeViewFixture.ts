@@ -5,7 +5,7 @@
 // first, one more for each the window credits, the newest replacing the rest),
 // keeps one view at a time and publishes its made-up session when closed. A
 // person's input while a made-up login runs ends that login, as the host's
-// interrupt does. A scenario plays a notice, a dialog, a download or a file
+// interrupt does. A scenario plays a dialog, a download or a file
 // chooser through `window.__scenarioSedeView`, and reads back what the page
 // received and how each prompt was answered. Design and test evidence only;
 // its call lines name a verb, never a value.
@@ -14,7 +14,6 @@ import type {
   SedeViewDialogKind,
   SedeViewEndReason,
   SedeViewInput,
-  SedeViewNoticeCode,
   SedeViewPhase,
   SedeViewPublication,
   SedeViewTransfer,
@@ -43,7 +42,6 @@ export type SedeViewAnswer =
 
 /** What a scenario can play into the open view. */
 export type SedeViewFixtureControls = {
-  notice(code: SedeViewNoticeCode, offerId?: string): void;
   dialog(kind: SedeViewDialogKind, message: string, answer?: string): void;
   download(filename: string): void;
   fileChooser(multiple: boolean): void;
@@ -195,22 +193,12 @@ export function sedeViewFixture({
   };
 
   const controls = (open: Open): SedeViewFixtureControls => ({
-    notice(code, offerId) {
-      open.listener({
-        kind: "notice",
-        view: open.id,
-        code,
-        offer_id: offerId ?? null,
-        dialog: null,
-      });
-    },
     dialog(kind, message, answer) {
       open.transfers += 1;
       open.listener({
         kind: "notice",
         view: open.id,
         code: "dialog_opened",
-        offer_id: null,
         dialog: {
           dialog_id: open.transfers,
           dialog_kind: kind,
@@ -357,9 +345,9 @@ export function sedeViewFixture({
         }, 100);
         return { supplied: choose ? 1 : 0 };
       },
-      async openExternal(offerId) {
+      async openExternal() {
         await live();
-        say(`sedeViewOpenExternal ${offerId === undefined ? "page" : "offer"}`);
+        say("sedeViewOpenExternal page");
       },
       async close() {
         if (open.ended) return Promise.reject({ code: "not_admitted" });

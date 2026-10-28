@@ -965,30 +965,6 @@
         }
       },
       {
-        "name": "notice_offer",
-        "direction": "downstream",
-        "document": {
-          "kind": "view.notice",
-          "code": "download_offered",
-          "offer": {
-            "offer_id": "0123456789abcdef0123456789abcdef",
-            "url": "https://www.example.org/form?id=1"
-          }
-        }
-      },
-      {
-        "name": "notice_chooser_offer",
-        "direction": "downstream",
-        "document": {
-          "kind": "view.notice",
-          "code": "file_chooser_offered",
-          "offer": {
-            "offer_id": "0123456789abcdef0123456789abcdef",
-            "url": "https://www.example.org/form?id=1"
-          }
-        }
-      },
-      {
         "name": "notice_dialog",
         "direction": "downstream",
         "document": {
@@ -1816,11 +1792,23 @@
         }
       },
       {
-        "name": "notice_offer_code_without_offer",
+        "name": "notice_dialog_without_dialog",
         "direction": "downstream",
         "document": {
           "kind": "view.notice",
-          "code": "download_offered"
+          "code": "dialog_opened"
+        }
+      },
+      {
+        "name": "notice_retired_download_offer",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "download_offered",
+          "offer": {
+            "offer_id": "0123456789abcdef0123456789abcdef",
+            "url": "https://www.example.org/form?id=1"
+          }
         }
       },
       {
@@ -1836,42 +1824,6 @@
           },
           "offer": {
             "offer_id": "0123456789abcdef0123456789abcdef",
-            "url": "https://www.example.org/form?id=1"
-          }
-        }
-      },
-      {
-        "name": "notice_offer_javascript",
-        "direction": "downstream",
-        "document": {
-          "kind": "view.notice",
-          "code": "download_offered",
-          "offer": {
-            "offer_id": "0123456789abcdef0123456789abcdef",
-            "url": "javascript:alert(1)"
-          }
-        }
-      },
-      {
-        "name": "notice_offer_userinfo",
-        "direction": "downstream",
-        "document": {
-          "kind": "view.notice",
-          "code": "download_offered",
-          "offer": {
-            "offer_id": "0123456789abcdef0123456789abcdef",
-            "url": "https://a:b@example.org/"
-          }
-        }
-      },
-      {
-        "name": "notice_offer_id_shape",
-        "direction": "downstream",
-        "document": {
-          "kind": "view.notice",
-          "code": "download_offered",
-          "offer": {
-            "offer_id": "ABC",
             "url": "https://www.example.org/form?id=1"
           }
         }

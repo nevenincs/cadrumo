@@ -45,9 +45,9 @@ export type SedeViewSession = {
     chooserId: number,
     choose: boolean,
   ): Promise<{ supplied: number }>;
-  /** Opens the page the host holds in the system browser, or with an
-   * `offerId` the link a notice offered. The window sends no address. */
-  openExternal(offerId?: string): Promise<void>;
+  /** Opens the page the host holds in the system browser. The window sends
+   * no address. */
+  openExternal(): Promise<void>;
   /** The person left: the view publishes its session and ends. */
   close(): Promise<void>;
 };

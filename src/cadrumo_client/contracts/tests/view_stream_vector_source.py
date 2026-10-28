@@ -882,7 +882,6 @@ def _transfer_documents_refused() -> list[tuple[str, str, dict[str, Any]]]:
 
 
 def _documents() -> dict[str, list[dict[str, Any]]]:
-    offer = {"offer_id": "0123456789abcdef0123456789abcdef", "url": "https://www.example.org/form?id=1"}
     pointer = {
         "type": "pointer",
         "action": "down",
@@ -902,8 +901,6 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
             {**_STATE, "address": "https://sede.agenciatributaria.gob.es/Sede/inicio.html?nif=synthetic#top"},
         ),
         ("state_address_origin_only", "downstream", {**_STATE, "address": "https://sede.agenciatributaria.gob.es"}),
-        ("notice_offer", "downstream", {"kind": "view.notice", "code": "download_offered", "offer": offer}),
-        ("notice_chooser_offer", "downstream", {"kind": "view.notice", "code": "file_chooser_offered", "offer": offer}),
         (
             "notice_dialog",
             "downstream",
@@ -994,7 +991,16 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
             "downstream",
             {**_STATE, "address": "https://sede.agenciatributaria.gob.es/?q=" + "a" * _URL_MAX},
         ),
-        ("notice_offer_code_without_offer", "downstream", {"kind": "view.notice", "code": "download_offered"}),
+        ("notice_dialog_without_dialog", "downstream", {"kind": "view.notice", "code": "dialog_opened"}),
+        (
+            "notice_retired_download_offer",
+            "downstream",
+            {
+                "kind": "view.notice",
+                "code": "download_offered",
+                "offer": {"offer_id": "0123456789abcdef0123456789abcdef", "url": "https://www.example.org/form?id=1"},
+            },
+        ),
         (
             "notice_dialog_with_offer",
             "downstream",
@@ -1002,23 +1008,8 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
                 "kind": "view.notice",
                 "code": "dialog_opened",
                 "dialog": {"dialog_id": 1, "dialog_kind": "alert", "message": ""},
-                "offer": offer,
+                "offer": {"offer_id": "0123456789abcdef0123456789abcdef", "url": "https://www.example.org/form?id=1"},
             },
-        ),
-        (
-            "notice_offer_javascript",
-            "downstream",
-            {"kind": "view.notice", "code": "download_offered", "offer": {**offer, "url": "javascript:alert(1)"}},
-        ),
-        (
-            "notice_offer_userinfo",
-            "downstream",
-            {"kind": "view.notice", "code": "download_offered", "offer": {**offer, "url": "https://a:b@example.org/"}},
-        ),
-        (
-            "notice_offer_id_shape",
-            "downstream",
-            {"kind": "view.notice", "code": "download_offered", "offer": {**offer, "offer_id": "ABC"}},
         ),
         ("notice_unknown_code", "downstream", {"kind": "view.notice", "code": "form_submitted"}),
         ("closed_unknown_reason", "downstream", {"kind": "view.closed", "reason": "crashed"}),

@@ -9,9 +9,8 @@
 //!
 //! The window never names a URL, a path or an identifier it was not given.
 //! The host keeps the page's whole address, which the window never receives
-//! (it is shown the origin and path), and the links it was offered, and opens
-//! one in the system browser only when the person asks, after checking it as
-//! `open_external` does. A download or a file chooser asks the person in a
+//! (it is shown the origin and path), and opens it in the system browser only
+//! when the person asks, after checking it as `open_external` does. A download or a file chooser asks the person in a
 //! native dialog; the bytes go to the path chosen there, or come from the
 //! files chosen there, and are not kept elsewhere, logged or shown to the window.
 //!
@@ -426,11 +425,10 @@ enum Message {
         loading: bool,
         phase: ViewPhase,
     },
-    /// A notice; a code that carries an offer names it by `offer_id`, never its link.
+    /// A notice; `dialog_opened` carries the dialog the person answers.
     Notice {
         view: u32,
         code: ViewNoticeCode,
-        offer_id: Option<String>,
         dialog: Option<Dialog>,
     },
     /// A download is offered; answer it with the download answer command.
@@ -514,27 +512,12 @@ struct Held {
     /// The current page's whole address, query included, as the worker stated
     /// it. It stays here: the window gets the origin and path only.
     address: Option<String>,
-    offers: VecDeque<(String, String)>,
     dialogs: VecDeque<u32>,
     downloads: BTreeMap<u32, Offered>,
     choosers: BTreeMap<u32, Chooser>,
 }
 
 impl Held {
-    fn remember_offer(&mut self, offer_id: String, url: String) {
-        if self.offers.len() >= PENDING_LIMIT {
-            self.offers.pop_front();
-        }
-        self.offers.push_back((offer_id, url));
-    }
-
-    fn offer_url(&self, offer_id: &str) -> Option<String> {
-        self.offers
-            .iter()
-            .find(|(known, _)| known == offer_id)
-            .map(|(_, url)| url.clone())
-    }
-
     fn note_dialog(&mut self, dialog_id: u32) {
         if self.dialogs.len() >= PENDING_LIMIT {
             self.dialogs.pop_front();
@@ -974,19 +957,12 @@ impl View {
     }
 
     fn notice(&self, notice: ViewNotice) -> bool {
-        let mut held = lock(&self.held);
-        let offer_id = notice.offer.map(|offer| {
-            held.remember_offer(offer.offer_id.clone(), offer.url);
-            offer.offer_id
-        });
         if let Some(dialog) = &notice.dialog {
-            held.note_dialog(dialog.dialog_id);
+            lock(&self.held).note_dialog(dialog.dialog_id);
         }
-        drop(held);
         self.send(&Message::Notice {
             view: self.id,
             code: notice.code,
-            offer_id,
             dialog: notice.dialog.map(Dialog::from),
         })
     }
@@ -1456,19 +1432,15 @@ impl SedeViewHost {
         self.view(id)?.answer_chooser(chooser_id, choose, dialogs)
     }
 
-    /// Opens the page's address, or a link the view offered, in the system
-    /// browser. The address is the host's own; a link is named by the
-    /// identifier the host issued. Either is checked again as `open_external`
-    /// checks a link before it leaves the application.
-    fn open_external(&self, id: u32, offer_id: Option<&str>) -> Result<()> {
+    /// Opens the page's address in the system browser. The address is the
+    /// host's own, checked again as `open_external` checks a link before it
+    /// leaves the application.
+    fn open_external(&self, id: u32) -> Result<()> {
         let view = self.view(id)?;
-        let text = {
-            let held = lock(&view.held);
-            match offer_id {
-                None => held.address.clone().ok_or_else(|| failure("unavailable"))?,
-                Some(offer_id) => held.offer_url(offer_id).ok_or_else(|| failure("invalid"))?,
-            }
-        };
+        let text = lock(&view.held)
+            .address
+            .clone()
+            .ok_or_else(|| failure("unavailable"))?;
         let url = external::admit(&text).map_err(|_| failure("invalid"))?;
         self.opener.open(&url)
     }
@@ -1608,16 +1580,12 @@ async fn sede_view_file_chooser_answer<R: tauri::Runtime>(
         .await?
 }
 
-/// Opens the page the person is on in the system browser, or with `offer_id`
-/// the link a notice offered. The window sends no address.
+/// Opens the page the person is on in the system browser. The window sends
+/// no address.
 #[tauri::command]
-async fn sede_view_open_external(
-    host: State<'_, Arc<SedeViewHost>>,
-    view: u32,
-    offer_id: Option<String>,
-) -> Result<()> {
+async fn sede_view_open_external(host: State<'_, Arc<SedeViewHost>>, view: u32) -> Result<()> {
     let owner = host.inner().clone();
-    blocking(move || Ok(owner.open_external(view, offer_id.as_deref()))).await?
+    blocking(move || Ok(owner.open_external(view))).await?
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {

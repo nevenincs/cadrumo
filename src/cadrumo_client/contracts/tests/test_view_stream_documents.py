@@ -116,14 +116,9 @@ def test_the_accepted_vectors_cover_every_document_kind() -> None:
 
 
 def test_every_notice_code_and_closed_reason_has_one_valid_spelling() -> None:
-    offer = {"offer_id": "f" * 32, "url": "https://sede.agenciatributaria.gob.es/x"}
     dialog = {"dialog_id": 1, "dialog_kind": "alert", "message": ""}
     for code in ViewNoticeCode:
-        document: dict[str, Any] = {"kind": "view.notice", "code": code.value}
-        if code is ViewNoticeCode.DIALOG_OPENED:
-            document["dialog"] = dialog
-        else:
-            document["offer"] = offer
+        document: dict[str, Any] = {"kind": "view.notice", "code": code.value, "dialog": dialog}
         assert _validate({"direction": "downstream", "document": document}) == document
     for reason in ViewClosedReason:
         document = {"kind": "view.closed", "reason": reason.value}

@@ -2,7 +2,6 @@ import type {
   SedeViewDialog,
   SedeViewEndReason,
   SedeViewFailureCode,
-  SedeViewNoticeCode,
   SedeViewPhase,
   SedeViewPublication,
   SedeViewTransfer,
@@ -16,14 +15,6 @@ import type { SedeViewEvent } from "../../shell/sedeView";
 /** How many offers, dialogs and prompts wait for the person at once; past
  * it the oldest is let go, as the host lets it go. */
 export const WAITING_LIMIT = 16;
-
-export type PageNotice = {
-  /** Told apart in the list; not the host's. */
-  key: number;
-  code: SedeViewNoticeCode;
-  /** The host's name for the link the notice offers, if it offers one. */
-  offerId: string | null;
-};
 
 export type DownloadOffer = { transferId: number; filename: string };
 export type ChooserOffer = { chooserId: number; multiple: boolean };
@@ -49,7 +40,6 @@ export type BrowserState = {
   phase: "opening" | "waiting" | "open" | "closing" | "ended" | "failed";
   page: PageAddress | null;
   /** Oldest first: the person answers them in the order they came. */
-  notices: PageNotice[];
   dialogs: SedeViewDialog[];
   downloads: DownloadOffer[];
   choosers: ChooserOffer[];
@@ -61,13 +51,11 @@ export type BrowserState = {
     publication: SedeViewPublication | null;
   } | null;
   failure: SedeViewFailureCode | null;
-  serial: number;
 };
 
 export const FIRST_STATE: BrowserState = {
   phase: "opening",
   page: null,
-  notices: [],
   dialogs: [],
   downloads: [],
   choosers: [],
@@ -75,7 +63,6 @@ export const FIRST_STATE: BrowserState = {
   problem: null,
   end: null,
   failure: null,
-  serial: 0,
 };
 
 export type BrowserAction =
@@ -85,7 +72,6 @@ export type BrowserAction =
   | { type: "event"; event: SedeViewEvent }
   | { type: "problem"; code: SedeViewFailureCode }
   | { type: "problem-dismissed" }
-  | { type: "notice-dismissed"; key: number }
   | { type: "dialog-answered"; dialogId: number }
   | { type: "download-answered"; transferId: number }
   | { type: "chooser-answered"; chooserId: number }
@@ -104,20 +90,15 @@ export function reduceBrowser(
   if (state.phase === "ended" && action.type === "event") return state;
   switch (action.type) {
     case "opening":
-      return { ...FIRST_STATE, serial: state.serial };
+      return FIRST_STATE;
     case "waiting":
-      return { ...FIRST_STATE, phase: "waiting", serial: state.serial };
+      return { ...FIRST_STATE, phase: "waiting" };
     case "failed":
       return { ...FIRST_STATE, phase: "failed", failure: action.code };
     case "problem":
       return { ...state, problem: action.code };
     case "problem-dismissed":
       return { ...state, problem: null };
-    case "notice-dismissed":
-      return {
-        ...state,
-        notices: state.notices.filter((each) => each.key !== action.key),
-      };
     case "dialog-answered":
       return {
         ...state,
@@ -168,20 +149,11 @@ function reduceEvent(state: BrowserState, event: SedeViewEvent): BrowserState {
           mode: event.phase,
         },
       };
-    case "notice": {
-      // A dialog is answered as a dialog, not read as a notice as well.
-      if (event.dialog)
-        return { ...state, dialogs: appended(state.dialogs, event.dialog) };
-      return {
-        ...state,
-        notices: appended(state.notices, {
-          key: state.serial,
-          code: event.code,
-          offerId: event.offer_id,
-        }),
-        serial: state.serial + 1,
-      };
-    }
+    case "notice":
+      // The one notice is a page dialog, which the person answers.
+      return event.dialog
+        ? { ...state, dialogs: appended(state.dialogs, event.dialog) }
+        : state;
     case "download":
       return {
         ...state,
@@ -220,7 +192,6 @@ function reduceEvent(state: BrowserState, event: SedeViewEvent): BrowserState {
       return {
         ...FIRST_STATE,
         phase: "ended",
-        serial: state.serial,
         end: {
           reason: event.reason,
           publication: event.outcome?.publication ?? null,

@@ -1100,10 +1100,8 @@ export type AgentLocalModels =
  * it publishes the session and ends. */
 export type SedeViewPhase = "acquiring" | "browsing" | "closing";
 
-/** Every notice the view may raise. The codes that carry an offer name it by
- * `offer_id`; the link itself stays in the host. */
-export type SedeViewNoticeCode =
-  "download_offered" | "file_chooser_offered" | "dialog_opened";
+/** Every notice the view may raise: a page dialog, which carries its dialog. */
+export type SedeViewNoticeCode = "dialog_opened";
 
 export type SedeViewDialogKind =
   "alert" | "confirm" | "prompt" | "beforeunload";
@@ -1188,7 +1186,6 @@ export type SedeViewMessage =
       kind: "notice";
       view: number;
       code: SedeViewNoticeCode;
-      offer_id: string | null;
       dialog: SedeViewDialog | null;
     }
   | {
@@ -2021,7 +2018,7 @@ export interface HostCommands {
   };
   // The Sede view: one view at a time, relayed on the channel `sede_view_open`
   // is given. The window never names an address; `sede_view_open_external`
-  // opens the page the host holds, or the link an `offer_id` names.
+  // opens the page the host holds.
   sede_view_open: {
     args: Authorized<{
       cssWidth: number;
@@ -2072,7 +2069,7 @@ export interface HostCommands {
     result: { supplied: number };
   };
   sede_view_open_external: {
-    args: Authorized<{ view: number; offerId?: string }>;
+    args: Authorized<{ view: number }>;
     result: null;
   };
 }
