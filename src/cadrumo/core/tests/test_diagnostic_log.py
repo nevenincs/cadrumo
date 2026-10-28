@@ -580,7 +580,7 @@ def test_event_fields_reach_the_written_line_only_as_scrubbed_allowed_scalars() 
     assert iban not in line
 
 
-def test_stall_and_lock_timing_fields_reach_the_log_file_and_unlisted_fields_do_not(tmp_path: Path) -> None:
+def test_stall_lock_and_recovery_timing_fields_reach_the_log_file_and_unlisted_fields_do_not(tmp_path: Path) -> None:
     logger = get_logger("cadrumo.tests.stall_timing_fields")
     log_file = tmp_path / "diagnostic.log"
     handler = AnnouncingRotatingFileHandler(str(log_file), encoding="utf-8")
@@ -597,6 +597,8 @@ def test_stall_and_lock_timing_fields_reach_the_log_file_and_unlisted_fields_do_
         "job_empty_seconds": 0.5,
         "members_signalled_seconds": 2.0,
         "wait_seconds": 0.75,
+        # The custody recovery window a worker loss opens.
+        "window_seconds": 120.0,
     }
     try:
         diagnostic_event(

@@ -117,6 +117,7 @@ _LIFECYCLE_FIELDS = tuple(
             "transition",
             "wal_bytes",
             "wait_seconds",
+            "window_seconds",
         }
     )
 )
