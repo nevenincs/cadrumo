@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae4ee882e5e953845f86894ec6373e52d460f6e1a6e837aebd445c9c3a770942'
+body_hash: 'sha256:b55d180a0aa226ff69bf8506ab4e4a60b9d218a662c10266fe5f1158c54fe677'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -360,6 +360,47 @@ related:
 - `S10` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
 - `S10` `verify:` `npm run check (native/desktop/frontend)` -> `pass`
 - `S10` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/sede-browser.spec.ts tests/scenarios/scenarios.spec.ts (all 21 sede-browser passed; 156 of 158 passed, the 2 scenarios.spec failures pass in isolation)` -> `pass`
+- `S16` `M` `src/cadrumo_client/contracts/tests/test_view_stream_documents.py`
+- `S16` `M` `native/application/src/view_stream/lane.rs`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_view_input.py`
+- `S16` `M` `native/desktop/frontend/src/shell/sedeView.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/components/browser/BrowserToolbar.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/browser/BrowserPrompts.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/browser/browserModel.ts`
+- `S16` `M` `native/desktop/frontend/src/components/browser/browserWords.ts`
+- `S16` `M` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S16` `M` `native/desktop/frontend/tests/sede-view-model.spec.ts`
+- `S16` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S16` `M` `dev/locales/desktop_chrome.py`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `verify:` `view_stream_vector_source --check` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest src/cadrumo_client src/cadrumo/adapters/outbound/aeat/browser/tests src/cadrumo_runtime/host/tests -k "view or sede"` -> `pass`
+- `S16` `verify:` `desktop-host-unit-test` -> `pass`
+- `S16` `verify:` `ctest -R ^application.rust$` -> `pass`
+- `S16` `verify:` `npm run check` -> `pass`
+- `S16` `verify:` `playwright sede-browser scenarios` -> `pass`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/browser/sede_view.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/view_page_support.py`
+- `S07` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_sede_view_page.py`
+- `S07` `M` `src/cadrumo/application/live/tests/test_sede_view_operation.py`
+- `S07` `verify:` `uv run --no-sync pytest src/cadrumo_client src/cadrumo/adapters/outbound/aeat/browser/tests src/cadrumo_runtime/host/tests -k "view or sede"` -> `pass`
+- `S07` `verify:` `pytest test_view_stream_relay.py test_sede_view_page.py test_sede_view_operation.py` -> `pass`
+- `S12` `M` `src/cadrumo/core/errors/hierarchy.py`
+- `S12` `M` `src/cadrumo/core/errors/registry/_adapters_part2.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/view_capture_identity.py`
+- `S12` `M` `src/cadrumo/locales/en/errors.yml`
+- `S12` `M` `src/cadrumo/locales/es/errors.yml`
+- `S12` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S12` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S12` `verify:` `pytest contracts, core/errors, auth view tests, sede view page/input/operation` -> `pass`
+- `S12` `verify:` `desktop-host-unit-test` -> `pass`
+- `S12` `verify:` `playwright sede-browser scenarios` -> `pass`
+- `S12` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -403,3 +444,4 @@ related:
 - `S12` signed-out-page-verification: a load is verified only when its cookie jar differs from every refused jar; loads during a check fold into one more check (commit 1d41de0fbf)
 - `S12` signed-out-page-verification: reusing one browser across verifications was not done; BrowserSession launches one browser per context and refuses a second context
 - `S10` aeat-click-target: an AEAT click on an open view brings the Browser page forward and navigates the view home; landed in the operator checkpoint commit 7de262810f together with the offer-removal hunks
+- `S16` Page state marker landed in the operator-requested checkpoint commit 7de262810f; offer codes removed in 3dab8ab998.
