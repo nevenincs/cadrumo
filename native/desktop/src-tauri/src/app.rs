@@ -371,7 +371,6 @@ pub(crate) async fn assemble<R: Runtime>(
     startup: &crate::startup::Startup,
 ) -> Result<()> {
     let diagnostics = launch.diagnostics.clone();
-    #[cfg(not(feature = "webview2-remote-debugging"))]
     let data_directory = launch.webview.clone();
     if let Some(lease) = launch._publication.as_ref() {
         std::mem::forget(lease.clone());
@@ -419,17 +418,19 @@ pub(crate) async fn assemble<R: Runtime>(
     let origins = startup.origins.clone();
     tauri::WebviewWindowBuilder::from_config(&app, config)
         .and_then(|builder| {
-            let builder = match shell::webview_environment::workspace_browser_arguments() {
-                Some(arguments) => builder.additional_browser_args(&arguments),
+            let arguments = shell::webview_environment::workspace_browser_arguments();
+            let builder = match &arguments {
+                Some(arguments) => builder.additional_browser_args(arguments),
                 None => builder,
             };
             let builder = builder.visible(false);
-            // The packaged end-to-end test host keeps the workspace in the
-            // startup window's browser process, the one that bound the
-            // remote-debugging port; a second data directory would start a
-            // second browser process that cannot. The product keeps its own.
-            #[cfg(not(feature = "webview2-remote-debugging"))]
-            let builder = builder.data_directory(data_directory);
+            let builder = match shell::webview_environment::workspace_data_directory(
+                data_directory,
+                arguments.as_deref(),
+            ) {
+                Some(directory) => builder.data_directory(directory),
+                None => builder,
+            };
             builder
                 .initialization_script(startup.script.clone())
                 .on_navigation(move |url| shell::navigation::allowed(&origins, url))

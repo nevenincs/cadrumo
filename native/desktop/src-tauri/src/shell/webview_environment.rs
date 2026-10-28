@@ -142,6 +142,26 @@ pub fn workspace_browser_arguments() -> Option<String> {
     None
 }
 
+/// The data directory the workspace window's browser runs in, given the
+/// package's own one and the workspace's browser arguments; `None` leaves the
+/// workspace in the startup window's browser.
+///
+/// WebView2 refuses a second browser on one data directory with other
+/// arguments than the browser already running there, so a workspace given
+/// its own DevTools port must have its own directory, as the product's has.
+/// Only the packaged test host started with the remote-debugging variable
+/// alone, which reaches every browser alike, shares the startup window's.
+pub fn workspace_data_directory(
+    directory: std::path::PathBuf,
+    arguments: Option<&str>,
+) -> Option<std::path::PathBuf> {
+    owns_data_directory(Policy::of_this_build(), arguments).then_some(directory)
+}
+
+fn owns_data_directory(policy: Policy, arguments: Option<&str>) -> bool {
+    !policy.remote_debugging || arguments.is_some()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -198,6 +218,23 @@ mod tests {
         for refused in ["", "0", "09222", "65536", "9222 --inspect", "-1", "port"] {
             assert_eq!(workspace_arguments(refused.into()), None, "{refused}");
         }
+    }
+
+    #[test]
+    fn a_workspace_with_its_own_arguments_has_its_own_data_directory() {
+        let directory = std::path::PathBuf::from(r"C:\root\webview");
+        let port = workspace_arguments("9222".into());
+        // The product keeps its own directory whatever it is given.
+        assert!(owns_data_directory(PACKAGED, None));
+        // The test host given a workspace port: a browser of its own, which
+        // WebView2 cannot share with the startup window's other arguments.
+        assert!(owns_data_directory(DEBUGGING, port.as_deref()));
+        // The test host given no workspace arguments shares the startup browser.
+        assert!(!owns_data_directory(DEBUGGING, None));
+        assert_eq!(
+            workspace_data_directory(directory.clone(), port.as_deref()),
+            Some(directory)
+        );
     }
 
     #[test]
