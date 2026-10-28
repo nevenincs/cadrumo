@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:b55d180a0aa226ff69bf8506ab4e4a60b9d218a662c10266fe5f1158c54fe677'
+body_hash: 'sha256:9ad5a7b6815e8e24c057735f35564c6a4017aee0d118f34911ef5e68f61d49b9'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -401,6 +401,13 @@ related:
 - `S12` `verify:` `desktop-host-unit-test` -> `pass`
 - `S12` `verify:` `playwright sede-browser scenarios` -> `pass`
 - `S12` `by:` `implementation-engineer-high`
+- `S13` `M` `src/cadrumo_runtime/host/tests/test_view_stream_integration.py`
+- `S13` `M` `src/cadrumo_runtime/host/tests/view_session_world.py`
+- `S13` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/view_session_support.py`
+- `S13` `verify:` `lint-imports` -> `pass`
+- `S13` `verify:` `pytest test_view_stream_integration+test_view_session_custody+test_view_sign_in` -> `pass`
+- `S13` `verify:` `ruff+ty` -> `pass`
+- `S13` `by:` `implementer`
 
 ## Notes
 
