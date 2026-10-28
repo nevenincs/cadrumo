@@ -329,8 +329,10 @@ categories:
   registry:
     amortizacion_vivienda_afecto:
       label: Üzleti célra használt lakás amortizációja
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (Ley 35/2006 art. 30.2.5.b szabály 4.ª, üzleti célra használt lakás amortizációja).
+      notes: A lakás tevékenységhez használt alapterületének aránya és a tulajdoni
+        hányadod szerint levonható; a közüzemi díjakra vonatkozó 30% itt nem alkalmazandó
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, üzleti célra használt lakás
+        amortizációja).
     arrendamiento_local:
       label: Üzlethelyiség bérleti díja
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
@@ -352,8 +354,10 @@ categories:
         (Ley 35/2006 art. 28.1).
     comunidad_vivienda_afecto:
       label: Üzleti célra használt lakás közös költsége
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (Ley 35/2006 art. 30.2.5.b szabály 2.ª, lakástulajdonlási költségek).
+      notes: A lakás tevékenységhez használt alapterületének aránya és a tulajdoni
+        hányadod szerint levonható; a közüzemi díjakra vonatkozó 30% itt nem alkalmazandó
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, üzleti célra használt lakás
+        közös költsége).
     cuotas_autonomos_ss:
       notes: Teljes mértékben levonható költség; a RETA-járulék a tevékenység folytatásának
         törvényi feltétele.
@@ -375,52 +379,62 @@ categories:
         banki költségek).
     hardware_amortizable:
       label: Amortizálható informatikai eszközök
-      notes: Teljes mértékben levonható az amortizáció útján (Ley 35/2006 art. 28.1,
-        tárgyi eszközök amortizációja).
+      notes: 'Az éves amortizációs összeget vonod le a tevékenység eszköznyilvántartásán
+        keresztül. A legfeljebb 300 EUR értékű új eszköz szabadon amortizálható, évente
+        legfeljebb 25 000 EUR összegig (Ley 27/2014 art. 12.3.e). IVA: vegyes használatnál
+        a cuota csak akkor vonható le a használati arány szerint, ha az eszköz értéke
+        legalább 3005,06 EUR (Ley 37/1992 art. 95.Tres.1.ª és 108.Dos.5.º).'
     home_office_agua: Otthoni iroda vízdíja
     home_office_gas: Otthoni iroda gázköltsége
     home_office_internet: Otthoni iroda internetköltsége
     home_office_luz: Otthoni iroda villamosenergia-költsége
     ibi_local_afecto:
       label: Üzlethelyiség ingatlanadója (IBI)
-      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 14 LIS, hivatkozás
-        útján; tributos fiscalmente deducibles).
+      notes: Teljes mértékben levonható a tevékenység nem állami adójaként (Ley 35/2006
+        art. 28.1, a Ley 27/2014 art. 15 alapján).
     ibi_vivienda_afecto:
       label: Üzleti célra használt lakás ingatlanadója (IBI)
-      notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
-        (Ley 35/2006 art. 30.2.5.b szabály 2.ª, nem állami adók a lakásra).
+      notes: A lakás tevékenységhez használt alapterületének aránya és a tulajdoni
+        hányadod szerint levonható; a közüzemi díjakra vonatkozó 30% itt nem alkalmazandó
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, üzleti célra használt lakás
+        ingatlanadója).
     manutencion_dietas_extranjero:
-      notes: 'Törvényi napi felső határig levonható: 48,08 EUR/nap éjszakai tartózkodás
-        nélkül, 91,35 EUR/nap éjszakai tartózkodással (Ley 6/2017 / Ley IRPF art.
-        30.2.5.c, Reglamento IRPF art. 9.A.3.a).'
+      notes: 'Csak a saját, a tevékenység során felmerült étkezési költségeid, vendéglátóhelyen,
+        elektronikus fizetéssel. Napi felső határ: 48,08 EUR éjszakázás nélkül, 91,35
+        EUR, ha a szokásos munkahelyedtől és a lakóhelyedtől eltérő településen éjszakázol
+        (Ley 35/2006 art. 30.2, 5. szabály, c pont; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: Éjszakai tartózkodással
         sin-pernocta:
           label: Éjszakai tartózkodás nélkül
     manutencion_dietas_nacional:
-      notes: 'Törvényi napi felső határig levonható: 26,67 EUR/nap éjszakai tartózkodás
-        nélkül, 53,34 EUR/nap éjszakai tartózkodással (Ley 6/2017 / Ley IRPF art.
-        30.2.5.c, Reglamento IRPF art. 9.A.3.a).'
+      notes: 'Csak a saját, a tevékenység során felmerült étkezési költségeid, vendéglátóhelyen,
+        elektronikus fizetéssel. Napi felső határ: 26,67 EUR éjszakázás nélkül, 53,34
+        EUR, ha a szokásos munkahelyedtől és a lakóhelyedtől eltérő településen éjszakázol
+        (Ley 35/2006 art. 30.2, 5. szabály, c pont; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: Éjszakai tartózkodással
         sin-pernocta:
           label: Éjszakai tartózkodás nélkül
-    manutencion_extranjero: Külföldi napidíj (étkezés és tartózkodás)
-    manutencion_nacional: Belföldi napidíj (étkezés és tartózkodás)
+    manutencion_extranjero: Külföldi napidíj (étkezés)
+    manutencion_nacional: Belföldi napidíj (étkezés)
     material_oficina:
       label: Irodaszerek
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
       label: Amortizálható bútorzat
-      notes: Teljes mértékben levonható az amortizáció útján (Ley 35/2006 art. 28.1,
-        tárgyi eszközök amortizációja).
+      notes: 'Az éves amortizációs összeget vonod le a tevékenység eszköznyilvántartásán
+        keresztül. A legfeljebb 300 EUR értékű új eszköz szabadon amortizálható, évente
+        legfeljebb 25 000 EUR összegig (Ley 27/2014 art. 12.3.e). IVA: vegyes használatnál
+        a cuota csak akkor vonható le a használati arány szerint, ha az eszköz értéke
+        legalább 3005,06 EUR (Ley 37/1992 art. 95.Tres.1.ª és 108.Dos.5.º).'
     mutualidad_alternativa:
       label: Alternatív kölcsönös biztosítói járulék
-      notes: 'Törvényi felső határig levonható: legfeljebb 15 000 EUR/év, adóalanyonként,
-        a RETA-t helyettesítő alternatív mutualidad esetén (AEAT Renta útmutató, Cotizaciones
-        al RETA).'
+      notes: Levonható az adott év RETA szerinti, közös kockázatokra vonatkozó legmagasabb
+        járulékáig, és csak a RETA-kockázatokat fedező részben, ha a mutualidad helyettesíti
+        a RETA-tagságodat (Ley 35/2006 art. 30.2, 1. szabály, második bekezdés).
     publicidad_marketing:
       label: Reklám- és marketingköltség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
@@ -433,8 +447,9 @@ categories:
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     seguros_salud: Önálló vállalkozói egészségbiztosítás
     seguros_salud_autonomo:
-      notes: 'Törvényi felső határig levonható: legfeljebb 500 EUR/év, adóalanyonként
-        (Ley 35/2006 art. 30.2.5.c szabály 1.ª, betegségbiztosítási díjak).'
+      notes: Levonható évente biztosított személyenként legfeljebb 500 EUR (te, a
+        házastársad és a veled élő, 25 év alatti gyermekeid), fogyatékossággal élő
+        személyenként legfeljebb 1500 EUR (Ley 35/2006 art. 30.2, 5. szabály, a pont).
       statutory_cap_variants:
         discapacidad:
           label: Felső határ fogyatékossággal élő biztosított személyenként
@@ -495,32 +510,42 @@ categories:
         37/1992 art. 95; a TEAC 2023. július 19-i határozata, RG 00/06654/2022).'
     telefonia_movil:
       label: Mobiltelefon-költség
-      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
-        IRPF art. 22, a vagyonelem kizárólagos affektációja).
+      notes: 'IRPF: a vonal csak akkor levonható, ha kizárólag a tevékenységhez használod;
+        a készülék amortizáció útján vonható le (Reglamento IRPF art. 22). IVA: ha
+        magáncélra is használod, a cuota nem vonható le (Ley 37/1992 art. 95.Dos.2.º).'
     tributos_deducibles: Egyéb adózásilag levonható adók és díjak
     tributos_fiscalmente_deducibles:
-      notes: Teljes mértékben levonható költség (Ley 35/2006 art. 14 LIS, hivatkozás
-        útján).
+      notes: Levonható, ha az adó a tevékenység jövedelmét terheli, ugyanarra az évre
+        vonatkozik, és nem bírság (Ley 35/2006 art. 28.1, a Ley 27/2014 art. 15 alapján).
     vehiculo_combustible:
       label: Járműves üzemanyagköltség
-      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
-        IRPF art. 22, a jármű kizárólagos affektációja).
+      notes: 'IRPF: csak akkor levonható, ha a járművet kizárólag a tevékenységhez
+        használod; bármilyen magáncélú használat kizárja, kivéve a Reglamento IRPF
+        art. 22.4 eseteit. IVA: a cuota 50%-ban vélelmezetten levonható, hacsak más
+        használati arányt nem igazolsz (Ley 37/1992 art. 95.Tres.2.ª és 95.Cuatro).'
     vehiculo_mantenimiento:
       label: Járműkarbantartási költség
-      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
-        IRPF art. 22, a jármű kizárólagos affektációja).
+      notes: 'IRPF: csak akkor levonható, ha a járművet kizárólag a tevékenységhez
+        használod; bármilyen magáncélú használat kizárja, kivéve a Reglamento IRPF
+        art. 22.4 eseteit. IVA: a cuota 50%-ban vélelmezetten levonható, hacsak más
+        használati arányt nem igazolsz (Ley 37/1992 art. 95.Tres.2.ª és 95.Cuatro).'
     vehiculo_parking:
       label: Parkolási költség
-      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
-        IRPF art. 22, a jármű kizárólagos affektációja).
+      notes: 'IRPF: csak akkor levonható, ha a járművet kizárólag a tevékenységhez
+        használod; bármilyen magáncélú használat kizárja, kivéve a Reglamento IRPF
+        art. 22.4 eseteit. IVA: a cuota 50%-ban vélelmezetten levonható, hacsak más
+        használati arányt nem igazolsz (Ley 37/1992 art. 95.Tres.2.ª és 95.Cuatro).'
     vehiculo_peaje:
       label: Autópálya-díj
-      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
-        IRPF art. 22, a jármű kizárólagos affektációja).
+      notes: 'IRPF: csak akkor levonható, ha a járművet kizárólag a tevékenységhez
+        használod; bármilyen magáncélú használat kizárja, kivéve a Reglamento IRPF
+        art. 22.4 eseteit. IVA: a cuota 50%-ban vélelmezetten levonható, hacsak más
+        használati arányt nem igazolsz (Ley 37/1992 art. 95.Tres.2.ª és 95.Cuatro).'
     vehiculo_seguro:
       label: Járműbiztosítás
-      notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
-        IRPF art. 22, a jármű kizárólagos affektációja).
+      notes: Csak akkor levonható, ha a járművet kizárólag a tevékenységhez használod;
+        bármilyen magáncélú használat kizárja, kivéve a Reglamento IRPF art. 22.4
+        eseteit (a jármű kizárólagos affektációja).
     viajes_alojamiento:
       label: Utazási szállásköltség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
@@ -652,8 +677,8 @@ desktop:
     no_profile: Nincs aktív profil
     no_profile_lead: Ezen a számítógépen még nincs profil.
     reconnecting: Újracsatlakozás…
-    reconnecting_lead: A munkameneted megszakadt. A Cadrumo helyreállítja, és ez az
-      ablak folytatódik, amint visszaáll.
+    reconnecting_lead: A munkameneted megszakadt. A helyreállítása folyamatban van,
+      és ez az ablak folytatódik, amint visszaáll.
     remaining_access: Kijelentkezés után az általad külső alkalmazásoknak kiadott
       kulcsok közül legalább egy még hozzáférést adhat ehhez a profilhoz.
     services_down: A háttérszolgáltatások nem futnak
@@ -738,6 +763,7 @@ desktop:
       hogy átvedd az irányítást.
     address: Az oldal címe
     back: Vissza
+    close: Böngésző bezárása
     closing: A munkameneted mentése…
     dialog:
       cancel: Mégse
@@ -776,6 +802,7 @@ desktop:
       unknown: A Cadrumo nem tudta megállapítani, hogyan ért véget.
     forward: Előre
     home: Az AEAT kezdőoldala
+    maximize: Böngésző teljes méretben
     notice:
       dialog_opened: Az oldal megnyitott egy párbeszédablakot.
       dismiss: Elvetés
@@ -795,6 +822,7 @@ desktop:
     reopen: A böngésző újranyitása
     retry: Próbáld újra
     surface: Böngészőoldal
+    title: Böngésző
     upload:
       cancelled: A feltöltés megszakadt.
       choose: Választás…
@@ -4277,6 +4305,8 @@ navigation:
       label: AEAT-szinkron
     agent:
       label: Ügynök
+    browser:
+      label: Böngésző
     calendar:
       label: Bevallási naptár
     declarations:

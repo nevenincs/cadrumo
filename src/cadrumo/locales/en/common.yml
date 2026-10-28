@@ -326,8 +326,10 @@ categories:
   registry:
     amortizacion_vivienda_afecto:
       label: Depreciation of home used for business
-      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
-        art. 30.2.5.b rule 4, depreciation of the home used for business).
+      notes: Deductible in proportion to the home's floor area used for the business
+        and to your ownership share in it; the 30% supplies factor does not apply
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, depreciation of the home
+        used for business).
     arrendamiento_local:
       label: Business premises rent
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
@@ -349,8 +351,10 @@ categories:
         35/2006 art. 28.1).
     comunidad_vivienda_afecto:
       label: Community/condo fees on home used for business
-      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
-        art. 30.2.5.b rule 2, home-ownership costs).
+      notes: Deductible in proportion to the home's floor area used for the business
+        and to your ownership share in it; the 30% supplies factor does not apply
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, community fees of the home
+        used for business).
     cuotas_autonomos_ss:
       notes: Fully deductible expense; RETA contributions are a statutory condition
         of carrying on the activity.
@@ -371,52 +375,64 @@ categories:
         expenses).
     hardware_amortizable:
       label: Depreciable computer hardware
-      notes: Fully deductible through depreciation (Ley 35/2006 art. 28.1, depreciation
-        of fixed assets).
+      notes: 'You deduct the yearly depreciation quota through the activity asset
+        register. A new item worth up to 300 EUR can be written off freely, up to
+        25,000 EUR a year (Ley 27/2014 art. 12.3.e). IVA: with mixed use, the cuota
+        is deductible by degree of use only if the item is worth at least 3,005.06
+        EUR (Ley 37/1992 art. 95.Tres.1 and 108.Dos.5).'
     home_office_agua: Home-office water
     home_office_gas: Home-office gas
     home_office_internet: Home-office internet
     home_office_luz: Home-office electricity
     ibi_local_afecto:
       label: Property tax (IBI) on business premises
-      notes: Fully deductible expense (Ley 35/2006 art. 14 LIS, by reference; fiscally
-        deductible taxes).
+      notes: Fully deductible as a non-state tax of the business (Ley 35/2006 art.
+        28.1, by reference to art. 15 of Ley 27/2014).
     ibi_vivienda_afecto:
       label: Property tax (IBI) on home used for business
-      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
-        art. 30.2.5.b rule 2, non-state taxes on the home).
+      notes: Deductible in proportion to the home's floor area used for the business
+        and to your ownership share in it; the 30% supplies factor does not apply
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, property tax on the home
+        used for business).
     manutencion_dietas_extranjero:
-      notes: 'Deductible up to a statutory daily cap: 48.08 EUR/day without an overnight
-        stay, 91.35 EUR/day with an overnight stay (Ley 6/2017 / Ley IRPF art. 30.2.5.c,
-        Reglamento IRPF art. 9.A.3.a).'
+      notes: 'Only your own meal expenses in the business, in a restaurant or hospitality
+        establishment, paid by electronic means. Daily limit: 48.08 EUR without an
+        overnight stay, 91.35 EUR if you stay overnight in a municipality other than
+        your usual workplace and your residence (Ley 35/2006 art. 30.2, rule 5, letter
+        c; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: With overnight stay
         sin-pernocta:
           label: Without overnight stay
     manutencion_dietas_nacional:
-      notes: 'Deductible up to a statutory daily cap: 26.67 EUR/day without an overnight
-        stay, 53.34 EUR/day with an overnight stay (Ley 6/2017 / Ley IRPF art. 30.2.5.c,
-        Reglamento IRPF art. 9.A.3.a).'
+      notes: 'Only your own meal expenses in the business, in a restaurant or hospitality
+        establishment, paid by electronic means. Daily limit: 26.67 EUR without an
+        overnight stay, 53.34 EUR if you stay overnight in a municipality other than
+        your usual workplace and your residence (Ley 35/2006 art. 30.2, rule 5, letter
+        c; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: With overnight stay
         sin-pernocta:
           label: Without overnight stay
-    manutencion_extranjero: Foreign subsistence allowance (meals and stay)
-    manutencion_nacional: Domestic subsistence allowance (meals and stay)
+    manutencion_extranjero: Foreign subsistence allowance (meals)
+    manutencion_nacional: Domestic subsistence allowance (meals)
     material_oficina:
       label: Office supplies
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
       label: Depreciable furniture
-      notes: Fully deductible through depreciation (Ley 35/2006 art. 28.1, depreciation
-        of fixed assets).
+      notes: 'You deduct the yearly depreciation quota through the activity asset
+        register. A new item worth up to 300 EUR can be written off freely, up to
+        25,000 EUR a year (Ley 27/2014 art. 12.3.e). IVA: with mixed use, the cuota
+        is deductible by degree of use only if the item is worth at least 3,005.06
+        EUR (Ley 37/1992 art. 95.Tres.1 and 108.Dos.5).'
     mutualidad_alternativa:
       label: Alternative mutual-insurance contribution
-      notes: Deductible up to a statutory cap of 15,000 EUR/year per taxpayer, for
-        an alternative mutualidad replacing RETA (AEAT Renta guide, Cotizaciones al
-        RETA).
+      notes: Deductible up to the RETA maximum quota for common contingencies of each
+        year, and only for the part that covers RETA contingencies, when the mutualidad
+        replaces your RETA membership (Ley 35/2006 art. 30.2, rule 1, second paragraph).
     publicidad_marketing:
       label: Advertising and marketing
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
@@ -428,8 +444,9 @@ categories:
       notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     seguros_salud: Self-employed health insurance
     seguros_salud_autonomo:
-      notes: Deductible up to a statutory cap of 500 EUR/year per taxpayer (Ley 35/2006
-        art. 30.2.5.c rule 1, sickness-insurance premiums).
+      notes: Deductible up to 500 EUR a year for each insured person (you, your spouse
+        and your children under 25 who live with you), or 1,500 EUR for each person
+        with a disability (Ley 35/2006 art. 30.2, rule 5, letter a).
       statutory_cap_variants:
         discapacidad:
           label: Limit per insured person with a disability
@@ -489,31 +506,44 @@ categories:
         art. 95; TEAC resolution of 19 July 2023, RG 00/06654/2022).'
     telefonia_movil:
       label: Mobile phone expense
-      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
-        exclusive affectation of the asset).
+      notes: 'IRPF: the line is deductible only if you use it exclusively for the
+        business; the handset is deducted through depreciation (Reglamento IRPF art.
+        22). IVA: if you also use it privately, the cuota is not deductible (Ley 37/1992
+        art. 95.Dos.2).'
     tributos_deducibles: Other fiscally deductible taxes and levies
     tributos_fiscalmente_deducibles:
-      notes: Fully deductible expense (Ley 35/2006 art. 14 LIS, by reference).
+      notes: Deductible when the tax bears on the business income, belongs to the
+        same year and is not a penalty (Ley 35/2006 art. 28.1, by reference to art.
+        15 of Ley 27/2014).
     vehiculo_combustible:
       label: Vehicle fuel
-      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
-        exclusive affectation of the vehicle).
+      notes: 'IRPF: deductible only if the vehicle is used exclusively for the business;
+        any private use rules it out, except in the cases of Reglamento IRPF art.
+        22.4. IVA: the cuota is presumed deductible at 50% unless you prove another
+        degree of use (Ley 37/1992 art. 95.Tres.2 and 95.Cuatro).'
     vehiculo_mantenimiento:
       label: Vehicle maintenance
-      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
-        exclusive affectation of the vehicle).
+      notes: 'IRPF: deductible only if the vehicle is used exclusively for the business;
+        any private use rules it out, except in the cases of Reglamento IRPF art.
+        22.4. IVA: the cuota is presumed deductible at 50% unless you prove another
+        degree of use (Ley 37/1992 art. 95.Tres.2 and 95.Cuatro).'
     vehiculo_parking:
       label: Parking charges
-      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
-        exclusive affectation of the vehicle).
+      notes: 'IRPF: deductible only if the vehicle is used exclusively for the business;
+        any private use rules it out, except in the cases of Reglamento IRPF art.
+        22.4. IVA: the cuota is presumed deductible at 50% unless you prove another
+        degree of use (Ley 37/1992 art. 95.Tres.2 and 95.Cuatro).'
     vehiculo_peaje:
       label: Toll charges
-      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
-        exclusive affectation of the vehicle).
+      notes: 'IRPF: deductible only if the vehicle is used exclusively for the business;
+        any private use rules it out, except in the cases of Reglamento IRPF art.
+        22.4. IVA: the cuota is presumed deductible at 50% unless you prove another
+        degree of use (Ley 37/1992 art. 95.Tres.2 and 95.Cuatro).'
     vehiculo_seguro:
       label: Vehicle insurance
-      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
-        exclusive affectation of the vehicle).
+      notes: Deductible only if the vehicle is used exclusively for the business;
+        any private use rules it out, except in the cases of Reglamento IRPF art.
+        22.4 (exclusive affectation of the vehicle).
     viajes_alojamiento:
       label: Travel accommodation
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
@@ -641,8 +671,8 @@ desktop:
     no_profile: No active profile
     no_profile_lead: There's no profile on this computer yet.
     reconnecting: Reconnecting…
-    reconnecting_lead: Your session was interrupted. Cadrumo is restoring it, and
-      this window carries on once it is back.
+    reconnecting_lead: Your session was interrupted. It is being restored, and this
+      window carries on once it is back.
     remaining_access: After you sign out, at least one key you issued for an external
       application can still grant access to this profile.
     services_down: Background services aren't running
@@ -722,6 +752,7 @@ desktop:
     acquiring: Cadrumo is signing you in. Click or press a key to take over.
     address: Page address
     back: Back
+    close: Close the browser
     closing: Saving your session…
     dialog:
       cancel: Cancel
@@ -760,6 +791,7 @@ desktop:
       unknown: Cadrumo couldn't tell how that ended.
     forward: Forward
     home: AEAT start page
+    maximize: Maximize the browser
     notice:
       dialog_opened: The page opened a dialog.
       dismiss: Dismiss
@@ -778,6 +810,7 @@ desktop:
     reopen: Open the browser again
     retry: Try again
     surface: Browser page
+    title: Browser
     upload:
       cancelled: The upload was cancelled.
       choose: Choose…
@@ -4220,6 +4253,8 @@ navigation:
       label: AEAT Sync
     agent:
       label: Agent
+    browser:
+      label: Browser
     calendar:
       label: Filing calendar
     declarations:

@@ -353,7 +353,9 @@ categories:
     amortizacion_vivienda_afecto:
       label: Amortización de la vivienda afecta
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (Ley 35/2006 art. 30.2.5.b, regla 4ª, amortización de la vivienda afecta).
+        y a tu porcentaje de titularidad en ella; no se aplica el 30 % de los suministros
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, amortización de la vivienda
+        afecta).
     arrendamiento_local:
       label: Alquiler del local
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
@@ -376,7 +378,9 @@ categories:
     comunidad_vivienda_afecto:
       label: Gastos de comunidad de la vivienda afecta
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (Ley 35/2006 art. 30.2.5.b, regla 2ª, gastos de titularidad de la vivienda).
+        y a tu porcentaje de titularidad en ella; no se aplica el 30 % de los suministros
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, gastos de comunidad de
+        la vivienda afecta).
     cuotas_autonomos_ss:
       notes: Gasto totalmente deducible; las cuotas del RETA son una condición legal
         para el ejercicio de la actividad.
@@ -397,33 +401,41 @@ categories:
         y bancarios).
     hardware_amortizable:
       label: Hardware amortizable
-      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
-        amortización del inmovilizado).
+      notes: 'Deduces la cuota anual de amortización a través del registro de bienes
+        de la actividad. Un elemento nuevo de hasta 300 EUR se puede amortizar libremente,
+        con un máximo de 25.000 EUR al año (Ley 27/2014 art. 12.3.e). IVA: con uso
+        mixto, la cuota solo es deducible según el grado de uso si el bien vale al
+        menos 3.005,06 EUR (Ley 37/1992 art. 95.Tres.1.ª y 108.Dos.5.º).'
     home_office_agua: Agua del despacho en casa
     home_office_gas: Gas del despacho en casa
     home_office_internet: Internet del despacho en casa
     home_office_luz: Electricidad del despacho en casa
     ibi_local_afecto:
       label: IBI del local afecto
-      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión; tributos
-        fiscalmente deducibles).
+      notes: Gasto totalmente deducible como tributo no estatal de la actividad (Ley
+        35/2006 art. 28.1, por remisión al art. 15 de la Ley 27/2014).
     ibi_vivienda_afecto:
       label: IBI de la vivienda afecta
       notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
-        (Ley 35/2006 art. 30.2.5.b, regla 2ª, tributos no estatales de la vivienda).
+        y a tu porcentaje de titularidad en ella; no se aplica el 30 % de los suministros
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, IBI de la vivienda afecta).
     manutencion_dietas_extranjero:
-      notes: 'Deducible hasta un límite diario legal: 48,08 EUR/día sin pernocta,
-        91,35 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
-        IRPF art. 9.A.3.a).'
+      notes: 'Solo tus propios gastos de manutención en la actividad, en establecimientos
+        de restauración u hostelería y pagados por medios electrónicos. Límite diario:
+        48,08 EUR sin pernocta, 91,35 EUR si pernoctas en un municipio distinto del
+        lugar de trabajo habitual y de tu residencia (Ley 35/2006 art. 30.2, regla
+        5.ª, letra c; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: Con pernocta
         sin-pernocta:
           label: Sin pernocta
     manutencion_dietas_nacional:
-      notes: 'Deducible hasta un límite diario legal: 26,67 EUR/día sin pernocta,
-        53,34 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
-        IRPF art. 9.A.3.a).'
+      notes: 'Solo tus propios gastos de manutención en la actividad, en establecimientos
+        de restauración u hostelería y pagados por medios electrónicos. Límite diario:
+        26,67 EUR sin pernocta, 53,34 EUR si pernoctas en un municipio distinto del
+        lugar de trabajo habitual y de tu residencia (Ley 35/2006 art. 30.2, regla
+        5.ª, letra c; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: Con pernocta
@@ -436,13 +448,17 @@ categories:
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
       label: Mobiliario amortizable
-      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
-        amortización del inmovilizado).
+      notes: 'Deduces la cuota anual de amortización a través del registro de bienes
+        de la actividad. Un elemento nuevo de hasta 300 EUR se puede amortizar libremente,
+        con un máximo de 25.000 EUR al año (Ley 27/2014 art. 12.3.e). IVA: con uso
+        mixto, la cuota solo es deducible según el grado de uso si el bien vale al
+        menos 3.005,06 EUR (Ley 37/1992 art. 95.Tres.1.ª y 108.Dos.5.º).'
     mutualidad_alternativa:
       label: Mutualidad alternativa
-      notes: Deducible hasta un límite legal de 15.000 EUR/año por contribuyente,
-        para una mutualidad alternativa que sustituye al RETA (AEAT ayuda Renta, Cotizaciones
-        al RETA).
+      notes: Deducible con el límite de la cuota máxima por contingencias comunes
+        del RETA de cada ejercicio, solo en la parte que cubre contingencias del RETA,
+        si la mutualidad sustituye tu alta en el RETA (Ley 35/2006 art. 30.2, regla
+        1.ª, segundo párrafo).
     publicidad_marketing:
       label: Publicidad y marketing
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
@@ -454,8 +470,9 @@ categories:
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     seguros_salud: Seguro de salud del autónomo
     seguros_salud_autonomo:
-      notes: Deducible hasta un límite legal de 500 EUR/año por contribuyente (Ley
-        35/2006 art. 30.2.5.c, regla 1ª, primas de seguro de enfermedad).
+      notes: Deducible hasta 500 EUR al año por cada persona asegurada (tú, tu cónyuge
+        y tus hijos menores de 25 años que convivan contigo), o 1.500 EUR por cada
+        persona con discapacidad (Ley 35/2006 art. 30.2, regla 5.ª, letra a).
       statutory_cap_variants:
         discapacidad:
           label: Límite por persona asegurada con discapacidad
@@ -515,31 +532,44 @@ categories:
         % (Ley 37/1992 art. 95; Resolución del TEAC de 19 de julio de 2023, RG 00/06654/2022).'
     telefonia_movil:
       label: Telefonía móvil
-      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
-        IRPF art. 22, afectación exclusiva del elemento patrimonial).
+      notes: 'IRPF: la línea es deducible solo si la usas exclusivamente en la actividad;
+        el teléfono se deduce por amortización (Reglamento IRPF art. 22). IVA: si
+        la usas también para fines privados, la cuota no es deducible (Ley 37/1992
+        art. 95.Dos.2.º).'
     tributos_deducibles: Otros tributos y tasas fiscalmente deducibles
     tributos_fiscalmente_deducibles:
-      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión).
+      notes: Deducible si el tributo incide en los rendimientos de la actividad, corresponde
+        al mismo ejercicio y no es una sanción (Ley 35/2006 art. 28.1, por remisión
+        al art. 15 de la Ley 27/2014).
     vehiculo_combustible:
       label: Combustible del vehículo
-      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
-        IRPF art. 22, afectación exclusiva del vehículo).
+      notes: 'IRPF: deducible solo si el vehículo se dedica exclusivamente a la actividad;
+        cualquier uso privado lo impide, salvo los supuestos del Reglamento IRPF art.
+        22.4. IVA: la cuota se presume deducible al 50 %, salvo que pruebes otro grado
+        de uso (Ley 37/1992 art. 95.Tres.2.ª y 95.Cuatro).'
     vehiculo_mantenimiento:
       label: Mantenimiento del vehículo
-      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
-        IRPF art. 22, afectación exclusiva del vehículo).
+      notes: 'IRPF: deducible solo si el vehículo se dedica exclusivamente a la actividad;
+        cualquier uso privado lo impide, salvo los supuestos del Reglamento IRPF art.
+        22.4. IVA: la cuota se presume deducible al 50 %, salvo que pruebes otro grado
+        de uso (Ley 37/1992 art. 95.Tres.2.ª y 95.Cuatro).'
     vehiculo_parking:
       label: Aparcamiento del vehículo
-      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
-        IRPF art. 22, afectación exclusiva del vehículo).
+      notes: 'IRPF: deducible solo si el vehículo se dedica exclusivamente a la actividad;
+        cualquier uso privado lo impide, salvo los supuestos del Reglamento IRPF art.
+        22.4. IVA: la cuota se presume deducible al 50 %, salvo que pruebes otro grado
+        de uso (Ley 37/1992 art. 95.Tres.2.ª y 95.Cuatro).'
     vehiculo_peaje:
       label: Peajes del vehículo
-      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
-        IRPF art. 22, afectación exclusiva del vehículo).
+      notes: 'IRPF: deducible solo si el vehículo se dedica exclusivamente a la actividad;
+        cualquier uso privado lo impide, salvo los supuestos del Reglamento IRPF art.
+        22.4. IVA: la cuota se presume deducible al 50 %, salvo que pruebes otro grado
+        de uso (Ley 37/1992 art. 95.Tres.2.ª y 95.Cuatro).'
     vehiculo_seguro:
       label: Seguro del vehículo
-      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
-        IRPF art. 22, afectación exclusiva del vehículo).
+      notes: Deducible solo si el vehículo se dedica exclusivamente a la actividad;
+        cualquier uso privado lo impide, salvo los supuestos del Reglamento IRPF art.
+        22.4 (afectación exclusiva del vehículo).
     viajes_alojamiento:
       label: Alojamiento en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
@@ -670,8 +700,8 @@ desktop:
     no_profile: Ningún perfil activo
     no_profile_lead: Todavía no hay ningún perfil en este equipo.
     reconnecting: Reconectando…
-    reconnecting_lead: Tu sesión se interrumpió. Cadrumo la está restaurando y esta
-      ventana sigue en cuanto vuelva.
+    reconnecting_lead: Tu sesión se interrumpió. Se está restaurando y esta ventana
+      sigue en cuanto vuelva.
     remaining_access: Después de cerrar la sesión, al menos una clave que emitiste
       para una aplicación externa todavía puede dar acceso a este perfil.
     services_down: Los servicios en segundo plano no están en marcha
@@ -757,6 +787,7 @@ desktop:
       el control.
     address: Dirección de la página
     back: Atrás
+    close: Cerrar el navegador
     closing: Guardando tu sesión…
     dialog:
       cancel: Cancelar
@@ -796,6 +827,7 @@ desktop:
       unknown: Cadrumo no pudo saber cómo terminó.
     forward: Adelante
     home: Página de inicio de la AEAT
+    maximize: Maximizar el navegador
     notice:
       dialog_opened: La página abrió un cuadro de diálogo.
       dismiss: Descartar
@@ -815,6 +847,7 @@ desktop:
     reopen: Abrir el navegador otra vez
     retry: Volver a intentarlo
     surface: Página del navegador
+    title: Navegador
     upload:
       cancelled: Se canceló la subida.
       choose: Elegir…
@@ -4300,6 +4333,8 @@ navigation:
       label: Sincronización AEAT
     agent:
       label: Agente
+    browser:
+      label: Navegador
     calendar:
       label: Calendario de presentaciones
     declarations:

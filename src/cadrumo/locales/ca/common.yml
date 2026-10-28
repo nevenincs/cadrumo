@@ -346,7 +346,9 @@ categories:
     amortizacion_vivienda_afecto:
       label: Amortització de l'habitatge afecte a l'activitat
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (Ley 35/2006 art. 30.2.5.b regla 4a, amortització de l'habitatge afecte).
+        i al teu percentatge de titularitat; no s'hi aplica el 30 % dels subministraments
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, amortització de l'habitatge
+        afecte).
     arrendamiento_local:
       label: Lloguer del local de negoci
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
@@ -369,7 +371,9 @@ categories:
     comunidad_vivienda_afecto:
       label: Despeses de comunitat de l'habitatge afecte a l'activitat
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (Ley 35/2006 art. 30.2.5.b regla 2a, despeses de titularitat de l'habitatge).
+        i al teu percentatge de titularitat; no s'hi aplica el 30 % dels subministraments
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, despeses de comunitat de
+        l'habitatge afecte).
     cuotas_autonomos_ss:
       notes: Despesa íntegrament deduïble; les quotes del RETA són una condició legal
         per exercir l'activitat.
@@ -390,52 +394,64 @@ categories:
         i bancàries).
     hardware_amortizable:
       label: Maquinari informàtic amortitzable
-      notes: Íntegrament deduïble mitjançant amortització (Ley 35/2006 art. 28.1,
-        amortització de l'immobilitzat).
+      notes: 'Dedueixes la quota anual d''amortització a través del registre de béns
+        de l''activitat. Un element nou de fins a 300 EUR es pot amortitzar lliurement,
+        amb un màxim de 25.000 EUR l''any (Ley 27/2014 art. 12.3.e). IVA: amb ús mixt,
+        la quota només és deduïble segons el grau d''ús si el bé val almenys 3.005,06
+        EUR (Ley 37/1992 art. 95.Tres.1a i 108.Dos.5è).'
     home_office_agua: Aigua de l'habitatge-oficina
     home_office_gas: Gas de l'habitatge-oficina
     home_office_internet: Internet de l'habitatge-oficina
     home_office_luz: Electricitat de l'habitatge-oficina
     ibi_local_afecto:
       label: IBI del local de negoci
-      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 14 LIS, per remissió;
-        tributs fiscalment deduïbles).
+      notes: Despesa íntegrament deduïble com a tribut no estatal de l'activitat (Ley
+        35/2006 art. 28.1, per remissió a l'art. 15 de la Ley 27/2014).
     ibi_vivienda_afecto:
       label: IBI de l'habitatge afecte a l'activitat
       notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
-        (Ley 35/2006 art. 30.2.5.b regla 2a, tributs no estatals de l'habitatge).
+        i al teu percentatge de titularitat; no s'hi aplica el 30 % dels subministraments
+        (Ley 35/2006 art. 29.2, Reglamento IRPF art. 22.3, IBI de l'habitatge afecte).
     manutencion_dietas_extranjero:
-      notes: 'Deduïble fins a un límit diari legal: 48,08 EUR/dia sense pernoctació,
-        91,35 EUR/dia amb pernoctació (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
-        IRPF art. 9.A.3.a).'
+      notes: 'Només les teves pròpies despeses de manutenció a l''activitat, en establiments
+        de restauració o hostaleria i pagades per mitjans electrònics. Límit diari:
+        48,08 EUR sense pernoctar, 91,35 EUR si pernoctes en un municipi diferent
+        del lloc de treball habitual i de la teva residència (Ley 35/2006 art. 30.2,
+        regla 5a, lletra c; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: Amb pernoctació
         sin-pernocta:
           label: Sense pernoctació
     manutencion_dietas_nacional:
-      notes: 'Deduïble fins a un límit diari legal: 26,67 EUR/dia sense pernoctació,
-        53,34 EUR/dia amb pernoctació (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
-        IRPF art. 9.A.3.a).'
+      notes: 'Només les teves pròpies despeses de manutenció a l''activitat, en establiments
+        de restauració o hostaleria i pagades per mitjans electrònics. Límit diari:
+        26,67 EUR sense pernoctar, 53,34 EUR si pernoctes en un municipi diferent
+        del lloc de treball habitual i de la teva residència (Ley 35/2006 art. 30.2,
+        regla 5a, lletra c; Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
           label: Amb pernoctació
         sin-pernocta:
           label: Sense pernoctació
-    manutencion_extranjero: Dietes de manutenció a l'estranger (menjar i estada)
-    manutencion_nacional: Dietes de manutenció nacionals (menjar i estada)
+    manutencion_extranjero: Dietes de manutenció a l'estranger
+    manutencion_nacional: Dietes de manutenció nacionals
     material_oficina:
       label: Material d'oficina
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
       label: Mobiliari amortitzable
-      notes: Íntegrament deduïble mitjançant amortització (Ley 35/2006 art. 28.1,
-        amortització de l'immobilitzat).
+      notes: 'Dedueixes la quota anual d''amortització a través del registre de béns
+        de l''activitat. Un element nou de fins a 300 EUR es pot amortitzar lliurement,
+        amb un màxim de 25.000 EUR l''any (Ley 27/2014 art. 12.3.e). IVA: amb ús mixt,
+        la quota només és deduïble segons el grau d''ús si el bé val almenys 3.005,06
+        EUR (Ley 37/1992 art. 95.Tres.1a i 108.Dos.5è).'
     mutualidad_alternativa:
       label: Aportació a mutualitat alternativa
-      notes: Deduïble fins a un límit legal de 15.000 EUR/any per contribuent, per
-        a una mutualitat alternativa que substitueix el RETA (Guia AEAT Renda, Cotitzacions
-        al RETA).
+      notes: Deduïble amb el límit de la quota màxima per contingències comunes del
+        RETA de cada exercici, només en la part que cobreix contingències del RETA,
+        si la mutualitat substitueix la teva alta al RETA (Ley 35/2006 art. 30.2,
+        regla 1a, segon paràgraf).
     publicidad_marketing:
       label: Publicitat i màrqueting
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
@@ -447,8 +463,10 @@ categories:
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
     seguros_salud: Assegurança de salut de l'autònom
     seguros_salud_autonomo:
-      notes: Deduïble fins a un límit legal de 500 EUR/any per contribuent (Ley 35/2006
-        art. 30.2.5.c regla 1a, primes d'assegurança de malaltia).
+      notes: Deduïble fins a 500 EUR l'any per cada persona assegurada (tu, el teu
+        cònjuge i els teus fills menors de 25 anys que convisquin amb tu), o 1.500
+        EUR per cada persona amb discapacitat (Ley 35/2006 art. 30.2, regla 5a, lletra
+        a).
       statutory_cap_variants:
         discapacidad:
           label: Límit per persona assegurada amb discapacitat
@@ -508,31 +526,44 @@ categories:
         % (Ley 37/1992 art. 95; resolució del TEAC de 19 de juliol de 2023, RG 00/06654/2022).'
     telefonia_movil:
       label: Despesa de telefonia mòbil
-      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
-        22, afectació exclusiva de l'element patrimonial).
+      notes: 'IRPF: la línia és deduïble només si la fas servir exclusivament per
+        a l''activitat; el telèfon es dedueix per amortització (Reglamento IRPF art.
+        22). IVA: si també la fas servir per a fins privats, la quota no és deduïble
+        (Ley 37/1992 art. 95.Dos.2n).'
     tributos_deducibles: Altres tributs fiscalment deduïbles
     tributos_fiscalmente_deducibles:
-      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 14 LIS, per remissió).
+      notes: Deduïble si el tribut incideix en els rendiments de l'activitat, correspon
+        al mateix exercici i no és una sanció (Ley 35/2006 art. 28.1, per remissió
+        a l'art. 15 de la Ley 27/2014).
     vehiculo_combustible:
       label: Combustible del vehicle
-      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
-        22, afectació exclusiva del vehicle).
+      notes: 'IRPF: deduïble només si el vehicle es dedica exclusivament a l''activitat;
+        qualsevol ús privat ho impedeix, llevat dels supòsits del Reglamento IRPF
+        art. 22.4. IVA: la quota es presumeix deduïble al 50 %, llevat que provis
+        un altre grau d''ús (Ley 37/1992 art. 95.Tres.2a i 95.Cuatro).'
     vehiculo_mantenimiento:
       label: Manteniment del vehicle
-      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
-        22, afectació exclusiva del vehicle).
+      notes: 'IRPF: deduïble només si el vehicle es dedica exclusivament a l''activitat;
+        qualsevol ús privat ho impedeix, llevat dels supòsits del Reglamento IRPF
+        art. 22.4. IVA: la quota es presumeix deduïble al 50 %, llevat que provis
+        un altre grau d''ús (Ley 37/1992 art. 95.Tres.2a i 95.Cuatro).'
     vehiculo_parking:
       label: Despeses d'aparcament
-      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
-        22, afectació exclusiva del vehicle).
+      notes: 'IRPF: deduïble només si el vehicle es dedica exclusivament a l''activitat;
+        qualsevol ús privat ho impedeix, llevat dels supòsits del Reglamento IRPF
+        art. 22.4. IVA: la quota es presumeix deduïble al 50 %, llevat que provis
+        un altre grau d''ús (Ley 37/1992 art. 95.Tres.2a i 95.Cuatro).'
     vehiculo_peaje:
       label: Despeses de peatge
-      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
-        22, afectació exclusiva del vehicle).
+      notes: 'IRPF: deduïble només si el vehicle es dedica exclusivament a l''activitat;
+        qualsevol ús privat ho impedeix, llevat dels supòsits del Reglamento IRPF
+        art. 22.4. IVA: la quota es presumeix deduïble al 50 %, llevat que provis
+        un altre grau d''ús (Ley 37/1992 art. 95.Tres.2a i 95.Cuatro).'
     vehiculo_seguro:
       label: Assegurança del vehicle
-      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
-        22, afectació exclusiva del vehicle).
+      notes: Deduïble només si el vehicle es dedica exclusivament a l'activitat; qualsevol
+        ús privat ho impedeix, llevat dels supòsits del Reglamento IRPF art. 22.4
+        (afectació exclusiva del vehicle).
     viajes_alojamiento:
       label: Allotjament de viatge
       notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
@@ -663,8 +694,8 @@ desktop:
     no_profile: Cap perfil actiu
     no_profile_lead: Encara no hi ha cap perfil en aquest ordinador.
     reconnecting: S’està reconnectant…
-    reconnecting_lead: La teva sessió s’ha interromput. Cadrumo la està restaurant
-      i aquesta finestra continua tan bon punt torni.
+    reconnecting_lead: La teva sessió s’ha interromput. S’està restaurant i aquesta
+      finestra continua tan bon punt torni.
     remaining_access: Després de tancar la sessió, almenys una clau que vas emetre
       per a una aplicació externa encara pot donar accés a aquest perfil.
     services_down: Els serveis en segon pla no estan en marxa
@@ -751,6 +782,7 @@ desktop:
       prendre'n el control.
     address: Adreça de la pàgina
     back: Enrere
+    close: Tanca el navegador
     closing: Desant la teva sessió…
     dialog:
       cancel: Cancel·la
@@ -790,6 +822,7 @@ desktop:
       unknown: Cadrumo no ha pogut saber com ha acabat.
     forward: Endavant
     home: Pàgina d'inici de l'AEAT
+    maximize: Maximitza el navegador
     notice:
       dialog_opened: La pàgina ha obert un diàleg.
       dismiss: Descarta
@@ -810,6 +843,7 @@ desktop:
     reopen: Obre el navegador un altre cop
     retry: Torna-ho a provar
     surface: Pàgina del navegador
+    title: Navegador
     upload:
       cancelled: S'ha cancel·lat la pujada.
       choose: Tria…
@@ -4294,6 +4328,8 @@ navigation:
       label: Sincronització AEAT
     agent:
       label: Agent
+    browser:
+      label: Navegador
     calendar:
       label: Calendari de presentacions
     declarations:
