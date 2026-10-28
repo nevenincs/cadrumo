@@ -1,14 +1,17 @@
-"""Owned child exit and absolute deadlines during worker startup acceptance."""
+"""Owned child exit, stop and the timeout during worker startup acceptance."""
 
 from __future__ import annotations
 
 from collections import deque
-from threading import Event, RLock
+from collections.abc import Callable
+from threading import RLock
 from typing import override
 
 import pytest
 
 from cadrumo_client.contracts.contracts import ChannelWake, RefusalCode, RefusalError
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, OrchestrationTimeoutError
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_process import WindowsOwnedProcess
@@ -17,13 +20,8 @@ from ..profile_worker import ProfileWorkerProcess
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-
-class _Clock:
-    def __init__(self) -> None:
-        self.elapsed = 0.0
-
-    def __call__(self) -> float:
-        return self.elapsed
+type _Event = str | RefusalCode | Exception | Callable[[], None]
+"""What one scripted accept does: connect, refuse, fail, or run a signal first and then report an unmet wait."""
 
 
 class _Child(WindowsOwnedProcess):
@@ -44,7 +42,7 @@ class _Child(WindowsOwnedProcess):
             raise self.failure
         if self.status is not None:
             return self.status
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
 
 class _Channel(WindowsChannel):
@@ -57,20 +55,19 @@ class _Channel(WindowsChannel):
 
 
 class _Endpoint(WindowsEndpoint):
-    def __init__(self, clock: _Clock, child: _Child, events: tuple[str | RefusalCode, ...] = ()) -> None:
-        self.clock = clock
+    def __init__(self, child: _Child, events: tuple[_Event, ...] = ()) -> None:
         self.child = child
         self.events = deque(events)
-        self.accept_timeouts: list[float] = []
+        self.accept_timeouts: list[float | None] = []
+        self.accept_wakes: list[tuple[ChannelWake, ...]] = []
         self.channel = _Channel()
 
     @override
     def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> WindowsChannel:
-        # Worker startup always bounds its wait and passes no wake.
-        assert timeout is not None
-        assert wakes == ()
         self.accept_timeouts.append(timeout)
-        event = self.events.popleft() if self.events else "deadline"
+        self.accept_wakes.append(wakes)
+        assert self.events, "the scripted endpoint was asked to accept more often than the test planned"
+        event = self.events.popleft()
         if event == "accepted":
             return self.channel
         if event == "accepted_exit":
@@ -78,10 +75,12 @@ class _Endpoint(WindowsEndpoint):
             return self.channel
         if isinstance(event, RefusalCode):
             raise RefusalError(event)
-        self.clock.elapsed += timeout
-        if event == "exit":
-            self.child.status = 1
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        if isinstance(event, Exception):
+            raise event
+        assert callable(event), event
+        # A set wake ends the real endpoint's wait as an unmet deadline.
+        event()
+        raise RefusalError(RefusalCode.TIMEOUT)
 
 
 def _worker(child: _Child) -> ProfileWorkerProcess:
@@ -91,84 +90,169 @@ def _worker(child: _Child) -> ProfileWorkerProcess:
     worker._native_guard = RLock()
     worker._native_activity_lock = RLock()
     worker._native_activity = None
-    worker._stopping = Event()
+    worker._stopping = NativeWake()
+    worker._process_exited = NativeWake()
+    worker._startup_expired = NativeWake()
+    worker._owner_stopping = None
     return worker
+
+
+def _accept(worker: ProfileWorkerProcess, endpoint: _Endpoint) -> WindowsChannel:
+    channel = worker._accept_startup_channel(endpoint, deadline=DEFAULT_TIMEOUT_POLICY.deadline())
+    assert isinstance(channel, WindowsChannel)
+    return channel
 
 
 @pytest.mark.parametrize("exit_code", [0, 1, 255])
 def test_already_exited_child_is_connection_closed_before_accept(exit_code: int) -> None:
-    clock = _Clock()
     child = _Child(exit_code=exit_code)
-    endpoint = _Endpoint(clock, child)
+    endpoint = _Endpoint(child)
     with pytest.raises(RefusalError) as caught:
-        _worker(child)._accept_startup_channel(endpoint, timeout=45, monotonic=clock)
+        _accept(_worker(child), endpoint)
     assert caught.value.reason is RefusalCode.CONNECTION_CLOSED
     assert endpoint.accept_timeouts == []
     assert child.wait_timeouts == [0]
 
 
-def test_child_exit_during_accept_is_detected_after_first_timeout() -> None:
-    clock = _Clock()
+def test_a_worker_stopped_before_accept_is_connection_closed_without_waiting() -> None:
     child = _Child()
-    endpoint = _Endpoint(clock, child, ("exit",))
+    worker = _worker(child)
+    worker._stopping.set()
+    endpoint = _Endpoint(child)
     with pytest.raises(RefusalError) as caught:
-        _worker(child)._accept_startup_channel(endpoint, timeout=45, monotonic=clock)
+        _accept(worker, endpoint)
     assert caught.value.reason is RefusalCode.CONNECTION_CLOSED
-    assert clock.elapsed < 1
-    assert len(endpoint.accept_timeouts) == 1
-    assert set(child.wait_timeouts) == {0}
+    assert endpoint.accept_timeouts == []
 
 
-@pytest.mark.parametrize("timeout", [45.0, 10.0])
-def test_alive_child_keeps_original_absolute_accept_deadline(timeout: float) -> None:
-    clock = _Clock()
+def test_an_expired_startup_timeout_is_refused_before_accept() -> None:
     child = _Child()
-    endpoint = _Endpoint(clock, child)
+    worker = _worker(child)
+    worker._startup_expired.set()
+    endpoint = _Endpoint(child)
     with pytest.raises(RefusalError) as caught:
-        _worker(child)._accept_startup_channel(endpoint, timeout=timeout, monotonic=clock)
-    assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
-    assert clock.elapsed == pytest.approx(timeout)
-    assert sum(endpoint.accept_timeouts) == pytest.approx(timeout)
-    assert all(0 < duration <= 0.1 for duration in endpoint.accept_timeouts)
-    assert set(child.wait_timeouts) == {0}
+        _accept(worker, endpoint)
+    assert caught.value.reason is RefusalCode.TIMEOUT
+    assert endpoint.accept_timeouts == []
 
 
-def test_healthy_child_can_connect_after_retryable_accept_timeouts() -> None:
-    clock = _Clock()
+def test_accept_waits_on_the_workers_own_signals_without_a_timeout() -> None:
     child = _Child()
-    endpoint = _Endpoint(clock, child, ("deadline", "deadline", "accepted"))
-    channel = _worker(child)._accept_startup_channel(endpoint, timeout=45, monotonic=clock)
-    assert channel is endpoint.channel
+    worker = _worker(child)
+    endpoint = _Endpoint(child, ("accepted",))
+    assert _accept(worker, endpoint) is endpoint.channel
+    assert endpoint.accept_timeouts == [None]
+    assert endpoint.accept_wakes == [(worker._stopping, worker._process_exited, worker._startup_expired)]
+
+
+def test_the_owner_stop_signal_is_one_more_wake_of_the_accept() -> None:
+    child = _Child()
+    worker = _worker(child)
+    owner_stopping = NativeWake()
+    worker._owner_stopping = owner_stopping
+    endpoint = _Endpoint(child, ("accepted",))
+    _accept(worker, endpoint)
+    assert endpoint.accept_wakes == [
+        (worker._stopping, worker._process_exited, worker._startup_expired, owner_stopping)
+    ]
+
+
+def test_child_exit_during_accept_is_connection_closed_after_one_wait() -> None:
+    child = _Child()
+    worker = _worker(child)
+
+    def exit_child() -> None:
+        child.status = 1
+        worker._process_exited.set()
+
+    endpoint = _Endpoint(child, (exit_child,))
+    with pytest.raises(RefusalError) as caught:
+        _accept(worker, endpoint)
+    assert caught.value.reason is RefusalCode.CONNECTION_CLOSED
+    assert endpoint.accept_timeouts == [None]
+    assert child.wait_timeouts == [0]
+
+
+def test_stopping_the_worker_during_accept_is_connection_closed() -> None:
+    child = _Child()
+    worker = _worker(child)
+    endpoint = _Endpoint(child, (worker._stopping.set,))
+    with pytest.raises(RefusalError) as caught:
+        _accept(worker, endpoint)
+    assert caught.value.reason is RefusalCode.CONNECTION_CLOSED
+    assert endpoint.accept_timeouts == [None]
+
+
+def test_the_owner_stopping_during_accept_is_connection_closed() -> None:
+    child = _Child()
+    worker = _worker(child)
+    owner_stopping = NativeWake()
+    worker._owner_stopping = owner_stopping
+    endpoint = _Endpoint(child, (owner_stopping.set,))
+    with pytest.raises(RefusalError) as caught:
+        _accept(worker, endpoint)
+    assert caught.value.reason is RefusalCode.CONNECTION_CLOSED
+
+
+def test_the_startup_timeout_during_accept_is_the_timeout() -> None:
+    child = _Child()
+    worker = _worker(child)
+    endpoint = _Endpoint(child, (worker._startup_expired.set,))
+    with pytest.raises(RefusalError) as caught:
+        _accept(worker, endpoint)
+    assert caught.value.reason is RefusalCode.TIMEOUT
+    assert endpoint.accept_timeouts == [None]
+
+
+def test_an_endpoint_timeout_is_the_timeout() -> None:
+    child = _Child()
+    expired = OrchestrationTimeoutError("orchestration_timeout")
+    endpoint = _Endpoint(child, (expired,))
+    with pytest.raises(RefusalError) as caught:
+        _accept(_worker(child), endpoint)
+    assert caught.value.reason is RefusalCode.TIMEOUT
+    assert caught.value.__cause__ is expired
+
+
+def test_an_unmet_wait_no_signal_explains_stays_a_timeout() -> None:
+    child = _Child()
+    endpoint = _Endpoint(child, (lambda: None,))
+    with pytest.raises(RefusalError) as caught:
+        _accept(_worker(child), endpoint)
+    assert caught.value.reason is RefusalCode.TIMEOUT
+    assert endpoint.accept_timeouts == [None]
+
+
+def test_healthy_child_connects_without_closing_the_channel() -> None:
+    child = _Child()
+    endpoint = _Endpoint(child, ("accepted",))
+    assert _accept(_worker(child), endpoint) is endpoint.channel
     assert not endpoint.channel.closed
-    assert clock.elapsed == pytest.approx(0.2)
 
 
 def test_child_exit_with_new_connection_closes_accepted_channel() -> None:
-    clock = _Clock()
     child = _Child()
-    endpoint = _Endpoint(clock, child, ("accepted_exit",))
+    endpoint = _Endpoint(child, ("accepted_exit",))
     with pytest.raises(RefusalError) as caught:
-        _worker(child)._accept_startup_channel(endpoint, timeout=10, monotonic=clock)
+        _accept(_worker(child), endpoint)
     assert caught.value.reason is RefusalCode.CONNECTION_CLOSED
     assert endpoint.channel.closed
 
 
 @pytest.mark.parametrize("failure", [RefusalError(RefusalCode.UNAVAILABLE), OSError("owned process wait failed")])
 def test_unexpected_process_error_is_preserved(failure: Exception) -> None:
-    clock = _Clock()
     child = _Child(failure=failure)
-    endpoint = _Endpoint(clock, child)
+    endpoint = _Endpoint(child)
     with pytest.raises(type(failure)) as caught:
-        _worker(child)._accept_startup_channel(endpoint, timeout=45, monotonic=clock)
+        _accept(_worker(child), endpoint)
     assert caught.value is failure
     assert not endpoint.accept_timeouts
 
 
-def test_non_deadline_endpoint_error_is_preserved_without_retry() -> None:
-    clock = _Clock()
+def test_non_timeout_endpoint_error_is_preserved_without_retry() -> None:
     child = _Child()
-    endpoint = _Endpoint(clock, child, (RefusalCode.PEER_UNTRUSTED,))
+    endpoint = _Endpoint(child, (RefusalCode.PEER_UNTRUSTED,))
     with pytest.raises(RefusalError) as caught:
-        _worker(child)._accept_startup_channel(endpoint, timeout=45, monotonic=clock)
+        _accept(_worker(child), endpoint)
     assert caught.value.reason is RefusalCode.PEER_UNTRUSTED
     assert len(endpoint.accept_timeouts) == 1

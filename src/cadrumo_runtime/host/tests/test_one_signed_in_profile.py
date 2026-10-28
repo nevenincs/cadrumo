@@ -31,6 +31,7 @@ from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.tests.in_memory_keyring import InMemoryKeyring
 from cadrumo_client.contracts.access_refusals import AccessDenied
+from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.profile_access import ProfileLogin, ProfileStatus
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.contracts.transport import ConnectionContext
@@ -38,6 +39,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.installation import read_runtime_installation
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id
+from ...application.session_authority_contracts import HumanAdmissionControl
 from ..profile_connections import RuntimeProfileConnections
 from ..profile_host import ProfileConnection, RuntimeProfileHost
 from ..sign_in_sweep import revoke_other_saved_sign_ins
@@ -212,8 +214,10 @@ def test_overlapping_password_handovers_do_not_revoke_each_other(
             host: RuntimeProfileHost,
             context: ConnectionContext,
             secret: bytearray,
+            control: HumanAdmissionControl,
+            deadline: TimeoutDeadline,
         ) -> AccessSession | AccessDenied:
-            result = original_admit(self, connection, host, context, secret)
+            result = original_admit(self, connection, host, context, secret, control, deadline)
             if host.store.binding.profile_id == second_id:
                 assert isinstance(result, AccessSession)
                 second_admitted.set()

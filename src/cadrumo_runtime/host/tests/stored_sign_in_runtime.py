@@ -57,6 +57,8 @@ from cadrumo_client.contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
     ProfileLogin,
+    ProfileLoginPending,
+    ProfileLoginStatusQuery,
     ProfileStatus,
     SessionRequest,
     SessionsLocked,
@@ -107,6 +109,7 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         context: ConnectionContext,
         channel: ByteChannel,
         request: ProfileLogin
+        | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
         | PresentationRequest
@@ -117,6 +120,7 @@ class RecordingProfileConnections(RuntimeProfileConnections):
         | AttendanceDecide,
     ) -> (
         ProfileStatus
+        | ProfileLoginPending
         | ProfileDisclosurePage
         | PresentationDelivered
         | SessionsLocked

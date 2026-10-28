@@ -79,6 +79,7 @@ from cadrumo_client.contracts.model_runs import (
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport import credentials
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.startup import LaunchDoor
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -123,7 +124,7 @@ class _Channel:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 self.incoming.condition.wait(remaining)
             result = bytes(self.incoming.data[:count])
             del self.incoming.data[:count]
@@ -145,7 +146,7 @@ class _Channel:
             if self.outgoing.closed:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
             if time.monotonic() >= deadline:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             self.outgoing.data.extend(payload)
             self.outgoing.condition.notify_all()
 
@@ -182,7 +183,7 @@ class _Listener:
                 return self.pending.get(timeout=remaining)
             except Empty:
                 continue
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
     def connect(self, *, timeout: float) -> ByteChannel:
         del timeout
@@ -371,7 +372,7 @@ class _Worker(ProfileWorkerHumanAdmission):
             raise AssertionError("portable runtime requires its owned encrypted test oracle")
         self.identity = identity
         self._lock, self._operation_lock, self._human_lock = RLock(), RLock(), RLock()
-        self._stopping = Event()
+        self._stopping = NativeWake()
         self._human_candidate = None
         self._human_deadline = None
         control_client, control = _channels(identity.binding.os_owner_id)

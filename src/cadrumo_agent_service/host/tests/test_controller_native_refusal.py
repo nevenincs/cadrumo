@@ -12,6 +12,7 @@ import logging
 import time
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -69,6 +70,9 @@ class _Process:
     def read_output_line(self, *, limit: int, timeout: float) -> bytes:
         assert self._read_error is not None, "the scripted tree answers nothing"
         raise self._read_error
+
+    def cancel_output_wait(self) -> None:
+        pass
 
     def settled_standard_error(self, *, timeout: float) -> bytes:
         self.standard_error_reads += 1
@@ -230,18 +234,18 @@ def test_a_write_that_fails_for_any_other_status_stays_a_launch_failure(tmp_path
     assert error.native_refusal is None
 
 
-def test_a_tree_still_running_at_the_emergency_cutoff_is_not_waited_for(tmp_path: Path) -> None:
+def test_a_tree_still_running_at_the_timeout_is_not_waited_for(tmp_path: Path) -> None:
     process = _Process(read_error=TimeoutError(), status=None)
     controller, error = _start(process, tmp_path)
-    assert error.reason is AgentHostRefusal.EMERGENCY_CUTOFF
+    assert error.reason is AgentHostRefusal.TIMEOUT
     assert process.waits == []
     assert process.standard_error_reads == 0
     assert process.terminated and controller.state is AgentHostState.DETACHED
 
 
-def test_emergency_cutoff_remains_distinct_even_if_the_host_has_exited(tmp_path: Path) -> None:
+def test_timeout_remains_distinct_even_if_the_host_has_exited(tmp_path: Path) -> None:
     _, error = _start(_Process(read_error=TimeoutError()), tmp_path)
-    assert error.reason is AgentHostRefusal.EMERGENCY_CUTOFF
+    assert error.reason is AgentHostRefusal.TIMEOUT
 
 
 def test_a_status_that_cannot_be_observed_leaves_the_plain_refusal(tmp_path: Path) -> None:
@@ -253,12 +257,10 @@ def test_a_status_that_cannot_be_observed_leaves_the_plain_refusal(tmp_path: Pat
 
 def test_cancellation_invalidates_a_ready_line_already_being_delivered(tmp_path: Path) -> None:
     class LateReady(_Process):
+        @override
         def read_output_line(self, *, limit: int, timeout: float) -> bytes:
             controller.cancel_start()
             return b'{"event":"agent_ready","gateway_port":47001,"agent_version":"test","hosting_contract":1}\n'
-
-        def cancel_output_wait(self) -> None:
-            pass
 
     process = LateReady(status=0)
     controller = AgentHostController(
@@ -274,22 +276,21 @@ def test_cancellation_invalidates_a_ready_line_already_being_delivered(tmp_path:
 
 
 @pytest.mark.parametrize("outcome", ["observation_error", "cancel", "stale", "expired", "published_stop"])
-def test_post_ready_observation_and_cleanup_share_the_startup_cutoff(
+def test_post_ready_observation_and_cleanup_share_the_startup_timeout(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, outcome: str
 ) -> None:
     now = [100.0]
     monkeypatch.setattr(deadline_budget.time, "monotonic", lambda: now[0])
 
     class ReadyProcess(_Process):
+        @override
         def read_output_line(self, *, limit: int, timeout: float) -> bytes:
             assert timeout == 10.0
             now[0] = 106.0
             return b'{"event":"agent_ready","gateway_port":47001,"agent_version":"test","hosting_contract":1}\n'
 
-        def cancel_output_wait(self) -> None:
-            pass
-
     class ObservedCredentials(_Credentials):
+        @override
         def current_generations(self) -> AgentGenerations | None:
             now[0] = 111.0 if outcome == "expired" else 107.0
             if outcome == "observation_error":
@@ -309,7 +310,7 @@ def test_post_ready_observation_and_cleanup_share_the_startup_cutoff(
             arguments=(),
             directory=tmp_path,
             environment={},
-            emergency_wait_policy=deadline_budget.EmergencyWaitPolicy(10.0),
+            timeout_policy=deadline_budget.TimeoutPolicy(10.0),
         ),
     )
     if outcome == "published_stop":
@@ -317,7 +318,7 @@ def test_post_ready_observation_and_cleanup_share_the_startup_cutoff(
         assert controller.state is AgentHostState.READY
         now[0] = 150.0
         controller.stop()
-        assert process.waits == [10.0], "an explicit stop of a published agent owns a new cutoff"
+        assert process.waits == [10.0], "an explicit stop of a published agent owns a new timeout"
     else:
         expected_error = RuntimeError if outcome == "observation_error" else AgentHostError
         with pytest.raises(expected_error) as refused:
@@ -328,7 +329,7 @@ def test_post_ready_observation_and_cleanup_share_the_startup_cutoff(
                 is {
                     "cancel": AgentHostRefusal.CANCELLED,
                     "stale": AgentHostRefusal.STALE_GENERATION,
-                    "expired": AgentHostRefusal.EMERGENCY_CUTOFF,
+                    "expired": AgentHostRefusal.TIMEOUT,
                 }[outcome]
             )
         assert process.waits == ([] if outcome == "expired" else [3.0])

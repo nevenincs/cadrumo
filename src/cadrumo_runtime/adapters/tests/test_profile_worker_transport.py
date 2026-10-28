@@ -22,6 +22,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import document_frame
+from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerActivity, ProfileWorkerRefusal
@@ -71,7 +72,7 @@ class _SlowWorkerChannel(WindowsChannel):
     def read_exact(self, count: int, *, deadline: float) -> bytes:
         if self.awaiting_reply:
             if deadline - time.monotonic() < self.latency:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             self.awaiting_reply = False
         result = bytes(self.pending[:count])
         del self.pending[:count]
@@ -100,7 +101,7 @@ def _worker(latency: float) -> _Worker:
     worker._native_guard = RLock()
     worker._native_activity_lock = RLock()
     worker._native_activity = None
-    worker._stopping = Event()
+    worker._stopping = NativeWake()
     # Not a Linux scope, so the exchange needs no native membership check.
     worker._scope = WindowsProcessScope.__new__(WindowsProcessScope)
     worker._channel = _SlowWorkerChannel(latency)
@@ -134,7 +135,7 @@ def test_operation_reply_beyond_the_worker_authority_budget_still_contains_the_w
     with pytest.raises(RefusalError) as refused:
         _observe(worker)
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert worker.contained
     assert worker._stopping.is_set()
 
@@ -151,13 +152,13 @@ def test_starved_worker_control_reply_keeps_the_worker() -> None:
     assert not worker._stopping.is_set()
 
 
-def test_control_reply_beyond_its_budget_contains_the_worker() -> None:
+def test_control_reply_beyond_timeout_timeout_contains_the_worker() -> None:
     worker = _worker(latency=transport._CONTROL_EXCHANGE_SECONDS + 1)
 
     with pytest.raises(RefusalError) as refused:
         worker.status()
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert worker.contained
 
 
@@ -178,7 +179,7 @@ def test_contract_discovery_beyond_exchange_budget_contains_worker() -> None:
     with pytest.raises(RefusalError) as refused:
         worker.describe(uuid4(), "auth.local-read")
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert worker.contained
     assert worker._stopping.is_set()
 
@@ -195,7 +196,7 @@ def test_expired_free_or_reentrant_exchange_sends_nothing_and_keeps_worker(reent
     ):
         worker.prepare_api_admission(deadline=time.monotonic() - 1)
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert not channel.pending and not channel.awaiting_reply
     assert not worker.contained and not worker._stopping.is_set()
     with pytest.raises(ProfileAccessRefusedError) as available:
@@ -227,7 +228,7 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
             instant = 106.0
         with pytest.raises(RefusalError) as refused:
             response.result(timeout=2)
-        assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert refused.value.reason is RefusalCode.TIMEOUT
         assert not channel.pending and not channel.awaiting_reply
         assert not worker.contained and not worker._stopping.is_set()
         assert worker._lock.acquire(blocking=False), "expired borrower retained the exchange lock"
@@ -240,7 +241,7 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
         pool.shutdown(wait=True)
 
 
-def test_default_control_budget_also_bounds_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_control_timeout_timeout_also_ends_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
     worker = _worker(latency=0)
     monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
     with ThreadPoolExecutor(max_workers=1) as pool:
@@ -248,7 +249,7 @@ def test_default_control_budget_also_bounds_queued_callers(monkeypatch: pytest.M
             queued = pool.submit(worker.status)
             with pytest.raises(RefusalError) as refused:
                 queued.result(timeout=2)
-            assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert refused.value.reason is RefusalCode.TIMEOUT
         assert not worker.contained and not worker.stopping
         with pytest.raises(ProfileAccessRefusedError):
             worker.status()
@@ -275,7 +276,7 @@ def test_queued_caller_that_times_out_is_named_without_containing_the_worker(
     assert fields["request_type"] == "ProfileWorkerControlRequest"
     assert fields["request_action"] == "status"
     assert fields["operation_channel"] is False
-    assert fields["reason"] == RefusalCode.DEADLINE_EXCEEDED.value
+    assert fields["reason"] == RefusalCode.TIMEOUT.value
     assert fields["queue_seconds"] >= 0.0 and fields["budget_seconds"] > 0.0
     assert not worker.contained and not worker.stopping
 
@@ -341,7 +342,7 @@ class _ProbeChannel(WindowsChannel):
     @override
     def read_exact(self, count: int, *, deadline: float) -> bytes:
         if len(self.pending) < count:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         result = bytes(self.pending[:count])
         del self.pending[:count]
         return result
@@ -368,7 +369,7 @@ def test_unanswered_probe_sends_nothing_more_and_keeps_the_worker() -> None:
     with pytest.raises(RefusalError) as refused:
         worker.prepare_api_admission(deadline=time.monotonic() + 0.05)
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert len(channel.requests) == 1
     assert not worker.contained and not worker.stopping
 

@@ -343,21 +343,21 @@ def test_an_unreadable_model_list_record_reports_its_guard_and_a_guarded_reset_c
                 expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID,
             )
             assert written.state == "written"
+            revision = written.revision
+            assert revision is not None
 
             unreadable = _exchange(server.port, bytes(admin), _request("local_models"))["result"]
             assert isinstance(unreadable, dict)
             assert unreadable["unreadable"] is True and unreadable["models"] == []
-            assert unreadable["revision"] == written.revision
+            assert unreadable["revision"] == revision
             refused = _exchange(
                 server.port,
                 bytes(admin),
-                _list_request("local_model_add", written.revision, provider=KEYLESS_LANE, model="custom-model:test"),
+                _list_request("local_model_add", revision, provider=KEYLESS_LANE, model="custom-model:test"),
             )
             assert refused["result"] == {"code": "unknown"}
 
-            reset = _model_list(
-                _exchange(server.port, bytes(admin), _list_request("local_models_reset", written.revision))
-            )
+            reset = _model_list(_exchange(server.port, bytes(admin), _list_request("local_models_reset", revision)))
             assert reset == {
                 "unreadable": False,
                 "models": [],
