@@ -10,6 +10,19 @@ use std::{
     path::{Path, PathBuf},
 };
 
+/// A step of appending a batch, entered in this order, so delivery can say
+/// where a slow batch spends its time.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WritePhase {
+    /// Checking and creating the directory and opening the lock file.
+    Open,
+    Lock,
+    /// Opening the log, rotating it as needed and writing the records.
+    Write,
+    Flush,
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LogPaths {
@@ -71,14 +84,22 @@ impl LogFile {
         })
     }
     pub fn append(&self, record: &crate::diagnostics::Event) -> Result<()> {
-        self.append_batch(std::slice::from_ref(record))
+        self.append_batch(std::slice::from_ref(record), |_| {})
     }
-    pub(super) fn append_batch(&self, records: &[crate::diagnostics::Event]) -> Result<()> {
+    /// `enter` is told each phase as the batch reaches it.
+    pub(super) fn append_batch(
+        &self,
+        records: &[crate::diagnostics::Event],
+        mut enter: impl FnMut(WritePhase),
+    ) -> Result<()> {
+        enter(WritePhase::Open);
         let directory = self.paths.current.parent().ok_or_else(failure)?;
         filesystem::absolute_root(directory).map_err(|e| failure().caused_by(e))?;
         fs::create_dir_all(directory).map_err(|e| failure().caused_by(e))?;
         let lock = open(&self.paths.lock)?;
+        enter(WritePhase::Lock);
         lock.try_lock().map_err(|e| failure().caused_by(e))?;
+        enter(WritePhase::Write);
         let mut file = open(&self.paths.current)?;
         let mut size = file.metadata().map_err(|e| failure().caused_by(e))?.len();
         for record in records {
@@ -96,6 +117,7 @@ impl LogFile {
             file.write_all(&bytes).map_err(|e| failure().caused_by(e))?;
             size += bytes.len() as u64;
         }
+        enter(WritePhase::Flush);
         file.flush().map_err(|e| failure().caused_by(e))
     }
     fn rotate(&self) -> Result<()> {

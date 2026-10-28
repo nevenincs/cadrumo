@@ -1,34 +1,85 @@
 //! Diagnostic I/O owns its own thread and never borrows the event-ring lock.
 
-use super::{Event, Replay, State, logging::LogFile};
+use super::{
+    Event, Replay, State,
+    logging::{LogFile, WritePhase},
+};
 use crate::error::application::{ApplicationError, ErrorCode, Operation};
 use serde::Serialize;
 use std::{
     sync::{
-        Arc, Mutex,
-        atomic::{AtomicU64, Ordering},
+        Arc, Mutex, MutexGuard,
+        atomic::{AtomicU8, AtomicU64, Ordering},
         mpsc::{self, SyncSender},
     },
     thread,
-    time::Duration,
+    time::{Duration, Instant},
 };
 
 enum Work {
     Configure(LogFile, Vec<Event>),
     Append(Box<Event>),
-    Flush(SyncSender<()>),
+    Flush(SyncSender<()>, Instant),
 }
 impl Work {
     fn weight(&self) -> u64 {
         match self {
             Self::Configure(_, events) => events.len() as u64 + 1,
             Self::Append(_) => 1,
-            Self::Flush(_) => 0,
+            Self::Flush(..) => 0,
         }
     }
 }
 
-#[derive(Clone, Copy, Default, Serialize)]
+/// What the writer thread is doing, so a flush that misses its bound names the cost.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum WriterStage {
+    /// Waiting for work; a flush that is not answered from here was never scheduled.
+    #[default]
+    Waiting,
+    /// Replaying the event ring into a newly configured file.
+    Configure,
+    File(WritePhase),
+    /// Recording the outcome under the event-ring lock.
+    EventRing,
+}
+impl WriterStage {
+    const ALL: [Self; 7] = [
+        Self::Waiting,
+        Self::Configure,
+        Self::File(WritePhase::Open),
+        Self::File(WritePhase::Lock),
+        Self::File(WritePhase::Write),
+        Self::File(WritePhase::Flush),
+        Self::EventRing,
+    ];
+    fn code(self) -> u8 {
+        Self::ALL
+            .iter()
+            .position(|stage| *stage == self)
+            .map_or(0, |index| index as u8)
+    }
+    fn of(code: u8) -> Self {
+        Self::ALL
+            .get(usize::from(code))
+            .copied()
+            .unwrap_or_default()
+    }
+}
+
+/// Microseconds the last appended batch spent in each stage.
+#[derive(Clone, Copy, Debug, Default, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BatchTimings {
+    pub open_micros: u64,
+    pub lock_micros: u64,
+    pub write_micros: u64,
+    pub flush_micros: u64,
+    pub event_ring_micros: u64,
+}
+
+#[derive(Clone, Copy, Debug, Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DeliveryStatus {
     pub accepted: u64,
@@ -36,15 +87,85 @@ pub struct DeliveryStatus {
     pub dropped: u64,
     pub failed: u64,
     pub retained_events: u64,
+    pub stage: WriterStage,
+    /// How long the writer has been in `stage`.
+    pub stage_micros: u64,
+    pub last_batch: BatchTimings,
+    /// How long the last answered flush waited in the queue.
+    pub last_flush_wait_micros: u64,
 }
 
-#[derive(Default)]
 struct Counters {
     accepted: AtomicU64,
     completed: AtomicU64,
     dropped: AtomicU64,
     failed: AtomicU64,
     retained_events: AtomicU64,
+    epoch: Instant,
+    stage: AtomicU8,
+    stage_entered_micros: AtomicU64,
+    /// Indexed by `WriterStage::code`.
+    last_batch_micros: [AtomicU64; 7],
+    last_flush_wait_micros: AtomicU64,
+}
+impl Default for Counters {
+    fn default() -> Self {
+        Self {
+            accepted: AtomicU64::default(),
+            completed: AtomicU64::default(),
+            dropped: AtomicU64::default(),
+            failed: AtomicU64::default(),
+            retained_events: AtomicU64::default(),
+            epoch: Instant::now(),
+            stage: AtomicU8::default(),
+            stage_entered_micros: AtomicU64::default(),
+            last_batch_micros: Default::default(),
+            last_flush_wait_micros: AtomicU64::default(),
+        }
+    }
+}
+impl Counters {
+    fn now_micros(&self) -> u64 {
+        u64::try_from(self.epoch.elapsed().as_micros()).unwrap_or(u64::MAX)
+    }
+}
+
+/// The stages of one unit of work, published as they are entered.
+struct StageClock<'a> {
+    counters: &'a Counters,
+    spent: [u64; 7],
+}
+impl<'a> StageClock<'a> {
+    fn start(counters: &'a Counters, stage: WriterStage) -> Self {
+        counters
+            .stage_entered_micros
+            .store(counters.now_micros(), Ordering::Relaxed);
+        counters.stage.store(stage.code(), Ordering::Relaxed);
+        Self {
+            counters,
+            spent: [0; 7],
+        }
+    }
+    fn enter(&mut self, stage: WriterStage) {
+        let now = self.counters.now_micros();
+        let previous = self.counters.stage.swap(stage.code(), Ordering::Relaxed);
+        let entered = self
+            .counters
+            .stage_entered_micros
+            .swap(now, Ordering::Relaxed);
+        self.spent[usize::from(previous)] += now.saturating_sub(entered);
+    }
+    /// Locks the event ring as a stage of its own; a poisoned ring still yields its data.
+    fn event_ring<'s>(&mut self, state: &'s Mutex<State>) -> MutexGuard<'s, State> {
+        self.enter(WriterStage::EventRing);
+        state.lock().unwrap_or_else(|error| error.into_inner())
+    }
+    fn finish(mut self) {
+        self.enter(WriterStage::Waiting);
+        for (slot, spent) in self.counters.last_batch_micros.iter().zip(self.spent) {
+            slot.store(spent, Ordering::Relaxed);
+        }
+    }
 }
 
 pub(super) struct LogWriter {
@@ -68,10 +189,14 @@ impl LogWriter {
                     let mut weight = work.weight();
                     let result = match work {
                         Work::Configure(target, events) => {
+                            let mut clock =
+                                StageClock::start(&worker_counters, WriterStage::Configure);
                             let result = configure(&mut file, &mut replay, target, &events);
-                            let mut state = state.lock().unwrap_or_else(|error| error.into_inner());
-                            state.file = file.clone();
-                            state.log_failure = result.as_ref().err().cloned();
+                            let mut ring = clock.event_ring(&state);
+                            ring.file = file.clone();
+                            ring.log_failure = result.as_ref().err().cloned();
+                            drop(ring);
+                            clock.finish();
                             result
                         }
                         Work::Append(event) => {
@@ -88,18 +213,27 @@ impl LogWriter {
                             }
                             count = batch.len() as u64;
                             weight = count;
-                            let result = file
-                                .as_ref()
-                                .map_or(Ok(()), |file| file.append_batch(&batch));
+                            let mut clock = StageClock::start(
+                                &worker_counters,
+                                WriterStage::File(WritePhase::Open),
+                            );
+                            let result = file.as_ref().map_or(Ok(()), |file| {
+                                file.append_batch(&batch, |phase| {
+                                    clock.enter(WriterStage::File(phase));
+                                })
+                            });
                             if file.is_some() {
-                                state
-                                    .lock()
-                                    .unwrap_or_else(|error| error.into_inner())
-                                    .log_failure = result.as_ref().err().cloned();
+                                clock.event_ring(&state).log_failure =
+                                    result.as_ref().err().cloned();
                             }
+                            clock.finish();
                             result
                         }
-                        Work::Flush(done) => {
+                        Work::Flush(done, requested) => {
+                            worker_counters.last_flush_wait_micros.store(
+                                u64::try_from(requested.elapsed().as_micros()).unwrap_or(u64::MAX),
+                                Ordering::Relaxed,
+                            );
                             let _ = done.try_send(());
                             continue;
                         }
@@ -166,16 +300,35 @@ impl LogWriter {
 
     pub(super) fn flush(&self, timeout: Duration) -> bool {
         let (sender, receiver) = mpsc::sync_channel(1);
-        self.sender.try_send(Work::Flush(sender)).is_ok() && receiver.recv_timeout(timeout).is_ok()
+        self.sender
+            .try_send(Work::Flush(sender, Instant::now()))
+            .is_ok()
+            && receiver.recv_timeout(timeout).is_ok()
     }
 
     pub(super) fn status(&self) -> DeliveryStatus {
+        let counters = &self.counters;
+        let spent = |stage: WriterStage| {
+            counters.last_batch_micros[usize::from(stage.code())].load(Ordering::Relaxed)
+        };
         DeliveryStatus {
-            accepted: self.counters.accepted.load(Ordering::Acquire),
-            completed: self.counters.completed.load(Ordering::Acquire),
-            dropped: self.counters.dropped.load(Ordering::Relaxed),
-            failed: self.counters.failed.load(Ordering::Relaxed),
-            retained_events: self.counters.retained_events.load(Ordering::Relaxed),
+            accepted: counters.accepted.load(Ordering::Acquire),
+            completed: counters.completed.load(Ordering::Acquire),
+            dropped: counters.dropped.load(Ordering::Relaxed),
+            failed: counters.failed.load(Ordering::Relaxed),
+            retained_events: counters.retained_events.load(Ordering::Relaxed),
+            stage: WriterStage::of(counters.stage.load(Ordering::Relaxed)),
+            stage_micros: counters
+                .now_micros()
+                .saturating_sub(counters.stage_entered_micros.load(Ordering::Relaxed)),
+            last_batch: BatchTimings {
+                open_micros: spent(WriterStage::File(WritePhase::Open)),
+                lock_micros: spent(WriterStage::File(WritePhase::Lock)),
+                write_micros: spent(WriterStage::File(WritePhase::Write)),
+                flush_micros: spent(WriterStage::File(WritePhase::Flush)),
+                event_ring_micros: spent(WriterStage::EventRing),
+            },
+            last_flush_wait_micros: counters.last_flush_wait_micros.load(Ordering::Relaxed),
         }
     }
 }
@@ -221,7 +374,44 @@ pub(super) fn unavailable() -> ApplicationError {
 mod tests {
     use super::*;
     use crate::diagnostics::{Diagnostics, EventKind};
-    use std::time::Instant;
+
+    #[test]
+    fn a_missed_flush_names_the_stage_the_writer_is_held_in() {
+        let directory = tempfile::tempdir().unwrap();
+        let file = LogFile::new(directory.path(), 1 << 20, 1).unwrap();
+        let diagnostics = Diagnostics::default();
+        let state = diagnostics.state.clone();
+        let writer = LogWriter::new(state.clone());
+        assert!(writer.configure(file.clone(), Vec::new()));
+        assert!(writer.flush(Duration::from_secs(60)));
+        assert_eq!(writer.status().stage, WriterStage::Waiting);
+
+        let ring = state.lock().unwrap();
+        assert!(writer.configure(file, Vec::new()));
+        assert!(!writer.flush(Duration::from_millis(50)));
+        let held = writer.status();
+        assert_eq!(held.stage, WriterStage::EventRing);
+        assert!(held.stage_micros >= 50_000, "{held:?}");
+        drop(ring);
+        assert!(writer.flush(Duration::from_secs(60)));
+        assert_eq!(writer.status().stage, WriterStage::Waiting);
+    }
+
+    #[test]
+    fn an_appended_batch_reports_where_its_time_went() {
+        let directory = tempfile::tempdir().unwrap();
+        let diagnostics = Diagnostics::default();
+        diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
+        diagnostics.event(EventKind::HostStarted, None, None);
+        assert!(diagnostics.flush_logs(Duration::from_secs(60)));
+        let status = diagnostics.log_delivery_status();
+        let spent = status.last_batch;
+        assert_eq!(status.stage, WriterStage::Waiting);
+        assert!(
+            spent.open_micros + spent.lock_micros + spent.write_micros + spent.flush_micros > 0,
+            "{status:?}"
+        );
+    }
 
     #[test]
     fn repeated_replay_requests_share_the_record_memory_budget() {
