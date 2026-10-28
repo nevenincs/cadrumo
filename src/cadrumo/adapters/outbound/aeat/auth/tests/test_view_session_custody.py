@@ -41,7 +41,6 @@ from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
-from ...sede.censal_datos import censal_datos_url
 from .. import session_store
 from ..authenticator import AeatAuthenticator
 from .view_session_support import (
@@ -237,7 +236,7 @@ async def test_a_session_whose_identity_is_not_the_active_profile_publishes_noth
 async def test_a_view_signed_in_as_another_taxpayer_publishes_nothing(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    """The capture unlocks AEAT, but the consulta AEAT shows to it names someone other than the profile."""
+    """The capture unlocks AEAT, but Mis Expedientes names someone other than the profile as signed in."""
     with certificate_profile(tmp_path, operation):
         async with opened_http_boundary() as boundary:
             factory = real_browser_factory(boundary=boundary, profile_name="sede-view-other-taxpayer")
@@ -253,12 +252,11 @@ async def test_a_view_signed_in_as_another_taxpayer_publishes_nothing(
             assert host.effects == []
             assert stored_digest() == seed.baseline.storage_state_sha256
             assert SESSION_COOKIE not in stored_cookie_names()
-            # The provider read the taxpayer with a request of its own, in its own browser.
-            assert any(_CENSAL_PATH in url for url in boundary.requested_urls)
+            assert [url for url in boundary.requested_urls if _CENSAL_PATH in url] == []
 
 
 @pytest.mark.asyncio
-async def test_a_view_signed_in_as_the_profile_taxpayer_reads_it_from_the_consulta(
+async def test_a_view_signed_in_as_the_profile_taxpayer_reads_it_from_a_request_naming_nobody(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     with certificate_profile(tmp_path, operation):
@@ -272,9 +270,9 @@ async def test_a_view_signed_in_as_the_profile_taxpayer_reads_it_from_the_consul
                 publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
 
             assert publication.outcome is ViewSessionPublicationOutcome.PUBLISHED
-            assert [url for url in boundary.requested_urls if _CENSAL_PATH in url] == [
-                censal_datos_url(CERTIFICATE_NIF, origin=Settings.external_constants().aeat.domains.www6)
-            ]
+            # Neither the consulta, which takes the taxpayer to show, nor any request naming the NIF.
+            assert [url for url in boundary.requested_urls if _CENSAL_PATH in url] == []
+            assert [url for url in boundary.requested_urls if CERTIFICATE_NIF in url] == []
 
 
 @pytest.mark.asyncio

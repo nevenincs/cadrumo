@@ -22,7 +22,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Final, cast, override
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
@@ -246,11 +246,19 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
             html = f"<p>{_CLAVE_PERMANENTE.invalid_credentials_marker}</p>"
         elif self.path == "/censal-consulta":
             html = _censal_consulta_html(boundary.signed_in_nif)
+        elif self.path == "/censal-consulta-represented" and boundary.represented_nif is not None:
+            html = _censal_consulta_html(boundary.represented_nif)
         elif self.path == "/signed-out-churn":
             # The page's own script, as AEAT's pages keep their own local state.
             html = "<html><body><script>localStorage.setItem('visit', String(Date.now()))</script></body></html>"
         else:
-            html = "<html><title>real-auth-boundary</title></html>"
+            # Every other page carries Mis Expedientes' heading, which names the signed-in person.
+            html = (
+                "<html><title>real-auth-boundary</title><body><ul><li>"
+                "<strong>Persona consultada:</strong> "
+                f"<span><span>{boundary.signed_in_nif} - CONTRIBUYENTE SINTETICO</span></span>"
+                "</li></ul></body></html>"
+            )
         return html.encode("utf-8")
 
     @override
@@ -272,13 +280,17 @@ def _censal_consulta_html(nif: str) -> str:
 class LocalHttpBoundary:
     """Serve real HTTP responses while Playwright retains the requested AEAT URL.
 
-    The censal consulta always shows :attr:`signed_in_nif` as the signed-in
-    taxpayer, whatever the scenario, so a test signs in someone else by setting it.
+    The censal consulta and Mis Expedientes show :attr:`signed_in_nif` as the
+    signed-in person, whatever the scenario, so a test signs in someone else by
+    setting it. Setting :attr:`represented_nif` signs that person in as a
+    representative of another taxpayer: a consulta asked for that taxpayer as
+    ``nifRepresentado`` then shows the taxpayer's data.
     """
 
     def __init__(self) -> None:
         self.scenario = "success"
         self.signed_in_nif = SIGNED_IN_NIF
+        self.represented_nif: str | None = None
         self.response_html: str | None = None
         self._churn = 0
         self.navigation_count = 0
@@ -415,9 +427,15 @@ class LocalHttpBoundary:
             )
         return None
 
-    @staticmethod
-    def _censal_path(requested_url: str) -> str | None:
-        return "/censal-consulta" if urlsplit(requested_url).path == _CENSAL_PATH else None
+    def _censal_path(self, requested_url: str) -> str | None:
+        requested = urlsplit(requested_url)
+        if requested.path != _CENSAL_PATH:
+            return None
+        if self.represented_nif is not None and parse_qs(requested.query).get("nifRepresentado") == [
+            self.represented_nif
+        ]:
+            return "/censal-consulta-represented"
+        return "/censal-consulta"
 
     def _signed_out_churn_path(self, requested_url: str) -> str | None:
         """Serve a signed-out Sede: pages load, and the protected Cl@ve landing a verification probes fails."""

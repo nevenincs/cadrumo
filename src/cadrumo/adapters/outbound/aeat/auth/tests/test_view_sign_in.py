@@ -333,6 +333,41 @@ async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
 
 
 @pytest.mark.asyncio
+async def test_a_representative_login_for_the_profiles_taxpayer_publishes_nothing(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The person signs in as a representative holding a power of attorney for the profile's taxpayer.
+
+    AEAT would show that taxpayer's consulta to a request naming them, but the
+    session is the representative's own, and so is the data every later Sede
+    read returns. Nothing is stored.
+    """
+    kind = AuthProviderKind.CLAVE_PERMANENTE
+    with clave_permanente_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            host = OperationHost(kind=kind)
+            boundary.configure("failure")
+            async with _panel(boundary, host, operation, name="view-representative") as panel:
+                await panel.view.context.pages[0].wait_for_load_state("load")
+                boundary.configure("clave-permanente-success")
+                boundary.signed_in_nif = _OTHER_NIF
+                boundary.represented_nif = CERTIFICATE_NIF
+                panel.start()
+                panel.sink.put(ViewNavigate(verb=ViewNavigateVerb.HOME))
+                await until(lambda: bool(panel.sink.of(ViewNotice)), timeout=_SIGN_IN_SECONDS)
+                panel.sink.put(ViewClose())
+                assert panel.browsing is not None
+                assert await asyncio.wait_for(panel.browsing, timeout=_SIGN_IN_SECONDS) is SedeViewEnd.CLOSED
+                outcome = await panel.sign_in.close()
+
+            assert panel.sink.of(ViewNotice) == [ViewNotice(code=ViewNoticeCode.IDENTITY_MISMATCH)]
+            assert outcome is ViewSessionPublicationOutcome.IDENTITY_MISMATCH
+            assert not panel.sign_in.signed_in
+            assert host.effects == []
+            assert stored_digest(kind) is None
+
+
+@pytest.mark.asyncio
 async def test_an_assisted_certificate_login_runs_in_the_view_and_publishes_at_once(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:

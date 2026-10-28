@@ -74,7 +74,7 @@ from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 if TYPE_CHECKING:
     from playwright.async_api import Page
 
-    from .....application.auth.protocols import BrowserContextPort, BrowserSessionFactoryPort
+    from .....application.auth.protocols import BrowserSessionFactoryPort
     from .....application.auth.session_types import AeatSession
 
 
@@ -525,30 +525,6 @@ async def _navigate_and_parse(
         )
 
 
-async def read_censal_identity_nif(context: BrowserContextPort, *, taxpayer_nif: str) -> str | None:
-    """Return the NIF the censal consulta shows to the session ``context`` carries.
-
-    The consulta landing is requested and refused exactly as
-    :func:`fetch_censal_datos` requests and refuses it, in a page of
-    ``context`` that this call opens and closes; the subsidiary consultations
-    are not read. A session AEAT did not accept, a representation dialog or any
-    page that is not the consulta raises :class:`SedeNavigationError`.
-
-    Args:
-        context: A Cadrumo-owned browser context seeded with the session to read.
-        taxpayer_nif: The identifier the session is expected to belong to.
-
-    Returns:
-        The identity NIF the consulta renders, or ``None`` when it renders none.
-    """
-    page = require_playwright_page(await context.new_page())
-    try:
-        result, _landing_path = await _read_consulta_landing(page, taxpayer_nif=taxpayer_nif)
-    finally:
-        await close_async_resources(page, task_name="cadrumo-censal-identity-page-close")
-    return result.identity.nif
-
-
 async def _read_consulta_landing(page: Page, *, taxpayer_nif: str) -> tuple[CensalObservation, str]:
     """Request the consulta in ``page``, refuse any other landing and parse it; returns the landed path too."""
     url = censal_datos_url(taxpayer_nif, origin=_CENSAL_ORIGIN)
@@ -693,5 +669,4 @@ __all__ = [
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",
     "parse_censal_datos",
-    "read_censal_identity_nif",
 ]
