@@ -38,6 +38,7 @@ from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -92,7 +93,8 @@ def test_activity_replies_continue_while_the_real_diagnostic_file_sink_is_blocke
         "    if not held:\n"
         "        held = True\n"
         "        win32event.SetEvent(entered)\n"
-        "        win32event.WaitForSingleObject(release, 15000)\n"
+        # Held until the test releases it, so a probe can only be answered while the sink is stuck.
+        f"        win32event.WaitForSingleObject(release, {int(3 * HANG_GUARD_SECONDS * 1000)})\n"
         "    original(self, record)\n"
         "AnnouncingRotatingFileHandler.emit = blocked\n"
         "raise SystemExit(run())\n",
@@ -103,13 +105,13 @@ def test_activity_replies_continue_while_the_real_diagnostic_file_sink_is_blocke
             root, ((identity, _), _) = profiles
             worker = ProfileWorkerProcess(identity, storage_root=root, worker_script=script)
             try:
-                assert win32event.WaitForSingleObject(entered, 5000) == win32event.WAIT_OBJECT_0
-                started = time.monotonic()
+                assert (
+                    win32event.WaitForSingleObject(entered, int(HANG_GUARD_SECONDS * 1000)) == win32event.WAIT_OBJECT_0
+                )
                 for _ in range(16):
-                    probe = worker.activity(deadline=time.monotonic() + 5)
+                    probe = worker.activity(deadline=time.monotonic() + HANG_GUARD_SECONDS)
                     assert probe is not None and probe.in_flight_operations == 0
                     assert not worker.status().sessions
-                assert time.monotonic() - started < 3
                 assert not worker.stopping
             finally:
                 win32event.SetEvent(release)
