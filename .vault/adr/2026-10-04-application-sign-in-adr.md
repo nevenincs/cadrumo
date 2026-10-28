@@ -322,6 +322,10 @@ Accepted under the user's instruction of 2026-10-24 to implement native desktop 
 - The host's password buffers are zeroized as before; the password now reaches the runtime in one secret frame instead of a child's standard input.
 - A reply to the window is bounded by the relay's assembled-document bound (16 MiB, `native/application/src/person_operations.rs`), not by the 64 KiB line the hold could write to its pipe; ruled by the user on 2026-10-24 ("lift") so that a settled ledger period or form read reaches the window in one reply.
 
+## Amendment 2026-10-28: pending first-login orchestration
+
+Accepted under the user's signal/slot-driven first-login instruction recorded in2026-10-28-debug-startup-reliability-adr. Selected and explicitly named targets resolve through current observations and use the native password path with correlated pending completion, claim and cancellation. The earlier CLI routing for another named profile is replaced for this GUI flow. The runtime still performs canonical profile selection only after successful login under its existing handover guard; a failed candidate preserves the previous session. No frontend writes the selected-profile pointer. One owner timeout spans the attempt, while readiness, completion and cancellation signals drive progress.
+
 ## Amendment 2026-10-27: the view stream lane
 
 Accepted 2026-10-27 under `2026-10-27-sede-browser-adr`, on the user's choice of an in-app Sede browser streamed into the window ("implement 1)"). The consideration "The transport is strictly request-then-response. Pushed events are new protocol" is kept as accepted history and now reads together with this amendment.

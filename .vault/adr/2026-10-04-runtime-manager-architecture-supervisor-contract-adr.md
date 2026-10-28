@@ -172,6 +172,10 @@ OS signals give the manager a stop that works on adopted runtimes and older vers
 - Its launch-policy pointers redirect to `2026-10-04-runtime-manager-architecture-adr`. These are the purpose line, the runtime ownership paragraph, the end of the local transport section, and the restart and upgrade deferral.
 - The rule that the adapter must not stop the runtime is unchanged.
 
+## Amendment 2026-10-28: startup timeout ownership
+
+Accepted under the user's signal/slot-driven startup instruction recorded in2026-10-28-debug-startup-reliability-adr. Startup readiness follows the exact runtime's readiness or exit signal under the shared owner timeout. Timeout contains the owned startup attempt, reports its distinct cause and preserves unknown effects when containment is unconfirmed; it does not start a fresh drain budget or authorize replay. Heartbeat health and already-published runtime supervision retain their existing rules.
+
 **Reconsider if:**
 - stream rewiring breaks a dependency that needs fd 1 or fd 2
 - the settle cannot fit the platform budget

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-22'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:0031ca1a64ecdcce5bf034f20ac50b08a7a571bee729e1a4aabab91047185204'
+body_hash: 'sha256:3082bf8da53539a09e449bdb0d6d71fd68f77c67db3ce7f2528f92ad84aa0171'
 related:
   - "[[2026-10-22-startup-performance-request-path-audit]]"
   - "[[2026-10-16-idle-churn-adr]]"
@@ -55,4 +55,4 @@ Accepted 2026-10-22 under the operator's instruction in this session: "fix the r
 
 ## Amendment 2026-10-28: signal-joined construction and dispatcher readiness
 
-Accepted under the user's explicit signal/slot-driven first-login ruling in2026-10-28-debug-startup-reliability-adr. The earlier bounded wait on a worker under construction is a signal-joined exact construction result with a shared emergency-only backstop, not a60-second normal refusal. A key-free ready result is emitted only after authenticated channels and dispatchers are installed. Concurrent callers join that generation, and child exit, owner stop or cancellation wakes them. Prestarting grants no credential or authority; candidate proof and exact-profile admission remain mandatory.
+Accepted under the user's explicit signal/slot-driven first-login ruling in2026-10-28-debug-startup-reliability-adr. The earlier bounded wait on a worker under construction is a signal-joined exact construction result with a shared last-resort timeout, not a60-second normal refusal. A key-free ready result is emitted only after authenticated channels and dispatchers are installed. Concurrent callers join that generation, and child exit, owner stop or cancellation wakes them. Prestarting grants no credential or authority; candidate proof and exact-profile admission remain mandatory.

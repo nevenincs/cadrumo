@@ -16,9 +16,9 @@ related:
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-10-18'
+modified: '2026-10-28'
 body_schema: 'body-v1'
-body_hash: 'sha256:41006a5322c71abcf535b0fcd838c7f03552017503cbe735b60258918c50da96'
+body_hash: 'sha256:8e71f9c22859bf5392f5066d630994cbbcfdc1dd3c225f39b16f740ce1c2e079'
 ---
 
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
@@ -158,3 +158,7 @@ Recovery-code administration is now served by `cadrumo-runtime config profile re
 Accepted 2026-10-18 under `2026-10-18-runtime-authority-boundary-adr`, on the user's ruling of that day: "ensure there's no runtime management code in the cadrumo/ src".
 
 The wording "This protocol is enforced at the application enrollment boundary" above is kept as accepted history. It now reads together with this ruling: The password envelope, bounded KDF supervision, recovery enrolment and proof, capsule publication transactions, the failed-attempt throttle and the human receipt are implemented and enforced in `src/cadrumo_runtime`. Every Argon2 child is spawned by a runtime-owned process only, and no frontend process generates, wraps or unwraps a DEK. Formats, parameters, throttle rules, recovery independence and deletion scope in this record are unchanged; the move changes code location, not bytes.
+
+## Amendment 2026-10-28: orchestrated first-login waiting is bounded by the shared timeout
+
+Accepted under the user's explicit first-login and multi-service signal/slot ruling recorded in2026-10-28-debug-startup-reliability-adr. For an exact runtime-owned first-login attempt that supplies one absolute timeout deadline, waiting for the installation KDF permit, child attestation, request/result and sentinel-verified proof consumes that same remaining deadline; the ordinary15-second wrap/unwrap wall-clock default does not cut off this orchestrated attempt, and process launch never extends its timeout budget. The earlier15-second default remains for callers that supply no orchestration deadline. The finite Argon2id grid, calibration sample/total budgets, parameter-strength floor, child OS CPU/memory/process ceilings, ready attestation before secret delivery, sentinel proof, strict environment, secret-free IPC metadata and exact cleanup/containment remain unchanged. A timeout in the orchestrated path is explicitly KDF_TIMEOUT and grants no key or candidate. Permit waiting uses release/exit/cancellation signals in the same lock domain, preserving interoperation with already-running workers rather than creating a parallel permit.

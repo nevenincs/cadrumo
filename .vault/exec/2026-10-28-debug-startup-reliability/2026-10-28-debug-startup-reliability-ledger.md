@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:914129c35faa829261a2300498e36065d1b29391c85c2ea7ef652db3726668d4'
+body_hash: 'sha256:c174bfae363a6584085cc58363f9b0ff7837f116b7a8f5393a04d63c099257ca'
 related:
   - "[[2026-10-28-debug-startup-reliability-plan]]"
 ---
@@ -68,8 +68,34 @@ related:
 - `S05` `verify:` `four-locale emergency-key projection` -> `pass`
 - `S05` `verify:` `independent S05 delta review` -> `pass`
 - `S05` `by:` `Sol6.1 medium and root`
+- `S07` `M` `src/cadrumo_runtime/host/profile_login.py`
+- `S07` `M` `src/cadrumo/application/user_profile/login_session.py`
+- `S07` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/errors.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `S07` `verify:` `pytest owning KDF supervision/prewarm/login-port/custody-adapter47 tests` -> `pass`
+- `S07` `verify:` `scoped Ruff format and ty` -> `pass`
+- `S07` `by:` `Sol6.1 high`
+- `S12` `A` `src/cadrumo/application/user_profile/proof_cancellation.py`
+- `S12` `A` `src/cadrumo_runtime/adapters/worker_proof_control.py`
+- `S12` `M` `src/cadrumo_runtime/host/session_owner.py`
+- `S12` `verify:` `pytest crypto and token51 plus Windows and Linux three cancellation cases` -> `pass`
+- `S12` `verify:` `pytest worker91 construction20 token3 and native exact-attempt cancel EOF queued admission` -> `pass`
+- `S12` `verify:` `independent Sol6.1 high S12 delta review` -> `pass`
+- `S12` `by:` `Sol6.1 high`
+- `S08` `A` `src/cadrumo/adapters/persistence/storage/custody/_kdf_file_lease.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/storage/custody/_kdf_lease_worker.py`
+- `S08` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py`
+- `S08` `verify:` `pytest owning KDF51 and Windows legacy-lock cancellation` -> `pass`
+- `S08` `verify:` `WSL Linux same-domain leases and exact-child cancellation` -> `pass`
+- `S08` `verify:` `Ruff format and ty Windows Linux macOS` -> `pass`
+- `S08` `by:` `Sol6.1 high`
 
 ## Notes
 
 - `S02` Initial owning fixture startup failed twice before regression bodies; final reruns passed, logs125649/130851/131345/132021 under2026-10-28 test-runs. Root aggregate gates remain running.
 - `S05` Initial real-process cohort containment confirmation timed out; repeated targeted real-child runs passed without relaxing containment proof. Locale focused check10pass1fail due two unused browser setup keys outside this change. Original broad code gate failed on types/import/symbol/manifest results while tree was changing; original broad test gate interrupted for expanded protocol scope after unrelated ledger failure. Fresh integrated gates pending S04/S06/S07.
+- `S07` Run20261028T141339.796127Z-pytest-30576-685e7846. Same-domain OS lock signaling is separately sequenced S08; S07 retains legacy permit implementation until that checkpoint.
