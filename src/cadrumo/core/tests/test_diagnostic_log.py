@@ -17,6 +17,7 @@ from typing import cast, override
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 
 from ..diagnostic_log import (
@@ -325,7 +326,7 @@ async def test_concurrent_tasks_and_threads_keep_distinct_attempts_and_restore_p
 
     def make_thread_record() -> logging.LogRecord:
         record = make_record()
-        threaded.wait(timeout=5)
+        threaded.wait(timeout=HANG_GUARD_SECONDS)
         return record
 
     async def attempt() -> tuple[str, tuple[logging.LogRecord, ...], logging.LogRecord]:
@@ -333,7 +334,7 @@ async def test_concurrent_tasks_and_threads_keep_distinct_attempts_and_restore_p
             identifiers.append(identifier)
             if len(identifiers) == 8:
                 ready.set()
-            await asyncio.wait_for(ready.wait(), timeout=5)
+            await asyncio.wait_for(ready.wait(), timeout=HANG_GUARD_SECONDS)
             before = make_record()
             inherited = await asyncio.to_thread(make_thread_record)
             with diagnostic_scope() as nested:
@@ -372,7 +373,7 @@ async def test_cancelled_task_restores_its_parent_context_without_changing_sibli
 
     with diagnostic_process("tui"), diagnostic_scope() as parent:
         task = asyncio.create_task(cancelled_attempt())
-        await asyncio.wait_for(entered.wait(), timeout=5)
+        await asyncio.wait_for(entered.wait(), timeout=HANG_GUARD_SECONDS)
         sibling = _record()
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
@@ -524,7 +525,7 @@ def test_timing_observations_are_bounded_and_keep_only_scalar_diagnostic_context
             },
             clock=lambda: observed,
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     records = [record for record in caplog.records if record.name == logger.name]
     if isinstance(observed, bool) or not 0 <= observed <= (1 << 63) - 1:
         assert records == []
@@ -564,7 +565,7 @@ def test_event_fields_reach_the_written_line_only_as_scrubbed_allowed_scalars() 
             },
             level=logging.WARNING,
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         logger.removeHandler(handler)
         logger.setLevel(previous_level)
@@ -611,7 +612,7 @@ def test_stall_lock_and_recovery_timing_fields_reach_the_log_file_and_unlisted_f
             },
             level=logging.WARNING,
         )
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         logger.removeHandler(handler)
         handler.close()
@@ -805,7 +806,7 @@ async def test_timed_task_scopes_cross_threads_and_restore_the_parent_after_fail
     with caplog.at_level(logging.DEBUG, logger=logger.name), diagnostic_scope(new=True) as parent:
         results = await asyncio.gather(observe(1, fail=False), observe(2, fail=True), return_exceptions=True)
         diagnostic_timing_event(logger, "synthetic_timing", clock=lambda: 100)
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     records = [record for record in caplog.records if record.name == logger.name]
     assert len(set(identifiers)) == 2 and parent not in identifiers
     assert results[0] == identifiers[0] and isinstance(results[1], ValueError)
@@ -826,7 +827,7 @@ def test_declared_worker_failure_cannot_be_logged_below_error(
     logger = get_logger("cadrumo.tests.worker_levels")
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         diagnostic_event(logger, "worker_lifecycle", fields={"outcome": "failed"}, level=requested)
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     assert caplog.records[-1].levelno == logging.ERROR
 
 
@@ -837,5 +838,5 @@ def test_technical_event_defaults_to_debug_and_operator_info_is_preserved(
     with caplog.at_level(logging.DEBUG, logger=logger.name):
         diagnostic_event(logger, "worker_attestation_started")
         diagnostic_event(logger, "service_ready", level=logging.INFO)
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     assert [record.levelno for record in caplog.records] == [logging.DEBUG, logging.INFO]

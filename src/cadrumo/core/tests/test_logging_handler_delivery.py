@@ -9,6 +9,8 @@ from typing import override
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
 from ..logging import flush_logging, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -41,7 +43,7 @@ def test_a_stdlib_logger_record_reaches_a_root_handler_once(caplog: pytest.LogCa
 
     with caplog.at_level(logging.INFO):
         logger.info("plain %s", "record")
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
 
     assert [record.getMessage() for record in caplog.records if record.name == logger.name] == ["plain record"]
 
@@ -51,7 +53,7 @@ def test_a_project_logger_record_reaches_a_root_handler_once(caplog: pytest.LogC
 
     with caplog.at_level(logging.INFO):
         logger.info("project %s", "record")
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
 
     assert [record.getMessage() for record in caplog.records if record.name == logger.name] == ["project record"]
 
@@ -64,6 +66,6 @@ def test_a_handler_on_an_ancestor_logger_receives_a_record_once(project_logger: 
 
     with _attached(ancestor) as recorder:
         logger.warning("ancestor %s", "record")
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
 
     assert recorder.messages == ["ancestor record"]

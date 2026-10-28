@@ -29,6 +29,8 @@ from urllib.parse import urlsplit
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
 from ....tests.path_obstruction import obstructed_path
 from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
@@ -338,7 +340,7 @@ class TestStorePersistenceErrors:
 
             caplog.set_level(logging.WARNING, logger="cadrumo.core.observability.store")
             assert list(iter_runs()) == [(run_b, trace_b)]
-            assert flush_logging(timeout=10)
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
 
         messages = [record.getMessage() + (record.exc_text or "") for record in caplog.records]
         assert any(
@@ -357,7 +359,7 @@ class TestStorePersistenceErrors:
             caplog.set_level(logging.DEBUG, logger="cadrumo.core.observability.store")
 
             assert list(iter_runs(settings=settings)) == []
-            assert flush_logging(timeout=10)
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
         messages = [record.getMessage() for record in caplog.records]
         assert any("skipping non-directory entry" in message and "plain.txt" in message for message in messages)
         assert any("skipping non-run directory not-a-run" in message for message in messages)
@@ -498,7 +500,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
 
                 with caplog.at_level(logging.WARNING, logger="cadrumo.core.observability.tests.sink"):
                     sink.emit(record)
-                    assert flush_logging(timeout=10)
+                    assert flush_logging(timeout=HANG_GUARD_SECONDS)
             finally:
                 sink.close()
 

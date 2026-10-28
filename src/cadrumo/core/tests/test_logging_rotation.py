@@ -18,11 +18,15 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 from ..directory_scan import scan_directory
 from ..log_file_handler import AnnouncingRotatingFileHandler
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+# A child process waits for its own delivery, which no test times; this bounds only a hung one.
+_PROCESS_HANG_SECONDS = HANG_GUARD_SECONDS * 3
 
 
 def test_idle_writer_does_not_prevent_another_writer_rotating(
@@ -72,14 +76,14 @@ finally:
                 )
             )
         for child in children:
-            stdout, stderr = child.communicate(timeout=30)
+            stdout, stderr = child.communicate(timeout=_PROCESS_HANG_SECONDS)
             assert child.returncode == 0, (stdout, stderr)
             assert not stderr, stderr
     finally:
         for child in children:
             if child.poll() is None:
                 child.kill()
-                child.communicate(timeout=10)
+                child.communicate(timeout=_PROCESS_HANG_SECONDS)
     records = [
         line
         for path in tmp_path.glob("shared.log*")
@@ -98,21 +102,22 @@ import sys
 from pathlib import Path
 from cadrumo.core.config import override_settings
 from cadrumo.core.logging import configure_logging, flush_logging, get_logger, shutdown_logging
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS as HANG
 with override_settings(cadrumo_log_dir=Path(sys.argv[1]), cadrumo_log_file_max_bytes=int(sys.argv[2]),
                        cadrumo_log_file_backup_count=int(sys.argv[3]), cadrumo_log_stderr_level='CRITICAL'):
     configure_logging()
-assert flush_logging(timeout=10), 'configuration did not complete'
+assert flush_logging(timeout=HANG), 'configuration did not complete'
 logger = get_logger('cadrumo.tests.format')
 for index in range(int(sys.argv[4])):
     logger.warning('format probe %03d %s', index, 'x' * 40)
-assert flush_logging(timeout=10), 'log delivery did not complete'
+assert flush_logging(timeout=HANG), 'log delivery did not complete'
 shutdown_logging(timeout=2)
 """
     result = run_audited_process(
         [sys.executable, "-c", script, str(log_dir), str(max_bytes), str(backups), str(records)],
         capture_output=True,
         text=True,
-        timeout=30,
+        timeout=_PROCESS_HANG_SECONDS,
     )
     assert result.returncode == 0, result.stderr
 
@@ -158,6 +163,7 @@ import logging, sys
 from pathlib import Path
 from cadrumo.core.config import override_settings
 from cadrumo.core.logging import flush_logging, get_logger, set_log_level, shutdown_logging
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS as HANG
 logger = get_logger('cadrumo.tests.context_handoff')
 with override_settings(cadrumo_log_dir=Path(sys.argv[1]), cadrumo_log_stderr_level='CRITICAL',
                        cadrumo_log_file_level='CRITICAL'):
@@ -165,14 +171,17 @@ with override_settings(cadrumo_log_dir=Path(sys.argv[1]), cadrumo_log_stderr_lev
         logger.critical('context-first-record')
     else:
         set_log_level(logging.INFO, file_level=logging.DEBUG)
-assert flush_logging(timeout=10), 'configuration did not complete'
+assert flush_logging(timeout=HANG), 'configuration did not complete'
 if sys.argv[2] == 'set_level':
     logger.debug('context-level-change')
-    assert flush_logging(timeout=10), 'level change did not reach the file'
+    assert flush_logging(timeout=HANG), 'level change did not reach the file'
 shutdown_logging(timeout=2)
 """
     result = run_audited_process(
-        [sys.executable, "-c", script, str(log_dir), entry], capture_output=True, text=True, timeout=30
+        [sys.executable, "-c", script, str(log_dir), entry],
+        capture_output=True,
+        text=True,
+        timeout=_PROCESS_HANG_SECONDS,
     )
     assert result.returncode == 0, result.stderr
     output = (log_dir / "cadrumo.log").read_text(encoding="utf-8")

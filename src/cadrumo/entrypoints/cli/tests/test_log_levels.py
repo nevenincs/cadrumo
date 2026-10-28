@@ -7,6 +7,8 @@ from typing import override
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.logging import configure_logging, flush_logging, get_logger, set_log_level
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
@@ -130,7 +132,7 @@ def test_the_applied_level_decides_which_records_reach_the_stderr_handlers(
     try:
         for level in (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR):
             logger.log(level, "level probe")
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         for sink, probe in probed:
             sink.removeFilter(probe)

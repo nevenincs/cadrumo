@@ -24,6 +24,8 @@ from typing import override
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
 from ....tests.storage_scope import storage_overrides
 from ...config import override_settings
 from ...logging import DropOperatorDocumentEchoFilter, flush_logging, get_logger, operator_document_output
@@ -80,7 +82,7 @@ class TestRunContextLoggingFilter:
                     logger.info("inside")
                     inside_run_id = info.run_id
             finally:
-                assert flush_logging(timeout=10)
+                assert flush_logging(timeout=HANG_GUARD_SECONDS)
                 logging.getLogger().removeHandler(capture)
 
             outside_records = [r for r in capture.records if r.getMessage() == "outside"]
@@ -160,7 +162,7 @@ def test_document_diagnostics_keep_file_evidence_and_restore_stderr_after_failur
                 logger.error("still in document scope")
                 raise RuntimeError("document scope failure")
             logger.error("text diagnostic after failure")
-            assert flush_logging(timeout=10)
+            assert flush_logging(timeout=HANG_GUARD_SECONDS)
             file_handler.flush()
         finally:
             logger.handlers, logger.propagate = previous_handlers, previous_propagation
@@ -191,7 +193,7 @@ def test_document_routing_survives_async_thread_handoff_and_deferred_delivery() 
     try:
         asyncio.run(emit())
     finally:
-        assert flush_logging(timeout=10)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
         logger.handlers, logger.propagate = previous_handlers, previous_propagation
         logger.setLevel(previous_level)
     stderr = StringIO()

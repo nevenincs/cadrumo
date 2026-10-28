@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
 from ..logging import _AsyncDiagnosticHandler, flush_logging
 
 
@@ -17,7 +19,7 @@ def delivery_sinks() -> list[logging.Handler]:
     so the dispatch is flushed first. A handler that is not a wrapper is its
     own sink.
     """
-    assert flush_logging(timeout=5)
+    assert flush_logging(timeout=HANG_GUARD_SECONDS)
     return [
         handler.sink if isinstance(handler, _AsyncDiagnosticHandler) else handler
         for handler in tuple(logging.getLogger().handlers)

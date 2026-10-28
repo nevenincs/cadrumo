@@ -16,10 +16,14 @@ from pathlib import Path
 import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 from ..type_guards import is_object_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+# A probe waits for its own delivery, which no test times; this bounds only a hung one.
+_PROCESS_HANG_SECONDS = HANG_GUARD_SECONDS * 3
 
 _PROBE = """
 import json, sys
@@ -27,9 +31,10 @@ from contextlib import nullcontext
 from pathlib import Path
 
 from cadrumo.core import logging as project_logging
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS as HANG
 
 def drain():
-    if not project_logging.flush_logging(timeout=10):
+    if not project_logging.flush_logging(timeout=HANG):
         import faulthandler
         faulthandler.dump_traceback()
         print(project_logging.diagnostic_delivery_status(), file=sys.stderr)
@@ -70,6 +75,7 @@ print(json.dumps({"before": before, "after_info": after_info, "configured": proj
 _DELIVERY_PROBE = """
 import json, logging, sys
 from cadrumo.core import logging as project_logging
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS as HANG
 
 class Recorder(logging.Handler):
     def __init__(self):
@@ -92,7 +98,7 @@ if mode == "deferred":
 if mode == "held":
     logger.info("held record")
 logger.warning("first record")
-assert project_logging.flush_logging(timeout=10), project_logging.diagnostic_delivery_status()
+assert project_logging.flush_logging(timeout=HANG), project_logging.diagnostic_delivery_status()
 project_logging.shutdown_logging()
 print(json.dumps({"delivered": recorder.messages, "configured": project_logging._configured}))
 """
@@ -120,7 +126,7 @@ def _run_probe(
         capture_output=True,
         text=True,
         check=False,
-        timeout=30,
+        timeout=_PROCESS_HANG_SECONDS,
     )
     assert completed.returncode == 0, completed.stderr
     loaded: object = json.loads(str(completed.stdout))

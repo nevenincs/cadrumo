@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
 from ..agent_process import _StandardErrorTail
@@ -60,7 +61,7 @@ def _line(sequence: int, *, service: str = "worker", level: str = "DEBUG", messa
 
 
 def _read(path: Path) -> str:
-    assert project_logging.flush_logging(timeout=5)
+    assert project_logging.flush_logging(timeout=HANG_GUARD_SECONDS)
     for handler in logging.getLogger().handlers:
         handler.flush()
     return path.read_text(encoding="utf-8")

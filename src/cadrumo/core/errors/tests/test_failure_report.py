@@ -8,6 +8,8 @@ import logging
 
 import pytest
 
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+
 from ....tests.log_records import delivered_records
 from ..error_codes import render_error_json, render_error_text
 from ..failure_report import failure_chain, failure_trace_id, log_boundary_failure, root_cause_context
@@ -130,7 +132,7 @@ def test_an_identifier_shaped_private_reason_is_scrubbed_from_the_written_bounda
             logger, "unit_boundary", CadrumoError("synthetic boundary failure", context={"reason": _PRIVATE})
         )
         # Delivery runs on the dispatch thread and reaches the handler only while it is attached.
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
     finally:
         logger.removeHandler(handler)
         logger.setLevel(previous_level)

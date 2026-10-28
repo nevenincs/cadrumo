@@ -15,6 +15,7 @@ import pytest
 
 from ..core import logging as project_logging
 from ..core.logging import flush_logging, get_logger
+from .hang_guard import HANG_GUARD_SECONDS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -39,6 +40,6 @@ def test_a_test_can_end_while_its_diagnostic_record_is_still_queued(monkeypatch:
 def test_the_capture_of_the_next_test_holds_only_its_own_records(caplog: pytest.LogCaptureFixture) -> None:
     with caplog.at_level(logging.DEBUG):
         get_logger(_NAME).warning("own record")
-        assert flush_logging(timeout=5)
+        assert flush_logging(timeout=HANG_GUARD_SECONDS)
 
     assert [record.getMessage() for record in caplog.records if record.name == _NAME] == ["own record"]
