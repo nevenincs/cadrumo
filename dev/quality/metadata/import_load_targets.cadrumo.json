@@ -146,6 +146,7 @@
         "cadrumo.adapters.outbound.aeat.sede.notifications",
         "cadrumo.adapters.outbound.aeat.sede.observation_store",
         "cadrumo.adapters.outbound.aeat.sede.schema",
+        "cadrumo.adapters.outbound.aeat.sede.signed_in_identity",
         "cadrumo.adapters.outbound.aeat.verify",
         "cadrumo.adapters.outbound.aeat.verify.contract",
         "cadrumo.adapters.outbound.calculation_summary_pdf",
