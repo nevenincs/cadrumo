@@ -64,6 +64,7 @@ def test_a_role_this_computer_cannot_run_offers_no_setup() -> None:
 
     reason = column_reader_refusal_reason(verdict, locale="en")
 
-    assert reason.startswith("Local AI")
+    # Setup cannot repair a missing model choice, so the sentence sends the person to that choice instead.
+    assert "model you picked" in reason and "Cadrumo desktop app" in reason
     assert "set it up" not in reason.lower()
     assert reason != column_reader_refusal_reason(_absent_reader().precondition_verdict, locale="en")
