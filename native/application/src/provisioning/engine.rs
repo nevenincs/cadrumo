@@ -51,7 +51,8 @@
 
 use super::{
     activity::{
-        ActivityStore, Bytes, EndedOutcome, ItemWriter, Published, Retry, RunMark, RunStop, Watched,
+        ActivityStore, Bytes, EndedOutcome, ItemWriter, Published, Reservation, Retry, RunMark,
+        RunStop, Watched,
     },
     browser::{self, BrowserLayout, DriverManifest, LaunchContext},
     connection::Network,
@@ -697,14 +698,28 @@ impl Engine {
                 },
             },
         };
-        plan.remeasure(self.free_bytes());
+        // Held until this run's writers publish what they reserve, so a setup of another
+        // item checking its space meanwhile waits and then counts them.
+        let reservation = match self.activity.reservation() {
+            Ok(reservation) => reservation,
+            Err(error) => {
+                let rows = self.quick_rows(&ItemId::ALL);
+                return Report {
+                    failure: Some(browser::failure_category(&error)),
+                    ..Report::new(Outcome::Failed, rows)
+                }
+                .with_plan(plan);
+            }
+        };
+        plan.remeasure(self.free_bytes(), self.reserved_elsewhere(&plan));
         if !plan.space.sufficient() {
+            drop(reservation);
             let rows = self.quick_rows(&ItemId::ALL);
             return Report::new(Outcome::Refused, rows)
                 .with_plan(plan)
                 .disk_full();
         }
-        let stopped = self.run_plan(&plan, &sink, cancellation);
+        let stopped = self.run_plan(&plan, reservation, &sink, cancellation);
         let rows = self.quick_rows(&ItemId::ALL);
         let report = stopped.unwrap_or_else(|| Report::new(Outcome::Completed, Vec::new()));
         Report { rows, ..report }.with_plan(plan)
@@ -831,6 +846,13 @@ impl Engine {
 
     fn free_bytes(&self) -> Option<u64> {
         (self.config.free_space)(existing_ancestor(&self.config.storage_root))
+    }
+
+    /// What the setups of items outside `plan` running now have yet to download under
+    /// this installation's storage root, the volume `plan` is measured on.
+    fn reserved_elsewhere(&self, plan: &SetupPlan) -> u64 {
+        let items: Vec<ItemId> = plan.entries.iter().map(|entry| entry.item).collect();
+        self.activity.reserved_except(&items)
     }
 
     fn hardware(&mut self) -> Hardware {
@@ -1155,7 +1177,8 @@ impl Engine {
         if entries.is_empty() {
             return Ok((rows, None));
         }
-        let plan = SetupPlan::new(entries, self.free_bytes()).map_err(|_| Report {
+        let reserved = self.activity.reserved_except(&chosen);
+        let plan = SetupPlan::new(entries, self.free_bytes(), reserved).map_err(|_| Report {
             failure: Some(FailureCategory::Unexpected),
             ..Report::new(Outcome::Failed, rows.clone())
         })?;
@@ -1195,6 +1218,7 @@ impl Engine {
     fn run_plan(
         &mut self,
         plan: &SetupPlan,
+        reservation: Reservation,
         sink: &Sink<'_>,
         cancellation: &Cancellation,
     ) -> Option<Report> {
@@ -1217,7 +1241,11 @@ impl Engine {
             .iter()
             .zip(&observers)
             .map(|(entry, observer)| {
-                match self.activity.queue(entry.item, &run, observer.as_ref()) {
+                let reserved = entry.download_bytes.unwrap_or(0);
+                match self
+                    .activity
+                    .queue(entry.item, &run, reserved, observer.as_ref())
+                {
                     Ok(writer) => match self.clear_cancel_request(entry.item) {
                         Ok(()) => Slot::Own(writer),
                         Err(error) => {
@@ -1233,6 +1261,7 @@ impl Engine {
                 }
             })
             .collect();
+        drop(reservation);
         let mut slots = slots.into_iter();
         let mut stopped = None;
         for (entry, slot) in plan.entries.iter().zip(&mut slots) {
@@ -1777,7 +1806,7 @@ mod follower_access_tests {
         };
         let observer = |_| {};
         activity
-            .queue(item, &run, &observer)
+            .queue(item, &run, 0, &observer)
             .unwrap()
             .failed(FailureCategory::Cancelled)
             .unwrap();

@@ -1008,7 +1008,7 @@ fn a_download_two_roles_share_is_counted_once_in_the_review() {
         Destination::OllamaModels,
     )
     .unwrap();
-    let plan = SetupPlan::new(vec![entry], Some(512 * GIB)).unwrap();
+    let plan = SetupPlan::new(vec![entry], Some(512 * GIB), 0).unwrap();
     let shown = review_view(&plan, &Locations::under(Path::new("/state")));
     assert_eq!(
         shown.entries[0]
@@ -1410,6 +1410,69 @@ async fn the_browser_and_the_local_ai_set_up_at_the_same_time_each_on_its_own() 
         (result.changed, result.failure, result.transferred_bytes),
         (false, local_ai_run.failure, PROGRAM_BYTES)
     );
+}
+
+#[tokio::test]
+async fn a_setup_counts_what_another_running_setup_still_downloads_against_the_space() {
+    use cadrumo_application::provisioning::plan::required_free_bytes;
+    let gate = Arc::new(Released::default());
+    let mut fixture = Fixture::new(Serving::Gated(gate.clone())).with_program();
+    let browser_bytes = (fixture.engines())()
+        .unwrap()
+        .engine
+        .plan(Some(&[ItemId::Browser]))
+        .plan
+        .expect("the browser's plan")
+        .known_download_bytes();
+    assert!(browser_bytes > PROGRAM_BYTES);
+    // Room for either download alone, not for both at once.
+    fixture.free_bytes = Some(required_free_bytes(browser_bytes));
+    let components = window(&fixture);
+
+    approved(&components, ItemId::LocalAi).await;
+    until(&components, |view| {
+        run_of(view, ItemId::LocalAi).is_some_and(|run| {
+            progress(run)
+                .parts
+                .iter()
+                .any(|part| part.completed.is_some())
+        })
+    })
+    .await;
+    components
+        .start(ItemId::Browser, false, None)
+        .await
+        .unwrap();
+    // A setup that counted only its own download would ask for approval here instead.
+    let refused = until(&components, |view| {
+        matches!(
+            stage_of(view, ItemId::Browser),
+            Some(RunStage::Settled | RunStage::Review)
+        )
+    })
+    .await;
+    let stages: Vec<_> = refused
+        .runs
+        .iter()
+        .map(|run| (run.item.as_str(), run.stage, run.outcome))
+        .collect();
+    assert_eq!(
+        stages,
+        [
+            ("browser", RunStage::Settled, Some(Outcome::NotEnoughSpace)),
+            ("local_ai", RunStage::Running, None)
+        ]
+    );
+    assert_eq!(fixture.downloads(), 0, "no browser archive was asked for");
+
+    // Once the local AI's setup has ended, its bytes are no longer held against the
+    // volume, and the same space is enough for the browser.
+    gate.release();
+    until(&components, |view| {
+        stage_of(view, ItemId::LocalAi) == Some(RunStage::Settled)
+    })
+    .await;
+    approved(&components, ItemId::Browser).await;
 }
 
 #[tokio::test]

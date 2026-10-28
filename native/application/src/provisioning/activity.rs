@@ -74,6 +74,10 @@ struct ActivityRecord {
     step: SetupStep,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     run: Option<RunMark>,
+    /// The known bytes the run's plan downloads for the item, held against the volume
+    /// so a setup of another item planned meanwhile does not count them as free.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    reserved: Option<u64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     steps: Vec<SetupStep>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -133,6 +137,8 @@ pub struct RunStop {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Published {
     pub run: RunMark,
+    /// The known bytes the run's plan downloads for the item.
+    pub reserved: Option<u64>,
     /// Every step reached so far, in order, a repeated step once per arrival.
     pub steps: Vec<SetupStep>,
     pub progress: Option<Bytes>,
@@ -147,6 +153,11 @@ pub enum Watched {
     Running(Option<Published>),
     Interrupted,
     Idle,
+}
+
+/// The held reservation lock; dropping it lets the next setup check its space.
+pub struct Reservation {
+    _lock: WriterLock,
 }
 
 /// Blocks until no writer holds the lock at `lock`, which a writer that ends or dies
@@ -254,17 +265,56 @@ impl ActivityStore {
     }
 
     /// Takes the item's writer lock for `run` without waiting, before the run reaches the
-    /// item, and records it as planned without telling `observer`; the run's first step
-    /// for the item is the first the observer hears. `Busy` when another writer holds it.
+    /// item, and records it as planned with the `reserved` bytes its plan downloads for
+    /// it, without telling `observer`; the run's first step for the item is the first the
+    /// observer hears. `Busy` when another writer holds it.
     pub fn queue<'a>(
         &'a self,
         item: ItemId,
         run: &RunMark,
+        reserved: u64,
         observer: &'a dyn Fn(SetupStep),
     ) -> Result<ItemWriter<'a>, Error> {
         let writer = ItemWriter::new(self, item, self.take(item)?, Some(run.clone()), observer);
+        writer.record.borrow_mut().reserved = Some(reserved);
         writer.publish()?;
         Ok(writer)
+    }
+
+    /// Waits for, then holds, the installation's reservation lock. A setup holds it from
+    /// its last free-space check until its writers have published what they reserve, so
+    /// two setups starting together cannot both count the same free bytes.
+    pub fn reservation(&self) -> Result<Reservation, Error> {
+        filesystem::refuse_links(&self.root)?;
+        fs::create_dir_all(&self.root)?;
+        let path = self.root.join("space.lock");
+        filesystem::refuse_links(&path)?;
+        let file = File::options()
+            .read(true)
+            .write(true)
+            .create(true)
+            .truncate(false)
+            .open(path)?;
+        file.lock()?;
+        Ok(Reservation {
+            _lock: WriterLock(file),
+        })
+    }
+
+    /// The bytes the setups running now of items other than `except` have yet to
+    /// download: what each reserved less what it already holds. A record that cannot be
+    /// read reserves nothing it does not state.
+    pub fn reserved_except(&self, except: &[ItemId]) -> u64 {
+        ItemId::ALL
+            .into_iter()
+            .filter(|item| !except.contains(item))
+            .filter_map(|item| match self.watch(item) {
+                Ok(Watched::Running(Some(published))) => published.reserved.map(|reserved| {
+                    reserved.saturating_sub(published.progress.map_or(0, |bytes| bytes.completed))
+                }),
+                _ => None,
+            })
+            .fold(0, u64::saturating_add)
     }
 
     /// What a setup is doing to the item right now, judged by its lock and then its record.
@@ -350,6 +400,7 @@ impl ActivityRecord {
     fn published(self) -> Option<Published> {
         Some(Published {
             run: self.run?,
+            reserved: self.reserved,
             steps: self.steps,
             progress: self.progress,
             retry: self.retry,
@@ -388,6 +439,7 @@ impl<'a> ItemWriter<'a> {
                 item,
                 step: SetupStep::Plan,
                 run,
+                reserved: None,
                 steps: Vec::new(),
                 progress: None,
                 retry: None,
@@ -649,13 +701,13 @@ mod tests {
         let heard = RefCell::new(Vec::new());
         let observer = |step| heard.borrow_mut().push(step);
         let browser = store
-            .queue(ItemId::Browser, &run("one"), &observer)
+            .queue(ItemId::Browser, &run("one"), 0, &observer)
             .unwrap();
         let local_ai = store
-            .queue(ItemId::LocalAi, &run("one"), &observer)
+            .queue(ItemId::LocalAi, &run("one"), 0, &observer)
             .unwrap();
         assert!(matches!(
-            store.queue(ItemId::Browser, &run("two"), &observer),
+            store.queue(ItemId::Browser, &run("two"), 0, &observer),
             Err(Error::Busy)
         ));
         let queued = |item| match store.watch(item).unwrap() {

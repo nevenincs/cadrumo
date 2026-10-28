@@ -181,10 +181,13 @@ fn known_part_bytes(parts: &[PlanPart]) -> u64 {
 }
 
 /// Free space measured on the storage volume against what the plan needs. A volume that
-/// could not be measured is never read as enough.
+/// could not be measured is never read as enough. What setups of other items running now
+/// have yet to download to the volume is `reserved_bytes`, and is needed on top of the
+/// plan's own download.
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize)]
 pub struct SpaceCheck {
     pub free_bytes: Option<u64>,
+    pub reserved_bytes: u64,
     pub required_bytes: u64,
 }
 
@@ -203,15 +206,23 @@ pub struct SetupPlan {
 }
 
 impl SetupPlan {
-    /// Assembles the plan from each item's entry and the measured free space.
-    pub fn new(entries: Vec<PlanEntry>, free_bytes: Option<u64>) -> Result<Self, Error> {
+    /// Assembles the plan from each item's entry, the measured free space and the bytes
+    /// other running setups have reserved on the volume.
+    pub fn new(
+        entries: Vec<PlanEntry>,
+        free_bytes: Option<u64>,
+        reserved_bytes: u64,
+    ) -> Result<Self, Error> {
         let items: BTreeSet<ItemId> = entries.iter().map(|entry| entry.item).collect();
         if entries.is_empty() || items.len() != entries.len() {
             return Err(invalid("a plan names each item once"));
         }
         let space = SpaceCheck {
             free_bytes,
-            required_bytes: required_free_bytes(known_download_bytes(&entries)),
+            reserved_bytes,
+            required_bytes: required_free_bytes(
+                known_download_bytes(&entries).saturating_add(reserved_bytes),
+            ),
         };
         Ok(Self { entries, space })
     }
@@ -231,10 +242,16 @@ impl SetupPlan {
             .any(|entry| entry.installs_outside_program)
     }
 
-    /// Replaces the free-space reading, as setup does again before the transfer starts;
-    /// the digest does not change.
-    pub fn remeasure(&mut self, free_bytes: Option<u64>) {
-        self.space.free_bytes = free_bytes;
+    /// Replaces the free-space reading and the other setups' reservation, as setup does
+    /// again before the transfer starts; the digest does not change.
+    pub fn remeasure(&mut self, free_bytes: Option<u64>, reserved_bytes: u64) {
+        self.space = SpaceCheck {
+            free_bytes,
+            reserved_bytes,
+            required_bytes: required_free_bytes(
+                self.known_download_bytes().saturating_add(reserved_bytes),
+            ),
+        };
     }
 
     /// The document the digest is taken of.
@@ -315,7 +332,7 @@ mod tests {
             Destination::OllamaModels,
         )
         .unwrap();
-        SetupPlan::new(vec![browser, local], Some(10)).unwrap()
+        SetupPlan::new(vec![browser, local], Some(10), 0).unwrap()
     }
 
     #[test]
@@ -337,8 +354,19 @@ mod tests {
     fn the_digest_binds_what_is_downloaded_and_not_the_volume_reading() {
         let plan = sample();
         let mut remeasured = plan.clone();
-        remeasured.remeasure(Some(u64::MAX));
+        remeasured.remeasure(Some(u64::MAX), 0);
         assert!(remeasured.space.sufficient());
+        assert_eq!(remeasured.digest(), plan.digest());
+        // Another setup's reservation is needed on top, yet asks for no new approval.
+        let enough = plan.space.required_bytes;
+        remeasured.remeasure(Some(enough), 0);
+        assert!(remeasured.space.sufficient());
+        remeasured.remeasure(Some(enough), 1_000);
+        assert_eq!(
+            remeasured.space.required_bytes,
+            required_free_bytes(plan.known_download_bytes() + 1_000)
+        );
+        assert!(!remeasured.space.sufficient());
         assert_eq!(remeasured.digest(), plan.digest());
         let mut resized = plan.clone();
         resized.entries[0].download_bytes = Some(1);
@@ -356,7 +384,7 @@ mod tests {
         let mut reassigned = plan.clone();
         reassigned.entries[1].parts[3].part_id = "statement_reading".into();
         assert_ne!(reassigned.digest(), plan.digest());
-        let browser_only = SetupPlan::new(vec![plan.entries[0].clone()], None).unwrap();
+        let browser_only = SetupPlan::new(vec![plan.entries[0].clone()], None, 0).unwrap();
         assert_ne!(browser_only.digest(), plan.digest());
         assert!(
             !browser_only.space.sufficient(),
@@ -372,6 +400,7 @@ mod tests {
         assert_eq!(required_free_bytes(u64::MAX), u64::MAX);
         let check = SpaceCheck {
             free_bytes: Some(required_free_bytes(100)),
+            reserved_bytes: 0,
             required_bytes: required_free_bytes(100),
         };
         assert!(check.sufficient());
@@ -380,8 +409,8 @@ mod tests {
     #[test]
     fn malformed_plans_are_refused() {
         let browser = sample().entries[0].clone();
-        assert!(SetupPlan::new(vec![browser.clone(), browser.clone()], None).is_err());
-        assert!(SetupPlan::new(Vec::new(), None).is_err());
+        assert!(SetupPlan::new(vec![browser.clone(), browser.clone()], None, 0).is_err());
+        assert!(SetupPlan::new(Vec::new(), None, 0).is_err());
         assert!(
             PlanEntry::whole(
                 ItemId::Browser,
