@@ -62,6 +62,7 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
+from ...core.type_guards import is_object_list, is_object_mapping
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
@@ -212,11 +213,11 @@ def _cookie_jar_digest(storage_state: Mapping[str, object]) -> str:
     what a verification would find, so they are left out.
     """
     raw = storage_state.get("cookies")
-    cookies: list[object] = list(raw) if isinstance(raw, list) else []
+    cookies: list[object] = raw if is_object_list(raw) else []
     jar = sorted(
         (str(cookie.get("domain")), str(cookie.get("path")), str(cookie.get("name")), str(cookie.get("value")))
         for cookie in cookies
-        if isinstance(cookie, Mapping)
+        if is_object_mapping(cookie)
     )
     return session_store().storage_state_sha256(
         {
