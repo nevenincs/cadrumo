@@ -3781,7 +3781,6 @@ desktop:
       needs_person: Espera a que lo apruebes o lo instales tú.
       not_in_this_build: Esta versión de Cadrumo no lo incluye.
       offline: No tienes conexión. Conéctate a internet para configurarlo.
-    browser_open: Abrir la configuración del navegador
     cancel: Cancelar la configuración
     cancelling: Se detendrá tras el paso actual…
     checking: Comprobando los componentes…

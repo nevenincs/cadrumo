@@ -3261,7 +3261,6 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.setup.blocked.needs_person",
         "desktop.setup.blocked.not_in_this_build",
         "desktop.setup.blocked.offline",
-        "desktop.setup.browser_open",
         "desktop.setup.failure.blocked_by_network",
         "desktop.setup.failure.cancelled",
         "desktop.setup.failure.damaged_download",

@@ -287,27 +287,27 @@ test("a change made against an out-of-date list is refused and the list read aga
   expect(await storedList(target)).toEqual([]);
 });
 
-test("window settings opens the local provider with setup status and the model list", async ({
+test("window settings holds one provisioning section that opens the panel, with no door of its own to the local AI", async ({
   page: target,
 }) => {
   await open(target);
   await target.locator("[data-rail=settings]").click();
-  await target
-    .locator(".settings")
-    .getByRole("button", {
+  const section = target.locator(".settings [data-settings-provisioning]");
+  await expect(section).toContainText(label("desktop.setup.outcome_completed"));
+  await expect(
+    target.locator(".settings").getByRole("button", {
       name: label("desktop.setup.item.local_ai"),
       exact: true,
-    })
+    }),
+  ).toHaveCount(0);
+  await section
+    .getByRole("button", { name: label("desktop.setup.open"), exact: true })
     .click();
-  const provider = settings(target).locator(
-    'li[data-provider="local"] > details',
-  );
-  await expect(provider).toHaveAttribute("open", "");
-  await expect(provider.locator("summary")).toBeFocused();
-  await expect(provider.locator('[data-setup-row="local_ai"]')).toContainText(
-    label("desktop.setup.state.ready"),
-  );
-  await expect(provider.locator('[data-slot="local-models"]')).toBeVisible();
+  const panel = target.getByRole("dialog", {
+    name: label("desktop.setup.title"),
+  });
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('[data-setup-element="local_ai"]')).toBeVisible();
   expect(await calls(target)).not.toContain("setup.start local_ai");
 });
 
@@ -353,10 +353,8 @@ test("a host without setup cannot offer a model download", async ({
     }),
   ).toBeDisabled();
   await target.locator("[data-rail=settings]").click();
+  await expect(target.locator(".settings")).toBeVisible();
   await expect(
-    target.locator(".settings").getByRole("button", {
-      name: label("desktop.setup.item.local_ai"),
-      exact: true,
-    }),
+    target.locator(".settings [data-settings-provisioning]"),
   ).toHaveCount(0);
 });

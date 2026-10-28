@@ -471,7 +471,6 @@ function ProviderGroupRow({
   shownLanes,
   t,
   renderLane,
-  focus = false,
   searchMatch = true,
   searching = false,
 }: {
@@ -479,17 +478,10 @@ function ProviderGroupRow({
   shownLanes: readonly ProviderStatus[];
   t: Translate;
   renderLane: (lane: ProviderStatus) => ReactNode;
-  focus?: boolean;
   searchMatch?: boolean;
   searching?: boolean;
 }) {
   const details = useRef<HTMLDetailsElement>(null);
-  useEffect(() => {
-    if (!focus || !details.current) return;
-    details.current.open = true;
-    details.current.querySelector("summary")?.focus();
-    details.current.scrollIntoView({ block: "nearest" });
-  }, [focus]);
   useEffect(() => {
     if (searching && searchMatch && details.current)
       details.current.open = true;
@@ -573,7 +565,6 @@ export function ProviderSettings({
   revisions = {},
   identity = null,
   localModels,
-  focusLane,
   query = "",
   searching = false,
   embedded = false,
@@ -608,8 +599,6 @@ export function ProviderSettings({
   /** The model controls of a keyless lane, where the host offers them: a
    * lane on this computer has no key or sign-in, only its models. */
   localModels?: (lane: ProviderStatus) => ReactNode;
-  /** Opens the existing provider group when reached from setup. */
-  focusLane?: string;
   query?: string;
   searching?: boolean;
   embedded?: boolean;
@@ -675,7 +664,6 @@ export function ProviderSettings({
             shownLanes={group.lanes.filter((lane) => laneMatches(group, lane))}
             searchMatch={groupMatches(group)}
             searching={searching || Boolean(normalizedQuery)}
-            focus={group.lanes.some((lane) => lane.id === focusLane)}
             t={t}
             renderLane={(lane) => (
               <WayRow

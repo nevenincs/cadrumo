@@ -3,7 +3,6 @@ import { identity } from "virtual:desktop-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Icon } from "@/components/ui/icon";
 import { LanguageSelect, type LanguageControl } from "./LanguageSelect";
 import {
   Popover,
@@ -15,12 +14,11 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import type { SetupRow } from "../ipc/contract";
 import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
 import { versionLine, type AboutState } from "../shell/about";
 import { terminalFontPx } from "../shell/metrics";
+import { useProvisioning } from "../shell/provisioning";
 import { useStrings } from "../shell/strings";
-import { RowState } from "./setup/ProvisioningRow";
 
 /** A choice among a few short options: a labelled segmented control. */
 function Choice<T extends string>({
@@ -56,72 +54,82 @@ function Choice<T extends string>({
   );
 }
 
-/** The browser Cadrumo reads the tax agency website with: its state said
- * once, and the way into its own setup flow. Apart from the local AI and any
- * other component. */
-function BrowserSection({
-  row,
-  onOpen,
-}: {
-  /** Null while setup's status is being read. */
-  row: SetupRow | null;
-  onOpen: () => void;
-}) {
+/** What the window provisions, said once, and the way into the one panel
+ * that lists and sets up each component. Absent where this window offers no
+ * setup. */
+function ProvisioningSection() {
   const t = useStrings();
   const id = useId();
-  return (
-    <section data-settings-browser className="grid gap-2" aria-labelledby={id}>
-      <h3 id={id} className="text-sm font-medium text-muted-foreground">
-        {t("desktop.setup.item.browser")}
-      </h3>
-      {row ? (
-        <RowState row={row} />
-      ) : (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+  const store = useProvisioning();
+  if (!store.offered) return null;
+  const { control, snapshot } = store;
+  let status: ReactNode;
+  if (store.anyLive)
+    status = (
+      <>
+        <Spinner />
+        {t("desktop.setup.rail_busy")}
+      </>
+    );
+  else if (snapshot === null)
+    status =
+      control.read.kind === "loading" ? (
+        <>
           <Spinner />
           {t("desktop.setup.checking")}
-        </p>
-      )}
+        </>
+      ) : (
+        t("desktop.setup.unavailable")
+      );
+  else
+    status = store.incomplete
+      ? t("desktop.setup.rail_incomplete")
+      : t("desktop.setup.outcome_completed");
+  return (
+    <section
+      data-settings-provisioning
+      className="grid gap-3"
+      aria-labelledby={id}
+    >
+      <h3 id={id} className="text-sm font-medium text-muted-foreground">
+        {t("desktop.setup.title")}
+      </h3>
+      <p
+        data-settings-provisioning-status
+        className="flex items-center gap-2 text-sm text-foreground"
+      >
+        {status}
+      </p>
       <Button
         variant="outline"
         size="sm"
         className="justify-self-start"
-        onClick={onOpen}
+        onClick={() => store.open(null)}
       >
-        {t("desktop.setup.browser_open")}
+        {t("desktop.setup.open")}
       </Button>
     </section>
   );
 }
 
-/** Window presentation settings and the shared output language; above them,
- * while Cadrumo is not fully set up, the one line that leads into setup. */
+/** The provisioning section, then window presentation settings and the
+ * shared output language. */
 export function Settings({
   prefs,
   setPrefs,
   language,
   onReset,
   close,
-  advisory,
   about,
-  onLocalAi,
-  browser,
 }: {
   prefs: Prefs;
   setPrefs: (prefs: Prefs) => void;
   language: LanguageControl;
   onReset: () => void;
   close: () => void;
-  /** The setup advisory, first under the title; absent, or rendering
-   * nothing, when there is nothing to finish. */
-  advisory?: ReactNode;
   /** The installation's version row, which opens the About dialog; absent
    * where the host cannot say what is installed. */
   about?: { state: AboutState | null; onOpen: () => void };
-  /** Opens the existing provider settings for models on this computer. */
-  onLocalAi?: () => void;
-  /** The browser's own section; absent where this window offers no setup. */
-  browser?: { row: SetupRow | null; onOpen: () => void };
 }) {
   const t = useStrings();
   const windowId = useId();
@@ -169,18 +177,7 @@ export function Settings({
         }}
       >
         <h2 className="font-serif text-lg">{t("desktop.settings.title")}</h2>
-        {advisory}
-        {onLocalAi && (
-          <Button
-            variant="outline"
-            className="justify-start"
-            onClick={onLocalAi}
-          >
-            <Icon name="settings" />
-            {t("desktop.setup.item.local_ai")}
-          </Button>
-        )}
-        {browser && <BrowserSection {...browser} />}
+        <ProvisioningSection />
         <section className="grid gap-3" aria-labelledby={windowId}>
           <h3
             id={windowId}

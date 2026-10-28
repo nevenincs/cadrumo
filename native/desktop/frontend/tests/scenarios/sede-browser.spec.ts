@@ -1017,8 +1017,13 @@ test("a view refused for want of the browser says so and offers the browser's se
   const offer = ended.locator('[data-setup-offer="browser"]');
   await expect(offer).toBeVisible();
   await offer.getByRole("button").click();
+  // The offer opens the one provisioning panel on the browser's own row.
+  const panel = target.getByRole("dialog", {
+    name: label("desktop.setup.title"),
+  });
+  await expect(panel).toBeVisible();
   await expect(
-    target.getByRole("dialog", { name: label("desktop.setup.item.browser") }),
+    panel.getByRole("listitem", { name: label("desktop.setup.item.browser") }),
   ).toBeVisible();
   await expect(target.locator("body")).not.toContainText("operator.");
 });

@@ -3756,7 +3756,6 @@ desktop:
       needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.
       not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
       offline: Nincs internetkapcsolatod. Csatlakozz az internethez a beállításhoz.
-    browser_open: Böngésző beállításának megnyitása
     cancel: Beállítás megszakítása
     cancelling: Leáll a mostani lépés után…
     checking: Az összetevők ellenőrzése…

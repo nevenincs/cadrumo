@@ -1409,24 +1409,10 @@ export function App({ host }: { host: Host }) {
   );
 
   const { openView, openLink: openViewLink, resolve: resolveView } = nav;
-  // The local AI's model lists are kept in the agent's settings, and the model
-  // documents are read with is picked in the agent column's model picker; a
-  // page beside a reading with no model leads to the picker.
+  // The model documents are read with is picked in the agent column's model
+  // picker; a page beside a reading with no model leads to the picker.
   const agentSession = host.agentSession;
-  const localListsOffered = Boolean(
-    agentSession?.localModels &&
-    agentSession.addLocalModel &&
-    agentSession.removeLocalModel &&
-    agentSession.resetLocalModels,
-  );
   const agentControl = useRef<AgentColumnControl>(null);
-  const openLocalAi = useCallback(() => {
-    setSettingsOpen(false);
-    provisioning.close();
-    openView("agent");
-    agentControl.current?.openLocalAi();
-    if (setup.offered) setup.check("quick");
-  }, [openView, setup, provisioning]);
   const modelList = useMemo<ModelList | null>(
     () =>
       agentSession?.localModels && agentSession.chooseReadingModel
@@ -3682,27 +3668,6 @@ export function App({ host }: { host: Host }) {
                   setMaximized(null);
                   say(t("desktop.settings.layout_reset"));
                 }}
-                advisory={
-                  setupOffered ? (
-                    <Button
-                      variant="outline"
-                      className="justify-start"
-                      data-setup-open
-                      onClick={() => openSetup(null)}
-                    >
-                      <Icon name="download" />
-                      {t("desktop.setup.palette_open")}
-                    </Button>
-                  ) : undefined
-                }
-                onLocalAi={
-                  setupOffered &&
-                  signedIn &&
-                  localListsOffered &&
-                  host.providerSettings
-                    ? openLocalAi
-                    : undefined
-                }
               />
             )}
             <AboutDialog

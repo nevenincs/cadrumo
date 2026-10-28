@@ -101,26 +101,17 @@ function SettingsDisclosure({
   title,
   visible,
   searching,
-  focus,
   children,
 }: {
   title: string;
   visible: boolean;
   searching: boolean;
-  focus: number;
   children: ReactNode;
 }) {
   const details = useRef<HTMLDetailsElement>(null);
   useEffect(() => {
     if (searching && visible && details.current) details.current.open = true;
   }, [searching, visible]);
-  useEffect(() => {
-    if (!focus || !details.current) return;
-    details.current.open = true;
-    if (!details.current.contains(document.activeElement))
-      details.current.querySelector("summary")?.focus();
-    details.current.scrollIntoView({ block: "nearest" });
-  }, [focus]);
   return (
     <details
       ref={details}
@@ -156,7 +147,6 @@ const NO_SELECTION: AgentSelection = {
 type Panel = "none" | "history" | "settings" | "documents";
 
 export type AgentColumnControl = {
-  openLocalAi(): void;
   /** Shows the conversation with the model picker open. */
   openModelPicker(): void;
 };
@@ -194,8 +184,8 @@ function refusalWords(t: Translate, code: string): string {
       return t("desktop.agent.service_credential_missing");
     case "agent_service_failed":
       return t("desktop.agent.service_failed");
-    case "agent_emergency_cutoff":
-      return t("desktop.agent.service_emergency_cutoff");
+    case "agent_timeout":
+      return t("desktop.agent.service_timeout");
     case "agent_service_busy":
       return t("desktop.agent.service_starting");
     case "agent_reconnecting":
@@ -307,7 +297,6 @@ export function AgentColumn({
   const [view, setView] = useState({
     reader,
     panel: "none" as Panel,
-    localFocus: 0,
     archived: false,
     conversationId: null as string | null,
     chosen: null as AgentSelection | null,
@@ -327,7 +316,6 @@ export function AgentColumn({
     setView({
       reader,
       panel: "none",
-      localFocus: 0,
       archived: false,
       conversationId: null,
       chosen: null,
@@ -466,14 +454,6 @@ export function AgentColumn({
   const [settingsQuery, setSettingsQuery] = useState("");
   const [providerMatches, setProviderMatches] = useState(true);
   const [accessMatches, setAccessMatches] = useState(true);
-  const openLocalAi = useCallback(() => {
-    setSettingsQuery("");
-    setView((held) => ({
-      ...held,
-      panel: "settings",
-      localFocus: held.localFocus + 1,
-    }));
-  }, []);
   const [pickerRequests, setPickerRequests] = useState(0);
   const openModelPicker = useCallback(() => {
     setView((held) => ({ ...held, panel: "none" }));
@@ -482,10 +462,9 @@ export function AgentColumn({
   useImperativeHandle(
     control,
     () => ({
-      openLocalAi,
       openModelPicker,
     }),
-    [openLocalAi, openModelPicker],
+    [openModelPicker],
   );
   // The models the person added to the local lanes' lists, where the host
   // offers reading and changing them.
@@ -755,7 +734,7 @@ export function AgentColumn({
     [],
   );
   const toggle = (next: Panel) =>
-    change({ panel: panel === next ? "none" : next, localFocus: 0 });
+    change({ panel: panel === next ? "none" : next });
   const localProvider =
     settings.read.kind === "ready"
       ? settings.read.value.providers.find((lane) => lane.authKind === "none")
@@ -805,7 +784,7 @@ export function AgentColumn({
   const openSettings =
     (providerSettings || agentAccess) && reader !== null
       ? () => {
-          change({ panel: "settings", localFocus: 0 });
+          change({ panel: "settings" });
         }
       : undefined;
 
@@ -1230,17 +1209,7 @@ export function AgentColumn({
                   title={t("desktop.providers.title")}
                   visible={providerVisible}
                   searching={Boolean(query)}
-                  focus={view.localFocus}
                 >
-                  {view.localFocus > 0 &&
-                    settings.read.kind === "ready" &&
-                    !localProvider && (
-                      <LocalAi
-                        lanes={[]}
-                        host={localModelHost}
-                        locale={locale}
-                      />
-                    )}
                   {providerSettings &&
                     (settings.read.kind === "ready" ? (
                       <ProviderSettingsSection
@@ -1248,9 +1217,6 @@ export function AgentColumn({
                         searching={Boolean(query)}
                         embedded
                         onMatch={setProviderMatches}
-                        focusLane={
-                          view.localFocus > 0 ? localProvider?.id : undefined
-                        }
                         providers={settings.read.value.providers}
                         signIn={providerSettings.signIn}
                         signInProviders={settings.read.value.signInProviders}
@@ -1278,7 +1244,7 @@ export function AgentColumn({
                                 // its program and its model list together.
                                 return lane.id === localProvider?.id ? (
                                   <LocalAi
-                                    key={`${lane.id}/${view.localFocus}`}
+                                    key={lane.id}
                                     lanes={listed ? [listed] : []}
                                     host={localModelHost}
                                     locale={locale}
@@ -1286,7 +1252,7 @@ export function AgentColumn({
                                   />
                                 ) : (
                                   <LocalModels
-                                    key={`${lane.id}/${view.localFocus}`}
+                                    key={lane.id}
                                     lane={listed}
                                     host={localModelHost}
                                     locale={locale}
@@ -1312,7 +1278,6 @@ export function AgentColumn({
                   title={t("desktop.automation_access.title")}
                   visible={accessVisible}
                   searching={Boolean(query)}
-                  focus={0}
                 >
                   {agentAccess &&
                     (access.read.kind === "ready" ? (

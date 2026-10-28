@@ -3783,7 +3783,6 @@ desktop:
       needs_person: Espera que ho aprovis o que ho instal·lis tu.
       not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
       offline: No tens connexió. Connecta't a internet per configurar-ho.
-    browser_open: Obre la configuració del navegador
     cancel: Cancel·la la configuració
     cancelling: S'aturarà després del pas actual…
     checking: S'estan comprovant els components…

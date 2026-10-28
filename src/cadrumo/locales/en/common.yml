@@ -3725,7 +3725,6 @@ desktop:
       needs_person: Waiting for you to approve it, or to install it yourself.
       not_in_this_build: This version of Cadrumo does not include this.
       offline: You are offline. Connect to the internet to set this up.
-    browser_open: Open browser setup
     cancel: Cancel setup
     cancelling: Stopping after the current step…
     checking: Checking components…
