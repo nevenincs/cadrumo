@@ -178,6 +178,7 @@ class WorkerViewStream:
         self._sender: ViewTransferSender | None = None
         self._sender_result: bool | None = None
         self._early_credit: dict[int, int] = {}
+        self._cancelled_downloads: set[int] = set()
         self._download_turn = Lock()
         self._channel: WorkerChannel | None = None
         self._closing: ViewClosedReason | None = None
@@ -239,6 +240,9 @@ class WorkerViewStream:
     def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
         """Stream an accepted download under the window's credit; ``False`` when cancelled or ended first."""
         with self._download_turn, self._signal:
+            if transfer_id in self._cancelled_downloads:
+                self._cancelled_downloads.discard(transfer_id)
+                return False
             if self._ended.is_set() or self._closing is not None:
                 return False
             sender = ViewTransferSender(transfer_id, source)
@@ -255,6 +259,22 @@ class WorkerViewStream:
             self._sender = None
             self._sender_result = None
             return delivered
+
+    def cancel_download(self, transfer_id: int) -> None:
+        """Stop the download ``transfer_id`` from the worker side and tell the window."""
+        with self._signal:
+            self._early_credit.pop(transfer_id, None)
+            sender = self._sender
+            if sender is not None and sender.transfer_id == transfer_id:
+                self._cancel_download(transfer_id)
+            else:
+                # Not streaming yet: its call returns at once, and the window stops waiting for its bytes.
+                self._cancelled_downloads.add(transfer_id)
+                if not self._ended.is_set() and self._closing is None:
+                    self._transfer_documents.append(
+                        ViewTransferCancel(direction=ViewTransferDirection.DOWNLOAD, transfer_id=transfer_id)
+                    )
+            self._signal.notify_all()
 
     def _download_settled(self) -> bool:
         """Whether the streaming download finished or was cancelled, or the view ended; hold ``_signal``."""

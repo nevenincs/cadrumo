@@ -22,6 +22,7 @@ from playwright.async_api import BrowserContext, Page, Route, async_playwright
 from cadrumo_client.contracts.view_stream import (
     VIEW_MAX_URL_LENGTH,
     ViewClose,
+    ViewClosedReason,
     ViewPhase,
     ViewResize,
     ViewState,
@@ -130,6 +131,11 @@ def _files_holding(root: Path, data: bytes) -> list[Path]:
     return [path for path in root.rglob("*") if path.is_file() and data[:64] in path.read_bytes()]
 
 
+def _transient_downloads(root: Path) -> list[Path]:
+    """The browser's own download files that hold the payload; the rest of its profile stays locked while it runs."""
+    return [path for path in root.rglob("artifacts/*") if path.is_file() and path.read_bytes() == _PAYLOAD]
+
+
 @pytest.mark.asyncio
 async def test_sede_view_opens_the_sede_home_and_draws_its_state(tmp_path: Path) -> None:
     site = _Site()
@@ -157,6 +163,33 @@ async def test_sede_view_streams_an_accepted_download_to_the_window_and_keeps_no
         running.sink.put(ViewDownloadAnswer(transfer_id=offer.transfer_id, outcome=ViewDownloadOutcome.ACCEPTED))
         await until(lambda: offer.transfer_id in running.sink.downloaded)
         assert running.sink.downloaded[offer.transfer_id] == _PAYLOAD
+    assert _files_holding(tmp_path, _PAYLOAD) == []
+
+
+@pytest.mark.asyncio
+async def test_sede_view_close_deletes_a_download_still_streaming(tmp_path: Path) -> None:
+    site = _Site()
+    target = site.file("/wlpl/justificante.pdf", _PAYLOAD)
+    _home(site, f'<a id="go" href="{target}">justificante</a>')
+    async with _view(tmp_path, site) as running:
+        running.sink.stall_downloads = True
+        try:
+            await running.page.wait_for_selector("#go")
+            await running.page.click("#go")
+            await until(lambda: len(running.sink.of(ViewDownload)) == 1)
+            offer = running.sink.of(ViewDownload)[0]
+            running.sink.put(ViewDownloadAnswer(transfer_id=offer.transfer_id, outcome=ViewDownloadOutcome.ACCEPTED))
+            await until(lambda: offer.transfer_id in running.sink.streaming)
+            # The browser's transient file is on disk and open while its bytes stream.
+            assert _transient_downloads(tmp_path) != []
+            running.stop[0] = True
+            await asyncio.wait_for(running.browsing, timeout=10)
+            await asyncio.wait_for(running.view.close(), timeout=10)
+            # Gone before the stream itself ends, so no later cleanup can be what removed it.
+            assert _transient_downloads(tmp_path) == []
+            assert running.sink.cancelled_downloads == [offer.transfer_id]
+        finally:
+            running.sink.close(ViewClosedReason.CANCELLED)
     assert _files_holding(tmp_path, _PAYLOAD) == []
 
 

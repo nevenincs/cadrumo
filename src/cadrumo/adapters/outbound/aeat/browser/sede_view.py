@@ -22,7 +22,8 @@ navigation it starts is the Sede home page, which the person's ``home`` verb
 also opens. It evaluates no script; the toolbar's URL and title come from ``Page.getNavigationHistory``
 through the input adapter. A download's bytes pass from the browser's own
 transient file straight to the stream, and the file is deleted when the
-transfer ends; an upload reaches the page from memory. URLs, titles, images,
+transfer ends, however it ends: completed, cancelled, failed or cut short by
+the view's close; an upload reaches the page from memory. URLs, titles, images,
 input and file bytes are never logged, persisted or journaled.
 """
 
@@ -432,7 +433,15 @@ class SedeViewPage:
                 logger.info("aeat view download failed exc_type=%s", type(exc).__name__)
                 self._sink.send(ViewTransferCancel(direction=ViewTransferDirection.DOWNLOAD, transfer_id=transfer_id))
                 return
-            await asyncio.to_thread(self._stream_file, transfer_id, path)
+            streaming = asyncio.ensure_future(asyncio.to_thread(self._stream_file, transfer_id, path))
+            try:
+                await asyncio.shield(streaming)
+            except asyncio.CancelledError:
+                # The thread still holds the transient file open, which would keep it on disk: stop the stream
+                # and let the thread release the file before it is deleted.
+                self._sink.cancel_download(transfer_id)
+                await asyncio.wait({streaming})
+                raise
         finally:
             await self._discard(download)
 

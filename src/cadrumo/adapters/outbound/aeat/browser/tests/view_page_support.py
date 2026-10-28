@@ -70,6 +70,11 @@ class RecordingViewSink:
         self.documents: list[ViewState | ViewNotice | ViewDownload | ViewFileChooser | ViewTransferCancel] = []
         self.downloaded: dict[int, bytes] = {}
         self.closed: list[ViewClosedReason] = []
+        self.cancelled_downloads: list[int] = []
+        self.streaming: list[int] = []
+        #: When set, a download waits, its source open, for window credit that never comes, as a stalled window's does.
+        self.stall_downloads = False
+        self._changed = threading.Condition(self._lock)
 
     @property
     def connected(self) -> bool:
@@ -100,6 +105,12 @@ class RecordingViewSink:
         return None
 
     def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
+        if self.stall_downloads:
+            source.read(4096)
+            with self._changed:
+                self.streaming.append(transfer_id)
+                self._changed.wait_for(lambda: transfer_id in self.cancelled_downloads or bool(self.closed))
+            return False
         chunks: list[bytes] = []
         while chunk := source.read(4096):
             chunks.append(chunk)
@@ -107,8 +118,15 @@ class RecordingViewSink:
             self.downloaded[transfer_id] = b"".join(chunks)
         return True
 
+    def cancel_download(self, transfer_id: int) -> None:
+        with self._changed:
+            self.cancelled_downloads.append(transfer_id)
+            self._changed.notify_all()
+
     def close(self, reason: ViewClosedReason) -> None:
-        self.closed.append(reason)
+        with self._changed:
+            self.closed.append(reason)
+            self._changed.notify_all()
 
     def of[DocumentT](self, kind: type[DocumentT]) -> list[DocumentT]:
         with self._lock:

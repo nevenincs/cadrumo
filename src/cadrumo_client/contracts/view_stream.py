@@ -614,7 +614,8 @@ class ViewStreamSink(Protocol):
     ``view.download`` and ``view.file_chooser`` requests; ``receive`` returns
     the window's answers, the files it supplied, received whole and checked
     against their digest, and its cancels. ``send_download`` streams one
-    accepted download under the window's transfer credit. ``close`` ends the view from the worker side: it
+    accepted download under the window's transfer credit, and
+    ``cancel_download`` stops it from the worker side. ``close`` ends the view from the worker side: it
     sends ``view.closed`` with ``reason`` and returns only after the host has
     unbound the window, or after a short bound when the host does not answer,
     so the operation settles only after unbinding.
@@ -645,8 +646,18 @@ class ViewStreamSink(Protocol):
     def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
         """Stream an accepted download's bytes, blocking until its completion is sent.
 
-        Returns ``False`` when the window cancels the transfer or the view ends
-        first. One download streams at a time; a second call waits its turn.
+        Returns ``False`` when the window cancels the transfer, the worker
+        cancels it with :meth:`cancel_download`, or the view ends first. One
+        download streams at a time; a second call waits its turn.
+        """
+        ...
+
+    def cancel_download(self, transfer_id: int) -> None:
+        """Stop the download ``transfer_id`` from the worker side and tell the window.
+
+        A ``send_download`` streaming it, or waiting its turn to, returns
+        ``False`` promptly, so its caller can release the source. A later call
+        for the same transfer returns ``False`` at once.
         """
         ...
 

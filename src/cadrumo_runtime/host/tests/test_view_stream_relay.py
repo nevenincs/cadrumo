@@ -54,6 +54,7 @@ from cadrumo_client.contracts.view_transfer import (
     ViewFileChooser,
     ViewFileChooserAnswer,
     ViewFileChooserOutcome,
+    ViewTransferCancel,
     ViewTransferComplete,
     ViewTransferCredit,
     ViewTransferDirection,
@@ -649,6 +650,31 @@ def test_view_download_bytes_reach_the_window_under_its_transfer_credit(lane: _L
         break
     sending.join(timeout=5)
     assert bytes(received) == payload and delivered == [True]
+
+
+def test_view_worker_cancel_releases_a_download_waiting_for_credit_and_tells_the_window(lane: _Lane) -> None:
+    window = lane.attach()
+    reader, _ = _transfer_window(window)
+    lane.sink.send(ViewDownload(transfer_id=1, filename="justificante.pdf"))
+    assert reader.read(deadline=time.monotonic() + 5) == ViewDownload(transfer_id=1, filename="justificante.pdf")
+    # The window accepts but never grants credit, so the stream holds its source until it is cancelled.
+    delivered: list[bool] = []
+    sending = Thread(target=lambda: delivered.append(lane.sink.send_download(1, io.BytesIO(b"x" * 1_000))), daemon=True)
+    sending.start()
+    time.sleep(0.3)
+    assert sending.is_alive()
+    lane.sink.cancel_download(1)
+    sending.join(timeout=2)
+    assert delivered == [False]
+    cancel = ViewTransferCancel(direction=ViewTransferDirection.DOWNLOAD, transfer_id=1)
+    assert reader.read(deadline=time.monotonic() + 5) == cancel
+    # A download cancelled before it streams returns at once, and the window is told too.
+    lane.sink.cancel_download(2)
+    assert reader.read(deadline=time.monotonic() + 5) == ViewTransferCancel(
+        direction=ViewTransferDirection.DOWNLOAD, transfer_id=2
+    )
+    assert lane.sink.send_download(2, io.BytesIO(b"y")) is False
+    assert not lane.sink.ended
 
 
 def test_view_upload_reaches_the_worker_whole_and_checked(lane: _Lane) -> None:

@@ -101,6 +101,9 @@ class _Sink:
         del transfer_id, source
         return False
 
+    def cancel_download(self, transfer_id: int) -> None:
+        del transfer_id
+
     def close(self, reason: ViewClosedReason) -> None:
         self.closed.append(reason)
 
