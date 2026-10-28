@@ -51,6 +51,7 @@ from ....application.user_profile.custody_ports import (
     ProfileRecordCryptoPort,
     ProfileRecordEncryptedBlob,
 )
+from ....application.user_profile.proof_cancellation import ProfileProofCancellation
 from ....core.config import Settings
 from ....core.hashing import prefixed_digest
 from ....core.profile_publication import ProfilePublicationKindValue
@@ -742,13 +743,15 @@ class _PersistenceProfileCustody:
         material: ProfileCustodyPasswordProofMaterialPort,
         *,
         password: str,
-        emergency_deadline: float | None = None,
+        timeout_deadline: float | None = None,
+        cancellation: ProfileProofCancellation | None = None,
     ) -> ProfileCustodyUnlockPort:
         return unlock_profile_custody(
             _substrate_handle(material.envelope, ProfileCustodyEnvelope, "password envelope"),
             password,
             sentinel=_substrate_handle(material.sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
-            emergency_deadline=emergency_deadline,
+            timeout_deadline=timeout_deadline,
+            cancellation=cancellation,
         )
 
     def fence_human_sign_in(self, *, profile_id: UUID, root: Path) -> None:

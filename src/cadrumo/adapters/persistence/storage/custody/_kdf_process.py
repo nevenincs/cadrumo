@@ -58,6 +58,39 @@ def launch_worker(
     return process, None, environment_keys
 
 
+def launch_lease_worker(*, neutral_root: Path, lease_fd: int, owner_fd: int, result_fd: int) -> subprocess.Popen[bytes]:
+    """Launch only the secret-free POSIX lease helper with three exact inherited FDs."""
+    if sys.platform == "win32":
+        raise _supervision_refusal()
+    if len({lease_fd, owner_fd, result_fd}) != 3 or min(lease_fd, owner_fd, result_fd) < 3:
+        raise _supervision_refusal()
+    command = [
+        *worker_interpreter(),
+        "-m",
+        "cadrumo.adapters.persistence.storage.custody._kdf_lease_worker",
+        "--lease-fd",
+        str(lease_fd),
+        "--owner-fd",
+        str(owner_fd),
+        "--result-fd",
+        str(result_fd),
+        "--descriptor-bound",
+        str(os.sysconf("SC_OPEN_MAX")),
+    ]
+    return subprocess.Popen(
+        command,
+        cwd=neutral_root,
+        env=worker_environment(neutral_root=neutral_root),
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        close_fds=True,
+        pass_fds=(lease_fd, owner_fd, result_fd),
+        start_new_session=True,
+        preexec_fn=apply_posix_worker_limits,
+    )
+
+
 def _environment_keys(launch_kwargs: dict[str, object]) -> frozenset[str]:
     # Native hosts pin these package-declared names after receiving our neutral
     # environment. The bootstrap projects names only, never publisher values.
@@ -222,6 +255,7 @@ __all__ = [
     "WINDOWS_ABOVE_NORMAL_PRIORITY_CLASS",
     "apply_posix_worker_limits",
     "clear_worker_handle_inheritance",
+    "launch_lease_worker",
     "launch_worker",
     "terminate_process_tree",
     "worker_command",

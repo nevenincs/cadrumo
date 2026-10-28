@@ -59,6 +59,7 @@ from .profile_record_repository import (
     bind_active_profile_record_session,
     close_active_profile_record_session,
 )
+from .proof_cancellation import ProfileProofCancellation
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
@@ -366,7 +367,8 @@ def authenticate_profile_candidate(
     passphrase_callback: Callable[[], str],
     profile_decode_context: ProfileDecodeContext,
     now: datetime | None = None,
-    emergency_deadline: float | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> Generator[ProfileLoginCandidate]:
     """Prove an exact profile without replacing another connection's live custody.
 
@@ -374,6 +376,8 @@ def authenticate_profile_candidate(
     No active pointer, process binding, acceleration receipt or human session is
     published here. Only the runtime authority can promote the borrowed result.
     """
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     instant = _now() if now is None else now
     storage_root = effective_storage_root()
     target = resolve_login_target(str(bucket_id))
@@ -385,7 +389,8 @@ def authenticate_profile_candidate(
         now=instant,
         passphrase_callback=passphrase_callback,
         profile_decode_context=profile_decode_context,
-        emergency_deadline=emergency_deadline,
+        timeout_deadline=timeout_deadline,
+        cancellation=cancellation,
     )
     try:
         yield ProfileLoginCandidate(
@@ -513,7 +518,8 @@ def _authenticate_unthrottled_candidate(
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
     profile_decode_context: ProfileDecodeContext,
-    emergency_deadline: float | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> _CandidateProfileLogin:
     """Refuse a throttled profile, prove the password, then clear its failure count.
 
@@ -528,7 +534,8 @@ def _authenticate_unthrottled_candidate(
         now=now,
         passphrase_callback=passphrase_callback,
         profile_decode_context=profile_decode_context,
-        emergency_deadline=emergency_deadline,
+        timeout_deadline=timeout_deadline,
+        cancellation=cancellation,
     )
     try:
         _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
@@ -555,13 +562,20 @@ def _authenticate_candidate_or_record_failure(
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
     profile_decode_context: ProfileDecodeContext,
-    emergency_deadline: float | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> _CandidateProfileLogin:
     """Authenticate B into unbound candidate memory and nothing else."""
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     password = _resolve_login_password(passphrase_callback)
     try:
-        unlocked = unlock_profile_custody_password(material, password=password, emergency_deadline=emergency_deadline)
+        unlocked = unlock_profile_custody_password(
+            material, password=password, timeout_deadline=timeout_deadline, cancellation=cancellation
+        )
     except BaseException as exc:
         refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
         if refusal is not None:

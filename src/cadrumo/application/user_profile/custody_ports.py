@@ -37,6 +37,7 @@ from ...core.hashing import bounded_canonical_json_bytes, canonical_json_digest
 from ...core.paths import effective_storage_root
 from .authentication import ProfileAuthenticationRefusedError, ProfilePasswordProofOperation
 from .login_session_port import profile_current_bucket_session, profile_session_serves_bucket
+from .proof_cancellation import ProfileProofCancellation
 
 
 class ProfileCustodyCommitPort(Protocol):
@@ -1163,7 +1164,8 @@ class ProfileCustodyPort(Protocol):
         material: ProfileCustodyPasswordProofMaterialPort,
         *,
         password: str,
-        emergency_deadline: float | None = None,
+        timeout_deadline: float | None = None,
+        cancellation: ProfileProofCancellation | None = None,
     ) -> ProfileCustodyUnlockPort:
         """Authenticate one committed password envelope and sentinel."""
         ...
@@ -1423,7 +1425,8 @@ def unlock_profile_custody_password(
     material: ProfileCustodyPasswordProofMaterialPort,
     *,
     password: str,
-    emergency_deadline: float | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> ProfileCustodyUnlockPort:
     """Authenticate one committed profile through its password envelope.
 
@@ -1433,7 +1436,9 @@ def unlock_profile_custody_password(
     material already loaded from the exact target capsule, so a caller cannot
     resolve one profile and unwrap another through ambient state.
     """
-    return profile_custody_port().unlock_password(material, password=password, emergency_deadline=emergency_deadline)
+    return profile_custody_port().unlock_password(
+        material, password=password, timeout_deadline=timeout_deadline, cancellation=cancellation
+    )
 
 
 def replace_profile_custody_password_envelope(

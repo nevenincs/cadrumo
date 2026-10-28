@@ -13,12 +13,13 @@ import tempfile
 import threading
 import time
 from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext, suppress
 from pathlib import Path
 from typing import Literal, cast
 
 from pydantic import ValidationError
 
+from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import Settings, load_settings
 from .....core.diagnostic_log import DiagnosticValue, diagnostic_event
 from .....core.logging import get_logger
@@ -45,6 +46,7 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     read_kdf_frame_to_queue as _read_kdf_frame_to_queue,
 )
+from ._kdf_file_lease import wait_for_kdf_process_exit
 from ._kdf_operations import KdfOperation
 from ._kdf_process import (
     launch_worker as _launch_worker,
@@ -101,9 +103,12 @@ class _SupervisedKdfWorker:
         deadline: float,
         settings: Settings | None = None,
         absolute_deadline: bool = False,
+        cancellation: ProfileProofCancellation | None = None,
     ) -> None:
         self._deadline = deadline
         self._absolute_deadline = absolute_deadline
+        self._cancellation = cancellation
+        self._readers: list[threading.Thread] = []
         self._temporary_root = (settings or load_settings()).cadrumo_temp_dir
         self._process: subprocess.Popen[bytes] | None = None
         self._request_fd: int | None = None
@@ -135,9 +140,13 @@ class _SupervisedKdfWorker:
         self._result_refused = False
         self._diagnostic_emitted = False
         try:
+            if self._cancellation is not None:
+                self._cancellation.raise_if_cancelled()
             launch_started = time.monotonic()
             with self._phase("start"):
                 self._start()
+            if self._cancellation is not None:
+                self._cancellation.raise_if_cancelled()
             # Process creation is one uncancellable OS call that can block for
             # tens of seconds on a saturated host, before any child exists to
             # stall. The deadline abandons a stalled child, so it starts once
@@ -158,13 +167,13 @@ class _SupervisedKdfWorker:
             with self._phase("ready_attestation"):
                 self._verify_ready_attestation(ready)
                 if self._absolute_deadline and time.monotonic() >= self._deadline:
-                    raise TimeoutError("profile KDF worker emergency cutoff elapsed during attestation")
+                    raise TimeoutError("profile KDF worker timeout elapsed during attestation")
             return self
         except BaseException as error:
             self._close_with_diagnostic(failed=True, primary_error=error)
             raise
 
-    def adopt(self, *, deadline: float) -> bool:
+    def adopt(self, *, deadline: float, cancellation: ProfileProofCancellation | None = None) -> bool:
         """Hand this attested, still idle child to one operation under that operation's deadline.
 
         A child launched ahead of need has proved its limits but received no
@@ -178,6 +187,7 @@ class _SupervisedKdfWorker:
         if sys.platform == "win32" and (self._job is None or not self._job.contains(process)):
             return False
         self._deadline = deadline
+        self._cancellation = cancellation
         self._adopted_ns = time.monotonic_ns()
         return True
 
@@ -360,6 +370,12 @@ class _SupervisedKdfWorker:
             outcome = "unconfirmed"
         elif self._result_refused:
             outcome = "refused"
+        if (
+            isinstance(primary_error, ProfileProofCancelledError)
+            and cleanup_status == "completed"
+            and cleanup_error is None
+        ):
+            outcome = "cancelled"
         # A calibration probe exceeding its sample budget is an expected
         # rejection of that grid point, not a failed password operation.
         if (
@@ -395,7 +411,7 @@ class _SupervisedKdfWorker:
             fields=fields,
             level=(
                 logging.DEBUG
-                if outcome in {"completed", "sample_rejected"}
+                if outcome in {"completed", "sample_rejected", "cancelled"}
                 else logging.WARNING
                 if outcome == "refused"
                 else logging.ERROR
@@ -432,6 +448,10 @@ class _SupervisedKdfWorker:
         if self._request_fd is None:
             raise _supervision_refusal()
         encoded = _canonical_frame_bytes(payload)
+        if self._cancellation is not None:
+            self._cancellation.raise_if_cancelled()
+        if time.monotonic() >= self._deadline:
+            raise TimeoutError("profile KDF worker timeout elapsed before request")
         try:
             write_kdf_frame(self._request_fd, encoded, kind=KDF_FRAME_CONTROL)
         except OSError:
@@ -443,17 +463,32 @@ class _SupervisedKdfWorker:
         remaining = self._deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError("profile KDF worker deadline elapsed")
-        result_queue: queue.Queue[tuple[int, bytes] | BaseException] = queue.Queue(maxsize=1)
+        # One producer frame and one cancellation cue can race; neither may
+        # strand the retained pipe reader on a full queue during containment.
+        result_queue: queue.Queue[tuple[int, bytes] | BaseException] = queue.Queue(maxsize=2)
         reader = threading.Thread(
             target=_read_kdf_frame_to_queue,
             args=(self._result_fd, result_queue),
             daemon=True,
         )
+        self._readers.append(reader)
         reader.start()
-        try:
-            item = result_queue.get(timeout=remaining)
-        except queue.Empty:
-            raise TimeoutError("profile KDF worker did not respond before its deadline") from None
+
+        def cancelled() -> None:
+            with suppress(queue.Full):
+                result_queue.put_nowait(ProfileProofCancelledError("profile proof attempt cancelled"))
+
+        with self._cancellation.watch(cancelled) if self._cancellation is not None else nullcontext():
+            if self._cancellation is not None:
+                self._cancellation.raise_if_cancelled()
+            try:
+                item = result_queue.get(timeout=remaining)
+            except queue.Empty:
+                raise TimeoutError("profile KDF worker did not respond before its deadline") from None
+            if self._cancellation is not None:
+                self._cancellation.raise_if_cancelled()
+        if isinstance(item, ProfileProofCancelledError):
+            raise item
         if isinstance(item, BaseException):
             raise _supervision_refusal() from item
         return item
@@ -487,10 +522,13 @@ class _SupervisedKdfWorker:
         remaining = self._deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError("profile KDF worker deadline elapsed")
-        try:
-            exit_code = process.wait(timeout=remaining)
-        except subprocess.TimeoutExpired:
-            raise TimeoutError("profile KDF worker did not exit after its response") from None
+        if self._cancellation is not None:
+            exit_code = wait_for_kdf_process_exit(process, deadline=self._deadline, cancellation=self._cancellation)
+        else:
+            try:
+                exit_code = process.wait(timeout=remaining)
+            except subprocess.TimeoutExpired:
+                raise TimeoutError("profile KDF worker did not exit after its response") from None
         if exit_code != 0:
             raise _supervision_refusal()
         try:
@@ -519,6 +557,11 @@ class _SupervisedKdfWorker:
         # A Windows reader may hold the CRT descriptor lock while blocked in
         # os.read. Settle its writer before closing the parent pipe ends.
         with self._cleanup_span("pipes"):
+            for reader in self._readers:
+                reader.join(timeout=1.0)
+                if reader.is_alive():
+                    raise _supervision_refusal()
+            self._readers.clear()
             _close_fd(self._request_fd)
             _close_fd(self._result_fd)
             self._request_fd = None

@@ -91,11 +91,13 @@ async def _kill_orphan_child(command: list[str], *, env: dict[str, str]) -> tupl
         assert child.stdout is not None
         line = (await asyncio.wait_for(child.stdout.readline(), timeout=30)).decode("utf-8", errors="replace").strip()
         child.kill()
-        return line, int(await asyncio.wait_for(child.wait(), timeout=5.0))
+        await asyncio.wait_for(child.communicate(), timeout=5.0)
+        assert child.returncode is not None
+        return line, child.returncode
     finally:
         if child.returncode is None:
             child.kill()
-            await child.wait()
+            await child.communicate()
 
 
 def test_killed_supervisor_leaves_no_stuck_lease_and_the_next_run_reacquires_and_unlocks(

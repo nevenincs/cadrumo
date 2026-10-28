@@ -11,11 +11,12 @@ import sys
 import threading
 import time
 from collections.abc import Callable, Generator, Mapping
-from contextlib import ExitStack, contextmanager
+from contextlib import ExitStack, contextmanager, nullcontext
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Literal, cast
 from uuid import UUID
 
+from .....application.user_profile.proof_cancellation import ProfileProofCancellation
 from .....core.config import load_settings
 from .....core.errors.hierarchy import CadrumoError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -34,6 +35,7 @@ from ._kdf_codec import (
 from ._kdf_codec import (
     windows_available_memory_bytes as _windows_available_memory_bytes,
 )
+from ._kdf_file_lease import acquire_kdf_file_lease, open_kdf_file_lease, release_kdf_file_lease
 from ._kdf_records import (
     PROFILE_CUSTODY_KDF_ITERATIONS,
     PROFILE_CUSTODY_KDF_MEMORY_MIB,
@@ -68,7 +70,7 @@ PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
 #: Default wall-clock bound on direct wrap or unwrap. Runtime first login supplies its
-#: retained absolute emergency deadline instead; no normal phase timeout applies there.
+#: retained absolute timeout deadline instead; no normal phase timeout applies there.
 #: Includes waiting for the installation's single
 #: KDF permit, attesting a fresh child, then the derivation; the operating system's
 #: uncancellable process-creation call is not charged, because no child exists to
@@ -84,6 +86,7 @@ PROFILE_CUSTODY_KDF_TARGET_MAX_SECONDS: Final = 0.500
 _MEBIBYTE: Final = 1024 * 1024
 _KDF_LEASE_FILENAME: Final = "profile-kdf.v1.lock"
 _KDF_THREAD_LEASE: Final = threading.BoundedSemaphore(value=1)
+_KDF_THREAD_CAPACITY: Final = threading.Condition()
 _KDF_PREWARM: Final = contextvars.ContextVar["ProfileKdfPrewarm | None"]("cadrumo_profile_kdf_prewarm", default=None)
 
 
@@ -353,7 +356,8 @@ def unlock_profile_custody(
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
-    emergency_deadline: float | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> ProfileCustodyUnlock:
     """Return a DEK only after supervised unwrap and parent sentinel proof."""
     dek = unlock_profile_custody_password_material(
@@ -371,7 +375,8 @@ def unlock_profile_custody(
         sentinel=sentinel,
         settings=settings,
         timeout_seconds=timeout_seconds,
-        emergency_deadline=emergency_deadline,
+        timeout_deadline=timeout_deadline,
+        cancellation=cancellation,
     )
     return ProfileCustodyUnlock(
         profile_id=envelope.profile_id,
@@ -392,7 +397,8 @@ def unlock_profile_custody_password_material(
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
-    emergency_deadline: float | None = None,
+    timeout_deadline: float | None = None,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> bytes:
     """Supervise one current-format wrapper unwrap and prove its immutable DEK.
 
@@ -402,18 +408,24 @@ def unlock_profile_custody_password_material(
     """
     if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
         raise ValueError("profile KDF timeout must be positive")
-    if emergency_deadline is not None and not math.isfinite(emergency_deadline):
-        raise ValueError("profile KDF emergency deadline must be finite")
+    if timeout_deadline is not None and not math.isfinite(timeout_deadline):
+        raise ValueError("profile KDF timeout deadline must be finite")
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     password_bytes = encode_profile_password(secret)
-    deadline = time.monotonic() + timeout_seconds if emergency_deadline is None else emergency_deadline
+    deadline = time.monotonic() + timeout_seconds if timeout_deadline is None else timeout_deadline
     try:
-        _require_emergency_time(emergency_deadline)
+        _require_timeout_budget(timeout_deadline, cancellation=cancellation)
         with (
-            profile_kdf_lease(settings=settings, deadline=deadline),
+            profile_kdf_lease(settings=settings, deadline=deadline, cancellation=cancellation),
             _supervised_kdf_worker(
-                deadline=deadline, settings=settings, absolute_deadline=emergency_deadline is not None
+                deadline=deadline,
+                settings=settings,
+                absolute_deadline=timeout_deadline is not None,
+                cancellation=cancellation,
             ) as worker,
         ):
+            _require_timeout_budget(timeout_deadline, cancellation=cancellation)
             dek = worker.unwrap(
                 password=password_bytes,
                 kdf=kdf,
@@ -421,13 +433,15 @@ def unlock_profile_custody_password_material(
                 associated_data=associated_data,
             )
     except TimeoutError as error:
-        if emergency_deadline is not None:
-            raise _emergency_refusal() from None
+        if cancellation is not None:
+            cancellation.raise_if_cancelled()
+        if timeout_deadline is not None:
+            raise _owner_timeout_refusal() from None
         raise _timeout_refusal(error) from None
     except ProfileCustodyRefusedError:
-        _require_emergency_time(emergency_deadline)
+        _require_timeout_budget(timeout_deadline, cancellation=cancellation)
         raise
-    _require_emergency_time(emergency_deadline)
+    _require_timeout_budget(timeout_deadline, cancellation=cancellation)
     if dek is None:
         raise ProfileCustodyPasswordError("profile password did not authenticate the custody envelope")
     verify_profile_custody_sentinel(
@@ -436,7 +450,7 @@ def unlock_profile_custody_password_material(
         dek_epoch=dek_epoch,
         sentinel=sentinel,
     )
-    _require_emergency_time(emergency_deadline)
+    _require_timeout_budget(timeout_deadline, cancellation=cancellation)
     return dek
 
 
@@ -602,13 +616,15 @@ class ProfileKdfPrewarm:
             if spare is not None:
                 spare.__exit__(None, None, None)
 
-    def take(self, *, deadline: float) -> _SupervisedKdfWorker | None:
+    def take(
+        self, *, deadline: float, cancellation: ProfileProofCancellation | None = None
+    ) -> _SupervisedKdfWorker | None:
         """Hand the ready spare to one operation, or ``None`` when a fresh launch is needed."""
         with self._lock:
             spare, self._spare = self._spare, None
         if spare is None:
             return None
-        if not spare.adopt(deadline=deadline):
+        if not spare.adopt(deadline=deadline, cancellation=cancellation):
             spare.__exit__(None, None, None)
             return None
         return spare
@@ -635,13 +651,19 @@ class ProfileKdfPrewarm:
 
 @contextmanager
 def _supervised_kdf_worker(
-    *, deadline: float, settings: Settings | None, absolute_deadline: bool = False
+    *,
+    deadline: float,
+    settings: Settings | None,
+    absolute_deadline: bool = False,
+    cancellation: ProfileProofCancellation | None = None,
 ) -> Generator[_SupervisedKdfWorker]:
     """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
     prewarm = _KDF_PREWARM.get()
-    spare = prewarm.take(deadline=deadline) if prewarm is not None else None
+    spare = prewarm.take(deadline=deadline, cancellation=cancellation) if prewarm is not None else None
     if spare is None:
-        with _SupervisedKdfWorker(deadline=deadline, settings=settings, absolute_deadline=absolute_deadline) as worker:
+        with _SupervisedKdfWorker(
+            deadline=deadline, settings=settings, absolute_deadline=absolute_deadline, cancellation=cancellation
+        ) as worker:
             yield worker
         return
     with ExitStack() as owned:
@@ -649,14 +671,16 @@ def _supervised_kdf_worker(
         yield spare
 
 
-def _emergency_refusal() -> ProfileCustodyRefusedError:
-    return ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_EMERGENCY_CUTOFF)
+def _owner_timeout_refusal() -> ProfileCustodyRefusedError:
+    return ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_TIMEOUT)
 
 
-def _require_emergency_time(deadline: float | None) -> None:
-    """An elapsed owner cutoff may never release even a successfully proven key."""
+def _require_timeout_budget(deadline: float | None, *, cancellation: ProfileProofCancellation | None = None) -> None:
+    """An elapsed owner timeout may never release even a successfully proven key."""
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
     if deadline is not None and time.monotonic() >= deadline:
-        raise _emergency_refusal()
+        raise _owner_timeout_refusal()
 
 
 def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:
@@ -698,16 +722,30 @@ def _measure_profile_kdf(
 
 
 @contextmanager
-def profile_kdf_lease(*, deadline: float, settings: Settings | None = None) -> Generator[None]:
+def profile_kdf_lease(
+    *, deadline: float, settings: Settings | None = None, cancellation: ProfileProofCancellation | None = None
+) -> Generator[None]:
     """Acquire the one OS-released KDF permit for a canonical installation root.
 
     The descriptor stays open for the operation, so an abnormal owner death
     releases its permit at the operating-system boundary instead of leaving a
     process-local or persistent ownership record behind.
     """
-    remaining = deadline - time.monotonic()
-    if remaining <= 0 or not _KDF_THREAD_LEASE.acquire(timeout=remaining):
-        raise _resource_refusal()
+
+    def capacity_changed() -> None:
+        with _KDF_THREAD_CAPACITY:
+            _KDF_THREAD_CAPACITY.notify_all()
+
+    with cancellation.watch(capacity_changed) if cancellation is not None else nullcontext(), _KDF_THREAD_CAPACITY:
+        while True:
+            if cancellation is not None:
+                cancellation.raise_if_cancelled()
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise _resource_refusal()
+            if _KDF_THREAD_LEASE.acquire(blocking=False):
+                break
+            _KDF_THREAD_CAPACITY.wait(timeout=remaining)
     try:
         try:
             root = storage_path(StorageCategory.BUCKETS, settings=settings).parent
@@ -720,60 +758,21 @@ def profile_kdf_lease(*, deadline: float, settings: Settings | None = None) -> G
             if not root.is_dir():
                 raise NotADirectoryError(root)
             lock_path = root / _KDF_LEASE_FILENAME
-            descriptor = os.open(
-                lock_path,
-                os.O_RDWR | os.O_CREAT | getattr(os, "O_BINARY", 0),
-                0o600,
-            )
+            descriptor = open_kdf_file_lease(lock_path)
         except OSError:
             raise _supervision_refusal() from None
         try:
-            if os.fstat(descriptor).st_size == 0:
-                os.write(descriptor, b"\x00")
-            _acquire_kdf_file_lease(descriptor, deadline=deadline)
+            acquire_kdf_file_lease(descriptor, deadline=deadline, settings=settings, cancellation=cancellation)
             try:
                 yield
             finally:
-                _release_kdf_file_lease(descriptor)
+                release_kdf_file_lease(descriptor)
         finally:
             _close_fd(descriptor)
     finally:
-        _KDF_THREAD_LEASE.release()
-
-
-def _acquire_kdf_file_lease(descriptor: int, *, deadline: float) -> None:
-    while True:
-        try:
-            if sys.platform == "win32":
-                import msvcrt
-
-                os.lseek(descriptor, 0, os.SEEK_SET)
-                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
-            else:
-                import fcntl
-
-                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return
-        except OSError:
-            remaining = deadline - time.monotonic()
-            if remaining <= 0:
-                raise _resource_refusal() from None
-            time.sleep(min(0.02, remaining))
-
-
-def _release_kdf_file_lease(descriptor: int) -> None:
-    try:
-        if sys.platform == "win32":
-            import msvcrt
-
-            os.lseek(descriptor, 0, os.SEEK_SET)
-            msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
-        else:
-            import fcntl
-
-            fcntl.flock(descriptor, fcntl.LOCK_UN)
-    except OSError:
-        raise _supervision_refusal() from None
+        with _KDF_THREAD_CAPACITY:
+            _KDF_THREAD_LEASE.release()
+            _KDF_THREAD_CAPACITY.notify_all()
 
 
 __all__ = [
