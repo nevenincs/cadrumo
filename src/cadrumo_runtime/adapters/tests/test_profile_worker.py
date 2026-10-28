@@ -37,6 +37,7 @@ from cadrumo.core.bucket_pointer import read_pointer
 from cadrumo.core.operations import OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
@@ -52,7 +53,7 @@ from cadrumo_runtime.contracts.worker_authorization import (
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..profile_worker import ProfileWorkerProcess
-from .profile_worker_support import PROFILE_INPUT, changed, lease, worker_profiles
+from .profile_worker_support import PROFILE_INPUT, changed, lease, release_worker, worker_profiles
 
 pytestmark = [
     pytest.mark.integration,
@@ -145,7 +146,7 @@ def _record_snapshot(profile_id: UUID) -> tuple[int, str, dict[str, str]]:
 
 def _wait_for_terminal(worker: ProfileWorkerProcess, session_id: UUID, operation_id: OperationId):
     request = OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32)
-    deadline = time.monotonic() + 10
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     while True:
         observation = worker.observe(session_id, request).observation
         assert isinstance(observation, OperationObservationSuccessV1), observation
@@ -154,7 +155,7 @@ def _wait_for_terminal(worker: ProfileWorkerProcess, session_id: UUID, operation
             return projection
         if time.monotonic() >= deadline:
             raise AssertionError(
-                f"operation {operation_id} did not settle within the original 10s deadline; "
+                f"operation {operation_id} did not settle within the {HANG_GUARD_SECONDS:g}s hang guard; "
                 + _settlement_diagnostic(projection)
             )
         time.sleep(0.02)
@@ -193,9 +194,9 @@ def test_concurrent_profiles_never_retarget_and_disconnect_is_isolated(profiles)
     root, ((first, first_key), (second, second_key)) = profiles
     with ExitStack() as cleanup:
         a = ProfileWorkerProcess(first, storage_root=root)
-        cleanup.callback(a.close)
+        cleanup.callback(release_worker, a)
         b = ProfileWorkerProcess(second, storage_root=root)
-        cleanup.callback(b.close)
+        cleanup.callback(release_worker, b)
         a_lease, b_lease = lease(first), lease(second)
         a_buffer, b_buffer = bytearray(first_key), bytearray(second_key)
         a.install(a_lease, a_buffer)
@@ -229,7 +230,7 @@ def test_worker_rejects_wrong_dek_before_acknowledging_custody(profiles) -> None
         worker.install(admitted, bytearray(key))
         assert worker.status().sessions == (admitted.session_id,)
     finally:
-        worker.close()
+        release_worker(worker)
 
 
 def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> None:
@@ -247,7 +248,9 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
         worker.refresh(refreshed)
         worker.retire(independent.session_id)
         assert worker.status().sessions == (short.session_id,)
-        deadline = time.monotonic() + 6
+        # The lease ends at its own expiry; how soon the worker is seen to have ended it depends
+        # on the machine, so this waits for the session to go and bounds only a hang.
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while worker.status().sessions and time.monotonic() < deadline:
             time.sleep(0.1)
         assert not worker.status().sessions
@@ -263,7 +266,7 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
             )
         assert expired.value.reason is AccessDenialCode.SESSION_EXPIRED
     finally:
-        worker.close()
+        release_worker(worker)
 
 
 def test_password_candidate_does_not_replace_agents_or_select_another_profile(profiles) -> None:
@@ -306,7 +309,7 @@ def test_password_candidate_does_not_replace_agents_or_select_another_profile(pr
         assert worker.status().sessions == (api.session_id,)
         assert read_pointer(root) == selected
     finally:
-        worker.close()
+        release_worker(worker)
 
 
 def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision_conflict(profiles) -> None:
@@ -319,9 +322,9 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
     authority = _AllowWorkerOperations()
     with ExitStack() as cleanup:
         worker_a = ProfileWorkerProcess(identity_a, storage_root=root, authorization=authority)
-        cleanup.callback(worker_a.close)
+        cleanup.callback(release_worker, worker_a)
         worker_b = ProfileWorkerProcess(identity_b, storage_root=root, authorization=authority)
-        cleanup.callback(worker_b.close)
+        cleanup.callback(release_worker, worker_b)
         lease_a, lease_b = lease(identity_a), lease(identity_b)
         worker_a.install(lease_a, bytearray(key_a))
         worker_b.install(lease_b, bytearray(key_b))
@@ -357,7 +360,7 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
                 pool.submit(worker_b.start, lease_b.session_id, submitted_b.receipt.operation_id),
             )
             for future in started:
-                future.result(timeout=10)
+                future.result(timeout=HANG_GUARD_SECONDS)
 
         result_a = _wait_for_terminal(worker_a, lease_a.session_id, submitted_a.receipt.operation_id)
         result_b = _wait_for_terminal(worker_b, lease_b.session_id, submitted_b.receipt.operation_id)
@@ -435,14 +438,14 @@ class _WindowsBrowserFixture:
                     win32api.TerminateProcess(handle, 124)
             if self.process.returncode is None:
                 self.process.kill()
-            _, self.stderr = await asyncio.wait_for(self.process.communicate(), timeout=10)
+            _, self.stderr = await asyncio.wait_for(self.process.communicate(), timeout=HANG_GUARD_SECONDS)
         for pid, handle in tuple(self.handles.items()):
             win32api.CloseHandle(handle)
             del self.handles[pid]
 
 
 async def _windows_fixture_record[T: BaseModel](path: Path, model: type[T], owner: _WindowsBrowserFixture) -> T:
-    deadline = time.monotonic() + 35
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     failure = path.parent / "windows-worker-browser-failure.json"
     while not path.exists():
         assert not failure.exists(), "post-admission browser fixture reported failure"
@@ -458,7 +461,7 @@ async def _windows_job_members(owner: _WindowsBrowserFixture) -> dict[int, str]:
     assert owner.process.stdin is not None and owner.process.stdout is not None
     owner.process.stdin.write(b"members\n")
     await owner.process.stdin.drain()
-    encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=5)
+    encoded = await asyncio.wait_for(owner.process.stdout.readline(), timeout=HANG_GUARD_SECONDS)
     assert 0 < len(encoded) <= 65536
     members = TypeAdapter(list[_WindowsJobMember]).validate_json(encoded)
     assert 4 <= len(members) <= 4096
@@ -561,7 +564,7 @@ async def test_admitted_worker_browser_descendants_end_on_owner_death(tmp_path: 
         for handle in owner.handles.values():
             assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
         win32api.TerminateProcess(owner.handles[admission.runtime_pid], 23)
-        await asyncio.wait_for(owner.process.wait(), timeout=5)
+        await asyncio.wait_for(owner.process.wait(), timeout=HANG_GUARD_SECONDS)
         # These are the same held native objects, observed dead before the
         # cleanup owner can issue a graceful worker close or release a handle.
         for handle in owner.handles.values():
@@ -685,7 +688,7 @@ async def test_idle_admitted_worker_death_retires_browser_without_frontend_reque
         win32api.TerminateProcess(owner.handles[admission.worker_pid], 23)
         # No command or frontend request follows the kill. The original host's
         # independent poll must contain the scope while its native parent lives.
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         descendant_handles = [handle for pid, handle in owner.handles.items() if pid != admission.runtime_pid]
         while any(
             win32event.WaitForSingleObject(handle, 0) != win32event.WAIT_OBJECT_0 for handle in descendant_handles

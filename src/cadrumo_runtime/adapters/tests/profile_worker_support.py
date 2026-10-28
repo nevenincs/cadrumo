@@ -40,11 +40,13 @@ from cadrumo.core.async_cleanup import (
     close_async_resources,
 )
 from cadrumo.core.time.clock import now
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ShutdownIncompleteError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 
+from ..profile_worker import ProfileWorkerProcess
 from ..server import RuntimeListener
 from .retained_server import RetainedRuntimeTransportServer
 
@@ -271,6 +273,15 @@ class NativeRuntimeFixtureOwner:
         finally:
             if self.executor is not None:
                 self.executor.shutdown(wait=False, cancel_futures=False)
+
+
+def release_worker(worker: ProfileWorkerProcess) -> None:
+    """Close a worker, leaving its containment as long as it takes the machine to end the process.
+
+    The default close gives the Windows job two seconds to empty and its members to be signaled,
+    which a busy machine misses for reasons that have nothing to do with the case being tested.
+    """
+    worker.close(deadline=time.monotonic() + HANG_GUARD_SECONDS)
 
 
 def changed[T: BaseModel](model: T, **values: object) -> T:
