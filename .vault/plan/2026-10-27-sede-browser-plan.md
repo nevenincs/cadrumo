@@ -10,6 +10,7 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-06-04-live-auth-decomposition-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 modified: '2026-10-28'
 body_schema: body-v2
 body_hash: 'sha256:e0980310424db0479c77b27ee8488670cc8cc11cfff671d5db88252b47c8c260'
