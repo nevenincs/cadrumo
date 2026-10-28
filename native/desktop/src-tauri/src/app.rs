@@ -143,6 +143,7 @@ pub fn run(
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::channel::commands(),
             shell::window_controls::commands(),
             shell::about::commands(),
             shell::sign_in::commands(),
@@ -155,6 +156,7 @@ pub fn run(
             shell::user_profile::censo::commands(),
             shell::ledger::commands(),
             shell::modelo::commands(),
+            shell::sede_view::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),
@@ -271,6 +273,10 @@ pub fn run(
 /// every cleanup even after a failure, including on run-loop exit without a
 /// window close event. Each owner keeps failed cleanup available for retry.
 fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Result<()> {
+    // First, while the person's session is still held: the view publishes its session.
+    if let Some(view) = handle.try_state::<Arc<shell::sede_view::SedeViewHost>>() {
+        view.close();
+    }
     if let Some(modelo) = handle.try_state::<Arc<shell::modelo::ModeloHost>>() {
         modelo.close();
     }
@@ -354,6 +360,7 @@ pub(crate) async fn assemble<R: Runtime>(
     let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
     app.manage(profile.clone());
     app.manage(Arc::new(shell::ledger::LedgerHost::new(profile.clone())));
+    app.manage(Arc::new(shell::sede_view::SedeViewHost::new()));
     app.manage(Arc::new(shell::modelo::ModeloHost::new(profile)));
     startup.stage(crate::startup::Phase::Runtime);
     #[cfg(windows)]
@@ -576,6 +583,7 @@ mod tests {
             docs::commands(),
             logs::commands(),
             shell::commands(),
+            shell::channel::commands(),
             shell::window_controls::commands(),
             shell::about::commands(),
             shell::sign_in::commands(),
@@ -588,6 +596,7 @@ mod tests {
             shell::user_profile::censo::commands(),
             shell::ledger::commands(),
             shell::modelo::commands(),
+            shell::sede_view::commands(),
             manager::commands(),
             agent::commands(),
             crate::startup::commands(),

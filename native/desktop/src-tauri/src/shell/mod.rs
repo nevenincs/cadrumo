@@ -14,6 +14,7 @@ pub mod provider_settings;
 pub(crate) mod relay;
 #[cfg(all(test, windows))]
 mod scripted;
+pub mod sede_view;
 mod settle;
 pub mod setup;
 pub mod sign_in;
@@ -134,6 +135,19 @@ pub fn plugin<R: Runtime>(launch: &Launch) -> TauriPlugin<R> {
             window_states.attach(&window);
             single_instance::attach(&window, activation.clone());
             window_controls::attach(&window);
+        })
+        .on_page_load(|webview, payload| {
+            if !matches!(payload.event(), tauri::webview::PageLoadEvent::Started) {
+                return;
+            }
+            // A new top document has no channel to the view the old one held,
+            // and cannot ask for the frames the old one left waiting.
+            if let Some(view) = webview.try_state::<Arc<sede_view::SedeViewHost>>() {
+                view.page_replaced();
+            }
+            if let Some(deliveries) = webview.try_state::<channel::Deliveries>() {
+                deliveries.forget(webview.label());
+            }
         })
         .on_event(move |app, event| match event {
             RunEvent::WindowEvent {

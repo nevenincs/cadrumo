@@ -1,7 +1,15 @@
 import { Channel } from "@tauri-apps/api/core";
-import type { SedeViewDelivery } from "../ipc/contract";
+import type { ChannelRawFrame, SedeViewDelivery } from "../ipc/contract";
 import type { HostCall } from "./hostCall";
 import { sedeViewReader, type SedeViewPort } from "./sedeView";
+
+function isRawFrame(delivery: SedeViewDelivery): delivery is ChannelRawFrame {
+  return (
+    typeof delivery === "object" &&
+    delivery !== null &&
+    typeof (delivery as Partial<ChannelRawFrame>).raw_frame === "string"
+  );
+}
 
 /** The Sede view port over the desktop host's `sede_view_*` commands. */
 export function tauriSedeView(call: HostCall): SedeViewPort {
@@ -12,7 +20,19 @@ export function tauriSedeView(call: HostCall): SedeViewPort {
         listener(event);
         if (event.kind === "ended") messages.onmessage = () => undefined;
       });
-      messages.onmessage = reader.accept;
+      // An image's bytes arrive as a named frame the host holds; taking it
+      // is asynchronous, so every delivery waits for the one before it and
+      // the reader still sees them in order. A frame that cannot be taken
+      // becomes empty bytes: the image is then credited without being drawn.
+      let delivered: Promise<void> = Promise.resolve();
+      messages.onmessage = (delivery) => {
+        const resolved = isRawFrame(delivery)
+          ? call("shell_channel_frame", { frame: delivery.raw_frame }).catch(
+              () => new ArrayBuffer(0),
+            )
+          : delivery;
+        delivered = delivered.then(async () => reader.accept(await resolved));
+      };
 
       let opened: { view: number };
       try {
