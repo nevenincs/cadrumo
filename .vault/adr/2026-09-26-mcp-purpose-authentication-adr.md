@@ -17,9 +17,9 @@ related:
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
 supersedes:
   - '2026-10-27-mcp-purpose-authentication-worker-loss-recovery-adr'
-modified: '2026-10-27'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:dc3a5cc1b91db2e6d8ee3655ba241f2df30f35f1d9de8898f626b917a0006b5c'
+body_hash: 'sha256:0184a9d001ead03ce38da49e71d9f2dd0883d83845e95e5b58abfc1dbbd1f7df'
 ---
 # `mcp-purpose-authentication` adr: local runtime ownership and replacement MCP harness | (**status:** `accepted`)
 
@@ -133,7 +133,7 @@ The runtime owns worker, browser, KDF and other child resources through the exis
 
 Last eligible OS logout fences private admission and effects, causes bounded shutdown and releases custody without permanently revoking independent grants or imposing profile-global suspension. Suspend/shutdown preparation is bounded best effort, backed by crash-safe persistence and reconciliation. Shutdown stops admission, requests declared settlement, waits to a bound, records unresolved ownership/effects, terminates and reaps owned descendants, closes storage/authority leases and releases key material best-effort. Revalidate authority before resumed private output or effects, and reconcile possibly committed work before retrying; timeout or process loss never implies rollback. A thread timeout cannot claim execution stopped. SIGKILL/process loss may skip cleanup, so restart recovery cannot depend on graceful callbacks.
 
-Profile worker loss suspends rather than retires. A worker that is positively lost (contained, exited or with a closed channel) suspends every lease of its profile for 120 s from the moment the loss is established. A worker that merely cannot be observed in time is not lost and keeps its leases. A suspended lease grants nothing: no admission, private projection, review response or effect. Its requests are refused with the typed refusal `CUSTODY_RECOVERING`, carrying the remaining window. Frontends present it as reconnecting and the CLI as retryable. The DEK stays only in a worker, so custody returns only through a fresh proof:
+Profile worker loss suspends rather than retires. A worker that is positively lost (contained, exited or with a closed channel) suspends every lease of its profile for 120 s from the moment the loss is established. A worker that merely cannot be observed in time is not lost and keeps its leases. A suspended lease grants nothing: no admission, private projection, review response or effect. Its requests are refused with the typed refusal `CUSTODY_RECOVERING`, carrying the remaining window. Frontends present it as reconnecting and the CLI as retryable. A request the worker was already serving when the loss is established is answered the same way, except that a request carrying a change also reports its effect as `UNKNOWN`, naming the operation when the request named one: the change may have committed, so no client presents that refusal as retryable. The DEK stays only in a worker, so custody returns only through a fresh proof:
 
 - A human lease rebinds when the same native connection that held it (boot, peer process, frontend and connection id) presents the profile password or the stored receipt proof, valid for the current sign-in generation and originating OS login. The lease keeps its session id and original deadlines and is not renewed. A receipt is minted only under the post-publication mint rule. The same proof on any other connection is an ordinary sign-in under a new id.
 - Attended children present no proof. When their parent rebinds, each child whose own native connection is still open is re-admitted under its existing id, bounded by the parent's scope and remaining expiry. A child whose connection closed retires, and children of a parent that does not rebind retire with it.
