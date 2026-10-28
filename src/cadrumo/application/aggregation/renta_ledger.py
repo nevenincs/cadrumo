@@ -497,8 +497,8 @@ def resolve_category_deduction_rules(
         region_category_overrides: Per-comunidad override layer; defaults to the
             registry-provisioned (empty) layer.
         iva_deduction_ratio: Activity-wide IVA-deduction fraction, or ``None``.
-        profile_record: Profile supplying the insured-person counts; loaded from
-            the bucket when absent.
+        profile_record: The :class:`UserProfileRecord` supplying the
+            insured-person counts; loaded from the bucket when absent.
         profile_decode_context: Decode context of the caller-held authority operation.
         operation: Generation-pinned authority operation.
         ownership_share: The taxpayer's ownership share of the partly affected

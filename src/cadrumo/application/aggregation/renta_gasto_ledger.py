@@ -341,8 +341,9 @@ def aggregate_renta_gasto_ledger(
             territorial-regime category override.
         region_category_overrides: Optional per-comunidad category-profile
             override layer; defaults to the registry-provisioned (empty) layer.
-        profile_record: Optional profile supplying the insured-person counts of
-            the statutory cap; loaded from the bucket when ``None``.
+        profile_record: Optional :class:`UserProfileRecord` supplying the
+            insured-person counts of the statutory cap; loaded from the bucket
+            when ``None``.
         profile_decode_context: Optional decode context from the caller-held
             authority operation.
         operation: Existing generation-pinned authority operation. When omitted,
