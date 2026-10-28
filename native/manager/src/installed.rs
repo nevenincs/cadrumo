@@ -339,6 +339,8 @@ mod tests {
             require_identity(&identity, &root).unwrap_err().refusal,
             InspectionRefusal::RuntimeIdentityMismatch
         );
+        // Delivery is asynchronous; read the file only after the writer has drained.
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         let log = fs::read_to_string(log).unwrap();
         assert!(log.contains("failed_version_marker"));
         assert!(log.contains("runtime_identity_mismatch"));
@@ -384,6 +386,8 @@ mod tests {
         assert_eq!(failure.refusal, InspectionRefusal::PackageIncompatible);
         assert!(!failure.is_cancelled());
         crate::diagnostics::inspection_failed(&diagnostics, failure);
+        // Delivery is asynchronous; read the file only after the writer has drained.
+        assert!(diagnostics.flush_logs(Duration::from_secs(5)));
         let log = fs::read_to_string(log).unwrap();
         assert!(log.contains("package_incompatible"));
         assert!(!log.contains("synthetic-private"));

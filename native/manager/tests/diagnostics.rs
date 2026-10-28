@@ -109,8 +109,10 @@ fn supervision_facts_survive_durable_replay_without_identifiers_or_protocol_payl
     );
     let current = scratch.0.join(MANAGER_LOG);
     diagnostics.configure_file(&current, 65536, 2).unwrap();
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let text = fs::read_to_string(&current).unwrap();
     diagnostics.configure_file(&current, 65536, 2).unwrap();
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     assert_eq!(fs::read_to_string(&current).unwrap(), text);
     assert!(!text.contains("synthetic-private"));
     assert!(!text.contains("bootId") && !text.contains("\"version\""));
@@ -187,6 +189,7 @@ fn termination_failures_remain_distinct_and_retain_only_safe_native_facts() {
     ] {
         supervision_event(&diagnostics, &event);
     }
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let records: Vec<serde_json::Value> = fs::read_to_string(current)
         .unwrap()
         .lines()
@@ -231,6 +234,7 @@ fn stage_failure_keeps_safe_io_facts_and_buffer_until_a_canonical_file_is_select
     assert_eq!(fs::read_dir(&scratch.0).unwrap().count(), 0);
     let current = scratch.0.join(MANAGER_LOG);
     diagnostics.configure_file(&current, 4096, 1).unwrap();
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let text = fs::read_to_string(current).unwrap();
     assert!(text.contains("\"stage\":\"storage\""));
     assert!(text.contains("environment_failed") && text.contains("InvalidInput"));
@@ -280,6 +284,7 @@ fn refusals_and_faults_have_failure_severity_while_expected_liveness_stays_ordin
             last: RestartClass::Hang,
         },
     );
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let records = fs::read_to_string(current)
         .unwrap()
         .lines()

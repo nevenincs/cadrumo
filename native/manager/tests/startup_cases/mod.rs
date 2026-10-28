@@ -318,6 +318,7 @@ fn saturated_input_preserves_session_end_and_persists_dropped_observations() {
     );
     assert_eq!(root.launches(), 1, "session end must suppress restart");
     assert_eq!(owned.running.handle.take_dropped_events(), 0);
+    assert!(diagnostics.flush_logs(Duration::from_secs(5)));
     let text = fs::read_to_string(log).unwrap();
     let dropped = text
         .lines()
@@ -344,11 +345,12 @@ fn session_end_settles_before_logging_and_preserves_final_facts_with_a_refused_s
         } else {
             root.path().join("fixture-plan").join("refused.log")
         };
-        let configured = diagnostics.configure_file(&log, 65536, 1);
-        if writable {
-            configured.unwrap();
-        } else {
-            diagnostics.failure(configured.unwrap_err());
+        diagnostics.configure_file(&log, 65536, 1).unwrap();
+        if !writable {
+            // The writer opens the target after configuration returns; its refusal
+            // reaches the snapshot once delivery has drained.
+            assert!(diagnostics.flush_logs(Duration::from_secs(5)));
+            diagnostics.failure(diagnostics.snapshot(0).log_failure.unwrap());
         }
         loop {
             let event = owned.running.events.recv_timeout(CASE_LIMIT).unwrap();
@@ -413,6 +415,7 @@ fn session_end_settles_before_logging_and_preserves_final_facts_with_a_refused_s
                 .is_some()
         );
         if writable {
+            assert!(diagnostics.flush_logs(Duration::from_secs(5)));
             let text = fs::read_to_string(log).unwrap();
             assert!(text.contains("session_end_settle") && text.contains("supervisor_ended"));
         } else {
