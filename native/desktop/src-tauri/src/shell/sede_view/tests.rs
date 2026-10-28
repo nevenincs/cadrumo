@@ -14,6 +14,8 @@ struct FakeLane {
     wake: Condvar,
     ended: Mutex<Option<ViewEnd>>,
     calls: Mutex<Vec<String>>,
+    /// While set, `end_view` leaves the stream open, as a publication in flight does.
+    publishing: AtomicBool,
 }
 
 impl FakeLane {
@@ -23,6 +25,7 @@ impl FakeLane {
             wake: Condvar::new(),
             ended: Mutex::new(None),
             calls: Mutex::new(Vec::new()),
+            publishing: AtomicBool::new(false),
         })
     }
 
@@ -111,7 +114,9 @@ impl Lane for FakeLane {
     }
     fn end_view(&self) {
         let _ = self.note("end_view".into());
-        self.finish(ViewEnd::Closed);
+        if !self.publishing.load(Ordering::Acquire) {
+            self.finish(ViewEnd::Closed);
+        }
     }
     fn close(&self) {
         let _ = self.note("close".into());
@@ -130,6 +135,8 @@ struct FakeRuntime {
     cancelled: Mutex<Vec<String>>,
     settled: Mutex<Option<Outcome>>,
     settles: AtomicU32,
+    /// What happened, in order, across the view and whoever ends the session.
+    events: Arc<Mutex<Vec<&'static str>>>,
 }
 
 impl FakeRuntime {
@@ -148,6 +155,7 @@ impl FakeRuntime {
                 publication: Some(Publication::Published),
             })),
             settles: AtomicU32::new(0),
+            events: Arc::new(Mutex::new(Vec::new())),
         })
     }
 
@@ -182,6 +190,7 @@ impl ViewRuntime for FakeRuntime {
     }
     fn settled(&self, _: &str) -> Option<Outcome> {
         self.settles.fetch_add(1, Ordering::AcqRel);
+        lock(&self.events).push("settled");
         *lock(&self.settled)
     }
     fn held(&self) -> bool {
@@ -818,6 +827,44 @@ fn closing_the_window_ends_an_open_view_the_same_way_and_admits_no_new_one() {
         [OPERATION],
         "a view that cannot be kept is cancelled"
     );
+}
+
+#[test]
+fn closing_the_window_returns_only_after_the_view_published_and_ended() {
+    let rig = rig();
+    rig.lane().publishing.store(true, Ordering::Release);
+    let lane = rig.lane().clone();
+    let publication = thread::spawn(move || {
+        wait_until("the close", || lane.calls().iter().any(|c| c == "end_view"));
+        thread::sleep(Duration::from_millis(300));
+        lane.finish(ViewEnd::Closed);
+    });
+    rig.host.close();
+    // What the window's close does next: sign-in ends the person's session.
+    lock(&rig.runtime.events).push("session_stopped");
+    publication.join().unwrap();
+    assert_eq!(*lock(&rig.runtime.events), ["settled", "session_stopped"]);
+    rig.wait_for_message("ended");
+    assert_eq!(rig.window.last("ended").unwrap()["reason"], "closed");
+    assert!(
+        rig.runtime.cancelled().is_empty(),
+        "closing is not a cancellation"
+    );
+}
+
+#[test]
+fn closing_the_window_stops_waiting_for_a_view_that_never_ends() {
+    let rig = rig();
+    rig.lane().publishing.store(true, Ordering::Release);
+    let started = Instant::now();
+    rig.host.close_within(Duration::from_millis(300));
+    assert!(started.elapsed() < Duration::from_secs(5));
+    assert!(
+        rig.window.last("ended").is_none(),
+        "the view is still publishing"
+    );
+    rig.lane().finish(ViewEnd::Closed);
+    rig.wait_for_message("ended");
 }
 
 #[test]

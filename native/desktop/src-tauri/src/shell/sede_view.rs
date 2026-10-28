@@ -57,7 +57,7 @@ use serde_json::{Value, json};
 use std::{
     collections::{BTreeMap, VecDeque},
     sync::{
-        Arc, Mutex,
+        Arc, Condvar, Mutex,
         atomic::{AtomicBool, AtomicU32, Ordering},
     },
     thread,
@@ -605,6 +605,8 @@ struct View {
     /// announcement and its bytes.
     outbound: Mutex<()>,
     control: Mutex<Control>,
+    /// Signalled when the view reaches `Phase::Ended`.
+    ended: Condvar,
     held: Mutex<Held>,
     /// The downloads being written.
     transfers: Mutex<BTreeMap<u32, Download>>,
@@ -625,6 +627,7 @@ impl View {
                 stop: None,
                 reported: None,
             }),
+            ended: Condvar::new(),
             held: Mutex::new(Held::default()),
             transfers: Mutex::new(BTreeMap::new()),
             upstream: Upstream::default(),
@@ -633,6 +636,22 @@ impl View {
 
     fn phase(&self) -> Phase {
         lock(&self.control).phase
+    }
+
+    /// Waits until the view has ended, or until `deadline`; says whether it ended.
+    fn wait_ended(&self, deadline: Instant) -> bool {
+        let mut control = lock(&self.control);
+        while control.phase != Phase::Ended {
+            let Some(remaining) = deadline.checked_duration_since(Instant::now()) else {
+                return false;
+            };
+            control = self
+                .ended
+                .wait_timeout(control, remaining)
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
+                .0;
+        }
+        true
     }
 
     /// The connection, while the view is open for the person's commands.
@@ -864,6 +883,7 @@ impl View {
             code: end.code.clone(),
             outcome,
         });
+        self.ended.notify_all();
     }
 
     /// Sends the person's queued commands to the page, in order.
@@ -1267,12 +1287,20 @@ impl SedeViewHost {
     }
 
     /// Ends the view when the window closes: it publishes its session and
-    /// settles in the runtime, which outlives the window.
+    /// settles. Returns once the view has ended, so the caller can then end
+    /// the person's session, which a publication still in flight needs. The
+    /// wait is bounded by how long any submitted operation is followed.
     pub fn close(&self) {
+        self.close_within(relay::SETTLE_LIMIT);
+    }
+
+    fn close_within(&self, limit: Duration) {
+        let deadline = Instant::now() + limit;
         self.closed.store(true, Ordering::Release);
         let view = lock(&self.current).clone();
         if let Some(view) = view {
             view.request_close(true);
+            view.wait_ended(deadline);
         }
     }
 
