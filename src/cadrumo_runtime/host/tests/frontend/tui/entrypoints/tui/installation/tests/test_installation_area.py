@@ -461,7 +461,7 @@ class _WaitRunsOut(InstallationClient):
     ) -> ReplyT | InstallationRefused | InstallationFailed:
         if installation_request_facts(request).changes_records:
             self.unanswered.append(installation_act_of(request))
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return self._real.perform(request, reply_type, secret=secret, hold_secret=hold_secret, timeout=timeout)
 
     @override
@@ -497,7 +497,7 @@ async def test_an_act_whose_answer_never_arrived_is_shown_as_unknown_and_its_out
             # Not failed and not sent again: nobody knows how it ended, and the profiles may be gone.
             assert _status(reset).tone == "warning"
             assert _status(reset).message == tr(
-                "tui.installation.status.effect_unknown", code=RefusalCode.DEADLINE_EXCEEDED.value
+                "tui.installation.status.effect_unknown", code=RefusalCode.TIMEOUT.value
             )
             assert [client.unanswered for client in lost] == [[], [InstallationAct.RESET_START]]
             assert served.acts.resets == [False] and changed == [True]
@@ -563,7 +563,4 @@ async def test_the_installed_opener_reaches_the_running_runtime_with_no_profile_
             await settle_until(
                 pilot, lambda: _status(check).tone == "error", "_status(check).tone == 'error'", workers=False
             )
-            assert any(
-                code.value in _status(check).message
-                for code in (RefusalCode.UNAVAILABLE, RefusalCode.DEADLINE_EXCEEDED)
-            )
+            assert any(code.value in _status(check).message for code in (RefusalCode.UNAVAILABLE, RefusalCode.TIMEOUT))

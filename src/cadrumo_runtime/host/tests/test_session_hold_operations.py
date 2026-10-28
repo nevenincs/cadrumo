@@ -705,12 +705,12 @@ def test_relay_logs_transport_cause_without_request_data(
     runtime = _Runtime()
 
     def refused(request: OperationRequest, *, deadline: float) -> OperationReply:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED, check="private-profile-value")
+        raise RefusalError(RefusalCode.TIMEOUT, check="private-profile-value")
 
     monkeypatch.setattr(runtime, "operation", refused)
     with caplog.at_level(logging.WARNING), pytest.raises(RelayRefusedError, match="unavailable"):
         _submit(_relay(runtime), GOOGLE_STATUS_OPERATION_DEFINITION_ID, {"private": "private-profile-value"})
     record = next(record for record in delivered_records(caplog) if record.message == "session_hold_operation_refused")
-    assert record.__dict__["reason"] == "runtime_deadline_exceeded"
+    assert record.__dict__["reason"] == "runtime_timeout"
     assert record.__dict__["action"] == "operation_submit"
     assert "private-profile-value" not in str(record.__dict__)

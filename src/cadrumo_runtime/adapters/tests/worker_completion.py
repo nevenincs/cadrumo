@@ -1,4 +1,4 @@
-"""Observe owned fixture process completion without an elapsed test cutoff."""
+"""Observe owned fixture process completion without an elapsed test timeout."""
 
 from pathlib import Path
 
@@ -12,7 +12,7 @@ def wait_process(process: WindowsOwnedProcess) -> int:
         try:
             return process.wait(timeout=0.05)
         except RefusalError as error:
-            if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is not RefusalCode.TIMEOUT:
                 raise
 
 
@@ -22,7 +22,7 @@ def wait_file(path: Path, process: WindowsOwnedProcess) -> None:
         try:
             result = process.wait(timeout=0.01)
         except RefusalError as error:
-            if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is not RefusalCode.TIMEOUT:
                 raise
         else:
             assert path.exists(), (path.name, result)

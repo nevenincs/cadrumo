@@ -451,7 +451,7 @@ def test_a_write_still_running_at_the_deadline_is_unknown_not_refused(monkeypatc
     assert raised.value.operation_id == _OPERATION_ID
     assert raised.value.effect is None
     assert isinstance(raised.value.__cause__, RefusalError)
-    assert raised.value.__cause__.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.__cause__.reason is RefusalCode.TIMEOUT
     assert len(submissions) == 1
     assert controller.observations >= 2
     assert client.subscriptions == 1
@@ -498,9 +498,7 @@ def test_a_failed_receipt_with_an_effect_and_no_recorded_reason_is_still_unknown
 def test_a_succeeded_write_whose_result_read_times_out_is_unknown(monkeypatch: pytest.MonkeyPatch) -> None:
     client = _Client()
     succeeded = _observation(effect=OperationEffect.UPDATED)
-    controller = _Controller(
-        _OWN_ACCOUNT, observation=succeeded, result_refusal=RefusalError(RefusalCode.DEADLINE_EXCEEDED)
-    )
+    controller = _Controller(_OWN_ACCOUNT, observation=succeeded, result_refusal=RefusalError(RefusalCode.TIMEOUT))
     _install(monkeypatch, client, controller)
 
     with pytest.raises(OperationOutcomeUnknownError) as raised:
@@ -712,7 +710,7 @@ def test_a_read_that_times_out_stays_a_timeout(monkeypatch: pytest.MonkeyPatch) 
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_review_door(client)(LedgerReviewRequest(profile_id=_PROFILE_ID)))
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert controller.observations >= 2
 
 
@@ -765,7 +763,7 @@ def test_a_refusal_whose_detail_read_times_out_stays_a_refusal(monkeypatch: pyte
     refused = _observation(condition=OperationTerminalCondition.REFUSED, effect=OperationEffect.NONE)
 
     def deadline() -> None:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
     _install(
         monkeypatch,
@@ -776,7 +774,7 @@ def test_a_refusal_whose_detail_read_times_out_stays_a_refusal(monkeypatch: pyte
     with pytest.raises(RefusalError) as raised:
         asyncio.run(_door(client)(_add_request()))
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
 
 
 def test_a_result_the_receipt_does_not_support_stays_an_invalid_frame(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1231,7 +1231,7 @@ async def test_resume_typed_refusal_preserves_failed_close_for_unmount_retry(cod
 async def test_resume_timeout_fences_mutation_replay_while_separate_login_remains_available() -> None:
     choices = _choices()
     recovery = _RecoveryClient(UUID(choices[0].profile_id))
-    recovery.recovery_failure = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    recovery.recovery_failure = RefusalError(RefusalCode.TIMEOUT)
     opened = 0
 
     async def open_client(_profile_id: UUID) -> FrontendClient:
@@ -1248,7 +1248,7 @@ async def test_resume_timeout_fences_mutation_replay_while_separate_login_remain
         await settle_until(
             pilot, lambda: recovery.closed and not screen._busy, "recovery.closed and not screen._busy", workers=False
         )
-        assert "runtime_deadline_exceeded" in screen.query_one("#runtime-login-status", PinnedStatusBar).message
+        assert "runtime_timeout" in screen.query_one("#runtime-login-status", PinnedStatusBar).message
         assert screen.query_one("#runtime-login-resume", Button).disabled
         assert not screen.query_one("#runtime-login-submit", Button).disabled
         screen.query_one("#runtime-login-resume-password", Input).value = "private-blind-replay-proof"
