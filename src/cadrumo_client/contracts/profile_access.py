@@ -13,6 +13,7 @@ from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.identity.digest import ContentDigest
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from cadrumo.core.operations import OperationEffect
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.request_faults import MAX_REQUEST_FAULTS, RequestFault
 
@@ -287,6 +288,11 @@ class AccessRefusal(BaseModel):
     holder_operation_id: OperationId | None = None
     #: Whole seconds left in the recovery window of a ``custody_recovering`` refusal.
     recovery_remaining_seconds: int | None = Field(default=None, ge=0)
+    #: ``unknown`` when the worker was lost while it served a change this request
+    #: carried: the change may have taken effect, so repeating it is not safe.
+    effect: OperationEffect | None = None
+    #: The operation whose change has that unknown effect, when the request named one.
+    operation_id: OperationId | None = None
 
     @model_validator(mode="after")
     def _only_an_invalid_request_has_faults(self) -> AccessRefusal:
@@ -296,6 +302,12 @@ class AccessRefusal(BaseModel):
             raise ValueError("only a busy subject names the operation that holds it")
         if self.recovery_remaining_seconds is not None and self.code is not AccessDenialCode.CUSTODY_RECOVERING:
             raise ValueError("only a session suspended for custody recovery carries a recovery window")
+        if self.effect is not None and (
+            self.effect is not OperationEffect.UNKNOWN or self.code is not AccessDenialCode.CUSTODY_RECOVERING
+        ):
+            raise ValueError("only a change the lost worker was serving has an effect, and it is unknown")
+        if self.operation_id is not None and self.effect is None:
+            raise ValueError("only a change of unknown effect names its operation")
         return self
 
 

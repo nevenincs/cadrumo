@@ -19,7 +19,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from threading import Event
+from threading import Event, Thread
 from uuid import UUID, uuid4
 
 import pytest
@@ -55,6 +55,7 @@ from cadrumo_client.contracts.operation_access import (
     OperationControl,
     OperationObserve,
     OperationObserved,
+    OperationRequest,
     OperationSubmit,
     OperationSubmitted,
 )
@@ -442,8 +443,8 @@ def test_work_of_the_lost_worker_is_never_carried_to_its_replacement(
 
 
 @dataclass
-class _CommitHold:
-    """What the held COMMIT saw: the operations that asked, and the runtime's answer to each."""
+class _AuthorityHold:
+    """What the held authority request saw: the operations that asked, and the runtime's answer to each."""
 
     entered: list[OperationId] = field(default_factory=list)
     entered_event: Event = field(default_factory=Event)
@@ -452,30 +453,35 @@ class _CommitHold:
 
 
 @contextmanager
-def _commit_held(monkeypatch: pytest.MonkeyPatch, definition_id: str) -> Generator[_CommitHold]:
-    """Hold the runtime's answer to a worker's COMMIT request for ``definition_id`` until released.
+def _authority_held(
+    monkeypatch: pytest.MonkeyPatch, action: AccessAction, definition_id: str
+) -> Generator[_AuthorityHold]:
+    """Hold the runtime's answer to the first worker request for ``action`` on ``definition_id`` until released.
 
     The hold waits before the runtime's own authority runs, so no profile guard
-    is held meanwhile; the worker's executor has already entered and waits for
-    the answer. The runtime's decision, once released, is the real one.
+    is held meanwhile; the worker has already entered the request and waits for
+    the answer. The runtime's decision, once released, is the real one. Every
+    later request for the same door is recorded and passes at once.
     """
-    hold = _CommitHold()
+    hold = _AuthorityHold()
     original = RuntimeProfileHost.authorize
 
     @contextmanager
     def held(host: RuntimeProfileHost, request: WorkerAuthorityRequest) -> Generator[object]:
         if not (
             isinstance(request, WorkerAuthorizationRequest)
-            and request.request.action is AccessAction.COMMIT
+            and request.request.action is action
             and request.request.definition_id == definition_id
         ):
             with original(host, request) as allowed:
                 yield allowed
             return
+        first = not hold.entered
         hold.entered.append(request.operation_id)
-        hold.entered_event.set()
-        if not hold.release.wait(timeout=60):
-            raise TimeoutError("the held COMMIT was never released")
+        if first:
+            hold.entered_event.set()
+            if not hold.release.wait(timeout=60):
+                raise TimeoutError("the held authority request was never released")
         try:
             with original(host, request) as allowed:
                 hold.answered.append(None)
@@ -566,7 +572,7 @@ def test_work_in_flight_at_the_loss_stays_unknown_after_the_same_connection_rebi
 ) -> None:
     with (
         _runtime(tmp_path, monkeypatch) as (runtime, _clock),
-        _commit_held(monkeypatch, PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID) as hold,
+        _authority_held(monkeypatch, AccessAction.COMMIT, PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID) as hold,
     ):
         person = runtime.connect()
         session_id = _signed_in(runtime, person).status.session_id
@@ -622,4 +628,113 @@ def test_work_in_flight_at_the_loss_stays_unknown_after_the_same_connection_rebi
         assert after.identity == in_flight.identity and after.revision == in_flight.revision
         assert after.executor_entered_at == in_flight.executor_entered_at and after.terminal_condition is None
         assert after.effect is OperationEffect.UNKNOWN
+        assert _profile_view(_reader(runtime))[:2] == (revision, digest)
+
+
+def _in_flight_when_lost(
+    runtime: StoredSignInRuntime, connection: VerifiedConnection, request: OperationRequest, hold: _AuthorityHold
+) -> object:
+    """Send ``request``, kill the worker while it waits on the held authority, and return the runtime's answer."""
+    answers: list[object] = []
+    sender = Thread(target=lambda: answers.append(connection.operation(request, deadline=exchange_deadline())))
+    sender.start()
+    try:
+        assert hold.entered_event.wait(timeout=60), "the worker never asked for the request's authority"
+        assert not answers, f"the request was answered before the worker asked: {answers!r}"
+        _kill_worker(runtime)
+    finally:
+        hold.release.set()
+        sender.join(timeout=60)
+    assert not sender.is_alive(), "the request in flight at the loss was never answered"
+    assert len(answers) == 1
+    return answers[0]
+
+
+def test_a_read_in_flight_when_the_worker_is_lost_hears_the_session_is_recovering(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with (
+        _runtime(tmp_path, monkeypatch) as (runtime, _clock),
+        _authority_held(monkeypatch, AccessAction.OBSERVE, PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID) as hold,
+    ):
+        person = runtime.connect()
+        session_id = _signed_in(runtime, person).status.session_id
+        assert session_id is not None
+        revision, digest, _facts = _profile_view(_reader(runtime))
+        submitted = person.operation(
+            _field_mutation(runtime, session_id, revision=revision, digest=digest, language="ca"),
+            deadline=exchange_deadline(),
+        )
+        assert isinstance(submitted, OperationSubmitted), submitted
+        operation_id = submitted.receipt.operation_id
+
+        refused = _in_flight_when_lost(
+            runtime,
+            person,
+            OperationObserve(
+                request_id=uuid4(),
+                profile_id=runtime.profile_id,
+                session_id=session_id,
+                observation=OperationObservationRequestV1(operation_id=operation_id, after_cursor=0, page_limit=32),
+            ),
+            hold,
+        )
+
+        # A read changed nothing: it is the ordinary, retryable refusal of a suspended session.
+        assert _recovering(refused) > 0
+        assert isinstance(refused, AccessRefusal)
+        assert refused.effect is None and refused.operation_id is None
+        assert hold.entered == [operation_id]
+
+
+def test_a_mutation_in_flight_when_the_worker_is_lost_is_unknown_and_never_run_again_after_rebinding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with (
+        _runtime(tmp_path, monkeypatch) as (runtime, _clock),
+        _authority_held(monkeypatch, AccessAction.START, PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID) as hold,
+    ):
+        person = runtime.connect()
+        session_id = _signed_in(runtime, person).status.session_id
+        assert session_id is not None
+        revision, digest, facts = _profile_view(_reader(runtime))
+        language = "hu" if facts.get(PROFILE_OUTPUT_LANGUAGE_PATH) == "es" else "es"
+        submitted = person.operation(
+            _field_mutation(runtime, session_id, revision=revision, digest=digest, language=language),
+            deadline=exchange_deadline(),
+        )
+        assert isinstance(submitted, OperationSubmitted), submitted
+        operation_id = submitted.receipt.operation_id
+        before = _journal(runtime, operation_id)
+
+        refused = _in_flight_when_lost(
+            runtime,
+            person,
+            OperationControl(
+                action="operation_start",
+                request_id=uuid4(),
+                profile_id=runtime.profile_id,
+                session_id=session_id,
+                operation_id=operation_id,
+            ),
+            hold,
+        )
+
+        # The start may have taken effect: the session is recovering, and the start's outcome is unknown.
+        assert _recovering(refused) > 0
+        assert isinstance(refused, AccessRefusal)
+        assert refused.effect is OperationEffect.UNKNOWN and refused.operation_id == operation_id, refused
+
+        rebound = runtime.resume(person, OperationFrontendProjection.TUI)
+        assert isinstance(rebound, ProfileStatus) and rebound.status.session_id == session_id, rebound
+        projection = _observe(runtime, person, session_id, operation_id)
+        assert projection.terminal_condition is None and projection.lifecycle is not OperationLifecycle.TERMINAL
+        # Observing it is the reconciliation: the lost worker never began it, so nothing took effect.
+        assert projection.effect is OperationEffect.NONE, projection.effect
+        assert projection.result_ref is None and projection.failure_error_code is None
+        # Rebinding ran nothing: the replacement never asked to start it, and its record and the profile are as before.
+        assert hold.entered == [operation_id]
+        after = _journal(runtime, operation_id)
+        assert after.identity == before.identity and after.terminal_condition is None
+        assert after.executor_entered_at is None
         assert _profile_view(_reader(runtime))[:2] == (revision, digest)

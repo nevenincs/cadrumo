@@ -16,7 +16,7 @@ from cadrumo.application.operations.person_acts import operation_is_persons_act
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.logging import get_logger
-from cadrumo.core.operations import OperationLifecycle
+from cadrumo.core.operations import OperationEffect, OperationLifecycle
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -113,6 +113,56 @@ def _session_mismatch(connection: ProfileConnection) -> AccessDenialCode:
     )
 
 
+def _lost_in_flight(
+    host: RuntimeProfileHost,
+    request: OperationRequest,
+    error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+) -> ProfileAccessRefusedError | None:
+    """Return the session's recovery refusal when the worker serving ``request`` was lost meanwhile.
+
+    A failed worker channel, an owner left without a worker, or a session the
+    authority already suspended may each be that loss. It is established here,
+    not by the next request, so this request reports it. Any other failure, or
+    one that left the worker serving, keeps its own answer.
+    """
+    if isinstance(error, ProfileAccessRefusedError) and error.reason is not AccessDenialCode.CUSTODY_RECOVERING:
+        return None
+    if isinstance(error, AutomationCustodyError) and error.reason is not AutomationCustodyCode.UNAVAILABLE:
+        return None
+    host.owner.observe_exit()
+    try:
+        host.authority.require_unsuspended(request.session_id)
+    except ProfileAccessRefusedError as recovering:
+        return recovering
+    return None
+
+
+def _carries_change(request: OperationRequest) -> bool:
+    """Whether ``request`` asks the worker for a change, rather than to read or describe what exists."""
+    return not isinstance(
+        request,
+        OperationContract
+        | OperationObserve
+        | OperationResult
+        | OperationResultPage
+        | OperationReview
+        | OperationClaimableReviews,
+    )
+
+
+def _named_operation(request: OperationRequest) -> OperationId | None:
+    """The existing operation a change names; a submission names none until the worker answers it."""
+    if isinstance(request, OperationControl):
+        return request.operation_id
+    if isinstance(request, OperationManage):
+        return request.management.operation_id
+    if isinstance(request, OperationReviewClaim):
+        return request.reference.operation_id
+    if isinstance(request, OperationSecret):
+        return request.requirement.identity.operation_id
+    return None
+
+
 class ProfileConnectionOperationMixin:
     """Own the operation behavior of the profile connection service."""
 
@@ -183,6 +233,8 @@ class ProfileConnectionOperationMixin:
         """Hold newly observed authority through the final bounded frontend write."""
         reply: OperationReply | AccessRefusal
         deadline = time.monotonic() + 5
+        # Set once the request may reach the worker; a loss after that may have taken its change with it.
+        served_by: RuntimeProfileHost | None = None
         with self._language_observed_after(context), ExitStack() as release_guard:
             try:
                 release_guard.enter_context(self.operation_admission())
@@ -195,6 +247,10 @@ class ProfileConnectionOperationMixin:
                     return
                 if isinstance(request, OperationFinancialInput):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
+                # A suspended session learns how long it may still rebind before any worker is borrowed for it.
+                host.owner.observe_exit()
+                host.authority.require_unsuspended(request.session_id)
+                served_by = host
                 if isinstance(request, OperationSecret):
                     self._operation_secret(host, connection, channel, request)
                     return
@@ -205,31 +261,47 @@ class ProfileConnectionOperationMixin:
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
+                lost = None if served_by is None else _lost_in_flight(served_by, request, error)
+                unknown = lost is not None and _carries_change(request)
                 # A typed refusal is an answer, not a fault: name the request and the
                 # registered fault codes, never a traceback, a payload or a message.
                 _log.warning(
-                    "runtime operation refused code=%s request=%s definition=%s faults=%s",
-                    error.reason,
+                    "runtime operation refused code=%s request=%s definition=%s faults=%s effect=%s",
+                    error.reason if lost is None else lost.reason,
                     type(request).__name__,
                     request.definition_id if isinstance(request, OperationSubmit) else "-",
                     ",".join(fault.type for fault in error.request_faults)
                     if isinstance(error, AutomationCustodyError) and error.request_faults
                     else "-",
+                    OperationEffect.UNKNOWN.value if unknown else "-",
                 )
-                reply = AccessRefusal(
-                    request_id=request.request_id,
-                    runtime_boot_id=self.boot,
-                    connection_id=context.connection_id,
-                    code=error.reason,
-                    sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
-                    request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
-                    holder_operation_id=error.holder_operation_id
-                    if isinstance(error, ProfileAccessRefusedError)
-                    else None,
-                    recovery_remaining_seconds=error.recovery_remaining_seconds
-                    if isinstance(error, ProfileAccessRefusedError)
-                    else None,
-                )
+                if lost is not None:
+                    # The worker was lost while it served this request: the session is recovering,
+                    # and a change it carried may have taken effect, so it is never offered as safe to repeat.
+                    reply = AccessRefusal(
+                        request_id=request.request_id,
+                        runtime_boot_id=self.boot,
+                        connection_id=context.connection_id,
+                        code=lost.reason,
+                        recovery_remaining_seconds=lost.recovery_remaining_seconds,
+                        effect=OperationEffect.UNKNOWN if unknown else None,
+                        operation_id=_named_operation(request) if unknown else None,
+                    )
+                else:
+                    reply = AccessRefusal(
+                        request_id=request.request_id,
+                        runtime_boot_id=self.boot,
+                        connection_id=context.connection_id,
+                        code=error.reason,
+                        sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
+                        request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
+                        holder_operation_id=error.holder_operation_id
+                        if isinstance(error, ProfileAccessRefusedError)
+                        else None,
+                        recovery_remaining_seconds=error.recovery_remaining_seconds
+                        if isinstance(error, ProfileAccessRefusedError)
+                        else None,
+                    )
                 deadline = time.monotonic() + 5
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
@@ -347,9 +419,6 @@ class ProfileConnectionOperationMixin:
         *,
         release_guard: ExitStack,
     ) -> tuple[OperationReply, datetime | None]:
-        # A suspended session learns how long it may still rebind before any worker is borrowed for it.
-        host.owner.observe_exit()
-        host.authority.require_unsuspended(request.session_id)
         if isinstance(request, OperationClaimableReviews):
             # Only the desktop surfaces these reviews; the claim itself stays open to every person frontend.
             if connection.frontend is not OperationFrontendProjection.DESKTOP:
