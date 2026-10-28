@@ -79,8 +79,15 @@ def declared_modelo_period_tokens(
 
 
 def registry_modelo_codes(*, operation: PinnedAuthorityOperation) -> tuple[str, ...]:
-    """Return registry-backed modelo codes in authority order."""
-    return _with_service(operation, lambda service: tuple(row.code for row in service.list_modelos().modelos))
+    """Return registry-backed modelo codes in code order.
+
+    Read from the modelo directories' identities alone. The list report also
+    resolves every modelo's localized title, which a caller asking only for
+    codes would pay for with a scan of each modelo's locale shard.
+    """
+    return tuple(
+        sorted(operation.modelo_directory(modelo_id).modelo.id for modelo_id in operation.modelo_ids()),
+    )
 
 
 def registry_support_matrix(*, operation: PinnedAuthorityOperation) -> ModeloSupportMatrixReport:
