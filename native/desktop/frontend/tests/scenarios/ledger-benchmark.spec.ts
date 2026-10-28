@@ -111,8 +111,10 @@ test("five thousand movements draw, scroll, select and filter within budget", as
   });
   const filtered = Date.now();
   await search.fill("farmacia");
+  // Polled as often as a locator assertion retries: the default backoff of a
+  // poll would add its own waits to the time measured.
   await expect
-    .poll(async () => (await counts(target)).shown)
+    .poll(async () => (await counts(target)).shown, { intervals: [20] })
     .toBeLessThan(ROWS);
   expect(logged("ledger_filter", filtered)).toBeLessThan(500);
   expect(await dataRows(target).count()).toBeLessThan(WINDOW_LIMIT);
