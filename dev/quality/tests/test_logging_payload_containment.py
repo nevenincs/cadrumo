@@ -74,11 +74,16 @@ def log_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
             cadrumo_log_file_level="DEBUG",
         ):
             configure_logging()
+            # Configuration runs on the dispatch thread; drain it before records or the latch depend on it.
+            assert flush_logging(timeout=5)
             yield log_dir / "cadrumo.log"
     finally:
         _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+        try:
+            configure_logging()
+            assert flush_logging(timeout=5)
+        finally:
+            _logging_mod._configured = original_configured or True
 
 
 def _written_log_text(log_file: Path) -> str:
