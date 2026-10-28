@@ -210,7 +210,7 @@ def test_parent_loss_retires_the_coalition_except_the_guardian(monkeypatch: pyte
 def test_unproven_retirement_after_worker_exit_reports_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     kernel = _kernel()
     kernel.worker_codes = [0]
-    kernel.termination_failure = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    kernel.termination_failure = RefusalError(RefusalCode.TIMEOUT)
     _install(monkeypatch, kernel)
     assert _run() == 2
     assert kernel.terminations == [(_OWN_COALITION, _OWN)]

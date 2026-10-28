@@ -138,7 +138,7 @@ class LinuxOwnedProcess:
             poller = select.poll()
             poller.register(self._pidfd, select.POLLIN | select.POLLERR | select.POLLHUP)
             if not poller.poll(min(2_147_483_647, int(timeout * 1000))):
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             return 0
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 
@@ -396,7 +396,7 @@ def _wait_for_unit_settlement(scope: LinuxProcessScope, timeout: float) -> None:
             _release_worker_authority(scope)
             return
         time.sleep(0.01)
-    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+    raise RefusalError(RefusalCode.TIMEOUT)
 
 
 def _unit_is_settled(scope: LinuxProcessScope) -> bool:

@@ -69,7 +69,7 @@ def run_containment_command_sync(tool: ContainmentCommand, arguments: tuple[str,
                 raise RefusalError(RefusalCode.UNAVAILABLE)
             return _read_containment_command_output(process, stdout)
         except subprocess.TimeoutExpired:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         finally:
             if process.returncode is None:
                 with contextlib.suppress(ProcessLookupError):
@@ -89,7 +89,7 @@ def _read_containment_command_output(process: subprocess.Popen[bytes], stdout: I
         remaining = remaining_budget(deadline)
         readable, _, _ = select.select((stdout,), (), (), remaining)
         if not readable:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         block = os.read(stdout.fileno(), 4096)
         if not block:
             break

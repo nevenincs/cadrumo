@@ -109,7 +109,7 @@ class MemoryChannel:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 self._condition.wait(remaining)
             result = bytes(self._data[:count])
             del self._data[:count]
@@ -129,7 +129,7 @@ class MemoryChannel:
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         other = self._other
         if other is None or time.monotonic() >= deadline:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         with other._condition:
             if self._closed or other._closed:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)
@@ -246,7 +246,7 @@ def test_frontend_refuses_one_page_with_wrong_binding(fault: str) -> None:
 @pytest.mark.parametrize(
     ("code", "expected_error"),
     (
-        (RefusalCode.DEADLINE_EXCEEDED, RefusalError),
+        (RefusalCode.TIMEOUT, RefusalError),
         (AccessDenialCode.PERIOD_DENIED, FrontendRefusedError),
     ),
 )
@@ -359,7 +359,7 @@ def test_frontend_does_not_request_first_result_page_after_absolute_deadline() -
     with pytest.raises(RefusalError) as raised:
         FrontendClient.read_result_document(client, _result(), deadline=time.monotonic() - 1)
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert requests == []
 
 
@@ -375,7 +375,7 @@ def test_frontend_zero_timeout_keeps_deadline_refusal_without_requesting_a_page(
     with pytest.raises(RefusalError) as raised:
         FrontendClient.read_result_document(client, _result(), timeout=0)
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert requests == []
 
 

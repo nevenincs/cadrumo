@@ -646,7 +646,7 @@ class MacosOwnedProcess:
             if self._watch.wait(timeout=min(remaining, _MAXIMUM_WATCH_SECONDS)):
                 return 0
             if remaining <= _MAXIMUM_WATCH_SECONDS:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
 
     def close(self) -> None:
         """Release the native watch after its job has settled."""
@@ -963,11 +963,11 @@ class MacosProcessScope:
                 self._worker.watch if self._worker is not None else None,
             ):
                 if watch is not None and not self._exited(watch, deadline=deadline):
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
             if self._watcher is not None:
                 self._watcher.join(timeout=max(0.0, deadline - time.monotonic()))
                 if self._watcher.is_alive():
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 self._watcher = None
         except BaseException as error:
             if self._watcher_failure is not None:
@@ -997,7 +997,7 @@ class MacosProcessScope:
             try:
                 watch.wait(timeout=max(0.0, deadline - time.monotonic()))
             except RefusalError as error:
-                if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason is RefusalCode.TIMEOUT:
                     return False
                 raise
             return True
@@ -1033,7 +1033,7 @@ class MacosProcessScope:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         while not self._absent(target):
             if time.monotonic() >= deadline:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             time.sleep(0.01)
 
     def _reap_stale_jobs(self) -> None:

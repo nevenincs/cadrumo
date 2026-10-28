@@ -178,7 +178,7 @@ def test_read_deadline_cancels_pending_io_and_channel_remains_usable(tmp_path: P
         try:
             with pytest.raises(RefusalError) as caught:
                 client.read_exact(1, deadline=time.monotonic() + 0.05)
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
             server.write_all(b"x", deadline=time.monotonic() + 1)
             assert client.read_exact(1, deadline=time.monotonic() + 1) == b"x"
         finally:
@@ -194,7 +194,7 @@ def test_accept_deadline_can_be_retried(tmp_path: Path) -> None:
         endpoint.listen()
         with pytest.raises(RefusalError) as caught:
             endpoint.accept(timeout=0.05)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         client = endpoint.connect()
         server = endpoint.accept(timeout=1)
         client.close()

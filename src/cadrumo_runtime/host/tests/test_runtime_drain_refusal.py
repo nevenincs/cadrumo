@@ -38,7 +38,7 @@ class _FailedWorker:
         self.settled = False
 
     def drain(self, *, deadline: float) -> None:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
     def close(self, *, deadline: float) -> None:
         self.contained = True

@@ -134,7 +134,7 @@ def _startup_diagnostics(directory: Path, child: asyncio.subprocess.Process | Wi
         try:
             status = str(child.wait(timeout=0))
         except RefusalError as error:
-            if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is not RefusalCode.TIMEOUT:
                 raise
             status = "still_running"
         observations.append(f"direct_child_pid={child.pid}, exit={status}")

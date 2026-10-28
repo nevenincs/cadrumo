@@ -151,7 +151,7 @@ class _Peer:
             try:
                 channel = self.endpoint.accept(timeout=1)
             except RefusalError as error:
-                if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason is RefusalCode.TIMEOUT:
                     continue
                 return
             Thread(target=self._serve, args=(channel,), daemon=True).start()

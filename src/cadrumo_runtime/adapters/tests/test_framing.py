@@ -204,7 +204,7 @@ def test_a_held_exchange_reads_every_step_of_one_request_and_admits_no_other_unt
 
     assert isinstance(ready, SecretReady)
     assert isinstance(settled, AccessRefusal)
-    assert queued.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert queued.value.reason is RefusalCode.TIMEOUT
     # Only this request and its one secret frame reached the peer, and the buffer is wiped.
     request_frame, secret_header, secret_body = channel.writes[handshake_writes:]
     assert str(request.request_id).encode() in request_frame

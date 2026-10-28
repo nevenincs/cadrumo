@@ -53,7 +53,7 @@ class MemoryChannel:
                     raise RefusalError(RefusalCode.CONNECTION_CLOSED)
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 self._condition.wait(remaining)
             result = bytes(self._data[:count])
             del self._data[:count]
@@ -73,7 +73,7 @@ class MemoryChannel:
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         other = self._other
         if other is None or time.monotonic() >= deadline:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         with other._condition:
             if self._closed or other._closed:
                 raise RefusalError(RefusalCode.CONNECTION_CLOSED)

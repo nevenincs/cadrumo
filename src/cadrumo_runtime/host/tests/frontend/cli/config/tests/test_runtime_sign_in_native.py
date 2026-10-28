@@ -167,7 +167,7 @@ def test_native_runtime_password_login_shared_presence_and_logout(tmp_path: Path
                     try:
                         code = process.wait(timeout=0)
                     except RefusalError as waiting:
-                        if waiting.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                        if waiting.reason is not RefusalCode.TIMEOUT:
                             raise
                     else:
                         pytest.fail(f"Runtime exited before readiness: {code}", pytrace=False)

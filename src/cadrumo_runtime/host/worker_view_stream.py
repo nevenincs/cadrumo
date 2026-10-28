@@ -326,7 +326,7 @@ class WorkerViewStream:
             try:
                 channel = self._endpoint.accept(timeout=None, wakes=(self._stopping,))
             except RefusalError as error:
-                if error.reason in {RefusalCode.CONNECTION_CLOSED, RefusalCode.DEADLINE_EXCEEDED}:
+                if error.reason in {RefusalCode.CONNECTION_CLOSED, RefusalCode.TIMEOUT}:
                     continue
                 self._stop()
                 return

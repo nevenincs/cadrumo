@@ -91,7 +91,7 @@ class RuntimeModeloWorkbenchSource:
         # Serialize until that read returns, sharing one queue/read deadline.
         deadline = time.monotonic() + _READ_TIMEOUT_SECONDS
         if not self._help_read_lock.acquire(timeout=max(0.0, deadline - time.monotonic())):
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         try:
             self._require_session()
             projection = asyncio.run(

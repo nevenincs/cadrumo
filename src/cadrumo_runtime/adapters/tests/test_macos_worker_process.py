@@ -633,10 +633,10 @@ def test_failed_termination_is_retained_until_a_retry_proves_the_coalition_empty
     guardian = _launch(scope, tmp_path)
     host.add_worker()
     scope.verify_worker(_channel(), owner_id=str(_UID))
-    host.termination_failures.append(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+    host.termination_failures.append(RefusalError(RefusalCode.TIMEOUT))
     with pytest.raises(RefusalError) as caught:
         scope.terminate(timeout=1)
-    assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert caught.value.reason is RefusalCode.TIMEOUT
     assert scope._started and scope._label + ".json" in host.store and not any(w.closed for w in host.watches[:1])
     assert not any(event[:2] == ("launchctl", "bootout") for event in host.events)
     scope.terminate(timeout=2)
@@ -707,10 +707,10 @@ def test_absent_stale_job_keeps_its_recorded_coalition_retirement_obligation(
     host.processes[950] = orphan
     scope = MacosProcessScope(worker_id=uuid4(), storage_root=tmp_path, host=host)
     if termination_fails:
-        host.termination_failures.append(RefusalError(RefusalCode.DEADLINE_EXCEEDED))
+        host.termination_failures.append(RefusalError(RefusalCode.TIMEOUT))
         with pytest.raises(RefusalError) as caught:
             _launch(scope, tmp_path)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         assert not orphan.exited.is_set() and stale.label + ".json" in host.store
         assert not any(event[0] == "bootstrap" for event in host.events)
         return

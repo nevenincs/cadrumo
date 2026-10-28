@@ -315,7 +315,7 @@ def test_repeated_containment_failure_keeps_retiring_host_mapped(
 
         def refused_containment(*, deadline: float | None = None) -> None:
             del deadline
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
 
         monkeypatch.setattr(worker, "drain", refused_containment)
         monkeypatch.setattr(worker, "close", refused_containment)

@@ -203,7 +203,7 @@ def test_member_that_never_dies_exceeds_the_deadline() -> None:
     kernel = _UnkillableKernel({80: (_OWNED, member)})
     with pytest.raises(RefusalError) as caught:
         terminate_macos_coalition(_OWNED, deadline=_deadline(0.05), port=kernel)
-    assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert caught.value.reason is RefusalCode.TIMEOUT
     assert len(kernel.signals) >= 2
 
 

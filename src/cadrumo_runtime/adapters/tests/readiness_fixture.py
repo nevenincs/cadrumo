@@ -36,7 +36,7 @@ def main() -> None:
             try:
                 channel = endpoint.accept(timeout=2)
             except RefusalError as error:
-                if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason is RefusalCode.TIMEOUT:
                     continue
                 raise
             try:

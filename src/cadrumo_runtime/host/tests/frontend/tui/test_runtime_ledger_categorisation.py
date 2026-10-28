@@ -966,7 +966,7 @@ def test_a_review_whose_start_reply_is_lost_is_unknown(monkeypatch: pytest.Monke
             definition_contract = contract
 
             async def start(self) -> str:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
 
         return _Accepted()
 

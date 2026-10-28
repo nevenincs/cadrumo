@@ -198,7 +198,7 @@ class _ContainmentCleanup:
             deadline = time.monotonic() + 10
             while _job(label) is not None:
                 if time.monotonic() >= deadline:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 time.sleep(0.05)
         _NativeMacosWorkerHost().remove_marker(label)
 

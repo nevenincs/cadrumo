@@ -210,7 +210,7 @@ class ProfileConnectionAccessMixin:
                 )
                 remaining = min(5.0, (session.expires_at - self._wall_clock()).total_seconds())
                 if remaining <= 0:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 write_document(
                     channel,
                     EnrollmentRecorded(

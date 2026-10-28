@@ -135,7 +135,7 @@ class _ContainmentCleanup:
             if self.cgroup:
                 while not _cgroup_empty(self.cgroup):
                     if time.monotonic() >= deadline:
-                        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                        raise RefusalError(RefusalCode.TIMEOUT)
                     time.sleep(0.05)
             # An unknown cgroup from partial construction needs exact native absence.
             if (failure is not None or not self.cgroup) and not _unit_absent(self.unit):

@@ -216,7 +216,7 @@ def test_queue_timeout_never_starts_a_second_operation(monkeypatch: pytest.Monke
         try:
             with pytest.raises(RefusalError) as raised:
                 await asyncio.to_thread(_help, source, "02")
-            assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert raised.value.reason is RefusalCode.TIMEOUT
             assert len(transport.calls) == 1
         finally:
             transport.release.set()

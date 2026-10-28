@@ -133,7 +133,7 @@ class WorkerAuthorizationClient:
             clean = True
             # Admission is checked as the stage starts; a lease already ended admits nothing.
             if reply.expires_at <= now():
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
         finally:
             self.connections.checkin(channel, reusable=clean)
 

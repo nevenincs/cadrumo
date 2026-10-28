@@ -89,7 +89,7 @@ class _Listener:
     def accept(self, *, timeout: float | None, wakes: tuple[ChannelWake, ...] = ()) -> ByteChannel:
         if self.accepted:
             self.stop.set()
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         self.accepted = True
         if self.reject_on_accept:
             self.stop.set()
@@ -452,7 +452,7 @@ def test_cleanup_owner_lock_uses_remaining_absolute_drain_budget() -> None:
             assert entered.wait(2)
             with pytest.raises(RefusalError) as caught:
                 owner.close_now(deadline=time.monotonic() + 0.05)
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
             assert not owner.released and not channel.closed.is_set()
         finally:
             release.set()

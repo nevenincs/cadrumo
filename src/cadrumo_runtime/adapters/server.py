@@ -284,7 +284,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             self.stop.set()
             return False
         return error.reason in {
-            RefusalCode.DEADLINE_EXCEEDED,
+            RefusalCode.TIMEOUT,
             RefusalCode.PEER_UNTRUSTED,
             RefusalCode.CONNECTION_CLOSED,
         }

@@ -95,7 +95,7 @@ class WorkerAuthorizationConnections:
                 return None
             remaining = deadline - time.monotonic()
             if remaining <= 0:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             self._condition.wait(remaining)
 
     def _require_reusable(self, channel: WorkerChannel) -> None:

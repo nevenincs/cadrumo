@@ -145,7 +145,7 @@ class WorkerAuthorizationServer:
                         channel = self._endpoint.accept(timeout=None, wakes=(self._stop,))
                     except RefusalError as error:
                         if error.reason in {
-                            RefusalCode.DEADLINE_EXCEEDED,
+                            RefusalCode.TIMEOUT,
                             RefusalCode.PEER_UNTRUSTED,
                             RefusalCode.CONNECTION_CLOSED,
                         }:

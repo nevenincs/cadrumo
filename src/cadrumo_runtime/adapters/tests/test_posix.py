@@ -582,7 +582,7 @@ def test_deadline_bounds_partial_frame() -> None:
         right.sendall(b"J")
         with pytest.raises(RefusalError) as caught:
             read_document(channel, ClientHello, deadline=time.monotonic() + 0.05)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
     finally:
         channel.close()
         with contextlib.suppress(OSError):

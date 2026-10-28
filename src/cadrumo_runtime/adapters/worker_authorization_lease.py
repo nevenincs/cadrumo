@@ -376,5 +376,5 @@ def _validated_authority_permit(
         raise RefusalError(RefusalCode.INVALID_FRAME)
     # Admission is checked as the stage starts; a lease already ended admits nothing.
     if reply.expires_at <= now():
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
     return reply

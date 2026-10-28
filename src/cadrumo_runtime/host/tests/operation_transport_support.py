@@ -89,7 +89,7 @@ class ProjectionWriteBarrier:
             self._record("private_entered")
             self.entered.set()
             if not self.release.wait(max(0, deadline - time.monotonic())):
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
 
 
 @dataclass

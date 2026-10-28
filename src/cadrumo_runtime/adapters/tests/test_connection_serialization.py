@@ -116,7 +116,7 @@ def test_concurrent_status_exchanges_share_only_their_own_native_connection(tmp_
                             queued_secret,
                             deadline=time.monotonic() + 0.1,
                         )
-                    assert timed_out.value.reason is RefusalCode.DEADLINE_EXCEEDED
+                    assert timed_out.value.reason is RefusalCode.TIMEOUT
                     assert not any(queued_secret)
                     assert pausing.writes == 1 and not first.done()
                     second_started = Event()

@@ -900,7 +900,7 @@ async def test_recovery_mismatched_receipt_is_unknown_and_cannot_replay(receipt_
 @pytest.mark.parametrize(
     "failure",
     [
-        RefusalError(RefusalCode.DEADLINE_EXCEEDED),
+        RefusalError(RefusalCode.TIMEOUT),
         FrontendRefusedError(RefusalCode.CONNECTION_CLOSED.value),
         OSError("private-dispatch-error-canary"),
     ],
@@ -940,7 +940,7 @@ async def test_recovery_pre_dispatch_failure_and_domain_refusal_allow_fresh_proo
         nonlocal openings
         openings += 1
         if openings == 1:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return refused if openings == 2 else recovered
 
     screen = RuntimeAccessManagementScreen(client, open_recovery_client=open_recovery)
