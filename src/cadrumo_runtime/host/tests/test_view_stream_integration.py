@@ -420,7 +420,9 @@ async def _running_view(
             bind_worker_leg, relay, storage_root=tmp_path, identity=identity, product_version=_VERSION
         )
         assert bind == ViewWorkerBind(operation_id=operation_id, session_id=session_id)
-        lane = _Lane(tmp_path, relay, _Clock(), identity, opened[0], operation_id, session_id, person_id, runtime, held)
+        lane = _Lane(
+            tmp_path, relay, _Clock(), identity, operation_id, session_id, person_id, runtime, held, sink=opened[0]
+        )
         lanes.append(lane)
         yield _View(supervisor, operation_id, settling, lane, site, root)
     finally:

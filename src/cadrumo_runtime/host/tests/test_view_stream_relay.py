@@ -94,6 +94,20 @@ def _same_process_worker(channel: WorkerChannel) -> None:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
 
 
+def _synthetic_identity() -> ProfileWorkerIdentity:
+    return ProfileWorkerIdentity(
+        worker_id=uuid4(),
+        runtime_boot_id=uuid4(),
+        binding=ProfileAccessBinding(
+            profile_id=uuid4(),
+            installation_id=uuid4(),
+            os_owner_id="synthetic-owner",
+            custody_generation=1,
+            dek_epoch=uuid4(),
+        ),
+    )
+
+
 def _operation_id() -> str:
     return content_hash_hex({"view": str(uuid4())})
 
@@ -150,12 +164,13 @@ class _Window:
 
 
 @dataclass
-class _Lane:
+class _Views:
+    """A relay bound to one view's worker leg, and the windows attached to it."""
+
     root: Path
     relay: ViewStreamRelay
     clock: _Clock
     identity: ProfileWorkerIdentity
-    sink: WorkerViewStream
     operation_id: str
     session_id: UUID
     person_id: UUID
@@ -214,22 +229,19 @@ class _Lane:
         return window
 
 
+@dataclass(kw_only=True)
+class _Lane(_Views):
+    """The relay's view served by this process's own worker sink."""
+
+    sink: WorkerViewStream
+
+
 _RUNTIME_NAMESPACE = uuid4()
 
 
 @pytest.fixture
 def lane(tmp_path: Path) -> Iterator[_Lane]:
-    identity = ProfileWorkerIdentity(
-        worker_id=uuid4(),
-        runtime_boot_id=uuid4(),
-        binding=ProfileAccessBinding(
-            profile_id=uuid4(),
-            installation_id=uuid4(),
-            os_owner_id="synthetic-owner",
-            custody_generation=1,
-            dek_epoch=uuid4(),
-        ),
-    )
+    identity = _synthetic_identity()
     operation_id, session_id, person_id = _operation_id(), uuid4(), uuid4()
     held = {(person_id, session_id)}
     clock = _Clock()
@@ -249,7 +261,7 @@ def lane(tmp_path: Path) -> Iterator[_Lane]:
     _wait_until(lambda: sink.connected)
     runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
     runtime.listen()
-    built = _Lane(tmp_path, relay, clock, identity, sink, operation_id, session_id, person_id, runtime, held)
+    built = _Lane(tmp_path, relay, clock, identity, operation_id, session_id, person_id, runtime, held, sink=sink)
     try:
         yield built
     finally:
@@ -416,17 +428,7 @@ def test_view_images_without_window_credit_are_dropped_not_buffered(lane: _Lane)
 
 
 def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: Path) -> None:
-    identity = ProfileWorkerIdentity(
-        worker_id=uuid4(),
-        runtime_boot_id=uuid4(),
-        binding=ProfileAccessBinding(
-            profile_id=uuid4(),
-            installation_id=uuid4(),
-            os_owner_id="synthetic-owner",
-            custody_generation=1,
-            dek_epoch=uuid4(),
-        ),
-    )
+    identity = _synthetic_identity()
     operation_id, session_id = _operation_id(), uuid4()
     endpoint = worker_endpoint(storage_root=tmp_path, worker_namespace=worker_view_namespace(identity.worker_id))
     endpoint.listen()
@@ -474,17 +476,7 @@ def test_view_worker_image_without_credit_is_a_violation_not_buffered(tmp_path: 
 
 
 def test_view_worker_leg_admits_only_the_verified_worker(tmp_path: Path) -> None:
-    identity = ProfileWorkerIdentity(
-        worker_id=uuid4(),
-        runtime_boot_id=uuid4(),
-        binding=ProfileAccessBinding(
-            profile_id=uuid4(),
-            installation_id=uuid4(),
-            os_owner_id="synthetic-owner",
-            custody_generation=1,
-            dek_epoch=uuid4(),
-        ),
-    )
+    identity = _synthetic_identity()
 
     def foreign(_channel: WorkerChannel) -> None:
         raise RefusalError(RefusalCode.PEER_UNTRUSTED)
@@ -559,10 +551,9 @@ def test_view_person_input_reaches_the_worker_and_runtime_stop_unbinds(lane: _La
     _wait_until(lambda: lane.sink.ended)
 
 
-def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane: _Lane) -> None:
-    window = lane.attach()
-    # More key presses than the worker queues, sent before the view takes any: each release must arrive.
-    presses = [
+def _key_presses(count: int) -> list[ViewInput]:
+    """Alternating presses and releases, so a dropped one would leave a key held down."""
+    return [
         ViewInput(
             event=KeyInput(
                 action=KeyAction.DOWN if index % 2 == 0 else KeyAction.UP,
@@ -571,28 +562,193 @@ def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane:
                 modifiers=index % 16,
             )
         )
-        for index in range(1_500)
+        for index in range(count)
     ]
+
+
+def _type_all(window: _Window, presses: list[ViewInput], *, seconds: float) -> Thread:
+    """Send every press from the window on its own thread, each write waiting up to ``seconds``."""
 
     def type_all() -> None:
         for press in presses:
-            write_view_document(window.client, press, deadline=time.monotonic() + 10)
+            write_view_document(window.client, press, deadline=time.monotonic() + seconds)
 
     typing = Thread(target=type_all, daemon=True)
     typing.start()
-    # Long enough for the worker's queue to fill and the reader to hold the rest back.
-    time.sleep(1.0)
+    return typing
+
+
+def _take_all(sink: WorkerViewStream, count: int) -> list[object]:
     received: list[object] = []
     deadline = time.monotonic() + 15
-    while len(received) < len(presses) and time.monotonic() < deadline:
-        if (item := lane.sink.receive(timeout=0.5)) is not None:
+    while len(received) < count and time.monotonic() < deadline:
+        if (item := sink.receive(timeout=0.5)) is not None:
             received.append(item)
+    return received
+
+
+_HELD_PRESSES = 4_000
+"""More presses than the worker queues plus both legs' pipe buffers hold, so the window's own writes wait."""
+
+_HELD_SECONDS = 6.0
+"""Longer than any per-frame bound the relay applies."""
+
+
+def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane: _Lane) -> None:
+    window = lane.attach()
+    # More key presses than the worker queues, sent before the view takes any: each release must arrive.
+    presses = _key_presses(1_500)
+    typing = _type_all(window, presses, seconds=10)
+    # Long enough for the worker's queue to fill and the reader to hold the rest back.
+    time.sleep(1.0)
+    received = _take_all(lane.sink, len(presses))
     typing.join(timeout=10)
     assert not typing.is_alive()
     assert received == presses
     assert not lane.sink.ended
     window.send(ViewNavigate(verb=ViewNavigateVerb.RELOAD))
     assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
+
+
+def test_view_input_the_worker_holds_back_past_any_frame_bound_keeps_the_view(lane: _Lane) -> None:
+    window = lane.attach()
+    presses = _key_presses(_HELD_PRESSES)
+    typing = _type_all(window, presses, seconds=60)
+    # The page takes nothing for longer than a frame may take: that is a busy page, not a failure.
+    time.sleep(_HELD_SECONDS)
+    assert lane.relay.worker_bind(lane.operation_id) is not None, "the held input ended the view"
+    assert not lane.sink.ended
+    assert typing.is_alive(), "the input was never held back up to the window"
+    received = _take_all(lane.sink, len(presses))
+    typing.join(timeout=10)
+    assert not typing.is_alive()
+    assert received == presses
+    window.send(ViewNavigate(verb=ViewNavigateVerb.RELOAD))
+    assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
+
+
+def test_view_images_keep_reaching_the_window_while_input_is_held(lane: _Lane) -> None:
+    window = lane.attach()
+    window.send(ViewCredit(images=2))
+    # Upstream is ordered: once the worker has the navigation, it holds the credit sent before it.
+    window.send(ViewNavigate(verb=ViewNavigateVerb.RELOAD))
+    assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
+    presses = _key_presses(_HELD_PRESSES)
+    typing = _type_all(window, presses, seconds=60)
+    time.sleep(_HELD_SECONDS)
+    assert lane.relay.worker_bind(lane.operation_id) is not None, "the held input ended the view"
+    assert typing.is_alive(), "the input was never held back up to the window"
+    for sequence in (1, 2):
+        lane.sink.offer_image(*_image(sequence))
+        image = window.read()
+        assert isinstance(image, AssembledViewImage)
+        assert image.announcement.sequence == sequence
+        assert image.data == _image(sequence)[1]
+    assert typing.is_alive()
+    received = _take_all(lane.sink, len(presses))
+    typing.join(timeout=10)
+    assert received == presses
+    # Credit granted after the held input reaches the worker once that input is taken.
+    window.send(ViewCredit(images=1))
+    lane.sink.offer_image(*_image(3))
+    image = window.read()
+    assert isinstance(image, AssembledViewImage)
+    assert image.announcement.sequence == 3
+
+
+def _other_process_worker(channel: WorkerChannel) -> None:
+    """Stand in for the worker owner's check: the worker is a child process, never this one."""
+    if channel.peer.process_id == os.getpid():
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+
+
+def test_view_whose_worker_is_gone_while_input_is_held_ends_promptly(tmp_path: Path) -> None:
+    identity = _synthetic_identity()
+    operation_id, session_id, person_id = _operation_id(), uuid4(), uuid4()
+    held = {(person_id, session_id)}
+    relay = ViewStreamRelay(
+        runtime_boot_id=identity.runtime_boot_id,
+        holds_session=lambda connection, session: (connection, session) in held,
+    )
+    child = subprocess.Popen(
+        [
+            sys.executable,
+            "-c",
+            # A profile worker in its own process: its sink listens and never takes the person's input.
+            "import os, sys\n"
+            "from pathlib import Path\n"
+            "from uuid import UUID\n"
+            "from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity\n"
+            "from cadrumo_runtime.host.worker_view_stream import WorkerViewStreams\n"
+            "identity = ProfileWorkerIdentity.model_validate_json(os.environ['VIEW_TEST_IDENTITY'])\n"
+            "WorkerViewStreams(\n"
+            "    storage_root=Path(os.environ['VIEW_TEST_ROOT']),\n"
+            "    identity=identity,\n"
+            "    parent_pid=int(os.environ['VIEW_TEST_PARENT']),\n"
+            "    product_version=os.environ['VIEW_TEST_VERSION'],\n"
+            ").open_view(operation_id=os.environ['VIEW_TEST_OPERATION'], session_id=UUID(os.environ['VIEW_TEST_SESSION']))\n"
+            "print('listening', flush=True)\n"
+            "sys.stdin.read()\n"
+            # Gone without a word: the process ends and the system closes its channel.
+            "os._exit(0)\n",
+        ],
+        env={
+            **os.environ,
+            "VIEW_TEST_IDENTITY": identity.model_dump_json(),
+            "VIEW_TEST_ROOT": str(tmp_path),
+            "VIEW_TEST_PARENT": str(os.getpid()),
+            "VIEW_TEST_VERSION": _VERSION,
+            "VIEW_TEST_OPERATION": operation_id,
+            "VIEW_TEST_SESSION": str(session_id),
+        },
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+    runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
+    views = _Views(tmp_path, relay, _Clock(), identity, operation_id, session_id, person_id, runtime, held)
+    try:
+        assert child.stdout is not None
+        assert child.stdout.readline().strip() == "listening"
+        bind, channel = open_worker_view_leg(
+            storage_root=tmp_path, identity=identity, verify=_other_process_worker, product_version=_VERSION
+        )
+        assert bind == ViewWorkerBind(operation_id=operation_id, session_id=session_id)
+        relay.bind_worker(profile_id=identity.binding.profile_id, bind=bind, channel=channel)
+        runtime.listen()
+        window = views.attach()
+        typing = _type_all(window, _key_presses(_HELD_PRESSES), seconds=60)
+        time.sleep(_HELD_SECONDS)
+        assert relay.worker_bind(operation_id) is not None, "the held input ended the view"
+        assert typing.is_alive(), "the input was never held back up to the window"
+        assert child.stdin is not None
+        child.stdin.close()
+        child.wait(timeout=30)
+        gone = time.monotonic()
+        try:
+            closed = window.read()
+        except RefusalError as ended:
+            # A pipe closed with held input unread may discard the reason written just before it.
+            assert ended.reason is RefusalCode.CONNECTION_CLOSED
+        else:
+            assert closed in {
+                ViewClosed(reason=ViewClosedReason.OPERATION_ENDED),
+                ViewClosed(reason=ViewClosedReason.FAILED),
+            }
+        # Both legs let go: the relay holds no view and the window's held write is released.
+        _wait_until(lambda: relay.worker_bind(operation_id) is None, seconds=2)
+        typing.join(timeout=2)
+        assert not typing.is_alive()
+        assert time.monotonic() - gone < 2
+    finally:
+        relay.close()
+        if child.poll() is None:
+            child.kill()
+            child.wait(timeout=30)
+        for window in views.windows:
+            window.client.close()
+            window.server.close()
+        runtime.close()
 
 
 def test_view_attach_documents_travel_the_public_request_door() -> None:

@@ -14,6 +14,14 @@ image arriving while the window has no credit is dropped as it is read, so
 the host buffers no image. Credit beyond two images on either leg, and any
 frame the view codec refuses, is a protocol violation.
 
+Person input the worker holds back waits in the worker leg for as long as
+the worker lives: its own reader paces the person, and a page busy for a
+while is not a failure. Only the leg's end, whether its peer went away, it
+broke the protocol or the host unbound it, ends that wait. Images keep
+reaching the window meanwhile under the credit the worker holds, because the
+worker's frames are read on their own thread; credit the window grants later
+reaches the worker behind the held input, in the order the window sent it.
+
 Transfer documents and transfer chunks pass through unchanged in both
 directions, each chunk checked for a well-formed header and never inside an
 image's chunk run; their credit is end to end, between the bytes' sender and
@@ -97,6 +105,14 @@ _LOGGER = get_logger(__name__)
 
 _FRAME_SECONDS = 5.0
 """Each relayed frame and each leg handshake completes within this bound."""
+
+_HELD_WRITE_SECONDS = 0xFFFFFFFE / 1000
+"""A write to the worker waits up to the longest single native wait; liveness ends it first.
+
+The worker paces person input by not reading, so this is no bound on the
+person's use: the worker leg's end closes its channel, which cancels the
+write, and a worker that went away fails it.
+"""
 
 _CLOSING_SECONDS = 1.0
 """The best-effort ``view.closed`` to a window being unbound; its close follows regardless."""
@@ -499,11 +515,14 @@ class ViewStreamRelay:
                 return
 
     def _write_worker(self, worker: _WorkerLeg, item: ViewConnectionUpstreamDocument | bytes) -> bool:
-        """Write one document or upload chunk to the worker; a failure ends the view."""
+        """Write one document or upload chunk to the worker, waiting while it holds input back.
+
+        A failure ends the view; a worker that is alive but busy is not one.
+        """
         frame = encode_frame(VIEW_CHUNK_FRAME_KIND, item) if isinstance(item, bytes) else document_frame(item)
         try:
             with worker.write_lock:
-                worker.channel.write_all(frame, deadline=time.monotonic() + _FRAME_SECONDS)
+                worker.channel.write_all(frame, deadline=time.monotonic() + _HELD_WRITE_SECONDS)
         except RefusalError:
             self._end_worker(worker, ViewClosedReason.FAILED)
             return False
