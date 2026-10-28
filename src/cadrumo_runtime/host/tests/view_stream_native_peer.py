@@ -50,6 +50,7 @@ from cadrumo_client.contracts.view_transfer import (
     ViewDownloadAnswer,
     ViewDownloadOutcome,
     ViewFileChooser,
+    ViewUploadCancelled,
     ViewUploadedFile,
 )
 from cadrumo_client.transport.frame_io import read_document, write_document
@@ -270,6 +271,8 @@ class _Peer:
                     size=len(item.data),
                     sha256=hashlib.sha256(item.data).hexdigest(),
                 )
+            elif isinstance(item, ViewUploadCancelled):
+                self.emit("upload_cancelled", chooser_id=item.chooser_id)
             else:
                 self.emit("transfer", kind=item.kind)
 
