@@ -808,6 +808,8 @@ desktop:
       save: Guardar…
     ended:
       closed: El navegador está cerrado.
+      component_not_ready: El navegador para la web de la Agencia Tributaria aún no
+        está configurado. Configúralo para abrir aquí la Sede de la AEAT.
       failed: El navegador se detuvo por un error.
       refused: Cadrumo no puede abrir el navegador ahora.
       session_lost: Tu sesión de Cadrumo terminó, así que el navegador se cerró sin

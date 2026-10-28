@@ -45,6 +45,8 @@ pub fn level(event: &Event) -> Level {
             } => Level::Info,
             ServiceFact::AgentRefused { .. } | ServiceFact::AgentProtocolRefused {} => Level::Error,
             ServiceFact::AgentRetryScheduled { .. } => Level::Warning,
+            // The window says why and offers a way on; nothing here failed.
+            ServiceFact::FeatureRefused { .. } => Level::Warning,
             ServiceFact::AgentRetryExhausted { .. } => Level::Error,
             ServiceFact::EnvironmentResolved { .. } => Level::Debug,
             ServiceFact::AgentReady { .. } | ServiceFact::ManagerInstallationCompleted { .. } => {
@@ -234,8 +236,12 @@ fn lifecycle(fact: LifecycleFact) -> Level {
 mod tests {
     use super::*;
     use cadrumo_application::{
-        diagnostics::{Diagnostics, HostStage},
+        diagnostics::{
+            Diagnostics, HostStage,
+            service::{FeatureRefusal, RefusedFeature},
+        },
         process::status::ProcessRole,
+        provisioning::items::ItemId,
     };
 
     #[test]
@@ -534,6 +540,14 @@ mod tests {
             (ServiceFact::AgentProtocolRefused {}, Level::Error),
             (
                 ServiceFact::AgentRetryScheduled { delay_ms: 30000 },
+                Level::Warning,
+            ),
+            (
+                ServiceFact::FeatureRefused {
+                    feature: RefusedFeature::SedeView,
+                    refusal: FeatureRefusal::ComponentNotReady,
+                    item: Some(ItemId::Browser),
+                },
                 Level::Warning,
             ),
         ] {

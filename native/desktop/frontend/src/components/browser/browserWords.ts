@@ -35,6 +35,7 @@ const ENDS: Record<SedeViewEndReason, string> = {
   failed: "desktop.browser.ended.failed",
   unavailable: "desktop.browser.ended.unavailable",
   refused: "desktop.browser.ended.refused",
+  component_not_ready: "desktop.browser.ended.component_not_ready",
 };
 
 export const endText = (t: Translate, reason: SedeViewEndReason) =>

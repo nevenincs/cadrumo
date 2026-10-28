@@ -784,6 +784,8 @@ desktop:
       save: Mentés…
     ended:
       closed: A böngésző be van zárva.
+      component_not_ready: Az adóhivatal webhelyéhez való böngésző még nincs beállítva.
+        Állítsd be, hogy itt megnyithasd az AEAT Sede oldalát.
       failed: A böngésző hiba miatt leállt.
       refused: A Cadrumo most nem tudja megnyitni a böngészőt.
       session_lost: A munkameneted véget ért, ezért a böngésző bezárult, és a bejelentkezésed

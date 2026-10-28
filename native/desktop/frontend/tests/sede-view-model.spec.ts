@@ -118,13 +118,18 @@ test("the view opens, shows its page, and publishes before it ends", () => {
           end: "closed",
           publication: "kept-newer",
         },
+        recovery_action_id: null,
       },
     ],
     state,
   );
   expect(state.phase).toBe("ended");
   // Only the typed outcome is kept: the raw code never reaches the state.
-  expect(state.end).toEqual({ reason: "closed", publication: "kept-newer" });
+  expect(state.end).toEqual({
+    reason: "closed",
+    publication: "kept-newer",
+    recoveryAction: null,
+  });
   expect(JSON.stringify(state)).not.toContain("operation_unavailable");
   expect(state.page).toBeNull();
   // Nothing follows the end.
@@ -219,6 +224,7 @@ test("opening again forgets the last view, and a refusal is kept as its code", (
       reason: "session_lost",
       code: null,
       outcome: null,
+      recovery_action_id: null,
     },
   ]);
   const actions: BrowserAction[] = [{ type: "opening" }, { type: "waiting" }];
@@ -233,6 +239,27 @@ test("opening again forgets the last view, and a refusal is kept as its code", (
   expect(
     reduceBrowser(failed, { type: "problem", code: "unavailable" }).problem,
   ).toBe("unavailable");
+});
+
+test("a view refused for a missing component keeps the setup its verdict names", () => {
+  const ended = run([
+    {
+      kind: "ended",
+      view: 1,
+      reason: "component_not_ready",
+      code: null,
+      outcome: { condition: "refused", end: null, publication: null },
+      recovery_action_id: "operator.provision.browser",
+    },
+  ]);
+  expect(ended.phase).toBe("ended");
+  expect(ended.end).toEqual({
+    reason: "component_not_ready",
+    publication: null,
+    recoveryAction: "operator.provision.browser",
+  });
+  // Opening again forgets the setup with the rest of the end.
+  expect(reduceBrowser(ended, { type: "opening" }).end).toBeNull();
 });
 
 test("a key that types sends its text; a shortcut, AltGr and a dead key do not", () => {

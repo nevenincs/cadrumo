@@ -803,6 +803,8 @@ desktop:
       save: Desa…
     ended:
       closed: El navegador està tancat.
+      component_not_ready: El navegador per al web de l'Agència Tributària encara
+        no està configurat. Configura'l per obrir aquí la Seu de l'AEAT.
       failed: El navegador s'ha aturat per un error.
       refused: Cadrumo no pot obrir el navegador ara.
       session_lost: La teva sessió de Cadrumo ha acabat, així que el navegador s'ha

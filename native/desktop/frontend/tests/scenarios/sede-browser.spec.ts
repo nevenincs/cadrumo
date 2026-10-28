@@ -989,3 +989,54 @@ test("no frame, address or title of the page reaches storage, the window's addre
     for (const mine of [SEDE_VIEW_ORIGIN, SEDE_VIEW_TITLE])
       expect(found).not.toContain(mine);
 });
+
+test("a view refused for want of the browser says so and offers the browser's setup, not the generic refusal", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=sede-browser-missing&latency=0&bar=off",
+  );
+  await target
+    .getByRole("dialog", { name: label("desktop.setup.title") })
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  await browserButton(target).click();
+  const ended = browserPage(target)
+    .getByRole("status")
+    .filter({
+      hasText: label("desktop.browser.ended.component_not_ready"),
+    });
+  await expect(ended).toBeVisible();
+  await expect(browserPage(target)).not.toContainText(
+    label("desktop.browser.failure.refused"),
+  );
+  await expect(browserPage(target)).not.toContainText(
+    label("desktop.browser.ended.refused"),
+  );
+  // The offer comes from the setup the recorded verdict names.
+  const offer = ended.locator('[data-setup-offer="browser"]');
+  await expect(offer).toBeVisible();
+  await offer.getByRole("button").click();
+  await expect(
+    target.getByRole("dialog", { name: label("desktop.setup.item.browser") }),
+  ).toBeVisible();
+  await expect(target.locator("body")).not.toContainText("operator.");
+});
+
+test("a view the host opens names no setup when it ends", async ({
+  page: target,
+}) => {
+  await open(target);
+  await browserButton(target).click();
+  await expect(surface(target)).toBeVisible();
+  await target.evaluate(() =>
+    window.__scenarioSedeView?.end("operation_ended"),
+  );
+  const ended = browserPage(target)
+    .getByRole("status")
+    .filter({
+      hasText: label("desktop.browser.ended.stopped"),
+    });
+  await expect(ended).toBeVisible();
+  await expect(ended.locator("[data-setup-offer]")).toHaveCount(0);
+});

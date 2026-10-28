@@ -1,4 +1,5 @@
 //! Closed operational facts; credentials, paths and protocol text are excluded.
+use crate::provisioning::items::ItemId;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -80,6 +81,23 @@ pub enum InstallationScope {
     Machine,
 }
 
+/// A desktop feature whose work could not start.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum RefusedFeature {
+    SedeView,
+}
+
+/// Why a feature could not start.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FeatureRefusal {
+    /// A component the feature needs is not ready; its setup is offered.
+    ComponentNotReady,
+    /// The runtime refused the feature's operation for another reason.
+    Refused,
+}
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(
     tag = "event",
@@ -126,5 +144,11 @@ pub enum ServiceFact {
         package_abi: u32,
         log_level: LogLevel,
         log_level_overridden: bool,
+    },
+    /// `item` is the component a `component_not_ready` refusal names.
+    FeatureRefused {
+        feature: RefusedFeature,
+        refusal: FeatureRefusal,
+        item: Option<ItemId>,
     },
 }

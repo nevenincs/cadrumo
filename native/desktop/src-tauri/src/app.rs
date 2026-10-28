@@ -402,7 +402,9 @@ pub(crate) async fn assemble<R: Runtime>(
     let profile = Arc::new(shell::user_profile::ProfileHost::new(sign_in.clone()));
     app.manage(profile.clone());
     app.manage(Arc::new(shell::ledger::LedgerHost::new(profile.clone())));
-    app.manage(Arc::new(shell::sede_view::SedeViewHost::new()));
+    app.manage(Arc::new(shell::sede_view::SedeViewHost::new(
+        diagnostics.clone(),
+    )));
     app.manage(Arc::new(shell::modelo::ModeloHost::new(profile)));
     startup.stage(crate::startup::Phase::Runtime);
     #[cfg(windows)]

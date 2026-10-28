@@ -1729,6 +1729,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.browser.download.prompt",
         "desktop.browser.download.save",
         "desktop.browser.ended.closed",
+        "desktop.browser.ended.component_not_ready",
         "desktop.browser.ended.failed",
         "desktop.browser.ended.refused",
         "desktop.browser.ended.session_lost",

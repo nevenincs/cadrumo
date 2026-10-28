@@ -651,7 +651,12 @@ export function scenarioHost(
           views,
           ledger,
           modelo,
-          sedeView: sedeViewFixture({ say }),
+          sedeView: sedeViewFixture({
+            say,
+            ...(scenario.sedeView === "browser_missing"
+              ? { needs: "operator.provision.browser" }
+              : {}),
+          }),
           agent,
           agentSession,
           providerSettings,

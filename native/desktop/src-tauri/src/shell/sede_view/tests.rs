@@ -135,6 +135,7 @@ struct FakeRuntime {
     cancelled: Mutex<Vec<String>>,
     settled: Mutex<Option<Outcome>>,
     settles: AtomicU32,
+    needs: Mutex<Option<ItemId>>,
     /// What happened, in order, across the view and whoever ends the session.
     events: Arc<Mutex<Vec<&'static str>>>,
 }
@@ -155,6 +156,7 @@ impl FakeRuntime {
                 publication: Some(Publication::Published),
             })),
             settles: AtomicU32::new(0),
+            needs: Mutex::new(None),
             events: Arc::new(Mutex::new(Vec::new())),
         })
     }
@@ -195,6 +197,10 @@ impl ViewRuntime for FakeRuntime {
     }
     fn held(&self) -> bool {
         self.held.load(Ordering::Acquire)
+    }
+    fn needs(&self, operation: &str) -> Option<ItemId> {
+        assert_eq!(operation, OPERATION);
+        *lock(&self.needs)
     }
 }
 
@@ -319,7 +325,10 @@ fn host() -> (Arc<SedeViewHost>, Arc<Mutex<Vec<String>>>) {
     let browser = Browser::default();
     let opened = browser.0.clone();
     (
-        Arc::new(SedeViewHost::with_opener(Box::new(browser))),
+        Arc::new(SedeViewHost::with_opener(
+            Box::new(browser),
+            Arc::new(Diagnostics::default()),
+        )),
         opened,
     )
 }
@@ -488,11 +497,25 @@ fn the_window_receives_closed_documents_with_stable_names() {
             end: Some(Finish::PageLost),
             publication: Some(Publication::KeptNewer),
         }),
+        recovery_action_id: None,
     };
     assert_eq!(
         serde_json::to_value(ended).unwrap(),
         json!({"kind":"ended","view":3,"reason":"session_lost","code":null,
-            "outcome":{"condition":"succeeded","end":"page_lost","publication":"kept-newer"}})
+            "outcome":{"condition":"succeeded","end":"page_lost","publication":"kept-newer"},
+            "recovery_action_id":null})
+    );
+    let blocked = Message::Ended {
+        view: 3,
+        reason: Reason::ComponentNotReady,
+        code: None,
+        outcome: None,
+        recovery_action_id: Some("operator.provision.browser"),
+    };
+    assert_eq!(
+        serde_json::to_value(blocked).unwrap(),
+        json!({"kind":"ended","view":3,"reason":"component_not_ready","code":null,
+            "outcome":null,"recovery_action_id":"operator.provision.browser"})
     );
     let transfer = Message::DownloadEnded {
         view: 3,
@@ -1094,6 +1117,110 @@ fn a_refusal_that_is_not_a_wait_ends_the_view_and_cancels_it() {
     assert_eq!(ended["code"], "frontend_denied");
     assert_eq!(runtime.cancelled(), [OPERATION]);
     assert_eq!(runtime.settles.load(Ordering::Acquire), 0);
+    assert_eq!(
+        refusals(&host),
+        [json!({"event":"feature_refused","feature":"sede_view","refusal":"refused","item":null})]
+    );
+}
+
+/// The host's refusal warnings: what refused, why, and which component it named.
+fn refusals(host: &SedeViewHost) -> Vec<Value> {
+    host.diagnostics
+        .snapshot(0)
+        .events
+        .into_iter()
+        .filter_map(|event| event.service)
+        .map(|fact| serde_json::to_value(fact).unwrap())
+        .filter(|fact| fact["event"] == "feature_refused")
+        .collect()
+}
+
+/// A view whose operation the runtime refused before its browser opened.
+fn refused_before_opening(needs: Option<ItemId>) -> (Arc<SedeViewHost>, Value) {
+    let (host, _) = host();
+    let runtime = FakeRuntime::new(u32::MAX);
+    runtime.running.store(false, Ordering::Release);
+    *lock(&runtime.settled) = Some(Outcome {
+        condition: Condition::Refused,
+        end: None,
+        publication: None,
+    });
+    *lock(&runtime.needs) = needs;
+    let window = Arc::new(Window::default());
+    host.open_with(started(&runtime), window.sink()).unwrap();
+    wait_until("ended", || window.last("ended").is_some());
+    let ended = window.last("ended").unwrap();
+    (host, ended)
+}
+
+#[test]
+fn a_view_refused_for_a_component_ends_with_its_setup_and_is_logged_as_a_warning() {
+    let (host, ended) = refused_before_opening(Some(ItemId::Browser));
+    assert_eq!(ended["reason"], "component_not_ready");
+    assert_eq!(ended["recovery_action_id"], "operator.provision.browser");
+    assert_eq!(ended["outcome"]["condition"], "refused");
+    assert_eq!(
+        refusals(&host),
+        [json!({"event":"feature_refused","feature":"sede_view",
+            "refusal":"component_not_ready","item":"browser"})]
+    );
+}
+
+#[test]
+fn a_view_refused_for_another_reason_keeps_its_end_and_is_logged() {
+    let (host, ended) = refused_before_opening(None);
+    assert_eq!(ended["reason"], "operation_ended");
+    assert_eq!(ended["recovery_action_id"], Value::Null);
+    assert_eq!(
+        refusals(&host),
+        [json!({"event":"feature_refused","feature":"sede_view","refusal":"refused","item":null})]
+    );
+}
+
+#[test]
+fn a_view_that_ends_without_a_refusal_logs_none() {
+    let rig = rig();
+    rig.host.close_view(rig.id).unwrap();
+    rig.wait_for_message("ended");
+    assert!(refusals(&rig.host).is_empty());
+}
+
+#[test]
+fn the_component_is_the_setup_item_whose_action_the_recorded_verdict_names() {
+    let detail = |schema: &str, verdict: Option<&str>| {
+        json!({"outcome":"success","result_schema":{"schema_id":schema},
+            "projection":{"error_code":"REFUSED_BROWSER_NOT_READY","precondition_verdict_json":verdict}})
+    };
+    let named = |action: &str| {
+        json!({"failed_condition_id":"provisioning.playwright_browser.installed",
+            "action":{"action_id":action}})
+        .to_string()
+    };
+    let browser = named("operator.provision.browser");
+    assert_eq!(
+        needed_component(&detail("operation.error_detail", Some(&browser))),
+        Some(ItemId::Browser)
+    );
+    let local_ai = named("operator.provision.local_ai");
+    assert_eq!(
+        needed_component(&detail("operation.error_detail", Some(&local_ai))),
+        Some(ItemId::LocalAi)
+    );
+    for refused in [
+        detail("operation.error_detail", None),
+        detail(
+            "operation.error_detail",
+            Some(&named("operator.profile.edit")),
+        ),
+        detail(
+            "operation.error_detail",
+            Some(&named("operator.provision.printer")),
+        ),
+        detail("operation.error_detail", Some("not json")),
+        detail("live.sede.view.result", Some(&browser)),
+    ] {
+        assert_eq!(needed_component(&refused), None, "{refused}");
+    }
 }
 
 #[test]

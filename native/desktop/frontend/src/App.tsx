@@ -3186,48 +3186,51 @@ export function App({ host }: { host: Host }) {
         />
       )}
       {browserMounted && host.sedeView && (
-        <BrowserPage
-          key={reader ?? ""}
-          port={host.sedeView}
-          withheld={
-            reader === null ? (
-              <SignedOut
-                account={account}
-                lead={t("desktop.browser.failure.not_signed_in")}
-                quiet
-                onSignIn={askSignIn}
-              />
-            ) : undefined
-          }
-          page={browserPage}
-          shown={browserOn && firstPaneShown}
-          home={browserHome}
-          isShellChord={isShellChord}
-          pane={{
-            title: t("desktop.browser.title"),
-            onToggleMaximize: () => toggleMaximize("docs"),
-            controls: [
-              maximizeControl("docs", "desktop.browser.maximize"),
-              ...splitControls.map((control) => ({
-                ...control,
-                yields: true,
-              })),
-              {
-                id: "close",
-                icon: "close",
-                label: t("desktop.browser.close"),
-                // Closing the page, unlike leaving it, ends the view.
-                run: () => {
-                  guarded(() => {
-                    setBrowserKeptFor(null);
-                    showPage("docs");
-                  });
-                  setMaximized(null);
+        // A view the runtime refuses for a missing component offers its setup.
+        <ProvisioningRecoveryContext.Provider value={provisioning}>
+          <BrowserPage
+            key={reader ?? ""}
+            port={host.sedeView}
+            withheld={
+              reader === null ? (
+                <SignedOut
+                  account={account}
+                  lead={t("desktop.browser.failure.not_signed_in")}
+                  quiet
+                  onSignIn={askSignIn}
+                />
+              ) : undefined
+            }
+            page={browserPage}
+            shown={browserOn && firstPaneShown}
+            home={browserHome}
+            isShellChord={isShellChord}
+            pane={{
+              title: t("desktop.browser.title"),
+              onToggleMaximize: () => toggleMaximize("docs"),
+              controls: [
+                maximizeControl("docs", "desktop.browser.maximize"),
+                ...splitControls.map((control) => ({
+                  ...control,
+                  yields: true,
+                })),
+                {
+                  id: "close",
+                  icon: "close",
+                  label: t("desktop.browser.close"),
+                  // Closing the page, unlike leaving it, ends the view.
+                  run: () => {
+                    guarded(() => {
+                      setBrowserKeptFor(null);
+                      showPage("docs");
+                    });
+                    setMaximized(null);
+                  },
                 },
-              },
-            ],
-          }}
-        />
+              ],
+            }}
+          />
+        </ProvisioningRecoveryContext.Provider>
       )}
       {profileOn &&
         (reader !== null ? (

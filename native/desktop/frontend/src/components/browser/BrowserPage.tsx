@@ -15,6 +15,7 @@ import {
 } from "../../shell/navigation/hooks";
 import { useStrings } from "../../shell/strings";
 import { PaneHeader, type PaneControl } from "../PaneHeader";
+import { SetupOffer } from "../setup/SetupOffer";
 import { publishing, takesInput } from "./browserModel";
 import { endText, failureText, publicationText } from "./browserWords";
 import { BrowserPrompts } from "./BrowserPrompts";
@@ -228,6 +229,9 @@ function OpenBrowser({
                 : undefined
             }
           >
+            {state.end.reason === "component_not_ready" && (
+              <SetupOffer action={state.end.recoveryAction} />
+            )}
             <Button size="sm" onClick={view.reopen}>
               {t("desktop.browser.reopen")}
             </Button>

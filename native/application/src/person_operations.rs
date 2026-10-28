@@ -6,7 +6,9 @@
 //! definition, a subject and a typed request, and the runtime's registered
 //! operation validation decides whether the session may submit it. The relay
 //! then passes back what the runtime publishes: an operation's observation,
-//! its settled result or refusal document, a pending review with the digest of
+//! its settled result or refusal document (or, for a refused or failed one
+//! whose definition declares no refusal document, the detail its executor
+//! recorded of why it stopped), a pending review with the digest of
 //! exactly what it showed, an answer bound to that digest, and a cancellation
 //! at the observed revision. Documents pass unchanged, so the product that
 //! registered an operation owns its meaning and its words.
@@ -73,6 +75,13 @@ const OUTPUT_LANGUAGE_PATH: &str = "preferences.output_language";
 const OUTPUT_LANGUAGES: [&str; 4] = ["es", "en", "ca", "hu"];
 const PROFILE_VIEW_MAX_ITEMS: u64 = 128;
 const PROFILE_VIEW_MAX_PAGES: usize = 512;
+/// The product's one public schema for a refused or failed operation's
+/// recorded detail: its registered code, message key, scrubbed context and
+/// any typed precondition verdict. No definition contract names it.
+const ERROR_DETAIL_SCHEMA_ID: &str = "operation.error_detail";
+const ERROR_DETAIL_SCHEMA_VERSION: u64 = 1;
+const ERROR_DETAIL_SCHEMA_FINGERPRINT: &str =
+    "cf1bbc93defa151d2342c645c15d246c7c7a05ac21ab49feb8d53fd4f5f4de04";
 
 /// The runtime's transport refusals: it failed rather than denied, so the
 /// relay names none of them and answers `unavailable`.
@@ -728,11 +737,20 @@ impl OperationRelay {
                     .refusal_ref
                     .as_ref()
                     .is_some_and(|reference| contract.refusal_detail_codes.contains(reference)));
+        let stopped = matches!(
+            projection.terminal_condition.as_deref(),
+            Some("refused" | "failed")
+        );
         let schema = match &contract.result_schema {
             Some(schema) if projection.terminal && documented => schema.clone(),
+            // Any other stop carries the detail its executor recorded, where it recorded one.
+            _ if projection.terminal && stopped => error_detail_schema(),
             _ => return Err(Failure::code("no_result")),
         };
         let document = read_result_document(held, &result_request(&projection, &schema), deadline)?;
+        if text(&document, "outcome") == Some("refused") && schema == error_detail_schema() {
+            return Err(Failure::code("no_result"));
+        }
         if document.get("result_schema") != Some(&schema)
             || text(&document, "definition_contract_digest") != Some(contract.digest.as_str())
         {
@@ -2026,6 +2044,14 @@ fn cancel(
         "kind": "operation_cancel_requested",
         "operation_id": operation_id,
     })))
+}
+
+fn error_detail_schema() -> Value {
+    json!({
+        "schema_id": ERROR_DETAIL_SCHEMA_ID,
+        "schema_version": ERROR_DETAIL_SCHEMA_VERSION,
+        "schema_fingerprint": ERROR_DETAIL_SCHEMA_FINGERPRINT,
+    })
 }
 
 fn result_request(projection: &Projection, schema: &Value) -> Value {
@@ -4171,27 +4197,120 @@ mod tests {
         .unwrap();
         assert_eq!(answered["document"], document);
 
-        let undeclared = observation(
+        let fake = Fake::new(vec![reply(observed(running(&operation(), &view())))]);
+        refused_with(
+            handle(
+                &fake,
+                &mut OperationRelay::new(),
+                "operation_result",
+                json!({"operation_id": operation()}),
+            ),
+            "no_result",
+        );
+        assert_eq!(fake.sent().len(), 1);
+    }
+
+    fn stopped(condition: &str, refusal: Option<&str>) -> Value {
+        observation(
             &operation(),
             &view(),
             "terminal",
-            Some("refused"),
-            (None, Some("REFUSED_APODERADO_LIVE_CHECK_UNAVAILABLE")),
+            Some(condition),
+            (None, refusal),
             json!({"disposition": "none"}),
-        );
-        for state in [running(&operation(), &view()), undeclared] {
-            let fake = Fake::new(vec![reply(observed(state))]);
-            refused_with(
-                handle(
-                    &fake,
-                    &mut OperationRelay::new(),
-                    "operation_result",
-                    json!({"operation_id": operation()}),
-                ),
-                "no_result",
+        )
+    }
+
+    fn error_detail_envelope(projection: Value) -> Value {
+        json!({
+            "outcome": "success",
+            "result_projection_version": 1,
+            "result_schema": error_detail_schema(),
+            "definition_contract_digest": view()["definition_contract_digest"],
+            "projection": projection,
+        })
+    }
+
+    #[test]
+    fn a_stop_its_definition_declares_no_document_for_is_read_as_its_recorded_detail() {
+        let verdict = r#"{"action":{"action_id":"operator.provision.browser"}}"#;
+        let detail = error_detail_envelope(json!({
+            "detail_version": 1,
+            "kind": "registered_error",
+            "error_code": "REFUSED_BROWSER_NOT_READY",
+            "message_key": "adapters.browser.errors.not_provisioned",
+            "context": [],
+            "context_entries_omitted": 0,
+            "precondition_verdict_json": verdict,
+        }));
+        for state in [
+            stopped("refused", Some("REFUSED_BROWSER_NOT_READY")),
+            stopped("failed", None),
+        ] {
+            let mut steps = vec![reply(observed(state))];
+            steps.extend(pages(&operation(), canonical_json(&detail).as_bytes()));
+            let fake = Fake::new(steps);
+            let answered = handle(
+                &fake,
+                &mut OperationRelay::new(),
+                "operation_result",
+                json!({"operation_id": operation()}),
+            )
+            .unwrap();
+            assert_eq!(answered["document"], detail);
+            assert_eq!(
+                fake.sent()[1]["result"]["result_schema"],
+                json!({
+                    "schema_id": "operation.error_detail",
+                    "schema_version": 1,
+                    "schema_fingerprint": ERROR_DETAIL_SCHEMA_FINGERPRINT,
+                })
             );
-            assert_eq!(fake.sent().len(), 1);
         }
+    }
+
+    #[test]
+    fn a_stop_without_a_recorded_detail_has_no_result_and_a_mislabelled_detail_is_refused() {
+        let unrecorded = json!({"outcome": "refused", "code": "result_projection_unavailable"});
+        let mut steps = vec![reply(observed(stopped("refused", Some("REFUSED_X_Y"))))];
+        steps.extend(pages(&operation(), canonical_json(&unrecorded).as_bytes()));
+        let fake = Fake::new(steps);
+        refused_with(
+            handle(
+                &fake,
+                &mut OperationRelay::new(),
+                "operation_result",
+                json!({"operation_id": operation()}),
+            ),
+            "no_result",
+        );
+
+        let mislabelled = result_envelope(&view(), json!({"kind": "registered_error"}));
+        let mut steps = vec![reply(observed(stopped("refused", Some("REFUSED_X_Y"))))];
+        steps.extend(pages(&operation(), canonical_json(&mislabelled).as_bytes()));
+        let fake = Fake::new(steps);
+        refused_with(
+            handle(
+                &fake,
+                &mut OperationRelay::new(),
+                "operation_result",
+                json!({"operation_id": operation()}),
+            ),
+            "unavailable",
+        );
+
+        let cancelled = stopped("cancelled", None);
+        let fake = Fake::new(vec![reply(observed(cancelled))]);
+        refused_with(
+            handle(
+                &fake,
+                &mut OperationRelay::new(),
+                "operation_result",
+                json!({"operation_id": operation()}),
+            ),
+            "no_result",
+        );
+        assert_eq!(fake.sent().len(), 1);
     }
 
     #[test]

@@ -58,6 +58,8 @@ export type BrowserState = {
   end: {
     reason: SedeViewEndReason;
     publication: SedeViewPublication | null;
+    /** The setup that readies the component the view lacked. */
+    recoveryAction: string | null;
   } | null;
   failure: SedeViewFailureCode | null;
 };
@@ -208,6 +210,7 @@ function reduceEvent(state: BrowserState, event: SedeViewEvent): BrowserState {
         end: {
           reason: event.reason,
           publication: event.outcome?.publication ?? null,
+          recoveryAction: event.recovery_action_id,
         },
       };
   }

@@ -74,6 +74,10 @@ export type SedeViewFixtureOptions = {
   say: (call: string) => void;
   /** How long publishing the session takes when the view is closed. */
   publishMs?: number;
+  /** The setup action the runtime's recorded verdict names when a component
+   * the view needs is not set up: each view then ends refused before its
+   * browser opens. */
+  needs?: string;
 };
 
 type Open = {
@@ -132,6 +136,7 @@ async function draw(open: Open): Promise<ArrayBuffer> {
 export function sedeViewFixture({
   say,
   publishMs = 600,
+  needs,
 }: SedeViewFixtureOptions): SedeViewPort {
   let issued = 0;
   let current: Open | null = null;
@@ -200,6 +205,7 @@ export function sedeViewFixture({
         end: reason === "closed" ? "closed" : "stopped",
         publication,
       },
+      recovery_action_id: null,
     });
     if (window.__scenarioSedeView && current === open)
       delete window.__scenarioSedeView;
@@ -416,6 +422,20 @@ export function sedeViewFixture({
         transfers: 0,
       };
       current = open;
+      if (needs !== undefined) {
+        window.setTimeout(() => {
+          open.ended = true;
+          listener({
+            kind: "ended",
+            view: open.id,
+            reason: "component_not_ready",
+            code: null,
+            outcome: { condition: "refused", end: null, publication: null },
+            recovery_action_id: needs,
+          });
+        }, 0);
+        return session(open);
+      }
       window.__scenarioSedeView = controls(open);
       // The host answers first; the browser opens after.
       window.setTimeout(() => {

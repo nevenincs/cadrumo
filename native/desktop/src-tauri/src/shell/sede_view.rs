@@ -23,6 +23,11 @@
 //! The view ends when the person closes the page or the window, which asks it
 //! to publish its session and settle, and when the person's session is lost,
 //! which cancels it without publishing.
+//!
+//! A view whose operation the runtime refuses is logged as a warning. One
+//! refused because a component it needs is not set up ends `component_not_ready`
+//! with that component's setup action, read from the verdict the operation
+//! recorded and checked against the setup engine's own items.
 mod transfer;
 mod upstream;
 
@@ -38,6 +43,11 @@ use super::{
 };
 use crate::agent::person::HeldPerson;
 use cadrumo_application::{
+    diagnostics::{
+        Diagnostics,
+        service::{FeatureRefusal, RefusedFeature, ServiceFact},
+    },
+    provisioning::items::ItemId,
     runtime_client::Refusal,
     view_stream::{
         chunks::AssembledImage,
@@ -70,6 +80,8 @@ use transfer::{Dialogs, Download, NativeDialogs, upload_file};
 use upstream::{Command, Upstream};
 
 const DEFINITION: &str = "live.sede.view";
+/// The schema a refused operation's recorded detail is read under.
+const ERROR_DETAIL_SCHEMA: &str = "operation.error_detail";
 /// The runtime's refusal of a view whose browser is not open yet.
 const NOT_YET: &str = "operation_unavailable";
 /// How long the relay waits for an event before it looks at the session again.
@@ -234,6 +246,24 @@ trait ViewRuntime: Send + Sync {
     fn settled(&self, operation: &str) -> Option<Outcome>;
     /// Whether the session that submitted the view is still held.
     fn held(&self) -> bool;
+    /// The component a refused operation's recorded verdict says must be set
+    /// up first; `None` when it names none or its detail cannot be read.
+    fn needs(&self, operation: &str) -> Option<ItemId>;
+}
+
+/// The setup item whose action a stopped operation's recorded detail names
+/// as its recovery. Only an action the setup engine declares for one of its
+/// items counts.
+fn needed_component(document: &Value) -> Option<ItemId> {
+    if document["result_schema"]["schema_id"] != ERROR_DETAIL_SCHEMA {
+        return None;
+    }
+    let verdict: Value =
+        serde_json::from_str(document["projection"]["precondition_verdict_json"].as_str()?).ok()?;
+    let action = verdict["action"]["action_id"].as_str()?;
+    ItemId::ALL
+        .into_iter()
+        .find(|item| item.declaration().recovery_action == action)
 }
 
 /// The runtime as the window's own person session reaches it.
@@ -319,6 +349,12 @@ impl ViewRuntime for PersonRuntime {
         }
     }
 
+    fn needs(&self, operation: &str) -> Option<ItemId> {
+        let document =
+            tauri::async_runtime::block_on(relay::result(&self.relayed(operation))).ok()?;
+        needed_component(&document)
+    }
+
     fn held(&self) -> bool {
         match self.person.try_lock() {
             Ok(mut person) => person.is_open(),
@@ -353,6 +389,9 @@ enum Reason {
     Unavailable,
     /// The runtime refused the view; `code` says why.
     Refused,
+    /// A component the view needs is not set up; `recovery_action_id` names
+    /// its setup.
+    ComponentNotReady,
 }
 
 impl From<ViewClosedReason> for Reason {
@@ -472,6 +511,7 @@ enum Message {
         reason: Reason,
         code: Option<String>,
         outcome: Option<Outcome>,
+        recovery_action_id: Option<&'static str>,
     },
 }
 
@@ -566,6 +606,8 @@ struct End {
     code: Option<String>,
     /// Whether the operation's receipt is worth waiting for.
     settle: bool,
+    /// The component a `ComponentNotReady` end names.
+    needs: Option<ItemId>,
 }
 
 impl End {
@@ -574,6 +616,7 @@ impl End {
             reason,
             code: None,
             settle,
+            needs: None,
         }
     }
 
@@ -602,15 +645,17 @@ struct View {
     /// The downloads being written.
     transfers: Mutex<BTreeMap<u32, Download>>,
     upstream: Upstream,
+    diagnostics: Arc<Diagnostics>,
 }
 
 impl View {
-    fn new(id: u32, started: Started, sink: Sink) -> Self {
+    fn new(id: u32, started: Started, sink: Sink, diagnostics: Arc<Diagnostics>) -> Self {
         Self {
             id,
             operation: started.operation,
             runtime: started.runtime,
             sink,
+            diagnostics,
             outbound: Mutex::new(()),
             control: Mutex::new(Control {
                 phase: Phase::Attaching,
@@ -715,12 +760,31 @@ impl View {
 
     /// Runs the view from submission to its last message.
     fn run(self: &Arc<Self>) {
-        let end = self.serve();
+        let mut end = self.serve();
         let outcome = if end.settle {
             self.runtime.settled(&self.operation)
         } else {
             None
         };
+        let refused = outcome.is_some_and(|outcome| outcome.condition == Condition::Refused);
+        if refused && let Some(item) = self.runtime.needs(&self.operation) {
+            end.reason = Reason::ComponentNotReady;
+            end.needs = Some(item);
+        }
+        if refused || matches!(end.reason, Reason::Refused) {
+            self.diagnostics.service(
+                None,
+                ServiceFact::FeatureRefused {
+                    feature: RefusedFeature::SedeView,
+                    refusal: if end.needs.is_some() {
+                        FeatureRefusal::ComponentNotReady
+                    } else {
+                        FeatureRefusal::Refused
+                    },
+                    item: end.needs,
+                },
+            );
+        }
         self.finish(&end, outcome);
     }
 
@@ -873,6 +937,7 @@ impl View {
             reason: end.reason,
             code: end.code.clone(),
             outcome,
+            recovery_action_id: end.needs.map(|item| item.declaration().recovery_action),
         });
         self.ended.notify_all();
     }
@@ -1266,6 +1331,7 @@ pub struct SedeViewHost {
     deadline: OnceLock<Instant>,
     behind: Mutex<Behind>,
     opener: Box<dyn Opener>,
+    diagnostics: Arc<Diagnostics>,
 }
 
 /// A window close that waits for the view off the window's thread.
@@ -1289,11 +1355,11 @@ pub enum WindowClose {
 }
 
 impl SedeViewHost {
-    pub fn new() -> Self {
-        Self::with_opener(Box::new(System))
+    pub fn new(diagnostics: Arc<Diagnostics>) -> Self {
+        Self::with_opener(Box::new(System), diagnostics)
     }
 
-    fn with_opener(opener: Box<dyn Opener>) -> Self {
+    fn with_opener(opener: Box<dyn Opener>, diagnostics: Arc<Diagnostics>) -> Self {
         Self {
             current: Mutex::new(None),
             issued: AtomicU32::new(0),
@@ -1301,6 +1367,21 @@ impl SedeViewHost {
             deadline: OnceLock::new(),
             behind: Mutex::new(Behind::Idle),
             opener,
+            diagnostics,
+        }
+    }
+
+    /// Logs a view the runtime refused to submit.
+    fn submission_refused(&self, failure: &Failure) {
+        if failure.code == "refused" {
+            self.diagnostics.service(
+                None,
+                ServiceFact::FeatureRefused {
+                    feature: RefusedFeature::SedeView,
+                    refusal: FeatureRefusal::Refused,
+                    item: None,
+                },
+            );
         }
     }
 
@@ -1414,7 +1495,7 @@ impl SedeViewHost {
     /// that cannot take it is cancelled.
     fn open_with(self: &Arc<Self>, started: Started, sink: Sink) -> Result<u32> {
         let id = self.issued.fetch_add(1, Ordering::AcqRel) + 1;
-        let view = Arc::new(View::new(id, started, sink));
+        let view = Arc::new(View::new(id, started, sink, self.diagnostics.clone()));
         let admitted = {
             let mut current = lock(&self.current);
             let refused = self.admits(current.as_ref());
@@ -1549,12 +1630,6 @@ impl SedeViewHost {
     }
 }
 
-impl Default for SedeViewHost {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 /// A view's messages on the window's channel. The images reach the page as
 /// binary, which the page takes by name. It ends when the channel refuses a
 /// message or the shell reports that one could not be delivered to the page.
@@ -1584,7 +1659,9 @@ async fn sede_view_open<R: tauri::Runtime>(
 ) -> Result<Opened> {
     let size = Size::admit(css_width, css_height, scale)?;
     host.admit_open()?;
-    let started = start(&profile, &size).await?;
+    let started = start(&profile, &size)
+        .await
+        .inspect_err(|failure| host.submission_refused(failure))?;
     let sink = channel_sink(webview, messages);
     let owner = host.inner().clone();
     let view = blocking(move || Ok(owner.open_with(started, sink))).await??;

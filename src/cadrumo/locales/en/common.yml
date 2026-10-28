@@ -773,6 +773,8 @@ desktop:
       save: Save…
     ended:
       closed: The browser is closed.
+      component_not_ready: The browser for the tax agency website isn't set up yet.
+        Set it up to open the AEAT Sede here.
       failed: The browser stopped because of an error.
       refused: Cadrumo can't open the browser right now.
       session_lost: Your Cadrumo session ended, so the browser closed without saving

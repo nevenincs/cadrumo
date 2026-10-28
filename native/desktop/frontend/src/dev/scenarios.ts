@@ -27,6 +27,9 @@ export type SubmitOutcome =
 
 export type Scenario = {
   censo?: CensoMode;
+  /** The Sede browser: left out, it opens; `browser_missing`, the runtime
+   * refuses every view for want of the browser and names its setup. */
+  sedeView?: "browser_missing";
   id: string;
   title: string;
   summary: string;
@@ -199,6 +202,20 @@ export const SCENARIOS: readonly Scenario[] = [
     summary:
       "Open Your profile, then Sync from AEAT: each pull stops for want of the browser and offers its setup. No AEAT request is sent.",
     censo: "browser_missing",
+    setup: "fresh",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "sede-browser-missing",
+    title: "Sede: Browser not set up",
+    summary:
+      "Open the Sede browser: the view stops for want of the browser and offers its setup. No AEAT page is opened.",
+    sedeView: "browser_missing",
     setup: "fresh",
     signIn: {
       status: { ...signedOut, state: "present" },
