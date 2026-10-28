@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:4400d3c71e78dba8163d4e7f5e3c486e752964a1fc713100c78cea57d7bed118'
+body_hash: 'sha256:b874d8c2dbd08b5856d6c1b232dde1aad5f11f21d79ae94b1c2a0f97601b9fb0'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -416,6 +416,12 @@ related:
 - `S09` `verify:` `npm run check` -> `pass`
 - `S09` `verify:` `playwright sede-browser.spec.ts` -> `pass`
 - `S09` `by:` `implementer`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/sede/signed_in_identity.py`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_signed_in_identity.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/view_capture_identity.py`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests src/cadrumo/adapters/outbound/aeat/sede/tests src/cadrumo/application/auth/tests -k "view or censal or identity" -m "not aeat_live"` -> `pass`
+- `S05` `verify:` `ruff check, ruff format --check, ty check, lint-imports` -> `pass`
+- `S05` `by:` `vaultspec-high-executor`
 
 ## Notes
 

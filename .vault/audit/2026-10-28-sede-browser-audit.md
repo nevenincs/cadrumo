@@ -124,6 +124,8 @@ Resolved: 09c314ebb4
 
 `src/cadrumo/adapters/outbound/aeat/auth/view_capture_identity.py:38` reads the consulta through `censal_datos_url` (`src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py:482`), which requests `nifRepresentado=<expected NIF>`. A person who signs in as a representative holding an apoderamiento for the profile's taxpayer may be served that taxpayer's consulta. The check would then pass and publish a representative's session, while every other Sede reader, none of which passes `nifRepresentado`, reads the signed-in identity's own data. The refusal relies on AEAT answering with its representation dialog; nothing in the repository grounds that. Fix: read the signed-in identity from a surface that does not take the expected NIF as input. Alternatively, ground the dialog answer with a specimen in P06.S14 and record it.
 
+Resolved: 509b6b5646 (reads Mis Expedientes, which names no taxpayer in its request; P06.S14 still confirms AEAT's answer to a representative session).
+
 ### paced-input-host-deadline | low | Paced input can end the view through the runtime's 5 s worker write
 
 `src/cadrumo_runtime/host/worker_view_stream.py:424-436` holds the reader once 1024 inputs wait. The runtime's `_write_worker` (`src/cadrumo_runtime/host/view_stream_relay.py:506`) then blocks, and once the pipe buffer is full and the stall exceeds `_FRAME_SECONDS`, it ends the view `FAILED`. A page hung for several seconds under sustained input therefore loses the view instead of being paced. The new relay test stalls for only 1 s. Fix: let the upstream worker write wait while the worker leg is alive, bounded by liveness rather than a per-frame deadline, and test a stall longer than 5 s.
