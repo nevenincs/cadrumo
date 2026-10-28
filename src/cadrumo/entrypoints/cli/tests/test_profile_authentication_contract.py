@@ -184,10 +184,10 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     # declaration more and the same family is gated again.
     for profile_free in ("modelo.list", "ledger.categories", "config.storage.list"):
         assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
-    # Component setup runs the native component engine's role, which reaches nothing a
-    # profile holds; the local reader's report stays a registered operation on the profile.
+    # Component setup and the local reader's report both submit registered operations in
+    # the signed-in profile, so each resumes that profile's session.
     for setup in ("config.provision.status", "config.provision.verify", "config.provision.browser"):
-        assert postures[setup] is ProfileAuthenticationPosture.NOT_APPLICABLE, setup
+        assert postures[setup] is ProfileAuthenticationPosture.RESUME_FALLBACK, setup
     assert postures["config.provision.report"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     assert "config.provision.load" not in postures
     assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK

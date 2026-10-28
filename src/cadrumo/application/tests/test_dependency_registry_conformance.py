@@ -60,8 +60,14 @@ _REMOVED_OPERATIONS: Final = (
     "local-reader.provision",
 )
 
-#: The ``config provision`` verbs that run the native components role and submit nothing.
+#: The ``config provision`` verbs that run the native components role through its registered operations.
 _COMPONENT_LEAVES: Final = frozenset({"browser", "probe", "remove", "setup", "status", "verify"})
+#: The registered operations through which the components role runs in the signed-in profile.
+_COMPONENT_OPERATIONS: Final = frozenset(
+    {"config.provision.remove", "config.provision.setup", "config.provision.status", "config.provision.verify"}
+)
+#: The ``config provision`` verb that answers a running setup's review and submits nothing of its own.
+_REVIEW_LEAF: Final = "review"
 #: The operations the local reader's remaining verbs submit in the signed-in profile.
 _LOCAL_READER_OPERATIONS: Final = frozenset({"local-reader.status", "local-reader.report"})
 
@@ -241,7 +247,7 @@ def script_private_list_findings(source: str, identities: frozenset[str], *, ori
 
 
 def provision_leaf_findings(rows: Iterable[tuple[tuple[str, ...], str | None]]) -> list[str]:
-    """Name every component verb that submits an operation, and every other verb that submits no local reader one."""
+    """Name every verb whose submission is not its role's: components, review answer or local reader."""
     findings: list[str] = []
     seen = False
     for path, operation in rows:
@@ -249,8 +255,11 @@ def provision_leaf_findings(rows: Iterable[tuple[tuple[str, ...], str | None]]) 
             continue
         seen = True
         if path[2] in _COMPONENT_LEAVES:
+            if operation not in _COMPONENT_OPERATIONS:
+                findings.append(f"{' '.join(path)}: submits {operation!r}, which is not a components role operation")
+        elif path[2] == _REVIEW_LEAF:
             if operation is not None:
-                findings.append(f"{' '.join(path)}: submits {operation!r} instead of running the components role")
+                findings.append(f"{' '.join(path)}: submits {operation!r} instead of answering a running review")
         elif operation not in _LOCAL_READER_OPERATIONS:
             findings.append(f"{' '.join(path)}: submits {operation!r}, which is not a local reader operation")
     if not seen:
@@ -465,11 +474,14 @@ def test_script_list_checker_names_a_private_item_array_and_ignores_comments() -
     assert script_private_list_findings(commented, identities, origin="fixture.tsx") == []
 
 
-def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreign_operation() -> None:
-    """A component verb that submits an operation, or a local reader verb submitting another one, is caught."""
+def test_provision_leaf_checker_names_a_verb_that_submits_outside_its_role() -> None:
+    """A component verb off the components role, a review that submits, or a foreign reader operation is caught."""
     rows = [
+        (("config", "provision", "status"), "config.provision.status"),
         (("config", "provision", "status"), "dependencies.status"),
         (("config", "provision", "browser"), None),
+        (("config", "provision", "review"), None),
+        (("config", "provision", "review"), "config.provision.setup"),
         (("config", "provision", "report"), "local-reader.report"),
         (("config", "provision", "remove"), "local-reader.report"),
         (("config", "provision", "report"), "browser-runtime.provision"),
@@ -477,8 +489,10 @@ def test_provision_leaf_checker_names_a_component_verb_that_submits_and_a_foreig
         (("config", "check"), None),
     ]
     assert provision_leaf_findings(rows) == [
-        "config provision status: submits 'dependencies.status' instead of running the components role",
-        "config provision remove: submits 'local-reader.report' instead of running the components role",
+        "config provision status: submits 'dependencies.status', which is not a components role operation",
+        "config provision browser: submits None, which is not a components role operation",
+        "config provision review: submits 'config.provision.setup' instead of answering a running review",
+        "config provision remove: submits 'local-reader.report', which is not a components role operation",
         "config provision report: submits 'browser-runtime.provision', which is not a local reader operation",
         "config provision report: submits None, which is not a local reader operation",
     ]
@@ -626,8 +640,8 @@ def test_desktop_setup_renders_host_snapshots_and_keeps_no_item_list() -> None:
     assert not findings, "\n".join(findings)
 
 
-def test_component_verbs_run_the_role_and_the_local_reader_verbs_submit_its_operations() -> None:
-    """The component verbs start the components role; the local reader's verbs submit its registered operations."""
+def test_component_verbs_submit_the_role_operations_and_the_local_reader_verbs_its_own() -> None:
+    """The component verbs submit the components role's operations; the local reader's verbs submit its own."""
     findings = provision_leaf_findings(_command_operation_rows())
     assert not findings, "\n".join(findings)
 
