@@ -33,15 +33,17 @@ from cadrumo.application.live.session import (
     publish_live_view_session,
 )
 from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import load_settings
+from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ...browser.tests.real_http_boundary import LocalHttpBoundary, opened_http_boundary, real_browser_factory
+from ...sede.censal_datos import censal_datos_url
 from .. import session_store
 from ..authenticator import AeatAuthenticator
 from .view_session_support import (
+    CERTIFICATE_NIF,
     CERTIFICATE_SECRET_BACKEND_FACTORY,
     OPERATOR_SCOPE_PORTS,
     SESSION_COOKIE,
@@ -57,6 +59,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_outbound_adapter]
 
 _OTHER_NIF = "00000000T"
 _COOKIE_SCENARIO = "clave-permanente-success"
+_CENSAL_PATH = Settings.external_constants().aeat.sede_paths.censal_datos
 
 
 async def _open(
@@ -225,6 +228,50 @@ async def test_a_session_whose_identity_is_not_the_active_profile_publishes_noth
             assert host.effects == []
             assert stored_digest() == baseline.storage_state_sha256
             assert SESSION_COOKIE not in stored_cookie_names()
+
+
+@pytest.mark.asyncio
+async def test_a_view_signed_in_as_another_taxpayer_publishes_nothing(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The capture unlocks AEAT, but the consulta AEAT shows to it names someone other than the profile."""
+    with certificate_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            factory = real_browser_factory(boundary=boundary, profile_name="sede-view-other-taxpayer")
+            await _sync(factory, OperationHost(), operation)
+            seed = await _open(factory, OperationHost(), operation)
+            host = OperationHost()
+            async with _view_context(boundary, seed.storage_state, browse_to_session_cookie=True) as context:
+                boundary.signed_in_nif = _OTHER_NIF
+                publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
+
+            assert publication.outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED
+            assert publication.baseline == seed.baseline
+            assert host.effects == []
+            assert stored_digest() == seed.baseline.storage_state_sha256
+            assert SESSION_COOKIE not in stored_cookie_names()
+            # The provider read the taxpayer with a request of its own, in its own browser.
+            assert any(_CENSAL_PATH in url for url in boundary.requested_urls)
+
+
+@pytest.mark.asyncio
+async def test_a_view_signed_in_as_the_profile_taxpayer_reads_it_from_the_consulta(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with certificate_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            factory = real_browser_factory(boundary=boundary, profile_name="sede-view-own-taxpayer")
+            await _sync(factory, OperationHost(), operation)
+            seed = await _open(factory, OperationHost(), operation)
+            host = OperationHost()
+            async with _view_context(boundary, seed.storage_state, browse_to_session_cookie=True) as context:
+                boundary.signed_in_nif = CERTIFICATE_NIF
+                publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
+
+            assert publication.outcome is ViewSessionPublicationOutcome.PUBLISHED
+            assert [url for url in boundary.requested_urls if _CENSAL_PATH in url] == [
+                censal_datos_url(CERTIFICATE_NIF, origin=Settings.external_constants().aeat.domains.www6)
+            ]
 
 
 @pytest.mark.asyncio

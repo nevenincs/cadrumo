@@ -95,6 +95,7 @@ from .errors import (
     AuthValidationError,
 )
 from .providers import CertificateContextProvisioner
+from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -399,7 +400,9 @@ class AeatAuthenticator:
         with this certificate's thumbprint, subject and NIF/NIE, anchored at the
         capture instant, and then resumed exactly as a stored session is: every
         persisted-session gate and the canonical protected-resource probe run
-        in a browser of this provider's own. The caller stages the writes and
+        in a browser of this provider's own. The person may have signed in with
+        another credential, so the taxpayer AEAT shows to the capture must then
+        be this certificate's NIF/NIE. The caller stages the writes and
         publishes them only after this returns; a refusal raises
         :class:`PersistedSessionInvalidError` after staging the record's
         invalidation.
@@ -417,18 +420,26 @@ class AeatAuthenticator:
                     translated_message="errors.auth.auth_auth_provider_cleanup",
                 )
             cert = self.load_certificate()
+            certificate_nif = extract_nif_from_subject(cert)
             captured_at = now()
             path = self._resolve_storage_state_path()
             metadata = PersistedSessionMetadata(
                 certificate_thumbprint=cert.sha256_thumbprint,
                 certificate_subject=cert.subject,
-                certificate_nif=extract_nif_from_subject(cert),
+                certificate_nif=certificate_nif,
                 authenticated_at=captured_at,
                 idle_deadline=captured_at + AEAT_SESSION_IDLE_TTL,
                 storage_state_sha256=session_store.storage_state_sha256(storage_state),
             )
             session_store.save(path, storage_state=storage_state, metadata=metadata.model_dump(mode="json"))
             session, _assertion = await self._resume_from_storage_state_locked(path)
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError(
+                    "a resumed view capture left no context to read its taxpayer in",
+                    translated_message="adapters.auth.authenticator.errors.resume_failed",
+                )
+            await require_signed_in_taxpayer(context, expected_nif=certificate_nif)
             return session
 
     async def _fresh_login_locked(self) -> AeatSession:

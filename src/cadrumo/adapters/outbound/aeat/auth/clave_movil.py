@@ -106,6 +106,7 @@ from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
 from .errors import AuthConfigurationError, AuthProviderCleanupError
+from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -351,7 +352,8 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         exactly as a stored session is, in a browser of this provider's own.
         The proof navigates to that landing only: it never clicks through the
         Cl@ve selector, so verifying a capture never sends a request to the
-        person's phone. The caller stages the writes and publishes them only
+        person's phone. The taxpayer AEAT shows to the capture must then be the
+        configured DNI/NIE. The caller stages the writes and publishes them only
         after this returns; a refusal raises :class:`AeatLoginAssertionError`.
         """
         async with self._lifecycle.work():
@@ -380,7 +382,12 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
                     landing_url=self._default_target_url(),
                 ),
             )
-            return await self._resume_locked(path, target_url=None, dispatch_selector=False)
+            session = await self._resume_locked(path, target_url=None, dispatch_selector=False)
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError("a resumed view capture left no context to read its taxpayer in")
+            await require_signed_in_taxpayer(context, expected_nif=dni_nie)
+            return session
 
     def _finalize_probe_result(
         self,

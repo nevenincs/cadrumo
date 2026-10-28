@@ -56,6 +56,9 @@ _REPRESENTATION_URL: Final[str] = f"{_DOMAINS.www6}{_CLAVE_MOVIL.dialogo_represe
 _PRE303_TARGET_URL: Final[str] = f"{_DOMAINS.www1}{PRE303.presentation_service_path}"
 _PERMANENTE_IDP_URL: Final[str] = f"https://se-pasarela.{urlsplit(_DOMAINS.clave).netloc}/idp/login"
 _DEFAULT_CLAVE_TARGET_URL: Final[str] = f"{_DOMAINS.www6}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
+_CENSAL_PATH: Final[str] = EXTERNAL.aeat.sede_paths.censal_datos
+#: The synthetic taxpayer the stood-in Sede shows as signed in, unless a test signs in someone else.
+SIGNED_IN_NIF: Final[str] = "12345678Z"
 #: Registrable domains whose hosts the tunnel stands in for; any other host is refused.
 _STOOD_IN_DOMAINS: Final[tuple[str, ...]] = (_DOMAINS.host_suffix, urlsplit(_DOMAINS.clave).netloc)
 
@@ -234,6 +237,8 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
             """
         elif self.path == "/clave-permanente-invalid":
             html = f"<p>{_CLAVE_PERMANENTE.invalid_credentials_marker}</p>"
+        elif self.path == "/censal-consulta":
+            html = _censal_consulta_html(boundary.signed_in_nif)
         else:
             html = "<html><title>real-auth-boundary</title></html>"
         return html.encode("utf-8")
@@ -243,11 +248,27 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
         del format, args
 
 
+def _censal_consulta_html(nif: str) -> str:
+    """The censal consulta landing, as AEAT renders its identity table to the signed-in taxpayer."""
+    return f"""
+    <html><body><h1>Consulta de Datos Identificativos y Censales</h1>
+    <table class="celdasConBorde" title="Datos Identificativos del Contribuyente">
+      <tr><td><b>NIF</b></td><td>{nif}</td></tr>
+      <tr><td><b>Apellidos y Nombre</b></td><td>CONTRIBUYENTE SINTETICO</td></tr>
+    </table></body></html>
+    """
+
+
 class LocalHttpBoundary:
-    """Serve real HTTP responses while Playwright retains the requested AEAT URL."""
+    """Serve real HTTP responses while Playwright retains the requested AEAT URL.
+
+    The censal consulta always shows :attr:`signed_in_nif` as the signed-in
+    taxpayer, whatever the scenario, so a test signs in someone else by setting it.
+    """
 
     def __init__(self) -> None:
         self.scenario = "success"
+        self.signed_in_nif = SIGNED_IN_NIF
         self.response_html: str | None = None
         self.navigation_count = 0
         self.requested_urls: list[str] = []
@@ -377,8 +398,17 @@ class LocalHttpBoundary:
             )
         return None
 
+    @staticmethod
+    def _censal_path(requested_url: str) -> str | None:
+        return "/censal-consulta" if urlsplit(requested_url).path == _CENSAL_PATH else None
+
     def _local_path_for_request(self, requested_url: str) -> str:
-        for resolver in (self._retry_or_failure_path, self._clave_movil_path, self._clave_permanente_path):
+        for resolver in (
+            self._censal_path,
+            self._retry_or_failure_path,
+            self._clave_movil_path,
+            self._clave_permanente_path,
+        ):
             local_path = resolver(requested_url)
             if local_path is not None:
                 return local_path
@@ -534,6 +564,7 @@ async def open_real_browser_session(
 
 
 __all__ = [
+    "SIGNED_IN_NIF",
     "LocalHttpBoundary",
     "RoutedStealthEvasion",
     "open_real_browser_session",

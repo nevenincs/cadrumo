@@ -71,6 +71,7 @@ from .view_session_support import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 _SIGN_IN_SECONDS = 60.0
+_OTHER_NIF = "00000000T"
 
 
 @dataclass
@@ -227,6 +228,33 @@ async def test_a_page_the_provider_cannot_verify_publishes_nothing(
             host = OperationHost(kind=kind)
             boundary.configure("failure")
             async with _panel(boundary, host, operation, name="view-unverified") as panel:
+                panel.start()
+                panel.sink.put(ViewNavigate(verb=ViewNavigateVerb.HOME))
+                panel.sink.put(ViewClose())
+                assert panel.browsing is not None
+                assert await asyncio.wait_for(panel.browsing, timeout=_SIGN_IN_SECONDS) is SedeViewEnd.CLOSED
+                outcome = await panel.sign_in.close()
+
+            assert outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED
+            assert not panel.sign_in.signed_in
+            assert host.effects == []
+            assert stored_digest(kind) is None
+
+
+@pytest.mark.asyncio
+async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The person signs in by hand as someone else: AEAT's consulta names that taxpayer, so nothing is stored."""
+    kind = AuthProviderKind.CLAVE_PERMANENTE
+    with clave_permanente_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            host = OperationHost(kind=kind)
+            boundary.configure("failure")
+            async with _panel(boundary, host, operation, name="view-other-taxpayer") as panel:
+                await panel.view.context.pages[0].wait_for_load_state("load")
+                boundary.configure("clave-permanente-success")
+                boundary.signed_in_nif = _OTHER_NIF
                 panel.start()
                 panel.sink.put(ViewNavigate(verb=ViewNavigateVerb.HOME))
                 panel.sink.put(ViewClose())

@@ -72,7 +72,9 @@ from .censal_tables import census_shape_error, census_source_url
 from .errors import SedeFailureMode, SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
-    from .....application.auth.protocols import BrowserSessionFactoryPort
+    from playwright.async_api import Page
+
+    from .....application.auth.protocols import BrowserContextPort, BrowserSessionFactoryPort
     from .....application.auth.session_types import AeatSession
 
 
@@ -500,47 +502,12 @@ async def _navigate_and_parse(
     browser_session_factory: BrowserSessionFactoryPort,
 ) -> CensalObservation:
     """Request the censal consulta directly with the stored session and parse the landing."""
-    url = censal_datos_url(taxpayer_nif, origin=_CENSAL_ORIGIN)
-    _assert_read_http("GET", url)
     browser_session = await browser_session_factory(settings)
     context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
         page = require_playwright_page(await context.new_page())
-        try:
-            await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-        except PlaywrightError as exc:
-            raise SedeNavigationError(
-                f"censal consulta navigation failed ({type(exc).__name__}) for {redacted_url(url)}",
-                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-            ) from exc
-
-        # Follow the redirect chain rather than trusting the requested URL:
-        # refuse a landing that is not the consulta, re-assert the host AEAT
-        # actually served, then refuse outright if that landing is a censal
-        # modification surface.
-        landing_url = _censal_landing_url(page, requested_url=redacted_url(url) or "")
-        _refuse_non_consulta_landing(landing_url)
-        landing = urlsplit(landing_url)
-        _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
-        _assert_read_landing(landing_url)
-
-        html = await page.content()
-        result = parse_censal_datos(html, source_url=str(census_source_url(landing_url)))
-        if result.identity.nif is None and not _censal_marker_present(html):
-            raise SedeNavigationError(
-                "AEAT censal navigation returned a page with no censal marker and no identity data; "
-                "this is a wrong-service / auth-gate / maintenance landing, not an empty censal record. "
-                f"landing_host={landing.netloc!r} landing_path={landing.path!r} marker_present=False",
-                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-                translated_message=tr("adapters.sede.errors.censal_bad_landing"),
-                context={
-                    "requested_url": redacted_url(url),
-                    "landing_host": landing.netloc,
-                    "landing_path": landing.path,
-                    "marker_present": False,
-                },
-            )
+        result, landing_path = await _read_consulta_landing(page, taxpayer_nif=taxpayer_nif)
         try:
             consultations = await capture_censal_consultations(page, policy=READ_GUARD_POLICY, settings=settings)
         except PlaywrightError as exc:
@@ -548,7 +515,7 @@ async def _navigate_and_parse(
                 f"Census consultation browser acquisition failed ({type(exc).__name__})",
                 failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
             ) from None
-        log.info("fetch_censal_datos: read complete censal consulta from %s", landing.path)
+        log.info("fetch_censal_datos: read complete censal consulta from %s", landing_path)
         return result.model_copy(update={"consultations": consultations})
     finally:
         await close_async_resources(
@@ -556,6 +523,71 @@ async def _navigate_and_parse(
             browser_session,
             task_name="cadrumo-censal-close",
         )
+
+
+async def read_censal_identity_nif(context: BrowserContextPort, *, taxpayer_nif: str) -> str | None:
+    """Return the NIF the censal consulta shows to the session ``context`` carries.
+
+    The consulta landing is requested and refused exactly as
+    :func:`fetch_censal_datos` requests and refuses it, in a page of
+    ``context`` that this call opens and closes; the subsidiary consultations
+    are not read. A session AEAT did not accept, a representation dialog or any
+    page that is not the consulta raises :class:`SedeNavigationError`.
+
+    Args:
+        context: A Cadrumo-owned browser context seeded with the session to read.
+        taxpayer_nif: The identifier the session is expected to belong to.
+
+    Returns:
+        The identity NIF the consulta renders, or ``None`` when it renders none.
+    """
+    page = require_playwright_page(await context.new_page())
+    try:
+        result, _landing_path = await _read_consulta_landing(page, taxpayer_nif=taxpayer_nif)
+    finally:
+        await close_async_resources(page, task_name="cadrumo-censal-identity-page-close")
+    return result.identity.nif
+
+
+async def _read_consulta_landing(page: Page, *, taxpayer_nif: str) -> tuple[CensalObservation, str]:
+    """Request the consulta in ``page``, refuse any other landing and parse it; returns the landed path too."""
+    url = censal_datos_url(taxpayer_nif, origin=_CENSAL_ORIGIN)
+    _assert_read_http("GET", url)
+    try:
+        await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+    except PlaywrightError as exc:
+        raise SedeNavigationError(
+            f"censal consulta navigation failed ({type(exc).__name__}) for {redacted_url(url)}",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+        ) from exc
+
+    # Follow the redirect chain rather than trusting the requested URL:
+    # refuse a landing that is not the consulta, re-assert the host AEAT
+    # actually served, then refuse outright if that landing is a censal
+    # modification surface.
+    landing_url = _censal_landing_url(page, requested_url=redacted_url(url) or "")
+    _refuse_non_consulta_landing(landing_url)
+    landing = urlsplit(landing_url)
+    _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
+    _assert_read_landing(landing_url)
+
+    html = await page.content()
+    result = parse_censal_datos(html, source_url=str(census_source_url(landing_url)))
+    if result.identity.nif is None and not _censal_marker_present(html):
+        raise SedeNavigationError(
+            "AEAT censal navigation returned a page with no censal marker and no identity data; "
+            "this is a wrong-service / auth-gate / maintenance landing, not an empty censal record. "
+            f"landing_host={landing.netloc!r} landing_path={landing.path!r} marker_present=False",
+            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            translated_message=tr("adapters.sede.errors.censal_bad_landing"),
+            context={
+                "requested_url": redacted_url(url),
+                "landing_host": landing.netloc,
+                "landing_path": landing.path,
+                "marker_present": False,
+            },
+        )
+    return result, landing.path
 
 
 def _refuse_non_consulta_landing(landing_url: str) -> None:
@@ -661,4 +693,5 @@ __all__ = [
     "fetch_censal_datos",
     "forbidden_censal_landing_marker",
     "parse_censal_datos",
+    "read_censal_identity_nif",
 ]

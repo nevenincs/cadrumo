@@ -99,6 +99,7 @@ from .clave_permanente_support import (
 from .clave_permanente_support import clave_permanente_configuration_error as _configuration_error
 from .clave_permanente_support import clave_permanente_login_error as _login_error
 from .errors import AuthConfigurationError, AuthProviderCleanupError
+from .view_capture_identity import require_signed_in_taxpayer
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -221,7 +222,8 @@ class ClavePermanenteAuthProvider:
         Cl@ve Permanente form there. The capture is written with the configured
         DNI/NIE and the default authenticated Sede page as its landing, anchored
         at the capture instant, and then resumed exactly as a stored session is,
-        in a browser of this provider's own. The caller stages the writes and
+        in a browser of this provider's own. The taxpayer AEAT shows to the
+        capture must then be the configured DNI/NIE. The caller stages the writes and
         publishes them only after this returns; a refusal raises
         :class:`AeatLoginAssertionError`.
         """
@@ -242,6 +244,10 @@ class ClavePermanenteAuthProvider:
                 ),
             )
             session, _assertion = await self._resume_locked(path, target_url=None)
+            context = self._context
+            if context is None:
+                raise AeatLoginAssertionError("a resumed view capture left no context to read its taxpayer in")
+            await require_signed_in_taxpayer(context, expected_nif=dni_nie)
             return session
 
     def _require_idle(self) -> None:
