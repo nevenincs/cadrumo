@@ -1,4 +1,5 @@
 cadrumo_cargo_command(application_cargo
+  --env "CADRUMO_TEST_PYTHON=${CADRUMO_DEV_PYTHON}"
   --env "CADRUMO_CONTRACT_RS=${CONTRACT_DIR}/contract.rs")
 set(application_manifest "${CMAKE_CURRENT_SOURCE_DIR}/Cargo.toml")
 set(application_profile "$<IF:$<CONFIG:Debug>,dev,release>")
