@@ -30,20 +30,11 @@ from dataclasses import dataclass, field
 from datetime import timedelta
 from pathlib import Path
 from typing import Final
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from playwright.async_api import BrowserContext, Route, WebSocketRoute, async_playwright
 
-from cadrumo.adapters.outbound.aeat.auth.tests.view_session_support import (
-    CERTIFICATE_SECRET_BACKEND_FACTORY,
-    OPERATOR_SCOPE_PORTS,
-    PROFILE_ID,
-    OperationHost,
-    certificate_profile,
-    stored_cookie_names,
-    stored_digest,
-)
 from cadrumo.adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope, DefaultBrowserSession
 from cadrumo.adapters.outbound.aeat.browser.profile import Profile
 from cadrumo.adapters.outbound.aeat.browser.sede_view import SedeViewPage
@@ -134,6 +125,7 @@ from ...adapters.worker_transport import worker_endpoint
 from ..view_stream_relay import ViewStreamRelay
 from ..worker_view_stream import WorkerViewStream, WorkerViewStreams
 from .test_view_stream_relay import _RUNTIME_NAMESPACE, _Clock, _Lane, _Window
+from .view_session_world import ViewSessionWorld
 from .view_stream_host_support import bind_worker_leg, synthetic_worker_identity
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -345,8 +337,8 @@ def _view_browser_factory(site: _SedeStandIn) -> SedeViewBrowserFactory:
     return open_view
 
 
-def _request() -> OperationRequest[SedeViewRequest]:
-    profile_id = UUID(PROFILE_ID)
+def _request(world: ViewSessionWorld) -> OperationRequest[SedeViewRequest]:
+    profile_id = world.profile_id
     return OperationRequest[SedeViewRequest](
         definition_id=SEDE_VIEW_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(profile_id)),
@@ -354,16 +346,18 @@ def _request() -> OperationRequest[SedeViewRequest]:
     )
 
 
-async def _sync(boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation, name: str) -> bool:
+async def _sync(
+    world: ViewSessionWorld, boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation, name: str
+) -> bool:
     """A CLI or TUI sync: whether it reused the stored session rather than signing in afresh."""
-    host = OperationHost()
+    host = world.operation_host()
     result = await ensure_live_authenticated_session(
         load_settings(),
-        certificate_secret_backend_factory=CERTIFICATE_SECRET_BACKEND_FACTORY,
+        certificate_secret_backend_factory=world.certificate_secret_backend_factory,
         browser_session_factory=real_browser_factory(boundary=boundary, profile_name=name),
         operation=name,
         target_url=None,
-        operator_scope_ports=OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=world.operator_scope_ports,
         profile_decode_context=operation.profile_decode_context(),
         effect_guard=host.effect_guard,
         on_session_write=host.report,
@@ -373,7 +367,7 @@ async def _sync(boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation
 
 @asynccontextmanager
 async def _running_view(
-    tmp_path: Path, boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation
+    world: ViewSessionWorld, tmp_path: Path, boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation
 ) -> AsyncGenerator[_View]:
     """Submit the view to the supervisor, bind its worker leg to the relay and attach no window yet."""
     site = _SedeStandIn()
@@ -397,9 +391,9 @@ async def _running_view(
 
     root = tmp_path / "operations"
     definition = build_sede_view_definition(
-        certificate_secret_backend_factory=CERTIFICATE_SECRET_BACKEND_FACTORY,
+        certificate_secret_backend_factory=world.certificate_secret_backend_factory,
         browser_session_factory=real_browser_factory(boundary=boundary, profile_name="sede-view-provider"),
-        operator_scope_ports=OPERATOR_SCOPE_PORTS,
+        operator_scope_ports=world.operator_scope_ports,
         browser_resources_factory=BrowserRuntimeResourceScope,
         provider_preflight=lambda _profile_id, _operation: None,
         view_browser_factory=_view_browser_factory(site),
@@ -421,7 +415,7 @@ async def _running_view(
         lease_duration=timedelta(minutes=10),
         cleanup_timeout=timedelta(minutes=1),
     )
-    operation_id = await supervisor.submit(_request(), operation_id=os.urandom(32).hex())
+    operation_id = await supervisor.submit(_request(world), operation_id=os.urandom(32).hex())
     settling = asyncio.ensure_future(run_to_settlement(supervisor, operation_id))
     runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
     runtime.listen()
@@ -586,16 +580,20 @@ def _leaks(text: bytes, targets: dict[str, tuple[bytes, ...]]) -> list[str]:
 
 @pytest.mark.asyncio
 async def test_a_scripted_session_streams_the_page_blocks_nothing_and_publishes_on_close(
-    tmp_path: Path, operation: PinnedAuthorityOperation, caplog: pytest.LogCaptureFixture
+    view_session_world: ViewSessionWorld,
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
+    world = view_session_world
     caplog.set_level(logging.DEBUG)
-    with certificate_profile(tmp_path, operation):
+    with world.registered_profile(tmp_path, operation):
         async with opened_http_boundary() as boundary:
             # A sync signed in first: the view opens on that session.
-            await _sync(boundary, operation, "sync-before-view")
-            seeded = stored_digest()
-            assert seeded is not None and _VIEW_COOKIE not in stored_cookie_names()
-            async with _running_view(tmp_path, boundary, operation) as view:
+            await _sync(world, boundary, operation, "sync-before-view")
+            seeded = world.stored_digest()
+            assert seeded is not None and _VIEW_COOKIE not in world.stored_cookie_names()
+            async with _running_view(world, tmp_path, boundary, operation) as view:
                 panel = await asyncio.to_thread(_attach, view)
                 downloaded = await asyncio.to_thread(_person_script, view, panel)
 
@@ -627,11 +625,11 @@ async def test_a_scripted_session_streams_the_page_blocks_nothing_and_publishes_
                 journals = view.root
 
             # Custody now holds the view's session, and the next sync reuses that very record.
-            published = stored_digest()
+            published = world.stored_digest()
             assert published not in {None, seeded}
-            assert _VIEW_COOKIE in stored_cookie_names()
-            assert await _sync(boundary, operation, "sync-after-view")
-            assert stored_digest() == published
+            assert _VIEW_COOKIE in world.stored_cookie_names()
+            assert await _sync(world, boundary, operation, "sync-after-view")
+            assert world.stored_digest() == published
 
         targets = _scan_targets(panel, downloaded)
         records = delivered_records(caplog)
@@ -657,14 +655,15 @@ async def test_a_scripted_session_streams_the_page_blocks_nothing_and_publishes_
 
 @pytest.mark.asyncio
 async def test_signing_out_unbinds_the_view_at_once_and_it_settles_without_publishing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+    view_session_world: ViewSessionWorld, tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    with certificate_profile(tmp_path, operation):
+    world = view_session_world
+    with world.registered_profile(tmp_path, operation):
         async with opened_http_boundary() as boundary:
-            await _sync(boundary, operation, "sync-before-view")
-            seeded = stored_digest()
+            await _sync(world, boundary, operation, "sync-before-view")
+            seeded = world.stored_digest()
             assert seeded is not None
-            async with _running_view(tmp_path, boundary, operation) as view:
+            async with _running_view(world, tmp_path, boundary, operation) as view:
                 panel = await asyncio.to_thread(_attach, view)
                 # The Sede page loaded and set its cookie: a close now would publish a changed session.
                 await until(lambda: view.site.reached("GET", _HOME), timeout=_SECONDS)
@@ -681,5 +680,5 @@ async def test_signing_out_unbinds_the_view_at_once_and_it_settles_without_publi
                 result = await _result(view)
                 assert result.end is SedeViewEnd.STREAM_ENDED
                 assert result.publication is None
-            assert stored_digest() == seeded
-            assert _VIEW_COOKIE not in stored_cookie_names()
+            assert world.stored_digest() == seeded
+            assert _VIEW_COOKIE not in world.stored_cookie_names()

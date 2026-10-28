@@ -198,6 +198,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
     from cadrumo.entrypoints.cli.tests.cli_fixture_worlds import CliWorldProvider
     from cadrumo.tests.cli_fixture_ports import CliInvocation, FreshCliInvocation
+    from cadrumo_runtime.host.tests.view_session_world import ViewSessionWorld
 
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
@@ -233,6 +234,14 @@ def module_run(tmp_path_factory: pytest.TempPathFactory) -> tuple[int | None, by
     from cadrumo_runtime.host.tests.frontend.tui.module_execution import run_tui_module
 
     return run_tui_module(tmp_path_factory.mktemp("tui-module"))
+
+
+@pytest.fixture(scope="session")
+def view_session_world() -> ViewSessionWorld:
+    """Inject the tax-owned certificate profile and session custody into runtime-owned view assertions."""
+    from cadrumo.adapters.outbound.aeat.auth.tests.view_session_support import CertificateViewSessionWorld
+
+    return CertificateViewSessionWorld()
 
 
 @pytest.fixture(scope="session")

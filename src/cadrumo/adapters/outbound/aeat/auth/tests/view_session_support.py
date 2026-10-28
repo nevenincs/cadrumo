@@ -8,9 +8,10 @@ that supplies them is not the behaviour under test.
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Generator
-from contextlib import asynccontextmanager, contextmanager
+from contextlib import AbstractContextManager, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Final
+from uuid import UUID
 
 from pydantic import SecretStr
 
@@ -20,6 +21,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.acquisition_lock import AuthAcquisitionLockState, inspect_auth_acquisition_lock
 from cadrumo.application.auth.operator import configure_operator_auth
+from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
 from cadrumo.application.auth.sessions import storage_state_paths
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.core.auth_provider import AuthProviderKind
@@ -125,3 +127,31 @@ def stored_cookie_names(kind: AuthProviderKind = AuthProviderKind.CERTIFICATE) -
 
 def lock_state(kind: AuthProviderKind = AuthProviderKind.CERTIFICATE) -> AuthAcquisitionLockState:
     return inspect_auth_acquisition_lock(load_settings(), kind).state
+
+
+class CertificateViewSessionWorld:
+    """The certificate-provider profile and stored session, offered to hosts that drive a Sede view."""
+
+    @property
+    def profile_id(self) -> UUID:
+        return UUID(PROFILE_ID)
+
+    @property
+    def certificate_secret_backend_factory(self) -> InMemoryCertificateSecretBackendFactory:
+        return CERTIFICATE_SECRET_BACKEND_FACTORY
+
+    @property
+    def operator_scope_ports(self) -> OperatorScopePorts:
+        return OPERATOR_SCOPE_PORTS
+
+    def registered_profile(self, tmp_path: Path, operation: PinnedAuthorityOperation) -> AbstractContextManager[None]:
+        return certificate_profile(tmp_path, operation)
+
+    def operation_host(self) -> OperationHost:
+        return OperationHost()
+
+    def stored_digest(self) -> str | None:
+        return stored_digest()
+
+    def stored_cookie_names(self) -> set[str]:
+        return stored_cookie_names()
