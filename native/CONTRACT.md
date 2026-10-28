@@ -2162,11 +2162,26 @@ supervisor command reader. A stalled read refuses retries without accumulating
 workers; expired results cannot enqueue notices or authorize stop. A later
 attempt requires a fresh observation, within its own existing stop deadline.
 
-The optional ClientHello `lifecycle_notices: "v1"` capability is omitted for legacy
-clients and unattended MCP composition. Legacy clients can connect to this server
-and receive only their existing event grammar. An opted-in client is refused by an
-older strict protocol-3 server; there is no silent capability downgrade. Unknown
-event kinds and mismatched connection/boot identity remain protocol failures.
+Runtime clients and servers use protocol 4 as one package cohort. Protocol 3 peers
+are refused; there is no silent capability downgrade. Within protocol 4, callers
+may omit the optional ClientHello `lifecycle_notices: "v1"` capability, including
+unattended MCP composition, and receive only the event grammar they requested.
+Unknown event kinds and mismatched connection/boot identity remain protocol failures.
+
+Human login and installed-service admission can return `ProfileLoginPending` or
+`ServiceAdmissionPending`. Their producer completion cues allow the same admitted
+connection to claim or cancel the exact attempt without replaying proof or admission.
+Pending verification releases shared request slots. Cancellation, connection loss,
+profile replacement and process exit wake the owner and prevent stale publication;
+a committed result remains committed. Worker readiness is published only after all
+authenticated dispatchers, including private proof cancellation, are installed.
+
+Startup progress follows readiness and completion signals. `TimeoutPolicy` supplies
+the centralized last-resort timeout, and `TimeoutDeadline` retains one absolute
+owner deadline across dependent preparation, credential reads, proof, admission and
+cleanup. Timeout does not authorize replay or prove termination when containment
+remains unconfirmed. Private proof cancellation can wake queued capacity, OS lock
+and child-response waits independently of the occupied proof channel.
 
 Obsolete native-product cleanup and interactive two-release installer acceptance
 remain separate completion evidence. Headless notice checks do not prove attended
