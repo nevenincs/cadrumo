@@ -136,16 +136,7 @@ def _search_memory_level(
         for parallelism in sorted(columns, reverse=True)
     ]
     while True:
-        best: ProfileCustodyKdfParameters | None = None
-        for column in ordered_columns:
-            if best is not None:
-                # A tie in iterations already loses to the higher parallelism found first.
-                column = [point for point in column if point.iterations > best.iterations]
-                if not column or search.over(column[0]):
-                    continue
-            choice = search.column(column)
-            if choice is not None:
-                best = choice
+        best = _strongest_provisional(ordered_columns, search)
         if best is None:
             return None
         # Discovery was the discarded warm-up; only the provisional winner is confirmed.
@@ -155,3 +146,19 @@ def _search_memory_level(
             return ProfileKdfSearchChoice(parameters=best, median_seconds=confirmed)
         # Reconsider this same materialized level: the rejected point may have
         # pruned a lower lane or fewer iterations that can now be the strongest.
+
+
+def _strongest_provisional(
+    columns: Sequence[Sequence[ProfileCustodyKdfParameters]], search: _Search
+) -> ProfileCustodyKdfParameters | None:
+    best: ProfileCustodyKdfParameters | None = None
+    for column in columns:
+        if best is not None:
+            # A tie in iterations already loses to the higher parallelism found first.
+            column = [point for point in column if point.iterations > best.iterations]
+            if not column or search.over(column[0]):
+                continue
+        choice = search.column(column)
+        if choice is not None:
+            best = choice
+    return best

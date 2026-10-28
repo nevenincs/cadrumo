@@ -10,25 +10,32 @@ KDF_LEASE_WAITING = b"W"
 KDF_LEASE_ACQUIRED = b"L"
 
 
+def _parse_descriptors(arguments: list[str]) -> tuple[int, int, int, int] | None:
+    names = {"--lease-fd", "--owner-fd", "--result-fd", "--descriptor-bound"}
+    if len(arguments) != 8:
+        return None
+    options: dict[str, int] = {}
+    for name, value in zip(arguments[::2], arguments[1::2], strict=True):
+        if name not in names or name in options or not value.isdecimal():
+            return None
+        options[name] = int(value)
+    lease, owner, result = (options[name] for name in ("--lease-fd", "--owner-fd", "--result-fd"))
+    bound = options["--descriptor-bound"]
+    if len({lease, owner, result}) != 3 or min(lease, owner, result) < 3 or max(lease, owner, result) >= bound:
+        return None
+    return lease, owner, result, bound
+
+
 def main() -> int:
     """Block in the kernel until capacity or owner death; hand off no authority."""
     if sys.platform == "win32":
         return 1
     import fcntl
 
-    names = {"--lease-fd", "--owner-fd", "--result-fd", "--descriptor-bound"}
-    arguments = sys.argv[1:]
-    if len(arguments) != 8:
+    parsed = _parse_descriptors(sys.argv[1:])
+    if parsed is None:
         return 1
-    options: dict[str, int] = {}
-    for name, value in zip(arguments[::2], arguments[1::2], strict=True):
-        if name not in names or name in options or not value.isdecimal():
-            return 1
-        options[name] = int(value)
-    lease, owner, result = (options[name] for name in ("--lease-fd", "--owner-fd", "--result-fd"))
-    bound = options["--descriptor-bound"]
-    if len({lease, owner, result}) != 3 or min(lease, owner, result) < 3 or max(lease, owner, result) >= bound:
-        return 1
+    lease, owner, result, bound = parsed
     start = 3
     for descriptor in sorted((lease, owner, result)):
         os.closerange(start, descriptor)

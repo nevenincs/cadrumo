@@ -69,9 +69,9 @@ def test_kernel_wait_joins_the_same_lock_held_by_an_older_runtime(
 
         def waiting(handle: int, milliseconds: int) -> int:
             started.set()
-            return wait(handle, milliseconds)
+            return int(wait(handle, milliseconds))
 
-        kernel.WaitForSingleObject = waiting
+        monkeypatch.setattr(kernel, "WaitForSingleObject", waiting)
         monkeypatch.setattr(lease, "_kernel32", lambda: kernel)
     else:
         launch = lease.launch_lease_worker
@@ -166,7 +166,7 @@ def test_windows_capacity_granted_as_timeout_wins_is_explicitly_unlocked(
         # has already chosen timeout. CancelIoEx cannot undo that successful lock.
         return 258
 
-    kernel.WaitForSingleObject = grant_at_timeout
+    monkeypatch.setattr(kernel, "WaitForSingleObject", grant_at_timeout)
     monkeypatch.setattr(lease, "_kernel32", lambda: kernel)
     try:
         with pytest.raises(ProfileCustodyRefusedError) as captured:

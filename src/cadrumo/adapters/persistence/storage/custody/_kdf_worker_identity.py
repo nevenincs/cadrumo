@@ -57,7 +57,11 @@ def _validate_environment(
     reported = payload["environment_keys"]
     if not isinstance(reported, list):
         raise ValueError(KDF_WORKER_ENVIRONMENT_REFUSAL)
-    keys = [key for key in cast("list[object]", reported) if isinstance(key, str)]
+    _validate_environment_keys(cast("list[object]", reported), environment_keys)
+
+
+def _validate_environment_keys(reported: list[object], environment_keys: frozenset[str]) -> None:
+    keys = [key for key in reported if isinstance(key, str)]
     given = set(environment_keys)
     injected = _DARWIN_INJECTED_ENVIRONMENT if sys.platform == "darwin" else frozenset[str]()
     if keys != reported or keys != sorted(set(keys)) or not given <= set(keys) <= given | injected:

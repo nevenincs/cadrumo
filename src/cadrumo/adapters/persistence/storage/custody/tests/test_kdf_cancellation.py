@@ -95,9 +95,9 @@ def test_cancellation_settles_a_real_legacy_file_lock_wait_before_that_lock_is_r
 
         def wait_for_capacity(count: int, handles: object, all_objects: bool, milliseconds: int) -> int:
             waiting.set()
-            return wait(count, handles, all_objects, milliseconds)
+            return int(wait(count, handles, all_objects, milliseconds))
 
-        kernel.WaitForMultipleObjects = wait_for_capacity
+        monkeypatch.setattr(kernel, "WaitForMultipleObjects", wait_for_capacity)
         monkeypatch.setattr(file_lease, "_kernel32", lambda: kernel)
     else:
         launch = file_lease.launch_lease_worker

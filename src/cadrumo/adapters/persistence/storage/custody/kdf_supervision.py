@@ -386,6 +386,17 @@ def unlock_profile_custody(
     )
 
 
+def _require_unlock_timeout(
+    timeout_seconds: float, timeout_deadline: float | None, cancellation: ProfileProofCancellation | None
+) -> None:
+    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
+        raise ValueError("profile KDF timeout must be positive")
+    if timeout_deadline is not None and not math.isfinite(timeout_deadline):
+        raise ValueError("profile KDF timeout deadline must be finite")
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
+
+
 def unlock_profile_custody_password_material(
     *,
     profile_id: UUID,
@@ -406,12 +417,7 @@ def unlock_profile_custody_password_material(
     representation, process supervision, and the non-optional capsule proof.
     It never returns an unproved key.
     """
-    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
-        raise ValueError("profile KDF timeout must be positive")
-    if timeout_deadline is not None and not math.isfinite(timeout_deadline):
-        raise ValueError("profile KDF timeout deadline must be finite")
-    if cancellation is not None:
-        cancellation.raise_if_cancelled()
+    _require_unlock_timeout(timeout_seconds, timeout_deadline, cancellation)
     password_bytes = encode_profile_password(secret)
     deadline = time.monotonic() + timeout_seconds if timeout_deadline is None else timeout_deadline
     try:

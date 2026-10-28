@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 import json
-import logging
 import os
 import queue
 import subprocess
@@ -12,8 +11,7 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import Generator
-from contextlib import ExitStack, contextmanager, nullcontext, suppress
+from contextlib import ExitStack, nullcontext, suppress
 from pathlib import Path
 from typing import Literal, cast
 
@@ -21,7 +19,6 @@ from pydantic import ValidationError
 
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import Settings, load_settings
-from .....core.diagnostic_log import DiagnosticValue, diagnostic_event
 from .....core.logging import get_logger
 from ..crypto.aes_gcm import KEY_SIZE
 from ._kdf_attestation import (
@@ -58,33 +55,10 @@ from ._kdf_refusals import resource_refusal as _resource_refusal
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_identity import verify_ready_worker as _verify_ready_worker
+from ._kdf_worker_observation import KDF_WORKER_PHASE_FIELDS, KdfCleanupPart, KdfWorkerObservation, KdfWorkerStage
 from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
 
 logger = get_logger(__name__)
-
-type _KdfStage = Literal[
-    "start",
-    "ready_wait",
-    "ready_attestation",
-    "request_write",
-    "result_wait",
-    "clean_exit",
-    "result_validation",
-    "cleanup",
-]
-type _KdfCleanupStatus = Literal["completed", "unconfirmed", "failed"]
-type _CleanupPart = Literal["process", "pipes", "directory"]
-
-_PHASE_FIELDS: dict[_KdfStage, str] = {
-    "start": "kdf_start_elapsed_ms",
-    "ready_wait": "kdf_ready_wait_elapsed_ms",
-    "ready_attestation": "kdf_ready_attestation_elapsed_ms",
-    "request_write": "kdf_request_write_elapsed_ms",
-    "result_wait": "kdf_result_wait_elapsed_ms",
-    "clean_exit": "kdf_clean_exit_elapsed_ms",
-    "cleanup": "kdf_cleanup_elapsed_ms",
-}
-
 
 _NEVER_ATTESTED = "_kdf_worker_never_attested"
 
@@ -94,7 +68,7 @@ def kdf_worker_never_attested(error: BaseException) -> bool:
     return error.__dict__.get(_NEVER_ATTESTED) is True
 
 
-class _SupervisedKdfWorker:
+class _SupervisedKdfWorker(KdfWorkerObservation):
     """One process with a complete no-fallback lifecycle and bounded pipes."""
 
     def __init__(
@@ -120,9 +94,9 @@ class _SupervisedKdfWorker:
         self._expected_posix_file_descriptors: tuple[int, int] | None = None
         self._started_ns = 0
         self._adopted_ns: int | None = None
-        self._phase_elapsed_ms: dict[_KdfStage, float | None] = dict.fromkeys(_PHASE_FIELDS)
-        self._cleanup_elapsed_ms: dict[_CleanupPart, float | None] = dict.fromkeys(("process", "pipes", "directory"))
-        self._failure_stage: _KdfStage | Literal["caller"] | None = None
+        self._phase_elapsed_ms: dict[KdfWorkerStage, float | None] = dict.fromkeys(KDF_WORKER_PHASE_FIELDS)
+        self._cleanup_elapsed_ms: dict[KdfCleanupPart, float | None] = dict.fromkeys(("process", "pipes", "directory"))
+        self._failure_stage: KdfWorkerStage | Literal["caller"] | None = None
         self._failure_type: str | None = None
         self._launch_attempted = False
         self._result_refused = False
@@ -132,7 +106,7 @@ class _SupervisedKdfWorker:
     def __enter__(self) -> _SupervisedKdfWorker:
         self._started_ns = time.monotonic_ns()
         self._adopted_ns = None
-        self._phase_elapsed_ms = dict.fromkeys(_PHASE_FIELDS)
+        self._phase_elapsed_ms = dict.fromkeys(KDF_WORKER_PHASE_FIELDS)
         self._cleanup_elapsed_ms = dict.fromkeys(("process", "pipes", "directory"))
         self._failure_stage = None
         self._failure_type = None
@@ -282,32 +256,6 @@ class _SupervisedKdfWorker:
             except (UnicodeDecodeError, ValidationError, ValueError, TypeError, json.JSONDecodeError):
                 raise _supervision_refusal() from None
 
-    @contextmanager
-    def _phase(self, stage: _KdfStage) -> Generator[None]:
-        """Collect fixed monotonic spans in memory; never emit during a phase."""
-        started = time.monotonic_ns()
-        try:
-            yield
-        except BaseException as error:
-            if self._failure_type is None:
-                self._failure_stage = stage
-                self._failure_type = type(error).__name__
-            raise
-        finally:
-            if stage in _PHASE_FIELDS:
-                elapsed_ms = max(0, time.monotonic_ns() - started) / 1_000_000
-                self._phase_elapsed_ms[stage] = (self._phase_elapsed_ms[stage] or 0.0) + elapsed_ms
-
-    @contextmanager
-    def _cleanup_span(self, part: _CleanupPart) -> Generator[None]:
-        """Attribute cleanup delay without changing failure precedence or ownership."""
-        started = time.monotonic_ns()
-        try:
-            yield
-        finally:
-            elapsed_ms = max(0, time.monotonic_ns() - started) / 1_000_000
-            self._cleanup_elapsed_ms[part] = (self._cleanup_elapsed_ms[part] or 0.0) + elapsed_ms
-
     def _exchange(self, payload: dict[str, object]) -> tuple[int, bytes]:
         operation = payload.get("operation")
         self._operation = operation if isinstance(operation, KdfOperation) else None
@@ -341,82 +289,6 @@ class _SupervisedKdfWorker:
             cleanup_error=None,
             primary_error=primary_error,
             exit_code=process.returncode if process is not None else None,
-        )
-
-    def _emit_diagnostic(
-        self,
-        *,
-        cleanup_status: _KdfCleanupStatus,
-        cleanup_error: BaseException | None,
-        primary_error: BaseException | None,
-        exit_code: int | None = None,
-    ) -> None:
-        """Attempt one summary after cleanup; elapsed time excludes this emission."""
-        if self._diagnostic_emitted:
-            return
-        self._diagnostic_emitted = True
-        fields: dict[str, DiagnosticValue] = {
-            name: self._phase_elapsed_ms[stage] for stage, name in _PHASE_FIELDS.items()
-        }
-        fields.update(
-            kdf_cleanup_process_elapsed_ms=self._cleanup_elapsed_ms["process"],
-            kdf_cleanup_pipes_elapsed_ms=self._cleanup_elapsed_ms["pipes"],
-            kdf_cleanup_directory_elapsed_ms=self._cleanup_elapsed_ms["directory"],
-        )
-        outcome = "completed"
-        if self._failure_type is not None or cleanup_error is not None:
-            outcome = "failed"
-        elif cleanup_status != "completed":
-            outcome = "unconfirmed"
-        elif self._result_refused:
-            outcome = "refused"
-        if (
-            isinstance(primary_error, ProfileProofCancelledError)
-            and cleanup_status == "completed"
-            and cleanup_error is None
-        ):
-            outcome = "cancelled"
-        # A calibration probe exceeding its sample budget is an expected
-        # rejection of that grid point, not a failed password operation.
-        if (
-            self._operation is KdfOperation.CALIBRATE
-            and self._failure_stage == "result_wait"
-            and self._failure_type == "TimeoutError"
-            and cleanup_status == "completed"
-            and cleanup_error is None
-        ):
-            outcome = "sample_rejected"
-        finished_ns = time.monotonic_ns()
-        if self._adopted_ns is not None:
-            # A prestarted child may wait minutes for a password. Preserve that
-            # lifetime separately; it is not time spent handling the request.
-            fields["kdf_worker_age_seconds"] = max(0, finished_ns - self._started_ns) / 1_000_000_000
-        fields.update(
-            kdf_operation=self._operation.value if self._operation is not None else None,
-            stage=self._failure_stage,
-            error_type=self._failure_type,
-            outcome=outcome,
-            elapsed_seconds=max(
-                0, finished_ns - (self._adopted_ns if self._adopted_ns is not None else self._started_ns)
-            )
-            / 1_000_000_000,
-            cleanup_status=cleanup_status,
-            cleanup_incomplete=cleanup_status != "completed",
-            cleanup_error_type=type(cleanup_error).__name__ if cleanup_error is not None else None,
-            exit_code=exit_code,
-        )
-        diagnostic_event(
-            logger,
-            "kdf_worker_lifecycle",
-            fields=fields,
-            level=(
-                logging.DEBUG
-                if outcome in {"completed", "sample_rejected", "cancelled"}
-                else logging.WARNING
-                if outcome == "refused"
-                else logging.ERROR
-            ),
-            primary_error=primary_error,
         )
 
     def _start(self) -> None:
@@ -556,6 +428,15 @@ class _SupervisedKdfWorker:
                 self._job = None
         # A Windows reader may hold the CRT descriptor lock while blocked in
         # os.read. Settle its writer before closing the parent pipe ends.
+        self._close_pipes()
+        if process is None and job is not None:
+            with self._cleanup_span("process"):
+                job.close()
+                self._job = None
+        with self._cleanup_span("directory"):
+            self._cleanup_neutral_directory()
+
+    def _close_pipes(self) -> None:
         with self._cleanup_span("pipes"):
             for reader in self._readers:
                 reader.join(timeout=1.0)
@@ -566,12 +447,6 @@ class _SupervisedKdfWorker:
             _close_fd(self._result_fd)
             self._request_fd = None
             self._result_fd = None
-        if process is None and job is not None:
-            with self._cleanup_span("process"):
-                job.close()
-                self._job = None
-        with self._cleanup_span("directory"):
-            self._cleanup_neutral_directory()
 
     def _cleanup_neutral_directory(self) -> None:
         if self._neutral_directory is not None:

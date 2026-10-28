@@ -160,10 +160,7 @@ if sys.platform == "win32":
                     raise supervision_refusal()
                 pending = True
                 waited = _wait_windows_completion(kernel, int(event), deadline=deadline, cancellation=cancellation)
-                if waited != 0:
-                    if waited == 258:  # WAIT_TIMEOUT
-                        raise resource_refusal()
-                    raise supervision_refusal()
+                _require_windows_wait_success(waited)
                 transferred = wintypes.DWORD()
                 acquired = bool(
                     kernel.GetOverlappedResult(handle, ctypes.byref(overlapped), ctypes.byref(transferred), True)
@@ -171,26 +168,37 @@ if sys.platform == "win32":
                 pending = False
                 if not acquired:
                     raise supervision_refusal()
-            if time.monotonic() >= deadline:
-                raise resource_refusal()
-            if cancellation is not None:
-                cancellation.raise_if_cancelled()
+            _check_acquired_lease(deadline, cancellation)
         except BaseException:
             if pending:
-                # Cancellation is a request, so join its completion before the
-                # OVERLAPPED/event storage goes away. Success can race timeout.
-                kernel.CancelIoEx(handle, ctypes.byref(overlapped))
-                transferred = wintypes.DWORD()
-                acquired = bool(
-                    kernel.GetOverlappedResult(handle, ctypes.byref(overlapped), ctypes.byref(transferred), True)
-                )
-                if not acquired and ctypes.get_last_error() != 995:  # ERROR_OPERATION_ABORTED
-                    raise supervision_refusal() from None
+                acquired = _cancel_pending_windows_lease(kernel, handle, overlapped)
             if acquired:
                 _unlock_windows_lease(descriptor)
             raise
         finally:
             kernel.CloseHandle(event)
+
+    def _require_windows_wait_success(waited: int) -> None:
+        if waited != 0:
+            if waited == 258:  # WAIT_TIMEOUT
+                raise resource_refusal()
+            raise supervision_refusal()
+
+    def _check_acquired_lease(deadline: float, cancellation: ProfileProofCancellation | None) -> None:
+        if time.monotonic() >= deadline:
+            raise resource_refusal()
+        if cancellation is not None:
+            cancellation.raise_if_cancelled()
+
+    def _cancel_pending_windows_lease(kernel: ctypes.CDLL, handle: int, overlapped: _Overlapped) -> bool:
+        # Cancellation is a request, so join its completion before the
+        # OVERLAPPED/event storage goes away. Success can race timeout.
+        kernel.CancelIoEx(handle, ctypes.byref(overlapped))
+        transferred = wintypes.DWORD()
+        acquired = bool(kernel.GetOverlappedResult(handle, ctypes.byref(overlapped), ctypes.byref(transferred), True))
+        if not acquired and ctypes.get_last_error() != 995:  # ERROR_OPERATION_ABORTED
+            raise supervision_refusal() from None
+        return acquired
 
 
 def open_kdf_file_lease(path: Path) -> int:
@@ -265,13 +273,32 @@ def _await_posix_exit_signal(
     cancelled: int | None,
 ) -> int:
     """Observe process exit in the kernel before performing the owned waitpid reap."""
-    import select
-
     if cancellation is not None:
         cancellation.raise_if_cancelled()
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise resource_refusal()
+    if sys.platform == "linux":
+        reaped = _await_linux_exit(process, remaining, cancellation, cancelled)
+    elif sys.platform == "darwin":
+        reaped = _await_darwin_exit(process, remaining, cancellation, cancelled)
+    else:
+        raise supervision_refusal()
+    if reaped is not None:
+        return reaped
+    # pidfd/NOTE_EXIT proves the child has ended, so this reap cannot turn
+    # into an unbounded wait or Popen's timeout-based waitpid retry loop.
+    return process.wait()
+
+
+def _await_linux_exit(
+    process: subprocess.Popen[bytes],
+    remaining: float,
+    cancellation: ProfileProofCancellation | None,
+    cancelled: int | None,
+) -> int | None:
+    import select
+
     if sys.platform == "linux":
         try:
             process_fd = os.pidfd_open(process.pid)
@@ -289,7 +316,19 @@ def _await_posix_exit_signal(
                 raise resource_refusal()
         finally:
             close_fd(process_fd)
-    elif sys.platform == "darwin":
+        return None
+    raise supervision_refusal()
+
+
+def _await_darwin_exit(
+    process: subprocess.Popen[bytes],
+    remaining: float,
+    cancellation: ProfileProofCancellation | None,
+    cancelled: int | None,
+) -> int | None:
+    import select
+
+    if sys.platform == "darwin":
         events = select.kqueue()
         try:
             exited = select.kevent(
@@ -312,12 +351,7 @@ def _await_posix_exit_signal(
                     if notification.data == errno.ESRCH:
                         raise ProcessLookupError(errno.ESRCH, "profile KDF lease helper already exited")
                     raise supervision_refusal()
-                if (
-                    notification.ident != process.pid
-                    or notification.filter != select.KQ_FILTER_PROC
-                    or not notification.fflags & select.KQ_NOTE_EXIT
-                ):
-                    raise supervision_refusal()
+                _validate_darwin_exit(notification.ident, notification.filter, notification.fflags, process.pid)
             except ProcessLookupError:
                 result = process.poll()
                 if result is None:
@@ -325,11 +359,18 @@ def _await_posix_exit_signal(
                 return result
         finally:
             events.close()
-    else:
-        raise supervision_refusal()
-    # pidfd/NOTE_EXIT proves the child has ended, so this reap cannot turn
-    # into an unbounded wait or Popen's timeout-based waitpid retry loop.
-    return process.wait()
+        return None
+    raise supervision_refusal()
+
+
+def _validate_darwin_exit(ident: int, event_filter: int, flags: int, pid: int) -> None:
+    import select
+
+    if sys.platform == "darwin":
+        if ident != pid or event_filter != select.KQ_FILTER_PROC or not flags & select.KQ_NOTE_EXIT:
+            raise supervision_refusal()
+        return
+    raise supervision_refusal()
 
 
 def _acquire_posix_lease(
@@ -345,8 +386,8 @@ def _acquire_posix_lease(
     description. While blocked, owner-pipe EOF terminates it even if its
     parent is killed; the parent otherwise contains and reaps it on timeout.
     """
-    import select
-
+    if sys.platform == "win32":
+        raise supervision_refusal()
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise resource_refusal()
@@ -382,29 +423,7 @@ def _acquire_posix_lease(
             owner_read = -1
             close_fd(result_write)
             result_write = -1
-            for cue in (KDF_LEASE_WAITING, KDF_LEASE_ACQUIRED):
-                if cancellation is not None:
-                    cancellation.raise_if_cancelled()
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise resource_refusal()
-                watched = [result_read] if cancelled is None else [result_read, cancelled]
-                ready = select.select(watched, [], [], remaining)[0]
-                if cancellation is not None:
-                    cancellation.raise_if_cancelled()
-                if result_read not in ready:
-                    raise resource_refusal()
-                if os.read(result_read, 1) != cue:
-                    raise supervision_refusal()
-            if (
-                _await_posix_helper_exit(process, deadline=deadline, cancellation=cancellation) != 0
-                or os.read(result_read, 1) != b""
-            ):
-                raise supervision_refusal()
-            if time.monotonic() >= deadline:
-                raise resource_refusal()
-            if cancellation is not None:
-                cancellation.raise_if_cancelled()
+            _confirm_lease_handoff(process, result_read, cancelled, deadline, cancellation)
         except BaseException:
             close_fd(owner_write)
             owner_write = -1
@@ -419,6 +438,46 @@ def _acquire_posix_lease(
         finally:
             for pipe in (owner_read, owner_write, result_read, result_write):
                 close_fd(pipe)
+
+
+def _confirm_lease_handoff(
+    process: subprocess.Popen[bytes],
+    result_read: int,
+    cancelled: int | None,
+    deadline: float,
+    cancellation: ProfileProofCancellation | None,
+) -> None:
+    _await_lease_cues(result_read, cancelled, deadline, cancellation)
+    if (
+        _await_posix_helper_exit(process, deadline=deadline, cancellation=cancellation) != 0
+        or os.read(result_read, 1) != b""
+    ):
+        raise supervision_refusal()
+    if time.monotonic() >= deadline:
+        raise resource_refusal()
+    if cancellation is not None:
+        cancellation.raise_if_cancelled()
+
+
+def _await_lease_cues(
+    result_read: int, cancelled: int | None, deadline: float, cancellation: ProfileProofCancellation | None
+) -> None:
+    import select
+
+    for cue in (KDF_LEASE_WAITING, KDF_LEASE_ACQUIRED):
+        if cancellation is not None:
+            cancellation.raise_if_cancelled()
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise resource_refusal()
+        watched = [result_read] if cancelled is None else [result_read, cancelled]
+        ready = select.select(watched, [], [], remaining)[0]
+        if cancellation is not None:
+            cancellation.raise_if_cancelled()
+        if result_read not in ready:
+            raise resource_refusal()
+        if os.read(result_read, 1) != cue:
+            raise supervision_refusal()
 
 
 __all__ = ["acquire_kdf_file_lease", "open_kdf_file_lease", "release_kdf_file_lease", "wait_for_kdf_process_exit"]
