@@ -17,3 +17,7 @@ desktop:
     process: Proceso
     title: Un proceso externo solicita acceso
     'yes': Sí
+  signin:
+    refused:
+      timeout: El inicio de sesión ha agotado el tiempo de espera. Comprueba el estado
+        de la cuenta antes de volver a intentarlo.

@@ -329,6 +329,11 @@ fn close_clients_and_supervision<R: Runtime>(handle: &tauri::AppHandle<R>) -> Re
     if let Some(profile) = handle.try_state::<Arc<shell::user_profile::ProfileHost>>() {
         profile.close();
     }
+    // Preparation may be opening a person connection. Wake it before joining
+    // the agent or any observer that depends on that exact window connection.
+    if let Some(sign_in) = handle.try_state::<Arc<shell::sign_in::SignIn>>() {
+        sign_in.request_stop();
+    }
     let language_cleanup = handle
         .try_state::<Arc<shell::language::LanguageHost>>()
         .map_or(Ok(()), |language| {

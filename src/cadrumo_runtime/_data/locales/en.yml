@@ -17,3 +17,6 @@ desktop:
     process: Process
     title: External process requests access
     'yes': 'Yes'
+  signin:
+    refused:
+      timeout: Sign-in timed out. Check the account status before trying again.

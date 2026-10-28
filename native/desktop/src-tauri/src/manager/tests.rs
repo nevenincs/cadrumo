@@ -1,50 +1,57 @@
 use super::*;
 
-#[cfg(windows)]
 #[tokio::test(start_paused = true)]
-async fn readiness_preserves_public_observation_after_former_startup_boundary() {
+async fn readiness_preserves_public_observation_after_former_startup_boundaries() {
     let started = tokio::time::Instant::now();
     let observed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
     let progress = observed.clone();
-    let ready = wait_for_readiness(async move {
-        tokio::time::sleep(Duration::from_millis(89_800)).await;
-        progress.store(1, Ordering::Release);
-        tokio::time::sleep(Duration::from_secs(5)).await;
-        progress.store(2, Ordering::Release);
-        Ok(())
-    });
+    let ready = wait_for_readiness(
+        async move {
+            tokio::time::sleep(Duration::from_millis(179_800)).await;
+            progress.store(1, Ordering::Release);
+            tokio::time::sleep(Duration::from_secs(15)).await;
+            progress.store(2, Ordering::Release);
+            Ok(())
+        },
+        STARTUP_TIMEOUT,
+    );
     tokio::pin!(ready);
     tokio::select! {
         result = &mut ready => panic!("admission finished before public observation: {result:?}"),
-        _ = tokio::time::sleep(Duration::from_secs(90)) => {}
+        _ = tokio::time::sleep(Duration::from_secs(180)) => {}
     }
     assert_eq!(observed.load(Ordering::Acquire), 1);
     ready.await.unwrap();
     assert_eq!(observed.load(Ordering::Acquire), 2);
-    assert_eq!(started.elapsed(), Duration::from_millis(94_800));
+    assert_eq!(started.elapsed(), Duration::from_millis(194_800));
 }
 
-#[cfg(windows)]
 #[tokio::test(start_paused = true)]
-async fn readiness_expiry_and_public_refusal_remain_failures() {
+async fn readiness_timeout_is_distinct_and_public_refusal_remains_prompt() {
     let started = tokio::time::Instant::now();
-    let error = wait_for_readiness(std::future::pending())
+    let injected_timeout = Duration::from_secs(7);
+    let error = wait_for_readiness(std::future::pending(), injected_timeout)
         .await
         .unwrap_err();
     assert_eq!(error.code, ErrorCode::TimedOut);
+    assert_eq!(error.reason.as_deref(), Some("runtime_timeout"));
     assert_eq!(error.operation, Operation::Manager);
-    assert_eq!(
-        started.elapsed(),
-        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling
-    );
-    let error = wait_for_readiness(async {
-        tokio::time::sleep(Duration::from_secs(95)).await;
-        Err(failure(ErrorCode::ReadFailed))
-    })
+    assert_eq!(started.elapsed(), injected_timeout);
+    let refused_at = tokio::time::Instant::now();
+    let error = wait_for_readiness(
+        async { Err(failure(ErrorCode::ReadFailed)) },
+        STARTUP_TIMEOUT,
+    )
     .await
     .unwrap_err();
     assert_eq!(error.code, ErrorCode::ReadFailed);
     assert_eq!(error.operation, Operation::Manager);
+    assert_eq!(refused_at.elapsed(), Duration::ZERO);
+    #[cfg(windows)]
+    assert_eq!(
+        STARTUP_TIMEOUT,
+        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().startup_timeout
+    );
 }
 
 #[tokio::test]

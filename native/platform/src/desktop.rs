@@ -288,7 +288,7 @@ impl Drop for LocalMemory {
 }
 
 #[repr(C)]
-struct SecurityAttributes {
+pub(crate) struct SecurityAttributes {
     length: u32,
     descriptor: *mut c_void,
     inherit: i32,

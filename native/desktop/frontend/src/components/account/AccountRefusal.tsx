@@ -21,6 +21,16 @@ const MANAGER = {
 
 // Typed refusals select product wording; unknown codes use a general refusal.
 const REFUSALS: Record<string, { key: string; tone: Tone; icon: IconName }> = {
+  RUNTIME_TIMEOUT: {
+    key: "desktop.signin.refused.timeout",
+    tone: "warning",
+    icon: "alert",
+  },
+  runtime_timeout: {
+    key: "desktop.signin.refused.timeout",
+    tone: "warning",
+    icon: "alert",
+  },
   INSTALLATION_UNAVAILABLE: {
     key: "desktop.signin.refused.installation_unavailable",
     tone: "warning",

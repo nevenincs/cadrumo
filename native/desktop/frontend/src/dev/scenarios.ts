@@ -797,6 +797,20 @@ export const SCENARIOS: readonly Scenario[] = [
     profiles: "one",
     terminals: "silent",
     manager: { result: "dispatched", autoDispatched: true, readyAfterReads: 5 },
+    supervision: {
+      initial: { state: "starting", failure: null },
+      events: [
+        {
+          afterMs: 5_000,
+          manager: {
+            kind: "manager-state",
+            revision: 1,
+            status: { state: "ready", failure: null },
+          },
+          presence: "absent",
+        },
+      ],
+    },
   },
   {
     ...base,

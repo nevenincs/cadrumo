@@ -1,8 +1,10 @@
 //! The window's sign-in: the selected profile signs in on the window's own
-//! runtime connection, which then holds the person's session; other profiles,
-//! creation and listing run short canonical CLI invocations; one pushed status
+//! runtime connection, which then holds the person's session; profile
+//! creation and listing run canonical CLI invocations; one pushed status
 //! observation follows every change.
 mod observation;
+#[cfg(all(test, windows))]
+mod opening_tests;
 mod password;
 mod profiles;
 mod watch;
@@ -47,12 +49,6 @@ use process::Children;
 pub(crate) use wire::Presence;
 use wire::{ProfileCreateResult, ProfileList, SignInResult, SignInStatus, SignOutResult};
 
-/// The longest a connection to the runtime for the window's own sign-in may take.
-#[cfg(windows)]
-const NATIVE_CONNECT: std::time::Duration = std::time::Duration::from_secs(10);
-/// The longest the runtime may take to prove a password and admit the window's session.
-#[cfg(windows)]
-const NATIVE_SIGN_IN: std::time::Duration = std::time::Duration::from_secs(120);
 /// Why the window could not sign in on its own connection.
 enum NativeSignIn {
     /// The runtime refused the sign-in itself, as the command line would report it.
@@ -71,6 +67,10 @@ impl NativeSignIn {
         use cadrumo_application::runtime_client::Refusal;
 
         match refusal {
+            Refusal::Timeout => Self::Refused(wire::Refusal {
+                code: "RUNTIME_TIMEOUT".into(),
+                retry_after_seconds: None,
+            }),
             refusal @ Refusal::Denied { .. } if refusal.code() != "runtime_peer_untrusted" => {
                 match wire::sign_in_refusal(
                     refusal.code(),
@@ -127,6 +127,7 @@ struct Call {
     slow: bool,
     command: &'static str,
 }
+#[cfg(test)]
 const LOGIN: Call = Call {
     words: &["login"],
     leaf: "login",
@@ -190,7 +191,7 @@ pub struct SignIn {
     /// What the window's own runtime connections are made from.
     native: Result<watch::Native>,
     service: Result<ChildConfiguration>,
-    pub children: Children,
+    pub children: Arc<Children>,
     observation: observation::Observer,
     watch: watch::Watch,
     // The one person session this window holds; each consumer keeps it alive
@@ -204,6 +205,52 @@ pub struct SignIn {
     // Whether the session held waits for a fresh proof after the profile's
     // worker was lost, as the connection that holds it reports it.
     custody: Custody,
+    closed: std::sync::atomic::AtomicBool,
+    lifecycle: std::sync::Mutex<()>,
+    #[cfg(windows)]
+    signing_in: std::sync::Mutex<Option<Arc<PendingSignIn>>>,
+    #[cfg(windows)]
+    openings: std::sync::Mutex<
+        Vec<std::sync::Weak<cadrumo_application::runtime_client::OpenCancellation>>,
+    >,
+}
+
+#[cfg(windows)]
+struct PendingSignIn {
+    password: std::sync::Mutex<Zeroizing<Vec<u8>>>,
+    complete: std::sync::Mutex<bool>,
+    settled: std::sync::Condvar,
+}
+
+#[cfg(windows)]
+impl PendingSignIn {
+    fn wait(&self) {
+        let mut complete = self.complete.lock().unwrap_or_else(|e| e.into_inner());
+        while !*complete {
+            complete = self
+                .settled
+                .wait(complete)
+                .unwrap_or_else(|e| e.into_inner());
+        }
+    }
+}
+
+#[cfg(windows)]
+struct SigningIn<'a>(
+    &'a std::sync::Mutex<Option<Arc<PendingSignIn>>>,
+    Arc<PendingSignIn>,
+);
+
+#[cfg(windows)]
+impl Drop for SigningIn<'_> {
+    fn drop(&mut self) {
+        *self.1.complete.lock().unwrap_or_else(|e| e.into_inner()) = true;
+        self.1.settled.notify_all();
+        self.0
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .take();
+    }
 }
 
 impl SignIn {
@@ -216,12 +263,18 @@ impl SignIn {
             native,
             runtime,
             service: resolve_image(launch, "cadrumo-agent-service"),
-            children: Children::new(launch.diagnostics.clone()),
+            children: Arc::new(Children::new(launch.diagnostics.clone())),
             observation: observation::Observer::default(),
             person: std::sync::Mutex::new(std::sync::Weak::new()),
             signed_in: std::sync::Mutex::new(None),
             person_events: tokio::sync::broadcast::channel(16).0,
             custody: Custody::default(),
+            closed: std::sync::atomic::AtomicBool::new(false),
+            lifecycle: std::sync::Mutex::new(()),
+            #[cfg(windows)]
+            signing_in: std::sync::Mutex::new(None),
+            #[cfg(windows)]
+            openings: std::sync::Mutex::new(Vec::new()),
         }
     }
 
@@ -245,15 +298,26 @@ impl SignIn {
     /// profile's is replaced by resuming the stored sign-in on a fresh
     /// connection of the window's own.
     pub(crate) fn person(&self, profile_id: &str) -> Result<crate::agent::person::HeldPerson> {
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
         let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(held) = cached.upgrade() {
             let mut person = held.lock().unwrap_or_else(|e| e.into_inner());
             if person.identity["profile_id"] == profile_id && person.is_open() {
                 drop(person);
+                let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
+                if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+                    return Err(failure(ErrorCode::SessionUnavailable));
+                }
                 return Ok(held);
             }
         }
         let mut person = self.resume(profile_id)?;
+        let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
         person.observe_events(self.person_events.clone())?;
         let held = Arc::new(std::sync::Mutex::new(person));
         *cached = Arc::downgrade(&held);
@@ -263,32 +327,83 @@ impl SignIn {
 
     /// Signs the selected profile in on the window's own connection, storing
     /// the sign-in for the TUI and the command line, and keeps that session as
-    /// the window's person session. Another named profile still signs in
-    /// through the command line, which selects it.
+    /// the window's person session. Named profiles are resolved by the runtime,
+    /// even before this window has received its first status observation.
+    #[cfg(windows)]
     fn sign_in(&self, label: Option<&str>, password: Zeroizing<Vec<u8>>) -> Result<SignInResult> {
-        let selected = self.watch.latest().ok().and_then(|observed| {
-            observed
-                .status
-                .active_profile
-                .zip(observed.profile_id)
-                .filter(|(active, _)| label.is_none_or(|label| label == active))
+        use cadrumo_application::runtime_client::TimeoutWait;
+
+        let waiting = TimeoutWait::new();
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        macro_rules! native {
+            ($exchange:expr) => {
+                match $exchange {
+                    Ok(value) => value,
+                    Err(refusal) => {
+                        return match NativeSignIn::from_refusal(refusal) {
+                            NativeSignIn::Refused(refusal) => Ok(SignInResult::Refused { refusal }),
+                            NativeSignIn::Unavailable(error) => Err(error),
+                        };
+                    }
+                }
+            };
+        }
+        let pending_sign_in = Arc::new(PendingSignIn {
+            password: std::sync::Mutex::new(password),
+            complete: std::sync::Mutex::new(false),
+            settled: std::sync::Condvar::new(),
         });
-        let Some((active, profile_id)) = selected.filter(|_| password.len() <= 4096) else {
-            return wire::login(self.run(&LOGIN, label, Some(encoded_bytes(&password, false)?))?);
+        {
+            let mut pending = self
+                .signing_in
+                .lock()
+                .unwrap_or_else(|error| error.into_inner());
+            if self.closed.load(std::sync::atomic::Ordering::Acquire) || pending.is_some() {
+                return Err(failure(ErrorCode::CliBusy).with_reason("sign_in_in_progress"));
+            }
+            *pending = Some(pending_sign_in.clone());
+        }
+        let _signing_in = SigningIn(&self.signing_in, pending_sign_in.clone());
+        let connection = native!(self.connect(waiting.deadline()));
+        let target = match label {
+            Some(label) => label.to_owned(),
+            None => native!(connection.active_profile(false, waiting.deadline()))
+                .selected_profile_id
+                .ok_or_else(|| {
+                    failure(ErrorCode::ReadFailed).with_reason("profile_identity_absent")
+                })?,
         };
+        let (profile_id, active) = native!(connection.login_target(&target, waiting.deadline()))
+            .ok_or_else(|| failure(ErrorCode::ReadFailed).with_reason("profile_identity_absent"))?;
         let _mutation = self.watch.mutation();
+        let password = pending_sign_in
+            .password
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
         if let Some(rebound) = self.rebind_held(&profile_id, &password) {
+            let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
+            if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+                return Err(failure(ErrorCode::SessionUnavailable));
+            }
             return match rebound {
                 Ok(()) => Ok(signed_in(active)),
                 Err(NativeSignIn::Refused(refusal)) => Ok(SignInResult::Refused { refusal }),
                 Err(NativeSignIn::Unavailable(error)) => Err(error),
             };
         }
-        let mut person = match self.native_sign_in(&profile_id, &password) {
-            Ok(person) => person,
-            Err(NativeSignIn::Refused(refusal)) => return Ok(SignInResult::Refused { refusal }),
-            Err(NativeSignIn::Unavailable(error)) => return Err(error),
-        };
+        let mut person =
+            match self.native_sign_in(&profile_id, &password, connection, waiting.deadline()) {
+                Ok(person) => person,
+                Err(NativeSignIn::Refused(refusal)) => {
+                    return Ok(SignInResult::Refused { refusal });
+                }
+                Err(NativeSignIn::Unavailable(error)) => return Err(error),
+            };
         if !person.session_persisted() {
             // As the command line answers it: a sign-in no other frontend can
             // resume is refused, and dropping the session here ends it.
@@ -301,9 +416,19 @@ impl SignIn {
         }
         person.observe_events(self.person_events.clone())?;
         let held = Arc::new(std::sync::Mutex::new(person));
-        *self.person.lock().unwrap_or_else(|e| e.into_inner()) = Arc::downgrade(&held);
+        let mut cached = self.person.lock().unwrap_or_else(|e| e.into_inner());
+        let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            return Err(failure(ErrorCode::SessionUnavailable));
+        }
+        *cached = Arc::downgrade(&held);
         *self.signed_in.lock().unwrap_or_else(|e| e.into_inner()) = Some(held);
         Ok(signed_in(active))
+    }
+
+    #[cfg(not(windows))]
+    fn sign_in(&self, _: Option<&str>, _: Zeroizing<Vec<u8>>) -> Result<SignInResult> {
+        Err(failure(ErrorCode::UnsupportedPlatform))
     }
 
     /// Brings the session this window holds for `profile_id` back by its
@@ -398,9 +523,57 @@ impl SignIn {
         status
     }
 
+    /// Signal every opening before shutdown joins any dependent owner.
+    pub(crate) fn request_stop(&self) {
+        {
+            let _lifecycle = self.lifecycle.lock().unwrap_or_else(|e| e.into_inner());
+            self.closed
+                .store(true, std::sync::atomic::Ordering::Release);
+        }
+        self.watch.request_close();
+        #[cfg(windows)]
+        for opening in self
+            .openings
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .drain(..)
+            .filter_map(|owner| owner.upgrade())
+        {
+            opening.cancel();
+        }
+        #[cfg(windows)]
+        if let Some(pending) = self
+            .signing_in
+            .lock()
+            .unwrap_or_else(|error| error.into_inner())
+            .as_ref()
+            .cloned()
+        {
+            zeroize::Zeroize::zeroize(
+                &mut **pending.password.lock().unwrap_or_else(|e| e.into_inner()),
+            );
+        }
+    }
+
     pub async fn stop(&self) -> Result<()> {
+        self.request_stop();
         self.observation.close();
-        let result = self.children.stop();
+        #[cfg(windows)]
+        let pending = self
+            .signing_in
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+            .cloned();
+        let children = self.children.clone();
+        let result = super::blocking(move || {
+            #[cfg(windows)]
+            if let Some(pending) = pending {
+                pending.wait();
+            }
+            children.stop()
+        })
+        .await;
         let joined = self.observation.join().await;
         let watch = self.watch.clone();
         let signed_in = self
@@ -445,16 +618,30 @@ impl SignIn {
     #[cfg(windows)]
     fn connect(
         &self,
+        deadline: std::time::Instant,
     ) -> std::result::Result<
-        cadrumo_application::runtime_client::Connection,
+        Arc<cadrumo_application::runtime_client::Connection>,
         cadrumo_application::runtime_client::Refusal,
     > {
+        use cadrumo_application::runtime_client::{Connection, OpenCancellation, Refusal};
+        let opening = Arc::new(OpenCancellation::new().map_err(Refusal::Io)?);
+        {
+            let mut owners = self.openings.lock().unwrap_or_else(|e| e.into_inner());
+            if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+                return Err(Refusal::ConnectionClosed);
+            }
+            owners.retain(|owner| owner.upgrade().is_some_and(|opening| !opening.cancelled()));
+            owners.push(Arc::downgrade(&opening));
+        }
         let (endpoint, cohort) = self.runtime_target()?;
-        cadrumo_application::runtime_client::Connection::open(
-            &endpoint,
-            &cohort,
-            std::time::Instant::now() + NATIVE_CONNECT,
-        )
+        let connection = Arc::new(Connection::open_cancellable(
+            &endpoint, &cohort, deadline, opening,
+        )?);
+        if self.closed.load(std::sync::atomic::Ordering::Acquire) {
+            connection.close();
+            return Err(Refusal::ConnectionClosed);
+        }
+        Ok(connection)
     }
 
     /// Signs `profile_id` in on a connection of the window's own, storing the
@@ -464,33 +651,20 @@ impl SignIn {
         &self,
         profile_id: &str,
         password: &[u8],
+        connection: Arc<cadrumo_application::runtime_client::Connection>,
+        deadline: std::time::Instant,
     ) -> std::result::Result<crate::agent::person::Person, NativeSignIn> {
-        use cadrumo_application::runtime_client::{Frontend, Refusal};
-
-        let unavailable = |refusal: Refusal| {
-            NativeSignIn::Unavailable(
-                failure(ErrorCode::SessionUnavailable)
-                    .with_reason("native_sign_in_unavailable")
-                    .caused_by(refusal),
-            )
-        };
+        use cadrumo_application::runtime_client::Frontend;
         let recovery = self.recovery().map_err(NativeSignIn::Unavailable)?;
-        let connection = self.connect().map_err(unavailable)?;
         // Subscribed first: a push between the sign-in's reply and the
         // session's router still reaches it.
         let pushed = connection.subscribe_scoped();
         let admitted = connection
-            .login_password(
-                profile_id,
-                Frontend::Desktop,
-                password,
-                true,
-                std::time::Instant::now() + NATIVE_SIGN_IN,
-            )
+            .login_password(profile_id, Frontend::Desktop, password, true, deadline)
             .map_err(NativeSignIn::from_refusal)?;
         let persisted = admitted.session_persisted == Some(true);
         crate::agent::person::Person::native(
-            Arc::new(connection),
+            connection,
             pushed,
             admitted,
             Some(persisted),
@@ -499,26 +673,16 @@ impl SignIn {
         .map_err(NativeSignIn::Unavailable)
     }
 
-    #[cfg(not(windows))]
-    fn native_sign_in(
-        &self,
-        _: &str,
-        _: &[u8],
-    ) -> std::result::Result<crate::agent::person::Person, NativeSignIn> {
-        Err(NativeSignIn::Unavailable(failure(
-            ErrorCode::UnsupportedPlatform,
-        )))
-    }
-
     /// Resumes the stored sign-in of `profile_id` on a fresh connection of the
     /// window's own, as the desktop frontend, and holds the session it admits.
     #[cfg(windows)]
     fn resume(&self, profile_id: &str) -> Result<crate::agent::person::Person> {
         use cadrumo_application::runtime_client::Frontend;
+        let waiting = cadrumo_application::runtime_client::TimeoutWait::new();
 
         let native = self.native.as_ref().map_err(Clone::clone)?;
         let recovery = self.recovery()?;
-        let connection = self.connect().map_err(|refusal| {
+        let connection = self.connect(waiting.deadline()).map_err(|refusal| {
             failure(ErrorCode::SessionUnavailable)
                 .with_reason("person_resume_unavailable")
                 .caused_by(refusal)
@@ -529,14 +693,14 @@ impl SignIn {
                 &native.storage_root,
                 profile_id,
                 Frontend::Desktop,
-                std::time::Instant::now() + NATIVE_SIGN_IN,
+                waiting.deadline(),
             )
             .map_err(|refusal| {
                 failure(ErrorCode::SessionUnavailable)
                     .with_reason("person_resume_refused")
                     .caused_by(refusal)
             })?;
-        crate::agent::person::Person::native(Arc::new(connection), pushed, admitted, None, recovery)
+        crate::agent::person::Person::native(connection, pushed, admitted, None, recovery)
     }
 
     #[cfg(not(windows))]
@@ -622,7 +786,7 @@ impl SignIn {
             self.children.read(identity, command)
         } else if call.slow {
             self.children
-                .run_within(identity, command, secret, process::CREATION_DEADLINE)
+                .run_within(identity, command, secret, process::TIMEOUT)
         } else {
             self.children.run(identity, command, secret)
         }

@@ -33,9 +33,9 @@ use zeroize::Zeroizing;
 
 /// Initial retry delay; later failures back off, up to three retries.
 pub const RETRY: Duration = Duration::from_secs(30);
-/// Includes the runtime handshake, its 120-second registration exchange and
-/// headroom for cold interpreter startup before the service can report ready.
-const START_LIMIT: Duration = Duration::from_secs(180);
+/// Last resort for an owner that never reports readiness or terminal completion.
+const STARTUP_TIMEOUT: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
 
 pub use cadrumo_application::diagnostics::service::AgentRefusal as Refusal;
 use cadrumo_application::diagnostics::service::{AgentStopCause, ServiceFact};
@@ -180,6 +180,36 @@ struct Running {
     started: Instant,
 }
 
+struct Preparing {
+    generation: u64,
+    profile: String,
+    started: Instant,
+    cancelled: Arc<AtomicBool>,
+}
+
+struct Admitting {
+    generation: u64,
+    cancel: Arc<Notify>,
+    cancelled: Arc<AtomicBool>,
+    ready: Option<Event>,
+}
+
+struct AdmissionWork {
+    person: super::person::HeldPerson,
+    boot: String,
+    profile: String,
+    recipient: String,
+    service: String,
+    deadline: Instant,
+    cancelled: Arc<AtomicBool>,
+    cancel: Arc<Notify>,
+}
+
+enum Completion {
+    Started(u64, Result<Running>),
+    Admitted(u64, Result<super::admin::Endpoint>),
+}
+
 struct Listener {
     channel: Channel<Status>,
 }
@@ -190,6 +220,11 @@ struct Shared {
     gateway: Mutex<Option<Gateway>>,
     admin: Mutex<Option<super::admin::Endpoint>>,
     running: Mutex<Option<Running>>,
+    preparing: Mutex<Option<Preparing>>,
+    admitting: Mutex<Option<Admitting>>,
+    completions: mpsc::UnboundedSender<Completion>,
+    completed: Mutex<Option<mpsc::UnboundedReceiver<Completion>>>,
+    tasks: Mutex<Vec<tauri::async_runtime::JoinHandle<()>>>,
     closed: AtomicBool,
     started: AtomicBool,
     retry_requested: AtomicBool,
@@ -199,7 +234,7 @@ struct Shared {
     diagnostics: Arc<Diagnostics>,
     grace: Duration,
     retry: Duration,
-    start_limit: Duration,
+    startup_timeout: Duration,
 }
 
 /// The supervision of one host's launcher.
@@ -257,6 +292,7 @@ impl Supervisor {
         grace: Duration,
         retry: Duration,
     ) -> Self {
+        let (completions, completed) = mpsc::unbounded_channel();
         let status = if launch.is_some() {
             Status {
                 state: State::Stopped,
@@ -277,6 +313,11 @@ impl Supervisor {
                 gateway: Mutex::new(None),
                 admin: Mutex::new(None),
                 running: Mutex::new(None),
+                preparing: Mutex::new(None),
+                admitting: Mutex::new(None),
+                completions,
+                completed: Mutex::new(Some(completed)),
+                tasks: Mutex::new(Vec::new()),
                 closed: AtomicBool::new(false),
                 started: AtomicBool::new(false),
                 retry_requested: AtomicBool::new(false),
@@ -286,7 +327,7 @@ impl Supervisor {
                 diagnostics,
                 grace,
                 retry,
-                start_limit: START_LIMIT,
+                startup_timeout: STARTUP_TIMEOUT,
             }),
             observe,
             changed,
@@ -297,10 +338,10 @@ impl Supervisor {
     /// A fixture launcher's speed is not under test; it gets `limit` to report
     /// its service instead of the product's start limit.
     #[cfg(test)]
-    fn starting_within(mut self, limit: Duration) -> Self {
+    fn timeout_within(mut self, limit: Duration) -> Self {
         Arc::get_mut(&mut self.shared)
             .expect("timing is set before supervision begins")
-            .start_limit = limit;
+            .startup_timeout = limit;
         self
     }
 
@@ -461,6 +502,22 @@ async fn stop_running(
     generation: Option<u64>,
     cause: AgentStopCause,
 ) -> Result<()> {
+    if let Some(preparing) = lock(&shared.preparing).as_ref()
+        && generation.is_none_or(|wanted| wanted == preparing.generation)
+    {
+        preparing.cancelled.store(true, Ordering::Release);
+    }
+    {
+        let mut admitting = lock(&shared.admitting);
+        if admitting
+            .as_ref()
+            .is_some_and(|pending| generation.is_none_or(|wanted| wanted == pending.generation))
+            && let Some(pending) = admitting.take()
+        {
+            pending.cancelled.store(true, Ordering::Release);
+            pending.cancel.notify_one();
+        }
+    }
     let taken = {
         let mut running = lock(&shared.running);
         if generation.is_some_and(|wanted| running.as_ref().map(|r| r.generation) != Some(wanted)) {
@@ -505,21 +562,22 @@ async fn stop_running(
     ended.map(|_| ())
 }
 
-async fn start(
+async fn prepare_start(
     shared: &Arc<Shared>,
     launch: &Launch,
     profile: String,
     signals: &mpsc::UnboundedSender<(u64, Signal)>,
-) -> Result<()> {
+    generation: u64,
+    cancelled: Arc<AtomicBool>,
+    preparation_started: Instant,
+) -> Result<Running> {
     let bearer = Arc::new(mint_bearer()?);
     let gateway_bearer = Arc::new(mint_bearer()?);
     let launch = launch.clone();
     let prepare_bearer = bearer.clone();
     let prepare_profile = profile.clone();
-    let preparation_started = Instant::now();
     // Include held-person acquisition (which can wait on another consumer)
     // in the visible startup interval, not just the child launch afterwards.
-    let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
     shared
         .diagnostics
         .service(None, ServiceFact::AgentStarting { generation });
@@ -535,6 +593,12 @@ async fn start(
         .await
         .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
     let prepared_at = Instant::now();
+    if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
+        return Err(
+            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason("agent_start_cancelled"),
+        );
+    }
     let sender = signals.clone();
     let diagnostics = shared.diagnostics.clone();
     let secret = bearer.clone();
@@ -567,35 +631,62 @@ async fn start(
                 .unwrap_or(u64::MAX),
         },
     );
-    let refused = {
-        let mut running = lock(&shared.running);
-        if shared.closed.load(Ordering::Acquire) {
-            Some(supervised)
-        } else {
-            *running = Some(Running {
-                supervised,
-                profile,
-                generation,
-                bearer,
-                gateway_bearer,
-                person,
-                person_failure,
-                started: Instant::now(),
-            });
-            None
-        }
-    };
-    if let Some(supervised) = refused {
+    if cancelled.load(Ordering::Acquire) || shared.closed.load(Ordering::Acquire) {
         let grace = shared.grace;
-        match tauri::async_runtime::spawn_blocking(move || supervised.stop(grace)).await {
-            Ok(Ok(_)) => {}
-            Ok(Err(error)) => shared.diagnostics.host_failure(HostStage::Agent, error),
-            Err(_) => shared
-                .diagnostics
-                .contained_panic(Some(HostStage::Agent), Operation::Cli),
-        }
+        tauri::async_runtime::spawn_blocking(move || supervised.stop(grace))
+            .await
+            .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+        return Err(
+            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason("agent_start_cancelled"),
+        );
     }
-    Ok(())
+    Ok(Running {
+        supervised,
+        profile,
+        generation,
+        bearer,
+        gateway_bearer,
+        person,
+        person_failure,
+        started: preparation_started,
+    })
+}
+
+fn start(
+    shared: &Arc<Shared>,
+    launch: &Launch,
+    profile: String,
+    signals: &mpsc::UnboundedSender<(u64, Signal)>,
+) {
+    let generation = shared.generation.fetch_add(1, Ordering::AcqRel) + 1;
+    let cancelled = Arc::new(AtomicBool::new(false));
+    let started = Instant::now();
+    *lock(&shared.preparing) = Some(Preparing {
+        generation,
+        profile: profile.clone(),
+        started,
+        cancelled: cancelled.clone(),
+    });
+    let (owner, launch, signals) = (shared.clone(), launch.clone(), signals.clone());
+    let task = tauri::async_runtime::spawn(async move {
+        let result = prepare_start(
+            &owner, &launch, profile, &signals, generation, cancelled, started,
+        )
+        .await;
+        if let Err(failed) = owner
+            .completions
+            .send(Completion::Started(generation, result))
+            && let Completion::Started(_, Ok(running)) = failed.0
+        {
+            let grace = owner.grace;
+            let _ =
+                tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace)).await;
+        }
+    });
+    let mut tasks = lock(&shared.tasks);
+    tasks.retain(|task| !task.inner().is_finished());
+    tasks.push(task);
 }
 
 /// A failed service gets three automatic retries. The last refusal remains
@@ -605,11 +696,18 @@ struct RetryBudget {
     failures: u32,
     after: Option<Instant>,
     refusal: Option<Refusal>,
+    stopped: bool,
 }
 
 impl RetryBudget {
     fn waiting(&self) -> bool {
-        self.failures >= 4 || self.after.is_some_and(|at| Instant::now() < at)
+        self.stopped || self.failures >= 4 || self.after.is_some_and(|at| Instant::now() < at)
+    }
+
+    fn timeout(&mut self) {
+        self.stopped = true;
+        self.after = None;
+        self.refusal = Some(Refusal::Timeout);
     }
 
     fn failed(&mut self, shared: &Shared) {
@@ -640,6 +738,11 @@ impl RetryBudget {
 
 async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, launch: Launch) {
     let (signals, mut received) = mpsc::unbounded_channel::<(u64, Signal)>();
+    let mut completed = lock(&shared.completed)
+        .take()
+        .expect("one supervision owner");
+    let mut completions = std::collections::VecDeque::new();
+    let mut early = Vec::new();
     let mut retries = RetryBudget::default();
     let mut serving: Option<String> = None;
     'supervision: while !shared.closed.load(Ordering::Acquire) {
@@ -656,6 +759,13 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         tokio::pin!(observation);
         let failed_person = person_failed(&shared);
         tokio::pin!(failed_person);
+        let startup_timeout = async {
+            match startup_due(&shared) {
+                Some(deadline) => tokio::time::sleep_until(deadline.into()).await,
+                None => std::future::pending::<()>().await,
+            }
+        };
+        tokio::pin!(startup_timeout);
         // CLI status reads can take seconds. Launcher refusal/exit must clear
         // the gateway and publish its cause while that read is still pending.
         let observed = loop {
@@ -668,9 +778,64 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     continue 'supervision;
                 }
                 Some((generation, signal)) = received.recv() => {
+                    if lock(&shared.running).is_none() && lock(&shared.preparing).as_ref().is_some_and(|p| p.generation == generation) {
+                        early.push((generation, signal));
+                        continue;
+                    }
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
                     }
+                }
+                Some(completion) = completed.recv() => {
+                    match completion {
+                        Completion::Started(generation, result) => {
+                            // Keeping a privately owned child needs no new
+                            // authority observation. Readiness/admission still
+                            // cannot publish an endpoint until the exact
+                            // canonical profile is observed below. Process
+                            // exit/refusal must remain observable meanwhile.
+                            let pending = {
+                                let mut preparing = lock(&shared.preparing);
+                                if preparing.as_ref().is_some_and(|pending| pending.generation == generation) {
+                                    preparing.take()
+                                } else {
+                                    None
+                                }
+                            };
+                            let valid = pending.as_ref().is_some_and(|pending| !pending.cancelled.load(Ordering::Acquire));
+                            match result {
+                                Ok(running) if valid => {
+                                    *lock(&shared.running) = Some(running);
+                                    for (epoch, signal) in early.drain(..) {
+                                        if epoch == generation && handle(&shared, epoch, signal).await {
+                                            retries.failed(&shared);
+                                        }
+                                    }
+                                }
+                                Ok(running) => {
+                                    let grace = shared.grace;
+                                    let _ = tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace)).await;
+                                    early.retain(|(epoch, _)| *epoch != generation);
+                                }
+                                Err(error) if valid => {
+                                    shared.diagnostics.host_failure(HostStage::Agent, error);
+                                    publish(&shared, State::Refused { code: Refusal::ServiceFailed });
+                                    retries.failed(&shared);
+                                }
+                                Err(_) => early.retain(|(epoch, _)| *epoch != generation),
+                            }
+                        }
+                        completion @ Completion::Admitted(..) => {
+                            completions.push_back(completion);
+                            continue 'supervision;
+                        }
+                    }
+                }
+                () = &mut startup_timeout => {
+                    retries.timeout();
+                    let _ = stop_running(&shared, None, AgentStopCause::ProtocolRefused).await;
+                    publish(&shared, State::Refused { code: Refusal::Timeout });
+                    continue 'supervision;
                 }
                 (generation, error) = &mut failed_person => {
                     if retire_failed_person(&shared, generation, error).await {
@@ -685,18 +850,146 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
         if shared.closed.load(Ordering::Acquire) {
             break;
         }
+        if let Some(preparing) = lock(&shared.preparing).as_ref()
+            && !matches!(&allowed, Allowed::Serve(profile) if *profile == preparing.profile)
+        {
+            preparing.cancelled.store(true, Ordering::Release);
+        }
+        while let Some(completion) = completions.pop_front() {
+            match completion {
+                Completion::Started(generation, result) => {
+                    let preparing = {
+                        let mut held = lock(&shared.preparing);
+                        if held
+                            .as_ref()
+                            .is_some_and(|pending| pending.generation == generation)
+                        {
+                            held.take()
+                        } else {
+                            None
+                        }
+                    };
+                    let valid = preparing.as_ref().is_some_and(|pending| {
+                        !pending.cancelled.load(Ordering::Acquire)
+                            && matches!(&allowed, Allowed::Serve(profile) if *profile == pending.profile)
+                    });
+                    match result {
+                        Ok(running) if valid => {
+                            *lock(&shared.running) = Some(running);
+                            for (epoch, signal) in early.drain(..) {
+                                if epoch == generation && handle(&shared, epoch, signal).await {
+                                    retries.failed(&shared);
+                                }
+                            }
+                        }
+                        Ok(running) => {
+                            let grace = shared.grace;
+                            let _ = tauri::async_runtime::spawn_blocking(move || {
+                                running.supervised.stop(grace)
+                            })
+                            .await;
+                            early.retain(|(epoch, _)| *epoch != generation);
+                        }
+                        Err(error) if valid => {
+                            shared.diagnostics.host_failure(HostStage::Agent, error);
+                            publish(
+                                &shared,
+                                State::Refused {
+                                    code: Refusal::ServiceFailed,
+                                },
+                            );
+                            retries.failed(&shared);
+                        }
+                        Err(_) => {
+                            early.retain(|(epoch, _)| *epoch != generation);
+                        }
+                    }
+                }
+                Completion::Admitted(generation, result) => {
+                    let pending = {
+                        let mut held = lock(&shared.admitting);
+                        if held
+                            .as_ref()
+                            .is_some_and(|pending| pending.generation == generation)
+                        {
+                            held.take()
+                        } else {
+                            None
+                        }
+                    };
+                    let current = lock(&shared.running).as_ref().is_some_and(|running| {
+                        running.generation == generation
+                            && matches!(&allowed, Allowed::Serve(profile) if *profile == running.profile)
+                    });
+                    if let Some(pending) = pending
+                        && current
+                        && !pending.cancelled.load(Ordering::Acquire)
+                    {
+                        match result {
+                            Ok(endpoint) => {
+                                *lock(&shared.admin) = Some(endpoint);
+                                if let Some(ready) = pending.ready {
+                                    let _ = handle(&shared, generation, Signal::Event(ready)).await;
+                                }
+                            }
+                            Err(error) => {
+                                let timeout = error.reason.as_deref() == Some("agent_timeout");
+                                shared.diagnostics.host_failure(HostStage::Agent, error);
+                                publish(
+                                    &shared,
+                                    State::Refused {
+                                        code: if timeout {
+                                            Refusal::Timeout
+                                        } else {
+                                            Refusal::ServiceFailed
+                                        },
+                                    },
+                                );
+                                let _ = stop_running(
+                                    &shared,
+                                    Some(generation),
+                                    AgentStopCause::ProtocolRefused,
+                                )
+                                .await;
+                                if timeout {
+                                    retries.timeout();
+                                } else {
+                                    retries.failed(&shared);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        let preparation_expired = lock(&shared.preparing).as_ref().is_some_and(|pending| {
+            !pending.cancelled.load(Ordering::Acquire)
+                && pending.started.elapsed() >= shared.startup_timeout
+        });
+        if preparation_expired {
+            if let Some(pending) = lock(&shared.preparing).as_ref() {
+                pending.cancelled.store(true, Ordering::Release);
+            }
+            publish(
+                &shared,
+                State::Refused {
+                    code: Refusal::Timeout,
+                },
+            );
+            retries.timeout();
+        }
         let starting_expired = lock(&shared.running).as_ref().is_some_and(|running| {
-            lock(&shared.admin).is_none() && running.started.elapsed() >= shared.start_limit
+            lock(&shared.admin).is_none() && running.started.elapsed() >= shared.startup_timeout
         });
         if starting_expired {
             publish(
                 &shared,
                 State::Refused {
-                    code: Refusal::ServiceFailed,
+                    code: Refusal::Timeout,
                 },
             );
             let _ = stop_running(&shared, None, AgentStopCause::ProtocolRefused).await;
-            retries.failed(&shared);
+            retries.timeout();
         }
         let current = lock(&shared.running).as_ref().map(|r| r.profile.clone());
         match (&current, &allowed) {
@@ -742,22 +1035,10 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                 if serving.as_deref() != Some(profile.as_str()) {
                     retries = RetryBudget::default();
                 }
-                if !retries.waiting() {
+                if !retries.waiting() && lock(&shared.preparing).is_none() {
                     serving = Some(profile.clone());
                     publish(&shared, State::Starting);
-                    if let Err(error) = start(&shared, &launch, profile.clone(), &signals).await {
-                        shared.diagnostics.host_failure(
-                            cadrumo_application::diagnostics::HostStage::Agent,
-                            error,
-                        );
-                        publish(
-                            &shared,
-                            State::Refused {
-                                code: Refusal::ServiceFailed,
-                            },
-                        );
-                        retries.failed(&shared);
-                    }
+                    start(&shared, &launch, profile.clone(), &signals);
                 } else if let Some(code) = retries.refusal {
                     // The runtime recovered, but this service's last failure
                     // still explains why its retry budget is waiting/exhausted.
@@ -791,15 +1072,41 @@ async fn supervise(shared: Arc<Shared>, observe: Observe, changed: Changed, laun
                     break;
                 }
                 Some((generation, signal)) = received.recv() => {
+                    if lock(&shared.running).is_none() && lock(&shared.preparing).as_ref().is_some_and(|p| p.generation == generation) {
+                        early.push((generation, signal));
+                        continue;
+                    }
                     if handle(&shared, generation, signal).await {
                         retries.failed(&shared);
                         break;
                     }
                 }
+                Some(completion) = completed.recv() => {
+                    match completion {
+                        started @ Completion::Started(..) => {
+                            // The observation loop above installs private child
+                            // ownership even if its observation stays pending.
+                            let _ = shared.completions.send(started);
+                        }
+                        admitted => completions.push_back(admitted),
+                    }
+                    break;
+                }
             }
         }
     }
     let _ = stop_running(&shared, None, AgentStopCause::WindowClosing).await;
+    let tasks = std::mem::take(&mut *lock(&shared.tasks));
+    for task in tasks {
+        let _ = task.await;
+    }
+    while let Ok(completion) = completed.try_recv() {
+        if let Completion::Started(_, Ok(running)) = completion {
+            let grace = shared.grace;
+            let _ =
+                tauri::async_runtime::spawn_blocking(move || running.supervised.stop(grace)).await;
+        }
+    }
 }
 
 /// A failed shared profile read must retire the service it admitted promptly,
@@ -865,16 +1172,104 @@ async fn retire_failed_person(
 /// a refused start may be retried, or when a starting launcher has had its time.
 fn next_due(shared: &Shared, retries: &RetryBudget) -> Option<Instant> {
     let retry = retries.after.filter(|at| *at > Instant::now());
+    retry.into_iter().chain(startup_due(shared)).min()
+}
+
+fn startup_due(shared: &Shared) -> Option<Instant> {
     let starting = lock(&shared.running).as_ref().and_then(|running| {
         lock(&shared.admin)
             .is_none()
-            .then_some(running.started + shared.start_limit)
+            .then_some(running.started + shared.startup_timeout)
     });
-    retry.into_iter().chain(starting).min()
+    let preparation = lock(&shared.preparing).as_ref().and_then(|pending| {
+        (!pending.cancelled.load(Ordering::Acquire))
+            .then_some(pending.started + shared.startup_timeout)
+    });
+    starting.into_iter().chain(preparation).min()
 }
 
 /// Acts on one launcher signal. True when the launcher ended unasked, which
 /// delays the next start.
+async fn person_exchange(
+    person: super::person::HeldPerson,
+    request: serde_json::Value,
+    deadline: Instant,
+) -> Result<serde_json::Value> {
+    tauri::async_runtime::spawn_blocking(move || lock(&person).exchange_before(request, deadline))
+        .await
+        .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))?
+}
+
+async fn admit_person(work: AdmissionWork) -> Result<()> {
+    let AdmissionWork {
+        person,
+        boot,
+        profile,
+        recipient,
+        service,
+        deadline,
+        cancelled,
+        cancel,
+    } = work;
+    let held = person.clone();
+    let changed = tauri::async_runtime::spawn_blocking(move || {
+        let held = lock(&held);
+        if held.identity["runtime_boot_id"] != boot || held.identity["profile_id"] != profile {
+            return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+                .with_reason("service_ready_identity_mismatch"));
+        }
+        Ok(held.admission_changed())
+    })
+    .await
+    .map_err(|_| ApplicationError::new(ErrorCode::Panic, Operation::Cli))??;
+    if cancelled.load(Ordering::Acquire) {
+        return Ok(());
+    }
+    let base = serde_json::json!({"recipient_connection_id":recipient, "service_id":service});
+    let mut request = base.clone();
+    request["action"] = serde_json::json!(if changed.is_some() {
+        "service_admission_begin"
+    } else {
+        "service_admission"
+    });
+    let mut reply = person_exchange(person.clone(), request, deadline).await?;
+    if reply["kind"] == "service_connected" {
+        return Ok(());
+    }
+    let Some(changed) = changed else {
+        return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
+            .with_reason("service_admission_reply_unexpected"));
+    };
+    let admission_id = reply["admission_id"].clone();
+    loop {
+        if Instant::now() >= deadline {
+            return Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli)
+                .with_reason("agent_timeout"));
+        }
+        let notified = changed.notified();
+        tokio::pin!(notified);
+        notified.as_mut().enable();
+        let mut request = base.clone();
+        request["action"] = serde_json::json!(if cancelled.load(Ordering::Acquire) {
+            "service_admission_cancel"
+        } else {
+            "service_admission_status"
+        });
+        request["admission_id"] = admission_id.clone();
+        reply = person_exchange(person.clone(), request, deadline).await?;
+        if reply["kind"] == "service_connected" || reply["cancelled"] == true {
+            return Ok(());
+        }
+        tokio::select! {
+            () = &mut notified => {},
+            () = cancel.notified() => {},
+            () = tokio::time::sleep_until(deadline.into()) => {
+                return Err(ApplicationError::new(ErrorCode::TimedOut, Operation::Cli).with_reason("agent_timeout"));
+            }
+        }
+    }
+}
+
 async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
     let (bearer, gateway_bearer, process) = {
         let running = lock(&shared.running);
@@ -908,47 +1303,43 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
                     stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
                 return true;
             };
-            let admitted = tauri::async_runtime::spawn_blocking(move || {
-                let mut person = lock(&person);
-                if person.identity["runtime_boot_id"] != runtime_boot_id || person.identity["profile_id"] != profile_id {
-                    return Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                        .with_reason("service_ready_identity_mismatch"));
-                }
-                let reply = person.exchange(serde_json::json!({"action":"service_admission", "recipient_connection_id":connection_id, "service_id":service_id}))?;
-                if reply["kind"] == "service_connected" {
-                    Ok(())
-                } else {
-                    Err(ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
-                        .with_reason("service_admission_reply_unexpected"))
-                }
-            }).await.unwrap_or_else(|_| {
-                shared.diagnostics.contained_panic(Some(HostStage::Agent), Operation::Cli);
-                Err(ApplicationError::new(ErrorCode::Panic, Operation::Cli))
-            });
-            let admitted = match admitted {
-                Ok(()) => true,
-                Err(error) => {
-                    shared.diagnostics.host_failure(HostStage::Agent, error);
-                    false
-                }
-            };
-            if !admitted {
-                let _ =
-                    stop_running(shared, Some(generation), AgentStopCause::ProtocolRefused).await;
-                publish(
-                    shared,
-                    State::Refused {
-                        code: Refusal::ServiceFailed,
-                    },
-                );
-                return true;
+            if lock(&shared.admitting).is_some() {
+                return false;
             }
-            *lock(&shared.admin) = Some(super::admin::Endpoint {
+            let cancelled = Arc::new(AtomicBool::new(false));
+            let cancel = Arc::new(Notify::new());
+            *lock(&shared.admitting) = Some(Admitting {
+                generation,
+                cancel: cancel.clone(),
+                cancelled: cancelled.clone(),
+                ready: None,
+            });
+            let deadline = lock(&shared.running).as_ref().unwrap().started + shared.startup_timeout;
+            let owner = shared.clone();
+            let endpoint = super::admin::Endpoint {
                 port: admin_port,
                 bearer,
                 generation,
                 gate: Default::default(),
+            };
+            let task = tauri::async_runtime::spawn(async move {
+                let result = admit_person(AdmissionWork {
+                    person,
+                    boot: runtime_boot_id,
+                    profile: profile_id,
+                    recipient: connection_id,
+                    service: service_id,
+                    deadline,
+                    cancelled,
+                    cancel,
+                })
+                .await
+                .map(|()| endpoint);
+                let _ = owner
+                    .completions
+                    .send(Completion::Admitted(generation, result));
             });
+            lock(&shared.tasks).push(task);
             false
         }
         Signal::Event(Event::Ready {
@@ -956,6 +1347,20 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             agent_version,
             workspace_root,
         }) => {
+            {
+                let mut admitting = lock(&shared.admitting);
+                if let Some(pending) = admitting
+                    .as_mut()
+                    .filter(|pending| pending.generation == generation)
+                {
+                    pending.ready = Some(Event::Ready {
+                        gateway_port,
+                        agent_version,
+                        workspace_root,
+                    });
+                    return false;
+                }
+            }
             if !lock(&shared.admin)
                 .as_ref()
                 .is_some_and(|endpoint| endpoint.generation == generation)
@@ -985,6 +1390,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
         // provider sign-in, holds it: the agent it serves, if any, is unchanged.
         Signal::Event(Event::Refused { code }) if code == "busy" => false,
         Signal::Event(Event::Refused { code }) => {
+            if let Some(pending) = lock(&shared.admitting).as_mut() {
+                pending.ready = None;
+            }
             publish(
                 shared,
                 State::Refused {
@@ -995,6 +1403,9 @@ async fn handle(shared: &Arc<Shared>, generation: u64, signal: Signal) -> bool {
             false
         }
         Signal::Event(Event::Stopped { reason }) => {
+            if let Some(pending) = lock(&shared.admitting).as_mut() {
+                pending.ready = None;
+            }
             *lock(&shared.gateway) = None;
             if reason == "agent_retired" {
                 // The hosted controller was retired for an operation such as
@@ -1488,6 +1899,118 @@ mod tests {
             .unwrap();
     }
 
+    #[tokio::test(flavor = "multi_thread")]
+    async fn startup_timeout_is_observed_while_canonical_status_is_pending() {
+        let calls = Arc::new(AtomicU64::new(0));
+        let count = calls.clone();
+        let observe: Observe = Arc::new(move || {
+            let first = count.fetch_add(1, Ordering::SeqCst) == 0;
+            Box::pin(async move {
+                if first {
+                    observed(true, true, Some("A"))
+                } else {
+                    std::future::pending().await
+                }
+            })
+        });
+        // A dropped sender releases preparation even if an assertion panics.
+        let (release, gate) = std::sync::mpsc::channel::<()>();
+        let gate = Mutex::new(gate);
+        let entered = Arc::new(Notify::new());
+        let arriving = entered.clone();
+        let launch: Launch = Arc::new(move |_, _| {
+            arriving.notify_one();
+            let _ = lock(&gate).recv();
+            Ok(Prepared {
+                command: Command::new("cadrumo-timed-out-preparation-must-never-launch"),
+                person: None,
+            })
+        });
+        let supervisor = Supervisor::new(
+            observe,
+            every(Duration::from_millis(1)),
+            Some(launch),
+            Arc::new(Diagnostics::default()),
+        )
+        .timeout_within(Duration::from_millis(100));
+        supervisor.status();
+        entered.notified().await;
+        tokio::time::timeout(Duration::from_secs(5), async {
+            while supervisor.status().state
+                != (State::Refused {
+                    code: Refusal::Timeout,
+                })
+            {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(calls.load(Ordering::SeqCst) > 1);
+        assert!(lock(&supervisor.shared.running).is_none());
+        drop(release);
+        supervisor.close().await.unwrap();
+    }
+
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_profile_change_invalidates_preparation_before_its_result_can_launch() {
+        struct Release(Arc<(Mutex<bool>, std::sync::Condvar)>);
+        impl Drop for Release {
+            fn drop(&mut self) {
+                *lock(&self.0.0) = true;
+                self.0.1.notify_all();
+            }
+        }
+        let source = Arc::new(Mutex::new(observed(true, true, Some("A"))));
+        let current = source.clone();
+        let observe: Observe = Arc::new(move || {
+            let status = lock(&current).clone();
+            Box::pin(async move { status })
+        });
+        let entered = Arc::new(Notify::new());
+        let arriving = entered.clone();
+        let release = Release(Arc::new((Mutex::new(false), std::sync::Condvar::new())));
+        let gate = release.0.clone();
+        let launch: Launch = Arc::new(move |_, _| {
+            arriving.notify_one();
+            let mut open = lock(&gate.0);
+            while !*open {
+                open = gate.1.wait(open).unwrap();
+            }
+            Ok(Prepared {
+                command: Command::new("cadrumo-cancelled-preparation-must-never-launch"),
+                person: None,
+            })
+        });
+        let supervisor = Supervisor::new(
+            observe,
+            every(Duration::from_millis(1)),
+            Some(launch),
+            Arc::new(Diagnostics::default()),
+        );
+        supervisor.status();
+        entered.notified().await;
+        *lock(&source) = observed(true, true, Some("B"));
+        tokio::time::timeout(Duration::from_secs(10), async {
+            loop {
+                if lock(&supervisor.shared.preparing)
+                    .as_ref()
+                    .is_some_and(|pending| pending.cancelled.load(Ordering::Acquire))
+                {
+                    break;
+                }
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .unwrap();
+        assert!(lock(&supervisor.shared.running).is_none());
+        drop(release);
+        supervisor.close().await.unwrap();
+        assert!(lock(&supervisor.shared.running).is_none());
+        assert!(supervisor.gateway().is_none());
+    }
+
     #[cfg(windows)]
     mod live {
         use super::*;
@@ -1585,6 +2108,7 @@ mod tests {
             ignore_end: bool,
             retire_at_gate: Option<&str>,
             service_at_gate: Option<&str>,
+            admission_at_gate: Option<&str>,
         ) -> (Prepared, HolderFixture) {
             let profile_id = match profile {
                 "A" => "11111111-1111-4111-8111-111111111111",
@@ -1617,6 +2141,9 @@ mod tests {
                     "descriptor_digest": "a".repeat(64),
                 },
             });
+            let admission_gate = admission_at_gate
+                .map(|gate| format!("{gate}Wait-Gate 'admission'; "))
+                .unwrap_or_default();
             let holder_script = format!(
                 "& {{ [Console]::Out.WriteLine('{identity}'); [Console]::Out.Flush(); \
                  while (($line = [Console]::In.ReadLine()) -ne $null) {{ \
@@ -1625,7 +2152,7 @@ mod tests {
                          $request.recipient_connection_id -ne '{recipient}' -or \
                          $request.service_id -ne 'cadrumo-agent-service' -or \
                          $request.psobject.Properties.Name.Count -ne 4) {{ exit 7 }}; \
-                     $reply = '{reply}' | ConvertFrom-Json; \
+                     {admission_gate}$reply = '{reply}' | ConvertFrom-Json; \
                      $reply.request_id = $request.request_id; \
                      [Console]::Out.WriteLine(($reply | ConvertTo-Json -Compress -Depth 8)); \
                      [Console]::Out.Flush(); \
@@ -1686,13 +2213,14 @@ mod tests {
         }
 
         fn rig(ignore_end: bool, retire_after_ready: bool) -> Rig {
-            rig_with_service_gate(ignore_end, retire_after_ready, false)
+            rig_with_service_gate(ignore_end, retire_after_ready, false, false)
         }
 
         fn rig_with_service_gate(
             ignore_end: bool,
             retire_after_ready: bool,
             wait_for_service: bool,
+            wait_for_admission: bool,
         ) -> Rig {
             let observation = Arc::new(Mutex::new(observed(true, true, Some("A"))));
             let source = observation.clone();
@@ -1702,18 +2230,24 @@ mod tests {
             });
             let holders = Arc::new(Mutex::new(Vec::new()));
             let witnesses = holders.clone();
-            let gate = (retire_after_ready || wait_for_service).then(Gate::new);
+            let gate =
+                (retire_after_ready || wait_for_service || wait_for_admission).then(Gate::new);
             let gate_script = gate
                 .as_ref()
                 .filter(|_| retire_after_ready)
                 .map(Gate::script);
             let service_gate = gate.as_ref().filter(|_| wait_for_service).map(Gate::script);
+            let admission_gate = gate
+                .as_ref()
+                .filter(|_| wait_for_admission)
+                .map(Gate::script);
             let launch: Launch = Arc::new(move |_, profile| {
                 let (prepared, witness) = held_protocol_fixture(
                     profile,
                     ignore_end,
                     gate_script.as_deref(),
                     service_gate.as_deref(),
+                    admission_gate.as_deref(),
                 );
                 lock(&witnesses).push(witness);
                 Ok(prepared)
@@ -1733,7 +2267,7 @@ mod tests {
             let supervisor = if wait_for_service {
                 supervisor
             } else {
-                supervisor.starting_within(HANG_GUARD)
+                supervisor.timeout_within(HANG_GUARD)
             };
             let statuses = Arc::new(Mutex::new(Vec::new()));
             let sink = statuses.clone();
@@ -1761,14 +2295,14 @@ mod tests {
 
         #[tokio::test(flavor = "multi_thread")]
         async fn cold_service_registration_can_finish_after_the_runtime_exchange_window() {
-            let mut rig = rig_with_service_gate(false, false, true);
+            let mut rig = rig_with_service_gate(false, false, true, false);
             service_waiting(&mut rig).await;
             // Account for a ten-second handshake and a 120-second registration
             // without spending that time asleep in a process fixture.
             lock(&rig.supervisor.shared.running)
                 .as_mut()
                 .unwrap()
-                .started = Instant::now() - Duration::from_secs(131);
+                .started = Instant::now() - Duration::from_secs(181);
             let due = next_due(&rig.supervisor.shared, &RetryBudget::default()).unwrap();
             assert!(due > Instant::now(), "a valid registration still has time");
             rig.gate.as_mut().unwrap().go();
@@ -1782,18 +2316,18 @@ mod tests {
 
         #[tokio::test(flavor = "multi_thread")]
         async fn a_service_that_never_registers_still_exhausts_its_start_deadline() {
-            let mut rig = rig_with_service_gate(false, false, true);
+            let mut rig = rig_with_service_gate(false, false, true, false);
             service_waiting(&mut rig).await;
             lock(&rig.supervisor.shared.running)
                 .as_mut()
                 .unwrap()
-                .started = Instant::now() - Duration::from_secs(181);
+                .started = Instant::now() - (STARTUP_TIMEOUT + Duration::from_secs(1));
             rig.supervisor.shared.wake.notify_one();
             until_seen(&rig, "unregistered service stopped", || {
                 (matches!(
                     rig.supervisor.status().state,
                     State::Refused {
-                        code: Refusal::ServiceFailed
+                        code: Refusal::Timeout
                     }
                 ) && lock(&rig.supervisor.shared.running).is_none())
                 .then_some(())
@@ -1815,6 +2349,31 @@ mod tests {
             })
             .await
             .unwrap();
+        }
+
+        #[tokio::test(flavor = "multi_thread")]
+        async fn sign_out_fences_an_admission_that_has_not_answered_and_discards_its_late_reply() {
+            let mut rig = rig_with_service_gate(false, false, false, true);
+            tokio::task::block_in_place(|| rig.gate.as_mut().unwrap().reached("admission"));
+            *lock(&rig.observation) = observed(false, true, Some("A"));
+            until_seen(&rig, "sign-out while admission waits", || {
+                matches!(
+                    rig.supervisor.status().state,
+                    State::Refused {
+                        code: Refusal::SignedOut
+                    }
+                )
+                .then_some(())
+            })
+            .await;
+            assert!(lock(&rig.supervisor.shared.admin).is_none());
+            assert!(rig.supervisor.gateway().is_none());
+            rig.gate.as_mut().unwrap().go();
+            rig.supervisor.close().await.unwrap();
+            assert!(
+                lock(&rig.supervisor.shared.admin).is_none(),
+                "late admission cannot publish"
+            );
         }
 
         /// What `seen` finds once a published status or recorded diagnostic

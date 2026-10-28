@@ -353,6 +353,7 @@ enum_projection!(
     StopCause,
     Defect,
     Hang,
+    Timeout,
     IdleRequested,
     Requested,
     SessionEnd

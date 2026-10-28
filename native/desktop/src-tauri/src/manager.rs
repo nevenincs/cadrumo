@@ -26,17 +26,16 @@ mod observation;
 pub use observation::{ManagerState, ManagerStatus};
 
 const DISPATCH: &str = include_str!("python/manager_dispatch.py");
-const DEADLINE: Duration = Duration::from_secs(60);
+const STARTUP_TIMEOUT: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
 
-async fn wait_for_readiness(ready: impl std::future::Future<Output = Result<()>>) -> Result<()> {
-    #[cfg(windows)]
-    let bound =
-        cadrumo_manager::supervision::supervisor::SupervisorConfig::default().readiness_ceiling;
-    #[cfg(not(windows))]
-    let bound = Duration::from_secs(90);
-    tokio::time::timeout(bound, ready)
+async fn wait_for_readiness(
+    ready: impl std::future::Future<Output = Result<()>>,
+    startup_timeout: Duration,
+) -> Result<()> {
+    tokio::time::timeout(startup_timeout, ready)
         .await
-        .map_err(|_| failure(ErrorCode::TimedOut))?
+        .map_err(|_| failure(ErrorCode::TimedOut).with_reason("runtime_timeout"))?
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize)]
@@ -123,40 +122,55 @@ impl ManagerStart {
         self: &Arc<Self>,
         sign_in: &Arc<crate::shell::sign_in::SignIn>,
     ) -> Result<()> {
-        wait_for_readiness(async {
-            if self.start_existing().await? != StartOutcome::Dispatched {
-                return Err(failure(ErrorCode::ManagerUnavailable));
-            }
-            let mut supervision = self.supervision_changes();
-            loop {
-                // Subscribed before reading, so a change meanwhile still wakes.
-                supervision.borrow_and_update();
-                let observed = sign_in.observation_changed();
-                if !self.supervision_status()? {
-                    supervision
-                        .changed()
-                        .await
-                        .map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
-                    continue;
+        let result = wait_for_readiness(
+            async {
+                if self.start_existing().await? != StartOutcome::Dispatched {
+                    return Err(failure(ErrorCode::ManagerUnavailable));
                 }
-                let status = sign_in.read_status().await?;
-                if status.runtime_ready() && self.supervision_status()? {
-                    self.diagnostics
-                        .host_outcome(HostStage::Manager, HostOutcome::Ready);
-                    return Ok(());
-                }
-                if status.runtime_available && status.refusal.is_some() {
-                    return Err(failure(ErrorCode::ReadFailed));
-                }
-                tokio::select! {
-                    changed = supervision.changed() => {
-                        changed.map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                let mut supervision = self.supervision_changes();
+                loop {
+                    if self.closed.load(Ordering::Acquire) {
+                        return Err(failure(ErrorCode::SessionUnavailable));
                     }
-                    () = observed => {}
+                    // Subscribed before reading, so a change meanwhile still wakes.
+                    supervision.borrow_and_update();
+                    let observed = sign_in.observation_changed();
+                    if !self.supervision_status()? {
+                        supervision
+                            .changed()
+                            .await
+                            .map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                        continue;
+                    }
+                    let status = sign_in.read_status().await?;
+                    if status.runtime_ready() && self.supervision_status()? {
+                        self.diagnostics
+                            .host_outcome(HostStage::Manager, HostOutcome::Ready);
+                        return Ok(());
+                    }
+                    if status.runtime_available && status.refusal.is_some() {
+                        return Err(failure(ErrorCode::ReadFailed));
+                    }
+                    tokio::select! {
+                        changed = supervision.changed() => {
+                            changed.map_err(|_| failure(ErrorCode::ManagerUnavailable))?;
+                        }
+                        () = observed => {}
+                    }
                 }
-            }
-        })
-        .await
+            },
+            STARTUP_TIMEOUT,
+        )
+        .await;
+        if result
+            .as_ref()
+            .is_err_and(|error| error.reason.as_deref() == Some("runtime_timeout"))
+        {
+            self.close_checked()
+                .await
+                .map_err(|error| error.with_reason("runtime_timeout"))?;
+        }
+        result
     }
 
     /// An explicit scope never shares a different caller's installation decision.
@@ -538,7 +552,7 @@ impl ManagerStart {
             return Err(failure(ErrorCode::SessionUnavailable));
         }
         let outcome = self
-            .run_dispatch(self.dispatch_command(&target, retry), DEADLINE)
+            .run_dispatch(self.dispatch_command(&target, retry), STARTUP_TIMEOUT)
             .await;
         drop(target);
         outcome
@@ -588,8 +602,9 @@ impl ManagerStart {
     async fn run_dispatch(
         &self,
         mut command: tokio::process::Command,
-        deadline: Duration,
+        startup_timeout: Duration,
     ) -> Result<StartOutcome> {
+        let timeout_deadline = tokio::time::Instant::now() + startup_timeout;
         let closing = self.closing.notified();
         tokio::pin!(closing);
         closing.as_mut().enable();
@@ -614,7 +629,7 @@ impl ManagerStart {
             ProcessRole::ManagerDispatch,
         );
         let mut recorded_exit = false;
-        let read = tokio::time::timeout(deadline, async {
+        let read = tokio::time::timeout_at(timeout_deadline, async {
             let mut stdout = child
                 .stdout
                 .take()
@@ -647,7 +662,7 @@ impl ManagerStart {
             other => {
                 let error = match other {
                     Ok(Err(error)) => error,
-                    _ => failure(ErrorCode::TimedOut),
+                    _ => failure(ErrorCode::TimedOut).with_reason("runtime_timeout"),
                 };
                 self.diagnostics.failure_for(id, error.clone());
                 let cleanup: Result<()> = async {

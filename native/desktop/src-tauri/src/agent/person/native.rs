@@ -36,7 +36,8 @@ use std::{
 };
 
 /// The runtime's bound on one exchange, and on each relayed action.
-const EXCHANGE: Duration = Duration::from_secs(120);
+const EXCHANGE: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
 /// The longest reply: the longest document the relay assembles, and one
 /// runtime frame for the reply around it.
 const REPLY_LIMIT: usize = PROJECTION_DOCUMENT_MAX_BYTES + 64 * 1024;
@@ -46,6 +47,7 @@ const OS_SESSION_UNAVAILABLE: &str = "os_session_unavailable";
 /// What the event router and the requests share.
 #[derive(Default)]
 struct Shared {
+    admission_changed: Arc<tokio::sync::Notify>,
     /// The window asked for pushes: each cue becomes a person event.
     observing: AtomicBool,
     /// An operation this session relayed is unsettled, so its cues matter.
@@ -59,6 +61,7 @@ struct Shared {
 }
 
 pub(super) struct NativeSession {
+    timeout_deadline: Option<Instant>,
     connection: Option<Arc<dyn SessionExchange>>,
     admitted: Admitted,
     shared: Arc<Shared>,
@@ -109,6 +112,7 @@ impl NativeSession {
         }
         Ok((
             Self {
+                timeout_deadline: None,
                 connection: Some(connection),
                 admitted,
                 shared,
@@ -147,7 +151,12 @@ impl NativeSession {
         within: Duration,
     ) -> std::result::Result<Map<String, Value>, Refusal> {
         let connection = self.connection.as_ref().ok_or(Refusal::ConnectionClosed)?;
-        connection.exchange(request, Instant::now() + within)
+        let deadline = self
+            .timeout_deadline
+            .map_or(Instant::now() + within, |deadline| {
+                deadline.min(Instant::now() + within)
+            });
+        connection.exchange(request, deadline)
     }
 
     /// The reply a request the runtime answered for this session carries:
@@ -228,7 +237,12 @@ impl NativeSession {
         }
         let action = request["action"].as_str().unwrap_or_default();
         let keys: &[&str] = match action {
-            "service_admission" => &["recipient_connection_id", "service_id"],
+            "service_admission" | "service_admission_begin" => {
+                &["recipient_connection_id", "service_id"]
+            }
+            "service_admission_status" | "service_admission_cancel" => {
+                &["recipient_connection_id", "service_id", "admission_id"]
+            }
             "attendance_decision" => &["attendance_id", "approve"],
             "language_set" => &["language"],
             "present_destination" => &["destination", "params"],
@@ -270,6 +284,19 @@ impl NativeSession {
             "status" => self.status(&request_id),
             "activity" => self.activity(&request_id),
             "service_admission" => self.service_admission(&request_id, request),
+            "service_admission_begin" => {
+                let asked = self.request("service_admission", &request_id, json!({
+                    "recipient_connection_id": request["recipient_connection_id"], "service_id": request["service_id"],
+                }));
+                self.passed_through(&request_id, &asked, EXCHANGE)
+            }
+            "service_admission_status" | "service_admission_cancel" => {
+                let asked = self.request(action, &request_id, json!({
+                    "recipient_connection_id": request["recipient_connection_id"], "service_id": request["service_id"],
+                    "admission_id": request["admission_id"],
+                }));
+                self.passed_through(&request_id, &asked, EXCHANGE)
+            }
             "attendance_inventory" => {
                 let asked = self.request(action, &request_id, json!({}));
                 self.passed_through(&request_id, &asked, EXCHANGE)
@@ -382,6 +409,30 @@ impl NativeSession {
     fn passed_through(&mut self, request_id: &str, asked: &Value, within: Duration) -> Value {
         match self.ask(asked, within) {
             Ok(reply) => Value::Object(reply),
+            Err(Refusal::Denied { code, .. })
+                if asked["action"]
+                    .as_str()
+                    .is_some_and(|action| action.starts_with("service_admission"))
+                    && !matches!(
+                        code.as_str(),
+                        "authentication_required"
+                            | "session_inactive"
+                            | "session_expired"
+                            | "profile_locked"
+                            | "os_locked"
+                    ) =>
+            {
+                self.refuse(
+                    request_id,
+                    if code == "subject_busy" {
+                        "busy"
+                    } else {
+                        "unavailable"
+                    },
+                    Some(&code),
+                    false,
+                )
+            }
             Err(refusal) => self.failed_request(request_id, &refusal),
         }
     }
@@ -523,6 +574,12 @@ impl Drop for NativeSession {
 }
 
 impl Bridge for NativeSession {
+    fn timeout_deadline(&mut self, deadline: Option<Instant>) {
+        self.timeout_deadline = deadline;
+    }
+    fn admission_changed(&self) -> Option<Arc<tokio::sync::Notify>> {
+        Some(self.shared.admission_changed.clone())
+    }
     fn exchange(&mut self, request: &Value) -> Result<Value> {
         if self.connection.is_none() {
             return Err(failed("person_bridge_closed"));
@@ -649,6 +706,11 @@ fn route(pushed: &mpsc::Receiver<Pushed>, routing: &Routing, events: &EventSlot)
             Event::LifecycleNotice => continue,
             Event::SignInChanged => {
                 follow(course, connection, admitted, recovery);
+                continue;
+            }
+            Event::ProfileLoginChanged { .. } => continue,
+            Event::ServiceAdmissionChanged if own && profile_id.as_deref() == Some(profile) => {
+                shared.admission_changed.notify_one();
                 continue;
             }
             Event::Disconnected => break,
@@ -840,7 +902,7 @@ mod tests {
         /// What was written on the secret frame, each only after the runtime
         /// answered a request for it with `secret_ready`.
         secrets: Mutex<Vec<Vec<u8>>>,
-        pushes: Mutex<Option<mpsc::Sender<Pushed>>>,
+        pushes: Mutex<Vec<mpsc::Sender<Pushed>>>,
         closed: AtomicBool,
         admission_work: Option<Duration>,
     }
@@ -864,25 +926,26 @@ mod tests {
         /// The cue the runtime sends a connection whose session it suspended or
         /// returned: it names neither profile nor session.
         fn cue(&self) {
-            let sender = self.pushes.lock().unwrap().clone().unwrap();
-            sender
-                .send(Pushed {
-                    event: Event::SignInChanged,
-                    profile_id: None,
-                    session_id: None,
-                })
-                .unwrap();
+            self.publish(Pushed {
+                event: Event::SignInChanged,
+                profile_id: None,
+                session_id: None,
+            });
         }
 
         fn push_for(&self, profile: &str, event: Event, session: &str) {
-            let sender = self.pushes.lock().unwrap().clone().unwrap();
-            sender
-                .send(Pushed {
-                    event,
-                    profile_id: Some(profile.into()),
-                    session_id: Some(session.into()),
-                })
-                .unwrap();
+            self.publish(Pushed {
+                event,
+                profile_id: Some(profile.into()),
+                session_id: Some(session.into()),
+            });
+        }
+
+        fn publish(&self, pushed: Pushed) {
+            self.pushes
+                .lock()
+                .unwrap()
+                .retain(|sender| sender.send(pushed.clone()).is_ok());
         }
     }
 
@@ -914,7 +977,7 @@ mod tests {
                     .admission_work
                     .is_some_and(|work| deadline.saturating_duration_since(Instant::now()) < work)
             {
-                return Err(Refusal::DeadlineExceeded);
+                return Err(Refusal::Timeout);
             }
             self.answer(request)
         }
@@ -952,7 +1015,7 @@ mod tests {
 
         fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
             let (sender, receiver) = mpsc::channel();
-            *self.pushes.lock().unwrap() = Some(sender);
+            self.pushes.lock().unwrap().push(sender);
             receiver
         }
 
@@ -1198,11 +1261,11 @@ mod tests {
                 "descriptor_digest": "a".repeat(64),
             },
         }));
-        // Model an admission that needs more than ten seconds without making
+        // Model an admission beyond the former two-minute phase cap without making
         // the test sleep: a short wire budget refuses before doing that work.
         let runtime = Arc::new(Runtime {
             script: Mutex::new(VecDeque::from([status(SESSION, Value::Null), connected])),
-            admission_work: Some(Duration::from_secs(11)),
+            admission_work: Some(Duration::from_secs(121)),
             ..Runtime::default()
         });
         let mut held = person(&runtime);
@@ -1236,6 +1299,33 @@ mod tests {
             "no admission is asked of an inactive session"
         );
         assert!(!held.is_open());
+    }
+
+    #[test]
+    fn a_pending_service_admission_releases_the_person_for_an_independent_read() {
+        let runtime = Runtime::answering([
+            Answer::Reply(json!({
+                "kind":"service_admission_pending", "profile_id":PROFILE,
+                "service_id":"cadrumo-agent-service", "admission_id":OTHER, "cancelled":false,
+            })),
+            status(SESSION, Value::Null),
+        ]);
+        let mut held = person(&runtime);
+        let pending = held
+            .exchange(json!({
+                "action":"service_admission_begin", "recipient_connection_id":OTHER,
+                "service_id":"cadrumo-agent-service",
+            }))
+            .unwrap();
+        assert_eq!(pending["kind"], "service_admission_pending");
+        assert_eq!(
+            held.exchange(json!({"action":"status"})).unwrap()["kind"],
+            "profile_status"
+        );
+        let asked = runtime.asked();
+        assert_eq!(asked[0]["action"], "service_admission");
+        assert_eq!(asked[1]["action"], "session_status");
+        assert!(held.is_open());
     }
 
     const TRANSACTION: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
@@ -1456,10 +1546,9 @@ mod tests {
         let held = person(&runtime);
         let (events, mut heard) = broadcast::channel(8);
         *held.events.lock().unwrap() = Some(events);
-        let pushes = runtime.pushes.lock().unwrap().clone().unwrap();
         drop(held);
         // The connection's end reaches the router after the window let go.
-        let _ = pushes.send(Pushed {
+        runtime.publish(Pushed {
             event: Event::Disconnected,
             profile_id: None,
             session_id: None,

@@ -239,14 +239,14 @@ pub fn connect_view(
     deadline: Instant,
 ) -> Result<(Pipe, ViewConnected), Refusal> {
     if grant.expired() {
-        return Err(Refusal::DeadlineExceeded);
+        return Err(Refusal::Timeout);
     }
     let (pipe, hello) = handshake(endpoint, cohort, false, deadline)?;
     if hello.boot_id != grant.runtime_boot_id {
         return Err(Refusal::InvalidFrame);
     }
     if grant.expired() {
-        return Err(Refusal::DeadlineExceeded);
+        return Err(Refusal::Timeout);
     }
     let id = request_id();
     let payload = Zeroizing::new(

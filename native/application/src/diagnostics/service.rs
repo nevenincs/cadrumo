@@ -47,6 +47,8 @@ pub enum AgentRefusal {
     ProviderCredentialMissing,
     #[serde(rename = "agent_service_failed")]
     ServiceFailed,
+    #[serde(rename = "agent_timeout")]
+    Timeout,
 }
 
 impl AgentRefusal {
@@ -57,6 +59,7 @@ impl AgentRefusal {
             "agent_signed_out" => Self::SignedOut,
             "agent_runtime_unavailable" => Self::RuntimeUnavailable,
             "agent_provider_credential_missing" => Self::ProviderCredentialMissing,
+            "agent_timeout" => Self::Timeout,
             _ => Self::ServiceFailed,
         }
     }

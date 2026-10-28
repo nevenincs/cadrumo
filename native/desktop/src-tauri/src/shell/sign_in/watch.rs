@@ -82,6 +82,8 @@ struct Inner {
     wakes: Mutex<Option<mpsc::Sender<Wake>>>,
     #[cfg(windows)]
     connection: Mutex<Option<Arc<cadrumo_application::runtime_client::Connection>>>,
+    #[cfg(windows)]
+    opening: Mutex<Option<Arc<cadrumo_application::runtime_client::OpenCancellation>>>,
     started: AtomicBool,
     closed: AtomicBool,
     stopping: Mutex<Option<mpsc::Sender<()>>>,
@@ -114,6 +116,8 @@ impl Watch {
                 wakes: Mutex::new(None),
                 #[cfg(windows)]
                 connection: Mutex::new(None),
+                #[cfg(windows)]
+                opening: Mutex::new(None),
                 started: AtomicBool::new(false),
                 closed: AtomicBool::new(false),
                 stopping: Mutex::new(None),
@@ -127,6 +131,9 @@ impl Watch {
         self.start();
         let mut receiver = self.inner.snapshot.subscribe();
         loop {
+            if self.inner.closed.load(Ordering::Acquire) {
+                return Err(failure(ErrorCode::SessionUnavailable));
+            }
             {
                 let fence = lock(&self.inner.fence);
                 if fence.mutations != 0 {
@@ -182,6 +189,7 @@ impl Watch {
     }
 
     fn start(&self) {
+        let mut worker_owner = lock(&self.inner.worker);
         if self.inner.closed.load(Ordering::Acquire)
             || self.inner.started.swap(true, Ordering::AcqRel)
         {
@@ -194,23 +202,38 @@ impl Watch {
             .name("sign-in-watch".into())
             .spawn(move || supervise(&inner, &stopping));
         match worker {
-            Ok(worker) => *lock(&self.inner.worker) = Some(worker),
+            Ok(worker) => *worker_owner = Some(worker),
             Err(_) => publish(&self.inner, Err(failure(ErrorCode::SpawnFailed))),
         }
     }
 
     /// Ends the connection and waits for the watch to settle. It only reads
     /// status, so ending it at once loses nothing.
-    pub(super) fn close(&self) {
-        self.inner.closed.store(true, Ordering::Release);
+    pub(super) fn request_close(&self) {
+        {
+            let _fence = lock(&self.inner.fence);
+            self.inner.closed.store(true, Ordering::Release);
+            self.inner.snapshot.send_modify(|snapshot| {
+                snapshot.sequence += 1;
+                snapshot.value = None;
+            });
+        }
         lock(&self.inner.stopping).take();
         if let Some(wakes) = lock(&self.inner.wakes).take() {
             let _ = wakes.send(Wake::Stop);
         }
         #[cfg(windows)]
-        if let Some(connection) = lock(&self.inner.connection).take() {
-            connection.close();
+        if let Some(opening) = lock(&self.inner.opening).as_ref() {
+            opening.cancel();
         }
+        #[cfg(windows)]
+        if let Some(connection) = lock(&self.inner.connection).as_ref() {
+            connection.request_close();
+        }
+    }
+
+    pub(super) fn close(&self) {
+        self.request_close();
         let worker = lock(&self.inner.worker).take();
         if let Some(worker) = worker {
             let _ = worker.join();
@@ -234,6 +257,10 @@ impl Drop for Mutation<'_> {
 }
 
 fn publish(inner: &Inner, value: Result<Observed>) {
+    let _fence = lock(&inner.fence);
+    if inner.closed.load(Ordering::Acquire) {
+        return;
+    }
     inner.snapshot.send_modify(|snapshot| {
         snapshot.sequence += 1;
         snapshot.value = Some(value);
@@ -289,10 +316,10 @@ fn supervise(inner: &Arc<Inner>, stopping: &mpsc::Receiver<()>) {
 /// served stretch starts its pauses over.
 #[cfg(windows)]
 fn run(inner: &Inner) -> Result<bool> {
-    use cadrumo_application::runtime_client::{Cohort, Connection, Endpoint, Event};
-    use std::time::Instant;
-
-    const CONNECT: Duration = Duration::from_secs(10);
+    use cadrumo_application::runtime_client::{
+        Cohort, Connection, Endpoint, Event, OpenCancellation, TimeoutWait,
+    };
+    let waiting = TimeoutWait::new();
 
     let native = inner.native.as_ref().map_err(Clone::clone)?;
     let (wake, wakes) = mpsc::channel();
@@ -304,8 +331,20 @@ fn run(inner: &Inner) -> Result<bool> {
         product_version: native.product_version.clone(),
         authority_generation: None,
     };
-    let connected = Endpoint::of(&native.storage_root)
-        .and_then(|endpoint| Connection::open(&endpoint, &cohort, Instant::now() + CONNECT));
+    let opening = Arc::new(
+        OpenCancellation::new().map_err(|cause| failure(ErrorCode::ReadFailed).caused_by(cause))?,
+    );
+    {
+        let mut owner = lock(&inner.opening);
+        if inner.closed.load(Ordering::Acquire) {
+            return Ok(false);
+        }
+        *owner = Some(opening.clone());
+    }
+    let connected = Endpoint::of(&native.storage_root).and_then(|endpoint| {
+        Connection::open_cancellable(&endpoint, &cohort, waiting.deadline(), opening.clone())
+    });
+    lock(&inner.opening).take();
     let connection = match connected {
         Ok(connection) => Arc::new(connection),
         Err(refusal) => {
@@ -313,7 +352,14 @@ fn run(inner: &Inner) -> Result<bool> {
             return Ok(false);
         }
     };
-    *lock(&inner.connection) = Some(connection.clone());
+    {
+        let mut owner = lock(&inner.connection);
+        if inner.closed.load(Ordering::Acquire) {
+            connection.close();
+            return Ok(false);
+        }
+        *owner = Some(connection.clone());
+    }
     let events = connection.subscribe();
     let forward = wake;
     let forwarding = thread::Builder::new()
@@ -331,12 +377,15 @@ fn run(inner: &Inner) -> Result<bool> {
                 }
             }
         });
-    let result = match forwarding {
+    let result = match &forwarding {
         Ok(_) => follow(inner, &connection, &wakes),
         Err(_) => Err(failure(ErrorCode::SpawnFailed)),
     };
     lock(&inner.connection).take();
     connection.close();
+    if let Ok(forwarding) = forwarding {
+        let _ = forwarding.join();
+    }
     result.map(|()| true)
 }
 
@@ -367,6 +416,9 @@ fn follow(
     wakes: &mpsc::Receiver<Wake>,
 ) -> Result<()> {
     loop {
+        if inner.closed.load(Ordering::Acquire) {
+            return Ok(());
+        }
         match observe(connection) {
             Ok(observed) => publish(inner, Ok(observed)),
             Err(refusal) => {
@@ -391,11 +443,7 @@ fn follow(
 fn observe(
     connection: &cadrumo_application::runtime_client::Connection,
 ) -> std::result::Result<Observed, cadrumo_application::runtime_client::Refusal> {
-    use std::time::Instant;
-
-    const EXCHANGE: Duration = Duration::from_secs(30);
-
-    let deadline = Instant::now() + EXCHANGE;
+    let deadline = cadrumo_application::runtime_client::TimeoutWait::new().deadline();
     let active = connection.active_profile(true, deadline)?;
     let Some(profile_id) = active.selected_profile_id else {
         return Ok(Observed {

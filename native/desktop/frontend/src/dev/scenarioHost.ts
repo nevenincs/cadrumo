@@ -147,6 +147,7 @@ const never = <T>() => new Promise<T>(() => undefined);
 /** External runtime events and delayed transport answers for browser scenarios. */
 declare global {
   interface Window {
+    __scenarioLoginRead?: { complete(): void; timeout(): void };
     __scenarioLanguage?: {
       publish(state: DesktopLanguage): void;
       switchAccount(profile: string, language: string): void;
@@ -267,7 +268,6 @@ export function scenarioHost(
   // The session waits for a fresh proof until a sign-in or a sign-out ends it.
   let reconnecting = scenario.signIn.status.reconnecting;
   let managerDispatched = scenario.manager?.autoDispatched ?? false;
-  let managerReads = 0;
   let clipboard = "";
   const supervision = scenario.supervision;
   let observedManager: ManagerStatus | undefined = supervision?.initial;
@@ -305,6 +305,49 @@ export function scenarioHost(
   });
 
   const manager = scenario.manager;
+  let pendingStatus: {
+    resolve(value: SignInStatus): void;
+    reject(error: unknown): void;
+  } | null = null;
+  let statusPending = scenario.signIn.statusPending === true;
+  let readinessTimer: number | undefined;
+  let signInRevision = 0;
+  window.__scenarioLoginRead = {
+    complete() {
+      statusPending = false;
+      runtimeAvailable = true;
+      presence = "absent";
+      pendingStatus?.resolve(status());
+      pendingStatus = null;
+    },
+    timeout() {
+      statusPending = false;
+      pendingStatus?.reject({ code: "runtime_timeout" });
+      pendingStatus = null;
+    },
+  };
+  const scheduleReadiness = () => {
+    if (
+      supervision ||
+      !managerDispatched ||
+      manager?.readyAfterReads === undefined ||
+      !signInListener
+    )
+      return;
+    window.clearTimeout(readinessTimer);
+    readinessTimer = window.setTimeout(
+      () => {
+        runtimeAvailable = true;
+        presence = "absent";
+        signInListener?.({
+          kind: "sign-in-state",
+          revision: ++signInRevision,
+          status: status(),
+        });
+      },
+      (manager.readyAfterReads - 1) * 1_000 + (manager.readyReadDelayMs ?? 0),
+    );
+  };
   const managerCommand: Pick<Host, "startManager"> = manager
     ? {
         async startManager() {
@@ -315,7 +358,7 @@ export function scenarioHost(
             throw failure(manager.result.code, "launch");
           if (manager.result === "dispatched") {
             managerDispatched = true;
-            managerReads = 0;
+            scheduleReadiness();
           }
           return manager.result;
         },
@@ -712,7 +755,9 @@ export function scenarioHost(
       : {}),
     observeSignIn: ((listener) => {
       signInListener = listener;
+      scheduleReadiness();
       return Promise.resolve(() => {
+        window.clearTimeout(readinessTimer);
         if (signInListener === listener) signInListener = null;
       });
     }) satisfies NonNullable<Host["observeSignIn"]>,
@@ -726,7 +771,7 @@ export function scenarioHost(
             if (typeof result === "object")
               throw failure(result.code, "installation");
             managerDispatched = true;
-            managerReads = 0;
+            scheduleReadiness();
             return result;
           },
         }
@@ -773,7 +818,10 @@ export function scenarioHost(
           return captured;
         });
       }
-      if (scenario.signIn.statusPending) return never();
+      if (statusPending)
+        return new Promise<SignInStatus>((resolve, reject) => {
+          pendingStatus = { resolve, reject };
+        });
       if (scenario.signIn.statusFailure)
         return Promise.reject(
           typeof scenario.signIn.statusFailure === "string"
@@ -785,21 +833,6 @@ export function scenarioHost(
         return Promise.reject(
           failure(manager.statusFailureAfterDispatch, "cli"),
         );
-      }
-      if (
-        managerDispatched &&
-        manager?.readyAfterReads !== undefined &&
-        ++managerReads >= manager.readyAfterReads
-      ) {
-        runtimeAvailable = true;
-        presence = "absent";
-        if (manager.readyReadDelayMs !== undefined) {
-          const ready = status();
-          return wait(manager.readyReadDelayMs).then(() => {
-            say("managerReadinessResolved");
-            return ready;
-          });
-        }
       }
       return Promise.resolve(status());
     },

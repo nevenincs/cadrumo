@@ -16,7 +16,10 @@ use std::{
     os::windows::ffi::OsStrExt,
     path::{Path, PathBuf},
     ptr,
-    sync::Mutex,
+    sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    },
     time::Instant,
 };
 
@@ -83,7 +86,13 @@ unsafe extern "system" {
         flags: u32,
         template: *mut c_void,
     ) -> *mut c_void;
-    fn WaitNamedPipeW(name: *const u16, milliseconds: u32) -> i32;
+    fn SetEvent(event: *mut c_void) -> i32;
+    fn WaitForMultipleObjects(
+        count: u32,
+        handles: *const *mut c_void,
+        all: i32,
+        milliseconds: u32,
+    ) -> u32;
     fn GetNamedPipeServerProcessId(pipe: *mut c_void, process_id: *mut u32) -> i32;
     fn OpenProcess(access: u32, inherit: i32, process_id: u32) -> *mut c_void;
     fn GetCurrentProcess() -> *mut c_void;
@@ -135,6 +144,30 @@ unsafe extern "system" {
     fn LocalFree(memory: *mut c_void) -> *mut c_void;
 }
 
+#[repr(C)]
+#[derive(Default)]
+struct IoStatusBlock {
+    status: usize,
+    information: usize,
+}
+
+#[link(name = "ntdll")]
+unsafe extern "system" {
+    fn NtFsControlFile(
+        file: *mut c_void,
+        event: *mut c_void,
+        apc: *mut c_void,
+        context: *mut c_void,
+        status: *mut IoStatusBlock,
+        code: u32,
+        input: *const u8,
+        input_size: u32,
+        output: *mut c_void,
+        output_size: u32,
+    ) -> i32;
+    fn RtlNtStatusToDosError(status: i32) -> u32;
+}
+
 #[link(name = "advapi32")]
 unsafe extern "system" {
     fn OpenProcessToken(process: *mut c_void, access: u32, token: *mut *mut c_void) -> i32;
@@ -176,13 +209,14 @@ const CRED_TYPE_GENERIC: u32 = 1;
 const WAIT_OBJECT_0: u32 = 0;
 const WAIT_TIMEOUT: u32 = 0x102;
 const ERROR_FILE_NOT_FOUND: i32 = 2;
-const ERROR_SEM_TIMEOUT: i32 = 121;
 const ERROR_PIPE_BUSY: i32 = 231;
 const ERROR_OPERATION_ABORTED: i32 = 995;
 const ERROR_IO_PENDING: i32 = 997;
 const CREATE_EVENT_MANUAL_RESET: u32 = 1;
 const EVENT_ALL_ACCESS: u32 = 0x001F_0003;
 const ERROR_NOT_FOUND: i32 = 1168;
+// CTL_CODE(FILE_DEVICE_NAMED_PIPE, 6, METHOD_BUFFERED, FILE_ANY_ACCESS).
+const FSCTL_PIPE_WAIT: u32 = 0x0011_0018;
 /// The longest image path Windows reports, in UTF-16 units.
 const IMAGE_PATH_UNITS: usize = 32_768;
 
@@ -421,6 +455,7 @@ pub enum ConnectRefusal {
     PeerUntrusted,
     /// The deadline passed before the pipe answered.
     Deadline,
+    Cancelled,
     Failed(io::Error),
 }
 
@@ -430,6 +465,7 @@ impl std::fmt::Display for ConnectRefusal {
             Self::NotReady => formatter.write_str("runtime endpoint not ready"),
             Self::PeerUntrusted => formatter.write_str("runtime peer untrusted"),
             Self::Deadline => formatter.write_str("runtime connect deadline exceeded"),
+            Self::Cancelled => formatter.write_str("runtime connect cancelled"),
             Self::Failed(error) => write!(formatter, "runtime connect failed: {error}"),
         }
     }
@@ -442,11 +478,163 @@ fn remaining_milliseconds(deadline: Instant) -> Option<u32> {
     Some(remaining.as_millis().min(u128::from(u32::MAX - 1)) as u32)
 }
 
+/// An owned, persistent cancellation signal, registered before connecting.
+#[derive(Debug)]
+pub struct ConnectCancellation {
+    event: Handle,
+    cancelled: AtomicBool,
+}
+
+impl ConnectCancellation {
+    pub fn new() -> io::Result<Self> {
+        // SAFETY: an unnamed manual-reset event, retained for every observing I/O.
+        let event = Handle::opened(unsafe {
+            CreateEventExW(
+                ptr::null(),
+                ptr::null(),
+                CREATE_EVENT_MANUAL_RESET,
+                EVENT_ALL_ACCESS,
+            )
+        })?;
+        Ok(Self {
+            event,
+            cancelled: AtomicBool::new(false),
+        })
+    }
+
+    pub fn cancel(&self) {
+        self.cancelled.store(true, Ordering::Release);
+        // SAFETY: this owned event remains live until every observing operation settles.
+        unsafe {
+            SetEvent(self.event.0);
+        }
+    }
+
+    pub fn cancelled(&self) -> bool {
+        self.cancelled.load(Ordering::Acquire)
+    }
+}
+
+/// Wait once on the named-pipe filesystem's availability notification. Unlike
+/// WaitNamedPipe, asynchronous FSCTL_PIPE_WAIT can share the owner's cancellation.
+fn wait_available(
+    name: &str,
+    deadline: Instant,
+    cancellation: &ConnectCancellation,
+) -> io::Result<()> {
+    wait_available_observed(name, deadline, cancellation, || {})
+}
+
+fn wait_available_observed(
+    name: &str,
+    deadline: Instant,
+    cancellation: &ConnectCancellation,
+    pending: impl FnOnce(),
+) -> io::Result<()> {
+    let pipe_name = name
+        .strip_prefix(r"\\.\pipe\")
+        .ok_or(io::ErrorKind::InvalidInput)?;
+    let root = wide(r"\\.\pipe\");
+    // SAFETY: an asynchronous handle to the local named-pipe filesystem root.
+    let root = Handle::opened(unsafe {
+        CreateFileW(
+            root.as_ptr(),
+            FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+            FILE_SHARE_ALL,
+            ptr::null(),
+            OPEN_EXISTING,
+            FILE_FLAG_OVERLAPPED,
+            ptr::null_mut(),
+        )
+    })?;
+    let event = Handle::opened(unsafe {
+        // SAFETY: an unnamed manual-reset completion event owned through settlement.
+        CreateEventExW(
+            ptr::null(),
+            ptr::null(),
+            CREATE_EVENT_MANUAL_RESET,
+            EVENT_ALL_ACCESS,
+        )
+    })?;
+    let name: Vec<u16> = pipe_name.encode_utf16().collect();
+    let mut input = Vec::with_capacity(14 + name.len() * 2);
+    // Local NPFS substitutes the server default when TimeoutSpecified is
+    // false. Pass the same owner's remaining timeout in NT relative 100 ns
+    // units; the completion wait below still uses the original deadline.
+    let remaining = deadline
+        .checked_duration_since(Instant::now())
+        .ok_or(io::ErrorKind::TimedOut)?;
+    if remaining.is_zero() {
+        return Err(io::ErrorKind::TimedOut.into());
+    }
+    let timeout = -i64::try_from(remaining.as_nanos().div_ceil(100)).unwrap_or(i64::MAX);
+    input.extend_from_slice(&timeout.to_le_bytes());
+    input.extend_from_slice(
+        &(u32::try_from(name.len() * 2).map_err(|_| io::ErrorKind::InvalidInput)?).to_le_bytes(),
+    );
+    input.extend_from_slice(&[1, 0]);
+    for unit in name {
+        input.extend_from_slice(&unit.to_le_bytes());
+    }
+    let mut status = IoStatusBlock::default();
+    // SAFETY: the input/status/event stay owned until completion, including cancellation.
+    let result = unsafe {
+        NtFsControlFile(
+            root.0,
+            event.0,
+            ptr::null_mut(),
+            ptr::null_mut(),
+            &mut status,
+            FSCTL_PIPE_WAIT,
+            input.as_ptr(),
+            input.len() as u32,
+            ptr::null_mut(),
+            0,
+        )
+    };
+    if result == 0x103 {
+        pending();
+        // STATUS_PENDING
+        let handles = [cancellation.event.0, event.0];
+        let milliseconds = remaining_milliseconds(deadline).unwrap_or(0);
+        // SAFETY: both events remain retained until this request settles.
+        let wake = unsafe { WaitForMultipleObjects(2, handles.as_ptr(), 0, milliseconds) };
+        if wake != WAIT_OBJECT_0 + 1 {
+            let failure = match wake {
+                WAIT_OBJECT_0 => io::ErrorKind::ConnectionAborted.into(),
+                WAIT_TIMEOUT => io::ErrorKind::TimedOut.into(),
+                _ => io::Error::last_os_error(),
+            };
+            // SAFETY: this root handle owns only this request. Await cancellation
+            // before releasing the input or status memory the kernel can write.
+            unsafe {
+                CancelIoEx(root.0, ptr::null_mut());
+                WaitForSingleObject(event.0, u32::MAX);
+            }
+            return Err(failure);
+        }
+    } else if result < 0 {
+        // SAFETY: conversion of the returned NTSTATUS carries no ownership.
+        return Err(io::Error::from_raw_os_error(
+            unsafe { RtlNtStatusToDosError(result) } as i32,
+        ));
+    }
+    let result = status.status as i32;
+    if result < 0 {
+        // SAFETY: the operation settled before its NTSTATUS is inspected.
+        return Err(io::Error::from_raw_os_error(
+            unsafe { RtlNtStatusToDosError(result) } as i32,
+        ));
+    }
+    Ok(())
+}
+
 /// One connected pipe: bounded reads and writes from any thread, and a close
 /// that ends a read another thread is blocked in.
 #[derive(Debug)]
 pub struct Pipe {
-    handle: Mutex<Option<Handle>>,
+    handle: Mutex<Option<Arc<Handle>>>,
+    cancellation: Arc<ConnectCancellation>,
     process: Handle,
     peer: Peer,
 }
@@ -460,8 +648,25 @@ impl Pipe {
         expected_owner: &str,
         deadline: Instant,
     ) -> Result<Self, ConnectRefusal> {
+        Self::connect_cancellable(
+            name,
+            expected_owner,
+            deadline,
+            Arc::new(ConnectCancellation::new().map_err(ConnectRefusal::Failed)?),
+        )
+    }
+
+    pub fn connect_cancellable(
+        name: &str,
+        expected_owner: &str,
+        deadline: Instant,
+        cancellation: Arc<ConnectCancellation>,
+    ) -> Result<Self, ConnectRefusal> {
         let wide_name = wide(name);
         let handle = loop {
+            if cancellation.cancelled() {
+                return Err(ConnectRefusal::Cancelled);
+            }
             // SAFETY: the name is nul-terminated and the attributes and
             // template are absent; the handle is owned below.
             let raw = unsafe {
@@ -479,18 +684,17 @@ impl Pipe {
                 Ok(handle) => break handle,
                 Err(error) => match error.raw_os_error() {
                     Some(ERROR_PIPE_BUSY) => {
-                        let Some(milliseconds) = remaining_milliseconds(deadline) else {
-                            return Err(ConnectRefusal::Deadline);
-                        };
-                        // SAFETY: the name is nul-terminated.
-                        if unsafe { WaitNamedPipeW(wide_name.as_ptr(), milliseconds.max(1)) } == 0 {
-                            return Err(match io::Error::last_os_error().raw_os_error() {
-                                Some(
-                                    ERROR_FILE_NOT_FOUND | ERROR_SEM_TIMEOUT | ERROR_PIPE_BUSY,
-                                ) => ConnectRefusal::NotReady,
-                                _ => ConnectRefusal::PeerUntrusted,
-                            });
-                        }
+                        wait_available(name, deadline, &cancellation).map_err(|error| {
+                            if cancellation.cancelled() {
+                                ConnectRefusal::Cancelled
+                            } else if error.kind() == io::ErrorKind::TimedOut {
+                                ConnectRefusal::Deadline
+                            } else if error.raw_os_error() == Some(ERROR_FILE_NOT_FOUND) {
+                                ConnectRefusal::NotReady
+                            } else {
+                                ConnectRefusal::Failed(error)
+                            }
+                        })?;
                     }
                     Some(ERROR_FILE_NOT_FOUND) => return Err(ConnectRefusal::NotReady),
                     _ => return Err(ConnectRefusal::PeerUntrusted),
@@ -521,7 +725,8 @@ impl Pipe {
         }
         let image = process_image_path(process.0).map_err(|_| ConnectRefusal::PeerUntrusted)?;
         Ok(Self {
-            handle: Mutex::new(Some(handle)),
+            handle: Mutex::new(Some(Arc::new(handle))),
+            cancellation,
             process,
             peer: Peer {
                 process_id,
@@ -541,12 +746,12 @@ impl Pipe {
         unsafe { WaitForSingleObject(self.process.0, 0) == WAIT_TIMEOUT }
     }
 
-    fn raw_handle(&self) -> io::Result<*mut c_void> {
+    fn retained_handle(&self) -> io::Result<Arc<Handle>> {
         self.handle
             .lock()
             .unwrap_or_else(|poisoned| poisoned.into_inner())
             .as_ref()
-            .map(|handle| handle.0)
+            .cloned()
             .ok_or_else(|| io::ErrorKind::ConnectionAborted.into())
     }
 
@@ -562,12 +767,13 @@ impl Pipe {
     }
 
     fn read_until(&self, buffer: &mut [u8], deadline: Option<Instant>) -> io::Result<()> {
-        let handle = self.raw_handle()?;
+        let retained = self.retained_handle()?;
+        let handle = retained.0;
         let mut filled = 0usize;
         while filled < buffer.len() {
             let remaining = &mut buffer[filled..];
             let size = remaining.len().min(u32::MAX as usize) as u32;
-            let received = transfer(handle, deadline, |overlapped| {
+            let received = transfer(handle, deadline, &self.cancellation, |overlapped| {
                 // SAFETY: the buffer outlives the operation, which `transfer`
                 // settles before it returns.
                 unsafe {
@@ -601,12 +807,13 @@ impl Pipe {
     }
 
     fn write_until(&self, bytes: &[u8], deadline: Option<Instant>) -> io::Result<()> {
-        let handle = self.raw_handle()?;
+        let retained = self.retained_handle()?;
+        let handle = retained.0;
         let mut written = 0usize;
         while written < bytes.len() {
             let remaining = &bytes[written..];
             let size = remaining.len().min(u32::MAX as usize) as u32;
-            let sent = transfer(handle, deadline, |overlapped| {
+            let sent = transfer(handle, deadline, &self.cancellation, |overlapped| {
                 // SAFETY: the bytes outlive the operation, which `transfer`
                 // settles before it returns.
                 unsafe {
@@ -630,6 +837,7 @@ impl Pipe {
     /// Ends every pending transfer and releases the pipe; later calls report
     /// an aborted connection. The verified peer process stays observable.
     pub fn close(&self) {
+        self.cancellation.cancel();
         let taken = self
             .handle
             .lock()
@@ -657,8 +865,12 @@ impl Drop for Pipe {
 fn transfer(
     handle: *mut c_void,
     deadline: Option<Instant>,
+    cancellation: &ConnectCancellation,
     start: impl FnOnce(*mut Overlapped) -> i32,
 ) -> io::Result<u32> {
+    if cancellation.cancelled() {
+        return Err(io::ErrorKind::ConnectionAborted.into());
+    }
     // SAFETY: an anonymous manual-reset event, owned for the operation.
     let event = Handle::opened(unsafe {
         CreateEventExW(
@@ -679,8 +891,15 @@ fn transfer(
         }
         let milliseconds =
             deadline.map_or(u32::MAX, |end| remaining_milliseconds(end).unwrap_or(0));
-        // SAFETY: the event belongs to this operation.
-        if unsafe { WaitForSingleObject(event.0, milliseconds) } != WAIT_OBJECT_0 {
+        let events = [cancellation.event.0, event.0];
+        // SAFETY: both events remain retained until this operation settles.
+        let wake = unsafe { WaitForMultipleObjects(2, events.as_ptr(), 0, milliseconds) };
+        if wake != WAIT_OBJECT_0 + 1 {
+            let failure = match wake {
+                WAIT_OBJECT_0 => io::ErrorKind::ConnectionAborted.into(),
+                WAIT_TIMEOUT => io::ErrorKind::TimedOut.into(),
+                _ => io::Error::last_os_error(),
+            };
             let mut settled = 0u32;
             // SAFETY: the operation is cancelled and then awaited, so no
             // completion can touch the caller's buffer after this returns.
@@ -688,7 +907,7 @@ fn transfer(
                 CancelIoEx(handle, &mut overlapped);
                 GetOverlappedResult(handle, &mut overlapped, &mut settled, 1);
             }
-            return Err(io::ErrorKind::TimedOut.into());
+            return Err(failure);
         }
     }
     let mut transferred = 0u32;
@@ -767,6 +986,8 @@ mod tests {
             attributes: *const c_void,
         ) -> *mut c_void;
         fn ConnectNamedPipe(pipe: *mut c_void, overlapped: *mut Overlapped) -> i32;
+        fn DisconnectNamedPipe(pipe: *mut c_void) -> i32;
+        fn WaitNamedPipeW(name: *const u16, milliseconds: u32) -> i32;
         fn GetCurrentProcessId() -> u32;
     }
 
@@ -781,6 +1002,10 @@ mod tests {
 
     impl Server {
         fn listen(name: &str) -> Self {
+            Self::listen_with_timeout(name, 0)
+        }
+
+        fn listen_with_timeout(name: &str, default_timeout: u32) -> Self {
             let wide_name = wide(name);
             // SAFETY: a fresh first instance with default security; owned by `Handle`.
             let handle = Handle::opened(unsafe {
@@ -791,7 +1016,7 @@ mod tests {
                     1,
                     65_536,
                     65_536,
-                    0,
+                    default_timeout,
                     ptr::null(),
                 )
             })
@@ -857,6 +1082,102 @@ mod tests {
 
     fn soon() -> Instant {
         Instant::now() + Duration::from_secs(5)
+    }
+
+    #[test]
+    fn a_busy_pipe_wait_survives_the_server_default_and_connects_on_availability() {
+        let name = pipe_name("busy-available");
+        let server = Arc::new(Server::listen_with_timeout(&name, 1));
+        let pipe = Pipe::connect(&name, &current_user_sid().unwrap(), soon()).unwrap();
+        server.accept();
+        let cancellation = Arc::new(ConnectCancellation::new().unwrap());
+        let (pending, reached) = std::sync::mpsc::channel();
+        let (answer, answered) = std::sync::mpsc::channel();
+        let (release, released) = std::sync::mpsc::channel();
+        let waiter = {
+            let name = name.clone();
+            let cancellation = cancellation.clone();
+            std::thread::spawn(move || {
+                let result = wait_available_observed(&name, soon(), &cancellation, || {
+                    pending.send(()).unwrap();
+                })
+                .and_then(|()| {
+                    Pipe::connect(&name, &current_user_sid().unwrap(), soon())
+                        .map_err(|_| io::ErrorKind::ConnectionRefused.into())
+                });
+                let _ = answer.send(result.as_ref().map(|_| ()).map_err(|error| error.kind()));
+                let _ = released.recv();
+                drop(result);
+            })
+        };
+        reached.recv_timeout(Duration::from_secs(5)).unwrap();
+        // This guard deliberately exceeds the server's 1 ms default. There
+        // is no producer signal yet, so a normal timeout must not finish it.
+        let early = answered.recv_timeout(Duration::from_millis(50));
+        // SAFETY: the exact test-owned instance is connected to `pipe`.
+        checked(unsafe { DisconnectNamedPipe(server.0.0) }).unwrap();
+        drop(pipe);
+        let acceptor = {
+            let server = server.clone();
+            std::thread::spawn(move || server.accept())
+        };
+        let result = match early {
+            Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
+                answered.recv_timeout(Duration::from_secs(5))
+            }
+            other => other,
+        };
+        let fallback = if !matches!(result, Ok(Ok(()))) {
+            cancellation.cancel();
+            // Cleanup uses the independent Win32 wait, so the assertion below
+            // still detects a wrong production filesystem control.
+            checked(unsafe { WaitNamedPipeW(wide(&name).as_ptr(), 5000) }).unwrap();
+            Some(Pipe::connect(&name, &current_user_sid().unwrap(), soon()).unwrap())
+        } else {
+            None
+        };
+        release.send(()).unwrap();
+        waiter.join().unwrap();
+        acceptor.join().unwrap();
+        drop(fallback);
+        assert_eq!(result.unwrap(), Ok(()));
+    }
+
+    #[test]
+    fn a_busy_pipe_wait_is_cancelled_before_its_wait_starts() {
+        let name = pipe_name("cancel-busy");
+        let server = Server::listen(&name);
+        let pipe = Pipe::connect(&name, &current_user_sid().unwrap(), soon()).unwrap();
+        server.accept();
+        let cancellation = Arc::new(ConnectCancellation::new().unwrap());
+        let (pending, reached) = std::sync::mpsc::channel();
+        let (resume, resumed) = std::sync::mpsc::channel();
+        let (answer, answered) = std::sync::mpsc::channel();
+        let waiter = {
+            let cancellation = cancellation.clone();
+            std::thread::spawn(move || {
+                let result = wait_available_observed(
+                    &name,
+                    Instant::now() + Duration::from_secs(600),
+                    &cancellation,
+                    || {
+                        pending.send(()).unwrap();
+                        let _ = resumed.recv();
+                    },
+                );
+                answer.send(result.map_err(|error| error.kind())).unwrap();
+            })
+        };
+        reached.recv_timeout(Duration::from_secs(5)).unwrap();
+        cancellation.cancel();
+        resume.send(()).unwrap();
+        assert_eq!(
+            answered.recv_timeout(Duration::from_secs(5)).unwrap(),
+            Err(io::ErrorKind::ConnectionAborted)
+        );
+        waiter.join().unwrap();
+        drop(pipe);
+        drop(server);
     }
 
     #[test]

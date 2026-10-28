@@ -147,7 +147,8 @@ struct Envelope {
     /// Absent where the product refused before it knew its command.
     command: Option<String>,
     status: String,
-    active_profile: Option<String>,
+    #[serde(rename = "active_profile")]
+    _active_profile: Option<String>,
     result: Option<serde_json::Value>,
     error: Option<ErrorBody>,
 }
@@ -160,6 +161,7 @@ struct ErrorBody {
 pub enum Outcome {
     Success {
         result: serde_json::Value,
+        #[cfg(test)]
         active_profile: Option<String>,
     },
     Refused {
@@ -191,7 +193,8 @@ pub fn decode(leaf: &str, output: &Output) -> Result<Outcome> {
                 result: envelope.result.ok_or_else(|| {
                     failure(ErrorCode::ReadFailed).with_reason("helper_success_without_result")
                 })?,
-                active_profile: envelope.active_profile,
+                #[cfg(test)]
+                active_profile: envelope._active_profile,
             })
         }
         "error" if (named || unnamed) && !output.success && envelope.result.is_none() => {
@@ -254,6 +257,7 @@ pub(crate) fn sign_in_refusal(
     // not infer it from an arbitrary message or a seconds field alone.
     let code = match code {
         "credential_rejected" => "CREDENTIAL_REJECTED",
+        "runtime_timeout" => "RUNTIME_TIMEOUT",
         "REFUSED_PROFILE_LOGIN_THROTTLED" => "THROTTLED",
         "authentication_required" if sign_in_reason == Some("throttled") => "THROTTLED",
         _ => code,
@@ -294,6 +298,7 @@ fn error_envelope(bytes: &[u8]) -> Result<Envelope> {
     Ok(envelope)
 }
 
+#[cfg(test)]
 pub fn login(outcome: Outcome) -> Result<SignInResult> {
     match outcome {
         Outcome::Refused { refusal, .. } => Ok(SignInResult::Refused { refusal }),

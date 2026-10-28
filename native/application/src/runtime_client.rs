@@ -20,6 +20,7 @@
 //! Nothing here starts, stops or supervises a runtime.
 
 use crate::value::Sha256Digest;
+pub use cadrumo_platform::runtime_pipe::ConnectCancellation as OpenCancellation;
 use cadrumo_platform::runtime_pipe::{self, ConnectRefusal, Pipe};
 use serde_json::{Map, Value, json};
 use sha2::{Digest, Sha256};
@@ -36,7 +37,7 @@ use std::{
 };
 use zeroize::Zeroizing;
 
-const PROTOCOL_VERSION: u64 = 3;
+const PROTOCOL_VERSION: u64 = 4;
 const MAXIMUM_FRAME_BYTES: usize = 64 * 1024;
 /// The longest secret one secret frame carries, and so the longest the runtime takes.
 pub const MAXIMUM_SECRET_BYTES: usize = 64 * 1024;
@@ -46,8 +47,38 @@ const SUBMISSION_PAYLOAD_CHUNK_BYTES: usize = 16_384;
 const DOCUMENT_FRAME: u8 = b'J';
 const SECRET_FRAME: u8 = b'S';
 const EVENT_FRAME: u8 = b'E';
-/// The longest a reply's remaining frames may take once its first frame arrived.
-const FRAME_BUDGET: Duration = Duration::from_secs(5);
+/// Last-resort protection against a peer that leaves an incomplete frame open.
+const FRAME_BUDGET: Duration =
+    Duration::from_secs(cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS);
+/// One absolute last-resort timeout for a signal-driven course of work.
+#[derive(Clone, Copy, Debug)]
+pub struct TimeoutWait {
+    deadline: Instant,
+}
+
+impl TimeoutWait {
+    pub fn new() -> Self {
+        Self::with_timeout(Duration::from_secs(
+            cadrumo_platform::DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS,
+        ))
+    }
+
+    pub fn with_timeout(deadline: Duration) -> Self {
+        Self {
+            deadline: Instant::now() + deadline,
+        }
+    }
+
+    pub fn deadline(self) -> Instant {
+        self.deadline
+    }
+}
+
+impl Default for TimeoutWait {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 const TRANSFER_CHUNK_BYTES: usize = 16_384;
 const TRANSFER_LIMIT_BYTES: usize = 1_048_576;
 const RECEIPT_RECORD_MAX_BYTES: u64 = 8 * 1024;
@@ -71,7 +102,7 @@ pub enum Refusal {
     RootMismatch,
     InvalidFrame,
     ConnectionClosed,
-    DeadlineExceeded,
+    Timeout,
     /// The runtime answered with its typed refusal: an access denial code,
     /// for a sign-in the reason it was refused, for a busy subject the
     /// operation that holds it, and for a suspended session the whole seconds
@@ -183,7 +214,7 @@ impl Refusal {
             Self::RootMismatch => "runtime_root_mismatch",
             Self::InvalidFrame => "runtime_invalid_frame",
             Self::ConnectionClosed => "runtime_connection_closed",
-            Self::DeadlineExceeded => "runtime_deadline_exceeded",
+            Self::Timeout => "runtime_timeout",
             Self::Denied { code, .. } => code,
             Self::Unsettled { .. } => CUSTODY_RECOVERING,
         }
@@ -208,7 +239,7 @@ impl From<io::Error> for Refusal {
             | io::ErrorKind::UnexpectedEof
             | io::ErrorKind::BrokenPipe
             | io::ErrorKind::NotConnected => Self::ConnectionClosed,
-            io::ErrorKind::TimedOut => Self::DeadlineExceeded,
+            io::ErrorKind::TimedOut => Self::Timeout,
             _ => Self::Io(error),
         }
     }
@@ -219,7 +250,8 @@ impl From<ConnectRefusal> for Refusal {
         match refusal {
             ConnectRefusal::NotReady => Self::EndpointNotReady,
             ConnectRefusal::PeerUntrusted => Self::PeerUntrusted,
-            ConnectRefusal::Deadline => Self::DeadlineExceeded,
+            ConnectRefusal::Deadline => Self::Timeout,
+            ConnectRefusal::Cancelled => Self::ConnectionClosed,
             ConnectRefusal::Failed(error) => Self::Io(error),
         }
     }
@@ -287,6 +319,10 @@ pub enum Event {
         destination: String,
     },
     ServiceLeaseChanged,
+    ServiceAdmissionChanged,
+    ProfileLoginChanged {
+        login_request_id: String,
+    },
     LifecycleNotice,
     ModelRunRequested,
     /// The connection ended; no further reply or event will arrive.
@@ -460,6 +496,7 @@ struct Shared {
     subscribers: Mutex<Vec<mpsc::Sender<Event>>>,
     scoped: Mutex<Vec<mpsc::Sender<Pushed>>>,
     closed: AtomicBool,
+    timeout: AtomicBool,
 }
 
 impl Shared {
@@ -533,6 +570,12 @@ fn event(document: &Map<String, Value>) -> Event {
             destination: text(document, "destination").unwrap_or_default().to_owned(),
         },
         Some("service_lease_changed") => Event::ServiceLeaseChanged,
+        Some("service_admission_changed") => Event::ServiceAdmissionChanged,
+        Some("profile_login_changed") => Event::ProfileLoginChanged {
+            login_request_id: text(document, "login_request_id")
+                .unwrap_or_default()
+                .to_owned(),
+        },
         Some("lifecycle_notice") => Event::LifecycleNotice,
         Some("model_run_requested") => Event::ModelRunRequested,
         _ => Event::Disconnected,
@@ -545,32 +588,53 @@ pub struct Connection {
     pipe: Arc<Pipe>,
     hello: Hello,
     shared: Arc<Shared>,
-    exchange: ExchangeQueue,
+    exchange: Arc<ExchangeQueue>,
     reader: Mutex<Option<thread::JoinHandle<()>>>,
 }
 
 struct ExchangeQueue {
     replies: Mutex<Option<mpsc::Receiver<Map<String, Value>>>>,
     available: Condvar,
+    closed: AtomicBool,
 }
 
 impl ExchangeQueue {
+    fn close(&self) {
+        let _replies = self.replies.lock().unwrap_or_else(|p| p.into_inner());
+        self.closed.store(true, Ordering::Release);
+        self.available.notify_all();
+    }
     fn claim(&self, deadline: Instant) -> Result<ExchangeClaim<'_>, Refusal> {
+        self.claim_observed(deadline, || {})
+    }
+
+    fn claim_observed(
+        &self,
+        deadline: Instant,
+        before_wait: impl FnOnce(),
+    ) -> Result<ExchangeClaim<'_>, Refusal> {
+        let mut before_wait = Some(before_wait);
         let mut replies = self.replies.lock().unwrap_or_else(|p| p.into_inner());
         loop {
+            if self.closed.load(Ordering::Acquire) {
+                return Err(Refusal::ConnectionClosed);
+            }
             let Some(remaining) = deadline.checked_duration_since(Instant::now()) else {
                 // A release may have woken this claimant just as its budget
                 // elapsed. Pass that wake on while the receiver is available.
                 if replies.is_some() {
                     self.available.notify_one();
                 }
-                return Err(Refusal::DeadlineExceeded);
+                return Err(Refusal::Timeout);
             };
             if let Some(replies) = replies.take() {
                 return Ok(ExchangeClaim {
                     owner: self,
                     replies: Some(replies),
                 });
+            }
+            if let Some(before_wait) = before_wait.take() {
+                before_wait();
             }
             (replies, _) = self
                 .available
@@ -627,7 +691,28 @@ pub(crate) fn handshake(
     lifecycle_notices: bool,
     deadline: Instant,
 ) -> Result<(Pipe, Hello), Refusal> {
-    let pipe = Pipe::connect(&endpoint.pipe_name, &endpoint.owner_sid, deadline)?;
+    handshake_cancellable(
+        endpoint,
+        cohort,
+        lifecycle_notices,
+        deadline,
+        Arc::new(OpenCancellation::new().map_err(Refusal::Io)?),
+    )
+}
+
+fn handshake_cancellable(
+    endpoint: &Endpoint,
+    cohort: &Cohort,
+    lifecycle_notices: bool,
+    deadline: Instant,
+    cancellation: Arc<OpenCancellation>,
+) -> Result<(Pipe, Hello), Refusal> {
+    let pipe = Pipe::connect_cancellable(
+        &endpoint.pipe_name,
+        &endpoint.owner_sid,
+        deadline,
+        cancellation,
+    )?;
     let payload = serde_json::to_vec(&hello_document(endpoint, cohort, lifecycle_notices))
         .map_err(|_| Refusal::InvalidFrame)?;
     pipe.write_all(&frame(DOCUMENT_FRAME, &payload)?, deadline)?;
@@ -679,8 +764,17 @@ fn read_loop(
     shared: Arc<Shared>,
     replies: mpsc::Sender<Map<String, Value>>,
     boot_id: String,
+    queue: Arc<ExchangeQueue>,
 ) {
-    while let Ok((kind, payload)) = read_idle_frame(&pipe) {
+    loop {
+        let (kind, payload) = match read_idle_frame(&pipe) {
+            Ok(frame) => frame,
+            Err(Refusal::Timeout) => {
+                shared.timeout.store(true, Ordering::Release);
+                break;
+            }
+            Err(_) => break,
+        };
         let Ok(document) = document(&payload) else {
             break;
         };
@@ -709,6 +803,7 @@ fn read_loop(
         shared.dispatch(&pushed);
     }
     shared.closed.store(true, Ordering::Release);
+    queue.close();
     pipe.close();
     shared.dispatch(&Pushed {
         event: Event::Disconnected,
@@ -722,30 +817,53 @@ impl Connection {
     /// verified, the handshake completed, and the event reader started. No
     /// credential is involved.
     pub fn open(endpoint: &Endpoint, cohort: &Cohort, deadline: Instant) -> Result<Self, Refusal> {
-        let (pipe, hello) = handshake(endpoint, cohort, true, deadline)?;
+        Self::open_cancellable(
+            endpoint,
+            cohort,
+            deadline,
+            Arc::new(OpenCancellation::new().map_err(Refusal::Io)?),
+        )
+    }
+
+    /// The caller retains cancellation before entering any connect or hello wait.
+    pub fn open_cancellable(
+        endpoint: &Endpoint,
+        cohort: &Cohort,
+        deadline: Instant,
+        cancellation: Arc<OpenCancellation>,
+    ) -> Result<Self, Refusal> {
+        let (pipe, hello) =
+            handshake_cancellable(endpoint, cohort, true, deadline, cancellation.clone())?;
+        if cancellation.cancelled() {
+            return Err(Refusal::ConnectionClosed);
+        }
         let pipe = Arc::new(pipe);
         let shared = Arc::new(Shared {
             connection_id: Mutex::new(None),
             subscribers: Mutex::new(Vec::new()),
             scoped: Mutex::new(Vec::new()),
             closed: AtomicBool::new(false),
+            timeout: AtomicBool::new(false),
         });
         let (replies, exchange) = mpsc::channel();
+        let exchange = Arc::new(ExchangeQueue {
+            replies: Mutex::new(Some(exchange)),
+            available: Condvar::new(),
+            closed: AtomicBool::new(false),
+        });
         let reader = {
             let (pipe, shared, boot_id) = (pipe.clone(), shared.clone(), hello.boot_id.clone());
+            let queue = exchange.clone();
             thread::Builder::new()
                 .name("runtime-connection-reader".into())
-                .spawn(move || read_loop(pipe, shared, replies, boot_id))
+                .spawn(move || read_loop(pipe, shared, replies, boot_id, queue))
                 .map_err(Refusal::Io)?
         };
         Ok(Self {
             pipe,
             hello,
             shared,
-            exchange: ExchangeQueue {
-                replies: Mutex::new(Some(exchange)),
-                available: Condvar::new(),
-            },
+            exchange,
             reader: Mutex::new(Some(reader)),
         })
     }
@@ -777,10 +895,16 @@ impl Connection {
         self.shared.subscribe_scoped()
     }
 
+    /// Fence and wake I/O without waiting for the retained reader to join.
+    pub fn request_close(&self) {
+        self.shared.closed.store(true, Ordering::Release);
+        self.exchange.close();
+        self.pipe.close();
+    }
+
     /// Stops exchanges and ends the connection; the reader thread is joined.
     pub fn close(&self) {
-        self.shared.closed.store(true, Ordering::Release);
-        self.pipe.close();
+        self.request_close();
         let reader = self
             .reader
             .lock()
@@ -806,7 +930,7 @@ impl Connection {
             return Err(Refusal::ConnectionClosed);
         }
         if Instant::now() >= deadline {
-            return Err(Refusal::DeadlineExceeded);
+            return Err(Refusal::Timeout);
         }
         Ok(exchange)
     }
@@ -824,11 +948,11 @@ impl Connection {
         let remaining = deadline
             .checked_duration_since(Instant::now())
             .filter(|remaining| !remaining.is_zero())
-            .ok_or(Refusal::DeadlineExceeded)?;
+            .ok_or(Refusal::Timeout)?;
         match replies.recv_timeout(remaining) {
-            Ok(_) if Instant::now() >= deadline => Err(Refusal::DeadlineExceeded),
+            Ok(_) if Instant::now() >= deadline => Err(Refusal::Timeout),
             Ok(reply) => Ok(reply),
-            Err(mpsc::RecvTimeoutError::Timeout) => Err(Refusal::DeadlineExceeded),
+            Err(mpsc::RecvTimeoutError::Timeout) => Err(Refusal::Timeout),
             Err(mpsc::RecvTimeoutError::Disconnected) => Err(Refusal::ConnectionClosed),
         }
     }
@@ -851,7 +975,15 @@ impl Connection {
         request_id: &str,
         deadline: Instant,
     ) -> Result<Map<String, Value>, Refusal> {
-        let mut reply = Self::next_reply(replies, deadline)?;
+        let mut reply = Self::next_reply(replies, deadline).map_err(|refusal| {
+            if matches!(refusal, Refusal::ConnectionClosed)
+                && self.shared.timeout.load(Ordering::Acquire)
+            {
+                Refusal::Timeout
+            } else {
+                refusal
+            }
+        })?;
         self.verify_reply(&reply, request_id)?;
         if text(&reply, "kind").is_some_and(|kind| kind.ends_with("_transfer")) {
             reply = self.assemble_transfer(replies, &reply, request_id, deadline)?;
@@ -1132,6 +1264,9 @@ fn uuid_list(value: Option<&Value>) -> Vec<String> {
 /// A recovering session's refusal of a change whose effect is `unknown` is
 /// [`Refusal::Unsettled`], never the plain refusal of a request nothing served.
 fn access_refusal(reply: &Map<String, Value>) -> Refusal {
+    if text(reply, "code") == Some("runtime_timeout") {
+        return Refusal::Timeout;
+    }
     if text(reply, "code") == Some(CUSTODY_RECOVERING) && text(reply, "effect") == Some("unknown") {
         return Refusal::Unsettled {
             operation_id: text(reply, "operation_id").map(str::to_owned),
@@ -1476,6 +1611,7 @@ fn present_login(
     persist_receipt: bool,
     deadline: Instant,
 ) -> Result<Admitted, Refusal> {
+    let changed = exchange.subscribe_scoped();
     let request = json!({
         "action": "profile_login",
         "request_id": request_id(),
@@ -1484,7 +1620,52 @@ fn present_login(
         "method": method,
         "persist_receipt": persist_receipt,
     });
-    let reply = exchange.exchange_with_secret(&request, secret, deadline)?;
+    let mut reply = exchange.exchange_with_secret(&request, secret, deadline)?;
+    if text(&reply, "kind") == Some("profile_login_pending") {
+        let login_request_id = text(&reply, "login_request_id")
+            .filter(|id| is_uuid(id))
+            .ok_or(Refusal::InvalidFrame)?
+            .to_owned();
+        if login_request_id != request["request_id"].as_str().unwrap_or_default()
+            || text(&reply, "profile_id") != Some(profile_id)
+        {
+            return Err(Refusal::InvalidFrame);
+        }
+        loop {
+            reply = exchange.exchange(
+                &json!({
+                    "action": "profile_login_status", "request_id": request_id(),
+                    "profile_id": profile_id, "login_request_id": login_request_id,
+                }),
+                deadline,
+            )?;
+            if text(&reply, "kind") != Some("profile_login_pending") {
+                break;
+            }
+            loop {
+                let remaining = deadline
+                    .checked_duration_since(Instant::now())
+                    .ok_or(Refusal::Timeout)?;
+                let cue = changed
+                    .recv_timeout(remaining)
+                    .map_err(|error| match error {
+                        mpsc::RecvTimeoutError::Timeout => Refusal::Timeout,
+                        mpsc::RecvTimeoutError::Disconnected => Refusal::ConnectionClosed,
+                    })?;
+                match cue.event {
+                    Event::Disconnected => return Err(Refusal::ConnectionClosed),
+                    Event::ProfileLoginChanged {
+                        login_request_id: changed,
+                    } if changed == login_request_id
+                        && cue.profile_id.as_deref() == Some(profile_id) =>
+                    {
+                        break;
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
     admitted(&reply, profile_id)
 }
 
@@ -1845,7 +2026,7 @@ mod tests {
         sender.send(Map::new()).unwrap();
         assert!(matches!(
             Connection::next_reply(&receiver, Instant::now()),
-            Err(Refusal::DeadlineExceeded)
+            Err(Refusal::Timeout)
         ));
         assert!(
             Connection::next_reply(&receiver, Instant::now() + Duration::from_secs(1))
@@ -1859,7 +2040,7 @@ mod tests {
         let (_sender, receiver) = mpsc::channel();
         assert!(matches!(
             Connection::next_reply(&receiver, Instant::now() + Duration::from_millis(20)),
-            Err(Refusal::DeadlineExceeded)
+            Err(Refusal::Timeout)
         ));
     }
 
@@ -1869,6 +2050,7 @@ mod tests {
         let queue = Arc::new(ExchangeQueue {
             replies: Mutex::new(Some(receiver)),
             available: Condvar::new(),
+            closed: AtomicBool::new(false),
         });
         let owner = queue
             .claim(Instant::now() + Duration::from_secs(2))
@@ -1879,7 +2061,7 @@ mod tests {
             thread::spawn(move || {
                 let timed_out = matches!(
                     queue.claim(Instant::now() + Duration::from_millis(50)),
-                    Err(Refusal::DeadlineExceeded)
+                    Err(Refusal::Timeout)
                 );
                 done.send(timed_out).unwrap();
             })
@@ -1899,6 +2081,80 @@ mod tests {
     }
 
     #[test]
+    fn close_serializes_with_the_claim_check_before_condvar_wait() {
+        let (_sender, receiver) = mpsc::channel();
+        let queue = Arc::new(ExchangeQueue {
+            replies: Mutex::new(Some(receiver)),
+            available: Condvar::new(),
+            closed: AtomicBool::new(false),
+        });
+        let owner = queue.claim(TimeoutWait::new().deadline()).unwrap();
+        let (at_gap, gap) = mpsc::channel();
+        let (resume, resumed) = mpsc::channel();
+        let (answer, answered) = mpsc::channel();
+        let waiter = {
+            let queue = queue.clone();
+            thread::spawn(move || {
+                let result = queue.claim_observed(TimeoutWait::new().deadline(), || {
+                    at_gap.send(()).unwrap();
+                    resumed.recv().unwrap();
+                });
+                answer
+                    .send(matches!(result, Err(Refusal::ConnectionClosed)))
+                    .unwrap();
+            })
+        };
+        gap.recv_timeout(Duration::from_secs(5)).unwrap();
+        let (started, starting) = mpsc::channel();
+        let (closed, closing) = mpsc::channel();
+        let closer = {
+            let queue = queue.clone();
+            thread::spawn(move || {
+                started.send(()).unwrap();
+                queue.close();
+                closed.send(()).unwrap();
+            })
+        };
+        starting.recv_timeout(Duration::from_secs(5)).unwrap();
+        assert!(
+            closing.recv_timeout(Duration::from_millis(50)).is_err(),
+            "close must serialize with the held reply mutex"
+        );
+        resume.send(()).unwrap();
+        assert!(answered.recv_timeout(Duration::from_secs(5)).unwrap());
+        closing.recv_timeout(Duration::from_secs(5)).unwrap();
+        waiter.join().unwrap();
+        closer.join().unwrap();
+        drop(owner);
+    }
+
+    #[test]
+    fn closing_wakes_a_queued_slot_without_waiting_for_the_startup_timeout() {
+        let (_sender, receiver) = mpsc::channel();
+        let queue = Arc::new(ExchangeQueue {
+            replies: Mutex::new(Some(receiver)),
+            available: Condvar::new(),
+            closed: AtomicBool::new(false),
+        });
+        let owner = queue.claim(TimeoutWait::new().deadline()).unwrap();
+        let (started, waiting) = mpsc::channel();
+        let contender = {
+            let queue = queue.clone();
+            thread::spawn(move || {
+                started.send(()).unwrap();
+                matches!(
+                    queue.claim(TimeoutWait::new().deadline()),
+                    Err(Refusal::ConnectionClosed)
+                )
+            })
+        };
+        waiting.recv().unwrap();
+        queue.close();
+        assert!(contender.join().unwrap());
+        drop(owner);
+    }
+
+    #[test]
     fn subscription_racing_disconnect_always_receives_the_terminal_event() {
         for _ in 0..100 {
             let shared = Arc::new(Shared {
@@ -1906,6 +2162,7 @@ mod tests {
                 subscribers: Mutex::new(Vec::new()),
                 scoped: Mutex::new(Vec::new()),
                 closed: AtomicBool::new(false),
+                timeout: AtomicBool::new(false),
             });
             let barrier = Arc::new(std::sync::Barrier::new(2));
             let subscriber = {
@@ -1943,6 +2200,7 @@ mod tests {
         let queue = Arc::new(ExchangeQueue {
             replies: Mutex::new(None),
             available: Condvar::new(),
+            closed: AtomicBool::new(false),
         });
         let (waiting, started) = mpsc::channel();
         let (done, finished) = mpsc::channel();
@@ -1964,7 +2222,7 @@ mod tests {
         *queue.replies.lock().unwrap() = Some(receiver);
         assert!(matches!(
             queue.claim(Instant::now() - Duration::from_secs(1)),
-            Err(Refusal::DeadlineExceeded)
+            Err(Refusal::Timeout)
         ));
         let woke = finished.recv_timeout(Duration::from_secs(1));
         waiter.join().unwrap();
@@ -2142,6 +2400,120 @@ mod tests {
         }
     }
 
+    struct PendingLogin {
+        sender: Mutex<Option<mpsc::Sender<Pushed>>>,
+        requests: Mutex<Vec<String>>,
+        login_id: Mutex<String>,
+        deadline: Instant,
+    }
+
+    impl PendingLogin {
+        fn pending(&self, request: &Value) -> Map<String, Value> {
+            json!({
+                "kind": "profile_login_pending", "request_id": request["request_id"],
+                "profile_id": held().profile_id, "login_request_id": *self.login_id.lock().unwrap(),
+            })
+            .as_object()
+            .unwrap()
+            .clone()
+        }
+    }
+
+    impl SessionExchange for PendingLogin {
+        fn exchange(
+            &self,
+            request: &Value,
+            deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            assert_eq!(deadline, self.deadline);
+            assert_eq!(request["action"], "profile_login_status");
+            assert_eq!(request["login_request_id"], *self.login_id.lock().unwrap());
+            let mut requests = self.requests.lock().unwrap();
+            requests.push("status".into());
+            if requests.len() == 2 {
+                self.sender
+                    .lock()
+                    .unwrap()
+                    .as_ref()
+                    .unwrap()
+                    .send(Pushed {
+                        event: Event::ProfileLoginChanged {
+                            login_request_id: self.login_id.lock().unwrap().clone(),
+                        },
+                        profile_id: Some(held().profile_id),
+                        session_id: None,
+                    })
+                    .unwrap();
+                Ok(self.pending(request))
+            } else {
+                Ok(json!({"kind": "profile_status", "status": {
+                    "connected": true, "credential_authenticated": true, "profile_bound": true,
+                    "profile_id": held().profile_id, "session_id": held().session_id,
+                }, "connection_id": held().connection_id, "runtime_boot_id": held().runtime_boot_id
+                })
+                .as_object()
+                .unwrap()
+                .clone())
+            }
+        }
+
+        fn exchange_with_secret(
+            &self,
+            request: &Value,
+            secret: &[u8],
+            deadline: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            assert_eq!(deadline, self.deadline);
+            assert_eq!(secret, b"one-proof");
+            self.requests.lock().unwrap().push("proof".into());
+            *self.login_id.lock().unwrap() = request["request_id"].as_str().unwrap().into();
+            Ok(self.pending(request))
+        }
+
+        fn exchange_streamed(
+            &self,
+            _: &Value,
+            _: &[u8],
+            _: Instant,
+        ) -> Result<Map<String, Value>, Refusal> {
+            panic!("login has no operation payload")
+        }
+
+        fn subscribe_scoped(&self) -> mpsc::Receiver<Pushed> {
+            let (sender, receiver) = mpsc::channel();
+            *self.sender.lock().unwrap() = Some(sender);
+            receiver
+        }
+
+        fn close(&self) {}
+    }
+
+    #[test]
+    fn pending_login_sends_one_proof_and_claims_after_its_cue_under_one_deadline() {
+        let deadline = TimeoutWait::new().deadline();
+        let exchange = PendingLogin {
+            sender: Mutex::new(None),
+            requests: Mutex::new(Vec::new()),
+            login_id: Mutex::new(String::new()),
+            deadline,
+        };
+        let admitted = present_login(
+            &exchange,
+            &held().profile_id,
+            Frontend::Desktop,
+            "password",
+            b"one-proof",
+            false,
+            deadline,
+        )
+        .unwrap();
+        assert_eq!(admitted.session_id, held().session_id);
+        assert_eq!(
+            *exchange.requests.lock().unwrap(),
+            ["proof", "status", "status"]
+        );
+    }
+
     #[test]
     fn a_status_reads_as_held_recovering_or_refused_for_the_session_it_names() {
         let status = |value: Value| value.as_object().unwrap().clone();
@@ -2266,7 +2638,7 @@ mod tests {
         assert_eq!(
             hello,
             json!({
-                "kind": "client_hello", "protocol_version": 3, "product_version": "0.6.0",
+                "kind": "client_hello", "protocol_version": 4, "product_version": "0.6.0",
                 "storage_identity": "f".repeat(64), "authority_generation": "a1", "lifecycle_notices": "v1"
             })
         );
@@ -2279,7 +2651,7 @@ mod tests {
         assert_eq!(
             hello,
             json!({
-                "kind": "client_hello", "protocol_version": 3, "product_version": "0.6.0",
+                "kind": "client_hello", "protocol_version": 4, "product_version": "0.6.0",
                 "storage_identity": "f".repeat(64), "authority_generation": "a1"
             })
         );
@@ -2287,7 +2659,7 @@ mod tests {
 
     fn server(version: &str, identity: &str, generation: Option<&str>) -> Map<String, Value> {
         let mut document = json!({
-            "kind": "server_hello", "protocol_version": 3, "product_version": version,
+            "kind": "server_hello", "protocol_version": 4, "product_version": version,
             "storage_identity": identity, "boot_id": "0a1b2c3d-4e5f-4a6b-9c7d-8e9f0a1b2c3d",
             "authority_generation": generation,
         });

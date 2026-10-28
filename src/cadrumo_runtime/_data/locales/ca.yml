@@ -17,3 +17,7 @@ desktop:
     process: Procés
     title: Un procés extern sol·licita accés
     'yes': Sí
+  signin:
+    refused:
+      timeout: L’inici de sessió ha superat el temps d’espera. Comprova l’estat del
+        compte abans de tornar-ho a provar.

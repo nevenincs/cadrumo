@@ -17,3 +17,7 @@ desktop:
     process: Folyamat
     title: Egy külső folyamat hozzáférést kér
     'yes': Igen
+  signin:
+    refused:
+      timeout: A bejelentkezés túllépte az időkorlátot. Újrapróbálkozás előtt ellenőrizd
+        a fiók állapotát.

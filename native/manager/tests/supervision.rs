@@ -204,7 +204,7 @@ impl Case {
     fn bounded() -> Self {
         Self {
             config: SupervisorConfig {
-                readiness_ceiling: Duration::from_secs(20),
+                startup_timeout: Duration::from_secs(20),
                 heartbeat_interval: Duration::from_millis(30),
                 idle_heartbeat_interval: Duration::from_millis(30),
                 heartbeat_staleness: Duration::from_millis(600),
@@ -988,43 +988,48 @@ fn a_runtime_busy_again_after_a_late_idle_reply_is_pinged_before_its_hang_bound(
 }
 
 #[test]
-fn no_readiness_within_the_ceiling_is_a_hang() {
-    // Every launch is silent, so each one misses the ceiling however slowly the machine
-    // starts processes; a later healthy launch would race the same short ceiling.
+fn startup_timeout_terminates_once_without_normal_hang_or_retry() {
     let root = Root::new(&["silent"]);
     let mut case = Case::bounded();
-    case.config.readiness_ceiling = Duration::from_millis(500);
-    case.config.restart.crash_loop_limit = 2;
+    case.config.startup_timeout = Duration::from_millis(500);
     let (seen, outcome) = case.run(&root, |_, _| {});
     assert_eq!(
         outcome,
-        Outcome::Failed {
-            last: RestartClass::Hang
+        Outcome::Stopped {
+            effects: Effects::Unknown
         }
     );
-    // A launch record exists only once the fixture got to run, which a loaded machine can
-    // outlast the ceiling, so the launches are counted as the supervisor reports them.
     assert_eq!(
         count(&seen, |event| matches!(event, Event::Launched { .. })),
-        3
+        1
+    );
+    assert_eq!(
+        count(&seen, |event| matches!(event, Event::HangDetected { .. })),
+        0
     );
     assert_eq!(
         count(&seen, |event| matches!(
             event,
-            Event::HangDetected { ready: false, .. }
+            Event::StopRequested {
+                cause: StopCause::Timeout,
+                ..
+            }
         )),
-        3
+        1
     );
     assert_eq!(
-        count(&seen, |event| matches!(event, Event::HangDetected { .. })),
-        3
+        count(&seen, |event| matches!(
+            event,
+            Event::TerminationRequested { .. }
+        )),
+        1
     );
-    assert_eq!(exits(&seen), [RuntimeExit::Terminated; 3]);
-    assert_eq!(restarts(&seen), [RestartClass::Hang; 2]);
+    assert_eq!(exits(&seen), [RuntimeExit::Terminated]);
+    assert!(restarts(&seen).is_empty());
 }
 
 #[test]
-fn readiness_within_the_ceiling_is_not_a_hang() {
+fn readiness_signal_completes_without_timeout_termination() {
     let root = Root::new(&["serve"]);
     let (seen, outcome) = Case::default().run(&root, stop_on_ready(1));
     assert_eq!(outcome, SETTLED);

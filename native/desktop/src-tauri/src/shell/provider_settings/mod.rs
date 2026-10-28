@@ -47,6 +47,7 @@ fn outcome(result: Value) -> Outcome {
     };
     Outcome::Success {
         result,
+        #[cfg(test)]
         active_profile: None,
     }
 }

@@ -19,6 +19,7 @@ pub mod installation;
 pub mod launch;
 #[cfg(all(test, unix))]
 mod posix_tests;
+pub mod process_exit;
 #[cfg(unix)]
 pub mod process_scope;
 #[cfg(windows)]

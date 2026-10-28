@@ -508,7 +508,7 @@ mod fixture {
         )
         .expect("fixture target");
         let config = SupervisorConfig {
-            readiness_ceiling: Duration::from_secs(20),
+            startup_timeout: Duration::from_secs(20),
             heartbeat_interval: Duration::from_millis(50),
             heartbeat_staleness: Duration::from_secs(20),
             accept_tick_ceiling: Duration::from_secs(5),

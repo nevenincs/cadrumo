@@ -95,7 +95,7 @@ const RUNTIME_REFUSAL_CODES: [&str; 12] = [
     "runtime_root_mismatch",
     "runtime_invalid_frame",
     "runtime_connection_closed",
-    "runtime_deadline_exceeded",
+    "runtime_timeout",
     "runtime_draining",
     "runtime_containment_unavailable",
 ];
@@ -1062,7 +1062,7 @@ impl Held<'_> {
 fn remaining(deadline: Instant) -> Outcome<Duration> {
     let left = deadline.saturating_duration_since(Instant::now());
     if left.is_zero() {
-        return Err(Failure::Runtime(Refusal::DeadlineExceeded));
+        return Err(Failure::Runtime(Refusal::Timeout));
     }
     Ok(left)
 }
@@ -2504,7 +2504,7 @@ fn read_language(held: &Held, deadline: Instant) -> Outcome<ProfileLanguage> {
     loop {
         remaining(deadline)?;
         if pages >= PROFILE_VIEW_MAX_PAGES {
-            return Err(Failure::Runtime(Refusal::DeadlineExceeded));
+            return Err(Failure::Runtime(Refusal::Timeout));
         }
         let payload = view_request(&held.session.profile_id, cursor, pin.as_ref());
         let page = read_view_page(held, &contract, &payload, cursor, deadline)?;
@@ -3573,7 +3573,7 @@ mod tests {
         for failure in [
             Refusal::denied("runtime_draining"),
             Refusal::ConnectionClosed,
-            Refusal::DeadlineExceeded,
+            Refusal::Timeout,
             // The worker was lost while it served the submission: it may have been made.
             Refusal::Unsettled {
                 operation_id: None,
@@ -4910,10 +4910,7 @@ mod tests {
             read_profile_language(&fake, &session(), started + Duration::from_millis(400));
         assert!(started.elapsed() >= Duration::from_millis(400));
         assert!(
-            matches!(
-                failure,
-                Err(RelayFailure::Unavailable(Refusal::DeadlineExceeded))
-            ),
+            matches!(failure, Err(RelayFailure::Unavailable(Refusal::Timeout))),
             "{failure:?}"
         );
         // Two observations, then one wait: no polling.

@@ -115,19 +115,18 @@ for (const [scenario, code] of [
   });
 }
 
-test("dispatched manager keeps unavailability truthful after the bounded wait", async ({
+test("dispatched manager stays unavailable until an actual observation changes", async ({
   page,
 }) => {
   test.setTimeout(60_000);
   await open(page, "manager-still-down");
   await start(page).click();
   await page.clock.runFor(10);
-  await expect(pending(page)).toHaveAttribute("aria-busy", "true");
+  await expect(start(page)).toBeVisible();
+  const reads = await calls(page, "signInStatus");
   await page.clock.runFor(91_000);
   await expect(start(page)).toBeVisible();
-  await expect(page.locator(".sign-in")).toContainText(
-    label("desktop.signin.refused.runtime_unavailable"),
-  );
+  expect(await calls(page, "signInStatus")).toBe(reads);
   await expect(page.locator(".sign-in").getByRole("heading")).toHaveText(
     label("desktop.account.services_down"),
   );
@@ -144,7 +143,7 @@ test("a late readiness answer cannot revive an unmounted manager wait", async ({
   await open(page, "manager-readiness-delayed");
   await start(page).click();
   await page.clock.runFor(10);
-  await expect(pending(page)).toHaveAttribute("aria-busy", "true");
+  await expect(start(page)).toBeVisible();
   expect(await calls(page, "signInStatus")).toBeGreaterThan(1);
   expect(await calls(page, "managerReadinessResolved")).toBe(0);
 
@@ -159,7 +158,7 @@ test("a late readiness answer cannot revive an unmounted manager wait", async ({
   const statusReads = await calls(page, "signInStatus");
   const profileReads = await calls(page, "profiles");
   await page.clock.runFor(6_000);
-  expect(await calls(page, "managerReadinessResolved")).toBe(1);
+  expect(await calls(page, "managerReadinessResolved")).toBe(0);
   expect(await calls(page, "signInStatus")).toBe(statusReads);
   expect(await calls(page, "profiles")).toBe(profileReads);
   expect(await calls(page, "startManager")).toBe(0);

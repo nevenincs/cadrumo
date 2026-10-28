@@ -138,26 +138,6 @@ export function canSignIn(phase: AccountPhase): boolean {
 }
 
 const COUNTDOWN_TICK_MS = 250;
-const STARTUP_WAIT_MS = 90_000;
-
-/** Bound read-only UI waits even if the transport never settles its promise.
- * Late answers are ignored; native process cleanup remains owned by Tauri. */
-async function boundedRead<T>(read: Promise<T>): Promise<T> {
-  let timer: number | undefined;
-  try {
-    return await Promise.race([
-      read,
-      new Promise<never>((_, reject) => {
-        timer = window.setTimeout(
-          () => reject({ code: "timed_out" }),
-          STARTUP_WAIT_MS,
-        );
-      }),
-    ]);
-  } finally {
-    window.clearTimeout(timer);
-  }
-}
 
 /** The seconds left of a refusal's wait. No timer runs unless one is owed. */
 function useCountdown(refusal: SignInRefusal | null) {
@@ -286,7 +266,7 @@ export function useSignIn(host: Host) {
           // Show the independent canonical CLI status read before the
           // optional profile list. Read profiles only while there is a
           // sign-in to prepare; an unreadable list is not an empty one.
-          const next = await boundedRead(host.signInStatus());
+          const next = await host.signInStatus();
           if (
             !mounted.current ||
             generation !== request.current ||
@@ -314,9 +294,7 @@ export function useSignIn(host: Host) {
             next.state === "present"
           )
             return;
-          const list = await boundedRead(host.profiles.list()).catch(
-            () => null,
-          );
+          const list = await host.profiles.list().catch(() => null);
           if (generation !== request.current) return;
           listed.current = list;
           // Unread, the rows that were held are kept as what was last
@@ -430,7 +408,8 @@ export function useSignIn(host: Host) {
         );
     }
     if (host.managerStatus) {
-      void boundedRead(host.managerStatus())
+      void host
+        .managerStatus()
         .then((next) => {
           if (revision < 0) accept(next);
         })
@@ -512,7 +491,7 @@ export function useSignIn(host: Host) {
               return;
             const promise = Promise.resolve().then(async () => {
               try {
-                const list = await boundedRead(accounts.list());
+                const list = await accounts.list();
                 if (
                   !active ||
                   generation !== request.current ||
@@ -549,48 +528,14 @@ export function useSignIn(host: Host) {
 
   useEffect(() => {
     mounted.current = true;
-    let active = true;
-    let expired = false;
-    const deadline = window.setTimeout(() => {
-      expired = true;
-      setObservingStartup(false);
-      // A missing answer is not readiness. Give a stalled initial read a
-      // visible failure instead of leaving a skeleton on screen forever.
-      if (!latestStatus.current && host.available) {
-        const unavailable = {
-          ...unknownStatus,
-          runtimeAvailable: false,
-          refusal: { code: "runtime_unavailable", retryAfterSeconds: null },
-        };
-        latestStatus.current = unavailable;
-        setStatus(unavailable);
-      }
-    }, STARTUP_WAIT_MS);
-    const observeStartup = async () => {
-      do {
-        await refresh();
-        if (!active) return;
-        if (
-          !host.startManager ||
-          statusReadFailed.current ||
-          latestStatus.current?.runtimeAvailable !== false
-        ) {
-          window.clearTimeout(deadline);
-          setObservingStartup(false);
-          return;
-        }
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
-      } while (active && !expired);
-    };
-    // Production observations own manager progress; the legacy fixture port
-    // retains its existing bounded startup reads.
-    if (managerObserved) void refresh();
-    else void observeStartup();
+    // Native manager/sign-in observations own readiness. An outstanding host
+    // promise stays pending until its owner answers or reports a timeout.
+    void refresh().finally(() => {
+      if (mounted.current && !managerObserved) setObservingStartup(false);
+    });
     const focus = () => void refresh();
     window.addEventListener("focus", focus);
     return () => {
-      active = false;
-      window.clearTimeout(deadline);
       mounted.current = false;
       invalidate();
       window.removeEventListener("focus", focus);
@@ -627,19 +572,7 @@ export function useSignIn(host: Host) {
         return;
       }
       if (managerObserved) return;
-      const until = performance.now() + 90_000;
-      do {
-        await refresh();
-        if (
-          !mounted.current ||
-          statusReadFailed.current ||
-          latestStatus.current?.runtimeAvailable
-        )
-          return;
-        await new Promise<void>((resolve) => window.setTimeout(resolve, 1_000));
-      } while (mounted.current && performance.now() < until);
-      if (mounted.current)
-        setRefusal({ code: "runtime_unavailable", retryAfterSeconds: null });
+      await refresh();
     } catch (error) {
       if (mounted.current) setRefusal(refusalFrom(error));
     } finally {

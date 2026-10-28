@@ -75,6 +75,7 @@ pub enum RestartClass {
 pub enum StopCause {
     Defect,
     Hang,
+    Timeout,
     IdleRequested,
     Requested,
     SessionEnd,

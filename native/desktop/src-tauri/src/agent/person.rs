@@ -114,6 +114,10 @@ pub struct SignedOut {
 /// runtime's `session hold` command speaks: the window's own runtime session,
 /// or a test's scripted holder. Pushes reach the events slot it was given.
 trait Bridge: Send {
+    fn timeout_deadline(&mut self, _deadline: Option<Instant>) {}
+    fn admission_changed(&self) -> Option<Arc<tokio::sync::Notify>> {
+        None
+    }
     /// Sends `request`, which carries its request id, and returns its reply,
     /// or why no reply arrived.
     fn exchange(&mut self, request: &Value) -> Result<Value>;
@@ -161,6 +165,9 @@ pub struct Person {
 }
 
 impl Person {
+    pub(crate) fn admission_changed(&self) -> Option<Arc<tokio::sync::Notify>> {
+        self.bridge.admission_changed()
+    }
     /// Holds the session the window's own connection admitted for its profile.
     #[cfg(windows)]
     pub(crate) fn native(
@@ -332,6 +339,13 @@ impl Person {
         self.exchange_in(&mut document)
     }
 
+    pub(crate) fn exchange_before(&mut self, document: Value, deadline: Instant) -> Result<Value> {
+        self.bridge.timeout_deadline(Some(deadline));
+        let result = self.exchange(document);
+        self.bridge.timeout_deadline(None);
+        result
+    }
+
     /// As [`Person::exchange`], for a request that carries private input:
     /// its texts, numbers and flags are overwritten once the exchange ends,
     /// whether or not it was sent.
@@ -438,7 +452,16 @@ impl Person {
                     && reply["status"]["session_expires_at"].is_string()
                     && reply["status"]["denial"].is_null()
             }
-            Some("service_admission") => {
+            Some(
+                "service_admission_begin" | "service_admission_status" | "service_admission_cancel",
+            ) if reply["kind"] == "service_admission_pending" => {
+                reply["profile_id"] == self.identity["profile_id"]
+                    && reply["service_id"] == document["service_id"]
+                    && reply["admission_id"]
+                        .as_str()
+                        .is_some_and(crate::shell::agent_access::wire::is_uuid)
+            }
+            Some("service_admission" | "service_admission_status" | "service_admission_cancel") => {
                 reply["kind"] == "service_connected"
                     && reply["profile_id"] == self.identity["profile_id"]
                     && reply["service_id"] == document["service_id"]
