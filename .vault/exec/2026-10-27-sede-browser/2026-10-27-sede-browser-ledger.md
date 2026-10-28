@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:048fbed9407c511ce9cb4b6e8576ced5d3347f6951e1947c3b577caf4d2d7f1e'
+body_hash: 'sha256:f95b58c94ca242d6fe8aeb185568580c141a10ce05b6f033b98779327af0bee9'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -314,6 +314,15 @@ related:
 - `S13` `verify:` `ctest --preset debug -R ^application.(clippy|features.clippy)$` -> `pass`
 - `S13` `verify:` `just test-native-bundle Debug` -> `fail`
 - `S13` `by:` `implementation-engineer-high`
+- `S03` `verify:` `just check-rust` -> `pass`
+- `S03` `verify:` `ctest all non-installer targets` -> `pass`
+- `S03` `verify:` `npm run check` -> `pass`
+- `S08` `verify:` `just check-rust` -> `pass`
+- `S08` `verify:` `ctest all non-installer targets` -> `pass`
+- `S08` `verify:` `npm run check` -> `pass`
+- `S16` `verify:` `just check-rust` -> `pass`
+- `S16` `verify:` `ctest all non-installer targets` -> `pass`
+- `S16` `verify:` `npm run check` -> `pass`
 
 ## Notes
 
@@ -345,3 +354,6 @@ related:
 - `S11` the spec reads the desktop.browser strings from the generated chrome catalogue, which holds them from the uncommitted locale files; the spec is correct only once those catalogues are committed
 - `S11` the fixture was extended for the spec: it records inputs and answers, counts images, sends a made-up title, and ends a made-up login when the person's input arrives
 - `S13` test-native-bundle Debug stopped in `user_docs_build:` documentation inputs under `docs/_sequences` changed during the build from another session's concurrent edits; application.fmt fails only on the uncommitted documents.rs edit of P03.S16
+- `S03` Bundle gate not run: on Windows the bundle target depends on native-installer (MSI), which dev and agent verification never builds; evidence is every non-installer CTest target.
+- `S08` Bundle gate not run: on Windows the bundle target depends on native-installer (MSI), which dev and agent verification never builds; evidence is every non-installer CTest target.
+- `S16` Bundle gate not run: on Windows the bundle target depends on native-installer (MSI), which dev and agent verification never builds; evidence is every non-installer CTest target.
