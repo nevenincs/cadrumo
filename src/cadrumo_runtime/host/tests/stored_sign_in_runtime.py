@@ -39,6 +39,7 @@ from cadrumo.application.user_profile import login_session
 from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding
 from cadrumo.application.user_profile.login_session import authenticate_profile_candidate
 from cadrumo.core.time.clock import now
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.in_memory_keyring import IN_MEMORY_KEYRING, InMemoryKeyring
 from cadrumo_client.contracts.access_vocabulary import AccessScope
 from cadrumo_client.contracts.attendance import (
@@ -153,9 +154,9 @@ class StoredSignInRuntime:
     def connect(self) -> VerifiedConnection:
         """Open one verified connection; the runtime learns its frontend at login."""
         connection = VerifiedConnection(
-            self.endpoint.connect(timeout=3),
+            self.endpoint.connect(timeout=HANG_GUARD_SECONDS),
             expected=ClientHello(product_version=version("cadrumo"), storage_identity=self.endpoint.storage_identity),
-            deadline=time.monotonic() + 3,
+            deadline=time.monotonic() + HANG_GUARD_SECONDS,
         )
         self.connections.append(connection)
         return connection
@@ -213,12 +214,15 @@ class StoredSignInRuntime:
         }
         if target_session_id is not None:
             document["target_session_id"] = target_session_id
-        return connection.session(SessionRequest.model_validate(document), deadline=time.monotonic() + 10)
+        return connection.session(
+            SessionRequest.model_validate(document), deadline=time.monotonic() + HANG_GUARD_SECONDS
+        )
 
     def sign_in(self, connection: VerifiedConnection) -> SignInStatus:
         """Read the stored sign-in's presence and deadlines as the runtime reports them."""
         reply = connection.sign_in_status(
-            SignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id), deadline=time.monotonic() + 5
+            SignInStatusRequest(request_id=uuid4(), profile_id=self.profile_id),
+            deadline=time.monotonic() + HANG_GUARD_SECONDS,
         )
         assert isinstance(reply, SignInStatusReply), reply
         return reply.status
@@ -306,13 +310,13 @@ def stored_sign_in_runtime(
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
-                    assert server.ready.wait(3)
+                    assert server.ready.wait(HANG_GUARD_SECONDS)
                     yield runtime
                 finally:
                     for connection in runtime.connections:
                         connection.close()
                     stop.set()
-                    running.result(timeout=15)
+                    running.result(timeout=HANG_GUARD_SECONDS)
                     endpoint.close()
     finally:
         keyring.set_keyring(prior_keyring)

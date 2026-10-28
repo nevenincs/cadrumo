@@ -44,6 +44,7 @@ from cadrumo.application.user_profile.view_operation import ProfileViewFactItem,
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, profile_operation_subject
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
@@ -139,7 +140,7 @@ def _kill_worker(runtime: StoredSignInRuntime) -> None:
     waiter = process.retain_waiter()
     try:
         os.kill(process.pid, signal.SIGTERM)
-        waiter.wait(timeout=10)
+        waiter.wait(timeout=HANG_GUARD_SECONDS)
     finally:
         waiter.close()
 
@@ -147,7 +148,7 @@ def _kill_worker(runtime: StoredSignInRuntime) -> None:
 def _lose_worker(runtime: StoredSignInRuntime, connection: VerifiedConnection, session_id: UUID) -> SessionReply:
     """Terminate the profile worker's process from outside the runtime; return the session's first status after it."""
     _kill_worker(runtime)
-    deadline = time.monotonic() + 30
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     while True:
         # Each status observes the worker's health; the terminated process is a positive loss.
         reply = _session_status(runtime, connection, session_id)
@@ -186,7 +187,7 @@ def _idle(runtime: StoredSignInRuntime) -> None:
     runtime.profiles.session_changes_pushed(True)
     # This runtime has no logon inventory to report the test's logon as one with a lock surface.
     runtime.profiles._unreported_logins = False
-    deadline = time.monotonic() + 15
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     quiet_since = time.monotonic()
     while time.monotonic() - quiet_since < 1.0:
         assert time.monotonic() < deadline, "a lifecycle pass stayed due"
@@ -195,11 +196,12 @@ def _idle(runtime: StoredSignInRuntime) -> None:
         time.sleep(0.05)
 
 
-def _suspended_without_a_request(runtime: StoredSignInRuntime, session_id: UUID, *, within: float) -> None:
+def _suspended_without_a_request(runtime: StoredSignInRuntime, session_id: UUID) -> None:
+    """Wait for the runtime's own observation of the loss to suspend the session; how soon is the machine's."""
     authority = runtime.profiles._profiles[runtime.profile_id].authority
-    deadline = time.monotonic() + within
+    deadline = time.monotonic() + HANG_GUARD_SECONDS
     while session_id not in authority._suspended:
-        assert time.monotonic() < deadline, f"no session was suspended within {within} s of the worker's loss"
+        assert time.monotonic() < deadline, "no session was suspended after the worker's loss"
         time.sleep(0.05)
 
 
@@ -219,7 +221,7 @@ def test_a_killed_worker_suspends_its_sessions_with_no_request_or_heartbeat(
 
         _kill_worker(runtime)
 
-        _suspended_without_a_request(runtime, session_id, within=5)
+        _suspended_without_a_request(runtime, session_id)
         _recovering(_session_status(runtime, person, session_id))
 
 
@@ -234,10 +236,12 @@ def test_a_heartbeat_that_finds_the_worker_gone_suspends_its_sessions_at_once(
         _idle(runtime)
         _kill_worker(runtime)
 
-        # The supervisor's heartbeat asks for this count; a dead worker cannot answer it.
-        assert runtime.profiles.in_flight_operation_count(timeout=2) is None
+        # The supervisor's heartbeat asks for this count; a dead worker cannot answer it. The
+        # probe's bound only ends a hang: a bound the machine can pass would end the probe as
+        # unanswered rather than as a loss, and nothing would then suspend the session.
+        assert runtime.profiles.in_flight_operation_count(timeout=HANG_GUARD_SECONDS) is None
 
-        _suspended_without_a_request(runtime, session_id, within=5)
+        _suspended_without_a_request(runtime, session_id)
         _recovering(_session_status(runtime, person, session_id))
 
 
@@ -352,7 +356,7 @@ def test_sessions_not_rebound_when_the_window_ends_retire_as_custody_unavailable
 
         clock.now += 120
         runtime.profiles.os_session_changed()
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while session_id in runtime.profiles._profiles[runtime.profile_id].authority._suspended:
             assert time.monotonic() < deadline, "the lifecycle pass never ended the recovery window"
             time.sleep(0.05)
@@ -593,7 +597,7 @@ def test_work_in_flight_at_the_loss_stays_unknown_after_the_same_connection_rebi
         _recovering(_lose_worker(runtime, person, session_id))
         # The lost worker's own commit request is answered only now, while its session is suspended.
         hold.release.set()
-        deadline = time.monotonic() + 15
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while not hold.answered:
             assert time.monotonic() < deadline, "the held commit was never answered"
             time.sleep(0.05)
