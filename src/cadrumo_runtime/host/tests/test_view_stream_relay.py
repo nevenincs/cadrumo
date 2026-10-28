@@ -29,6 +29,8 @@ from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, R
 from cadrumo_client.contracts.profile_access import Request
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.view_stream import (
+    KeyAction,
+    KeyInput,
     ViewAttachGranted,
     ViewAttachRequest,
     ViewClose,
@@ -38,6 +40,7 @@ from cadrumo_client.contracts.view_stream import (
     ViewConnected,
     ViewCredit,
     ViewImage,
+    ViewInput,
     ViewNavigate,
     ViewNavigateVerb,
     ViewStreamSink,
@@ -552,6 +555,42 @@ def test_view_person_input_reaches_the_worker_and_runtime_stop_unbinds(lane: _La
     lane.relay.close()
     assert window.read() == ViewClosed(reason=ViewClosedReason.RUNTIME_STOPPING)
     _wait_until(lambda: lane.sink.ended)
+
+
+def test_view_person_input_beyond_the_workers_queue_is_paced_never_dropped(lane: _Lane) -> None:
+    window = lane.attach()
+    # More key presses than the worker queues, sent before the view takes any: each release must arrive.
+    presses = [
+        ViewInput(
+            event=KeyInput(
+                action=KeyAction.DOWN if index % 2 == 0 else KeyAction.UP,
+                key=f"F{index // 2 % 12 + 1}",
+                code=f"F{index // 2 % 12 + 1}",
+                modifiers=index % 16,
+            )
+        )
+        for index in range(1_500)
+    ]
+
+    def type_all() -> None:
+        for press in presses:
+            write_view_document(window.client, press, deadline=time.monotonic() + 10)
+
+    typing = Thread(target=type_all, daemon=True)
+    typing.start()
+    # Long enough for the worker's queue to fill and the reader to hold the rest back.
+    time.sleep(1.0)
+    received: list[object] = []
+    deadline = time.monotonic() + 15
+    while len(received) < len(presses) and time.monotonic() < deadline:
+        if (item := lane.sink.receive(timeout=0.5)) is not None:
+            received.append(item)
+    typing.join(timeout=10)
+    assert not typing.is_alive()
+    assert received == presses
+    assert not lane.sink.ended
+    window.send(ViewNavigate(verb=ViewNavigateVerb.RELOAD))
+    assert lane.sink.receive(timeout=5) == ViewNavigate(verb=ViewNavigateVerb.RELOAD)
 
 
 def test_view_attach_documents_travel_the_public_request_door() -> None:

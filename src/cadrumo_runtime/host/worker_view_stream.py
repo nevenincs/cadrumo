@@ -87,11 +87,18 @@ _FRAME_SECONDS = 5.0
 """Each frame, and the host's acknowledgement of ``view.closed``, completes within this bound."""
 
 _DOCUMENT_QUEUE = 32
-_INPUT_QUEUE = 64
-"""Page documents and person input waiting for their reader; excess is dropped, never queued.
+"""Page documents waiting for the writer; excess is dropped, never queued.
 
-Transfer requests, the window's transfer answers, received files and
-``view.close`` are never dropped: each answers something the view waits on.
+Transfer requests are never dropped: each answers something the window waits on.
+"""
+
+_INPUT_QUEUE = 1024
+"""Person input waiting for the executor before the reader stops reading the view channel.
+
+No person input is dropped: a dropped key or button release would leave it
+held down in the page. Once this many wait, the reader holds the next one and
+reads nothing more until the executor takes one, so the host's writes wait in
+turn. That paces the window; it does not limit what the person may do.
 """
 
 _UPLOAD_REGRANT = VIEW_TRANSFER_CREDIT_MAX_CHUNKS // 2
@@ -122,7 +129,7 @@ def _close_quietly(channel: WorkerChannel) -> None:
 
 
 def _is_person_input(item: ViewSinkInput) -> bool:
-    """Whether an inbox item is droppable person input rather than something the view waits on."""
+    """Whether an inbox item is person input, which the reader paces, rather than something the view waits on."""
     return isinstance(item, ViewInput | ViewNavigate | ViewResize | ViewDialog)
 
 
@@ -225,6 +232,8 @@ class WorkerViewStream:
             item = self._inbox.popleft()
             if _is_person_input(item):
                 self._person_inputs -= 1
+                # A reader holding input back waits for this room.
+                self._signal.notify_all()
             return item
 
     def send_download(self, transfer_id: int, source: ViewTransferByteSource) -> bool:
@@ -389,9 +398,27 @@ class WorkerViewStream:
             if not self._close_requested:
                 self._close_requested = True
                 self._inbox.append(item)
-        elif self._closing is None and not self._close_requested and self._person_inputs < _INPUT_QUEUE:
+        elif self._wait_for_input_room():
             self._person_inputs += 1
             self._inbox.append(item)
+
+    def _wait_for_input_room(self) -> bool:
+        """Hold the reader until the executor has room for one more person input; hold ``_signal``.
+
+        Returns ``False`` once the view is closing or ended, when input no
+        longer reaches the page.
+        """
+        while self._person_inputs >= _INPUT_QUEUE and self._accepts_input():
+            self._signal.wait()
+        return self._accepts_input()
+
+    def _accepts_input(self) -> bool:
+        return (
+            self._closing is None
+            and not self._close_requested
+            and not self._ended.is_set()
+            and not self._stopping.is_set()
+        )
 
     def _cancel_download(self, transfer_id: int) -> None:
         """Stop the streaming download the window cancelled, answering with this end's cancel unless complete."""
