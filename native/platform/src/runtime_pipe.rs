@@ -590,12 +590,23 @@ impl Pipe {
 
     /// Writes all of `bytes` before `deadline`.
     pub fn write_all(&self, bytes: &[u8], deadline: Instant) -> io::Result<()> {
+        self.write_until(bytes, Some(deadline))
+    }
+
+    /// Writes all of `bytes` for as long as the connection lives. A peer that
+    /// stops reading holds the write; the peer's end fails it, and a close
+    /// from any thread ends it.
+    pub fn write_all_while_open(&self, bytes: &[u8]) -> io::Result<()> {
+        self.write_until(bytes, None)
+    }
+
+    fn write_until(&self, bytes: &[u8], deadline: Option<Instant>) -> io::Result<()> {
         let handle = self.raw_handle()?;
         let mut written = 0usize;
         while written < bytes.len() {
             let remaining = &bytes[written..];
             let size = remaining.len().min(u32::MAX as usize) as u32;
-            let sent = transfer(handle, Some(deadline), |overlapped| {
+            let sent = transfer(handle, deadline, |overlapped| {
                 // SAFETY: the bytes outlive the operation, which `transfer`
                 // settles before it returns.
                 unsafe {
@@ -939,6 +950,62 @@ mod tests {
             pipe.write_all(b"x", soon()).unwrap_err().kind(),
             io::ErrorKind::ConnectionAborted
         );
+        release.send(()).unwrap();
+        serving.join().unwrap();
+    }
+
+    #[test]
+    fn a_write_the_peer_holds_waits_until_a_close_or_the_peers_end() {
+        let name = pipe_name("held-write");
+        let server = Server::listen(&name);
+        let (drop_instance, dropped) = std::sync::mpsc::channel::<()>();
+        let serving = std::thread::spawn(move || {
+            server.accept();
+            // Read nothing, so the client's writes fill the pipe and wait.
+            let _ = dropped.recv();
+            drop(server);
+        });
+        let owner = current_user_sid().unwrap();
+        let pipe = std::sync::Arc::new(Pipe::connect(&name, &owner, soon()).unwrap());
+        // More than the pipe's buffers hold, so the write must wait for a reader.
+        let bytes = vec![7u8; 1 << 20];
+        let write = |pipe: std::sync::Arc<Pipe>| {
+            let bytes = bytes.clone();
+            let (done, finished) = std::sync::mpsc::channel();
+            std::thread::spawn(move || {
+                let _ = done.send(pipe.write_all_while_open(&bytes));
+            });
+            finished
+        };
+        let finished = write(pipe.clone());
+        assert!(
+            finished.recv_timeout(Duration::from_millis(300)).is_err(),
+            "a peer that does not read holds the write"
+        );
+        drop_instance.send(()).unwrap();
+        serving.join().unwrap();
+        let ended = finished
+            .recv_timeout(Duration::from_secs(3))
+            .expect("the peer's end fails the held write")
+            .unwrap_err();
+        assert_ne!(ended.kind(), io::ErrorKind::TimedOut, "{ended}");
+
+        let name = pipe_name("held-write-close");
+        let server = Server::listen(&name);
+        let (release, released) = std::sync::mpsc::channel::<()>();
+        let serving = std::thread::spawn(move || {
+            server.accept();
+            let _ = released.recv();
+        });
+        let pipe = std::sync::Arc::new(Pipe::connect(&name, &owner, soon()).unwrap());
+        let finished = write(pipe.clone());
+        assert!(finished.recv_timeout(Duration::from_millis(300)).is_err());
+        pipe.close();
+        let ended = finished
+            .recv_timeout(Duration::from_secs(3))
+            .expect("a close ends the held write")
+            .unwrap_err();
+        assert_eq!(ended.kind(), io::ErrorKind::ConnectionAborted, "{ended}");
         release.send(()).unwrap();
         serving.join().unwrap();
     }

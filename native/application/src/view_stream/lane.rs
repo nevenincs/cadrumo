@@ -6,14 +6,21 @@
 //! runs on plain threads and every method takes `&self`, so a host shares one
 //! lane between its command handlers.
 //!
-//! Two threads belong to the lane. The reader waits for the first byte of a
+//! Three threads belong to the lane. The reader waits for the first byte of a
 //! frame with no deadline, however long the page stays still, then must see
 //! the rest of that frame within [`ViewTiming::frame_completion`]; it decodes
 //! frames with the same rules the Python reader applies, and queues what they
 //! complete. The upload pump sends the files the person chose, one transfer
-//! at a time, chunk by chunk under the credit the page grants. Any thread may
-//! write: each frame is written whole under one lock, so documents sit
-//! between a transfer's chunks and nothing interleaves inside a frame.
+//! at a time, chunk by chunk under the credit the page grants. The credit
+//! returner sends back the credit of images the queue replaced, so the reader
+//! never writes. Any thread may write: each frame is written whole, one at a
+//! time, so documents sit between a transfer's chunks and nothing interleaves
+//! inside a frame.
+//!
+//! A write has no fixed bound. The page paces the person's input by not
+//! reading it, so a write waits for as long as the connection lives: the
+//! runtime going away fails it, and [`ViewLane::close`] ends it at once.
+//! Images keep arriving meanwhile under the credit the page already holds.
 //!
 //! The consumer calls [`ViewLane::recv`] from one thread and gets
 //! [`ViewEvent`]s in the order the frames arrived. The queue is bounded: a
@@ -66,7 +73,7 @@ use zeroize::Zeroizing;
 /// The most events the queue holds before the reader waits for the consumer.
 const QUEUE_CAPACITY: usize = 256;
 
-/// How long the request to close the view may take to write.
+/// How long the request to close the view may wait for its turn and take to write.
 const CLOSE_REQUEST_BOUND: Duration = Duration::from_secs(1);
 
 /// What the lane needs of a connection: a verified runtime pipe, or, in a
@@ -76,8 +83,9 @@ pub trait ViewTransport: Send + Sync + 'static {
     fn read_idle_byte(&self, byte: &mut u8) -> io::Result<()>;
     /// Fills `buffer` before `deadline`.
     fn read_exact(&self, buffer: &mut [u8], deadline: Instant) -> io::Result<()>;
-    /// Writes all of `bytes` before `deadline`.
-    fn write_all(&self, bytes: &[u8], deadline: Instant) -> io::Result<()>;
+    /// Writes all of `bytes` before `deadline`, or, without one, for as long
+    /// as the connection lives.
+    fn write_all(&self, bytes: &[u8], deadline: Option<Instant>) -> io::Result<()>;
     /// Ends the connection and every pending read and write.
     fn close(&self);
 }
@@ -91,8 +99,11 @@ impl ViewTransport for Pipe {
         Pipe::read_exact(self, buffer, deadline)
     }
 
-    fn write_all(&self, bytes: &[u8], deadline: Instant) -> io::Result<()> {
-        Pipe::write_all(self, bytes, deadline)
+    fn write_all(&self, bytes: &[u8], deadline: Option<Instant>) -> io::Result<()> {
+        match deadline {
+            Some(deadline) => Pipe::write_all(self, bytes, deadline),
+            None => Pipe::write_all_while_open(self, bytes),
+        }
     }
 
     fn close(&self) {
@@ -100,21 +111,18 @@ impl ViewTransport for Pipe {
     }
 }
 
-/// The bounds a lane keeps on frames it has begun. Neither limits how long
-/// the stream may idle.
+/// The bound a lane keeps on frames it reads. It does not limit how long the
+/// stream may idle.
 #[derive(Clone, Copy, Debug)]
 pub struct ViewTiming {
     /// How long the rest of a frame may take once its first byte arrived.
     pub frame_completion: Duration,
-    /// How long one frame may take to write.
-    pub write: Duration,
 }
 
 impl Default for ViewTiming {
     fn default() -> Self {
         Self {
             frame_completion: Duration::from_secs(5),
-            write: Duration::from_secs(5),
         }
     }
 }
@@ -404,6 +412,76 @@ impl Uploads {
     }
 }
 
+/// Whose turn it is to write. A writer waits for its turn for as long as the
+/// lane lives, or, for the close request, until a deadline.
+#[derive(Default)]
+struct WriteGate {
+    busy: Mutex<bool>,
+    free: Condvar,
+}
+
+/// The one writer's turn; dropping it lets the next writer in.
+struct WriteTurn<'a>(&'a WriteGate);
+
+impl Drop for WriteTurn<'_> {
+    fn drop(&mut self) {
+        *locked(&self.0.busy) = false;
+        // Every waiter, so one whose deadline passed cannot swallow the wake.
+        self.0.free.notify_all();
+    }
+}
+
+impl WriteGate {
+    /// The turn to write; `None` once `closed` is set, or once `deadline`
+    /// passed while another writer held the turn.
+    fn enter(&self, closed: &AtomicBool, deadline: Option<Instant>) -> Option<WriteTurn<'_>> {
+        let mut busy = locked(&self.busy);
+        loop {
+            if closed.load(Ordering::Acquire) {
+                return None;
+            }
+            if !*busy {
+                *busy = true;
+                return Some(WriteTurn(self));
+            }
+            busy = match deadline {
+                None => self
+                    .free
+                    .wait(busy)
+                    .unwrap_or_else(|poisoned| poisoned.into_inner()),
+                Some(deadline) => {
+                    let remaining = deadline.checked_duration_since(Instant::now())?;
+                    self.free
+                        .wait_timeout(busy, remaining)
+                        .unwrap_or_else(|poisoned| poisoned.into_inner())
+                        .0
+                }
+            };
+        }
+    }
+
+    /// Wakes every waiter to see that the lane ended.
+    fn wake_all(&self) {
+        let _busy = locked(&self.busy);
+        self.free.notify_all();
+    }
+}
+
+/// The window's image credit.
+#[derive(Default)]
+struct Credit {
+    /// Images the page was granted and has not sent yet.
+    granted: u8,
+    /// Credit of replaced images the returner has yet to grant.
+    owed: u8,
+}
+
+/// One document as a whole frame, or the refusal of a document the contract forbids.
+fn document_frame(document: &ViewUpstream) -> Result<Zeroizing<Vec<u8>>, Refusal> {
+    let payload = document.encode().map_err(|_| Refusal::InvalidFrame)?;
+    encode_frame(KIND_DOCUMENT, &payload).map_err(|_| Refusal::InvalidFrame)
+}
+
 fn ended_by(error: io::Error) -> ViewEnd {
     if error.kind() == io::ErrorKind::TimedOut {
         ViewEnd::TimedOut
@@ -436,13 +514,17 @@ fn read_view_frame(
     Ok((kind, payload))
 }
 
+/// A lane thread's name and the loop it runs.
+type ThreadRole = (&'static str, fn(&Core));
+
 struct Core {
     transport: Arc<dyn ViewTransport>,
     timing: ViewTiming,
-    write: Mutex<()>,
+    write: WriteGate,
     closed: AtomicBool,
-    /// Images the window has granted credit for and not yet received.
-    window: Mutex<u8>,
+    credit: Mutex<Credit>,
+    /// Wakes the credit returner when credit is owed or the lane ended.
+    owed: Condvar,
     events: EventQueue,
     downloads: Arc<TransferReceiver>,
     uploads: Uploads,
@@ -458,58 +540,90 @@ impl Core {
         if self.closed.swap(true, Ordering::AcqRel) {
             return;
         }
+        // Closing the transport ends every pending write: no write outlasts the connection.
         self.transport.close();
         self.events.finish(end);
         self.uploads.shutdown();
+        self.write.wake_all();
+        drop(locked(&self.credit));
+        self.owed.notify_all();
     }
 
-    /// Writes one whole frame; a failed write ends the lane.
+    /// Writes one whole frame, waiting while the page holds input back; a
+    /// failed write ends the lane.
     fn write_frame(&self, frame: &[u8]) -> Result<(), Refusal> {
-        self.write_frame_within(frame, self.timing.write)
-    }
-
-    fn write_frame_within(&self, frame: &[u8], bound: Duration) -> Result<(), Refusal> {
-        let _writing = locked(&self.write);
-        if self.is_closed() {
+        let Some(_turn) = self.write.enter(&self.closed, None) else {
             return Err(Refusal::ConnectionClosed);
-        }
-        self.transport
-            .write_all(frame, Instant::now() + bound)
-            .map_err(|error| {
-                let end = ended_by(error);
-                self.fail(end);
-                if end == ViewEnd::TimedOut {
-                    Refusal::DeadlineExceeded
-                } else {
-                    Refusal::ConnectionClosed
-                }
-            })
+        };
+        self.transport.write_all(frame, None).map_err(|error| {
+            self.fail(ended_by(error));
+            Refusal::ConnectionClosed
+        })
     }
 
     /// Validates a document and writes it. A document the contract refuses is
     /// never written and does not end the lane.
     fn send(&self, document: &ViewUpstream) -> Result<(), Refusal> {
-        self.send_within(document, self.timing.write)
+        self.write_frame(&document_frame(document)?)
     }
 
-    fn send_within(&self, document: &ViewUpstream, bound: Duration) -> Result<(), Refusal> {
-        let payload = document.encode().map_err(|_| Refusal::InvalidFrame)?;
-        let frame = encode_frame(KIND_DOCUMENT, &payload).map_err(|_| Refusal::InvalidFrame)?;
-        self.write_frame_within(&frame, bound)
+    /// Asks the view to close within [`CLOSE_REQUEST_BOUND`], counting the
+    /// wait behind a held write. Best effort: the close that follows ends the
+    /// lane whether or not it was sent.
+    fn request_close(&self) {
+        let Ok(frame) = document_frame(&ViewUpstream::Close(ViewClose {})) else {
+            return;
+        };
+        let deadline = Instant::now() + CLOSE_REQUEST_BOUND;
+        if let Some(_turn) = self.write.enter(&self.closed, Some(deadline)) {
+            let _ = self.transport.write_all(&frame, Some(deadline));
+        }
     }
 
-    /// Grants the page credit for images the window has room for.
+    /// Grants the page credit for images the window has room for. Credit the
+    /// returner owes counts as outstanding.
     fn grant_credit(&self, images: u8) -> Result<(), Refusal> {
         let credit = ViewCredit { images };
         credit.validate().map_err(|_| Refusal::InvalidFrame)?;
         {
-            let mut window = locked(&self.window);
-            if *window + images > CREDIT_MAX_IMAGES {
+            let mut window = locked(&self.credit);
+            if window.granted + window.owed + images > CREDIT_MAX_IMAGES {
                 return Err(Refusal::InvalidFrame);
             }
-            *window += images;
+            window.granted += images;
         }
         self.send(&ViewUpstream::Credit(credit))
+    }
+
+    /// Grants the credit of replaced images off the reader's thread, since a
+    /// write waits for as long as the page holds input back.
+    fn return_loop(&self) {
+        loop {
+            let images = {
+                let mut window = locked(&self.credit);
+                loop {
+                    if self.is_closed() {
+                        return;
+                    }
+                    if window.owed > 0 {
+                        break;
+                    }
+                    window = self
+                        .owed
+                        .wait(window)
+                        .unwrap_or_else(|poisoned| poisoned.into_inner());
+                }
+                let images = std::mem::take(&mut window.owed);
+                window.granted += images;
+                images
+            };
+            if self
+                .send(&ViewUpstream::Credit(ViewCredit { images }))
+                .is_err()
+            {
+                return;
+            }
+        }
     }
 
     fn read_loop(&self) {
@@ -547,15 +661,16 @@ impl Core {
 
     fn deliver_image(&self, image: AssembledImage) -> Result<(), ViewEnd> {
         {
-            let mut window = locked(&self.window);
-            if *window == 0 {
+            let mut window = locked(&self.credit);
+            if window.granted == 0 {
                 return Err(ViewEnd::Violation("view_image_without_credit"));
             }
-            *window -= 1;
+            window.granted -= 1;
         }
         if self.events.push(ViewEvent::Image(image)) == Pushed::Replaced {
             // The replaced image is never drawn, so nothing else would credit it.
-            self.grant_credit(1).map_err(|_| ViewEnd::Disconnected)?;
+            locked(&self.credit).owed += 1;
+            self.owed.notify_all();
         }
         Ok(())
     }
@@ -717,9 +832,10 @@ impl ViewLane {
         let core = Arc::new(Core {
             transport,
             timing,
-            write: Mutex::new(()),
+            write: WriteGate::default(),
             closed: AtomicBool::new(false),
-            window: Mutex::new(0),
+            credit: Mutex::new(Credit::default()),
+            owed: Condvar::new(),
             events: EventQueue::default(),
             downloads: Arc::new(TransferReceiver::new(ViewTransferDirection::Download)),
             uploads: Uploads::default(),
@@ -728,34 +844,32 @@ impl ViewLane {
             core: core.clone(),
             threads: Mutex::new(Vec::new()),
         };
-        let reader = {
-            let core = core.clone();
-            thread::Builder::new()
-                .name("view-stream-reader".into())
-                .spawn(move || core.read_loop())
-        };
-        let pump = {
-            let core = core.clone();
-            thread::Builder::new()
-                .name("view-stream-upload".into())
-                .spawn(move || core.pump_loop())
-        };
-        match (reader, pump) {
-            (Ok(reader), Ok(pump)) => {
-                locked(&lane.threads).extend([reader, pump]);
-                Ok(lane)
-            }
-            (reader, pump) => {
-                core.fail(ViewEnd::Closed);
-                let started = reader.into_iter().chain(pump);
-                started.for_each(|thread| {
-                    let _ = thread.join();
-                });
-                Err(Refusal::Io(io::Error::other(
-                    "the view threads did not start",
-                )))
+        let roles: [ThreadRole; 3] = [
+            ("view-stream-reader", Core::read_loop),
+            ("view-stream-upload", Core::pump_loop),
+            ("view-stream-credit", Core::return_loop),
+        ];
+        for (name, role) in roles {
+            let spawned = {
+                let core = core.clone();
+                thread::Builder::new()
+                    .name(name.into())
+                    .spawn(move || role(&core))
+            };
+            match spawned {
+                Ok(thread) => locked(&lane.threads).push(thread),
+                Err(_) => {
+                    core.fail(ViewEnd::Closed);
+                    for thread in std::mem::take(&mut *locked(&lane.threads)) {
+                        let _ = thread.join();
+                    }
+                    return Err(Refusal::Io(io::Error::other(
+                        "the view threads did not start",
+                    )));
+                }
             }
         }
+        Ok(lane)
     }
 
     /// The next event, waiting up to `timeout`; `None` if none came. After
@@ -772,17 +886,14 @@ impl ViewLane {
     /// The person closed the page or the window: asks the view to publish its
     /// session and settle, then closes the lane as [`ViewLane::close`] does.
     ///
-    /// This is a close, not a cancellation. The request gets a short bound
-    /// and is best effort: a lane that cannot send it is closed all the same,
-    /// and a connection that drops without it is closed the same way by the
+    /// This is a close, not a cancellation. The request gets a short bound,
+    /// which includes waiting behind input the page holds back, and is best
+    /// effort: a lane that cannot send it is closed all the same, and a
+    /// connection that drops without it is closed the same way by the
     /// runtime. Do not use it when the session was lost; [`ViewLane::close`]
     /// then ends the lane with nothing to publish.
     pub fn end_view(&self) {
-        let bound = self.core.timing.write.min(CLOSE_REQUEST_BOUND);
-        // Whether it was sent changes nothing here: the lane closes either way.
-        let _ = self
-            .core
-            .send_within(&ViewUpstream::Close(ViewClose {}), bound);
+        self.core.request_close();
         self.close();
     }
 
@@ -960,6 +1071,8 @@ mod tests {
         bytes: VecDeque<u8>,
         eof: bool,
         aborted: bool,
+        /// The reader holds writes back, as a page pacing input does.
+        held: bool,
     }
 
     #[derive(Default)]
@@ -1060,6 +1173,12 @@ mod tests {
             serde_json::from_slice(&payload).unwrap()
         }
 
+        /// Stops reading what the lane writes, or starts again.
+        fn hold(&self, held: bool) {
+            locked(&self.incoming.state).held = held;
+            self.incoming.ready.notify_all();
+        }
+
         fn is_quiet(&self) -> bool {
             thread::sleep(Duration::from_millis(150));
             locked(&self.incoming.state).bytes.is_empty()
@@ -1075,11 +1194,38 @@ mod tests {
             self.pull(buffer, Some(deadline))
         }
 
-        fn write_all(&self, bytes: &[u8], _deadline: Instant) -> io::Result<()> {
-            let closed_here = locked(&self.incoming.state).aborted;
+        /// Waits while the peer holds writes back, as a full pipe does.
+        fn write_all(&self, bytes: &[u8], deadline: Option<Instant>) -> io::Result<()> {
             let mut state = locked(&self.outgoing.state);
-            if closed_here || state.eof || state.aborted {
-                return Err(io::ErrorKind::BrokenPipe.into());
+            loop {
+                // This end's close marks the outgoing half ended; the peer's close aborts it.
+                if state.eof {
+                    return Err(io::ErrorKind::ConnectionAborted.into());
+                }
+                if state.aborted {
+                    return Err(io::ErrorKind::BrokenPipe.into());
+                }
+                if !state.held {
+                    break;
+                }
+                state = match deadline {
+                    None => self
+                        .outgoing
+                        .ready
+                        .wait(state)
+                        .unwrap_or_else(|poisoned| poisoned.into_inner()),
+                    Some(deadline) => {
+                        let Some(remaining) = deadline.checked_duration_since(Instant::now())
+                        else {
+                            return Err(io::ErrorKind::TimedOut.into());
+                        };
+                        self.outgoing
+                            .ready
+                            .wait_timeout(state, remaining)
+                            .unwrap_or_else(|poisoned| poisoned.into_inner())
+                            .0
+                    }
+                };
             }
             state.bytes.extend(bytes);
             self.outgoing.ready.notify_all();
@@ -1284,7 +1430,6 @@ mod tests {
     fn an_idle_stream_never_times_out_but_a_frame_begun_and_not_finished_does() {
         let timing = ViewTiming {
             frame_completion: Duration::from_millis(150),
-            write: Duration::from_secs(5),
         };
         let (lane, runtime) = lane_with(timing);
         assert!(
@@ -1414,6 +1559,119 @@ mod tests {
         ));
         assert!(locked(&lane.threads).is_empty());
         lane.close();
+    }
+
+    fn typed(text: &str) -> ViewInputEvent {
+        ViewInputEvent::Text(TextInput { text: text.into() })
+    }
+
+    /// Waits until the lane has queued `count` events the consumer has not taken.
+    fn wait_queued(lane: &ViewLane, count: usize) {
+        let deadline = Instant::now() + soon();
+        while locked(&lane.core.events.state).items.len() < count {
+            assert!(Instant::now() < deadline, "{count} events were not queued");
+            thread::sleep(Duration::from_millis(10));
+        }
+    }
+
+    /// Sends one input from its own thread; the receiver gets the result.
+    fn input_in_background(lane: &Arc<ViewLane>) -> mpsc::Receiver<Result<(), Refusal>> {
+        let (done, finished) = mpsc::channel();
+        let lane = lane.clone();
+        thread::spawn(move || {
+            let _ = done.send(lane.input(typed("a")));
+        });
+        finished
+    }
+
+    #[test]
+    fn input_the_page_holds_back_waits_while_the_connection_lives_and_images_keep_flowing() {
+        let (lane, runtime) = lane();
+        let lane = Arc::new(lane);
+        lane.credit(2).unwrap();
+        runtime.take_json();
+        runtime.hold(true);
+        let finished = input_in_background(&lane);
+        // Two images under the credit the page holds; the second replaces the first.
+        send_image(&runtime, 1, &pattern(0, 10));
+        send_image(&runtime, 2, &pattern(1, 10));
+        runtime.send_json(&state_document("still reading"));
+        wait_queued(&lane, 2);
+        assert!(
+            matches!(next_event(&lane), ViewEvent::Image(image) if image.announcement.sequence == 2)
+        );
+        assert!(matches!(next_event(&lane), ViewEvent::State(_)));
+        assert!(
+            finished.recv_timeout(Duration::from_millis(5_500)).is_err(),
+            "a held write outlasts any fixed bound while the connection lives"
+        );
+        assert!(!lane.is_closed());
+        runtime.hold(false);
+        assert!(matches!(finished.recv_timeout(soon()).unwrap(), Ok(())));
+        // The input and the credit the replaced image earned, in whichever order they took turns.
+        let mut kinds = [runtime.take_json(), runtime.take_json()].map(|document| {
+            if document["kind"] == "view.credit" {
+                assert_eq!(document["images"], 1);
+            }
+            document["kind"].as_str().unwrap().to_owned()
+        });
+        kinds.sort();
+        assert_eq!(kinds, ["view.credit", "view.input"]);
+        assert!(!lane.is_closed());
+    }
+
+    /// A way the window ends the view, by name.
+    type Ending = (&'static str, fn(&ViewLane));
+
+    #[test]
+    fn closing_or_ending_the_view_ends_a_held_write_at_once() {
+        let ends: [Ending; 2] = [("close", ViewLane::close), ("end_view", ViewLane::end_view)];
+        for (name, end) in ends {
+            let (lane, runtime) = lane();
+            let lane = Arc::new(lane);
+            runtime.hold(true);
+            let finished = input_in_background(&lane);
+            assert!(finished.recv_timeout(Duration::from_millis(150)).is_err());
+            let started = Instant::now();
+            end(&lane);
+            assert!(
+                started.elapsed() < CLOSE_REQUEST_BOUND + Duration::from_millis(500),
+                "{name} waited {:?}",
+                started.elapsed()
+            );
+            assert!(
+                matches!(
+                    finished.recv_timeout(soon()).unwrap(),
+                    Err(Refusal::ConnectionClosed)
+                ),
+                "{name}"
+            );
+            assert!(
+                matches!(
+                    lane.recv(Duration::ZERO),
+                    Some(ViewEvent::Ended(ViewEnd::Closed))
+                ),
+                "{name}"
+            );
+        }
+    }
+
+    #[test]
+    fn the_runtime_going_away_fails_a_held_write() {
+        let (lane, runtime) = lane();
+        let lane = Arc::new(lane);
+        runtime.hold(true);
+        let finished = input_in_background(&lane);
+        assert!(finished.recv_timeout(Duration::from_millis(150)).is_err());
+        runtime.close();
+        assert!(matches!(
+            finished.recv_timeout(soon()).unwrap(),
+            Err(Refusal::ConnectionClosed)
+        ));
+        assert!(matches!(
+            next_event(&lane),
+            ViewEvent::Ended(ViewEnd::Disconnected)
+        ));
     }
 
     #[test]
