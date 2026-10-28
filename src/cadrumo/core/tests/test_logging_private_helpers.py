@@ -8,7 +8,8 @@ from typing import cast, override
 
 import pytest
 
-from ..logging import SecretScrubbingFilter, _prepare_log_directory, _scrub_value
+from ..log_scrubbing import SecretScrubbingFilter, scrub_value
+from ..logging import _prepare_log_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -45,7 +46,7 @@ def test_prepare_log_directory_reports_reason_when_path_uncreatable(tmp_path: Pa
     assert "Error" in reason
 
 
-def test_scrub_value_non_sensitive_overloads_preserve_shape() -> None:
+def testscrub_value_non_sensitive_overloads_preserve_shape() -> None:
     """Non-sensitive scalar/container inputs preserve their public shape."""
 
     for value, expected_type, expected in (
@@ -54,38 +55,38 @@ def test_scrub_value_non_sensitive_overloads_preserve_shape() -> None:
         (["one", "two"], list, ["one", "two"]),
         ({"alpha", "beta"}, set, {"alpha", "beta"}),
     ):
-        result = _scrub_value(value)
+        result = scrub_value(value)
         assert isinstance(result, expected_type)
         assert result == expected
 
 
-def test_scrub_value_mapping_overload_returns_dict() -> None:
+def testscrub_value_mapping_overload_returns_dict() -> None:
     """Mapping input must produce a dict result."""
 
-    result = _scrub_value({"account": "visible", "secret": "hidden"})
+    result = scrub_value({"account": "visible", "secret": "hidden"})
     assert isinstance(result, dict)
     assert result["account"] == "visible"
     assert result["sec" + "ret"] == "<redacted>"
 
 
-def test_scrub_value_object_overload_passes_through_non_sensitive() -> None:
+def testscrub_value_object_overload_passes_through_non_sensitive() -> None:
     """An arbitrary object with a non-sensitive key passes through unchanged."""
 
     obj = object()
-    result = _scrub_value(obj, key="count")
+    result = scrub_value(obj, key="count")
     assert result is obj
 
 
-def test_scrub_value_sensitive_key_redacts_to_marker() -> None:
+def testscrub_value_sensitive_key_redacts_to_marker() -> None:
     """Any input paired with a sensitive key is redacted to the public marker."""
 
     for value in ("super-secret", 12345):
-        result = _scrub_value(value, key="to" + "ken")
+        result = scrub_value(value, key="to" + "ken")
         assert isinstance(result, str)
         assert result == "<redacted>"
 
 
-def test_scrub_value_uses_canonical_camel_key_folding_and_preserves_diagnostics() -> None:
+def testscrub_value_uses_canonical_camel_key_folding_and_preserves_diagnostics() -> None:
     values = {
         "taxId": "OPAQUE-TAX-ID-CANARY",
         "certificatePassword": "OPAQUE-CERTIFICATE-CANARY",
@@ -97,7 +98,7 @@ def test_scrub_value_uses_canonical_camel_key_folding_and_preserves_diagnostics(
         "llm_api_key_hint": "useful key-selection detail",
     }
 
-    scrubbed = _scrub_value(values)
+    scrubbed = scrub_value(values)
 
     assert isinstance(scrubbed, dict)
     assert scrubbed == {
@@ -112,11 +113,11 @@ def test_scrub_value_uses_canonical_camel_key_folding_and_preserves_diagnostics(
     }
 
 
-def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
+def testscrub_value_nested_mapping_scrubs_recursively() -> None:
     """Nested dicts must have their sensitive leaves redacted at every depth."""
 
     payload = {"outer": {"token": "s3cr3t", "count": 3}}
-    result = _scrub_value(payload)
+    result = scrub_value(payload)
     assert isinstance(result, dict)
     outer_raw = result["outer"]
     assert isinstance(outer_raw, dict)
@@ -125,7 +126,7 @@ def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
     assert outer["count"] == 3
 
 
-def test_scrub_value_masks_the_home_directory_in_a_logged_path() -> None:
+def testscrub_value_masks_the_home_directory_in_a_logged_path() -> None:
     """A path argument keeps the file it names and loses whose machine it is on.
 
     The diagnostic value of a path in a failed write, fsync, or lock is the
@@ -137,7 +138,7 @@ def test_scrub_value_masks_the_home_directory_in_a_logged_path() -> None:
 
     target = Path.home() / ".cadrumo" / "secrets" / "index.json"
 
-    result = _scrub_value(target)
+    result = scrub_value(target)
 
     rendered = str(result)
     assert str(Path.home()) not in rendered
@@ -145,10 +146,10 @@ def test_scrub_value_masks_the_home_directory_in_a_logged_path() -> None:
     assert rendered.endswith("index.json")
 
 
-def test_scrub_value_leaves_a_path_outside_the_home_directory_intact() -> None:
+def testscrub_value_leaves_a_path_outside_the_home_directory_intact() -> None:
     """Masking is keyed to this machine's home, not to paths in general."""
 
-    assert _scrub_value(Path("/etc/shared/cadrumo/index.json")) == Path("/etc/shared/cadrumo/index.json")
+    assert scrub_value(Path("/etc/shared/cadrumo/index.json")) == Path("/etc/shared/cadrumo/index.json")
 
 
 def test_secret_scrubbing_filter_masks_the_home_directory_in_a_record() -> None:

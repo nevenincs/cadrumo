@@ -6,7 +6,8 @@ import logging
 
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 
-from ...logging import SecretScrubbingFilter, _ThirdPartyDebugFilter, flush_logging
+from ...log_scrubbing import SecretScrubbingFilter
+from ...logging import _ThirdPartyDebugFilter, flush_logging
 
 
 def attach_run_sink(sink: logging.Handler) -> None:

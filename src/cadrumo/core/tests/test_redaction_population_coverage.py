@@ -44,8 +44,8 @@ from ..identity.documents import (
 )
 from ..identity.nif_iva import is_nif_iva_structurally_shaped, normalise_nif_iva
 from ..identity.tests.tax_id_format_support import SPANISH_TAX_ID_FORMAT
+from ..redaction.patterns import NIF_PATTERN
 from ..redaction.rules import (
-    NIF_PATTERN,
     default_rules_for_class,
     redact_for_cli_output,
     redact_for_log,

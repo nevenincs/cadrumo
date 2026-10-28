@@ -1,7 +1,7 @@
 """The redaction exemption list is the stdlib's field set, not the factory's.
 
 :class:`SecretScrubbingFilter` scrubs every field on a record EXCEPT those in
-``_STANDARD_LOG_RECORD_FIELDS``. That makes the set an exemption list, and its
+``STANDARD_LOG_RECORD_FIELDS``. That makes the set an exemption list, and its
 membership decides what escapes redaction untouched.
 
 It was built with ``logging.makeLogRecord({})``, which dispatches through the
@@ -30,7 +30,7 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 
-from ..logging import _STANDARD_LOG_RECORD_FIELDS, SecretScrubbingFilter
+from ..log_scrubbing import STANDARD_LOG_RECORD_FIELDS, SecretScrubbingFilter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -58,7 +58,7 @@ _PROBE = (
     "    record.smuggled = 'value that must not escape scrubbing'\n"
     "    return record\n"
     "logging.setLogRecordFactory(factory)\n"
-    "from cadrumo.core.logging import _STANDARD_LOG_RECORD_FIELDS as fields\n"
+    "from cadrumo.core.log_scrubbing import STANDARD_LOG_RECORD_FIELDS as fields\n"
     "print(json.dumps(sorted(fields)))\n"
 )
 
@@ -104,12 +104,12 @@ def test_the_module_imports_while_its_own_factory_is_installed() -> None:
 def test_the_exemption_set_still_holds_the_stdlib_fields() -> None:
     """ANTI-TAUTOLOGY: an empty set would satisfy the exclusion above.
 
-    Emptying ``_STANDARD_LOG_RECORD_FIELDS`` would pass every "not in" check
+    Emptying ``STANDARD_LOG_RECORD_FIELDS`` would pass every "not in" check
     here while scrubbing fields the stdlib owns, so the set is pinned to the
     plain record's own fields.
     """
-    assert frozenset(logging.LogRecord("", 0, "", 0, "", None, None).__dict__) == _STANDARD_LOG_RECORD_FIELDS
-    assert {"levelname", "pathname", "thread"} <= _STANDARD_LOG_RECORD_FIELDS
+    assert frozenset(logging.LogRecord("", 0, "", 0, "", None, None).__dict__) == STANDARD_LOG_RECORD_FIELDS
+    assert {"levelname", "pathname", "thread"} <= STANDARD_LOG_RECORD_FIELDS
 
 
 def test_the_filter_scrubs_a_field_outside_the_exemption_set() -> None:

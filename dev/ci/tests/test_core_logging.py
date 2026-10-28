@@ -1,6 +1,6 @@
 """Unit tests for the record-level log secret scrubber.
 
-Exercises :class:`cadrumo.core.logging.SecretScrubbingFilter` end-to-end
+Exercises :class:`cadrumo.core.log_scrubbing.SecretScrubbingFilter` end-to-end
 through the standard :mod:`logging` pipeline: tuple ``%``-args, dict
 ``extra=`` payloads, exception tracebacks, and inline secrets in the
 record's message format string. The tests verify that key-paired
@@ -23,8 +23,8 @@ import pytest
 from cadrumo.core import logging as _logging_mod
 from cadrumo.core.config import override_settings
 from cadrumo.core.log_extra import LogExtra
+from cadrumo.core.log_scrubbing import SecretScrubbingFilter
 from cadrumo.core.logging import (
-    SecretScrubbingFilter,
     configure_logging,
     default_log_file_path,
     diagnostic_delivery_status,

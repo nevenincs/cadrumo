@@ -16,11 +16,10 @@ def delivery_sinks() -> list[logging.Handler]:
     and pass a record to a sink on a thread of its own, so a wrapper's ``level``
     and type say nothing about what is written: the sink carries the level and
     the file or stream. A level change is queued behind the records before it,
-    so the dispatch is flushed first. A handler that is not a wrapper is its
-    own sink.
+    so the dispatch is flushed first. A handler that is not a wrapper belongs to
+    another owner, such as the test harness's capture, and is not a sink.
     """
     assert flush_logging(timeout=HANG_GUARD_SECONDS)
     return [
-        handler.sink if isinstance(handler, _AsyncDiagnosticHandler) else handler
-        for handler in tuple(logging.getLogger().handlers)
+        handler.sink for handler in tuple(logging.getLogger().handlers) if isinstance(handler, _AsyncDiagnosticHandler)
     ]

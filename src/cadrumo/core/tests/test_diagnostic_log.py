@@ -33,7 +33,8 @@ from ..diagnostic_log import (
     stamp_diagnostic_scalar_fields,
 )
 from ..log_file_handler import AnnouncingRotatingFileHandler
-from ..logging import LOG_FILE_FORMAT, SecretScrubbingFilter, flush_logging, get_logger
+from ..log_scrubbing import SecretScrubbingFilter
+from ..logging import LOG_FILE_FORMAT, flush_logging, get_logger
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

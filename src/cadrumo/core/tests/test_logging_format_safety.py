@@ -7,7 +7,7 @@ import logging
 
 import pytest
 
-from ..logging import SecretScrubbingFilter
+from ..log_scrubbing import SecretScrubbingFilter
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

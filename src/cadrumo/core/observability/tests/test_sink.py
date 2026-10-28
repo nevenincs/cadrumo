@@ -519,7 +519,7 @@ class TestSinkEmitFailureWarningIsScrubbed:
         # the meaningful assertion is that the logger used is the module-level
         # get_logger() one (has SecretScrubbingFilter attached) rather than
         # a bare logging.getLogger() call (which would not).
-        from ...logging import SecretScrubbingFilter
+        from ...log_scrubbing import SecretScrubbingFilter
 
         sink_logger = logging.getLogger(warn.name)
         assert any(isinstance(f, SecretScrubbingFilter) for f in sink_logger.filters), (

@@ -50,20 +50,17 @@ import atexit
 import logging
 import math
 import os
-import re
 import sys
 import time
 from codecs import getincrementalencoder
 from collections import deque
-from collections.abc import Callable, Generator, Iterable, Iterator, Mapping
+from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
 from contextvars import Context, ContextVar, copy_context
-from enum import Enum
 from io import BufferedRandom, BufferedWriter, RawIOBase, TextIOWrapper
-from itertools import islice
 from pathlib import Path
 from threading import Event, Lock, Thread
-from typing import TYPE_CHECKING, Any, NamedTuple, TextIO, cast, overload, override
+from typing import TYPE_CHECKING, Any, NamedTuple, TextIO, cast, override
 
 if TYPE_CHECKING:
     from .config import Settings
@@ -71,52 +68,13 @@ if TYPE_CHECKING:
     from .observability.context import RunContextInfo
 from .cli_metadata import is_metadata_invocation
 from .diagnostic_dispatch import DiagnosticDispatch, DispatchStatus
-from .diagnostic_log import DiagnosticFormatter, stamp_diagnostic_record, stamp_diagnostic_scalar_fields
-from .redaction.rules import (
-    ALWAYS_REDACT_KEY_TERMS,
-    is_sensitive_redaction_key,
-    normalise_redaction_key,
-    redact_for_log,
-)
+from .diagnostic_log import DiagnosticFormatter, stamp_diagnostic_record
+from .log_scrubbing import SCRUBBED_RECORD, SecretScrubbingFilter, scrub_text
+from .log_snapshot import bound_format, snapshot_record, snapshot_value
 from .redaction.tax_identity_admission import lexical_tax_identity_redaction
-from .type_guards import (
-    is_object_list,
-    is_object_list_or_tuple,
-    is_object_mapping,
-    is_object_set,
-    is_object_tuple,
-)
 
 _configured = False
 _factory_installed = False
-# Built directly rather than through ``logging.makeLogRecord``, which dispatches
-# via the process-global record factory. This set is the redaction filter's
-# exemption list, so any field an installed factory adds would enrol itself as
-# "standard" and escape scrubbing. Calling the factory here also re-enters this
-# module through the observability layer while it is still initialising.
-_STANDARD_LOG_RECORD_FIELDS = frozenset(logging.LogRecord("", 0, "", 0, "", None, None).__dict__)
-_EXCEPTION_FORMATTER = logging.Formatter()
-
-SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
-    *sorted(ALWAYS_REDACT_KEY_TERMS),
-    "access_token",
-    "api_key",
-    "bearer_header",
-    "cert_password",
-    "certificate_password",
-    "certificate_serial",
-    "cif",
-    "llm_api_key",
-    "oauth_access_token",
-    "oauth_refresh_token",
-    "profile_tax_id",
-    "refresh_token",
-    "session_cookie",
-)
-"""Log-message KEY-NAME redaction vocabulary: :data:`ALWAYS_REDACT_KEY_TERMS`
-(the tree-wide shared base) plus this module's own generic logging-domain
-additions. See :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS` for why
-the base is never redeclared independently."""
 
 
 def _is_cli_metadata_invocation() -> bool:
@@ -134,467 +92,23 @@ def _is_cli_metadata_invocation() -> bool:
     return is_metadata_invocation(sys.argv[1:])
 
 
-_SENSITIVE_KEY_SET = frozenset(normalise_redaction_key(pattern) for pattern in SCRUB_FIELD_PATTERNS)
-_SENSITIVE_ASSIGNMENT_KEYS: tuple[str, ...] = (*sorted(SCRUB_FIELD_PATTERNS, key=lambda p: len(p), reverse=True),)
-
-_SENSITIVE_ASSIGNMENT_RE = re.compile(
-    r"(?<![A-Za-z0-9])(?P<key>"
-    + "|".join(re.escape(pattern) for pattern in _SENSITIVE_ASSIGNMENT_KEYS)
-    + r")(?![A-Za-z0-9])(?P<separator>\s*[:=]\s*)"
-    + r"(?P<value>\"[^\"]*\"|'[^']*'|[^,;\r\n]+?)"
-    + r"(?=$|[,;\r\n]|\s+[A-Za-z0-9_.-]+\s*[:=])",
-    flags=re.IGNORECASE,
-)
-_BEARER_TOKEN_RE = re.compile(r"(?i)\bBearer\s+[A-Za-z0-9._~+/=-]+\b")
-_LLM_KEY_RE = re.compile(r"\b(?:sk-ant-|sk-proj-|sk-live-|sk-test-|sk-)[A-Za-z0-9_-]+\b")
-_PLACEHOLDER_PATTERN = r"%(?:\([^)]+\))?[-#+ 0-9]*(?:\*|\d+)?(?:\.(?:\*|\d*))?[hlL]?[diouxXeEfFgGcrsa]"
-_PERCENT_PLACEHOLDER_ONLY_RE = re.compile(rf"%%|{_PLACEHOLDER_PATTERN}")
-_PERCENT_PLACEHOLDER_VALUE_RE = re.compile(rf"^{_PLACEHOLDER_PATTERN}$")
-_PERCENT_PLACEHOLDER_RE = re.compile(
-    rf"%%|(?:(?P<key>[A-Za-z0-9_.-]+)\s*[:=]\s*)?(?P<placeholder>{_PLACEHOLDER_PATTERN})"
-)
-_FORMAT_OPERAND_RE = re.compile(
-    r"%(?:\((?P<mapping>[^)]+)\))?[-#+ 0-9]*(?P<width>\*)?"
-    r"(?:\.(?P<precision>\*|\d*))?[hlL]?(?P<conversion>[diouxXeEfFgGcrsa])"
-)
-_FORMAT_SIZE_RE = re.compile(
-    r"%(?:\([^)]+\))?[-#+ ]*(?P<width>\d+|\*)?(?:\.(?P<precision>\d+|\*))?[hlL]?[diouxXeEfFgGcrsa]"
-)
-
-#: Base64 payload embedded in a ``data:`` URI, the shape a vision request uses
-#: when the image travels inline rather than as a bare field.
-_DATA_URI_PAYLOAD_RE = re.compile(r"data:[A-Za-z0-9.+-]+/[A-Za-z0-9.+-]+;base64,[A-Za-z0-9+/=]+")
-
-#: Base64 renderings of the file magics a scanned or photographed document
-#: arrives as. Matched without a word boundary because several magics begin
-#: with ``/``, which is not a word character.
-_BINARY_MAGIC_PAYLOAD_RE = re.compile(
-    r"(?:iVBORw0KGg|/9j/4AAQ|R0lGODdh|R0lGODlh|UklGR|JVBERi0|SUkqA|TU0AK)[A-Za-z0-9+/]{16,}={0,2}",
-)
-
-#: Any sufficiently long unbroken base64 run, whatever produced it. Diagnostic
-#: prose never contains one; an encoded document always does. This is the rule
-#: that does not need to recognise the payload's shape, so a format the magic
-#: alternation above has never heard of is still contained.
-_OPAQUE_PAYLOAD_RE = re.compile(r"[A-Za-z0-9+/]{256,}={0,2}")
-
-#: Ceiling on a ``bytes`` log argument before it is treated as a payload rather
-#: than a diagnostic value. Decrypted document bytes must never be formatted
-#: into a log line, and a %s-rendered ``bytes`` object writes them verbatim.
-_MAX_LOGGED_BYTES = 256
-
-_PAYLOAD_REDACTION_MARKER = "<redacted:payload>"
-
-#: Stand-in for the operator's home directory in a logged path.
-_HOME_DIRECTORY_MARKER = "~"
-
-
-def _home_directory_prefixes() -> tuple[str, ...]:
-    """Return the spellings of this machine's home directory, longest first.
-
-    Both separators are produced because a path reaches a log line as whatever
-    spelling its producer built -- ``Path`` renders native separators, while a
-    URI, a config value, or a string-joined path can carry the other one on the
-    same machine. Longest first so the drive-qualified form is replaced before
-    a prefix of it.
-    """
-    home = Path.home()
-    spellings = {str(home), str(home).replace("\\", "/"), home.as_posix()}
-    return tuple(sorted((spelling for spelling in spellings if spelling), key=len, reverse=True))
-
-
-def _mask_home_directory(value: str) -> str:
-    """Replace this machine's home directory with ``~`` wherever it appears.
-
-    A diagnostic path is worth keeping -- it is the only identity a failed
-    write, fsync, or lock acquisition has -- but its leading segments are the
-    operator's account name and local layout, which the diagnostic never needed.
-    Masking the prefix keeps the part that answers "which file" and drops the
-    part that answers "whose machine", so a log file attached to a bug report
-    does not carry an identity with it.
-    """
-    for prefix in _HOME_DIRECTORY_PREFIXES:
-        value = value.replace(prefix, _HOME_DIRECTORY_MARKER)
-    return value
-
-
-_HOME_DIRECTORY_PREFIXES: tuple[str, ...] = _home_directory_prefixes()
-
-
-def _redact_payloads(value: str) -> str:
-    """Redact encoded document payloads from ``value``.
-
-    Sensitive financial documents may exist only transiently in process
-    memory; a diagnostic log file is an on-disk plaintext store, so an image
-    or PDF that reaches a log record has left its only sanctioned home. The
-    three patterns run widest-last: a ``data:`` URI and a recognised file
-    magic name the payload precisely, and the length rule then catches
-    whatever neither recognised.
-    """
-    redacted = _DATA_URI_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, value)
-    redacted = _BINARY_MAGIC_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
-    return _OPAQUE_PAYLOAD_RE.sub(_PAYLOAD_REDACTION_MARKER, redacted)
-
-
-def _looks_sensitive_key(key: str | None) -> bool:
-    """Return whether ``key`` should have its value redacted."""
-    return is_sensitive_redaction_key(key, additional_exact_terms=_SENSITIVE_KEY_SET)
-
-
-def _redacted_value(key: str | None, value: str) -> str:
-    """Return the stable redaction marker for a sensitive value."""
-    if key is not None and "serial" in key.lower():
-        suffix = value[-4:] if len(value) >= 4 else "????"
-        return f"<cert:....{suffix}>"
-    return "<redacted>"
-
-
-def _redact_around_placeholders(key: str | None, value: str) -> str:
-    """Redact a sensitive assignment's value, preserving its %-format placeholders.
-
-    A record's ``msg`` is scrubbed before ``%``-formatting runs, so a
-    placeholder dropped here would leave the record with more args than slots
-    and the whole line would be lost to a formatting error. Placeholders are
-    therefore kept verbatim and only the literal runs around them are redacted
-    -- which is exactly where an inline secret sits when a message mixes a
-    real value with a placeholder, as in ``token=abc123 %s``.
-
-    A value that is nothing but a placeholder carries no secret and is
-    returned untouched, which is the ``credential=%s`` format-string shape the
-    paired :func:`_scrub_positional_format` pass redacts at the argument instead.
-    """
-    if _PERCENT_PLACEHOLDER_VALUE_RE.fullmatch(value.strip()):
-        return value
-    marker = _redacted_value(key, value)
-    pieces: list[str] = []
-    cursor = 0
-    for placeholder in _PERCENT_PLACEHOLDER_ONLY_RE.finditer(value):
-        if placeholder.group(0) == "%%":
-            continue  # An escaped percent is literal secret text, not an operand.
-        if value[cursor : placeholder.start()].strip():
-            pieces.append(marker)
-        pieces.append(placeholder.group(0))
-        cursor = placeholder.end()
-    if value[cursor:].strip():
-        pieces.append(marker)
-    return "".join(pieces) if pieces else marker
-
-
-def _scrub_text(value: str, *, key: str | None = None) -> str:
-    """Redact sensitive fragments from a free-form string."""
-    if not value:
-        return value
-    if _looks_sensitive_key(key):
-        return _redacted_value(key, value)
-
-    scrubbed = _redact_payloads(value)
-    scrubbed = redact_for_log(scrubbed)
-    scrubbed = _SENSITIVE_ASSIGNMENT_RE.sub(
-        lambda match: (
-            f"{match.group('key')}{match.group('separator')}"
-            f"{_redact_around_placeholders(match.group('key'), match.group('value'))}"
-        ),
-        scrubbed,
-    )
-    scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
-    scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
-    return _mask_home_directory(scrubbed)
-
-
-@overload
-def _scrub_value(value: str, *, key: str | None = ...) -> str: ...
-
-
-@overload
-def _scrub_value(value: Mapping[str, object], *, key: str | None = ...) -> dict[str, object]: ...
-
-
-@overload
-def _scrub_value(value: tuple[object, ...], *, key: str | None = ...) -> tuple[object, ...]: ...
-
-
-@overload
-def _scrub_value(value: list[object], *, key: str | None = ...) -> list[object]: ...
-
-
-@overload
-def _scrub_value(value: set[object], *, key: str | None = ...) -> set[object]: ...
-
-
-@overload
-def _scrub_value(value: object, *, key: str | None = ...) -> object: ...
-
-
-def _scrub_items(values: Iterable[object], key: str | None) -> Iterator[object]:
-    """Yield every element of a logging container, each recursively scrubbed.
-
-    The element walk is shared by the tuple, list and set arms of
-    :func:`_scrub_value`; each arm rebuilds its own concrete container from
-    this stream so a subclass never dictates the reconstructed type.
-    """
-    return (_scrub_value(item, key=key) for item in values)
-
-
-def _scrub_binary_value(value: bytes | bytearray) -> bytes | bytearray | str:
-    """Keep short diagnostic bytes and replace larger document payloads."""
-    return _PAYLOAD_REDACTION_MARKER if len(value) > _MAX_LOGGED_BYTES else value
-
-
-def _scrub_mapping_value(value: Mapping[object, object]) -> dict[object, object]:
-    """Rebuild a mapping while scrubbing each value with its key hint."""
-    return {item_key: _scrub_value(item_value, key=str(item_key)) for item_key, item_value in value.items()}
-
-
-def _scrub_tuple_value(value: tuple[object, ...], key: str | None) -> tuple[object, ...]:
-    """Rebuild a tuple from recursively scrubbed logging values."""
-    return tuple(_scrub_items(value, key))
-
-
-def _scrub_list_value(value: list[object], key: str | None) -> list[object]:
-    """Rebuild a list from recursively scrubbed logging values."""
-    return list(_scrub_items(value, key))
-
-
-def _scrub_set_value(value: set[object], key: str | None) -> set[object]:
-    """Rebuild a set from recursively scrubbed logging values."""
-    return set(_scrub_items(value, key))
-
-
-# ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL:
-# The implementation overload returns Any to subsume all concrete overload
-# return types per mypy overload rules.
-def _scrub_value(value: object, *, key: str | None = None) -> Any:  # ANY-RETURN-RATIONALE-SCRUB-OVERLOAD-IMPL
-    """Recursively scrub sensitive values in common logging payload shapes."""
-    if isinstance(value, str):
-        return _scrub_text(value, key=key)
-    if isinstance(value, bytes | bytearray):
-        return _scrub_binary_value(value)
-    if is_object_mapping(value):
-        return _scrub_mapping_value(value)
-    if is_object_tuple(value):
-        return _scrub_tuple_value(value, key)
-    if is_object_list(value):
-        return _scrub_list_value(value, key)
-    if is_object_set(value):
-        return _scrub_set_value(value, key)
-    if _looks_sensitive_key(key):
-        return _redacted_value(key, str(value))
-    return _scrub_opaque_object(value)
-
-
-# ANY-RETURN-RATIONALE-OPAQUE-LOG-ARGUMENT: the parameter and return mirror an
-# arbitrary %-formatting operand, which the stdlib types as ``object``.
-def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-LOG-ARGUMENT
-    """Redact a payload carried inside a non-string logging argument.
-
-    Scrubbing the record's structured shapes is not enough on its own: a
-    third-party client logs its whole request object with ``%s``, so the
-    payload is never a ``str``, a ``Mapping`` or a sequence the recursive
-    walk above descends into -- it is a field of an opaque object that only
-    becomes text when the handler formats the record, downstream of every
-    filter. Rendering the object here is what lets the payload rules see it.
-
-    The same reasoning covers the home directory in a logged path: a
-    :class:`~pathlib.Path` argument is not a ``str`` either, so masking it in
-    :func:`_scrub_text` alone would leave ``target=%s`` carrying the operator's
-    account name into the formatted line.
-
-    The original object is returned untouched when it holds no payload and no
-    home prefix, so the formatted record is unchanged for the overwhelming
-    majority of arguments; only a rendering that actually matched is
-    substituted.
-    """
-    if value is None or isinstance(value, int | float | complex):
-        return value
-    rendered = str(value)
-    redacted = _mask_home_directory(_redact_payloads(rendered))
-    return redacted if redacted != rendered else value
-
-
-def _scrub_format_operand(
-    value: object, key: str | None, placeholder: str, *, redacted: bool = False
-) -> tuple[object, str]:
-    """Keep the conversion compatible with a redacted operand.
-
-    A numeric credential becomes a string marker. Numeric conversions cannot
-    consume it, and string precision must not truncate the marker. Replacing
-    that one conversion preserves the other operands' diagnostic formatting.
-    """
-    scrubbed = _scrub_value(value, key=key)
-    operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-    if operand is not None and (
-        redacted
-        or _looks_sensitive_key(key)
-        or (
-            isinstance(scrubbed, str)
-            and (not isinstance(value, str) or scrubbed != value)
-            and operand.group("conversion") not in "sra"
-        )
-    ):
-        mapping = operand.group("mapping")
-        return scrubbed, f"%({mapping})s" if mapping is not None else "%s"
-    return scrubbed, placeholder
-
-
-def _scrub_positional_format(message: str, args: tuple[object, ...]) -> tuple[str, tuple[object, ...]]:
-    """Scrub operands and their conversions together, including star widths."""
-    pieces: list[str] = []
-    scrubbed_args: list[object] = []
-    cursor = 0
-    index = 0
-    for match in _PERCENT_PLACEHOLDER_RE.finditer(message):
-        placeholder = match.group("placeholder")
-        if placeholder is None:  # %% consumes no argument.
-            continue
-        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-        if operand is None or operand.group("mapping") is not None:
-            continue
-        stars = int(operand.group("width") == "*") + int(operand.group("precision") == "*")
-        if index + stars >= len(args):
-            break  # Retain the stdlib's refusal of an invalid format/arity.
-        value, conversion = _scrub_format_operand(args[index + stars], match.group("key"), placeholder)
-        pieces.append(message[cursor : match.start("placeholder")])
-        pieces.append(conversion)
-        cursor = match.end("placeholder")
-        if conversion == placeholder:
-            scrubbed_args.extend(args[index : index + stars])
-        scrubbed_args.append(value)
-        index += stars + 1
-    pieces.append(message[cursor:])
-    scrubbed_args.extend(_scrub_value(value) for value in args[index:])
-    return "".join(pieces), tuple(scrubbed_args)
-
-
-def _scrub_mapping_format(message: str, args: Mapping[str, object]) -> tuple[str, dict[str, object]]:
-    """Scrub mapping operands, preserving each use's conversion independently."""
-    scrubbed_args = {str(key): _scrub_value(value, key=str(key)) for key, value in args.items()}
-    redacted_keys: set[str] = set()
-
-    def replace(match: re.Match[str]) -> str:
-        placeholder = match.group("placeholder")
-        if placeholder is None:
-            return match.group(0)
-        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-        if operand is None:
-            return match.group(0)
-        mapping_key = operand.group("mapping")
-        if mapping_key is None or mapping_key not in args:
-            return match.group(0)
-        key = match.group("key") if _looks_sensitive_key(match.group("key")) else mapping_key
-        value, conversion = _scrub_format_operand(args[mapping_key], key, placeholder)
-        # A key used in a sensitive assignment must stay redacted in all uses.
-        if _looks_sensitive_key(key):
-            scrubbed_args[mapping_key] = value
-            redacted_keys.add(mapping_key)
-        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
-
-    rewritten = _PERCENT_PLACEHOLDER_RE.sub(replace, message)
-
-    # A later sensitive assignment may redact a key previously used numerically.
-    def compatible(match: re.Match[str]) -> str:
-        placeholder = match.group("placeholder")
-        if placeholder is None:
-            return match.group(0)
-        operand = _FORMAT_OPERAND_RE.fullmatch(placeholder)
-        if operand is None:
-            return match.group(0)
-        mapping_key = operand.group("mapping")
-        if mapping_key is None or mapping_key not in scrubbed_args:
-            return match.group(0)
-        _, conversion = _scrub_format_operand(
-            scrubbed_args[mapping_key], None, placeholder, redacted=mapping_key in redacted_keys
-        )
-        return match.group(0)[: match.start("placeholder") - match.start()] + conversion
-
-    return _PERCENT_PLACEHOLDER_RE.sub(compatible, rewritten), scrubbed_args
-
-
-def _scrub_record_message_and_args(record: logging.LogRecord) -> None:
-    """Scrub a record's message and all supported argument shapes."""
-    raw_msg: object = record.msg
-    scrubbed_msg = _scrub_text(raw_msg) if isinstance(raw_msg, str) else _scrub_value(raw_msg)
-    record.msg = scrubbed_msg
-    _scrub_record_args(record, scrubbed_msg)
-
-
-def _scrub_record_args(record: logging.LogRecord, message: object) -> None:
-    """Scrub record arguments, retaining placeholder-aware positional arity."""
-    if is_object_list_or_tuple(record.args) and isinstance(message, str):
-        record.msg, scrubbed_args = _scrub_positional_format(message, tuple(record.args))
-        # ``logging.LogRecord.args`` is annotated ``tuple[object, ...]
-        # | Mapping[str, object] | None``; ``list`` is not in the
-        # union even though logging accepts it at runtime.
-        # Normalising to a tuple sidesteps the union mismatch
-        # without changing the runtime contract.
-        record.args = tuple(scrubbed_args)
-        return
-    if isinstance(record.args, Mapping):
-        if isinstance(message, str):
-            record.msg, record.args = _scrub_mapping_format(message, record.args)
-        else:
-            record.args = {str(k): _scrub_value(v, key=str(k)) for k, v in record.args.items()}
-        return
-    if isinstance(record.args, tuple | list):
-        # Residual tuple/list args reach only when ``record.msg`` is not a
-        # str (the positional branch above requires a str format). Preserve
-        # the original ``_scrub_value`` element-wise scrubbing so no args
-        # path skips redaction.
-        record.args = tuple(_scrub_value(item) for item in record.args)
-
-
-def _scrub_record_exception(record: logging.LogRecord) -> None:
-    """Scrub formatted exception text while retaining the exception tuple."""
-    # ``exc_info=False`` reaches the record unchanged; only an exception tuple names one to format.
-    if isinstance(record.exc_info, tuple):
-        record.exc_text = _scrub_text(_EXCEPTION_FORMATTER.formatException(record.exc_info))
-    elif record.exc_text is not None and record.exc_text:
-        record.exc_text = _scrub_text(record.exc_text)
-
-
-def _scrub_record_extras(record: logging.LogRecord) -> None:
-    """Scrub non-standard record attributes in place."""
-    for key, value in tuple(record.__dict__.items()):
-        if key in _STANDARD_LOG_RECORD_FIELDS or key in {"msg", "args", "exc_info", "exc_text"}:
-            continue
-        record.__dict__[key] = _scrub_value(value, key=key)
-
-
-class SecretScrubbingFilter(logging.Filter):
-    """Redact sensitive fields from log records before formatting.
-
-    The filter mutates each :class:`logging.LogRecord` in place so handlers,
-    stderr diagnostics, and JSONL run sinks see the same scrubbed record. It is
-    deliberately narrower than CLI output redaction: structured command results
-    still route through :mod:`cadrumo.core.output_rendering` or
-    :mod:`cadrumo.core.json_contract`, while this filter protects logging-only
-    message text, %-format args, exception text, and ``extra`` fields.
-    """
-
-    @override
-    def filter(self, record: logging.LogRecord) -> bool:
-        """Scrub sensitive values from ``record`` in-place and return ``True`` to allow it.
-
-        Args:
-            record: The log record whose ``msg``, ``args``, ``exc_info``,
-                ``exc_text``, and extra fields are scrubbed before formatting.
-
-        Returns:
-            Always ``True`` — every record is allowed through after scrubbing.
-        """
-        if _scrubbed_record.get() is record:
-            return True
-        stamp_diagnostic_scalar_fields(record)
-        _scrub_record_message_and_args(record)
-        _scrub_record_exception(record)
-        _scrub_record_extras(record)
-        return True
-
-
 def _run_context_variables() -> tuple[ContextVar[RunContextInfo | None], ContextVar[str | None]]:
     """Return the run and step contextvars, importing their module on first use."""
     from .observability.context import RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
 
     return RUN_CONTEXT_VAR, STEP_CONTEXT_VAR
+
+
+def _safe_factory_args(args: tuple[Any, ...]) -> tuple[Any, ...]:
+    if len(args) <= 5 or type(args[5]) is not tuple:
+        return args
+    arguments = cast(tuple[object, ...], args[5])
+    if len(arguments) != 1:
+        return args
+    candidate = arguments[0]
+    if type(candidate) in (str, int, float, bool, bytes, bytearray, tuple, list, dict) or candidate is None:
+        return args
+    return (*args[:5], (snapshot_value(candidate),), *args[6:])
 
 
 def _install_run_context_record_factory() -> None:
@@ -634,24 +148,7 @@ def _install_run_context_record_factory() -> None:
         nonlocal cached_vars
         # The stdlib probes a lone operand as a Mapping before logger filters.
         # An opaque object's class/metaclass hooks must not run in that probe.
-        if len(args) > 5 and type(args[5]) is tuple:
-            arguments = cast(tuple[object, ...], args[5])
-            if len(arguments) == 1:
-                candidate = arguments[0]
-                kind = type(candidate)
-                if not (
-                    kind is str
-                    or kind is int
-                    or kind is float
-                    or kind is bool
-                    or kind is bytes
-                    or kind is bytearray
-                    or kind is tuple
-                    or kind is list
-                    or kind is dict
-                    or candidate is None
-                ):
-                    args = (*args[:5], (_snapshot_value(candidate),), *args[6:])
+        args = _safe_factory_args(args)
         record = previous_factory(*args, **kwargs)
         if cached_vars is None:
             cached_vars = _run_context_variables()
@@ -892,7 +389,7 @@ def _load_delivery_modules() -> None:
     _run_context_variables()
     _configuration_parts()
     with lexical_tax_identity_redaction():
-        _scrub_text(_DELIVERY_WARMUP_TEXT)
+        scrub_text(_DELIVERY_WARMUP_TEXT)
     _delivery_modules_loaded = True
 
 
@@ -910,6 +407,23 @@ def configure_logging() -> None:
         with suppress(Exception):
             _load_delivery_modules()
     _submit_work(_configure_logging)
+
+
+def _replace_root_handlers(sinks: list[logging.Handler], root_level: str) -> None:
+    root_logger = logging.getLogger()
+    previous = tuple(root_logger.handlers)
+    root_logger.handlers = [
+        handler
+        for handler in previous
+        if not isinstance(handler, _AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler)
+    ]
+    root_logger.handlers.extend(_AsyncDiagnosticHandler(sink) for sink in sinks)
+    root_logger.setLevel(root_level)
+    for handler in previous:
+        if isinstance(handler, _AsyncDiagnosticHandler):
+            handler.close()
+    for name in ("alembic.runtime.plugins", "pdfminer", "pikepdf._core"):
+        logging.getLogger(name).setLevel(logging.WARNING)
 
 
 def _configure_logging() -> None:
@@ -966,20 +480,7 @@ def _configure_logging() -> None:
         sink.addFilter(DropRunEventFilter())
         sink.addFilter(_ThirdPartyDebugFilter())
         sink.addFilter(SecretScrubbingFilter())
-    root_logger = logging.getLogger()
-    previous = tuple(root_logger.handlers)
-    root_logger.handlers = [
-        handler
-        for handler in previous
-        if not isinstance(handler, _AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler)
-    ]
-    root_logger.handlers.extend(_AsyncDiagnosticHandler(sink) for sink in sinks)
-    root_logger.setLevel(settings.cadrumo_log_root_level)
-    for handler in previous:
-        if isinstance(handler, _AsyncDiagnosticHandler):
-            handler.close()
-    for name in ("alembic.runtime.plugins", "pdfminer", "pikepdf._core"):
-        logging.getLogger(name).setLevel(logging.WARNING)
+    _replace_root_handlers(sinks, settings.cadrumo_log_root_level)
 
     # Local import: the observability layer imports ``cadrumo.core.logging`` for
     # its own get_logger() seed, so attaching the filter at module
@@ -1009,14 +510,18 @@ def _configure_logging() -> None:
 
 
 def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
-    """Apply ``level`` to the root logger and every attached handler.
+    """Apply ``level`` to the root logger and every sink this module installed.
 
     The root logger itself is always set to ``logging.DEBUG`` so no
-    record is discarded before reaching a handler; each handler then
-    applies its own level gate.  ``FileHandler`` instances receive
+    record is discarded before reaching a handler; each sink then
+    applies its own level gate.  ``FileHandler`` sinks receive
     ``file_level`` (default ``DEBUG``) to keep the diagnostic log
-    comprehensive.  All other handlers (typically the stderr stream
+    comprehensive.  All other sinks (typically the stderr stream
     handler) receive ``level``.
+
+    A handler some other owner attached to the root, such as a test
+    harness's capture handler, keeps its own level: the CLI verbosity
+    governs what Cadrumo writes, not what another observer records.
 
     Configuration and sink-level changes are queued before subsequent records.
 
@@ -1034,9 +539,9 @@ def set_log_level(level: int, *, file_level: int = logging.DEBUG) -> None:
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
         for handler in root_logger.handlers:
-            target = handler.sink if isinstance(handler, _AsyncDiagnosticHandler) else handler
-            target.setLevel(file_level if isinstance(target, logging.FileHandler) else level)
-            handler.setLevel(logging.NOTSET if isinstance(handler, _AsyncDiagnosticHandler) else target.level)
+            if isinstance(handler, _AsyncDiagnosticHandler):
+                sink = handler.sink
+                sink.setLevel(file_level if isinstance(sink, logging.FileHandler) else level)
 
     _submit_work(apply)
 
@@ -1235,107 +740,9 @@ def get_logger(name: str) -> logging.Logger:
 #: its logger hierarchy during propagation.
 _OFFERED_TO_HANDLERS = "_cadrumo_offered_to_handlers"
 _active_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_delivery_record", default=None)
-_scrubbed_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_scrubbed_record", default=None)
+
 _sink_workers: list[DiagnosticDispatch[logging.LogRecord]] = []
 _stdlib_shutdown = logging.shutdown
-
-
-def _snapshot_value(value: object, *, depth: int = 0, budget: list[int] | None = None) -> object:
-    """Copy bounded builtin shapes without invoking application rendering hooks."""
-    if budget is None:
-        budget = [256, 65536]
-    budget[0] -= 1
-    if depth >= 6 or budget[0] < 0:
-        return "<omitted:nesting>"
-    if type(value) is str:
-        if len(value) > 16384 or len(value) * 4 > budget[1]:
-            return "<omitted:oversized-text>"
-        budget[1] -= len(value) * 4
-        return value
-    if type(value) is int:
-        integer = value
-        return integer if integer.bit_length() <= 4096 else "<omitted:oversized-number>"
-    if type(value) is float or type(value) is bool or value is None:
-        return value
-    if type(value) is bytes or type(value) is bytearray:
-        binary = value
-        return bytes(binary) if len(binary) <= 256 else "<redacted:payload>"
-    if type(value) is dict:
-        mapping = cast(dict[object, object], value)
-        return {
-            cast(str, _snapshot_value(key, depth=depth + 1, budget=budget)): _snapshot_value(
-                item, depth=depth + 1, budget=budget
-            )
-            for key, item in islice(mapping.items(), 64)
-            if type(key) is str and len(key) <= 256
-        }
-    if type(value) is tuple or type(value) is list:
-        sequence = cast(tuple[object, ...] | list[object], value)
-        return tuple(_snapshot_value(item, depth=depth + 1, budget=budget) for item in sequence[:64])
-    if issubclass(type(value), Enum):
-        members = cast(dict[object, object], Enum.__dict__["__dict__"].__get__(value))
-        return _snapshot_value(dict[object, object].get(members, "_value_"), depth=depth + 1, budget=budget)
-    # Opaque arguments may hide documents or execute arbitrary __str__/__repr__.
-    return "<omitted:opaque-value>"
-
-
-def _snapshot_record(record: logging.LogRecord) -> logging.LogRecord:
-    snapshot = logging.LogRecord.__new__(logging.LogRecord)
-    budget = [256, 65536]
-    snapshot.__dict__ = {
-        key: None if key == "exc_info" else _snapshot_value(value, budget=budget)
-        for key, value in islice(record.__dict__.items(), 128)
-        if type(key) is str and len(key) <= 256
-    }
-    if isinstance(record.exc_info, tuple) and isinstance(record.exc_info[1], BaseException):
-        snapshot.__dict__["_cadrumo_exception_snapshot"] = _snapshot_exception(record.exc_info[1], budget)
-    snapshot.__dict__["_cadrumo_snapshot_weight"] = 1024 + 65536 - budget[1] + (256 - budget[0]) * 32
-    return snapshot
-
-
-def _snapshot_exception(error: BaseException, budget: list[int]) -> tuple[object, ...]:
-    """Keep bounded causal frames and builtin arguments without retaining live frames."""
-    chain: list[object] = []
-    seen: set[int] = set()
-    while id(error) not in seen and len(chain) < 8:
-        seen.add(id(error))
-        name = _snapshot_value(type.__dict__["__name__"].__get__(type(error)), budget=budget)
-        arguments = _snapshot_value(BaseException.__dict__["args"].__get__(error), budget=budget)
-        frames: list[tuple[str, int, str]] = []
-        traceback = BaseException.__dict__["__traceback__"].__get__(error)
-        while traceback is not None and len(frames) < 32:
-            code = traceback.tb_frame.f_code
-            frames.append(
-                (
-                    str(_snapshot_value(code.co_filename, budget=budget)),
-                    traceback.tb_lineno,
-                    str(_snapshot_value(code.co_name, budget=budget)),
-                )
-            )
-            traceback = traceback.tb_next
-        cause = BaseException.__dict__["__cause__"].__get__(error)
-        context = BaseException.__dict__["__context__"].__get__(error)
-        suppressed = BaseException.__dict__["__suppress_context__"].__get__(error)
-        following = cause if cause is not None else None if suppressed else context
-        chain.append((name, arguments, tuple(frames), "cause" if cause is not None else "context"))
-        if not isinstance(following, BaseException):
-            break
-        error = following
-    return tuple(chain)
-
-
-def _bound_format(record: logging.LogRecord) -> None:
-    """Reject allocation-sized printf requests before any formatter evaluates them."""
-    if not bool(record.args) or not isinstance(record.msg, str):
-        return
-    for index, match in enumerate(_FORMAT_SIZE_RE.finditer(record.msg)):
-        sizes = (match.group("width"), match.group("precision"))
-        oversized = any(size and size != "*" and (len(size) > 5 or int(size) > 16384) for size in sizes)
-        if "*" in sizes and isinstance(record.args, tuple):
-            oversized |= any(type(arg) is int and abs(arg) > 16384 for arg in record.args)
-        if index >= 64 or oversized:
-            record.msg, record.args = "<omitted:oversized-format>", None
-            return
 
 
 def _enqueue_record(record: logging.LogRecord, *, offered_to_handlers: bool) -> None:
@@ -1356,7 +763,7 @@ def _enqueue_record(record: logging.LogRecord, *, offered_to_handlers: bool) -> 
     record.__dict__["_cadrumo_queued_pid"] = os.getpid()
     record.__dict__["_cadrumo_configuration_deferred"] = _configuration_deferred
     try:
-        snapshot = _snapshot_record(record)
+        snapshot = snapshot_record(record)
         snapshot.__dict__[_OFFERED_TO_HANDLERS] = offered_to_handlers
         _submit_work(snapshot)
     except Exception:
@@ -1389,17 +796,17 @@ def _deliver_work(work: logging.LogRecord | Callable[[], None]) -> None:
                 stack = "".join(f'  File "{path}", line {line}, in {function}\n' for path, line, function in frames)
                 sections.append(f"Traceback (most recent call last):\n{stack}{name}: {arguments}")
             work.exc_text = "\n".join(sections)
-        _bound_format(work)
+        bound_format(work)
         with lexical_tax_identity_redaction():
             SecretScrubbingFilter().filter(work)
-        scrubbed = _scrubbed_record.set(work)
+        scrubbed = SCRUBBED_RECORD.set(work)
         try:
             if work.__dict__.get(_OFFERED_TO_HANDLERS) is True:
                 _handle_by_own_handlers(work)
             else:
                 logging.getLogger(work.name).handle(work)
         finally:
-            _scrubbed_record.reset(scrubbed)
+            SCRUBBED_RECORD.reset(scrubbed)
     finally:
         _active_record.reset(token)
 
@@ -1452,11 +859,11 @@ class _AsyncDiagnosticHandler(logging.Handler):
 
     def _write(self, record: logging.LogRecord) -> None:
         token = _active_record.set(record)
-        scrubbed = _scrubbed_record.set(record)
+        scrubbed = SCRUBBED_RECORD.set(record)
         try:
             self.sink.handle(record)
         finally:
-            _scrubbed_record.reset(scrubbed)
+            SCRUBBED_RECORD.reset(scrubbed)
             _active_record.reset(token)
 
     @override

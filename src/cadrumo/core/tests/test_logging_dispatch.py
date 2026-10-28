@@ -116,14 +116,15 @@ def test_blocked_redaction_does_not_block_logging_or_grow_the_queue(tmp_path: Pa
         tmp_path,
         ("logger = logging.getLogger('synthetic.third_party')\n" if foreign else "")
         + """
+from cadrumo.core import log_scrubbing
 entered, release = threading.Event(), threading.Event()
-original = project._scrub_record_message_and_args
+original = log_scrubbing._scrub_record_message_and_args
 def scrub(record):
     if record.msg == 'held-redaction':
         entered.set()
         assert release.wait(HANG)
     original(record)
-project._scrub_record_message_and_args = scrub
+log_scrubbing._scrub_record_message_and_args = scrub
 try:
     logger.warning('held-redaction')
     assert entered.wait(HANG)

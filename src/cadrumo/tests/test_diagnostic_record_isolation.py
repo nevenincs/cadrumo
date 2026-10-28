@@ -13,7 +13,7 @@ import time
 
 import pytest
 
-from ..core import logging as project_logging
+from ..core import log_scrubbing as project_logging
 from ..core.logging import flush_logging, get_logger
 from .hang_guard import HANG_GUARD_SECONDS
 
