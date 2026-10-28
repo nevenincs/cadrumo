@@ -9,8 +9,7 @@ use cadrumo_application::{
 use serde_json::{Value, json};
 use std::fs;
 
-mod support;
-use support::delivered;
+use cadrumo_application::diagnostics::delivery_wait::delivered;
 
 #[test]
 fn browser_failure_persists_only_closed_numeric_metadata() {

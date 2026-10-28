@@ -1,7 +1,8 @@
 //! Waiting for the diagnostic writer without expecting any particular speed of it.
 //!
-//! One source, included by the library's unit tests and by each integration test that reads
-//! what the writer delivered; the includer imports `Diagnostics`.
+//! One source for every test that reads what the writer delivered: the library's own tests,
+//! this crate's integration tests and the tests of the crates that embed it, the last two
+//! through the `diagnostics-test-support` feature.
 
 use super::Diagnostics;
 use std::time::{Duration, Instant};

@@ -7,8 +7,7 @@ use cadrumo_application::{
 use serde_json::Value;
 use std::{env, fs, path::Path, process::Command, sync::Arc};
 
-mod support;
-use support::delivered;
+use cadrumo_application::diagnostics::delivery_wait::delivered;
 
 const SECRET: &str = "ES12345678Z-synthetic-private-payload";
 const CHILD: &str = "--panic-child";

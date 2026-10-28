@@ -19,8 +19,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-mod support;
-use support::delivered;
+use cadrumo_application::diagnostics::delivery_wait::delivered;
 
 /// Only a hung thread can outlast this; no healthy one is expected to be near it.
 const HANG: Duration = Duration::from_secs(60);

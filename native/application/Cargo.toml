@@ -10,9 +10,11 @@ live-python-tests = []
 live-package-tests = ["platform"]
 live-release-tests = ["live-package-tests"]
 platform = ["dep:cadrumo-platform"]
+# Waiting for the diagnostic writer's delivery, for owners whose own tests read what it wrote.
+diagnostics-test-support = []
 # The local test servers the provisioning tests use, for owners whose own tests drive the
 # engine against them.
-test-support = ["dep:ring"]
+test-support = ["dep:ring", "diagnostics-test-support"]
 
 [dependencies]
 cadrumo-platform = { path = "../platform", optional = true }
@@ -43,6 +45,24 @@ tempfile = "3"
 name = "panic_hook"
 path = "tests/panic_hook.rs"
 harness = false
+required-features = ["diagnostics-test-support"]
+
+# These read what the diagnostic writer delivered and wait for it through the shared
+# helper, which the library exposes under the feature.
+[[test]]
+name = "diagnostics"
+path = "tests/diagnostics.rs"
+required-features = ["diagnostics-test-support"]
+
+[[test]]
+name = "helper_diagnostics"
+path = "tests/helper_diagnostics.rs"
+required-features = ["diagnostics-test-support"]
+
+[[test]]
+name = "webview_diagnostics"
+path = "tests/webview_diagnostics.rs"
+required-features = ["diagnostics-test-support"]
 
 [lints.rust]
 unsafe_code = "forbid"

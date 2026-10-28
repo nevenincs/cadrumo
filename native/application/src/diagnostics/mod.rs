@@ -1,3 +1,5 @@
+#[cfg(any(test, feature = "diagnostics-test-support"))]
+pub mod delivery_wait;
 mod dispatch;
 pub mod helper;
 pub mod lifecycle;
@@ -571,11 +573,6 @@ fn try_guard<T>(lock: &Mutex<T>) -> Option<MutexGuard<'_, T>> {
 fn poisoned() -> ApplicationError {
     ApplicationError::new(ErrorCode::LockPoisoned, Operation::Logging)
 }
-
-// The integration tests include this same source for their own waiting.
-#[cfg(test)]
-#[path = "../../tests/support/mod.rs"]
-mod delivery_wait;
 
 #[cfg(test)]
 mod tests {

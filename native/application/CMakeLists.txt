@@ -56,9 +56,12 @@ if(BUILD_TESTING)
   if(NOT IS_ABSOLUTE "${CADRUMO_APPLICATION_TEST_PACKAGE_ROOT}")
     message(FATAL_ERROR "CADRUMO_APPLICATION_TEST_PACKAGE_ROOT must be absolute")
   endif()
+  # The diagnostics integration tests wait for the writer through the library's shared helper,
+  # which an integration test sees only under this feature; it carries no dependency.
   add_test(NAME application.rust
     COMMAND ${application_cargo} test --locked --manifest-path "${application_manifest}"
-      --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}" --features platform
+      --target "${CADRUMO_PIN_rust_target}" --profile "${application_profile}"
+      --features platform,diagnostics-test-support
       ${application_test_arguments})
   set_tests_properties(application.rust PROPERTIES WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}" TIMEOUT 600)
   cadrumo_cargo_command(application_package_cargo

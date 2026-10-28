@@ -9,8 +9,7 @@ use cadrumo_application::{
 use serde_json::{Value, json};
 use std::fs;
 
-mod support;
-use support::delivered;
+use cadrumo_application::diagnostics::delivery_wait::delivered;
 
 fn timing(outcome: HelperOutcome) -> HelperTiming {
     HelperTiming {
