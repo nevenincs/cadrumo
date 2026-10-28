@@ -53,7 +53,14 @@ from cadrumo_runtime.contracts.worker_authorization import (
 from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..profile_worker import ProfileWorkerProcess
-from .profile_worker_support import PROFILE_INPUT, changed, lease, release_worker, worker_profiles
+from .profile_worker_support import (
+    PROFILE_INPUT,
+    changed,
+    install_lease,
+    lease,
+    release_worker,
+    worker_profiles,
+)
 
 pytestmark = [
     pytest.mark.integration,
@@ -199,8 +206,8 @@ def test_concurrent_profiles_never_retarget_and_disconnect_is_isolated(profiles)
         cleanup.callback(release_worker, b)
         a_lease, b_lease = lease(first), lease(second)
         a_buffer, b_buffer = bytearray(first_key), bytearray(second_key)
-        a.install(a_lease, a_buffer)
-        b.install(b_lease, b_buffer)
+        install_lease(a, a_lease, a_buffer)
+        install_lease(b, b_lease, b_buffer)
         assert not any(a_buffer) and not any(b_buffer)
         a_status, b_status = a.status(), b.status()
         assert a_status.sessions == (a_lease.session_id,)
@@ -208,13 +215,13 @@ def test_concurrent_profiles_never_retarget_and_disconnect_is_isolated(profiles)
         assert a_status.in_flight_operations == b_status.in_flight_operations == 0
         # A foreign profile's valid DEK cannot switch this process to B.
         with pytest.raises(AutomationCustodyError):
-            a.install(b_lease, bytearray(second_key))
+            install_lease(a, b_lease, bytearray(second_key))
         assert a.status().sessions == (a_lease.session_id,)
         assert b.status().sessions == (b_lease.session_id,)
         b.retire(b_lease.session_id)
         assert not b.status().sessions
         fresh = lease(second)
-        b.install(fresh, bytearray(second_key))
+        install_lease(b, fresh, bytearray(second_key))
         assert b.status().sessions == (fresh.session_id,)
 
 
@@ -224,10 +231,10 @@ def test_worker_rejects_wrong_dek_before_acknowledging_custody(profiles) -> None
     try:
         secret = bytearray(wrong_key)
         with pytest.raises(AutomationCustodyError):
-            worker.install(lease(identity), secret)
+            install_lease(worker, lease(identity), secret)
         assert not any(secret)
         admitted = lease(identity)
-        worker.install(admitted, bytearray(key))
+        install_lease(worker, admitted, bytearray(key))
         assert worker.status().sessions == (admitted.session_id,)
     finally:
         release_worker(worker)
@@ -238,10 +245,10 @@ def test_refresh_and_idle_expiry_release_only_the_affected_leases(profiles) -> N
     worker = ProfileWorkerProcess(identity, storage_root=root)
     try:
         # Prepare the cold application graph before starting the expiry clock.
-        worker.prepare_api_admission(deadline=time.monotonic() + 30)
+        worker.prepare_api_admission(deadline=time.monotonic() + HANG_GUARD_SECONDS)
         short, independent = lease(identity, seconds=2), lease(identity)
-        worker.install(short, bytearray(key))
-        worker.install(independent, bytearray(key))
+        install_lease(worker, short, bytearray(key))
+        install_lease(worker, independent, bytearray(key))
         refreshed = changed(
             short, issued_at=now(), issued_monotonic=time.monotonic(), expires_at=now() + timedelta(seconds=4)
         )
@@ -275,7 +282,7 @@ def test_password_candidate_does_not_replace_agents_or_select_another_profile(pr
     worker = ProfileWorkerProcess(identity, storage_root=root)
     try:
         api = lease(identity)
-        worker.install(api, bytearray(key))
+        install_lease(worker, api, bytearray(key))
         password = bytearray(PROFILE_INPUT.encode())
         with worker.authenticate_human(password) as outcome:
             assert outcome.bucket_id == str(identity.binding.profile_id) and not outcome.session_persisted
@@ -326,8 +333,8 @@ def test_simultaneous_profile_operations_survive_human_switch_and_stale_revision
         worker_b = ProfileWorkerProcess(identity_b, storage_root=root, authorization=authority)
         cleanup.callback(release_worker, worker_b)
         lease_a, lease_b = lease(identity_a), lease(identity_b)
-        worker_a.install(lease_a, bytearray(key_a))
-        worker_b.install(lease_b, bytearray(key_b))
+        install_lease(worker_a, lease_a, bytearray(key_a))
+        install_lease(worker_b, lease_b, bytearray(key_b))
 
         # A human switch changes the shared default pointer while both workers retain
         # their immutable bindings and installed custody.

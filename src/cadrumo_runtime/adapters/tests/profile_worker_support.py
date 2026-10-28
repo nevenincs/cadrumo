@@ -275,6 +275,15 @@ class NativeRuntimeFixtureOwner:
                 self.executor.shutdown(wait=False, cancel_futures=False)
 
 
+def install_lease(worker: ProfileWorkerProcess, session: AccessSession, dek: bytearray) -> None:
+    """Install custody, leaving the worker's first-use graph preparation as long as the machine needs.
+
+    The default gives a cold worker thirty seconds to import and compose everything before it
+    acknowledges its first lease, which a busy machine does not always meet.
+    """
+    worker.install(session, dek, deadline=time.monotonic() + HANG_GUARD_SECONDS)
+
+
 def release_worker(worker: ProfileWorkerProcess) -> None:
     """Close a worker, leaving its containment as long as it takes the machine to end the process.
 
