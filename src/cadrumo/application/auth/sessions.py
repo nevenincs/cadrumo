@@ -684,8 +684,13 @@ def _prepare_clave_auth(
     *,
     operator_scope_ports: OperatorScopePorts,
     profile_decode_context: ProfileDecodeContext,
+    logs_in: bool = True,
 ) -> tuple[Settings, str | None]:
     """Bind profile-borne Cl@ve credentials and refuse an incomplete mode.
+
+    ``logs_in`` is ``False`` where the provider only verifies a session the
+    person already signed into, in the Sede view: that verification types
+    nothing into a Cl@ve form, so only the identity it aligns is required.
 
     Returns the settings the provider should read - the caller's, with any
     profile-borne credential bound onto it - and the identity a resulting
@@ -731,6 +736,7 @@ def _prepare_clave_auth(
         bound_settings,
         credentials,
         profile_decode_context=profile_decode_context,
+        logs_in=logs_in,
     )
     expected_identity = _assert_active_profile_identity_matches_provider(
         credentials,
@@ -840,15 +846,18 @@ def _require_clave_credentials(
     credentials: ClaveCredentials,
     *,
     profile_decode_context: ProfileDecodeContext,
+    logs_in: bool,
 ) -> None:
     """Refuse a Cl@ve mode whose flow lacks a credential it needs.
 
     Every Cl@ve mode needs the DNI/NIE that identifies the person. The
     contraste - the numero de soporte for a NIE, the validity date for a
     DNI - is read only by the app-request form, so it is required exactly
-    when that route is in effect. That is the default route, so a profile
+    when a login runs on that route. That is the default route, so a profile
     that never chose one is refused here too; an explicit QR route asks for
-    neither and must not be refused for their absence.
+    neither and must not be refused for their absence. Verifying a session the
+    person signed into in the Sede view (``logs_in`` false) fills no form, so it
+    needs the identity alone.
     """
     if not credentials.dni_nie:
         raise ClaveCredentialsIncompleteError(
@@ -861,7 +870,7 @@ def _require_clave_credentials(
                 ),
             },
         )
-    if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+    if credentials.provider_kind is not AuthProviderKind.CLAVE_MOVIL or not logs_in:
         return
     if not settings.cadrumo_clave_prefer_non_qr:
         return
@@ -1385,6 +1394,7 @@ async def resume_view_session(
                     kind,
                     operator_scope_ports=operator_scope_ports,
                     profile_decode_context=profile_decode_context,
+                    logs_in=False,
                 )
             except (AuthProfileIdentityMismatchError, ClaveCredentialsIncompleteError):
                 return signed_out
@@ -1539,6 +1549,7 @@ async def _publish_view_session_state_locked(
             kind,
             operator_scope_ports=operator_scope_ports,
             profile_decode_context=profile_decode_context,
+            logs_in=False,
         )
     except (AuthProfileIdentityMismatchError, ClaveCredentialsIncompleteError):
         return _standing(ViewSessionPublicationOutcome.VERIFICATION_FAILED, baseline)

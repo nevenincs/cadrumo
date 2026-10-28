@@ -19,8 +19,10 @@ from cadrumo.application.auth.acquisition_lock import (
     AuthAcquisitionLockState,
     acquire_auth_acquisition_lock,
 )
+from cadrumo.application.auth.operator import configure_operator_auth
 from cadrumo.application.auth.protocols import BrowserContextPort, BrowserSessionFactoryPort
 from cadrumo.application.auth.sessions import (
+    ClaveCredentialsIncompleteError,
     ViewSessionBaseline,
     ViewSessionPublication,
     ViewSessionPublicationOutcome,
@@ -32,8 +34,8 @@ from cadrumo.application.live.session import (
     open_live_view_session,
     publish_live_view_session,
 )
-from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import Settings, load_settings
+from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from cadrumo.core.config import Settings, load_settings, override_settings
 from cadrumo.core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -49,6 +51,7 @@ from .view_session_support import (
     SESSION_COOKIE,
     OperationHost,
     certificate_profile,
+    clave_permanente_profile,
     lock_state,
     session_path,
     stored_cookie_names,
@@ -272,6 +275,41 @@ async def test_a_view_signed_in_as_the_profile_taxpayer_reads_it_from_the_consul
             assert [url for url in boundary.requested_urls if _CENSAL_PATH in url] == [
                 censal_datos_url(CERTIFICATE_NIF, origin=Settings.external_constants().aeat.domains.www6)
             ]
+
+
+@pytest.mark.asyncio
+async def test_a_clave_movil_profile_without_its_contraste_publishes_a_manual_view_login(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The app-request route's contraste is typed only by a Cadrumo login; verifying the person's login needs none."""
+    kind = AuthProviderKind.CLAVE_MOVIL
+    with (
+        clave_permanente_profile(tmp_path, operation),
+        override_settings(cadrumo_clave_movil_nie_soporte=None, cadrumo_clave_movil_dni_fecha=None),
+    ):
+        # The same profile, DNI/NIE recorded and no contraste anywhere, on Cl@ve Movil's app-request route.
+        configure_operator_auth(
+            "clave_movil",
+            clave_movil_route=ClaveMovilRoute.APP_REQUEST,
+            operator_scope_ports=OPERATOR_SCOPE_PORTS,
+            operation=operation,
+        )
+        async with opened_http_boundary() as boundary:
+            factory = real_browser_factory(boundary=boundary, profile_name="sede-view-movil-no-contraste")
+            # A CLI or TUI sync would have to log in on that route, so it still asks for the contraste.
+            with pytest.raises(ClaveCredentialsIncompleteError):
+                await _sync(factory, OperationHost(kind=kind), operation)
+            seed = await _open(factory, OperationHost(kind=kind), operation)
+            assert seed.baseline.provider_kind is kind
+            assert not seed.signed_in
+            host = OperationHost(kind=kind)
+            async with _view_context(boundary, None, browse_to_session_cookie=True) as context:
+                publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
+
+            assert publication.outcome is ViewSessionPublicationOutcome.PUBLISHED
+            assert host.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+            assert publication.baseline.storage_state_sha256 == stored_digest(kind)
+            assert SESSION_COOKIE in stored_cookie_names(kind)
 
 
 @pytest.mark.asyncio
