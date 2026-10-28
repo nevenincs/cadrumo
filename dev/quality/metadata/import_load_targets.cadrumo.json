@@ -103,6 +103,7 @@
         "cadrumo.adapters.outbound.aeat.auth.provider_selection",
         "cadrumo.adapters.outbound.aeat.auth.providers",
         "cadrumo.adapters.outbound.aeat.auth.session_store",
+        "cadrumo.adapters.outbound.aeat.auth.view_capture_identity",
         "cadrumo.adapters.outbound.aeat.browser",
         "cadrumo.adapters.outbound.aeat.browser._site_health_parsers",
         "cadrumo.adapters.outbound.aeat.browser._site_health_probe",
