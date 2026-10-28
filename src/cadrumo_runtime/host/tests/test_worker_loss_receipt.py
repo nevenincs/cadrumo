@@ -63,8 +63,10 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
+from cadrumo_client.transport.windows_process import WindowsOwnedProcess
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest, WorkerAuthorizationRequest
 
+from ...adapters.profile_worker import ProfileWorkerProcess
 from ...application.session_authority_core import CustodyRecoveryPolicy
 from ..profile_host import RuntimeProfileHost
 from .stored_sign_in_runtime import SessionReply, StoredSignInRuntime, stored_sign_in_runtime
@@ -127,12 +129,23 @@ def _worker_id(runtime: StoredSignInRuntime) -> UUID:
     return worker.identity.worker_id
 
 
+def _kill_worker(runtime: StoredSignInRuntime) -> None:
+    """Terminate the profile worker's process from outside the runtime, and return once it has exited."""
+    worker = runtime.profiles._profiles[runtime.profile_id].owner._worker
+    assert worker is not None
+    process = worker._process
+    assert isinstance(process, WindowsOwnedProcess)
+    waiter = process.retain_waiter()
+    try:
+        os.kill(process.pid, signal.SIGTERM)
+        waiter.wait(timeout=10)
+    finally:
+        waiter.close()
+
+
 def _lose_worker(runtime: StoredSignInRuntime, connection: VerifiedConnection, session_id: UUID) -> SessionReply:
     """Terminate the profile worker's process from outside the runtime; return the session's first status after it."""
-    host = runtime.profiles._profiles[runtime.profile_id]
-    worker = host.owner._worker
-    assert worker is not None
-    os.kill(worker._process.pid, signal.SIGTERM)
+    _kill_worker(runtime)
     deadline = time.monotonic() + 30
     while True:
         # Each status observes the worker's health; the terminated process is a positive loss.
@@ -160,6 +173,90 @@ def _recovering(reply: object) -> int:
         seconds = reply.status.recovery_remaining_seconds
     assert seconds is not None and 0 < seconds <= 120
     return seconds
+
+
+def _idle(runtime: StoredSignInRuntime) -> None:
+    """Run as the installed runtime does once nothing happens: the OS reports session changes, so no pass is on a timer.
+
+    Returns once no lifecycle pass has been due for a second, longer than a
+    finished request takes to owe one, so only the runtime's own observation
+    of the worker can bring the next one.
+    """
+    runtime.profiles.session_changes_pushed(True)
+    # This runtime has no logon inventory to report the test's logon as one with a lock surface.
+    runtime.profiles._unreported_logins = False
+    deadline = time.monotonic() + 15
+    quiet_since = time.monotonic()
+    while time.monotonic() - quiet_since < 1.0:
+        assert time.monotonic() < deadline, "a lifecycle pass stayed due"
+        if (due := runtime.profiles.lifecycle_due_in()) is not None and due < 10:
+            quiet_since = time.monotonic()
+        time.sleep(0.05)
+
+
+def _suspended_without_a_request(runtime: StoredSignInRuntime, session_id: UUID, *, within: float) -> None:
+    authority = runtime.profiles._profiles[runtime.profile_id].authority
+    deadline = time.monotonic() + within
+    while session_id not in authority._suspended:
+        assert time.monotonic() < deadline, f"no session was suspended within {within} s of the worker's loss"
+        time.sleep(0.05)
+
+
+def _without_exit_watch(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Leave the loss to the runtime's other observations, as where no exit can be waited on."""
+    monkeypatch.setattr(ProfileWorkerProcess, "_watch_exit", lambda _worker, _exited: None)
+
+
+def test_a_killed_worker_suspends_its_sessions_with_no_request_or_heartbeat(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with _runtime(tmp_path, monkeypatch) as (runtime, _clock):
+        person = runtime.connect()
+        session_id = _signed_in(runtime, person).status.session_id
+        assert session_id is not None
+        _idle(runtime)
+
+        _kill_worker(runtime)
+
+        _suspended_without_a_request(runtime, session_id, within=5)
+        _recovering(_session_status(runtime, person, session_id))
+
+
+def test_a_heartbeat_that_finds_the_worker_gone_suspends_its_sessions_at_once(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _without_exit_watch(monkeypatch)
+    with _runtime(tmp_path, monkeypatch) as (runtime, _clock):
+        person = runtime.connect()
+        session_id = _signed_in(runtime, person).status.session_id
+        assert session_id is not None
+        _idle(runtime)
+        _kill_worker(runtime)
+
+        # The supervisor's heartbeat asks for this count; a dead worker cannot answer it.
+        assert runtime.profiles.in_flight_operation_count(timeout=2) is None
+
+        _suspended_without_a_request(runtime, session_id, within=5)
+        _recovering(_session_status(runtime, person, session_id))
+
+
+def test_the_first_submission_after_an_unobserved_loss_hears_the_session_is_recovering(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _without_exit_watch(monkeypatch)
+    with _runtime(tmp_path, monkeypatch) as (runtime, _clock):
+        person = runtime.connect()
+        session_id = _signed_in(runtime, person).status.session_id
+        assert session_id is not None
+        _idle(runtime)
+        _kill_worker(runtime)
+
+        refused = person.operation(
+            _field_mutation(runtime, session_id, revision=1, digest="0" * 64, language="es"),
+            deadline=exchange_deadline(),
+        )
+
+        assert _recovering(refused) > 0
 
 
 def test_the_same_connection_rebinds_its_session_with_the_saved_sign_in_under_a_fresh_worker(

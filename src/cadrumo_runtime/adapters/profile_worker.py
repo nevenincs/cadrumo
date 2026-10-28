@@ -8,11 +8,14 @@ import time
 from collections.abc import Callable
 from datetime import datetime
 from importlib.metadata import version
+from logging import WARNING
 from pathlib import Path
-from threading import Event, RLock
+from threading import Event, RLock, Thread
 from uuid import UUID
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo.core.package_interpreter import interpreter_command
 from cadrumo.core.storage_environment import ChildEnvironmentProfile, child_environment
 from cadrumo.core.time.clock import now
@@ -39,6 +42,11 @@ _WORKER_STARTUP_ACCEPT_TIMEOUT_SECONDS = 45.0
 
 
 _WORKER_STARTUP_ACCEPT_POLL_SECONDS = 0.1
+
+_EXIT_WATCH_SLICE_SECONDS = 1.0
+"""How long one wait for the worker's exit lasts before the watch looks whether its owner stopped it."""
+
+_LOGGER = get_logger(__name__)
 
 
 def unreturned_profile_worker(error: BaseException) -> ProfileWorkerProcess | None:
@@ -69,8 +77,13 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
+        exited: Callable[[ProfileWorkerProcess], None] | None = None,
     ) -> None:
-        """Launch and authenticate a contained installed worker before key access."""
+        """Launch and authenticate a contained installed worker before key access.
+
+        ``exited`` hears, from a watch thread, that the worker exited before
+        anything stopped it; an exit after ``close`` began is not reported.
+        """
         if sys.platform not in {"win32", "linux", "darwin"}:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         if worker_script is not None:
@@ -177,6 +190,45 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
                 owners += (endpoint_owner, operation_endpoint_owner)
             release_worker_resources(*owners, primary_error=error)
             raise
+        if exited is not None:
+            self._watch_exit(exited)
+
+    def _watch_exit(self, exited: Callable[[ProfileWorkerProcess], None]) -> None:
+        """Report an unrequested exit as soon as the process ends, not when a later exchange fails.
+
+        Only a Windows process offers a wait handle independent of the scope's
+        own; elsewhere the health checks of later exchanges establish the loss.
+        """
+        process = self._process
+        if not isinstance(process, WindowsOwnedProcess):
+            return
+        try:
+            waiter = process.retain_waiter()
+        except Exception as error:
+            diagnostic_event(_LOGGER, "profile_worker_exit_watch_unavailable", primary_error=error, level=WARNING)
+            return
+        watch = Thread(target=self._await_exit, args=(waiter, exited), name="profile-worker-exit-watch", daemon=True)
+        try:
+            watch.start()
+        except BaseException as error:
+            waiter.close()
+            diagnostic_event(_LOGGER, "profile_worker_exit_watch_unavailable", primary_error=error, level=WARNING)
+
+    def _await_exit(self, waiter: WindowsOwnedProcess, exited: Callable[[ProfileWorkerProcess], None]) -> None:
+        try:
+            # Waiting in slices ends the watch within one slice of a close, even when containment fails.
+            while not self._stopping.is_set():
+                try:
+                    waiter.wait(timeout=_EXIT_WATCH_SLICE_SECONDS)
+                except RefusalError as error:
+                    if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+                        continue
+                    return
+                if not self._stopping.is_set():
+                    exited(self)
+                return
+        finally:
+            waiter.close()
 
     def _accept_startup_channel(
         self,

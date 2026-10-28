@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Callable, Generator
 from contextlib import AbstractContextManager, contextmanager
@@ -13,6 +14,8 @@ from uuid import UUID
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo.core.profile_session import ProfileHumanLoginReceipt
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -27,6 +30,8 @@ from ..application.session_authority_contracts import SessionAuthorityFacts
 
 _CONSTRUCTION_WAIT_SECONDS = 60.0
 """How long a request waits for a worker another request is constructing; construction is itself bounded."""
+
+_LOGGER = get_logger(__name__)
 
 
 class ProfileWorkerSessionOwner:
@@ -48,9 +53,15 @@ class ProfileWorkerSessionOwner:
         authorization: WorkerAuthorizationOwner | None = None,
         worker_script: Path | None = None,
         wall_clock: Callable[[], datetime] = now,
+        lost: Callable[[], None] | None = None,
     ) -> None:
-        """Share the profile denial guard with the existing authority and administration."""
+        """Share the profile denial guard with the existing authority and administration.
+
+        ``lost`` hears that a worker loss was established outside any request,
+        so the sessions it ends are swept without waiting for one.
+        """
         self.identity, self.root = identity, storage_root
+        self._lost_notice = lost
         self._observe, self._human_secret, self._guard = observe, human_secret, guard
         self._worker: ProfileWorkerProcess | None = None
         self._lost = False
@@ -131,6 +142,33 @@ class ProfileWorkerSessionOwner:
             if not self._stopping.is_set():
                 self._worker_lost = True
 
+    def _worker_exited(self, worker: ProfileWorkerProcess) -> None:
+        """Contain this owner's current worker after it failed with nothing waiting on it, then call for a sweep."""
+        with self._lifecycle_guard:
+            if worker is not self._worker or self._stopping.is_set():
+                return
+        try:
+            self._contain_lost_worker()
+        except Exception as error:
+            # The worker stays retiring; settling the lost owner proves its containment later.
+            diagnostic_event(
+                _LOGGER, "profile_worker_loss_containment_pending", primary_error=error, level=logging.WARNING
+            )
+        if self._lost_notice is not None:
+            self._lost_notice()
+
+    def observe_exit(self) -> None:
+        """Establish the loss of a current worker that has exited, before a request borrows it."""
+        with self._lifecycle_guard:
+            worker = None if self._lost else self._worker
+        if worker is None:
+            return
+        try:
+            worker.require_alive()
+        except RefusalError as error:
+            if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                self._worker_exited(worker)
+
     def operation_worker(self) -> ProfileWorkerProcess:
         """Borrow an already admitted worker without holding the guard during callbacks."""
         with self._lifecycle_guard:
@@ -161,7 +199,12 @@ class ProfileWorkerSessionOwner:
             # alive. Its late answer is discarded, never reused as proof that a
             # subsequent admission fence was idle.
             activity = worker.activity(deadline=deadline)
-        except (RefusalError, AutomationCustodyError, ProfileAccessRefusedError):
+        except RefusalError as error:
+            # The probe fences a worker whose channel failed; that is a loss, not an unknown count.
+            if error.reason is not RefusalCode.DEADLINE_EXCEEDED and worker.stopping:
+                self._worker_exited(worker)
+            return None
+        except (AutomationCustodyError, ProfileAccessRefusedError):
             return None
         return None if activity is None else activity.in_flight_operations
 
@@ -177,6 +220,7 @@ class ProfileWorkerSessionOwner:
                     authorization=self._authorization,
                     worker_script=self._worker_script,
                     wall_clock=self._wall_clock,
+                    exited=self._worker_exited,
                 )
                 with self._lifecycle_guard:
                     if self._stopping.is_set():

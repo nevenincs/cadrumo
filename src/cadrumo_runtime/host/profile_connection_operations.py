@@ -347,6 +347,9 @@ class ProfileConnectionOperationMixin:
         *,
         release_guard: ExitStack,
     ) -> tuple[OperationReply, datetime | None]:
+        # A suspended session learns how long it may still rebind before any worker is borrowed for it.
+        host.owner.observe_exit()
+        host.authority.require_unsuspended(request.session_id)
         if isinstance(request, OperationClaimableReviews):
             # Only the desktop surfaces these reviews; the claim itself stays open to every person frontend.
             if connection.frontend is not OperationFrontendProjection.DESKTOP:

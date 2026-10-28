@@ -98,6 +98,7 @@ class ProfileConnectionAdmissionMixin:
                         suspended=partial(self._sessions_suspended, profile_id),
                         rebound=self._cue_lease_holders,
                         recovery=self._custody_recovery,
+                        worker_lost=self.lifecycle_changed,
                     )
                     if not self._admitting():
                         raise RefusalError(RefusalCode.DRAINING)

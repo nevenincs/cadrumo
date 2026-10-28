@@ -235,12 +235,14 @@ class RuntimeProfileHost:
         suspended: Callable[[tuple[AccessSession, ...]], None] | None = None,
         rebound: Callable[[tuple[AccessSession, ...]], None] | None = None,
         recovery: CustodyRecoveryPolicy | None = None,
+        worker_lost: Callable[[], None] | None = None,
     ) -> None:
         """Compose existing authorities without opening keys or selecting a profile.
 
         A positive worker loss suspends this profile's leases under a fresh
         worker owner; ``suspended`` and ``rebound`` hear which leases wait and
-        which returned after a fresh proof.
+        which returned after a fresh proof. ``worker_lost`` hears a loss
+        established outside any request, which a lifecycle pass then sweeps.
         """
         self.store, self._registry = store, registry
         self._contracts = registry.public_contract_set
@@ -258,6 +260,7 @@ class RuntimeProfileHost:
         self._sign_in_generation: SignInGeneration | None = None
         self.issuer = CustodyAutomationKeyIssuer()
         self._runtime_boot_id, self._worker_script = runtime_boot_id, worker_script
+        self._worker_lost = worker_lost
         # Owners of lost workers, kept until their containment and callbacks settle.
         self._lost_owners: list[ProfileWorkerSessionOwner] = []
         self._owner = self._new_owner()
@@ -290,6 +293,7 @@ class RuntimeProfileHost:
             authorization=self,
             worker_script=self._worker_script,
             wall_clock=self._wall_clock,
+            lost=self._worker_lost,
         )
 
     def _replace_lost_owner(self) -> ProfileWorkerSessionOwner:

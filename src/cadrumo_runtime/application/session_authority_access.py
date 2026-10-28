@@ -92,6 +92,16 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             raise ProfileAccessRefusedError(current.code)
         return facts, session, grant, key
 
+    def require_unsuspended(self: SessionAuthorityAccess, session_id: UUID) -> None:
+        """Refuse a lease a worker loss suspended, with the time left to rebind it; any other identity passes."""
+        with self.owner.admission_guard():
+            self._observe_worker_loss()
+            recovering = self._recovering(session_id)
+        if recovering is not None:
+            raise ProfileAccessRefusedError(
+                recovering.code, recovery_remaining_seconds=recovering.recovery_remaining_seconds
+            )
+
     def automation_request_session(
         self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID
     ) -> AccessSession:
