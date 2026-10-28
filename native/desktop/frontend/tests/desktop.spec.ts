@@ -350,6 +350,9 @@ const signInState = (target: Page) =>
 test("TUI startup stays covered through sign-in and loading until a screen is rendered", async ({
   page,
 }) => {
+  // The page's clock runs at its own pace until the settle window below,
+  // which the test then moves through itself.
+  await page.clock.install();
   await signInHost(page);
   await page.evaluate(() => {
     Object.assign(
@@ -400,13 +403,17 @@ test("TUI startup stays covered through sign-in and loading until a screen is re
   expect((await signInState(page)).tuiCloses).toBe(0);
   await output("\x1b]777;cadrumo;presentation;loading\x1b\\\x1b[2J");
   await expect(content).toBeHidden();
+  // The clock stops, so the pane's settle window ends when the test moves
+  // time on, not when a busy machine is slow to send the next output.
+  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
   // ConPTY can forward OSC first and buffer the following screen repaint.
   await output("\x1b]777;cadrumo;presentation;ready\x1b\\");
-  await page.waitForTimeout(50);
+  await page.clock.runFor(50);
   await expect(content).toBeHidden();
   await output("Next screen");
-  await page.waitForTimeout(50);
+  await page.clock.runFor(50);
   await expect(content).toBeHidden();
+  await page.clock.resume();
   await expect(content).toBeVisible();
   expect((await signInState(page)).tuiStarts).toBe(1);
   // A process that exits before readiness must not strand a loading cover.
