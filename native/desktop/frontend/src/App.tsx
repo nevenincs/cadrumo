@@ -664,6 +664,8 @@ export function App({ host }: { host: Host }) {
       : null;
   if (browserReader !== browserKeptFor) setBrowserKeptFor(browserReader);
   const browserMounted = browserOn || browserReader !== null;
+  // Raised to send an open view to its home page, the Sede.
+  const [browserHome, setBrowserHome] = useState(0);
   // What the reader has made of the calendar, kept while its page is away:
   // the page is taken down when it is put away, and comes back as it was.
   // A calendar belongs to its profile, and so does what was made of it: a
@@ -766,6 +768,12 @@ export function App({ host }: { host: Host }) {
     setMaximized((area) => (area === "docs" ? area : null));
     setPage("browser");
   }, [browserVisible, setMaximized, setPage]);
+  // The AEAT shortcut: the browser at the Sede. A view already open is sent
+  // back there; a new one starts there.
+  const showSede = useCallback(() => {
+    if (browserMounted) setBrowserHome((count) => count + 1);
+    showBrowser();
+  }, [browserMounted, showBrowser]);
   const askSignIn = useCallback(() => {
     const element = document.activeElement;
     signInOpener.current = {
@@ -2916,7 +2924,7 @@ export function App({ host }: { host: Host }) {
       // Where the window has a browser the shortcut opens it, and the
       // person's own browser is its menu's choice.
       ...(host.sedeView
-        ? { onClick: showBrowser, onMenu: aeatMenu }
+        ? { onClick: showSede, onMenu: aeatMenu }
         : { onClick: () => runAction("link.aeat") }),
     },
     ...(driveUrl
@@ -3165,6 +3173,7 @@ export function App({ host }: { host: Host }) {
           }
           page={browserPage}
           shown={browserOn && firstPaneShown}
+          home={browserHome}
           isShellChord={isShellChord}
           pane={{
             title: t("desktop.browser.title"),

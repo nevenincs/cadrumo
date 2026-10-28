@@ -16,7 +16,7 @@ import pytest
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
     ProvisionMutationRequest,
 )
 from cadrumo.application.operations.frontend_projection import OperationReviewAvailableInteractionV1
@@ -114,7 +114,7 @@ def test_independent_humans_claim_mcp_review_once_and_both_live_principals_are_r
                     request_id=uuid4(),
                     profile_id=external.profile_id,
                     session_id=external.session_id,
-                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload_json=ProvisionMutationRequest().model_dump_json(),
                 ),

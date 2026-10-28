@@ -12,8 +12,8 @@ from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.operation_access import OperationReviewClaim, OperationReviewClaimed
 
 from .....application.components_operations import (
-    COMPONENTS_STATUS_OPERATION_ID,
-    COMPONENTS_VERIFY_OPERATION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
+    COMPONENTS_VERIFY_DEFINITION_ID,
     PROVISION_RESPONSE_SCHEMA,
     PROVISION_REVIEW_SCHEMA,
     ProvisionOutcome,
@@ -93,9 +93,9 @@ def test_claim_binds_the_exact_document_and_refuses_a_mismatched_successor(fault
 @pytest.mark.parametrize(
     ("full", "items", "definition"),
     [
-        (False, (), COMPONENTS_STATUS_OPERATION_ID),
-        (True, (), COMPONENTS_VERIFY_OPERATION_ID),
-        (True, (DependencyItemKind.BROWSER,), COMPONENTS_VERIFY_OPERATION_ID),
+        (False, (), COMPONENTS_STATUS_DEFINITION_ID),
+        (True, (), COMPONENTS_VERIFY_DEFINITION_ID),
+        (True, (DependencyItemKind.BROWSER,), COMPONENTS_VERIFY_DEFINITION_ID),
     ],
 )
 def test_component_reads_submit_typed_registered_requests(

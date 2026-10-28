@@ -49,6 +49,7 @@ const page = (over: Partial<Extract<SedeViewEvent, { kind: "state" }>> = {}) =>
   ({
     kind: "state",
     view: 1,
+    security: "secure",
     origin: "https://sede.example.test",
     path: "/inicio",
     title: "",
@@ -56,8 +57,26 @@ const page = (over: Partial<Extract<SedeViewEvent, { kind: "state" }>> = {}) =>
     can_go_forward: true,
     loading: false,
     phase: "browsing",
+    external: true,
     ...over,
   }) satisfies SedeViewEvent;
+
+test("a page off https replaces the address it left with its marker", () => {
+  const sede = run([{ kind: "opened", view: 1 }, page()]);
+  expect(sede.page).toMatchObject({ security: "secure", external: true });
+  for (const security of ["insecure", "unknown"] as const) {
+    const away = run(
+      [page({ security, origin: null, path: null, external: false })],
+      sede,
+    );
+    expect(away.page).toMatchObject({
+      security,
+      origin: null,
+      path: null,
+      external: false,
+    });
+  }
+});
 
 test("the view opens, shows its page, and publishes before it ends", () => {
   let state = run([{ kind: "opened", view: 1 }, page()]);

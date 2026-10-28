@@ -190,6 +190,32 @@ test("the AEAT click starts the view, and its menu opens the system browser whil
   expect(await since(target, at, "sedeViewOpen")).toEqual([]);
 });
 
+test("the AEAT click brings an open view forward and sends it back to the Sede", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  const aeat = railButton(target, "desktop.rail.aeat");
+
+  // Shown already, the view still goes home.
+  let at = await mark(target);
+  await aeat.click();
+  await expect
+    .poll(() => since(target, at, "sedeViewNavigate home"))
+    .toHaveLength(1);
+
+  // Put aside behind another page, the click brings the same view forward.
+  await railButton(target, "desktop.calendar.title").click();
+  await expect(browserPage(target)).toHaveCount(0);
+  at = await mark(target);
+  await aeat.click();
+  await expect(browserPage(target)).toBeVisible();
+  await expect
+    .poll(() => since(target, at, "sedeViewNavigate home"))
+    .toHaveLength(1);
+  expect(await since(target, at, "sedeViewOpen")).toEqual([]);
+  expect(await since(target, at, "sedeViewClose")).toEqual([]);
+});
+
 // ---------------------------------------------------------------------------
 // The toolbar
 // ---------------------------------------------------------------------------
@@ -249,6 +275,40 @@ test("the toolbar's back, forward, reload and home reach the view, and its exter
 // ---------------------------------------------------------------------------
 // Keys, pointer, wheel and text
 // ---------------------------------------------------------------------------
+
+test("a page off https shows its marker instead of the address it left, and has no page to open externally", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  const external = control(target, "desktop.browser.external");
+  await expect(external).toBeEnabled();
+  for (const [security, words] of [
+    ["insecure", "desktop.browser.page_insecure"],
+    ["unknown", "desktop.browser.page_unknown"],
+  ] as const) {
+    await target.evaluate(
+      (left) => window.__scenarioSedeView?.leave(left),
+      security,
+    );
+    await expect(address(target)).toHaveAttribute(
+      "data-browser-security",
+      security,
+    );
+    await expect(address(target)).toContainText(label(words));
+    await expect(address(target)).not.toContainText(SEDE_VIEW_ORIGIN);
+    await expect(address(target)).not.toHaveAttribute("title");
+    await expect(external).toBeDisabled();
+  }
+  // Back on the Sede, its address and its external open return.
+  const at = await mark(target);
+  await control(target, "desktop.browser.home").click();
+  await live(target);
+  await expect(external).toBeEnabled();
+  await external.click();
+  await expect
+    .poll(() => since(target, at, "sedeViewOpenExternal page"))
+    .toHaveLength(1);
+});
 
 test("the shell's chords stay out of the canvas while it has focus, and run again once focus leaves", async ({
   page: target,
@@ -537,42 +597,6 @@ test("file choosers wait for the person oldest first, and a refusal says it was 
   expect(await since(target, at, "sedeViewUpload cancel")).toHaveLength(1);
 });
 
-test("a notice that offers a link opens it in the person's own browser from the host, and any notice can be dismissed", async ({
-  page: target,
-}) => {
-  await showBrowser(target);
-  await target.evaluate(() => {
-    window.__scenarioSedeView?.notice("download_offered", "offer-1");
-    window.__scenarioSedeView?.notice("file_chooser_offered");
-  });
-  const offered = line(
-    target,
-    label("desktop.browser.notice.download_offered"),
-  );
-  await expect(offered).toBeVisible();
-  const at = await mark(target);
-  await offered
-    .getByRole("button", { name: label("desktop.browser.external") })
-    .click();
-  await expect(offered).toHaveCount(0);
-  expect(await since(target, at, "sedeViewOpenExternal offer")).toHaveLength(1);
-  expect(await externalOpens(target)).toEqual([]);
-
-  // The next has no link to offer: it can only be dismissed.
-  const plain = line(
-    target,
-    label("desktop.browser.notice.file_chooser_offered"),
-  );
-  await expect(plain).toBeVisible();
-  await expect(
-    plain.getByRole("button", { name: label("desktop.browser.external") }),
-  ).toHaveCount(0);
-  await plain
-    .getByRole("button", { name: label("desktop.browser.notice.dismiss") })
-    .click();
-  await expect(plain).toHaveCount(0);
-});
-
 test("page dialogs are answered by the person, each in its own words", async ({
   page: target,
 }) => {
@@ -848,7 +872,6 @@ test("no frame, address or title of the page reaches storage, the window's addre
   await control(target, "desktop.browser.home").click();
   await target.evaluate(() => {
     window.__scenarioSedeView?.download("secreto.pdf");
-    window.__scenarioSedeView?.notice("download_offered", "offer-1");
   });
   await expect(
     line(

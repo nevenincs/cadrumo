@@ -17,9 +17,9 @@ import pytest
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.application.components_operations import (
-    COMPONENTS_SETUP_OPERATION_ID,
-    COMPONENTS_STATUS_OPERATION_ID,
-    COMPONENTS_VERIFY_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
+    COMPONENTS_VERIFY_DEFINITION_ID,
 )
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -106,11 +106,11 @@ def test_parsed_cli_runs_registered_provisioning_against_real_role(
 
         snapshots = _snapshots(runtime.root)
         definitions = [snapshot.identity.definition_id for snapshot in snapshots]
-        assert definitions.count(COMPONENTS_STATUS_OPERATION_ID) == 1
-        assert definitions.count(COMPONENTS_VERIFY_OPERATION_ID) == 2
-        assert definitions.count(COMPONENTS_SETUP_OPERATION_ID) == 1
+        assert definitions.count(COMPONENTS_STATUS_DEFINITION_ID) == 1
+        assert definitions.count(COMPONENTS_VERIFY_DEFINITION_ID) == 2
+        assert definitions.count(COMPONENTS_SETUP_DEFINITION_ID) == 1
         setup = next(
-            snapshot for snapshot in snapshots if snapshot.identity.definition_id == COMPONENTS_SETUP_OPERATION_ID
+            snapshot for snapshot in snapshots if snapshot.identity.definition_id == COMPONENTS_SETUP_DEFINITION_ID
         )
         assert setup.terminal_condition is OperationTerminalCondition.SUCCEEDED
         assert setup.effect is OperationEffect.NONE

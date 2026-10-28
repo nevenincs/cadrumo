@@ -7,7 +7,7 @@ from collections.abc import Callable, Sequence
 
 from cadrumo.application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_STATUS_OPERATION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
     ProvisionOutcome,
     ProvisionReadRequest,
     ProvisionResult,
@@ -41,7 +41,7 @@ def gate_setup_actions(
             completed = run_registered_operation(
                 client,
                 ProvisionReadRequest(),
-                definition_id=COMPONENTS_STATUS_OPERATION_ID,
+                definition_id=COMPONENTS_STATUS_DEFINITION_ID,
                 subject_ref=COMPONENTS_OPERATION_SUBJECT,
                 result_type=ProvisionResult,
                 request_version=1,

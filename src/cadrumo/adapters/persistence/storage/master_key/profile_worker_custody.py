@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 import time
-from collections.abc import AsyncGenerator, Callable
-from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, replace
 from datetime import timedelta
 from pathlib import Path
@@ -22,16 +22,20 @@ from .....application.user_profile.access_errors import ProfileAccessRefusedErro
 from .....application.user_profile.access_policy import intersect_scopes
 from .....application.user_profile.profile_record_repository import close_active_profile_record_session
 from .....core.async_cleanup import await_cancellation_complete
+from .....core.diagnostic_log import diagnostic_phase
+from .....core.logging import get_logger
 from .....core.storage_taxonomy import StorageCategory
 from .....core.time.clock import now
 from .....core.time.utc import UtcInstant
 from ..custody.automation_profile import validate_automation_profile_binding
 from ..custody.change_witness import CustodyChangeWitness, WatchedDirectory
 from ..custody.paths import profile_custody_path
-from .active_session import bind_active_bucket_session, close_active_bucket_session, current_active_bucket_session
-from .bucket_session import BucketSession
+from .active_session import bind_active_bucket_session, current_active_bucket_session, seal_active_bucket_session
+from .bucket_session import KEY_RELEASE_PHASE_EVENT, BucketSession
 from .profile_worker_binding import profile_worker_binding
 from .timed_lock import TimedRLock
+
+_log = get_logger(__name__)
 
 _ENDED_MEMORY = 256
 """How many ended lease ids custody remembers, so a late request hears how its session ended."""
@@ -125,6 +129,10 @@ class ProfileWorkerCustody:
         self._leases: dict[UUID, AccessSession] = {}
         self._ended: dict[UUID, AccessDenialCode] = {}
         self._lock = TimedRLock()
+        # Sessions sealed under the lock whose engine pools close once the
+        # outermost holder leaves it. Their keys are already zeroised.
+        self._sealed: list[BucketSession] = []
+        self._sealed_guard = Lock()
         self._closed = False
         self._sections = 0
         # Moves at every section entry and at close. A failed capsule read that
@@ -149,6 +157,36 @@ class ProfileWorkerCustody:
                 ),
             )
         )
+
+    @contextmanager
+    def _held(self, call_name: str) -> Generator[None]:
+        """Hold the custody lock, then close the engines of sessions sealed meanwhile once it is left.
+
+        Sealing zeroises the key and unbinds the session under the lock, so
+        nothing can use the material after the holder's call answers. Closing
+        the last connection to the profile's WAL database checkpoints and
+        fsyncs it; that waits on the disk, so it runs after the outermost
+        holder leaves, before the call returns, and no other custody request
+        waits for it.
+        """
+        try:
+            with self._lock.held(call_name):
+                yield
+        finally:
+            if not self._lock.owned():
+                self._dispose_sealed()
+
+    def _dispose_sealed(self) -> None:
+        with self._sealed_guard:
+            sealed, self._sealed = self._sealed, []
+        for session in sealed:
+            session.dispose_engines()
+
+    def _seal(self, session: BucketSession) -> None:
+        """Seal ``session`` under the custody lock and leave its engines for :meth:`_held` to dispose."""
+        with self._sealed_guard:
+            self._sealed.append(session)
+        session.seal()
 
     def _live(self, lease: AccessSession) -> bool:
         instant, elapsed = self.clock(), self.monotonic() - lease.issued_monotonic
@@ -202,13 +240,13 @@ class ProfileWorkerCustody:
         overtook is read again, because a publication inside that section may
         have failed it.
         """
-        with self._lock.held(call_name):
+        with self._held(call_name):
             if not needed():
                 return commit(None)
         attempts = 1
         while True:
             proof = self._prove(dek)
-            with self._lock.held(call_name):
+            with self._held(call_name):
                 current = not proof.failed or proof.epoch == self._epoch
                 if current or attempts == _PROOF_ATTEMPTS:
                     return commit(replace(proof, current=current))
@@ -342,7 +380,7 @@ class ProfileWorkerCustody:
         return ProfileWorkerCustodySection(self._leave_section)
 
     def _leave_section(self) -> None:
-        with self._lock.held("section_exit"):
+        with self._held("section_exit"):
             self._sections -= 1
             if self._sections:
                 return
@@ -383,7 +421,7 @@ class ProfileWorkerCustody:
 
     def retire(self, session_id: UUID) -> frozenset[UUID]:
         """Drop one lineage and name the leases it held; the process remains pinned after its last lease ends."""
-        with self._lock.held("retire"):
+        with self._held("retire"):
             dropped: set[UUID] = set()
             pending = {session_id}
             while pending:
@@ -450,11 +488,11 @@ class ProfileWorkerCustody:
         try:
             bind_active_bucket_session(successor)
             if previous is not None:
-                previous.close()
+                self._seal(previous)
             self._leases = leases
             self._material_update_pending = False
         except BaseException:
-            successor.close()
+            self._seal(successor)
             self.close()
             raise
 
@@ -468,7 +506,7 @@ class ProfileWorkerCustody:
 
     def seconds_until_expiry(self) -> float | None:
         """Seconds until the earliest held lease lapses on either clock, or ``None`` while none is held."""
-        with self._lock.held("seconds_until_expiry"):
+        with self._held("seconds_until_expiry"):
             instant, elapsed = self.clock(), self.monotonic()
             remaining = [
                 min(
@@ -489,7 +527,7 @@ class ProfileWorkerCustody:
         The successor is proved without the custody lock; the caller's own
         section keeps the material it was proved with in place meanwhile.
         """
-        with self._lock.held("retire_password_successor"):
+        with self._held("retire_password_successor"):
             self._require_password_successor(password_generation)
             session = current_active_bucket_session()
             if session is None:
@@ -497,7 +535,7 @@ class ProfileWorkerCustody:
             dek = session.dek
         successor = self.identity.binding.model_copy(update={"custody_generation": password_generation})
         validate_automation_profile_binding(successor, root=self.root, dek=dek)
-        with self._lock.held("retire_password_successor"):
+        with self._held("retire_password_successor"):
             self._require_password_successor(password_generation)
             # Clear logical authority before the generic section cleanup. Its
             # old-binding validation must not misreport this proven transition
@@ -515,7 +553,7 @@ class ProfileWorkerCustody:
 
     def close(self) -> None:
         """Fence further installation and release all process custody."""
-        with self._lock.held("close"):
+        with self._held("close"):
             self._closed = True
             self._epoch += 1
             self._leases.clear()
@@ -528,6 +566,11 @@ class ProfileWorkerCustody:
             return
         self._material_update_pending = False
         try:
-            close_active_profile_record_session()
+            with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "record_authority_zeroise"):
+                close_active_profile_record_session()
         finally:
-            close_active_bucket_session()
+            with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "bucket_session_seal"):
+                session = seal_active_bucket_session()
+                if session is not None:
+                    with self._sealed_guard:
+                        self._sealed.append(session)

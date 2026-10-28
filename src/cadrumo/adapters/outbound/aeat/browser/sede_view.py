@@ -48,6 +48,7 @@ from cadrumo_client.contracts.view_stream import (
     ViewImage,
     ViewInput,
     ViewNavigate,
+    ViewPageSecurity,
     ViewPhase,
     ViewResize,
     ViewSinkInput,
@@ -122,28 +123,22 @@ def _is_aeat_page(url: str) -> bool:
     return host is not None and is_current_aeat_host(host)
 
 
-def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool, phase: ViewPhase) -> ViewState | None:
-    """Return the state of an https page, or ``None`` for any other page.
+def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool, phase: ViewPhase) -> ViewState:
+    """Return the state of the page at ``url``, whatever page it is.
 
-    The toolbar gets the origin and path only. The page's whole ``url`` rides
-    along as the host-only address when the contract admits it, and is left
-    out otherwise.
+    An https page is stated by its origin and path, which the toolbar shows.
+    The page's whole ``url`` rides along as the host-only address when the
+    contract admits it, and is left out otherwise. Any other page is stated by
+    its marker alone: ``insecure`` for an ``http:`` page, ``unknown`` for one
+    whose origin cannot be stated. Either way the host learns that the person
+    left the page it held.
     """
-    try:
-        parts = urlsplit(url)
-        host = parts.hostname
-        port = parts.port
-    except ValueError:
-        return None
-    if parts.scheme != "https" or host is None or host == "":
-        return None
-    netloc = host if port is None else f"{host}:{port}"
-    path = parts.path or "/"
 
-    def state(address: str | None) -> ViewState:
+    def state(security: ViewPageSecurity, origin: str | None, path: str | None, address: str | None) -> ViewState:
         return ViewState(
-            origin=f"https://{netloc.lower()}",
-            path=path[:VIEW_MAX_PATH_LENGTH],
+            security=security,
+            origin=origin,
+            path=path,
             address=address,
             title=title[:VIEW_MAX_TITLE_LENGTH],
             can_go_back=back,
@@ -152,12 +147,24 @@ def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool
             phase=phase,
         )
 
+    try:
+        parts = urlsplit(url)
+        host = parts.hostname
+        port = parts.port
+    except ValueError:
+        return state(ViewPageSecurity.UNKNOWN, None, None, None)
+    if parts.scheme == "http":
+        return state(ViewPageSecurity.INSECURE, None, None, None)
+    if parts.scheme != "https" or host is None or host == "":
+        return state(ViewPageSecurity.UNKNOWN, None, None, None)
+    netloc = host if port is None else f"{host}:{port}"
+    path = (parts.path or "/")[:VIEW_MAX_PATH_LENGTH]
     for address in (url, None):
         try:
-            return state(address)
+            return state(ViewPageSecurity.SECURE, f"https://{netloc.lower()}", path, address)
         except ValidationError:
             continue
-    return None
+    return state(ViewPageSecurity.UNKNOWN, None, None, None)
 
 
 @dataclass(slots=True)
@@ -595,26 +602,27 @@ class SedeViewPage:
             self._screencast.grant_credit(1)
 
     async def _send_state(self) -> None:
+        """State the shown page; a page whose entry cannot be read is stated as unknown, never left unsaid."""
         adapter = self._input
         if adapter is None:
             return
         try:
             entry = await adapter.current_entry()
         except PlaywrightError as exc:
-            logger.debug("aeat view state skipped exc_type=%s", type(exc).__name__)
-            return
+            logger.debug("aeat view state unreadable exc_type=%s", type(exc).__name__)
+            entry = None
         if entry is None:
-            return
-        state = view_state(
-            entry.url,
-            entry.title,
-            back=entry.availability.can_go_back,
-            forward=entry.availability.can_go_forward,
-            loading=self._loading,
-            phase=self._phase,
-        )
-        if state is not None:
-            self._sink.send(state)
+            state = view_state("", "", back=False, forward=False, loading=self._loading, phase=self._phase)
+        else:
+            state = view_state(
+                entry.url,
+                entry.title,
+                back=entry.availability.can_go_back,
+                forward=entry.availability.can_go_forward,
+                loading=self._loading,
+                phase=self._phase,
+            )
+        self._sink.send(state)
 
     def _spawn(self, work: Coroutine[object, object, None]) -> None:
         self._track(work)

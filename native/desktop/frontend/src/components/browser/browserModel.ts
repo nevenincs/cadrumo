@@ -2,6 +2,7 @@ import type {
   SedeViewDialog,
   SedeViewEndReason,
   SedeViewFailureCode,
+  SedeViewPageSecurity,
   SedeViewPhase,
   SedeViewPublication,
   SedeViewTransfer,
@@ -26,8 +27,12 @@ export type TransferNote = {
 };
 
 export type PageAddress = {
-  origin: string;
-  path: string;
+  /** Only a `secure` page has an origin and a path to show. */
+  security: SedeViewPageSecurity;
+  origin: string | null;
+  path: string | null;
+  /** Whether the host holds this page's address to open externally. */
+  external: boolean;
   canGoBack: boolean;
   canGoForward: boolean;
   loading: boolean;
@@ -141,8 +146,10 @@ function reduceEvent(state: BrowserState, event: SedeViewEvent): BrowserState {
             ? "closing"
             : state.phase,
         page: {
+          security: event.security,
           origin: event.origin,
           path: event.path,
+          external: event.external,
           canGoBack: event.can_go_back,
           canGoForward: event.can_go_forward,
           loading: event.loading,

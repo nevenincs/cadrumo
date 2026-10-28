@@ -13,9 +13,9 @@ from cadrumo_client.transport.operation_controller import OperationController, a
 
 from ....application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_SETUP_OPERATION_ID,
-    COMPONENTS_STATUS_OPERATION_ID,
-    COMPONENTS_VERIFY_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
+    COMPONENTS_VERIFY_DEFINITION_ID,
     ProvisionMutationRequest,
     ProvisionReadRequest,
     ProvisionResult,
@@ -38,7 +38,7 @@ class SetupOperations:
         """Run the quick local status operation and read its typed result."""
         controller = await OperationController.submit(
             self.client,
-            definition_id=COMPONENTS_STATUS_OPERATION_ID,
+            definition_id=COMPONENTS_STATUS_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             payload=ProvisionReadRequest(),
             expected_session_id=self.session_id,
@@ -49,7 +49,7 @@ class SetupOperations:
         await controller.start()
         projection = await await_terminal_projection(
             controller,
-            definition_id=COMPONENTS_STATUS_OPERATION_ID,
+            definition_id=COMPONENTS_STATUS_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             request_schema=contract.request_schema,
             deadline=time.monotonic() + 30,
@@ -64,7 +64,7 @@ class SetupOperations:
         """Submit full checking or browser-only setup; the modal owns its controls."""
         return await OperationController.submit(
             self.client,
-            definition_id=COMPONENTS_VERIFY_OPERATION_ID if verify else COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_VERIFY_DEFINITION_ID if verify else COMPONENTS_SETUP_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             payload=ProvisionReadRequest(items=items) if verify else ProvisionMutationRequest(),
             expected_session_id=self.session_id,

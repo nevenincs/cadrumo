@@ -19,10 +19,10 @@ from cadrumo_client.contracts.failure_categories import DependencyFailureCategor
 from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row, set_up_row
 from ....application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_REMOVE_OPERATION_ID,
-    COMPONENTS_SETUP_OPERATION_ID,
-    COMPONENTS_STATUS_OPERATION_ID,
-    COMPONENTS_VERIFY_OPERATION_ID,
+    COMPONENTS_REMOVE_DEFINITION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
+    COMPONENTS_VERIFY_DEFINITION_ID,
     ProvisionMutationRequest,
     ProvisionOutcome,
     ProvisionPlan,
@@ -80,7 +80,7 @@ def submitted(monkeypatch: pytest.MonkeyPatch) -> list[tuple[object, dict[str, A
         calls.append((payload, options))
         definition = options["definition_id"]
         rows = (recorded_absent_row("browser"), recorded_absent_row("local_ai"))
-        if definition == COMPONENTS_SETUP_OPERATION_ID:
+        if definition == COMPONENTS_SETUP_DEFINITION_ID:
             review = ProvisionReviewProjection(reviewed_proposal_digest="b" * 64, plan=_plan(), plan_digest="c" * 64)
             handler = options["review"]
             decision = handler.decide(review)
@@ -89,7 +89,7 @@ def submitted(monkeypatch: pytest.MonkeyPatch) -> list[tuple[object, dict[str, A
                 rows=(set_up_row("browser"),) if decision == "apply" else (),
                 plan_digest=review.plan_digest,
             )
-        elif definition == COMPONENTS_REMOVE_OPERATION_ID:
+        elif definition == COMPONENTS_REMOVE_DEFINITION_ID:
             result = ProvisionResult(outcome=ProvisionOutcome.REMOVED, rows=rows, items=("browser",))
         else:
             result = ProvisionResult(outcome=ProvisionOutcome.OK, rows=rows, setup_complete=False)
@@ -102,9 +102,9 @@ def submitted(monkeypatch: pytest.MonkeyPatch) -> list[tuple[object, dict[str, A
 @pytest.mark.parametrize(
     ("name", "definition"),
     [
-        ("status", COMPONENTS_STATUS_OPERATION_ID),
-        ("probe", COMPONENTS_VERIFY_OPERATION_ID),
-        ("verify", COMPONENTS_VERIFY_OPERATION_ID),
+        ("status", COMPONENTS_STATUS_DEFINITION_ID),
+        ("probe", COMPONENTS_VERIFY_DEFINITION_ID),
+        ("verify", COMPONENTS_VERIFY_DEFINITION_ID),
     ],
 )
 def test_status_probe_and_verify_route_and_keep_distinct_exit_rules(
@@ -160,7 +160,7 @@ def test_setup_uses_browser_only_and_prompts_or_rejects(
     document = json.loads(output.out)["result"]
     assert document["outcome"] == expected and document["approved"] is yes
     payload, options = submitted[0]
-    assert payload == ProvisionMutationRequest() and options["definition_id"] == COMPONENTS_SETUP_OPERATION_ID
+    assert payload == ProvisionMutationRequest() and options["definition_id"] == COMPONENTS_SETUP_DEFINITION_ID
     assert options["settlement_timeout"] is RegisteredOperationSettlement.UNBOUNDED
     assert options["review"].claim is provision_cli._claim_review
     assert options["review"].present_document is not None
@@ -172,7 +172,7 @@ def test_remove_only_submits_after_confirmation(submitted: list[tuple[object, di
     assert submitted == []
     provision_cli.provision_remove(_context(), "browser", yes=True)
     assert submitted[0][0] == ProvisionMutationRequest()
-    assert submitted[0][1]["definition_id"] == COMPONENTS_REMOVE_OPERATION_ID
+    assert submitted[0][1]["definition_id"] == COMPONENTS_REMOVE_DEFINITION_ID
     with pytest.raises(typer.BadParameter):
         provision_cli.remove_item("local_ai")
 

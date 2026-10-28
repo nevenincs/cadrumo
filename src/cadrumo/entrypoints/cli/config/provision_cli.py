@@ -78,10 +78,10 @@ from cadrumo_client.contracts.operation_access import (
 
 from ....application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_REMOVE_OPERATION_ID,
-    COMPONENTS_SETUP_OPERATION_ID,
-    COMPONENTS_STATUS_OPERATION_ID,
-    COMPONENTS_VERIFY_OPERATION_ID,
+    COMPONENTS_REMOVE_DEFINITION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
+    COMPONENTS_VERIFY_DEFINITION_ID,
     PROVISION_RESPONSE_SCHEMA,
     PROVISION_REVIEW_SCHEMA,
     ProvisionMutationRequest,
@@ -353,7 +353,7 @@ def _read(ctx: typer.Context, items: tuple[DependencyItemKind, ...] = (), *, ful
         completed = run_registered_operation(
             bound_profile_client(ctx),
             ProvisionReadRequest(items=items),
-            definition_id=COMPONENTS_VERIFY_OPERATION_ID if full else COMPONENTS_STATUS_OPERATION_ID,
+            definition_id=COMPONENTS_VERIFY_DEFINITION_ID if full else COMPONENTS_STATUS_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             result_type=ProvisionResult,
             request_version=1,
@@ -527,8 +527,8 @@ def provision_review(ctx: typer.Context, operation_id: str, yes: bool = False, r
         raise typer.BadParameter("invalid operation ID", param_hint="OPERATION_ID") from None
     client = bound_profile_client(ctx)
     budget = RegisteredOperationDeadline(None, _CALL_TIMEOUT_S, RegisteredOperationSettlement.UNBOUNDED)
-    contract = client.contract(COMPONENTS_SETUP_OPERATION_ID, deadline=budget.call_deadline())
-    if contract.definition_id != COMPONENTS_SETUP_OPERATION_ID:
+    contract = client.contract(COMPONENTS_SETUP_DEFINITION_ID, deadline=budget.call_deadline())
+    if contract.definition_id != COMPONENTS_SETUP_DEFINITION_ID:
         raise RefusalError(RefusalCode.INVALID_FRAME)
     progress = RegisteredOperationProgress()
     exchange = RegisteredOperationExchange(
@@ -539,7 +539,7 @@ def provision_review(ctx: typer.Context, operation_id: str, yes: bool = False, r
         target,
         client.profile_id,
         client.session_id,
-        COMPONENTS_SETUP_OPERATION_ID,
+        COMPONENTS_SETUP_DEFINITION_ID,
         COMPONENTS_OPERATION_SUBJECT,
         contract,
         None,
@@ -586,7 +586,7 @@ def _setup(
         completed = run_registered_operation(
             bound_profile_client(ctx),
             ProvisionMutationRequest(),
-            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_SETUP_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             result_type=ProvisionResult,
             request_version=1,
@@ -810,7 +810,7 @@ def provision_remove(ctx: typer.Context, item: str, yes: bool = False) -> None:
         completed = run_registered_operation(
             bound_profile_client(ctx),
             ProvisionMutationRequest(),
-            definition_id=COMPONENTS_REMOVE_OPERATION_ID,
+            definition_id=COMPONENTS_REMOVE_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             result_type=ProvisionResult,
             request_version=1,

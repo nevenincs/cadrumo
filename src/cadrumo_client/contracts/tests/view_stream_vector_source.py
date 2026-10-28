@@ -126,6 +126,7 @@ def _expected_image(sequence: int, length: int) -> dict[str, Any]:
 
 _STATE: dict[str, Any] = {
     "kind": "view.state",
+    "security": "secure",
     "origin": "https://sede.agenciatributaria.gob.es",
     "path": "/Sede/inicio.html",
     "title": "Sede electrónica",
@@ -134,6 +135,18 @@ _STATE: dict[str, Any] = {
     "loading": False,
     "phase": "browsing",
 }
+
+
+_UNSTATED: dict[str, Any] = {
+    "kind": "view.state",
+    "security": "insecure",
+    "title": "Pagina sin cifrar",
+    "can_go_back": True,
+    "can_go_forward": False,
+    "loading": False,
+    "phase": "browsing",
+}
+"""A page whose address cannot be stated: the marker alone, with no origin, path or address."""
 
 
 def _headers() -> list[dict[str, Any]]:
@@ -901,6 +914,8 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
             {**_STATE, "address": "https://sede.agenciatributaria.gob.es/Sede/inicio.html?nif=synthetic#top"},
         ),
         ("state_address_origin_only", "downstream", {**_STATE, "address": "https://sede.agenciatributaria.gob.es"}),
+        ("state_insecure", "downstream", _UNSTATED),
+        ("state_unknown", "downstream", {**_UNSTATED, "security": "unknown", "title": ""}),
         (
             "notice_dialog",
             "downstream",
@@ -952,6 +967,20 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("image_scale_beyond_bound", "downstream", {**_image_document(0, 1), "scale": 4.5}),
         ("image_pixels_beyond_bound", "downstream", {**_image_document(0, 1), "pixel_width": 8193}),
         ("state_origin_with_path", "downstream", {**_STATE, "origin": "https://sede.agenciatributaria.gob.es/Sede"}),
+        ("state_without_security", "downstream", {key: value for key, value in _STATE.items() if key != "security"}),
+        ("state_unknown_security", "downstream", {**_STATE, "security": "mixed"}),
+        (
+            "state_secure_without_origin",
+            "downstream",
+            {key: value for key, value in _STATE.items() if key not in {"origin", "path"}},
+        ),
+        ("state_insecure_with_origin", "downstream", {**_UNSTATED, "origin": "https://sede.agenciatributaria.gob.es"}),
+        ("state_insecure_with_path", "downstream", {**_UNSTATED, "path": "/Sede/inicio.html"}),
+        (
+            "state_unknown_with_address",
+            "downstream",
+            {**_UNSTATED, "security": "unknown", "address": "https://sede.agenciatributaria.gob.es/"},
+        ),
         ("state_origin_http", "downstream", {**_STATE, "origin": "http://sede.agenciatributaria.gob.es"}),
         ("state_path_with_query", "downstream", {**_STATE, "path": "/Sede/x.html?nif=1"}),
         ("state_unknown_phase", "downstream", {**_STATE, "phase": "submitting"}),

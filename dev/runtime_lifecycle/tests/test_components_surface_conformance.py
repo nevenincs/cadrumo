@@ -21,7 +21,7 @@ from textual.widgets import Button
 from cadrumo.adapters.outbound.components import client as components_client
 from cadrumo.adapters.outbound.components.protocol import ComponentsResultLine, decode_components_line
 from cadrumo.application.components_operations import (
-    COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
     ProvisionResult,
 )
 from cadrumo.application.dependency_contracts import (
@@ -113,7 +113,7 @@ def test_all_surfaces_share_the_registered_component_contracts() -> None:
         "config.provision.setup",
         "config.provision.remove",
     }
-    setup = registry.lookup_public_contract(COMPONENTS_SETUP_OPERATION_ID)
+    setup = registry.lookup_public_contract(COMPONENTS_SETUP_DEFINITION_ID)
     assert setup.review_projection_schema is not None
     assert setup.interaction_response_schema is not None
 

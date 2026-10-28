@@ -169,21 +169,37 @@ class ViewImage(BaseModel):
     scale: _Scale
 
 
-class ViewState(BaseModel):
-    """The page: origin and path for the toolbar, and the full address for the desktop host alone.
+class ViewPageSecurity(StrEnum):
+    """Whether the shown page's address can be stated to the person."""
 
-    ``origin`` and ``path`` never carry a query or fragment; they are what the
-    window shows. ``address`` is the page's whole URL, query included, so that
-    the person's "open in external browser" lands on the same page. The desktop
-    host keeps it in memory and never relays it to the window; it is ``None``
-    when the page's URL does not fit the contract.
+    SECURE = "secure"
+    """An https page; ``origin`` and ``path`` say where the person is."""
+    INSECURE = "insecure"
+    """A page not served over https, such as an ``http:`` page; nothing of its address is stated."""
+    UNKNOWN = "unknown"
+    """A page whose origin cannot be stated, such as ``data:``, ``about:blank``, an error page or an unreadable URL."""
+
+
+class ViewState(BaseModel):
+    """The page: its security marker, origin and path for the toolbar, and the full address for the desktop host alone.
+
+    Every top-level navigation states the page. An https page is ``secure``
+    and carries its ``origin`` and ``path``, which never carry a query or
+    fragment; they are what the window shows. ``address`` is the page's whole
+    URL, query included, so that the person's "open in external browser" lands
+    on the same page. The desktop host keeps it in memory and never relays it
+    to the window; it is ``None`` when the page's URL does not fit the
+    contract. Any other page is ``insecure`` or ``unknown`` and carries no
+    origin, path or address, so the host drops the address it held and the
+    toolbar shows the marker instead of an earlier page.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["view.state"] = "view.state"
-    origin: str = Field(min_length=1, max_length=VIEW_MAX_URL_LENGTH)
-    path: str = Field(min_length=1, max_length=VIEW_MAX_PATH_LENGTH)
+    security: ViewPageSecurity
+    origin: str | None = Field(default=None, min_length=1, max_length=VIEW_MAX_URL_LENGTH)
+    path: str | None = Field(default=None, min_length=1, max_length=VIEW_MAX_PATH_LENGTH)
     address: str | None = Field(default=None, min_length=1, max_length=VIEW_MAX_URL_LENGTH)
     title: str = Field(max_length=VIEW_MAX_TITLE_LENGTH)
     can_go_back: bool
@@ -193,7 +209,14 @@ class ViewState(BaseModel):
 
     @model_validator(mode="after")
     def _origin_and_path_only(self) -> Self:
-        parts = urlsplit(self.origin)
+        if self.security is not ViewPageSecurity.SECURE:
+            if self.origin is not None or self.path is not None or self.address is not None:
+                raise ValueError("an insecure or unknown page states no origin, path or address")
+            return self
+        if self.origin is None or self.path is None:
+            raise ValueError("a secure page states its origin and path")
+        origin, path = self.origin, self.path
+        parts = urlsplit(origin)
         if (
             parts.scheme != "https"
             or parts.hostname in {None, ""}
@@ -202,15 +225,15 @@ class ViewState(BaseModel):
             or parts.path
             or parts.query
             or parts.fragment
-            or self.origin != f"https://{parts.netloc}"
+            or origin != f"https://{parts.netloc}"
             or parts.netloc != parts.netloc.lower()
         ):
             raise ValueError("origin must be a lower-case https origin alone")
-        if not self.path.startswith("/") or "?" in self.path or "#" in self.path:
+        if not path.startswith("/") or "?" in path or "#" in path:
             raise ValueError("path must be an absolute path without query or fragment")
-        if _has_control_character(self.origin + self.path):
+        if _has_control_character(origin + path):
             raise ValueError("origin and path must not carry control characters")
-        if self.address is not None and not _is_address_of(self.address, self.origin):
+        if self.address is not None and not _is_address_of(self.address, origin):
             raise ValueError("address must be a credential-free https URL on the stated origin")
         return self
 

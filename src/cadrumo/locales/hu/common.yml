@@ -807,6 +807,8 @@ desktop:
       dismiss: Elvetés
       more: még {count} vár
     opening: A böngésző megnyitása…
+    page_insecure: Nem biztonságos
+    page_unknown: Ismeretlen cím
     publication:
       kept_newer: Már el volt mentve egy újabb bejelentkezés, ezért a Cadrumo azt
         tartotta meg.

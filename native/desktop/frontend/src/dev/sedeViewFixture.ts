@@ -14,6 +14,7 @@ import type {
   SedeViewDialogKind,
   SedeViewEndReason,
   SedeViewInput,
+  SedeViewPageSecurity,
   SedeViewPhase,
   SedeViewPublication,
   SedeViewTransfer,
@@ -45,6 +46,9 @@ export type SedeViewFixtureControls = {
   dialog(kind: SedeViewDialogKind, message: string, answer?: string): void;
   download(filename: string): void;
   fileChooser(multiple: boolean): void;
+  /** Follows a link off https: to a plain `http:` page, or to one whose
+   * origin is not known. */
+  leave(security: Exclude<SedeViewPageSecurity, "secure">): void;
   phase(phase: SedeViewPhase): void;
   /** Ends the view as the host would, without the window asking. */
   end(reason: SedeViewEndReason, publication?: SedeViewPublication): void;
@@ -78,7 +82,7 @@ type Open = {
   credit: number;
   stale: boolean;
   sequence: number;
-  history: string[];
+  history: { path: string; security: SedeViewPageSecurity }[];
   at: number;
   phase: SedeViewPhase;
   received: Record<string, number>;
@@ -106,7 +110,7 @@ async function draw(open: Open): Promise<ArrayBuffer> {
   context.fillStyle = "#222222";
   context.font = "16px sans-serif";
   const lines = [
-    `Path ${open.history[open.at] ?? SEDE_VIEW_HOME}`,
+    `Path ${open.history[open.at]?.path ?? SEDE_VIEW_HOME}`,
     open.phase === "acquiring"
       ? "A made-up login is running."
       : "Browsing a made-up page.",
@@ -130,18 +134,25 @@ export function sedeViewFixture({
   let issued = 0;
   let current: Open | null = null;
 
-  const state = (open: Open) =>
+  // A page off https states only its marker, and has no address to open.
+  const secure = (open: Open) =>
+    (open.history[open.at]?.security ?? "secure") === "secure";
+  const state = (open: Open) => {
+    const shown = secure(open);
     open.listener({
       kind: "state",
       view: open.id,
-      origin: SEDE_VIEW_ORIGIN,
-      path: open.history[open.at] ?? SEDE_VIEW_HOME,
+      security: open.history[open.at]?.security ?? "secure",
+      origin: shown ? SEDE_VIEW_ORIGIN : null,
+      path: shown ? (open.history[open.at]?.path ?? SEDE_VIEW_HOME) : null,
       title: SEDE_VIEW_TITLE,
       can_go_back: open.at > 0,
       can_go_forward: open.at < open.history.length - 1,
       loading: false,
       phase: open.phase,
+      external: shown,
     });
+  };
 
   // A change is drawn at once when the window has credit, and otherwise
   // waits as the newest image until it credits one.
@@ -228,6 +239,15 @@ export function sedeViewFixture({
         multiple,
       });
     },
+    leave(security) {
+      open.history = [
+        ...open.history.slice(0, open.at + 1),
+        { path: "/fuera", security },
+      ];
+      open.at = open.history.length - 1;
+      state(open);
+      void frame(open);
+    },
     phase(phase) {
       open.phase = phase;
       state(open);
@@ -282,7 +302,7 @@ export function sedeViewFixture({
           else if (verb === "home") {
             open.history = [
               ...open.history.slice(0, open.at + 1),
-              SEDE_VIEW_HOME,
+              { path: SEDE_VIEW_HOME, security: "secure" },
             ];
             open.at = open.history.length - 1;
           }
@@ -347,6 +367,8 @@ export function sedeViewFixture({
       },
       async openExternal() {
         await live();
+        if (!secure(open))
+          return Promise.reject({ code: "unavailable", operation_id: null });
         say("sedeViewOpenExternal page");
       },
       async close() {
@@ -374,7 +396,7 @@ export function sedeViewFixture({
         credit: START_CREDIT,
         stale: false,
         sequence: 0,
-        history: [SEDE_VIEW_HOME],
+        history: [{ path: SEDE_VIEW_HOME, security: "secure" }],
         at: 0,
         phase: "browsing",
         received: {},

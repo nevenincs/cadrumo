@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.application.components_operations import COMPONENTS_STATUS_OPERATION_ID
+from cadrumo.application.components_operations import COMPONENTS_STATUS_DEFINITION_ID
 from cadrumo.application.live.verify_capture_operation import VERIFY_TGVI_CAPTURE_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -102,7 +102,7 @@ def test_mcp_result_runs_one_status_for_real_missing_browser(tmp_path: Path, cou
                     assert not before.has_more
                     before_snapshots = [await journal.load(entry.operation_id) for entry in before.entries]
                     assert not any(
-                        item.identity.definition_id == COMPONENTS_STATUS_OPERATION_ID for item in before_snapshots
+                        item.identity.definition_id == COMPONENTS_STATUS_DEFINITION_ID for item in before_snapshots
                     )
                     response = await sdk.call_tool("result", {"result": {"operation_id": source_id}})
                     assert response.is_error is True
@@ -113,7 +113,7 @@ def test_mcp_result_runs_one_status_for_real_missing_browser(tmp_path: Path, cou
                     assert not after.has_more
                     snapshots = [await journal.load(entry.operation_id) for entry in after.entries]
                     statuses = [
-                        item for item in snapshots if item.identity.definition_id == COMPONENTS_STATUS_OPERATION_ID
+                        item for item in snapshots if item.identity.definition_id == COMPONENTS_STATUS_DEFINITION_ID
                     ]
                     assert len(statuses) == 1
                     status_id = statuses[0].identity.operation_id

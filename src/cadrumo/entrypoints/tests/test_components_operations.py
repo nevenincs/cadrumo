@@ -42,9 +42,9 @@ from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepos
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_SETUP_OPERATION_ID,
-    COMPONENTS_STATUS_OPERATION_ID,
-    COMPONENTS_VERIFY_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
+    COMPONENTS_VERIFY_DEFINITION_ID,
     ProvisionMutationRequest,
     ProvisionReadRequest,
     ProvisionResult,
@@ -336,7 +336,7 @@ def test_setup_reviews_the_role_digest_once_and_accounts_for_the_actual_outcome(
         async def scenario() -> None:
             operation = await owner.submit(
                 OperationRequest(
-                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload=ProvisionMutationRequest(),
                 )
@@ -435,7 +435,7 @@ def test_setup_consumed_without_verified_claim_is_refused(
         async def scenario() -> None:
             operation = await owner.submit(
                 OperationRequest(
-                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload=ProvisionMutationRequest(),
                 )
@@ -485,7 +485,7 @@ def test_claimed_setup_review_consumes_exact_decision(
         async def scenario() -> None:
             operation = await owner.submit(
                 OperationRequest(
-                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload=ProvisionMutationRequest(),
                 )
@@ -553,7 +553,7 @@ def test_claimed_setup_review_consumes_exact_decision(
 
 @pytest.mark.parametrize(
     ("definition_id", "full"),
-    [(COMPONENTS_STATUS_OPERATION_ID, False), (COMPONENTS_VERIFY_OPERATION_ID, True)],
+    [(COMPONENTS_STATUS_DEFINITION_ID, False), (COMPONENTS_VERIFY_DEFINITION_ID, True)],
 )
 def test_read_admission_ids_preserve_status_argv_and_check_mode(
     tmp_path: Path,
@@ -604,11 +604,11 @@ def test_mcp_may_start_and_observe_setup_but_never_answer_its_review(action: Acc
         destination_id=uuid4(),
         action=action,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=registry.lookup_public_contract(COMPONENTS_SETUP_OPERATION_ID),
+        contract=registry.lookup_public_contract(COMPONENTS_SETUP_DEFINITION_ID),
         published_authority=Availability.AVAILABLE,
     )
     request = OperationRequest[BaseModel](
-        definition_id=COMPONENTS_SETUP_OPERATION_ID,
+        definition_id=COMPONENTS_SETUP_DEFINITION_ID,
         subject_ref=COMPONENTS_OPERATION_SUBJECT,
         payload=ProvisionMutationRequest(),
     )
@@ -666,7 +666,7 @@ def test_foreign_follow_cleanup_failure_retains_launch_and_prevents_terminal_rec
         async def scenario() -> None:
             operation = await owner.submit(
                 OperationRequest(
-                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload=ProvisionMutationRequest(),
                 )
@@ -799,7 +799,7 @@ def test_recovery_preserves_effect_and_never_replays_an_apply_whose_result_was_l
         async def scenario() -> None:
             operation = await owner.submit(
                 OperationRequest(
-                    definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                    definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload=ProvisionMutationRequest(),
                 )
@@ -940,7 +940,7 @@ def test_cancellation_reaches_the_role_and_settles_only_after_its_safe_acknowled
         async def scenario() -> None:
             operation = await owner.submit(
                 OperationRequest(
-                    definition_id=COMPONENTS_VERIFY_OPERATION_ID,
+                    definition_id=COMPONENTS_VERIFY_DEFINITION_ID,
                     subject_ref=COMPONENTS_OPERATION_SUBJECT,
                     payload=ProvisionReadRequest(items=(DependencyItemKind.BROWSER,)),
                 )

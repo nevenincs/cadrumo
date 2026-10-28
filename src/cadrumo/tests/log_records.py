@@ -1,4 +1,4 @@
-"""Records a project logger delivered to a test's capture handler, once each."""
+"""Records that reached a test's capture handler once the asynchronous dispatch has drained."""
 
 from __future__ import annotations
 
@@ -10,16 +10,14 @@ from cadrumo.core.logging import flush_logging
 
 
 def delivered_records(caplog: pytest.LogCaptureFixture, logger_name: str | None = None) -> list[logging.LogRecord]:
-    """Return the distinct records ``logger_name`` emitted, after the asynchronous dispatch has drained.
+    """Return the records ``logger_name`` emitted, after the asynchronous dispatch has drained.
 
-    Delivery to the capture handler is not synchronous with the logging call,
-    so the dispatch is flushed first. The first record a process emits can
-    reach a root handler twice as the same object; it counts once here.
+    A project logger hands its record to the capture handler from the dispatch
+    thread rather than from the logging call, so the dispatch is flushed first.
     ``None`` selects every logger, for a check that no logger leaked a value.
     """
     assert flush_logging(timeout=5)
-    distinct = {id(record): record for record in caplog.records if logger_name is None or record.name == logger_name}
-    return list(distinct.values())
+    return [record for record in caplog.records if logger_name is None or record.name == logger_name]
 
 
 def delivered_text(caplog: pytest.LogCaptureFixture) -> str:

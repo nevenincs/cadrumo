@@ -32,11 +32,15 @@ Resolved: b56b862b74
 
 `native/desktop/src-tauri/src/app.rs:277-279` calls `SedeViewHost::close` (`sede_view.rs:1271-1277`), which only queues `view.close` and returns. `sign_in.stop` then drops the person connection at once (`shell/sign_in/mod.rs:411-415`), which retires the session, unbinds the view and cancels the operation. The worker skips publication once a cancel is requested (`src/cadrumo/application/live/sede_view_operation.py:464`), and a publication already running hits the retired session at the effect guard. This breaks the ruling that `view.close` publishes, and contradicts the comment "while the person's session is still held". Fix: in `close`, wait a bounded time for the view to reach `Phase::Ended` (its settled receipt) before the profile and sign-in hosts close.
 
+Resolved: c4d3de56f0
+
 ### browser-page-lifetime | medium | Leaving the Browser page ends the view, where the ADR keeps it running
 
 `native/desktop/frontend/src/App.tsx:3096-3097` mounts `BrowserPage` only while it is the shown page, and `src/components/browser/useSedeView.ts:102-109` closes the view on unmount. Each page switch therefore publishes, closes Chromium and loses the page state and history. The ADR's Window constraint says "Leaving the page keeps the view running without frames". Fix: keep the page mounted while it is hidden, or amend the ADR.
 
 Resolved: dc6ab7705a (ADR amended; leaving the page does not close the view).
+
+Resolved: 4726994819
 
 ### worker-input-drop | medium | The worker silently drops person input past 64 queued items
 
@@ -75,6 +79,8 @@ Resolved: ec97843317
 ### upload-cancel-scope | low | Cancelling one upload drops every pending chooser
 
 `sede_view.py:410-413` ignores `transfer_id`. Fix: map transfers to their chooser.
+
+Resolved: 53e2cf1850
 
 ### adr-wording-drift | low | The ADR still says view.state carries the origin and path only, and that moves are coalesced in the worker
 

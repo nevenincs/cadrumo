@@ -18,7 +18,7 @@ import typer
 
 from cadrumo.application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
     PROVISION_RESPONSE_SCHEMA,
     PROVISION_REVIEW_SCHEMA,
     ProvisionMutationRequest,
@@ -475,7 +475,7 @@ class ProvisionReviewWire(ReviewWire):
         definition = next(
             item
             for item in build_components_definitions(cast(Any, None))
-            if item.definition_id == COMPONENTS_SETUP_OPERATION_ID
+            if item.definition_id == COMPONENTS_SETUP_DEFINITION_ID
         )
         self.public_contract = build_components_registration(definition).contract
         self.contract_set_digest = OperationPublicContractSetV1.build((self.public_contract,)).contract_set_digest
@@ -506,7 +506,7 @@ class ProvisionReviewWire(ReviewWire):
 
     @override
     def contract(self, definition_id: str, *, deadline: float) -> OperationPublicDefinitionContractV1:
-        assert definition_id == COMPONENTS_SETUP_OPERATION_ID
+        assert definition_id == COMPONENTS_SETUP_DEFINITION_ID
         return self.public_contract
 
     @override
@@ -546,7 +546,7 @@ class ProvisionReviewWire(ReviewWire):
         )
         projection = OperationPublicProjectionV1(
             operation_id=_OPERATION,
-            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_SETUP_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             revision=6 if terminal else 4,
             anchor_cursor=0,
@@ -590,7 +590,7 @@ class ProvisionReviewWire(ReviewWire):
         self.requests.append(request)
         common: _ReplyIds = {"request_id": request.request_id, "runtime_boot_id": _PROFILE, "connection_id": _SESSION}
         if isinstance(request, OperationSubmit):
-            assert request.definition_id == COMPONENTS_SETUP_OPERATION_ID
+            assert request.definition_id == COMPONENTS_SETUP_DEFINITION_ID
             assert ProvisionMutationRequest.model_validate_json(request.payload_json) == ProvisionMutationRequest()
             return OperationSubmitted(
                 **common, receipt=OperationSubmissionReceiptV1(operation_id=_OPERATION, secret_requirement=None)
@@ -1227,7 +1227,7 @@ def test_setup_wait_preserves_owned_review_and_download_beyond_short_budget(
         return run_registered_operation(
             cast(FrontendClient, wire),
             ProvisionMutationRequest(),
-            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_SETUP_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             result_type=ProvisionResult,
             request_version=1,
@@ -1268,7 +1268,7 @@ def test_unbounded_settlement_preserves_exact_human_interrupt_and_releases_subsc
         run_registered_operation(
             cast(FrontendClient, wire),
             ProvisionMutationRequest(),
-            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_SETUP_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             result_type=ProvisionResult,
             request_version=1,
@@ -1337,7 +1337,7 @@ def test_unbounded_signal_wait_releases_subscription_on_disconnect_or_interrupt(
         run_registered_operation(
             cast(FrontendClient, wire),
             ProvisionMutationRequest(),
-            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_SETUP_DEFINITION_ID,
             subject_ref=COMPONENTS_OPERATION_SUBJECT,
             result_type=ProvisionResult,
             request_version=1,

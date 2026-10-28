@@ -1749,6 +1749,8 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.browser.notice.dismiss",
         "desktop.browser.notice.more",
         "desktop.browser.opening",
+        "desktop.browser.page_insecure",
+        "desktop.browser.page_unknown",
         "desktop.browser.publication.kept_newer",
         "desktop.browser.publication.published",
         "desktop.browser.publication.unchanged",

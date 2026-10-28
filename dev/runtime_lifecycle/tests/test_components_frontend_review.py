@@ -11,7 +11,7 @@ import pytest
 from textual.widgets import Button, Input, Static
 
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
-from cadrumo.application.components_operations import COMPONENTS_OPERATION_SUBJECT, COMPONENTS_SETUP_OPERATION_ID
+from cadrumo.application.components_operations import COMPONENTS_OPERATION_SUBJECT, COMPONENTS_SETUP_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -71,7 +71,7 @@ def test_tui_claims_and_rejects_existing_mcp_setup(tmp_path: Path, counting_prox
                         await sdk.call_tool(
                             "execute",
                             {
-                                "definition_id": COMPONENTS_SETUP_OPERATION_ID,
+                                "definition_id": COMPONENTS_SETUP_DEFINITION_ID,
                                 "subject_ref": COMPONENTS_OPERATION_SUBJECT,
                                 "payload": {},
                             },
@@ -145,7 +145,7 @@ def test_tui_claims_and_rejects_existing_mcp_setup(tmp_path: Path, counting_prox
                         assert not page.has_more
                         snapshots = [await journal.load(entry.operation_id) for entry in page.entries]
                         setups = [
-                            item for item in snapshots if item.identity.definition_id == COMPONENTS_SETUP_OPERATION_ID
+                            item for item in snapshots if item.identity.definition_id == COMPONENTS_SETUP_DEFINITION_ID
                         ]
                         assert len(setups) == 1 and setups[0].identity.operation_id == operation_id
                         assert counting_proxy.tunnels == {} and counting_proxy.unauthenticated == 0

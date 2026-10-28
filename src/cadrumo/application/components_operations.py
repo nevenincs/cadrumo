@@ -89,10 +89,10 @@ from .operations.subject_reference import OperationSubjectReferenceV1
 from .user_profile.access_errors import ProfileAccessRefusedError
 
 COMPONENTS_OPERATION_SUBJECT = "components:installation"
-COMPONENTS_STATUS_OPERATION_ID = "config.provision.status"
-COMPONENTS_VERIFY_OPERATION_ID = "config.provision.verify"
-COMPONENTS_SETUP_OPERATION_ID = "config.provision.setup"
-COMPONENTS_REMOVE_OPERATION_ID = "config.provision.remove"
+COMPONENTS_STATUS_DEFINITION_ID = "config.provision.status"
+COMPONENTS_VERIFY_DEFINITION_ID = "config.provision.verify"
+COMPONENTS_SETUP_DEFINITION_ID = "config.provision.setup"
+COMPONENTS_REMOVE_DEFINITION_ID = "config.provision.remove"
 
 
 class ProvisionCommand(StrEnum):
@@ -227,12 +227,12 @@ class ProvisionReviewResponse(BaseModel):
 
 
 PROVISION_REVIEW_SCHEMA = OperationSchemaBindingV1.bind(
-    schema_id=COMPONENTS_SETUP_OPERATION_ID + ".review",
+    schema_id=COMPONENTS_SETUP_DEFINITION_ID + ".review",
     schema_version=1,
     model_type=ProvisionReviewProjection,
 )
 PROVISION_RESPONSE_SCHEMA = OperationSchemaBindingV1.bind(
-    schema_id=COMPONENTS_SETUP_OPERATION_ID + ".response",
+    schema_id=COMPONENTS_SETUP_DEFINITION_ID + ".response",
     schema_version=1,
     model_type=ProvisionReviewResponse,
 )
@@ -627,8 +627,8 @@ def resolve_components_access(
 ) -> ResolvedOperationAccess:
     """Bind profile authority and require a person only for setup response actions."""
     definition_id = request.definition_id
-    setup = definition_id == COMPONENTS_SETUP_OPERATION_ID
-    mutation = setup or definition_id == COMPONENTS_REMOVE_OPERATION_ID
+    setup = definition_id == COMPONENTS_SETUP_DEFINITION_ID
+    mutation = setup or definition_id == COMPONENTS_REMOVE_DEFINITION_ID
     expected = ProvisionMutationRequest if mutation else ProvisionReadRequest
     if (
         definition_id not in _COMMANDS
@@ -671,10 +671,10 @@ def resolve_components_access(
 
 
 _COMMANDS = {
-    COMPONENTS_STATUS_OPERATION_ID: ProvisionCommand.STATUS,
-    COMPONENTS_VERIFY_OPERATION_ID: ProvisionCommand.VERIFY,
-    COMPONENTS_SETUP_OPERATION_ID: ProvisionCommand.SETUP,
-    COMPONENTS_REMOVE_OPERATION_ID: ProvisionCommand.REMOVE,
+    COMPONENTS_STATUS_DEFINITION_ID: ProvisionCommand.STATUS,
+    COMPONENTS_VERIFY_DEFINITION_ID: ProvisionCommand.VERIFY,
+    COMPONENTS_SETUP_DEFINITION_ID: ProvisionCommand.SETUP,
+    COMPONENTS_REMOVE_DEFINITION_ID: ProvisionCommand.REMOVE,
 }
 
 
@@ -757,7 +757,7 @@ def _review_projection(operand: BaseModel, interaction: object) -> BaseModel:
 
 def build_components_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
     """Bind the public result and setup review schemas."""
-    if definition.definition_id != COMPONENTS_SETUP_OPERATION_ID:
+    if definition.definition_id != COMPONENTS_SETUP_DEFINITION_ID:
         return OperationPublicDefinitionRegistrationV1.compose_request_result(
             definition=definition, public_result_type=ProvisionResult, access_resolver=resolve_components_access
         )

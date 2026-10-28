@@ -1132,7 +1132,7 @@ mod tests {
     }
 
     fn state_document(title: &str) -> Value {
-        json!({"kind": "view.state", "origin": "https://sede.agenciatributaria.gob.es",
+        json!({"kind": "view.state", "security": "secure", "origin": "https://sede.agenciatributaria.gob.es",
                "path": "/Sede/inicio.html", "title": title, "can_go_back": false,
                "can_go_forward": false, "loading": false, "phase": "browsing"})
     }

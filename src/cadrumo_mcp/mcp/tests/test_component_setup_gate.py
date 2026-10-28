@@ -10,7 +10,7 @@ import pytest
 
 from cadrumo.application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_STATUS_OPERATION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
     ProvisionOutcome,
     ProvisionReadRequest,
     ProvisionResult,
@@ -99,7 +99,7 @@ def test_gate_uses_one_local_operation_and_the_typed_rows(monkeypatch: pytest.Mo
         }
     ]
     assert len(calls) == 1
-    assert calls[0]["definition_id"] == COMPONENTS_STATUS_OPERATION_ID
+    assert calls[0]["definition_id"] == COMPONENTS_STATUS_DEFINITION_ID
     assert calls[0]["subject_ref"] == COMPONENTS_OPERATION_SUBJECT
     assert calls[0]["payload"] == ProvisionReadRequest()
     assert calls[0]["result_type"] is ProvisionResult
@@ -143,7 +143,7 @@ async def test_result_gates_repeated_verdicts_once_and_status_result_does_not_re
         reply = await adapter.call("result", {"result": {"operation_id": _observed_operation_id()}})
         assert reply["recovery_action_ids"] == [_BROWSER]
         assert len(calls) == 1
-        schema = request.result_schema.model_copy(update={"schema_id": COMPONENTS_STATUS_OPERATION_ID + ".result"})
+        schema = request.result_schema.model_copy(update={"schema_id": COMPONENTS_STATUS_DEFINITION_ID + ".result"})
         status_request = request.model_copy(update={"result_schema": schema})
         await adapter.call("result", {"result": status_request.model_dump(mode="json")})
         assert len(calls) == 1

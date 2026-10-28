@@ -19,7 +19,7 @@ import pytest
 
 from cadrumo.application.components_operations import (
     COMPONENTS_OPERATION_SUBJECT,
-    COMPONENTS_SETUP_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
     ProvisionMutationRequest,
     ProvisionResult,
     ProvisionReviewProjection,
@@ -75,7 +75,7 @@ def _frontend(runtime: ServiceRecordRuntime, projection: OperationFrontendProjec
         profile_id=runtime.profile_id,
         frontend=projection,
         scope=AccessScope(
-            operations=frozenset({COMPONENTS_SETUP_OPERATION_ID}),
+            operations=frozenset({COMPONENTS_SETUP_DEFINITION_ID}),
             actions=frozenset(AccessAction),
             disclosures=frozenset(),
             periods=None,
@@ -107,10 +107,10 @@ async def _waiting(
 async def _terminal(controller: OperationController) -> OperationPublicProjectionV1:
     return await await_terminal_projection(
         controller,
-        definition_id=COMPONENTS_SETUP_OPERATION_ID,
+        definition_id=COMPONENTS_SETUP_DEFINITION_ID,
         subject_ref=COMPONENTS_OPERATION_SUBJECT,
         request_schema=OperationSchemaIdentityV1.from_model(
-            schema_id=COMPONENTS_SETUP_OPERATION_ID + ".request", schema_version=1, model_type=ProvisionMutationRequest
+            schema_id=COMPONENTS_SETUP_DEFINITION_ID + ".request", schema_version=1, model_type=ProvisionMutationRequest
         ),
         deadline=time.monotonic() + 120,
     )
@@ -142,7 +142,7 @@ def test_mcp_review_answers_are_refused_and_a_human_uses_only_their_own_issued_c
                         await sdk.call_tool(
                             "execute",
                             {
-                                "definition_id": COMPONENTS_SETUP_OPERATION_ID,
+                                "definition_id": COMPONENTS_SETUP_DEFINITION_ID,
                                 "subject_ref": COMPONENTS_OPERATION_SUBJECT,
                                 "payload": {},
                             },
@@ -205,7 +205,7 @@ def test_mcp_review_answers_are_refused_and_a_human_uses_only_their_own_issued_c
 
                     controller = await OperationController.submit(
                         human,
-                        definition_id=COMPONENTS_SETUP_OPERATION_ID,
+                        definition_id=COMPONENTS_SETUP_DEFINITION_ID,
                         subject_ref=COMPONENTS_OPERATION_SUBJECT,
                         payload=ProvisionMutationRequest(),
                     )

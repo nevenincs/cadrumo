@@ -44,8 +44,8 @@ use cadrumo_application::{
         documents::{
             TRANSFER_CREDIT_MAX_CHUNKS, ViewClosedReason, ViewDialog, ViewDialogKind,
             ViewDialogPrompt, ViewDownload, ViewDownloadOutcome, ViewFileChooser, ViewInputEvent,
-            ViewNavigateVerb, ViewNotice, ViewNoticeCode, ViewPhase, ViewResize, ViewState,
-            ViewTransferComplete,
+            ViewNavigateVerb, ViewNotice, ViewNoticeCode, ViewPageSecurity, ViewPhase, ViewResize,
+            ViewState, ViewTransferComplete,
         },
         lane::{UploadFile, UploadOutcome, ViewEnd, ViewEvent, ViewLane},
         transfer::TransferChunk,
@@ -414,16 +414,21 @@ enum Message {
         css_height: u32,
         scale: f64,
     },
+    /// The page the person is on. A page that is not `secure` has no origin
+    /// or path, and `external` says whether the host holds an address it
+    /// would open.
     #[serde(rename = "state")]
     Page {
         view: u32,
-        origin: String,
-        path: String,
+        security: ViewPageSecurity,
+        origin: Option<String>,
+        path: Option<String>,
         title: String,
         can_go_back: bool,
         can_go_forward: bool,
         loading: bool,
         phase: ViewPhase,
+        external: bool,
     },
     /// A notice; `dialog_opened` carries the dialog the person answers.
     Notice {
@@ -941,11 +946,18 @@ impl View {
     }
 
     fn page(&self, state: ViewState) -> bool {
-        // A page whose address the worker could not state clears the previous
-        // one, so the external open never lands on an earlier page.
+        // Every navigation states its page. One whose address the worker could
+        // not state, an insecure or unknown page included, clears the previous
+        // one, so neither the toolbar nor the external open stays on an
+        // earlier page.
+        let external = state
+            .address
+            .as_deref()
+            .is_some_and(|address| external::admit(address).is_ok());
         lock(&self.held).address = state.address;
         self.send(&Message::Page {
             view: self.id,
+            security: state.security,
             origin: state.origin,
             path: state.path,
             title: state.title,
@@ -953,6 +965,7 @@ impl View {
             can_go_forward: state.can_go_forward,
             loading: state.loading,
             phase: state.phase,
+            external,
         })
     }
 

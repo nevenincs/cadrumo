@@ -111,6 +111,47 @@ _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
         "only the exact live person-held session may approve an independently verified installed service; "
         "this admits a service connection and does not discriminate between submitted operations"
     ),
+    (
+        "src/cadrumo/application/components_operations.py",
+        "resolve_components_access",
+    ): (
+        "answering component setup's review is the person's act; any frontend may start and observe setup, "
+        "and only a person's frontend may respond"
+    ),
+    (
+        "src/cadrumo/application/live/sede_view_operation.py",
+        "resolve_sede_view_access",
+    ): "the Sede view streams a person-driven browser that only the desktop window can display and drive",
+    (
+        "src/cadrumo_runtime/host/operation_authority.py",
+        "ProfileWorkerOperationAuthority.sede_view_session",
+    ): "rechecks that a running Sede view stays bound to the desktop person session whose window shows it",
+    (
+        "src/cadrumo_runtime/host/operation_authority.py",
+        "ProfileWorkerOperationAuthority.human_review_guard",
+    ): (
+        "a separately signed-in person may claim component setup's review; the claimant's attested frontend "
+        "must be a person's, which grants response authority only"
+    ),
+    (
+        "src/cadrumo_runtime/host/operation_host.py",
+        "ProfileWorkerOperationHost._manage",
+    ): "a response to component setup's review is the person's act, answered only under a person's claim",
+    (
+        "src/cadrumo_runtime/host/profile_connection_operations.py",
+        "ProfileConnectionOperationMixin._operation_reply",
+    ): (
+        "only the desktop lists claimable setup reviews, as its approval column surfaces them; claiming stays "
+        "open to every person frontend"
+    ),
+    (
+        "src/cadrumo_runtime/host/profile_connection_operations.py",
+        "ProfileConnectionOperationMixin._view_target",
+    ): "only the desktop window attaches to a Sede view's stream, as no other frontend consumes it",
+    (
+        "src/cadrumo_runtime/host/profile_host.py",
+        "RuntimeProfileHost._require_review_person",
+    ): "reobserves that a setup review claimant is a live person on a person's frontend, not an automation",
 }
 """Functions that name a frontend without refusing or changing an operation for it."""
 

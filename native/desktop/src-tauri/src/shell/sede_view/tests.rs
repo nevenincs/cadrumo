@@ -387,8 +387,9 @@ const ADDRESS: &str = "https://sede.example/Sede/inicio.html?ejercicio=2025&mode
 
 fn page() -> ViewEvent {
     ViewEvent::State(ViewState {
-        origin: "https://sede.example".into(),
-        path: "/Sede/inicio.html".into(),
+        security: ViewPageSecurity::Secure,
+        origin: Some("https://sede.example".into()),
+        path: Some("/Sede/inicio.html".into()),
         address: Some(ADDRESS.into()),
         title: "Inicio".into(),
         can_go_back: false,
@@ -447,18 +448,21 @@ fn the_window_receives_closed_documents_with_stable_names() {
     );
     let state = Message::Page {
         view: 3,
-        origin: "https://sede.example".into(),
-        path: "/a".into(),
+        security: ViewPageSecurity::Secure,
+        origin: Some("https://sede.example".into()),
+        path: Some("/a".into()),
         title: "T".into(),
         can_go_back: true,
         can_go_forward: false,
         loading: true,
         phase: ViewPhase::Closing,
+        external: true,
     };
     assert_eq!(
         serde_json::to_value(state).unwrap(),
-        json!({"kind":"state","view":3,"origin":"https://sede.example","path":"/a","title":"T",
-            "can_go_back":true,"can_go_forward":false,"loading":true,"phase":"closing"})
+        json!({"kind":"state","view":3,"security":"secure","origin":"https://sede.example",
+            "path":"/a","title":"T","can_go_back":true,"can_go_forward":false,"loading":true,
+            "phase":"closing","external":true})
     );
     let notice = Message::Notice {
         view: 3,
@@ -713,8 +717,9 @@ fn a_page_whose_address_was_not_stated_opens_no_earlier_page() {
     rig.lane().push(page());
     rig.wait_for_message("state");
     rig.lane().push(ViewEvent::State(ViewState {
-        origin: "https://sede.example".into(),
-        path: "/otra".into(),
+        security: ViewPageSecurity::Secure,
+        origin: Some("https://sede.example".into()),
+        path: Some("/otra".into()),
         address: None,
         title: "Otra".into(),
         can_go_back: true,
@@ -727,8 +732,45 @@ fn a_page_whose_address_was_not_stated_opens_no_earlier_page() {
             .last("state")
             .is_some_and(|shown| shown["path"] == "/otra")
     });
+    assert_eq!(rig.window.last("state").unwrap()["external"], false);
     assert_eq!(code(rig.host.open_external(rig.id)), "unavailable");
     assert!(lock(&rig.opened).is_empty());
+}
+
+#[test]
+fn a_page_off_https_clears_the_address_and_shows_only_its_marker() {
+    for security in [ViewPageSecurity::Insecure, ViewPageSecurity::Unknown] {
+        let rig = rig();
+        rig.lane().push(page());
+        rig.wait_for_message("state");
+        assert_eq!(rig.window.last("state").unwrap()["external"], true);
+        rig.lane().push(ViewEvent::State(ViewState {
+            security,
+            origin: None,
+            path: None,
+            address: None,
+            title: "Fuera".into(),
+            can_go_back: true,
+            can_go_forward: false,
+            loading: false,
+            phase: ViewPhase::Browsing,
+        }));
+        wait_until("the page off https", || {
+            rig.window
+                .last("state")
+                .is_some_and(|shown| shown["title"] == "Fuera")
+        });
+        let shown = rig.window.last("state").unwrap();
+        assert_eq!(shown["security"], serde_json::to_value(security).unwrap());
+        assert_eq!(shown["origin"], Value::Null);
+        assert_eq!(shown["path"], Value::Null);
+        assert_eq!(shown["external"], false);
+        let relayed = serde_json::to_string(&shown).unwrap();
+        assert!(!relayed.contains("sede.example"), "{relayed}");
+        // The earlier Sede page is no longer the host's to open.
+        assert_eq!(code(rig.host.open_external(rig.id)), "unavailable");
+        assert!(lock(&rig.opened).is_empty());
+    }
 }
 
 #[test]
@@ -1330,8 +1372,9 @@ fn a_frame_the_shell_could_not_deliver_ends_the_window_sink() {
 fn input_reaches_the_page_while_a_login_runs_in_the_view() {
     let rig = rig();
     rig.lane().push(ViewEvent::State(ViewState {
-        origin: "https://sede.example".into(),
-        path: "/login".into(),
+        security: ViewPageSecurity::Secure,
+        origin: Some("https://sede.example".into()),
+        path: Some("/login".into()),
         address: None,
         title: String::new(),
         can_go_back: false,

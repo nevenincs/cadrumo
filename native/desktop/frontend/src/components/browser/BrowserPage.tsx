@@ -36,6 +36,9 @@ export type BrowserPageProps = {
   /** False while the page is put aside rather than unloaded: its view goes on
    * and its images are credited, but nothing is drawn. */
   shown?: boolean;
+  /** A count the window raises to send an open view to its home page, the
+   * Sede. A view not open yet starts there anyway. */
+  home?: number;
   /** The pane's title and controls, which the page's header carries. */
   pane: {
     title: string;
@@ -83,6 +86,7 @@ function OpenBrowser({
   port,
   page,
   shown = true,
+  home = 0,
   pane,
   isShellChord,
 }: BrowserPageProps) {
@@ -109,6 +113,14 @@ function OpenBrowser({
   const { state } = view;
   const busy = publishing(state);
   const live = state.phase === "open";
+
+  const homeAsked = useRef(home);
+  const { navigate } = view;
+  useEffect(() => {
+    if (home === homeAsked.current) return;
+    homeAsked.current = home;
+    if (live) navigate("home");
+  }, [home, live, navigate]);
 
   useFocusTarget(ELEMENT, () => surface.current?.element() ?? null);
   // Work in flight is not cut off by a navigation: publishing the session
@@ -163,12 +175,9 @@ function OpenBrowser({
             problem={state.problem}
             downloads={state.downloads}
             choosers={state.choosers}
-            notices={state.notices}
             note={state.note}
             onAnswerDownload={view.answerDownload}
             onAnswerChooser={view.answerChooser}
-            onOpenExternal={view.openExternal}
-            onDismissNotice={view.dismissNotice}
             onDismissNote={view.dismissNote}
             onDismissProblem={view.dismissProblem}
           />

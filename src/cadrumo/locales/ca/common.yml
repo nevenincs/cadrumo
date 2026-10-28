@@ -827,6 +827,8 @@ desktop:
       dismiss: Descarta
       more: '{count} més en espera'
     opening: Obrint el navegador…
+    page_insecure: No és segur
+    page_unknown: Adreça desconeguda
     publication:
       kept_newer: Ja hi havia un inici de sessió més recent desat, així que Cadrumo
         l'ha mantingut.

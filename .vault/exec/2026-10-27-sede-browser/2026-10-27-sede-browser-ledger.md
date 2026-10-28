@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:f95b58c94ca242d6fe8aeb185568580c141a10ce05b6f033b98779327af0bee9'
+body_hash: 'sha256:8cb666e3d9dd24fe9a12aca11dbf44dcc59a34eabc0f2d0ad7206956a7dc7dbe'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -323,6 +323,39 @@ related:
 - `S16` `verify:` `just check-rust` -> `pass`
 - `S16` `verify:` `ctest all non-installer targets` -> `pass`
 - `S16` `verify:` `npm run check` -> `pass`
+- `S09` `M` `native/desktop/frontend/src/App.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S09` `M` `native/desktop/frontend/src/components/browser/useSedeView.ts`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S09` `verify:` `npm run check (native/desktop/frontend)` -> `pass`
+- `S09` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/sede-browser.spec.ts (20 passed)` -> `pass`
+- `S08` `M` `src/cadrumo_client/contracts/view_transfer.py`
+- `S08` `M` `src/cadrumo_runtime/host/worker_view_stream.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/aeat/browser/sede_view.py`
+- `S08` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_sede_view_page.py`
+- `S08` `M` `src/cadrumo_runtime/host/tests/test_view_stream_relay.py`
+- `S08` `verify:` `uv run --no-sync pytest -m '' browser sede_view page tests, view stream relay and integration, contracts and live tests -k view (364 passed)` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check on the touched files` -> `pass`
+- `S08` `M` `native/desktop/src-tauri/src/shell/sede_view.rs`
+- `S08` `M` `native/desktop/src-tauri/src/shell/sede_view/tests.rs`
+- `S08` `verify:` `cmake --build --preset debug --target desktop-host-unit-test (698 passed, 1 ignored)` -> `pass`
+- `S08` `verify:` `just check-rust (24 of 24)` -> `pass`
+- `S05` `A` `src/cadrumo/adapters/outbound/aeat/auth/view_capture_identity.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/clave_movil.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/real_http_boundary.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_session_custody.py`
+- `S05` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_sign_in.py`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests src/cadrumo/application/auth/tests src/cadrumo/application/live/tests -k "view or session or sede" -m "not aeat_live" (215 passed)` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check, ruff format --check and ty check on the touched files` -> `pass`
+- `S05` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/sede/tests -k censal -m '' (82 passed)` -> `pass`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/real_http_boundary.py`
+- `S12` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_view_sign_in.py`
+- `S12` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests src/cadrumo/application/auth/tests src/cadrumo/application/live/tests -k "view or session or sede" -m "not aeat_live" (215 passed)` -> `pass`
+- `S12` `verify:` `uv run --no-sync ruff check, ruff format --check and ty check on the touched files` -> `pass`
+- `S12` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
 
 ## Notes
 
@@ -357,3 +390,11 @@ related:
 - `S03` Bundle gate not run: on Windows the bundle target depends on native-installer (MSI), which dev and agent verification never builds; evidence is every non-installer CTest target.
 - `S08` Bundle gate not run: on Windows the bundle target depends on native-installer (MSI), which dev and agent verification never builds; evidence is every non-installer CTest target.
 - `S16` Bundle gate not run: on Windows the bundle target depends on native-installer (MSI), which dev and agent verification never builds; evidence is every non-installer CTest target.
+- `S09` browser-page-lifetime: the page stays mounted while put aside; only the pane close, window close or session loss closes the view (commit 4726994819)
+- `S08` upload-cancel-scope: an upload cancel now names its chooser, and only that chooser is dropped (commit 53e2cf1850)
+- `S08` window-close-publication: SedeViewHost::close waits for the view to end, bounded by `relay::SETTLE_LIMIT` (90 s), before sign-in stops (commit c4d3de56f0)
+- `S05` view-login-identity: the provider reads the censal consulta in its own context seeded from the capture and requires the NIF AEAT shows to equal the identity it records (commit b56b862b74)
+- `S05` clave-manual-publication: view seed and publication require only the Cl@ve identity; a CLI or TUI sync still refuses the app route without the contraste (commit e3da9ab6ee)
+- `S05` view-login-identity: a mismatch reports verification-failed; a distinct identity notice needs a `view_stream` contract change, not made
+- `S12` signed-out-page-verification: a load is verified only when its cookie jar differs from every refused jar; loads during a check fold into one more check (commit 1d41de0fbf)
+- `S12` signed-out-page-verification: reusing one browser across verifications was not done; BrowserSession launches one browser per context and refuses a second context

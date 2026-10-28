@@ -79,13 +79,47 @@ print(json.dumps({"before": before, "after_info": after_info, "configured": proj
                   "dropped": project_logging.diagnostic_delivery_status()['records'].dropped}))
 """
 
+# A foreign root handler stands for caplog or any handler a library attaches: it is
+# not one of the sinks the first record installs, and must see each record once.
+_DELIVERY_PROBE = """
+import json, logging, sys
+from cadrumo.core import logging as project_logging
+
+class Recorder(logging.Handler):
+    def __init__(self):
+        super().__init__()
+        self.messages = []
+
+    def emit(self, record):
+        self.messages.append(record.getMessage())
+
+mode, kind = sys.argv[2], sys.argv[4]
+recorder = Recorder()
+logging.getLogger().addHandler(recorder)
+logger = (
+    logging.getLogger("probe.delivery") if kind == "stdlib" else project_logging.get_logger("cadrumo.tests.delivery")
+)
+if mode == "orphan":
+    logger.propagate = False
+if mode == "deferred":
+    project_logging.defer_logging_configuration()
+if mode == "held":
+    logger.info("held record")
+logger.warning("first record")
+assert project_logging.flush_logging(timeout=10), project_logging.diagnostic_delivery_status()
+project_logging.shutdown_logging()
+print(json.dumps({"delivered": recorder.messages, "configured": project_logging._configured}))
+"""
+
 _STAMP = r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z"
 _CONTEXT = r' \| \{"process_id":\d+,"process_role":"python","thread_id":\d+,"thread_name":"MainThread"\}'
 _INFO_LINE = rf"{_STAMP} \[INFO\] cadrumo\.tests\.first_record: info record before-warning{_CONTEXT}\n"
 _WARNING_LINE = rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: first record probe{_CONTEXT}\n"
 
 
-def _run_probe(tmp_path: Path, mode: str, *, removal: str = "native") -> tuple[dict[str, object], str, Path]:
+def _run_probe(
+    tmp_path: Path, mode: str, *, removal: str = "native", probe: str = _PROBE, kind: str = "project"
+) -> tuple[dict[str, object], str, Path]:
     log_dir = tmp_path / "logs"
     env = {
         **os.environ,
@@ -95,7 +129,7 @@ def _run_probe(tmp_path: Path, mode: str, *, removal: str = "native") -> tuple[d
     if mode == "document-deferred":
         env["CADRUMO_LOG_STDERR_LEVEL"] = "WARNING"
     completed = run_audited_process(
-        [sys.executable, "-c", _PROBE, str(log_dir), mode, removal],
+        [sys.executable, "-c", probe, str(log_dir), mode, removal, kind],
         env=env,
         capture_output=True,
         text=True,
@@ -175,3 +209,46 @@ def test_document_diagnostics_defer_without_stderr_and_replay_after_scope_exit(t
         + rf"{_STAMP} \[WARNING\] cadrumo\.tests\.first_record: outside document scope{_CONTEXT}\n",
         log_file.read_text(encoding="utf-8"),
     )
+
+
+def _logged_messages(log_file: Path) -> list[str]:
+    return [str(message) for message in re.findall(r"\] [\w.]+: (.+?) \| \{", log_file.read_text(encoding="utf-8"))]
+
+
+@pytest.mark.parametrize("kind", ["stdlib", "project"])
+def test_the_record_that_configures_logging_reaches_a_foreign_handler_and_the_file_once(
+    tmp_path: Path, kind: str
+) -> None:
+    report, _, log_file = _run_probe(tmp_path, "first", probe=_DELIVERY_PROBE, kind=kind)
+
+    assert report["configured"] is True
+    assert report["delivered"] == ["first record"]
+    assert _logged_messages(log_file) == ["first record"]
+
+
+@pytest.mark.parametrize("kind", ["stdlib", "project"])
+def test_a_held_record_is_replayed_to_the_sinks_without_reaching_a_foreign_handler_again(
+    tmp_path: Path, kind: str
+) -> None:
+    report, _, log_file = _run_probe(tmp_path, "held", probe=_DELIVERY_PROBE, kind=kind)
+
+    assert report["delivered"] == ["held record", "first record"]
+    assert _logged_messages(log_file) == ["held record", "first record"]
+
+
+@pytest.mark.parametrize("kind", ["stdlib", "project"])
+def test_a_deferred_process_gives_a_warning_to_a_foreign_handler_and_stderr_once(tmp_path: Path, kind: str) -> None:
+    report, stderr, log_file = _run_probe(tmp_path, "deferred", probe=_DELIVERY_PROBE, kind=kind)
+
+    assert report["configured"] is False
+    assert report["delivered"] == ["first record"]
+    assert stderr.count("first record") == 1
+    assert not log_file.exists()
+
+
+@pytest.mark.parametrize("kind", ["stdlib", "project"])
+def test_a_logger_without_any_handler_reaches_the_fallback_sink_once(tmp_path: Path, kind: str) -> None:
+    report, stderr, _ = _run_probe(tmp_path, "orphan", probe=_DELIVERY_PROBE, kind=kind)
+
+    assert report["delivered"] == []
+    assert stderr.count("first record") == 1

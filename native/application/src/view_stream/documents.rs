@@ -231,19 +231,36 @@ impl ViewImage {
     }
 }
 
-/// The page: origin and path for the toolbar, and the full address for the
-/// desktop host alone.
+/// Whether the shown page's address can be stated to the person.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ViewPageSecurity {
+    /// An https page; its origin and path say where the person is.
+    Secure,
+    /// A page not served over https; nothing of its address is stated.
+    Insecure,
+    /// A page whose origin cannot be stated, such as `data:` or an error page.
+    Unknown,
+}
+
+/// The page: its security marker, origin and path for the toolbar, and the
+/// full address for the desktop host alone.
 ///
-/// `origin` and `path` never carry a query or fragment; they are what the
-/// window shows. `address` is the page's whole URL, query included, so that the
-/// person's external open lands on the same page. The host keeps it in memory
-/// and never relays it to the window; it is `None` when the worker could not
-/// state it within the contract.
+/// Every top-level navigation states the page. A `Secure` page carries its
+/// `origin` and `path`, which never carry a query or fragment; they are what
+/// the window shows. `address` is the page's whole URL, query included, so
+/// that the person's external open lands on the same page. The host keeps it
+/// in memory and never relays it to the window; it is `None` when the worker
+/// could not state it within the contract. Any other page carries no origin,
+/// path or address, so the host drops the address it held.
 #[derive(Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ViewState {
-    pub origin: String,
-    pub path: String,
+    pub security: ViewPageSecurity,
+    #[serde(default)]
+    pub origin: Option<String>,
+    #[serde(default)]
+    pub path: Option<String>,
     #[serde(default)]
     pub address: Option<String>,
     pub title: String,
@@ -255,18 +272,29 @@ pub struct ViewState {
 
 impl ViewState {
     pub fn validate(&self) -> Result<(), Violation> {
+        require(char_count(&self.title) <= MAX_TITLE_LENGTH)?;
+        let (Some(origin), Some(path)) = (self.origin.as_deref(), self.path.as_deref()) else {
+            // Only a page that is not stated may leave out its origin and path,
+            // and it names no address either.
+            return require(
+                self.security != ViewPageSecurity::Secure
+                    && self.origin.is_none()
+                    && self.path.is_none()
+                    && self.address.is_none(),
+            );
+        };
         require(
-            (1..=MAX_URL_LENGTH).contains(&char_count(&self.origin))
-                && (1..=MAX_PATH_LENGTH).contains(&char_count(&self.path))
-                && char_count(&self.title) <= MAX_TITLE_LENGTH
-                && is_origin(&self.origin)
-                && self.path.starts_with('/')
-                && !self.path.contains(['?', '#'])
-                && !has_control_character(&self.origin)
-                && !has_control_character(&self.path)
+            self.security == ViewPageSecurity::Secure
+                && (1..=MAX_URL_LENGTH).contains(&char_count(origin))
+                && (1..=MAX_PATH_LENGTH).contains(&char_count(path))
+                && is_origin(origin)
+                && path.starts_with('/')
+                && !path.contains(['?', '#'])
+                && !has_control_character(origin)
+                && !has_control_character(path)
                 && self.address.as_deref().is_none_or(|address| {
                     (1..=MAX_URL_LENGTH).contains(&char_count(address))
-                        && is_address_of(address, &self.origin)
+                        && is_address_of(address, origin)
                 }),
         )
     }
@@ -963,8 +991,9 @@ mod tests {
     #[test]
     fn private_documents_print_no_content() {
         let state = ViewDownstream::State(ViewState {
-            origin: "https://sede.agenciatributaria.gob.es".into(),
-            path: "/Sede/inicio.html".into(),
+            security: ViewPageSecurity::Secure,
+            origin: Some("https://sede.agenciatributaria.gob.es".into()),
+            path: Some("/Sede/inicio.html".into()),
             address: Some(
                 "https://sede.agenciatributaria.gob.es/Sede/inicio.html?nif=private".into(),
             ),

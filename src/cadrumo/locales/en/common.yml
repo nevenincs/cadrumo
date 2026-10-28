@@ -796,6 +796,8 @@ desktop:
       dismiss: Dismiss
       more: '{count} more waiting'
     opening: Opening the browser…
+    page_insecure: Not secure
+    page_unknown: Unknown address
     publication:
       kept_newer: A newer sign-in was already saved, so Cadrumo kept it.
       published: Your sign-in was saved. Everything else in Cadrumo can use it now.

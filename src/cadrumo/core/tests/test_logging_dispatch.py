@@ -11,6 +11,8 @@ import pytest
 
 from cadrumo.tests.audited_process import run_audited_process
 
+from ..storage_taxonomy import StorageCategory
+from ..storage_taxonomy_locations import storage_location
 from ..type_guards import is_object_mapping
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -24,13 +26,22 @@ logger = project.get_logger('cadrumo.tests.dispatch_probe')
 """
 
 
+def _log_directory(tmp_path: Path) -> Path:
+    return tmp_path / "logs"
+
+
+def _log_file(tmp_path: Path) -> Path:
+    """Return the file a probe's diagnostics reach, named as the storage taxonomy declares it."""
+    return _log_directory(tmp_path) / Path(storage_location(StorageCategory.LOG_FILE).subpath).name
+
+
 def _probe(tmp_path: Path, body: str) -> dict[str, float | int]:
     completed = run_audited_process(
         [sys.executable, "-c", _SETUP + body],
         env={
             **os.environ,
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
-            "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
+            "CADRUMO_LOG_DIR": str(_log_directory(tmp_path)),
             "CADRUMO_LOG_STDERR_LEVEL": "WARNING",
         },
         capture_output=True,
@@ -82,7 +93,7 @@ print(json.dumps({{'shutdown_seconds': time.monotonic() - started}}), flush=True
         env={
             **os.environ,
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),
-            "CADRUMO_LOG_DIR": str(tmp_path / "logs"),
+            "CADRUMO_LOG_DIR": str(_log_directory(tmp_path)),
             "CADRUMO_LOG_STDERR_LEVEL": "WARNING",
         },
         capture_output=True,
@@ -205,7 +216,7 @@ assert project.flush_logging(timeout=10)
 print(json.dumps({'done': True}))
 """,
     )
-    text = (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    text = _log_file(tmp_path).read_text(encoding="utf-8")
     assert "opaque <omitted:opaque-value>" in text
     assert "Fault:" in text and "safe exception snapshot" in text
     assert "synthetic-secret" not in text
@@ -232,7 +243,7 @@ assert project.diagnostic_delivery_status()['records'].failed == 0
 print(json.dumps({'done': True}))
 """,
     )
-    text = (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    text = _log_file(tmp_path).read_text(encoding="utf-8")
     assert text.count("<omitted:oversized-format>") == 2
     assert "<omitted:oversized-number>" in text
     assert "OSError:" in text and "RuntimeError:" in text and "Exception cause:" in text
@@ -250,7 +261,7 @@ assert project.flush_logging(timeout=10)
 print(json.dumps({'done': True}))
 """,
     )
-    assert "immediate level probe" in (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    assert "immediate level probe" in _log_file(tmp_path).read_text(encoding="utf-8")
 
 
 def test_diagnostic_redaction_never_borrows_a_blocked_application_authority(tmp_path: Path) -> None:
@@ -285,7 +296,7 @@ assert project.flush_logging(timeout=10)
 print(json.dumps({'done': True}))
 """,
     )
-    output = (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    output = _log_file(tmp_path).read_text(encoding="utf-8")
     assert "diagnostic identity sha256:" in output
     assert "B" + "0" * 8 not in output
 
@@ -320,7 +331,7 @@ assert project.diagnostic_delivery_status()['records'].dropped == 0
 print(json.dumps({'done': True}))
 """,
     )
-    output = (tmp_path / "logs" / "cadrumo.log").read_text(encoding="utf-8")
+    output = _log_file(tmp_path).read_text(encoding="utf-8")
     assert "hash hook <omitted:opaque-value>" in output
     assert "class hook <omitted:opaque-value>" in output
     assert "NameTrapFault:" in output

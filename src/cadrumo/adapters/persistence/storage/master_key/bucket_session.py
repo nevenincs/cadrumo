@@ -24,6 +24,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .....core.diagnostic_log import diagnostic_phase
 from .....core.logging import get_logger
 from .....core.time.utc import validate_utc_aware
 from ..bucket.errors import BucketLockedError
@@ -45,6 +46,9 @@ if TYPE_CHECKING:
 #: not a general-purpose cache size.
 _ROUTED_SETTINGS_MEMO_SIZE = 4
 _log = get_logger(__name__)
+
+KEY_RELEASE_PHASE_EVENT = "storage_key_release_phase"
+"""The record naming how long one step of releasing a profile key session took."""
 
 
 class BucketSession:
@@ -375,43 +379,57 @@ class BucketSession:
         return self._engine
 
     def close(self) -> None:
-        """Zeroise key buffers, dispose the bucket's engine, and seal the session.
+        """Zeroise key buffers, seal the session, and dispose the bucket's engines.
 
-        Idempotent: a second call after the first is a no-op.
-
-        Engine disposal:
-
-        The session owns the engine lifecycle for its bucket. Closing the
-        session (on idle expiry, profile switch, or explicit close)
-        disposes the engine handle registered at first storage access and
-        evicts every cached engine bound to this bucket id, so the next
-        consumer that opens a different bucket — or re-opens this one —
-        never reuses a stale engine handle. Disposal keys on bucket
-        identity, so it never depends on re-deriving a database route from
-        live settings.
+        Idempotent: a call on a sealed session is a no-op; whoever sealed it
+        owns :meth:`dispose_engines`. Otherwise :meth:`seal` followed by
+        :meth:`dispose_engines`.
         """
         if self._sealed:
             return
-        _zeroise(self._dek_buffer)
-        self._sealed = True
-        self._routed_settings.clear()
-        self._hmac_subkeys.clear()
-        self._dispose_engine()
+        self.seal()
+        self.dispose_engines()
 
-    def _dispose_engine(self) -> None:
-        """Dispose the engine(s) bound to this bucket's database."""
-        from sqlalchemy.exc import SQLAlchemyError
+    def seal(self) -> None:
+        """Zeroise key buffers, seal the session, and detach the bucket's engines without closing them.
 
-        from ..sql.engine import dispose_engine_handle, dispose_engines_for_bucket
+        Idempotent. Once this returns the session refuses key access and the
+        engine cache no longer serves this bucket's engines, so the next
+        consumer that opens a different bucket, or re-opens this one, never
+        reuses a stale engine handle. The detached pools stay open until
+        :meth:`dispose_engines` runs: closing the last connection to a WAL
+        database checkpoints and fsyncs it, which a caller can do after
+        releasing a lock that other work waits on.
+
+        The session owns the engine lifecycle for its bucket. Detaching evicts
+        the engine handle registered at first storage access and every cached
+        engine bound to this bucket id. It keys on bucket identity, so it never
+        depends on re-deriving a database route from live settings.
+        """
+        if self._sealed:
+            return
+        with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "dek_zeroise"):
+            _zeroise(self._dek_buffer)
+            self._sealed = True
+            self._routed_settings.clear()
+            self._hmac_subkeys.clear()
+        from ..sql.engine import detach_bucket_engines
 
         engine = self._engine
         self._engine = None
-        try:
-            if engine is not None:
-                dispose_engine_handle(engine)
-            dispose_engines_for_bucket(self._bucket_id)
-        except SQLAlchemyError as exc:
-            _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
+        detach_bucket_engines(self._bucket_id, engine)
+
+    def dispose_engines(self) -> None:
+        """Close the pools of every engine detached for this session's bucket and not yet disposed."""
+        from sqlalchemy.exc import SQLAlchemyError
+
+        from ..sql.engine import dispose_detached_bucket_engines
+
+        with diagnostic_phase(_log, KEY_RELEASE_PHASE_EVENT, "engine_dispose"):
+            try:
+                dispose_detached_bucket_engines(self._bucket_id)
+            except SQLAlchemyError as exc:
+                _log.debug("bucket session engine disposal failed error_type=%s", type(exc).__name__)
 
 
 __all__ = ["BucketSession"]

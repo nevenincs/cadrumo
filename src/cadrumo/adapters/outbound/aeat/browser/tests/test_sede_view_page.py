@@ -23,6 +23,7 @@ from cadrumo_client.contracts.view_stream import (
     VIEW_MAX_URL_LENGTH,
     ViewClose,
     ViewClosedReason,
+    ViewPageSecurity,
     ViewPhase,
     ViewResize,
     ViewState,
@@ -168,6 +169,35 @@ async def test_sede_view_streams_an_accepted_download_to_the_window_and_keeps_no
 
 
 @pytest.mark.asyncio
+async def test_sede_view_states_a_page_off_https_without_the_address_it_left(tmp_path: Path) -> None:
+    site = _Site()
+    plain = "http://plain.example.test/form?nif=synthetic"
+    site.pages[plain] = ("text/html; charset=utf-8", b"<title>Sin cifrar</title>", {})
+    _home(site, f'<title>Inicio</title><a id="plain" href="{plain}">fuera</a>')
+    async with _view(tmp_path, site) as running:
+        await until(lambda: any(state.title == "Inicio" for state in running.sink.of(ViewState)))
+        await running.page.wait_for_selector("#plain")
+        before = len(running.sink.of(ViewState))
+        await running.page.click("#plain")
+        await until(
+            lambda: any(
+                state.security is ViewPageSecurity.INSECURE and not state.loading
+                for state in running.sink.of(ViewState)[before:]
+            )
+        )
+        left = running.sink.of(ViewState)[before:]
+        # Every state since the move is the marker alone: nothing of either page's address.
+        assert [state.security for state in left if state.origin is not None] == []
+        assert all(state.address is None and state.path is None for state in left)
+        assert left[-1].title == "Sin cifrar"
+        before = len(running.sink.of(ViewState))
+        await running.page.goto("data:text/html,<title>datos</title>")
+        await until(
+            lambda: any(state.security is ViewPageSecurity.UNKNOWN for state in running.sink.of(ViewState)[before:])
+        )
+
+
+@pytest.mark.asyncio
 async def test_sede_view_close_deletes_a_download_still_streaming(tmp_path: Path) -> None:
     site = _Site()
     target = site.file("/wlpl/justificante.pdf", _PAYLOAD)
@@ -297,21 +327,31 @@ def test_sede_view_state_keeps_origin_and_path_only() -> None:
         loading=False,
         phase=ViewPhase.BROWSING,
     )
-    assert state is not None
+    assert state.security is ViewPageSecurity.SECURE
     assert (state.origin, state.path) == ("https://sede.example.es:8443", "/a/b")
     # A URL whose host does not read as its origin carries no address.
     assert state.address is None
-    assert (
-        view_state("http://sede.example.es/", "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
-        is None
-    )
-    assert view_state("about:blank", "", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING) is None
+
+
+def test_sede_view_state_marks_a_page_it_cannot_state_and_names_no_address() -> None:
+    for url, security in (
+        ("http://sede.example.es/Sede/inicio.html?nif=synthetic", ViewPageSecurity.INSECURE),
+        ("about:blank", ViewPageSecurity.UNKNOWN),
+        ("data:text/html,<p>x</p>", ViewPageSecurity.UNKNOWN),
+        ("chrome-error://chromewebdata/", ViewPageSecurity.UNKNOWN),
+        ("https://[::1/", ViewPageSecurity.UNKNOWN),
+        ("", ViewPageSecurity.UNKNOWN),
+    ):
+        state = view_state(url, "t", back=True, forward=False, loading=False, phase=ViewPhase.BROWSING)
+        assert state.security is security, url
+        if security is not ViewPageSecurity.SECURE:
+            assert (state.origin, state.path, state.address) == (None, None, None), url
+            assert state.can_go_back
 
 
 def test_sede_view_state_carries_the_whole_address_for_the_host() -> None:
     url = "https://sede.example.es/wlpl/BUGC-JDIT/Consulta?ejercicio=2025&modelo=303#resumen"
     state = view_state(url, "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
-    assert state is not None
     assert (state.origin, state.path, state.address) == (
         "https://sede.example.es",
         "/wlpl/BUGC-JDIT/Consulta",
@@ -319,7 +359,6 @@ def test_sede_view_state_carries_the_whole_address_for_the_host() -> None:
     )
     long_query = "https://sede.example.es/x?q=" + "a" * VIEW_MAX_URL_LENGTH
     state = view_state(long_query, "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
-    assert state is not None
     assert (state.path, state.address) == ("/x", None)
 
 

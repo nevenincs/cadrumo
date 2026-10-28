@@ -288,6 +288,25 @@ def close_active_bucket_session() -> None:
         active_session.clear_bound(session)
 
 
+def seal_active_bucket_session() -> BucketSession | None:
+    """Seal and evict the currently bound :class:`BucketSession`, leaving its engines to dispose.
+
+    Does what :func:`close_active_bucket_session` does except closing the
+    bucket's engine pools: the key is zeroised and the binding removed before
+    this returns, and the caller disposes the returned session's engines with
+    :meth:`BucketSession.dispose_engines` once it no longer holds a lock that
+    other work waits on. Returns ``None`` when no session is bound.
+    """
+    session = active_session.get()
+    if session is None:
+        return None
+    try:
+        session.seal()
+    finally:
+        active_session.clear_bound(session)
+    return session
+
+
 def _close_active_session_at_exit() -> None:
     """Best-effort close of every live session on interpreter shutdown.
 
@@ -331,5 +350,6 @@ __all__ = [
     "get_active_master_key",
     "has_active_bucket_session",
     "require_fresh_active_session",
+    "seal_active_bucket_session",
     "session_serves_bucket",
 ]

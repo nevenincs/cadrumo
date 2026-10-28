@@ -9,7 +9,9 @@ import type { PageAddress } from "./browserModel";
  * The browser's controls, in the pane's header: back, forward, reload, the
  * AEAT start page, the page's origin and path, and the person's way to open
  * the page in their own browser. The address is shown, never typed: the window
- * names no address, and the query of a page is not shown.
+ * names no address, and the query of a page is not shown. A page that is not
+ * served over https, or whose origin is not known, shows that instead of an
+ * address, and has none to open.
  */
 export function BrowserToolbar({
   page,
@@ -27,6 +29,7 @@ export function BrowserToolbar({
   onExternal: () => void;
 }) {
   const t = useStrings();
+  const stated = page?.security === "secure";
   return (
     <div
       role="group"
@@ -64,19 +67,31 @@ export function BrowserToolbar({
       <div
         role="group"
         aria-label={t("desktop.browser.address")}
-        title={page ? `${page.origin}${page.path}` : undefined}
+        title={stated ? `${page.origin ?? ""}${page.path ?? ""}` : undefined}
         className="mx-1 flex h-control-xs min-w-0 flex-1 items-center gap-1.5 rounded-md bg-accent px-2 text-sm"
         data-browser-address=""
+        data-browser-security={page?.security}
       >
-        <span className="min-w-0 truncate">
-          <span className="text-muted-foreground">{page?.origin}</span>
-          <span className="text-foreground">{page?.path}</span>
-        </span>
+        {page && !stated ? (
+          <span className="flex min-w-0 items-center gap-1.5 text-warning">
+            <Icon name={page.security === "insecure" ? "alert" : "unknown"} />
+            <span className="min-w-0 truncate">
+              {page.security === "insecure"
+                ? t("desktop.browser.page_insecure")
+                : t("desktop.browser.page_unknown")}
+            </span>
+          </span>
+        ) : (
+          <span className="min-w-0 truncate">
+            <span className="text-muted-foreground">{page?.origin}</span>
+            <span className="text-foreground">{page?.path}</span>
+          </span>
+        )}
         {page?.loading && <Spinner className="ml-auto" />}
       </div>
       <IconButton
         label={t("desktop.browser.external")}
-        disabled={!external}
+        disabled={!external || !page?.external}
         onClick={onExternal}
       >
         <Icon name="external" />

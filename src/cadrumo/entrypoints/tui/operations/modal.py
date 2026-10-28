@@ -32,7 +32,7 @@ from textual.worker import Worker, WorkerCancelled, WorkerFailed
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ....application.components_operations import COMPONENTS_SETUP_OPERATION_ID, ProvisionReviewProjection
+from ....application.components_operations import COMPONENTS_SETUP_DEFINITION_ID, ProvisionReviewProjection
 from ....application.dependency_contracts import DependencySetupStep, DependencyStatusRow
 from ....application.dependency_registry import dependency_item_declarations
 from ....application.dependency_wording import dependency_name_key
@@ -323,7 +323,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 cursor = self._log_view.next_cursor
             if self._view_model is None:
                 self._clear_action_refusal()
-            if self._response_only and observed.projection.definition_id != COMPONENTS_SETUP_OPERATION_ID:
+            if self._response_only and observed.projection.definition_id != COMPONENTS_SETUP_DEFINITION_ID:
                 self._observation_stopped = True
                 self._clear_private_view(tr("operation.modal.claim.unavailable"))
                 return
@@ -332,7 +332,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 self._controller,
                 observed.projection,
                 ProvisionReviewProjection
-                if observed.projection.definition_id == COMPONENTS_SETUP_OPERATION_ID
+                if observed.projection.definition_id == COMPONENTS_SETUP_DEFINITION_ID
                 else BaseModel,
                 current=self._interaction,
             )
@@ -408,7 +408,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self._observation_stopped = True
         code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
         setup_review = self._response_only or (
-            self._view_model is not None and self._view_model.projection.definition_id == COMPONENTS_SETUP_OPERATION_ID
+            self._view_model is not None and self._view_model.projection.definition_id == COMPONENTS_SETUP_DEFINITION_ID
         )
         self._clear_private_view(code)
         if setup_review:
@@ -827,7 +827,7 @@ def _progress_text(completed: int, total: int, unit_code: str | None, subject_co
 
 def _phase_text(code: str) -> str:
     """Word setup phase coordinates using the component and step declarations."""
-    if code == COMPONENTS_SETUP_OPERATION_ID:
+    if code == COMPONENTS_SETUP_DEFINITION_ID:
         return tr("tui.setup.working")
     if code in {"config.provision.status", "config.provision.verify"}:
         return tr("tui.setup.checking")

@@ -36,6 +36,12 @@ background sinks expose delivery counters and finite flush/shutdown attempts;
 overload rejects diagnostic work rather than blocking application progress.
 Queued redaction uses conservative lexical identity matching without borrowing
 application registry locks; identity-shaped technical references may be hashed.
+
+Every handler receives a record once. A :func:`get_logger` logger withholds its
+record from propagation, so the dispatch thread hands the scrubbed snapshot to
+every handler in the hierarchy, foreign ones included. A plain stdlib logger
+cannot be intercepted before propagation: foreign handlers already received the
+original, so the snapshot goes only to this module's own handlers.
 """
 
 from __future__ import annotations
@@ -1023,22 +1029,21 @@ class _ConfigureOnFirstRecordHandler(logging.Handler):
     @override
     def handle(self, record: logging.LogRecord) -> bool:
         if _active_record.get() is not record:
-            _enqueue_record(record)
+            _enqueue_record(record, offered_to_handlers=True)
             return True
         return bool(super().handle(record))
 
     @override
     def emit(self, record: logging.LogRecord) -> None:
         if _active_record.get() is not record:
-            _enqueue_record(record)
+            _enqueue_record(record, offered_to_handlers=True)
             return
         root_logger = logging.getLogger()
-        walked = root_logger.handlers
-        position = walked.index(self) if self in walked else 0
+        walked = tuple(root_logger.handlers)
         _configure_for_first_record(self, record)
         if _defer_record_if_placeholder(self, root_logger, record):
             return
-        _forward_first_record(self, root_logger, walked, position, record)
+        _forward_first_record(root_logger, walked, record)
 
 
 def _configure_for_first_record(handler: _ConfigureOnFirstRecordHandler, record: logging.LogRecord) -> None:
@@ -1072,21 +1077,15 @@ def _defer_record_if_placeholder(
 
 
 def _forward_first_record(
-    handler: _ConfigureOnFirstRecordHandler,
     root_logger: logging.Logger,
-    walked: list[logging.Handler],
-    position: int,
+    walked: tuple[logging.Handler, ...],
     record: logging.LogRecord,
 ) -> None:
-    # ``Logger.callHandlers`` is still walking the handler list it read before
-    # configuration ran. If removal mutated that list in place, only the
-    # configured handlers before this placeholder are ours. If removal replaced
-    # it (CPython 3.13.15 and 3.14.7 onward, gh-79366), all configured handlers
-    # are ours and the triggering record must be forwarded to each one.
-    configured = root_logger.handlers
-    ours = configured if configured is not walked else configured[: position + 1]
-    for active_handler in ours:
-        if record.levelno >= active_handler.level:
+    # Configuration replaces the root handler list, so the walk that reached the
+    # placeholder never sees the sinks configuration installed, and still
+    # reaches every handler it started with. Only the new sinks need the record.
+    for active_handler in tuple(root_logger.handlers):
+        if active_handler not in walked and record.levelno >= active_handler.level:
             active_handler.handle(record)
 
 
@@ -1102,6 +1101,9 @@ def _handle_as_last_resort(record: logging.LogRecord) -> None:
 def _hold_pending_record(record: logging.LogRecord) -> None:
     if len(_pending_records) == _PENDING_RECORD_LIMIT:
         _dispatch.discard()
+    # The walk that held it also reached every foreign handler; only the sinks
+    # that configuration installs are still owed this record.
+    record.__dict__[_OFFERED_TO_HANDLERS] = True
     _pending_records.append(record)
 
 
@@ -1118,8 +1120,12 @@ def _retire_first_record_configuration() -> None:
     """Drop the placeholder and its held records when configuration is refused."""
     global _root_level_before_buffering
     root_logger = logging.getLogger()
-    for handler in [handler for handler in root_logger.handlers if isinstance(handler, _ConfigureOnFirstRecordHandler)]:
-        root_logger.removeHandler(handler)
+    # Replaced rather than removed in place: before CPython 3.13.15 and 3.14.7
+    # (gh-79366) an in-place removal makes the walk that reached the placeholder
+    # skip the handler after it.
+    root_logger.handlers = [
+        handler for handler in root_logger.handlers if not isinstance(handler, _ConfigureOnFirstRecordHandler)
+    ]
     _pending_records.clear()
     if _root_level_before_buffering is not None:
         root_logger.setLevel(_root_level_before_buffering)
@@ -1169,6 +1175,9 @@ def get_logger(name: str) -> logging.Logger:
     return logger
 
 
+#: Snapshot attribute stating that its original already reached every handler of
+#: its logger hierarchy during propagation.
+_OFFERED_TO_HANDLERS = "_cadrumo_offered_to_handlers"
 _active_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_delivery_record", default=None)
 _scrubbed_record: ContextVar[logging.LogRecord | None] = ContextVar("diagnostic_scrubbed_record", default=None)
 _sink_workers: list[DiagnosticDispatch[logging.LogRecord]] = []
@@ -1273,7 +1282,15 @@ def _bound_format(record: logging.LogRecord) -> None:
             return
 
 
-def _enqueue_record(record: logging.LogRecord) -> None:
+def _enqueue_record(record: logging.LogRecord, *, offered_to_handlers: bool) -> None:
+    """Queue a snapshot of ``record`` for the dispatch thread.
+
+    ``offered_to_handlers`` states whether ``record`` itself goes on to reach the
+    handlers of its hierarchy. A logger filter withholds it, so the snapshot owes
+    every handler a delivery. A handler that intercepts it during propagation
+    leaves the other handlers to receive the original, so the snapshot owes only
+    this module's own handlers.
+    """
     if _active_record.get() is not None:
         _dispatch.discard()
         return
@@ -1283,7 +1300,9 @@ def _enqueue_record(record: logging.LogRecord) -> None:
     record.__dict__["_cadrumo_queued_pid"] = os.getpid()
     record.__dict__["_cadrumo_configuration_deferred"] = _configuration_deferred
     try:
-        _submit_work(_snapshot_record(record))
+        snapshot = _snapshot_record(record)
+        snapshot.__dict__[_OFFERED_TO_HANDLERS] = offered_to_handlers
+        _submit_work(snapshot)
     except Exception:
         # A malformed foreign LogRecord must not change the caller's result.
         _dispatch.discard()
@@ -1295,7 +1314,7 @@ class _DispatchFilter(logging.Filter):
     def filter(self, record: logging.LogRecord) -> bool:
         if _active_record.get() is record:
             return True
-        _enqueue_record(record)
+        _enqueue_record(record, offered_to_handlers=False)
         return False
 
 
@@ -1319,11 +1338,39 @@ def _deliver_work(work: logging.LogRecord | Callable[[], None]) -> None:
             SecretScrubbingFilter().filter(work)
         scrubbed = _scrubbed_record.set(work)
         try:
-            logging.getLogger(work.name).handle(work)
+            if work.__dict__.get(_OFFERED_TO_HANDLERS) is True:
+                _handle_by_own_handlers(work)
+            else:
+                logging.getLogger(work.name).handle(work)
         finally:
             _scrubbed_record.reset(scrubbed)
     finally:
         _active_record.reset(token)
+
+
+def _handle_by_own_handlers(record: logging.LogRecord) -> None:
+    """Offer a snapshot to this module's handlers, along the path ``callHandlers`` takes.
+
+    The original of ``record`` was already offered to every handler of its
+    hierarchy, so a foreign handler reached again here would log it twice. Each
+    logger's handlers are read once, so a sink installed while the walk is in
+    progress is not reached; the placeholder that installs sinks forwards the
+    record to them itself.
+    """
+    found = False
+    logger: logging.Logger | None = logging.getLogger(record.name)
+    while logger is not None:
+        for handler in tuple(logger.handlers):
+            found = True
+            if isinstance(handler, _AsyncDiagnosticHandler | _ConfigureOnFirstRecordHandler) and (
+                record.levelno >= handler.level
+            ):
+                handler.handle(record)
+        logger = logger.parent if logger.propagate else None
+    fallback = logging.lastResort
+    # The stdlib falls back to ``lastResort`` only for a hierarchy with no handler.
+    if not found and isinstance(fallback, _AsyncDiagnosticHandler) and record.levelno >= fallback.level:
+        fallback.handle(record)
 
 
 class _AsyncDiagnosticHandler(logging.Handler):
@@ -1343,7 +1390,7 @@ class _AsyncDiagnosticHandler(logging.Handler):
         # Foreign loggers bypass logger-attached filters during propagation.
         # Intercept before handler filters can enter redaction or registry I/O.
         if _active_record.get() is not record:
-            _enqueue_record(record)
+            _enqueue_record(record, offered_to_handlers=True)
             return True
         return bool(super().handle(record))
 
@@ -1365,7 +1412,7 @@ class _AsyncDiagnosticHandler(logging.Handler):
             snapshot.__dict__ = record.__dict__.copy()
             self._worker.submit(snapshot, weight=record.__dict__.get("_cadrumo_snapshot_weight", 1024))
         else:
-            _enqueue_record(record)
+            _enqueue_record(record, offered_to_handlers=True)
 
     @override
     def close(self) -> None:

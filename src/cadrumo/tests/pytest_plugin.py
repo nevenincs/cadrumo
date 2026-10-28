@@ -67,3 +67,21 @@ def _release_the_source_scan_caches_with_their_module() -> Iterator[None]:
     from .inventory import release_parsed_sources
 
     release_parsed_sources()
+
+
+@pytest.fixture(autouse=True)
+def _deliver_queued_diagnostics_between_tests() -> Iterator[None]:
+    """Keep one test's asynchronously delivered log records out of the next test's capture.
+
+    A project logger hands its record to the diagnostic dispatch, which delivers
+    it to every root handler present when delivery happens. A test that logs and
+    ends without draining can therefore have its records land in the capture
+    handler the next test has just attached, and a count of that test's own
+    records is wrong. The drain is bounded and never fails a test: a sink that
+    cannot deliver is that test's own defect to report.
+    """
+    from ..core.logging import flush_logging
+
+    flush_logging()
+    yield
+    flush_logging()

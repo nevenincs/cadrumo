@@ -16,8 +16,8 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 
 from .....adapters.outbound.components.protocol import ComponentsReviewLine, decode_components_line
 from .....application.components_operations import (
-    COMPONENTS_SETUP_OPERATION_ID,
-    COMPONENTS_STATUS_OPERATION_ID,
+    COMPONENTS_SETUP_DEFINITION_ID,
+    COMPONENTS_STATUS_DEFINITION_ID,
     PROVISION_RESPONSE_SCHEMA,
     PROVISION_REVIEW_SCHEMA,
     ProvisionPlan,
@@ -67,7 +67,7 @@ class ReviewController:
     def __init__(self) -> None:
         group = build_components_operations()
         registry = OperationRegistry(definitions=group.definitions, public_registrations=group.registrations)
-        contract = registry.lookup_public_contract(COMPONENTS_SETUP_OPERATION_ID)
+        contract = registry.lookup_public_contract(COMPONENTS_SETUP_DEFINITION_ID)
         line = next(
             decode_components_line(raw)
             for raw in transcript_lines("setup_browser_completed")
@@ -103,12 +103,12 @@ class ReviewController:
         self.projection = OperationPublicProjectionV1(
             operation_id=self.operation_id,
             subject_ref="components:installation",
-            definition_id=COMPONENTS_SETUP_OPERATION_ID,
+            definition_id=COMPONENTS_SETUP_DEFINITION_ID,
             definition_contract=contract,
             contract_set_digest=registry.public_contract_set.contract_set_digest,
             revision=4,
             anchor_cursor=0,
-            phase_code=COMPONENTS_SETUP_OPERATION_ID,
+            phase_code=COMPONENTS_SETUP_DEFINITION_ID,
             lifecycle=OperationLifecycle.WAITING_FOR_INTERACTION,
             terminal_condition=None,
             effect=OperationEffect.NONE,
@@ -334,10 +334,10 @@ async def test_response_only_reference_to_another_operation_never_resolves_or_cl
     controller = ReviewController()
     group = build_components_operations()
     registry = OperationRegistry(definitions=group.definitions, public_registrations=group.registrations)
-    contract = registry.lookup_public_contract(COMPONENTS_STATUS_OPERATION_ID)
+    contract = registry.lookup_public_contract(COMPONENTS_STATUS_DEFINITION_ID)
     values = controller.projection.model_dump(mode="python")
     values.update(
-        definition_id=COMPONENTS_STATUS_OPERATION_ID,
+        definition_id=COMPONENTS_STATUS_DEFINITION_ID,
         definition_contract=contract,
         contract_set_digest=registry.public_contract_set.contract_set_digest,
         phase_code=None,

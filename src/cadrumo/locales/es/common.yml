@@ -832,6 +832,8 @@ desktop:
       dismiss: Descartar
       more: '{count} más en espera'
     opening: Abriendo el navegador…
+    page_insecure: No es seguro
+    page_unknown: Dirección desconocida
     publication:
       kept_newer: Ya había un inicio de sesión más reciente guardado, así que Cadrumo
         lo mantuvo.

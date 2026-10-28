@@ -552,6 +552,7 @@
         {
           "document": {
             "kind": "view.state",
+            "security": "secure",
             "origin": "https://sede.agenciatributaria.gob.es",
             "path": "/Sede/inicio.html",
             "title": "Sede electrónica",
@@ -772,6 +773,7 @@
         {
           "document": {
             "kind": "view.state",
+            "security": "secure",
             "origin": "https://sede.agenciatributaria.gob.es",
             "path": "/Sede/inicio.html",
             "title": "Sede electrónica",
@@ -911,6 +913,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -925,6 +928,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "",
@@ -939,6 +943,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -954,6 +959,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -962,6 +968,32 @@
           "loading": false,
           "phase": "browsing",
           "address": "https://sede.agenciatributaria.gob.es"
+        }
+      },
+      {
+        "name": "state_insecure",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "insecure",
+          "title": "Pagina sin cifrar",
+          "can_go_back": true,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_unknown",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "unknown",
+          "title": "",
+          "can_go_back": true,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
         }
       },
       {
@@ -1620,6 +1652,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es/Sede",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1630,10 +1663,95 @@
         }
       },
       {
+        "name": "state_without_security",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_unknown_security",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "mixed",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_secure_without_origin",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "secure",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing"
+        }
+      },
+      {
+        "name": "state_insecure_with_origin",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "insecure",
+          "title": "Pagina sin cifrar",
+          "can_go_back": true,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "origin": "https://sede.agenciatributaria.gob.es"
+        }
+      },
+      {
+        "name": "state_insecure_with_path",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "insecure",
+          "title": "Pagina sin cifrar",
+          "can_go_back": true,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "path": "/Sede/inicio.html"
+        }
+      },
+      {
+        "name": "state_unknown_with_address",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "security": "unknown",
+          "title": "Pagina sin cifrar",
+          "can_go_back": true,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es/"
+        }
+      },
+      {
         "name": "state_origin_http",
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "http://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1648,6 +1766,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/x.html?nif=1",
           "title": "Sede electrónica",
@@ -1662,6 +1781,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1676,6 +1796,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1691,6 +1812,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1706,6 +1828,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1721,6 +1844,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1736,6 +1860,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1751,6 +1876,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1766,6 +1892,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -1781,6 +1908,7 @@
         "direction": "downstream",
         "document": {
           "kind": "view.state",
+          "security": "secure",
           "origin": "https://sede.agenciatributaria.gob.es",
           "path": "/Sede/inicio.html",
           "title": "Sede electrónica",
@@ -3737,6 +3865,7 @@
         {
           "document": {
             "kind": "view.state",
+            "security": "secure",
             "origin": "https://sede.agenciatributaria.gob.es",
             "path": "/Sede/inicio.html",
             "title": "Sede electrónica",

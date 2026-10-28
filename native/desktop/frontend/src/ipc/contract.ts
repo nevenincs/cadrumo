@@ -1100,6 +1100,10 @@ export type AgentLocalModels =
  * it publishes the session and ends. */
 export type SedeViewPhase = "acquiring" | "browsing" | "closing";
 
+/** Whether the page's address can be shown: an https page shows its origin
+ * and path; any other page shows only that it is not secure, or not known. */
+export type SedeViewPageSecurity = "secure" | "insecure" | "unknown";
+
 /** Every notice the view may raise: a page dialog, which carries its dialog. */
 export type SedeViewNoticeCode = "dialog_opened";
 
@@ -1174,13 +1178,17 @@ export type SedeViewMessage =
   | {
       kind: "state";
       view: number;
-      origin: string;
-      path: string;
+      security: SedeViewPageSecurity;
+      /** Null unless the page is `secure`. */
+      origin: string | null;
+      path: string | null;
       title: string;
       can_go_back: boolean;
       can_go_forward: boolean;
       loading: boolean;
       phase: SedeViewPhase;
+      /** Whether the host holds this page's address to open externally. */
+      external: boolean;
     }
   | {
       kind: "notice";

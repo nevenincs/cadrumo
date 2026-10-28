@@ -89,6 +89,11 @@ class TimedRLock:
         finally:
             self.release()
 
+    def owned(self) -> bool:
+        """Whether the calling thread holds the lock at any depth."""
+        entry = self._holder
+        return entry is not None and entry.owner == get_ident()
+
     def acquire(self, blocking: bool = True, timeout: float = -1) -> bool:
         """Acquire as ``RLock.acquire`` does, naming the entry by its calling code."""
         return self._enter(None, blocking, timeout)

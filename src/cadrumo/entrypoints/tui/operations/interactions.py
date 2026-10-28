@@ -20,7 +20,7 @@ from typing import Literal, assert_never
 
 from pydantic import BaseModel
 
-from ....application.components_operations import COMPONENTS_SETUP_OPERATION_ID
+from ....application.components_operations import COMPONENTS_SETUP_DEFINITION_ID
 from ....application.operations.frontend_contracts import OperationReviewProjectionResultV1
 from ....application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
@@ -131,7 +131,7 @@ async def resolve_modal_interaction_state[ReviewProjectionT: BaseModel](
             else frozenset[OperationResponseIntentValue]()
         )
         return replace(current, apply_enabled="apply" in permitted, reject_enabled="reject" in permitted)
-    if projection.definition_id == COMPONENTS_SETUP_OPERATION_ID:
+    if projection.definition_id == COMPONENTS_SETUP_DEFINITION_ID:
         if not isinstance(controller, OperationReviewClaimPort):
             return OperationModalReviewUnavailableV1(interaction=pending)
         resolved, digest = await controller.resolve_review_document(pending.review_reference, projection_type)
