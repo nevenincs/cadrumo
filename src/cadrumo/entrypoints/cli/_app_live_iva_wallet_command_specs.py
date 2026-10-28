@@ -60,7 +60,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OPTIONAL_TAXPAYER_NIF_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "iva_wallet_pull_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_iva_commands", "iva_wallet_pull_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".app_live_iva_wallet_results", "IvaWalletPullResult", __package__),
@@ -89,7 +89,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
         ),
         policy=_ENCRYPTED_LOCAL_READ_POLICY,
-        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "iva_wallet_history_cmd", __package__)),
+        handler=LazyBinding.available(DeferredTarget(".app_live_iva_commands", "iva_wallet_history_cmd", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".app_live_iva_wallet_results", "IvaWalletHistoryResult", __package__),
@@ -110,7 +110,9 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _OUTPUT_ROOT_OPTION,
         ),
         policy=_PROFILE_BOUND_NETWORK_CAPTURE_POLICY,
-        handler=LazyBinding.available(DeferredTarget(".app_live_commands", "iva_wallet_pull_history_cmd", __package__)),
+        handler=LazyBinding.available(
+            DeferredTarget(".app_live_iva_commands", "iva_wallet_pull_history_cmd", __package__)
+        ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
             target=DeferredTarget(".app_live_iva_wallet_results", "IvaWalletCaptureHistoryResult", __package__),
@@ -163,7 +165,7 @@ LIVE_IVA_WALLET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             live_write=False,
         ),
         handler=LazyBinding.available(
-            DeferredTarget(".app_live_commands", "iva_wallet_pull_evidence_cmd", __package__)
+            DeferredTarget(".app_live_iva_commands", "iva_wallet_pull_evidence_cmd", __package__)
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,

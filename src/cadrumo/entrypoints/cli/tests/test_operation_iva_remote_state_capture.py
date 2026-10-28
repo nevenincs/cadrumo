@@ -27,7 +27,7 @@ from ....application.live.remote_state_models import (
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
-from .. import app_live_commands as handler
+from .. import app_live_iva_commands as handler
 from .. import operation_iva_remote_state_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletPullEvidenceResult
 

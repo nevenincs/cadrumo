@@ -496,7 +496,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.IVA_COMPENSATION_HISTORY,
         "live/iva-compensation-history",
-        consumer_module="entrypoints/cli/app_live_commands.py",
+        consumer_module="entrypoints/cli/app_live_iva_commands.py",
         settings_field="cadrumo_iva_compensation_history_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,
@@ -504,7 +504,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.IVA_READ_EVIDENCE,
         "live/iva-read-evidence",
-        consumer_module="entrypoints/cli/app_live_commands.py",
+        consumer_module="entrypoints/cli/app_live_iva_commands.py",
         settings_field="cadrumo_iva_read_evidence_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,

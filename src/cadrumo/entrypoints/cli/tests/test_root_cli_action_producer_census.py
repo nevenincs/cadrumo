@@ -12,6 +12,7 @@ import pytest
 from .. import _log_levels as log_levels_module
 from .. import app_diagnostics_commands as diagnostics_module
 from .. import app_live_commands as live_module
+from .. import app_live_period as live_period_module
 from ..config import archive_reconcile as maintenance_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -57,8 +58,8 @@ _LLM_NOTICE_CALLERS = {
 }
 
 _NATIVE_PARSE_VALIDATION_CARRIERS = {
-    ("_live_period_option", "f'invalid AEAT period {period!r} for year {year}'"),
-    ("_required_live_period_option", "'--period is required'"),
+    ("live_period_option", "f'invalid AEAT period {period!r} for year {year}'"),
+    ("required_live_period_option", "'--period is required'"),
     ("filed_pull_cmd", "tr('cli.app.live.filed.pull_dry_run_single_mode_error')"),
     ("filed_pull_cmd", "'--period and --expediente are only valid for one --modelo with --year'"),
 }
@@ -125,11 +126,12 @@ def test_llm_guidance_callers_and_native_option_shape_exclusions_are_exact() -> 
     assert llm_callers == _LLM_NOTICE_CALLERS
 
     parse_carriers: set[tuple[str, str]] = set()
-    for function in _functions(live_module):
-        for call in ast.walk(function):
-            if isinstance(call, ast.Call) and _call_name(call.func) == "BadParameter":
-                assert len(call.args) == 1
-                parse_carriers.add((function.name, ast.unparse(call.args[0])))
+    for module in (live_module, live_period_module):
+        for function in _functions(module):
+            for call in ast.walk(function):
+                if isinstance(call, ast.Call) and _call_name(call.func) == "BadParameter":
+                    assert len(call.args) == 1
+                    parse_carriers.add((function.name, ast.unparse(call.args[0])))
     assert parse_carriers == _NATIVE_PARSE_VALIDATION_CARRIERS
 
     log_level_calls = {

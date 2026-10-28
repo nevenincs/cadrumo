@@ -20,7 +20,7 @@ from ....application.live.iva_wallet_history_capture_operation import (
     IvaWalletHistoryCaptureRequest,
 )
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from .. import app_live_commands as handler
+from .. import app_live_iva_commands as handler
 from .. import operation_iva_history_capture as bridge
 from ..app_live_iva_wallet_results import IvaWalletCaptureHistoryResult
 

@@ -30,7 +30,7 @@ import pytest
 from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva_compensation.reconciliation import IvaCompensationDecisionReason, reconcile_iva_compensation_wallet
-from ..app_live_commands import _iva_wallet_decision_reason_text
+from ..app_live_iva_commands import _iva_wallet_decision_reason_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
