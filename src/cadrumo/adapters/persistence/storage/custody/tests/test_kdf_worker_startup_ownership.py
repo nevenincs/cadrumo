@@ -13,6 +13,7 @@ from typing import Literal
 import pytest
 
 from ......core.config import Settings
+from .. import _kdf_worker_observation as observation
 from .. import _kdf_worker_supervision as supervision
 from .._kdf_worker_supervision import _SupervisedKdfWorker
 from ..errors import ProfileCustodyRefusal, ProfileCustodyRefusedError
@@ -44,7 +45,7 @@ def real_pipe_closes(monkeypatch: pytest.MonkeyPatch) -> Generator[tuple[list[in
     monkeypatch.setattr(supervision.os, "close", tracked_close)
     # Avoid unrelated logger file opens reusing the pipe descriptor numbers.
     # Diagnostic behavior is independently exercised by test_kdf_worker_diagnostics.
-    monkeypatch.setattr(supervision, "diagnostic_event", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(observation, "diagnostic_event", lambda *_args, **_kwargs: None)
     try:
         yield allocated, closes
     finally:
