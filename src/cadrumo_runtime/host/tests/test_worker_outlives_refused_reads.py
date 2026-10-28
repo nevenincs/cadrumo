@@ -61,6 +61,7 @@ from cadrumo.core.operations import OperationTerminalCondition, profile_operatio
 from cadrumo.core.request_faults import RequestFault
 from cadrumo.core.time.clock import now
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.attendance import AttendancePending
@@ -137,14 +138,14 @@ class _Session:
         )
 
     def settled(self, operation_id: OperationId) -> OperationObservationSuccessV1:
-        deadline = time.monotonic() + 30
+        deadline = time.monotonic() + HANG_GUARD_SECONDS
         while True:
             observed = self.observe(operation_id)
             assert isinstance(observed, OperationObserved), observed
             assert isinstance(observed.observation, OperationObservationSuccessV1), observed
             if observed.observation.projection.terminal_condition is not None:
                 return observed.observation
-            assert time.monotonic() < deadline
+            assert time.monotonic() < deadline, "the operation never settled"
             time.sleep(0.05)
 
     def reads(
@@ -408,7 +409,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
             with ThreadPoolExecutor(max_workers=1) as pool:
                 running = pool.submit(server.serve)
                 try:
-                    assert server.ready.wait(3)
+                    assert server.ready.wait(HANG_GUARD_SECONDS)
                     connection = _connect(endpoint)
                     try:
                         session_id = _admit(connection, profile_id, method="password", proof=PROFILE_INPUT.encode())
@@ -422,7 +423,7 @@ def _served_units(tmp_path: Path) -> Generator[_ServedUnits]:
                     close_active_bucket_session()
                     stop.set()
                     try:
-                        running.result(timeout=20)
+                        running.result(timeout=HANG_GUARD_SECONDS)
                     except Exception:
                         if primary is None:
                             raise

@@ -48,6 +48,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -214,9 +215,9 @@ def _issue_scoped_key(subject: AdministrationSubject, *, scope: AccessScope | No
 
 def _connect(endpoint: WindowsEndpoint) -> VerifiedConnection:
     return VerifiedConnection(
-        endpoint.connect(timeout=3),
+        endpoint.connect(timeout=HANG_GUARD_SECONDS),
         expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity),
-        deadline=time.monotonic() + 3,
+        deadline=time.monotonic() + HANG_GUARD_SECONDS,
     )
 
 
