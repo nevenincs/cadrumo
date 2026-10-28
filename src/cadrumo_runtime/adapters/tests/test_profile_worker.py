@@ -579,7 +579,9 @@ class _WindowsHostRetirement(BaseModel):
     runtime_pid: int
     worker_pid: int
     owner_lost: bool
-    profile_removed: bool
+    replacement_started: bool
+    lease_suspended: bool
+    profile_retained: bool
     server_running: bool
     stop_requested: bool
 
@@ -693,7 +695,9 @@ async def test_idle_admitted_worker_death_retires_browser_without_frontend_reque
             await asyncio.sleep(0.02)
         retired = await _windows_fixture_record(tmp_path / "windows-host-retired.json", _WindowsHostRetirement, owner)
         assert retired.runtime_pid == admission.runtime_pid and retired.worker_pid == admission.worker_pid
-        assert retired.owner_lost and retired.profile_removed and retired.server_running and not retired.stop_requested
+        # A lost worker suspends its profile's leases under a keyless replacement; the profile stays hosted.
+        assert retired.owner_lost and retired.replacement_started and retired.lease_suspended
+        assert retired.profile_retained and retired.server_running and not retired.stop_requested
         assert win32event.WaitForSingleObject(parent_handle, 0) == win32event.WAIT_TIMEOUT
         assert owner.process.returncode is None
         assert all(
