@@ -616,6 +616,8 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
         let auth_hosted_root = [
             "windows-agent-auth-admits-browser-connect-in-its-profile",
             "posix-agent-auth-admits-device-connect-in-its-profile",
+            "windows-agent-auth-admits-browser-code-connect-in-its-profile",
+            "posix-agent-auth-admits-browser-code-connect-in-its-profile",
             "windows-agent-auth-keeps-the-legacy-login-invocation",
         ]
         .contains(&vector.name)
@@ -623,6 +625,8 @@ fn launch_profiles_reproduce_every_generated_launch_vector() {
         let auth_browser_executable = [
             "windows-agent-auth-admits-browser-connect-in-its-profile",
             "posix-agent-auth-admits-device-connect-in-its-profile",
+            "windows-agent-auth-admits-browser-code-connect-in-its-profile",
+            "posix-agent-auth-admits-browser-code-connect-in-its-profile",
         ]
         .contains(&vector.name)
         .then(|| {
