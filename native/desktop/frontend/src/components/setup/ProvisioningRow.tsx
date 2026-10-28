@@ -115,7 +115,9 @@ export function StepFigure({
       <p className="flex items-center gap-2 text-foreground">
         <Spinner />
         <span data-setup-sentence>{stepWords(t, progress.step)}</span>
-        {determinate && (
+        {/* Before its first byte the bar alone says the download began;
+            a count of none would read as a size. */}
+        {determinate && completed > 0 && (
           <span className="ml-auto text-muted-foreground">
             {t("desktop.setup.progress_bytes", {
               done: formatSize(locale, completed),
