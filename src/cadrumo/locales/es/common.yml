@@ -3773,10 +3773,6 @@ desktop:
       set_up_in_desktop: Configurar en la aplicación de escritorio de Cadrumo
       try_again: Volver a intentarlo
       update: Actualizar
-    advisory_incomplete: La configuración de Cadrumo no está completa. Haz clic aquí
-      para completarla.
-    advisory_running: La configuración de Cadrumo está en curso. Haz clic aquí para
-      ver cómo va.
     approve: Descargar y configurar
     approve_at_least: Descargar al menos {size} y configurar
     approve_size: Descargar {size} y configurar
@@ -3785,18 +3781,12 @@ desktop:
       needs_person: Espera a que lo apruebes o lo instales tú.
       not_in_this_build: Esta versión de Cadrumo no lo incluye.
       offline: No tienes conexión. Conéctate a internet para configurarlo.
-    browser_lead: Cadrumo usa su propio navegador para identificarse en la web de
-      la Agencia Tributaria y leer allí tus datos.
     browser_open: Abrir la configuración del navegador
-    browser_other_running: Hay otra configuración en curso. Cuando termine, podrás
-      configurar el navegador aquí.
-    browser_title: Configuración del navegador
     cancel: Cancelar la configuración
     cancelling: Se detendrá tras el paso actual…
     checking: Comprobando los componentes…
     close: Cerrar
     copy_details: Copiar detalles
-    details: Detalles
     failure:
       blocked_by_network: Tu red ha bloqueado la descarga.
       cancelled: Has cancelado la configuración.
@@ -3819,14 +3809,10 @@ desktop:
       secure_connection_failed: No se ha podido establecer una conexión segura. Puede
         que un filtro de red lo impida.
       unexpected: Algo ha salido mal.
-    hide: Ocultar
     item:
       browser: Navegador para la web de la Agencia Tributaria
       local_ai: IA local
-    lead: Cadrumo necesita estos componentes para funcionar.
     lead_review: Revisa qué se va a descargar y dónde se guarda, y después apruébalo.
-    lead_running: Puedes cerrar esto; la configuración sigue y Ajustes muestra cómo
-      va.
     not_now: Ahora no
     open: Abrir la configuración
     outcome_cancelled: Se ha cancelado la configuración. Lo ya descargado se conserva.
@@ -3840,13 +3826,13 @@ desktop:
     outcome_plan_changed: Lo necesario cambió antes de empezar. Revisa el nuevo plan
       y apruébalo.
     outcome_rejected: No se ha descargado nada.
-    overall_progress: Progreso de la configuración
-    palette_browser: Configurar el navegador
     palette_cancel: Cancelar la configuración
     palette_check: Comprobar los componentes
-    palette_local_ai: Configurar la IA local
+    palette_item: 'Configurar: {name}'
     palette_open: Configurar los componentes
     palette_retry: Reintentar la configuración
+    panel_lead: Cada componente se configura por separado, y varios pueden configurarse
+      a la vez. Puedes cerrar esto; la configuración sigue.
     part_download: Descarga del modelo
     part_program: El programa que ejecuta los modelos
     plan_destination: 'Se guarda en: {folder}'
@@ -3859,7 +3845,6 @@ desktop:
     plan_size_at_least: Se descargarán al menos {size}.
     planning: Calculando qué hay que descargar…
     progress_bytes: '{done} de {total}'
-    progress_item: '{index} de {count}: {name} - {step}'
     progress_label: Progreso de {name}
     rail_busy: Configurando los componentes
     rail_incomplete: La configuración no ha terminado
@@ -3879,12 +3864,8 @@ desktop:
     reject: No descargar
     result_already: Ya estaba configurado
     result_done: Configurado
-    result_not_finished: No ha terminado
-    resume: Reanudar
     retry: Problema de conexión. Se volverá a intentar en {seconds} segundos (intento
       {attempt}).
-    show_new_plan: Ver el nuevo plan
-    show_running: Ver esa configuración
     size_unknown: Tamaño conocido al empezar
     space: Necesita {required} de espacio libre; hay {free} libres.
     space_short: No hay suficiente espacio libre. Libera algo y vuelve a intentarlo.
@@ -3893,7 +3874,6 @@ desktop:
     stale:
       older_revision: Funciona, pero hace falta una versión más reciente.
       program_too_old: Funciona, pero esta versión es demasiado antigua para Cadrumo.
-    start: Configurar
     state:
       absent: Aún no está configurado.
       blocked: Ahora mismo no se puede configurar.
@@ -3909,16 +3889,10 @@ desktop:
     step_installing: Instalando
     step_tidying: Ordenando
     step_waiting: Esperando para empezar
-    summary_complete: Todo lo que Cadrumo necesita está configurado.
-    summary_hardware: Este ordenador no puede ejecutar todo lo que Cadrumo necesita;
-      el resto está configurado.
-    summary_incomplete: Parte de lo que Cadrumo necesita aún no está configurado.
-    summary_running: La configuración está en curso.
     title: Configurar Cadrumo
     toast_cancelled: Configuración cancelada
     toast_done: Los componentes están configurados
     toast_not_finished: La configuración no ha terminado
-    try_again: Reintentar
     unavailable: Ahora no se pueden comprobar los componentes. Inténtalo de nuevo
       en un momento.
   setup_review:

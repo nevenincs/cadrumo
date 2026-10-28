@@ -20,7 +20,7 @@ import { TERMINAL_FONT_SIZES, type Prefs } from "../shell/layout";
 import { versionLine, type AboutState } from "../shell/about";
 import { terminalFontPx } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import { RowState } from "./setup/SetupRowItem";
+import { RowState } from "./setup/ProvisioningRow";
 
 /** A choice among a few short options: a labelled segmented control. */
 function Choice<T extends string>({

@@ -14,7 +14,9 @@ import {
 } from "../../shell/localModelLanes";
 import type { AgentModelLicenceFacts } from "../../shell/agentSession";
 import { useLocalModels, type LocalModelHost } from "../../shell/localModels";
+import { useProvisioning } from "../../shell/provisioning";
 import { useStrings, type Translate } from "../../shell/strings";
+import { StepFigure, type StepProgress } from "../setup/ProvisioningRow";
 import { refusalWords } from "../setup/setupWords";
 
 const licenceWords = (licence: AgentModelLicenceFacts) =>
@@ -53,13 +55,15 @@ function ModelFacts({ model, locale }: { model: LaneModel; locale: string }) {
   );
 }
 
-/** One listed model and its download or removal action. */
+/** One listed model, its download's progress while the local AI's setup
+ * pulls it, and its download or removal action. */
 function LocalModelRow({
   model,
   added,
   locale,
   busy,
   refusal,
+  progress,
   onDownload,
   onRemove,
 }: {
@@ -68,6 +72,9 @@ function LocalModelRow({
   locale: string;
   busy: boolean;
   refusal: string | null;
+  /** What the local AI's latest setup reports of this model, where it
+   * planned it and its outcome is still news. */
+  progress: StepProgress | null;
   onDownload?: () => void;
   onRemove?: () => void;
 }) {
@@ -99,6 +106,9 @@ function LocalModelRow({
         )}
       </div>
       <ModelFacts model={model} locale={locale} />
+      {progress && (
+        <StepFigure progress={progress} name={model.name} locale={locale} />
+      )}
       <div className="flex flex-wrap gap-2">
         {model.installed !== true && (
           <Button
@@ -178,28 +188,47 @@ function AddModel({
 }
 
 /** A local lane's model list: what the agent recommends and what the person
- * added by name, each downloaded and removed here. The list is what the
- * agent's model picker offers of the lane; the model the person picks there is
- * the one the agent and document reading run with. */
+ * added by name, each downloaded and removed here through the local AI's
+ * setup, whose progress each model shows. The list is what the agent's model
+ * picker offers of the lane; the model the person picks there is the one the
+ * agent and document reading run with. */
 export function LocalModels({
   lane,
   host,
   locale,
-  onSetUp,
-  onRemove,
+  onRemoved,
 }: {
   lane: CatalogLane | null;
   host: LocalModelHost;
   locale: string;
-  /** Opens setup's review of the local AI downloading one model; absent
-   * where this window offers no setup. */
-  onSetUp?: (model: string) => void;
-  /** Removes one model from this computer, answering the refusal's code or
-   * null; absent where this window offers no setup. */
-  onRemove?: (model: string) => Promise<string | null>;
+  /** Told once a model is removed from this computer. */
+  onRemoved?: () => void;
 }) {
   const t = useStrings();
+  const store = useProvisioning();
   const { snapshot, busy, outcomes, change } = useLocalModels(host);
+  // Downloading and removing are setup's: offered only where this window
+  // offers setup, and a download waits while the local AI sets up.
+  const localAi = store.localAiRow;
+  const settingUp = localAi !== null && store.liveRunOf(localAi.item) !== null;
+  const onSetUp =
+    store.offered && localAi !== null
+      ? (model: string) => {
+          if (lane) store.downloadModel(lane.id, model);
+        }
+      : undefined;
+  const onRemove = store.offered ? store.removeModel : undefined;
+  /** What the latest local AI setup says of `model`: its progress while it
+   * runs, and how it ended while the catalog does not yet show the model
+   * here, or when it failed. */
+  const progressOf = (model: LaneModel): StepProgress | null => {
+    const part = store.modelPart(model.id);
+    if (!part) return null;
+    if (part.result === null) return settingUp ? part : null;
+    return part.result.failure !== null || model.installed !== true
+      ? part
+      : null;
+  };
   const [removing, setRemoving] = useState<string | null>(null);
   const [removals, setRemovals] = useState<Record<string, string>>({});
   const readable =
@@ -226,6 +255,7 @@ export function LocalModels({
           setRemovals((held) => ({ ...held, [key]: code }));
           return;
         }
+        onRemoved?.();
       }
       if (added)
         await change(key, (revision) =>
@@ -298,7 +328,8 @@ export function LocalModels({
                     model={model}
                     added={added}
                     locale={locale}
-                    busy={working}
+                    busy={working || (settingUp && model.installed !== true)}
+                    progress={progressOf(model)}
                     refusal={
                       removals[key]
                         ? removalWords(t, removals[key])

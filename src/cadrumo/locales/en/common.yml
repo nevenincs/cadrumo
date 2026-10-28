@@ -3717,8 +3717,6 @@ desktop:
       set_up_in_desktop: Set up in the Cadrumo desktop app
       try_again: Try again
       update: Update
-    advisory_incomplete: Cadrumo setup is not complete. Click here to complete it.
-    advisory_running: Cadrumo setup is running. Click here to see how it's going.
     approve: Download and set up
     approve_at_least: Download at least {size} and set up
     approve_size: Download {size} and set up
@@ -3727,18 +3725,12 @@ desktop:
       needs_person: Waiting for you to approve it, or to install it yourself.
       not_in_this_build: This version of Cadrumo does not include this.
       offline: You are offline. Connect to the internet to set this up.
-    browser_lead: Cadrumo uses its own browser to sign in to the tax agency website
-      and read your data there.
     browser_open: Open browser setup
-    browser_other_running: Another setup is running. Once it finishes, you can set
-      up the browser here.
-    browser_title: Browser setup
     cancel: Cancel setup
     cancelling: Stopping after the current step…
     checking: Checking components…
     close: Close
     copy_details: Copy details
-    details: Details
     failure:
       blocked_by_network: Your network blocked the download.
       cancelled: You cancelled the setup.
@@ -3761,14 +3753,10 @@ desktop:
       secure_connection_failed: A secure connection could not be made. A network filter
         may be in the way.
       unexpected: Something went wrong.
-    hide: Hide
     item:
       browser: Browser for the tax agency website
       local_ai: Local AI
-    lead: Cadrumo needs these components to work.
     lead_review: Check what will be downloaded and where it goes, then approve it.
-    lead_running: You can close this; setup keeps going and Settings shows how it's
-      doing.
     not_now: Not now
     open: Open setup
     outcome_cancelled: Setup was cancelled. What was already downloaded is kept.
@@ -3781,13 +3769,13 @@ desktop:
     outcome_plan_changed: What's needed changed before setup started. Check the new
       plan and approve it.
     outcome_rejected: Nothing was downloaded.
-    overall_progress: Setup progress
-    palette_browser: Set up the browser
     palette_cancel: Cancel setup
     palette_check: Check components
-    palette_local_ai: Set up the local AI
+    palette_item: 'Set up: {name}'
     palette_open: Set up components
     palette_retry: Retry setup
+    panel_lead: Each component sets up on its own, and several can set up at once.
+      You can close this; setup keeps going.
     part_download: Model download
     part_program: The program that runs the models
     plan_destination: 'Saved in: {folder}'
@@ -3800,7 +3788,6 @@ desktop:
     plan_size_at_least: At least {size} to download.
     planning: Working out what to download…
     progress_bytes: '{done} of {total}'
-    progress_item: '{index} of {count}: {name} - {step}'
     progress_label: Progress of {name}
     rail_busy: Setting up components
     rail_incomplete: Setup isn't finished
@@ -3817,11 +3804,7 @@ desktop:
     reject: Don't download
     result_already: Already set up
     result_done: Set up
-    result_not_finished: Didn't finish
-    resume: Resume
     retry: Connection problem. Trying again in {seconds} seconds (attempt {attempt}).
-    show_new_plan: Show the new plan
-    show_running: Show that setup
     size_unknown: Size known once it starts
     space: Needs {required} of free space; {free} is free.
     space_short: There isn't enough free space. Free some up, then try again.
@@ -3829,7 +3812,6 @@ desktop:
     stale:
       older_revision: Works, but a newer version is needed.
       program_too_old: Works, but this version is too old for Cadrumo.
-    start: Set up
     state:
       absent: Not set up yet.
       blocked: This cannot be set up right now.
@@ -3845,16 +3827,10 @@ desktop:
     step_installing: Installing
     step_tidying: Tidying up
     step_waiting: Waiting to start
-    summary_complete: Everything Cadrumo needs is set up.
-    summary_hardware: This computer can't run everything Cadrumo needs; the rest is
-      set up.
-    summary_incomplete: Some of what Cadrumo needs isn't set up yet.
-    summary_running: Setup is running.
     title: Set up Cadrumo
     toast_cancelled: Setup cancelled
     toast_done: Components are set up
     toast_not_finished: Setup didn't finish
-    try_again: Try again
     unavailable: Components can't be checked right now. Try again in a moment.
   setup_review:
     changed: This setup request changed or ended. Ask the assistant to start setup

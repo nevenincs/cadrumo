@@ -1,13 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Icon } from "@/components/ui/icon";
-import { useProvisioningRecovery } from "../../shell/provisioningRecovery";
+import { useProvisioning } from "../../shell/provisioning";
 import { needsSetup } from "../../shell/setup";
 import { useStrings } from "../../shell/strings";
 import { actionWords, itemName, rowSentence } from "./setupWords";
 
 /** Beside something that could not run for a component: the component by
- * its name and the way into the window's setup prompt on it, when its row
+ * its name and the way into the provisioning panel on it, when its row
  * says setup can act now. A row setup cannot change from here says so
  * instead, as the component's name and the row's own sentence, with nothing
  * to press. Nothing is shown for an action that is not about setup, while
@@ -22,7 +22,7 @@ export function SetupOffer({
   className?: string;
 }) {
   const t = useStrings();
-  const recovery = useProvisioningRecovery();
+  const recovery = useProvisioning();
   if (action === null) return null;
   const target = recovery.targetOf(action);
   if (target === null) return null;
@@ -32,7 +32,7 @@ export function SetupOffer({
         className={cn("setup-held text-sm text-muted-foreground", className)}
         data-setup-held={target.item}
       >
-        {`${itemName(t, target.kind)}: ${rowSentence(t, target)}`}
+        {`${itemName(t, target.item)}: ${rowSentence(t, target)}`}
       </span>
     );
   return (
@@ -45,7 +45,7 @@ export function SetupOffer({
     >
       {target !== "general" && (
         <span className="font-medium text-foreground">
-          {itemName(t, target.kind)}
+          {itemName(t, target.item)}
         </span>
       )}
       <Button

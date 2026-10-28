@@ -2,7 +2,7 @@ import { useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { browserPlan, type SetupApprovals } from "../../shell/setupApprovals";
 import { useStrings } from "../../shell/strings";
-import { approveLabel, PlanDetail, PlanSummary } from "../setup/SetupDialog";
+import { approveLabel, PlanDetail, PlanSummary } from "../setup/SetupPlan";
 import { ApprovalPrompt } from "./ApprovalPrompt";
 
 /**

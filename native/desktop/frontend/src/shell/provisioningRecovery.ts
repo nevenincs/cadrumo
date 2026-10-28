@@ -1,5 +1,3 @@
-import { createContext, useContext } from "react";
-import type { SetupRow } from "../ipc/contract";
 import type { LedgerOutcome, LedgerPort } from "./ledger";
 import type { CensoPort, CensoSnapshot } from "./profileCenso";
 
@@ -7,13 +5,10 @@ import type { CensoPort, CensoSnapshot } from "./profileCenso";
 // as an `operator.provision.<item>` action: on an agent tool's refusal, on a
 // settled operation's precondition verdict, or on a reading that stood
 // without its model fill. This module finds that action in any of those
-// shapes, so every surface routes it the same way to the window's one setup
-// prompt. The action is an identifier for routing, never shown.
+// shapes, so every surface routes it the same way to the window's one
+// provisioning panel. The action is an identifier for routing, never shown.
 
 const PROVISION_PREFIX = "operator.provision.";
-/** The action that sets up the local AI: its program and every role's
- * model. */
-export const LOCAL_AI_SETUP_ACTION = "operator.provision.local_ai";
 /** Lower-case letters, digits, `_` and `.`, within the host's token cap. */
 const ACTION_TOKEN = /^[a-z0-9_.]{1,128}$/;
 /** How deep a refusal's nested shapes are searched for the action. */
@@ -76,28 +71,6 @@ function search(value: unknown, depth: number): string | null {
  */
 export function provisionActionOf(value: unknown): string | null {
   return search(value, DEPTH);
-}
-
-/** The window's setup, as a feature that could not run asks for it. */
-export type ProvisioningRecovery = {
-  /** Where `action` leads now: the row of the item it sets up, setup as a
-   * whole, or nowhere while this window offers no setup. */
-  targetOf(action: string): SetupRow | "general" | null;
-  /** Opens the setup prompt on the item `action` sets up, or setup as a
-   * whole; false where it leads nowhere. */
-  offer(action: string): boolean;
-};
-
-const NO_SETUP: ProvisioningRecovery = {
-  targetOf: () => null,
-  offer: () => false,
-};
-
-export const ProvisioningRecoveryContext =
-  createContext<ProvisioningRecovery>(NO_SETUP);
-
-export function useProvisioningRecovery(): ProvisioningRecovery {
-  return useContext(ProvisioningRecoveryContext);
 }
 
 /**

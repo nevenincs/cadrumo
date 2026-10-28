@@ -88,6 +88,7 @@ import type { LocalModelHost } from "../shell/localModels";
 import type { SkillCommand } from "../shell/agentSkills";
 import { AgentAccess as AgentAccessSection } from "./settings/AgentAccess";
 import { LocalModels } from "./settings/LocalModels";
+import { LocalAi } from "./setup/LocalAi";
 import { ProviderSettings as ProviderSettingsSection } from "./settings/ProviderSettings";
 import { Transcript } from "./agent/Transcript";
 import type {
@@ -248,11 +249,7 @@ export function AgentColumn({
   onToolRefused,
   onOpenLink,
   onOpenView,
-  onSetUpLocalAi,
-  onRemoveLocalModel,
   control,
-  localAiSetup,
-  onShowLocalAiSetup,
   setupSettled = null,
   setupApprovals,
 }: {
@@ -288,11 +285,6 @@ export function AgentColumn({
   /** Opens a `cadrumo:` link a reply carries, or says why it cannot.
    * `opened` is told the register view that opened, once it is shown. */
   onOpenView?: (url: string, opened?: (view: string) => void) => void;
-  /** Opens setup on the local AI, where this window offers setup. */
-  onSetUpLocalAi?: (lane: string, model: string) => void;
-  /** Removes one local model from this computer, answering the refusal's
-   * code or null, where this window offers setup. */
-  onRemoveLocalModel?: (model: string) => Promise<string | null>;
   /** The last setup that settled, by operation: what this computer holds may
    * have changed, so the catalog is read again. */
   setupSettled?: string | null;
@@ -300,9 +292,6 @@ export function AgentColumn({
    * approvals, and where to check setup after an unconfirmed answer. */
   setupApprovals?: { approvals: SetupApprovals; onCheckSetup: () => void };
   control?: Ref<AgentColumnControl>;
-  /** The existing component status and recovery beside its local models. */
-  localAiSetup?: ReactNode;
-  onShowLocalAiSetup?: () => void;
 }) {
   const t = useStrings();
   const searchId = useId();
@@ -1246,20 +1235,11 @@ export function AgentColumn({
                   {view.localFocus > 0 &&
                     settings.read.kind === "ready" &&
                     !localProvider && (
-                      <div className="grid gap-2">
-                        {localAiSetup}
-                        <p className="text-sm text-muted-foreground">
-                          {t("desktop.providers.local_models_none")}
-                        </p>
-                        {onShowLocalAiSetup && (
-                          <Button
-                            variant="outline"
-                            onClick={onShowLocalAiSetup}
-                          >
-                            {t("desktop.setup.open")}
-                          </Button>
-                        )}
-                      </div>
+                      <LocalAi
+                        lanes={[]}
+                        host={localModelHost}
+                        locale={locale}
+                      />
                     )}
                   {providerSettings &&
                     (settings.read.kind === "ready" ? (
@@ -1287,42 +1267,33 @@ export function AgentColumn({
                         onSignInTerminal={refreshProviderAfterSignIn}
                         localModels={
                           localModelHost
-                            ? (lane) => (
-                                <div className="grid gap-3">
-                                  {lane.id === localProvider?.id &&
-                                    localAiSetup}
-                                  <LocalModels
+                            ? (lane) => {
+                                const listed =
+                                  localLanes.find(
+                                    (held) => held.id === lane.id,
+                                  ) ?? null;
+                                const removed = () =>
+                                  setCatalogAgain((count) => count + 1);
+                                // The lane on this computer is the local AI:
+                                // its program and its model list together.
+                                return lane.id === localProvider?.id ? (
+                                  <LocalAi
                                     key={`${lane.id}/${view.localFocus}`}
-                                    lane={
-                                      localLanes.find(
-                                        (held) => held.id === lane.id,
-                                      ) ?? null
-                                    }
+                                    lanes={listed ? [listed] : []}
                                     host={localModelHost}
                                     locale={locale}
-                                    onSetUp={
-                                      onSetUpLocalAi
-                                        ? (model) =>
-                                            onSetUpLocalAi(lane.id, model)
-                                        : undefined
-                                    }
-                                    onRemove={
-                                      onRemoveLocalModel
-                                        ? (model) =>
-                                            onRemoveLocalModel(model).then(
-                                              (code) => {
-                                                if (code === null)
-                                                  setCatalogAgain(
-                                                    (count) => count + 1,
-                                                  );
-                                                return code;
-                                              },
-                                            )
-                                        : undefined
-                                    }
+                                    onRemoved={removed}
                                   />
-                                </div>
-                              )
+                                ) : (
+                                  <LocalModels
+                                    key={`${lane.id}/${view.localFocus}`}
+                                    lane={listed}
+                                    host={localModelHost}
+                                    locale={locale}
+                                    onRemoved={removed}
+                                  />
+                                );
+                              }
                             : undefined
                         }
                       />

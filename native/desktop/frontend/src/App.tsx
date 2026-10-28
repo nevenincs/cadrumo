@@ -35,12 +35,7 @@ import {
   type DocsFrameApi,
   type DocsMenuRequest,
 } from "./components/DocsFrame";
-import type {
-  DocsTheme,
-  PresentationOutcome,
-  SetupItemId,
-  SetupRow,
-} from "./ipc/contract";
+import type { DocsTheme, PresentationOutcome } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn, type AgentColumnControl } from "./components/AgentColumn";
@@ -59,27 +54,29 @@ import {
 } from "./shell/records";
 import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
-import { SetupAdvisory } from "./components/setup/SetupAdvisory";
-import { SetupDialog } from "./components/setup/SetupDialog";
+import { ProvisioningPanel } from "./components/setup/ProvisioningPanel";
 import { SetupApprovals } from "./shell/setupApprovals";
-import { SetupPrompt } from "./components/setup/SetupPrompt";
-import { SetupRowItem } from "./components/setup/SetupRowItem";
-import { canSignInGoogle, outcomeToast } from "./components/setup/setupWords";
+import {
+  canSignInGoogle,
+  itemName,
+  outcomeToast,
+} from "./components/setup/setupWords";
 import {
   liveRunOf,
   runOf,
   liveRuns,
   needsSetup,
-  rowOfKind,
-  setupTargetOf,
   useSetup,
 } from "./shell/setup";
 import {
+  ProvisioningContext,
+  useProvisioningStore,
+  type ProvisioningStore,
+} from "./shell/provisioning";
+import {
   provisionActionOf,
-  ProvisioningRecoveryContext,
   routeCensoRefusals,
   routeProvisioningRefusals,
-  type ProvisioningRecovery,
 } from "./shell/provisioningRecovery";
 import { ModelListContext, type ModelList } from "./shell/agentModelList";
 import { useAbout } from "./shell/about";
@@ -225,28 +222,25 @@ const activeTerminal = (): TerminalKind | null => {
     : null;
 };
 
-/** Whether keystrokes now go into text the person is writing, a terminal's
- * included. */
-const typingInto = (element: Element | null): boolean =>
-  element instanceof HTMLElement &&
-  (element.isContentEditable ||
-    element.matches("input, textarea, select") ||
-    element.closest("[data-terminal]") !== null);
-
-/** The window's own contexts: its strings and its navigation runtime. */
+/** The window's own contexts: its strings, its navigation runtime and its
+ * provisioning store. */
 function ShellContexts({
   t,
   navigation,
+  provisioning,
   children,
 }: {
   t: Translate;
   navigation: NavigationRuntime;
+  provisioning: ProvisioningStore;
   children: ReactNode;
 }) {
   return (
     <StringsContext.Provider value={t}>
       <NavigationContext.Provider value={navigation}>
-        {children}
+        <ProvisioningContext.Provider value={provisioning}>
+          {children}
+        </ProvisioningContext.Provider>
       </NavigationContext.Provider>
     </StringsContext.Provider>
   );
@@ -916,41 +910,14 @@ export function App({ host }: { host: Host }) {
       .map((run) => run.operation_id);
     return settled.length > 0 ? settled.join(" ") : null;
   }, [setupRuns]);
-  const setupIncomplete = setupOffered && setupSnapshot?.complete === false;
-  const [setupDialog, setSetupDialog] = useState<{
-    open: boolean;
-    focus: SetupItemId | null;
-  }>({ open: false, focus: null });
-  const [setupPrompt, setSetupPrompt] = useState<SetupRow | null>(null);
-  // A prompt raised by the agent while the person types leaves the keyboard
-  // where it is.
-  const [setupPromptFocus, setSetupPromptFocus] = useState(true);
-  const openSetup = useCallback((focus: SetupItemId | null) => {
-    setSettingsOpen(false);
-    setSetupPrompt(null);
-    setSetupDialog({ open: true, focus });
-  }, []);
-  // Setup on the local AI's row, which a model chosen in the provider settings
-  // is downloaded through.
-  const setUpLocalAi = useCallback(
-    (lane: string, model: string) => {
-      openSetup("local_ai");
-      setup.start("local_ai", { download: { lane, model } });
-    },
-    [openSetup, setup],
+  // The one provisioning store every surface reads, and the one panel it
+  // opens: once per launch while setup is not complete, and on every
+  // recovery, on the element the recovery names.
+  const provisioning = useProvisioningStore(setup, reader, () =>
+    setSettingsOpen(false),
   );
-  // A refusal that arrives before this window can say where it leads -- its
-  // setup status not read yet -- is offered once the status is read: the
-  // latest such refusal, for the profile it arrived for.
-  const deferredOffer = useRef<string | null>(null);
-  const setupShown = useRef(false);
-  useEffect(() => {
-    if (!setupIncomplete || setupShown.current) return;
-    setupShown.current = true;
-    // A refusal waiting on this same read opens its own prompt instead.
-    if (deferredOffer.current !== null) return;
-    setSetupDialog({ open: true, focus: null });
-  }, [setupIncomplete]);
+  const setupIncomplete = provisioning.incomplete;
+  const openSetup = provisioning.open;
   // One toast for each setup this window watched run, once it settles.
   const setupWatched = useRef(new Set<string>());
   useEffect(() => {
@@ -965,86 +932,10 @@ export function App({ host }: { host: Host }) {
       if (text) say(text);
     }
   }, [setupRuns, say, t]);
-  /** A row's own button: check again, or set it up in the dialog. */
-  const actOnSetupRow = useCallback(
-    (row: SetupRow) => {
-      setSetupPrompt(null);
-      switch (row.recovery) {
-        case null:
-          return;
-        case "check_again":
-          setup.verify([row.item]);
-          return;
-        default:
-          openSetup(row.item);
-          setup.start(row.item, { resume: row.recovery === "resume" });
-      }
-    },
-    [setup, openSetup],
-  );
-  /** Sets up these rows where they can be; where none can, says why. */
-  const setUpRows = useCallback(
-    (rows: SetupRow[]) => {
-      const wanted = rows.filter(needsSetup);
-      if (wanted.length > 0) {
-        openSetup(wanted.length === 1 ? (wanted[0]?.item ?? null) : null);
-        for (const row of wanted)
-          setup.start(row.item, { resume: row.recovery === "resume" });
-        return;
-      }
-      const held = rows.find(
-        (row) => row.state !== "ready" && row.state !== "stale",
-      );
-      if (held) {
-        setSetupPromptFocus(true);
-        setSetupPrompt(held);
-      } else openSetup(null);
-    },
-    [setup, openSetup],
-  );
   // Something the product refused for a component that is not set up opens
-  // that component's prompt; an action that is not about setup opens
+  // the panel on that component; an action that is not about setup opens
   // nothing. The refusal's code is never shown.
-  const setupRowsRef = useRef<readonly SetupRow[]>([]);
-  setupRowsRef.current = setupSnapshot?.rows ?? [];
-  const setupOfferedRef = useRef(setupOffered);
-  setupOfferedRef.current = setupOffered;
-  const offerSetup = useCallback(
-    (action: string): boolean => {
-      if (!setupOfferedRef.current) return false;
-      const target = setupTargetOf(action, setupRowsRef.current);
-      if (target === null) return false;
-      if (target === "general") {
-        openSetup(null);
-        return true;
-      }
-      setSetupPromptFocus(!typingInto(document.activeElement));
-      setSetupPrompt(target);
-      return true;
-    },
-    [openSetup],
-  );
-  const raiseSetup = useCallback(
-    (action: string) => {
-      if (
-        setupOfferedRef.current &&
-        (setupRowsRef.current.length > 0 || setupTargetOf(action, []) !== null)
-      )
-        offerSetup(action);
-      else deferredOffer.current = action;
-    },
-    [offerSetup],
-  );
-  const setupRows = setupSnapshot?.rows;
-  useEffect(() => {
-    deferredOffer.current = null;
-  }, [reader]);
-  useEffect(() => {
-    const action = deferredOffer.current;
-    if (action === null || !setupOffered || !setupRows?.length) return;
-    deferredOffer.current = null;
-    offerSetup(action);
-  }, [setupOffered, setupRows, offerSetup]);
+  const raiseSetup = provisioning.raise;
   // A tool call's refusal opens it once per refusal: each new call that is
   // refused opens it again, and a conversation read again raises none twice.
   const toolRefusalsSeen = useRef(new Set<string>());
@@ -1070,25 +961,6 @@ export function App({ host }: { host: Host }) {
         ? { ...host, censo: routeCensoRefusals(host.censo, raiseSetup) }
         : host,
     [host, raiseSetup],
-  );
-  // The browser's own setup flow, whatever state the browser is in; a
-  // browser that can be set up is started on, and nothing else is.
-  const browserRow = rowOfKind("browser", setupRows ?? []);
-  const openBrowserSetup = useCallback(() => {
-    const row = rowOfKind("browser", setupRowsRef.current);
-    openSetup(row?.item ?? "browser");
-    if (row && needsSetup(row) && liveRunOf(setupSnapshot, row.item) === null)
-      setup.start(row.item, { resume: row.recovery === "resume" });
-  }, [openSetup, setup, setupSnapshot]);
-  // What the ledger's own surfaces offer beside a refusal or a reader that
-  // is not ready: the same prompt, on the same item.
-  const provisioning = useMemo<ProvisioningRecovery>(
-    () => ({
-      targetOf: (action) =>
-        setupOffered ? setupTargetOf(action, setupRows ?? []) : null,
-      offer: offerSetup,
-    }),
-    [setupOffered, setupRows, offerSetup],
   );
 
   const copyLogs = useCallback(
@@ -1550,12 +1422,11 @@ export function App({ host }: { host: Host }) {
   const agentControl = useRef<AgentColumnControl>(null);
   const openLocalAi = useCallback(() => {
     setSettingsOpen(false);
-    setSetupPrompt(null);
-    setSetupDialog((held) => ({ ...held, open: false }));
+    provisioning.close();
     openView("agent");
     agentControl.current?.openLocalAi();
     if (setup.offered) setup.check("quick");
-  }, [openView, setup]);
+  }, [openView, setup, provisioning]);
   const modelList = useMemo<ModelList | null>(
     () =>
       agentSession?.localModels && agentSession.chooseReadingModel
@@ -1843,35 +1714,22 @@ export function App({ host }: { host: Host }) {
           setup.check("full");
         },
       },
-      {
-        id: "setup.browser",
-        label: t("desktop.setup.palette_browser"),
+      // One way to each element the engine reports: it opens the panel on
+      // that element, and sets it up where it can be.
+      ...(setupSnapshot?.rows ?? []).map((row): Action => ({
+        id: `setup.item.${row.item}`,
+        label: t("desktop.setup.palette_item", {
+          name: itemName(t, row.item),
+        }),
         group: "setup",
         icon: "download",
-        keywords: "browser chromium playwright aeat sync sede censo",
         enabled: () => setupOffered,
-        run: openBrowserSetup,
-      },
-      {
-        id: "setup.local_ai",
-        label: t("desktop.setup.palette_local_ai"),
-        group: "setup",
-        icon: "download",
-        enabled: () =>
-          setupOffered &&
-          (setupSnapshot?.rows.some(
-            (row) =>
-              row.kind === "local_ai" &&
-              liveRunOf(setupSnapshot, row.item) === null,
-          ) ??
-            false),
-        run: () =>
-          setUpRows(
-            (setupSnapshot?.rows ?? []).filter(
-              (row) => row.kind === "local_ai",
-            ),
-          ),
-      },
+        run: () => {
+          openSetup(row.item);
+          if (needsSetup(row) && liveRunOf(setupSnapshot, row.item) === null)
+            setup.start(row.item, { resume: row.recovery === "resume" });
+        },
+      })),
       {
         id: "setup.retry",
         label: t("desktop.setup.palette_retry"),
@@ -2337,8 +2195,6 @@ export function App({ host }: { host: Host }) {
       setupRetryable,
       setupCancellable,
       openSetup,
-      openBrowserSetup,
-      setUpRows,
     ],
   );
   const actionsRef = useRef(actions);
@@ -2984,7 +2840,7 @@ export function App({ host }: { host: Host }) {
       label: t("desktop.rail.settings"),
       shortcut: primaryChord(byId("settings.open")),
       expanded: settingsOpen,
-      ...(setupLive.length > 0
+      ...(provisioning.anyLive
         ? { pin: "busy", hint: t("desktop.setup.rail_busy") }
         : setupIncomplete
           ? { pin: "attention", hint: t("desktop.setup.rail_incomplete") }
@@ -3097,49 +2953,47 @@ export function App({ host }: { host: Host }) {
           }}
         />
       ) : ledgerOn && routedLedger ? (
-        <ProvisioningRecoveryContext.Provider value={provisioning}>
-          <ModelListContext.Provider value={modelList}>
-            <LedgerPage
-              key={reader ?? ""}
-              port={routedLedger}
-              reader={reader}
-              withheld={
-                <SignedOut
-                  account={account}
-                  lead={t("desktop.ledger.signed_out")}
-                  quiet
-                  onSignIn={askSignIn}
-                />
-              }
-              locale={locale}
-              shown={firstPaneShown}
-              page={ledgerPage}
-              view={layout.ledgerView}
-              onViewChange={changeLedgerView}
-              memory={ledgerKept.memory}
-              contribute={contribute}
-              copy={(text) => host.writeClipboard(text)}
-              onFloor={setLedgerFloor}
-              pane={{
-                title: t("desktop.ledger.title"),
-                onToggleMaximize: () => toggleMaximize("docs"),
-                controls: [
-                  maximizeControl("docs", "desktop.ledger.maximize"),
-                  ...splitControls.map((control) => ({
-                    ...control,
-                    yields: true,
-                  })),
-                  {
-                    id: "close",
-                    icon: "close",
-                    label: t("desktop.ledger.close"),
-                    run: closePage,
-                  },
-                ],
-              }}
-            />
-          </ModelListContext.Provider>
-        </ProvisioningRecoveryContext.Provider>
+        <ModelListContext.Provider value={modelList}>
+          <LedgerPage
+            key={reader ?? ""}
+            port={routedLedger}
+            reader={reader}
+            withheld={
+              <SignedOut
+                account={account}
+                lead={t("desktop.ledger.signed_out")}
+                quiet
+                onSignIn={askSignIn}
+              />
+            }
+            locale={locale}
+            shown={firstPaneShown}
+            page={ledgerPage}
+            view={layout.ledgerView}
+            onViewChange={changeLedgerView}
+            memory={ledgerKept.memory}
+            contribute={contribute}
+            copy={(text) => host.writeClipboard(text)}
+            onFloor={setLedgerFloor}
+            pane={{
+              title: t("desktop.ledger.title"),
+              onToggleMaximize: () => toggleMaximize("docs"),
+              controls: [
+                maximizeControl("docs", "desktop.ledger.maximize"),
+                ...splitControls.map((control) => ({
+                  ...control,
+                  yields: true,
+                })),
+                {
+                  id: "close",
+                  icon: "close",
+                  label: t("desktop.ledger.close"),
+                  run: closePage,
+                },
+              ],
+            }}
+          />
+        </ModelListContext.Provider>
       ) : browserOn && host.sedeView ? null : (
         <PaneHeader
           title={t(
@@ -3187,50 +3041,48 @@ export function App({ host }: { host: Host }) {
       )}
       {browserMounted && host.sedeView && (
         // A view the runtime refuses for a missing component offers its setup.
-        <ProvisioningRecoveryContext.Provider value={provisioning}>
-          <BrowserPage
-            key={reader ?? ""}
-            port={host.sedeView}
-            withheld={
-              reader === null ? (
-                <SignedOut
-                  account={account}
-                  lead={t("desktop.browser.failure.not_signed_in")}
-                  quiet
-                  onSignIn={askSignIn}
-                />
-              ) : undefined
-            }
-            page={browserPage}
-            shown={browserOn && firstPaneShown}
-            home={browserHome}
-            isShellChord={isShellChord}
-            pane={{
-              title: t("desktop.browser.title"),
-              onToggleMaximize: () => toggleMaximize("docs"),
-              controls: [
-                maximizeControl("docs", "desktop.browser.maximize"),
-                ...splitControls.map((control) => ({
-                  ...control,
-                  yields: true,
-                })),
-                {
-                  id: "close",
-                  icon: "close",
-                  label: t("desktop.browser.close"),
-                  // Closing the page, unlike leaving it, ends the view.
-                  run: () => {
-                    guarded(() => {
-                      setBrowserKeptFor(null);
-                      showPage("docs");
-                    });
-                    setMaximized(null);
-                  },
+        <BrowserPage
+          key={reader ?? ""}
+          port={host.sedeView}
+          withheld={
+            reader === null ? (
+              <SignedOut
+                account={account}
+                lead={t("desktop.browser.failure.not_signed_in")}
+                quiet
+                onSignIn={askSignIn}
+              />
+            ) : undefined
+          }
+          page={browserPage}
+          shown={browserOn && firstPaneShown}
+          home={browserHome}
+          isShellChord={isShellChord}
+          pane={{
+            title: t("desktop.browser.title"),
+            onToggleMaximize: () => toggleMaximize("docs"),
+            controls: [
+              maximizeControl("docs", "desktop.browser.maximize"),
+              ...splitControls.map((control) => ({
+                ...control,
+                yields: true,
+              })),
+              {
+                id: "close",
+                icon: "close",
+                label: t("desktop.browser.close"),
+                // Closing the page, unlike leaving it, ends the view.
+                run: () => {
+                  guarded(() => {
+                    setBrowserKeptFor(null);
+                    showPage("docs");
+                  });
+                  setMaximized(null);
                 },
-              ],
-            }}
-          />
-        </ProvisioningRecoveryContext.Provider>
+              },
+            ],
+          }}
+        />
       )}
       {profileOn &&
         (reader !== null ? (
@@ -3420,28 +3272,6 @@ export function App({ host }: { host: Host }) {
         onMenu={openMenu}
         onToolRefused={onToolRefused}
         onOpenLink={openLink}
-        onSetUpLocalAi={setupOffered ? setUpLocalAi : undefined}
-        onRemoveLocalModel={setupOffered ? setup.removeModel : undefined}
-        onShowLocalAiSetup={
-          setupOffered ? () => openSetup("local_ai") : undefined
-        }
-        localAiSetup={
-          setupSnapshot?.rows.some((row) => row.kind === "local_ai") ? (
-            <ul>
-              {setupSnapshot.rows
-                .filter((row) => row.kind === "local_ai")
-                .map((row) => (
-                  <SetupRowItem
-                    key={row.item}
-                    row={row}
-                    locale={locale}
-                    disabled={setup.pending}
-                    onAct={actOnSetupRow}
-                  />
-                ))}
-            </ul>
-          ) : undefined
-        }
         setupSettled={settledSetups}
         setupApprovals={
           setupApprovals
@@ -3513,7 +3343,7 @@ export function App({ host }: { host: Host }) {
   const panelMax = maximizeControl("panel", "desktop.pane.maximize_panel");
 
   return (
-    <ShellContexts t={t} navigation={nav.runtime}>
+    <ShellContexts t={t} navigation={nav.runtime} provisioning={provisioning}>
       <TooltipProvider>
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
           <Titlebar
@@ -3546,7 +3376,10 @@ export function App({ host }: { host: Host }) {
                 host.userProfile
                   ? () => {
                       setPage("profile");
-                      setLayout((current) => ({ ...current, maximized: null }));
+                      setLayout((current) => ({
+                        ...current,
+                        maximized: null,
+                      }));
                     }
                   : undefined
               }
@@ -3851,19 +3684,16 @@ export function App({ host }: { host: Host }) {
                 }}
                 advisory={
                   setupOffered ? (
-                    <SetupAdvisory
-                      control={setup}
-                      onOpen={() => openSetup(null)}
-                    />
+                    <Button
+                      variant="outline"
+                      className="justify-start"
+                      data-setup-open
+                      onClick={() => openSetup(null)}
+                    >
+                      <Icon name="download" />
+                      {t("desktop.setup.palette_open")}
+                    </Button>
                   ) : undefined
-                }
-                browser={
-                  setupOffered
-                    ? {
-                        row: setupSnapshot ? browserRow : null,
-                        onOpen: openBrowserSetup,
-                      }
-                    : undefined
                 }
                 onLocalAi={
                   setupOffered &&
@@ -3919,35 +3749,19 @@ export function App({ host }: { host: Host }) {
             />
             {nav.prompt && <NavigationPrompt prompt={nav.prompt} />}
             {setupOffered && (
-              <>
-                <SetupDialog
-                  open={setupDialog.open}
-                  onOpenChange={(open) =>
-                    setSetupDialog((held) => ({ ...held, open }))
-                  }
-                  control={setup}
-                  focus={setupDialog.focus}
-                  locale={locale}
-                  onAct={actOnSetupRow}
-                  onCopyDetails={copy}
-                  onLocalAi={
-                    localListsOffered && host.providerSettings
-                      ? openLocalAi
-                      : undefined
-                  }
-                />
-                <SetupPrompt
-                  row={setupPrompt}
-                  takeFocus={setupPromptFocus}
-                  onClose={() => setSetupPrompt(null)}
-                  onSetUp={actOnSetupRow}
-                  onLocalAi={
-                    localListsOffered && host.providerSettings
-                      ? openLocalAi
-                      : undefined
-                  }
-                />
-              </>
+              <ProvisioningPanel
+                locale={locale}
+                onCopyDetails={copy}
+                localAi={
+                  signedIn && agentSession && host.providerSettings
+                    ? {
+                        session: agentSession,
+                        providerSettings: host.providerSettings,
+                        reader,
+                      }
+                    : null
+                }
+              />
             )}
             {managingProfiles && host.profiles && (
               <ManageProfiles

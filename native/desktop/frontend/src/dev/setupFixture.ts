@@ -4,7 +4,9 @@ import type {
   SetupFailureCategory,
   SetupItemId,
   SetupItemProgress,
+  SetupPartProgress,
   SetupPlanEntry,
+  SetupPlanPart,
   SetupReview,
   SetupRow,
   SetupRun,
@@ -19,10 +21,12 @@ import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
 // a shape gives it, and the profile's Google account beside them -- not a
 // setup item. Like the host, it sends codes only, which the window words.
 // Nothing is downloaded: every plan, byte count and receipt is synthetic. Each
-// item has a setup of its own, and items set up side by side. With a latency
-// the fixture runs a setup by itself; with none it waits for the scenario
-// tests to move it on through `window.__scenarioSetup`, whose controls act on
-// the first item setting up now.
+// item has a setup of its own, and items set up side by side. The local AI's
+// setup installs its program when it is missing, then the one model asked
+// for, each as a part with progress of its own. With a latency the fixture
+// runs a setup by itself; with none it waits for the scenario tests to move
+// it on through `window.__scenarioSetup`, whose controls act on the first
+// item setting up now, or on the item they name.
 
 export const SETUP_SHAPES = [
   "fresh",
@@ -45,15 +49,15 @@ export type SetupShape = (typeof SETUP_SHAPES)[number];
 export type SetupFixtureControls = {
   /** Changes the underlying files; only the next host command observes it. */
   setAbsent(item: SetupItemId): void;
-  /** Moves the first running setup on by one step. */
-  step(): void;
+  /** Moves the first running setup, or `item`'s, on by one step. */
+  step(item?: SetupItemId): void;
   /** A retry notice on the first item now running. */
   retry(attempt: number, delaySeconds: number): void;
   /** The first item now running fails in this way; its setup settles. */
   fail(category: SetupFailureCategory): void;
-  /** The first running setup stops part-way, as when the computer sleeps or
-   * Cadrumo closes. */
-  interrupt(): void;
+  /** The first running setup, or `item`'s, stops part-way, as when the
+   * computer sleeps or Cadrumo closes. */
+  interrupt(item?: SetupItemId): void;
   /** Google's own page answers the sign-in this window started. */
   finishGoogle(succeeded: boolean): void;
   setGoogle(account: GoogleAccount): void;
@@ -76,11 +80,8 @@ type Seed = {
   plan: Omit<SetupPlanEntry, "item">;
 };
 
-/** The operator action the product names as each kind's recovery. */
-const RECOVERY_ACTION: Record<SetupRow["kind"], string> = {
-  browser: "operator.provision.browser",
-  local_ai: "operator.provision.local_ai",
-};
+/** The operator action the product names as an item's recovery. */
+const recoveryAction = (item: SetupItemId) => `operator.provision.${item}`;
 
 const GOOGLE_EMAIL = "persona@example.com";
 
@@ -97,7 +98,7 @@ const row = (
   blocked_reason: null,
   failure: null,
   recovery: "set_up",
-  recovery_action_id: RECOVERY_ACTION[kind],
+  recovery_action_id: recoveryAction(item),
   version: null,
   size_bytes: size,
 });
@@ -116,22 +117,17 @@ function seeds(): Seed[] {
       },
     },
     {
-      // One item: the program that runs the models, then the model selected for
-      // each role. Two roles select the same model, so only the first downloads it.
-      row: row("local_ai", "local_ai", 3.4 * GB),
+      // One item: the program that runs the models, whose installer's size
+      // is known only once it starts, then the model asked for. Its parts are
+      // planned with each setup.
+      row: row("local_ai", "local_ai", null),
       plan: {
-        download_bytes: 3.4 * GB,
+        download_bytes: null,
         source_hosts: ["github.com", "registry.ollama.ai"],
         destination: "models",
         installs_outside_program: true,
         shares_download_with: null,
-        parts: [
-          { part: "program", download_bytes: null },
-          { part: "vision_transcription", download_bytes: 2.4 * GB },
-          { part: "text_extraction", download_bytes: 1 * GB },
-          { part: "column_role_mapping", download_bytes: 0 },
-          { part: "supply_nature_proposal", download_bytes: 0 },
-        ],
+        parts: [],
       },
     },
   ];
@@ -179,7 +175,7 @@ function failed(held: SetupRow, failure: SetupFailureCategory): SetupRow {
     blocked_reason: failure === "offline" ? "offline" : null,
     failure: failure === "offline" ? null : failure,
     recovery,
-    recovery_action_id: recovery ? RECOVERY_ACTION[held.kind] : null,
+    recovery_action_id: recovery ? recoveryAction(held.item) : null,
   };
 }
 
@@ -269,9 +265,16 @@ export function setupFixture({
   // Each planned row as it stood before its setup ran, for an item a setup
   // that stopped never reached.
   const before = new Map<SetupItemId, SetupRow>();
-  // What an interrupted download had already fetched: a resume goes on from
-  // there instead of starting again.
-  const partial = new Map<SetupItemId, number>();
+  // What an interrupted download had already fetched, by item and part: a
+  // resume goes on from there instead of starting again.
+  const partial = new Map<string, number>();
+  // Whether the local AI's program is on this computer: a computer whose
+  // local AI was set up once has it, whatever became of its models.
+  let programReady =
+    shape === "ready" ||
+    shape === "google_signed_out" ||
+    shape === "partial" ||
+    shape === "hardware";
 
   const rows = () => items.map((seed) => seed.row);
   const snapshot = (): SetupSnapshot => {
@@ -380,7 +383,14 @@ export function setupFixture({
     total: null,
     retry: null,
     result: null,
-    parts: [],
+    parts: seed.plan.parts.map((part): SetupPartProgress => ({
+      part: part.part,
+      ...(part.model ? { model: part.model } : {}),
+      step: null,
+      completed: null,
+      total: null,
+      result: null,
+    })),
   });
 
   const seedOf = (item: SetupItemId) =>
@@ -398,8 +408,13 @@ export function setupFixture({
     );
     return next;
   };
-  /** The first item setting up now, which the scenario controls move on. */
-  const active = () => runs.find((held) => held.stage === "running") ?? null;
+  /** The item setting up now that the scenario controls act on: `item`'s,
+   * or the first. */
+  const active = (item?: SetupItemId) =>
+    runs.find(
+      (held) =>
+        held.stage === "running" && (item === undefined || held.item === item),
+    ) ?? null;
 
   const settle = (
     run: SetupRun,
@@ -425,9 +440,77 @@ export function setupFixture({
 
   const current = (run: SetupRun | null) =>
     run?.items.find((entry) => entry.result === null);
+  /** The part of `entry` setting up now; none for an item without parts. */
+  const currentPart = (entry: SetupItemProgress | undefined) =>
+    entry?.parts.find((part) => part.result === null);
 
-  /** One step of a running setup: connect, download in quarters, check;
-   * then the outcome. */
+  type Track = Pick<
+    SetupPartProgress,
+    "step" | "completed" | "total" | "result"
+  >;
+  /** One step of one track, an item's or one of its parts': connect,
+   * download in quarters where the size is known, install where it is a
+   * program, check; then its result. */
+  const advance = (
+    track: Track,
+    key: string,
+    size: number | null,
+    installs: boolean,
+  ): Track => {
+    switch (track.step) {
+      case null:
+        return { ...track, step: "preflight" };
+      case "preflight":
+        return {
+          ...track,
+          step: "download",
+          completed: size === null ? null : (partial.get(key) ?? 0),
+          total: size,
+        };
+      case "download": {
+        if (track.total === null || track.completed === null)
+          return { ...track, step: installs ? "install" : "verify" };
+        const done = Math.min(track.total, track.completed + track.total / 4);
+        if (done < track.total) return { ...track, completed: done };
+        return {
+          ...track,
+          step: installs ? "install" : "verify",
+          completed: null,
+          total: null,
+        };
+      }
+      case "install":
+        return { ...track, step: "verify" };
+      default:
+        return {
+          step: null,
+          completed: null,
+          total: null,
+          result: {
+            changed: true,
+            failure: null,
+            transferred_bytes: size ?? 0,
+          },
+        };
+    }
+  };
+
+  /** The program's installer, sized once its download starts. */
+  const PROGRAM_BYTES = 120 * MB;
+  // Each item's plan as its latest setup worked it out.
+  const plannedSeeds = new Map<SetupItemId, Seed>();
+  const partSize = (part: SetupPartProgress, item: SetupItemId) =>
+    part.model
+      ? (plannedSeeds
+          .get(item)
+          ?.plan.parts.find((held) => held.model === part.model)
+          ?.download_bytes ?? null)
+      : PROGRAM_BYTES;
+  const partKey = (item: SetupItemId, part: SetupPartProgress) =>
+    `${item}:${part.model ?? part.part}`;
+
+  /** One step of a running setup, on its current item and part; then the
+   * outcome. */
   const stepOf = (run: SetupRun | null) => {
     if (!run || run.stage !== "running") return;
     if (pendingCancel.has(run.operation_id)) {
@@ -447,41 +530,51 @@ export function setupFixture({
       publish();
       return;
     }
-    const total = seed.plan.download_bytes;
-    const download = (): SetupItemProgress => ({
-      ...entry,
-      step: "download",
-      completed: total === null ? null : (partial.get(entry.item) ?? 0),
-      total,
-    });
     let next: SetupItemProgress;
-    if (entry.step === null) next = { ...entry, step: "preflight" };
-    else if (entry.step === "preflight")
-      // The local AI installs its program first, then fetches its models.
-      next = seed.plan.installs_outside_program
-        ? { ...entry, step: "install" }
-        : download();
-    else if (entry.step === "install") next = download();
-    else if (entry.step === "download" && total !== null) {
-      const done = Math.min(total, (entry.completed ?? 0) + total / 4);
-      next =
-        done >= total
-          ? { ...entry, step: "verify", completed: null, total: null }
-          : { ...entry, completed: done, retry: null };
-    } else if (entry.step === "download") next = { ...entry, step: "verify" };
-    else {
-      seed.row = readied(seed.row);
+    const part = currentPart(entry);
+    if (part) {
+      const moved: SetupPartProgress = {
+        ...part,
+        ...advance(
+          part,
+          partKey(entry.item, part),
+          partSize(part, entry.item),
+          !part.model,
+        ),
+      };
+      if (moved.result && !part.model) programReady = true;
+      const parts = entry.parts.map((held) => (held === part ? moved : held));
+      const finished = parts.every((held) => held.result !== null);
       next = {
         ...entry,
-        step: null,
-        retry: null,
-        result: {
-          changed: true,
-          failure: null,
-          transferred_bytes: total ?? 0,
-        },
+        parts,
+        step: moved.step,
+        completed: moved.completed,
+        total: moved.total,
+        retry: moved.step === part.step ? entry.retry : null,
+        result: finished
+          ? {
+              changed: true,
+              failure: null,
+              transferred_bytes: parts.reduce(
+                (sum, held) => sum + (held.result?.transferred_bytes ?? 0),
+                0,
+              ),
+            }
+          : null,
       };
-    }
+    } else
+      next = {
+        ...entry,
+        ...advance(
+          entry,
+          entry.item,
+          seed.plan.download_bytes,
+          seed.plan.installs_outside_program,
+        ),
+        retry: null,
+      };
+    if (next.result) seed.row = readied(seed.row);
     let moved = put({
       ...run,
       items: run.items.map((held) => (held.item === entry.item ? next : held)),
@@ -493,7 +586,7 @@ export function setupFixture({
       later(() => stepOf(runById(id)));
     }
   };
-  const step = () => stepOf(active());
+  const step = (item?: SetupItemId) => stepOf(active(item));
 
   /** The approved plan starts: its rows are being set up from now on. */
   const begin = (run: SetupRun) => {
@@ -512,6 +605,47 @@ export function setupFixture({
     const next = publish();
     later(() => stepOf(runById(id)));
     return next;
+  };
+
+  /** What setting up `seed` plans: the browser as it is; the local AI's
+   * program where it is missing or nothing else is asked for, then the
+   * model asked for. */
+  const planned = (
+    seed: Seed,
+    model: { id: string; sizeBytes: number | null } | null,
+  ): Seed => {
+    if (!seed.plan.installs_outside_program) {
+      plannedSeeds.set(seed.row.item, seed);
+      return seed;
+    }
+    const parts: SetupPlanPart[] = [
+      ...(!programReady || !model
+        ? [{ part: "program", download_bytes: null }]
+        : []),
+      ...(model
+        ? [
+            {
+              part: "download",
+              model: model.id,
+              download_bytes: model.sizeBytes,
+            },
+          ]
+        : []),
+    ];
+    const known = parts.flatMap((part) =>
+      part.download_bytes === null ? [] : [part.download_bytes],
+    );
+    const shaped: Seed = {
+      ...seed,
+      plan: {
+        ...seed.plan,
+        download_bytes:
+          known.length === 0 ? null : known.reduce((sum, n) => sum + n, 0),
+        parts,
+      },
+    };
+    plannedSeeds.set(seed.row.item, shaped);
+    return shaped;
   };
 
   const controls: SetupFixtureControls = {
@@ -546,6 +680,13 @@ export function setupFixture({
       const held = before.get(seed.row.item) ?? seed.row;
       before.delete(seed.row.item);
       seed.row = failed(held, category);
+      const cut = {
+        changed: false,
+        failure: category,
+        transferred_bytes: entry.completed ?? 0,
+      };
+      // Only the part it hit fails; the parts after it were never reached.
+      const part = currentPart(entry);
       const ended = settle(
         {
           ...run,
@@ -555,11 +696,10 @@ export function setupFixture({
                   ...held,
                   step: null,
                   retry: null,
-                  result: {
-                    changed: false,
-                    failure: category,
-                    transferred_bytes: held.completed ?? 0,
-                  },
+                  result: cut,
+                  parts: held.parts.map((each) =>
+                    each === part ? { ...each, step: null, result: cut } : each,
+                  ),
                 }
               : held,
           ),
@@ -569,13 +709,18 @@ export function setupFixture({
       put({ ...ended, failure: category });
       publish();
     },
-    interrupt() {
-      const run = active();
+    interrupt(item) {
+      const run = active(item);
       const entry = current(run);
       const seed = entry && seedOf(entry.item);
       if (!run || !seed) return;
       const held = before.get(seed.row.item) ?? seed.row;
-      if (entry.completed !== null) partial.set(entry.item, entry.completed);
+      const part = currentPart(entry);
+      if (entry.completed !== null)
+        partial.set(
+          part ? partKey(entry.item, part) : entry.item,
+          entry.completed,
+        );
       stopped = true;
       settle(run, "interrupted");
       seed.row = failed(held, "interrupted");
@@ -677,24 +822,7 @@ export function setupFixture({
               (seed.row.recovery !== null &&
                 seed.row.recovery !== "check_again")),
         )
-        .map((seed) =>
-          download && model
-            ? {
-                ...seed,
-                plan: {
-                  ...seed.plan,
-                  download_bytes: model.sizeBytes,
-                  parts: [
-                    {
-                      part: "download",
-                      model: model.id,
-                      download_bytes: model.sizeBytes,
-                    },
-                  ],
-                },
-              }
-            : seed,
-        );
+        .map((seed) => planned(seed, model));
       if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
       const plan = chosen.length === 0 ? null : review(chosen);
@@ -728,7 +856,7 @@ export function setupFixture({
       if (run.review.plan_digest !== planDigest) return refuse("plan_changed");
       if (shape === "plan_changes" && plans === 1) {
         const chosen = run.items
-          .map((entry) => seedOf(entry.item))
+          .map((entry) => plannedSeeds.get(entry.item) ?? seedOf(entry.item))
           .filter((seed): seed is Seed => seed !== undefined);
         put({ ...run, review: review(chosen) });
         publish();

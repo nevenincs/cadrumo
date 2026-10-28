@@ -3,10 +3,10 @@ import { label } from "../support/strings";
 
 // The Documents section on a computer whose local AI is not set up: a scan
 // whose read is refused for it, a reading that stood on its labels alone,
-// and readers that are not ready each lead to the window's one setup prompt
-// on the local AI, which says its state once and leads into setting it up.
-// Where setup cannot change what is missing, or the window offers no setup,
-// nothing is offered. Every value is synthetic.
+// and readers that are not ready each lead to the window's one provisioning
+// panel, opened on the local AI, which says its state once and sets it up
+// from its own row. Where setup cannot change what is missing, or the window
+// offers no setup, nothing is offered. Every value is synthetic.
 
 const PLENOIL = "ticket-plenoil-1015.jpg";
 const ARROYO = "factura-arroyo-2026-10.pdf";
@@ -22,7 +22,11 @@ const tab = (target: Page, name: string) =>
   });
 const setupDialog = (target: Page) =>
   target.getByRole("dialog", { name: label("desktop.setup.title") });
-const prompt = (target: Page) => target.getByRole("dialog", { name: LOCAL_AI });
+/** The panel's local AI element, opened on its program and model list. */
+const prompt = (target: Page) =>
+  setupDialog(target).locator('[data-setup-element="local_ai"]');
+const programRow = (target: Page) =>
+  prompt(target).locator('[data-setup-row="local_ai"]');
 
 async function openDocuments(
   target: Page,
@@ -34,7 +38,7 @@ async function openDocuments(
       setup ? `&setup=${setup}` : ""
     }`,
   );
-  // Setup unfinished opens its dialog once per launch; it is put away here.
+  // Setup unfinished opens its panel once per launch; it is put away here.
   if (setup === "fresh" || setup === "hardware") {
     await setupDialog(target)
       .getByRole("button", { name: label("desktop.setup.not_now") })
@@ -57,11 +61,12 @@ async function choose(target: Page, name: string) {
   await expect(draft(target).getByRole("heading", { name })).toBeVisible();
 }
 
-/** The prompt names the local AI, says its state once and nothing else of
- * the refusal behind it. */
+/** The panel opens on the local AI, whose element names it, says its state
+ * once and nothing else of the refusal behind it. */
 async function promptSaysOnce(target: Page) {
   const shown = prompt(target);
-  await expect(shown).toBeVisible();
+  await expect(programRow(target)).toBeVisible();
+  await expect(shown).toContainText(LOCAL_AI);
   await expect(shown).toContainText(NOT_SET_UP);
   expect((await shown.innerText()).split(NOT_SET_UP).length - 1).toBe(1);
   const body = target.locator("body");
@@ -70,7 +75,7 @@ async function promptSaysOnce(target: Page) {
   await expect(body).not.toContainText("local_ai");
 }
 
-test("the Readers tab offers the local AI's setup and its prompt leads into it", async ({
+test("the Readers tab offers the local AI's setup and the panel sets it up", async ({
   page: target,
 }) => {
   await openDocuments(target, "fresh");
@@ -84,14 +89,17 @@ test("the Readers tab offers the local AI's setup and its prompt leads into it",
   await expect(readers).not.toContainText(NOT_SET_UP);
   await offer.getByRole("button", { name: "Set up", exact: true }).click();
   await promptSaysOnce(target);
-  await prompt(target)
+  await programRow(target)
     .getByRole("button", { name: "Set up", exact: true })
     .click();
-  await expect(prompt(target)).toBeHidden();
-  await expect(setupDialog(target)).toBeVisible();
+  // The plan is reviewed in the program's own row, in the same panel.
+  await expect(programRow(target)).toContainText(
+    label("desktop.setup.lead_review"),
+  );
+  await expect(target.getByRole("dialog")).toHaveCount(1);
 });
 
-test("a scan refused for the missing local AI opens its prompt once", async ({
+test("a scan refused for the missing local AI opens the panel on it once", async ({
   page: target,
 }) => {
   await openDocuments(target, "fresh");
@@ -100,11 +108,11 @@ test("a scan refused for the missing local AI opens its prompt once", async ({
     .getByRole("button", { name: label("desktop.ledger.documents.read_again") })
     .click();
   await promptSaysOnce(target);
-  await prompt(target)
+  await setupDialog(target)
     .getByRole("button", { name: label("desktop.setup.not_now") })
     .click();
-  await expect(prompt(target)).toBeHidden();
-  // The refusal stays on the page, and offers the same prompt again.
+  await expect(setupDialog(target)).toBeHidden();
+  // The refusal stays on the page, and offers the same panel again.
   const refused = draft(target)
     .getByRole("alert")
     .filter({
@@ -117,7 +125,7 @@ test("a scan refused for the missing local AI opens its prompt once", async ({
   await promptSaysOnce(target);
 });
 
-test("a reading that stood on its labels names the local AI and opens its prompt", async ({
+test("a reading that stood on its labels names the local AI and opens the panel on it", async ({
   page: target,
 }) => {
   await openDocuments(target, "fresh");
@@ -152,28 +160,38 @@ test("a scan refused for a local AI this computer cannot set up says why and off
   page: target,
 }) => {
   // The refusal still names the local AI's setup, but its row is blocked:
-  // the prompt says the row's sentence and offers model management, not setup.
+  // the panel says the row's sentence once, offers no setup, and keeps the
+  // model list.
   await openDocuments(target, "hardware");
   await choose(target, PLENOIL);
   await draft(target)
     .getByRole("button", { name: label("desktop.ledger.documents.read_again") })
     .click();
-  const shown = prompt(target);
-  await expect(shown).toBeVisible();
-  await expect(shown).toContainText(
-    "This computer does not have enough memory for this.",
-  );
-  await expect(shown.getByRole("button")).toHaveText([
-    label("desktop.providers.local_models_title"),
-    label("desktop.setup.close"),
-  ]);
-  await shown
-    .getByRole("button", { name: label("desktop.setup.close"), exact: true })
-    .click();
-  await expect(shown).toBeHidden();
+  await heldByHardware(target);
+  await closePanel(target);
   // Beside the refusal, nothing offers the setup either.
   await expect(draft(target).locator(".setup-offer")).toHaveCount(0);
 });
+
+/** The panel opens on a local AI this computer cannot run: its sentence
+ * once, no setup, and its model list. */
+async function heldByHardware(target: Page) {
+  const sentence = "This computer does not have enough memory for this.";
+  await expect(programRow(target)).toContainText(sentence);
+  expect((await prompt(target).innerText()).split(sentence).length - 1).toBe(1);
+  await expect(programRow(target).getByRole("button")).toHaveCount(0);
+  await expect(
+    prompt(target).locator('[data-slot="local-models"]'),
+  ).toBeVisible();
+}
+
+/** Puts the panel away from its footer. */
+async function closePanel(target: Page) {
+  await setupDialog(target)
+    .getByRole("button", { name: label("desktop.setup.not_now"), exact: true })
+    .click();
+  await expect(setupDialog(target)).toBeHidden();
+}
 
 /** Adds the folder's documents as received ones; its scan pauses for the
  * missing local AI. */
@@ -191,17 +209,17 @@ async function addFolder(target: Page) {
   return folder;
 }
 
-test("a folder whose scan paused for the local AI names it and opens its prompt once", async ({
+test("a folder whose scan paused for the local AI names it and opens the panel on it once", async ({
   page: target,
 }) => {
   await openDocuments(target, "fresh");
   const folder = await addFolder(target);
-  // The batch settled; its pause still leads to the local AI's prompt.
+  // The batch settled; its pause still leads to the panel on the local AI.
   await promptSaysOnce(target);
-  await prompt(target)
+  await setupDialog(target)
     .getByRole("button", { name: label("desktop.setup.not_now") })
     .click();
-  await expect(prompt(target)).toBeHidden();
+  await expect(setupDialog(target)).toBeHidden();
   const paused = folder.locator(".ledger-batch-paused");
   await expect(paused).toContainText(
     label("desktop.ledger.documents.paused_local_ai"),
@@ -217,17 +235,8 @@ test("a folder paused for a local AI this computer cannot set up says why and of
 }) => {
   await openDocuments(target, "hardware");
   const folder = await addFolder(target);
-  const shown = prompt(target);
-  await expect(shown).toContainText(
-    "This computer does not have enough memory for this.",
-  );
-  await expect(shown.getByRole("button")).toHaveText([
-    label("desktop.providers.local_models_title"),
-    label("desktop.setup.close"),
-  ]);
-  await shown
-    .getByRole("button", { name: label("desktop.setup.close"), exact: true })
-    .click();
+  await heldByHardware(target);
+  await closePanel(target);
   const paused = folder.locator(".ledger-batch-paused");
   await expect(paused).toContainText(
     label("desktop.ledger.documents.paused_local_ai"),
@@ -236,12 +245,12 @@ test("a folder paused for a local AI this computer cannot set up says why and of
 });
 
 /** Opens the Ledger's import on the bank statements, with the window's
- * setup dialog put away, and previews every statement it offers. */
+ * setup panel put away, and previews every statement it offers. */
 async function previewStatements(target: Page, setup: string) {
   await target.goto(
     `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=reader_missing&setup=${setup}`,
   );
-  // A status that cannot be read opens no setup dialog to put away.
+  // A status that cannot be read opens no setup panel to put away.
   if (setup !== "unavailable") {
     await setupDialog(target)
       .getByRole("button", { name: label("desktop.setup.not_now") })
@@ -286,7 +295,7 @@ test("a PDF statement only the local AI reads names it and offers its setup", as
   );
   await expect(card).toContainText(LOCAL_AI);
   // A preview is no refusal of the import: nothing opens by itself.
-  await expect(prompt(target)).toHaveCount(0);
+  await expect(setupDialog(target)).toHaveCount(0);
   await card.getByRole("button", { name: "Set up", exact: true }).click();
   await promptSaysOnce(target);
 });
@@ -298,13 +307,13 @@ test("a PDF statement for a local AI this computer cannot set up says why and of
   await expect(card).toContainText(
     label("desktop.ledger.import.refusal.reader_unavailable"),
   );
-  // The import settles, so no prompt opens: the card itself says why.
+  // The import settles, so no panel opens: the card itself says why.
   await expect(card.locator(".setup-held")).toHaveText(
     `${LOCAL_AI}: This computer does not have enough memory for this.`,
   );
   await expect(card.locator(".setup-offer")).toHaveCount(0);
   await expect(card.getByRole("button")).toHaveCount(0);
-  await expect(prompt(target)).toHaveCount(0);
+  await expect(setupDialog(target)).toHaveCount(0);
 });
 
 test("a PDF statement while the setup status cannot be read offers nothing", async ({
@@ -317,7 +326,6 @@ test("a PDF statement while the setup status cannot be read offers nothing", asy
   await expect(card.locator(".setup-offer")).toHaveCount(0);
   await expect(card.locator(".setup-held")).toHaveCount(0);
   await expect(card.getByRole("button")).toHaveCount(0);
-  await expect(prompt(target)).toHaveCount(0);
   await expect(setupDialog(target)).toHaveCount(0);
 });
 

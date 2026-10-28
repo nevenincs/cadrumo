@@ -4,7 +4,6 @@ import type {
   SetupCheckMode,
   SetupItemId,
   SetupModelDownload,
-  SetupItemKind,
   SetupRow,
   SetupRun,
   SetupSnapshot,
@@ -93,22 +92,26 @@ export function needsSetup(row: SetupRow): boolean {
   );
 }
 
-/** The operator actions that set up one kind of item, as the product names
- * each kind's recovery. */
-export const SETUP_ACTION_KINDS: ReadonlyMap<string, SetupItemKind> = new Map([
-  ["operator.provision.browser", "browser"],
-  ["operator.provision.local_ai", "local_ai"],
-]);
 /** The operator actions that lead to setup as a whole. */
 const GENERAL_SETUP_ACTIONS: ReadonlySet<string> = new Set([
   "operator.provision.setup",
   "operator.provision.status",
 ]);
+const PROVISION_PREFIX = "operator.provision.";
+
+/** Whether `action` is the recovery that sets up `row`'s item: the row
+ * names it while it offers a recovery, and a row that offers none (ready,
+ * or waiting on something outside Cadrumo) is still the one its item's own
+ * action leads to, the item's id following the action's prefix. */
+function recoversRow(action: string, row: SetupRow): boolean {
+  return row.recovery_action_id !== null
+    ? row.recovery_action_id === action
+    : action === `${PROVISION_PREFIX}${row.item}`;
+}
 
 /** Where an operator action named as a recovery leads in this window: the
- * row of the item it sets up, setup as a whole (`"general"`) for an action
- * about setup as a whole, or nowhere (`null`). A kind with several rows
- * leads to the first that is not ready. A kind the snapshot has no row of
+ * row it recovers, setup as a whole (`"general"`) for an action about setup
+ * as a whole, or nowhere (`null`). An action no row of the snapshot names
  * leads nowhere: while the status is loading or cannot be read, nothing
  * says whether setup could act, so nothing is offered. */
 export function setupTargetOf(
@@ -116,18 +119,7 @@ export function setupTargetOf(
   rows: readonly SetupRow[],
 ): SetupRow | "general" | null {
   if (GENERAL_SETUP_ACTIONS.has(action)) return "general";
-  const kind = SETUP_ACTION_KINDS.get(action);
-  return kind === undefined ? null : rowOfKind(kind, rows);
-}
-
-/** The row that speaks for one kind of item: the first that is not ready,
- * else the first; null while the snapshot has none of that kind. */
-export function rowOfKind(
-  kind: SetupItemKind,
-  rows: readonly SetupRow[],
-): SetupRow | null {
-  const ofKind = rows.filter((row) => row.kind === kind);
-  return ofKind.find((row) => row.state !== "ready") ?? ofKind[0] ?? null;
+  return rows.find((row) => recoversRow(action, row)) ?? null;
 }
 
 /** A host answer that is a setup state at all; anything else is treated as

@@ -1,6 +1,5 @@
 import { expect, test } from "@playwright/test";
 import {
-  LOCAL_AI_SETUP_ACTION,
   pausedActionOf,
   provisionActionOf,
   routeCensoRefusals,
@@ -10,11 +9,14 @@ import type { LedgerPort } from "../src/shell/ledger";
 import { setupTargetOf } from "../src/shell/setup";
 import type { SetupRow } from "../src/ipc/contract";
 
+/** The action the engine names as the local AI's recovery. */
+const LOCAL_AI_SETUP_ACTION = "operator.provision.local_ai";
+
 // The setup action a refusal names, wherever its shape carries it: an agent
 // tool's refusal, a settled operation's error detail with the verdict as its
 // JSON text, a verdict snapshot, or a label reading that stood without its
 // model fill. And the ledger port that hands each refusal naming one to the
-// window's setup prompt once. The scenario ledger needs a window; a bare one
+// window's provisioning panel once. The scenario ledger needs a window; a bare one
 // stands in for it here. No page is opened.
 
 const stand = globalThis as unknown as { window?: unknown };
@@ -276,4 +278,20 @@ test("an item's setup leads to its row, and nowhere while the status has no row"
   // Setup as a whole still leads there, and other actions nowhere.
   expect(setupTargetOf("operator.provision.setup", [])).toBe("general");
   expect(setupTargetOf("operator.ledger.classify", [absent])).toBeNull();
+});
+
+test("a row that names its recovery is found by that action alone", () => {
+  // The engine names the action; the window routes by it, not by a list of
+  // its own.
+  const named = {
+    ...localAiRow("absent"),
+    recovery_action_id: "operator.provision.local_ai_program",
+  };
+  expect(setupTargetOf("operator.provision.local_ai_program", [named])).toBe(
+    named,
+  );
+  expect(setupTargetOf(LOCAL_AI_SETUP_ACTION, [named])).toBeNull();
+  // A row offering no recovery is still its own item's.
+  const ready = localAiRow("ready");
+  expect(setupTargetOf(LOCAL_AI_SETUP_ACTION, [named, ready])).toBe(ready);
 });

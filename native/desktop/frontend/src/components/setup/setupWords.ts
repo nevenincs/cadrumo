@@ -2,12 +2,10 @@ import type {
   GoogleAccount,
   SetupFailureCategory,
   SetupItemId,
-  SetupItemKind,
   SetupOutcome,
   SetupRecovery,
   SetupRetry,
   SetupRow,
-  SetupRun,
   SetupStep,
 } from "../../ipc/contract";
 import type { Translate } from "../../shell/strings";
@@ -20,12 +18,21 @@ import type { Translate } from "../../shell/strings";
 // A row's sentence is the one place its state is said. No closed value is
 // ever shown as it is.
 
-/** An item's plain name, such as "Local AI"; an item's id is its kind. */
-export function itemName(
-  t: Translate,
-  item: SetupItemKind | SetupItemId,
-): string {
+/** An item's plain name, such as "Local AI", keyed by the row's item. */
+export function itemName(t: Translate, item: SetupItemId): string {
   return t(`desktop.setup.item.${item}`);
+}
+
+/** A row's download size as the engine states it: unknown until the
+ * download starts, nothing at all when its files are already here, else
+ * the size. */
+export function rowSizeWords(
+  t: Translate,
+  bytes: number | null,
+  format: (bytes: number) => string,
+): string {
+  if (bytes === null) return t("desktop.setup.size_unknown");
+  return bytes === 0 ? t("desktop.setup.plan_nothing") : format(bytes);
 }
 
 /** The one sentence stating a row's state and its reason. */
@@ -104,20 +111,7 @@ export function stepWords(t: Translate, step: SetupStep | null): string {
   }
 }
 
-/** How far a setup has come over every item it planned, from 0 to 1: a
- * finished item counts whole, the running one by its bytes where known. */
-export function overallShare(run: SetupRun): number {
-  if (run.items.length === 0) return 0;
-  const done = run.items.reduce((sum, item) => {
-    if (item.result) return sum + 1;
-    if (item.completed !== null && item.total !== null && item.total > 0)
-      return sum + item.completed / item.total;
-    return sum;
-  }, 0);
-  return Math.min(1, done / run.items.length);
-}
-
-/** What a settled setup came to, said once in the dialog. */
+/** What a settled setup came to. */
 export function outcomeWords(
   t: Translate,
   outcome: SetupOutcome,

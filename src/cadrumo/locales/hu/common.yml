@@ -3748,9 +3748,6 @@ desktop:
       set_up_in_desktop: Beállítás a Cadrumo asztali alkalmazásában
       try_again: Újrapróbálás
       update: Frissítés
-    advisory_incomplete: A Cadrumo beállítása nem teljes. Kattints ide a befejezéséhez.
-    advisory_running: A Cadrumo beállítása folyamatban van. Kattints ide, hogy lásd,
-      hol tart.
     approve: Letöltés és beállítás
     approve_at_least: Legalább {size} letöltése és beállítás
     approve_size: '{size} letöltése és beállítás'
@@ -3759,18 +3756,12 @@ desktop:
       needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.
       not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
       offline: Nincs internetkapcsolatod. Csatlakozz az internethez a beállításhoz.
-    browser_lead: A Cadrumo saját böngészőjével jelentkezik be az adóhivatal webhelyére,
-      és ott olvassa el az adataidat.
     browser_open: Böngésző beállításának megnyitása
-    browser_other_running: Egy másik beállítás fut. Ha befejeződik, itt beállíthatod
-      a böngészőt.
-    browser_title: A böngésző beállítása
     cancel: Beállítás megszakítása
     cancelling: Leáll a mostani lépés után…
     checking: Az összetevők ellenőrzése…
     close: Bezárás
     copy_details: Részletek másolása
-    details: Részletek
     failure:
       blocked_by_network: A hálózatod letiltotta a letöltést.
       cancelled: Leállítottad a beállítást.
@@ -3793,14 +3784,10 @@ desktop:
       secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
         hogy egy hálózati szűrő akadályozza.
       unexpected: Valami hiba történt.
-    hide: Elrejtés
     item:
       browser: Böngésző az adóhivatal webhelyéhez
       local_ai: Helyi MI
-    lead: A Cadrumo működéséhez ezekre az összetevőkre van szükség.
     lead_review: Nézd át, mi töltődik le és hová kerül, majd hagyd jóvá.
-    lead_running: Ezt bezárhatod; a beállítás folytatódik, és a Beállításokban látod,
-      hogy áll.
     not_now: Most nem
     open: Beállítás megnyitása
     outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
@@ -3814,13 +3801,13 @@ desktop:
     outcome_plan_changed: Az indulás előtt megváltozott, mire van szükség. Nézd át
       az új tervet, és hagyd jóvá.
     outcome_rejected: Semmi sem töltődött le.
-    overall_progress: A beállítás állapota
-    palette_browser: A böngésző beállítása
     palette_cancel: Beállítás megszakítása
     palette_check: Összetevők ellenőrzése
-    palette_local_ai: A helyi MI beállítása
+    palette_item: 'Beállítás: {name}'
     palette_open: Összetevők beállítása
     palette_retry: Beállítás újrapróbálása
+    panel_lead: Minden összetevő külön állítható be, és egyszerre több is beállítható.
+      Ezt bezárhatod; a beállítás folytatódik.
     part_download: Modell letöltése
     part_program: A modelleket futtató program
     plan_destination: 'Hely: {folder}'
@@ -3833,7 +3820,6 @@ desktop:
     plan_size_at_least: Legalább {size} letöltése.
     planning: Annak kiszámítása, mit kell letölteni…
     progress_bytes: '{done} / {total}'
-    progress_item: '{index}/{count}: {name} - {step}'
     progress_label: 'Haladás: {name}'
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be
@@ -3852,12 +3838,8 @@ desktop:
     reject: Ne töltsd le
     result_already: Már be volt állítva
     result_done: Beállítva
-    result_not_finished: Nem fejeződött be
-    resume: Folytatás
     retry: Kapcsolati hiba. Újrapróbálkozás {seconds} másodperc múlva ({attempt}.
       próbálkozás).
-    show_new_plan: Az új terv megjelenítése
-    show_running: A futó beállítás megjelenítése
     size_unknown: A méret induláskor derül ki
     space: '{required} szabad hely kell hozzá; {free} szabad.'
     space_short: Nincs elég szabad hely. Szabadíts fel valamennyit, majd próbáld újra.
@@ -3866,7 +3848,6 @@ desktop:
     stale:
       older_revision: Működik, de újabb verzióra van szükség.
       program_too_old: Működik, de ez a verzió túl régi a Cadrumóhoz.
-    start: Beállítás
     state:
       absent: Még nincs beállítva.
       blocked: Most nem lehet beállítani.
@@ -3882,16 +3863,10 @@ desktop:
     step_installing: Telepítés
     step_tidying: Rendrakás
     step_waiting: Indulásra vár
-    summary_complete: Minden be van állítva, amire a Cadrumónak szüksége van.
-    summary_hardware: Ez a számítógép nem tud mindent futtatni, amire a Cadrumónak
-      szüksége van; a többi be van állítva.
-    summary_incomplete: A Cadrumónak szükséges összetevők egy része még nincs beállítva.
-    summary_running: A beállítás folyamatban van.
     title: A Cadrumo beállítása
     toast_cancelled: Beállítás megszakítva
     toast_done: Az összetevők be vannak állítva
     toast_not_finished: A beállítás nem fejeződött be
-    try_again: Újrapróbálás
     unavailable: Az összetevőket most nem lehet ellenőrizni. Próbáld újra egy kicsit
       később.
   setup_review:

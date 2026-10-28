@@ -3775,10 +3775,6 @@ desktop:
       set_up_in_desktop: Configura a l'aplicació d'escriptori de Cadrumo
       try_again: Torna-ho a provar
       update: Actualitza
-    advisory_incomplete: La configuració de Cadrumo no és completa. Fes clic aquí
-      per completar-la.
-    advisory_running: La configuració de Cadrumo està en curs. Fes clic aquí per veure
-      com va.
     approve: Baixa i configura
     approve_at_least: Baixa almenys {size} i configura
     approve_size: Baixa {size} i configura
@@ -3787,18 +3783,12 @@ desktop:
       needs_person: Espera que ho aprovis o que ho instal·lis tu.
       not_in_this_build: Aquesta versió de Cadrumo no ho inclou.
       offline: No tens connexió. Connecta't a internet per configurar-ho.
-    browser_lead: Cadrumo fa servir el seu propi navegador per identificar-se al web
-      de l'Agència Tributària i llegir-hi les teves dades.
     browser_open: Obre la configuració del navegador
-    browser_other_running: Hi ha una altra configuració en curs. Quan acabi, podràs
-      configurar el navegador aquí.
-    browser_title: Configuració del navegador
     cancel: Cancel·la la configuració
     cancelling: S'aturarà després del pas actual…
     checking: S'estan comprovant els components…
     close: Tanca
     copy_details: Copia els detalls
-    details: Detalls
     failure:
       blocked_by_network: La teva xarxa ha bloquejat la baixada.
       cancelled: Has cancel·lat la configuració.
@@ -3821,14 +3811,10 @@ desktop:
       secure_connection_failed: No s'ha pogut establir una connexió segura. Potser
         un filtre de xarxa ho impedeix.
       unexpected: Alguna cosa ha anat malament.
-    hide: Amaga
     item:
       browser: Navegador per al web de l'Agència Tributària
       local_ai: IA local
-    lead: Cadrumo necessita aquests components per funcionar.
     lead_review: Revisa què es baixarà i on es desa, i després aprova-ho.
-    lead_running: Pots tancar això; la configuració continua i Configuració mostra
-      com va.
     not_now: Ara no
     open: Obre la configuració
     outcome_cancelled: S'ha cancel·lat la configuració. El que ja s'havia baixat es
@@ -3843,13 +3829,13 @@ desktop:
     outcome_plan_changed: El que cal ha canviat abans de començar. Revisa el nou pla
       i aprova'l.
     outcome_rejected: No s'ha baixat res.
-    overall_progress: Progrés de la configuració
-    palette_browser: Configura el navegador
     palette_cancel: Cancel·la la configuració
     palette_check: Comprova els components
-    palette_local_ai: Configura la IA local
+    palette_item: 'Configura: {name}'
     palette_open: Configura els components
     palette_retry: Torna a provar la configuració
+    panel_lead: Cada component es configura per separat, i se'n poden configurar diversos
+      alhora. Pots tancar això; la configuració continua.
     part_download: Descàrrega del model
     part_program: El programa que executa els models
     plan_destination: 'Es desa a: {folder}'
@@ -3862,7 +3848,6 @@ desktop:
     plan_size_at_least: Es baixaran com a mínim {size}.
     planning: S'està calculant què cal baixar…
     progress_bytes: '{done} de {total}'
-    progress_item: '{index} de {count}: {name} - {step}'
     progress_label: Progrés de {name}
     rail_busy: S'estan configurant els components
     rail_incomplete: La configuració no ha acabat
@@ -3880,12 +3865,8 @@ desktop:
     reject: No baixis res
     result_already: Ja estava configurat
     result_done: Configurat
-    result_not_finished: No ha acabat
-    resume: Reprèn
     retry: Problema de connexió. Es tornarà a provar d'aquí a {seconds} segons (intent
       {attempt}).
-    show_new_plan: Mostra el nou pla
-    show_running: Mostra aquella configuració
     size_unknown: Mida coneguda en començar
     space: Necessita {required} d'espai lliure; n'hi ha {free} de lliures.
     space_short: No hi ha prou espai lliure. Allibera'n una mica i torna-ho a provar.
@@ -3894,7 +3875,6 @@ desktop:
     stale:
       older_revision: Funciona, però cal una versió més recent.
       program_too_old: Funciona, però aquesta versió és massa antiga per a Cadrumo.
-    start: Configura
     state:
       absent: Encara no està configurat.
       blocked: Ara mateix no es pot configurar.
@@ -3910,16 +3890,10 @@ desktop:
     step_installing: Instal·lant
     step_tidying: Endreçant
     step_waiting: Esperant per començar
-    summary_complete: Tot el que Cadrumo necessita està configurat.
-    summary_hardware: Aquest ordinador no pot executar tot el que Cadrumo necessita;
-      la resta està configurada.
-    summary_incomplete: Part del que Cadrumo necessita encara no està configurat.
-    summary_running: La configuració està en curs.
     title: Configura Cadrumo
     toast_cancelled: Configuració cancel·lada
     toast_done: Els components estan configurats
     toast_not_finished: La configuració no ha acabat
-    try_again: Torna-ho a provar
     unavailable: Ara no es poden comprovar els components. Torna-ho a provar d'aquí
       a un moment.
   setup_review:

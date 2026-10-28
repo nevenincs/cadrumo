@@ -151,24 +151,26 @@ test("the model picker offers the local lane's list, and a model added to it joi
   expect(await offeredModels(picker)).toContain("synthetic-plain:1");
 });
 
-test("Download opens model setup for that model, sized by the catalog where it states one", async ({
+/** The plan a model download awaits an answer on, in the local AI's own row
+ * inside the lane. */
+const laneReview = (lane: Locator) =>
+  lane.locator('[data-setup-row="local_ai"] [data-setup-review]');
+
+test("Download plans that model's setup in the lane, sized by the catalog where it states one", async ({
   page: target,
 }) => {
   await open(target);
   const lane = await openLane(target);
-  await lane
-    .locator('li[data-model="synthetic-vision:1"]')
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await vision
     .getByRole("button", {
       name: label("desktop.providers.local_model_download"),
     })
     .click();
-  const review = target.getByRole("dialog", {
-    name: label("desktop.setup.title"),
-  });
+  const review = laneReview(lane);
   await expect(review).toContainText(label("desktop.setup.lead_review"));
-  await review
-    .getByText(label("desktop.setup.details"), { exact: true })
-    .click();
+  // No other window opens: the plan is answered where it was asked for.
+  await expect(target.getByRole("dialog")).toHaveCount(0);
   await expect(review.locator('[data-setup-plan="local_ai"]')).toHaveCount(1);
   await expect(review.locator('[data-setup-plan="browser"]')).toHaveCount(0);
   await expect
@@ -182,7 +184,13 @@ test("Download opens model setup for that model, sized by the catalog where it s
       name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
     })
     .click();
-  await expect(review).toContainText(label("desktop.setup.lead_running"));
+  // The model's own entry shows its download; the program row shows none,
+  // since the program is not part of this setup. Nothing opens over it.
+  await expect(vision.locator("[data-setup-progress]")).toBeVisible();
+  await expect(
+    lane.locator('[data-setup-row="local_ai"] [data-setup-progress]'),
+  ).toHaveCount(0);
+  await expect(target.getByRole("dialog")).toHaveCount(0);
 });
 
 test("an added model downloads with its size unknown", async ({
@@ -197,15 +205,10 @@ test("an added model downloads with its size unknown", async ({
       name: label("desktop.providers.local_model_download"),
     })
     .click();
-  const review = target.getByRole("dialog", {
-    name: label("desktop.setup.title"),
-  });
   await expect
     .poll(() => calls(target))
     .toContain(`setup.download local_api ${ADDED}`);
-  await review
-    .getByText(label("desktop.setup.details"), { exact: true })
-    .click();
+  const review = laneReview(lane);
   await expect(review).toContainText(ADDED);
   await expect(review).not.toContainText(
     label("desktop.setup.plan_size", { size: "3.2 GB" }),
@@ -308,25 +311,26 @@ test("window settings opens the local provider with setup status and the model l
   expect(await calls(target)).not.toContain("setup.start local_ai");
 });
 
-test("setup leads to the same model list without starting a download", async ({
+test("the panel's local AI holds the same model list without starting a download", async ({
   page: target,
 }) => {
   await open(target, "partial");
   const setup = target.getByRole("dialog", {
     name: label("desktop.setup.title"),
   });
-  await setup
-    .getByRole("button", {
-      name: label("desktop.providers.local_models_title"),
-    })
+  const localAi = setup.locator('[data-setup-element="local_ai"]');
+  await localAi
+    .getByRole("button", { name: label("desktop.setup.item.local_ai") })
     .click();
-  await expect(setup).toBeHidden();
-  await expect(
-    settings(target).locator('[data-slot="local-models"]'),
-  ).toBeVisible();
-  await expect(
-    settings(target).locator('[data-setup-row="local_ai"]'),
-  ).toContainText(label("desktop.setup.failure.damaged_download"));
+  await expect(localAi.locator('[data-setup-row="local_ai"]')).toContainText(
+    label("desktop.setup.failure.damaged_download"),
+  );
+  const models = localAi.locator("[data-slot=local-models] li[data-model]");
+  await expect(models).toHaveCount(localLane.recommended.length);
+  for (const model of localLane.recommended)
+    await expect(
+      localAi.locator(`[data-slot=local-models] li[data-model="${model}"]`),
+    ).toHaveCount(1);
   expect(await calls(target)).not.toContain("setup.start local_ai");
 });
 

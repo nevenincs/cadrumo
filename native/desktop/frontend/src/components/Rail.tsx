@@ -4,6 +4,7 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { Separator } from "@/components/ui/separator";
+import { Spinner } from "@/components/ui/spinner";
 import { fromPointer } from "../shell/pointer";
 import type { MenuAnchor } from "./ContextMenu";
 
@@ -23,8 +24,8 @@ export type RailItem = {
   hint?: string;
   /** A pin where a count would be, never drawn together with one. Hollow:
    * what the item counts is not known, or could not be read. Filled: the
-   * surface it opens has something still to do, or, pulsing, is busy
-   * with it. Its `hint` says which. */
+   * surface it opens has something still to do. A spinning wheel: it is
+   * busy with it. Its `hint` says which. */
   pin?: "unknown" | "failed" | "attention" | "busy";
   /** Why the item cannot be used now. It stays in place and says so,
    * and a press does nothing. */
@@ -88,6 +89,13 @@ function RailButton({ item }: { item: RailItem }) {
             >
               {item.badge > BADGE_LIMIT ? `${BADGE_LIMIT}+` : item.badge}
             </Badge>
+          ) : item.pin === "busy" ? (
+            // Turning in the corner where a count would be, on the rail's
+            // own colour so it reads over the icon's edge.
+            <Spinner
+              data-pin="busy"
+              className="absolute -top-0.5 -right-0.5 size-icon-xs rounded-full bg-chrome text-brand"
+            />
           ) : item.pin ? (
             // Hollow, as a session's dot is once there is nothing running:
             // not a zero, an absence of an answer. It is centred where a
@@ -98,10 +106,9 @@ function RailButton({ item }: { item: RailItem }) {
               aria-hidden="true"
               className={cn(
                 "absolute top-0.5 right-0.5 size-2 rounded-full",
-                item.pin === "attention" || item.pin === "busy"
+                item.pin === "attention"
                   ? "bg-muted-foreground"
                   : "ring-1 ring-inset",
-                item.pin === "busy" && "motion-safe:animate-pulse",
                 item.pin === "failed"
                   ? "ring-destructive"
                   : item.pin === "unknown" && "ring-faint",
