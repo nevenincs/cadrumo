@@ -879,9 +879,12 @@ class ProfileWorkerOperationHost:
         frontend: OperationFrontendProjection,
     ) -> AsyncGenerator[tuple[dict[str, JsonValue], WorkerAuthorityRequest]]:
         """Serialize each exact response against a simultaneous human claim."""
-        invocation = await self._stored_invocation(request.operation_id)
-        if invocation.identity.definition_id == "config.provision.setup" and isinstance(
-            request, OperationResponseControlRequestV1
+        # A response without a submission this host holds is refused for authority in
+        # `_manage`, whether or not the operation exists; only a held one reads its record.
+        if (
+            isinstance(request, OperationResponseControlRequestV1)
+            and request.operation_id in self._submissions
+            and (await self._stored_invocation(request.operation_id)).identity.definition_id == "config.provision.setup"
         ):
             async with (
                 self._serialize_review(request.operation_id),
@@ -904,11 +907,14 @@ class ProfileWorkerOperationHost:
         submission = self._submissions.get(request.operation_id)
         capability = None if submission is None else submission[1].response_capability
         claim = self._review_claims.get(request.operation_id)
-        invocation = await self._stored_invocation(request.operation_id)
-        provisioning_response = (
-            isinstance(request, OperationResponseControlRequestV1)
-            and invocation.identity.definition_id == "config.provision.setup"
+        # Only a response to a submission this host holds reads its record: without one, every
+        # response is refused for authority alone, whether or not the operation exists.
+        invocation = (
+            await self._stored_invocation(request.operation_id)
+            if isinstance(request, OperationResponseControlRequestV1) and submission is not None
+            else None
         )
+        provisioning_response = invocation is not None and invocation.identity.definition_id == "config.provision.setup"
         if provisioning_response:
             if not is_persons_frontend(frontend):
                 raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
@@ -950,7 +956,7 @@ class ProfileWorkerOperationHost:
             return await response.inspect(request)
 
         if provisioning_response:
-            if claim is None or self._execution is None or submission is None:
+            if claim is None or self._execution is None or submission is None or invocation is None:
                 raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
             guard = self._execution.human_review_guard(invocation.identity, claim[0], submission[0])
         else:
