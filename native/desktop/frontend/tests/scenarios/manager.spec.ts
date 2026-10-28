@@ -241,7 +241,9 @@ const password = (page: Page) =>
 
 async function observedClock(page: Page) {
   const time = new Date("2026-10-11T00:00:00Z");
-  await page.clock.install({ time });
+  // Installed before the time it pauses at: the installed clock runs until
+  // it is paused, and pausing at a time it has already passed is refused.
+  await page.clock.install({ time: new Date(time.getTime() - 60_000) });
   await page.clock.pauseAt(time);
 }
 
