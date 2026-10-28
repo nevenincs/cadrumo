@@ -107,7 +107,7 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "behind a public sink, so a future caller could feed it redactable "
         "material. Revisit if that sink grows a caller carrying identity data."
     ),
-    ("application/wizard/commands.py", "_echo_wizard_text", "typer.echo"): (
+    ("application/wizard/command_success.py", "_echo_wizard_text", "typer.echo"): (
         "IS the wizard funnel, and is now the ONLY one: echoes "
         "render_command_output()'s text arm after prepending the sandbox banner. "
         "The success surface and the save-and-exit disclosure both delegate here. "

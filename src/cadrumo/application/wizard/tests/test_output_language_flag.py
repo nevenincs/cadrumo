@@ -27,7 +27,7 @@ from cadrumo.application.wizard.tests.registry_setup_flow_support import registr
 from ....core.config import override_settings
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n.render import tr
-from ..commands import SETUP_OPTION_INFOS
+from ..command_parameters import SETUP_OPTION_INFOS
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

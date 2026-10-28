@@ -4,8 +4,8 @@
 `build_wizard_command` Typer-binding orchestrator. The end-to-end
 Typer-invocation tests exercise them only indirectly. A regression
 in (for example) dropping the `visible_when is None` predicate from
-`_required_flag_questions`, or returning Path objects instead of
-strings from `_canonical_from_flag_value`, would silently break the
+`required_flag_questions`, or returning Path objects instead of
+strings from `canonical_from_flag_value`, would silently break the
 wizard's --quiet-mode validation across every operator's setup
 session.
 
@@ -33,16 +33,15 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.calculations.registry.ccaa_catalogue import ccaa_choices, resolve_ccaa_catalogue
 from ..catalogue import build_setup_flow
-from ..commands import (
+from ..command_parameters import (
     SETUP_OPTION_INFOS,
-    _canonical_from_flag_value,
-    _flag_name,
     _help_key,
-    _missing_required_flags,
-    _required_flag_questions,
-    _wizard_command_metadata,
-    build_wizard_command,
+    canonical_from_flag_value,
+    flag_name,
+    required_flag_questions,
+    wizard_command_metadata,
 )
+from ..commands import _missing_required_flags, build_wizard_command
 from ..models import WizardCondition, WizardFlow, WizardQuestion, WizardSection, WizardWidget
 from ..patch_edit import format_missing_flags
 from .registry_setup_flow_support import EmptyAnswersBase
@@ -88,13 +87,13 @@ def _flow(*questions: WizardQuestion) -> WizardFlow:
 
 
 # ---------------------------------------------------------------------------
-# _flag_name
+# flag_name
 # ---------------------------------------------------------------------------
 
 
 def test_flag_name_prefixes_double_dash_to_question_id() -> None:
     question = _question(qid="tax_id")
-    assert _flag_name(question) == "--tax_id"
+    assert flag_name(question) == "--tax_id"
 
 
 def test_tax_residence_ccaa_option_uses_short_metavar() -> None:
@@ -174,7 +173,7 @@ def test_help_key_composes_wizard_flow_flags_question_help_key() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _required_flag_questions
+# required_flag_questions
 # ---------------------------------------------------------------------------
 
 
@@ -184,7 +183,7 @@ def test_required_flag_questions_includes_unconditionally_required_question() ->
     required_q = _question(qid="tax_id", required=True, visible_when=None)
     flow = _flow(required_q)
 
-    required = _required_flag_questions(flow)
+    required = required_flag_questions(flow)
 
     assert len(required) == 1
     assert required[0].id == "tax_id"
@@ -202,7 +201,7 @@ def test_required_flag_questions_omits_conditionally_visible_question() -> None:
     )
     flow = _flow(gate_q, conditional_q)
 
-    required = _required_flag_questions(flow)
+    required = required_flag_questions(flow)
 
     assert tuple(q.id for q in required) == ("declaration_type",)
 
@@ -212,7 +211,7 @@ def test_required_flag_questions_omits_non_required_question() -> None:
     required_q = _question(qid="tax_id", required=True, visible_when=None)
     flow = _flow(optional_q, required_q)
 
-    required = _required_flag_questions(flow)
+    required = required_flag_questions(flow)
 
     assert tuple(q.id for q in required) == ("tax_id",)
 
@@ -286,47 +285,47 @@ def test_format_missing_flags_empty_tuple_renders_empty_string() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _canonical_from_flag_value
+# canonical_from_flag_value
 # ---------------------------------------------------------------------------
 
 
 def test_canonical_from_flag_value_none_returns_none() -> None:
     question = _question()
-    assert _canonical_from_flag_value(question, None) is None
+    assert canonical_from_flag_value(question, None) is None
 
 
 def test_canonical_from_flag_value_confirm_true_returns_true_token() -> None:
     question = _question(widget=WizardWidget.CONFIRM, answer_type=bool)
-    assert _canonical_from_flag_value(question, True) == "true"
+    assert canonical_from_flag_value(question, True) == "true"
 
 
 def test_canonical_from_flag_value_confirm_false_returns_false_token() -> None:
     question = _question(widget=WizardWidget.CONFIRM, answer_type=bool)
-    assert _canonical_from_flag_value(question, False) == "false"
+    assert canonical_from_flag_value(question, False) == "false"
 
 
 def test_canonical_from_flag_value_confirm_non_bool_returns_none() -> None:
     """A CONFIRM-widget question with a non-bool Typer-parsed value is
     a parser anomaly; the helper refuses to coerce silently."""
     question = _question(widget=WizardWidget.CONFIRM, answer_type=bool)
-    assert _canonical_from_flag_value(question, "true") is None
+    assert canonical_from_flag_value(question, "true") is None
 
 
 def test_canonical_from_flag_value_integer_returns_decimal_string() -> None:
     question = _question(widget=WizardWidget.INTEGER, answer_type=int)
-    assert _canonical_from_flag_value(question, 42) == "42"
+    assert canonical_from_flag_value(question, 42) == "42"
 
 
 def test_canonical_from_flag_value_path_returns_str_form() -> None:
     question = _question(widget=WizardWidget.PATH, answer_type=Path)
-    assert _canonical_from_flag_value(question, Path("project/data/example.txt")) == str(
+    assert canonical_from_flag_value(question, Path("project/data/example.txt")) == str(
         Path("project/data/example.txt"),
     )
 
 
 def test_canonical_from_flag_value_text_widget_passes_string_through() -> None:
     question = _question(widget=WizardWidget.TEXT, answer_type=str)
-    assert _canonical_from_flag_value(question, "madrid") == "madrid"
+    assert canonical_from_flag_value(question, "madrid") == "madrid"
 
 
 def test_canonical_from_flag_value_checkbox_joins_tokens_with_comma() -> None:
@@ -334,15 +333,15 @@ def test_canonical_from_flag_value_checkbox_joins_tokens_with_comma() -> None:
     canonical token. Empty list returns None (no value supplied)."""
     question = _question(widget=WizardWidget.CHECKBOX, answer_type=str)
 
-    assert _canonical_from_flag_value(question, ["a", "b", "c"]) == "a,b,c"
-    assert _canonical_from_flag_value(question, []) is None
+    assert canonical_from_flag_value(question, ["a", "b", "c"]) == "a,b,c"
+    assert canonical_from_flag_value(question, []) is None
 
 
 def test_canonical_from_flag_value_checkbox_non_iterable_returns_none() -> None:
     """A CHECKBOX-widget question with a non-iterable Typer-parsed
     value is rejected as a parser anomaly."""
     question = _question(widget=WizardWidget.CHECKBOX, answer_type=str)
-    assert _canonical_from_flag_value(question, "madrid") is None
+    assert canonical_from_flag_value(question, "madrid") is None
 
 
 # ---------------------------------------------------------------------------
@@ -363,7 +362,7 @@ def test_wizard_command_metadata_keeps_signature_and_annotations_in_lockstep() -
         kind=inspect.Parameter.KEYWORD_ONLY,
     )
 
-    signature, annotations = _wizard_command_metadata((annotated, unannotated))
+    signature, annotations = wizard_command_metadata((annotated, unannotated))
 
     assert signature.parameters["value"].annotation is annotation
     assert annotations == {"value": annotation}

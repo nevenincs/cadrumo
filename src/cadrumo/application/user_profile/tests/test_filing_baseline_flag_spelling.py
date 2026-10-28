@@ -16,7 +16,7 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...wizard.commands import SETUP_OPTION_INFOS
+from ...wizard.command_parameters import SETUP_OPTION_INFOS
 from ..filing_baseline import (
     _profile_path_flag,
     missing_filing_baseline_flag_groups,

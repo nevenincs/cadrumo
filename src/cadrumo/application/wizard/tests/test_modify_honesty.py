@@ -52,13 +52,8 @@ from ...flows.checkpoint import checkpoint_available
 from ...flows.definition import CopyRef, FlowDefinition, FlowPage, FlowSection
 from ...flows.line_frontend import LineFlowFrontend
 from ...flows.wizard_projection import flow_definition_from_wizard_flow
-from ..commands import (
-    _MODIFY_DESCENDANTS_DOOR_CODE,
-    _MODIFY_NO_RESUME_CODE,
-    _SETUP_CHECKPOINT,
-    _emit_wizard_success,
-    setup_flow_definition,
-)
+from ..command_success import _MODIFY_DESCENDANTS_DOOR_CODE, _MODIFY_NO_RESUME_CODE, emit_wizard_success
+from ..commands import _SETUP_CHECKPOINT, setup_flow_definition
 from ..descendant_group import DESCENDANT_ENTRY_EVENT_VALIDATOR_ID, DESCENDANTS_COUNT_PAGE_ID, DESCENDANTS_GROUP_ID
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -148,7 +143,7 @@ def test_edit_envelope_carries_modify_no_resume_notice(
     _json_context: None,
 ) -> None:
     """An interactive modify run's envelope carries the info staging-honesty notice."""
-    _emit_wizard_success("edit", "probe-profile", modify_no_resume=True)
+    emit_wizard_success("edit", "probe-profile", modify_no_resume=True)
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"]: notice for notice in document["notices"]}
@@ -163,7 +158,7 @@ def test_envelope_omits_modify_notice_when_not_requested(
     _json_context: None,
 ) -> None:
     """The notice is scoped to interactive modify; a plain create omits it."""
-    _emit_wizard_success("create", "probe-profile", modify_no_resume=False)
+    emit_wizard_success("create", "probe-profile", modify_no_resume=False)
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"] for notice in document["notices"]}
@@ -212,7 +207,7 @@ def test_edit_envelope_carries_descendants_via_door_notice(
     silently absent: the final envelope carries an info notice whose typed
     action projection names the dedicated descendant-management command.
     """
-    _emit_wizard_success("edit", "probe-profile", modify_descendants_via_door=True)
+    emit_wizard_success("edit", "probe-profile", modify_descendants_via_door=True)
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"]: notice for notice in document["notices"]}
@@ -228,7 +223,7 @@ def test_create_envelope_omits_descendants_via_door_notice(
     _json_context: None,
 ) -> None:
     """The door notice is scoped to interactive modify; a create omits it."""
-    _emit_wizard_success("create", "probe-profile", modify_descendants_via_door=False)
+    emit_wizard_success("create", "probe-profile", modify_descendants_via_door=False)
 
     document = json.loads(capsys.readouterr().out)
     codes = {notice["code"] for notice in document["notices"]}

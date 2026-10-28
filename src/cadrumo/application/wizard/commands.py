@@ -33,24 +33,19 @@ persisted typed model is produced identically regardless of frontend.
 
 from __future__ import annotations
 
-import inspect
 import typing
 from collections.abc import Callable, Mapping, Sequence
-from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ...core.errors.hierarchy import CadrumoError
-    from ...core.json_contract import Notice, ResolvedNoticeAction
+    from ...core.json_contract import Notice
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.user_profile.values import UserProfileFact
-    from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
 
 import contextlib
 
-import click
 import typer
-import typer._click.types
 from pydantic import BaseModel, ValidationError
 from pydantic_core import ErrorDetails
 
@@ -58,15 +53,23 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ...core.flows import CheckpointAvailability, FlowMode
 from ...core.i18n.render import tr
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
-from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
+from ...core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ..flows.definition import FlowDefinition, FlowPage, FlowSection
 from ..flows.engine import start_flow, visible_sequence
 from ..flows.errors import FlowAnswerError, FlowSubmitError
 from ..flows.scripted import run_scripted_flow
 from ..flows.wizard_projection import flow_definition_from_wizard_flow
 from ._format_hints import attach_format_hints
+from .command_parameters import (
+    canonical_from_flag_value,
+    flag_name,
+    mode_parameters,
+    question_parameters,
+    required_flag_questions,
+    wizard_command_metadata,
+)
+from .command_success import ccaa_was_defaulted, emit_wizard_success, next_step_command_for_profile_values
 from .descendant_group import attach_descendant_group
 from .errors import (
     WizardEditUnsupportedConsoleError,
@@ -77,7 +80,7 @@ from .errors import (
     wizard_no_action_verdict,
 )
 from .flow_validators import attach_taxpayer_projection_validator
-from .models import WizardFlow, WizardQuestion, WizardWidget
+from .models import WizardFlow
 from .patch_edit import (
     WizardPatchPersister,
     apply_profile_patch,
@@ -114,384 +117,13 @@ _SETUP_CHECKPOINT: dict[FlowMode, CheckpointAvailability] = {
 # KWARGS-RATIONALE-flow-runner: keyword-only frontend seam injected by the caller.
 
 
-def _choice(values: list[str], *, case_sensitive: bool = True) -> typer._click.types.ParamType:
-    """Wrap ``click.Choice`` and present it as ``typer._click.types.ParamType``.
-
-    ``click.Choice`` is generic (``Choice[T]``), but the ``typer.Option``
-    overload that accepts ``click_type`` declares it as
-    ``typer._click.types.ParamType | None``.  Typer vendors its own copy of
-    click; the static type hierarchies are unrelated even though at runtime
-    ``click.Choice`` is exactly the object typer passes through to click.
-
-    CAST-RATIONALE-CHOICE-PARAM-TYPE: ``typing.cast`` is used here for the
-    same reason as in ``build_wizard_command`` — the runtime object is always a
-    real ``click.Choice`` instance.  Only the static view is narrowed to the
-    typer-internal ``ParamType`` so the ``typer.Option`` overload resolver
-    accepts it without an ``Any`` escape.
-    """
-    # CAST-RATIONALE-CHOICE-PARAM-TYPE: runtime object is a real click.Choice;
-    # only the static view is narrowed to typer's vendored ParamType (see docstring).
-    return typing.cast("typer._click.types.ParamType", click.Choice(values, case_sensitive=case_sensitive))
-
-
-def _choice_metavar(values: list[str]) -> str:
-    """Render accepted choice tokens for Typer's dynamic-signature help."""
-    return "|".join(values)
-
-
-# Choice values are materialized from the operation-scoped WizardFlow by
-# _python_parameter.  Keeping these placeholders empty makes importing the
-# command factory safe before any authority operation is leased.
-_CCAA_CHOICE_VALUES: list[str] = []
-_FISCAL_RESIDENCY_CHOICE_VALUES: list[str] = []
-_ENTITY_TYPE_CHOICE_VALUES: list[str] = []
-_LEGAL_ENTITY_FORM_CHOICE_VALUES: list[str] = []
-_IRPF_INCOME_CATEGORY_CHOICE_VALUES: list[str] = []
-_IRPF_ESTIMATION_REGIME_CHOICE_VALUES: list[str] = []
-_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = []
-_IRPF_SPECIAL_REGIME_CHOICE_VALUES: list[str] = []
-_SITUACION_FAMILIAR_CHOICE_VALUES: list[str] = []
-IVA_REGIME_CHOICE_VALUES: list[str] = []
-_M303_REGIME_COMPOSITION_CHOICE_VALUES: list[str] = []
-_M303_TAX_TERRITORY_CHOICE_VALUES: list[str] = []
-
-
-def _flag_name(question: WizardQuestion) -> str:
-    """Map a question id to its primary Typer flag name."""
-    return f"--{question.id}"
-
-
-def _help_key(flow: WizardFlow, question: WizardQuestion) -> str:
-    """Return the translation key used for the flag's ``--help`` text."""
-    return f"wizard.{flow.id}.flags.{question.id}.help"
-
-
-SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
-    "tax-id": typer.Option("--tax-id", help=tr("wizard.setup.flags.tax-id.help")),
-    "name": typer.Option("--name", help=tr("wizard.setup.flags.name.help")),
-    "surnames": typer.Option("--surnames", help=tr("wizard.setup.flags.surnames.help")),
-    "legal-name": typer.Option("--legal-name", help=tr("wizard.setup.flags.legal-name.help")),
-    "activity": typer.Option("--activity", help=tr("wizard.setup.flags.activity.help")),
-    "address-postcode": typer.Option("--address-postcode", help=tr("wizard.setup.flags.address-postcode.help")),
-    "activity-start-date": typer.Option(
-        "--activity-start-date",
-        help=tr("wizard.setup.flags.activity-start-date.help"),
-    ),
-    "taxation-type": typer.Option(
-        "--taxation-type",
-        click_type=_choice(["1", "2"]),
-        metavar=_choice_metavar(["1", "2"]),
-        help=tr("wizard.setup.flags.taxation-type.help"),
-    ),
-    "output-language": typer.Option(
-        "--output-language",
-        click_type=_choice(list(SUPPORTED_OUTPUT_LANGUAGES)),
-        metavar=_choice_metavar(list(SUPPORTED_OUTPUT_LANGUAGES)),
-        help=tr("wizard.setup.flags.output-language.help"),
-    ),
-    "taxpayer-sex": typer.Option(
-        "--taxpayer-sex",
-        click_type=_choice(["H", "M"]),
-        metavar=_choice_metavar(["H", "M"]),
-        help=tr("wizard.setup.flags.taxpayer-sex.help"),
-    ),
-    "taxpayer-marital-status": typer.Option(
-        "--taxpayer-marital-status",
-        click_type=_choice(["1", "2", "3", "4", "5"]),
-        metavar=_choice_metavar(["1", "2", "3", "4", "5"]),
-        help=tr("wizard.setup.flags.taxpayer-marital-status.help"),
-    ),
-    "taxpayer-marriage-date": typer.Option(
-        "--taxpayer-marriage-date",
-        help=tr("wizard.setup.flags.taxpayer-marriage-date.help"),
-    ),
-    "taxpayer-birth-date": typer.Option(
-        "--taxpayer-birth-date",
-        help=tr("wizard.setup.flags.taxpayer-birth-date.help"),
-    ),
-    "taxpayer-disability-grade": typer.Option(
-        "--taxpayer-disability-grade",
-        click_type=_choice(["1", "2", "3", "4"]),
-        metavar=_choice_metavar(["1", "2", "3", "4"]),
-        help=tr("wizard.setup.flags.taxpayer-disability-grade.help"),
-    ),
-    "taxpayer-death-date": typer.Option(
-        "--taxpayer-death-date",
-        help=tr("wizard.setup.flags.taxpayer-death-date.help"),
-    ),
-    "spouse-tax-id": typer.Option("--spouse-tax-id", help=tr("wizard.setup.flags.spouse-tax-id.help")),
-    "spouse-name": typer.Option("--spouse-name", help=tr("wizard.setup.flags.spouse-name.help")),
-    "spouse-surnames": typer.Option("--spouse-surnames", help=tr("wizard.setup.flags.spouse-surnames.help")),
-    "spouse-birth-date": typer.Option(
-        "--spouse-birth-date",
-        help=tr("wizard.setup.flags.spouse-birth-date.help"),
-    ),
-    "spouse-sex": typer.Option(
-        "--spouse-sex",
-        click_type=_choice(["H", "M"]),
-        metavar=_choice_metavar(["H", "M"]),
-        help=tr("wizard.setup.flags.spouse-sex.help"),
-    ),
-    "spouse-disability-grade": typer.Option(
-        "--spouse-disability-grade",
-        click_type=_choice(["1", "2", "3", "4"]),
-        metavar=_choice_metavar(["1", "2", "3", "4"]),
-        help=tr("wizard.setup.flags.spouse-disability-grade.help"),
-    ),
-    "spouse-non-resident-irpf": typer.Option(
-        "--spouse-non-resident-irpf/--no-spouse-non-resident-irpf",
-        help=tr("wizard.setup.flags.spouse-non-resident-irpf.help"),
-    ),
-    "spouse-eu-eea-resident": typer.Option(
-        "--spouse-eu-eea-resident/--no-spouse-eu-eea-resident",
-        help=tr("wizard.setup.flags.spouse-eu-eea-resident.help"),
-    ),
-    "spouse-eu-eea-country": typer.Option(
-        "--spouse-eu-eea-country",
-        help=tr("wizard.setup.flags.spouse-eu-eea-country.help"),
-    ),
-    "family-descendants-eu-eea-deduction": typer.Option(
-        "--family-descendants-eu-eea-deduction/--no-family-descendants-eu-eea-deduction",
-        help=tr("wizard.setup.flags.family-descendants-eu-eea-deduction.help"),
-    ),
-    "family-minor-children-in-unit": typer.Option(
-        "--family-minor-children-in-unit/--no-family-minor-children-in-unit",
-        help=tr("wizard.setup.flags.family-minor-children-in-unit.help"),
-    ),
-    "iva-regime": typer.Option(
-        "--iva-regime",
-        click_type=_choice(IVA_REGIME_CHOICE_VALUES, case_sensitive=False),
-        metavar=_choice_metavar(IVA_REGIME_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.iva-regime.help"),
-    ),
-    "iva-m303-regime-composition": typer.Option(
-        "--iva-m303-regime-composition",
-        click_type=_choice(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
-        metavar=_choice_metavar(_M303_REGIME_COMPOSITION_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.iva-m303-regime-composition.help"),
-    ),
-    "iva-roi-enrolled": typer.Option(
-        "--iva-roi-enrolled/--no-iva-roi-enrolled",
-        help=tr("wizard.setup.flags.iva-roi-enrolled.help"),
-    ),
-    "iva-oss-enrolled": typer.Option(
-        "--iva-oss-enrolled/--no-iva-oss-enrolled",
-        help=tr("wizard.setup.flags.iva-oss-enrolled.help"),
-    ),
-    "iva-group-member-enrolled": typer.Option(
-        "--iva-group-member-enrolled/--no-iva-group-member-enrolled",
-        help=tr("wizard.setup.flags.iva-group-member-enrolled.help"),
-    ),
-    "iva-group-dominant-entity-enrolled": typer.Option(
-        "--iva-group-dominant-entity-enrolled/--no-iva-group-dominant-entity-enrolled",
-        help=tr("wizard.setup.flags.iva-group-dominant-entity-enrolled.help"),
-    ),
-    "iva-intracommunity-operations-exceed-50000-eur": typer.Option(
-        "--iva-intracommunity-operations-exceed-50000-eur/--no-iva-intracommunity-operations-exceed-50000-eur",
-        help=tr("wizard.setup.flags.iva-intracommunity-operations-exceed-50000-eur.help"),
-    ),
-    "iva-cash-accounting-regime-enrolled": typer.Option(
-        "--iva-cash-accounting-regime-enrolled/--no-iva-cash-accounting-regime-enrolled",
-        help=tr("wizard.setup.flags.iva-cash-accounting-regime-enrolled.help"),
-    ),
-    "iva-voluntary-sii-enrolled": typer.Option(
-        "--iva-voluntary-sii-enrolled/--no-iva-voluntary-sii-enrolled",
-        help=tr("wizard.setup.flags.iva-voluntary-sii-enrolled.help"),
-    ),
-    "iva-hydrocarbon-deposit-advance-payment-deduction-entitled": typer.Option(
-        "--iva-hydrocarbon-deposit-advance-payment-deduction-entitled/"
-        "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        help=tr("wizard.setup.flags.iva-hydrocarbon-deposit-advance-payment-deduction-entitled.help"),
-    ),
-    "enrollment-large-company": typer.Option(
-        "--enrollment-large-company/--no-enrollment-large-company",
-        help=tr("wizard.setup.flags.enrollment-large-company.help"),
-    ),
-    "enrollment-public-administration-budget-gt-6000000": typer.Option(
-        "--enrollment-public-administration-budget-gt-6000000/--no-enrollment-public-administration-budget-gt-6000000",
-        help=tr("wizard.setup.flags.enrollment-public-administration-budget-gt-6000000.help"),
-    ),
-    "has-employees": typer.Option(
-        "--has-employees/--no-has-employees",
-        help=tr("wizard.setup.flags.has-employees.help"),
-    ),
-    "pays-professionals-with-retencion": typer.Option(
-        "--pays-professionals-with-retencion/--no-pays-professionals-with-retencion",
-        help=tr("wizard.setup.flags.pays-professionals-with-retencion.help"),
-    ),
-    "art109-activity-income-withholding-ge-70pct": typer.Option(
-        "--art109-activity-income-withholding-ge-70pct/--no-art109-activity-income-withholding-ge-70pct",
-        help=tr("wizard.setup.flags.art109-activity-income-withholding-ge-70pct.help"),
-    ),
-    "pays-rent-with-retencion": typer.Option(
-        "--pays-rent-with-retencion/--no-pays-rent-with-retencion",
-        help=tr("wizard.setup.flags.pays-rent-with-retencion.help"),
-    ),
-    "pays-capital-income-with-retencion": typer.Option(
-        "--pays-capital-income-with-retencion/--no-pays-capital-income-with-retencion",
-        help=tr("wizard.setup.flags.pays-capital-income-with-retencion.help"),
-    ),
-    "modelo-111-no-retenciones-periods": typer.Option(
-        "--modelo-111-no-retenciones-periods",
-        help=tr("wizard.setup.flags.modelo-111-no-retenciones-periods.help"),
-    ),
-    "does-intracomunitario": typer.Option(
-        "--does-intracomunitario/--no-does-intracomunitario",
-        help=tr("wizard.setup.flags.does-intracomunitario.help"),
-    ),
-    "third-party-transactions-above-347-threshold": typer.Option(
-        "--third-party-transactions-above-347-threshold/--no-third-party-transactions-above-347-threshold",
-        help=tr("wizard.setup.flags.third-party-transactions-above-347-threshold.help"),
-    ),
-    "bienes-extranjero-above-threshold": typer.Option(
-        "--bienes-extranjero-above-threshold/--no-bienes-extranjero-above-threshold",
-        help=tr("wizard.setup.flags.bienes-extranjero-above-threshold.help"),
-    ),
-    "monedas-virtuales-extranjero-above-threshold": typer.Option(
-        "--monedas-virtuales-extranjero-above-threshold/--no-monedas-virtuales-extranjero-above-threshold",
-        help=tr("wizard.setup.flags.monedas-virtuales-extranjero-above-threshold.help"),
-    ),
-    "premio-loteria-gravamen-especial-sin-retencion": typer.Option(
-        "--premio-loteria-gravamen-especial-sin-retencion/--no-premio-loteria-gravamen-especial-sin-retencion",
-        help=tr("wizard.setup.flags.premio-loteria-gravamen-especial-sin-retencion.help"),
-    ),
-    "premio-loteria-gravamen-especial-trimestres": typer.Option(
-        "--premio-loteria-gravamen-especial-trimestres",
-        help=tr("wizard.setup.flags.premio-loteria-gravamen-especial-trimestres.help"),
-    ),
-    "fiscal-residency": typer.Option(
-        "--fiscal-residency",
-        click_type=_choice(_FISCAL_RESIDENCY_CHOICE_VALUES),
-        metavar=_choice_metavar(_FISCAL_RESIDENCY_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.fiscal-residency.help"),
-    ),
-    "country-of-fiscal-residence": typer.Option(
-        "--country-of-fiscal-residence",
-        help=tr("wizard.setup.flags.country-of-fiscal-residence.help"),
-    ),
-    "representante-fiscal-nif": typer.Option(
-        "--representante-fiscal-nif",
-        help=tr("wizard.setup.flags.representante-fiscal-nif.help"),
-    ),
-    "representante-fiscal-nombre": typer.Option(
-        "--representante-fiscal-nombre",
-        help=tr("wizard.setup.flags.representante-fiscal-nombre.help"),
-    ),
-    "tax-residence-ccaa": typer.Option(
-        "--tax-residence-ccaa",
-        click_type=_choice(_CCAA_CHOICE_VALUES),
-        # The 15 CCAA choices form one ~150-char metavar that Rich
-        # wraps mid-token (`com` / `unidad_valenciana`). A short
-        # explicit metavar plus `show_choices=False` keeps the metavar
-        # column tidy; the refusal for an unrecognised value lists the
-        # accepted communities instead.
-        metavar="CCAA",
-        show_choices=False,
-        help=tr("wizard.setup.flags.tax-residence-ccaa.help"),
-    ),
-    "tax-residence-jurisdiction-scope": typer.Option(
-        "--tax-residence-jurisdiction-scope",
-        click_type=_choice(_M303_TAX_TERRITORY_CHOICE_VALUES),
-        metavar=_choice_metavar(_M303_TAX_TERRITORY_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.tax-residence-jurisdiction-scope.help"),
-    ),
-    "cloud-evidence-upload": typer.Option(
-        "--cloud-evidence-upload/--no-cloud-evidence-upload",
-        help=tr("wizard.setup.flags.cloud-evidence-upload.help"),
-    ),
-    "llm-vision": typer.Option(
-        "--llm-vision/--no-llm-vision",
-        help=tr("wizard.setup.flags.llm-vision.help"),
-    ),
-    "google-export": typer.Option(
-        "--google-export/--no-google-export",
-        help=tr("wizard.setup.flags.google-export.help"),
-    ),
-    "entity-type": typer.Option(
-        "--entity-type",
-        click_type=_choice(_ENTITY_TYPE_CHOICE_VALUES),
-        metavar=_choice_metavar(_ENTITY_TYPE_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.entity-type.help"),
-    ),
-    "legal-entity-form": typer.Option(
-        "--legal-entity-form",
-        click_type=_choice(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
-        metavar=_choice_metavar(_LEGAL_ENTITY_FORM_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.legal-entity-form.help"),
-    ),
-    "irpf-income-categories": typer.Option(
-        "--irpf-income-categories",
-        click_type=_choice(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
-        metavar=_choice_metavar(_IRPF_INCOME_CATEGORY_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.irpf-income-categories.help"),
-    ),
-    "declaration-roles": typer.Option(
-        "--declaration-roles",
-        click_type=_choice(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
-        metavar=_choice_metavar(_THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.declaration-roles.help"),
-    ),
-    "incn-prior-12-months": typer.Option(
-        "--incn-prior-12-months",
-        help=tr("wizard.setup.flags.incn-prior-12-months.help"),
-    ),
-    "new-entity-first-two-profit-periods": typer.Option(
-        "--new-entity-first-two-profit-periods/--no-new-entity-first-two-profit-periods",
-        help=tr("wizard.setup.flags.new-entity-first-two-profit-periods.help"),
-    ),
-    "irpf-estimation-regime": typer.Option(
-        "--irpf-estimation-regime",
-        click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
-        metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
-    ),
-    "irpf-special-regime": typer.Option(
-        "--irpf-special-regime",
-        click_type=_choice(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
-        metavar=_choice_metavar(_IRPF_SPECIAL_REGIME_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.irpf-special-regime.help"),
-    ),
-    "irpf-special-regime-start-date": typer.Option(
-        "--irpf-special-regime-start-date",
-        help=tr("wizard.setup.flags.irpf-special-regime-start-date.help"),
-    ),
-    "situacion-familiar": typer.Option(
-        "--situacion-familiar",
-        click_type=_choice(_SITUACION_FAMILIAR_CHOICE_VALUES),
-        metavar=_choice_metavar(_SITUACION_FAMILIAR_CHOICE_VALUES),
-        help=tr("wizard.setup.flags.situacion-familiar.help"),
-    ),
-    "iva-sii-enrolled": typer.Option(
-        "--iva-sii-enrolled/--no-iva-sii-enrolled",
-        help=tr("wizard.setup.flags.iva-sii-enrolled.help"),
-    ),
-    "iva-redeme-enrolled": typer.Option(
-        "--iva-redeme-enrolled/--no-iva-redeme-enrolled",
-        help=tr("wizard.setup.flags.iva-redeme-enrolled.help"),
-    ),
-}
-
-# This mapping is the operator-facing wizard vocabulary used by application
-# refusals to name flags the CLI can actually parse.
-
-
-def _required_flag_questions(flow: WizardFlow) -> tuple[WizardQuestion, ...]:
-    """Return the questions whose value must be supplied in ``--quiet`` mode."""
-    return tuple(
-        question
-        for section in flow.sections
-        for question in section.questions
-        if question.required and question.visible_when is None
-    )
-
-
 def _missing_required_flags(
     flow: WizardFlow,
     canonical: dict[str, str],
 ) -> tuple[str, ...]:
     """Return the question ids whose canonical-token value is missing."""
     missing: list[str] = []
-    for question in _required_flag_questions(flow):
+    for question in required_flag_questions(flow):
         if question.id not in canonical or not canonical[question.id]:
             if question.default is not None and question.default:
                 canonical[question.id] = question.default
@@ -674,214 +306,6 @@ def _run_scripted_walk(
     return _answers_model_from_canonical(flow, dict(state.answers))
 
 
-def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str | None:
-    """Project a Typer-parsed flag value into the canonical-token form."""
-    if value is None:
-        return None
-    if question.widget is WizardWidget.CONFIRM:
-        return _canonical_confirm_value(value)
-    if question.widget is WizardWidget.CHECKBOX:
-        return _canonical_checkbox_value(value)
-    if question.widget is WizardWidget.INTEGER:
-        return _canonical_integer_value(value)
-    if question.widget is WizardWidget.PATH:
-        return str(value)
-    return str(value)
-
-
-def _canonical_confirm_value(value: object) -> str | None:
-    """Project a boolean flag into the flow's lowercase canonical token."""
-    if not isinstance(value, bool):
-        return None
-    return "true" if value else "false"
-
-
-def _canonical_checkbox_value(value: object) -> str | None:
-    """Project repeated checkbox values into one comma-separated token."""
-    if not isinstance(value, list | tuple):
-        return None
-    tokens = [str(item) for item in OBJECT_TUPLE_ADAPTER.validate_python(value) if str(item)]
-    return ",".join(tokens) if tokens else None
-
-
-def _canonical_integer_value(value: object) -> str:
-    """Project an integer flag while retaining Typer's accepted coercions."""
-    if isinstance(value, int):
-        return str(value)
-    return str(int(str(value)))
-
-
-def _configure_select_option(
-    question: WizardQuestion,
-    operation: PinnedAuthorityOperation,
-    option: typer.models.OptionInfo,
-) -> None:
-    """Apply registry choices and reviewed help overrides for selects."""
-    if question.widget is not WizardWidget.SELECT:
-        return
-    values = [choice.value for choice in question.choices]
-    if question.id == "tax-residence-ccaa":
-        # Foral tokens stay selectable so the refusal can redirect the
-        # operator to the foral Hacienda instead of a generic choice error.
-        from ...domain.calculations.registry.ccaa_catalogue import resolve_ccaa_catalogue
-
-        values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
-    option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
-    option.metavar = _choice_metavar(values)
-    if question.id == "situacion-familiar":
-        # Keep the closed input protocol visible at the boundary while using
-        # the direct catalogue translation for operator-facing help.
-        option.help = tr("wizard.setup.flags.situacion-familiar.help")
-    if question.id == "tax-residence-ccaa":
-        option.metavar = "CCAA"
-        option.show_choices = False
-        option.help = tr("wizard.setup.flags.tax-residence-ccaa.help")
-
-
-def _parameter_annotation_default(
-    question: WizardQuestion,
-    option: typer.models.OptionInfo,
-) -> tuple[object, object]:
-    """Derive the exact Typer annotation and default for one wizard widget."""
-    match question.widget:
-        case WizardWidget.CONFIRM:
-            return Annotated[bool | None, option], None
-        case WizardWidget.SELECT:
-            return Annotated[str | None, option], None
-        case WizardWidget.CHECKBOX:
-            return Annotated[list[str], option], []
-        case WizardWidget.INTEGER:
-            return Annotated[int | None, option], None
-        case WizardWidget.PATH:
-            return Annotated[Path | None, option], None
-        case WizardWidget.SECRET:
-            return Annotated[str | None, option], None
-        case WizardWidget.TEXT:
-            return Annotated[str | None, option], None
-
-
-def _python_parameter(
-    flow: WizardFlow,
-    question: WizardQuestion,
-    *,
-    operation: PinnedAuthorityOperation,
-    section_title: str | None = None,
-) -> inspect.Parameter:
-    """Build the ``inspect.Parameter`` Typer reads to register a flag.
-
-    ``section_title`` becomes the ``rich_help_panel`` so Typer renders
-    each ``WizardSection`` as its own group in the ``--help`` output;
-    this groups the ~40-flag surface into operator-meaningful panels
-    (basic identity vs. advanced regime questions) instead of one
-    undifferentiated wall of flags.
-    """
-    _flag_name(question)
-    option = SETUP_OPTION_INFOS.get(question.id)
-    if option is None:
-        option = typer.Option(_flag_name(question), help=tr(_help_key(flow, question)))
-        SETUP_OPTION_INFOS[question.id] = option
-    _configure_select_option(question, operation, option)
-    if section_title is not None:
-        # `OptionInfo` carries `rich_help_panel`; setting it groups the
-        # flag under the section's panel in Typer's `--help` output.
-        option.rich_help_panel = section_title
-    annotation, default = _parameter_annotation_default(question, option)
-    return inspect.Parameter(
-        name=question.id.replace("-", "_"),
-        kind=inspect.Parameter.KEYWORD_ONLY,
-        default=default,
-        annotation=annotation,
-    )
-
-
-def _mode_parameters(flow: WizardFlow, *, mode: WizardPersistMode) -> tuple[inspect.Parameter, ...]:
-    """Build the callback context, profile-name, and fixed mode-flag parameters.
-
-    The name is optional at parse time for both verbs. The interactive create
-    screen can collect it, while an unnamed edit addresses the authenticated
-    active profile. The programmatic create path still applies
-    ``_require_profile_name`` after dispatch, so headless create retains its
-    typed missing-name refusal. The injected ``ctx`` is part of the callback
-    contract rather than a profile field: the CLI frontend seam needs it to
-    emit the manager's closing envelope after the screen returns.
-    """
-    del flow
-    ctx = inspect.Parameter(
-        name="ctx",
-        kind=inspect.Parameter.POSITIONAL_OR_KEYWORD,
-        annotation=typer.Context,
-    )
-    profile_name_default: object = None
-    profile_name_argument = typer.Argument(
-        ...,
-        help=tr("cli.config.setup.profile_name_help"),
-    )
-    profile_name_annotation = Annotated[str | None, profile_name_argument]
-    profile_name = inspect.Parameter(
-        name="profile_name",
-        kind=inspect.Parameter.KEYWORD_ONLY,
-        default=profile_name_default,
-        annotation=profile_name_annotation,
-    )
-    quiet = inspect.Parameter(
-        name="quiet",
-        kind=inspect.Parameter.KEYWORD_ONLY,
-        default=False,
-        annotation=Annotated[
-            bool,
-            typer.Option("--quiet", help=tr("cli.config.setup.quiet_help")),
-        ],
-    )
-    accept_defaults = inspect.Parameter(
-        name="accept_defaults",
-        kind=inspect.Parameter.KEYWORD_ONLY,
-        default=False,
-        annotation=Annotated[
-            bool,
-            typer.Option("--accept-defaults", help=tr("cli.config.setup.accept_defaults_help")),
-        ],
-    )
-    return (ctx, profile_name, quiet, accept_defaults)
-
-
-def _question_parameters(flow: WizardFlow, *, operation: PinnedAuthorityOperation) -> tuple[inspect.Parameter, ...]:
-    """Build one ``inspect.Parameter`` per descriptor question.
-
-    Each question's ``rich_help_panel`` is the section's translated
-    title so the profile-create command's help renders one panel per
-    :class:`WizardSection`.
-    """
-    parameters: list[inspect.Parameter] = []
-    for section in flow.sections:
-        section_title = tr(str(section.title))
-        for question in section.questions:
-            parameters.append(_python_parameter(flow, question, operation=operation, section_title=section_title))
-    return tuple(parameters)
-
-
-def _wizard_command_metadata(
-    parameters: tuple[inspect.Parameter, ...],
-) -> tuple[inspect.Signature, dict[str, object]]:
-    """Build the public signature and annotation map for a wizard callback.
-
-    The callback is assembled at runtime because each flow contributes a
-    different set of flags.  Keep the ``inspect.Signature`` and the function's
-    annotation mapping derived from the same canonical parameter objects: a
-    future change in how Python stores annotations must not make Typer inspect
-    one representation while ``typing.get_type_hints`` sees another.  The
-    public ``inspect.Parameter.annotation`` sentinel is deliberately retained
-    for an unannotated parameter rather than importing any private ``inspect``
-    or ``typing`` implementation detail.
-    """
-    signature = inspect.Signature(parameters=parameters)
-    annotations: dict[str, object] = {
-        parameter.name: parameter.annotation
-        for parameter in signature.parameters.values()
-        if parameter.annotation is not inspect.Parameter.empty
-    }
-    return signature, annotations
-
-
 def _collect_flag_values(
     flow: WizardFlow,
     kwargs: dict[str, object],
@@ -892,7 +316,7 @@ def _collect_flag_values(
         for question in section.questions:
             field_name = question.id.replace("-", "_")
             raw = kwargs.get(field_name)
-            canonical_value = _canonical_from_flag_value(question, raw)
+            canonical_value = canonical_from_flag_value(question, raw)
             if canonical_value is not None:
                 canonical[question.id] = canonical_value
     return canonical
@@ -1356,7 +780,7 @@ _WIZARD_ERROR_TYPE_KEYS: dict[str, tuple[str, str, str]] = {
 def _wizard_field_flags(flow: WizardFlow) -> dict[str, str]:
     """Return answers-model field names mapped to their CLI flag names."""
     return {
-        question.id.replace("-", "_"): _flag_name(question)
+        question.id.replace("-", "_"): flag_name(question)
         for section in flow.sections
         for question in section.questions
     }
@@ -1486,385 +910,6 @@ def _run_wizard_persistence_path(
 #: (the profile manager) needs to tell "the ordinary default applies" from
 #: "this profile earned a specific next step" without re-deriving the
 #: comparison.
-DEFAULT_PROFILE_NEXT_COMMAND = "aeat app modelo work create"
-
-
-def profile_next_step_modelo(
-    profile_values: dict[str, str],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> str | None:
-    """The modelo id the routing projection singles out, or ``None`` for the default.
-
-    The one canonical classification a taxpayer's declared facts route
-    through — currently a single rule (IRNR non-residents route to Modelo
-    210, TRLIRNR RDLeg 5/2004 Art. 2) — ``None`` for every profile the
-    projection does not single out. This is the PRIMARY authority;
-    :func:`next_step_command_for_profile_values` derives its CLI command
-    text from it rather than repeating the classification, so a consumer
-    whose channel cannot carry command prose (the shared
-    :class:`~cadrumo.core.json_contract.Notice` structurally forbids an
-    embedded executable ``aeat ...`` invocation outside its typed action
-    projection) can still word its own sentence around the routed modelo.
-
-    Args:
-        profile_values: Dotted-path fact values as the wizard's canonical
-            question-id keys, or the equivalent
-            :func:`~cadrumo.application.user_profile.projections.record_to_path_values`
-            projection of a :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`
-            — the two share the same ``taxpayer_type.fiscal_residency`` key.
-        operation: Caller-owned pinned authority operation used to classify the
-            fiscal-residency token.
-    """
-    fiscal_residency = profile_values.get("taxpayer_type.fiscal_residency", "").strip().lower()
-    from ...domain.calculations.registry.renta_codes_catalogue import fiscal_residency_requires_country
-
-    if fiscal_residency_requires_country(fiscal_residency, authority=operation):
-        return Modelo("210").value
-    return None
-
-
-def next_step_command_for_profile_values(
-    profile_values: dict[str, str],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> str:
-    """Resolve the CLI command a profile's declared facts point at next.
-
-    Derived from :func:`profile_next_step_modelo`, the canonical
-    classification, falling back to :data:`DEFAULT_PROFILE_NEXT_COMMAND` when
-    it singles out no modelo. Consumed by the scripted wizard's own success
-    line, which renders the command as text.
-    """
-    modelo = profile_next_step_modelo(profile_values, operation=operation)
-    if modelo is None:
-        return DEFAULT_PROFILE_NEXT_COMMAND
-    return f"aeat app modelo describe {modelo}"
-
-
-def _ccaa_was_defaulted(
-    mode: WizardPersistMode,
-    explicit_flags: dict[str, str],
-    profile_values: dict[str, str],
-    *,
-    non_interactive: bool,
-    default_ccaa_value: str | None,
-) -> bool:
-    """Return True when the comunidad autónoma was assumed, not chosen.
-
-    The wizard descriptor defaults ``tax-residence-ccaa`` to Madrid for a
-    resident-IRPF profile. That default is applied silently on the
-    non-interactive create paths (``--quiet`` / ``--accept-defaults``)
-    when the operator omits ``--tax-residence-ccaa`` — precisely the case
-    that lands a Madrid-based autonomic calculation without the operator
-    knowing. The signal is therefore: a non-interactive ``create`` where
-    the operator supplied no CCAA flag yet the persisted profile carries
-    the Madrid default. An explicitly-supplied CCAA (including an explicit
-    ``madrid``) sits in ``explicit_flags`` and is excluded; the interactive
-    path prompts for the value and is likewise excluded, as is ``edit``
-    (whose CCAA already exists on the profile).
-    """
-    return (
-        mode == "create"
-        and non_interactive
-        and "tax-residence-ccaa" not in explicit_flags
-        and default_ccaa_value is not None
-        and profile_values.get("tax_residence.ccaa") == default_ccaa_value
-    )
-
-
-_MODIFY_NO_RESUME_CODE = "config.profile.edit.modify_no_resume"
-_MODIFY_DESCENDANTS_DOOR_CODE = "config.profile.edit.descendants_via_door"
-
-
-def _selected_profile_label() -> str | None:
-    """Return the label of the profile the selection pointer names, if any.
-
-    A pointer naming a capsule whose label cannot be read leaves the spine
-    unset rather than guessing: the anchor exists to identify a profile, and a
-    wrong identity is worse than an absent one.
-    """
-    from ...core.logging import get_logger
-    from ..user_profile.profile_pointer import observe_active_profile_pointer
-    from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
-
-    # This runs after the record has been written, so it must not be able to
-    # fail the verb: the edit is already durable, and reporting a refusal for a
-    # committed change is worse than reporting it without the spine anchor.
-    try:
-        pointer = observe_active_profile_pointer()
-        if pointer.bucket_id is None:
-            return None
-        selected = read_profile_bucket_by_id(pointer.bucket_id)
-    except Exception:
-        get_logger(__name__).debug("active-profile label resolution failed for the wizard spine", exc_info=True)
-        return None
-    return None if selected is None else selected.label
-
-
-def _emit_wizard_success(
-    mode: WizardPersistMode,
-    profile_name: str,
-    *,
-    record_changed: bool = True,
-    next_command: str = DEFAULT_PROFILE_NEXT_COMMAND,
-    ccaa_defaulted: bool = False,
-    modify_no_resume: bool = False,
-    modify_no_resume_message: str | None = None,
-    modify_descendants_via_door: bool = False,
-    modify_descendants_message: str | None = None,
-    default_ccaa_value: str | None = None,
-    invocation_notices: Callable[[], Sequence[Notice]] = tuple,
-) -> None:
-    """Emit the success payload in JSON or tabular CLI form.
-
-    The post-create / post-edit next-step hint rides on the envelope
-    ``notices`` channel (an ``info``-severity :class:`Notice` whose
-    ``suggestion`` is the follow-on command) rather than as a bespoke
-    ``next`` payload field, so next-step guidance is uniform with every
-    other command's notices.
-
-    ``ccaa_defaulted`` requests an additional ``warning``-severity
-    :class:`Notice` disclosing that no comunidad autónoma was chosen and
-    that Madrid was assumed for the profile — so the operator learns the
-    autonomic deductions and autonomic tax scale are being computed for
-    Madrid rather than the value being applied silently.
-
-    ``modify_no_resume`` requests an ``info``-severity :class:`Notice`
-    stating that mid-flow save/resume is unavailable in modify mode and an
-    interrupted modify discards its staged edits. It rides the final
-    envelope of every interactive modify run regardless of whether the
-    operator attempted a save — the LOUD, never-silent honesty disclosure
-    the persistence model binds modify to.
-
-    ``modify_no_resume_message`` carries the message pre-rendered in the
-    command-level output language. The final envelope is a command-level
-    disclosure, so it must render in the language the command entered with,
-    not a mid-walk output-language switch that shadows it by the time this
-    emit runs; the caller freezes the string before the walk and passes it
-    here. ``None`` falls back to resolving it now (the direct, walk-less
-    callers).
-
-    ``invocation_notices`` supplies the notices the invoking frontend staged
-    for this invocation, such as an authentication that could not be kept for
-    the next process. This emitter reaches the envelope directly rather than
-    through the frontend's own funnel, so without it those notices were lost
-    on every edit. It is called only here, on success, so a refused command
-    leaves them for the frontend's error path.
-    """
-    from ...core.click_context import json_output_requested
-    from ..operator_output.emit import emit_operator_json_success
-    from .results import ConfigProfileCreateResult, ConfigProfileEditResult, ProfileWizardStatus
-
-    def _success_status() -> tuple[ProfileWizardStatus, str]:
-        """Keep machine status and localized verb keys paired."""
-        if mode == "create":
-            return ProfileWizardStatus.CREATED, "wizard.commands.status.created"
-        if record_changed:
-            return ProfileWizardStatus.UPDATED, "wizard.commands.status.updated"
-        return ProfileWizardStatus.UNCHANGED, "wizard.commands.status.unchanged"
-
-    def _success_messages() -> tuple[str, str, str]:
-        """Resolve all user-visible disclosures in the active language."""
-        no_resume = (
-            modify_no_resume_message
-            if modify_no_resume_message is not None
-            else tr("application.wizard.notices.modify_no_resume")
-        )
-        descendants = (
-            modify_descendants_message
-            if modify_descendants_message is not None
-            else tr("application.wizard.notices.modify_descendants_via_door")
-        )
-        ccaa = (
-            tr("application.wizard.notices.ccaa_defaulted", ccaa=default_ccaa_value)
-            if ccaa_defaulted and default_ccaa_value is not None
-            else ""
-        )
-        return no_resume, descendants, ccaa
-
-    # Keep the closed machine token separate from the localized text verb.
-    status_token, verb_key = _success_status()
-    verb = tr(verb_key)
-    resolved_modify_no_resume_message, resolved_modify_descendants_message, ccaa_message = _success_messages()
-    notices = _wizard_success_notices(
-        mode,
-        next_command=next_command,
-        modify_no_resume=modify_no_resume,
-        modify_no_resume_message=resolved_modify_no_resume_message,
-        modify_descendants_via_door=modify_descendants_via_door,
-        modify_descendants_message=resolved_modify_descendants_message,
-        modify_descendants_action=_resolved_descendientes_action(),
-        ccaa_defaulted=ccaa_defaulted,
-        ccaa_message=ccaa_message,
-        ccaa_value=default_ccaa_value,
-    )
-    # Populate the envelope-spine active_profile identity anchor. The wizard
-    # sits below the CLI transport's emit_envelope funnel (it cannot import
-    # it — layering), so it must resolve the label itself. On create the
-    # newly-created profile IS the active one, so its name is the label. On
-    # edit the edited profile is not necessarily the active one, so the label
-    # is read from the selection pointer rather than assumed or left unset:
-    # every other command reports the active profile on this spine, and an
-    # unset one read as "no profile is active" while one plainly was.
-    notices = [*notices, *invocation_notices()]
-    active_profile = profile_name if mode == "create" else _selected_profile_label()
-    result: ConfigProfileCreateResult | ConfigProfileEditResult = (
-        ConfigProfileCreateResult(
-            profile_name=profile_name,
-            status=status_token,
-            active_profile=active_profile,
-        )
-        if mode == "create"
-        else ConfigProfileEditResult(profile_name=profile_name, status=status_token)
-    )
-    if json_output_requested():
-        command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        # emit_operator_json_success is the one sanctioned direct route to
-        # the envelope: it resolves and prepends the sandbox-active notice
-        # itself, so this call site cannot forget it (there is no other way
-        # to reach SchemaEnvelope for this result from here).
-        emit_operator_json_success(command_path, result, notices=notices, active_profile=active_profile)
-        return
-
-    _echo_wizard_success_text(
-        mode,
-        profile_name,
-        verb=verb,
-        next_command=next_command,
-        result=result,
-        disclosures=(
-            (modify_no_resume, resolved_modify_no_resume_message),
-            (modify_descendants_via_door, resolved_modify_descendants_message),
-            (ccaa_defaulted, ccaa_message),
-        ),
-    )
-
-
-def _echo_wizard_text(lines: list[str], *, payload: object) -> None:
-    """Render wizard text lines through the output boundary and emit them.
-
-    The single place this module's operator-facing text crosses into stdout.
-    Every identifier-bearing success disclosure funnels through here, so the
-    sandbox banner, the redaction pass and the reveal-identifiers resolution
-    are applied once rather than once per emitter. Two emitters each holding a
-    private copy of the render-and-echo pair is how one of them came to bypass
-    the boundary while its sibling did not.
-    """
-    import typer as _typer
-
-    from ...core.output_rendering import render_command_output
-    from ..operator_output.sandbox_notice import sandbox_banner_line, sandbox_notice_for_active_bucket
-
-    sandbox_notice = sandbox_notice_for_active_bucket()
-    if sandbox_notice is not None:
-        lines.insert(0, sandbox_banner_line(sandbox_notice))
-    rendered = render_command_output(format_name="text", payload=payload, lines=lines)
-    _typer.echo(rendered.text)
-
-
-def _echo_wizard_success_text(
-    mode: WizardPersistMode,
-    profile_name: str,
-    *,
-    verb: str,
-    next_command: str,
-    result: ConfigProfileCreateResult | ConfigProfileEditResult,
-    disclosures: tuple[tuple[bool, str], ...],
-) -> None:
-    """Render the success payload as tab-separated operator text.
-
-    Every disclosure that rides the notices channel is repeated here: the
-    envelope renders ``notices`` only in JSON mode, so one left off these
-    lines would be visible to automation and invisible to the operator
-    running the verb plainly.
-    """
-    lines = [
-        f"{tr('application.wizard.output_labels.profile')}\t{profile_name}",
-        f"{tr('application.wizard.output_labels.status')}\t{verb}",
-    ]
-    if mode == "create":
-        lines.append(f"{tr('application.wizard.output_labels.active_profile')}\t{profile_name}")
-    lines.append(f"{tr('application.wizard.output_labels.next')}\t{next_command}")
-    lines.extend(message for enabled, message in disclosures if enabled)
-    _echo_wizard_text(lines, payload=result)
-
-
-def _resolved_descendientes_action() -> ResolvedNoticeAction | None:
-    """Resolve the typed descendiente door for the success notice.
-
-    The catalogue entry fails closed on an unknown id, so the notice's
-    executable action always names a live verb or the emission refuses —
-    the failure mode the old literal-command message could not have.
-    """
-    from ..operator_actions.catalogue import next_action
-
-    return next_action("operator.profile.descendiente")
-
-
-def _wizard_success_notices(
-    mode: WizardPersistMode,
-    *,
-    next_command: str,
-    modify_no_resume: bool,
-    modify_no_resume_message: str,
-    modify_descendants_via_door: bool,
-    modify_descendants_message: str,
-    modify_descendants_action: ResolvedNoticeAction | None = None,
-    ccaa_defaulted: bool,
-    ccaa_message: str,
-    ccaa_value: str | None,
-) -> list[Notice]:
-    """Build the success envelope's notices: the next step plus each disclosure.
-
-    Every message arrives pre-rendered because the final envelope is a
-    command-level disclosure and must render in the language the command
-    entered with, not one a mid-walk output-language switch left behind.
-    """
-    from ...core.json_contract import Notice, NoticeSeverity
-
-    verb_key = "create" if mode == "create" else "edit"
-    # The next-step hint is text-surface only. ``Notice`` reserves executable
-    # command identity for its typed action projection, which models a
-    # PRECONDITION-FAILURE recovery - a failed condition, its evidence, its
-    # conditionality - and has no member that means "this succeeded, here is a
-    # reasonable next verb". Carrying the bare label without its command would
-    # emit a notice reading "Next:" and nothing else, which is worse than
-    # emitting none, so the JSON channel omits it entirely rather than shipping
-    # an empty gesture. ``next_command`` still renders on the text surface.
-    _ = next_command
-    notices: list[Notice] = []
-    if modify_no_resume:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code=_MODIFY_NO_RESUME_CODE,
-                message=modify_no_resume_message,
-            ),
-        )
-    if modify_descendants_via_door:
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.INFO,
-                code=_MODIFY_DESCENDANTS_DOOR_CODE,
-                message=modify_descendants_message,
-                action=modify_descendants_action,
-            ),
-        )
-    if ccaa_defaulted:
-        if ccaa_value is None:
-            raise InternalInvariantError("CCAA default disclosure requires the operation-scoped default token")
-        notices.append(
-            Notice(
-                severity=NoticeSeverity.WARNING,
-                code=f"config.profile.{verb_key}.ccaa_defaulted",
-                message=ccaa_message,
-                context={"assumed_ccaa": ccaa_value},
-            ),
-        )
-    return notices
-
-
 def _execute_wizard_command(
     flow: WizardFlow,
     mode: WizardPersistMode,
@@ -1928,12 +973,12 @@ def _execute_wizard_command(
         None,
     )
     next_command = next_step_command_for_profile_values(profile_values, operation=operation)
-    _emit_wizard_success(
+    emit_wizard_success(
         mode,
         profile_name,
         record_changed=record_changed,
         next_command=next_command,
-        ccaa_defaulted=_ccaa_was_defaulted(
+        ccaa_defaulted=ccaa_was_defaulted(
             mode,
             explicit_flags,
             profile_values,
@@ -1975,10 +1020,10 @@ def build_wizard_command(
     An invocation that supplies neither ``--quiet``/``--accept-defaults``
     nor the values it needs is refused with the flag form named.
     """
-    question_params = _question_parameters(flow, operation=operation)
-    mode_params = _mode_parameters(flow, mode=mode)
+    question_params = question_parameters(flow, operation=operation)
+    mode_params = mode_parameters(flow, mode=mode)
     parameters = (*mode_params, *question_params)
-    signature, annotations = _wizard_command_metadata(parameters)
+    signature, annotations = wizard_command_metadata(parameters)
 
     def _command(**kwargs: object) -> None:
         from ...core.errors.hierarchy import CadrumoError
@@ -2026,12 +1071,3 @@ def build_wizard_command(
     typed.__doc__ = tr(f"wizard.{flow.id}.description")
     typed.__wizard_flow__ = flow
     return _command
-
-
-__all__ = [
-    "DEFAULT_PROFILE_NEXT_COMMAND",
-    "build_wizard_command",
-    "next_step_command_for_profile_values",
-    "profile_next_step_modelo",
-    "scripted_profile_facts",
-]
