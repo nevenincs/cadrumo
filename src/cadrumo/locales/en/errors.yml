@@ -47,6 +47,8 @@ errors:
       Either no credential store is registered, or this logon session cannot hold
       credentials, which is common on a network or service logon. Sign in interactively,
       or check that a credential store is installed and active.
+    auth_view_capture_identity_mismatch: The AEAT session belongs to a taxpayer other
+      than the active profile's.
     clave_movil_identity_checksum: The Cl@ve Móvil identifier has a valid shape but
       its checksum letter does not match its digits. Check the final letter on your
       document and try again.

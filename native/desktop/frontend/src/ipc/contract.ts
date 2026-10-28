@@ -1105,7 +1105,7 @@ export type SedeViewPhase = "acquiring" | "browsing" | "closing";
 export type SedeViewPageSecurity = "secure" | "insecure" | "unknown";
 
 /** Every notice the view may raise: a page dialog, which carries its dialog. */
-export type SedeViewNoticeCode = "dialog_opened";
+export type SedeViewNoticeCode = "dialog_opened" | "identity_mismatch";
 
 export type SedeViewDialogKind =
   "alert" | "confirm" | "prompt" | "beforeunload";
@@ -1136,7 +1136,12 @@ export type SedeViewEndReason =
 
 /** What became of the session when the view ended. */
 export type SedeViewPublication =
-  "published" | "unchanged" | "kept-newer" | "verification-failed" | "unknown";
+  | "published"
+  | "unchanged"
+  | "kept-newer"
+  | "verification-failed"
+  | "identity-mismatch"
+  | "unknown";
 
 /** How the view's operation settled, where the host could observe it. */
 export type SedeViewOutcome = {

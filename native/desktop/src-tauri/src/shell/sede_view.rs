@@ -197,6 +197,9 @@ enum Publication {
     KeptNewer,
     #[serde(rename = "verification-failed")]
     VerificationFailed,
+    /// AEAT showed the session signed in as another taxpayer.
+    #[serde(rename = "identity-mismatch")]
+    IdentityMismatch,
     #[serde(rename = "unknown")]
     Unknown,
 }

@@ -45,6 +45,8 @@ export type SedeViewAnswer =
 export type SedeViewFixtureControls = {
   dialog(kind: SedeViewDialogKind, message: string, answer?: string): void;
   download(filename: string): void;
+  /** AEAT showed the person signed in as another taxpayer. */
+  identityMismatch(): void;
   fileChooser(multiple: boolean): void;
   /** Follows a link off https: to a plain `http:` page, or to one whose
    * origin is not known. */
@@ -216,6 +218,14 @@ export function sedeViewFixture({
           message,
           default_prompt: answer ?? null,
         },
+      });
+    },
+    identityMismatch() {
+      open.listener({
+        kind: "notice",
+        view: open.id,
+        code: "identity_mismatch",
+        dialog: null,
       });
     },
     download(filename) {

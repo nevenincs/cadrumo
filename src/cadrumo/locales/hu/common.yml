@@ -805,11 +805,15 @@ desktop:
     maximize: Böngésző teljes méretben
     notice:
       dismiss: Elvetés
+      identity_mismatch: Nem ennek a profilnak az adózójaként jelentkeztél be, ezért
+        a Cadrumo nem mentette el ezt a munkamenetet.
       more: még {count} vár
     opening: A böngésző megnyitása…
     page_insecure: Nem biztonságos
     page_unknown: Ismeretlen cím
     publication:
+      identity_mismatch: Nem ennek a profilnak az adózójaként voltál bejelentkezve,
+        ezért a Cadrumo nem mentett semmit.
       kept_newer: Már el volt mentve egy újabb bejelentkezés, ezért a Cadrumo azt
         tartotta meg.
       published: A bejelentkezésed mentve lett. A Cadrumo többi része mostantól használhatja.

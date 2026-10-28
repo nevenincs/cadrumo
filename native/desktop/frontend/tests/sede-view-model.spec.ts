@@ -61,6 +61,16 @@ const page = (over: Partial<Extract<SedeViewEvent, { kind: "state" }>> = {}) =>
     ...over,
   }) satisfies SedeViewEvent;
 
+test("a sign-in as another taxpayer is said once, apart from a page dialog", () => {
+  const sede = run([
+    { kind: "opened", view: 1 },
+    { kind: "notice", view: 1, code: "identity_mismatch", dialog: null },
+  ]);
+  expect(sede.note).toEqual({ kind: "notice", code: "identity_mismatch" });
+  expect(sede.dialogs).toEqual([]);
+  expect(reduceBrowser(sede, { type: "note-dismissed" }).note).toBeNull();
+});
+
 test("a page off https replaces the address it left with its marker", () => {
   const sede = run([{ kind: "opened", view: 1 }, page()]);
   expect(sede.page).toMatchObject({ security: "secure", external: true });

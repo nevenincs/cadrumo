@@ -1011,6 +1011,14 @@
         }
       },
       {
+        "name": "notice_identity_mismatch",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "identity_mismatch"
+        }
+      },
+      {
         "name": "closed",
         "direction": "downstream",
         "document": {
@@ -1953,6 +1961,19 @@
           "offer": {
             "offer_id": "0123456789abcdef0123456789abcdef",
             "url": "https://www.example.org/form?id=1"
+          }
+        }
+      },
+      {
+        "name": "notice_identity_mismatch_with_dialog",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.notice",
+          "code": "identity_mismatch",
+          "dialog": {
+            "dialog_id": 1,
+            "dialog_kind": "alert",
+            "message": ""
           }
         }
       },

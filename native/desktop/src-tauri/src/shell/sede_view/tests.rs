@@ -657,6 +657,27 @@ fn an_identifier_the_host_never_issued_is_refused_and_asks_no_dialog() {
 }
 
 #[test]
+fn a_sign_in_as_another_taxpayer_reaches_the_window_as_its_notice_and_its_end() {
+    let rig = rig();
+    rig.lane().push(ViewEvent::Notice(ViewNotice {
+        code: ViewNoticeCode::IdentityMismatch,
+        dialog: None,
+    }));
+    rig.wait_for_message("notice");
+    let notice = rig.window.last("notice").unwrap();
+    assert_eq!(notice["code"], "identity_mismatch");
+    assert_eq!(notice["dialog"], Value::Null);
+    let report: Report =
+        serde_json::from_value(json!({"end": "closed", "publication": "identity-mismatch"}))
+            .unwrap();
+    assert_eq!(report.publication, Some(Publication::IdentityMismatch));
+    assert_eq!(
+        serde_json::to_value(Publication::IdentityMismatch).unwrap(),
+        "identity-mismatch"
+    );
+}
+
+#[test]
 fn a_page_dialog_is_answered_once_and_only_as_the_page_asked() {
     let rig = rig();
     rig.lane().push(ViewEvent::Notice(ViewNotice {

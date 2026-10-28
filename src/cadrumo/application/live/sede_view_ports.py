@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Protocol
 
-from cadrumo_client.contracts.view_stream import ViewPhase, ViewResize, ViewStreamSink
+from cadrumo_client.contracts.view_stream import ViewNoticeCode, ViewPhase, ViewResize, ViewStreamSink
 
 from ...core.config import Settings
 from ..auth.protocols import BrowserContextPort, BrowserContextProvisioner, ViewLoginSessionFactoryPort
@@ -98,6 +98,10 @@ class SedeViewBrowser(Protocol):
 
     async def announce_phase(self, phase: ViewPhase) -> None:
         """Tell the window which phase the view is in."""
+        ...
+
+    async def announce_notice(self, code: ViewNoticeCode) -> None:
+        """Tell the window of a notice that carries no dialog."""
         ...
 
     async def close(self) -> None:

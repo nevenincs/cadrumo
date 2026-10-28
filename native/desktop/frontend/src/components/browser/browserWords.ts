@@ -5,6 +5,7 @@ import type {
   SedeViewTransfer,
 } from "../../ipc/contract";
 import type { Translate } from "../../shell/strings";
+import type { SaidNotice } from "./browserModel";
 
 // The Browser page's wording. A code the host sends is said in the person's
 // language; the page never shows a code, an identifier or the host's text.
@@ -44,11 +45,18 @@ const PUBLICATIONS: Record<SedeViewPublication, string> = {
   unchanged: "desktop.browser.publication.unchanged",
   "kept-newer": "desktop.browser.publication.kept_newer",
   "verification-failed": "desktop.browser.publication.verification_failed",
+  "identity-mismatch": "desktop.browser.publication.identity_mismatch",
   unknown: "desktop.browser.publication.unknown",
 };
 
 export const publicationText = (t: Translate, kind: SedeViewPublication) =>
   t(PUBLICATIONS[kind]);
+
+const NOTICES: Record<SaidNotice, string> = {
+  identity_mismatch: "desktop.browser.notice.identity_mismatch",
+};
+
+export const noticeText = (t: Translate, code: SaidNotice) => t(NOTICES[code]);
 
 const DOWNLOADS: Record<SedeViewTransfer, string> = {
   done: "desktop.browser.download.done",

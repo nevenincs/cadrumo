@@ -248,7 +248,7 @@ async def test_a_view_signed_in_as_another_taxpayer_publishes_nothing(
                 boundary.signed_in_nif = _OTHER_NIF
                 publication = await _close(factory, host, operation, baseline=seed.baseline, view_context=context)
 
-            assert publication.outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED
+            assert publication.outcome is ViewSessionPublicationOutcome.IDENTITY_MISMATCH
             assert publication.baseline == seed.baseline
             assert host.effects == []
             assert stored_digest() == seed.baseline.storage_state_sha256

@@ -50,6 +50,8 @@ errors:
       d'inici no pot desar credencials, cosa habitual en sessions de xarxa o de servei.
       Inicia la sessió de manera interactiva o comprova que hi hagi un magatzem de
       credencials instal·lat i actiu.
+    auth_view_capture_identity_mismatch: La sessió de l'AEAT pertany a un contribuent
+      diferent del del perfil actiu.
     clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
       però la seva lletra de control no coincideix amb els dígits. Revisa l'última
       lletra del document i torna-ho a provar.

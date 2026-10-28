@@ -597,6 +597,19 @@ test("file choosers wait for the person oldest first, and a refusal says it was 
   expect(await since(target, at, "sedeViewUpload cancel")).toHaveLength(1);
 });
 
+test("a sign-in as another taxpayer is said in the person's words until it is dismissed", async ({
+  page: target,
+}) => {
+  await showBrowser(target);
+  await target.evaluate(() => window.__scenarioSedeView?.identityMismatch());
+  const said = line(target, label("desktop.browser.notice.identity_mismatch"));
+  await expect(said).toBeVisible();
+  await said
+    .getByRole("button", { name: label("desktop.browser.notice.dismiss") })
+    .click();
+  await expect(said).toHaveCount(0);
+});
+
 test("page dialogs are answered by the person, each in its own words", async ({
   page: target,
 }) => {

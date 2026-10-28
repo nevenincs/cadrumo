@@ -42,6 +42,7 @@ from cadrumo_client.contracts.view_stream import (
     VIEW_MAX_SCALE,
     VIEW_MIN_SCALE,
     ViewClosedReason,
+    ViewNoticeCode,
     ViewPhase,
     ViewResize,
     ViewStreamSink,
@@ -135,6 +136,10 @@ _PHASES = (
     SEDE_VIEW_RESULT_PHASE,
 )
 _SIGN_IN_OPERATION = "live-sede-view-sign-in"
+#: Sign-in checks whose cookie jar is not checked again until it changes.
+_REFUSED_SIGN_INS = frozenset(
+    {ViewSessionPublicationOutcome.VERIFICATION_FAILED, ViewSessionPublicationOutcome.IDENTITY_MISMATCH}
+)
 
 #: The view's own policy: it runs until the person closes it, so it declares no execution deadline, and the
 #: supervisor's cancel stops it cooperatively. One view per profile; its browser is a supervisor-owned process.
@@ -364,8 +369,10 @@ class SedeViewSessionSignIn:
             if jar in self._refused:
                 return
             publication = await self._publish(SEDE_VIEW_SIGN_IN_PHASE, operation=_SIGN_IN_OPERATION)
-            if publication.outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED:
+            if publication.outcome in _REFUSED_SIGN_INS:
                 self._refused.add(jar)
+            if publication.outcome is ViewSessionPublicationOutcome.IDENTITY_MISMATCH:
+                await self._browser.announce_notice(ViewNoticeCode.IDENTITY_MISMATCH)
             await self._settle(publication)
 
     async def close(self) -> ViewSessionPublicationOutcome:

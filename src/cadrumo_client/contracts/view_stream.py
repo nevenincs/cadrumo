@@ -116,6 +116,9 @@ class ViewNoticeCode(StrEnum):
     DIALOG_OPENED = "dialog_opened"
     """The page opened a dialog the person answers with ``view.dialog``."""
 
+    IDENTITY_MISMATCH = "identity_mismatch"
+    """AEAT shows the person signed in as a taxpayer other than the profile's, so the session was not saved."""
+
 
 class ViewDialogKind(StrEnum):
     """The page dialog kinds, spelled as CDP and Playwright spell them."""

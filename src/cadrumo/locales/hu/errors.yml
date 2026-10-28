@@ -50,6 +50,8 @@ errors:
       nem tud hitelesítő adatokat tárolni, ami hálózati vagy szolgáltatásfiókos bejelentkezésnél
       gyakori. Jelentkezz be interaktívan, vagy ellenőrizd, hogy telepítve és aktív-e
       egy hitelesítő tároló.
+    auth_view_capture_identity_mismatch: Az AEAT-munkamenet nem az aktív profil adózójához
+      tartozik.
     clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
       ellenőrző betűje nem egyezik a számjegyekkel. Ellenőrizd az okmány utolsó betűjét,
       és próbáld újra.

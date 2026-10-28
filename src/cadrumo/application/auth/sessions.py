@@ -32,7 +32,12 @@ from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, Ty
 
 from ...core.async_cleanup import close_async_resources
 from ...core.auth_provider import AuthProviderKind, ClaveMovilRoute
-from ...core.errors.hierarchy import AeatLoginAssertionError, CadrumoError, InternalInvariantError
+from ...core.errors.hierarchy import (
+    AeatLoginAssertionError,
+    CadrumoError,
+    InternalInvariantError,
+    ViewCaptureIdentityMismatchError,
+)
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import (
     same_tax_identifier,
@@ -1313,6 +1318,8 @@ class ViewSessionPublicationOutcome(StrEnum):
     UNCHANGED = "unchanged"
     KEPT_NEWER = "kept-newer"
     VERIFICATION_FAILED = "verification-failed"
+    IDENTITY_MISMATCH = "identity-mismatch"
+    """AEAT shows the captured session signed in as a taxpayer other than the profile's."""
     UNKNOWN = "unknown"
 
 
@@ -1575,8 +1582,9 @@ async def _publish_view_session_state_locked(
                 certificate_credentials=certificate_credentials,
                 operator_scope_ports=operator_scope_ports,
             )
-            if not await _adopt_view_capture(provider, captured, expected_identity=expected_identity):
-                return _standing(ViewSessionPublicationOutcome.VERIFICATION_FAILED, baseline)
+            refused = await _adopt_view_capture(provider, captured, expected_identity=expected_identity)
+            if refused is not None:
+                return _standing(refused, baseline)
             return await _publish_staged_view_session(
                 staged,
                 kind=kind,
@@ -1734,25 +1742,32 @@ async def _adopt_view_capture(
     captured: Mapping[str, object],
     *,
     expected_identity: str | None,
-) -> bool:
+) -> ViewSessionPublicationOutcome | None:
     """Let the provider author and prove its own record for a view's capture.
 
-    A provider that cannot adopt a capture cannot verify it, so its view state
-    is never published.
+    Returns the refusal, or ``None`` once the provider adopted the capture. A
+    provider that cannot adopt a capture cannot verify it, so its view state
+    is never published; a capture AEAT shows signed in as another taxpayer is
+    refused as ``IDENTITY_MISMATCH``.
     """
     async with _provider_lifecycle(provider):
         if not isinstance(provider, _ViewCaptureProvider):
-            return False
+            return ViewSessionPublicationOutcome.VERIFICATION_FAILED
         try:
             session = await provider.adopt_view_capture(captured)
+        except ViewCaptureIdentityMismatchError:
+            _logger.debug("publish_view_session_state: the captured state is signed in as another taxpayer")
+            return ViewSessionPublicationOutcome.IDENTITY_MISMATCH
         except Exception as exc:
             _logger.debug(
                 "publish_view_session_state: provider refused the captured state failure=%s",
                 type(exc).__name__,
                 exc_info=True,
             )
-            return False
-    return _identity_aligns(session, expected_identity)
+            return ViewSessionPublicationOutcome.VERIFICATION_FAILED
+    if not _identity_aligns(session, expected_identity):
+        return ViewSessionPublicationOutcome.VERIFICATION_FAILED
+    return None
 
 
 def _identity_aligns(session: AeatSession, expected_identity: str | None) -> bool:

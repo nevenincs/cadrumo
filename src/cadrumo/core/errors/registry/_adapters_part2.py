@@ -48,6 +48,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.core.errors.hierarchy.ViewCaptureIdentityMismatchError",
+        ErrorCode(
+            code="AUTH_VIEW_CAPTURE_IDENTITY_MISMATCH",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_view_capture_identity_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.aeat.auth.errors.AeatSessionExpiredError",
         ErrorCode(
             code="AUTH_AEAT_SESSION_EXPIRED",

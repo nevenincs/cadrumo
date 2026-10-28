@@ -48,6 +48,8 @@ from cadrumo_client.contracts.view_stream import (
     ViewImage,
     ViewInput,
     ViewNavigate,
+    ViewNotice,
+    ViewNoticeCode,
     ViewPageSecurity,
     ViewPhase,
     ViewResize,
@@ -277,6 +279,10 @@ class SedeViewPage:
         """Send the window the current page's state in ``phase``."""
         self._phase = phase
         await self._send_state()
+
+    async def announce_notice(self, code: ViewNoticeCode) -> None:
+        """Send the window a notice that carries no dialog."""
+        self._sink.send(ViewNotice(code=code))
 
     async def close(self) -> None:
         """Stop showing the page, cancel pending transfers and close the browser; safe to repeat."""

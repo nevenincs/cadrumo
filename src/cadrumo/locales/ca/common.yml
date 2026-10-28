@@ -825,11 +825,15 @@ desktop:
     maximize: Maximitza el navegador
     notice:
       dismiss: Descarta
+      identity_mismatch: Has iniciat la sessió com un contribuent diferent del d'aquest
+        perfil, així que Cadrumo no ha desat aquesta sessió.
       more: '{count} més en espera'
     opening: Obrint el navegador…
     page_insecure: No és segur
     page_unknown: Adreça desconeguda
     publication:
+      identity_mismatch: Havies iniciat la sessió com un contribuent diferent del
+        d'aquest perfil, així que Cadrumo no ha desat res.
       kept_newer: Ja hi havia un inici de sessió més recent desat, així que Cadrumo
         l'ha mantingut.
       published: El teu inici de sessió s'ha desat. La resta de Cadrumo ja el pot

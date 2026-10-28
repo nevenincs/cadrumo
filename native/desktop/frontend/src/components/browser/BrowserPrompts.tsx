@@ -6,7 +6,7 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import type { SedeViewFailureCode } from "../../ipc/contract";
 import { useStrings } from "../../shell/strings";
 import type { ChooserOffer, DownloadOffer, TransferNote } from "./browserModel";
-import { failureText, transferText } from "./browserWords";
+import { failureText, noticeText, transferText } from "./browserWords";
 
 type Tone = "neutral" | "success" | "warning" | "danger";
 
@@ -175,7 +175,12 @@ export function BrowserPrompts({
             : t("desktop.browser.upload.prompt")}
         </Line>
       )}
-      {note && (
+      {note?.kind === "notice" && (
+        <Line tone="danger" icon="alert" actions={dismiss(onDismissNote)}>
+          {noticeText(t, note.code)}
+        </Line>
+      )}
+      {note && note.kind !== "notice" && (
         <Line
           tone={
             note.outcome === "done"

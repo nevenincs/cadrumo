@@ -278,6 +278,10 @@ class AeatLoginAssertionError(AuthError):
     """Raised when an AEAT login assertion cannot be produced or trusted."""
 
 
+class ViewCaptureIdentityMismatchError(AeatLoginAssertionError):
+    """Raised when AEAT shows a Sede view's captured session signed in as another taxpayer."""
+
+
 class TerminalPreconditionErrorMixin[VerdictT]:
     """Carry one typed terminal verdict without coupling core to application models.
 

@@ -925,6 +925,7 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
                 "dialog": {"dialog_id": 1, "dialog_kind": "prompt", "message": "¿Seguro?", "default_prompt": "sí"},
             },
         ),
+        ("notice_identity_mismatch", "downstream", {"kind": "view.notice", "code": "identity_mismatch"}),
         ("closed", "downstream", {"kind": "view.closed", "reason": "session_retired"}),
         ("credit_two", "upstream", {"kind": "view.credit", "images": 2}),
         ("input_pointer_down", "upstream", {"kind": "view.input", "event": pointer}),
@@ -1038,6 +1039,15 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
                 "code": "dialog_opened",
                 "dialog": {"dialog_id": 1, "dialog_kind": "alert", "message": ""},
                 "offer": {"offer_id": "0123456789abcdef0123456789abcdef", "url": "https://www.example.org/form?id=1"},
+            },
+        ),
+        (
+            "notice_identity_mismatch_with_dialog",
+            "downstream",
+            {
+                "kind": "view.notice",
+                "code": "identity_mismatch",
+                "dialog": {"dialog_id": 1, "dialog_kind": "alert", "message": ""},
             },
         ),
         ("notice_unknown_code", "downstream", {"kind": "view.notice", "code": "form_submitted"}),

@@ -49,6 +49,8 @@ errors:
       no puede guardar credenciales, algo habitual en sesiones de red o de servicio.
       Inicia sesión de forma interactiva o comprueba que haya un almacén de credenciales
       instalado y activo.
+    auth_view_capture_identity_mismatch: La sesión de la AEAT pertenece a un contribuyente
+      distinto del del perfil activo.
     clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
       válida pero su letra de control no coincide con los dígitos. Revisa la última
       letra del documento e inténtalo de nuevo.

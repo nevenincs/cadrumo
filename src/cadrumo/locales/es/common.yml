@@ -830,11 +830,15 @@ desktop:
     maximize: Maximizar el navegador
     notice:
       dismiss: Descartar
+      identity_mismatch: Has iniciado sesión como un contribuyente distinto del de
+        este perfil, así que Cadrumo no ha guardado esa sesión.
       more: '{count} más en espera'
     opening: Abriendo el navegador…
     page_insecure: No es seguro
     page_unknown: Dirección desconocida
     publication:
+      identity_mismatch: Habías iniciado sesión como un contribuyente distinto del
+        de este perfil, así que Cadrumo no guardó nada.
       kept_newer: Ya había un inicio de sesión más reciente guardado, así que Cadrumo
         lo mantuvo.
       published: Tu inicio de sesión se guardó. El resto de Cadrumo ya puede usarlo.

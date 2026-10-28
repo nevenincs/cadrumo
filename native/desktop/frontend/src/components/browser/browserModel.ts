@@ -2,6 +2,7 @@ import type {
   SedeViewDialog,
   SedeViewEndReason,
   SedeViewFailureCode,
+  SedeViewNoticeCode,
   SedeViewPageSecurity,
   SedeViewPhase,
   SedeViewPublication,
@@ -17,14 +18,17 @@ import type { SedeViewEvent } from "../../shell/sedeView";
  * it the oldest is let go, as the host lets it go. */
 export const WAITING_LIMIT = 16;
 
+/** A notice the page says once; a page dialog is answered instead. */
+export type SaidNotice = Exclude<SedeViewNoticeCode, "dialog_opened">;
+
 export type DownloadOffer = { transferId: number; filename: string };
 export type ChooserOffer = { chooserId: number; multiple: boolean };
 
-/** How the last transfer ended, said once and then dismissed. */
-export type TransferNote = {
-  kind: "download" | "upload";
-  outcome: SedeViewTransfer;
-};
+/** How the last transfer ended, or a notice from the view, said once and
+ * then dismissed. */
+export type TransferNote =
+  | { kind: "download" | "upload"; outcome: SedeViewTransfer }
+  | { kind: "notice"; code: SaidNotice };
 
 export type PageAddress = {
   /** Only a `secure` page has an origin and a path to show. */
@@ -157,10 +161,12 @@ function reduceEvent(state: BrowserState, event: SedeViewEvent): BrowserState {
         },
       };
     case "notice":
-      // The one notice is a page dialog, which the person answers.
-      return event.dialog
-        ? { ...state, dialogs: appended(state.dialogs, event.dialog) }
-        : state;
+      // A page dialog is answered by the person; any other notice is said.
+      if (event.code === "dialog_opened")
+        return event.dialog
+          ? { ...state, dialogs: appended(state.dialogs, event.dialog) }
+          : state;
+      return { ...state, note: { kind: "notice", code: event.code } };
     case "download":
       return {
         ...state,

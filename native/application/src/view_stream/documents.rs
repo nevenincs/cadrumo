@@ -167,7 +167,11 @@ pub enum ViewPhase {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ViewNoticeCode {
+    /// The page opened a dialog the person answers.
     DialogOpened,
+    /// AEAT shows the person signed in as another taxpayer than the
+    /// profile's, so the session was not saved.
+    IdentityMismatch,
 }
 
 /// The page dialog kinds, spelled as CDP and Playwright spell them.

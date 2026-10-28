@@ -23,6 +23,7 @@ from cadrumo_client.contracts.view_stream import (
     ViewClosedReason,
     ViewImage,
     ViewNotice,
+    ViewNoticeCode,
     ViewPhase,
     ViewResize,
     ViewSinkInput,
@@ -142,6 +143,9 @@ class _Browser:
 
     async def announce_phase(self, phase: ViewPhase) -> None:
         self.phases.append(phase)
+
+    async def announce_notice(self, code: ViewNoticeCode) -> None:
+        raise AssertionError(f"a view whose sign-in is not checked announces no notice: {code}")
 
     async def close(self) -> None:
         self._journal.append("browser.close")

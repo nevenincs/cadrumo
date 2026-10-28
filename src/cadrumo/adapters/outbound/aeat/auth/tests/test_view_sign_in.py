@@ -39,6 +39,8 @@ from cadrumo_client.contracts.view_stream import (
     ViewInput,
     ViewNavigate,
     ViewNavigateVerb,
+    ViewNotice,
+    ViewNoticeCode,
     ViewPhase,
     ViewResize,
     ViewSinkInput,
@@ -301,7 +303,11 @@ async def test_a_page_the_provider_cannot_verify_publishes_nothing(
 async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
-    """The person signs in by hand as someone else: AEAT's consulta names that taxpayer, so nothing is stored."""
+    """The person signs in by hand as someone else: AEAT's consulta names that taxpayer, so nothing is stored.
+
+    The window is told who signed in is not the profile's taxpayer, apart
+    from any other refusal, and the close says so again.
+    """
     kind = AuthProviderKind.CLAVE_PERMANENTE
     with clave_permanente_profile(tmp_path, operation):
         async with opened_http_boundary() as boundary:
@@ -313,12 +319,14 @@ async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
                 boundary.signed_in_nif = _OTHER_NIF
                 panel.start()
                 panel.sink.put(ViewNavigate(verb=ViewNavigateVerb.HOME))
+                await until(lambda: bool(panel.sink.of(ViewNotice)), timeout=_SIGN_IN_SECONDS)
                 panel.sink.put(ViewClose())
                 assert panel.browsing is not None
                 assert await asyncio.wait_for(panel.browsing, timeout=_SIGN_IN_SECONDS) is SedeViewEnd.CLOSED
                 outcome = await panel.sign_in.close()
 
-            assert outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED
+            assert panel.sink.of(ViewNotice) == [ViewNotice(code=ViewNoticeCode.IDENTITY_MISMATCH)]
+            assert outcome is ViewSessionPublicationOutcome.IDENTITY_MISMATCH
             assert not panel.sign_in.signed_in
             assert host.effects == []
             assert stored_digest(kind) is None

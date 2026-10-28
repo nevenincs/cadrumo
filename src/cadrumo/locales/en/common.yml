@@ -794,11 +794,15 @@ desktop:
     maximize: Maximize the browser
     notice:
       dismiss: Dismiss
+      identity_mismatch: You signed in as a taxpayer other than this profile's, so
+        Cadrumo didn't save that session.
       more: '{count} more waiting'
     opening: Opening the browser…
     page_insecure: Not secure
     page_unknown: Unknown address
     publication:
+      identity_mismatch: You were signed in as a taxpayer other than this profile's,
+        so Cadrumo saved nothing.
       kept_newer: A newer sign-in was already saved, so Cadrumo kept it.
       published: Your sign-in was saved. Everything else in Cadrumo can use it now.
       unchanged: Your sign-in didn't change.
