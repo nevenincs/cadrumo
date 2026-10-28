@@ -1,5 +1,6 @@
 import { server } from "../scripts/configuration.mjs";
 import { buildPath } from "../scripts/build-paths.mjs";
+import { testRunDirectory } from "./scripts/test-run-directory.mjs";
 import { defineConfig } from "@playwright/test";
 import { resolve } from "node:path";
 
@@ -8,6 +9,12 @@ const preview = `http://127.0.0.1:${previewPort}`;
 const scenarios = `http://127.0.0.1:${scenariosPort}`;
 const hot = `http://127.0.0.1:${hotPort}`;
 const viewport = { width: 1440, height: 1050 };
+const results = testRunDirectory(buildPath("desktop_results"));
+// The record `--last-failed` reads sits beside the runs, not in one of them.
+process.env.PLAYWRIGHT_LAST_RUN_OUTPUT_FILE ??= resolve(
+  buildPath("desktop_results"),
+  "last-run.json",
+);
 
 // Three projects, three servers, none of them the display `just dev` serves.
 // A test never reuses a running server and never meets the developer's: each
@@ -23,15 +30,13 @@ const viewport = { width: 1440, height: 1050 };
 export default defineConfig({
   testDir: "./tests",
   // Playwright empties this directory when a run starts, so it is the run's
-  // own: the benchmark, the catalogue screenshots and the packaged run keep
-  // theirs beside it.
-  outputDir: resolve(buildPath("desktop_results"), "browser"),
+  // own, under `runs/` of the build's test results: a concurrent run keeps
+  // its traces, and the benchmark, the catalogue screenshots and the
+  // packaged run keep theirs beside it.
+  outputDir: resolve(results, "browser"),
   reporter: [
     ["list"],
-    [
-      "json",
-      { outputFile: resolve(buildPath("desktop_results"), "results.json") },
-    ],
+    ["json", { outputFile: resolve(results, "results.json") }],
   ],
   use: { viewport, trace: "retain-on-failure" },
   projects: [

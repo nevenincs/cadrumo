@@ -585,6 +585,15 @@ for any project, and the builds run each time. To run the scenarios alone,
 building only their bundle, use
 `npx playwright test -c playwright.scenarios.config.ts`.
 
+Each run writes its traces, screenshots and `results.json` to a directory of
+its own, `desktop/test-results/runs/<start>-<pid>` under the build directory,
+because Playwright empties its output directory when a run starts: two runs at
+once keep each other's results. A run removes the directories of earlier runs
+that started more than a day ago and are no longer running. `--last-failed` reads
+`desktop/test-results/last-run.json`, which the latest run to finish wrote.
+Two runs at once in one checkout still need the same fixed ports, so the
+second fails to start its servers.
+
 ### Speed and memory
 
 ```sh
