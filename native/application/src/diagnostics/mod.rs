@@ -572,20 +572,15 @@ fn poisoned() -> ApplicationError {
     ApplicationError::new(ErrorCode::LockPoisoned, Operation::Logging)
 }
 
+// The integration tests include this same source for their own waiting.
+#[cfg(test)]
+#[path = "../../tests/support/mod.rs"]
+mod delivery_wait;
+
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{delivery_wait::delivered, *};
     use std::sync::Arc;
-
-    const DELIVERY: Duration = Duration::from_secs(5);
-
-    /// A missed delivery fails with the stage the writer is held in and the
-    /// per-stage time of its last batch.
-    fn delivered(diagnostics: &Diagnostics) {
-        let flushed = diagnostics.flush_logs(DELIVERY);
-        let status = diagnostics.log_delivery_status();
-        assert!(flushed, "delivery missed {DELIVERY:?}: {status:?}");
-    }
 
     fn fact() -> PanicFact {
         PanicFact::new(Some(std::panic::Location::caller()), Some("t"), 1, None)

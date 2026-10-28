@@ -13,12 +13,17 @@ use std::{
     sync::{
         Arc, Barrier,
         atomic::{AtomicBool, Ordering},
+        mpsc::RecvTimeoutError,
     },
     thread,
     time::{Duration, Instant},
 };
 
-const DELIVERY: Duration = Duration::from_secs(5);
+mod support;
+use support::delivered;
+
+/// Only a hung thread can outlast this; no healthy one is expected to be near it.
+const HANG: Duration = Duration::from_secs(60);
 
 #[test]
 fn terminal_traffic_is_measured_without_retaining_screen_contents() {
@@ -47,7 +52,7 @@ fn terminal_traffic_is_measured_without_retaining_screen_contents() {
 #[test]
 fn a_blocked_observer_cannot_block_recording_snapshots_or_file_delivery() {
     let directory = tempfile::tempdir_in(env!("CARGO_TARGET_TMPDIR")).unwrap();
-    let diagnostics = Diagnostics::default();
+    let diagnostics = Arc::new(Diagnostics::default());
     diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
     let (entered, observed) = std::sync::mpsc::sync_channel(1);
     let (release, wait) = std::sync::mpsc::sync_channel(1);
@@ -56,27 +61,34 @@ fn a_blocked_observer_cannot_block_recording_snapshots_or_file_delivery() {
     diagnostics.on_recorded(Arc::new(move || {
         if !once.swap(true, Ordering::AcqRel) {
             entered.try_send(()).unwrap();
-            wait.lock()
-                .unwrap()
-                .recv_timeout(Duration::from_secs(5))
-                .unwrap();
+            // Held until the test releases it, or drops the sender on its way out.
+            let _ = wait.lock().unwrap().recv();
         }
     }));
     diagnostics.event(EventKind::HostStarted, None, None);
-    observed.recv_timeout(Duration::from_secs(2)).unwrap();
-    let started = Instant::now();
-    for _ in 0..1000 {
-        diagnostics.host_outcome(HostStage::Manager, HostOutcome::Ready);
-        assert!(diagnostics.snapshot(0).events.len() <= 512);
-    }
-    let elapsed = started.elapsed();
+    observed
+        .recv_timeout(HANG)
+        .expect("the observer was never called");
+    // Recording and snapshots go on while the observer is held; were either to wait for it,
+    // this could not finish, because the observer is released only afterwards.
+    let (finished, recorded) = std::sync::mpsc::sync_channel(1);
+    let recording = diagnostics.clone();
+    let producer = thread::spawn(move || {
+        for _ in 0..1000 {
+            recording.host_outcome(HostStage::Manager, HostOutcome::Ready);
+            assert!(recording.snapshot(0).events.len() <= 512);
+        }
+        let _ = finished.send(());
+    });
+    let recorded = recorded.recv_timeout(HANG);
     let unblocked = release.try_send(());
     assert!(
-        elapsed < Duration::from_secs(1),
-        "diagnostic producer stalled: {elapsed:?}"
+        !matches!(recorded, Err(RecvTimeoutError::Timeout)),
+        "a diagnostic producer waited for the held observer"
     );
+    producer.join().unwrap();
     unblocked.unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let status = diagnostics.log_delivery_status();
     assert_eq!(status.accepted, status.completed);
     assert_eq!(status.dropped, 0);
@@ -98,7 +110,7 @@ fn private_causes_and_child_payloads_never_enter_native_logs() {
     assert!(error.source().is_some());
     diagnostics.failure(error);
     diagnostics.finish(id, Some(7), ProcessPhase::Exited);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(0);
     assert_eq!(snapshot.processes[0].stdout_bytes, secret.len() as u64);
     assert_eq!(snapshot.processes[0].exit_code, Some(7));
@@ -171,7 +183,7 @@ fn early_failure_is_durable_and_same_target_configuration_does_not_replay() {
         ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Environment)
             .caused_by(std::io::Error::other("synthetic-private-projection-output")),
     );
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let file = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
     let early = fs::read_to_string(&file).unwrap();
     assert_eq!(early.lines().count(), 2);
@@ -182,11 +194,11 @@ fn early_failure_is_durable_and_same_target_configuration_does_not_replay() {
     diagnostics
         .configure(&directory.path().join("."), 16384, 3)
         .unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     assert_eq!(fs::read_to_string(&file).unwrap(), early);
     diagnostics.host_stopped(1);
     diagnostics.configure(directory.path(), 16384, 3).unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let records: Vec<serde_json::Value> = fs::read_to_string(&file)
         .unwrap()
         .lines()
@@ -216,7 +228,7 @@ fn failures_retain_child_identity_and_safe_os_codes_only() {
     );
     diagnostics.failure_for(id, error);
     diagnostics.finish(id, Some(9), ProcessPhase::Failed);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert!(snapshot.output.is_empty());
     let failure = &snapshot.events[1];
@@ -255,7 +267,7 @@ fn host_lifecycle_records_are_ordered_and_preserved_before_configuration() {
     );
     diagnostics.host_stopped(69);
     diagnostics.configure(directory.path(), 4096, 2).unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert!(
         snapshot
@@ -333,7 +345,7 @@ fn real_spawn_failure_preserves_role_without_logging_launch_payloads() {
     assert_eq!(snapshot.events.len(), 1);
     assert_eq!(snapshot.events[0].role, Some(ProcessRole::Cli));
     assert!(snapshot.events[0].status.is_none());
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let log = std::fs::read_to_string(diagnostics.snapshot(0).paths.unwrap().current).unwrap();
     assert!(!log.contains("synthetic-private"));
     assert!(!log.contains("SYNTHETIC_SECRET"));
@@ -350,7 +362,7 @@ fn logging_failure_is_observable_without_replacing_process_result() {
     let diagnostics = Diagnostics::default();
     diagnostics.event(EventKind::HostStarted, None, None);
     diagnostics.configure(&obstruction, 4096, 2).unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let failure = diagnostics.snapshot(0).log_failure.unwrap();
     diagnostics.failure(failure);
     assert_eq!(
@@ -367,15 +379,15 @@ fn explicit_file_targets_replay_and_rotate_without_using_the_default_sink() {
     let diagnostics = Diagnostics::new(DiagnosticSource::Manager);
     diagnostics.host_event(EventKind::HostStarted, HostStage::Admission);
     diagnostics.configure_file(&current, 1024, 2).unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let early = fs::read_to_string(&current).unwrap();
     diagnostics.configure_file(&current, 1024, 2).unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     assert_eq!(fs::read_to_string(&current).unwrap(), early);
     for _ in 0..30 {
         diagnostics.host_outcome(HostStage::Supervision, HostOutcome::Ready);
     }
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(0);
     assert_eq!(snapshot.paths.as_ref().unwrap().current, current);
     assert_eq!(
@@ -463,15 +475,18 @@ fn concurrent_writers_rotate_complete_records_and_keep_bounded_state() {
     diagnostics
         .configure(directory.path(), FILE_BYTES, 2)
         .unwrap();
-    let barrier = Arc::new(Barrier::new(WRITERS + 1));
+    // The reader starts with the writers, so its first snapshot is taken while they run.
+    let barrier = Arc::new(Barrier::new(WRITERS + 2));
     let done = Arc::new(AtomicBool::new(false));
     let started = Instant::now();
     let observed = thread::scope(|scope| {
         let reader_diagnostics = diagnostics.clone();
         let reader_done = done.clone();
+        let reader_barrier = barrier.clone();
         let reader = scope.spawn(move || {
             let mut snapshots = 0;
-            while !reader_done.load(Ordering::Acquire) {
+            reader_barrier.wait();
+            loop {
                 let snapshot = reader_diagnostics.snapshot(0);
                 assert!(snapshot.events.len() <= 512);
                 assert!(snapshot.processes.len() <= 128);
@@ -491,6 +506,9 @@ fn concurrent_writers_rotate_complete_records_and_keep_bounded_state() {
                         .all(|events| events[0].sequence < events[1].sequence)
                 );
                 snapshots += 1;
+                if reader_done.load(Ordering::Acquire) {
+                    break;
+                }
                 thread::sleep(Duration::from_millis(1));
             }
             snapshots
@@ -532,7 +550,7 @@ fn concurrent_writers_rotate_complete_records_and_keep_bounded_state() {
         observed
     });
     let elapsed = started.elapsed();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(0);
     assert!(snapshot.log_failure.is_none());
     assert_eq!(snapshot.events.len(), 512);
@@ -598,7 +616,7 @@ fn failed_configuration_recovers_buffered_events_without_replacing_the_primary()
         .caused_by(std::io::Error::other("synthetic-private-environment-error"));
     diagnostics.host_failure(HostStage::Environment, primary.clone());
     diagnostics.configure(&obstruction, 8192, 2).unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let sink_error = diagnostics.snapshot(0).log_failure.unwrap();
     diagnostics.failure(sink_error);
     assert!(diagnostics.snapshot(u64::MAX).paths.is_none());
@@ -608,7 +626,7 @@ fn failed_configuration_recovers_buffered_events_without_replacing_the_primary()
     fs::rename(&obstruction, &preserved).unwrap();
     diagnostics.configure(&obstruction, 8192, 2).unwrap();
     diagnostics.host_stopped(1);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert!(snapshot.log_failure.is_none());
     let log = fs::read_to_string(snapshot.paths.unwrap().current).unwrap();
@@ -630,7 +648,7 @@ fn a_busy_sink_keeps_the_primary_in_memory_and_future_writes_resume() {
     let diagnostics = Diagnostics::default();
     diagnostics.configure(directory.path(), 8192, 2).unwrap();
     diagnostics.event(EventKind::HostStarted, None, None);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let paths = diagnostics.snapshot(u64::MAX).paths.unwrap();
     let lock = fs::OpenOptions::new()
         .read(true)
@@ -642,7 +660,7 @@ fn a_busy_sink_keeps_the_primary_in_memory_and_future_writes_resume() {
         HostStage::Environment,
         ApplicationError::new(ErrorCode::EnvironmentFailed, Operation::Environment),
     );
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let blocked = diagnostics.snapshot(u64::MAX);
     assert_eq!(blocked.events.len(), 2);
     assert_eq!(
@@ -657,7 +675,7 @@ fn a_busy_sink_keeps_the_primary_in_memory_and_future_writes_resume() {
     drop(lock);
 
     diagnostics.host_stopped(1);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let log = fs::read_to_string(paths.current).unwrap();
     let sequences: Vec<u64> = log
         .lines()
@@ -693,7 +711,7 @@ fn incomplete_configuration_retry_preserves_buffered_events_without_duplicates()
     diagnostics
         .configure(directory.path(), first_record_bytes, 2)
         .unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let error = diagnostics.snapshot(0).log_failure.unwrap();
     assert_eq!(error.code, ErrorCode::LogUnavailable);
     diagnostics.failure(error);
@@ -714,7 +732,7 @@ fn incomplete_configuration_retry_preserves_buffered_events_without_duplicates()
 
     diagnostics.configure(directory.path(), 8192, 2).unwrap();
     diagnostics.host_stopped(1);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let log = fs::read_to_string(file).unwrap();
     assert!(!log.contains("synthetic-private"));
     let records: Vec<serde_json::Value> = log
@@ -761,10 +779,10 @@ fn retrying_a_different_target_replays_all_events_and_preserves_the_active_sink_
     diagnostics
         .configure(&interrupted, first_record_bytes, 2)
         .unwrap();
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let error = diagnostics.snapshot(0).log_failure.unwrap();
     diagnostics.failure(error);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(
         snapshot.paths.unwrap().current,
@@ -783,7 +801,7 @@ fn retrying_a_different_target_replays_all_events_and_preserves_the_active_sink_
 
     diagnostics.configure(&replacement, 8192, 2).unwrap();
     diagnostics.host_stopped(1);
-    assert!(diagnostics.flush_logs(DELIVERY));
+    delivered(&diagnostics);
     let installed = diagnostics.snapshot(u64::MAX).paths.unwrap().current;
     assert_eq!(installed, replacement.join("cadrumo-native.jsonl"));
     let sequences: Vec<u64> = fs::read_to_string(installed)

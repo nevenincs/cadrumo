@@ -373,7 +373,26 @@ pub(super) fn unavailable() -> ApplicationError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::diagnostics::{Diagnostics, EventKind};
+    use crate::diagnostics::{Diagnostics, EventKind, delivery_wait::delivered};
+
+    /// Only a writer that is hung can outlast this; no healthy one is expected to be near it.
+    const HANG: Duration = Duration::from_secs(60);
+
+    /// Waits for the writer to enter `stage`, which depends on when the machine schedules it.
+    fn entered(writer: &LogWriter, stage: WriterStage) -> DeliveryStatus {
+        let started = Instant::now();
+        loop {
+            let status = writer.status();
+            if status.stage == stage {
+                return status;
+            }
+            assert!(
+                started.elapsed() < HANG,
+                "writer never entered {stage:?}: {status:?}"
+            );
+            thread::sleep(Duration::from_millis(1));
+        }
+    }
 
     #[test]
     fn a_missed_flush_names_the_stage_the_writer_is_held_in() {
@@ -383,17 +402,19 @@ mod tests {
         let state = diagnostics.state.clone();
         let writer = LogWriter::new(state.clone());
         assert!(writer.configure(file.clone(), Vec::new()));
-        assert!(writer.flush(Duration::from_secs(60)));
+        assert!(writer.flush(HANG));
         assert_eq!(writer.status().stage, WriterStage::Waiting);
 
         let ring = state.lock().unwrap();
         assert!(writer.configure(file, Vec::new()));
+        entered(&writer, WriterStage::EventRing);
+        // Held at the ring, the flush is not answered however long it is waited for.
         assert!(!writer.flush(Duration::from_millis(50)));
         let held = writer.status();
         assert_eq!(held.stage, WriterStage::EventRing);
         assert!(held.stage_micros >= 50_000, "{held:?}");
         drop(ring);
-        assert!(writer.flush(Duration::from_secs(60)));
+        assert!(writer.flush(HANG));
         assert_eq!(writer.status().stage, WriterStage::Waiting);
     }
 
@@ -403,7 +424,7 @@ mod tests {
         let diagnostics = Diagnostics::default();
         diagnostics.configure(directory.path(), 1 << 20, 1).unwrap();
         diagnostics.event(EventKind::HostStarted, None, None);
-        assert!(diagnostics.flush_logs(Duration::from_secs(60)));
+        delivered(&diagnostics);
         let status = diagnostics.log_delivery_status();
         let spent = status.last_batch;
         assert_eq!(status.stage, WriterStage::Waiting);
@@ -423,19 +444,26 @@ mod tests {
         let state = diagnostics.state.clone();
         let guard = state.lock().unwrap();
         let events: Vec<_> = guard.events.iter().cloned().collect();
-        let writer = LogWriter::new(state.clone());
+        let writer = Arc::new(LogWriter::new(state.clone()));
         let file = LogFile::new(directory.path(), 1 << 20, 1).unwrap();
         assert!(writer.configure(file.clone(), Vec::new()));
-        let started = Instant::now();
-        for _ in 0..100 {
-            writer.configure(file.clone(), events.clone());
-        }
-        assert!(started.elapsed() < Duration::from_secs(1));
+        // Submitting never waits for the writer, which stays held at the ring until the
+        // guard is dropped below; were it to wait, this could not finish.
+        let (finished, submitted) = mpsc::sync_channel(1);
+        let producer = writer.clone();
+        thread::spawn(move || {
+            for _ in 0..100 {
+                producer.configure(file.clone(), events.clone());
+            }
+            let _ = finished.send(());
+        });
+        let submitted = submitted.recv_timeout(HANG);
+        assert!(submitted.is_ok(), "submission waited for the held writer");
         assert!(writer.status().retained_events <= 4096);
         assert!(writer.status().dropped > 0);
         assert!(!writer.flush(Duration::from_millis(10)));
         drop(guard);
-        assert!(writer.flush(Duration::from_secs(2)));
+        assert!(writer.flush(HANG));
         assert_eq!(writer.status().retained_events, 0);
     }
 }

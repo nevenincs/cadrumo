@@ -1,11 +1,14 @@
-//! Recoverable panics drain within an explicit bound. Aborting boundaries
-//! remain private even when the diagnostic writer has no time to run.
+//! Recoverable panics are drained to the log before the process ends. Aborting
+//! boundaries remain private even when the diagnostic writer has no time to run.
 use cadrumo_application::{
     diagnostics::{DiagnosticSource, Diagnostics, panic},
     error::application::Operation,
 };
 use serde_json::Value;
-use std::{env, fs, path::Path, process::Command, sync::Arc, time::Duration};
+use std::{env, fs, path::Path, process::Command, sync::Arc};
+
+mod support;
+use support::delivered;
 
 const SECRET: &str = "ES12345678Z-synthetic-private-payload";
 const CHILD: &str = "--panic-child";
@@ -164,7 +167,7 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
         "main" => {
             let caught = std::panic::catch_unwind(|| failing().unwrap()); // site:main
             assert!(caught.is_err());
-            assert!(diagnostics.flush_logs(Duration::from_secs(2)));
+            delivered(&diagnostics);
             std::process::exit(101)
         }
         "thread" => {
@@ -175,7 +178,7 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
                 .join();
             assert!(joined.is_err());
             diagnostics.contained_panic(None, Operation::Launch);
-            assert!(diagnostics.flush_logs(Duration::from_secs(2)));
+            delivered(&diagnostics);
             std::process::exit(CONTAINED)
         }
         "task" => {
@@ -187,7 +190,7 @@ fn child(scenario: &str, hooked: bool, directory: &Path) -> ! {
             });
             assert!(joined.is_err_and(|error| error.is_panic()));
             diagnostics.contained_panic(None, Operation::Launch);
-            assert!(diagnostics.flush_logs(Duration::from_secs(2)));
+            delivered(&diagnostics);
             std::process::exit(CONTAINED)
         }
         "callback" => {

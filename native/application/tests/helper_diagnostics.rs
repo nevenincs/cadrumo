@@ -7,7 +7,10 @@ use cadrumo_application::{
     process::status::{ProcessPhase, ProcessRole, Stream},
 };
 use serde_json::{Value, json};
-use std::{fs, time::Duration};
+use std::fs;
+
+mod support;
+use support::delivered;
 
 fn timing(outcome: HelperOutcome) -> HelperTiming {
     HelperTiming {
@@ -36,7 +39,7 @@ fn helper_summary_persists_only_closed_timings_and_existing_process_attribution(
     diagnostics.finish(process, Some(7), ProcessPhase::Exited);
     let fact = timing(HelperOutcome::Completed);
     diagnostics.helper_timing(Some(process), fact);
-    assert!(diagnostics.flush_logs(Duration::from_secs(2)));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     let event = snapshot.events.last().unwrap();
     assert!(matches!(event.kind, EventKind::HelperTiming));
@@ -80,7 +83,7 @@ fn unavailable_sink_does_not_lose_timing_or_claim_a_spawn_for_admission_refusal(
         ..timing(HelperOutcome::AdmissionRefused)
     };
     diagnostics.helper_timing(None, fact);
-    assert!(diagnostics.flush_logs(Duration::from_secs(2)));
+    delivered(&diagnostics);
     let snapshot = diagnostics.snapshot(u64::MAX);
     assert_eq!(
         snapshot.log_failure.as_ref().unwrap().code,
