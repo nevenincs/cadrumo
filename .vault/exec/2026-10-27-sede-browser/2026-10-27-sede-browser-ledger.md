@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:614f57fa9113d8860af793e3cd6cdf6c75441cbd739624493f2067c5501c3d7b'
+body_hash: 'sha256:c9bad1e5ce6a794b425662906858da4553234e649c354ecd4b6908b0ce2cef1c'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -430,6 +430,10 @@ related:
 - `S02` `verify:` `uv run --no-sync ty check src/cadrumo_runtime/host/view_stream_relay.py src/cadrumo_runtime/host/tests/test_view_stream_relay.py src/cadrumo_runtime/host/tests/test_view_stream_integration.py` -> `pass`
 - `S02` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 - `S02` `by:` `vaultspec-high-executor`
+- `S03` `M` `native/application/src/view_stream/lane.rs`
+- `S03` `M` `native/platform/src/runtime_pipe.rs`
+- `S03` `verify:` `ctest --preset debug -R ^(application|platform)\.(rust|resolver|fmt|clippy|features\.clippy)$` -> `pass`
+- `S03` `by:` `implementation engineer`
 
 ## Notes
 
@@ -474,3 +478,4 @@ related:
 - `S12` signed-out-page-verification: reusing one browser across verifications was not done; BrowserSession launches one browser per context and refuses a second context
 - `S10` aeat-click-target: an AEAT click on an open view brings the Browser page forward and navigates the view home; landed in the operator checkpoint commit 7de262810f together with the offer-removal hunks
 - `S16` Page state marker landed in the operator-requested checkpoint commit 7de262810f; offer codes removed in 3dab8ab998.
+- `S03` desktop view lane writes bounded by connection liveness, not 5 s (commit b12996b911)

@@ -132,6 +132,8 @@ Resolved: 509b6b5646 (reads Mis Expedientes, which names no taxpayer in its requ
 
 Resolved: 5ff0a8ad19
 
+Resolved: b12996b911 (the desktop lane, `native/application/src/view_stream/lane.rs`, bounds its upstream writes by connection liveness and returns replaced images' credit off the reader thread).
+
 ### signed-out-jar-rotation | low | The refused-jar memo counts every cookie value in the context
 
 `src/cadrumo/application/live/sede_view_operation.py:207-229` digests every cookie's domain, path, name and value, including other sites' cookies and any rotating load-balancer or WAF cookie on the AEAT hosts. If AEAT rotates such a value per response, each signed-out AEAT load still launches a provider Chromium under the acquisition lock, which the original finding meant to stop. Fix: measure it during P06.S14. If it recurs, key the memo on the cookies of the AEAT and Cl@ve authentication hosts.
