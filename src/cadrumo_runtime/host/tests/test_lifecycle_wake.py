@@ -121,6 +121,10 @@ class _Host:
     def retire_replaced_binding(self, *, deadline: float) -> bool:
         return False
 
+    def settle_lost_owners(self, *, deadline: float) -> None:
+        # No worker incarnation of this profile was ever lost.
+        return None
+
     def observe_human_lock_down(self) -> tuple[UUID, ...]:
         self._observe()
         return ()
