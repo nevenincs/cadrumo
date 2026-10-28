@@ -32,7 +32,8 @@ from cadrumo.core.logging import (
     get_logger,
 )
 from cadrumo.core.observability.tests.sink_scope import attach_run_sink, detach_run_sink
-from cadrumo.tests.log_records import delivered_records, delivery_sinks
+from cadrumo.core.tests.log_sinks import delivery_sinks
+from cadrumo.tests.log_records import delivered_records
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
