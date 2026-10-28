@@ -255,12 +255,17 @@ test("settings, palette and docs share the language without restarting terminals
   });
   await page.goto("/scenarios.html?scenario=signed-in&latency=0&bar=off");
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
-  const terminalStarts = await page.evaluate(
-    () =>
-      (window.__scenarioHostCalls ?? []).filter((call) =>
-        call.startsWith("openTerminal tui"),
-      ).length,
-  );
+  const tuiStarts = () =>
+    page.evaluate(
+      () =>
+        (window.__scenarioHostCalls ?? []).filter((call) =>
+          call.startsWith("openTerminal tui"),
+        ).length,
+    );
+  // The TUI starts once the terminal font is loaded, after the first draw:
+  // the count is taken once that start is in.
+  const terminalStarts = 1;
+  await expect.poll(tuiStarts).toBe(terminalStarts);
   await expect
     .poll(() =>
       page.evaluate(() => {
