@@ -15,7 +15,7 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import Any, override
+from typing import Any
 
 import pydantic
 import pytest
@@ -23,8 +23,16 @@ import pytest
 from cadrumo.core import logging as _logging_mod
 from cadrumo.core.config import override_settings
 from cadrumo.core.log_extra import LogExtra
-from cadrumo.core.logging import SecretScrubbingFilter, configure_logging, default_log_file_path, get_logger
+from cadrumo.core.logging import (
+    SecretScrubbingFilter,
+    configure_logging,
+    default_log_file_path,
+    diagnostic_delivery_status,
+    flush_logging,
+    get_logger,
+)
 from cadrumo.core.observability.tests.sink_scope import attach_run_sink, detach_run_sink
+from cadrumo.tests.log_records import delivered_records, delivery_sinks
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -60,6 +68,7 @@ def _render_info(message: str, *args: object) -> str:
                 "region": "es",
             },
         )
+        assert flush_logging(timeout=5)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -71,6 +80,8 @@ def _force_configure_logging() -> None:
     _logging_mod._configured = False
     try:
         _logging_mod.configure_logging()
+        # Configuration runs on the dispatch thread: restoring the latch first would make it a no-op.
+        assert flush_logging(timeout=5)
     finally:
         _logging_mod._configured = original_configured or True
 
@@ -95,7 +106,6 @@ def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, caps
 
     marker = "warning-route-marker-7f6a3c"
     log_dir = tmp_path / "logs"
-    original_configured = _logging_mod._configured
     try:
         _logging_mod._configured = False
         with override_settings(cadrumo_log_dir=log_dir):
@@ -103,14 +113,14 @@ def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, caps
             logger = get_logger("aeat-test_logging.default_route")
 
             logger.warning(marker)
+            # The warning is written by the dispatch thread and the file sink: read neither before they finish.
+            assert flush_logging(timeout=5)
 
             captured = capsys.readouterr()
             assert marker not in captured.err
             assert marker in _read_log_tail(default_log_file_path())
     finally:
-        _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+        _force_configure_logging()
 
 
 def _read_log_tail(path: Path, *, max_bytes: int = 64 * 1024) -> str:
@@ -139,33 +149,36 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
     blocker.write_text("x", encoding="utf-8")
     dead_log_dir = blocker / "probe-logs"
 
-    root_logger = logging.getLogger()
-    original_configured = _logging_mod._configured
+    failed_before = diagnostic_delivery_status()["records"].failed
     try:
         _logging_mod._configured = False
         with override_settings(cadrumo_log_dir=dead_log_dir):
-            # Must not raise despite the uncreatable directory.
             configure_logging()
 
-        file_handlers = [
-            handler
-            for handler in root_logger.handlers
-            if isinstance(handler, logging.FileHandler) and Path(handler.baseFilename).parent == dead_log_dir
+        # Configuration runs on the dispatch thread, which counts a failure instead of raising it.
+        sinks = delivery_sinks()
+        assert diagnostic_delivery_status()["records"].failed == failed_before, (
+            "configuration must not fail despite the uncreatable directory"
+        )
+        file_sinks = [
+            sink
+            for sink in sinks
+            if isinstance(sink, logging.FileHandler) and Path(sink.baseFilename).parent == dead_log_dir
         ]
-        assert file_handlers == [], "no FileHandler may point at the uncreatable log directory"
-        assert any(isinstance(handler, logging.StreamHandler) for handler in root_logger.handlers), (
+        assert file_sinks == [], "no FileHandler may point at the uncreatable log directory"
+        assert any(isinstance(sink, logging.StreamHandler) for sink in sinks), (
             "stderr StreamHandler must remain so diagnostics still surface"
         )
 
+        # The degrade diagnostic is logged by the configuration step itself, so it is admitted after the first drain.
+        assert flush_logging(timeout=5)
         captured = capsys.readouterr()
         assert "stderr-only" in captured.err
         assert "CADRUMO_LOCAL_STORAGE_ROOT" in captured.err
         assert not dead_log_dir.exists()
     finally:
         # Rebuild the normal configuration so sibling tests see a healthy logger.
-        _logging_mod._configured = False
-        configure_logging()
-        _logging_mod._configured = original_configured or True
+        _force_configure_logging()
 
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:
@@ -188,6 +201,7 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_rendered_output() -> None:
                     "region": "es",
                 },
             )
+        assert flush_logging(timeout=5)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -219,6 +233,7 @@ def test_secret_scrubbing_redacts_inline_message_text_when_tuple_args_exist() ->
                 "region": "es",
             },
         )
+        assert flush_logging(timeout=5)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -287,6 +302,7 @@ def test_secret_scrubbing_applies_shared_shape_rules_to_plain_text_args() -> Non
                 "region": "es",
             },
         )
+        assert flush_logging(timeout=5)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -385,6 +401,7 @@ def test_non_sensitive_fields_pass_through_unchanged() -> None:
                 "region": "es",
             },
         )
+        assert flush_logging(timeout=5)
     finally:
         root_logger.removeHandler(handler)
         root_logger.setLevel(previous_root_level)
@@ -501,36 +518,16 @@ def test_log_extra_rejects_a_non_scalar_value() -> None:
         LogExtra({"nested": invalid_nested_value})
 
 
-class _RecordCapturingHandler(logging.Handler):
-    """Minimal handler that keeps the raw :class:`logging.LogRecord` instances."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.records: list[logging.LogRecord] = []
-
-    @override
-    def emit(self, record: logging.LogRecord) -> None:
-        self.records.append(record)
-
-
-def test_log_extra_materialised_extra_survives_the_real_logging_pipeline() -> None:
+def test_log_extra_materialised_extra_survives_the_real_logging_pipeline(caplog: pytest.LogCaptureFixture) -> None:
     """The materialised dict flows through the real stdlib logging pipeline's ``extra=``."""
     logger = get_logger("aeat-test_logging.log_extra")
-    root_logger = logging.getLogger()
-    previous_root_level = root_logger.level
-    root_logger.setLevel(logging.INFO)
-    handler = _RecordCapturingHandler()
-    handler.setLevel(logging.INFO)
-    root_logger.addHandler(handler)
     extra = LogExtra({"modelo": "303", "period": "1T", "observation_count": 5})
-    try:
+    with caplog.at_level(logging.INFO):
         logger.info("ran aggregation", extra=extra.for_logging())
-    finally:
-        root_logger.removeHandler(handler)
-        root_logger.setLevel(previous_root_level)
+        records = delivered_records(caplog, logger.name)
 
-    assert len(handler.records) == 1
-    record = handler.records[0]
+    assert len(records) == 1
+    record = records[0]
     assert record.getMessage() == "ran aggregation"
     record_attributes = vars(record)
     assert record_attributes["modelo"] == "303"

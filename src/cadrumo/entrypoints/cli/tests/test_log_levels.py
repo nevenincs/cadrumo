@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import logging
+from typing import override
 
 import pytest
 
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
-from ....core.logging import configure_logging, set_log_level
+from ....core.logging import configure_logging, flush_logging, get_logger, set_log_level
 from ....core.operator_action_enums import ActionEvidenceProvenance, NoRecoveryOutcome
+from ....tests.log_records import delivery_sinks
 from .._log_levels import LogLevel, LogLevelResolutionError, apply_to_root_logger, resolve_log_level
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+_PROBE_LOGGER = "cadrumo.tests.log_levels"
 
 
 @pytest.fixture(autouse=True)
@@ -75,17 +79,64 @@ def test_apply_log_level_updates_stderr_handlers() -> None:
     ):
         apply_to_root_logger(log_level)
 
-        root_logger = logging.getLogger()
-        stderr_handlers = [handler for handler in root_logger.handlers if not isinstance(handler, logging.FileHandler)]
+        stderr_sinks = [sink for sink in delivery_sinks() if not isinstance(sink, logging.FileHandler)]
 
-        if not stderr_handlers:
+        if not stderr_sinks:
             failures.append(f"{log_level.value}: no stderr handlers")
             continue
-        for handler in stderr_handlers:
-            if handler.level != stderr_level:
-                failures.append(f"{log_level.value}: {handler!r} level {handler.level}, expected {stderr_level}")
+        for sink in stderr_sinks:
+            if sink.level != stderr_level:
+                failures.append(f"{log_level.value}: {sink!r} level {sink.level}, expected {stderr_level}")
 
     assert not failures, "\n".join(failures)
+
+
+class _LevelProbe(logging.Filter):
+    """Notes the severities of the probe logger's records that reach a handler, and swallows them."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.reached: list[int] = []
+
+    @override
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name != _PROBE_LOGGER:
+            return True
+        self.reached.append(record.levelno)
+        return False
+
+
+@pytest.mark.parametrize(
+    ("log_level", "reaching"),
+    [
+        pytest.param(LogLevel.DEFAULT, [logging.ERROR], id="default"),
+        pytest.param(LogLevel.VERBOSE, [logging.INFO, logging.WARNING, logging.ERROR], id="verbose"),
+    ],
+)
+def test_the_applied_level_decides_which_records_reach_the_stderr_handlers(
+    log_level: LogLevel, reaching: list[int]
+) -> None:
+    logger = get_logger(_PROBE_LOGGER)
+    apply_to_root_logger(log_level)
+    # A NullHandler neither filters nor writes, so it has nothing to observe.
+    probed = [
+        (sink, _LevelProbe())
+        for sink in delivery_sinks()
+        if not isinstance(sink, logging.FileHandler | logging.NullHandler)
+    ]
+    assert probed, "expected at least one stderr handler after apply_to_root_logger()"
+    for sink, probe in probed:
+        sink.addFilter(probe)
+    try:
+        for level in (logging.DEBUG, logging.INFO, logging.WARNING, logging.ERROR):
+            logger.log(level, "level probe")
+        assert flush_logging(timeout=5)
+    finally:
+        for sink, probe in probed:
+            sink.removeFilter(probe)
+
+    reached = [(repr(sink), probe.reached) for sink, probe in probed]
+    assert all(severities == reaching for _, severities in reached), f"expected {reaching} at each handler: {reached}"
 
 
 def test_set_log_level_configures_root_file_and_non_file_handlers() -> None:
@@ -93,42 +144,44 @@ def test_set_log_level_configures_root_file_and_non_file_handlers() -> None:
 
     Calls :func:`configure_logging` directly (mirroring the production path),
     then calls :func:`set_log_level`, and asserts the effective level on the
-    root logger plus file and non-file handlers attached by dictConfig. No
-    mocks; exercises real logger state.
+    root logger plus file and non-file handlers attached by configuration. The
+    levels are those of the handlers that write: the root handlers are
+    asynchronous wrappers whose sinks carry them. No mocks; exercises real
+    logger state.
     """
     configure_logging()
     set_log_level(logging.ERROR)
     root_logger = logging.getLogger()
+    sinks = delivery_sinks()
 
     assert root_logger.level == logging.DEBUG
-    file_handlers = [h for h in root_logger.handlers if isinstance(h, logging.FileHandler)]
-    assert file_handlers, "expected at least one FileHandler after configure_logging()"
-    assert all(h.level == logging.DEBUG for h in file_handlers)
-    non_file_handlers = [h for h in root_logger.handlers if not isinstance(h, logging.FileHandler)]
-    assert non_file_handlers, "expected at least one non-file handler after configure_logging()"
-    assert all(h.level == logging.ERROR for h in non_file_handlers)
+    file_sinks = [sink for sink in sinks if isinstance(sink, logging.FileHandler)]
+    assert file_sinks, "expected at least one FileHandler after configure_logging()"
+    assert all(sink.level == logging.DEBUG for sink in file_sinks)
+    non_file_sinks = [sink for sink in sinks if not isinstance(sink, logging.FileHandler)]
+    assert non_file_sinks, "expected at least one non-file handler after configure_logging()"
+    assert all(sink.level == logging.ERROR for sink in non_file_sinks)
 
 
 def test_all_handlers_reflect_debug_level_after_call() -> None:
     """Every handler, root and otherwise, has a level consistent with a DEBUG call."""
     configure_logging()
     set_log_level(logging.DEBUG)
-    root_logger = logging.getLogger()
-    assert root_logger.handlers, "root logger must have handlers"
-    for handler in root_logger.handlers:
+    sinks = delivery_sinks()
+    assert sinks, "root logger must have handlers"
+    for sink in sinks:
         # All handlers must be reachable at DEBUG: file at DEBUG, non-file at
         # DEBUG because DEBUG was requested.
-        assert handler.level == logging.DEBUG, f"handler {handler!r} level unexpected"
+        assert sink.level == logging.DEBUG, f"handler {sink!r} level unexpected"
 
 
 def test_multiple_set_log_level_calls_each_take_effect() -> None:
     """Successive set_log_level calls each update handler levels idempotently."""
     configure_logging()
     set_log_level(logging.ERROR)
-    root_logger = logging.getLogger()
-    non_file_before = [h for h in root_logger.handlers if not isinstance(h, logging.FileHandler)]
-    assert all(h.level == logging.ERROR for h in non_file_before)
+    non_file_before = [sink for sink in delivery_sinks() if not isinstance(sink, logging.FileHandler)]
+    assert all(sink.level == logging.ERROR for sink in non_file_before)
 
     set_log_level(logging.INFO)
-    non_file_after = [h for h in root_logger.handlers if not isinstance(h, logging.FileHandler)]
-    assert all(h.level == logging.INFO for h in non_file_after)
+    non_file_after = [sink for sink in delivery_sinks() if not isinstance(sink, logging.FileHandler)]
+    assert all(sink.level == logging.INFO for sink in non_file_after)
