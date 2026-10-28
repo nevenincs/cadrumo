@@ -33,6 +33,7 @@ from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability
 from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.transport.enrollment_client import NativeEnrollmentClient
@@ -138,7 +139,11 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
         def poll_requester(enrollment: NativeEnrollmentClient) -> None:
             deadline = time.monotonic() + 75
             while not done.is_set() and time.monotonic() < deadline:
-                enrollment.poll(timeout=10)
+                # A delivery exchange waits behind the publication fence the approval holds
+                # while it commits; a shorter poll ends the delivery being approved.
+                enrollment.poll(
+                    timeout=min(max(0.0, deadline - time.monotonic()), MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
+                )
 
         with override_settings(cadrumo_local_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
             running = pool.submit(server.serve)

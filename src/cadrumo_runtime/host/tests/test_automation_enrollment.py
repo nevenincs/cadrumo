@@ -43,7 +43,7 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello
-from cadrumo_client.contracts.deadline_budget import exchange_deadline
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS, exchange_deadline
 from cadrumo_client.contracts.enrollment_access import EnrollmentInspect, EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.operation_access import (
@@ -373,7 +373,9 @@ def test_preunlock_requester_receives_protected_credential_then_fresh_api_login(
 
                     def poll_client() -> None:
                         while not done.is_set():
-                            client.poll(timeout=10)
+                            # A delivery exchange waits behind the publication fence the approval holds
+                            # while it commits; a shorter poll ends the delivery being approved.
+                            client.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
 
                     polling = pool.submit(poll_client)
                     try:
@@ -535,7 +537,9 @@ def test_client_native_store_failure_does_not_complete_enrollment(tmp_path: Path
 
                     def poll_client() -> None:
                         while not done.is_set():
-                            client.poll(timeout=10)
+                            # A delivery exchange waits behind the publication fence the approval holds
+                            # while it commits; a shorter poll ends the delivery being approved.
+                            client.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
 
                     polling = pool.submit(poll_client)
                     try:

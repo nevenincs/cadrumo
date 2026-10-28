@@ -31,6 +31,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.contracts.profile_access import AccessRefusal
@@ -243,7 +244,13 @@ def test_installed_cli_inspect_approve_and_decline_preserve_two_proof_channels(t
                         def poll_requester() -> None:
                             deadline = time.monotonic() + 75
                             while not done.is_set() and time.monotonic() < deadline:
-                                enrollment.poll(timeout=10)
+                                # A delivery exchange waits behind the publication fence the approval holds
+                                # while it commits; a shorter poll ends the delivery being approved.
+                                enrollment.poll(
+                                    timeout=min(
+                                        max(0.0, deadline - time.monotonic()), MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
+                                    )
+                                )
 
                         polling = pool.submit(poll_requester)
                         try:

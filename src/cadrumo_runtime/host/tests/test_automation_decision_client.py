@@ -24,6 +24,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, AuthorityState, Availability
 from cadrumo_client.contracts.contracts import ClientHello
+from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.enrollment_access import EnrollmentPrepare, EnrollmentPrepared
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
 from cadrumo_client.transport.automation_decision import AutomationDecisionRunError, run_automation_decision
@@ -169,7 +170,9 @@ def test_native_reviewed_approve_and_decline_use_decision_client_and_requester_p
 
                     def poll_requester() -> None:
                         while not done.is_set():
-                            enrollment.poll(timeout=10)
+                            # A delivery exchange waits behind the publication fence the approval holds
+                            # while it commits; a shorter poll ends the delivery being approved.
+                            enrollment.poll(timeout=MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
 
                     polling = pool.submit(poll_requester)
                     try:
