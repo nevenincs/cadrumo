@@ -7,14 +7,21 @@ that supplies them is not the behaviour under test.
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
-from contextlib import AbstractContextManager, asynccontextmanager, contextmanager
+from collections.abc import AsyncGenerator, Callable, Generator
+from contextlib import AbstractAsyncContextManager, AbstractContextManager, asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Final
 from uuid import UUID
 
 from pydantic import SecretStr
 
+from cadrumo.adapters.outbound.aeat.browser.tests.real_http_boundary import (
+    LocalHttpBoundary,
+    opened_http_boundary,
+    real_browser_factory,
+)
+from cadrumo.adapters.outbound.aeat.browser.tests.view_page_support import until
+from cadrumo.adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -22,8 +29,12 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profi
 from cadrumo.application.auth.acquisition_lock import AuthAcquisitionLockState, inspect_auth_acquisition_lock
 from cadrumo.application.auth.operator import configure_operator_auth
 from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
+from cadrumo.application.auth.protocols import BrowserSessionFactoryPort
 from cadrumo.application.auth.sessions import storage_state_paths
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from cadrumo.application.operations.models import OperationId
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.operations import OperationEffect
@@ -155,3 +166,17 @@ class CertificateViewSessionWorld:
 
     def stored_cookie_names(self) -> set[str]:
         return stored_cookie_names()
+
+    def opened_http_boundary(self) -> AbstractAsyncContextManager[LocalHttpBoundary]:
+        return opened_http_boundary()
+
+    def browser_session_factory(self, *, boundary: LocalHttpBoundary, profile_name: str) -> BrowserSessionFactoryPort:
+        return real_browser_factory(boundary=boundary, profile_name=profile_name)
+
+    async def until(self, condition: Callable[[], bool], *, timeout: float) -> None:
+        await until(condition, timeout=timeout)
+
+    async def run_to_settlement(
+        self, supervisor: OperationSupervisor, operation_id: OperationId
+    ) -> OperationPersistedSnapshot:
+        return await run_to_settlement(supervisor, operation_id)

@@ -1,4 +1,4 @@
-"""The registered profile, session custody and operation host a Sede view test runs against.
+"""The registered profile, session custody, browser and supervision a Sede view test runs against.
 
 The tax application owns how a profile with certificate-backed session custody
 is built. The runtime tests consume that world through these ports and receive
@@ -7,6 +7,7 @@ it from the repository fixture, so they import no tax test support.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from contextlib import AbstractAsyncContextManager, AbstractContextManager
 from pathlib import Path
 from typing import Protocol
@@ -14,6 +15,10 @@ from uuid import UUID
 
 from cadrumo.application.auth.certificate_secret_backend import CertificateSecretBackendFactory
 from cadrumo.application.auth.operator_scope_ports import OperatorScopePorts
+from cadrumo.application.auth.protocols import BrowserSessionFactoryPort
+from cadrumo.application.operations.models import OperationId
+from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
+from cadrumo.application.operations.supervisor import OperationSupervisor
 from cadrumo.core.operations import OperationEffect
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -26,8 +31,14 @@ class ViewOperationHost(Protocol):
     async def report(self, effect: OperationEffect) -> None: ...
 
 
+class ViewHttpBoundary(Protocol):
+    """The local HTTP origin a view test's browsers reach in place of the Sede."""
+
+    def close(self) -> None: ...
+
+
 class ViewSessionWorld(Protocol):
-    """A certificate-provider profile and the encrypted session stored for it."""
+    """A certificate-provider profile, the encrypted session stored for it and the means to drive a view."""
 
     @property
     def profile_id(self) -> UUID: ...
@@ -52,4 +63,22 @@ class ViewSessionWorld(Protocol):
 
     def stored_cookie_names(self) -> set[str]:
         """The cookie names in the stored session."""
+        ...
+
+    def opened_http_boundary(self) -> AbstractAsyncContextManager[ViewHttpBoundary]:
+        """Serve the local HTTP origin for the duration of the context."""
+        ...
+
+    def browser_session_factory(self, *, boundary: ViewHttpBoundary, profile_name: str) -> BrowserSessionFactoryPort:
+        """A factory of production browser sessions that reach ``boundary`` instead of the Sede."""
+        ...
+
+    async def until(self, condition: Callable[[], bool], *, timeout: float) -> None:
+        """Wait until ``condition`` holds, failing the test after ``timeout`` seconds."""
+        ...
+
+    async def run_to_settlement(
+        self, supervisor: OperationSupervisor, operation_id: OperationId
+    ) -> OperationPersistedSnapshot:
+        """Start ``operation_id`` and return what its supervised task concluded, raising the error that stopped it."""
         ...

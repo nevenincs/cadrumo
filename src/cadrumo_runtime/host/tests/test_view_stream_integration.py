@@ -39,16 +39,9 @@ from cadrumo.adapters.outbound.aeat.browser.factory import BrowserRuntimeResourc
 from cadrumo.adapters.outbound.aeat.browser.profile import Profile
 from cadrumo.adapters.outbound.aeat.browser.sede_view import SedeViewPage
 from cadrumo.adapters.outbound.aeat.browser.session import BrowserSession
-from cadrumo.adapters.outbound.aeat.browser.tests.real_http_boundary import (
-    LocalHttpBoundary,
-    opened_http_boundary,
-    real_browser_factory,
-)
-from cadrumo.adapters.outbound.aeat.browser.tests.view_page_support import until
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from cadrumo.adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.auth.sessions import ViewSessionPublicationOutcome
 from cadrumo.application.live.sede_view_operation import (
@@ -125,7 +118,7 @@ from ...adapters.worker_transport import worker_endpoint
 from ..view_stream_relay import ViewStreamRelay
 from ..worker_view_stream import WorkerViewStream, WorkerViewStreams
 from .test_view_stream_relay import _RUNTIME_NAMESPACE, _Clock, _Lane, _Window
-from .view_session_world import ViewSessionWorld
+from .view_session_world import ViewHttpBoundary, ViewSessionWorld
 from .view_stream_host_support import bind_worker_leg, synthetic_worker_identity
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -347,14 +340,14 @@ def _request(world: ViewSessionWorld) -> OperationRequest[SedeViewRequest]:
 
 
 async def _sync(
-    world: ViewSessionWorld, boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation, name: str
+    world: ViewSessionWorld, boundary: ViewHttpBoundary, operation: PinnedAuthorityOperation, name: str
 ) -> bool:
     """A CLI or TUI sync: whether it reused the stored session rather than signing in afresh."""
     host = world.operation_host()
     result = await ensure_live_authenticated_session(
         load_settings(),
         certificate_secret_backend_factory=world.certificate_secret_backend_factory,
-        browser_session_factory=real_browser_factory(boundary=boundary, profile_name=name),
+        browser_session_factory=world.browser_session_factory(boundary=boundary, profile_name=name),
         operation=name,
         target_url=None,
         operator_scope_ports=world.operator_scope_ports,
@@ -367,7 +360,7 @@ async def _sync(
 
 @asynccontextmanager
 async def _running_view(
-    world: ViewSessionWorld, tmp_path: Path, boundary: LocalHttpBoundary, operation: PinnedAuthorityOperation
+    world: ViewSessionWorld, tmp_path: Path, boundary: ViewHttpBoundary, operation: PinnedAuthorityOperation
 ) -> AsyncGenerator[_View]:
     """Submit the view to the supervisor, bind its worker leg to the relay and attach no window yet."""
     site = _SedeStandIn()
@@ -392,7 +385,7 @@ async def _running_view(
     root = tmp_path / "operations"
     definition = build_sede_view_definition(
         certificate_secret_backend_factory=world.certificate_secret_backend_factory,
-        browser_session_factory=real_browser_factory(boundary=boundary, profile_name="sede-view-provider"),
+        browser_session_factory=world.browser_session_factory(boundary=boundary, profile_name="sede-view-provider"),
         operator_scope_ports=world.operator_scope_ports,
         browser_resources_factory=BrowserRuntimeResourceScope,
         provider_preflight=lambda _profile_id, _operation: None,
@@ -416,12 +409,12 @@ async def _running_view(
         cleanup_timeout=timedelta(minutes=1),
     )
     operation_id = await supervisor.submit(_request(world), operation_id=os.urandom(32).hex())
-    settling = asyncio.ensure_future(run_to_settlement(supervisor, operation_id))
+    settling = asyncio.ensure_future(world.run_to_settlement(supervisor, operation_id))
     runtime = worker_endpoint(storage_root=tmp_path, worker_namespace=_RUNTIME_NAMESPACE)
     runtime.listen()
     lanes: list[_Lane] = []
     try:
-        await until(lambda: bool(opened) or settling.done(), timeout=_SECONDS)
+        await world.until(lambda: bool(opened) or settling.done(), timeout=_SECONDS)
         assert opened, "the view settled before it opened its stream"
         bind = await asyncio.to_thread(
             bind_worker_leg, relay, storage_root=tmp_path, identity=identity, product_version=_VERSION
@@ -588,7 +581,7 @@ async def test_a_scripted_session_streams_the_page_blocks_nothing_and_publishes_
     world = view_session_world
     caplog.set_level(logging.DEBUG)
     with world.registered_profile(tmp_path, operation):
-        async with opened_http_boundary() as boundary:
+        async with world.opened_http_boundary() as boundary:
             # A sync signed in first: the view opens on that session.
             await _sync(world, boundary, operation, "sync-before-view")
             seeded = world.stored_digest()
@@ -659,14 +652,14 @@ async def test_signing_out_unbinds_the_view_at_once_and_it_settles_without_publi
 ) -> None:
     world = view_session_world
     with world.registered_profile(tmp_path, operation):
-        async with opened_http_boundary() as boundary:
+        async with world.opened_http_boundary() as boundary:
             await _sync(world, boundary, operation, "sync-before-view")
             seeded = world.stored_digest()
             assert seeded is not None
             async with _running_view(world, tmp_path, boundary, operation) as view:
                 panel = await asyncio.to_thread(_attach, view)
                 # The Sede page loaded and set its cookie: a close now would publish a changed session.
-                await until(lambda: view.site.reached("GET", _HOME), timeout=_SECONDS)
+                await world.until(lambda: view.site.reached("GET", _HOME), timeout=_SECONDS)
                 await asyncio.to_thread(panel.until, ViewState)
 
                 # Sign-out retires the session: the host unbinds both legs before the worker settles.
