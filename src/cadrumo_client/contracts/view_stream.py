@@ -88,6 +88,17 @@ def _has_control_character(value: str) -> bool:
     return any(ord(character) < 0x20 or ord(character) == 0x7F for character in value)
 
 
+def _is_address_of(address: str, origin: str) -> bool:
+    """Whether ``address`` is a URL on exactly ``origin``, with no credentials, space or control character."""
+    rest = address.removeprefix(origin)
+    return (
+        rest != address
+        and rest[:1] in {"", "/", "?", "#"}
+        and not _has_control_character(address)
+        and " " not in address
+    )
+
+
 class ViewPhase(StrEnum):
     """Where the view's operation is: logging in, browsing, or publishing on close."""
 
@@ -167,13 +178,21 @@ class ViewImage(BaseModel):
 
 
 class ViewState(BaseModel):
-    """The page as the toolbar shows it: origin and path only, never a query or fragment."""
+    """The page: origin and path for the toolbar, and the full address for the desktop host alone.
+
+    ``origin`` and ``path`` never carry a query or fragment; they are what the
+    window shows. ``address`` is the page's whole URL, query included, so that
+    the person's "open in external browser" lands on the same page. The desktop
+    host keeps it in memory and never relays it to the window; it is ``None``
+    when the page's URL does not fit the contract.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     kind: Literal["view.state"] = "view.state"
     origin: str = Field(min_length=1, max_length=VIEW_MAX_URL_LENGTH)
     path: str = Field(min_length=1, max_length=VIEW_MAX_PATH_LENGTH)
+    address: str | None = Field(default=None, min_length=1, max_length=VIEW_MAX_URL_LENGTH)
     title: str = Field(max_length=VIEW_MAX_TITLE_LENGTH)
     can_go_back: bool
     can_go_forward: bool
@@ -199,6 +218,8 @@ class ViewState(BaseModel):
             raise ValueError("path must be an absolute path without query or fragment")
         if _has_control_character(self.origin + self.path):
             raise ValueError("origin and path must not carry control characters")
+        if self.address is not None and not _is_address_of(self.address, self.origin):
+            raise ValueError("address must be a credential-free https URL on the stated origin")
         return self
 
 

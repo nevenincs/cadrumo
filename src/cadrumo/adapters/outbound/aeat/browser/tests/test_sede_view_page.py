@@ -20,6 +20,7 @@ import pytest
 from playwright.async_api import BrowserContext, Page, Route, async_playwright
 
 from cadrumo_client.contracts.view_stream import (
+    VIEW_MAX_URL_LENGTH,
     ViewClose,
     ViewPhase,
     ViewResize,
@@ -234,11 +235,28 @@ def test_sede_view_state_keeps_origin_and_path_only() -> None:
     )
     assert state is not None
     assert (state.origin, state.path) == ("https://sede.example.es:8443", "/a/b")
+    # A URL whose host does not read as its origin carries no address.
+    assert state.address is None
     assert (
         view_state("http://sede.example.es/", "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
         is None
     )
     assert view_state("about:blank", "", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING) is None
+
+
+def test_sede_view_state_carries_the_whole_address_for_the_host() -> None:
+    url = "https://sede.example.es/wlpl/BUGC-JDIT/Consulta?ejercicio=2025&modelo=303#resumen"
+    state = view_state(url, "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
+    assert state is not None
+    assert (state.origin, state.path, state.address) == (
+        "https://sede.example.es",
+        "/wlpl/BUGC-JDIT/Consulta",
+        url,
+    )
+    long_query = "https://sede.example.es/x?q=" + "a" * VIEW_MAX_URL_LENGTH
+    state = view_state(long_query, "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
+    assert state is not None
+    assert (state.path, state.address) == ("/x", None)
 
 
 def test_sede_view_download_names_are_plain_file_names() -> None:

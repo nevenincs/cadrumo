@@ -23,6 +23,7 @@ _FRAME_MAX = 64 * 1024
 _HEADER = 16
 _BODY = _FRAME_MAX - _HEADER
 _IMAGE_MAX = 2 * 1024 * 1024
+_URL_MAX = 2048
 _PATTERN_MODULUS = 251
 _TRANSFER_FLAG = 2
 _TRANSFER_ID_MAX = 2**32 - 1
@@ -895,6 +896,12 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("image", "downstream", _image_document(0, 1)),
         ("state", "downstream", _STATE),
         ("state_acquiring", "downstream", {**_STATE, "phase": "acquiring", "loading": True, "title": ""}),
+        (
+            "state_with_address",
+            "downstream",
+            {**_STATE, "address": "https://sede.agenciatributaria.gob.es/Sede/inicio.html?nif=synthetic#top"},
+        ),
+        ("state_address_origin_only", "downstream", {**_STATE, "address": "https://sede.agenciatributaria.gob.es"}),
         ("notice_offer", "downstream", {"kind": "view.notice", "code": "download_offered", "offer": offer}),
         ("notice_chooser_offer", "downstream", {"kind": "view.notice", "code": "file_chooser_offered", "offer": offer}),
         (
@@ -951,6 +958,42 @@ def _documents() -> dict[str, list[dict[str, Any]]]:
         ("state_origin_http", "downstream", {**_STATE, "origin": "http://sede.agenciatributaria.gob.es"}),
         ("state_path_with_query", "downstream", {**_STATE, "path": "/Sede/x.html?nif=1"}),
         ("state_unknown_phase", "downstream", {**_STATE, "phase": "submitting"}),
+        (
+            "state_address_on_another_origin",
+            "downstream",
+            {**_STATE, "address": "https://www.example.org/Sede/inicio.html"},
+        ),
+        (
+            "state_address_extends_the_host",
+            "downstream",
+            {**_STATE, "address": "https://sede.agenciatributaria.gob.es.example.org/"},
+        ),
+        (
+            "state_address_userinfo",
+            "downstream",
+            {**_STATE, "address": "https://sede.agenciatributaria.gob.es:a@example.org/"},
+        ),
+        (
+            "state_address_http",
+            "downstream",
+            {**_STATE, "address": "http://sede.agenciatributaria.gob.es/Sede/inicio.html"},
+        ),
+        (
+            "state_address_space",
+            "downstream",
+            {**_STATE, "address": "https://sede.agenciatributaria.gob.es/a b"},
+        ),
+        (
+            "state_address_control_character",
+            "downstream",
+            {**_STATE, "address": "https://sede.agenciatributaria.gob.es/a	b"},
+        ),
+        ("state_address_empty", "downstream", {**_STATE, "address": ""}),
+        (
+            "state_address_too_long",
+            "downstream",
+            {**_STATE, "address": "https://sede.agenciatributaria.gob.es/?q=" + "a" * _URL_MAX},
+        ),
         ("notice_offer_code_without_offer", "downstream", {"kind": "view.notice", "code": "download_offered"}),
         (
             "notice_dialog_with_offer",

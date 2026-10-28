@@ -96,6 +96,17 @@ fn is_origin(origin: &str) -> bool {
         && hostname(authority).is_some()
 }
 
+/// A URL on exactly `origin`, with no credentials, space or control character.
+/// `origin` is an origin `is_origin` admits, so what follows it can only be the
+/// path, query or fragment.
+fn is_address_of(address: &str, origin: &str) -> bool {
+    address
+        .strip_prefix(origin)
+        .is_some_and(|rest| rest.is_empty() || rest.starts_with(['/', '?', '#']))
+        && !has_control_character(address)
+        && !address.contains(' ')
+}
+
 /// A credential-free `http` or `https` URL naming a host.
 fn is_web_url(url: &str) -> bool {
     let Some((scheme, rest)) = url.split_once("://") else {
@@ -244,12 +255,21 @@ impl ViewImage {
     }
 }
 
-/// The page as the toolbar shows it: origin and path only, never a query or fragment.
+/// The page: origin and path for the toolbar, and the full address for the
+/// desktop host alone.
+///
+/// `origin` and `path` never carry a query or fragment; they are what the
+/// window shows. `address` is the page's whole URL, query included, so that the
+/// person's external open lands on the same page. The host keeps it in memory
+/// and never relays it to the window; it is `None` when the worker could not
+/// state it within the contract.
 #[derive(Clone, PartialEq, Eq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ViewState {
     pub origin: String,
     pub path: String,
+    #[serde(default)]
+    pub address: Option<String>,
     pub title: String,
     pub can_go_back: bool,
     pub can_go_forward: bool,
@@ -267,7 +287,11 @@ impl ViewState {
                 && self.path.starts_with('/')
                 && !self.path.contains(['?', '#'])
                 && !has_control_character(&self.origin)
-                && !has_control_character(&self.path),
+                && !has_control_character(&self.path)
+                && self.address.as_deref().is_none_or(|address| {
+                    (1..=MAX_URL_LENGTH).contains(&char_count(address))
+                        && is_address_of(address, &self.origin)
+                }),
         )
     }
 }
@@ -994,6 +1018,9 @@ mod tests {
         let state = ViewDownstream::State(ViewState {
             origin: "https://sede.agenciatributaria.gob.es".into(),
             path: "/Sede/inicio.html".into(),
+            address: Some(
+                "https://sede.agenciatributaria.gob.es/Sede/inicio.html?nif=private".into(),
+            ),
             title: "private title".into(),
             can_go_back: false,
             can_go_forward: false,

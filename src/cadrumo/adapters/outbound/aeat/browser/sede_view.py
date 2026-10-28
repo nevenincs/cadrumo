@@ -121,7 +121,12 @@ def _is_aeat_page(url: str) -> bool:
 
 
 def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool, phase: ViewPhase) -> ViewState | None:
-    """Return the toolbar's state for an https page: origin and path only, or ``None`` for any other page."""
+    """Return the state of an https page, or ``None`` for any other page.
+
+    The toolbar gets the origin and path only. The page's whole ``url`` rides
+    along as the host-only address when the contract admits it, and is left
+    out otherwise.
+    """
     try:
         parts = urlsplit(url)
         host = parts.hostname
@@ -132,18 +137,25 @@ def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool
         return None
     netloc = host if port is None else f"{host}:{port}"
     path = parts.path or "/"
-    try:
+
+    def state(address: str | None) -> ViewState:
         return ViewState(
             origin=f"https://{netloc.lower()}",
             path=path[:VIEW_MAX_PATH_LENGTH],
+            address=address,
             title=title[:VIEW_MAX_TITLE_LENGTH],
             can_go_back=back,
             can_go_forward=forward,
             loading=loading,
             phase=phase,
         )
-    except ValidationError:
-        return None
+
+    for address in (url, None):
+        try:
+            return state(address)
+        except ValidationError:
+            continue
+    return None
 
 
 @dataclass(slots=True)

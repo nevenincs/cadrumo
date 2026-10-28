@@ -935,6 +935,36 @@
         }
       },
       {
+        "name": "state_with_address",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es/Sede/inicio.html?nif=synthetic#top"
+        }
+      },
+      {
+        "name": "state_address_origin_only",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es"
+        }
+      },
+      {
         "name": "notice_offer",
         "direction": "downstream",
         "document": {
@@ -1663,6 +1693,126 @@
           "can_go_forward": false,
           "loading": false,
           "phase": "submitting"
+        }
+      },
+      {
+        "name": "state_address_on_another_origin",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://www.example.org/Sede/inicio.html"
+        }
+      },
+      {
+        "name": "state_address_extends_the_host",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es.example.org/"
+        }
+      },
+      {
+        "name": "state_address_userinfo",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es:a@example.org/"
+        }
+      },
+      {
+        "name": "state_address_http",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "http://sede.agenciatributaria.gob.es/Sede/inicio.html"
+        }
+      },
+      {
+        "name": "state_address_space",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es/a b"
+        }
+      },
+      {
+        "name": "state_address_control_character",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es/a\tb"
+        }
+      },
+      {
+        "name": "state_address_empty",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": ""
+        }
+      },
+      {
+        "name": "state_address_too_long",
+        "direction": "downstream",
+        "document": {
+          "kind": "view.state",
+          "origin": "https://sede.agenciatributaria.gob.es",
+          "path": "/Sede/inicio.html",
+          "title": "Sede electrónica",
+          "can_go_back": false,
+          "can_go_forward": false,
+          "loading": false,
+          "phase": "browsing",
+          "address": "https://sede.agenciatributaria.gob.es/?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
         }
       },
       {
