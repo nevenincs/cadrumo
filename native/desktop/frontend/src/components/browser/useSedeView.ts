@@ -27,19 +27,24 @@ const sameSize = (a: SedeViewSize | null, b: SedeViewSize | null) =>
 /**
  * Owns the page's view from the first panel size to the page's unmount: it
  * opens the view, keeps what it says in memory, credits every image it is
- * sent whether or not it was drawn, including while the page is put aside,
- * follows the panel's size, and closes the view when the page is unmounted,
- * which publishes the session. Nothing it holds reaches storage, the layout
- * or a log.
+ * sent once it is drawn or dropped, follows the panel's size, and closes the
+ * view when the page is unmounted, which publishes the session. While the page
+ * is put aside it grants no credit, so the worker holds its newest image and
+ * sends nothing more; the view, its state and its prompts go on, and the
+ * credit owed is granted when the page is shown again. Nothing it holds
+ * reaches storage, the layout or a log.
  */
 export function useSedeView({
   port,
   size,
+  shown,
   draw,
 }: {
   port: SedeViewPort;
   /** The panel's size once it has room; the view opens only then. */
   size: SedeViewSize | null;
+  /** False while the page is put aside: no credit is granted then. */
+  shown: boolean;
   /** Draws one image; settles when it is drawn or dropped. */
   draw: (image: DrawnImage) => Promise<void>;
 }) {
@@ -47,22 +52,36 @@ export function useSedeView({
   const [attempt, setAttempt] = useState(0);
   const session = useRef<SedeViewSession | null>(null);
   const sent = useRef<SedeViewSize | null>(null);
-  const latest = useRef({ size, draw });
-  latest.current = { size, draw };
+  const latest = useRef({ size, draw, shown });
+  latest.current = { size, draw, shown };
   const sized = size !== null;
+  // Images received and not yet credited; at most the two the view may have
+  // in flight, so granting them all restores the credit the view started with.
+  const owed = useRef(0);
+
+  // Credit goes only to an open view and only while the page is shown.
+  const settle = useCallback(() => {
+    const view = session.current;
+    if (!view || !latest.current.shown) return;
+    for (; owed.current > 0; owed.current -= 1)
+      void view.credit().catch(nothing);
+  }, []);
+
+  useEffect(() => {
+    if (shown) settle();
+  }, [shown, settle]);
 
   useEffect(() => {
     if (!sized) return;
     let cancelled = false;
     let timer = 0;
     let opened: SedeViewSession | null = null;
-    // Images that arrive before the open call has answered are credited then.
-    let owed = 0;
+    owed.current = 0;
 
     const credit = () => {
       if (cancelled) return;
-      if (opened) void opened.credit().catch(nothing);
-      else owed += 1;
+      owed.current += 1;
+      settle();
     };
     const onEvent = (event: SedeViewEvent) => {
       if (cancelled) return;
@@ -85,7 +104,7 @@ export function useSedeView({
           opened = view;
           session.current = view;
           sent.current = first;
-          for (; owed > 0; owed -= 1) void view.credit().catch(nothing);
+          settle();
         },
         (error: unknown) => {
           if (cancelled) return;
@@ -108,7 +127,7 @@ export function useSedeView({
       // Unmounting ends the view, which publishes the session.
       void opened?.close().catch(nothing);
     };
-  }, [port, sized, attempt]);
+  }, [port, sized, attempt, settle]);
 
   useEffect(() => {
     if (!size || state.phase !== "open" || sameSize(sent.current, size)) return;

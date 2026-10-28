@@ -485,26 +485,93 @@ test("every image is credited once it is drawn, so the stream keeps flowing past
   expect(await credits(target)).toBe(await images(target));
 });
 
-test("a page put aside still credits what it is sent, and the view goes on", async ({
+const PUTTING_ASIDE = {
+  "another page of the rail": {
+    away: (target: Page) =>
+      railButton(target, "desktop.calendar.title").click(),
+    back: (target: Page) => browserButton(target).click(),
+  },
+  "the agent pane maximized": {
+    away: async (target: Page) => {
+      const agent = railButton(target, "desktop.rail.agent");
+      if ((await agent.getAttribute("aria-pressed")) !== "true")
+        await agent.click();
+      await target
+        .locator(".pane-agent")
+        .getByRole("button", { name: label("desktop.pane.maximize_agent") })
+        .click();
+    },
+    back: (target: Page) =>
+      target
+        .locator(".pane-agent")
+        .getByRole("button", { name: label("desktop.pane.restore") })
+        .click(),
+  },
+} as const;
+
+for (const [way, { away, back }] of Object.entries(PUTTING_ASIDE)) {
+  test(`a page put aside by ${way} grants no credit, and shown again it credits what it owes so the newest image arrives at once`, async ({
+    page: target,
+  }) => {
+    await showBrowser(target);
+    await away(target);
+    await expect(surface(target)).toBeHidden();
+
+    const at = await mark(target);
+    const sent = await images(target);
+    // Three changes while out of sight: the view has credit for two of them,
+    // and the third waits in the worker as the newest image.
+    for (const phase of ["acquiring", "browsing", "acquiring"] as const)
+      await target.evaluate(
+        (next) => window.__scenarioSedeView?.phase(next),
+        phase,
+      );
+    await expect.poll(() => images(target)).toBe(sent + 2);
+    // Time for a credit to be sent if one were going to be.
+    await target.waitForTimeout(300);
+    expect(await images(target)).toBe(sent + 2);
+    expect(await since(target, at, "sedeViewCredit")).toEqual([]);
+    // The view was neither closed nor reopened for being out of sight.
+    expect(await since(target, at, "sedeViewClose")).toEqual([]);
+
+    await back(target);
+    await expect(surface(target)).toBeVisible();
+    await expect.poll(() => images(target)).toBe(sent + 3);
+    await expect
+      .poll(async () => (await since(target, at, "sedeViewCredit")).length)
+      .toBe(3);
+    await idle(target);
+    expect(await since(target, at, "sedeViewClose")).toEqual([]);
+    expect(await since(target, at, "sedeViewOpen")).toEqual([]);
+  });
+}
+
+test("a download offered while the page is put aside is kept, and answerable once the page is shown again", async ({
   page: target,
 }) => {
   await showBrowser(target);
-  const agent = railButton(target, "desktop.rail.agent");
-  if ((await agent.getAttribute("aria-pressed")) !== "true")
-    await agent.click();
-  await target
-    .locator(".pane-agent")
-    .getByRole("button", { name: label("desktop.pane.maximize_agent") })
-    .click();
+  await railButton(target, "desktop.calendar.title").click();
   await expect(surface(target)).toBeHidden();
 
   const at = await mark(target);
-  const sent = await images(target);
-  await target.evaluate(() => window.__scenarioSedeView?.phase("browsing"));
-  await expect.poll(() => images(target)).toBe(sent + 1);
-  await idle(target);
-  // Nothing was drawn, and the view was not closed for being out of sight.
+  await target.evaluate(() =>
+    window.__scenarioSedeView?.download("informe-aparte.pdf"),
+  );
+  await target.waitForTimeout(300);
   expect(await since(target, at, "sedeViewClose")).toEqual([]);
+
+  await browserButton(target).click();
+  const prompt = line(
+    target,
+    label("desktop.browser.download.prompt", { name: "informe-aparte.pdf" }),
+  );
+  await expect(prompt).toBeVisible();
+  await prompt
+    .getByRole("button", { name: label("desktop.browser.download.decline") })
+    .click();
+  await expect
+    .poll(() => answers(target))
+    .toEqual([{ kind: "download", id: 1, accepted: false }]);
 });
 
 // ---------------------------------------------------------------------------
@@ -808,14 +875,16 @@ for (const [way, leave] of Object.entries(LEAVING))
     await leave(target);
     await expect(browserPage(target)).toHaveCount(0);
 
-    // Out of sight, the view goes on and every image is still credited.
+    // Out of sight, the view goes on, and what it sends is not credited yet.
     const sent = await images(target);
     await target.evaluate(() => window.__scenarioSedeView?.phase("browsing"));
     await expect.poll(() => images(target)).toBe(sent + 1);
-    await idle(target);
+    await target.waitForTimeout(300);
+    expect(await since(target, at, "sedeViewCredit")).toEqual([]);
 
     await browserButton(target).click();
     await expect(browserPage(target)).toBeVisible();
+    await idle(target);
     await expect(address(target)).toContainText(
       `${SEDE_VIEW_ORIGIN}${SEDE_VIEW_HOME}`,
     );

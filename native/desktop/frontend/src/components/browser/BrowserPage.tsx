@@ -33,8 +33,9 @@ export type BrowserPageProps = {
   withheld?: ReactNode;
   /** The page's own element, for whoever sends focus to it. */
   page?: RefObject<HTMLElement | null>;
-  /** False while the page is put aside rather than unloaded: its view goes on
-   * and its images are credited, but nothing is drawn. */
+  /** False while the page is put aside rather than unloaded: its view goes on,
+   * but nothing is drawn and no credit is granted, so the worker sends no
+   * more images until the page is shown. */
   shown?: boolean;
   /** A count the window raises to send an open view to its home page, the
    * Sede. A view not open yet starts there anyway. */
@@ -108,6 +109,7 @@ function OpenBrowser({
   const view = useSedeView({
     port,
     size,
+    shown,
     draw: (image) => surface.current?.draw(image) ?? Promise.resolve(),
   });
   const { state } = view;

@@ -34,7 +34,7 @@ export type SurfaceHandle = {
 
 type Props = {
   ref?: Ref<SurfaceHandle>;
-  /** False while the page is put aside: images are credited, not drawn. */
+  /** False while the page is put aside: an image is kept, not drawn. */
   shown: boolean;
   /** Whether the person's input reaches the page. */
   enabled: boolean;
