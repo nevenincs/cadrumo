@@ -13,7 +13,7 @@ import pytest
 
 from cadrumo.core import logging as project_logging
 from cadrumo.core.config import override_settings
-from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, eventually, finishes
 
 from ..agent_diagnostics import AgentDiagnosticLines, AgentDiagnosticSink
 from ..agent_process import _StandardErrorTail
@@ -145,7 +145,6 @@ def test_successful_local_health_polls_are_quiet_but_failures_and_other_requests
 def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
     """The drain must read a small live write without waiting for a 4KiB buffer."""
     import os
-    import time
 
     reader, writer = os.pipe()
     stream = os.fdopen(reader, "rb")
@@ -154,16 +153,14 @@ def test_real_pipe_is_forwarded_before_writer_closes(log_file: Path) -> None:
     )
     try:
         os.write(writer, _line(1, service="gateway", message="live gateway"))
-        deadline = time.monotonic() + 5
-        while time.monotonic() < deadline:
-            if log_file.is_file() and "live gateway" in _read(log_file):
-                break
-            time.sleep(0.01)
-        assert "live gateway" in _read(log_file)
+        eventually(
+            lambda: log_file.is_file() and "live gateway" in _read(log_file),
+            what="the live gateway line reaching the log before its writer closed",
+        )
         assert '"process_role":"extension_service"' in _read(log_file)
     finally:
         os.close(writer)
-        tail.release(timeout=2)
+        tail.release(timeout=HANG_GUARD_SECONDS)
     assert b"live gateway" in tail.settled(timeout=0)
 
 
@@ -204,7 +201,8 @@ class _StalledLog(logging.Handler):
     @override
     def emit(self, record: logging.LogRecord) -> None:
         self.entered.set()
-        self.released.wait(30)
+        # Past every bound the test puts on the agent, so a stall that merely lasted that long cannot pass for a held one.
+        self.released.wait(3 * HANG_GUARD_SECONDS)
 
 
 def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: Path) -> None:
@@ -215,7 +213,6 @@ def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: P
     for as long as the log stalled.
     """
     import os
-    import time
 
     stalled = _StalledLog()
     logger = logging.getLogger("cadrumo_agent.worker.executor")
@@ -227,19 +224,22 @@ def test_an_agent_keeps_writing_while_the_application_log_is_stalled(log_file: P
     )
     try:
         os.write(writer, _line(1))
-        assert stalled.entered.wait(10)
+        assert stalled.entered.wait(HANG_GUARD_SECONDS)
         # Twice the backlog the log may fall behind by, far past what the pipe holds.
         record = _line(2, message="x" * 900)
-        started = time.monotonic()
-        for _ in range(2 * 1024 * 1024 // len(record)):
-            os.write(writer, record)
-        assert time.monotonic() - started < 10
+
+        def write_backlog() -> None:
+            for _ in range(2 * 1024 * 1024 // len(record)):
+                os.write(writer, record)
+
+        # Every write returns while the log stays stalled; a drain held by the stall never lets the pipe empty.
+        finishes(write_backlog, what="the agent's writes behind a stalled log")
     finally:
         stalled.released.set()
         os.close(writer)
-        tail.release(timeout=10)
+        tail.release(timeout=HANG_GUARD_SECONDS)
         logger.removeHandler(stalled)
-    deadline = time.monotonic() + 10
-    while time.monotonic() < deadline and "agent_diagnostic_output_dropped" not in _read(log_file):
-        time.sleep(0.05)
-    assert "agent_diagnostic_output_dropped" in _read(log_file)
+    eventually(
+        lambda: "agent_diagnostic_output_dropped" in _read(log_file),
+        what="the report of the lines the stalled log lost",
+    )
