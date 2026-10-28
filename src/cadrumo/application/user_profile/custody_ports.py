@@ -1163,6 +1163,7 @@ class ProfileCustodyPort(Protocol):
         material: ProfileCustodyPasswordProofMaterialPort,
         *,
         password: str,
+        emergency_deadline: float | None = None,
     ) -> ProfileCustodyUnlockPort:
         """Authenticate one committed password envelope and sentinel."""
         ...
@@ -1422,6 +1423,7 @@ def unlock_profile_custody_password(
     material: ProfileCustodyPasswordProofMaterialPort,
     *,
     password: str,
+    emergency_deadline: float | None = None,
 ) -> ProfileCustodyUnlockPort:
     """Authenticate one committed profile through its password envelope.
 
@@ -1431,7 +1433,7 @@ def unlock_profile_custody_password(
     material already loaded from the exact target capsule, so a caller cannot
     resolve one profile and unwrap another through ambient state.
     """
-    return profile_custody_port().unlock_password(material, password=password)
+    return profile_custody_port().unlock_password(material, password=password, emergency_deadline=emergency_deadline)
 
 
 def replace_profile_custody_password_envelope(

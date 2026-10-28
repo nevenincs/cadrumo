@@ -742,11 +742,13 @@ class _PersistenceProfileCustody:
         material: ProfileCustodyPasswordProofMaterialPort,
         *,
         password: str,
+        emergency_deadline: float | None = None,
     ) -> ProfileCustodyUnlockPort:
         return unlock_profile_custody(
             _substrate_handle(material.envelope, ProfileCustodyEnvelope, "password envelope"),
             password,
             sentinel=_substrate_handle(material.sentinel, ProfileCustodySentinelRecord, "DEK sentinel"),
+            emergency_deadline=emergency_deadline,
         )
 
     def fence_human_sign_in(self, *, profile_id: UUID, root: Path) -> None:

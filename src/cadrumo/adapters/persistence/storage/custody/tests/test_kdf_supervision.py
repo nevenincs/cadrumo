@@ -9,7 +9,8 @@ import sys
 import tempfile
 import threading
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Generator
+from contextlib import contextmanager
 from itertools import product
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -19,6 +20,7 @@ import pytest
 
 from ......core.config import Settings, override_settings
 from ......core.pid_liveness import pid_is_alive
+from .. import _kdf_worker_supervision as worker_supervision
 from .. import kdf_supervision
 from .._kdf_attestation import (
     expected_kdf_worker_limits,
@@ -533,6 +535,97 @@ def test_real_child_unwrap_returns_only_a_parent_sentinel_proven_dek(tmp_path: P
     assert unlock.profile_id == _PROFILE_ID
     assert unlock.dek == _DEK
     assert unlock.envelope_digest == envelope.self_digest
+
+
+class _ElapsedClock:
+    """Spend logical owner time while real OS children continue to supply readiness."""
+
+    def __init__(self) -> None:
+        self.elapsed = 0.0
+
+    def monotonic(self) -> float:
+        return time.monotonic() + self.elapsed
+
+    def monotonic_ns(self) -> int:
+        return time.monotonic_ns() + int(self.elapsed * 1_000_000_000)
+
+    def sleep(self, seconds: float) -> None:
+        time.sleep(seconds)
+
+
+@pytest.mark.parametrize("budget", [120.0, 35.0])
+def test_runtime_unlock_spends_one_absolute_emergency_budget_across_capacity_and_attestation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, budget: float
+) -> None:
+    """Two phases over the old 15s limit either prove the real key or exhaust one owner cutoff."""
+    clock = _ElapsedClock()
+    monkeypatch.setattr(kdf_supervision, "time", clock)
+    monkeypatch.setattr(worker_supervision, "time", clock)
+    lease = kdf_supervision.profile_kdf_lease
+    verify = _SupervisedKdfWorker._verify_ready_attestation
+    workers: list[_SupervisedKdfWorker] = []
+    children: list[subprocess.Popen[bytes]] = []
+    deadlines: list[float] = []
+
+    @contextmanager
+    def delayed_capacity(*, deadline: float, settings: Settings | None = None) -> Generator[None]:
+        deadlines.append(deadline)
+        with lease(deadline=deadline, settings=settings):
+            clock.elapsed += 20.0
+            yield
+
+    def delayed_attestation(worker: _SupervisedKdfWorker, frame: tuple[int, bytes]) -> None:
+        verify(worker, frame)
+        workers.append(worker)
+        assert worker._process is not None
+        children.append(worker._process)
+        deadlines.append(worker._deadline)
+        clock.elapsed += 20.0
+
+    monkeypatch.setattr(kdf_supervision, "profile_kdf_lease", delayed_capacity)
+    monkeypatch.setattr(_SupervisedKdfWorker, "_verify_ready_attestation", delayed_attestation)
+    envelope, sentinel = _unlock_inputs()
+    settings = _settings(tmp_path)
+    emergency = clock.monotonic() + budget
+    if budget == 120.0:
+        unlocked = unlock_profile_custody(
+            envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, emergency_deadline=emergency
+        )
+        assert unlocked.dek == _DEK
+    else:
+        with pytest.raises(ProfileCustodyRefusedError) as captured:
+            unlock_profile_custody(
+                envelope, _PASSPHRASE, sentinel=sentinel, settings=settings, emergency_deadline=emergency
+            )
+        assert captured.value.refusal is ProfileCustodyRefusal.KDF_EMERGENCY_CUTOFF
+        assert workers[0]._operation is None, "expired attestation must send no secret derivation request"
+    assert deadlines == [emergency, emergency], "launch and every dependent phase retain the exact owner instant"
+    assert all(child.poll() is not None for child in children)
+    assert workers[0]._request_fd is None and workers[0]._result_fd is None
+    assert workers[0]._job is None and workers[0]._neutral_directory is None
+    assert _permit_is_free(settings)
+
+
+def test_elapsed_runtime_emergency_cutoff_never_enters_a_child(tmp_path: Path) -> None:
+    envelope, sentinel = _unlock_inputs()
+    with pytest.raises(ProfileCustodyRefusedError) as captured:
+        unlock_profile_custody(
+            envelope,
+            _PASSPHRASE,
+            sentinel=sentinel,
+            settings=_settings(tmp_path),
+            emergency_deadline=time.monotonic() - 1,
+        )
+    assert captured.value.refusal is ProfileCustodyRefusal.KDF_EMERGENCY_CUTOFF
+
+
+@pytest.mark.parametrize("invalid", [float("inf"), float("-inf"), float("nan")])
+def test_runtime_emergency_deadline_must_be_finite(tmp_path: Path, invalid: float) -> None:
+    envelope, sentinel = _unlock_inputs()
+    with pytest.raises(ValueError, match="finite"):
+        unlock_profile_custody(
+            envelope, _PASSPHRASE, sentinel=sentinel, settings=_settings(tmp_path), emergency_deadline=invalid
+        )
 
 
 def test_real_worker_keeps_short_recovery_secret_outside_password_policy(tmp_path: Path) -> None:

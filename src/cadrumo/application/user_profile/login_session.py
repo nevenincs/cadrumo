@@ -366,6 +366,7 @@ def authenticate_profile_candidate(
     passphrase_callback: Callable[[], str],
     profile_decode_context: ProfileDecodeContext,
     now: datetime | None = None,
+    emergency_deadline: float | None = None,
 ) -> Generator[ProfileLoginCandidate]:
     """Prove an exact profile without replacing another connection's live custody.
 
@@ -384,6 +385,7 @@ def authenticate_profile_candidate(
         now=instant,
         passphrase_callback=passphrase_callback,
         profile_decode_context=profile_decode_context,
+        emergency_deadline=emergency_deadline,
     )
     try:
         yield ProfileLoginCandidate(
@@ -511,6 +513,7 @@ def _authenticate_unthrottled_candidate(
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
     profile_decode_context: ProfileDecodeContext,
+    emergency_deadline: float | None = None,
 ) -> _CandidateProfileLogin:
     """Refuse a throttled profile, prove the password, then clear its failure count.
 
@@ -525,6 +528,7 @@ def _authenticate_unthrottled_candidate(
         now=now,
         passphrase_callback=passphrase_callback,
         profile_decode_context=profile_decode_context,
+        emergency_deadline=emergency_deadline,
     )
     try:
         _profile_login_sessions().reset_throttle(storage_root=storage_root, bucket_id=bucket_id)
@@ -551,12 +555,13 @@ def _authenticate_candidate_or_record_failure(
     now: datetime,
     passphrase_callback: Callable[[], str] | None,
     profile_decode_context: ProfileDecodeContext,
+    emergency_deadline: float | None = None,
 ) -> _CandidateProfileLogin:
     """Authenticate B into unbound candidate memory and nothing else."""
     material = load_profile_custody_password_material(UUID(bucket_id), root=storage_root)
     password = _resolve_login_password(passphrase_callback)
     try:
-        unlocked = unlock_profile_custody_password(material, password=password)
+        unlocked = unlock_profile_custody_password(material, password=password, emergency_deadline=emergency_deadline)
     except BaseException as exc:
         refusal = map_profile_authentication_proof_failure(exc, operation=ProfilePasswordProofOperation.LOGIN)
         if refusal is not None:

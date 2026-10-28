@@ -67,7 +67,9 @@ PROFILE_CUSTODY_KDF_CALIBRATION_VERSION: Final = 1
 PROFILE_CUSTODY_KDF_SAMPLE_COUNT: Final = 5
 PROFILE_CUSTODY_KDF_SAMPLE_DEADLINE_SECONDS: Final = 2.0
 PROFILE_CUSTODY_KDF_TOTAL_DEADLINE_SECONDS: Final = 15.0
-#: Wall-clock bound on one wrap or unwrap. Includes waiting for the installation's single
+#: Default wall-clock bound on direct wrap or unwrap. Runtime first login supplies its
+#: retained absolute emergency deadline instead; no normal phase timeout applies there.
+#: Includes waiting for the installation's single
 #: KDF permit, attesting a fresh child, then the derivation; the operating system's
 #: uncancellable process-creation call is not charged, because no child exists to
 #: stall while it blocks. The derivation's own cost is bounded by the child's
@@ -351,6 +353,7 @@ def unlock_profile_custody(
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+    emergency_deadline: float | None = None,
 ) -> ProfileCustodyUnlock:
     """Return a DEK only after supervised unwrap and parent sentinel proof."""
     dek = unlock_profile_custody_password_material(
@@ -368,6 +371,7 @@ def unlock_profile_custody(
         sentinel=sentinel,
         settings=settings,
         timeout_seconds=timeout_seconds,
+        emergency_deadline=emergency_deadline,
     )
     return ProfileCustodyUnlock(
         profile_id=envelope.profile_id,
@@ -388,6 +392,7 @@ def unlock_profile_custody_password_material(
     sentinel: ProfileCustodySentinelRecord,
     settings: Settings | None = None,
     timeout_seconds: float = PROFILE_CUSTODY_KDF_OPERATION_DEADLINE_SECONDS,
+    emergency_deadline: float | None = None,
 ) -> bytes:
     """Supervise one current-format wrapper unwrap and prove its immutable DEK.
 
@@ -395,14 +400,19 @@ def unlock_profile_custody_password_material(
     representation, process supervision, and the non-optional capsule proof.
     It never returns an unproved key.
     """
-    if timeout_seconds <= 0:
+    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0:
         raise ValueError("profile KDF timeout must be positive")
+    if emergency_deadline is not None and not math.isfinite(emergency_deadline):
+        raise ValueError("profile KDF emergency deadline must be finite")
     password_bytes = encode_profile_password(secret)
-    deadline = time.monotonic() + timeout_seconds
+    deadline = time.monotonic() + timeout_seconds if emergency_deadline is None else emergency_deadline
     try:
+        _require_emergency_time(emergency_deadline)
         with (
             profile_kdf_lease(settings=settings, deadline=deadline),
-            _supervised_kdf_worker(deadline=deadline, settings=settings) as worker,
+            _supervised_kdf_worker(
+                deadline=deadline, settings=settings, absolute_deadline=emergency_deadline is not None
+            ) as worker,
         ):
             dek = worker.unwrap(
                 password=password_bytes,
@@ -411,7 +421,13 @@ def unlock_profile_custody_password_material(
                 associated_data=associated_data,
             )
     except TimeoutError as error:
+        if emergency_deadline is not None:
+            raise _emergency_refusal() from None
         raise _timeout_refusal(error) from None
+    except ProfileCustodyRefusedError:
+        _require_emergency_time(emergency_deadline)
+        raise
+    _require_emergency_time(emergency_deadline)
     if dek is None:
         raise ProfileCustodyPasswordError("profile password did not authenticate the custody envelope")
     verify_profile_custody_sentinel(
@@ -420,6 +436,7 @@ def unlock_profile_custody_password_material(
         dek_epoch=dek_epoch,
         sentinel=sentinel,
     )
+    _require_emergency_time(emergency_deadline)
     return dek
 
 
@@ -617,17 +634,29 @@ class ProfileKdfPrewarm:
 
 
 @contextmanager
-def _supervised_kdf_worker(*, deadline: float, settings: Settings | None) -> Generator[_SupervisedKdfWorker]:
+def _supervised_kdf_worker(
+    *, deadline: float, settings: Settings | None, absolute_deadline: bool = False
+) -> Generator[_SupervisedKdfWorker]:
     """Run one operation in the bound prewarmed child when one is ready, else in a fresh one."""
     prewarm = _KDF_PREWARM.get()
     spare = prewarm.take(deadline=deadline) if prewarm is not None else None
     if spare is None:
-        with _SupervisedKdfWorker(deadline=deadline, settings=settings) as worker:
+        with _SupervisedKdfWorker(deadline=deadline, settings=settings, absolute_deadline=absolute_deadline) as worker:
             yield worker
         return
     with ExitStack() as owned:
         owned.push(spare)
         yield spare
+
+
+def _emergency_refusal() -> ProfileCustodyRefusedError:
+    return ProfileCustodyRefusedError(ProfileCustodyRefusal.KDF_EMERGENCY_CUTOFF)
+
+
+def _require_emergency_time(deadline: float | None) -> None:
+    """An elapsed owner cutoff may never release even a successfully proven key."""
+    if deadline is not None and time.monotonic() >= deadline:
+        raise _emergency_refusal()
 
 
 def _timeout_refusal(error: TimeoutError) -> ProfileCustodyRefusedError:

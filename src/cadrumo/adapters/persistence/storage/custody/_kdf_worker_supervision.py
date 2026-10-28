@@ -100,8 +100,10 @@ class _SupervisedKdfWorker:
         *,
         deadline: float,
         settings: Settings | None = None,
+        absolute_deadline: bool = False,
     ) -> None:
         self._deadline = deadline
+        self._absolute_deadline = absolute_deadline
         self._temporary_root = (settings or load_settings()).cadrumo_temp_dir
         self._process: subprocess.Popen[bytes] | None = None
         self._request_fd: int | None = None
@@ -140,7 +142,8 @@ class _SupervisedKdfWorker:
             # tens of seconds on a saturated host, before any child exists to
             # stall. The deadline abandons a stalled child, so it starts once
             # the child does instead of refusing one that has not run yet.
-            self._deadline += time.monotonic() - launch_started
+            if not self._absolute_deadline:
+                self._deadline += time.monotonic() - launch_started
             with self._phase("ready_wait"):
                 try:
                     ready = self._read_response_frame()
@@ -154,6 +157,8 @@ class _SupervisedKdfWorker:
                     raise
             with self._phase("ready_attestation"):
                 self._verify_ready_attestation(ready)
+                if self._absolute_deadline and time.monotonic() >= self._deadline:
+                    raise TimeoutError("profile KDF worker emergency cutoff elapsed during attestation")
             return self
         except BaseException as error:
             self._close_with_diagnostic(failed=True, primary_error=error)

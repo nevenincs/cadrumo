@@ -29,6 +29,7 @@ from cadrumo.core.time.utc import UtcInstant
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.deadline_budget import EmergencyWaitCutoffError
 from cadrumo_client.contracts.sign_in_outcomes import (
     ProfileLoginOutcome,
     ProfileLoginThrottledError,
@@ -94,7 +95,9 @@ class ProfileWorkerHumanLogin:
         self._kdf_prewarm = ProfileKdfPrewarm()
         self._kdf_prewarm.refill()
 
-    def authenticate(self, password: bytearray) -> tuple[UUID, ProfileLoginOutcome]:
+    def authenticate(
+        self, password: bytearray, *, emergency_deadline: float | None = None
+    ) -> tuple[UUID, ProfileLoginOutcome]:
         """Prove the exact password without disturbing another admitted lease."""
         with self._lock:
             self.cancel()
@@ -105,6 +108,7 @@ class ProfileWorkerHumanLogin:
                             bucket_id=self.custody.identity.binding.profile_id,
                             passphrase_callback=lambda: password.decode("utf-8"),
                             profile_decode_context=self.decode(),
+                            emergency_deadline=emergency_deadline,
                         )
                     )
                 identity = uuid4()
@@ -123,6 +127,8 @@ class ProfileWorkerHumanLogin:
                 ) from None
             except ProfileCustodyRefusedError as error:
                 self.cancel()
+                if error.refusal is ProfileCustodyRefusal.KDF_EMERGENCY_CUTOFF:
+                    raise EmergencyWaitCutoffError("profile_kdf_emergency_cutoff") from None
                 if error.refusal not in _KDF_UNAVAILABLE:
                     raise
                 # The installation's one KDF permit stayed taken, or no derivation child attested: this
