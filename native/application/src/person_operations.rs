@@ -457,6 +457,9 @@ impl Failure {
 }
 
 impl From<Refusal> for Failure {
+    /// A runtime decision is a closed refusal. A change a lost worker was
+    /// serving is not one: it may have committed, so it stays the runtime's
+    /// failure and a relay answers it with `unavailable`.
     fn from(refusal: Refusal) -> Self {
         match refusal {
             Refusal::Denied {
@@ -3530,10 +3533,26 @@ mod tests {
             }
             other => panic!("{other:?}"),
         }
+        // Refused before the worker took it: nothing was done, and the session comes back by itself.
+        let recovering = Fake::new(vec![refuse(Refusal::denied("custody_recovering"))]);
+        refused_with(
+            handle(
+                &recovering,
+                &mut OperationRelay::new(),
+                "operation_submit",
+                request.clone(),
+            ),
+            "custody_recovering",
+        );
         for failure in [
             Refusal::denied("runtime_draining"),
             Refusal::ConnectionClosed,
             Refusal::DeadlineExceeded,
+            // The worker was lost while it served the submission: it may have been made.
+            Refusal::Unsettled {
+                operation_id: None,
+                recovery_remaining_seconds: Some(90),
+            },
         ] {
             let fake = Fake::new(vec![refuse(failure)]);
             refused_with(

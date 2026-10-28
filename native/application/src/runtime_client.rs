@@ -82,6 +82,15 @@ pub enum Refusal {
         holder_operation_id: Option<String>,
         recovery_remaining_seconds: Option<u64>,
     },
+    /// The worker was lost while it served a change this request carried, and
+    /// the runtime now keeps the session suspended. The change may have taken
+    /// effect, so its outcome is unknown and the request is not to be repeated
+    /// as it stands: the operation it named, when it named one, says what
+    /// happened once the session is back.
+    Unsettled {
+        operation_id: Option<String>,
+        recovery_remaining_seconds: Option<u64>,
+    },
     Io(io::Error),
 }
 
@@ -99,12 +108,30 @@ impl Refusal {
     /// Whether the session waits for a fresh proof after the profile's worker was lost.
     pub fn is_custody_recovering(&self) -> bool {
         matches!(self, Self::Denied { code, .. } if code == CUSTODY_RECOVERING)
+            || matches!(self, Self::Unsettled { .. })
+    }
+
+    /// Whether a change the request carried may have taken effect although it was refused.
+    pub fn is_unsettled(&self) -> bool {
+        matches!(self, Self::Unsettled { .. })
+    }
+
+    /// The operation whose change has an unknown effect, when the refused request named one.
+    pub fn unsettled_operation_id(&self) -> Option<&str> {
+        match self {
+            Self::Unsettled { operation_id, .. } => operation_id.as_deref(),
+            _ => None,
+        }
     }
 
     /// The whole seconds left in a suspended session's recovery window, when the runtime said.
     pub fn recovery_remaining_seconds(&self) -> Option<u64> {
         match self {
             Self::Denied {
+                recovery_remaining_seconds,
+                ..
+            }
+            | Self::Unsettled {
                 recovery_remaining_seconds,
                 ..
             } => *recovery_remaining_seconds,
@@ -158,6 +185,7 @@ impl Refusal {
             Self::ConnectionClosed => "runtime_connection_closed",
             Self::DeadlineExceeded => "runtime_deadline_exceeded",
             Self::Denied { code, .. } => code,
+            Self::Unsettled { .. } => CUSTODY_RECOVERING,
         }
     }
 }
@@ -1101,7 +1129,15 @@ fn uuid_list(value: Option<&Value>) -> Vec<String> {
 }
 
 /// The runtime's typed refusal as its `access_refusal` document spells it.
+/// A recovering session's refusal of a change whose effect is `unknown` is
+/// [`Refusal::Unsettled`], never the plain refusal of a request nothing served.
 fn access_refusal(reply: &Map<String, Value>) -> Refusal {
+    if text(reply, "code") == Some(CUSTODY_RECOVERING) && text(reply, "effect") == Some("unknown") {
+        return Refusal::Unsettled {
+            operation_id: text(reply, "operation_id").map(str::to_owned),
+            recovery_remaining_seconds: recovery_window(reply),
+        };
+    }
     Refusal::Denied {
         code: text(reply, "code").unwrap_or_default().to_owned(),
         sign_in: reply
@@ -2058,6 +2094,40 @@ mod tests {
         assert_eq!(ended.code(), "custody_unavailable");
         assert_eq!(Refusal::ConnectionClosed.recovery_remaining_seconds(), None);
         assert!(!Refusal::ConnectionClosed.is_custody_recovering());
+        assert!(!waiting.is_unsettled() && !ended.is_unsettled());
+    }
+
+    #[test]
+    fn a_change_the_lost_worker_was_serving_is_unsettled_while_the_session_recovers() {
+        let operation = "3".repeat(64);
+        let refused = access_refusal(
+            json!({
+                "kind": "access_refusal", "code": "custody_recovering", "sign_in": null,
+                "recovery_remaining_seconds": 87, "effect": "unknown", "operation_id": operation,
+            })
+            .as_object()
+            .unwrap(),
+        );
+        assert!(refused.is_unsettled());
+        assert!(refused.is_custody_recovering());
+        assert_eq!(refused.code(), CUSTODY_RECOVERING);
+        assert_eq!(refused.recovery_remaining_seconds(), Some(87));
+        assert_eq!(refused.unsettled_operation_id(), Some(operation.as_str()));
+        assert_eq!(refused.holder_operation_id(), None);
+        // A submission names no operation yet; its effect is unknown all the same.
+        let submitted = access_refusal(
+            json!({"kind": "access_refusal", "code": "custody_recovering", "effect": "unknown"})
+                .as_object()
+                .unwrap(),
+        );
+        assert!(submitted.is_unsettled());
+        assert_eq!(submitted.unsettled_operation_id(), None);
+        assert_eq!(submitted.recovery_remaining_seconds(), None);
+        assert!(!Refusal::denied(CUSTODY_RECOVERING).is_unsettled());
+        assert_eq!(
+            Refusal::denied(CUSTODY_RECOVERING).unsettled_operation_id(),
+            None
+        );
     }
 
     fn held() -> Admitted {
