@@ -710,10 +710,14 @@ export class CountingProxy {
 // The window driver
 // ---------------------------------------------------------------------------
 
+// The one provisioning panel: one row per element, each with its own
+// action, plan review and approval. Settings' provisioning section opens it.
 const DIALOG = ".setup-dialog";
-const FOOTER_BUTTONS = `${DIALOG} [data-slot=dialog-footer] button`;
-const ROW_BUTTON = (item) =>
-  `.setup-components [data-setup-row="${item}"] button`;
+const ROW = (item) => `${DIALOG} .setup-components [data-setup-row="${item}"]`;
+const ROW_BUTTON = (item) => `${ROW(item)} button`;
+/** The row's plan review; its last button approves the plan. */
+const APPROVE_BUTTON = (item) => `${ROW(item)} [data-setup-review] button`;
+const OPEN_PANEL = "[data-settings-provisioning] button";
 
 /** Install once per document: records every time a plan is rendered for review. */
 function watchReviews() {
@@ -750,10 +754,15 @@ export function compactRows(rows) {
   }));
 }
 
+/** The item's own setup in a snapshot: each item runs on its own. */
+export function runOf(snapshot, item) {
+  return snapshot?.runs?.find((run) => run.item === item) ?? null;
+}
+
 /**
  * Drives the packaged window through the browser setup as a person would:
- * Settings, Components, the row's own button, the plan, the approval, then
- * Resume after a forced interruption. Clicks go through the page; every
+ * Settings, the provisioning panel, the row's own button, the plan, the
+ * row's approval, then Resume after a forced interruption. Clicks go through the page; every
  * reading comes from the host's own setup commands, the window's IPC trace
  * and the rendered document.
  */
@@ -871,13 +880,15 @@ export class SetupDriver {
     return !(await this.visible(DIALOG));
   }
 
-  /** Settings, Components: the section with this item's row. */
+  /** The provisioning panel, opened from Settings' one section, with this item's row. */
   async openComponents() {
+    if (await this.visible(ROW(this.item))) return;
     await this.closeDialog();
-    if (!(await this.visible(".setup-components")))
+    if (!(await this.visible(OPEN_PANEL)))
       await this.click("[data-rail=settings]", "the Settings rail item");
+    await this.click(OPEN_PANEL, "Settings' provisioning button");
     await this.session.page
-      .locator(`.setup-components [data-setup-row="${this.item}"]`)
+      .locator(ROW(this.item))
       .waitFor({ state: "visible", timeout: 60000 });
   }
 
@@ -896,11 +907,11 @@ export class SetupDriver {
     this.rows = setup.snapshot.rows;
     const row = this.row(setup);
     this.note("rows-before", { rows: compactRows(this.rows) });
-    // The dialog opens once per launch while setup is incomplete; a person
-    // closes it to go to Settings instead.
+    // The panel opens once per launch while setup is incomplete; a person
+    // closes it and comes back to it through Settings.
     await this.wait(() => this.visible(DIALOG), {
       timeout: 20000,
-      what: "the setup dialog opened after sign-in",
+      what: "the provisioning panel opened after sign-in",
     }).catch(() => false);
     const dismissed = await this.closeDialog();
     if (row?.state !== "absent")
@@ -908,26 +919,26 @@ export class SetupDriver {
         rows: compactRows(this.rows),
       });
     return pass(
-      `${this.rows.length} rows; ${this.item} absent on the clean root${dismissed ? "; the first-run dialog closed" : ""}`,
+      `${this.rows.length} rows; ${this.item} absent on the clean root${dismissed ? "; the first-run panel closed" : ""}`,
       { rows: compactRows(this.rows) },
     );
   }
 
-  /** The row's own button opens the dialog on it and shows the plan. */
+  /** The row's own button in the panel shows the plan inside the row. */
   async showPlan() {
     await this.openComponents();
     this.rowLabel = await this.click(ROW_BUTTON(this.item), "the row's button");
     const setup = await this.wait(
       async () => {
         const read = await this.read();
-        return read.snapshot?.setup?.stage === "review" &&
-          (await this.visible(`[data-setup-plan="${this.item}"]`))
+        return runOf(read.snapshot, this.item)?.stage === "review" &&
+          (await this.visible(`${ROW(this.item)} [data-setup-plan]`))
           ? read
           : null;
       },
       { timeout: 240000, what: "the setup plan for review" },
     );
-    const run = setup.snapshot.setup;
+    const run = runOf(setup.snapshot, this.item);
     this.operationId = run.operation_id;
     this.review = run.review;
     const rendered = await this.session.shell(() =>
@@ -950,10 +961,13 @@ export class SetupDriver {
     );
   }
 
-  /** The person approves the plan the dialog shows. */
+  /** The person approves the plan the row shows. */
   async approve() {
     const before = await this.lastSequence();
-    this.approveLabel = await this.click(FOOTER_BUTTONS, "the approve button");
+    this.approveLabel = await this.click(
+      APPROVE_BUTTON(this.item),
+      "the row's approve button",
+    );
     const answer = await this.wait(
       async () =>
         (await this.setupCommands(before)).find(
@@ -1005,7 +1019,7 @@ export class SetupDriver {
     const cut = await this.wait(
       async () => {
         const setup = await this.read();
-        const run = setup.snapshot?.setup;
+        const run = runOf(setup.snapshot, this.item);
         const progress = run?.items.find((entry) => entry.item === this.item);
         // The wire count is the measure; the window's own progress stands in
         // when the download did not go through the counting proxy.
@@ -1087,7 +1101,7 @@ export class SetupDriver {
         const read = await this.read().catch(() => null);
         if (!read) return null;
         if (read.state === "signed_out") return read;
-        const run = read.snapshot?.setup;
+        const run = runOf(read.snapshot, this.item);
         if (run?.operation_id === this.operationId && run.stage === "settled")
           return read;
         if (
@@ -1122,19 +1136,13 @@ export class SetupDriver {
         { timeout: 180000, what: "the components after signing in again" },
       );
     }
-    const run = setup.snapshot?.setup ?? null;
+    const run = runOf(setup.snapshot, this.item);
     const row = this.row(setup);
     const dialog = await this.visible(DIALOG);
     const outcome = run?.operation_id === this.operationId ? run.outcome : null;
-    // The button the window offers: the dialog's main button follows the
-    // run's outcome; with no run on show, the row's own recovery.
-    const offered =
-      dialog && outcome === "interrupted"
-        ? "resume"
-        : dialog &&
-            ["failed", "cancelled", "not_enough_space"].includes(outcome)
-          ? "try_again"
-          : (row?.recovery ?? null);
+    // The button the window offers is the row's own, worded from its
+    // recovery, whether or not the panel is open.
+    const offered = row?.recovery ?? null;
     this.interrupted = {
       wireBytes: this.cut?.movedBytes ?? 0,
       outcome,
@@ -1154,18 +1162,11 @@ export class SetupDriver {
   async resume() {
     const reviewsBefore = (await this.reviewsRendered())?.length ?? 0;
     const before = await this.lastSequence();
-    if (this.interrupted.dialog) {
-      this.resumeLabel = await this.click(
-        FOOTER_BUTTONS,
-        "the dialog's main button",
-      );
-    } else {
-      await this.openComponents();
-      this.resumeLabel = await this.click(
-        ROW_BUTTON(this.item),
-        "the row's button",
-      );
-    }
+    await this.openComponents();
+    this.resumeLabel = await this.click(
+      ROW_BUTTON(this.item),
+      "the row's button",
+    );
     const started = await this.wait(
       async () =>
         (await this.setupCommands(before)).find(
@@ -1184,7 +1185,7 @@ export class SetupDriver {
     const settled = await this.wait(
       async () => {
         const read = await this.read();
-        const run = read.snapshot?.setup;
+        const run = runOf(read.snapshot, this.item);
         if (!run || run.operation_id === this.operationId) return null;
         resumedOperation = run.operation_id;
         if (run.stage === "review" && run.review) {
@@ -1192,8 +1193,8 @@ export class SetupDriver {
           // still reaches the full check and the second setup.
           const sequence = await this.lastSequence();
           await this.click(
-            FOOTER_BUTTONS,
-            "the approve button of a second plan",
+            APPROVE_BUTTON(this.item),
+            "the row's approve button of a second plan",
           );
           const answer = await this.wait(
             async () =>
@@ -1218,7 +1219,7 @@ export class SetupDriver {
     this.setupSettledAt = new Date().toISOString();
     const reviews = (await this.reviewsRendered()) ?? [];
     const after = completedBuilds(this.layout.browsers);
-    const run = settled.snapshot.setup;
+    const run = runOf(settled.snapshot, this.item);
     this.resumed = {
       label: this.resumeLabel,
       resumeRequested: started.args?.resume === true,
@@ -1269,9 +1270,7 @@ export class SetupDriver {
     const row = this.row(setup);
     this.rowsAfter = setup.snapshot.rows;
     await this.openComponents();
-    const shown = await this.session.page
-      .locator(`.setup-components [data-setup-row="${this.item}"]`)
-      .innerText();
+    const shown = await this.session.page.locator(ROW(this.item)).innerText();
     this.evidence = {
       itemId: this.item,
       state: row?.state ?? null,
@@ -1303,7 +1302,8 @@ export class SetupDriver {
     const tree = fingerprint([this.layout.browsers]);
     const reviewsBefore = (await this.reviewsRendered())?.length ?? 0;
     const wire = this.proxy.downstream;
-    const previous = (await this.read()).snapshot?.setup?.operation_id ?? null;
+    const previous =
+      runOf((await this.read()).snapshot, this.item)?.operation_id ?? null;
     const started = await this.session.call("desktop_setup_start", {
       items: [this.item],
       resume: false,
@@ -1316,7 +1316,7 @@ export class SetupDriver {
     const settled = await this.wait(
       async () => {
         const read = await this.read();
-        const run = read.snapshot?.setup;
+        const run = runOf(read.snapshot, this.item);
         if (!run || run.operation_id === previous) return null;
         if (run.stage === "review" && run.review && !reviewed) {
           reviewed = true;
@@ -1331,7 +1331,7 @@ export class SetupDriver {
       },
       { timeout: 300000, what: "the second setup to settle" },
     );
-    const run = settled.snapshot.setup;
+    const run = runOf(settled.snapshot, this.item);
     const reviews = (await this.reviewsRendered()) ?? [];
     this.second = {
       outcome: run.outcome,
@@ -1363,7 +1363,7 @@ export async function runSetupAcceptance({ driver, check, results }) {
     ],
     [
       "setup-review",
-      "Settings, Components and the browser row's button show its plan",
+      "Settings' provisioning button and the browser row's button show its plan",
       () => driver.showPlan(),
     ],
     [
