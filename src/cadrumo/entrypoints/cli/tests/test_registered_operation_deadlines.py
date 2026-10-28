@@ -56,7 +56,7 @@ def test_exchange_refuses_an_expired_or_non_finite_settlement_deadline_before_th
     with pytest.raises(RefusalError) as refused:
         _exchange(deadline)(cast("OperationRequest", object()))
 
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
 
 
 @pytest.mark.parametrize("timeout", [math.nan, math.inf, -math.inf, 0.0, -1.0, 120.5])

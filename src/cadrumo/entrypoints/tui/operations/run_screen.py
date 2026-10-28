@@ -60,7 +60,7 @@ _CONTRACT_READ_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 _ACTION_MIN_COLUMN_WIDTH = 16
 _REPLAY_KEY_MAX_LENGTH = 256
 """The longest replay key the operation request model accepts."""
-_UNKNOWN_OUTCOME_CODES = frozenset({RefusalCode.DEADLINE_EXCEEDED, RefusalCode.CONNECTION_CLOSED})
+_UNKNOWN_OUTCOME_CODES = frozenset({RefusalCode.TIMEOUT, RefusalCode.CONNECTION_CLOSED})
 """Transport outcomes that leave unknown whether the runtime recorded the submission."""
 
 

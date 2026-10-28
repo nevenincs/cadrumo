@@ -196,7 +196,7 @@ def test_a_violating_stream_refuses_at_its_step_and_closes(case: dict[str, Any])
     with pytest.raises(RefusalError) as waited:
         while True:
             prefix_reader.read(deadline=_deadline(0.2))
-    assert waited.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert waited.value.reason is RefusalCode.TIMEOUT
 
     writer, reader_channel = _pair()
     for step in case["steps"][: refused_at + 1]:

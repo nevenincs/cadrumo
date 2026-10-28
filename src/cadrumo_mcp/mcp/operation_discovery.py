@@ -168,7 +168,7 @@ def _ranked_page(
     for definition_id in scope:
         # Contracts already read stay cached, so a retry resumes where this stopped.
         if time.monotonic() >= deadline:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         description = _described(client, contracts, definition_id, unavailable)
         if description is not None:
             permitted.append(description)

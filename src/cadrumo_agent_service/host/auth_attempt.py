@@ -198,7 +198,7 @@ class AuthAttempt:
         try:
             return process.wait(timeout=timeout)
         except RefusalError as error:
-            if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+            if error.reason is RefusalCode.TIMEOUT:
                 return None
             raise
 

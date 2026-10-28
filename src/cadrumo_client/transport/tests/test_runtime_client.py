@@ -161,7 +161,7 @@ async def test_metadata_lookup_keeps_loop_responsive_and_acquires_no_endpoint_af
         else:
             with pytest.raises(RefusalError) as caught:
                 await opening
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
     finally:
         release.set()
         assert await asyncio.to_thread(finished.wait, 5)

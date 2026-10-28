@@ -34,7 +34,7 @@ from .test_result_page_tool import _auth_registry, _observed_operation_id, _Obse
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_DEADLINE = RefusalCode.DEADLINE_EXCEEDED.value
+_DEADLINE = RefusalCode.TIMEOUT.value
 
 
 def _document(called: CallToolResult) -> dict[str, object]:

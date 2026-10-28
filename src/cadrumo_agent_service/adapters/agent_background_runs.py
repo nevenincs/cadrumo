@@ -258,7 +258,7 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         while True:
             remaining = deadline - monotonic()
             if remaining <= 0:
-                return ModelRunRefusal(code=ModelRunRefusalCode.DEADLINE_EXCEEDED)
+                return ModelRunRefusal(code=ModelRunRefusalCode.TIMEOUT)
             wait = min(REPLY_WAIT_MAX_SECONDS, math.ceil(remaining))
             status, payload = self._exchange(
                 endpoint,

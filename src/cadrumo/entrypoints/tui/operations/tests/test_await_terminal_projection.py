@@ -188,7 +188,7 @@ async def test_an_expired_deadline_refuses_before_observing() -> None:
 
     with pytest.raises(RefusalError) as refused:
         await _await(controller, deadline=time.monotonic() - 1)
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert controller.requests == []
 
 
@@ -203,7 +203,7 @@ async def test_a_running_operation_is_observed_again_only_on_a_cue() -> None:
     silent = _Controller(running, running, running, cue=False)
     with pytest.raises(RefusalError) as expired:
         await _await(silent, deadline=time.monotonic() + 0.5)
-    assert expired.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert expired.value.reason is RefusalCode.TIMEOUT
     # The first read subscribes and reads once more; nothing then reads again without a cue.
     assert len(silent.requests) == 2
     assert silent.client.observers == []

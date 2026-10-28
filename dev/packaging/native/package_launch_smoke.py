@@ -115,7 +115,7 @@ def _require_health_running(process: WindowsOwnedProcess, root: Path, deadline: 
     try:
         code = process.wait(timeout=0)
     except RefusalError as error:
-        if error.reason != RefusalCode.DEADLINE_EXCEEDED:
+        if error.reason != RefusalCode.TIMEOUT:
             raise
     else:
         facts = json.dumps(_health_facts(root), sort_keys=True)
@@ -170,7 +170,7 @@ def _recover_runtime(
                 if error.reason not in {
                     RefusalCode.ENDPOINT_NOT_READY,
                     RefusalCode.CONNECTION_CLOSED,
-                    RefusalCode.DEADLINE_EXCEEDED,
+                    RefusalCode.TIMEOUT,
                 }:
                     raise
                 time.sleep(0.05)

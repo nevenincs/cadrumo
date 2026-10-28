@@ -81,13 +81,13 @@ class _SubmitClient:
                     request_id=request.request_id,
                     runtime_boot_id=uuid4(),
                     connection_id=uuid4(),
-                    code=RefusalCode.DEADLINE_EXCEEDED
+                    code=RefusalCode.TIMEOUT
                     if self.submit_failure == "wire_runtime"
                     else AccessDenialCode.PERIOD_DENIED,
                 ),
                 OperationSubmitted,
             )
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
 
     def close(self) -> None:
         self.closed = True
@@ -97,9 +97,9 @@ class _SubmitClient:
 @pytest.mark.parametrize(
     ("failure", "code"),
     (
-        ("runtime", RefusalCode.DEADLINE_EXCEEDED.value),
-        ("wire_runtime", RefusalCode.DEADLINE_EXCEEDED.value),
-        ("timeout", RefusalCode.DEADLINE_EXCEEDED.value),
+        ("runtime", RefusalCode.TIMEOUT.value),
+        ("wire_runtime", RefusalCode.TIMEOUT.value),
+        ("timeout", RefusalCode.TIMEOUT.value),
         ("os", RefusalCode.CONNECTION_CLOSED.value),
     ),
 )

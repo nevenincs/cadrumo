@@ -132,5 +132,5 @@ def test_cancel_failure_still_joins_native_completion(
     monkeypatch.setattr(windows_channel, "finish_windows_io", expired_finish)
     with pytest.raises(RefusalError) as refused:
         channel.read_exact(1, deadline=time.monotonic() + 5)
-    assert refused.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert refused.value.reason is RefusalCode.TIMEOUT
     assert joined.is_set(), "cancellation errors must not skip the native completion join"

@@ -802,7 +802,7 @@ def _exit_code(process: Any) -> int | None:
     try:
         return int(process.wait(timeout=0))
     except RefusalError as error:
-        if error.reason is RefusalCode.DEADLINE_EXCEEDED:
+        if error.reason is RefusalCode.TIMEOUT:
             return None
         raise
 

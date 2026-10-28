@@ -82,7 +82,7 @@ def observe_registered_operation(
             ),
         )
     except RefusalError as error:
-        if error.reason is RefusalCode.DEADLINE_EXCEEDED and deadline is not None and time.monotonic() >= deadline:
+        if error.reason is RefusalCode.TIMEOUT and deadline is not None and time.monotonic() >= deadline:
             raise registered_operation_still_running(operation_id, progress.effect, pending_check_command) from None
         raise
     return decode_registered_observation(observed, operation_id, definition_id, subject_ref, contract)

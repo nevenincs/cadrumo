@@ -209,7 +209,7 @@ class ProfileViewFrontend(OperationFrontend):
             while True:
                 remaining_budget(deadline)
                 if len(pages) >= max_pages:
-                    raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                    raise RefusalError(RefusalCode.TIMEOUT)
                 request = ProfileViewOperationRequest(
                     profile_id=self.profile_id,
                     page_kind=kind,

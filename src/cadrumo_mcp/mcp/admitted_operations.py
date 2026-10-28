@@ -271,7 +271,7 @@ def _submit(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     except RefusalError as error:
         return _unresolved_submission(error, submission.request_id, definition_id)
     except TimeoutError:
-        return _unresolved_submission(RefusalCode.DEADLINE_EXCEEDED.value, submission.request_id, definition_id)
+        return _unresolved_submission(RefusalCode.TIMEOUT.value, submission.request_id, definition_id)
     except OSError:
         return _unresolved_submission(RefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
     response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}

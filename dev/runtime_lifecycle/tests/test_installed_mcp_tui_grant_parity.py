@@ -558,7 +558,7 @@ async def test_installed_sdk_reconnects_tui_rotated_native_reference_and_cli_rev
                     def remaining() -> float:
                         budget = deadline - time.monotonic()
                         if budget <= 0:
-                            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                            raise RefusalError(RefusalCode.TIMEOUT)
                         return budget
 
                     async def reconcile_fresh() -> AutomationReceiptProjection:

@@ -225,7 +225,7 @@ def test_a_role_that_does_not_answer_in_time_is_ended(image: Path) -> None:
     launcher = ReplayLauncher("status_quick", stall_after=1)
 
     _refusal(
-        RefusalCode.DEADLINE_EXCEEDED,
+        RefusalCode.TIMEOUT,
         lambda: run_components_role(
             ComponentsRequest(ComponentsCommand.STATUS), timeout=0.5, image=image, launcher=launcher
         ),

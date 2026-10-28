@@ -186,7 +186,7 @@ def _serve() -> None:
                 # was queued behind another exchange: the admission stands and
                 # the tree keeps running. One that closed the connection ended
                 # the admission with it.
-                if error.reason is not RefusalCode.DEADLINE_EXCEEDED or client.connection.closed:
+                if error.reason is not RefusalCode.TIMEOUT or client.connection.closed:
                     raise
                 _LOGGER.warning("agent service lease claim overran; claiming again")
                 wake.wait(_CLAIM_RETRY_SECONDS)

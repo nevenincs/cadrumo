@@ -156,7 +156,7 @@ def test_submit_refuses_invalid_deadline_before_contract_or_operation_io(
     with pytest.raises(RefusalError) as raised:
         _submit(client, deadline)
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert client.contract_deadlines == []
     assert client.operation_deadlines == []
 
@@ -177,7 +177,7 @@ def test_retained_exchange_refuses_invalid_deadline_before_operation_io(
     with pytest.raises(RefusalError) as raised:
         asyncio.run(controller.start())
 
-    assert raised.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert raised.value.reason is RefusalCode.TIMEOUT
     assert client.contract_deadlines == []
     assert client.operation_deadlines == []
 

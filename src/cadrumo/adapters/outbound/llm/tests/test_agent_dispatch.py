@@ -162,7 +162,7 @@ def test_a_role_with_no_picked_model_says_to_pick_one_in_the_desktop_app(tmp_pat
     [
         (ModelRunRefusalCode.RUN_FAILED, LLMProviderError),
         (ModelRunRefusalCode.REFUSED_BY_PROVIDER, LLMProviderError),
-        (ModelRunRefusalCode.DEADLINE_EXCEEDED, LLMProviderError),
+        (ModelRunRefusalCode.TIMEOUT, LLMProviderError),
         # A caller's misspelled role is a defect, never a prompt to configure a selection.
         (ModelRunRefusalCode.UNKNOWN_ROLE, LLMProviderError),
         (ModelRunRefusalCode.LANE_UNAVAILABLE, LLMConfigError),

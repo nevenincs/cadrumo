@@ -140,7 +140,7 @@ def test_exact_runtime_crash_manager_recovery_and_operation_state(harness: Lifec
         assert stale.value.reason in {
             RefusalCode.CONNECTION_CLOSED,
             RefusalCode.UNAVAILABLE,
-            RefusalCode.DEADLINE_EXCEEDED,
+            RefusalCode.TIMEOUT,
             RefusalCode.PEER_UNTRUSTED,
         }
         recovered = harness.connect(profile.profile_id, after_boot=old_boot)
@@ -228,7 +228,7 @@ def test_manager_death_preserves_custody_and_successor_restores_verified_supervi
     assert stale.value.reason in {
         RefusalCode.CONNECTION_CLOSED,
         RefusalCode.UNAVAILABLE,
-        RefusalCode.DEADLINE_EXCEEDED,
+        RefusalCode.TIMEOUT,
         RefusalCode.PEER_UNTRUSTED,
     }
     _refused(_private_request(recovered, uuid4()))

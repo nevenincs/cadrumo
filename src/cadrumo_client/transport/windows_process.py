@@ -221,7 +221,7 @@ class WindowsOwnedProcess:
         milliseconds = win32event.INFINITE if timeout is None else min(0xFFFFFFFE, math.ceil(timeout * 1000))
         result = win32event.WaitForSingleObject(self._handle, milliseconds)
         if result == win32event.WAIT_TIMEOUT:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         if result != win32event.WAIT_OBJECT_0:
             raise RefusalError(RefusalCode.UNAVAILABLE)
         return _native_exit_status(self._handle)
@@ -448,7 +448,7 @@ class WindowsProcessScope:
         background. Reporting never changes the termination outcome.
         """
         failure = observed.failure
-        expired = isinstance(failure, RefusalError) and failure.reason is RefusalCode.DEADLINE_EXCEEDED
+        expired = isinstance(failure, RefusalError) and failure.reason is RefusalCode.TIMEOUT
         fields: dict[str, DiagnosticValue] = {
             "elapsed_seconds": round(max(0.0, time.monotonic() - observed.started), 3),
             "timeout_seconds": observed.timeout,
@@ -761,7 +761,7 @@ def _terminate_windows_job(job: int, deadline: float, observed: _JobTermination)
             "ActiveProcesses"
         ]:
             if time.monotonic() >= deadline:
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             time.sleep(min(0.01, max(0, deadline - time.monotonic())))
         observed.job_empty = round(time.monotonic() - requested, 3)
         _await_job_members(members, deadline)
@@ -806,7 +806,7 @@ def _report_late_exit(waiters: tuple[WindowsOwnedProcess, ...], started: float, 
             try:
                 code = waiter.wait(timeout=max(0.0, deadline - time.monotonic()))
             except RefusalError as error:
-                outcome = "observation_expired" if error.reason is RefusalCode.DEADLINE_EXCEEDED else "unavailable"
+                outcome = "observation_expired" if error.reason is RefusalCode.TIMEOUT else "unavailable"
             except Exception:
                 outcome = "unavailable"
             diagnostic_event(
@@ -837,7 +837,7 @@ def _await_job_members(members: tuple[NativeWindowsHandle, ...], deadline: float
         remaining = max(0.0, deadline - time.monotonic())
         result = win32event.WaitForSingleObject(int(member), min(0xFFFFFFFE, math.ceil(remaining * 1000)))
         if result == win32event.WAIT_TIMEOUT:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         if result != win32event.WAIT_OBJECT_0:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
 

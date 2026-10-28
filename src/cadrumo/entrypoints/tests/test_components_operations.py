@@ -767,7 +767,7 @@ def test_real_contained_process_cancellation_reaps_before_releasing_wait_handles
         else:
             with pytest.raises(RefusalError) as caught:
                 run()
-            assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+            assert caught.value.reason is RefusalCode.TIMEOUT
 
 
 @pytest.mark.parametrize("retained_effect", [OperationEffect.UNKNOWN, OperationEffect.UPDATED])

@@ -38,10 +38,10 @@ from ...core.errors.hierarchy import CadrumoError
 if TYPE_CHECKING:
     from cadrumo_client.transport.installation_client import InstallationClient, InstallationSecretHolder
 
-_SENT_ACT_REFUSALS: Final = frozenset({RefusalCode.DEADLINE_EXCEEDED, RefusalCode.CONNECTION_CLOSED})
+_SENT_ACT_REFUSALS: Final = frozenset({RefusalCode.TIMEOUT, RefusalCode.CONNECTION_CLOSED})
 """The transport outcomes that arise only after an act was sent, so what it did is not known."""
 
-_UNANSWERED_REFUSALS: Final = frozenset({RefusalCode.UNAVAILABLE, RefusalCode.DEADLINE_EXCEEDED})
+_UNANSWERED_REFUSALS: Final = frozenset({RefusalCode.UNAVAILABLE, RefusalCode.TIMEOUT})
 """The outcomes of opening a connection that a later attempt can cure: busy, timed out, or unreadable."""
 
 

@@ -337,13 +337,13 @@ class PosixEndpoint:
         except (OSError, ValueError):
             raise RefusalError(RefusalCode.UNAVAILABLE) from None
         if self._listener not in readable:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         # The connection is waiting now; one its peer abandoned meanwhile is not waited for.
         self._listener.settimeout(0)
         try:
             return PosixChannel(_accept_socket(self._listener))
         except (TimeoutError, BlockingIOError):
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
 
     def close(self) -> None:
         """Remove only the owned socket inode; never unlink the ownership lock."""

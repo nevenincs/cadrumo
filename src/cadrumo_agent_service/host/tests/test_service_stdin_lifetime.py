@@ -283,7 +283,7 @@ class FakeClient:
         self.claims += 1
         if self.claims == 2:
             # The runtime retired the lease's session and is slow to re-attend it.
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         if self.claims == 4:
             return None
         # A pushed frame wakes the next claim.

@@ -18,7 +18,7 @@ def google_consent_remaining(deadline: float) -> float:
     """Use the original consent deadline for every exchange and result read."""
     remaining = deadline - time.monotonic()
     if remaining <= 0:
-        raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        raise RefusalError(RefusalCode.TIMEOUT)
     return remaining
 
 

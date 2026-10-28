@@ -213,7 +213,7 @@ class PosixChannel:
                 payload.extend(block)
             return bytes(payload)
         except TimeoutError:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         except OSError:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
 
@@ -225,7 +225,7 @@ class PosixChannel:
             self._set_deadline(deadline)
             self._socket.sendall(payload)
         except TimeoutError:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         except OSError:
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
 

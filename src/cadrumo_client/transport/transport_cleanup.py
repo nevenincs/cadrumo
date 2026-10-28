@@ -34,7 +34,7 @@ class TransportCleanup:
         if deadline is None:
             self._close_guard.acquire()
         elif not self._close_guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         try:
             if not self._released:
                 self.resource.close()

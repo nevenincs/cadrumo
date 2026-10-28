@@ -166,9 +166,9 @@ def finish_windows_io(
                 waited,
             )
         except InterruptedError:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED) from None
+            raise RefusalError(RefusalCode.TIMEOUT) from None
         if elapsed != win32event.WAIT_OBJECT_0:
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return win32file.GetOverlappedResult(int(handle), overlapped, False)
     except BaseException:
         # Cancellation must complete before releasing the OVERLAPPED/read buffer.

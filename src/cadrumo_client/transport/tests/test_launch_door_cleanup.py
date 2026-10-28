@@ -137,7 +137,7 @@ async def test_startup_adaptation_retains_transitive_owners_through_duplicates_a
     timeout.__cause__ = cancellation
     primary: BaseException = cancellation
     if deadline_mapping:
-        primary = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        primary = RefusalError(RefusalCode.TIMEOUT)
         primary.__cause__ = timeout
     original_cause = primary.__cause__
 
@@ -152,7 +152,7 @@ async def test_startup_adaptation_retains_transitive_owners_through_duplicates_a
     assert cancellation.__dict__["cleanup_error"] is body
     assert body.reason is RefusalCode.VERSION_MISMATCH
     if isinstance(primary, RefusalError):
-        assert primary.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert primary.reason is RefusalCode.TIMEOUT
     else:
         assert primary.args == ("first cancellation",)
     cleanup = _cleanup(primary)
@@ -250,7 +250,7 @@ async def test_deadline_mapping_preserves_cause_and_retryable_late_connection_ow
     try:
         with pytest.raises(RefusalError) as caught:
             await _door(channel).open(timeout=0.05)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
         assert isinstance(caught.value.__cause__, TimeoutError)
         cancellation = caught.value.__cause__.__cause__
         assert isinstance(cancellation, asyncio.CancelledError)

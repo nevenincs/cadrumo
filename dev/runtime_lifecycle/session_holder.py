@@ -640,7 +640,7 @@ class WindowsRuntimeSessionHolder:
             try:
                 self._process.wait(timeout=_CLOSE_SECONDS)
             except RefusalError as error:
-                if error.reason != RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason != RefusalCode.TIMEOUT:
                     failures.append(error)
 
         scope_settled = self._scope is None

@@ -267,7 +267,7 @@ class _SlowConnectionClient(_AdmittedClient):
         time.sleep(self.read_seconds)
         if time.monotonic() > deadline:
             self.cut.append(definition_id)
-            raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+            raise RefusalError(RefusalCode.TIMEOUT)
         return super().describe(definition_id, deadline=deadline)
 
 
@@ -285,7 +285,7 @@ async def test_a_search_out_of_time_keeps_the_session_and_resumes_from_what_it_r
             budget.setattr(admitted_operations, "_TIMEOUT", 0.05)
             late = await adapter.call("search", {"query": "ledger"})
         assert client.cut == []
-        assert late == {"outcome": "refused", "code": RefusalCode.DEADLINE_EXCEEDED.value}
+        assert late == {"outcome": "refused", "code": RefusalCode.TIMEOUT.value}
         found = await adapter.call("search", {"query": "ledger"})
     finally:
         await adapter.close()

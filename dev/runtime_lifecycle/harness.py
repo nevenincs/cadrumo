@@ -212,7 +212,7 @@ class LifecycleHarness:
             try:
                 code = self.process.wait(timeout=0)
             except RefusalError as error:
-                if error.reason is not RefusalCode.DEADLINE_EXCEEDED:
+                if error.reason is not RefusalCode.TIMEOUT:
                     raise
             else:
                 raise RuntimeError(f"Manager exited before verified readiness: {code}")

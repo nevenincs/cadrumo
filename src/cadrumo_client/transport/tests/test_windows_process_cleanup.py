@@ -264,7 +264,7 @@ async def test_unproven_termination_retains_job_and_exact_primary_until_proven_r
         assert caught.value is primary
     else:
         assert isinstance(caught.value, RefusalError)
-        assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+        assert caught.value.reason is RefusalCode.TIMEOUT
     retained = _cleanup(caught.value)
     assert retained.resources == (scope,)
     if primary_kind == "cancel":
@@ -311,7 +311,7 @@ def test_a_missed_bound_is_reported_as_expired_and_starts_the_watch_of_the_late_
         native.active = 0
         scope.terminate()
 
-    assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+    assert caught.value.reason is RefusalCode.TIMEOUT
     expired, settled = _termination_events(caplog)
     assert expired.levelno == logging.WARNING
     assert expired.__dict__["outcome"] == "deadline_expired"

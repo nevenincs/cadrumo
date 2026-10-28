@@ -272,7 +272,7 @@ class ReviewWire:
             self.action = management.response_action
             self._cue()
             if self.fault == "lost-ack":
-                raise RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+                raise RefusalError(RefusalCode.TIMEOUT)
             if self.fault == "mutation-id":
                 reply_id = uuid4()
             document = OperationResponseMutationSuccessV1(
@@ -809,7 +809,7 @@ def test_review_callback_cancellation_is_exact_and_expired_deadline_prevents_con
     with pytest.raises(CliRefusedBoundaryError) as refused:
         _run(timed, expired)
     assert refused.value.context is not None
-    assert refused.value.context["reason"] == RefusalCode.DEADLINE_EXCEEDED.value
+    assert refused.value.context["reason"] == RefusalCode.TIMEOUT.value
     assert not any(isinstance(item, OperationManage) for item in timed.requests)
 
 
@@ -825,7 +825,7 @@ class ReleaseFaultChannel:
         self.writes: list[bytes] = []
         self.close_calls = 0
         self.close_failures = close_failures
-        self.failure = RefusalError(RefusalCode.DEADLINE_EXCEEDED)
+        self.failure = RefusalError(RefusalCode.TIMEOUT)
         self.close_contexts: list[str | None] = []
         self.close_threads: list[int] = []
 
@@ -914,7 +914,7 @@ def test_mapped_registered_exchange_and_invocation_keep_one_actual_native_retry_
     assert mapped.context is not None
     assert mapped.context["operation_id"] == _OPERATION
     assert mapped.context["effect"] == OperationEffect.UNKNOWN.value
-    assert mapped.context["reason"] == RefusalCode.DEADLINE_EXCEEDED.value
+    assert mapped.context["reason"] == RefusalCode.TIMEOUT.value
     assert mapped.__cause__ is None
     assert channel.close_calls == 2
     retained = _retained_cleanup(mapped)

@@ -278,7 +278,7 @@ def test_an_accept_wait_ends_for_a_wake_and_the_next_accepts_the_waiting_peer(tm
         assert waiting.is_alive(), "with no deadline only a connection or a wake ends the wait"
         wake.set()
         waiting.join(2)
-        assert not waiting.is_alive() and refused == [RefusalCode.DEADLINE_EXCEEDED]
+        assert not waiting.is_alive() and refused == [RefusalCode.TIMEOUT]
         wake.clear()
         with ThreadPoolExecutor(max_workers=1) as pool:
             accepted = pool.submit(endpoint.accept, timeout=None, wakes=(wake,))
@@ -353,7 +353,7 @@ def test_an_interrupted_accept_settles_its_io_before_the_next_accept(
             if interruption is InterruptedError:
                 with pytest.raises(RefusalError) as caught:
                     endpoint.accept(timeout=None)
-                assert caught.value.reason is RefusalCode.DEADLINE_EXCEEDED
+                assert caught.value.reason is RefusalCode.TIMEOUT
             else:
                 with pytest.raises(KeyboardInterrupt):
                     endpoint.accept(timeout=None)
