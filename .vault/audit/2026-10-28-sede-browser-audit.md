@@ -76,6 +76,8 @@ Resolved: ec97843317
 
 `App.tsx:749-757` and `:2907-2909` only reveal the page. Fix: send the `home` verb when a view is already open.
 
+Resolved: 7de262810f
+
 ### upload-cancel-scope | low | Cancelling one upload drops every pending chooser
 
 `sede_view.py:410-413` ignores `transfer_id`. Fix: map transfers to their chooser.

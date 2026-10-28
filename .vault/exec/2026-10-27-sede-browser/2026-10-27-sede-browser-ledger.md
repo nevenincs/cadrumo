@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:8cb666e3d9dd24fe9a12aca11dbf44dcc59a34eabc0f2d0ad7206956a7dc7dbe'
+body_hash: 'sha256:ae4ee882e5e953845f86894ec6373e52d460f6e1a6e837aebd445c9c3a770942'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -356,6 +356,10 @@ related:
 - `S12` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/aeat/auth/tests src/cadrumo/application/auth/tests src/cadrumo/application/live/tests -k "view or session or sede" -m "not aeat_live" (215 passed)` -> `pass`
 - `S12` `verify:` `uv run --no-sync ruff check, ruff format --check and ty check on the touched files` -> `pass`
 - `S12` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache (30 kept)` -> `pass`
+- `S10` `M` `native/desktop/frontend/src/components/browser/BrowserPage.tsx`
+- `S10` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S10` `verify:` `npm run check (native/desktop/frontend)` -> `pass`
+- `S10` `verify:` `npx playwright test -c playwright.scenarios.config.ts tests/scenarios/sede-browser.spec.ts tests/scenarios/scenarios.spec.ts (all 21 sede-browser passed; 156 of 158 passed, the 2 scenarios.spec failures pass in isolation)` -> `pass`
 
 ## Notes
 
@@ -398,3 +402,4 @@ related:
 - `S05` view-login-identity: a mismatch reports verification-failed; a distinct identity notice needs a `view_stream` contract change, not made
 - `S12` signed-out-page-verification: a load is verified only when its cookie jar differs from every refused jar; loads during a check fold into one more check (commit 1d41de0fbf)
 - `S12` signed-out-page-verification: reusing one browser across verifications was not done; BrowserSession launches one browser per context and refuses a second context
+- `S10` aeat-click-target: an AEAT click on an open view brings the Browser page forward and navigates the view home; landed in the operator checkpoint commit 7de262810f together with the offer-removal hunks
