@@ -19,7 +19,7 @@ import pytest
 from pydantic import SecretStr
 
 from cadrumo.application.auth.acquisition_lock import AuthAcquisitionLockState
-from cadrumo.application.auth.protocols import BrowserSessionFactoryPort
+from cadrumo.application.auth.protocols import BrowserSessionFactoryPort, BrowserSessionPort
 from cadrumo.application.auth.sessions import ViewSessionPublicationOutcome, view_context_provisioner
 from cadrumo.application.live.sede_view_operation import SedeViewSessionSignIn
 from cadrumo.application.live.sede_view_ports import SedeViewEnd, SedeViewOpening
@@ -54,6 +54,8 @@ from ...browser.tests.real_http_boundary import (
     real_browser_factory,
 )
 from ...browser.tests.view_page_support import RecordingViewSink, until
+from .. import session_store
+from .._clave_provider_common import default_sede_target_url
 from ..clave_movil import ClaveMovilAuthProvider
 from .view_session_support import (
     CERTIFICATE_NIF,
@@ -74,6 +76,18 @@ _SIGN_IN_SECONDS = 60.0
 _OTHER_NIF = "00000000T"
 
 
+class _LaunchCount:
+    """The real browser factory, counting the browsers the sign-in's verifications launch."""
+
+    def __init__(self, factory: BrowserSessionFactoryPort) -> None:
+        self._factory = factory
+        self.launches = 0
+
+    async def __call__(self, settings: Settings) -> BrowserSessionPort:
+        self.launches += 1
+        return await self._factory(settings)
+
+
 @dataclass
 class _Panel:
     """An open view, its stood-in window and the sign-in watching it."""
@@ -82,6 +96,7 @@ class _Panel:
     sink: RecordingViewSink
     sign_in: SedeViewSessionSignIn
     factory: BrowserSessionFactoryPort
+    verification_browsers: _LaunchCount
     stop: list[bool]
     browsing: asyncio.Task[SedeViewEnd] | None = None
 
@@ -135,17 +150,19 @@ async def _panel(
             ),
         )
         stop = [False]
+        verification_browsers = _LaunchCount(factory)
         panel = _Panel(
             view=view,
             sink=sink,
             factory=factory,
+            verification_browsers=verification_browsers,
             stop=stop,
             sign_in=SedeViewSessionSignIn(
                 settings=settings,
                 seed=seed,
                 browser=view,
                 certificate_secret_backend_factory=CERTIFICATE_SECRET_BACKEND_FACTORY,
-                browser_session_factory=factory,
+                browser_session_factory=verification_browsers,
                 operator_scope_ports=OPERATOR_SCOPE_PORTS,
                 authority_operation=operation,
                 effect_guard_for=lambda _phase: host.effect_guard,
@@ -216,6 +233,45 @@ async def test_a_manual_cl_ve_permanente_login_with_empty_custody_publishes_and_
                 assert panel.browsing is not None and not panel.browsing.done()
 
             assert await _reuses_the_published_session(panel.factory, operation)
+
+
+@pytest.mark.asyncio
+async def test_signed_out_loads_that_change_no_cookie_are_verified_once(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """Loads that slide a cookie's expiry or touch local storage cannot change a verification's answer."""
+    kind = AuthProviderKind.CLAVE_PERMANENTE
+    sede = Settings.external_constants().aeat.domains.sede
+    with clave_permanente_profile(tmp_path, operation):
+        async with opened_http_boundary() as boundary:
+            host = OperationHost(kind=kind)
+            boundary.configure("signed-out-churn")
+            async with _panel(boundary, host, operation, name="view-signed-out-churn") as panel:
+                page = panel.view.context.pages[0]
+                await page.wait_for_load_state("load")
+                captures: set[str] = set()
+                for _load in range(3):
+                    # The person browses the signed-out Sede; each load changes the capture.
+                    await page.goto(sede)
+                    captures.add(session_store.storage_state_sha256(await panel.view.context.storage_state()))
+                    await panel.sign_in.page_loaded()
+                landing = default_sede_target_url(load_settings())
+                probes = [url for url in boundary.requested_urls if url == landing]
+
+                assert len(captures) == 3
+                assert len(probes) == 1
+                assert panel.verification_browsers.launches == 1
+                assert not panel.sign_in.signed_in
+
+                # Signing in changes the cookies, so it is verified at once.
+                boundary.configure("clave-permanente-success")
+                await page.goto(sede)
+                await panel.sign_in.page_loaded()
+
+                assert panel.sign_in.signed_in
+                assert panel.verification_browsers.launches == 2
+                assert host.effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+                assert SESSION_COOKIE in stored_cookie_names(kind)
 
 
 @pytest.mark.asyncio

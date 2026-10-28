@@ -28,7 +28,7 @@ the journal, the result or a log.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Mapping
 from contextlib import AbstractAsyncContextManager
 from uuid import UUID
 
@@ -198,6 +198,31 @@ type EffectGuardFor = Callable[[str], Callable[[], AbstractAsyncContextManager[N
 """The operation's effect guard for a publication announced in one phase."""
 
 
+def _cookie_jar_digest(storage_state: Mapping[str, object]) -> str:
+    """Digest the part of a capture that a provider's verification can answer differently for.
+
+    AEAT recognises a session by the cookies the browser sends: their domain,
+    path, name and value. An expiry a response slides forward, and the pages'
+    local storage, change the capture on almost every load without changing
+    what a verification would find, so they are left out.
+    """
+    raw = storage_state.get("cookies")
+    cookies: list[object] = list(raw) if isinstance(raw, list) else []
+    jar = sorted(
+        (str(cookie.get("domain")), str(cookie.get("path")), str(cookie.get("name")), str(cookie.get("value")))
+        for cookie in cookies
+        if isinstance(cookie, Mapping)
+    )
+    return session_store().storage_state_sha256(
+        {
+            "cookies": [
+                {"domain": domain, "path": path, "name": name, "value": value} for domain, path, name, value in jar
+            ],
+            "origins": [],
+        }
+    )
+
+
 class SedeViewSessionSignIn:
     """The view's session, from its seed to its last publication.
 
@@ -209,11 +234,15 @@ class SedeViewSessionSignIn:
     each one's baseline is the digest the view was seeded from or last
     published, so the close-time publication follows the latest sign-in.
 
-    Each refused capture is remembered by digest and not verified again. After
-    a sign-in publishes, page loads are no longer checked: the close-time
-    publication covers what follows. A sign-in publication interrupted between
-    its ``UNKNOWN`` and ``UPDATED`` reports sets :attr:`unknown`, which ends
-    the view.
+    A page load is checked only when a verification could answer differently:
+    the capture's cookie jar must differ from every jar a verification already
+    refused. At most one check runs at a time, and loads that arrive meanwhile
+    fold into one more check after it. Each verification runs in the
+    provider's own browser, never the person's page, and none of this holds
+    back the person's browsing. After a sign-in publishes, page loads are no
+    longer checked: the close-time publication covers what follows. A sign-in
+    publication interrupted between its ``UNKNOWN`` and ``UPDATED`` reports
+    sets :attr:`unknown`, which ends the view.
     """
 
     def __init__(
@@ -247,6 +276,8 @@ class SedeViewSessionSignIn:
         self._publishing = asyncio.Lock()
         self._interruptible = False
         self._refused: set[str] = set()
+        self._checking = False
+        self._loads = 0
         self._unknown = False
 
     @property
@@ -302,19 +333,39 @@ class SedeViewSessionSignIn:
             await self._browser.announce_phase(ViewPhase.BROWSING)
 
     async def page_loaded(self) -> None:
-        """Publish the view's session if the person has signed in since the last check."""
+        """Publish the view's session if the person has signed in since the last check.
+
+        A load that arrives while a check runs returns at once and folds into
+        one more check after the running one.
+        """
         if self._watch_ended():
             return
+        self._loads += 1
+        if self._checking:
+            return
+        self._checking = True
+        try:
+            while True:
+                checked = self._loads
+                await self._check_sign_in()
+                if self._loads == checked or self._watch_ended():
+                    return
+        finally:
+            self._checking = False
+
+    async def _check_sign_in(self) -> None:
         async with self._publishing:
             if self._watch_ended():
                 return
             captured = await self._browser.context.storage_state()
-            digest = session_store().storage_state_sha256(captured)
-            if digest in self._refused or digest == self._baseline.storage_state_sha256:
+            if session_store().storage_state_sha256(captured) == self._baseline.storage_state_sha256:
+                return
+            jar = _cookie_jar_digest(captured)
+            if jar in self._refused:
                 return
             publication = await self._publish(SEDE_VIEW_SIGN_IN_PHASE, operation=_SIGN_IN_OPERATION)
             if publication.outcome is ViewSessionPublicationOutcome.VERIFICATION_FAILED:
-                self._refused.add(digest)
+                self._refused.add(jar)
             await self._settle(publication)
 
     async def close(self) -> ViewSessionPublicationOutcome:

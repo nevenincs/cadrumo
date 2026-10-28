@@ -17,6 +17,7 @@ from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
+from email.utils import formatdate
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
@@ -57,6 +58,7 @@ _PRE303_TARGET_URL: Final[str] = f"{_DOMAINS.www1}{PRE303.presentation_service_p
 _PERMANENTE_IDP_URL: Final[str] = f"https://se-pasarela.{urlsplit(_DOMAINS.clave).netloc}/idp/login"
 _DEFAULT_CLAVE_TARGET_URL: Final[str] = f"{_DOMAINS.www6}{EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 _CENSAL_PATH: Final[str] = EXTERNAL.aeat.sede_paths.censal_datos
+_CHURN_EPOCH: Final[float] = datetime(2099, 1, 1, tzinfo=UTC).timestamp()
 #: The synthetic taxpayer the stood-in Sede shows as signed in, unless a test signs in someone else.
 SIGNED_IN_NIF: Final[str] = "12345678Z"
 #: Registrable domains whose hosts the tunnel stands in for; any other host is refused.
@@ -179,6 +181,11 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         if self.path == "/clave-success":
             self.send_header("Set-Cookie", "AEAT_SESSION=real-boundary; Path=/; Secure; SameSite=Lax")
+        if self.path == "/signed-out-churn":
+            # AEAT slides a signed-out balancer cookie's expiry forward on every response.
+            boundary = cast("_BoundaryServer", self.server).boundary
+            expires = formatdate(_CHURN_EPOCH + 60 * boundary.next_churn(), usegmt=True)
+            self.send_header("Set-Cookie", f"AEAT_BALANCER=node-1; Path=/; Secure; Expires={expires}")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
@@ -239,6 +246,9 @@ class _BoundaryHandler(BaseHTTPRequestHandler):
             html = f"<p>{_CLAVE_PERMANENTE.invalid_credentials_marker}</p>"
         elif self.path == "/censal-consulta":
             html = _censal_consulta_html(boundary.signed_in_nif)
+        elif self.path == "/signed-out-churn":
+            # The page's own script, as AEAT's pages keep their own local state.
+            html = "<html><body><script>localStorage.setItem('visit', String(Date.now()))</script></body></html>"
         else:
             html = "<html><title>real-auth-boundary</title></html>"
         return html.encode("utf-8")
@@ -270,6 +280,7 @@ class LocalHttpBoundary:
         self.scenario = "success"
         self.signed_in_nif = SIGNED_IN_NIF
         self.response_html: str | None = None
+        self._churn = 0
         self.navigation_count = 0
         self.requested_urls: list[str] = []
         self.request_started = threading.Event()
@@ -327,6 +338,12 @@ class LocalHttpBoundary:
             self.navigation_count += 1
             self.requested_urls.append(requested_url)
             return self._local_path_for_request(requested_url)
+
+    def next_churn(self) -> int:
+        """Count one more signed-out response, so each slides its cookie's expiry further."""
+        with self._record_lock:
+            self._churn += 1
+            return self._churn
 
     def _retry_path(self) -> str | None:
         scenario = self.scenario
@@ -402,9 +419,16 @@ class LocalHttpBoundary:
     def _censal_path(requested_url: str) -> str | None:
         return "/censal-consulta" if urlsplit(requested_url).path == _CENSAL_PATH else None
 
+    def _signed_out_churn_path(self, requested_url: str) -> str | None:
+        """Serve a signed-out Sede: pages load, and the protected Cl@ve landing a verification probes fails."""
+        if self.scenario != "signed-out-churn":
+            return None
+        return "/failure" if requested_url == _DEFAULT_CLAVE_TARGET_URL else "/signed-out-churn"
+
     def _local_path_for_request(self, requested_url: str) -> str:
         for resolver in (
             self._censal_path,
+            self._signed_out_churn_path,
             self._retry_or_failure_path,
             self._clave_movil_path,
             self._clave_permanente_path,
