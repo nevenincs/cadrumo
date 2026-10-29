@@ -150,6 +150,12 @@ def _divergences(bodies: dict[tuple[str, str], str]) -> list[str]:
         windows = bodies.get((name, "windows"))
         if unix is None or windows is None:
             continue
+        # WSL invokes the Linux body itself, so it has the same work and verdict.
+        if re.fullmatch(
+            rf"\s*wsl\.exe\s+--cd\s+\{{\{{quote\(justfile_directory\(\)\)\}}\}}\s+--exec\s+just\s+{re.escape(name)}\s*",
+            windows,
+        ):
+            continue
         unix_meaning = _meaning(unix)
         windows_meaning = _meaning(windows)
         for label, unix_value in unix_meaning.items():
@@ -186,6 +192,16 @@ def test_every_platform_pair_agrees_on_what_it_does(live_bodies: dict[tuple[str,
     assert divergences == [], (
         "these platform-variant recipes do different work depending on the operating system, "
         "so a gate is weaker on one of them than the other:\n  " + "\n  ".join(divergences)
+    )
+
+
+def test_wsl_delegation_must_invoke_the_same_linux_recipe() -> None:
+    """A WSL wrapper is equivalent only when it delegates to its own recipe."""
+    linux = "cargo test --locked --lib"
+    wrapper = "wsl.exe --cd {{quote(justfile_directory())}} --exec just test-linux"
+    assert _divergences({("test-linux", "unix"): linux, ("test-linux", "windows"): wrapper}) == []
+    assert _divergences(
+        {("test-linux", "unix"): linux, ("test-linux", "windows"): wrapper.replace("test-linux", "test-other")}
     )
 
 

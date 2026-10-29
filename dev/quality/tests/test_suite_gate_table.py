@@ -41,7 +41,9 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.audit.report import IMPORT_QUALITY_RECIPE, import_quality_command
+from dev.exit_codes import TOOL_MISSING
 
+from .. import suite
 from ..suite import GATES, run_gate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -291,6 +293,37 @@ def _dashboard_overrides(source: str) -> list[str]:
         if callee in runners and node.keywords:
             overrides.append(f"line {node.lineno}: {callee}() overrides {keywords}")
     return overrides
+
+
+@pytest.mark.parametrize("first_status", [0, 3])
+def test_missing_tool_does_not_stop_later_gates(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    first_status: int,
+) -> None:
+    """Actual process launch failures must preserve the aggregate and first failure."""
+    marker = tmp_path / "later-gate-ran"
+    missing = str(tmp_path / "absent-quality-tool")
+    monkeypatch.setattr(
+        suite,
+        "GATES",
+        (
+            ("first", (sys.executable, "-c", f"raise SystemExit({first_status})")),
+            ("missing", (missing,)),
+            (
+                "later",
+                (sys.executable, "-c", "import pathlib, sys; pathlib.Path(sys.argv[1]).touch()", str(marker)),
+            ),
+        ),
+    )
+
+    assert suite.main() == (first_status or TOOL_MISSING)
+    assert marker.is_file()
+    output = capsys.readouterr().out
+    assert "FAIL  missing" in output
+    assert missing in output
+    assert "later" in output
 
 
 def test_every_row_unpacks_as_a_name_and_a_command() -> None:

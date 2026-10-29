@@ -26,6 +26,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from dev._paths import UTF_8
+from dev.exit_codes import TOOL_MISSING
 from dev.first_party_source import DEPENDENCY_DECLARATION_ROOTS
 
 _UTF_8: Final[str] = UTF_8
@@ -121,14 +122,17 @@ def run_gate(name: str, command: tuple[str, ...]) -> GateResult:
     # which on a Windows console is cp1252. The wrapped gates emit UTF-8, so the
     # reader thread died on the first non-cp1252 byte and the dashboard lost the
     # whole run rather than reporting the gate's verdict.
-    result = subprocess.run(
-        command,
-        capture_output=True,
-        text=True,
-        encoding=_UTF_8,
-        errors="replace",
-        check=False,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="replace",
+            check=False,
+        )
+    except FileNotFoundError as error:
+        return GateResult(name=name, returncode=TOOL_MISSING, output=f"cannot run {command[0]}: {error}")
     return GateResult(
         name=name,
         returncode=result.returncode,
