@@ -347,11 +347,6 @@ PERMITTED_PIN_MODULES: Final[frozenset[str]] = frozenset(
         # point... Deriving the expectation from the taxonomy would turn
         # every assertion below into the taxonomy compared with itself."
         "core/tests/test_output_dir_state_root.py",
-        # The native engine decides where a component and its record live; this
-        # module proves Python locates them where the engine wrote them, and its
-        # docstring says so. The expected side must come from the engine's
-        # recorded layout, not from the taxonomy the reader consults.
-        "core/tests/test_component_records.py",
     },
 )
 
@@ -375,18 +370,6 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
         (
             "core/tests/test_config.py",
             "TestRepoRelativePathNormalisationCoverage.test_relative_audit_flagged_paths_resolve_under_project_root",
-        ),
-        # The engine's records root, as the engine lays it out: the expected
-        # side is the native layout the reader must agree with, not the taxonomy.
-        (
-            "adapters/outbound/aeat/browser/tests/test_browser_provisioning_refusal.py",
-            "_recorded_browser",
-        ),
-        # Directories inside a staged package image (site-packages and driver
-        # folders), which only share names with taxonomy categories.
-        (
-            "tests/components_role_package.py",
-            "stage_components_role",
         ),
         # Independent resolver oracles for the managed Playwright cache and
         # the repository-local storage-root default.

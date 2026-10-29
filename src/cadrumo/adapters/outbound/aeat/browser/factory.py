@@ -333,7 +333,7 @@ async def create_browser_session(settings: Settings, profile: Profile) -> Defaul
     ``browser`` extra has been checked by ``_start_playwright``. If wrapper
     construction fails after Playwright starts, the partially opened runtime is
     stopped before the original failure is re-raised. A browser that is not
-    set up is refused before the Playwright driver starts.
+    available is refused before the Playwright driver starts.
     """
     require_browser_ready(settings, profile_name=profile.name)
     playwright = await _start_playwright(settings)
@@ -404,7 +404,7 @@ async def opened_browser_page(
     Playwright runtime, forwards ``provisioner`` and storage-state arguments to
     :meth:`BrowserSession.create_context`, yields the fresh ``(page, context)``
     pair, and closes the context and browser session during teardown. A
-    browser that is not set up is refused before any session is built.
+    browser that is not available is refused before any session is built.
     """
     require_browser_ready(settings, profile_name=profile.name)
     browser_session = BrowserSession(playwright=playwright, settings=settings, profile=profile)

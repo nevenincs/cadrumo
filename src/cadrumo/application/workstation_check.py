@@ -15,9 +15,9 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.capabilities import ServiceCapability
 from .auth.operator_probe_ports import OperatorProbePorts
 from .preflight import PreflightCheck, run_preflight_checks
-from .workstation_probes import DependencyStatus
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, resolve_active_capability
+from .workstation_probes import DependencyStatus
 
 
 @dataclass(frozen=True, slots=True)

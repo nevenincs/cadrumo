@@ -26,7 +26,6 @@ from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.schema import InvoiceKind
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
-from ...local_reader import probe_local_ai_program
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.error_detail import build_operation_error_detail

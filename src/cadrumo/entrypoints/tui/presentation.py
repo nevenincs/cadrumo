@@ -32,7 +32,6 @@ TUI_ROUTES: Final[Mapping[str, tuple[TuiDestinationIdV1, str]]] = MappingProxyTy
         "aeat-sync": ("workbench.aeat_sync", "presentation.aeat_sync"),
         "operations": ("workbench.operations", "presentation.operations"),
         "installation": ("workbench.installation", "presentation.installation"),
-        "setup": ("workbench.setup", "presentation.setup"),
         "reference": ("workbench.reference", "presentation.reference"),
         "profile": ("workbench.profile", "profile.overview"),
         "profile/aeat-access": ("workbench.profile", PROFILE_AEAT_AUTH_FOCUS),

@@ -36,9 +36,6 @@ from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
 from .product_identity import PRODUCT_IDENTITY
 
-DEVELOPMENT_ROLE_IMAGE_VARIABLE: Final = "CADRUMO_DEVELOPMENT_ROLE_IMAGE"
-"""A checkout's built native-role image; installed launch profiles never admit it."""
-
 if TYPE_CHECKING:
     from uuid import UUID
 
@@ -617,7 +614,7 @@ def authority_root_setting_names() -> frozenset[str]:
 def relayed_setting_names() -> frozenset[str]:
     """Return the settings an ``OPERATOR`` child takes from its parent: locations, authority root and proxy.
 
-    The proxy settings reach the child so the downloads it starts follow the
+    The proxy settings reach the child so the browser and network requests it starts follow the
     operator's network route; the child withholds them from its own children
     (:func:`withheld_child_settings`). The password setting is not relayed: a
     proxy password crosses a process boundary only inside the proxy address.
@@ -634,7 +631,7 @@ def withheld_child_settings() -> Generator[None]:
 
     Enter it once this process's settings already hold the values. Every child
     process inherits ``os.environ``, and a proxy address may carry a user name
-    and password; the download tools that need the proxy receive it explicitly
+    and password; the tools that need the proxy receive it explicitly
     in their own environment instead.
     """
     from .config import Settings
@@ -661,10 +658,6 @@ def _child_relay_settings(
         if name in authority:
             _normalized_absolute(_host_path_type()(_checked_path_value(value)))
         environment[name] = value
-    if profile is ChildEnvironmentProfile.OPERATOR and storage_mode().mode is StorageMode.DEVELOPMENT:
-        development_image = environment_in.get(DEVELOPMENT_ROLE_IMAGE_VARIABLE)
-        if development_image is not None:
-            environment[DEVELOPMENT_ROLE_IMAGE_VARIABLE] = development_image
 
 
 def _child_temporary_root(

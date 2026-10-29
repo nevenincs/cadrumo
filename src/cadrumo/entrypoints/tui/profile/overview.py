@@ -27,7 +27,6 @@ from typing import TYPE_CHECKING, ClassVar, override
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical
-from textual.screen import Screen
 from textual.widgets import Button, Checkbox, DataTable, Footer, Input, Static
 from textual.worker import Worker
 
@@ -195,7 +194,6 @@ class ProfileManagerScreen(
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
         credential_postures: Sequence[AcquisitionSourceCredentialPostureV1] | None = None,
         aeat_auth_setup: AeatAuthSetupPort | None = None,
-        open_document_reader: Callable[[], Screen[None]] | None = None,
         list_plantilla_media: Callable[[], Sequence[PlantillaMediaYear]] | None = None,
         set_plantilla_media: Callable[[int, Decimal, PlantillaMediaState], ProfileOverview] | None = None,
         remove_plantilla_media: Callable[[int], ProfileOverview] | None = None,
@@ -209,8 +207,6 @@ class ProfileManagerScreen(
         self._auth_readiness: AuthSyncReadiness | None = None
         self._aeat_auth_requested = False
         """Whether the page was opened to edit AEAT access, which opens once the page is up."""
-        self._open_document_reader = open_document_reader
-        """Builds the document reader page, or ``None`` when this host offers none."""
         self._complete_setup = complete_setup
         """Declares setup complete and hands back the page as storage now holds it.
 

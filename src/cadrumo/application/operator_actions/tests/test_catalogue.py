@@ -302,23 +302,3 @@ def test_catalogue_models_reject_noncanonical_identifier_fields(
 def test_catalogue_records_are_immutable() -> None:
     with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
         OPERATOR_ACTION_CATALOGUE.entries[0].target_command_key = "config.profile.edit"
-
-
-def test_every_setup_item_recovery_is_a_catalogued_action_on_the_command_that_performs_it() -> None:
-    """The setup registry names its recovery by action id; each resolves to the verb that sets the item up.
-
-    Only the desktop sets up the local AI, so its action resolves to the verb that reports its row.
-    """
-    from ...dependency_contracts import DependencyItemKind
-    from ...dependency_registry import dependency_item_declarations
-
-    targets = {
-        declaration.kind: lookup_action(declaration.recovery_action_id).target_command_key
-        for declaration in dependency_item_declarations()
-    }
-
-    assert targets == {
-        DependencyItemKind.BROWSER: "config.provision.browser",
-        DependencyItemKind.LOCAL_AI: "config.provision.status",
-    }
-    assert lookup_action("operator.provision.setup").target_command_key == "config.provision.setup"

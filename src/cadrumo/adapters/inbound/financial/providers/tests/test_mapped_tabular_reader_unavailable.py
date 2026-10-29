@@ -49,7 +49,7 @@ def test_a_reader_that_cannot_be_asked_is_reported_rather_than_declined() -> Non
     assert not validation.is_valid
     assert validation.reader_unavailable_verdict == unavailable.precondition_verdict
     assert not any("could not be established" in warning for warning in validation.warnings)
-    with pytest.raises(InvalidFinancialSourceError, match="not ready"):
+    with pytest.raises(InvalidFinancialSourceError, match="not available"):
         list(lane.ingest(_UNREAD_VOCABULARY))
 
 
@@ -73,17 +73,7 @@ def test_detection_hands_a_reader_blocked_file_to_its_lane() -> None:
     assert declined is None
 
 
-def test_the_reason_names_local_ai_and_its_setup_when_setup_repairs_it() -> None:
-    validation = MappedTabularProvider(mapping_resolver=lambda table: _reader_unavailable()).validate_source(
-        _UNREAD_VOCABULARY
-    )
-
-    (reason,) = validation.warnings
-    assert reason.startswith("Local AI")
-    assert "Set it up in the Cadrumo desktop app, then try again." in reason
-
-
-def test_the_reason_offers_no_setup_and_points_to_the_picked_model() -> None:
+def test_the_reason_states_the_column_model_is_unavailable() -> None:
     unservable = ColumnRoleReaderUnavailable(
         precondition_verdict=probe_no_recovery_verdict(
             ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
@@ -94,8 +84,7 @@ def test_the_reason_offers_no_setup_and_points_to_the_picked_model() -> None:
 
     (reason,) = lane.validate_source(_UNREAD_VOCABULARY).warnings
 
-    assert reason.startswith("The model that reads this file's column names")
-    assert "set it up" not in reason.lower()
-    assert "Check the model you picked in the agent's model picker in the Cadrumo desktop app" in reason
+    assert "column names" in reason
+    assert "not available right now" in reason
     with pytest.raises(InvalidFinancialSourceError, match="not available right now"):
         list(lane.ingest(_UNREAD_VOCABULARY))

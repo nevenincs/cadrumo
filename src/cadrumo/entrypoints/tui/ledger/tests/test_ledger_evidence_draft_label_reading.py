@@ -11,7 +11,6 @@ from __future__ import annotations
 import pytest
 
 from .....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
-from .....application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
 from .....domain.iva.schema import InvoiceKind
@@ -76,27 +75,6 @@ def test_a_degraded_draft_names_the_unread_fields_and_the_remedy_for_its_cause(
     last = lines[-1]
     assert "currency, supplier_name" in last
     assert last == template.format(count=2, fields="currency, supplier_name")
-
-
-def test_a_reader_the_local_ai_setup_supplies_names_that_setup() -> None:
-    """The probe named the setup: the line says the local AI is not ready and to set it up."""
-    fallback = _fallback(LabelReadingFallbackCause.READER_UNAVAILABLE).model_copy(
-        update={
-            "failed_condition_id": ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value,
-            "recovery_action_id": LOCAL_AI_PROVISION_ACTION_ID,
-        }
-    )
-    with override_settings(cadrumo_output_language="en"):
-        offered = draft_lines(_draft(fallback))[-1]
-        plain = draft_lines(_draft(_fallback(LabelReadingFallbackCause.READER_UNAVAILABLE)))[-1]
-
-    template = lookup_translation("tui.ledger.evidence.draft.label_reading.local_ai_not_ready", locale="en")
-    assert template is not None
-    assert offered == template.format(count=2, fields="currency, supplier_name")
-    assert "Local AI" in offered
-    assert "Set up" in offered
-    assert plain != offered
-    assert "Local AI" not in plain
 
 
 def test_every_cause_has_its_own_line() -> None:

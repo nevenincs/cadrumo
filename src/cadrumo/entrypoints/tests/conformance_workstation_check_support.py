@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE
-from ...application.operations.public_scalar import PublicNamedScalar, PublicScalar
 from ...application.browser_location import PLAYWRIGHT_BROWSER_SERVICE
+from ...application.operations.public_scalar import PublicNamedScalar, PublicScalar
 from ...application.workstation_check_operation import (
     WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
     WorkstationCheckProjection,
@@ -48,17 +47,15 @@ def _prepare_check(context: ConformanceFamilyContext) -> ConformancePreparation:
             assert row.source.value == ("safety_floor" if barred else "default"), row.capability
             assert row.capability.value in row.reason
         assert [row.service for row in projection.dependencies] == [
-            LOCAL_AI_PROGRAM_SERVICE,
             "local-inference-hardware",
             PLAYWRIGHT_BROWSER_SERVICE,
             *(f"extra:{extra.extra}" for extra in OPTIONAL_EXTRAS),
         ]
         by_service = {row.service: row for row in projection.dependencies}
-        program = by_service[LOCAL_AI_PROGRAM_SERVICE]
-        assert program.available is False
-        assert not {"role", "model"} & {item.key for item in program.facts}, "the program row judges no model"
-        assert _fact(program.facts, "local_ai_state") in {"absent", "blocked", "unknown"}
-        assert program.precondition_verdict is not None
+        hardware = by_service["local-inference-hardware"]
+        assert hardware.available is True
+        assert not {"role", "model"} & {item.key for item in hardware.facts}, "the hardware row judges no model"
+        assert _fact(hardware.facts, "accelerator_kind")
         checks = [row.check for row in projection.preflight]
         provider_checks = [f"auth-provider:{kind.value}" for kind in AuthProviderKind]
         assert checks[: len(provider_checks)] == provider_checks
@@ -112,8 +109,6 @@ def _retained_workstation_prepare(context: ConformanceFamilyContext) -> Conforma
             assert "extra:google" in services and result.preflight
             assert len(services) == len(result.dependencies)
             assert not any(row.service.startswith("local-reader:") for row in result.dependencies)
-            (program,) = (row for row in result.dependencies if row.service == LOCAL_AI_PROGRAM_SERVICE)
-            assert not program.available
 
         return ConformancePreparation(
             profile_operation_subject(str(context.profile_id)),

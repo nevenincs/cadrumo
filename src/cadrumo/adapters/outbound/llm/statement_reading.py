@@ -40,7 +40,6 @@ from collections.abc import Callable, Mapping
 
 from pydantic import TypeAdapter, ValidationError
 
-from ....application.reader_refusal_wording import statement_reader_refusal_reason
 from ....application.ledger.document_transcription import DocumentTranscription
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.import_ports import LedgerImportReaderUnavailableError
@@ -50,6 +49,7 @@ from ....application.ledger.statement_reading import (
     ProposedStatementPage,
 )
 from ....application.operator_actions.models import PreconditionVerdict
+from ....application.reader_refusal_wording import statement_reader_refusal_reason
 from ....application.user_profile.capabilities import resolve_active_capability
 from ....core.capabilities import ServiceCapability
 from ....core.config import Settings, load_settings

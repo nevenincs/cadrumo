@@ -41,7 +41,6 @@ from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
-
 class _ProviderReadFailedError(Exception):
     """The provider the read was routed to did not answer."""
 

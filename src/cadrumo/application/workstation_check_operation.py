@@ -38,10 +38,10 @@ from .operations.registry import OperationPublicDefinitionRegistrationV1
 from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
-from .workstation_probes import DependencyStatus
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, CapabilitySource
 from .workstation_check import WorkstationCheckReport
+from .workstation_probes import DependencyStatus
 
 WORKSTATION_CHECK_OPERATION_DEFINITION_ID = "diagnostics.workstation.check"
 type CheckText = Annotated[str, Field(min_length=1, max_length=4096)]

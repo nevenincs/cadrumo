@@ -31,7 +31,6 @@ from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...tests.component_record_support import record_shared_browser
 from ..live_state_composition import compose_live_state, preflight_filed_history_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -40,8 +39,6 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def test_missing_aeat_setup_survives_capture_settlement_and_result_read(tmp_path: Path) -> None:
     """Real preflight and custody distinguish missing setup from expired sign-in."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
-        # The browser is set up, so the capture goes on to the access it lacks.
-        record_shared_browser()
         definition = build_notifications_capture_definition(
             compose_live_state, BrowserRuntimeResourceScope, preflight_filed_history_provider
         )

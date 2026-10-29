@@ -267,7 +267,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         default="",
         description=(
             "Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. "
-            "The desktop Logs view defaults to INFO and uses this as its initial minimum level. "
+            "Log views default to INFO and use this as their initial minimum level. "
             "CLI verbosity names quiet, default, verbose, and debug remain supported."
         ),
     )
@@ -943,7 +943,7 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
 
     @classmethod
     def proxy_env_var_names(cls, *, secret_fields: bool = True) -> frozenset[str]:
-        """Return the proxy settings Cadrumo-started downloads follow.
+        """Return the proxy settings the browser and network requests Cadrumo starts follow.
 
         The address and the password can carry credentials, so a process that
         holds them keeps them out of the environment its own children inherit.

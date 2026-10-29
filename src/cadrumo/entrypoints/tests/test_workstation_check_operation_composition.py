@@ -34,7 +34,9 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Canonical capability reads retain source and issue behavior without a live probe."""
-    hardware = DependencyStatus(service="local-inference-hardware", available=True, facts={"installed": True, "count": 0})
+    hardware = DependencyStatus(
+        service="local-inference-hardware", available=True, facts={"installed": True, "count": 0}
+    )
     google = DependencyStatus(service="extra:google", available=True, facts={"installed": True})
     preflight_row = PreflightCheck(
         check="synthetic:registry", healthy=True, severity=HealthSeverity.OK, facts={"assembled": True, "records": 0}

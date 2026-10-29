@@ -25,10 +25,10 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 from .....adapters.inbound.financial.ledger_import import FinancialProviderResolverAdapter
 from .....adapters.inbound.financial.providers.detection import detect_provider
 from .....adapters.inbound.financial.providers.pdf_statement import PdfStatementProvider
-from .....application.reader_refusal_wording import statement_reader_refusal_reason
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
 from .....application.ledger.statement_reading import bind_statement_reader_factory
 from .....application.operator_actions.models import PreconditionVerdict
+from .....application.reader_refusal_wording import statement_reader_refusal_reason
 from .....core.model_roles import ModelRole
 from .....tests.fixtures.settings import EnvFileFreeSettings
 from .....tests.inventory import FIXTURES_DIR

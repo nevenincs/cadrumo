@@ -12,9 +12,9 @@ from ...core.config import Settings, load_settings, override_settings
 from .. import workstation_check as module
 from ..auth.operator_probe_ports import OperatorProbePorts
 from ..preflight import PreflightCheck
-from ..workstation_probes import DependencyStatus
 from ..user_profile.capabilities import CapabilityDecision, CapabilitySource, resolve_capability_from_values
 from ..workstation_check import WorkstationCheckReport
+from ..workstation_probes import DependencyStatus
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

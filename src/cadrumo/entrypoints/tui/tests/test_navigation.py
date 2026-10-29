@@ -113,7 +113,6 @@ def test_catalogue_is_closed_and_uses_only_locale_keys() -> None:
         "workbench.aeat_sync",
         "workbench.operations",
         "workbench.installation",
-        "workbench.setup",
         "workbench.reference",
         "workbench.profile",
     }

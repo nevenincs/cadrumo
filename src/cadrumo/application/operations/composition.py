@@ -13,7 +13,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .authorization import OperationExecutionAuthority
 from .drain import OperationDrainResult
 from .frontend_requests import OperationResponseControlRequestV1, OperationSubmissionReceiptV1
-from .interactions import OperationActorReference, OperationPendingInteraction
+from .interactions import OperationActorReference
 from .models import OperationId, OperationRequest, OperationStoredInvocation, new_operation_id
 from .observation import OperationObservationService
 from .persistence.financial_operand_custody import (
@@ -160,16 +160,6 @@ class OperationComposedServices:
     _drain: Callable[[timedelta], Awaitable[OperationDrainResult]]
     _inventory: Callable[[OperationId | None, OperationInventoryLimit], Awaitable[OperationRecoveryInventoryPage]]
     _ephemeral: OperationEphemeralRouting | None
-
-    def require_review_claimable(self, pending: OperationPendingInteraction) -> None:
-        """Require retained process-local bearer custody before a claim journal write."""
-        self._response_broker.require_claimable(pending, clock=self._response_clock)
-
-    def assign_review_actor(
-        self, pending: OperationPendingInteraction, successor: OperationPendingInteraction
-    ) -> OperationResponseCapability:
-        """Assign the retained bearer after the successor checkpoint committed."""
-        return self._response_broker.assign_actor(pending, successor, clock=self._response_clock)
 
     def discard_review_actor(self, operation_id: OperationId) -> None:
         """Discard process-local review authority after terminal settlement or retirement."""

@@ -16,8 +16,6 @@ _PAGE_BY_PREFIX: Final[tuple[tuple[str, str], ...]] = (
     ("user-profile.", "profile"),
     ("auth.", "profile/aeat-access"),
     ("overview.", "home"),
-    ("dependencies.", "setup"),
-    ("local-reader.", "setup"),
 )
 """Ordered most specific first; the first matching prefix names the register view."""
 

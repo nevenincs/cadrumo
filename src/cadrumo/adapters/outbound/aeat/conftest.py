@@ -11,7 +11,7 @@ import pytest
 def _align_browser_binary_cache(monkeypatch: pytest.MonkeyPatch) -> None:
     """Restore driver-cache mutations and align direct Playwright starts.
 
-    The repository bootstrap pins the provisioned binary directory before
+    The repository bootstrap pins the shared binary directory before
     private storage isolation. Tests may explicitly choose an empty cache to
     exercise refusal, and production driver startup mutates its native variable;
     those mutations must not redirect the next test's direct driver startup.

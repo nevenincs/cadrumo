@@ -41,7 +41,6 @@ from cadrumo_client.contracts.view_transfer import (
 
 from ......application.live.sede_view_ports import SedeViewEnd, SedeViewOpening
 from ......core.config import Settings
-from ......tests.component_record_support import record_shared_browser
 from ..profile import Profile
 from ..sede_view import SedeViewPage
 from ..session import BrowserSession
@@ -100,7 +99,6 @@ async def _view(tmp_path: Path, site: _Site) -> AsyncGenerator[_Running]:
     settings = Settings(
         cadrumo_local_storage_root=tmp_path, cadrumo_browser_headless=True, cadrumo_proxy_url=_CLOSED_PROXY
     )
-    record_shared_browser(settings)
     sink = RecordingViewSink()
     opening = SedeViewOpening(
         settings=settings,

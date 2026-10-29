@@ -35,7 +35,6 @@ from cadrumo_client.contracts.view_stream import (
 )
 
 from ......core.config import Settings
-from ......tests.component_record_support import record_shared_browser
 from ..profile import Profile
 from ..session import BrowserSession
 from ..view_input import (
@@ -617,7 +616,6 @@ async def test_dialog_reaches_the_window_once_through_the_view_contexts_page_obs
         # A loopback port nothing listens on, so a request no route answers cannot leave the host.
         cadrumo_proxy_url="http://127.0.0.1:9",
     )
-    record_shared_browser(settings)
     observer = _ForwardingObserver()
     notices = _Notices()
     async with async_playwright() as playwright:

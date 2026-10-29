@@ -35,7 +35,6 @@ type TuiDestinationIdV1 = Literal[
     "workbench.aeat_sync",
     "workbench.operations",
     "workbench.installation",
-    "workbench.setup",
     "workbench.reference",
     "workbench.profile",
 ]
@@ -49,7 +48,6 @@ type TuiDestinationLabelKeyV1 = Literal[
     "tui.destination.aeat_sync",
     "tui.destination.operations",
     "tui.destination.installation",
-    "tui.destination.setup",
     "tui.destination.reference",
     "tui.destination.profile",
 ]
@@ -270,7 +268,6 @@ TUI_DESTINATION_CATALOGUE: Final[tuple[TuiDestinationDescriptorV1, ...]] = (
     TuiDestinationDescriptorV1(
         destination="workbench.installation", label_key="tui.destination.installation", zone="primary"
     ),
-    TuiDestinationDescriptorV1(destination="workbench.setup", label_key="tui.destination.setup", zone="primary"),
     TuiDestinationDescriptorV1(
         destination="workbench.reference", label_key="tui.destination.reference", zone="primary"
     ),

@@ -33,8 +33,8 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
-from .....application.reader_refusal_wording import column_reader_refusal_reason
 from .....application.ledger.column_roles import ColumnRoleReaderUnavailable, resolve_column_roles
+from .....application.reader_refusal_wording import column_reader_refusal_reason
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
 from .....core.field_role import FieldRole
@@ -274,9 +274,7 @@ class MappedTabularProvider(FinancialProvider):
             )
         mapping = self.mapping_resolver(table)
         if isinstance(mapping, ColumnRoleReaderUnavailable):
-            raise InvalidFinancialSourceError(
-                f"{path.name}: {column_reader_refusal_reason()}"
-            )
+            raise InvalidFinancialSourceError(f"{path.name}: {column_reader_refusal_reason()}")
         if mapping is None:
             raise InvalidFinancialSourceError(
                 f"column roles could not be established for {path.name}",

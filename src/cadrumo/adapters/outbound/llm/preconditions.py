@@ -1,8 +1,8 @@
 """LLM-owned terminal refusal identities and fact-only verdict construction.
 
 The LLM package owns refusals about dispatch, model output, and the transient
-consent token.  These are deliberately distinct from provisioning's load-capacity
-and installed-dependency decisions: an omitted off-host model and malformed
+consent token.  These are deliberately distinct from the load-capacity
+and installed-dependency probes: an omitted off-host model and malformed
 model output are not memory-headroom predicates.  Each
 outcome is terminal because this package has no safe way to bind an executable
 CLI action from those observations.

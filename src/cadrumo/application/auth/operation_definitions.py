@@ -320,7 +320,7 @@ class AuthSessionAcquireOperationExecutor:
     ) -> str:
         bucket_id = _require_active_profile_subject(request)
         await context.events.phase("auth.acquire.preflight")
-        # Every sign-in drives the browser. Refuse a browser that is not set up
+        # Every sign-in drives the browser. Refuse a browser that is not available
         # before any credential is read or any session state is touched.
         self._ports.browser_readiness(load_settings(), profile_name=bucket_id)
         await context.events.phase("auth.acquire.execute")

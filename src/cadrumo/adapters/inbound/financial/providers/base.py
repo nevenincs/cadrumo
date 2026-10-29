@@ -185,7 +185,7 @@ class ProviderValidation(BaseModel):
         reader_unavailable_verdict: Why the model this provider reads with
             could not be asked. Present only when the provider declined because
             its reader is unavailable, so the source was never looked at; the
-            verdict names the setup action when setup can supply the reader.
+            verdict states why.
     """
 
     model_config = _STRICT_FROZEN

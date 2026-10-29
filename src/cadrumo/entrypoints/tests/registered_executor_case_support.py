@@ -24,6 +24,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
+from ...adapters.outbound.aeat.browser.tests.installed_builds import with_installed_browser
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -83,7 +84,6 @@ from ...application.user_profile.custody_ports import profile_custody_secure_obj
 from ...application.user_profile.login_session import authenticate_profile_for_invocation
 from ...application.user_profile.registration import register_profile_with_credentials
 from ...core.auth_provider import AuthProviderKind
-from ...core.component_records import component_records_root
 from ...core.config import override_settings
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.operations import OperationLifecycle, profile_operation_subject
@@ -91,7 +91,6 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
-from ...tests.component_record_support import engine_browser_record, installed_driver_version
 from ..adapter_composition_ports import build_censal_fetch_port
 from ..adapter_composition_work_ports import build_amendment_action_ports
 from ..operation_composition import build_production_operation_registry
@@ -467,13 +466,8 @@ def conformance_operation_runtime(
         override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
         isolated_profile_storage_root(tmp_path=tmp_path) as root,
         # The suite proves each executor reaches its sign-in precondition, so the
-        # browser is set up under this private root whatever the host has installed.
-        override_settings(cadrumo_playwright_browsers_dir=root / "browsers") as browser_settings,
-        engine_browser_record(
-            records_root=component_records_root(browser_settings),
-            browsers_root=root / "browsers",
-            driver_version=installed_driver_version(),
-        ),
+        # browser is present under this private root whatever the host has installed.
+        with_installed_browser(root / "browsers"),
     ):
         enrolled = register_profile_with_credentials(
             label="S45 registered executor subject",

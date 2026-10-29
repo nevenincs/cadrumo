@@ -10,10 +10,8 @@ import psutil
 import pytest
 
 from ......application.auth.protocols import BrowserSessionPort
-from ......core.component_records import component_records_root
 from ......core.config import Settings
 from ......core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
-from ......tests.component_record_support import engine_browser_record, installed_driver_version
 from ...tests.process_support import playwright_driver_pid, wait_for_process_exit, wait_for_task_readiness
 from ..errors import BrowserError, BrowserPreconditionCondition
 from ..factory import (
@@ -23,6 +21,7 @@ from ..factory import (
     shared_playwright_runtime,
 )
 from ..profile import Profile
+from .installed_builds import place_installed_builds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -253,17 +252,15 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 async def test_launch_failure_is_a_factual_typed_safety_outcome(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """A recorded browser whose executables cannot run fails the real launch.
+    """Browser builds without executables fail the real launch.
 
-    The engine's record locates the browser, so the refusal does not fire and
-    the launch itself fails on executables that are not programs.
+    The completion markers locate the browser, so the refusal does not fire and
+    the launch itself fails on builds that hold no programs.
     """
-    cache = tmp_path / "recorded-but-unrunnable-cache"
+    cache = tmp_path / "marked-but-unrunnable-cache"
     monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(cache))
-    with engine_browser_record(
-        records_root=component_records_root(Settings()), browsers_root=cache, driver_version=installed_driver_version()
-    ):
-        await _assert_the_launch_fails()
+    place_installed_builds(cache)
+    await _assert_the_launch_fails()
 
 
 async def _assert_the_launch_fails() -> None:

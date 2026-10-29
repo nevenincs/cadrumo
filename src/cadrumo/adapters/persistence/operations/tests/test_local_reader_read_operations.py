@@ -16,7 +16,6 @@ import pytest
 from .....application.local_reader import read_local_reader_status
 from .....application.local_reader_contracts import (
     LOCAL_READER_OPERATION_SUBJECT,
-    local_reader_fact_mapping,
     local_reader_public_verdict,
 )
 from .....application.local_reader_report import (

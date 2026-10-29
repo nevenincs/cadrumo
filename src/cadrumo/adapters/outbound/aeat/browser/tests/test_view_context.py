@@ -31,7 +31,6 @@ from playwright.async_api import (
 )
 
 from ......core.config import Settings
-from ......tests.component_record_support import record_shared_browser
 from ..profile import Profile
 from ..session import BrowserSession
 
@@ -118,7 +117,6 @@ async def _view_context(
         cadrumo_browser_headless=True,
         cadrumo_proxy_url=_CLOSED_PROXY,
     )
-    record_shared_browser(settings)
     observer = _RecordingObserver()
     async with async_playwright() as playwright:
         session = BrowserSession(playwright, settings, Profile(name="sede-view"), evasion_strategy=synthetic)

@@ -24,7 +24,6 @@ from ..components.widgets import (
 from .edit_screens import FieldEditScreen, RepeatableRowAddScreen, RepeatableRowRemoveScreen, field_help_text
 from .overview_contracts import (
     _CONTINUE_BUTTON_ID,
-    _DOCUMENT_READER_CARD_ID,
     _PLANTILLA_MEDIA_BUTTON_ID,
     _REQUIRED_ONLY_ID,
     _SEARCH_ID,
@@ -368,8 +367,6 @@ def _handle_section_button(screen: ProfileManagerScreen, button_id: str) -> bool
 async def _launch_source_button(screen: ProfileManagerScreen, event: Button.Pressed) -> None:
     """Launch only an identified source after preserving the edit-in-flight guard."""
     card = event.button.parent
-    if _open_document_reader_card(screen, card):
-        return
     launch_source = screen._launch_source
     if launch_source is None:
         return
@@ -382,15 +379,6 @@ async def _launch_source_button(screen: ProfileManagerScreen, event: Button.Pres
         screen._refuse(tr("flows.manager.edit.write_in_flight"))
         return
     await launch_source(source)
-
-
-def _open_document_reader_card(screen: ProfileManagerScreen, card: object | None) -> bool:
-    """Handle the document-reader action card if this is the pressed card."""
-    if not isinstance(card, SourceActionCard) or card.id != _DOCUMENT_READER_CARD_ID:
-        return False
-    if screen._open_document_reader is not None:
-        screen.app.push_screen(screen._open_document_reader())
-    return True
 
 
 def _selected_acquisition_source(card: object | None) -> ProfileAcquisitionSourceV1 | None:

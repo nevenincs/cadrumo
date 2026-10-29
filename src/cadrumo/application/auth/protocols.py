@@ -151,7 +151,7 @@ class BrowserReadinessPort(Protocol):
     """Refusal check run when browser-backed auth work starts."""
 
     def __call__(self, settings: Settings, *, profile_name: str) -> None:
-        """Raise the browser setup refusal when the browser is not ready for ``settings``."""
+        """Raise the browser refusal when the browser is not available for ``settings``."""
         ...
 
 

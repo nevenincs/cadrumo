@@ -14,9 +14,8 @@ binds. This adapter never imports the outbound model adapter. A host that has
 not bound a reader declines every PDF with a stated reason, and a host whose
 reader needs the uninstalled ``llm`` extra raises the typed missing-extra
 refusal when it meets a PDF, while every other format keeps importing. A
-reader whose selected lane needs the local AI, when that is not ready, declines
-the PDF with the reader probe's verdict, so the import refusal names the setup
-that would let it be read.
+reader whose selected lane needs the local AI, when that is not available, declines
+the PDF with the reader probe's verdict.
 
 Reading a statement costs model calls, so one provider instance reads each
 distinct source once: detection's validation and the following ingest share
@@ -31,7 +30,6 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import override
 
-from .....application.reader_refusal_wording import statement_reader_refusal_reason
 from .....application.ledger.document_transcription import DocumentTranscription
 from .....application.ledger.evidence_textlayer import text_layer_transcriber_identity
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
@@ -40,6 +38,7 @@ from .....application.ledger.statement_reading import (
     StatementReaderPort,
     statement_reader_factory,
 )
+from .....application.reader_refusal_wording import statement_reader_refusal_reason
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.logging import get_logger
@@ -158,7 +157,7 @@ class PdfStatementProvider(FinancialProvider):
             InvalidFinancialSourceError: The source is not a PDF, no reader is
                 bound, the PDF cannot be read, or the statement is refused.
             LedgerImportReaderUnavailableError: The local AI the bound reader
-                needs is not ready; the verdict names its setup.
+                needs is not available; the verdict states why.
             MissingOptionalExtraError: The bound reader needs the uninstalled
                 ``llm`` extra.
         """

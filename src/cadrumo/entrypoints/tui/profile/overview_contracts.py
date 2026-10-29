@@ -82,7 +82,6 @@ _SOURCE_ACTION_LOCALE_KEYS: dict[ProfileAcquisitionSourceKey, str] = {
     ProfileAcquisitionSourceKey.FILED_HISTORY: "profile.journey.source.filed_history.action",
 }
 
-_DOCUMENT_READER_CARD_ID = "manager-document-reader"
 
 _PLANTILLA_MEDIA_SECTION = PLANTILLA_MEDIA_PATH.split(".", 1)[0]
 

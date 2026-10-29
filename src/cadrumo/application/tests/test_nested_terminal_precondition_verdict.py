@@ -11,23 +11,14 @@ import pytest
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ..operator_actions.models import PreconditionVerdict
-from ..probe_outcomes import (
-    LOCAL_AI_PROVISION_ACTION_ID,
-    ProbePreconditionCondition,
-    probe_no_recovery_verdict,
-    provisioning_setup_verdict,
-)
+from ..probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_INSTALLED = provisioning_setup_verdict(
-    ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-    facts={"role": "text_extraction", "role_model_installed": False},
-    action_id=LOCAL_AI_PROVISION_ACTION_ID,
+_INSTALLED = probe_no_recovery_verdict(
+    ProbePreconditionCondition.ROLE_MODEL_INSTALLED, facts={"role": "text_extraction", "role_model_installed": False}
 )
-_REACHABLE = probe_no_recovery_verdict(
-    ProbePreconditionCondition.RUNTIME_REACHABLE, facts={"runtime_reachable": False}
-)
+_REACHABLE = probe_no_recovery_verdict(ProbePreconditionCondition.RUNTIME_REACHABLE, facts={"runtime_reachable": False})
 
 
 def _chained(outer: PreconditionVerdict, inner: PreconditionVerdict) -> LedgerImportReaderUnavailableError:

@@ -215,7 +215,7 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
         revision=1,
         timestamp=datetime(2026, 1, 1, tzinfo=UTC),
         code="operation.phase",
-        phase_code="dependencies.setup.browser.download",
+        phase_code="ledger.import.read",
     )
     progress = OperationPublicProgressEventV1(
         sequence=2,
@@ -224,8 +224,8 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
         code="operation.progress",
         completed=25,
         total=100,
-        unit_code="bytes",
-        subject_code="browser",
+        unit_code=None,
+        subject_code=None,
     )
     page = OperationPublicEventPageV1(
         operation_id=_OPERATION_ID,
@@ -241,29 +241,10 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
     assert (view.rows[1].completed, view.rows[1].total, view.rows[1].unit_code, view.rows[1].subject_code) == (
         25,
         100,
-        "bytes",
-        "browser",
+        None,
+        None,
     )
     with override_settings(cadrumo_output_language="en"):
-        assert "25 B" in log_row_text(view.rows[1])
-        assert "Browser for the tax agency website" in log_row_text(view.rows[1])
+        assert "25 / 100" in log_row_text(view.rows[1])
         assert "25%" in log_row_text(view.rows[1])
         assert log_row_text(view.rows[0]) != "Operation phase"
-
-
-@pytest.mark.parametrize(
-    ("locale", "expected"),
-    [
-        ("en", "Following a setup that is already running…"),
-        ("es", "Siguiendo una instalación que ya está en curso…"),
-        ("ca", "Seguint una instal·lació que ja està en curs…"),
-        ("hu", "Egy már futó telepítés követése…"),
-    ],
-)
-def test_setup_notice_renders_the_localized_event_sentence(locale: str, expected: str) -> None:
-    from .....core.config import override_settings
-    from ..modal_wording import log_row_text
-
-    row = _row(1).model_copy(update={"notice_code": "dependencies.setup.following"})
-    with override_settings(cadrumo_output_language=locale):
-        assert log_row_text(row) == expected

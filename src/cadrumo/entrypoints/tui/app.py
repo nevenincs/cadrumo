@@ -20,7 +20,6 @@ from textual.containers import Vertical
 from textual.screen import Screen
 from textual.widgets import Button, Footer, Static
 
-
 from ...application.overview.home import HomeSessionPosture
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.diagnostic_log import diagnostic_error_fields, diagnostic_event

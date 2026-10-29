@@ -1,4 +1,4 @@
-"""Tax agency reads refuse a browser that is not set up before any credential or remote effect.
+"""Tax agency reads refuse a browser that is not available before any credential or remote effect.
 
 The refusals run through the real composed preflights, the real setup probe
 over a real browsers root and the real supervisor. A root holding the probe's
@@ -20,6 +20,7 @@ import pytest
 from pydantic import BaseModel
 
 from ...adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope
+from ...adapters.outbound.aeat.browser.tests.installed_builds import with_installed_browser
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -40,33 +41,16 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.browser_location import BROWSER_PROVISION_ACTION_ID
 from ...application.probe_outcomes import ProbePreconditionCondition
-from ...core.component_records import component_records_root
 from ...core.config import Settings, override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...tests.component_record_support import engine_browser_record, installed_driver_version
 from ..live_state_composition import compose_live_state, preflight_filed_history_provider
 from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _BROWSER_REFUSAL_CODE = "REFUSED_BROWSER_NOT_READY"
-
-
-@contextmanager
-def _recorded_browser(browsers: Path) -> Generator[None]:
-    """Hand Playwright ``browsers``, holding builds the engine recorded for the installed driver."""
-    with (
-        override_settings(cadrumo_playwright_browsers_dir=browsers) as settings,
-        engine_browser_record(
-            records_root=component_records_root(settings),
-            browsers_root=browsers,
-            driver_version=installed_driver_version(),
-        ),
-    ):
-        yield
 
 
 @contextmanager
@@ -119,11 +103,11 @@ def _assert_browser_refusal(profile: TestRuntimeProfile, terminal: OperationPers
         )
     )
     assert detail.error_code == _BROWSER_REFUSAL_CODE
-    assert detail.message_key == "adapters.browser.errors.not_provisioned"
+    assert detail.message_key == "adapters.browser.errors.not_available"
     assert detail.precondition_verdict_json is not None
     verdict = json.loads(detail.precondition_verdict_json)
     assert verdict["failed_condition_id"] == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
-    assert verdict["action"]["action_id"] == BROWSER_PROVISION_ACTION_ID
+    assert verdict["action"] is None
 
 
 def test_live_capture_refuses_a_missing_browser_before_provider_readiness(tmp_path: Path) -> None:
@@ -142,7 +126,7 @@ def test_live_capture_refuses_a_missing_browser_before_provider_readiness(tmp_pa
         with _supervisor(profile, registry, tmp_path / "operations") as supervisor:
             with override_settings(cadrumo_playwright_browsers_dir=tmp_path / "browsers-empty"):
                 refused = _settle(supervisor, request, "3" * 64)
-            with _recorded_browser(tmp_path / "browsers-recorded"):
+            with with_installed_browser(tmp_path / "browsers-recorded"):
                 reached_provider = _settle(supervisor, request, "4" * 64)
 
         # This profile has no tax agency access configured, so provider

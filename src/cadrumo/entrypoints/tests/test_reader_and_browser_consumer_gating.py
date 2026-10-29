@@ -1,9 +1,8 @@
-"""Every browser and local AI consumer refuses with its setup before any effect.
+"""Every browser and local AI consumer refuses with its typed verdict before any effect.
 
 A feature that needs the browser or the local AI must say so when the
-component is not ready: the refusal carries the setup probe's verdict, the
-verdict names ``operator.provision.browser`` or ``operator.provision.local_ai``,
-and nothing was sent to the runtime or launched first. This gate holds that
+component is not available: the refusal carries the probe's verdict and
+nothing was sent to the runtime or launched first. This gate holds that
 for the whole consumer set, and finds the set in the source rather than in a
 list that could go stale.
 
@@ -22,8 +21,8 @@ Local AI rows:
   stand-in for the agent service that refuses the role's lookup and records
   every run it is sent, once per gated refusal code. The outcome must carry the
   verdict the real model-run verdict builder makes for that code and role: for
-  ``model_not_installed`` its action is ``operator.provision.local_ai``, and for
-  ``no_selection`` it names no action and states ``role_selection_required``.
+  ``model_not_installed`` it is the model-installed condition, and for
+  ``no_selection`` it states ``role_selection_required``.
   Its ``role`` fact must be the driven role, and the service must have been
   sent no run.
 
@@ -51,15 +50,15 @@ Browser rows:
   resource also hands it a preflight whose first call is
   ``require_browser_ready``, or ``require_browser_ready`` itself.
 - Behaviour. Every discovered launch site and gated preflight is driven with an
-  empty browsers root and must raise ``BrowserNotReadyError`` whose verdict
-  action is ``operator.provision.browser``.
+  empty browsers root and must raise ``BrowserNotReadyError`` carrying its
+  verdict.
 
 Where it stops:
 
 - The model transport (``llm.client``) dispatches on purpose and is exempt by
   name; an exemption that no longer matches a discovered site fails.
 - The runtime traffic of loading and keeping a model resident (under
-  ``application.provisioning_*``) does not build a request and is not a
+  the workstation probes) does not build a request and is not a
   consumer. ``src/cadrumo_agent_service`` and the desktop are not scanned.
 - A dispatch reached only through ``self`` attributes, a dynamic import or a
   value read from a mapping is not discovered.
@@ -113,9 +112,6 @@ from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunHeader, Mo
 
 from ...adapters.outbound.aeat.browser.errors import (
     BrowserNotReadyError,
-    BrowserNotUsableError,
-    BrowserPreconditionCondition,
-    browser_no_action_verdict,
 )
 from ...adapters.outbound.aeat.browser.factory import (
     create_browser_session,
@@ -153,12 +149,6 @@ from ...application.operations.registry import OperationPublicDefinitionRegistra
 from ...application.operations.subject_reference import OperationSubjectReferenceV1
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.operator_actions.models import PreconditionVerdict
-from ...application.browser_location import BROWSER_PROVISION_ACTION_ID
-from ...application.probe_outcomes import (
-    LOCAL_AI_PROVISION_ACTION_ID,
-    ProbePreconditionCondition,
-    probe_no_recovery_verdict,
-)
 from ...core.config import Settings, load_settings, override_settings
 from ...core.config_support import LLMProvider
 from ...core.errors.hierarchy import TerminalPreconditionErrorMixin
@@ -166,7 +156,6 @@ from ...core.image_media_type import ImageMediaType
 from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
-from ...core.operator_action_enums import NoRecoveryOutcome
 from ...core.tabular import normalize_tabular_bytes
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -512,7 +501,7 @@ def _browser_start_sites(modules: Mapping[str, _Module]) -> dict[str, str | None
                 continue
             checks = [call for call in calls if _callee(module, call) == _BROWSER_READY]
             if not checks:
-                sites[qualified] = f"line {starts[0].lineno} starts a browser and nothing checks it is set up"
+                sites[qualified] = f"line {starts[0].lineno} starts a browser and nothing checks it is available"
             elif (checks[0].lineno, checks[0].col_offset) > (starts[0].lineno, starts[0].col_offset):
                 sites[qualified] = (
                     f"line {starts[0].lineno} starts a browser before the check on line {checks[0].lineno}"
@@ -585,8 +574,8 @@ def _operation_browser_preflights(modules: Mapping[str, _Module]) -> tuple[froze
 # -- Shared runtime and outcomes -------------------------------------------------
 
 
-#: The lookup refusals every consumer is driven under: one that local AI setup
-#: recovers, and one that only the person's role selection does.
+#: The lookup refusals every consumer is driven under: a selected model the server
+#: does not hold, and a role with no selection.
 _GATED_REFUSALS = (ModelRunRefusalCode.MODEL_NOT_INSTALLED, ModelRunRefusalCode.NO_SELECTION)
 
 
@@ -661,14 +650,8 @@ def _local_ai_gating_problems(
     expected = model_run_refusal_verdict(ModelRunRefusal(code=code), role=role)
     if verdict.failed_condition_id != expected.failed_condition_id:
         problems.append(f"verdict {verdict.failed_condition_id} is not {expected.failed_condition_id}")
-    expected_action = None if expected.action is None else expected.action.action_id
-    action = None if verdict.action is None else verdict.action.action_id
-    if action != expected_action:
-        problems.append(
-            f"verdict names no setup action, not {expected_action}"
-            if action is None
-            else f"verdict names {action}, not {expected_action}"
-        )
+    if verdict.action is not None:
+        problems.append(f"verdict names {verdict.action.action_id}, not no action")
     spoken = sorted({str(evidence.values.get("role")) for evidence in verdict.evidence})
     if role.value not in spoken:
         problems.append(f"verdict speaks for role {spoken}, not {role.value}")
@@ -681,14 +664,11 @@ def _local_ai_gating_problems(
 
 
 def _browser_refusal_problems(outcome: object) -> list[str]:
-    """Return why an outcome is not a browser refusal that names the browser setup."""
+    """Return why an outcome is not a browser refusal that carries its verdict."""
     if not isinstance(outcome, BrowserNotReadyError):
-        return [f"ended in {type(outcome).__name__}, not a refusal for a browser that is not set up"]
-    verdict = outcome.terminal_precondition_verdict
-    if verdict is None or verdict.action is None:
-        return ["the refusal names no setup action"]
-    if verdict.action.action_id != BROWSER_PROVISION_ACTION_ID:
-        return [f"the refusal names {verdict.action.action_id}, not {BROWSER_PROVISION_ACTION_ID}"]
+        return [f"ended in {type(outcome).__name__}, not a refusal for a browser that is not available"]
+    if outcome.terminal_precondition_verdict is None:
+        return ["the refusal carries no verdict"]
     return []
 
 
@@ -998,7 +978,7 @@ def _operation_coverage_problems(
 def _operation_problems(
     settled: SettledOperation, posts: Sequence[str], role: ModelRole, code: ModelRunRefusalCode
 ) -> list[str]:
-    """Return why a settled operation does not let another process route its person to the local AI setup."""
+    """Return why a settled operation does not let another process read the reader refusal."""
     what = f"{settled.definition_id} settled {settled.condition.value}"
     if settled.published is None:
         return [f"{what} with no detail or result a client in another process can read"]
@@ -1187,7 +1167,7 @@ _BROWSER_DRIVES = [
 
 
 @pytest.mark.parametrize("driver", _BROWSER_DRIVES)
-def test_a_browser_consumer_refuses_with_the_browser_setup(
+def test_a_browser_consumer_refuses_while_the_browser_is_not_available(
     tmp_path: Path, driver: Callable[[Settings], object]
 ) -> None:
     with _empty_browsers_root(tmp_path) as settings:
@@ -1302,7 +1282,7 @@ def test_discovery_reports_an_exemption_that_no_longer_dispatches(tmp_path: Path
     assert any(problem.startswith("cadrumo.adapters.outbound.llm.client is exempt") for problem in stale)
 
 
-def test_a_consumer_that_skips_the_check_or_names_no_action_is_reported(tmp_path: Path) -> None:
+def test_a_consumer_that_skips_the_check_or_answers_for_another_code_is_reported(tmp_path: Path) -> None:
     code = ModelRunRefusalCode.MODEL_NOT_INSTALLED
     with _agent_refusing(tmp_path, code) as runtime:
         client = LLMClient(settings=runtime.settings)
@@ -1315,20 +1295,8 @@ def test_a_consumer_that_skips_the_check_or_names_no_action_is_reported(tmp_path
             header = ModelRunHeader(role=ModelRole.TEXT_EXTRACTION.value, deadline_seconds=30)
             return asyncio.run(runtime.service.run(header, ModelRunBody(prompt="Read this.", max_output_tokens=16)))
 
-        def names_no_action() -> object:
-            raise InvoiceDraftReaderUnavailableError(
-                RuntimeError("reader"),
-                precondition_verdict=probe_no_recovery_verdict(
-                    ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-                    facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
-                ),
-            )
-
         skipped = _local_ai_gating_problems(_outcome(skips_the_check), runtime.posts, ModelRole.TEXT_EXTRACTION, code)
         runtime.service.runs.clear()
-        actionless = _local_ai_gating_problems(
-            _outcome(names_no_action), runtime.posts, ModelRole.TEXT_EXTRACTION, code
-        )
         refused = _outcome(lambda: asyncio.run(client.complete(request)))
         wrong_role = _local_ai_gating_problems(refused, runtime.posts, ModelRole.VISION_TRANSCRIPTION, code)
         wrong_code = _local_ai_gating_problems(
@@ -1338,11 +1306,8 @@ def test_a_consumer_that_skips_the_check_or_names_no_action_is_reported(tmp_path
 
     assert any(problem.startswith("sent 1 run(s) to the agent") for problem in skipped), skipped
     assert any("carrying no verdict" in problem for problem in skipped), skipped
-    assert any(f"names no setup action, not {LOCAL_AI_PROVISION_ACTION_ID}" in problem for problem in actionless), (
-        actionless
-    )
     assert any(p == "verdict speaks for role ['text_extraction'], not vision_transcription" for p in wrong_role)
-    assert any(f"names {LOCAL_AI_PROVISION_ACTION_ID}, not None" in problem for problem in wrong_code), wrong_code
+    assert any(" is not " in problem for problem in wrong_code), wrong_code
     assert correct == [], "the real client's refusal is what a gated consumer returns"
 
 
@@ -1385,9 +1350,9 @@ def test_a_browser_start_without_an_earlier_check_is_reported(tmp_path: Path) ->
 
     factory = "cadrumo.adapters.outbound.aeat.browser.fixture_factory"
     assert sites[f"{factory}.gated"] is None
-    assert sites[f"{factory}.ungated"] == "line 5 starts a browser and nothing checks it is set up"
+    assert sites[f"{factory}.ungated"] == "line 5 starts a browser and nothing checks it is available"
     assert sites[f"{factory}.checked_too_late"] == "line 8 starts a browser before the check on line 9"
-    assert sites[f"{factory}.launches"] == "line 17 starts a browser and nothing checks it is set up"
+    assert sites[f"{factory}.launches"] == "line 17 starts a browser and nothing checks it is available"
 
 
 def test_a_browser_operation_without_a_browser_first_preflight_is_reported(tmp_path: Path) -> None:
@@ -1430,25 +1395,19 @@ def test_a_browser_operation_without_a_browser_first_preflight_is_reported(tmp_p
     ]
 
 
-def test_a_browser_consumer_that_does_not_refuse_or_names_no_action_is_reported(tmp_path: Path) -> None:
-    def names_no_action() -> object:
-        raise BrowserNotUsableError(
-            "fixture",
-            translated_message="adapters.browser.errors.not_usable",
-            precondition_verdict=browser_no_action_verdict(
-                condition=BrowserPreconditionCondition.CONTEXT_CREATABLE,
-                facts={"browser_context_creatable": False},
-                outcome=NoRecoveryOutcome.SAFETY,
-            ),
+def test_a_browser_consumer_that_does_not_refuse_or_carries_no_verdict_is_reported(tmp_path: Path) -> None:
+    def carries_no_verdict() -> object:
+        raise BrowserNotReadyError(
+            "fixture", translated_message="adapters.browser.errors.not_available", precondition_verdict=None
         )
 
     with _empty_browsers_root(tmp_path) as settings:
         real = _browser_refusal_problems(_outcome(lambda: _drive_sign_in_readiness(settings)))
 
     assert _browser_refusal_problems(_outcome(lambda: None)) == [
-        "ended in NoneType, not a refusal for a browser that is not set up"
+        "ended in NoneType, not a refusal for a browser that is not available"
     ]
-    assert _browser_refusal_problems(_outcome(names_no_action)) == ["the refusal names no setup action"]
+    assert _browser_refusal_problems(_outcome(carries_no_verdict)) == ["the refusal carries no verdict"]
     assert real == [], "the real readiness check's refusal is what a gated consumer raises"
 
 
@@ -1493,7 +1452,7 @@ class _FixtureReadResult(BaseModel):
 
 
 def _read_one_statement_page() -> None:
-    """Ask the real statement reader for one page; with the model not installed it refuses with the setup verdict."""
+    """Ask the real statement reader for one page; with the model not installed it refuses with the typed verdict."""
     StatementReader().propose_page(_transcription("05.03.2026 Cafeteria -4,50 EUR"))
 
 

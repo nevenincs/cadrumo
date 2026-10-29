@@ -61,8 +61,8 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
-from ..reader_refusal_wording import column_reader_refusal_reason
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
+from ..reader_refusal_wording import column_reader_refusal_reason
 from ._bulk_import_columns import (
     BulkImportColumnResolution,
     ColumnRoleMapper,
@@ -485,8 +485,7 @@ def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> N
 
     A book whose own column names only the mapping lane could read, and whose
     mapping model could not be asked, was never read. It refuses with the
-    reader's verdict, which names the local AI setup when setup can supply the
-    model, rather than claiming the book lacks the columns.
+    reader's verdict rather than claiming the book lacks the columns.
 
     Raises:
         LedgerImportReaderUnavailableError: The mapping lane was needed and

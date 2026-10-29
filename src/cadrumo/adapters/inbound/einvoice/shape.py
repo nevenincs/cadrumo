@@ -231,7 +231,7 @@ def _pdf_container_is_readable(pdf_bytes: bytes) -> bool:
 
     A header alone is not evidence of a PDF.  The shape probe is the admission
     boundary for evidence bytes, so accepting a header followed by arbitrary
-    bytes would send a malformed document to model provisioning before the
+    bytes would send a malformed document to a model before the
     deterministic reader could refuse it.  ``pikepdf`` already backs the
     embedded-file inspection above; opening the container here gives the same
     byte-level boundary to PDFs without attachments.

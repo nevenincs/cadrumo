@@ -121,13 +121,9 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
     ),
 }
 
-# Carriers whose refusal is recoverable by provisioning: the verdict, with its
-# recovery action, is the provisioning probe's own rather than a browser-authored one.
-_PROVISIONING_DELEGATED_CARRIERS: frozenset[str] = frozenset(
-    {
-        "session:require_browser_ready:BrowserNotReadyError:Chromium browser build is not provisioned",
-        "session:require_browser_ready:BrowserNotUsableError:Chromium browser build cannot be used",
-    }
+# Carriers whose verdict is the availability probe's own rather than a browser-authored one.
+_PROBE_DELEGATED_CARRIERS: frozenset[str] = frozenset(
+    {"session:require_browser_ready:BrowserNotReadyError:Chromium browser build is not available"}
 )
 
 _BROWSER_PRODUCER_MODULES: tuple[ModuleType, ...] = (
@@ -193,7 +189,6 @@ def _browser_error_carriers() -> dict[str, ast.Call]:
                     "BrowserError",
                     "BrowserEvasionError",
                     "BrowserNotReadyError",
-                    "BrowserNotUsableError",
                 }:
                     assert node.args
                     key = f"{self.module_name}:{self.owner}:{error_type}:{_message_identity(node.args[0])}"
@@ -269,9 +264,9 @@ def _assert_terminal_contract(
 def test_browser_failure_totality_uses_one_canonical_no_action_projection() -> None:
     observed = _browser_error_carriers()
 
-    assert set(observed) == set(_BROWSER_FAILURE_TOTALITY) | _PROVISIONING_DELEGATED_CARRIERS
+    assert set(observed) == set(_BROWSER_FAILURE_TOTALITY) | _PROBE_DELEGATED_CARRIERS
     for key, carrier in observed.items():
-        if key in _PROVISIONING_DELEGATED_CARRIERS:
+        if key in _PROBE_DELEGATED_CARRIERS:
             assert ast.unparse(_keyword(carrier, "precondition_verdict")) == "status.precondition_verdict"
             continue
         expected = _BROWSER_FAILURE_TOTALITY[key]

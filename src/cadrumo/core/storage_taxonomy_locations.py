@@ -100,9 +100,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.OLLAMA_HOME,
         "components/ollama/home",
-        dormant_reason=(
-            "The local AI server reads it; no tax application module reads or writes it."
-        ),
+        dormant_reason=("The local AI server reads it; no tax application module reads or writes it."),
         settings_field="cadrumo_ollama_home_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
@@ -111,9 +109,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.OLLAMA_MODELS,
         "models/ollama",
-        dormant_reason=(
-            "The local AI server reads it; no tax application module reads or writes it."
-        ),
+        dormant_reason=("The local AI server reads it; no tax application module reads or writes it."),
         settings_field="cadrumo_ollama_models_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,

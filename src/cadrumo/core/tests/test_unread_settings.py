@@ -98,7 +98,6 @@ def test_an_empty_value_configures_nothing_and_is_not_refused(monkeypatch: pytes
 
 def test_a_name_outside_the_owned_families_is_left_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
     """The check stops at the families the settings own whole: other prefixes belong to other readers."""
-    monkeypatch.setenv("CADRUMO_DEVELOPMENT_ROLE_IMAGE", _VALUE)
     monkeypatch.setenv("CADRUMO_AGENT_PORT", "0")
 
     Settings()

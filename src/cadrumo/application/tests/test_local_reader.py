@@ -225,9 +225,7 @@ def test_the_report_names_only_on_host_models_and_each_role_s_selection() -> Non
     mapping = rows[ModelRole.COLUMN_ROLE_MAPPING]
     assert mapping.selected is False
     assert mapping.precondition_verdict is not None
-    assert (
-        mapping.precondition_verdict.failed_condition_id == ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE
-    )
+    assert mapping.precondition_verdict.failed_condition_id == ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE
     assert mapping.facts["role_selection_required"] is True
 
 

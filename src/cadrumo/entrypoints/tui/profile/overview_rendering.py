@@ -32,7 +32,6 @@ from .aeat_auth_setup import readiness_text
 from .overview_contracts import (
     _ABSENT_GLYPH,
     _COMPLETE_SETUP_KEY,
-    _DOCUMENT_READER_CARD_ID,
     _FIELD_COLUMN_WIDTH,
     _LANGUAGE_ACTION,
     _LANGUAGE_KEY,
@@ -187,17 +186,6 @@ class ProfileOverviewRenderingMixin:
                     Button(tr("tui.aeat_auth.edit"), id="manager-auth-edit", compact=True),
                 )
             await sources.mount_all(self._source_cards())
-        if showing_sources and self._open_document_reader is not None:
-            await sources.mount(
-                SourceActionCard(
-                    SourceActionDescriptor(
-                        title=tr("tui.local_reader.card.title"),
-                        description=tr("tui.local_reader.card.description"),
-                        action_label=tr("tui.local_reader.card.action"),
-                    ),
-                    id=_DOCUMENT_READER_CARD_ID,
-                )
-            )
         self._sync_source_actions()
         await self._render_sections()
         self._render_onboarding()
