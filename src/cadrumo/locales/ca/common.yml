@@ -597,9 +597,8 @@ common:
       quan acabi la feina en curs.
     waiting: Esperant el control del motor
   runtime:
-    manager_unavailable_remedy: Obre {product} i comprova el gestor de serveis en
-      segon pla. Si vas desactivar l’inici en iniciar la sessió, inicia el gestor
-      manualment i torna-ho a provar.
+    manager_unavailable_remedy: No es pot accedir al gestor de serveis en segon pla
+      de {product}. Comprova que el gestor estigui en marxa i torna-ho a provar.
 core:
   profile:
     errors:

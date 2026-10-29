@@ -580,9 +580,8 @@ common:
       munka befejezése után váltanak verziót.
     waiting: Várakozás a háttérfolyamat vezérlésére
   runtime:
-    manager_unavailable_remedy: Nyisd meg a {product} alkalmazást, és ellenőrizd a
-      háttérszolgáltatás-kezelőjét. Ha kikapcsoltad a bejelentkezéskori indítást,
-      indítsd el kézzel a kezelőt, majd próbáld újra.
+    manager_unavailable_remedy: A {product} háttérszolgáltatás-kezelője nem érhető
+      el. Ellenőrizd, hogy a kezelő fut-e, majd próbáld újra.
 core:
   profile:
     errors:

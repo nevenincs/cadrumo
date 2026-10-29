@@ -575,8 +575,8 @@ common:
       work has finished.
     waiting: Waiting for runtime ownership
   runtime:
-    manager_unavailable_remedy: Open {product} and check its background-services manager.
-      If you turned off start at sign-in, start the manager manually, then retry.
+    manager_unavailable_remedy: The background-services manager of {product} is not
+      reachable. Check that the manager is running, then retry.
 core:
   profile:
     errors:

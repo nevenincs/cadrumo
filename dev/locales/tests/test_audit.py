@@ -76,7 +76,6 @@ _IDENTITY_HEADING_KEYS = {
 # key is an entry for three locales and not for the fourth.
 _PROSE_KEYS = {
     "ca": {
-        "adapters.browser.errors.not_usable",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
@@ -256,9 +255,9 @@ _PROSE_KEYS = {
         "desktop.browser.notice.identity_mismatch",
         "desktop.browser.publication.identity_mismatch",
         "desktop.setup.refused_browser_not_removed",
+        "desktop.setup.refused_local_ai_not_removed",
     },
     "en": {
-        "adapters.browser.errors.not_usable",
         "adapters.google.oauth_flow.errors.profile_state_unresolved",
         "adapters.google.profile_binding.errors.no_active_profile",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
@@ -436,9 +435,9 @@ _PROSE_KEYS = {
         "desktop.browser.notice.identity_mismatch",
         "desktop.browser.publication.identity_mismatch",
         "desktop.setup.refused_browser_not_removed",
+        "desktop.setup.refused_local_ai_not_removed",
     },
     "es": {
-        "adapters.browser.errors.not_usable",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
@@ -616,9 +615,9 @@ _PROSE_KEYS = {
         "desktop.browser.notice.identity_mismatch",
         "desktop.browser.publication.identity_mismatch",
         "desktop.setup.refused_browser_not_removed",
+        "desktop.setup.refused_local_ai_not_removed",
     },
     "hu": {
-        "adapters.browser.errors.not_usable",
         "adapters.outbound.storage.google_drive.errors.former_vault_folder",
         "application.iva_wallet.decision_reason.first_period_zero_activity_start_uncontrasted",
         "application.modelo.calc_diagnostic.advisory_retencion_credit_grade.what",
@@ -772,6 +771,7 @@ _PROSE_KEYS = {
         "desktop.browser.notice.identity_mismatch",
         "desktop.browser.publication.identity_mismatch",
         "desktop.setup.refused_browser_not_removed",
+        "desktop.setup.refused_local_ai_not_removed",
     },
 }
 

@@ -604,9 +604,8 @@ common:
       cuando termine el trabajo en curso.
     waiting: Esperando el control del motor
   runtime:
-    manager_unavailable_remedy: Abre {product} y comprueba su gestor de servicios
-      en segundo plano. Si desactivaste el inicio al iniciar sesión, inicia el gestor
-      manualmente y vuelve a intentarlo.
+    manager_unavailable_remedy: No se puede acceder al gestor de servicios en segundo
+      plano de {product}. Comprueba que el gestor esté en marcha y vuelve a intentarlo.
 core:
   profile:
     errors:
