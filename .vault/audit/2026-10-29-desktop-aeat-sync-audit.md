@@ -154,3 +154,32 @@ One high finding (`session-ended-never-pauses-a-writing-capture`) reopens P03.S1
 - `begin-keeps-a-just-finished-run`: resolved in 9366afc6df. `Run::active` counts only a paused run or one with an item waiting or running, so a start arriving after the last settle holds a fresh run. This is tested.
 - `status-store-catch-swallows-other-refusals`: resolved in b7e9cb1949. `PersistenceDegradationError` replaces `CadrumoError` in the store catch, and access, custody and transport refusals are re-raised first. The status composition translates adapter `StorageError` into that degradation at the seam. Tests cover propagation of `RefusalError`, `AutomationCustodyError` and `InternalInvariantError`.
 - `en-locale-lines-still-uncommitted`: not addressed in this pass. It remains open.
+
+## Third review (2026-10-29)
+
+Scope: only the behaviour changed in `9366afc6df` (host and frontend), `b7e9cb1949` (backend status refusals) and `6f4064e229` (audit and ledger), with their interactions. Verification coverage: reused the ledger evidence for S10, S11, S15 and S04 (`desktop-host-unit-test aeat_sync 37` and `user_profile 30`, `just check-rust`, `npm run check`, `playwright aeat-sync 27`, `pytest aeat_sync status 143`, style, format, types and `lint-imports`, all pass). No additional checks were run, because none of the gaps below can be closed by a focused run. P07.S21 (attended live check) remains open.
+
+Confirmed resolved:
+
+- `session-ended-never-pauses-a-writing-capture`: `outcome::session_ended` (`outcome.rs:89`) and `unsucceeded` (`mod.rs:227`) carry the flag separately from the outcome. `Run::settle` pauses on it whatever the effect (`run.rs:345`). `resume` re-queues only `Failed(SessionEnded)` and not-started items, so an unknown item is never re-run and the run continues after it. A relay follow error still settles `unknown` without pausing, which is correct. The table test drives every relay step (verify, notifications, VAT, discover, filed) with its effect order through `unsucceeded`.
+- `acknowledged-retry-key-never-reaches-the-host`: both ports and `HostCommands` send `acknowledgedUnknown`. The argument-name test parses every `#[tauri::command]` in `mod.rs` (all `aeat_sync_*` commands live there; none uses `rename_all`), excludes injected `State`/`WebviewWindow` parameters, and requires the contract's key sets to equal Tauri's camelCase binding. `progress` and `updates` channels, `subscription`, `profile`, `area`, `item`, `request`, `file`, `year` and `language` all bind correctly. `tauriHost.ts` is held to the contract by the typed `hostCall`, so `npm run check` covers the call sites.
+- `retry-drive-can-abort-a-fresh-run`: `begin` answers the claimed run, and `follow` attaches only on `Arc::ptr_eq`, releasing a superseded claim and never aborting the held run's task (`mod.rs:206-224`). The replaced loop has already released its claim, so leaving its handle unaborted is safe.
+- `begin-keeps-a-just-finished-run`: `Run::active` (`run.rs:264`) counts a paused run, or a running or stopping run with an item waiting or running. A discovery's year items are inserted under the same lock as its settle, so a start cannot replace a run between a discovery and its years. Replacing a finished run aborts a driver with nothing in flight.
+- `status-store-catch-swallows-other-refusals`: access, custody and transport refusals are re-raised before the store catch (`status_operation.py:167`), and other registered errors propagate. `_latest_identity_check` is a behaviour-preserving extraction of the `feb59b85b1` fix.
+- Sweep check: `6f4064e229` touches only the audit and the ledger. The plan file was last changed in `218afd038b`, and `status_operation.py` changes only in `b7e9cb1949`, which contains only this fix. No foreign edits were swept in. An uncommitted refactor of `workspace.py` validators (another session's work, behaviour-preserving) is in the working tree and was not committed by these changes.
+
+### en-locale-lines-still-uncommitted | medium | carried open: the en `session_ended` line and the browser wording are still only in the working tree
+
+This is unchanged from the previous round. The session-ended pause now runs for every relay capture, so the committed product depends on the uncommitted `en/cli.yml` `session_ended` key even more than before.
+
+### status-storage-translation-too-broad | low | every adapter `StorageError` becomes an unavailable area, including a sealed profile session and integrity failures
+
+`degrade_storage_failure` (`src/cadrumo/entrypoints/aeat_sync_status_composition.py:20-31`) translates every `StorageError` into `PersistenceDegradationError`. That includes `SessionExpiredError` (a sealed profile session, an authority condition), `PathContainmentError`, `SecureObjectRowIdentityError` and `BlobIntegrityError`. A session sealed during the read therefore shows every area as unavailable instead of refusing the read, and an integrity failure looks like a transient outage. This is the same class of problem as `status-store-catch-swallows-other-refusals`, moved to the seam. Fix: translate only I/O-class storage failures, and let session-expiry and integrity errors propagate.
+
+### census-session-end-does-not-pause | low | a census item whose AEAT session ended settles failed (other) and the run does not pause there
+
+The commit says every admitted capture pauses on an ended session, but the census step does not go through `unsucceeded`. `census_outcome` maps the census host's `failed` state to `Failed(Reason::Other)` (`native/desktop/src-tauri/src/shell/aeat_sync/mod.rs:410`), and `censo.rs:159-163` reports every effect-`none` refusal as `failed` without its `refusal_ref`. The run then moves on, and pauses only at the next relay item. Resume does not re-read the census, so the person has to retry that area by hand. The impact is small because census is first and the next item pauses. Fix: let the census snapshot carry the session-ended refusal so it settles `Failed(SessionEnded)`, or record that the census is out of scope for the pause.
+
+### third-review-verdict | medium | PASS
+
+No critical or high findings. The four fixes under review hold, and their interactions (resume, retry, start replacement, status refusal propagation) are consistent. One medium (`en-locale-lines-still-uncommitted`, carried) and two lows remain recorded for the approved P02, P03 and P05 Steps. Verification coverage is the reused ledger evidence listed above. P07.S21 is still pending.
