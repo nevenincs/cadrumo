@@ -1405,9 +1405,79 @@ export interface HostCommands {
    * `unknown` means the request was submitted and its outcome was not
    * confirmed, and it is never retried. */
   aeat_sync_start: {
-    args: { request: import("../shell/aeatSync").AeatSyncStart };
+    args: {
+      profile: string;
+      request: import("../shell/aeatSync").AeatSyncStart;
+    };
     result: null;
   };
+  /** What the last reads came to, per kind of data, with the filed
+   * declarations set against the profile's records; no network. */
+  aeat_sync_results: {
+    args: { profile: string; language: string };
+    result: Omit<
+      import("../shell/aeatSyncResults").AeatSyncResults,
+      "notifications"
+    >;
+  };
+  /** The notification rows with their read state, without identifiers. */
+  aeat_sync_notifications: {
+    args: { profile: string };
+    result: import("../shell/aeatSyncResults").NotificationRow[];
+  };
+  /** Reads one kind of data again, or one failed part of it. A rejection
+   * carries `{ code }`; `unknown` is never retried. */
+  aeat_sync_retry: {
+    args: {
+      profile: string;
+      area: import("../shell/aeatSync").AeatSyncAreaId;
+      item: number | null;
+      /** True once the person was told the part may already have been
+       * brought; only then is a part with an unknown outcome read again. */
+      acknowledged_unknown?: boolean;
+    };
+    result: null;
+  };
+  /** The update now going on or last ended: each kind of data with its
+   * parts and their outcomes; null before any. */
+  aeat_sync_progress: {
+    args: { profile: string };
+    result: import("../shell/aeatSyncRun").AeatSyncRunSnapshot | null;
+  };
+  /** Lets the part in progress settle and starts nothing further. */
+  aeat_sync_stop: { args: { profile: string }; result: null };
+  /** Carries a paused update on from where it stopped, once the person signed
+   * in again. */
+  aeat_sync_resume: { args: { profile: string }; result: null };
+  /** A token and the name of the Borrador PDF picked in the native dialog;
+   * null when it is closed without a choice. Never a path. */
+  aeat_sync_borrador_pick: {
+    args: Record<never, never>;
+    result: import("../shell/aeatSyncResults").BorradorFile | null;
+  };
+  /** Imports the picked Borrador PDF into the profile. */
+  aeat_sync_borrador_import: {
+    args: { profile: string; file: string };
+    result: import("../shell/aeatSyncResults").BorradorImportResult;
+  };
+  /** What an update needs before it reads AEAT: the secure browser's row and
+   * whether the profile has AEAT access. It reaches no network. */
+  aeat_sync_prepare: {
+    args: Record<string, never>;
+    result: import("../shell/aeatSyncPrepare").AeatSyncPrepared;
+  };
+  /** Signs in to AEAT with the profile's way, reusing a valid session.
+   * `progress` is told when it waits on the person's phone. A rejection
+   * carries `{ code }`: `needs_access`, `cancelled`, `refused` or
+   * `unavailable`. */
+  aeat_sync_sign_in: {
+    args: {
+      progress: Channel<import("../shell/aeatSyncPrepare").AeatSignInStage>;
+    };
+    result: null;
+  };
+  /** Stops a sign-in that waits on the person's phone. */
+  aeat_sync_sign_in_cancel: { args: Record<string, never>; result: null };
   /** Counts of the last notifications capture; no row reaches the window. */
   profile_views_notifications: {
     args: Authorized;

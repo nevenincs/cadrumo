@@ -48,9 +48,13 @@ export type AeatSyncStatus = {
   areas: AeatSyncArea[];
 };
 
+/** The areas an update reads from AEAT; Borrador 100 is only imported from a
+ * file, and the host refuses it in a start. */
+export type AeatSyncBringArea = Exclude<AeatSyncAreaId, "borrador">;
+
 /** What the window asks the host to bring. */
 export type AeatSyncStart = {
-  areas: AeatSyncAreaId[];
+  areas: AeatSyncBringArea[];
   years?: number[];
   forms?: string[];
   dry_run: boolean;
@@ -62,9 +66,10 @@ export type AeatSyncPort = {
   status(language: string): Promise<AeatSyncStatus>;
   /** Calls `changed` whenever what status serves may have changed. */
   observe(changed: () => void): Promise<() => void>;
-  /** Asks the host to bring the areas. A rejection is read by
-   * `aeatSyncFailure`; after `unknown` it is not retried. */
-  start(request: AeatSyncStart): Promise<void>;
+  /** Asks the host to bring the areas for `profile`, the `profile_id` the
+   * status served. A rejection is read by `aeatSyncFailure`; after
+   * `unknown` it is not retried. */
+  start(profile: string, request: AeatSyncStart): Promise<void>;
 };
 
 export type AeatSyncFailure =

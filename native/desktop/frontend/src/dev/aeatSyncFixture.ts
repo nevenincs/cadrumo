@@ -109,7 +109,7 @@ export function aeatSyncFixture(
       listeners.add(changed);
       return Promise.resolve(() => listeners.delete(changed));
     },
-    start(request: AeatSyncStart) {
+    start(_profile: string, request: AeatSyncStart) {
       say(`aeatSync.start ${request.areas.join(",")}`);
       listeners.forEach((listener) => listener());
       return Promise.resolve();

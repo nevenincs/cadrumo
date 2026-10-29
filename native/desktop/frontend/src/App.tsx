@@ -2673,6 +2673,20 @@ export function App({ host }: { host: Host }) {
           } satisfies RailItem,
         ]
       : []),
+    ...(host.aeatSync
+      ? [
+          {
+            id: "aeat-sync",
+            icon: "sync",
+            label: t("desktop.aeat_sync.title"),
+            pressed: aeatSyncOn && firstPaneShown,
+            onClick: () => {
+              setPage("aeat-sync");
+              setLayout((current) => ({ ...current, maximized: null }));
+            },
+          } satisfies RailItem,
+        ]
+      : []),
     ...(host.ledger
       ? [
           {

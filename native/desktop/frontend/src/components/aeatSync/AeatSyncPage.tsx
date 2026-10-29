@@ -9,6 +9,7 @@ import {
   aeatSyncFailure,
   useAeatSync,
   type AeatSyncArea,
+  type AeatSyncBringArea,
   type AeatSyncAreaId,
   type AeatSyncCountKind,
   type AeatSyncPort,
@@ -83,12 +84,19 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   const [starting, setStarting] = useState(false);
   const [failure, setFailure] = useState<"failed" | "unknown" | null>(null);
   const { refresh } = status;
+  const profile = status.data?.profile_id;
   const start = useCallback(
     async (areas: AeatSyncAreaId[]) => {
+      if (profile === undefined) return;
       setStarting(true);
       setFailure(null);
       try {
-        await port.start({ areas, dry_run: false });
+        await port.start(profile, {
+          areas: areas.filter(
+            (area): area is AeatSyncBringArea => area !== "borrador",
+          ),
+          dry_run: false,
+        });
       } catch (error) {
         setFailure(aeatSyncFailure(error) === "unknown" ? "unknown" : "failed");
       } finally {
@@ -96,7 +104,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         refresh();
       }
     },
-    [port, refresh],
+    [port, profile, refresh],
   );
 
   const served = new Map(status.data?.areas.map((a) => [a.area, a]));

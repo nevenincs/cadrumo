@@ -21,6 +21,7 @@ import {
   readSkillVerification,
 } from "./agentSkills";
 import type { AgentViews } from "./agentViews";
+import type { AeatSignInStage } from "./aeatSyncPrepare";
 import type { Host } from "./host";
 import type { HostCall } from "./hostCall";
 import { hostCall } from "./hostCall";
@@ -53,6 +54,20 @@ function takeToken(): ShellToken | null {
 export function tauriHost(): Host {
   const token = takeToken();
   const call = hostCall(token);
+  // One cue serves the overview and the run: it says only that a read may
+  // answer differently.
+  const observeAeatSync = async (changed: () => void) => {
+    let active = true;
+    const updates = new Channel<null>();
+    updates.onmessage = () => {
+      if (active) changed();
+    };
+    const subscription = await call("aeat_sync_observe", { updates });
+    return () => {
+      active = false;
+      void call("aeat_sync_unobserve", { subscription }).catch(() => undefined);
+    };
+  };
   const openExternal = (url: string) =>
     call("open_external", { url }).then(() => undefined);
   // A command whose body is a password, or one JSON object holding it, and
@@ -139,22 +154,50 @@ export function tauriHost(): Host {
     },
     aeatSync: {
       status: (language) => call("aeat_sync_status", { language }),
-      async observe(changed) {
-        let active = true;
-        const updates = new Channel<null>();
-        updates.onmessage = () => {
-          if (active) changed();
-        };
-        const subscription = await call("aeat_sync_observe", { updates });
-        return () => {
-          active = false;
-          void call("aeat_sync_unobserve", { subscription }).catch(
-            () => undefined,
-          );
-        };
+      observe: observeAeatSync,
+      start: (profile, request) =>
+        call("aeat_sync_start", { profile, request }).then(() => undefined),
+    },
+    aeatSyncResults: {
+      async results(profile, language) {
+        const [served, notifications] = await Promise.all([
+          call("aeat_sync_results", { profile, language }),
+          call("aeat_sync_notifications", { profile }),
+        ]);
+        return { ...served, notifications };
       },
-      start: (request) =>
-        call("aeat_sync_start", { request }).then(() => undefined),
+      retry: (profile, area, part) =>
+        call("aeat_sync_retry", { profile, area, item: part ?? null }).then(
+          () => undefined,
+        ),
+      pickBorrador: () => call("aeat_sync_borrador_pick", {}),
+      importBorrador: (profile, file) =>
+        call("aeat_sync_borrador_import", { profile, file }),
+    },
+    aeatSyncRun: {
+      progress: (profile) => call("aeat_sync_progress", { profile }),
+      observe: observeAeatSync,
+      stop: (profile) =>
+        call("aeat_sync_stop", { profile }).then(() => undefined),
+      retry: (profile, area, item, acknowledgedUnknown) =>
+        call("aeat_sync_retry", {
+          profile,
+          area,
+          item,
+          acknowledged_unknown: acknowledgedUnknown,
+        }).then(() => undefined),
+      resume: (profile) =>
+        call("aeat_sync_resume", { profile }).then(() => undefined),
+    },
+    aeatSyncPrepare: {
+      prepare: () => call("aeat_sync_prepare", {}),
+      async signIn(stage) {
+        const progress = new Channel<AeatSignInStage>();
+        progress.onmessage = stage;
+        await call("aeat_sync_sign_in", { progress });
+      },
+      cancelSignIn: () =>
+        call("aeat_sync_sign_in_cancel", {}).then(() => undefined),
     },
     views: {
       notifications: () => call("profile_views_notifications", {}),
