@@ -15,10 +15,14 @@ flags and therefore have no ValidationError path to exercise here.
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from click.testing import Result
+
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from cadrumo.domain.user_profile.values import UserProfileFact
 
 from ._ledger_validation_support import (
     _PROFILE_LABEL,
@@ -844,12 +848,21 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
     Mirrors the corrected ``docs/how-to/classify-transactions.md`` mixed-use
     steps end to end: save a category ratio, then allocate the row naming the
     same category id for both ``--usage-ratio-id`` and ``--category-id``.
-    Preflight must then report zero issues and ready=true.
+    Every ratio-eligible category is a home-office share, so preflight also
+    checks the saved ratio against the declared home-office area: half the
+    home here, matching the 0.5 the flow saves. Preflight must then report
+    zero issues and ready=true.
     """
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("50")),
+        )
+    )
     txn_id = _add_eligible_mixed_expense()
 
     ratios_set = _invoke(
-        ["app", "ledger", "ratios", "set", "telefonia_movil", "0.5"],
+        ["app", "ledger", "ratios", "set", "arrendamiento_vivienda_afecto", "0.5"],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )
     assert ratios_set.exit_code == 0, ratios_set.output
@@ -863,9 +876,9 @@ def test_documented_mixed_use_flow_reaches_preflight_ready(tmp_path: Path) -> No
             "--business-pct",
             "0.5",
             "--usage-ratio-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
             "--category-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
         ],
         env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
     )

@@ -870,13 +870,13 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
     """Bulk CSV can carry the proportionality reference needed by mixed rows."""
     tx1, _tx2 = _import_two_transactions(tmp_path)
 
-    ratio = _invoke_cli(["app", "ledger", "ratios", "set", "telefonia_movil", "0.50"])
+    ratio = _invoke_cli(["app", "ledger", "ratios", "set", "arrendamiento_vivienda_afecto", "0.50"])
     assert ratio.exit_code == 0, ratio.output
 
     csv_file = tmp_path / "mixed_with_ratio.csv"
     csv_file.write_text(
         "transaction_id,classification,category_id,business_pct,usage_ratio_id\n"
-        f"{tx1},MIXED,telefonia_movil,0.50,telefonia_movil\n",
+        f"{tx1},MIXED,arrendamiento_vivienda_afecto,0.50,arrendamiento_vivienda_afecto\n",
         encoding="utf-8",
     )
 
@@ -889,10 +889,10 @@ def test_classify_from_csv_accepts_usage_ratio_id_for_mixed(tmp_path: Path) -> N
     row = {r["transaction_id"]: r for r in _list_transactions()}[tx1]
     assert row["business_classification"] == "MIXED"
     assert row["business_pct"] is not None and row["business_pct"].startswith("0.5")
-    assert row["usage_ratio_id"] == "telefonia_movil"
+    assert row["usage_ratio_id"] == "arrendamiento_vivienda_afecto"
 
     stored = _stored_transaction(tx1)
-    assert stored.usage_ratio_id == "telefonia_movil"
+    assert stored.usage_ratio_id == "arrendamiento_vivienda_afecto"
     assert stored.classification_reason == "aeat app ledger classify --file"
     assert stored.edit_lineage[-1].source_command == "aeat app ledger classify --file"
 

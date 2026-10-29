@@ -2,12 +2,15 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable
+from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.user_profile.values import UserProfileFact
 from ...tests.ledger_corpus_support import (
     find_corpus_transaction,
     import_bbva_corpus_account,
@@ -128,10 +131,18 @@ def test_allocate_records_business_proportion(invoke_cli: Callable[..., Result])
 
 def test_ratios_eligible_set_list_validate(invoke_cli: Callable[..., Result]) -> None:
     import_bbva_corpus_account(invoke_cli=invoke_cli)
+    # Every ratio-eligible category is a home-office share, checked against the
+    # declared home-office area: half the home matches the 0.50 saved below.
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("50")),
+        )
+    )
     eligible = invoke_corpus_cli(["--format", "json", "app", "ledger", "ratios", "eligible"], invoke_cli=invoke_cli)
     assert eligible.exit_code == 0, eligible.output
-    blob = json.dumps(json.loads(eligible.output))
-    category = "telefonia_movil" if "telefonia_movil" in blob else "vehiculo_combustible"
+    category = "arrendamiento_vivienda_afecto"
+    assert category in {row["category"] for row in json.loads(eligible.output)["result"]["rows"]}, eligible.output
     setr = invoke_corpus_cli(["app", "ledger", "ratios", "set", category, "0.50"], invoke_cli=invoke_cli)
     assert setr.exit_code == 0, setr.output
     listed = invoke_corpus_cli(["app", "ledger", "ratios", "list"], invoke_cli=invoke_cli)
