@@ -3763,7 +3763,6 @@ desktop:
       check_again: Volver a comprobar
       resume: Reanudar
       set_up: Configurar
-      set_up_in_desktop: Configurar en la aplicación de escritorio de Cadrumo
       try_again: Volver a intentarlo
       update: Actualizar
     approve: Descargar y configurar
@@ -3894,23 +3893,6 @@ desktop:
     toast_not_finished: La configuración no ha terminado
     unavailable: Ahora no se pueden comprobar los componentes. Inténtalo de nuevo
       en un momento.
-  setup_review:
-    changed: Esta solicitud de configuración ha cambiado o ha terminado. Pide al asistente
-      que vuelva a iniciar la configuración.
-    check_setup: Revisar la configuración
-    destination_browser: La carpeta del navegador de Cadrumo
-    held_elsewhere: Otra persona con sesión en este perfil ya está respondiendo a
-      esta solicitud de configuración.
-    lead: La configuración espera tu aprobación. No se descarga nada hasta que la
-      apruebes.
-    reject: No configurar
-    title: ¿Configurar el navegador para la web de la Agencia Tributaria?
-    unavailable: Cadrumo no ha podido responder a esta solicitud de configuración.
-      Inténtalo de nuevo.
-    uncertain: Cadrumo no ha podido confirmar tu respuesta, así que la configuración
-      puede haber empezado. Revisa la configuración antes de volver a pedirla.
-    unreadable: Cadrumo no puede mostrar qué descargaría esta configuración, así que
-      no puedes aprobarla aquí.
   signin:
     checking: Comprobando tu sesión…
     choose_profile: Elige un perfil

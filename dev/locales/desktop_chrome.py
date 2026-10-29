@@ -139,7 +139,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "secure_connection_failed",
             "unexpected",
         ),
-        "desktop.setup.action.": ("check_again", "resume", "set_up", "set_up_in_desktop", "try_again", "update"),
+        "desktop.setup.action.": ("check_again", "resume", "set_up", "try_again", "update"),
         "desktop.startup.": (
             "starting",
             "progress",

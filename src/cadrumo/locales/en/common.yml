@@ -3707,7 +3707,6 @@ desktop:
       check_again: Check again
       resume: Resume
       set_up: Set up
-      set_up_in_desktop: Set up in the Cadrumo desktop app
       try_again: Try again
       update: Update
     approve: Download and set up
@@ -3831,21 +3830,6 @@ desktop:
     toast_done: Components are set up
     toast_not_finished: Setup didn't finish
     unavailable: Components can't be checked right now. Try again in a moment.
-  setup_review:
-    changed: This setup request changed or ended. Ask the assistant to start setup
-      again.
-    check_setup: Check setup
-    destination_browser: Cadrumo's browser folder
-    held_elsewhere: Someone else signed in to this profile is already answering this
-      setup request.
-    lead: Setup is waiting for your approval. Nothing is downloaded until you approve.
-    reject: Don't set up
-    title: Set up the browser for the tax agency website?
-    unavailable: Cadrumo couldn't answer this setup request. Try again.
-    uncertain: Cadrumo couldn't confirm your answer, so setup may have started. Check
-      setup before asking for it again.
-    unreadable: Cadrumo can't show what this setup would download, so you can't approve
-      it here.
   signin:
     checking: Checking your sign-in…
     choose_profile: Choose a profile

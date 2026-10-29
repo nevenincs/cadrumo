@@ -3738,7 +3738,6 @@ desktop:
       check_again: Újraellenőrzés
       resume: Folytatás
       set_up: Beállítás
-      set_up_in_desktop: Beállítás a Cadrumo asztali alkalmazásában
       try_again: Újrapróbálás
       update: Frissítés
     approve: Letöltés és beállítás
@@ -3867,23 +3866,6 @@ desktop:
     toast_not_finished: A beállítás nem fejeződött be
     unavailable: Az összetevőket most nem lehet ellenőrizni. Próbáld újra egy kicsit
       később.
-  setup_review:
-    changed: Ez a beállítási kérés megváltozott vagy véget ért. Kérd meg az asszisztenst,
-      hogy indítsa újra a beállítást.
-    check_setup: Beállítás ellenőrzése
-    destination_browser: A Cadrumo böngészőmappája
-    held_elsewhere: Ebbe a profilba bejelentkezett másik személy már válaszol erre
-      a beállítási kérésre.
-    lead: A beállítás a jóváhagyásodra vár. Amíg nem hagyod jóvá, semmi sem töltődik
-      le.
-    reject: Ne állítsd be
-    title: Beállítod a böngészőt az adóhivatal webhelyéhez?
-    unavailable: A Cadrumo nem tudott válaszolni erre a beállítási kérésre. Próbáld
-      újra.
-    uncertain: A Cadrumo nem tudta megerősíteni a válaszodat, ezért a beállítás elindulhatott.
-      Mielőtt újra kérnéd, ellenőrizd a beállítást.
-    unreadable: A Cadrumo nem tudja megmutatni, mit töltene le ez a beállítás, ezért
-      itt nem hagyhatod jóvá.
   signin:
     checking: A bejelentkezésed ellenőrzése…
     choose_profile: Válassz profilt

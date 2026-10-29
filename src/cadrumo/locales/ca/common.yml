@@ -3765,7 +3765,6 @@ desktop:
       check_again: Torna a comprovar
       resume: Reprèn
       set_up: Configura
-      set_up_in_desktop: Configura a l'aplicació d'escriptori de Cadrumo
       try_again: Torna-ho a provar
       update: Actualitza
     approve: Baixa i configura
@@ -3895,22 +3894,6 @@ desktop:
     toast_not_finished: La configuració no ha acabat
     unavailable: Ara no es poden comprovar els components. Torna-ho a provar d'aquí
       a un moment.
-  setup_review:
-    changed: Aquesta sol·licitud de configuració ha canviat o ha acabat. Demana a
-      l'assistent que torni a iniciar la configuració.
-    check_setup: Revisa la configuració
-    destination_browser: La carpeta del navegador de Cadrumo
-    held_elsewhere: Una altra persona amb sessió en aquest perfil ja està responent
-      aquesta sol·licitud de configuració.
-    lead: La configuració espera la teva aprovació. No es baixa res fins que l'aprovis.
-    reject: No configuris
-    title: Vols configurar el navegador per al web de l'Agència Tributària?
-    unavailable: Cadrumo no ha pogut respondre aquesta sol·licitud de configuració.
-      Torna-ho a provar.
-    uncertain: Cadrumo no ha pogut confirmar la teva resposta, així que la configuració
-      pot haver començat. Revisa la configuració abans de tornar-la a demanar.
-    unreadable: Cadrumo no pot mostrar què baixaria aquesta configuració, així que
-      no la pots aprovar aquí.
   signin:
     checking: S'està comprovant la teva sessió…
     choose_profile: Tria un perfil
