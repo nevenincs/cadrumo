@@ -158,7 +158,7 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
         cancelled after submission still settles, but nobody sees how, and a
         retry may repeat it. Back, area changes and tool choices are all
         refused while this holds, and so is every way the root has of removing
-        the body: palette and desktop navigation, the account controls that
+        the body: palette navigation, the account controls that
         replace the page or end the session, and quitting. A body that submits
         work overrides it with the state its own Back guard already keeps.
         """

@@ -205,7 +205,6 @@ class ProfileManagerScreen(
         self._refresh_overview_language = refresh_overview_language
         self._aeat_auth_setup = aeat_auth_setup
         self._auth_readiness: AuthSyncReadiness | None = None
-        self._aeat_auth_requested = False
         """Whether the page was opened to edit AEAT access, which opens once the page is up."""
         self._complete_setup = complete_setup
         """Declares setup complete and hands back the page as storage now holds it.
@@ -400,7 +399,6 @@ class ProfileManagerScreen(
         if self._aeat_auth_setup is not None:
             self.run_worker(self._refresh_auth(), group="profile-auth-readiness", exclusive=True)
         self._finish_mount()
-        self._open_requested_aeat_auth()
 
     async def action_refresh_profile(self) -> None:
         """Reload the current profile before opening another edit."""
@@ -468,17 +466,6 @@ class ProfileManagerScreen(
                 if isinstance(status, Static):
                     status.update(readiness_text(self._auth_readiness))
             self._sync_source_actions()
-
-    def request_aeat_auth_editor(self) -> None:
-        """Open the AEAT access editor once this page has mounted and read its profile."""
-        self._aeat_auth_requested = True
-
-    def _open_requested_aeat_auth(self) -> None:
-        # The mount awaited its reads; a page closed meanwhile opens nothing.
-        if not self._aeat_auth_requested or not self.is_attached:
-            return
-        self._aeat_auth_requested = False
-        self._edit_aeat_auth()
 
     def _edit_aeat_auth(self) -> None:
         if self._aeat_auth_setup is None or self._pending_write is not None:

@@ -18,7 +18,6 @@ from cadrumo.entrypoints.tui.navigation import (
     build_destination_catalogue,
     declared_destination_ids,
 )
-from cadrumo.entrypoints.tui.presentation import opens_aeat_auth
 from cadrumo.entrypoints.tui.root_binding import RootBindingV1, RootPresentationV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -172,8 +171,6 @@ class RuntimeInitialRoot(RuntimeProfileLanguage):
             screen = ProfileManagerClientComposition(
                 self._client, profile_label=self._label, output_language=language
             ).compose_from_overview(latest)
-            if opens_aeat_auth(context):
-                screen.request_aeat_auth_editor()
             return screen
 
         def refresh_home() -> RootPresentationV1:

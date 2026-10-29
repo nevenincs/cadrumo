@@ -285,17 +285,12 @@ _SLAB_GLYPHS = frozenset("▄▀█▌▐")
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("term_program", ["cadrumo", "WindowsTerminal"])
-async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
-    monkeypatch: pytest.MonkeyPatch,
-    term_program: str,
-) -> None:
+async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(monkeypatch: pytest.MonkeyPatch) -> None:
     """Without colour a block edge prints as a solid ink frame, so it is not drawn.
 
     Read off the composited strips the terminal receives, since the defect is
     in what the colour filter leaves behind rather than in any declared style.
     """
-    monkeypatch.setenv("TERM_PROGRAM", term_program)
     monkeypatch.setenv("NO_COLOR", "1")
     app = ScreenHostApp(_ActionRow())
     async with app.run_test(size=(40, 8)) as pilot:
@@ -312,7 +307,7 @@ async def test_monochrome_buttons_are_line_boxes_with_focus_on_the_label(
         pilot.app.exit(None)
 
 
-async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color]]:
+async def _button_states(theme_name: str) -> dict[str, tuple[Color, Color]]:
     """Drive a real action row through each button state and read its fill and label colour."""
     states: dict[str, tuple[Color, Color]] = {}
 
@@ -321,8 +316,7 @@ async def _button_states(theme_name: str | None) -> dict[str, tuple[Color, Color
 
     app = ScreenHostApp(_ActionRow())
     async with app.run_test(size=(40, 8)) as pilot:
-        if theme_name is not None:
-            pilot.app.theme = theme_name
+        pilot.app.theme = theme_name
         await settle(pilot)
         previous = pilot.app.screen.query_one("#previous", Button)
         start = pilot.app.screen.query_one("#start", Button)
@@ -347,7 +341,6 @@ async def test_every_button_state_has_its_own_legible_fill(monkeypatch: pytest.M
     button read as the recommended one, and the dark primary label resolved to
     white on light blue.
     """
-    monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")
     monkeypatch.delenv("NO_COLOR", raising=False)
     states = await _button_states(theme_name)
     fills = {state: fill for state, (fill, _) in states.items()}
@@ -355,23 +348,6 @@ async def test_every_button_state_has_its_own_legible_fill(monkeypatch: pytest.M
     for state, (fill, label) in states.items():
         assert fill.a == 1 and label.a == 1, state
         assert _contrast(label.hex, fill.hex) >= _WCAG_AA_BODY_TEXT, state
-
-
-@pytest.mark.asyncio
-async def test_every_desktop_button_state_paints_its_own_palette_slot(monkeypatch: pytest.MonkeyPatch) -> None:
-    """The desktop palette has no derived shades, so each state must name a slot.
-
-    Focus is the ink slot under the paper slot, the pair the desktop maps to
-    its foreground and background.
-    """
-    monkeypatch.setenv("TERM_PROGRAM", "cadrumo")
-    monkeypatch.delenv("NO_COLOR", raising=False)
-    states = await _button_states(None)
-    slots = {state: fill.ansi for state, (fill, _) in states.items()}
-    assert all(slot is not None and slot >= 0 for slot in slots.values()), slots
-    assert len(set(slots.values())) == len(slots), slots
-    focus_fill, focus_label = states["focus"]
-    assert (focus_fill.ansi, focus_label.ansi) == (7, 0)
 
 
 def test_no_stylesheet_carries_an_unsubstituted_token() -> None:

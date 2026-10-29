@@ -118,7 +118,6 @@ def test_no_color_is_read_as_the_boolean_cadrumo_declares(
     monkeypatch: pytest.MonkeyPatch, value: str, *, monochrome: bool
 ) -> None:
     """``NO_COLOR=false`` keeps colour, as it does in the CLI; Textual alone reads any value as monochrome."""
-    monkeypatch.setenv("TERM_PROGRAM", "WindowsTerminal")
     monkeypatch.setenv("NO_COLOR", value)
     assert ScreenHostApp(_InputScreen()).no_color is monochrome
 

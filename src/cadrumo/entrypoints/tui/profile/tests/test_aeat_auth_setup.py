@@ -17,7 +17,7 @@ from .....core.i18n.render import tr
 from .....domain.user_profile.values import ProfileSetupState
 from ...components.host import ScreenHostApp
 from ...components.widgets import DisclosureGroup
-from ...tests.settling import settle, settle_until
+from ...tests.settling import settle
 from ..aeat_auth_setup import AeatAuthSetupScreen, readiness_text
 from ..auth_fields import AeatAuthFieldSaveError
 from ..overview import ProfileManagerScreen
@@ -256,29 +256,3 @@ async def test_invalid_field_reports_which_field_failed_without_disclosing_rejec
         assert tr("tui.aeat_auth.field_failed", field="identity.tax_id") in message
         assert "private rejected" not in message
         assert not screen.query_one("#aeat-auth-save", Button).disabled
-
-
-@pytest.mark.asyncio
-async def test_a_profile_page_opened_for_aeat_access_opens_its_editor_once_the_page_is_up() -> None:
-    door = AeatAuthSetupDoor()
-    screen = ProfileManagerScreen(door.overview, persist=lambda *_args: door.overview, aeat_auth_setup=door)
-    screen.request_aeat_auth_editor()
-    async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
-        await settle_until(
-            pilot, lambda: isinstance(screen.app.screen, AeatAuthSetupScreen), "the editor to open over the page"
-        )
-        assert isinstance(screen.app.screen, AeatAuthSetupScreen)
-        screen.app.screen.action_close()
-        await settle_until(pilot, lambda: screen.app.screen is screen, "the page to return after the editor closes")
-        # Asked once: returning to the page does not open the editor again.
-        assert screen.app.screen is screen
-
-
-@pytest.mark.asyncio
-async def test_a_page_without_an_aeat_door_ignores_the_request() -> None:
-    door = AeatAuthSetupDoor()
-    screen = ProfileManagerScreen(door.overview, persist=lambda *_args: door.overview)
-    screen.request_aeat_auth_editor()
-    async with ScreenHostApp(screen).run_test(size=(110, 65)) as pilot:
-        await settle(pilot)
-        assert screen.app.screen is screen

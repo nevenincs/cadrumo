@@ -38,7 +38,6 @@ def test_initial_route_uses_explicit_state_and_exact_profile(
             frontend=OperationFrontendProjection.TUI,
             subscribe_session_retirement=None,
             subscribe_lifecycle_notices=None,
-            subscribe_presentation_requests=None,
         ),
     )
     status = SimpleNamespace(

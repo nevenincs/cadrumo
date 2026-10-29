@@ -10,7 +10,6 @@ from textual.containers import Horizontal, Vertical
 from textual.widgets import Button, Checkbox, Footer, Input, Label, Select, Static
 
 from cadrumo.core.i18n.render import tr
-from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.components.theme import install_cadrumo_themes
 from cadrumo.entrypoints.tui.components.widgets import ContentScroll
@@ -107,13 +106,6 @@ class RuntimeLoginFormMixin:
                 None,
                 resume_first=True,
             )
-        else:
-            self.call_after_refresh(self._present_login)
-
-    def _present_login(self: RuntimeLoginScreen) -> None:
-        """Keep automatic resumption covered; reveal a form that needs input."""
-        if self._active() and not self._transferred and isinstance(self.app, QuietApp):
-            self.app.present_terminal()
 
     def _show_method(self: RuntimeLoginScreen, method: RuntimeLoginMethod) -> None:
         """Show one proof family and discard values from the previous one."""

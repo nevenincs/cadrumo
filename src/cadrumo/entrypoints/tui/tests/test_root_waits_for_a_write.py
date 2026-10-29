@@ -1,8 +1,8 @@
 """The root does not remove a Records page while that page has a write out.
 
 The workspace refuses its own area, tool and Back changes during a write, but
-the root has its own ways of removing the page: palette navigation, a page
-requested from the desktop, the account keys and quitting. Each of them would
+the root has its own ways of removing the page: palette navigation, the
+account keys and quitting. Each of them would
 unmount the page, cancel its awaited door after submission and lose the
 outcome. These tests hold a real exclusion write mid-flight in the real
 ``CadrumoTuiApp`` and try each way out by the key or message the operator's
@@ -23,8 +23,6 @@ from textual.command import CommandPalette
 from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Input, Static
-
-from cadrumo_client.contracts.navigation import ViewLink
 
 from ....application.ledger.models import ManualLedgerTransactionResult
 from ....application.operator_actions.catalogue import lookup_action
@@ -61,7 +59,6 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
-from ..presentation import PagePresentationRequested
 from ..root_binding import HomeRefreshDoorV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
@@ -141,7 +138,6 @@ class _Account:
             "subscribe_retirement": None,
             "subscribe_notices": None,
             "subscribe_language": None,
-            "subscribe_presentation": None,
             "refresh_language": None,
         }.items():
             object.__setattr__(factories, name, value)
@@ -238,12 +234,6 @@ async def _choose_in_palette(pilot: _AppPilot, text: str) -> None:
     await settle(pilot, workers=False)
 
 
-async def _post_desktop_request(pilot: _AppPilot, view_id: str) -> None:
-    """Deliver a page request from the desktop exactly as the presentation subscription posts it."""
-    pilot.app.post_message(PagePresentationRequested(ViewLink(view_id=view_id)))
-    await settle(pilot, workers=False)
-
-
 async def _press(pilot: _AppPilot, key: str) -> None:
     """Press a key and wait for the messages it posts; a write the page holds stays out."""
     await pilot.press(key)
@@ -297,9 +287,6 @@ class _Way:
 _WAYS: dict[str, _Way] = {
     "palette-destination": _Way(
         lambda pilot: _choose_in_palette(pilot, "Declarations"), _opened("workbench.declarations")
-    ),
-    "desktop-page-request": _Way(
-        lambda pilot: _post_desktop_request(pilot, "declarations"), _opened("workbench.declarations")
     ),
     "f4-profile": _Way(lambda pilot: _press(pilot, "f4"), _opened("workbench.profile")),
     "f2-language": _Way(lambda pilot: _press(pilot, "f2"), _language_opened),
@@ -449,7 +436,6 @@ async def test_the_root_keeps_an_activity_asset_action_until_it_settles() -> Non
             for attempt in (
                 lambda: _press(pilot, "f4"),
                 lambda: _press(pilot, "escape"),
-                lambda: _post_desktop_request(pilot, "declarations"),
             ):
                 await attempt()
                 assert app.screen is assets, "the asset screen was removed while its action was out"

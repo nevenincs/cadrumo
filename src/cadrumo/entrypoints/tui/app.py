@@ -55,7 +55,6 @@ from .navigation import (
     TuiNavigationTargetV1,
 )
 from .operations.palette import WorkbenchOperationProviderV1
-from .presentation import PagePresentationRequested, presentation_target
 from .root_binding import (
     DestinationCatalogueRefreshDoorV1,
     HomeRefreshDoorV1,
@@ -70,8 +69,6 @@ if TYPE_CHECKING:
     from textual.timer import Timer
     from textual.worker import Worker
 
-    from cadrumo_client.contracts.navigation import ViewLink
-
     from ...application.overview.home import HomeAccountSession, HomeProjectionV1
     from .secret.passphrase import PassphraseScreen
 
@@ -85,7 +82,6 @@ class CadrumoTuiApp(RootNavigationMixin, AccountActionApp):
 
     _active_destination_catalogue: TuiDestinationCatalogueV1 | None
     _workbench_search_service: WorkbenchSearchDoorV1 | None
-    DEFER_TERMINAL_READY = True
 
     CSS = tokenised(
         BASE_CSS
@@ -165,7 +161,6 @@ class CadrumoTuiApp(RootNavigationMixin, AccountActionApp):
         """Fires at the known expiry when retirement is pushed; nothing polls meanwhile."""
         self._unsubscribe_notices: Callable[[], None] | None = None
         self._unsubscribe_language: Callable[[], None] | None = None
-        self._unsubscribe_presentation: Callable[[], None] | None = None
         self._language_pending = False
         self._language_refreshing = False
         self._language_revision = 0
@@ -211,7 +206,6 @@ class CadrumoTuiApp(RootNavigationMixin, AccountActionApp):
         if self._startup_ready or self._recomposition_pending or self.screen is not screen:
             return
         self._startup_ready = True
-        self.present_terminal()
         log_startup_phase(
             get_logger(__name__), "tui_initial_screen_ready", "leave", time.monotonic() - self._startup_started
         )
@@ -324,29 +318,8 @@ class CadrumoTuiApp(RootNavigationMixin, AccountActionApp):
             self._unsubscribe_language = factories.subscribe_language(self._post_language_invalidated)
         if factories is not None and factories.subscribe_notices is not None:
             self._unsubscribe_notices = factories.subscribe_notices(self._post_upgrade_notice)
-        if factories is not None and factories.subscribe_presentation is not None:
-            self._unsubscribe_presentation = factories.subscribe_presentation(self._post_presentation_requested)
         if factories is not None and factories.subscribe_retirement is not None:
             self._unsubscribe_retirement = factories.subscribe_retirement(self._post_session_retired)
-
-    def _post_presentation_requested(self, view: ViewLink) -> None:
-        self.post_message(PagePresentationRequested(view))
-
-    def on_page_presentation_requested(self, message: PagePresentationRequested) -> None:
-        """Open the page the person chose at their desktop, as a palette choice would.
-
-        Over a credential or modal form the request stands down with a notice:
-        replacing the destination would discard what that form holds.
-        """
-        if self._recomposition_pending or self._active_destination_catalogue is None:
-            return
-        if not self._account_controls_apply():
-            notice = tr("tui.root.navigation.busy")
-            self.query_one("#root-navigation-refusal", Static).update(notice)
-            self.notify(notice, severity="warning")
-            return
-        self.query_one("#root-navigation-refusal", Static).update("")
-        self.navigate_to(presentation_target(message.view))
 
     def on_runtime_upgrade_pending(self, _: RuntimeUpgradePending) -> None:
         """Render a manager upgrade notice on the existing UI thread."""
@@ -373,9 +346,6 @@ class CadrumoTuiApp(RootNavigationMixin, AccountActionApp):
         unsubscribe_language, self._unsubscribe_language = self._unsubscribe_language, None
         if unsubscribe_language is not None:
             unsubscribe_language()
-        unsubscribe_presentation, self._unsubscribe_presentation = self._unsubscribe_presentation, None
-        if unsubscribe_presentation is not None:
-            unsubscribe_presentation()
         unsubscribe_notice, self._unsubscribe_notices = self._unsubscribe_notices, None
         if unsubscribe_notice is not None:
             unsubscribe_notice()
@@ -424,7 +394,6 @@ class CadrumoTuiApp(RootNavigationMixin, AccountActionApp):
         if len(self.screen_stack) == 1:
             retry.focus()
         self.notify(message, severity="warning")
-        self.call_after_refresh(self.present_terminal)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Retry a failed bootstrap or Home read through its original read door."""

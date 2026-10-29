@@ -33,7 +33,6 @@ from ..contracts.deadline_budget import (
     deadline_after,
 )
 from ..contracts.model_runs import ModelRunRequested
-from ..contracts.navigation import ViewLink
 from ..contracts.profile_access import (
     ProfileLogin,
     ProfileStatus,
@@ -124,7 +123,6 @@ class FrontendClient(FrontendSessionClient):
         self._attendance_receivers: list[Callable[[], None]] = []
         self._answer_receivers: list[Callable[[], None]] = []
         self._operation_receivers: list[Callable[[], None]] = []
-        self._presentation_receivers: list[Callable[[ViewLink], None]] = []
 
     def _handle_global_event(self, event: ConnectionEvent) -> bool:
         if isinstance(event, ProfileLoginChanged):
@@ -179,13 +177,6 @@ class FrontendClient(FrontendSessionClient):
 
     def _handle_presentation_event(self, event: ConnectionEvent) -> bool:
         if isinstance(event, PresentationRequested):
-            with self._event_guard:
-                receivers_presentation = (
-                    tuple(self._presentation_receivers) if event.session_id == self._session_id else ()
-                )
-            view = ViewLink(view_id=event.destination, params=tuple(sorted(event.params.items())))
-            for receive_presentation in receivers_presentation:
-                receive_presentation(view)
             return True
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
@@ -704,19 +695,6 @@ class FrontendClient(FrontendSessionClient):
             with self._event_guard:
                 if receive in self._operation_receivers:
                     self._operation_receivers.remove(receive)
-
-        return unsubscribe
-
-    def subscribe_presentation_requests(self, receive: Callable[[ViewLink], None]) -> Callable[[], None]:
-        """Hear the views the person asks this exact session to show; each grants nothing and may be refused."""
-        self._observe_events()
-        with self._event_guard:
-            self._presentation_receivers.append(receive)
-
-        def unsubscribe() -> None:
-            with self._event_guard:
-                if receive in self._presentation_receivers:
-                    self._presentation_receivers.remove(receive)
 
         return unsubscribe
 

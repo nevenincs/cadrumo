@@ -403,5 +403,3 @@ class RuntimeLoginAttemptMixin:
                 self._busy = False
                 if self._active():
                     self._controls()
-                    if not state.transferred:
-                        self.call_after_refresh(self._present_login)

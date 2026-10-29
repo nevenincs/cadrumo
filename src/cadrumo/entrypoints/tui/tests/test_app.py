@@ -419,7 +419,6 @@ def _account_factories(
     object.__setattr__(factories, "subscribe_retirement", None)
     object.__setattr__(factories, "subscribe_notices", None)
     object.__setattr__(factories, "subscribe_language", None)
-    object.__setattr__(factories, "subscribe_presentation", None)
     object.__setattr__(factories, "refresh_language", None)
     object.__setattr__(factories, "profile", lambda context: MarkerScreen(context))
     object.__setattr__(

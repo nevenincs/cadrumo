@@ -29,7 +29,6 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from cadrumo.entrypoints import operation_composition
-from cadrumo.entrypoints.tui.components.quiet_app import QuietApp
 from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
@@ -189,8 +188,6 @@ async def test_login_scope_keeps_one_exact_client_until_frontend_finishes(root_f
 @pytest.mark.asyncio
 async def test_explicit_preselected_profile_resumes_before_password_prompt(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id = uuid4()
-    presentations: list[str] = []
-    monkeypatch.setattr(QuietApp, "_terminal_presentation", lambda _app, phase: presentations.append(phase))
 
     class ResumeClient(_OwnedClient):
         @override
@@ -213,7 +210,6 @@ async def test_explicit_preselected_profile_resumes_before_password_prompt(monke
             assert handoff is not None and handoff.method is RuntimeLoginMethod.RECEIPT
             assert handoff.client is client and client.closed == 0
     assert client.closed == 1
-    assert presentations == [], "automatic resumption must never reveal its transient form"
 
 
 class _RefusedResumeClient(_OwnedClient):
@@ -238,8 +234,6 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
     reason: ProfileSessionRefusalReason,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    presentations: list[str] = []
-    monkeypatch.setattr(QuietApp, "_terminal_presentation", lambda _app, phase: presentations.append(phase))
     profile_id = uuid4()
     resumed = _RefusedResumeClient(profile_id, ProfileReceiptRefusedError(reason))
     password = _OwnedClient(profile_id)
@@ -262,7 +256,6 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
             "resumed.closed == 1 and not screen._busy and credential.has_focus",
             workers=False,
         )
-        await settle_until(pilot, lambda: presentations == ["ready"], "presentations == ['ready']", workers=False)
         seen.append((status.message, credential.has_focus))
         credential.value = "synthetic-proof"
         assert await click_when_laid_out(pilot, pilot.app.screen.query_one("#runtime-login-submit", Button))
@@ -279,7 +272,6 @@ async def test_no_saved_sign_in_falls_back_to_the_password_without_a_refusal(
             assert handoff.client is password
     assert resumed.resumes == 1
     assert seen == [("", True)]
-    assert presentations == ["ready", "loading"]
 
 
 @pytest.mark.asyncio

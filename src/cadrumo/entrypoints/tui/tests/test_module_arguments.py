@@ -1,4 +1,4 @@
-"""The TUI process takes no page or profile from its command line; a desktop asks the running TUI instead."""
+"""The TUI process takes no page or profile from its command line."""
 
 import pytest
 
