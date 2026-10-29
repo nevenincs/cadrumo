@@ -36,7 +36,7 @@ def test_the_projection_carries_every_element_kind_and_retired_id() -> None:
         {"name": kind.name, "alphabet": kind.alphabet, "length": kind.length} for kind in register.kinds
     ]
     assert projection["retired"] == list(register.retired)
-    assert projection["surfaces"] == ["gui", "tui"]
+    assert projection["surfaces"] == ["gui"]
     assert projection["link"] == {
         "prefix": "cadrumo://view/",
         "max_length": 512,

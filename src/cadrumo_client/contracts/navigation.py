@@ -3,7 +3,7 @@
 The register is neutral data in ``navigation.toml``, packaged beside this
 module: each element has an id that is also its link path, an optional parent,
 one label locale key, search keywords and the surfaces that implement it
-(``gui`` for the window, ``tui`` for the terminal workbench). An element may
+(``gui``, the window, is the only one). An element may
 also declare link parameters, each taking values of one register-declared
 value kind, such as ``select`` taking an invoice id. The register never says
 how a surface implements an element; each surface keeps its own id table.
@@ -69,7 +69,6 @@ class NavigationSurface(StrEnum):
     """An interface that can open a register element."""
 
     GUI = "gui"
-    TUI = "tui"
 
 
 class NavigationRegisterError(ValueError):
@@ -317,7 +316,7 @@ type ViewParams = tuple[tuple[str, str], ...]
 
 
 class ViewLinkRefusal(StrEnum):
-    """Why a text is not a view link the window or the TUI may open."""
+    """Why a text is not a view link the window may open."""
 
     TOO_LONG = "too_long"
     MALFORMED = "malformed"
@@ -481,8 +480,8 @@ class SurfaceImplementation:
         return view_id in self.views and names <= self.params.get(view_id, frozenset())
 
 
-type ViewFallback = Literal["none", "other_surface", "ancestor"]
-"""Which element and surface opened compared with the request: as asked, the other surface, or an ancestor."""
+type ViewFallback = Literal["none", "ancestor"]
+"""Which element opened compared with the request: as asked, or an ancestor."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -533,15 +532,11 @@ def resolve_view(
 ) -> ViewOpened | ViewRefused:
     """Choose the surface and element a view request opens.
 
-    The preferred surface is the window unless the request asks for the TUI.
     In order, the first that applies opens:
 
-    1. the preferred surface, honouring the element and every parameter;
-    2. the other surface, honouring them all, with a notice;
-    3. the element without its parameters, on the preferred surface and then
-       the other, with a notice that they were dropped;
-    4. the nearest ancestor, on the preferred surface and then the other,
-       without parameters and with a notice.
+    1. the element, honouring every parameter;
+    2. the element without its parameters, with a notice that they were dropped;
+    3. the nearest ancestor, without parameters and with a notice.
 
     Otherwise the request is refused. ``implemented`` says what each surface
     can open now; it defaults to the surfaces the register declares, each
@@ -553,27 +548,23 @@ def resolve_view(
     if refusal is not None:
         return ViewRefused(requested=request, reason=_REGISTER_REFUSALS[refusal])
     surfaces = implemented if implemented is not None else _declared_implementation(active)
-    first = request.prefer or NavigationSurface.GUI
-    order = (first, NavigationSurface.TUI if first is NavigationSurface.GUI else NavigationSurface.GUI)
     names = frozenset(name for name, _ in request.params)
 
-    opened = _open_same_element(request, order, surfaces, names)
+    opened = _open_same_element(request, surfaces, names)
     if opened is not None:
         return opened
-    return _open_ancestor(request, active, order, surfaces)
+    return _open_ancestor(request, active, surfaces)
 
 
 def _open_ancestor(
     request: ViewLink,
     register: NavigationRegister,
-    order: tuple[NavigationSurface, NavigationSurface],
     surfaces: Mapping[NavigationSurface, SurfaceImplementation],
 ) -> ViewOpened | ViewRefused:
-    """Try nearest ancestors on each surface only after exact-element attempts fail."""
+    """Try nearest ancestors only after exact-element attempts fail."""
     for ancestor in register.lineage(request.view_id)[1:]:
-        for surface in order:
-            if _honours_view(surfaces, surface, ancestor.id, frozenset()):
-                return ViewOpened(request, ancestor.id, surface, "ancestor", ())
+        if _honours_view(surfaces, NavigationSurface.GUI, ancestor.id, frozenset()):
+            return ViewOpened(request, ancestor.id, NavigationSurface.GUI, "ancestor", ())
     return ViewRefused(requested=request, reason="not_implemented")
 
 
@@ -588,28 +579,17 @@ def _honours_view(
     return implementation is not None and implementation.honours(view_id, wanted)
 
 
-def _same_element_opening(
-    request: ViewLink, surface: NavigationSurface, first: NavigationSurface, params: ViewParams
-) -> ViewOpened:
-    """Record the selected surface and whether the original preference was retained."""
-    fallback: ViewFallback = "none" if surface is first else "other_surface"
-    return ViewOpened(request, request.view_id, surface, fallback, params)
-
-
 def _open_same_element(
     request: ViewLink,
-    order: tuple[NavigationSurface, NavigationSurface],
     surfaces: Mapping[NavigationSurface, SurfaceImplementation],
     names: frozenset[str],
 ) -> ViewOpened | None:
     """Try the exact element with all parameters, then without them when necessary."""
-    for surface in order:
-        if _honours_view(surfaces, surface, request.view_id, names):
-            return _same_element_opening(request, surface, order[0], request.params)
-    if names:
-        for surface in order:
-            if _honours_view(surfaces, surface, request.view_id, frozenset()):
-                return _same_element_opening(request, surface, order[0], ())
+    surface = NavigationSurface.GUI
+    if _honours_view(surfaces, surface, request.view_id, names):
+        return ViewOpened(request, request.view_id, surface, "none", request.params)
+    if names and _honours_view(surfaces, surface, request.view_id, frozenset()):
+        return ViewOpened(request, request.view_id, surface, "none", ())
     return None
 
 

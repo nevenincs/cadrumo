@@ -268,17 +268,17 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     ),
     (
         "views",
-        "Find the views of Cadrumo's window and terminal workspace a link can open, and check a link before you "
+        "Find the views of Cadrumo's window a link can open, and check a link before you "
         "write one. A link is cadrumo://view/{id}, optionally with a query of the view's declared params and "
-        "prefer=gui or prefer=tui, for example cadrumo://view/ledger/invoices?select={invoice id}: lowercase, at "
+        "prefer=gui, for example cadrumo://view/ledger/invoices?select={invoice id}: lowercase, at "
         "most 512 characters, no profile, no fragment, no percent-encoding, each key once. A link only shows, "
         "selects or focuses; it grants nothing. Pass query to search labels, keywords and ids; id for one view "
         "exactly (not_found for an id that names none, including a retired one); link to check a whole link, "
         "answered valid with its parts and opens (the surface and view it opens by the register's declared "
-        "surfaces, the fallback none, other_surface or ancestor, whether its params are kept and whether the "
+        "surfaces, the fallback none or ancestor, whether its params are kept and whether the "
         "person is told it opened other than asked) or invalid with the parser's reason; or nothing to list "
         "every view. Each "
-        "view carries id, parent, surfaces (gui is the window, tui the terminal workspace), params (each name "
+        "view carries id, parent, surfaces (gui is the window), params (each name "
         "with its value kind, alphabet and exact length), keywords, label in the profile's language, label_key "
         "and the link that opens it. Copy the links operation results carry rather than composing record links",
         _schema(

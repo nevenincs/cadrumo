@@ -17,8 +17,8 @@
     {
       "view_id": "profile/aeat-access",
       "params": {},
-      "prefer": "tui",
-      "link": "cadrumo://view/profile/aeat-access?prefer=tui"
+      "prefer": "gui",
+      "link": "cadrumo://view/profile/aeat-access?prefer=gui"
     },
     {
       "view_id": "calendar",
@@ -39,8 +39,8 @@
       "params": {
         "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
       },
-      "prefer": "tui",
-      "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=tui"
+      "prefer": "gui",
+      "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=gui"
     }
   ],
   "parse": [
@@ -61,11 +61,11 @@
       }
     },
     {
-      "link": "cadrumo://view/profile/aeat-access?prefer=tui",
+      "link": "cadrumo://view/profile/aeat-access?prefer=gui",
       "expect": {
         "view_id": "profile/aeat-access",
         "params": {},
-        "prefer": "tui"
+        "prefer": "gui"
       }
     },
     {
@@ -77,19 +77,19 @@
       }
     },
     {
-      "link": "cadrumo://view/aeat-sync",
+      "link": "cadrumo://view/calendar",
       "expect": {
-        "view_id": "aeat-sync",
+        "view_id": "calendar",
         "params": {},
         "prefer": null
       }
     },
     {
-      "link": "cadrumo://view/panel/logs?prefer=tui",
+      "link": "cadrumo://view/panel/logs?prefer=gui",
       "expect": {
         "view_id": "panel/logs",
         "params": {},
-        "prefer": "tui"
+        "prefer": "gui"
       }
     },
     {
@@ -103,13 +103,13 @@
       }
     },
     {
-      "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=tui",
+      "link": "cadrumo://view/ledger/movements?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=gui",
       "expect": {
         "view_id": "ledger/movements",
         "params": {
           "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
         },
-        "prefer": "tui"
+        "prefer": "gui"
       }
     },
     {
@@ -175,7 +175,7 @@
       }
     },
     {
-      "link": "cadrumo://view/l\u00e9dger",
+      "link": "cadrumo://view/lédger",
       "expect": {
         "refused": "malformed"
       }
@@ -487,7 +487,7 @@
       }
     },
     {
-      "link": "cadrumo://view/ledger/rules?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=tui",
+      "link": "cadrumo://view/ledger/rules?select=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&prefer=gui",
       "expect": {
         "refused": "param_not_accepted"
       }
@@ -521,6 +521,18 @@
       "expect": {
         "refused": "param_malformed"
       }
+    },
+    {
+      "link": "cadrumo://view/ledger?prefer=tui",
+      "expect": {
+        "refused": "query"
+      }
+    },
+    {
+      "link": "cadrumo://view/aeat-sync",
+      "expect": {
+        "refused": "unknown_view"
+      }
     }
   ],
   "resolve": [
@@ -543,21 +555,6 @@
       "link": {
         "view_id": "ledger",
         "params": {},
-        "prefer": "tui"
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "ledger",
-        "surface": "tui",
-        "fallback": "none",
-        "notice": false,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger",
-        "params": {},
         "prefer": "gui"
       },
       "implemented": null,
@@ -566,66 +563,6 @@
         "surface": "gui",
         "fallback": "none",
         "notice": false,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "home",
-        "params": {},
-        "prefer": null
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "home",
-        "surface": "tui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "home",
-        "params": {},
-        "prefer": "tui"
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "home",
-        "surface": "tui",
-        "fallback": "none",
-        "notice": false,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "calendar",
-        "params": {},
-        "prefer": "tui"
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "calendar",
-        "surface": "gui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger/invoices",
-        "params": {},
-        "prefer": "tui"
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "ledger/invoices",
-        "surface": "gui",
-        "fallback": "other_surface",
-        "notice": true,
         "params": {}
       }
     },
@@ -656,95 +593,11 @@
             "profile"
           ],
           "params": {}
-        },
-        "tui": {
-          "views": [],
-          "params": {}
         }
       },
       "expect": {
         "opened": "profile",
         "surface": "gui",
-        "fallback": "ancestor",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "profile/aeat-access",
-        "params": {},
-        "prefer": "gui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [],
-          "params": {}
-        },
-        "tui": {
-          "views": [
-            "profile"
-          ],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "profile",
-        "surface": "tui",
-        "fallback": "ancestor",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger/invoices",
-        "params": {},
-        "prefer": "tui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        },
-        "tui": {
-          "views": [],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "ledger",
-        "surface": "gui",
-        "fallback": "ancestor",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger/rules",
-        "params": {},
-        "prefer": "tui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        },
-        "tui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "ledger",
-        "surface": "tui",
         "fallback": "ancestor",
         "notice": true,
         "params": {}
@@ -775,44 +628,12 @@
     },
     {
       "link": {
-        "view_id": "ledger/rules",
-        "params": {},
-        "prefer": "tui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger/rules"
-          ],
-          "params": {}
-        },
-        "tui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "ledger/rules",
-        "surface": "gui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
         "view_id": "ledger/invoices",
         "params": {},
         "prefer": null
       },
       "implemented": {
         "gui": {
-          "views": [],
-          "params": {}
-        },
-        "tui": {
           "views": [],
           "params": {}
         }
@@ -823,7 +644,7 @@
     },
     {
       "link": {
-        "view_id": "home",
+        "view_id": "calendar",
         "params": {},
         "prefer": null
       },
@@ -847,7 +668,7 @@
       "link": {
         "view_id": "nowhere",
         "params": {},
-        "prefer": "tui"
+        "prefer": null
       },
       "implemented": {
         "gui": {
@@ -882,44 +703,6 @@
     },
     {
       "link": {
-        "view_id": "ledger/movements",
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        "prefer": "tui"
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "ledger/movements",
-        "surface": "gui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        }
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger",
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        "prefer": "tui"
-      },
-      "implemented": null,
-      "expect": {
-        "opened": "ledger",
-        "surface": "tui",
-        "fallback": "none",
-        "notice": false,
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        }
-      }
-    },
-    {
-      "link": {
         "view_id": "ledger",
         "params": {
           "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
@@ -928,84 +711,6 @@
       },
       "implemented": {
         "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        },
-        "tui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {
-            "ledger": [
-              "select"
-            ]
-          }
-        }
-      },
-      "expect": {
-        "opened": "ledger",
-        "surface": "tui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        }
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger",
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        "prefer": "tui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {
-            "ledger": [
-              "select"
-            ]
-          }
-        },
-        "tui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "ledger",
-        "surface": "gui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        }
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger",
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        "prefer": null
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        },
-        "tui": {
           "views": [
             "ledger"
           ],
@@ -1022,34 +727,6 @@
     },
     {
       "link": {
-        "view_id": "ledger",
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        "prefer": "tui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        },
-        "tui": {
-          "views": [],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "ledger",
-        "surface": "gui",
-        "fallback": "other_surface",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
         "view_id": "ledger/movements",
         "params": {
           "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
@@ -1066,51 +743,11 @@
               "select"
             ]
           }
-        },
-        "tui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {
-            "ledger": [
-              "select"
-            ]
-          }
         }
       },
       "expect": {
         "opened": "ledger",
         "surface": "gui",
-        "fallback": "ancestor",
-        "notice": true,
-        "params": {}
-      }
-    },
-    {
-      "link": {
-        "view_id": "ledger/movements",
-        "params": {
-          "select": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-        },
-        "prefer": "tui"
-      },
-      "implemented": {
-        "gui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        },
-        "tui": {
-          "views": [
-            "ledger"
-          ],
-          "params": {}
-        }
-      },
-      "expect": {
-        "opened": "ledger",
-        "surface": "tui",
         "fallback": "ancestor",
         "notice": true,
         "params": {}
@@ -1126,10 +763,6 @@
       },
       "implemented": {
         "gui": {
-          "views": [],
-          "params": {}
-        },
-        "tui": {
           "views": [],
           "params": {}
         }

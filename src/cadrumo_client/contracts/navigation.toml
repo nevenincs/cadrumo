@@ -1,5 +1,5 @@
 # The navigation register: every element a `cadrumo://view/{id}` link or a
-# palette can name, for the window (`gui`) and the terminal workbench (`tui`).
+# palette can name, for the window (`gui`).
 #
 # An element's `id` is also its link path: one to four lowercase segments
 # joined by `/`. A child names its `parent`, which is the id without its last
@@ -19,7 +19,7 @@
 # is never declared again, so an old link cannot open something new.
 
 schema = 1
-retired = ["setup"]
+retired = ["setup", "home", "withholding", "aeat-sync", "operations", "installation", "reference"]
 
 # A bank or manual ledger movement: its content-derived SHA-256 transaction id.
 [[kind]]
@@ -34,16 +34,10 @@ alphabet = "0123456789abcdef"
 length = 64
 
 [[element]]
-id = "home"
-label = "navigation.view.home.label"
-keywords = "overview start summary inicio"
-surfaces = ["tui"]
-
-[[element]]
 id = "ledger"
 label = "navigation.view.ledger.label"
 keywords = "records books bank movements libro registros"
-surfaces = ["gui", "tui"]
+surfaces = ["gui"]
 params = { select = "transaction" }
 
 [[element]]
@@ -91,53 +85,23 @@ keywords = "health readiness checks findings estado"
 surfaces = ["gui"]
 
 [[element]]
-id = "withholding"
-label = "navigation.view.withholding.label"
-keywords = "withholding retenciones irpf"
-surfaces = ["tui"]
-
-[[element]]
 id = "declarations"
 label = "navigation.view.declarations.label"
 keywords = "declarations returns modelo filing declaraciones"
-surfaces = ["gui", "tui"]
-
-[[element]]
-id = "aeat-sync"
-label = "navigation.view.aeat_sync.label"
-keywords = "aeat sync capture sede notifications sincronizacion"
-surfaces = ["tui"]
-
-[[element]]
-id = "operations"
-label = "navigation.view.operations.label"
-keywords = "operations runs jobs history operaciones"
-surfaces = ["tui"]
-
-[[element]]
-id = "installation"
-label = "navigation.view.installation.label"
-keywords = "installation runtime version instalacion"
-surfaces = ["tui"]
-
-[[element]]
-id = "reference"
-label = "navigation.view.reference.label"
-keywords = "reference law sources corpus referencia"
-surfaces = ["tui"]
+surfaces = ["gui"]
 
 [[element]]
 id = "profile"
 label = "navigation.view.profile.label"
 keywords = "profile taxpayer details perfil contribuyente"
-surfaces = ["gui", "tui"]
+surfaces = ["gui"]
 
 [[element]]
 id = "profile/aeat-access"
 parent = "profile"
 label = "navigation.view.profile.aeat_access.label"
 keywords = "aeat access sign-in certificate clave acceso"
-surfaces = ["gui", "tui"]
+surfaces = ["gui"]
 
 [[element]]
 id = "calendar"

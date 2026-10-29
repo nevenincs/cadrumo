@@ -116,7 +116,7 @@ async def test_a_profile_with_no_language_is_answered_in_the_default_language() 
     found = await _call({"id": "profile/aeat-access"}, language=None)
     assert found["language"] == "es"
     assert found["views"][0]["label"] == lookup_translation("navigation.view.profile.aeat_access.label", locale="es")
-    assert found["views"][0]["surfaces"] == ["gui", "tui"]
+    assert found["views"][0]["surfaces"] == ["gui"]
 
 
 @pytest.mark.anyio
@@ -124,12 +124,12 @@ async def test_a_search_matches_labels_keywords_and_ids_best_first() -> None:
     by_keyword = await _call({"query": "facturas"}, language="en")
     assert by_keyword["views"][0]["id"] == "ledger/invoices"
 
-    by_id = await _call({"query": "aeat sync"}, language="en")
-    assert by_id["views"][0]["id"] == "aeat-sync"
+    by_id = await _call({"query": "calendar"}, language="en")
+    assert by_id["views"][0]["id"] == "calendar"
 
     # Accents fold, and a word must match for a view to be answered at all.
-    folded = await _call({"query": "sincronización"}, language="es")
-    assert [row["id"] for row in folded["views"]] == ["aeat-sync"]
+    folded = await _call({"query": "plázos"}, language="es")
+    assert [row["id"] for row in folded["views"]] == ["calendar"]
     assert (await _call({"query": "zzzz"}))["views"] == []
 
 
@@ -165,28 +165,15 @@ async def test_a_valid_link_is_answered_with_its_parsed_parts() -> None:
 
 
 @pytest.mark.anyio
-async def test_a_valid_link_preferring_a_surface_the_view_lacks_opens_on_the_other_with_a_notice() -> None:
-    checked = await _call({"link": f"cadrumo://view/ledger/invoices?select={_INVOICE}&prefer=tui"})
-    assert checked["outcome"] == "valid"
-    assert checked["opens"] == {
-        "surface": "gui",
-        "view": "ledger/invoices",
-        "fallback": "other_surface",
-        "params_kept": True,
-        "notice_due": True,
+async def test_a_link_naming_a_surface_the_register_does_not_declare_is_invalid() -> None:
+    assert await _call({"link": f"cadrumo://view/ledger/invoices?select={_INVOICE}&prefer=tui"}) == {
+        "outcome": "invalid",
+        "reason": "query",
     }
 
-    terminal = await _call({"link": "cadrumo://view/aeat-sync"})
-    assert terminal["opens"] == {
-        "surface": "tui",
-        "view": "aeat-sync",
-        "fallback": "other_surface",
-        "params_kept": True,
-        "notice_due": True,
-    }
-    both = await _call({"link": "cadrumo://view/ledger?prefer=tui"})
-    assert both["opens"]["surface"] == "tui"
-    assert both["opens"]["fallback"] == "none"
+
+@pytest.mark.anyio
+async def test_a_valid_link_without_a_preference_opens_on_the_window() -> None:
     window_first = await _call({"link": "cadrumo://view/profile/aeat-access"})
     assert window_first["opens"] == {
         "surface": "gui",
@@ -206,7 +193,7 @@ async def test_a_valid_link_preferring_a_surface_the_view_lacks_opens_on_the_oth
         ("cadrumo://view/ledger#entries", "fragment"),
         ("cadrumo://view/nowhere", "unknown_view"),
         ("cadrumo://view/ledger/invoices?select=0042", "param_malformed"),
-        (f"cadrumo://view/home?select={_INVOICE}", "param_not_accepted"),
+        (f"cadrumo://view/calendar?select={_INVOICE}", "param_not_accepted"),
         ("cadrumo://view/ledger?select=a&select=b", "query"),
     ],
 )
@@ -225,9 +212,9 @@ async def test_naming_more_than_one_selector_is_refused() -> None:
 def register_with_a_retired_id(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[NavigationRegister]:
     """The shipped register with one more id retired, served to the tool as the packaged one."""
     source = Path(navigation.__file__).with_name("navigation.toml").read_text(encoding="utf-8")
-    assert "retired = []" in source
+    declared = next(line for line in source.splitlines() if line.startswith("retired = "))
     fixture = tmp_path / "navigation.toml"
-    fixture.write_text(source.replace("retired = []", f'retired = ["{_RETIRED}"]'), encoding="utf-8")
+    fixture.write_text(source.replace(declared, f'retired = ["{_RETIRED}"]'), encoding="utf-8")
     register = load_navigation_register(fixture)
     assert _RETIRED in register.retired and register.element(_RETIRED) is None
     monkeypatch.setattr(view_register, "load_navigation_register", lambda: register)

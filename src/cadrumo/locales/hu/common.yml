@@ -4254,8 +4254,6 @@ llm:
         a híváshoz nem engedélyezett.'
 navigation:
   view:
-    aeat_sync:
-      label: AEAT-szinkron
     agent:
       label: Ügynök
     browser:
@@ -4266,10 +4264,6 @@ navigation:
       label: Bevallások
     docs:
       label: Dokumentáció
-    home:
-      label: Kezdőlap
-    installation:
-      label: Telepítés
     ledger:
       documents:
         label: Dokumentumok
@@ -4284,8 +4278,6 @@ navigation:
         label: Nyilvántartások
       rules:
         label: Szabályok
-    operations:
-      label: Műveletek
     panel:
       console:
         label: Konzol
@@ -4298,12 +4290,8 @@ navigation:
       aeat_access:
         label: AEAT-hozzáférés
       label: Profil
-    reference:
-      label: Kézikönyv
     terminal:
       label: Munkaterület
-    withholding:
-      label: Levonások
 operation:
   modal:
     action:

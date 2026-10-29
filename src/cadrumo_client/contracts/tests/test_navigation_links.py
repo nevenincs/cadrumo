@@ -76,7 +76,6 @@ def test_vectors_cover_every_refusal_and_fallback() -> None:
     outcomes = {case["expect"].get("fallback", case["expect"].get("refused")) for case in _VECTORS["resolve"]}
     assert outcomes == {
         "none",
-        "other_surface",
         "ancestor",
         "not_implemented",
         "unknown_view",
@@ -122,7 +121,7 @@ def test_resolve_vector(case: dict[str, Any]) -> None:
     )
 
 
-def test_every_registered_view_round_trips_on_both_preferences() -> None:
+def test_every_registered_view_round_trips_on_each_preference() -> None:
     register = load_navigation_register()
     for element in register.elements:
         for prefer in (None, *NavigationSurface):

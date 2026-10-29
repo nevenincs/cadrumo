@@ -4284,8 +4284,6 @@ llm:
         no está permitida para esta invocación.'
 navigation:
   view:
-    aeat_sync:
-      label: Sincronización AEAT
     agent:
       label: Agente
     browser:
@@ -4296,10 +4294,6 @@ navigation:
       label: Declaraciones
     docs:
       label: Documentación
-    home:
-      label: Inicio
-    installation:
-      label: Instalación
     ledger:
       documents:
         label: Documentos
@@ -4314,8 +4308,6 @@ navigation:
         label: Registros
       rules:
         label: Reglas
-    operations:
-      label: Operaciones
     panel:
       console:
         label: Consola
@@ -4328,12 +4320,8 @@ navigation:
       aeat_access:
         label: Acceso a la AEAT
       label: Perfil
-    reference:
-      label: Referencia
     terminal:
       label: Espacio de trabajo
-    withholding:
-      label: Retenciones
 operation:
   modal:
     action:

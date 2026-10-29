@@ -48,7 +48,7 @@ def _element(view_id: str, *, parent: str | None = None, extra: str = "", surfac
 _VALID = (
     'schema = 1\nretired = ["old"]\n'
     + _KINDS
-    + _element("ledger", surfaces='["gui", "tui"]')
+    + _element("ledger", surfaces='["gui"]')
     + _element("ledger/invoices", parent="ledger", extra='params = { select = "invoice" }\n')
 )
 
@@ -156,7 +156,7 @@ def test_a_register_breaking_a_rule_is_refused(tmp_path: Path, text: str, messag
     assert message in str(refusal.value)
 
 
-def test_nearest_ancestor_wins_over_the_preferred_surface(tmp_path: Path) -> None:
+def test_the_nearest_ancestor_opens_when_the_element_is_not_implemented(tmp_path: Path) -> None:
     register = _load(
         tmp_path,
         _VALID
@@ -166,15 +166,14 @@ def test_nearest_ancestor_wins_over_the_preferred_surface(tmp_path: Path) -> Non
     outcome = resolve_view(
         ViewLink(view_id="ledger/invoices/lines/tax"),
         {
-            NavigationSurface.GUI: SurfaceImplementation(views=frozenset({"ledger"})),
-            NavigationSurface.TUI: SurfaceImplementation(views=frozenset({"ledger/invoices"})),
+            NavigationSurface.GUI: SurfaceImplementation(views=frozenset({"ledger", "ledger/invoices"})),
         },
         register=register,
     )
     assert outcome == ViewOpened(
         requested=ViewLink(view_id="ledger/invoices/lines/tax"),
         opened="ledger/invoices",
-        surface=NavigationSurface.TUI,
+        surface=NavigationSurface.GUI,
         fallback="ancestor",
         params=(),
     )
@@ -182,24 +181,18 @@ def test_nearest_ancestor_wins_over_the_preferred_surface(tmp_path: Path) -> Non
 
 def test_the_shipped_register_declares_the_initial_elements() -> None:
     register = load_navigation_register()
-    gui, tui = NavigationSurface.GUI, NavigationSurface.TUI
+    gui = NavigationSurface.GUI
     assert {element.id: set(element.surfaces) for element in register.elements} == {
-        "home": {tui},
-        "ledger": {gui, tui},
+        "ledger": {gui},
         "ledger/movements": {gui},
         "ledger/invoices": {gui},
         "ledger/documents": {gui},
         "ledger/rules": {gui},
         "ledger/registers": {gui},
         "ledger/health": {gui},
-        "withholding": {tui},
-        "declarations": {gui, tui},
-        "aeat-sync": {tui},
-        "operations": {tui},
-        "installation": {tui},
-        "reference": {tui},
-        "profile": {gui, tui},
-        "profile/aeat-access": {gui, tui},
+        "declarations": {gui},
+        "profile": {gui},
+        "profile/aeat-access": {gui},
         "calendar": {gui},
         "browser": {gui},
         "docs": {gui},
@@ -357,12 +350,12 @@ def test_parameters_are_spelled_in_name_order_and_read_in_any(tmp_path: Path) ->
         _VALID.replace('params = { select = "invoice" }', 'params = { select = "invoice", focus = "invoice" }'),
     )
     invoice, other = "a" * 64, "b" * 64
-    link = view_link("ledger/invoices", {"select": invoice, "focus": other}, NavigationSurface.TUI, register=register)
-    assert link == f"cadrumo://view/ledger/invoices?focus={other}&select={invoice}&prefer=tui"
+    link = view_link("ledger/invoices", {"select": invoice, "focus": other}, NavigationSurface.GUI, register=register)
+    assert link == f"cadrumo://view/ledger/invoices?focus={other}&select={invoice}&prefer=gui"
     expected = ViewLink(
-        view_id="ledger/invoices", params=(("focus", other), ("select", invoice)), prefer=NavigationSurface.TUI
+        view_id="ledger/invoices", params=(("focus", other), ("select", invoice)), prefer=NavigationSurface.GUI
     )
-    for text in (link, f"cadrumo://view/ledger/invoices?prefer=tui&select={invoice}&focus={other}"):
+    for text in (link, f"cadrumo://view/ledger/invoices?prefer=gui&select={invoice}&focus={other}"):
         assert parse_view_link(text, register=register) == expected
 
 

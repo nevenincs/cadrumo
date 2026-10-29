@@ -4279,8 +4279,6 @@ llm:
         està permesa per a aquesta invocació.'
 navigation:
   view:
-    aeat_sync:
-      label: Sincronització AEAT
     agent:
       label: Agent
     browser:
@@ -4291,10 +4289,6 @@ navigation:
       label: Declaracions
     docs:
       label: Documentació
-    home:
-      label: Inici
-    installation:
-      label: Instal·lació
     ledger:
       documents:
         label: Documents
@@ -4309,8 +4303,6 @@ navigation:
         label: Registres
       rules:
         label: Regles
-    operations:
-      label: Operacions
     panel:
       console:
         label: Consola
@@ -4323,12 +4315,8 @@ navigation:
       aeat_access:
         label: Accés a l’AEAT
       label: Perfil
-    reference:
-      label: Referència
     terminal:
       label: Espai de treball
-    withholding:
-      label: Retencions
 operation:
   modal:
     action:
