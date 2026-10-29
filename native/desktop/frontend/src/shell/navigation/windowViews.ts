@@ -1,7 +1,8 @@
 // How the window implements the register's `gui` elements: each id names a
 // change of the layout store, which stays the one owner of what is shown.
 // The register says only that the window implements an element; this table
-// says how, and a coverage test holds it to exactly the register's gui ids.
+// says how, and a coverage test holds it to the register's gui ids. A gui
+// element with no entry here is declared but not drawn.
 
 import type { LedgerSection, PanelTab } from "../layout";
 

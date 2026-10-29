@@ -10,6 +10,7 @@ import {
 } from "@/shared/chords";
 import type { BridgeChord } from "../ipc/contract";
 import { elementOf, type NavigationRegister } from "./navigation/register";
+import { WINDOW_VIEWS } from "./navigation/windowViews";
 import type { Translate } from "./strings";
 
 /** Where a chord fires. "global": everywhere, focused terminals included.
@@ -113,10 +114,12 @@ export type ViewActionSpec = {
 };
 
 /**
- * The palette's view actions, one per register element the window draws, in
- * register order. `opensHere` says whether the window opens an element
- * itself, not an ancestor; `open` opens it through the navigator. A pane or the panel names whether it is shown, and its entry
- * then hides or shows it. A section without a chord of its own is quiet:
+ * The palette's view actions, one per register element the window's own
+ * table draws, in register order. A register element it has no entry for is
+ * not offered. `opensHere` says whether the window opens an element itself,
+ * not an ancestor, with the host ports now available; `open` opens it
+ * through the navigator. A pane or the panel names whether it is shown, and
+ * its entry then hides or shows it. A section without a chord of its own is quiet:
  * it is listed only for a query that finds it.
  */
 export function viewActions(
@@ -128,7 +131,7 @@ export function viewActions(
 ): Action[] {
   const actions: Action[] = [];
   for (const element of register.elements) {
-    if (!element.surfaces.includes("gui")) continue;
+    if (!Object.hasOwn(WINDOW_VIEWS, element.id)) continue;
     const spec = Object.hasOwn(specs, element.id)
       ? specs[element.id]
       : undefined;
