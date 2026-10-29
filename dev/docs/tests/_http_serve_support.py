@@ -32,10 +32,16 @@ class _ConcurrentHTTPServer(socketserver.ThreadingTCPServer):
     ``daemon_threads`` keeps a wedged request handler from outliving the test,
     and ``block_on_close`` stays at its threading default so shutdown still
     joins live handlers.
+
+    ``request_queue_size`` is raised above the socketserver default of 5. A
+    browser opening a burst of connections while the machine is saturated by
+    parallel test workers overflows a backlog that small, and Windows then
+    refuses the connection (``ECONNREFUSED``) from a server that is listening.
     """
 
     daemon_threads = True
     allow_reuse_address = True
+    request_queue_size = 128
 
 
 @contextmanager

@@ -35,6 +35,7 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from dev._paths import REPO_ROOT
 from dev.cache_root import dev_cache_dir
 from dev.first_party_source import PRODUCT_SOURCE_ROOTS
+from dev.locales.write_guard import LOCK_FILENAME as _CATALOGUE_WRITE_LOCK
 
 from .authority_currency import require_current_authority
 from .errors import SequenceEngineError
@@ -66,6 +67,10 @@ def _hash_tree(digest: _Digest, root: Path, *, label: str) -> None:
         else scan_directory(root, recursive=True, select=DirectoryEntryKind.FILES, prune_directories=_PRUNED)
     )
     for path in files:
+        # The catalogue writers' lock exists only while one of them runs, so it
+        # carries no verdict input and may vanish between the scan and the read.
+        if path.name == _CATALOGUE_WRITE_LOCK:
+            continue
         relative = path.relative_to(root).as_posix() if path != root else path.name
         digest.update(f"{label}/{relative}\n".encode())
         with path.open("rb") as handle:

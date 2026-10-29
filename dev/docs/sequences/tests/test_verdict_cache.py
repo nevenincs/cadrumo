@@ -70,6 +70,16 @@ def test_any_input_the_verdict_depends_on_changes_the_key(tmp_path: Path, relati
     assert _key(repo, docs) != before
 
 
+def test_the_catalogue_writers_transient_lock_is_not_a_verdict_input(tmp_path: Path) -> None:
+    """A locale writer's lock appears and disappears while the gate runs; it must not move the key."""
+    repo, docs = _tree(tmp_path)
+    before = _key(repo, docs)
+    lock = repo / "src" / "cadrumo" / "locales" / ".catalogue-write.lock"
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    lock.write_text("pid", encoding="utf-8")
+    assert _key(repo, docs) == before
+
+
 def _engine_importing_helpers(root: Path) -> tuple[Path, Path]:
     """Extend the fixture tree with an engine module that reaches dev helpers four ways."""
     repo, docs = _tree(root)
