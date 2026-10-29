@@ -917,7 +917,7 @@ impl Engine {
                 .filter(|(_, observation)| **observation != present)
                 .map(|(part, _)| part),
         );
-        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).ok();
+        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts, Destination::OllamaModels).ok();
         Survey { reading, entry }
     }
 
