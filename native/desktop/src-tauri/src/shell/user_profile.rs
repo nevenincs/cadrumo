@@ -52,6 +52,8 @@ pub struct ProfileHost {
     held: Mutex<Option<HeldPerson>>,
     closed: AtomicBool,
     censo: tokio::sync::Mutex<Option<censo::Session>>,
+    /// The AEAT sync run, beside the census session it starts.
+    aeat_sync: super::aeat_sync::SyncHost,
     /// The certificate files the person picked, for the signed-in session.
     files: Files,
 }
@@ -65,6 +67,7 @@ impl ProfileHost {
             held: Mutex::new(None),
             closed: AtomicBool::new(false),
             censo: tokio::sync::Mutex::new(None),
+            aeat_sync: super::aeat_sync::SyncHost::default(),
             files: Files::default(),
         }
     }
@@ -77,7 +80,11 @@ impl ProfileHost {
             task.abort();
         }
         *lock(&self.held) = None;
+        self.aeat_sync.close();
         self.files.clear();
+    }
+    pub(crate) fn aeat_sync(&self) -> &super::aeat_sync::SyncHost {
+        &self.aeat_sync
     }
     /// Every profile operation, and each ledger operation, runs under this
     /// one lock: they share the held person and its relay.
@@ -122,7 +129,7 @@ impl ProfileHost {
     async fn call(person: &HeldPerson, request: Value) -> Result<Value> {
         relay::call(person, request).await
     }
-    async fn run(
+    pub(crate) async fn run(
         &self,
         person: &HeldPerson,
         definition: &str,
@@ -295,26 +302,39 @@ impl ProfileHost {
         &self,
         window: tauri::WebviewWindow<R>,
     ) -> Result<Option<Certificate>> {
-        let identity = Self::identity(&self.person(None).await?).await?;
-        let paths = picked_files::choose(
-            window,
-            Pick::File,
-            Purpose::Certificate,
-            CERTIFICATE_KINDS.into(),
-        )
-        .await?;
-        // The person may have signed out while the dialog was open.
-        if Self::identity(&self.person(None).await?).await? != identity {
-            return Err(Failure::new("not_signed_in"));
-        }
         let picked = self
-            .files
-            .issue_all(&identity, Purpose::Certificate, paths)?
-            .single()?;
+            .pick_one(window, Purpose::Certificate, CERTIFICATE_KINDS)
+            .await?;
         Ok(picked.map(|picked| Certificate {
             token: picked.token,
             name: picked.name,
         }))
+    }
+    /// One file of `purpose` picked in the native dialog, as a token for the
+    /// signed-in session; none when the dialog closed without a choice.
+    pub(crate) async fn pick_one<R: tauri::Runtime>(
+        &self,
+        window: tauri::WebviewWindow<R>,
+        purpose: Purpose,
+        kinds: &str,
+    ) -> Result<Option<picked_files::Picked>> {
+        let identity = Self::identity(&self.person(None).await?).await?;
+        let paths = picked_files::choose(window, Pick::File, purpose, kinds.into()).await?;
+        // The person may have signed out while the dialog was open.
+        if Self::identity(&self.person(None).await?).await? != identity {
+            return Err(Failure::new("not_signed_in"));
+        }
+        self.files.issue_all(&identity, purpose, paths)?.single()
+    }
+    /// The path behind a token the signed-in session picked for `purpose`.
+    pub(crate) async fn picked(
+        &self,
+        person: &HeldPerson,
+        token: &str,
+        purpose: Purpose,
+    ) -> Result<std::path::PathBuf> {
+        let identity = Self::identity(person).await?;
+        self.files.path(&identity, token, purpose, false)
     }
 }
 

@@ -32,6 +32,9 @@ pub enum Purpose {
     Export,
     /// The electronic certificate the person signs in to AEAT with.
     Certificate,
+    /// A Borrador 100 PDF downloaded from AEAT.
+    #[serde(skip_deserializing)]
+    Borrador,
     /// An AEAT justificante, register or declaration file, or a receipt.
     #[serde(skip_deserializing)]
     ModeloEvidence,
@@ -63,6 +66,7 @@ impl Purpose {
                 "pdf", "xml", "png", "jpg", "jpeg", "tif", "tiff", "webp", "heic", "heif",
             ],
             Self::Certificate => &["p12", "pfx"],
+            Self::Borrador => &["pdf"],
             Self::ModeloEvidence => &["pdf", "csv", "txt", "xml", "boe"],
             Self::ModeloReport => &["pdf", "csv", "xlsx"],
             Self::ModeloPackage => &["zip"],

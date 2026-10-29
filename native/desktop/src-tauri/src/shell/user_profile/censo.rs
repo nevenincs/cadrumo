@@ -18,9 +18,9 @@ pub struct Requirement {
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct Readiness {
-    provider: String,
+    pub(crate) provider: String,
     route: String,
-    ready: bool,
+    pub(crate) ready: bool,
     requirements: Vec<Requirement>,
 }
 #[derive(Clone, Serialize)]
@@ -51,7 +51,11 @@ pub(super) struct Session {
     snapshot: Option<Snapshot>,
 }
 
-async fn readiness(host: &ProfileHost, person: &HeldPerson, profile: &str) -> Result<Readiness> {
+pub(crate) async fn readiness(
+    host: &ProfileHost,
+    person: &HeldPerson,
+    profile: &str,
+) -> Result<Readiness> {
     let result = host
         .run(
             person,
@@ -279,23 +283,28 @@ pub async fn profile_censo_start(
     host: State<'_, Arc<ProfileHost>>,
     profile: String,
 ) -> Result<Snapshot> {
+    begin(&host, profile).await
+}
+/// Starts the census session for `profile`, or answers the one still going
+/// on: a lost reply must never start a second remote pull. The AEAT sync run
+/// starts the same session as its census item.
+pub(crate) async fn begin(host: &ProfileHost, profile: String) -> Result<Snapshot> {
     let mut session = host.censo.lock().await;
     let person = host.person(Some(&profile)).await?;
     if let Some(existing) = session.as_mut() {
-        // A lost UI response must never trigger a second remote pull.
         let previous_identity = lock(&existing.person).identity.clone();
         let same_session =
             existing.profile == profile && previous_identity == lock(&person).identity;
         if same_session {
             let snapshot = existing.status().await?;
-            existing.check(&host).await?;
+            existing.check(host).await?;
             if !matches!(snapshot.state, "done" | "stopped" | "failed") {
                 return Ok(snapshot);
             }
         }
     }
     let _serial = host.operation.lock().await;
-    if !readiness(&host, &person, &profile).await?.ready {
+    if !readiness(host, &person, &profile).await?.ready {
         return Err(Failure::new("refused"));
     }
     let prepared = host
@@ -323,8 +332,23 @@ pub async fn profile_censo_start(
     };
     let result = next.initial_status().await;
     *session = Some(next);
-    session.as_ref().unwrap().check(&host).await?;
+    session.as_ref().unwrap().check(host).await?;
     Ok(result)
+}
+/// Where the census session for `profile` stands now.
+pub(crate) async fn standing(host: &ProfileHost, profile: &str) -> Result<&'static str> {
+    let mut session = host.censo.lock().await;
+    let current = session
+        .as_mut()
+        .filter(|s| s.profile == profile)
+        .ok_or_else(protocol)?;
+    current.check(host).await?;
+    Ok(current.status().await?.state)
+}
+impl Snapshot {
+    pub(crate) fn state(&self) -> &'static str {
+        self.state
+    }
 }
 #[tauri::command]
 pub async fn profile_censo_status(
