@@ -41,7 +41,7 @@ export function PreflightCard({
 }
 
 /**
- * The secure browser is not installed. It says why it is needed and what it
+ * the browser is not installed. It says why it is needed and what it
  * costs in space, and installs it through the one setup engine: the row's own
  * progress, plan review, cancel and recovery wording, not a second
  * installer. The caller continues by itself once the row reads ready.

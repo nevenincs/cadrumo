@@ -49,8 +49,7 @@ adapters:
           igényel; először hívja meg az authenticate() metódust.
   browser:
     errors:
-      not_available: Az adóhivatal webhelyéhez használt böngésző nem érhető el, ezért
-        ez a művelet nem futtatható.
+      not_available: A böngésző nincs telepítve, ezért ez nem futtatható.
   google:
     calc_sheets:
       errors:

@@ -21,7 +21,7 @@ import { translator } from "../../shell/strings";
 import { AeatSyncPage } from "./AeatSyncPage";
 
 // The whole AEAT data page over synthetic ports: the overview, "Update from
-// AEAT" through the checks that block (the secure browser, AEAT access) or
+// AEAT" through the checks that block (the browser, AEAT access) or
 // straight on, the update as it goes, and its results. Nothing is read from
 // AEAT; each story names where the update ends.
 
@@ -129,7 +129,7 @@ export const Overview: Story = {};
 export const UpdateToResults: Story = { play: update };
 /** The update goes on until it is stopped. */
 export const Running: Story = { args: { run: "running" }, play: update };
-/** The secure browser is missing: it is installed and the update goes on. */
+/** the browser is missing: it is installed and the update goes on. */
 export const BrowserMissing: Story = {
   args: { before: "browser_missing", shape: "fresh" },
   play: update,

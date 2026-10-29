@@ -714,16 +714,16 @@ desktop:
     area:
       borrador:
         about: El teu Borrador de la Renda, d'un PDF que importes.
-        name: Borrador
+        name: Esborrany de la Renda
       census:
         about: Les teves dades registrades a l'AEAT.
-        name: Cens
+        name: Dades censals
       filed:
         about: El que l'AEAT té com a presentat a nom teu.
         name: Declaracions presentades
       identity:
         about: Si l'AEAT reconeix el teu NIF i el teu nom.
-        name: Comprovacions d'identitat
+        name: Comprovació del NIF
       notifications:
         about: Missatges que t'ha enviat l'AEAT.
         name: Notificacions
@@ -741,22 +741,20 @@ desktop:
       access_open: Configura l'accés a l'AEAT
       access_title: Accés a l'AEAT sense configurar
       browser_install: Instal·la i continua
-      browser_no_setup: La instal·lació no està disponible en aquesta finestra.
+      browser_no_setup: No es pot instal·lar des d'aquí.
       browser_size: 'Descàrrega: {size}'
       browser_size_unknown: Mida de la descàrrega desconeguda
-      browser_title: Navegador segur no instal·lat
-      browser_why: Cadrumo llegeix l'AEAT amb el seu propi navegador segur, a part
-        del que fas servir cada dia.
+      browser_title: Navegador no instal·lat
+      browser_why: Cal per actualitzar des de l'AEAT.
       cancel: Cancel·la
       checking: Comprovant…
-      ended_body: Inicia la sessió de nou per continuar.
+      ended_body: El teu accés a l'AEAT ha acabat.
       ended_sign_in: Inicia la sessió de nou
       ended_title: Ha caducat l'accés a l'AEAT
-      failed_body: Torna-ho a provar o revisa el teu accés a l'AEAT al perfil.
+      failed_body: Revisa el teu accés a l'AEAT al teu perfil.
       failed_title: No s'ha pogut iniciar la sessió a l'AEAT
       not_now: Ara no
-      phone_body: Obre l'app Cl@ve i aprova la sol·licitud d'accés. Continuarà tan
-        bon punt ho facis.
+      phone_body: Aprova l'accés a l'app Cl@ve.
       phone_title: Aprova al mòbil
       try_again: Torna-ho a provar
     bring_all: Actualitza des de l'AEAT
@@ -783,7 +781,7 @@ desktop:
       paused: Ha caducat el teu accés a l'AEAT. Inicia la sessió de nou per continuar.
       paused_status: En pausa
       reason:
-        no_access: Dades d'accés no acceptades
+        no_access: L'AEAT no ha acceptat el teu accés
         other: Alguna cosa ha fallat
         refused: L'AEAT ho ha rebutjat
         session_ended: Accés caducat
@@ -824,8 +822,8 @@ desktop:
       failed: No s'ha pogut actualitzar.
       filed:
         aeat:
-          none: No hi apareix
-          shown: Hi apareix, {date}
+          none: No trobada
+          shown: Trobada {date}
         column:
           aeat: A l'AEAT
           receipt: Justificant
@@ -844,8 +842,8 @@ desktop:
           confirmed: Confirmat
           not_confirmed: Sense confirmar
         record:
-          draft: Esborrany, {date}
-          marked_filed: Marcada com a presentada, {date}
+          draft: Esborrany {date}
+          marked_filed: Presentada {date}
           none: Cap
         title_period: Modelo {form}, {period} {year}
         title_year: Modelo {form}, {year}
@@ -874,9 +872,9 @@ desktop:
         form: Modelo {form}, {year}
         year: Declaracions de {year}
       partly: Alguns no s'han pogut actualitzar.
-      problems: '{name}: problemes'
+      problems: '{name}: algunes han fallat'
       reason:
-        no_access: Dades d'accés no acceptades.
+        no_access: L'AEAT no ha acceptat el teu accés.
         other: Alguna cosa ha fallat.
         refused: L'AEAT ho ha rebutjat.
         session_ended: Accés caducat.
@@ -989,8 +987,8 @@ desktop:
       save: Desa…
     ended:
       closed: El navegador està tancat.
-      component_not_ready: El navegador per al web de l'Agència Tributària encara
-        no està configurat. Configura'l per obrir aquí la Seu de l'AEAT.
+      component_not_ready: El navegador encara no està instal·lat. Instal·la'l per
+        obrir la Seu de l'AEAT aquí.
       failed: El navegador s'ha aturat per un error.
       refused: Cadrumo no pot obrir el navegador ara.
       session_lost: La teva sessió de Cadrumo ha acabat, així que el navegador s'ha
@@ -3985,7 +3983,7 @@ desktop:
         un filtre de xarxa ho impedeix.
       unexpected: Alguna cosa ha anat malament.
     item:
-      browser: Navegador per al web de l'Agència Tributària
+      browser: Navegador
       local_ai: IA local
     lead_review: Revisa què es baixarà i on es desa, i després aprova-ho.
     models_signed_out: Inicia la sessió al teu perfil per veure i baixar els teus

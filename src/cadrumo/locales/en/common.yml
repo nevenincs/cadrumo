@@ -691,16 +691,16 @@ desktop:
     area:
       borrador:
         about: Your Renta draft, from a PDF you import.
-        name: Borrador
+        name: Renta draft
       census:
         about: Your registered details at AEAT.
-        name: Census
+        name: Census details
       filed:
         about: What AEAT has as filed for you.
         name: Filed declarations
       identity:
         about: Whether AEAT recognises your tax ID and name.
-        name: Identity checks
+        name: Tax ID check
       notifications:
         about: Messages AEAT sent you.
         name: Notifications
@@ -718,22 +718,20 @@ desktop:
       access_open: Set up AEAT access
       access_title: AEAT access not set up
       browser_install: Install and continue
-      browser_no_setup: Setup isn't available in this window.
+      browser_no_setup: Can't install from here.
       browser_size: 'Download: {size}'
       browser_size_unknown: Download size unknown
-      browser_title: Secure browser not installed
-      browser_why: Cadrumo reads AEAT with its own secure browser, separate from your
-        everyday one.
+      browser_title: Browser not installed
+      browser_why: Needed to update from AEAT.
       cancel: Cancel
       checking: Checking…
-      ended_body: Sign in again to continue.
+      ended_body: Your AEAT sign-in ended.
       ended_sign_in: Sign in again
       ended_title: AEAT sign-in timed out
-      failed_body: Try again, or check your AEAT access in your profile.
+      failed_body: Check your AEAT access in your profile.
       failed_title: Couldn't sign in to AEAT
       not_now: Not now
-      phone_body: Open the Cl@ve app and approve the sign-in request. This continues
-        once you do.
+      phone_body: Approve the sign-in in the Cl@ve app.
       phone_title: Approve on your phone
       try_again: Try again
     bring_all: Update from AEAT
@@ -760,7 +758,7 @@ desktop:
       paused: Your AEAT sign-in timed out. Sign in again to continue.
       paused_status: Paused
       reason:
-        no_access: Access details not accepted
+        no_access: AEAT didn't accept your sign-in
         other: Something went wrong
         refused: AEAT refused
         session_ended: Sign-in timed out
@@ -801,8 +799,8 @@ desktop:
       failed: Couldn't update.
       filed:
         aeat:
-          none: Not shown
-          shown: Shown, {date}
+          none: Not found
+          shown: Found {date}
         column:
           aeat: At AEAT
           receipt: Receipt
@@ -821,8 +819,8 @@ desktop:
           confirmed: Confirmed
           not_confirmed: Not confirmed
         record:
-          draft: Draft, {date}
-          marked_filed: Marked filed, {date}
+          draft: Draft {date}
+          marked_filed: Filed {date}
           none: None
         title_period: Modelo {form}, {period} {year}
         title_year: Modelo {form}, {year}
@@ -851,9 +849,9 @@ desktop:
         form: Modelo {form}, {year}
         year: Declarations for {year}
       partly: Some couldn't be updated.
-      problems: '{name}: problems'
+      problems: '{name}: some failed'
       reason:
-        no_access: Access details not accepted.
+        no_access: AEAT didn't accept your sign-in.
         other: Something went wrong.
         refused: AEAT refused.
         session_ended: Sign-in timed out.
@@ -960,8 +958,8 @@ desktop:
       save: Save…
     ended:
       closed: The browser is closed.
-      component_not_ready: The browser for the tax agency website isn't set up yet.
-        Set it up to open the AEAT Sede here.
+      component_not_ready: The browser isn't installed yet. Install it to open the
+        AEAT Sede here.
       failed: The browser stopped because of an error.
       refused: Cadrumo can't open the browser right now.
       session_lost: Your Cadrumo session ended, so the browser closed without saving
@@ -3929,7 +3927,7 @@ desktop:
         may be in the way.
       unexpected: Something went wrong.
     item:
-      browser: Browser for the tax agency website
+      browser: Browser
       local_ai: Local AI
     lead_review: Check what will be downloaded and where it goes, then approve it.
     models_signed_out: Sign in to your profile to see and download your local models.

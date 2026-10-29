@@ -91,7 +91,7 @@ export function AeatSyncFlow({
     };
   }, [attempt, port, onReady, onClose]);
 
-  // The secure browser finishing its setup is what the update waited for.
+  // The browser finishing its setup is what the update waited for.
   const store = useProvisioning();
   const browserReady =
     store.rows.find((row) => row.kind === "browser")?.state === "ready";

@@ -7,7 +7,7 @@ import type {
 export type AeatSyncPrepareMode =
   /** Everything is in place and the sign-in is immediate. */
   | "ready"
-  /** The secure browser is not installed. */
+  /** the browser is not installed. */
   | "browser_missing"
   /** The browser's row needs its own recovery. */
   | "browser_attention"

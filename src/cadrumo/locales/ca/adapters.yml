@@ -49,8 +49,7 @@ adapters:
           de navegador actiu; crida primer authenticate().
   browser:
     errors:
-      not_available: El navegador per al web de l'Agència Tributària no està disponible,
-        per tant no pots executar aquesta operació.
+      not_available: El navegador no està instal·lat, així que això no es pot executar.
   google:
     calc_sheets:
       errors:

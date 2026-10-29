@@ -49,8 +49,7 @@ adapters:
           de navegador activo; llama primero a authenticate().
   browser:
     errors:
-      not_available: El navegador para la web de la Agencia Tributaria no está disponible,
-        así que no puedes ejecutar esta operación.
+      not_available: El navegador no está instalado, así que esto no se puede ejecutar.
   google:
     calc_sheets:
       errors:
@@ -218,7 +217,7 @@ adapters:
             del objeto.
           object_not_found: No se encontró el objeto local {object_key_hmac} en el
             espacio {namespace}.
-          payload_commit_failed: El almacenamiento local no pudo confirmar atomicamente
+          payload_commit_failed: El almacenamiento local no pudo confirmar atómicamente
             el payload del objeto.
           payload_read_permission: El almacenamiento local no pudo leer el payload
             del objeto.

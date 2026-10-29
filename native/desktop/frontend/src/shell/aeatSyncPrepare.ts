@@ -2,7 +2,7 @@
 // the host makes when the session needs one. The host judges both; the window
 // only words the answer. Nothing here starts an update.
 
-/** The secure browser the update reads AEAT with, as the setup engine's
+/** the browser the update reads AEAT with, as the setup engine's
  * browser row reads: `missing` is something setup can install (with its
  * served download size), `attention` is a row that needs its own recovery. */
 export type AeatBrowserReadiness =

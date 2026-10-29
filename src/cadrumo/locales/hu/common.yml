@@ -697,16 +697,16 @@ desktop:
     area:
       borrador:
         about: A Renta-tervezeted, egy importált PDF-ből.
-        name: Borrador
+        name: Szja-tervezet (Borrador)
       census:
         about: Az AEAT-nál nyilvántartott adataid.
-        name: Censo-adatok
+        name: Cenzusadatok
       filed:
         about: Amit az AEAT benyújtottként tart nyilván nálad.
         name: Benyújtott nyilatkozatok
       identity:
         about: Felismeri-e az AEAT az adóazonosítódat és a neved.
-        name: Személyazonosság-ellenőrzések
+        name: Adóazonosító ellenőrzése
       notifications:
         about: Az AEAT által küldött üzenetek.
         name: Értesítések
@@ -725,22 +725,20 @@ desktop:
       access_open: AEAT-hozzáférés beállítása
       access_title: Az AEAT-hozzáférés nincs beállítva
       browser_install: Telepítés és folytatás
-      browser_no_setup: A telepítés ebben az ablakban nem érhető el.
+      browser_no_setup: Innen nem telepíthető.
       browser_size: 'Letöltés: {size}'
       browser_size_unknown: A letöltés mérete ismeretlen
-      browser_title: A biztonságos böngésző nincs telepítve
-      browser_why: A Cadrumo a saját biztonságos böngészőjével olvassa az AEAT-ot,
-        a mindennapi böngésződtől elkülönítve.
+      browser_title: A böngésző nincs telepítve
+      browser_why: Az AEAT-ból való frissítéshez kell.
       cancel: Mégse
       checking: Ellenőrzés…
-      ended_body: Jelentkezz be újra a folytatáshoz.
+      ended_body: Az AEAT-belépésed lejárt.
       ended_sign_in: Bejelentkezés újra
       ended_title: Lejárt az AEAT-bejelentkezés
-      failed_body: Próbáld újra, vagy ellenőrizd az AEAT-hozzáférésedet a profilodban.
+      failed_body: Ellenőrizd az AEAT-hozzáférésed a profilodban.
       failed_title: Nem sikerült bejelentkezni az AEAT-ba
       not_now: Most nem
-      phone_body: Nyisd meg a Cl@ve alkalmazást, és hagyd jóvá a bejelentkezési kérést.
-        Utána magától folytatódik.
+      phone_body: Hagyd jóvá a belépést a Cl@ve alkalmazásban.
       phone_title: Hagyd jóvá a telefonodon
       try_again: Próbáld újra
     bring_all: Frissítés az AEAT-ból
@@ -767,7 +765,7 @@ desktop:
       paused: Lejárt az AEAT-bejelentkezésed. Jelentkezz be újra a folytatáshoz.
       paused_status: Szüneteltetve
       reason:
-        no_access: A hozzáférési adatokat nem fogadták el
+        no_access: Az AEAT nem fogadta el a belépésed
         other: Valami hiba történt
         refused: Az AEAT elutasította
         session_ended: Lejárt a bejelentkezés
@@ -808,8 +806,8 @@ desktop:
       failed: Nem sikerült frissíteni.
       filed:
         aeat:
-          none: Nem szerepel
-          shown: Szerepel, {date}
+          none: Nem található
+          shown: 'Megtalálva: {date}'
         column:
           aeat: Az AEAT-nál
           receipt: Igazolás
@@ -828,8 +826,8 @@ desktop:
           confirmed: Megerősítve
           not_confirmed: Nincs megerősítve
         record:
-          draft: Tervezet, {date}
-          marked_filed: Benyújtottnak jelölve, {date}
+          draft: 'Tervezet: {date}'
+          marked_filed: 'Benyújtva: {date}'
           none: Nincs
         title_period: Modelo {form}, {period} {year}
         title_year: Modelo {form}, {year}
@@ -858,9 +856,9 @@ desktop:
         form: Modelo {form}, {year}
         year: '{year} évi nyilatkozatok'
       partly: Néhányat nem sikerült frissíteni.
-      problems: '{name}: hibák'
+      problems: '{name}: néhány nem sikerült'
       reason:
-        no_access: A hozzáférési adatokat nem fogadták el.
+        no_access: Az AEAT nem fogadta el a belépésed.
         other: Valami hiba történt.
         refused: Az AEAT elutasította.
         session_ended: Lejárt a bejelentkezés.
@@ -971,8 +969,8 @@ desktop:
       save: Mentés…
     ended:
       closed: A böngésző be van zárva.
-      component_not_ready: Az adóhivatal webhelyéhez való böngésző még nincs beállítva.
-        Állítsd be, hogy itt megnyithasd az AEAT Sede oldalát.
+      component_not_ready: A böngésző még nincs telepítve. Telepítsd, hogy itt megnyithasd
+        az AEAT Sede-t.
       failed: A böngésző hiba miatt leállt.
       refused: A Cadrumo most nem tudja megnyitni a böngészőt.
       session_lost: A munkameneted véget ért, ezért a böngésző bezárult, és a bejelentkezésed
@@ -3959,7 +3957,7 @@ desktop:
         hogy egy hálózati szűrő akadályozza.
       unexpected: Valami hiba történt.
     item:
-      browser: Böngésző az adóhivatal webhelyéhez
+      browser: Böngésző
       local_ai: Helyi MI
     lead_review: Nézd át, mi töltődik le és hová kerül, majd hagyd jóvá.
     models_signed_out: Jelentkezz be a profilodba, hogy lásd és letöltsd a helyi modelljeidet.

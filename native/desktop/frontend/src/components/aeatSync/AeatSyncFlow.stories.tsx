@@ -10,7 +10,7 @@ import { useProvisioning } from "../../shell/provisioning";
 import { AeatSyncFlow } from "./AeatSyncFlow";
 
 // What stands between "Update from AEAT" and the first read, over the
-// scenario host's synthetic setup and AEAT checks: the secure browser
+// scenario host's synthetic setup and AEAT checks: the browser
 // missing, installing and failing; AEAT access not set up; approval on the
 // phone; and a session that ran out part-way.
 
@@ -79,7 +79,7 @@ const meta: Meta<Args> = {
 export default meta;
 type Story = StoryObj<Args>;
 
-/** The secure browser is not installed: why it is needed, its size, and
+/** the browser is not installed: why it is needed, its size, and
  * "Install and continue". */
 export const BrowserMissing: Story = {};
 /** The install is running: the setup's own progress and cancel; the update
