@@ -97,7 +97,9 @@ class _Runtime:
         self.reply: ProfileStatus | AccessRefusal | RefusalError | None = None
         self.asked: list[SessionRequest] = []
         self.claims = 0
-        self.connection = SimpleNamespace(session=self._session)
+        # The service closes the connection to interrupt a blocked read; these
+        # reads answer at once, so there is nothing for a close to interrupt.
+        self.connection = SimpleNamespace(session=self._session, close=lambda: None)
 
     def _session(self, request: SessionRequest, *, deadline: float) -> ProfileStatus | AccessRefusal:
         self.asked.append(request)
