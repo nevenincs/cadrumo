@@ -1,7 +1,7 @@
 """Inward port for semantic column-role resolution.
 
 Financial-source adapters consume the result of column-role inference, but the
-inference implementation is an optional outbound capability.  This structural
+inference implementation is an outbound capability.  This structural
 port keeps the inbound provider independent of that concrete adapter while
 preserving the existing role tuple as the only required contract.
 

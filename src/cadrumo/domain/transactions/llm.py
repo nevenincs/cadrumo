@@ -9,7 +9,7 @@ subprocess harness on the test side.
 This module keeps the part that is a SAFETY contract rather than a transport --
 the prompt spec and the parse that confine a model to selecting
 ``classification`` / ``category`` / ``iva_category`` and never emitting a
-regulated number. That belongs in the domain, not behind an optional install.
+regulated number. That belongs in the domain, not in the outbound adapter.
 
 The prompt is built
 PROGRAMMATICALLY from the available enum values so the LLM prompt

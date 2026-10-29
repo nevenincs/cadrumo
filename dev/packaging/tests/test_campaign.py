@@ -49,7 +49,6 @@ _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("dev.packaging.all_extra_smoke", ()),
         ("dev.packaging.smoke_split_install", ()),
         ("dev.packaging.smoke_browser", ()),
-        ("dev.packaging.smoke_absent_llm", ()),
     ),
     "ci": (
         ("dev.packaging.smoke_dev", ()),
@@ -59,7 +58,6 @@ _EXPECTED_EXECUTION: dict[str, tuple[tuple[str, tuple[str, ...]], ...]] = {
         ("dev.packaging.all_extra_smoke", ()),
         ("dev.packaging.smoke_split_install", ()),
         ("dev.packaging.smoke_browser", ("--with-deps",)),
-        ("dev.packaging.smoke_absent_llm", ()),
     ),
 }
 
@@ -132,7 +130,6 @@ def test_portable_profile_matches_the_host_portable_aggregate() -> None:
         "core/extras",
         "core/joined-cohort",
         "browser/host",
-        "inference-boundary/wheel",
     }
     assert "browser/host-with-deps" not in PROFILES["portable"]
 
@@ -147,7 +144,6 @@ def test_ci_profile_adds_the_dev_lane_and_swaps_the_browser_form() -> None:
         "core/sdist",
         "core/extras",
         "core/joined-cohort",
-        "inference-boundary/wheel",
     } <= ci
     assert "browser/host-with-deps" in ci
     # The portable browser variant is replaced by the --with-deps variant.

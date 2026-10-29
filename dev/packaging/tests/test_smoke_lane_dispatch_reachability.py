@@ -1,11 +1,9 @@
 """Every packaging smoke lane module must be reachable from some dispatch surface.
 
-A lane module is only a proof if something runs it. ``smoke_absent_llm`` shipped
-complete -- guards derived from the production call sites, a positive control, an
-uninstall step -- and was invoked by nothing: not the campaign registry, not a
-justfile recipe, not a workflow. Every assertion it makes was true and none of
-them was ever evaluated, which is indistinguishable from a passing lane in every
-report anyone reads.
+A lane module is only a proof if something runs it. A lane that ships complete
+but is invoked by nothing -- not the campaign registry, not a justfile recipe,
+not a workflow -- makes assertions that are never evaluated, which is
+indistinguishable from a passing lane in every report anyone reads.
 
 The check is deliberately a REACHABILITY property rather than an enrolment one.
 A lane may dispatch through the campaign lane registry, straight from a justfile
@@ -26,7 +24,7 @@ to catch, so both are stated rather than left to the reader.
 
 The module set was globbed ``smoke_*.py``. ``all_extra_smoke`` is a registered
 core form and a smoke lane by every other measure, and its name puts the word at
-the END, so the population the gate quantified over held eight of the nine lanes
+the END, so the population the gate quantified over held seven of the eight lanes
 and the one it could not see was the oddly-named one -- the member a naming
 convention is least likely to keep and a reader is least likely to miss twice.
 It was wired, so the gate was green and would have stayed green had it been
@@ -62,14 +60,14 @@ _WORKFLOWS = _REPO_ROOT / ".github" / "workflows"
 
 
 #: Both spellings a lane module in this package uses. A single ``smoke_*.py``
-#: glob held eight of the nine lanes and silently dropped ``all_extra_smoke``.
+#: glob held seven of the eight lanes and silently dropped ``all_extra_smoke``.
 _LANE_PATTERNS: Final = ("smoke_*.py", "*_smoke.py")
 
 
 def _lane_module_stems() -> frozenset[str]:
     """Return the stem of every packaging smoke-lane module in the tree.
 
-    Reads both name orders. The word ``smoke`` leads in eight of the lane
+    Reads both name orders. The word ``smoke`` leads in seven of the lane
     modules and trails in one, and a population defined by the majority
     spelling cannot see the minority one -- which is the member most likely to
     be forgotten when it is wired, and the member whose absence from the

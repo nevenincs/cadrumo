@@ -84,14 +84,13 @@ def optional_import_probe_source(companions: tuple[str, ...] = COMPANION_MODULES
     """Return the in-venv program proving every capability-gated extra imports.
 
     Derived from the installed ``OPTIONAL_EXTRAS`` registry rather than a hand-kept
-    name list. The hand-kept list reached three of the five registered extras:
-    ``ofx`` and ``llm`` had no present-side import proof in any lane, so a supply
-    that resolves but no longer imports -- ``nvidia-ml-py`` ceasing to provide
-    ``pynvml`` is the concrete shape -- would leave ``cadrumo[all]`` installing
-    cleanly while the capability reports itself absent, because the production
-    reader answers ``ImportError`` with an ``UNKNOWN`` accelerator rather than a
-    failure. Iterating the registry also makes the proof self-extending: a sixth
-    extra is covered by declaring it, not by remembering this list.
+    name list. The hand-kept list reached only two of the four registered extras:
+    ``ofx`` and ``pdf`` had no present-side import proof in any lane, so a supply
+    that resolves but no longer imports -- ``ofxtools`` ceasing to provide its
+    module is the concrete shape -- would leave ``cadrumo[all]`` installing
+    cleanly while the capability reports itself absent. Iterating the registry
+    also makes the proof self-extending: a sixth extra is covered by declaring
+    it, not by remembering this list.
 
     ``import_module`` rather than ``require_optional_extra`` alone, because the
     latter is a spec-only probe: it answers that the module is findable, not that

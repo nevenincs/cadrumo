@@ -1,6 +1,6 @@
 """Installed optional-extra refusals and overview remain distinct in every locale.
 
-Two real wheel installs prove the point-of-use guard with and without the LLM
+Two real wheel installs prove the point-of-use guard with and without the PDF
 extra. The public overview console can refuse at a profile/session boundary;
 that preceding refusal must remain distinct from an optional-extra failure.
 """
@@ -61,13 +61,13 @@ class _InstalledCohort:
 
     work_dir: Path
     core_python: Path
-    llm_python: Path
+    pdf_python: Path
     core_cli: Path
 
 
 @pytest.fixture(scope="module")
 def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> _InstalledCohort:
-    """Build one source cohort and install it both without and with ``llm``."""
+    """Build one source cohort and install it both without and with ``pdf``."""
     uv = shutil.which("uv")
     assert uv is not None, "uv is required to build the installed action-envelope cohort"
 
@@ -80,19 +80,19 @@ def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> _InstalledCoho
     core_venv = create_pip_venv(work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     install_targets_with_pip(work_dir, targets, core_venv)
 
-    llm_work_dir = work_dir / "llm-extra"
-    llm_work_dir.mkdir()
-    llm_venv = create_pip_venv(llm_work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
+    pdf_work_dir = work_dir / "pdf-extra"
+    pdf_work_dir.mkdir()
+    pdf_venv = create_pip_venv(pdf_work_dir, f"{sys.version_info.major}.{sys.version_info.minor}")
     install_targets_with_pip(
-        llm_work_dir,
-        (f"{root_wheel.resolve()}[llm]", *(str(wheel.resolve()) for wheel in data_wheels)),
-        llm_venv,
+        pdf_work_dir,
+        (f"{root_wheel.resolve()}[pdf]", *(str(wheel.resolve()) for wheel in data_wheels)),
+        pdf_venv,
     )
 
     return _InstalledCohort(
         work_dir=work_dir,
         core_python=venv_python_path(core_venv),
-        llm_python=venv_python_path(llm_venv),
+        pdf_python=venv_python_path(pdf_venv),
         core_cli=venv_cadrumo_path(core_venv),
     )
 
@@ -115,7 +115,7 @@ def _run_optional_extra_matrix(*, work_dir: Path, python: Path, state_name: str)
 
         import cadrumo
         from cadrumo.core.optional_extras import (
-            LLM_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra,
+            PDF_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra,
         )
         from cadrumo.core.config import override_settings
         from cadrumo.core.errors.error_codes import render_error_json, render_error_text
@@ -124,7 +124,7 @@ def _run_optional_extra_matrix(*, work_dir: Path, python: Path, state_name: str)
         for locale in {locales}:
             with override_settings(cadrumo_output_language=locale):
                 try:
-                    require_optional_extra(LLM_EXTRA)
+                    require_optional_extra(PDF_EXTRA)
                 except MissingOptionalExtraError as error:
                     matrix[locale] = {{
                         "facts": error.context,
@@ -138,7 +138,7 @@ def _run_optional_extra_matrix(*, work_dir: Path, python: Path, state_name: str)
             + json.dumps(
                 {{
                     "cadrumo_file": str(Path(cadrumo.__file__).resolve()),
-                    "extra_available": optional_extra_available(LLM_EXTRA),
+                    "extra_available": optional_extra_available(PDF_EXTRA),
                     "matrix": matrix,
                 }},
                 ensure_ascii=True,
@@ -273,12 +273,12 @@ def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
     )
     present = _run_optional_extra_matrix(
         work_dir=installed_cohort.work_dir,
-        python=installed_cohort.llm_python,
-        state_name="llm-optional-extra",
+        python=installed_cohort.pdf_python,
+        state_name="pdf-optional-extra",
     )
 
     assert Path(str(absent["cadrumo_file"])).is_relative_to(installed_cohort.core_python.parents[1])
-    assert Path(str(present["cadrumo_file"])).is_relative_to(installed_cohort.llm_python.parents[1])
+    assert Path(str(present["cadrumo_file"])).is_relative_to(installed_cohort.pdf_python.parents[1])
     assert absent["extra_available"] is False
     assert present["extra_available"] is True
 
@@ -295,16 +295,16 @@ def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
         assert error["code"] == "ERROR_OPTIONAL_EXTRA_MISSING"
         assert error["action"] is None
         assert row["facts"] == {
-            "extra": "llm",
-            "feature": "local-inference document reading",
-            "import_name": "pynvml",
+            "extra": "pdf",
+            "feature": "the calculation-summary PDF",
+            "import_name": "reportlab",
             "importable": False,
         }
         assert isinstance(error["message"], str) and error["message"].strip()
         assert isinstance(row["text"], str) and row["text"].strip()
         assert error["message"] in row["text"]
         context = _object(error["context"], label="rendered optional-extra context")
-        assert context["import_name"] == "pynvml"
+        assert context["import_name"] == "reportlab"
         assert context["importable"] == "false"
         structural = {key: value for key, value in error.items() if key != "message"}
         if baseline is None:

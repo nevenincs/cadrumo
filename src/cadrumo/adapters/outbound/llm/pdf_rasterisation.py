@@ -12,7 +12,6 @@ import base64
 from io import BytesIO
 from typing import Protocol, cast
 
-from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from .errors import LLMPdfRasterisationError
 
 __all__ = ["rasterise_pdf_pages_to_base64_png"]
@@ -50,19 +49,8 @@ def rasterise_pdf_pages_to_base64_png(pdf_bytes: bytes, *, scale: float = 2.0) -
         One base64-encoded PNG string per page, in page order.
 
     Raises:
-        MissingOptionalExtraError: If the ``llm`` extra is not installed.
         LLMPdfRasterisationError: If the PDF cannot be rendered.
     """
-    # The feature-boundary guard sits ahead of the lazy import, per the
-    # established convention. What it refuses is an operator who reached the
-    # rasteriser without opting into the inference closure at all; the refusal
-    # names the install command instead of letting the render proceed into a
-    # boundary the rest of the extra is absent from. It does NOT stand in for a
-    # missing Pillow -- Pillow is an unconditional base dependency, so its
-    # absence is a broken installation rather than a declined extra, and the
-    # bare ``except Exception`` below correctly owns the render failures that
-    # remain.
-    require_optional_extra(LLM_EXTRA)
     import pypdfium2 as pdfium  # lazy: keep the adapter import light
 
     try:

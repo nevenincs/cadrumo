@@ -397,7 +397,7 @@ print(root)
 
 
 def assert_attachment_and_llm_surfaces(work_dir: Path, venv_path: Path) -> None:
-    """Verify installed attachment storage and LLM optional-boundary behavior."""
+    """Verify installed attachment storage and the agent dispatch refusal."""
     runtime_root = work_dir / "runtime-surfaces"
     runtime_root.mkdir(parents=True, exist_ok=True)
     runtime_root_literal = repr(str(runtime_root))

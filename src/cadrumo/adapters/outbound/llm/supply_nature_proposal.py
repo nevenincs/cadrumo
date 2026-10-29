@@ -58,7 +58,6 @@ from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.model_roles import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.iva.supply_nature import SupplyNature
 from .client import LLMClient
@@ -285,7 +284,6 @@ class SupplyNatureProposer:
         consent_token: EvidenceConsentToken | None = None,
     ) -> None:
         """Build the proposer against settings and an optional consent token."""
-        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._consent_token = consent_token
         self._client = (

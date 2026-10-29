@@ -164,10 +164,8 @@ just verify-reviewed-operation build/windows-x64/stage/Release/app
 ```
 
 Prerequisites: the package's own `bin/aeat`, `bin/cadrumo-runtime` and
-`bin/cadrumo-mcp`, built with the optional `llm` extra (a core-only package
-refuses model work with `ERROR_OPTIONAL_EXTRA_MISSING`). No remote service is
-used and nothing is downloaded. The attendance approval only admits the MCP
-connection; the review is answered on its own interaction.
+`bin/cadrumo-mcp`. No remote service is used and nothing is downloaded. The
+attendance approval only admits the MCP connection; the review is answered on its own interaction.
 
 The review reads through an agent run on the person's text-extraction
 selection, so it needs an admitted agent service and a stored selection. The
@@ -212,7 +210,7 @@ standard input:
 The root is removed afterwards; `--keep` keeps it, and a failed run keeps it and
 prints its path. The driver exits 0 when every step held, 1 when one was
 contradicted, and 3 when the review had no agent service or selection to run
-on or the package lacks the `llm` extra.
+on.
 
 ## Inspect timing evidence
 

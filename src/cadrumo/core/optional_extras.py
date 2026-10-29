@@ -13,7 +13,7 @@ extra becomes one :class:`MissingOptionalExtraError` naming the feature that
 needs it instead of a raw deep-stack ``ModuleNotFoundError``.
 
 These records describe package availability only. They do not decide whether an
-operator has opted into Google export, browser automation, or hosted LLM usage;
+operator has opted into Google export or browser automation;
 that consent surface is represented separately by :class:`~core.capabilities.ServiceCapability`.
 """
 
@@ -29,7 +29,6 @@ from .models import STRICT_FROZEN_CONFIG
 __all__ = [
     "BROWSER_EXTRA",
     "GOOGLE_EXTRA",
-    "LLM_EXTRA",
     "OFX_EXTRA",
     "OPTIONAL_EXTRAS",
     "PDF_EXTRA",
@@ -65,20 +64,6 @@ BROWSER_EXTRA = OptionalExtra(extra="browser", import_name="playwright", feature
 # ``ofxtools`` is GPL-3.0-only; gating it behind an extra keeps the CORE
 # dependency closure free of strong copyleft.
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
-# Local-inference document reading (the gated outbound LLM adapter).
-# Registered here so one refusal shape covers every inference boundary.
-#
-# **The guarded import name must be EXCLUSIVE to the extra, and that is why it is
-# ``pynvml`` rather than ``PIL``.** Pillow is also an unconditional base
-# dependency (declared directly, since ``pypdfium2``'s ``to_pil()`` relies on
-# it) -- so ``find_spec("PIL")`` succeeds in every core install,
-# :func:`optional_extra_available` is permanently true, and every
-# :func:`require_optional_extra` call below it is a no-op that fails open.
-# ``pynvml`` is supplied by ``nvidia-ml-py``, which the ``llm`` extra declares
-# and the core closure does not, so its spec is present exactly when the extra
-# is installed. The check is spec-only, so it needs no NVIDIA hardware and no
-# NVML runtime.
-LLM_EXTRA = OptionalExtra(extra="llm", import_name="pynvml", feature="local-inference document reading")
 # The calculation-summary PDF writer. ``reportlab`` is exclusive to the extra:
 # no core distribution requires it, so its spec is present exactly when the
 # extra is installed. Reading and verifying a summary needs no extra -- that
@@ -89,7 +74,6 @@ OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (
     GOOGLE_EXTRA,
     BROWSER_EXTRA,
     OFX_EXTRA,
-    LLM_EXTRA,
     PDF_EXTRA,
 )
 

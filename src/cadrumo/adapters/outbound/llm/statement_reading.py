@@ -56,7 +56,6 @@ from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.image_media_type import ImageMediaType
 from ....core.model_roles import ModelRole
-from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from .client import LLMClient
 from .errors import LLMConfigError, LLMConsentError
@@ -284,8 +283,7 @@ class StatementReader:
         settings: Settings | None = None,
         vision_transcriber: VisionDocumentTranscriber | None = None,
     ) -> None:
-        """Build the reader, refusing first when the ``llm`` extra is absent."""
-        require_optional_extra(LLM_EXTRA)
+        """Build the reader against settings and the optional collaborators."""
         self._settings = settings if settings is not None else load_settings()
         self._client = (
             client

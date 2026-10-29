@@ -11,11 +11,9 @@ balances. Only anchored, reconciled movements are emitted.
 The model-backed stages are reached through the application port
 :mod:`application.ledger.statement_reading`, which an outer composition root
 binds. This adapter never imports the outbound model adapter. A host that has
-not bound a reader declines every PDF with a stated reason, and a host whose
-reader needs the uninstalled ``llm`` extra raises the typed missing-extra
-refusal when it meets a PDF, while every other format keeps importing. A
-reader whose selected lane needs the local AI, when that is not available, declines
-the PDF with the reader probe's verdict.
+not bound a reader declines every PDF with a stated reason, while every other
+format keeps importing. A reader whose selected lane needs the local AI, when
+that is not available, declines the PDF with the reader probe's verdict.
 
 Reading a statement costs model calls, so one provider instance reads each
 distinct source once: detection's validation and the following ingest share
@@ -42,7 +40,6 @@ from .....application.reader_refusal_wording import statement_reader_refusal_rea
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.logging import get_logger
-from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.transactions.raw_transaction import SourceFormat
 from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
 from ._statement_grounding import GroundedStatement, StatementPageText
@@ -112,10 +109,6 @@ class PdfStatementProvider(FinancialProvider):
         is anchored and nothing refuses the statement. A statement whose
         reader could not be asked is invalid and carries the reader's verdict,
         so detection keeps this provider and the import names the setup.
-
-        Raises:
-            MissingOptionalExtraError: When the source is a PDF and the bound
-                reader needs the uninstalled ``llm`` extra.
         """
         try:
             source_bytes = self._read_source_bytes(path)
@@ -158,8 +151,6 @@ class PdfStatementProvider(FinancialProvider):
                 bound, the PDF cannot be read, or the statement is refused.
             LedgerImportReaderUnavailableError: The local AI the bound reader
                 needs is not available; the verdict states why.
-            MissingOptionalExtraError: The bound reader needs the uninstalled
-                ``llm`` extra.
         """
         source_bytes = self._read_source_bytes(path)
         if not source_bytes.startswith(_PDF_SIGNATURE):
@@ -214,7 +205,7 @@ class PdfStatementProvider(FinancialProvider):
                 )
                 for page_number, transcription in sorted(transcriptions.items())
             )
-        except (MissingOptionalExtraError, FinancialProviderError, LedgerImportReaderUnavailableError):
+        except (FinancialProviderError, LedgerImportReaderUnavailableError):
             raise
         except CadrumoError as exc:
             raise InvalidFinancialSourceError(

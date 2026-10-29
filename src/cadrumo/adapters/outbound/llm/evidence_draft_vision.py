@@ -62,7 +62,6 @@ from ....core.config_support import LLMProvider
 from ....core.field_origin import FieldOrigin
 from ....core.model_roles import ModelRole
 from ....core.operator_action_enums import ActionEvidenceProvenance
-from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import provenance_transport_label
 from .client import LLMClient
 from .consent import EvidenceConsentToken
@@ -174,10 +173,6 @@ class VisionDocumentTranscriber:
         public_corpus: bool = False,
     ) -> None:
         """Build the vision reader for the vision transcription role."""
-        # Ahead of every other statement, so the refusal is what an operator
-        # without the extra sees rather than a settings error raised on the way
-        # to it.
-        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._consent_token = consent_token
         self._public_corpus = public_corpus

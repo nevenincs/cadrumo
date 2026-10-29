@@ -9,8 +9,8 @@ have broken page rendering with no resolution-time signal at all -- the failure
 would surface at runtime, on the first page rendered, wearing the rasteriser's
 own "could not rasterise PDF pages" wrapper.
 
-That specific hole is closed: Pillow is now declared in the base dependencies
-AND in the ``llm`` extra. This gate exists so the CLASS stays closed. The next
+That specific hole is closed: Pillow is now declared in the base dependencies.
+This gate exists so the CLASS stays closed. The next
 incidental transitive to be relied on directly will not announce itself, and
 nothing about an import statement reveals whether the package behind it was
 promised or inherited.
@@ -203,5 +203,5 @@ def test_a_development_group_entry_is_not_a_declaration() -> None:
         "rely on a package the wheel does not require"
     )
     assert "anthropic" not in declared, "the retired tax provider must remain development-only"
-    assert "nvidia-ml-py" in declared, "the reader stopped seeing optional-dependencies extras"
+    assert "reportlab" in declared, "the reader stopped seeing optional-dependencies extras"
     assert "pydantic" in declared, "the reader stopped seeing [project] dependencies"

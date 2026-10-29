@@ -41,9 +41,9 @@ def exported() -> tuple[str, ...]:
 
 def test_the_core_closure_leaves_out_optional_extras(exported: tuple[str, ...]) -> None:
     """Installers pin the core install; an extra's packages reach only an artifact that asks for them."""
-    assert not [row for row in exported if row.startswith("nvidia-ml-py==")]
-    widened = export_runtime_constraints(repo_root=REPO_ROOT, extras=("llm",))
-    assert [row for row in widened if row.startswith("nvidia-ml-py==")]
+    assert not [row for row in exported if row.startswith("reportlab==")]
+    widened = export_runtime_constraints(repo_root=REPO_ROOT, extras=("pdf",))
+    assert [row for row in widened if row.startswith("reportlab==")]
     assert set(exported) < set(widened)
 
 

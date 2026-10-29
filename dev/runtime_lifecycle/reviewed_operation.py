@@ -26,8 +26,7 @@ The review reads through an agent run on the person's text-extraction
 selection, which needs an admitted agent service and a stored selection. This
 run arranges neither, so a review refused for want of either
 (``service_unavailable`` or ``no_selection``) is reported unproven, not
-contradicted, as is a package built without the optional ``llm`` extra. Every
-other refusal fails the run. Nothing is downloaded.
+contradicted. Every other refusal fails the run. Nothing is downloaded.
 """
 
 from __future__ import annotations
@@ -77,7 +76,6 @@ from .session_holder import AsyncRuntimeSessionHolder
 _PROFILE = "reviewed-operation-acceptance"
 _REJECTED = "ledger.transaction.llm_suggestion.rejected"
 _CLASSIFIED = "ledger.transaction.classified"
-_EXTRA_MISSING = "ERROR_OPTIONAL_EXTRA_MISSING"
 
 _REVIEW_SECONDS = 600
 
@@ -87,10 +85,6 @@ _REVIEW_SECONDS = 600
 #: arranges neither, so either leaves the review unproven rather than
 #: contradicted.
 UNPROVABLE_REFUSALS: Final = frozenset({ModelRunRefusalCode.SERVICE_UNAVAILABLE, ModelRunRefusalCode.NO_SELECTION})
-
-
-class _ModelUnpackagedError(Exception):
-    """The package refuses model work because it was built without the optional ``llm`` extra."""
 
 
 class _ReviewUnprovableError(Exception):
@@ -223,9 +217,6 @@ async def _pending_review(session: McpSession, profile: Profile, transaction_id:
         pending = projection.get("pending_interaction") or {}
         if pending.get("disposition") == "review_available":
             break
-        if projection.get("failure_error_code") == _EXTRA_MISSING:
-            require(projection.get("effect") == "none", f"the refused review wrote: {projection}")
-            raise _ModelUnpackagedError
         if projection.get("terminal_condition") is not None:
             refusal = unprovable_review_refusal(await settled(session, review_id))
             if refusal is None:
@@ -361,8 +352,6 @@ async def run(programs: Programs, package: Path | None, scratch: Path) -> Receip
                 require(not is_error, f"the approved connection was refused: {content}")
                 try:
                     await _reject_then_apply(agent, programs, environment, profile, receipt)
-                except _ModelUnpackagedError:
-                    receipt.unproven.append("reviewed operation: the package was built without the optional llm extra")
                 except _ReviewUnprovableError as unprovable:
                     receipt.unproven.append(
                         f"reviewed operation: the review's model run refused {unprovable.refusal.value}; "

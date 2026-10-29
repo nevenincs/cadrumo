@@ -15,16 +15,6 @@ from dev.source_tree import line_ending_policies, normalise_with, repository_fil
 
 from .hashing import digest, transformed_digest
 
-BUNDLED_EXTRAS: tuple[str, ...] = ("llm", "browser")
-"""Optional extras the native application ships with its core closure.
-
-The application serves the local model's review operations, which refuse
-without ``llm``, and the AEAT browser sessions, which refuse without
-``browser``. Playwright's Node driver ships with it; the Chromium builds are
-provisioned into profile storage on demand. The wheel's core install stays
-without either extra.
-"""
-
 _PRODUCT_INPUT_EXCLUSIONS = frozenset({"__pycache__", ".git", "tests"})
 
 

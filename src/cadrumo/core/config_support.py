@@ -99,7 +99,7 @@ class LLMProvider(StrEnum):
     It lives in ``core`` because a closed value set is declared in ``core`` by
     the architecture boundary, and because the direction is forced: the
     inference package may import ``core`` (inward), while ``core`` importing
-    the optional inference package is refused by contract. The package consumes
+    the inference package is refused by contract. The package consumes
     this enum; it does not redeclare it.
     """
 

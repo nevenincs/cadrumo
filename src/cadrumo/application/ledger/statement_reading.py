@@ -5,8 +5,8 @@ acquisition stage turns each page into a
 :class:`~application.ledger.document_transcription.DocumentTranscription`: the
 deterministic text layer where the page carries one, a vision-model
 transcription where it does not. The semantic stage then proposes the
-movements printed on that page. Both stages that need a model are an optional
-outbound capability, so inbound providers depend on this structural port and an
+movements printed on that page. Both stages that need a model are an outbound
+capability, so inbound providers depend on this structural port and an
 outer composition root binds the implementation.
 
 Everything a reader returns is a proposal of PRINTED forms: the date, amount
@@ -110,8 +110,8 @@ class StatementReaderPort(Protocol):
 StatementReaderFactory = Callable[[], StatementReaderPort]
 """Builds the reader when a statement actually needs one.
 
-A factory rather than an instance, so a host without the optional model
-capability installed only meets the typed refusal when it reads a PDF.
+A factory rather than an instance, so a reader is built only when a PDF is
+actually read.
 """
 
 

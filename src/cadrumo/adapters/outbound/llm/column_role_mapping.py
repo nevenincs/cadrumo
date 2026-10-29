@@ -63,7 +63,6 @@ from ....core.logging import get_logger
 from ....core.model_roles import ModelRole
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operator_action_enums import ActionEvidenceProvenance
-from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....core.tabular import NormalizedTable
 from .consent import EvidenceConsentToken
@@ -532,13 +531,6 @@ class SemanticColumnRoleMapper:
         consent_token: EvidenceConsentToken | None = None,
     ) -> None:
         """Build the mapper against settings and an optional consent token."""
-        # Ahead of every other statement, so the refusal is what an operator
-        # without the extra sees rather than a settings error raised on the way
-        # to it. This is the point the tabular lane splits at: a known
-        # fixed-layout file never reaches here and imports fully on a core
-        # install, while an unknown header vocabulary needs the mapping call
-        # and refuses with the install hint.
-        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._consent_token = consent_token
         if client is None:
@@ -660,15 +652,11 @@ def resolve_header_roles(
     """
     try:
         resolved = mapper if mapper is not None else SemanticColumnRoleMapper()
-    except MissingOptionalExtraError:
-        raise
     except CadrumoError:
         _logger.warning("semantic column-role mapping could not be prepared for this table", exc_info=True)
         return None
     try:
         proposal = resolved.map(headers)
-    except MissingOptionalExtraError:
-        raise
     except LLMValidationError:
         _logger.warning("semantic column-role mapping could not establish roles for this table", exc_info=True)
         return None

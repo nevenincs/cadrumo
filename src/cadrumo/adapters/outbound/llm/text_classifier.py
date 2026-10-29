@@ -22,7 +22,6 @@ import asyncio
 from ....core.config import Settings, load_settings
 from ....core.config_support import LLMProvider
 from ....core.model_roles import ModelRole
-from ....core.optional_extras import LLM_EXTRA, require_optional_extra
 from ....core.provenance_stamp import build_provenance_stamp
 from ....domain.transactions.llm import (
     LLMClassificationResponse,
@@ -65,10 +64,6 @@ class TextLLMClassifier:
         consent_token: EvidenceConsentToken | None = None,
     ) -> None:
         """Build the classifier around one prompt spec."""
-        # Ahead of every other statement, so the refusal is what an operator
-        # without the extra sees rather than a settings or model-resolution
-        # error raised on the way to it.
-        require_optional_extra(LLM_EXTRA)
         resolved_settings = settings if settings is not None else load_settings()
         self._spec = spec
         self._consent_token = consent_token

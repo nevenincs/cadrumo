@@ -55,7 +55,6 @@ from .....application.ledger.invoice_extraction_authority import InvoiceExtracti
 from .....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from .....core.config import Settings
 from .....core.operator_action_enums import ActionEvidenceProvenance
-from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .....domain.iva.regime_legend import RegimeLegend
 from .....domain.user_profile.values import ProfileSetupState, UserProfileFact
@@ -204,7 +203,7 @@ def _invoice_draft_extraction_ports(
                 operation=operation,
                 consent_token=None if consent_token is None else _require_evidence_consent_token(consent_token),
             ).extract(transcription=transcription)
-        except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+        except (LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
     def propose_supply_nature(
@@ -234,7 +233,7 @@ def _invoice_draft_extraction_ports(
                 settings=settings,
                 consent_token=None if consent_token is None else _require_evidence_consent_token(consent_token),
             ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
-        except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+        except (LLMProviderError, httpx.HTTPError) as exc:
             raise InvoiceDraftReaderUnavailableError(exc) from exc
 
     def consent_binding_error(facts: dict[str, object]) -> Exception:

@@ -29,7 +29,6 @@ from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.error_codes import build_error_envelope
 from ....core.field_grounding import FieldGroundingOutcome
 from ....core.field_origin import FieldOrigin
-from ....core.optional_extras import LLM_EXTRA, MissingOptionalExtraError
 from ....core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
@@ -475,32 +474,6 @@ def test_an_absent_reader_refuses_with_a_typed_environment_condition() -> None:
         "reader_error_type": "_ReaderUnavailableForTestError",
     }
     assert raised.value.terminal_precondition_verdict.evidence[0].values == raised.value.context
-
-
-def test_a_missing_optional_extra_preserves_registry_facts_without_install_prose() -> None:
-    """The dependency registry identity crosses the ledger boundary unchanged."""
-    from ..invoice_draft_extraction import _refuse_a_text_read_with_no_reader
-
-    dependency_error = MissingOptionalExtraError(LLM_EXTRA)
-    with pytest.raises(PurchaseInvoiceEvidenceReaderError) as raised:
-        _refuse_a_text_read_with_no_reader(dependency_error)
-
-    expected_facts = {
-        "extra": LLM_EXTRA.extra,
-        "import_name": LLM_EXTRA.import_name,
-        "importable": False,
-    }
-    envelope = build_error_envelope(raised.value)
-    assert envelope.code == "REFUSED_LEDGER_EVIDENCE_READER"
-    assert envelope.retryable is True
-    assert str(dependency_error) not in str(raised.value), "install prose must not cross the boundary"
-    assert raised.value.context == expected_facts
-    assert raised.value.__cause__ is dependency_error
-    verdict = raised.value.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value
-    assert verdict.action is None
-    assert verdict.evidence[0].values == expected_facts
 
 
 def test_a_missing_reader_does_not_fall_through_to_the_vision_engine() -> None:

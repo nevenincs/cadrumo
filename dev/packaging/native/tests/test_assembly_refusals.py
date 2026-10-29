@@ -46,7 +46,6 @@ def _agent_dependencies(root: Path, versions: Mapping[str, str]) -> Path:
     ("defect", "message"),
     [
         ("missing", "closure mismatch"),
-        ("core-only", "closure mismatch"),
         ("browser-missing", "closure mismatch"),
         ("mixed", "cohort versions"),
         ("duplicate", "Duplicate installed"),
@@ -72,8 +71,6 @@ def test_invalid_cohort_never_reaches_payload_copy(tmp_path: Path, defect: str, 
     companion = PRODUCT_IDENTITY.companion_distributions[0]
     if defect == "missing":
         del versions[companion]
-    if defect == "core-only":
-        del versions["nvidia-ml-py"]
     if defect == "browser-missing":
         del versions["playwright"]
     if defect == "mixed":

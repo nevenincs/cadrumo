@@ -36,14 +36,13 @@ from .product_hatch_types import HatchWheelBuilder
 from .product_snapshot import capture_product_source_snapshot
 from .target import uv_environment, uv_platform
 
-BUNDLED_EXTRAS: tuple[str, ...] = ("llm", "browser")
+BUNDLED_EXTRAS: tuple[str, ...] = ("browser",)
 """Optional extras the native application ships with its core closure.
 
-The application serves the local model's review operations, which refuse
-without ``llm``, and the AEAT browser sessions, which refuse without
+The application serves the AEAT browser sessions, which refuse without
 ``browser``. Playwright's Node driver ships with it; the Chromium builds are
 provisioned into profile storage on demand. The wheel's core install stays
-without either extra.
+without the extra.
 """
 
 

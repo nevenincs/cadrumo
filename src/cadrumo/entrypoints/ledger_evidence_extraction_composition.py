@@ -63,7 +63,6 @@ from ..application.ledger.preconditions import LedgerPreconditionCondition, ledg
 from ..application.ledger.structured_invoice_ports import StructuredInvoiceRecord
 from ..core.config import Settings
 from ..core.operator_action_enums import ActionEvidenceProvenance
-from ..core.optional_extras import MissingOptionalExtraError
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
@@ -266,7 +265,7 @@ def _invoice_read_text(
             ).extract(transcription=transcription)
     except LLMConfigError as exc:
         raise _reader_unavailable(exc) from exc
-    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+    except (LLMProviderError, httpx.HTTPError) as exc:
         raise InvoiceDraftReaderUnavailableError(exc) from exc
     except LLMContentionError as exc:
         raise InvoiceDraftReaderHeadroomRefusedError(exc, failed_condition_id=_failed_condition_id(exc)) from exc
@@ -285,7 +284,7 @@ def _invoice_propose_supply_nature(
     service refused -- no selection for the role, an unavailable lane, an
     off-host lane without consent -- answers with that typed verdict on the
     proposal, so the caller can tell why no proposal was made. Any other model
-    error, transport failure or missing optional extra leaves no proposal.
+    error or transport failure leaves no proposal.
     """
     if before_read is not None:
         before_read()
@@ -294,7 +293,7 @@ def _invoice_propose_supply_nature(
             settings=settings, consent_token=_invoice_require_llm_consent_token(consent_token)
         )
         return proposer.propose(transcription.text.splitlines())
-    except (MissingOptionalExtraError, LLMError, httpx.HTTPError):
+    except (LLMError, httpx.HTTPError):
         return None
 
 
@@ -337,7 +336,7 @@ def _invoice_transcribe_vision(
         ).transcribe(evidence_images=inputs, source_content_sha256=source_content_sha256)
     except LLMConfigError as exc:
         raise _reader_unavailable(exc) from exc
-    except (MissingOptionalExtraError, LLMProviderError, httpx.HTTPError) as exc:
+    except (LLMProviderError, httpx.HTTPError) as exc:
         raise InvoiceDraftReaderUnavailableError(exc) from exc
 
 

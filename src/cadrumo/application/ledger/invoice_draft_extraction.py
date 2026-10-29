@@ -91,7 +91,6 @@ from ...core.external_constants import XML_MIME_TYPE
 from ...core.field_origin import FieldOrigin
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
 from ...core.logging import get_logger
-from ...core.optional_extras import MissingOptionalExtraError
 from ...domain.attachments.models import normalize_media_type
 from ...domain.iva.supply_nature import SupplyNature
 from ..operator_actions.models import PreconditionVerdict
@@ -387,17 +386,10 @@ def _refuse_with_unavailable_reader(
     """Preserve a reader refusal as typed facts, without presentation prose."""
     if precondition_verdict is not None:
         _refuse_with_reader_verdict(precondition_verdict, cause=exc)
-    if isinstance(exc, MissingOptionalExtraError):
-        facts: dict[str, str | bool] = {
-            "extra": exc.extra.extra,
-            "import_name": exc.extra.import_name,
-            "importable": False,
-        }
-    else:
-        facts = {
-            availability_fact: False,
-            "reader_error_type": exc.__class__.__name__,
-        }
+    facts: dict[str, str | bool] = {
+        availability_fact: False,
+        "reader_error_type": exc.__class__.__name__,
+    }
     raise PurchaseInvoiceEvidenceReaderError(
         context=facts,
         translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
@@ -889,9 +881,7 @@ def _extract_invoice_fields_via_vision(
     empty draft. A reader the agent service refuses -- no selection for the
     role, a model not installed, a lane that does not take images -- reaches the
     operator with the refusal's own typed verdict; no other lane or model is
-    tried. An unrasterisable PDF refuses as an unavailable reader. An absent
-    ``llm`` extra is reported separately as typed dependency facts, so a
-    dependency gap is never mistaken for a reader problem.
+    tried. An unrasterisable PDF refuses as an unavailable reader.
     """
     if not resolve_active_capability(ServiceCapability.LLM_VISION, settings=settings).enabled:
         facts = {"llm_vision_enabled": False}
@@ -930,12 +920,7 @@ def _extract_invoice_fields_via_vision(
         # nothing, which is worse than not asking.
         transcription = ports.transcribe_vision(images, evidence.content_sha256, settings, consent_token)
     except InvoiceDraftReaderUnavailableError as exc:
-        # Ordered ahead of the verdict branch deliberately. A missing `llm`
-        # extra is a dependency problem, and its identity must not be replaced
-        # by a reader verdict.
         cause = exc.cause
-        if isinstance(cause, MissingOptionalExtraError):
-            _refuse_with_unavailable_reader(cause, availability_fact="vision_reader_available")
         verdict = exc.precondition_verdict
         if verdict is not None:
             _refuse_with_reader_verdict(verdict, cause=cause)

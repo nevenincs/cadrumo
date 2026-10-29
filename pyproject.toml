@@ -95,9 +95,7 @@ dependencies = [
   # pdfplumber or pikepdf change dropping Pillow would surface as a runtime
   # failure on the first page rendered, misdiagnosed as a broken PDF by the
   # rasteriser's own error wrapping. Declaring it turns that into a resolution
-  # failure instead. The `llm` extra declares it too; that declaration is
-  # correct but not load-bearing, because the two PDF packages keep Pillow in
-  # the base closure regardless.
+  # failure instead.
   "pillow>=13,<14",
   # Data validation & models
   "pydantic>=2.14.1,<3",
@@ -185,34 +183,6 @@ browser = [
 ofx = [
   "ofxtools>=1.1,<2",
 ]
-# Local-inference document reading (the opt-in `cadrumo.adapters.outbound.llm`
-# subpackage).
-# Gates the probabilistic reading path: rasterising a scan-only invoice
-# on-host and handing it to a local model runtime. Deliberately narrow, and
-# the narrowness is the honest result rather than an oversight -- the local
-# runtime is reached over HTTP on the already-declared `httpx`, page rendering
-# runs on the already-declared `pypdfium2`, and the one direct third-party
-# reliance the path adds beyond the core closure is Pillow, via `to_pil()`.
-# The path carries no model weights, no GPU runtime and no inference library
-# today. The extra exists so that stays a CHECKABLE property: a transformers-
-# or vLLM-served model would land HERE rather than in [project.dependencies],
-# which is the boundary this extra is for.
-#
-# Pillow is ALSO a direct base dependency above. Both declarations are
-# deliberate: the base entry closes the undeclared-direct-reliance defect,
-# this one declares what the inference path needs on its own terms.
-llm = [
-  "pillow>=13,<14",
-  # NVML bindings, read-only. The local-inference contention check needs FREE
-  # VRAM, not total: a 16 GB card shared with a resident service and a desktop
-  # is not 16 GB of headroom, and a load admitted against the total is the
-  # overflow this check exists to prevent. NVML gives per-device total AND free
-  # figures; a whole-device `nvidia-smi` shell-out gives neither reliably nor
-  # without a subprocess. Absent, the accelerator reads `unknown` and acting
-  # fails closed -- so this extra widens what can be admitted, never what can
-  # be refused.
-  "nvidia-ml-py>=13,<14",
-]
 # The calculation-summary PDF destination (`aeat app modelo work report
 # --document-format pdf`). ReportLab (BSD) lays out the pages; the tagging,
 # attachment and metadata pass runs on the already-declared `pikepdf`, and
@@ -241,7 +211,6 @@ all = [
   "cadrumo[google]",
   "cadrumo[browser]",
   "cadrumo[ofx]",
-  "cadrumo[llm]",
   "cadrumo[pdf]",
 ]
 
@@ -558,12 +527,6 @@ dev = [
   "playwright-stealth>=2.0.3,<3",
   "anthropic>=1.13.0,<2",
   "ofxtools>=1.1,<2",
-  # The `llm` extra's exclusive requirement, and therefore the module the
-  # extra's probe resolves against. Without it here the probe reads ABSENT in
-  # the dev environment, every `require_optional_extra(LLM_EXTRA)` guard fires,
-  # and the inference test suite refuses instead of running. A pure-Python
-  # `py3-none-any` wheel: importable with no NVIDIA driver and no accelerator.
-  "nvidia-ml-py>=13,<14",
   "prek>=0.5.5",
   "pytest>=9.0.3",
   "pytest-asyncio>=1.0.0",
@@ -1051,12 +1014,6 @@ convention = "google"
 "dev/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/festivos.py" = ["S105"]
 "src/cadrumo/application/ledger/tests/_subprocess_classifier_support.py" = ["S603"]
-# Spawns a fresh interpreter to make the `llm` extra's probe module genuinely
-# unresolvable before any product module loads; the absent state cannot be
-# reached in-process because the dev environment installs the extra's
-# requirements so the rest of the suite runs. Argv is this repo's own literal.
-"src/cadrumo/entrypoints/cli/tests/test_language_flag_help_honesty.py" = ["S603"]
-"src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py" = ["S603"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
 # with literal short / weak / sentinel passphrases as assertion inputs.
 "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py" = ["S106"]
@@ -1248,7 +1205,7 @@ testpaths = [
   "src/cadrumo_mcp",
   "src/cadrumo_agent_service",
 ]
-pythonpath = ["src"]
+pythonpath = ["src", "."]
 python_files = ["test_*.py"]
 # `-ra` replaces the per-lane `-rsf`: pytest's default `-r` value is `fE`, so
 # a bare `-rs` REPLACES it and the short-summary `FAILED path::test` lines
@@ -1264,7 +1221,7 @@ python_files = ["test_*.py"]
 # `--capture=sys` avoids pytest's fd-level dup2 capture, which dies silently
 # under Git Bash / MinTTY on this project's primary platform.
 # Plain assertions preserve failures without rendering expensive comparison diffs.
-addopts = "-n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
+addopts = "-p dev.test_runs.logging -n auto --dist=loadfile -ra --tb=short --durations=10 -m 'unit and not perf and not external_tool and not os_keychain and not windows_only and not resident_service and not private_ingest_corpus' --strict-markers --strict-config --capture=sys --max-worker-restart=0 --assert=plain"
 # Correctness tests run to completion independently of host speed. Callers
 # can explicitly request a pytest-timeout deadline when investigating a hang.
 # `--max-worker-restart=0` keeps a crashed worker terminal and visible rather
@@ -1462,14 +1419,6 @@ ignore_names = [
   "win32security",
   "win32ts",
 ]
-# The NVML binding's distribution name and its import name differ, so the
-# mapping is stated rather than guessed: deptry's fallback would be
-# `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an
-# undeclared dependency (DEP001) while the declaration itself reads as unused
-# (DEP002) — one mapping closes both. Verified against the published wheel
-# rather than asserted from memory: `nvidia_ml_py-13.610.43-py3-none-any.whl`
-# ships a top-level `pynvml.py`.
-"nvidia-ml-py" = ["pynvml"]
 [tool.deptry.per_rule_ignores]
 # `cadrumo`: the `all` convenience extra self-references the capability extras
 # (`cadrumo[google]` etc.); deptry reads the self-reference as an unused dependency.
