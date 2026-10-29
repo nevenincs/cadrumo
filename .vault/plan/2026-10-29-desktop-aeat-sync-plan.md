@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:3269e5af5129709c7a4d7e637b5fbf46e4034020dc71a0cea7a03ef9801f87a3'
+body_hash: 'sha256:c363c3d49418f14cb297ae3d722185a5363f9e25c1ee3a021eeff7c2de779ebe'
 ---
 
 # `desktop-aeat-sync` plan
@@ -65,7 +65,7 @@ Give the host named aeat_sync commands and a profile-held area queue with stop, 
 - [x] `P03.S09` - implement the profile-held run: area order, per-year filed items, census session reuse, stop between items, reattach, discard on sign-out and profile change, settle waits that never become unknown; `native/desktop/src-tauri/src/shell/aeat_sync/run.rs (new), native/desktop/src-tauri/src/shell/user_profile.rs`.
 - [x] `P03.S10` - implement the closed outcome table, session-ended pause and resume from the first item not brought, person-initiated retry, preflight from setup rows, sign-in through auth.session.acquire, and observation-event progress; `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs (new), native/desktop/src-tauri/src/shell/relay.rs`.
 - [x] `P03.S11` - cover the run model and outcome table in desktop-host-unit-test, including unknown never retried and no id, code or path in any reply to the window; `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs (new)`.
-- [ ] `P03.S28` - serve the filed rows from live.sync.status in aeat_sync_results, and admit the local AEAT access readiness read auth.local-read so aeat_sync_prepare reports AEAT access not set up before starting, per the owner rulings of 2026-10-29, checked by test against the manifest; `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs, native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs, native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`.
+- [x] `P03.S28` - serve the filed rows from live.sync.status in aeat_sync_results, and admit the local AEAT access readiness read auth.local-read so aeat_sync_prepare reports AEAT access not set up before starting, per the owner rulings of 2026-10-29, checked by test against the manifest; `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs, native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs, native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`.
 
 ### Phase `P04` - Frontend page
 

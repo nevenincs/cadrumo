@@ -15,7 +15,14 @@ pub(super) enum Kind {
     Capture,
     /// Establishes the AEAT session the captures read through.
     Session,
+    /// Reads the profile's local AEAT access readiness; reaches no network.
+    /// Its contract journals the read, so it declares an updating effect.
+    Readiness,
 }
+
+/// The local read the preflight asks whether AEAT access is set up, the same
+/// one the census flow asks.
+pub(super) const READINESS: &str = "auth.local-read";
 
 /// The areas a run brings, in the fixed order they run.
 #[derive(
@@ -53,7 +60,8 @@ impl Area {
 
 /// Every definition the commands may submit, with what it may do. Sorted, so
 /// a duplicate or a missing entry is visible.
-pub(super) const ADMITTED: [(&str, Kind); 11] = [
+pub(super) const ADMITTED: [(&str, Kind); 12] = [
+    (READINESS, Kind::Readiness),
     ("auth.session.acquire", Kind::Session),
     ("live.borrador.100.import", Kind::Capture),
     ("live.filed-capture.bulk", Kind::Capture),

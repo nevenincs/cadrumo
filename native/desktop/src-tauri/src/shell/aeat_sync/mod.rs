@@ -32,6 +32,8 @@ const FORM_LENGTH: std::ops::RangeInclusive<usize> = 1..=5;
 const YEARS: std::ops::RangeInclusive<u16> = 1000..=9999;
 /// How long the preflight waits for the setup engine's first quick read.
 const PREPARE_LIMIT: Duration = Duration::from_secs(20);
+/// The most filed declaration rows one reply carries.
+const FILED_LIMIT: usize = 2000;
 /// The most notification rows one reply carries.
 const NOTIFICATION_LIMIT: usize = 500;
 /// The longest text of a notification row the window is served.
@@ -568,6 +570,9 @@ pub async fn aeat_sync_prepare(
 ) -> Result<Prepared> {
     let person = host.person(None).await?;
     let profile = relay::profile_of(&person).await?;
+    if admitted(admitted::READINESS).is_none() {
+        return Err(bare("unavailable"));
+    }
     let ready = {
         let _serial = host.serial().await;
         censo::readiness(&host, &person, &profile)
@@ -851,9 +856,121 @@ struct AreaResult {
 #[derive(Debug, PartialEq, Serialize)]
 pub struct Results {
     areas: Vec<AreaResult>,
-    /// The filed declarations set against the profile's own records; the
-    /// status read serves their counts only, so no row is served yet.
-    filed: Vec<Value>,
+    /// The filed declarations set against the profile's own records, as the
+    /// status read classified them.
+    filed: Vec<FiledRow>,
+}
+
+/// One filed declaration as the window lists it, without identifiers: the
+/// profile's own record, what AEAT showed and the receipt stay apart.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct FiledRow {
+    form: String,
+    year: u16,
+    period: Option<String>,
+    #[serde(rename = "match")]
+    group: &'static str,
+    record: Option<FiledRecord>,
+    aeat: Option<FiledSeen>,
+    receipt: &'static str,
+    differences: Vec<&'static str>,
+}
+#[derive(Debug, PartialEq, Serialize)]
+struct FiledRecord {
+    status: &'static str,
+    on: String,
+}
+#[derive(Debug, PartialEq, Serialize)]
+struct FiledSeen {
+    seen_on: String,
+}
+
+/// One served filed row in the window's closed words.
+fn filed_row(row: &Value) -> Result<FiledRow> {
+    let form = row["modelo"]
+        .as_str()
+        .filter(|form| {
+            FORM_LENGTH.contains(&form.len()) && form.bytes().all(|b| b.is_ascii_alphanumeric())
+        })
+        .ok_or_else(protocol)?
+        .to_owned();
+    let year = row["filing_year"]
+        .as_u64()
+        .and_then(|year| u16::try_from(year).ok())
+        .filter(|year| YEARS.contains(year))
+        .ok_or_else(protocol)?;
+    let period = match &row["period"] {
+        Value::Null => None,
+        Value::String(period)
+            if (1..=8).contains(&period.len())
+                && period.bytes().all(|b| b.is_ascii_alphanumeric()) =>
+        {
+            Some(period.clone())
+        }
+        _ => return Err(protocol()),
+    };
+    let group = match row["match"].as_str() {
+        Some("matched") => "matched",
+        Some("aeat_only") => "aeat_only",
+        Some("local_only") => "local_only",
+        Some("differing") => "differing",
+        _ => return Err(protocol()),
+    };
+    let record = match (
+        row["local_record"].as_str(),
+        instant(&row["local_record_at"])?,
+    ) {
+        (Some("none"), None) => None,
+        (Some("draft"), Some(on)) => Some(FiledRecord {
+            status: "draft",
+            on,
+        }),
+        (Some("marked_filed"), Some(on)) => Some(FiledRecord {
+            status: "marked_filed",
+            on,
+        }),
+        _ => return Err(protocol()),
+    };
+    let aeat = instant(&row["aeat_shown_at"])?.map(|seen_on| FiledSeen { seen_on });
+    let receipt = match row["receipt_confirmed"].as_bool() {
+        Some(true) if aeat.is_some() => "confirmed",
+        Some(false) => "not_confirmed",
+        _ => return Err(protocol()),
+    };
+    let differences = row["differences"]
+        .as_array()
+        .ok_or_else(protocol)?
+        .iter()
+        .map(|difference| match difference.as_str() {
+            Some("status") => Ok("status"),
+            _ => Err(protocol()),
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(FiledRow {
+        form,
+        year,
+        period,
+        group,
+        record,
+        aeat,
+        receipt,
+        differences,
+    })
+}
+
+/// The status read's filed rows; none while filed declarations were never
+/// read from AEAT.
+fn filed_rows(result: &Value) -> Result<Vec<FiledRow>> {
+    let areas = result["status"]["areas"].as_array().ok_or_else(protocol)?;
+    let area = areas
+        .iter()
+        .find(|entry| entry["area"] == "filed_declarations")
+        .ok_or_else(protocol)?;
+    match &area["filed_rows"] {
+        Value::Null => Ok(Vec::new()),
+        Value::Array(rows) if rows.len() <= FILED_LIMIT => rows.iter().map(filed_row).collect(),
+        _ => Err(protocol()),
+    }
 }
 
 fn item_outcome(state: ItemState, reason: Option<Reason>) -> Option<Outcome> {
@@ -875,8 +992,14 @@ fn outcome_word(outcome: Outcome) -> &'static str {
 }
 
 /// The run's settled areas, each at the instant the status read last saw it
-/// brought.
-fn results_reply(run: &Run, status: &Status) -> Results {
+/// brought, beside the served filed rows.
+fn results_reply(run: Option<&Run>, status: &Status, filed: Vec<FiledRow>) -> Results {
+    let Some(run) = run else {
+        return Results {
+            areas: Vec::new(),
+            filed,
+        };
+    };
     let areas = run
         .areas
         .iter()
@@ -921,10 +1044,7 @@ fn results_reply(run: &Run, status: &Status) -> Results {
             })
         })
         .collect();
-    Results {
-        areas,
-        filed: Vec::new(),
-    }
+    Results { areas, filed }
 }
 
 /// What the last reads came to, per area, from the run and the profile's own
@@ -939,13 +1059,12 @@ pub async fn aeat_sync_results(
         return Err(invalid());
     }
     let (person, _, run) = session(&host, &profile).await?;
-    let status = status_reply(&profile, &read_status(&host, &person, &profile).await?)?;
+    let result = read_status(&host, &person, &profile).await?;
+    let status = status_reply(&profile, &result)?;
+    let filed = filed_rows(&result)?;
     Ok(match run {
-        Some(run) => results_reply(&run::lock(&run), &status),
-        None => Results {
-            areas: Vec::new(),
-            filed: Vec::new(),
-        },
+        Some(run) => results_reply(Some(&run::lock(&run)), &status, filed),
+        None => results_reply(None, &status, filed),
     })
 }
 

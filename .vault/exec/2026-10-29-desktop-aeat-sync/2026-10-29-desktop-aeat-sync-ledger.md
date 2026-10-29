@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:a2bd3857b9c184c12f806a5e2f36f6ed3b153c7e5f8cd71388f70eafe7901888'
+body_hash: 'sha256:f5732a88326cc91694b56d37b92cbda9e27c98b0b2d4a2e0d92d4186b0f16bc9'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -245,6 +245,11 @@ related:
 - `S27` `verify:` `lint-imports --config .importlinter` -> `pass`
 - `S27` `verify:` `just check-style` -> `pass`
 - `S27` `verify:` `just check-format` -> `pass`
+- `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S28` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test (CADRUMO_DESKTOP_HOST_TEST_FILTER=aeat_sync)` -> `pass`
+- `S28` `verify:` `just check-rust` -> `pass`
 
 ## Notes
 

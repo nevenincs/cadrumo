@@ -81,7 +81,7 @@ fn no_admitted_definition_pauses_for_the_person_or_can_be_cancelled() {
 fn the_list_holds_only_reads_of_aeat_or_the_profile() {
     for (id, _) in ADMITTED {
         assert!(
-            id.starts_with("live.") || id == "auth.session.acquire",
+            id.starts_with("live.") || ["auth.local-read", "auth.session.acquire"].contains(&id),
             "{id} is outside the live reads"
         );
         assert!(
@@ -96,6 +96,7 @@ fn the_list_holds_only_reads_of_aeat_or_the_profile() {
 #[test]
 fn the_areas_submit_only_admitted_definitions_and_leave_none_unused() {
     let mut named: BTreeSet<&str> = BTreeSet::from([
+        "auth.local-read",
         "auth.session.acquire",
         "live.borrador.100.import",
         "live.notifications.latest",
@@ -869,7 +870,7 @@ fn no_identifier_code_or_path_reaches_the_window() {
     let snapshot = serde_json::to_string(&run.snapshot()).unwrap();
     leaks(&snapshot);
     assert!(snapshot.contains(r#""reason":"refused""#));
-    let results = results_reply(&run, &served);
+    let results = results_reply(Some(&run), &served, filed_rows(&status).unwrap());
     leaks(&serde_json::to_string(&results).unwrap());
     assert_eq!(results.areas[0].at.as_deref(), at);
     assert!(results.areas[0].review_pending);
@@ -899,4 +900,84 @@ fn no_identifier_code_or_path_reaches_the_window() {
         serde_json::to_value(&prepared).unwrap(),
         json!({"browser": {"state": "attention"}, "access": "ready"})
     );
+}
+
+#[test]
+fn the_preflight_reads_access_readiness_through_the_admitted_local_read() {
+    assert_eq!(super::admitted::READINESS, "auth.local-read");
+    assert_eq!(
+        admitted(super::admitted::READINESS),
+        Some(("auth.local-read", Kind::Readiness))
+    );
+    let contract = &contracts()["auth.local-read"];
+    assert_eq!(contract["subject_reference"]["kind"], "profile");
+    assert_eq!(contract["sensitive_input"], "none");
+}
+
+fn filed_status(row: Value) -> Value {
+    let mut area = status_area(
+        "filed_declarations",
+        "current",
+        Some("2026-10-01T10:00:00Z"),
+    );
+    area["filed_periods"] = json!({"matched": 0, "aeat_only": 0, "local_only": 0, "differing": 0});
+    area["filed_rows"] = json!([row]);
+    json!({"status": {"areas": [area]}})
+}
+
+fn served_row() -> Value {
+    json!({"modelo": "303", "filing_year": 2025, "period": "1T", "match": "differing",
+        "local_record": "draft", "local_record_at": "2026-09-01T10:00:00Z",
+        "aeat_shown_at": "2026-10-01T10:00:00Z", "receipt_confirmed": false,
+        "differences": ["status"]})
+}
+
+#[test]
+fn filed_rows_keep_the_record_the_aeat_observation_and_the_receipt_apart() {
+    let rows = filed_rows(&filed_status(served_row())).unwrap();
+    leaks(&serde_json::to_string(&rows).unwrap());
+    assert_eq!(
+        serde_json::to_value(&rows).unwrap(),
+        json!([{"form": "303", "year": 2025, "period": "1T", "match": "differing",
+            "record": {"status": "draft", "on": "2026-09-01T10:00:00Z"},
+            "aeat": {"seen_on": "2026-10-01T10:00:00Z"}, "receipt": "not_confirmed",
+            "differences": ["status"]}])
+    );
+    let mut annual = served_row();
+    annual["period"] = Value::Null;
+    annual["match"] = json!("aeat_only");
+    annual["local_record"] = json!("none");
+    annual["local_record_at"] = Value::Null;
+    annual["receipt_confirmed"] = json!(true);
+    annual["differences"] = json!([]);
+    let rows = filed_rows(&filed_status(annual)).unwrap();
+    assert_eq!(
+        (rows[0].period.as_ref(), rows[0].record.as_ref()),
+        (None, None)
+    );
+    assert_eq!((rows[0].group, rows[0].receipt), ("aeat_only", "confirmed"));
+    let never_read =
+        json!({"status": {"areas": [status_area("filed_declarations", "never_brought", None)]}});
+    assert_eq!(filed_rows(&never_read).unwrap(), Vec::new());
+}
+
+#[test]
+fn a_filed_row_outside_the_closed_words_is_refused() {
+    for (field, value) in [
+        ("match", json!("maybe")),
+        ("local_record", json!("submitted")),
+        ("local_record_at", Value::Null),
+        ("differences", json!(["amount"])),
+        ("modelo", json!("../303")),
+        ("filing_year", json!(20250)),
+        ("receipt_confirmed", json!("yes")),
+    ] {
+        let mut row = served_row();
+        row[field] = value;
+        assert!(filed_rows(&filed_status(row)).is_err(), "{field}");
+    }
+    let mut unseen = served_row();
+    unseen["aeat_shown_at"] = Value::Null;
+    unseen["receipt_confirmed"] = json!(true);
+    assert!(filed_rows(&filed_status(unseen)).is_err());
 }
