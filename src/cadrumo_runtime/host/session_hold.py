@@ -22,7 +22,6 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.presentation import presentation_refusal
 from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -211,11 +210,9 @@ def parse_hold_request(line: bytes) -> tuple[UUID, str, dict[str, object]] | Non
         "service_admission": {"recipient_connection_id", "service_id"},
         "attendance_decision": {"attendance_id", "approve"},
         "language_set": {"language"},
-        "present_destination": {"destination"},
         **RELAY_ACTION_KEYS,
     }
-    optional: set[str] = {"params"} if action == "present_destination" else set[str]()
-    if set(request) - optional != {"request_id", "action"} | action_keys.get(action, set()):
+    if set(request) != {"request_id", "action"} | action_keys.get(action, set()):
         _emit_refusal("invalid", request_id)
         return None
     return request_id, action, request
@@ -223,7 +220,7 @@ def parse_hold_request(line: bytes) -> tuple[UUID, str, dict[str, object]] | Non
 
 @dataclass(slots=True)
 class HoldActionState:
-    """Per-hold presentation and language observation state."""
+    """Per-hold language observation state."""
 
     client: FrontendClient
     status: ProfileStatus
@@ -259,8 +256,6 @@ def process_hold_request(
             return None
         if action in {"service_admission", "attendance_inventory", "attendance_decision", "status", "activity"}:
             return handle_hold_access(state, request_id, action, request)
-        if action == "present_destination":
-            return handle_hold_destination(state, request_id, action, request)
         if action in RELAY_ACTION_KEYS:
             return handle_hold_relay(state, request_id, action, request)
         if action in {"language_read", "language_set", "language_observe"}:
@@ -300,7 +295,6 @@ def log_slow_hold_request(action: str, request_id: UUID, started: float) -> None
                 "language_read",
                 "language_set",
                 "language_observe",
-                "present_destination",
                 *RELAY_ACTION_KEYS,
             }
             else "invalid",
@@ -357,56 +351,6 @@ def handle_hold_access(state: HoldActionState, request_id: UUID, action: str, re
             _emit_refusal("unavailable", request_id)
             return None
         _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
-    return None
-
-
-def hold_string_params(params: dict[str, object]) -> dict[str, str] | None:
-    """Accept destination parameters only when every value is a string."""
-    if not all(isinstance(value, str) for value in params.values()):
-        return None
-    return {key: value for key, value in params.items() if isinstance(value, str)}
-
-
-def handle_hold_destination(
-    state: HoldActionState, request_id: UUID, action: str, request: dict[str, object]
-) -> int | None:
-    """Handle a correlated presentation request."""
-    client, status, profile_id = state.client, state.status, state.profile_id
-    if action == "present_destination":
-        destination, raw_params = request["destination"], request.get("params", {})
-        if not isinstance(destination, str) or not isinstance(raw_params, dict):
-            _emit_refusal("invalid", request_id)
-            return 1
-        params = cast("dict[str, object]", raw_params)
-        string_params = hold_string_params(params)
-        if string_params is None:
-            _emit_refusal("invalid", request_id)
-            return 1
-        if presentation_refusal(destination, string_params) is not None:
-            _emit_refusal("invalid", request_id)
-            return 1
-        try:
-            presented = client.present_destination(destination, string_params)
-        except FrontendRefusedError as error:
-            if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
-                _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
-                return 1
-            # As for activity: an uncertain OS observation refuses the page but keeps the held sign-in.
-            _emit_refusal("unavailable", request_id)
-            return None
-        _emit(
-            {
-                "kind": "destination_presented",
-                "request_id": str(request_id),
-                "profile_id": str(profile_id),
-                "session_id": str(client.session_id),
-                "runtime_boot_id": str(status.runtime_boot_id),
-                "connection_id": str(status.connection_id),
-                "destination": presented.destination,
-                "params": dict(presented.params),
-                "delivered": presented.delivered,
-            }
-        )
     return None
 
 
