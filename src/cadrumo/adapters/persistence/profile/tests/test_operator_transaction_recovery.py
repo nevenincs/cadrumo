@@ -823,8 +823,8 @@ def test_failed_reset_serializes_and_refuses_concurrent_central_session_writer(
             test is about.
             """
             _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
-            writer_started.set()
             with open_test_profile_session(_BUCKET_ID):
+                writer_started.set()
                 asyncio.run(
                     ensure_authenticated_aeat_session(
                         load_settings(),

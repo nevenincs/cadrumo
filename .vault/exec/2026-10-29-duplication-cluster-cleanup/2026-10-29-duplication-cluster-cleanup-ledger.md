@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:9965a884a652e579467b7800cdffe5381f449d6163225858951ececd578bddc3'
+body_hash: 'sha256:30713dd550492084ed2e01140639be702990daf5ebf4d4b8ecd59716f6e1285b'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -77,6 +77,15 @@ related:
 - `S05` `verify:` `two-file Ruff check and format and Windows ty` -> `pass`
 - `S05` `by:` `Sol 6.1 high`
 - `S05` `verify:` `parent combined Ruff and formatting and Windows ty on 19 cleanup files` -> `pass`
+- `S06` `M` `src/cadrumo/application/auth/operator_cleanup.py`
+- `S06` `M` `src/cadrumo/application/auth/operator_revocation.py`
+- `S06` `A` `src/cadrumo/application/auth/tests/test_operator_cleanup_matching.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_operator_transaction_recovery.py`
+- `S06` `verify:` `auth matching and real durable cleanup combined pytest 58 cases` -> `pass`
+- `S06` `verify:` `exact transaction concurrency case pytest 1 case` -> `pass`
+- `S06` `verify:` `four-file Ruff check and format and Windows ty` -> `pass`
+- `S06` `verify:` `unchanged duplication scanner post-refinement no auth pair` -> `pass`
+- `S06` `by:` `Sol 6.1 high`
 
 ## Notes
 
@@ -85,3 +94,4 @@ related:
 - `S04` Existing worker-loss writer thread warning `CONNECTION_CLOSED` retained in test evidence.
 - `S05` Reader source adopted by concurrent commit b9003df9be with foreign calendar/staleness changes preserved; authored patch and receipt retain attribution.
 - `S05` S05 source already present in b9003df9be; separate remaining test checkpoint follows after concurrent Git lock delayed S04 staging.
+- `S06` Intermediate 21/22 and 57/58 durable failures were investigated with preimage controls. One-line test readiness signal moved after custody fixture entry; assertions and production session policy unchanged. Final combined 58 passed.

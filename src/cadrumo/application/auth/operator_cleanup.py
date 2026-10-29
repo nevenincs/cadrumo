@@ -125,14 +125,15 @@ def delete_certificate_source_secrets(
     return sum(backend.remove(name) for name in names)
 
 
-def assert_logout_request_matches(
+def assert_auth_cleanup_request_matches(
     intent: AuthCleanupIntent,
     *,
+    operation_kind: AuthCleanupOperationKind,
     provider: str | None,
     all_providers: bool,
 ) -> None:
-    """Refuse when a durable logout intent differs from the current request."""
-    if intent.operation_kind is not AuthCleanupOperationKind.LOGOUT:
+    """Refuse when a durable cleanup intent differs from the requested kind or scope."""
+    if intent.operation_kind is not operation_kind:
         matches = False
     elif all_providers:
         matches = intent.all_providers
@@ -157,27 +158,6 @@ def auth_cleanup_intent_has_effects(intent: AuthCleanupIntent) -> bool:
         or intent.certificate_sources
         or intent.secret_source_names
     )
-
-
-def assert_reset_request_matches(
-    intent: AuthCleanupIntent,
-    *,
-    provider: str | None,
-    all_providers: bool,
-) -> None:
-    """Refuse when a durable reset intent differs from the current request."""
-    if intent.operation_kind is not AuthCleanupOperationKind.RESET:
-        matches = False
-    elif all_providers:
-        matches = intent.all_providers
-    elif provider is not None:
-        matches = not intent.all_providers and intent.provider_ids == (get_auth_provider(provider).id,)
-    else:
-        matches = not intent.all_providers
-    if not matches:
-        raise AuthOperationScopeConflictError(
-            translated_message="application.auth.operator.errors.scope_conflict",
-        )
 
 
 def _certificate_source_witnesses(
@@ -551,8 +531,7 @@ def _certificate_source_secret_exists(
 
 __all__ = [
     "apply_auth_cleanup_intent",
-    "assert_logout_request_matches",
-    "assert_reset_request_matches",
+    "assert_auth_cleanup_request_matches",
     "auth_cleanup_bucket_events",
     "auth_cleanup_intent_has_effects",
     "clear_operator_auth_acquisition_locks",

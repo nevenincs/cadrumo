@@ -12,7 +12,7 @@ related:
   - '[[2026-10-02-duplication-remediation-plan]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:380bf91206d8133513e9de6177c7406d87e873a2f36df8028b62b6b408e2e425'
+body_hash: 'sha256:2cdd3a07f1230a6094012aede7a940b0ee18ddb6231534d9584bb52460f4717c'
 ---
 
 # `duplication-cluster-cleanup` plan
@@ -36,7 +36,7 @@ The accepted canonical-module decision governs all extraction and atomic consume
 - [x] `S03` - Centralize filed-capture CLI payload projection while preserving each command's scope and error protection; `src/cadrumo/entrypoints/cli/app_live_commands.py owned helper and three constructor mappings, plus tests/test_operation_filed_single.py, test_operation_filed_bulk.py and test_operation_filed_source.py`.
 - [x] `S04` - Share exact profile-connection admission checks while retaining desktop-only and guarded-status behavior; `src/cadrumo_runtime/host/profile_connection_operations.py, host/tests/test_view_stream_relay.py and host/tests/test_profile_connections.py`.
 - [x] `S05` - Share the ordered workbench source capture leaf while preserving generation-specific consistency checks; `src/cadrumo/application/workbench_generation_reader.py and application/tests/test_workbench_generation.py`.
-- [ ] `S06` - Share explicit-kind cleanup matching, durable intent preparation and its ambient storage/mutation scope; `src/cadrumo/application/auth/operator_cleanup.py, operator_revocation.py, new auth/tests/test_operator_cleanup_matching.py and adapters/persistence/profile/tests/test_operator_transaction_recovery.py for the proven writer-ready synchronization repair`.
+- [x] `S06` - Share explicit-kind cleanup matching, durable intent preparation and its ambient storage/mutation scope; `src/cadrumo/application/auth/operator_cleanup.py, operator_revocation.py, new auth/tests/test_operator_cleanup_matching.py and adapters/persistence/profile/tests/test_operator_transaction_recovery.py for the proven writer-ready synchronization repair`.
 - [ ] `S07` - Correct the reader-consumer negative oracle to require the actual refusal evidence mismatch; `src/cadrumo/entrypoints/tests/test_reader_consumer_gating.py wrong-code assertion, matching explanation and targeted verification`.
 
 ## Parallelization
