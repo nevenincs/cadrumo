@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import re
 import secrets
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -619,6 +620,86 @@ class AeatSyncFiledPeriodCountsV1(BaseModel):
     differing: NonNegativeInt
 
 
+class AeatSyncFiledMatch(StrEnum):
+    """How one declaration the AEAT register shows stands against this profile's records."""
+
+    MATCHED = "matched"
+    AEAT_ONLY = "aeat_only"
+    LOCAL_ONLY = "local_only"
+    DIFFERING = "differing"
+
+
+class AeatSyncFiledLocalRecord(StrEnum):
+    """What this profile itself holds for one declaration.
+
+    A draft is an open work unit with no filing record; marked filed is a local
+    filing record. Neither says anything about the AEAT.
+    """
+
+    NONE = "none"
+    DRAFT = "draft"
+    MARKED_FILED = "marked_filed"
+
+
+class AeatSyncFiledDifference(StrEnum):
+    """What the stored captures establish as differing for one declaration.
+
+    ``STATUS`` means the register shows the declaration inactive, of unknown
+    state, or with conflicting submissions, so it cannot be matched.
+    """
+
+    STATUS = "status"
+
+
+class AeatSyncFiledRowV1(BaseModel):
+    """One declaration either side knows, with its three facts kept apart.
+
+    The local record, what the AEAT register showed and whether a receipt was
+    verified are separate: a matching record is never a confirmed receipt.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    modelo: Annotated[str, StringConstraints(min_length=3, max_length=3, pattern=r"^[0-9]{3}$")]
+    filing_year: FilingYear
+    period: Annotated[str, StringConstraints(min_length=1, max_length=8)] | None
+    """The registry period token, or nothing for an annual declaration."""
+    match: AeatSyncFiledMatch
+    local_record: AeatSyncFiledLocalRecord
+    local_record_at: datetime | None = None
+    """When the draft was last changed or the record was marked filed."""
+    aeat_shown_at: datetime | None = None
+    """When the register capture that showed the declaration was made."""
+    receipt_confirmed: bool = False
+    differences: tuple[AeatSyncFiledDifference, ...] = ()
+
+    @field_validator("local_record_at", "aeat_shown_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _instants_are_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _coherent(self) -> Self:
+        if (self.local_record is AeatSyncFiledLocalRecord.NONE) != (self.local_record_at is None):
+            raise ValueError("only a held local record carries its date")
+        shown = self.aeat_shown_at is not None
+        filed = self.local_record is AeatSyncFiledLocalRecord.MARKED_FILED
+        expected = {
+            AeatSyncFiledMatch.MATCHED: shown and filed,
+            AeatSyncFiledMatch.AEAT_ONLY: shown and not filed,
+            AeatSyncFiledMatch.LOCAL_ONLY: filed and not shown,
+            AeatSyncFiledMatch.DIFFERING: shown,
+        }[self.match]
+        if not expected:
+            raise ValueError("match group contradicts the local record and the AEAT observation")
+        if (self.match is AeatSyncFiledMatch.DIFFERING) != bool(self.differences):
+            raise ValueError("only a differing declaration names what differs")
+        if self.receipt_confirmed and not shown:
+            raise ValueError("a confirmed receipt requires an AEAT observation")
+        return self
+
+
 class AeatSyncAreaStatusV1(BaseModel):
     """One area's state, last successful capture and last attempt."""
 
@@ -635,6 +716,8 @@ class AeatSyncAreaStatusV1(BaseModel):
     refusal: NamespacedId | None = None
     unread_notification_count: NonNegativeInt | None = None
     filed_periods: AeatSyncFiledPeriodCountsV1 | None = None
+    filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None
+    """Each declaration the counts count, served with them and only with them."""
 
     @field_validator("last_brought_at", "last_attempt_at")
     @classmethod
@@ -654,13 +737,29 @@ class AeatSyncAreaStatusV1(BaseModel):
             raise ValueError("an attempt carries both its time and its outcome")
         if self.state is AeatSyncAreaState.POSSIBLY_STALE and self.stale_after_days is None:
             raise ValueError("a possibly stale area requires its horizon")
+        self._validate_counts(brought=brought)
+        return self
+
+    def _validate_counts(self, *, brought: bool) -> None:
+        """Require counts to belong to a captured area of the matching kind."""
         if not brought and (self.unread_notification_count is not None or self.filed_periods is not None):
             raise ValueError("counts require a brought area")
         if self.unread_notification_count is not None and self.area is not AeatSyncStatusArea.NOTIFICATIONS:
             raise ValueError("only notifications carry an unread count")
         if self.filed_periods is not None and self.area is not AeatSyncStatusArea.FILED_DECLARATIONS:
             raise ValueError("only filed declarations carry period counts")
-        return self
+        if (self.filed_rows is None) != (self.filed_periods is None):
+            raise ValueError("filed rows are served with their counts")
+        if self.filed_rows is not None and self.filed_periods is not None:
+            groups = Counter(row.match for row in self.filed_rows)
+            counts = self.filed_periods
+            if (counts.matched, counts.aeat_only, counts.local_only, counts.differing) != (
+                groups[AeatSyncFiledMatch.MATCHED],
+                groups[AeatSyncFiledMatch.AEAT_ONLY],
+                groups[AeatSyncFiledMatch.LOCAL_ONLY],
+                groups[AeatSyncFiledMatch.DIFFERING],
+            ):
+                raise ValueError("filed period counts must be the rows' group sizes")
 
 
 class AeatSyncStatusV1(BaseModel):

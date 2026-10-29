@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:96dd15a1916f82253c436ce1e24ea702e67b495b749d89a44c24adae2d447bef'
+body_hash: 'sha256:3269e5af5129709c7a4d7e637b5fbf46e4034020dc71a0cea7a03ef9801f87a3'
 ---
 
 # `desktop-aeat-sync` plan
@@ -55,7 +55,7 @@ Serve per-area AEAT sync state from the backend and remove paths, tax numbers an
 - [x] `P02.S06` - make nif optional on live.verify.nif-iva and live.verify.tgvi defaulting to the profile taxpayer number, and add a distinct typed refusal detail for an ended AEAT session in live captures; `src/cadrumo/application/live/verify_capture_operation.py, src/cadrumo/application/live/errors.py`.
 - [x] `P02.S26` - test the per-area staleness defaults (notifications 7 days, IVA wallet 30 days, census, filed declarations and identity checks 90 days) at and across each boundary through the real reader; `src/cadrumo/application/aeat_sync/tests/`.
 - [x] `P02.S07` - regenerate the contract manifest and run focused tests plus import, style, format and type gates; `src/cadrumo/_data/operations/contract_manifest.json`.
-- [ ] `P02.S27` - extend live.sync.status with per-declaration filed rows (modelo, period and year, the local record as none, draft or marked filed with its date, the AEAT observation with its date, the confirmed receipt, and the match group with what differs), joined through the shared calendar evidence join and the filing and work-unit records, contacting no AEAT service, per the owner ruling of 2026-10-29; `src/cadrumo/application/aeat_sync/workspace.py, src/cadrumo/application/aeat_sync/workspace_reader.py, src/cadrumo/application/aeat_sync/status_operation.py, src/cadrumo/entrypoints/aeat_sync_status_composition.py, src/cadrumo/_data/operations/contract_manifest.json`.
+- [x] `P02.S27` - extend live.sync.status with per-declaration filed rows (modelo, period and year, the local record as none, draft or marked filed with its date, the AEAT observation with its date, the confirmed receipt, and the match group with what differs), joined through the shared calendar evidence join and the filing and work-unit records, contacting no AEAT service, per the owner ruling of 2026-10-29; `src/cadrumo/application/aeat_sync/workspace.py, src/cadrumo/application/aeat_sync/workspace_reader.py, src/cadrumo/application/aeat_sync/status_operation.py, src/cadrumo/entrypoints/aeat_sync_status_composition.py, src/cadrumo/_data/operations/contract_manifest.json`.
 
 ### Phase `P03` - Host commands and run model
 

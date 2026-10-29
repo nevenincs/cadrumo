@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:b788fad461126a8bdc8fad10b060a6996a3b55b2ac31ed5dfb296615fedb1223'
+body_hash: 'sha256:a2bd3857b9c184c12f806a5e2f36f6ed3b153c7e5f8cd71388f70eafe7901888'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -210,6 +210,41 @@ related:
 - `S11` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
 - `S11` `verify:` `desktop-host-unit-test aeat_sync 30` -> `pass`
 - `S11` `verify:` `just check-rust clippy rustfmt` -> `pass`
+- `S24` `M` `native/desktop/frontend/src/components/profile/ProfileSync.tsx`
+- `S24` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S24` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S24` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S24` `M` `native/desktop/frontend/src/shell/profileCenso.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S24` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S24` `verify:` `npm run check` -> `pass`
+- `S24` `verify:` `playwright 69` -> `pass`
+- `S25` `M` `native/desktop/frontend/src/components/profile/ProfileSync.tsx`
+- `S25` `M` `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`
+- `S25` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/censoFixture.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S25` `M` `native/desktop/frontend/src/shell/profileCenso.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/censo-palette.spec.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S25` `verify:` `npm run check` -> `pass`
+- `S25` `verify:` `playwright 69` -> `pass`
+- `S27` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S27` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/tests/test_status.py`
+- `S27` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S27` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S27` `verify:` `pytest src/cadrumo/application/aeat_sync/tests` -> `pass`
+- `S27` `verify:` `lint-imports --config .importlinter` -> `pass`
+- `S27` `verify:` `just check-style` -> `pass`
+- `S27` `verify:` `just check-format` -> `pass`
 
 ## Notes
 
@@ -229,3 +264,4 @@ related:
 - `S16` screens connected into one page flow; stopgap word tables removed; includes the Modelo census App.tsx hunk
 - `S09` builds only together with S10 outcome.rs
 - `S10` gaps: filed result rows need a backend extension; access readiness reuses auth.local-read outside the closed list (decision pending)
+- `S27` just check-types fails only in dev/docs files another session owns; just check-import-boundaries kept 30 of 30 contracts with no finding but reported unavailable because the source tree changed while it ran

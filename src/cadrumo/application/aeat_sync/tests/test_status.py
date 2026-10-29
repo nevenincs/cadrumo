@@ -13,10 +13,16 @@ from dataclasses import replace
 from datetime import UTC, datetime, timedelta
 
 import pytest
+from pydantic import ValidationError
 
 from ....core.period import Period
+from ....tests.aeat_literal_fixtures import CENSO_SOURCE_URL_FIXTURE
 from ...calculations.ports import FiledDeclaracionObservationProtocol
-from ...overview.calendar_models import OverviewAeatSubmissionState, OverviewCalendarFilingEvidence
+from ...overview.calendar_models import (
+    OverviewAeatEvidenceConcern,
+    OverviewAeatSubmissionState,
+    OverviewCalendarFilingEvidence,
+)
 from ...overview.evidence import (
     AeatCalendarEvidenceSources,
     CalendarEvidenceReadOutcome,
@@ -25,7 +31,15 @@ from ...overview.evidence import (
 )
 from ...overview.home import HomeAvailability, HomeZoneState
 from ...user_profile.censal_observation import CensalObservation, CensalObservationAddress, CensalObservationIdentity
-from ..workspace import AeatSyncAreaState, AeatSyncStatusArea, AeatSyncStatusV1
+from ..workspace import (
+    AeatSyncAreaState,
+    AeatSyncFiledDifference,
+    AeatSyncFiledLocalRecord,
+    AeatSyncFiledMatch,
+    AeatSyncFiledRowV1,
+    AeatSyncStatusArea,
+    AeatSyncStatusV1,
+)
 from ..workspace_reader import (
     AeatSyncAreaAttempt,
     AeatSyncNotificationsCapture,
@@ -55,7 +69,7 @@ def _census(captured_at: datetime) -> CensalObservation:
         domicilio_fiscal=CensalObservationAddress(codigo_postal="28001"),
         domicilio_notificacion=CensalObservationAddress(),
         captured_at=captured_at,
-        source_url="https://sede.agenciatributaria.gob.es/censo",
+        source_url=CENSO_SOURCE_URL_FIXTURE,
     )
 
 
@@ -332,3 +346,210 @@ def test_the_status_round_trips_through_json_with_its_states_intact() -> None:
 
     assert restored == status
     assert _area(restored, AeatSyncStatusArea.NOTIFICATIONS).state is AeatSyncAreaState.POSSIBLY_STALE
+
+
+def test_a_filed_row_exposes_a_constrained_scalar_modelo_and_round_trips() -> None:
+    row = AeatSyncFiledRowV1(
+        modelo="303",
+        filing_year=2026,
+        period="1T",
+        match=AeatSyncFiledMatch.AEAT_ONLY,
+        local_record=AeatSyncFiledLocalRecord.NONE,
+        aeat_shown_at=_NOW,
+    )
+
+    schema = AeatSyncFiledRowV1.model_json_schema()["properties"]["modelo"]
+    assert schema["type"] == "string"
+    assert schema["pattern"] == r"^[0-9]{3}$"
+    assert row.model_dump(mode="json")["modelo"] == "303"
+    assert AeatSyncFiledRowV1.model_validate_json(row.model_dump_json()) == row
+
+
+@pytest.mark.parametrize("modelo", [303, "30", "3030", "abc"])
+def test_a_public_filed_row_refuses_invalid_modelo_values(modelo: object) -> None:
+    with pytest.raises(ValidationError):
+        AeatSyncFiledRowV1.model_validate(
+            {
+                "modelo": modelo,
+                "filing_year": 2026,
+                "period": "1T",
+                "match": AeatSyncFiledMatch.AEAT_ONLY,
+                "local_record": AeatSyncFiledLocalRecord.NONE,
+                "aeat_shown_at": _NOW,
+            }
+        )
+
+
+def _draft(modelo: str, period: Period, updated_at: datetime):
+    from ....domain.modelos.codes import ModeloCode
+    from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+    from ...overview.tests.calendar_test_support import BUCKET_ID
+
+    revision_id = "2019-y-siguientes"
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=BUCKET_ID,
+            modelo=modelo,
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=revision_id,
+        ),
+        bucket_id=BUCKET_ID,
+        modelo=ModeloCode(modelo),
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=revision_id,
+        name=f"{modelo}-{period.filing_year}-{period.registry_token}",
+        created_at=updated_at,
+        updated_at=updated_at,
+    )
+
+
+def test_filed_rows_keep_the_local_record_aeat_observation_and_receipt_apart_per_match_group() -> None:
+    from ...overview.tests.calendar_test_support import filed_declaration_observation, modelo_record
+
+    second_quarter = Period.from_year_and_code(2025, "2T")
+    matched = filed_declaration_observation(artefacts=())
+    aeat_only = replace(
+        filed_declaration_observation(artefacts=(), expediente_id="22222222222222222222"),
+        _period=second_quarter,
+    )
+    captured_at = _NOW - timedelta(days=2)
+    joined = _filed_evidence(captured_at, observations=(matched, aeat_only))
+    contested = OverviewCalendarFilingEvidence(
+        modelo="130",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "1T"),
+        aeat_submission_state=OverviewAeatSubmissionState.SUBMITTED_OBSERVED,
+        aeat_evidence_concerns=(OverviewAeatEvidenceConcern.INACTIVE_REGISTER,),
+    )
+    annual = Period.from_year_and_code(2025, "0A")
+    draft_at = _NOW - timedelta(days=5)
+    lone_draft_at = _NOW - timedelta(days=6)
+    first_filed = modelo_record()
+    annual_filed = modelo_record(modelo="100", period=annual)
+
+    area = _area(
+        _status(
+            AeatSyncStatusSources(
+                filings=(first_filed, annual_filed),
+                drafts=(
+                    _draft("303", second_quarter, draft_at - timedelta(days=1)),
+                    _draft("303", second_quarter, draft_at),
+                    _draft("303", Period.from_year_and_code(2025, "4T"), lone_draft_at),
+                ),
+                filed_evidence=replace(joined, evidence=(*joined.evidence, contested)),
+            )
+        ),
+        AeatSyncStatusArea.FILED_DECLARATIONS,
+    )
+
+    assert area.filed_rows is not None
+    rows = {(row.modelo, row.filing_year, row.period): row for row in area.filed_rows}
+    assert set(rows) == {("100", 2025, None), ("130", 2025, "1T"), ("303", 2025, "1T"), ("303", 2025, "2T")}
+    local_only, differing = rows[("100", 2025, None)], rows[("130", 2025, "1T")]
+    matching, new_at_aeat = rows[("303", 2025, "1T")], rows[("303", 2025, "2T")]
+    assert (local_only.match, local_only.local_record, local_only.local_record_at, local_only.aeat_shown_at) == (
+        AeatSyncFiledMatch.LOCAL_ONLY,
+        AeatSyncFiledLocalRecord.MARKED_FILED,
+        annual_filed.filed_at,
+        None,
+    )
+    assert (differing.match, differing.local_record, differing.aeat_shown_at, differing.differences) == (
+        AeatSyncFiledMatch.DIFFERING,
+        AeatSyncFiledLocalRecord.NONE,
+        captured_at,
+        (AeatSyncFiledDifference.STATUS,),
+    )
+    assert (matching.match, matching.local_record_at, matching.aeat_shown_at, matching.differences) == (
+        AeatSyncFiledMatch.MATCHED,
+        first_filed.filed_at,
+        captured_at,
+        (),
+    )
+    assert (new_at_aeat.match, new_at_aeat.local_record, new_at_aeat.local_record_at) == (
+        AeatSyncFiledMatch.AEAT_ONLY,
+        AeatSyncFiledLocalRecord.DRAFT,
+        draft_at,
+    )
+    assert not any(row.receipt_confirmed for row in area.filed_rows)
+    assert area.filed_periods is not None
+    assert (
+        area.filed_periods.matched,
+        area.filed_periods.aeat_only,
+        area.filed_periods.local_only,
+        area.filed_periods.differing,
+    ) == (1, 1, 1, 1)
+
+
+def test_a_verified_justificante_confirms_the_receipt_and_nothing_else() -> None:
+    captured_at = _NOW - timedelta(days=1)
+    joined = _filed_evidence(captured_at)
+    verified = OverviewCalendarFilingEvidence(
+        modelo="303",
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "3T"),
+        aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+        verified_justificante_csv="ABCDEF1234567890",
+        justificante_verified=True,
+    )
+
+    area = _area(
+        _status(AeatSyncStatusSources(filed_evidence=replace(joined, evidence=(verified,)))),
+        AeatSyncStatusArea.FILED_DECLARATIONS,
+    )
+
+    assert area.filed_rows is not None
+    (row,) = area.filed_rows
+    assert (row.match, row.local_record, row.aeat_shown_at, row.receipt_confirmed) == (
+        AeatSyncFiledMatch.AEAT_ONLY,
+        AeatSyncFiledLocalRecord.NONE,
+        captured_at,
+        True,
+    )
+
+
+def test_no_filed_row_is_served_before_the_register_was_ever_read() -> None:
+    from ...overview.tests.calendar_test_support import modelo_record
+
+    area = _area(
+        _status(
+            AeatSyncStatusSources(
+                filings=(modelo_record(),),
+                filed_evidence=_filed_evidence(None, availability=HomeAvailability.NEVER_CAPTURED),
+            )
+        ),
+        AeatSyncStatusArea.FILED_DECLARATIONS,
+    )
+
+    assert (area.filed_rows, area.filed_periods) == (None, None)
+
+
+@pytest.mark.parametrize(
+    ("match", "local_record", "aeat_shown_at", "differences"),
+    (
+        (AeatSyncFiledMatch.MATCHED, AeatSyncFiledLocalRecord.DRAFT, _NOW, ()),
+        (AeatSyncFiledMatch.AEAT_ONLY, AeatSyncFiledLocalRecord.MARKED_FILED, _NOW, ()),
+        (AeatSyncFiledMatch.LOCAL_ONLY, AeatSyncFiledLocalRecord.MARKED_FILED, _NOW, ()),
+        (AeatSyncFiledMatch.DIFFERING, AeatSyncFiledLocalRecord.NONE, _NOW, ()),
+        (AeatSyncFiledMatch.MATCHED, AeatSyncFiledLocalRecord.MARKED_FILED, _NOW, (AeatSyncFiledDifference.STATUS,)),
+    ),
+    ids=("matched draft", "aeat-only filed", "local-only shown", "differing without what", "matched with a difference"),
+)
+def test_a_filed_row_refuses_a_match_group_its_facts_contradict(
+    match: AeatSyncFiledMatch,
+    local_record: AeatSyncFiledLocalRecord,
+    aeat_shown_at: datetime | None,
+    differences: tuple[AeatSyncFiledDifference, ...],
+) -> None:
+    with pytest.raises(ValidationError):
+        AeatSyncFiledRowV1(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            match=match,
+            local_record=local_record,
+            local_record_at=None if local_record is AeatSyncFiledLocalRecord.NONE else _NOW,
+            aeat_shown_at=aeat_shown_at,
+            differences=differences,
+        )

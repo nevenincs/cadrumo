@@ -58,6 +58,7 @@ if TYPE_CHECKING:
     from ...core.time.utc import UtcInstant
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.filing_record import ModeloRecord
+    from ...domain.modelos.work_unit import WorkUnit
     from ..live.borrador_100 import Borrador100Snapshot
     from ..live.notifications import PersistedNotificationsSnapshot
     from ..live.verify import VerifyObservation
@@ -99,6 +100,7 @@ class AeatSyncStatusPorts:
 
     profile_tax_id: Callable[[], str | None]
     filings: Callable[[], tuple[ModeloRecord, ...]]
+    drafts: Callable[[], tuple[WorkUnit, ...]]
     census_observation: Callable[[], CensalObservation | None]
     calendar_aeat_reader: Callable[[], CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources]]
     filed_attempt: Callable[[], AeatSyncAreaAttempt | None]
@@ -116,6 +118,16 @@ def _require_bucket(bucket_id: str, *stored: str) -> None:
     """Refuse a stored capture that belongs to another profile."""
     if any(owner != bucket_id for owner in stored):
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
+def _notification_capture(snapshot: PersistedNotificationsSnapshot | None) -> AeatSyncNotificationsCapture | None:
+    """Project the stored notification capture into its status counts."""
+    if snapshot is None:
+        return None
+    return AeatSyncNotificationsCapture(
+        captured_at=snapshot.captured_at,
+        unread_count=sum(1 for row in snapshot.rows if row.leida is False),
+    )
 
 
 def load_aeat_sync_status(
@@ -146,6 +158,8 @@ def load_aeat_sync_status(
     filed_areas = (AeatSyncStatusArea.FILED_DECLARATIONS,)
     census = guarded((AeatSyncStatusArea.CENSUS,), ports.census_observation, None)
     filings = guarded(filed_areas, ports.filings, ())
+    drafts = guarded(filed_areas, ports.drafts, ())
+    _require_bucket(bucket_id, *(record.bucket_id for record in filings), *(unit.bucket_id for unit in drafts))
     evidence = (
         None
         if AeatSyncStatusArea.FILED_DECLARATIONS in unreadable
@@ -170,16 +184,10 @@ def load_aeat_sync_status(
     sources = AeatSyncStatusSources(
         census_observation=census,
         filings=filings,
+        drafts=drafts,
         filed_evidence=evidence,
         filed_attempt=guarded(filed_areas, ports.filed_attempt, None),
-        notifications=(
-            None
-            if notifications is None
-            else AeatSyncNotificationsCapture(
-                captured_at=notifications.captured_at,
-                unread_count=sum(1 for row in notifications.rows if row.leida is False),
-            )
-        ),
+        notifications=_notification_capture(notifications),
         iva_wallet_captured_at=guarded((AeatSyncStatusArea.IVA_WALLET,), ports.iva_wallet_captured_at, None),
         borrador_imported_at=max((snapshot.captured_at for snapshot in borrador), default=None),
         identity_checked_at=max((observation.checked_at for observation in identity), default=None),

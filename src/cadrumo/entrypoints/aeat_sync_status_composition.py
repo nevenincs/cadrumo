@@ -82,6 +82,11 @@ def compose_aeat_sync_status_ports(
     def filings():
         return tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load_revisioned()[0].records.values())
 
+    def drafts():
+        from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+
+        return tuple(WorkUnitCatalogueRepository(bucket_id=bucket_id, objects=objects()).load())
+
     def latest_notifications():
         return NotificationsService(ports=compose_notifications_ports(settings=settings)).latest(bucket_id=bucket_id)
 
@@ -98,6 +103,7 @@ def compose_aeat_sync_status_ports(
     return AeatSyncStatusPorts(
         profile_tax_id=profile_tax_id,
         filings=filings,
+        drafts=drafts,
         census_observation=lambda: asyncio.run(read_stored_censal_observation(UUID(bucket_id))),
         calendar_aeat_reader=compose_calendar_aeat_reader(operation),
         filed_attempt=filed_attempt,

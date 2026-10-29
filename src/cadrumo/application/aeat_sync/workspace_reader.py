@@ -19,13 +19,16 @@ which is what makes the destination worth reaching in a fresh session.
 
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ...core.errors.hierarchy import InternalInvariantError
+from ...core.period import PeriodKind, registry_period_kind
 from ...domain.modelos.codes import ModeloCode
+from ...domain.modelos.work_unit import WorkUnitState
 from ..modelo.reconciliation_records import ModeloReconciliationRecord
 from ..operations.models import OperationDefinitionId
 from ..operator_actions.catalogue import OPERATOR_ACTION_CATALOGUE
@@ -43,7 +46,11 @@ from .workspace import (
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
     AeatSyncDiscrepancyKind,
+    AeatSyncFiledDifference,
+    AeatSyncFiledLocalRecord,
+    AeatSyncFiledMatch,
     AeatSyncFiledPeriodCountsV1,
+    AeatSyncFiledRowV1,
     AeatSyncJustificanteState,
     AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
@@ -71,6 +78,7 @@ if TYPE_CHECKING:
     from ...core.period import Period
     from ...core.time.utc import UtcInstant
     from ...domain.modelos.filing_record import ModeloRecord
+    from ...domain.modelos.work_unit import WorkUnit
     from ..operations.registry import OperationPublicContractSetV1, OperationPublicDefinitionContractV1
     from ..overview.calendar_models import OverviewCalendarFilingEvidence
     from ..overview.evidence import CalendarEvidenceProjection
@@ -792,6 +800,7 @@ class AeatSyncStatusSources:
 
     census_observation: CensalObservation | None = None
     filings: tuple[ModeloRecord, ...] = ()
+    drafts: tuple[WorkUnit, ...] = ()
     filed_evidence: CalendarEvidenceProjection | None = None
     filed_attempt: AeatSyncAreaAttempt | None = None
     notifications: AeatSyncNotificationsCapture | None = None
@@ -809,7 +818,7 @@ def _area_status(
     refusal: NamespacedId | None = None,
     attempt: AeatSyncAreaAttempt | None = None,
     unread_notification_count: int | None = None,
-    filed_periods: AeatSyncFiledPeriodCountsV1 | None = None,
+    filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None,
 ) -> AeatSyncAreaStatusV1:
     """Judge one area against its backend-owned horizon.
 
@@ -844,44 +853,109 @@ def _area_status(
         last_attempt_at=last_attempt_at,
         last_attempt_succeeded=last_attempt_succeeded,
         unread_notification_count=unread_notification_count,
-        filed_periods=filed_periods,
+        filed_periods=None if filed_rows is None else _filed_period_counts(filed_rows),
+        filed_rows=filed_rows,
     )
 
 
-def _filed_period_counts(
-    filings: tuple[ModeloRecord, ...],
+def _contested_filings(
     filed_evidence: CalendarEvidenceProjection | None,
-) -> AeatSyncFiledPeriodCountsV1:
-    """Partition every period either side knows into matched, AEAT-only, local-only and differing."""
-    local = _latest_filings(filings).keys()
-    observed = _observed_filings(filed_evidence).keys()
-    differing = _contested_filings(filed_evidence)
-    return AeatSyncFiledPeriodCountsV1(
-        matched=len(local & observed),
-        aeat_only=len(observed - local),
-        local_only=len(local - observed - differing),
-        differing=len(differing),
-    )
-
-
-def _contested_filings(filed_evidence: CalendarEvidenceProjection | None) -> frozenset[_NaturalKey]:
+) -> dict[_NaturalKey, OverviewCalendarFilingEvidence]:
     """Index the filings the register shows with evidence that conflicts or raises a concern."""
     if filed_evidence is None:
-        return frozenset[_NaturalKey]()
-    contested: set[_NaturalKey] = set()
-    for row in filed_evidence.evidence:
-        modelo = row.modelo
-        filing_year = row.filing_year
-        period = row.period
-        if (
-            modelo is not None
-            and filing_year is not None
-            and period is not None
-            and row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
-            and not row.aeat_filed
-        ):
-            contested.add((modelo, filing_year, period.registry_token))
-    return frozenset(contested)
+        return {}
+    return {
+        (row.modelo, row.filing_year, row.period.registry_token): row
+        for row in filed_evidence.evidence
+        if row.modelo is not None
+        and row.filing_year is not None
+        and row.period is not None
+        and row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
+        and not row.aeat_filed
+    }
+
+
+def _open_drafts(drafts: tuple[WorkUnit, ...]) -> dict[_NaturalKey, UtcInstant]:
+    """Index when each declaration's open work units last changed."""
+    latest: dict[_NaturalKey, UtcInstant] = {}
+    for unit in drafts:
+        if unit.state is not WorkUnitState.BORRADOR:
+            continue
+        key = (str(unit.modelo), unit.filing_year, unit.period.registry_token)
+        current = latest.get(key)
+        if current is None or unit.updated_at > current:
+            latest[key] = unit.updated_at
+    return latest
+
+
+def _filed_match(
+    key: _NaturalKey,
+    *,
+    record: ModeloRecord | None,
+    observed: Mapping[_NaturalKey, OverviewCalendarFilingEvidence],
+    contested: Mapping[_NaturalKey, OverviewCalendarFilingEvidence],
+) -> AeatSyncFiledMatch:
+    if key in contested:
+        return AeatSyncFiledMatch.DIFFERING
+    if key in observed:
+        return AeatSyncFiledMatch.AEAT_ONLY if record is None else AeatSyncFiledMatch.MATCHED
+    return AeatSyncFiledMatch.LOCAL_ONLY
+
+
+def _filed_rows(
+    sources: AeatSyncStatusSources,
+    *,
+    aeat_shown_at: UtcInstant,
+) -> tuple[AeatSyncFiledRowV1, ...]:
+    """Set every declaration either side knows against the other, one row each.
+
+    The AEAT side is the shared calendar evidence join over stored register
+    captures; the local side is the latest filing record per declaration, or
+    else an open draft. A draft alone is not a filed declaration and makes no
+    row. Rows the register shows with conflicting or concerning evidence are
+    differing, and what differs is their status.
+    """
+    local = _latest_filings(sources.filings)
+    observed = _observed_filings(sources.filed_evidence)
+    contested = _contested_filings(sources.filed_evidence)
+    drafts = _open_drafts(sources.drafts)
+    rows: list[AeatSyncFiledRowV1] = []
+    for key in sorted(local.keys() | observed.keys() | contested.keys()):
+        record = local.get(key)
+        evidence = observed.get(key) or contested.get(key)
+        match = _filed_match(key, record=record, observed=observed, contested=contested)
+        draft_at = drafts.get(key)
+        if record is not None:
+            local_record, local_at = AeatSyncFiledLocalRecord.MARKED_FILED, record.filed_at
+        elif draft_at is not None:
+            local_record, local_at = AeatSyncFiledLocalRecord.DRAFT, draft_at
+        else:
+            local_record, local_at = AeatSyncFiledLocalRecord.NONE, None
+        rows.append(
+            AeatSyncFiledRowV1(
+                modelo=str(ModeloCode(key[0])),
+                filing_year=key[1],
+                period=None if registry_period_kind(key[2]) is PeriodKind.ANNUAL else key[2],
+                match=match,
+                local_record=local_record,
+                local_record_at=local_at,
+                aeat_shown_at=None if evidence is None else aeat_shown_at,
+                receipt_confirmed=evidence is not None and evidence.justificante_verified,
+                differences=(AeatSyncFiledDifference.STATUS,) if match is AeatSyncFiledMatch.DIFFERING else (),
+            )
+        )
+    return tuple(rows)
+
+
+def _filed_period_counts(rows: tuple[AeatSyncFiledRowV1, ...]) -> AeatSyncFiledPeriodCountsV1:
+    """Count the rows in each match group."""
+    groups = Counter(row.match for row in rows)
+    return AeatSyncFiledPeriodCountsV1(
+        matched=groups[AeatSyncFiledMatch.MATCHED],
+        aeat_only=groups[AeatSyncFiledMatch.AEAT_ONLY],
+        local_only=groups[AeatSyncFiledMatch.LOCAL_ONLY],
+        differing=groups[AeatSyncFiledMatch.DIFFERING],
+    )
 
 
 def _filed_area_status(sources: AeatSyncStatusSources, *, observed_at: UtcInstant) -> AeatSyncAreaStatusV1:
@@ -893,14 +967,14 @@ def _filed_area_status(sources: AeatSyncStatusSources, *, observed_at: UtcInstan
     unreadable = sources.unreadable.get(area)
     if unreadable is None and source.availability not in _READABLE_AVAILABILITIES:
         unreadable = source.refusal
-    counts = None if source.observed_at is None else _filed_period_counts(sources.filings, sources.filed_evidence)
+    rows = None if source.observed_at is None else _filed_rows(sources, aeat_shown_at=source.observed_at)
     return _area_status(
         area,
         observed_at=observed_at,
         captured_at=source.observed_at,
         refusal=unreadable,
         attempt=sources.filed_attempt,
-        filed_periods=counts,
+        filed_rows=rows,
     )
 
 

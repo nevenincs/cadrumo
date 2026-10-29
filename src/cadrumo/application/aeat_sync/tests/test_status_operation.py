@@ -14,6 +14,7 @@ from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.modelos.work_unit import WorkUnit
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotService
 from ...live.notification_ports import NotificationType, RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
@@ -132,6 +133,7 @@ def _ports(
         unbound_calendar_aeat_evidence
     ),
     filed_attempt: Callable[[], AeatSyncAreaAttempt | None] = lambda: None,
+    drafts: Callable[[], tuple[WorkUnit, ...]] = lambda: (),
     latest_notifications: Callable[[], PersistedNotificationsSnapshot | None] = lambda: None,
     iva_wallet_captured_at: Callable[[], datetime | None] = _no_wallet_capture,
     borrador_snapshots: Callable[[], tuple[Borrador100Snapshot, ...]] = lambda: (),
@@ -141,6 +143,7 @@ def _ports(
     return AeatSyncStatusPorts(
         profile_tax_id=profile_tax_id,
         filings=lambda: (),
+        drafts=drafts,
         census_observation=lambda: None,
         calendar_aeat_reader=calendar_aeat_reader,
         filed_attempt=filed_attempt,
