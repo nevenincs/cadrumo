@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a3d93b05b7766c1a4a67f66753f52ddbe8b443cfe41c53fd30d71fcdd365b3c'
+body_hash: 'sha256:b790862c138499094bd11601ae6f0908c001ce49ed01fb77513c57e59ef683ce'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -299,6 +299,21 @@ related:
 - `S16` `A` `native/desktop/frontend/src/components/aeatSync/UnknownWarning.tsx`
 - `S16` `verify:` `npm run check` -> `pass`
 - `S19` `verify:` `playwright aeat-sync 27` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test aeat_sync 37` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test user_profile 30` -> `pass`
+- `S10` `verify:` `just check-rust` -> `pass`
+- `S11` `verify:` `desktop-host-unit-test aeat_sync 37` -> `pass`
+- `S15` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S15` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S15` `verify:` `npm run check` -> `pass`
+- `S15` `verify:` `playwright aeat-sync 27` -> `pass`
+- `S04` `M` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S04` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S04` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S04` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S04` `verify:` `pytest aeat_sync status 143` -> `pass`
+- `S04` `verify:` `just check-style check-format check-types` -> `pass`
+- `S04` `verify:` `lint-imports` -> `pass`
 
 ## Notes
 
