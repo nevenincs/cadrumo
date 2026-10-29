@@ -23,9 +23,10 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.tests.golden_comparison import canonicalise
-from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
+from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
+from dev.temporary_output import prepare_temp_root
 
 from .authority_currency import require_current_authority
 from .compare import check_transcript, evaluate_expectations, validate_live_export_evidence

@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision import strict_cross_revision_casilla_continuity_failures

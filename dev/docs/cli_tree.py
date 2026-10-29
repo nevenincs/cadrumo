@@ -58,7 +58,7 @@ from cadrumo_client.contracts.command_ports import (
     MachineSecretPayloadMetadata,
     ProfileAuthenticationContractMetadata,
 )
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from .cli_reference import _reference_subprocess_environment
 

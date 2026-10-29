@@ -17,8 +17,8 @@ from typing import TypedDict, cast
 from urllib.parse import quote_from_bytes
 from uuid import uuid4
 
-from dev._paths import prepare_temp_root
 from dev.packaging.native.build_directory import require_enrolled_build
+from dev.temporary_output import prepare_temp_root
 
 from .agent import agent_wheel
 from .build_paths import build_paths

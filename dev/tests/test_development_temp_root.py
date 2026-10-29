@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev import _paths
+from dev import temporary_output
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -23,8 +23,8 @@ def _checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     (distribution / "CMakePresets.json").write_text(
         json.dumps({"configurePresets": [{"name": "distribution-windows-x64"}]}), encoding="utf-8"
     )
-    monkeypatch.setattr(_paths, "REPO_ROOT", root)
-    monkeypatch.setattr(_paths, "TEMP_ROOT", root / ".tmp")
+    monkeypatch.setattr(temporary_output, "REPO_ROOT", root)
+    monkeypatch.setattr(temporary_output, "TEMP_ROOT", root / ".tmp")
     monkeypatch.delenv("CADRUMO_TEMP_DIR", raising=False)
     return root
 
@@ -33,7 +33,7 @@ def test_general_temporary_output_uses_only_the_checkout(tmp_path: Path, monkeyp
     root = _checkout(tmp_path, monkeypatch)
     external = tmp_path / "external-scratch"
     monkeypatch.setenv("CADRUMO_TEMP_DIR", str(external))
-    assert _paths.prepare_temp_root() == root / ".tmp"
+    assert temporary_output.prepare_temp_root() == root / ".tmp"
     assert not external.exists()
 
 
@@ -41,7 +41,7 @@ def test_temporary_output_refuses_traversal_before_writing(tmp_path: Path, monke
     root = _checkout(tmp_path, monkeypatch)
     monkeypatch.setenv("CADRUMO_TEMP_DIR", str(root / ".tmp" / ".." / "escaped"))
     with pytest.raises(ValueError, match="escapes"):
-        _paths.prepare_temp_root()
+        temporary_output.prepare_temp_root()
     assert not (root / "escaped").exists()
 
 
@@ -50,7 +50,7 @@ def test_native_temporary_override_requires_its_build_manifest(tmp_path: Path, m
     destination = root / "build" / "windows-x64" / "temporary"
     monkeypatch.setenv("CADRUMO_TEMP_DIR", str(destination))
     with pytest.raises(ValueError, match="manifest"):
-        _paths.prepare_temp_root()
+        temporary_output.prepare_temp_root()
     assert not destination.exists()
 
 
@@ -63,7 +63,7 @@ def test_native_temporary_output_remains_in_the_declared_build(tmp_path: Path, m
     )
     destination = build / "temporary"
     monkeypatch.setenv("CADRUMO_TEMP_DIR", str(destination))
-    assert _paths.prepare_temp_root() == destination
+    assert temporary_output.prepare_temp_root() == destination
     assert not (root / ".tmp").exists()
 
 
@@ -78,10 +78,10 @@ def test_distribution_temporary_output_accepts_its_preset_source_during_configur
         json.dumps({"source": str(root / "native/cmake/distribution"), "paths": {"temporary": "temporary"}}),
         encoding="utf-8",
     )
-    assert _paths.prepare_temp_root(override=build / "temporary") == build / "temporary"
+    assert temporary_output.prepare_temp_root(override=build / "temporary") == build / "temporary"
     manifest.write_text(json.dumps({"source": str(root), "paths": {"temporary": "temporary"}}), encoding="utf-8")
     with pytest.raises(ValueError, match="matching build-path manifest"):
-        _paths.resolve_temporary_output(override=build / "temporary")
+        temporary_output.resolve_temporary_output(override=build / "temporary")
 
 
 def test_unenrolled_build_manifest_cannot_admit_temporary_output(
@@ -94,7 +94,7 @@ def test_unenrolled_build_manifest_cannot_admit_temporary_output(
         json.dumps({"source": str(root), "paths": {"temporary": "temporary"}}), encoding="utf-8"
     )
     with pytest.raises(ValueError, match="matching build-path manifest"):
-        _paths.prepare_temp_root(override=build / "temporary")
+        temporary_output.prepare_temp_root(override=build / "temporary")
     assert not (build / "temporary").exists()
 
 
@@ -106,7 +106,7 @@ def test_linked_temporary_root_is_refused_without_writing_to_its_target(
     outside.mkdir()
     (root / ".tmp").symlink_to(outside, target_is_directory=True)
     with pytest.raises(ValueError, match="link"):
-        _paths.prepare_temp_root()
+        temporary_output.prepare_temp_root()
     assert not list(outside.iterdir())
 
 
@@ -121,5 +121,5 @@ def test_native_temporary_output_cannot_invent_an_undeclared_build_member(
     )
     destination = build / "unregistered"
     with pytest.raises(ValueError, match="declared build member"):
-        _paths.prepare_temp_root(override=destination)
+        temporary_output.prepare_temp_root(override=destination)
     assert not destination.exists()

@@ -44,7 +44,7 @@ from typing import Any, Final
 
 from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from .caller_owned_root import (
     AcceptanceError,

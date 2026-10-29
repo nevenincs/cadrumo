@@ -8,8 +8,9 @@ import tempfile
 from pathlib import Path
 
 from cadrumo.core.storage_environment import STORAGE_ROOT
-from dev._paths import REPO_ROOT, prepare_temp_root
+from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.temporary_output import prepare_temp_root
 
 from .build_paths import docs_build_root, docs_html_root
 from .i18n import TARGET_LANGUAGES

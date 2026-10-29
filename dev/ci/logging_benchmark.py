@@ -26,7 +26,7 @@ from cadrumo.core.logging import (
     shutdown_logging,
 )
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 
 def _handles() -> int | None:

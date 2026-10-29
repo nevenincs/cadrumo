@@ -578,7 +578,7 @@ def main(arguments: list[str] | None = None) -> int:
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    from dev._paths import prepare_temp_root
+    from dev.temporary_output import prepare_temp_root
 
     requested_parent = options.scratch_parent.resolve() if options.scratch_parent is not None else None
     scratch_parent = prepare_temp_root(override=requested_parent)

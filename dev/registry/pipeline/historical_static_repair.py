@@ -20,7 +20,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import AuthoringCandidateInspection, compile_validated_authority, inspect_authoring_candidate
 from ..compiler.identity import RegistryIdentity, resolve_registry_identity

@@ -64,7 +64,7 @@ _SOURCE_ROOT = _REPOSITORY_ROOT / "src"
 if str(_SOURCE_ROOT) not in sys.path:
     sys.path.insert(0, str(_SOURCE_ROOT))
 
-from dev._paths import prepare_temp_root  # noqa: E402
+from dev.temporary_output import prepare_temp_root  # noqa: E402
 
 from cadrumo.core.storage_environment import (  # noqa: E402
     configured_storage_root,

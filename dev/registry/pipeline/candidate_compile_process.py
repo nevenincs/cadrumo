@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 __all__ = [
     "CANDIDATE_COMPILER_MODULE",

@@ -30,10 +30,10 @@ def catalogue_in_localization_scope(catalogue: str, docs_root: Path, pages: set[
     files outside excluded directories. Missing sources remain orphan candidates
     unless their whole top-level tree is outside the translation authority.
     """
-    from dev.docs.i18n import _EXCLUDED_TOP_DIRS
+    from dev.docs.i18n import is_localized_documentation_tree
 
     relative = Path(catalogue)
-    if not relative.parts or relative.parts[0] in _EXCLUDED_TOP_DIRS:
+    if not is_localized_documentation_tree(relative):
         return False
     possible_sources = tuple(relative.with_suffix(suffix) for suffix in (".md", ".rst"))
     return any(path.as_posix() in pages for path in possible_sources) or not any(

@@ -42,9 +42,10 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.toml import parse_toml
 from cadrumo.core.type_guards import is_object_list
 from dev import exit_codes
-from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT, prepare_temp_root
+from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.packaging.playwright_driver import installed_playwright_driver_version
+from dev.temporary_output import prepare_temp_root
 
 #: The only hosts the browser item's archives may be fetched from; the table names them for the engine.
 BROWSER_HOSTS: Final[tuple[str, ...]] = (

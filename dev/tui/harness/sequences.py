@@ -74,12 +74,12 @@ from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIM
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
-from dev._paths import prepare_temp_root
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
 from dev.docs.sequences.runner import executed_sequence_sandbox
 from dev.docs.sequences.sandbox import SANDBOX_PROFILE_LABEL, SequenceSandbox
+from dev.temporary_output import prepare_temp_root
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
 NEXT_PAGE: Final[str] = "next-page"

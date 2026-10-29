@@ -39,7 +39,7 @@ import sysconfig
 import tempfile
 from pathlib import Path
 
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, require, run_cli
 

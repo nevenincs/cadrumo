@@ -19,7 +19,7 @@ from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormLayoutReviewState
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree

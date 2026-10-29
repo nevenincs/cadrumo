@@ -41,7 +41,8 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from dev._paths import REPO_ROOT, prepare_temp_root
+from dev._paths import REPO_ROOT
+from dev.temporary_output import prepare_temp_root
 
 from .errors import SequenceExecutionError
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store

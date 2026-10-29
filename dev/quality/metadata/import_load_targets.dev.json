@@ -1395,6 +1395,7 @@
         "dev.smoke",
         "dev.smoke.smoke_check",
         "dev.source_tree",
+        "dev.temporary_output",
         "dev.test_runs",
         "dev.test_runs.__main__",
         "dev.test_runs.command",

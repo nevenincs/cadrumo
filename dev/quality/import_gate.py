@@ -37,8 +37,9 @@ from typing import Final, cast
 import psutil
 
 from cadrumo.core.storage_environment import resolve_storage_path
-from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
+from dev._paths import REPO_ROOT, UTF_8
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
+from dev.temporary_output import prepare_temp_root
 
 from .import_authority import read_authority
 from .import_check_models import Authority, CheckResult, Finding, ImportOccurrence

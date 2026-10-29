@@ -72,9 +72,10 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
+from dev._paths import REPO_ROOT, UTF_8
 from dev.first_party_source import PRODUCT_PACKAGE
 from dev.product_environment import ambient_product_settings_removed
+from dev.temporary_output import prepare_temp_root
 
 from .build_paths import docs_build_root, docs_html_root
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV

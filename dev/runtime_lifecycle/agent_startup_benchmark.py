@@ -26,7 +26,7 @@ import psutil
 
 from cadrumo_agent_service.installed_client import SERVICE_ID
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from .agent_service_session import (
     _close_holder,

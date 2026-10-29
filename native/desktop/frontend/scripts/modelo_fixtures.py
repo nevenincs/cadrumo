@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
 
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 

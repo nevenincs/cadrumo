@@ -50,7 +50,7 @@ from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
 from cadrumo.core.storage_environment import host_installed_default_root
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 _PROFILE_NAME = "caller-owned-acceptance"
 _READY_SECONDS = 180

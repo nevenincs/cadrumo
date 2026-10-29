@@ -22,7 +22,8 @@ if not (__package__ is not None and __package__):
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from dev._paths import REPO_ROOT, prepare_temp_root
+from dev._paths import REPO_ROOT
+from dev.temporary_output import prepare_temp_root
 
 from .apidocs.manager import API_SOURCE_PACKAGE, API_SOURCE_ROOTS, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin_docs_build_root

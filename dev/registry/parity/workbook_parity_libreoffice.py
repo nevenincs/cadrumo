@@ -20,8 +20,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     WorkbookOutputId,
 )
-from dev._paths import prepare_temp_root
 from dev.packaging.command_execution import CommandResult, run_command
+from dev.temporary_output import prepare_temp_root
 
 from .workbook_parity_models import (
     WorkbookCellRef,

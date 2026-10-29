@@ -24,7 +24,7 @@ from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ._export_tree import render_complete_export_tree

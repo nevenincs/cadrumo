@@ -47,8 +47,9 @@ if not (__package__ is not None and __package__):
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
-from dev._paths import REPO_ROOT, prepare_temp_root
+from dev._paths import REPO_ROOT
 from dev.first_party_source import is_test_source
+from dev.temporary_output import prepare_temp_root
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
 
@@ -161,6 +162,11 @@ def _repo_root() -> Path:
     return REPO_ROOT
 
 
+def is_localized_documentation_tree(relative: Path) -> bool:
+    """Return whether a relative documentation path belongs to a translated tree."""
+    return bool(relative.parts) and relative.parts[0] not in _EXCLUDED_TOP_DIRS
+
+
 def user_scope_source_pages(docs_root: Path) -> list[str]:
     """Return the authored user-scope documentation pages as POSIX docpaths.
 
@@ -185,7 +191,7 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
         if source.suffix not in _DOC_SUFFIXES:
             continue
         relative = source.relative_to(docs_root)
-        if relative.parts[0] in _EXCLUDED_TOP_DIRS:
+        if not is_localized_documentation_tree(relative):
             continue
         if relative.name in _EXCLUDED_FILES or is_test_source(relative):
             continue

@@ -81,7 +81,7 @@ from cadrumo.entrypoints.cli.tests.cli_runner import semantic_cli_text
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from .errors import SequenceExecutionError
 from .sandbox import SequenceSandbox, _publish_replacement_sandbox_profile, sequence_sandbox

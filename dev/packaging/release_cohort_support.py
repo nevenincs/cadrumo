@@ -41,8 +41,9 @@ import zipfile
 from datetime import UTC, datetime
 from pathlib import Path
 
-from dev._paths import REPO_ROOT, prepare_temp_root
+from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.temporary_output import prepare_temp_root
 
 from .acquire_common import venv_bin_dir
 from .cohort_manifest import (

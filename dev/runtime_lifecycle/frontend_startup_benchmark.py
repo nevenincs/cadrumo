@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 from typing import Any, cast
 
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from .caller_owned_root import consumer_environment
 from .proof_support import package_identity

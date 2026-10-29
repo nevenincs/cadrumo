@@ -64,10 +64,11 @@ from typing import Final, TypeGuard
 import grimp
 
 from cadrumo.core.directory_scan import scan_directory
-from dev._paths import REPO_ROOT, prepare_temp_root
+from dev._paths import REPO_ROOT
 from dev.first_party_source import DEVELOPMENT_TOOLING, PRODUCT_PACKAGE, is_test_module_name, is_test_source
 from dev.packaging.command_execution import run_command
 from dev.quality.unread_inputs import report_unread
+from dev.temporary_output import prepare_temp_root
 
 SOURCE_ROOT: Final[Path] = REPO_ROOT / "src"
 ROOT_PACKAGE: Final[str] = "cadrumo"

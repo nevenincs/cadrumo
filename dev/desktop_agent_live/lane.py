@@ -59,7 +59,7 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import httpx
 import psutil
 
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from ..packaging.command_execution import run_command
 from ..runtime_lifecycle.caller_owned_root import AcceptanceError, require

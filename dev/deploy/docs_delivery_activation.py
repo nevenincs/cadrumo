@@ -11,7 +11,6 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from dev._paths import prepare_temp_root
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
     cloudflare_call,
@@ -39,6 +38,7 @@ from dev.deploy.docs_asset_manifest import (
     verify_bytes,
 )
 from dev.deploy.r2_objects import deployment_lock, list_keys, object_inventory, read_object, upload_tree
+from dev.temporary_output import prepare_temp_root
 
 from .docs_delivery_contracts import (
     _CACHE_CONTROL,

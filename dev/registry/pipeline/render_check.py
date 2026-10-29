@@ -62,7 +62,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
-from dev._paths import prepare_temp_root
+from dev.temporary_output import prepare_temp_root
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
