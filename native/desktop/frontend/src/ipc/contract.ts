@@ -1435,7 +1435,7 @@ export interface HostCommands {
       item: number | null;
       /** True once the person was told the part may already have been
        * brought; only then is a part with an unknown outcome read again. */
-      acknowledged_unknown?: boolean;
+      acknowledgedUnknown?: boolean;
     };
     result: null;
   };

@@ -3,17 +3,21 @@ use super::*;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
 
-/// The shipped operation contract manifest, found from the crate upward: the
-/// host tests run in a snapshot of the sources under the build tree, which
-/// sits inside the repository checkout that owns the manifest.
-fn manifest() -> String {
-    let relative = std::path::Path::new("src/cadrumo/_data/operations/contract_manifest.json");
+/// A file of the repository checkout, found from the crate upward: the host
+/// tests run in a snapshot of the sources under the build tree, which sits
+/// inside the checkout.
+fn checkout(relative: &str) -> String {
     let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .map(|directory| directory.join(relative))
         .find(|candidate| candidate.is_file())
-        .expect("the shipped operation contract manifest is above the crate");
+        .unwrap_or_else(|| panic!("{relative} is above the crate"));
     std::fs::read_to_string(path).unwrap()
+}
+
+/// The shipped operation contract manifest.
+fn manifest() -> String {
+    checkout("src/cadrumo/_data/operations/contract_manifest.json")
 }
 
 /// Each shipped definition's contract, by id.
@@ -377,32 +381,37 @@ async fn stop_lets_the_item_in_flight_settle_and_starts_nothing_further() {
     assert_eq!(snapshot.areas[0].state, queue::AreaState::Finished);
 }
 
+/// The item the terminal projection of a capture whose AEAT session ended
+/// with `effect` settles, read as the relay driver reads it.
+fn session_ended(effect: &str) -> Settled {
+    unsucceeded(&projection("refused", effect, Some(table::SESSION_ENDED))).unwrap()
+}
+
 #[tokio::test]
 async fn an_ended_session_pauses_and_resume_starts_from_the_first_item_not_brought() {
     let driver = Scripted::new(|step, times| match step {
         Step::Notifications => Settled::of(Outcome::Unknown),
-        Step::Vat if times == 1 => Settled::of(Outcome::Failed(Reason::SessionEnded)),
+        Step::Discover if times == 1 => session_ended("none"),
         _ => brought(step, times),
     });
     let (run, driver) = follow(&everything(), driver).await;
     assert_eq!(queue::lock(&run).state, RunState::Paused);
     let shown = states(&run);
-    assert!(shown.contains(&(Area::Vat, None, ItemState::Failed)));
-    assert!(shown.contains(&(Area::Filed, None, ItemState::NotStarted)));
+    assert!(shown.contains(&(Area::Vat, None, ItemState::Brought)));
+    assert!(shown.contains(&(Area::Filed, None, ItemState::Failed)));
     let paused = queue::lock(&run).snapshot();
-    assert_eq!(paused.areas[3].items[0].reason, Some(Reason::SessionEnded));
+    assert_eq!(paused.areas[4].items[0].reason, Some(Reason::SessionEnded));
     // A paused run is carried on, not read again part by part.
     assert_eq!(
-        queue::lock(&run).retry(Area::Vat, None, true),
+        queue::lock(&run).retry(Area::Filed, None, true),
         Err(queue::Refusal::Refused)
     );
     assert_eq!(queue::lock(&run).resume(), Ok(true));
     again(&run, &driver).await;
     let ran = driver.ran();
     assert_eq!(
-        ran[5..],
+        ran[6..],
         [
-            Step::Vat,
             Step::Discover,
             filed(2024, &["130", "303"]),
             filed(2025, &["303"]),
@@ -416,6 +425,77 @@ async fn an_ended_session_pauses_and_resume_starts_from_the_first_item_not_broug
     );
     assert_eq!(queue::lock(&run).state, RunState::Done);
     assert!(states(&run).contains(&(Area::Notifications, None, ItemState::Unknown)));
+}
+
+#[tokio::test]
+async fn an_ended_session_pauses_whatever_the_capture_reported_and_resume_reads_again_only_what_kept_nothing()
+ {
+    // Each admitted capture's effect when its session ends: the VAT history
+    // and filed declaration captures may write, so they report unknown before
+    // they read; the checks, notifications and discovery report none until
+    // they write, and unknown or updated after.
+    let cases = [
+        (Step::Verify("live.verify.nif-iva"), "none"),
+        (Step::Verify("live.verify.tgvi"), "none"),
+        (Step::Verify("live.verify.tgvi"), "unknown"),
+        (Step::Notifications, "none"),
+        (Step::Notifications, "unknown"),
+        (Step::Vat, "unknown"),
+        (Step::Discover, "none"),
+        (Step::Discover, "unknown"),
+        (Step::Discover, "updated"),
+        (filed(2024, &["130", "303"]), "unknown"),
+        (filed(2024, &["130", "303"]), "partial"),
+    ];
+    for (ends, effect) in cases {
+        let case = format!("{ends:?} {effect}");
+        let target = ends.clone();
+        let driver = Scripted::new(move |step, times| {
+            if *step == target && times == 1 {
+                session_ended(effect)
+            } else {
+                brought(step, times)
+            }
+        });
+        let (run, driver) = follow(&everything(), driver).await;
+        assert_eq!(queue::lock(&run).state, RunState::Paused, "{case}");
+        assert_eq!(
+            driver.ran().last(),
+            Some(&ends),
+            "{case}: nothing after it ran"
+        );
+        assert!(
+            states(&run)
+                .iter()
+                .all(|(_, _, state)| *state != ItemState::Waiting),
+            "{case}"
+        );
+        assert_eq!(queue::lock(&run).resume(), Ok(true), "{case}");
+        again(&run, &driver).await;
+        assert_eq!(queue::lock(&run).state, RunState::Done, "{case}");
+        let kept_nothing = effect == "none";
+        let times = driver.ran().iter().filter(|s| **s == ends).count();
+        assert_eq!(times, if kept_nothing { 2 } else { 1 }, "{case}");
+        let not_brought: Vec<_> = states(&run)
+            .into_iter()
+            .filter(|(_, _, state)| *state != ItemState::Brought)
+            .map(|(_, _, state)| state)
+            .collect();
+        let expected = if kept_nothing {
+            vec![]
+        } else {
+            vec![ItemState::Unknown]
+        };
+        assert_eq!(not_brought, expected, "{case}");
+        // The resume carried on with every item after it; the years a
+        // discovery that may have kept something would find stay unread.
+        let later = driver.ran().contains(&filed(2025, &["303"]));
+        assert_eq!(
+            later,
+            kept_nothing || !matches!(ends, Step::Discover),
+            "{case}"
+        );
+    }
 }
 
 #[tokio::test]
@@ -474,32 +554,6 @@ async fn a_sign_out_ends_the_driver_without_running_anything_further() {
     assert!(queue::lock(&run).claim(), "the queue is released");
 }
 
-#[tokio::test]
-async fn an_ended_session_that_may_have_kept_something_is_unknown_and_never_resumed() {
-    // The VAT capture ended its session after keeping a part: the run does
-    // not pause there, and the item is never read again by itself.
-    let ended = |effect: &str| {
-        table::terminal(&projection("refused", effect, Some(table::SESSION_ENDED))).unwrap()
-    };
-    let driver = Scripted::new(move |step, times| match step {
-        Step::Vat => Settled::of(ended("partial")),
-        Step::Discover if times == 1 => Settled::of(ended("none")),
-        _ => brought(step, times),
-    });
-    let (run, driver) = follow(&everything(), driver).await;
-    assert_eq!(queue::lock(&run).state, RunState::Paused);
-    let paused = states(&run);
-    assert!(paused.contains(&(Area::Vat, None, ItemState::Unknown)));
-    assert!(paused.contains(&(Area::Filed, None, ItemState::Failed)));
-    assert_eq!(queue::lock(&run).resume(), Ok(true));
-    again(&run, &driver).await;
-    let ran = driver.ran();
-    assert_eq!(ran.iter().filter(|s| **s == Step::Vat).count(), 1);
-    assert_eq!(ran.iter().filter(|s| **s == Step::Discover).count(), 2);
-    assert_eq!(queue::lock(&run).state, RunState::Done);
-    assert!(states(&run).contains(&(Area::Vat, None, ItemState::Unknown)));
-}
-
 #[test]
 fn an_area_is_served_the_worst_of_its_settled_items() {
     let mut run = Run::new(&plan(json!({"areas": ["identity", "notifications"]})));
@@ -520,31 +574,114 @@ fn an_area_is_served_the_worst_of_its_settled_items() {
 fn a_start_keeps_a_run_that_still_moves_and_replaces_only_a_settled_one() {
     let sync = SyncHost::default();
     let ours = json!({"profile_id": "a", "session_id": "1"});
-    assert!(
-        sync.begin(&ours, &everything()),
-        "the first start holds a run"
-    );
-    let first = sync.current(&ours).unwrap();
+    let first = sync
+        .begin(&ours, &everything())
+        .expect("the first start holds a run");
+    assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
     // A second start, as from a second click racing the first, reattaches.
-    assert!(!sync.begin(&ours, &everything()));
+    assert!(sync.begin(&ours, &everything()).is_none());
     assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
-    // A run whose driver still follows it is kept, whatever its state says.
+    // A stop asked for keeps the run until its driver ends it.
     queue::lock(&first).stop();
-    assert!(queue::lock(&first).active(), "its driver has not let go");
-    assert!(!sync.begin(&ours, &everything()));
+    assert!(queue::lock(&first).active());
+    assert!(sync.begin(&ours, &everything()).is_none());
     assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
-    // Once its driver let go of a stopped run, a start holds a fresh one.
+    // Once its driver ended a stopped run, a start holds a fresh one.
     assert_eq!(queue::lock(&first).next(), None);
     assert!(!queue::lock(&first).active());
-    assert!(sync.begin(&ours, &everything()));
-    assert!(!Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
+    let second = sync.begin(&ours, &everything()).unwrap();
+    assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &second));
     // Another session's start replaces this session's run.
     let other = json!({"profile_id": "a", "session_id": "2"});
-    assert!(sync.begin(&other, &everything()));
+    assert!(sync.begin(&other, &everything()).is_some());
     assert!(
         lock(&sync.held)
             .as_ref()
             .is_some_and(|h| h.identity == other)
+    );
+}
+
+#[test]
+fn a_start_as_the_last_item_settles_holds_a_fresh_run() {
+    let sync = SyncHost::default();
+    let ours = json!({"profile_id": "a", "session_id": "1"});
+    let notifications = plan(json!({"areas": ["notifications"]}));
+    let first = sync.begin(&ours, &notifications).unwrap();
+    {
+        let mut run = queue::lock(&first);
+        let (id, _) = run.next().unwrap();
+        run.settle(id, Settled::of(Outcome::Brought));
+        // Its driver has not yet asked for the next item, which ends it.
+        assert_eq!(run.state, RunState::Running);
+        assert!(!run.active());
+    }
+    let fresh = sync
+        .begin(&ours, &notifications)
+        .expect("a finished run is not reattached");
+    assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &fresh));
+    assert_eq!(
+        queue::lock(&fresh).snapshot().areas[0].items[0].state,
+        ItemState::Waiting
+    );
+    // The replaced run's driver still ends it cleanly.
+    assert_eq!(queue::lock(&first).next(), None);
+    assert_eq!(queue::lock(&first).state, RunState::Done);
+}
+
+/// A driver whose item stays in flight until the test lets it settle.
+#[derive(Default)]
+struct Gated {
+    started: tokio::sync::Notify,
+    release: tokio::sync::Notify,
+}
+impl queue::Driver for Gated {
+    async fn run(&self, _: Step) -> Settled {
+        self.started.notify_one();
+        self.release.notified().await;
+        Settled::of(Outcome::Brought)
+    }
+    async fn current(&self) -> bool {
+        true
+    }
+    fn changed(&self) {}
+}
+
+#[tokio::test]
+async fn a_retry_racing_a_start_leaves_the_fresh_run_and_its_driver_alone() {
+    let sync = SyncHost::default();
+    let ours = json!({"profile_id": "a", "session_id": "1"});
+    let notifications = plan(json!({"areas": ["notifications"]}));
+    let old = sync.begin(&ours, &notifications).unwrap();
+    {
+        let mut run = queue::lock(&old);
+        let (id, _) = run.next().unwrap();
+        run.settle(id, Settled::of(Outcome::Unknown));
+        assert_eq!(run.next(), None);
+    }
+    // A start replaces the finished run, and its driver takes the item.
+    let fresh = sync.begin(&ours, &notifications).unwrap();
+    let gated = Arc::new(Gated::default());
+    assert!(sync.follow(&fresh, gated.clone()));
+    gated.started.notified().await;
+    // A retry that read the old run before the start claims it only now.
+    assert_eq!(
+        queue::lock(&old).retry(Area::Notifications, None, true),
+        Ok(true)
+    );
+    assert!(!sync.follow(&old, Arc::new(Scripted::new(brought))));
+    assert!(queue::lock(&old).claim(), "the replaced run is released");
+    // The fresh run's item is still in flight, and settles.
+    assert_eq!(
+        queue::lock(&fresh).snapshot().areas[0].items[0].state,
+        ItemState::Running
+    );
+    gated.release.notify_one();
+    let task = lock(&sync.held).as_mut().unwrap().task.take().unwrap();
+    task.await.unwrap();
+    assert_eq!(queue::lock(&fresh).state, RunState::Done);
+    assert_eq!(
+        queue::lock(&fresh).snapshot().areas[0].items[0].state,
+        ItemState::Brought
     );
 }
 
@@ -651,7 +788,15 @@ fn a_terminal_condition_reads_as_one_outcome() {
         (projection("lost", "none", None), Outcome::Unknown),
     ] {
         assert_eq!(table::terminal(&p), Some(expected), "{p}");
+        let ended = p["refusal_ref"] == table::SESSION_ENDED;
+        assert_eq!(table::session_ended(&p), ended, "{p}");
+        assert_eq!(unsucceeded(&p).unwrap().session_ended, ended, "{p}");
     }
+    assert!(!table::session_ended(&projection(
+        "succeeded",
+        "updated",
+        Some(table::SESSION_ENDED)
+    )));
 }
 
 type Row = (&'static str, Value, Outcome, Value, Outcome);
@@ -1067,4 +1212,156 @@ fn a_filed_row_outside_the_closed_words_is_refused() {
     unseen["aeat_shown_at"] = Value::Null;
     unseen["receipt_confirmed"] = json!(true);
     assert!(filed_rows(&filed_status(unseen)).is_err());
+}
+
+// The window's IPC contract: the argument names it sends each command.
+
+/// `text` split at the commas or semicolons outside any bracket.
+fn top_level(text: &str, separators: &[char]) -> Vec<String> {
+    let (mut parts, mut part, mut depth) = (Vec::new(), String::new(), 0_i32);
+    for c in text.chars() {
+        match c {
+            '(' | '<' | '{' | '[' => depth += 1,
+            ')' | '>' | '}' | ']' => depth -= 1,
+            c if depth == 0 && separators.contains(&c) => {
+                parts.push(std::mem::take(&mut part));
+                continue;
+            }
+            _ => {}
+        }
+        part.push(c);
+    }
+    parts.push(part);
+    parts
+        .into_iter()
+        .map(|p| p.trim().to_owned())
+        .filter(|p| !p.is_empty())
+        .collect()
+}
+
+/// The text inside the brackets that open at `text[open]`.
+fn bracketed(text: &str, open: usize) -> &str {
+    let mut depth = 0;
+    for (index, c) in text[open..].char_indices() {
+        match c {
+            '{' | '(' => depth += 1,
+            '}' | ')' => {
+                depth -= 1;
+                if depth == 0 {
+                    return &text[open + 1..open + index];
+                }
+            }
+            _ => {}
+        }
+    }
+    panic!("unbalanced brackets")
+}
+
+/// Each `aeat_sync_*` command's parameters the window supplies, by name,
+/// with whether it may be left out: the host's own state and window are
+/// injected by Tauri.
+fn host_arguments() -> BTreeMap<String, BTreeMap<String, bool>> {
+    let source = include_str!("mod.rs");
+    let mut commands = BTreeMap::new();
+    for (at, _) in source.match_indices("#[tauri::command]") {
+        let rest = &source[at..];
+        let name_at = rest.find("fn ").unwrap() + 3;
+        let name: String = rest[name_at..]
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+            .collect();
+        let open = name_at + rest[name_at..].find('(').unwrap();
+        let parameters = top_level(bracketed(rest, open), &[','])
+            .into_iter()
+            .filter_map(|parameter| {
+                let (name, kind) = parameter.split_once(':').unwrap();
+                let kind = kind.trim();
+                let injected = kind.starts_with("State<")
+                    || kind.starts_with("tauri::WebviewWindow")
+                    || kind.starts_with("tauri::AppHandle");
+                (!injected).then(|| (name.trim().to_owned(), kind.starts_with("Option<")))
+            })
+            .collect();
+        commands.insert(name, parameters);
+    }
+    commands
+}
+
+/// Each `aeat_sync_*` command's arguments as the window's typed contract
+/// sends them, with whether it may leave them out.
+fn window_arguments() -> BTreeMap<String, BTreeMap<String, bool>> {
+    let contract = checkout("native/desktop/frontend/src/ipc/contract.ts");
+    let mut commands = BTreeMap::new();
+    for (at, _) in contract.match_indices("\n  aeat_sync_") {
+        let rest = &contract[at + 3..];
+        let name: String = rest
+            .chars()
+            .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
+            .collect();
+        let args = &rest[rest.find("args:").unwrap() + 5..];
+        let args = args.trim_start();
+        let mut arguments = BTreeMap::new();
+        if args.starts_with('{') {
+            let mut body = bracketed(args, 0).to_owned();
+            while let Some(start) = body.find("/*") {
+                let end = start + body[start..].find("*/").unwrap() + 2;
+                body.replace_range(start..end, "");
+            }
+            for field in top_level(&body, &[';', ',']) {
+                let (key, _) = field.split_once(':').unwrap();
+                let key = key.trim();
+                let optional = key.ends_with('?');
+                arguments.insert(key.trim_end_matches('?').to_owned(), optional);
+            }
+        } else {
+            assert!(args.starts_with("Record<"), "{name}: {args:.40}");
+        }
+        commands.insert(name, arguments);
+    }
+    commands
+}
+
+/// A Rust parameter name as Tauri binds it from the window by default.
+fn camel(name: &str) -> String {
+    let mut words = name.split('_');
+    let mut camel = words.next().unwrap().to_owned();
+    for word in words {
+        let mut chars = word.chars();
+        if let Some(first) = chars.next() {
+            camel.extend(first.to_uppercase());
+            camel.push_str(chars.as_str());
+        }
+    }
+    camel
+}
+
+#[test]
+fn the_window_sends_each_command_the_argument_names_tauri_binds() {
+    let host = host_arguments();
+    let window = window_arguments();
+    assert!(host.contains_key("aeat_sync_retry"), "{host:?}");
+    assert_eq!(
+        host.keys().collect::<Vec<_>>(),
+        window.keys().collect::<Vec<_>>(),
+        "every command is in the window's contract"
+    );
+    for (command, parameters) in &host {
+        let bound: BTreeMap<String, bool> = parameters
+            .iter()
+            .map(|(name, optional)| (camel(name), *optional))
+            .collect();
+        let sent = &window[command];
+        assert_eq!(
+            bound.keys().collect::<Vec<_>>(),
+            sent.keys().collect::<Vec<_>>(),
+            "{command}: Tauri binds camelCase argument names"
+        );
+        for (name, optional) in &bound {
+            assert!(
+                *optional || !sent[name],
+                "{command}: {name} is required by the host"
+            );
+        }
+    }
+    assert_eq!(camel("acknowledged_unknown"), "acknowledgedUnknown");
 }

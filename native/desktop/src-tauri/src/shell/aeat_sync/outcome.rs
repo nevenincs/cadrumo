@@ -67,8 +67,10 @@ pub(crate) fn terminal(p: &Value) -> Option<Outcome> {
     if p["terminal_condition"] == "succeeded" {
         return None;
     }
-    // A capture may end its session part way, after earlier parts were kept:
-    // only an ended session that kept nothing pauses the run to be read again.
+    // A capture may end its session part way, after earlier parts were kept,
+    // and one that may write reports that before it reads: only an ended
+    // session that kept nothing is read again on resume. Either pauses the
+    // run, which [`session_ended`] tells apart from the item's outcome.
     if p["effect"] != "none" {
         return Some(Outcome::Unknown);
     }
@@ -80,6 +82,12 @@ pub(crate) fn terminal(p: &Value) -> Option<Outcome> {
         Some("failed" | "cancelled" | "interrupted") => Outcome::Failed(Reason::Other),
         _ => Outcome::Unknown,
     })
+}
+
+/// Whether the terminal projection `p` settled because its AEAT session
+/// ended: the run pauses there for a new sign-in, whatever the item's outcome.
+pub(crate) fn session_ended(p: &Value) -> bool {
+    p["terminal_condition"] != "succeeded" && p["refusal_ref"] == SESSION_ENDED
 }
 
 fn count(value: &Value) -> Option<u64> {

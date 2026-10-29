@@ -160,49 +160,76 @@ impl SyncHost {
         held.as_ref().map(|h| h.run.clone())
     }
     /// Holds a fresh run of `plan` for the session `identity` names, under one
-    /// hold of the lock: a run of that session that still moves, or whose
-    /// driver still follows it, is kept and false answered; a run it replaces
-    /// is ended. True when a driver must follow the fresh run.
-    fn begin(&self, identity: &Value, plan: &Plan) -> bool {
+    /// hold of the lock: a run of that session that still moves is kept and
+    /// none answered; a run it replaces is ended. The fresh run is claimed,
+    /// and answered for a driver to follow.
+    fn begin(&self, identity: &Value, plan: &Plan) -> Option<Arc<Mutex<Run>>> {
         let mut held = lock(&self.held);
         if let Some(current) = held.as_ref()
             && current.identity == *identity
             && run::lock(&current.run).active()
         {
-            return false;
+            return None;
         }
         if let Some(mut replaced) = held.take() {
             replaced.end();
         }
         let mut fresh = Run::new(plan);
         fresh.claim();
+        let fresh = Arc::new(Mutex::new(fresh));
         *held = Some(Held {
             identity: identity.clone(),
-            run: Arc::new(Mutex::new(fresh)),
+            run: fresh.clone(),
             task: None,
         });
-        true
+        Some(fresh)
     }
-    /// Follows `run` with a driver loop over the relay for `person`.
-    fn drive(&self, host: &Arc<ProfileHost>, person: HeldPerson, profile: String, identity: Value) {
-        let mut held = lock(&self.held);
-        let Some(current) = held.as_mut().filter(|h| h.identity == identity) else {
-            return;
-        };
+    /// Follows `claimed`, a run whose queue the caller claimed, with a driver
+    /// loop over the relay for `person`.
+    fn drive(
+        &self,
+        host: &Arc<ProfileHost>,
+        person: HeldPerson,
+        profile: String,
+        identity: Value,
+        claimed: &Arc<Mutex<Run>>,
+    ) {
         let driver = Arc::new(RelayDriver {
             host: host.clone(),
             person,
             profile,
             identity,
         });
-        if let Some(task) = current.task.take() {
-            task.abort();
-        }
+        self.follow(claimed, driver);
+    }
+    /// Spawns `driver` over `claimed` while it is still the held run. A run a
+    /// start replaced since it was claimed is released instead, so a retry
+    /// racing a start leaves the fresh run and its driver alone. A previous
+    /// loop of the same run released its claim before this one was made and
+    /// ends by itself, so it is not aborted. True when a driver follows it.
+    fn follow<D: run::Driver>(&self, claimed: &Arc<Mutex<Run>>, driver: Arc<D>) -> bool {
+        let mut held = lock(&self.held);
+        let Some(current) = held.as_mut().filter(|h| Arc::ptr_eq(&h.run, claimed)) else {
+            drop(held);
+            run::lock(claimed).release();
+            return false;
+        };
         current.task = Some(tauri::async_runtime::spawn(run::drive(
-            current.run.clone(),
+            claimed.clone(),
             driver,
         )));
+        true
     }
+}
+
+/// How the terminal projection `p` settles its item when it did not succeed;
+/// none for a success, whose result is read.
+fn unsucceeded(p: &Value) -> Option<Settled> {
+    outcome::terminal(p).map(|outcome| Settled {
+        outcome,
+        session_ended: outcome::session_ended(p),
+        ..Settled::default()
+    })
 }
 
 /// The relay side of the run: each item submitted, followed and read through
@@ -243,8 +270,8 @@ impl RelayDriver {
         let Ok(p) = relay::follow(&mut events, &relayed, |_| false).await else {
             return (Settled::of(Outcome::Unknown), None);
         };
-        if let Some(settled) = outcome::terminal(&p) {
-            return (Settled::of(settled), None);
+        if let Some(settled) = unsucceeded(&p) {
+            return (settled, None);
         }
         let Ok(document) = relay::result(&relayed).await else {
             return (Settled::of(Outcome::Unknown), None);
@@ -726,8 +753,8 @@ pub async fn aeat_sync_start(
     let person = held(&host, &profile).await?;
     let identity = relay::identity(&person).await?;
     let sync = host.aeat_sync();
-    if sync.begin(&identity, &plan) {
-        sync.drive(&host, person, profile, identity);
+    if let Some(fresh) = sync.begin(&identity, &plan) {
+        sync.drive(&host, person, profile, identity, &fresh);
         sync.changed();
     }
     Ok(())
@@ -822,7 +849,8 @@ pub async fn aeat_sync_retry(
         .retry(area, item, acknowledged_unknown == Some(true))
         .map_err(refusal)?;
     if follow {
-        host.aeat_sync().drive(&host, person, profile, identity);
+        host.aeat_sync()
+            .drive(&host, person, profile, identity, &run);
     }
     host.aeat_sync().changed();
     Ok(())
@@ -836,7 +864,8 @@ pub async fn aeat_sync_resume(host: State<'_, Arc<ProfileHost>>, profile: String
     let run = run.ok_or_else(|| bare("refused"))?;
     let follow = run::lock(&run).resume().map_err(refusal)?;
     if follow {
-        host.aeat_sync().drive(&host, person, profile, identity);
+        host.aeat_sync()
+            .drive(&host, person, profile, identity, &run);
     }
     host.aeat_sync().changed();
     Ok(())

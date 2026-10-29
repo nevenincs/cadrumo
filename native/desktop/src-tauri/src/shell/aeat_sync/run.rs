@@ -41,6 +41,8 @@ pub(crate) struct Settled {
     pub(crate) discovered: Option<BTreeMap<u16, BTreeSet<String>>>,
     /// For the census: its comparison waits for the person.
     pub(crate) review_pending: bool,
+    /// Its AEAT session ended: the run pauses at it, whatever its outcome.
+    pub(crate) session_ended: bool,
 }
 impl Settled {
     pub(crate) fn of(outcome: Outcome) -> Self {
@@ -256,13 +258,19 @@ impl Run {
         }
     }
 
-    /// Whether the run still moves: a driver follows it or may be asked to.
+    /// Whether the run still moves: it waits for a resume, or an item is in
+    /// flight or waits its turn. A run whose last item settled is finished
+    /// even before its driver lets go, so a start then holds a fresh one.
     pub(crate) fn active(&self) -> bool {
-        self.driving
-            || matches!(
-                self.state,
-                RunState::Running | RunState::Stopping | RunState::Paused
-            )
+        match self.state {
+            RunState::Paused => true,
+            RunState::Running | RunState::Stopping => self
+                .areas
+                .iter()
+                .flat_map(|area| area.items.iter())
+                .any(|item| matches!(item.state, ItemState::Waiting | ItemState::Running)),
+            RunState::Stopped | RunState::Done => false,
+        }
     }
 
     /// Claims the queue for one driver loop; false when one already follows it.
@@ -310,10 +318,10 @@ impl Run {
     }
 
     /// Records how item `id` settled. An ended AEAT session pauses the run at
-    /// that item; a discovery is replaced by one item per year it found.
+    /// that item, whatever its outcome; a discovery is replaced by one item
+    /// per year it found.
     pub(crate) fn settle(&mut self, id: u32, settled: Settled) {
         let mut fresh: Option<(usize, Parts)> = None;
-        let mut pause = false;
         let Some((index, item)) = self.areas.iter_mut().enumerate().find_map(|(index, area)| {
             area.items
                 .iter_mut()
@@ -330,7 +338,11 @@ impl Run {
             counts,
             discovered,
             review_pending,
+            session_ended,
         } = settled;
+        // An ended session pauses the run whatever the item kept: an item that
+        // kept nothing is read again on resume, and an unknown one never is.
+        let pause = session_ended || outcome == Outcome::Failed(Reason::SessionEnded);
         match (&item.step, outcome, discovered) {
             (Step::Discover, Outcome::Brought | Outcome::NothingFound, Some(found)) => {
                 let parts = found
@@ -351,7 +363,6 @@ impl Run {
                 };
                 item.state = state;
                 item.reason = reason;
-                pause = reason == Some(Reason::SessionEnded);
             }
         }
         if pause {

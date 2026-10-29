@@ -171,7 +171,7 @@ export function tauriHost(): Host {
           profile,
           area,
           item: part,
-          acknowledged_unknown: acknowledgedUnknown,
+          acknowledgedUnknown,
         }).then(() => undefined),
       pickBorrador: () => call("aeat_sync_borrador_pick", {}),
       importBorrador: (profile, file, year) =>
@@ -187,7 +187,7 @@ export function tauriHost(): Host {
           profile,
           area,
           item,
-          acknowledged_unknown: acknowledgedUnknown,
+          acknowledgedUnknown,
         }).then(() => undefined),
       resume: (profile) =>
         call("aeat_sync_resume", { profile }).then(() => undefined),
