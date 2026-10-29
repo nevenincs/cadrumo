@@ -529,6 +529,7 @@ def portable_human_cli_runtime(
     stop, boot = Event(), uuid4()
     login = _Login(listener.owner, str(uuid4()))
     native = MemoryNativePort() if native_store is None else native_store
+    test_context = copy_context()
     profiles = RuntimeProfileConnections(
         storage_root=root,
         storage_identity=listener.storage_identity,
@@ -536,6 +537,8 @@ def portable_human_cli_runtime(
         stop=stop,
         capture_login=lambda _: login,
         secret_store=lambda: native,
+        # Login proof threads must observe the same replay clock as the owned worker.
+        wall_clock=lambda: test_context.copy().run(now),
     )
     server = _ContextServer(
         listener,
@@ -545,7 +548,7 @@ def portable_human_cli_runtime(
         boot_id=boot,
         authority_generation=published_authority_generation(),
     )
-    server.test_context = copy_context()
+    server.test_context = test_context
     owner = NativeRuntimeFixtureOwner(listener, stop, timeout=20)
     primary: BaseException | None = None
     with portable_password_custody(), pytest.MonkeyPatch.context() as patch:

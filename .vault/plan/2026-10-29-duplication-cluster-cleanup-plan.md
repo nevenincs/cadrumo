@@ -12,7 +12,7 @@ related:
   - '[[2026-10-02-duplication-remediation-plan]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:a4cb9c921f2bfbaa218e57addc0e38e6b1a56f8b6ee3b7c1815b25ec60500427'
+body_hash: 'sha256:da70bc8704b5befbb60dfd19de4ff1f41857b3b1d28ef26d24fa8870a6cf5d9e'
 ---
 
 # `duplication-cluster-cleanup` plan
@@ -39,6 +39,7 @@ The accepted canonical-module decision governs all extraction and atomic consume
 - [x] `S06` - Share explicit-kind cleanup matching, durable intent preparation and its ambient storage/mutation scope; `src/cadrumo/application/auth/operator_cleanup.py, operator_revocation.py, new auth/tests/test_operator_cleanup_matching.py and adapters/persistence/profile/tests/test_operator_transaction_recovery.py for the proven writer-ready synchronization repair`.
 - [x] `S07` - Correct the reader-consumer negative oracle to require the actual refusal evidence mismatch; `src/cadrumo/entrypoints/tests/test_reader_consumer_gating.py wrong-code assertion, matching explanation and targeted verification`.
 - [x] `S08` - Align the ledger reader-refusal presentation assertion with the categorized localized CLI contract; `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py refusal text assertion only and owning verification`.
+- [x] `S09` - Propagate the portable runtime test clock through the existing public wall-clock port; `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py captured test context and wall_clock wiring only`.
 
 ## Parallelization
 

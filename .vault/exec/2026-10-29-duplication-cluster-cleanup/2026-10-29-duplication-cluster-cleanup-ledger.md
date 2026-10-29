@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:450eacbc9602767712f0930116c43b0cb8adbd278382dc17e9dd38da4d5000e3'
+body_hash: 'sha256:c78b49487de355588845b4c06c262099f907437a67315a5e7f89d850e1a33a86'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -74,6 +74,11 @@ related:
 - `S08` `verify:` `ledger reader refusal settlement owning integration module pytest 4 cases` -> `pass`
 - `S08` `verify:` `scoped Ruff format and Windows ty` -> `pass`
 - `S08` `by:` `Terra 6.1 xhigh`
+- `S09` `M` `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py`
+- `S09` `verify:` `export result surface parity owning module 3 cases plus human expiry deadline control 1 case` -> `pass`
+- `S09` `verify:` `three additional M303 export parity and refusal cases after clock fix` -> `pass`
+- `S09` `verify:` `fixture Ruff format and Windows ty` -> `pass`
+- `S09` `by:` `Sol 6.1 high`
 
 ## Notes
 
@@ -87,3 +92,4 @@ related:
 - `S02` Independent final review found the newly added absolute test import contradicted the active relative-import rule. Corrected only that import spelling and sorted position; production and scanner controls unchanged.
 - `S04` S04 checkpoint also adopted a concurrent foreign ViewDownstreamReader test-support import migration. Targeted postimage rerun passed26; relay/helper/admission hashes unchanged during rerun. Existing worker-loss background thread `runtime_connection_closed` warning remained visible.
 - `S08` Original failure was only the stale first-line text prefix. Expected full categorized line is independently grounded in English locale and registered REFUSED rendering; preceding ordinary notices remain allowed. PDB was diagnostic only, not passing evidence. All typed verdict, no-model-run, settlement, exit and no-desktop assertions preserved.
+- `S09` Original five export failures stopped at CLI `session_expired` before intended assertions: login thread read real time while test proof used frozen time. Existing public `wall_clock` port now reads captured context through a fresh copy per call. Production authentication thresholds and expiry logic unchanged; explicit `SESSION_EXPIRED` negative control passed. A separate acquisition fixture failure in the four-node probe remains separately triaged.
