@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:7409550a2d84864fa15bd9cdb159586881f60ce51d7f2d99c2f0d0bd82c01efb'
+body_hash: 'sha256:451075f2d0cdb2d5115c8a163d9b9a47d1a5bfacac456e3b653f896dc7ce0477'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -174,6 +174,29 @@ related:
 - `S07` `verify:` `pytest touched areas 152` -> `pass`
 - `S07` `verify:` `just check-types` -> `pass`
 - `S08` `verify:` `desktop-host-unit-test aeat_sync 11 of 11` -> `pass`
+- `S23` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.stories.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S23` `A` `native/desktop/frontend/tests/scenarios/censo-modelo.spec.ts`
+- `S23` `M` `native/desktop/frontend/src/App.tsx`
+- `S23` `verify:` `playwright censo-modelo censo-palette modelo-declarations` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/AeatSyncPageFlow.stories.tsx`
+- `S16` `D` `native/desktop/frontend/src/dev/aeatSyncResultsWords.ts`
+- `S16` `D` `native/desktop/frontend/src/dev/aeatSyncRunWords.ts`
+- `S16` `M` `native/desktop/frontend/src/App.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.stories.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.stories.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncResults.stories.tsx`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S16` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S16` `verify:` `npm run check` -> `pass`
+- `S16` `verify:` `playwright aeat-sync user-profile censo-palette navigation-register 65` -> `pass`
 
 ## Notes
 
@@ -189,3 +212,5 @@ related:
 - `S15` views built and in Storybook; not yet mounted; host lacks resume and `acknowledged_unknown`
 - `S16` census routed via onReviewCensus; borrador import wired to port only; not yet mounted
 - `S07` manifest regenerated content landed in 29d0663d16 by another session; session-ended is a plain refusal so it is not a declared refusal-detail code in the manifest; en cli.yml line uncommitted (foreign hunks); remaining gate failures are in other sessions' dev/locales and dev/docs files and the live.sede.view conformance case
+- `S23` App.tsx onCensus hunk lands with the screen-connection commit; census reattach across profile remount unproven (useCensoSync has no status read on mount) - for P06.S24
+- `S16` screens connected into one page flow; stopgap word tables removed; includes the Modelo census App.tsx hunk
