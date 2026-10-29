@@ -16,8 +16,6 @@ You need:
   and at least one transaction in its records to classify. See
   [Import and manage transactions](import-bank-statements.md).
 - Your passphrase. The command opens your encrypted records, so it prompts for the passphrase.
-- The `llm` extra, installed through your install channel, for example
-  `pip install "cadrumo[llm]"`.
 - A model chosen for each reader role, as the next section describes.
 
 The examples in this documentation are recorded in English. `aeat` prints its

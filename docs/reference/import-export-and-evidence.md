@@ -45,7 +45,7 @@ stock inventory for the year, calculation warns and the boxes stay 0.
   - XLSX, but not legacy XLS
   - OFX or QFX when the optional OFX dependency is installed
   - PDF statements from any bank, read on your computer by the local language
-    model when the `llm` extra is installed; only movements whose date and
+    model chosen in the Cadrumo agent; only movements whose date and
     amount are printed on one line are kept, and printed balances must add up
 
   These become normalized transactions in your records, not tax-return values

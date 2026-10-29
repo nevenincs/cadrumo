@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 13:43+0100\n"
+"POT-Creation-Date: 2026-10-29 15:23+0100\n"
 "PO-Revision-Date: 2026-07-19 10:00+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -140,10 +140,6 @@ msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx` - OFX- és QFX-bankkivonat-import."
 
 #: ../../workstation-setup.md:60
-msgid "`llm` - on-host document reading through the local AI."
-msgstr "`llm` - dokumentumok olvasása a helyi gépen, a helyi MI-vel."
-
-#: ../../workstation-setup.md:61
 msgid ""
 "`pdf` - writing the calculation-summary PDF. Reading and verifying a "
 "summary needs no extra."
@@ -151,11 +147,11 @@ msgstr ""
 "`pdf` - a számítási összesítő PDF megírása. Az összesítő olvasásához és "
 "ellenőrzéséhez nincs szükség extrára."
 
-#: ../../workstation-setup.md:63
+#: ../../workstation-setup.md:62
 msgid "`all` - every extra in this list."
 msgstr "`all` - a listában szereplő összes extra."
 
-#: ../../workstation-setup.md:65
+#: ../../workstation-setup.md:64
 msgid ""
 "Name the extras you need when you install: in your channel's install "
 "command, write the package as `cadrumo[google,browser]` instead of "
@@ -170,7 +166,7 @@ msgstr ""
 "extrákat a `uv sync --extra google --extra browser` paranccsal adhatod "
 "hozzá."
 
-#: ../../workstation-setup.md:70
+#: ../../workstation-setup.md:69
 msgid ""
 "Install a missing extra by repeating your channel's install command with "
 "that extra named."
@@ -178,11 +174,11 @@ msgstr ""
 "A hiányzó extrát úgy telepítheted, hogy megismétled a csatornád "
 "telepítési parancsát, megadva az adott extrát."
 
-#: ../../workstation-setup.md:73
+#: ../../workstation-setup.md:72
 msgid "Connect an AI assistant"
 msgstr "AI-asszisztens csatlakoztatása"
 
-#: ../../workstation-setup.md:75
+#: ../../workstation-setup.md:74
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -198,7 +194,7 @@ msgstr ""
 "elérési utadon. Forráskód-munkapéldányban ezzel ellenőrizd a telepített "
 "belépési pontot:"
 
-#: ../../workstation-setup.md:86
+#: ../../workstation-setup.md:85
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -206,11 +202,11 @@ msgstr ""
 "Az [Ügynök csatlakoztatása](how-to/connect-an-agent.md) oldal bemutatja "
 "mindkét csatlakozási módot és az engedélykérés folyamatát."
 
-#: ../../workstation-setup.md:89
+#: ../../workstation-setup.md:88
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../workstation-setup.md:91
+#: ../../workstation-setup.md:90
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -218,7 +214,7 @@ msgstr ""
 "[Gyorsindító](how-to/quickstart.md) - az üres profiltól az exportált "
 "modelofájlig."
 
-#: ../../workstation-setup.md:93
+#: ../../workstation-setup.md:92
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -227,10 +223,10 @@ msgstr ""
 "szolgáltatási képességeket (Google-export, LLM-es képfeldolgozás, "
 "felhőbeli bizonyítékfeltöltés)."
 
-#: ../../workstation-setup.md:95
+#: ../../workstation-setup.md:94
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:96
+#: ../../workstation-setup.md:95
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"

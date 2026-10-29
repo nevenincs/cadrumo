@@ -57,7 +57,6 @@ The core install is lean. Each optional extra adds one capability:
 - `google` - Google Drive and Sheets export.
 - `browser` - live AEAT reads through browser automation.
 - `ofx` - OFX and QFX bank-statement import.
-- `llm` - on-host document reading through the local AI.
 - `pdf` - writing the calculation-summary PDF. Reading and verifying a summary
   needs no extra.
 - `all` - every extra in this list.
