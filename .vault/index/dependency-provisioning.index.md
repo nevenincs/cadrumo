@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#dependency-provisioning'
 date: '2026-08-16'
-modified: '2026-10-18'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:c54d21b0a92b7371634c3ed57f213d3a109db9a07b282defaf08c17d2add7d84'
+body_hash: 'sha256:801c6e1e2c796f07beb460d28ba726a42c130ae226ecbb34820f86f0ecef2409'
 related:
   - '[[2026-06-15-dependency-provisioning-adr]]'
   - '[[2026-07-06-dependency-provisioning-research]]'
@@ -24,8 +24,8 @@ Auto-generated index of all documents tagged with `#dependency-provisioning`.
 
 ### adr
 
-- `2026-06-15-dependency-provisioning-adr` - `dependency-provisioning` adr: `Dependency management and graceful degradation: cohesive missing-dependency behaviour, provisioning, and a single doctor` | (**status:** `accepted`)
-- `2026-10-18-dependency-provisioning-unified-setup-adr` - `dependency-provisioning` adr: `One setup system for the local model, the browser and Google` | (**status:** `accepted`)
+- `2026-06-15-dependency-provisioning-adr` - `dependency-provisioning` adr: `Dependency management and graceful degradation: a missing dependency is a typed point-of-use refusal` | (**status:** `accepted`)
+- `2026-10-18-dependency-provisioning-unified-setup-adr` - `dependency-provisioning` adr: `One setup system for the browser and the local AI` | (**status:** `accepted`)
 
 ### exec
 
