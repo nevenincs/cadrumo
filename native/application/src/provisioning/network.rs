@@ -8,6 +8,11 @@
 //! that refuses the tunnel or demands credentials is the network in between. When no host
 //! was even connected and no proxy stood in between, the computer is offline. The
 //! preflight runs on request only, never on a timer, and sends no taxpayer data.
+//!
+//! The 3 s is a bound on the whole host, name resolution included: a resolver that never
+//! answers ends the host as unreachable, and so as offline when no host connected at all.
+//! A cancellation ends the wait for a name at once and stops further addresses; a
+//! connection or answer already under way ends at the same bound.
 
 use super::{
     connection::{Network, Stage},
@@ -16,7 +21,7 @@ use super::{
     pins::ComponentPins,
     url::HttpsUrl,
 };
-use crate::value::HostName;
+use crate::{component::Cancellation, value::HostName};
 use serde::Serialize;
 use std::{
     collections::BTreeSet,
@@ -96,12 +101,18 @@ pub fn item_hosts(pins: &ComponentPins, item: &str) -> Option<BTreeSet<HostName>
     }
 }
 
-/// Checks every host together, each within `timeout`, through `network`.
-pub fn preflight(network: &Network, hosts: &[HostName], timeout: Duration) -> NetworkReport {
+/// Checks every host together, each within `timeout`, through `network`. Once
+/// `cancellation` is cancelled the report is no finding: its hosts read as unreachable.
+pub fn preflight(
+    network: &Network,
+    hosts: &[HostName],
+    timeout: Duration,
+    cancellation: &Cancellation,
+) -> NetworkReport {
     let checks: Vec<HostCheck> = std::thread::scope(|scope| {
         let running: Vec<_> = hosts
             .iter()
-            .map(|host| scope.spawn(move || check(network, host, timeout)))
+            .map(|host| scope.spawn(move || check(network, host, timeout, cancellation)))
             .collect();
         running
             .into_iter()
@@ -133,7 +144,12 @@ pub fn preflight(network: &Network, hosts: &[HostName], timeout: Duration) -> Ne
     NetworkReport { hosts }
 }
 
-fn check(network: &Network, host: &HostName, timeout: Duration) -> HostCheck {
+fn check(
+    network: &Network,
+    host: &HostName,
+    timeout: Duration,
+    cancellation: &Cancellation,
+) -> HostCheck {
     let via_proxy = network.proxied(host.as_str()).is_some();
     let mut answer = HostCheck {
         host: host.clone(),
@@ -146,7 +162,7 @@ fn check(network: &Network, host: &HostName, timeout: Duration) -> HostCheck {
         return answer;
     };
     let deadline = Instant::now() + timeout;
-    let mut stream = match network.open(&url, Some(deadline)) {
+    let mut stream = match network.open_unless_cancelled(&url, Some(deadline), Some(cancellation)) {
         Ok(stream) => stream,
         Err(failure) => {
             answer.connected = failure.connected;
@@ -167,7 +183,8 @@ fn check(network: &Network, host: &HostName, timeout: Duration) -> HostCheck {
     if http::write_request(&mut stream, "HEAD", url.target(), &url.authority(), &[]).is_err() {
         return answer;
     }
-    if let Ok(head) = http::read_head(&mut BufReader::new(stream), &http::never) {
+    let expired = || cancellation.is_cancelled() || Instant::now() >= deadline;
+    if let Ok(head) = http::read_head(&mut BufReader::new(stream), &expired) {
         answer.outcome = Reachability::Reachable;
         answer.status = Some(head.status);
     }
@@ -188,7 +205,7 @@ mod tests {
     };
     use std::{
         net::{SocketAddr, TcpListener},
-        sync::Arc,
+        sync::{Arc, Mutex, mpsc},
     };
 
     fn host(name: &str) -> HostName {
@@ -222,7 +239,12 @@ mod tests {
         ] {
             let server = TlsServer::start(&certificate, answering(status));
             let network = network_to(certificate.roots(), server.address(), None);
-            let report = preflight(&network, &[host("cdn.example.com")], HOST_TIMEOUT);
+            let report = preflight(
+                &network,
+                &[host("cdn.example.com")],
+                HOST_TIMEOUT,
+                &Cancellation::default(),
+            );
             assert_eq!(report.outcome(), Reachability::Reachable, "{status}");
             assert_eq!(report.failure_category(), None);
             assert_eq!(report.hosts[0].status, Some(status[..3].parse().unwrap()));
@@ -245,7 +267,12 @@ mod tests {
             ))
         });
         let network = network_to(certificate.roots(), server.address(), None);
-        let report = preflight(&network, &[host("github.com")], HOST_TIMEOUT);
+        let report = preflight(
+            &network,
+            &[host("github.com")],
+            HOST_TIMEOUT,
+            &Cancellation::default(),
+        );
         assert_eq!(report.outcome(), Reachability::Reachable);
         assert_eq!(report.hosts[0].status, Some(200));
     }
@@ -256,7 +283,12 @@ mod tests {
         let server = TlsServer::start(&certificate, answering("200 OK"));
         let stranger = TestCertificate::new(&["cdn.example.com"]);
         let network = network_to(stranger.roots(), server.address(), None);
-        let report = preflight(&network, &[host("cdn.example.com")], HOST_TIMEOUT);
+        let report = preflight(
+            &network,
+            &[host("cdn.example.com")],
+            HOST_TIMEOUT,
+            &Cancellation::default(),
+        );
         assert_eq!(report.outcome(), Reachability::SecureConnectionFailed);
         assert_eq!(
             report.failure_category(),
@@ -279,7 +311,12 @@ mod tests {
                 server.address(),
                 proxied(proxy.url("")),
             );
-            let report = preflight(&network, &[host("cdn.example.com")], HOST_TIMEOUT);
+            let report = preflight(
+                &network,
+                &[host("cdn.example.com")],
+                HOST_TIMEOUT,
+                &Cancellation::default(),
+            );
             assert_eq!(report.outcome(), outcome, "{status}");
             assert_eq!(report.hosts[0].status, Some(status));
             assert!(report.hosts[0].via_proxy && report.hosts[0].connected);
@@ -290,7 +327,12 @@ mod tests {
             server.address(),
             proxied(proxy.url("")),
         );
-        let report = preflight(&network, &[host("cdn.example.com")], HOST_TIMEOUT);
+        let report = preflight(
+            &network,
+            &[host("cdn.example.com")],
+            HOST_TIMEOUT,
+            &Cancellation::default(),
+        );
         assert_eq!(report.outcome(), Reachability::Reachable);
         assert_eq!(proxy.requests.lock().unwrap().len(), 1);
     }
@@ -302,6 +344,7 @@ mod tests {
             &network_nowhere(certificate.roots()),
             &[host("cdn.example.com"), host("mirror.example.com")],
             HOST_TIMEOUT,
+            &Cancellation::default(),
         );
         assert_eq!(report.outcome(), Reachability::Offline);
         assert!(
@@ -332,6 +375,7 @@ mod tests {
             &network,
             &[host("cdn.example.com"), host("mirror.example.com")],
             HOST_TIMEOUT,
+            &Cancellation::default(),
         );
         assert_eq!(
             report
@@ -346,7 +390,12 @@ mod tests {
 
         let unreachable_proxy = proxied(format!("http://{closed}"));
         let network = network_to(certificate.roots(), closed, unreachable_proxy);
-        let report = preflight(&network, &[host("cdn.example.com")], HOST_TIMEOUT);
+        let report = preflight(
+            &network,
+            &[host("cdn.example.com")],
+            HOST_TIMEOUT,
+            &Cancellation::default(),
+        );
         assert_eq!(
             report.outcome(),
             Reachability::HostUnreachable,
@@ -363,9 +412,103 @@ mod tests {
             &network,
             &[host("cdn.example.com")],
             Duration::from_millis(300),
+            &Cancellation::default(),
         );
         assert_eq!(report.outcome(), Reachability::HostUnreachable);
         assert!(report.hosts[0].connected);
+    }
+
+    /// A resolver that never answers on its own: each lookup reports itself on `entered`
+    /// and then waits until the returned sender is dropped.
+    fn stalled_resolver() -> (Arc<Resolve>, mpsc::Receiver<()>, mpsc::Sender<()>) {
+        let (entered, reached) = mpsc::channel();
+        let (release, released) = mpsc::channel::<()>();
+        let entered = Mutex::new(entered);
+        let released = Mutex::new(released);
+        let resolve: Arc<Resolve> = Arc::new(move |_: &str, _: u16| {
+            entered.lock().unwrap().send(()).unwrap();
+            let _ = released.lock().unwrap().recv();
+            Err(std::io::Error::from(std::io::ErrorKind::NotFound))
+        });
+        (resolve, reached, release)
+    }
+
+    #[test]
+    fn a_resolver_that_never_answers_ends_the_host_at_its_bound() {
+        let certificate = TestCertificate::new(&["cdn.example.com"]);
+        let hosts = [host("cdn.example.com"), host("mirror.example.com")];
+
+        let (resolve, reached, release) = stalled_resolver();
+        let network = Network::with_parts(certificate.roots(), resolve, None);
+        let report = preflight(
+            &network,
+            &hosts,
+            Duration::from_millis(100),
+            &Cancellation::default(),
+        );
+        // The report came back while every lookup was still held, so the bound ended it.
+        reached.recv().unwrap();
+        assert_eq!(report.outcome(), Reachability::Offline);
+        assert_eq!(report.failure_category(), Some(FailureCategory::Offline));
+        assert!(report.hosts.iter().all(|check| !check.connected));
+        drop(release);
+
+        let (resolve, reached, release) = stalled_resolver();
+        let proxy = proxied("http://proxy.example.net:3128".into());
+        let network = Network::with_parts(certificate.roots(), resolve, proxy);
+        let report = preflight(
+            &network,
+            &hosts[..1],
+            Duration::from_millis(100),
+            &Cancellation::default(),
+        );
+        reached.recv().unwrap();
+        assert_eq!(
+            report.outcome(),
+            Reachability::HostUnreachable,
+            "a stalled proxy name proves nothing about the computer"
+        );
+        assert!(report.hosts[0].via_proxy && !report.hosts[0].connected);
+        drop(release);
+    }
+
+    #[test]
+    fn a_cancellation_ends_the_wait_for_a_name_at_once() {
+        let certificate = TestCertificate::new(&["cdn.example.com"]);
+        let (resolve, reached, release) = stalled_resolver();
+        let mut network = Network::with_parts(certificate.roots(), resolve, None);
+        // Only the cancellation can end this wait.
+        network.connect_timeout = Duration::from_secs(3600);
+        let cancellation = Cancellation::default();
+        let report = std::thread::scope(|scope| {
+            let cancelling = &cancellation;
+            scope.spawn(move || {
+                reached.recv().unwrap();
+                cancelling.cancel();
+            });
+            preflight(
+                &network,
+                &[host("cdn.example.com")],
+                Duration::from_secs(3600),
+                &cancellation,
+            )
+        });
+        assert!(cancellation.is_cancelled());
+        assert!(!report.hosts[0].connected);
+        drop(release);
+
+        // A cancellation that came first stops the lookup before it is waited for.
+        let (resolve, _reached, release) = stalled_resolver();
+        let mut network = Network::with_parts(certificate.roots(), resolve, None);
+        network.connect_timeout = Duration::from_secs(3600);
+        let report = preflight(
+            &network,
+            &[host("cdn.example.com")],
+            Duration::from_secs(3600),
+            &cancellation,
+        );
+        assert!(!report.hosts[0].connected);
+        drop(release);
     }
 
     #[test]

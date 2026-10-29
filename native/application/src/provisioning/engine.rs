@@ -625,8 +625,13 @@ impl Engine {
                 step: SetupStep::Plan,
             });
         }
-        if let Some(refusal) = self.preflight(&plan, &sink) {
-            return Report::new(Outcome::Refused, rows)
+        if let Some(refusal) = self.preflight(&plan, &sink, cancellation) {
+            let outcome = if refusal.1 == FailureCategory::Cancelled {
+                Outcome::Cancelled
+            } else {
+                Outcome::Refused
+            };
+            return Report::new(outcome, rows)
                 .for_item(refusal.0, Some(refusal.1))
                 .with_plan(plan);
         }
@@ -912,7 +917,7 @@ impl Engine {
                 .filter(|(_, observation)| **observation != present)
                 .map(|(part, _)| part),
         );
-        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts, Destination::OllamaModels).ok();
+        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).ok();
         Survey { reading, entry }
     }
 
@@ -990,8 +995,16 @@ impl Engine {
                         hosts.extend(self.local_models.hosts());
                     }
                     let hosts: Vec<HostName> = hosts.into_iter().collect();
-                    let report = network::preflight(&self.config.network, &hosts, HOST_TIMEOUT);
-                    survey.reading = survey.reading.held_by_network(&report);
+                    let report = network::preflight(
+                        &self.config.network,
+                        &hosts,
+                        HOST_TIMEOUT,
+                        cancellation,
+                    );
+                    // A check cut short by a cancellation found nothing about the hosts.
+                    if !cancellation.is_cancelled() {
+                        survey.reading = survey.reading.held_by_network(&report);
+                    }
                 }
                 self.row(item, &survey)
             })
@@ -1176,8 +1189,14 @@ impl Engine {
     }
 
     /// Checks the hosts of every planned item that downloads anything; the first item
-    /// whose hosts cannot be reached refuses the setup with its category.
-    fn preflight(&self, plan: &SetupPlan, sink: &Sink<'_>) -> Option<(ItemId, FailureCategory)> {
+    /// whose hosts cannot be reached refuses the setup with its category. A cancellation
+    /// ends the check at once, as the cancelled category.
+    fn preflight(
+        &self,
+        plan: &SetupPlan,
+        sink: &Sink<'_>,
+        cancellation: &Cancellation,
+    ) -> Option<(ItemId, FailureCategory)> {
         for entry in &plan.entries {
             if entry.download_bytes == Some(0) {
                 continue;
@@ -1186,8 +1205,15 @@ impl Engine {
                 item: entry.item,
                 step: SetupStep::Preflight,
             });
-            let report =
-                network::preflight(&self.config.network, &entry.source_hosts, HOST_TIMEOUT);
+            let report = network::preflight(
+                &self.config.network,
+                &entry.source_hosts,
+                HOST_TIMEOUT,
+                cancellation,
+            );
+            if cancellation.is_cancelled() {
+                return Some((entry.item, FailureCategory::Cancelled));
+            }
             if report.outcome() != Reachability::Reachable {
                 return Some((
                     entry.item,

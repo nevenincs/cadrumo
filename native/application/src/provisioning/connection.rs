@@ -8,7 +8,7 @@
 //! consulted.
 
 use super::{http, proxy::ProxySettings, url::HttpsUrl};
-use crate::value::Sha256Digest;
+use crate::{component::Cancellation, value::Sha256Digest};
 use rustls::{ClientConfig, ClientConnection, RootCertStore, StreamOwned, pki_types::ServerName};
 use std::{
     io::{self, BufReader, Read, Write},
@@ -119,6 +119,18 @@ impl Network {
         url: &HttpsUrl,
         deadline: Option<Instant>,
     ) -> Result<TlsStream, ConnectFailure> {
+        self.open_unless_cancelled(url, deadline, None)
+    }
+
+    /// [`Self::open`] that also gives up, as an interrupted resolution or connection,
+    /// once `cancellation` is cancelled: a name lookup waits no longer, and no further
+    /// address is tried. A connection attempt already under way ends at its own bound.
+    pub(crate) fn open_unless_cancelled(
+        &self,
+        url: &HttpsUrl,
+        deadline: Option<Instant>,
+        cancellation: Option<&Cancellation>,
+    ) -> Result<TlsStream, ConnectFailure> {
         let host = url.host().as_str();
         let proxy = self.proxied(host);
         let mut failure = ConnectFailure {
@@ -137,17 +149,25 @@ impl Network {
                 .min(bound),
             None => bound,
         };
-        let addresses =
-            match self.resolved(connect_host, connect_port, remaining(self.connect_timeout)) {
-                Ok(addresses) if !addresses.is_empty() => addresses,
-                Ok(_) => return Err(failure),
-                Err(error) => return Err(failure.with_io(&error)),
-            };
+        let addresses = match self.resolved(
+            connect_host,
+            connect_port,
+            remaining(self.connect_timeout),
+            cancellation,
+        ) {
+            Ok(addresses) if !addresses.is_empty() => addresses,
+            Ok(_) => return Err(failure),
+            Err(error) => return Err(failure.with_io(&error)),
+        };
         failure.stage = Stage::Connect;
         let mut last = None;
         let mut tcp = None;
         for address in addresses {
             let bound = remaining(self.connect_timeout);
+            if cancellation.is_some_and(Cancellation::is_cancelled) {
+                last = Some(io::Error::from(io::ErrorKind::Interrupted));
+                break;
+            }
             if bound.is_zero() {
                 last = Some(io::Error::from(io::ErrorKind::TimedOut));
                 break;
@@ -221,9 +241,22 @@ impl Network {
     }
 
     /// Resolution with a bound: the system resolver cannot be interrupted, so it runs on
-    /// its own thread and an answer that comes too late is dropped with it.
-    fn resolved(&self, host: &str, port: u16, bound: Duration) -> io::Result<Vec<SocketAddr>> {
+    /// its own thread and an answer that comes too late is dropped with it. A
+    /// cancellation ends the wait at once, as an interrupted lookup.
+    fn resolved(
+        &self,
+        host: &str,
+        port: u16,
+        bound: Duration,
+        cancellation: Option<&Cancellation>,
+    ) -> io::Result<Vec<SocketAddr>> {
         let (sender, receiver) = mpsc::channel();
+        let _hook = cancellation.map(|cancellation| {
+            let interrupted = sender.clone();
+            cancellation.on_cancel(Arc::new(move || {
+                let _ = interrupted.send(Err(io::Error::from(io::ErrorKind::Interrupted)));
+            }))
+        });
         let resolve = self.resolve.clone();
         let name = host.to_owned();
         std::thread::Builder::new()
