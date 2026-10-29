@@ -90,8 +90,51 @@ impl Admission {
         LocalModels::new(vec![model]).map_err(|_| unusable())
     }
 
+    /// Every model on the list of a local lane that is turned on, recommended or added:
+    /// the models the person manages here and a removal of the local AI takes with it. A
+    /// model the person keeps off those lists is not among them.
+    pub fn listed(&self) -> Result<LocalModels, Stop> {
+        let lanes = self.lanes()?;
+        let catalogue = self.catalogue()?;
+        let added = self.added_models()?;
+        let mut names: Vec<String> = Vec::new();
+        for lane in lanes
+            .iter()
+            .filter(|lane| lane.auth_kind == AuthKind::Keyless && lane.mode != Mode::Disabled)
+        {
+            let recommended = lane_record(&catalogue, lane)
+                .map(LaneRecord::recommended_models)
+                .unwrap_or_default();
+            let listed = recommended
+                .into_iter()
+                .chain(added.added_to(&lane.id).map(str::to_owned));
+            for name in listed {
+                if !names.contains(&name) {
+                    names.push(name);
+                }
+            }
+        }
+        // A name the engine cannot pull is on no list the engine could have filled.
+        let selected = names
+            .iter()
+            .enumerate()
+            .map(|(index, name)| SelectedModel::new(&format!("listed{index}"), name, None))
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))?;
+        LocalModels::new(selected).map_err(|_| Stop::Refused(Refusal::ModelSelectionUnusable))
+    }
+
     /// Whether the person added `model` to `lane`'s list.
     fn added(&self, lane: &str, model: &str) -> Result<bool, Stop> {
+        Ok(self
+            .added_models()?
+            .added_to(lane)
+            .any(|added| added == model))
+    }
+
+    /// The models the person added to their lanes' lists. A record nobody can read lists
+    /// no model.
+    fn added_models(&self) -> Result<local_models::LocalModels, Stop> {
         let answer = self
             .agent
             .exchange(json!({"action": "local_models"}))
@@ -103,15 +146,13 @@ impl Admission {
                 &answer,
             ));
         }
-        match local_models::parse(&answer) {
-            // A record nobody can read lists no model, so it admits none.
-            Some(listed) => Ok(listed.added_to(lane).any(|added| added == model)),
-            // The service answered, so "not answering" would misname it.
-            None => Err(Stop::Host(
+        // The service answered, so "not answering" would misname a reply outside its contract.
+        local_models::parse(&answer).ok_or_else(|| {
+            Stop::Host(
                 ApplicationError::new(ErrorCode::ReadFailed, Operation::Cli)
                     .with_reason("setup_local_models_contract"),
-            )),
-        }
+            )
+        })
     }
 
     /// Every lane the profile lists, with the kind of access it takes.
@@ -185,6 +226,16 @@ impl LaneRecord<'_> {
         self.recommended
             .as_object()
             .is_some_and(|recommended| recommended.values().any(|named| named == model))
+    }
+
+    /// The models the catalogue recommends for the lane.
+    fn recommended_models(self) -> Vec<String> {
+        self.recommended
+            .as_object()
+            .into_iter()
+            .flat_map(|recommended| recommended.values())
+            .filter_map(|named| named.as_str().map(str::to_owned))
+            .collect()
     }
 
     /// The download size the catalogue states for `model`; `None` when it lists no such

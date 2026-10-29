@@ -926,14 +926,22 @@ export function setupFixture({
       models?.mark(model, false);
       return Promise.resolve(publish());
     },
-    removeBrowser() {
-      say("setup.removeBrowser");
+    remove(removal) {
+      say(`setup.remove ${removal}`);
       const refused = ready();
       if (refused) return refused;
-      const browser = runFor("browser");
-      if (browser && browser.stage !== "settled") return refuse("busy");
-      const seed = items.find((entry) => entry.row.item === "browser");
-      if (seed) seed.row = row("browser", "browser", 180 * MB);
+      const item = removal === "browser" ? "browser" : "local_ai";
+      const running = runFor(item);
+      if (running && running.stage !== "settled") return refuse("busy");
+      const seed = items.find((entry) => entry.row.item === item);
+      if (seed)
+        seed.row = row(item, item, item === "browser" ? 180 * MB : null);
+      if (item === "local_ai") {
+        programReady = false;
+        // The program alone leaves every model; the whole local AI takes
+        // the models on the person's lists with it.
+        if (removal === "local_ai") models?.markAll(false);
+      }
       return Promise.resolve(publish());
     },
     signInGoogle() {

@@ -276,6 +276,40 @@ fn an_unreadable_list_admits_no_added_model_but_keeps_the_recommended_ones() {
 }
 
 #[test]
+fn a_removal_selects_every_model_on_a_local_lanes_lists_once() {
+    let replies = Replies::serving(&[TEXT, VISION], &[ADDED, TEXT], &[]);
+    let listed = admission_of(replies).listed().unwrap();
+    let mut names: Vec<_> = listed
+        .as_slice()
+        .iter()
+        .map(|model| model.name.to_string())
+        .collect();
+    names.sort();
+    assert_eq!(names, [ADDED, TEXT, VISION]);
+}
+
+#[test]
+fn a_removal_selects_nothing_from_a_list_nobody_can_read_or_a_lane_that_is_not_local() {
+    let unreadable = json!({
+        "unreadable": true, "models": [], "reading": null, "local_lanes": [LOCAL], "revision": revision(),
+    });
+    let listed =
+        admission_of(Replies::serving(&[], &[], &[]).answering("local_models", unreadable))
+            .listed()
+            .unwrap();
+    assert!(listed.is_empty(), "the hosted lane's model is no local one");
+}
+
+#[test]
+fn a_removal_is_refused_for_a_list_name_the_engine_cannot_pull() {
+    let replies = Replies::serving(&[], &["has space"], &[]);
+    assert_eq!(
+        refusal(admission_of(replies).listed()),
+        Err(Refusal::ModelSelectionUnusable)
+    );
+}
+
+#[test]
 fn a_model_name_the_engine_cannot_pull_is_refused() {
     let replies = Replies::serving(&[], &["has space"], &[]);
     assert_eq!(

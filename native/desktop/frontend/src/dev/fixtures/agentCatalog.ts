@@ -350,15 +350,23 @@ export const FIXTURE_CATALOG: AgentProviderCatalog = {
 export type FixtureModelPresence = {
   /** `model` is now on this computer, or no longer. */
   mark(model: string, installed: boolean): void;
+  /** Every model is now on this computer, or none is; a model marked after
+   * this is as marked. */
+  markAll(installed: boolean): void;
   /** `catalog` with each marked model's `installed` as marked. */
   report(catalog: AgentProviderCatalog): AgentProviderCatalog;
 };
 
 export function fixtureModelPresence(): FixtureModelPresence {
   const marked = new Map<string, boolean>();
+  let all: boolean | undefined;
   return {
     mark(model, installed) {
       marked.set(model, installed);
+    },
+    markAll(installed) {
+      marked.clear();
+      all = installed;
     },
     report: (catalog) => ({
       ...catalog,
@@ -370,7 +378,7 @@ export function fixtureModelPresence(): FixtureModelPresence {
           catalog: {
             ...served.catalog,
             models: models.map((entry) => {
-              const installed = marked.get(entry.model);
+              const installed = marked.get(entry.model) ?? all;
               return installed === undefined ? entry : { ...entry, installed };
             }),
           },

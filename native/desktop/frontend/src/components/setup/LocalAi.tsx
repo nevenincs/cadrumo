@@ -3,6 +3,7 @@ import type { LocalModelHost } from "../../shell/localModels";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
 import { LocalModels } from "../settings/LocalModels";
+import { ItemRemoval } from "./ItemRemoval";
 import { ProvisioningRow } from "./ProvisioningRow";
 
 // The local AI as one element with two concerns: the program that runs the
@@ -39,7 +40,13 @@ export function LocalAi({
             locale={locale}
             heading={t("desktop.setup.part_program")}
             progress={store.programPart()}
-          />
+          >
+            <ItemRemoval
+              row={row}
+              removals={["local_ai", "local_ai_program"]}
+              onRemoved={onRemoved}
+            />
+          </ProvisioningRow>
         </ul>
       )}
       {host && (

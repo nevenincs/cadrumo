@@ -3845,6 +3845,8 @@ desktop:
     refused_browser_not_removed: Cadrumo no ha pogut eliminar el navegador. Torna'l
       a comprovar i prova-ho una altra vegada.
     refused_busy: Ja hi ha una configuració en curs en un altre lloc. Espera que acabi.
+    refused_local_ai_not_removed: Cadrumo no ha pogut eliminar la IA local. Torna-la
+      a comprovar i prova-ho una altra vegada.
     refused_model_selection_unusable: Cadrumo no pot baixar aquest model. Revisa la
       llista de models de la IA local a la configuració de l'agent i torna-ho a provar.
     refused_not_cancellable: Ara no es pot aturar la configuració. Acabarà aviat.
@@ -3861,6 +3863,12 @@ desktop:
       a configurar més tard.
     remove_confirm_yes: Esborra'l
     remove_keep: Conserva'l
+    remove_local_ai: Treu la IA local
+    remove_local_ai_confirm: Vols eliminar del teu ordinador la IA local i els models
+      de les teves llistes? Podràs tornar-la a configurar més tard.
+    remove_local_ai_program: Treu només el programa (conserva els models)
+    remove_local_ai_program_confirm: Vols eliminar del teu ordinador el programa de
+      la IA local? Els teus models es queden i podràs tornar-la a configurar més tard.
     result_already: Ja estava configurat
     result_done: Configurat
     retry: Problema de connexió. Es tornarà a provar d'aquí a {seconds} segons (intent

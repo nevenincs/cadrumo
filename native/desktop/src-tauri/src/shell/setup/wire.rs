@@ -52,6 +52,31 @@ pub enum Refusal {
     /// The engine did not remove the browser; what is stored is unchanged or reads
     /// again on the next check.
     BrowserNotRemoved,
+    /// The engine did not remove the local AI, or its program; what is stored is
+    /// unchanged or reads again on the next check.
+    LocalAiNotRemoved,
+}
+
+/// What a removal deletes from this computer.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq)]
+#[serde(rename_all = "snake_case")]
+pub enum Removal {
+    /// The browser for the tax agency website.
+    Browser,
+    /// The local AI: its program, the models on the person's lists and its record.
+    LocalAi,
+    /// The local AI's program and record alone; every model stays.
+    LocalAiProgram,
+}
+
+impl Removal {
+    /// The item whose setup a removal waits for, and whose row it reads again.
+    pub fn item(self) -> ItemId {
+        match self {
+            Self::Browser => ItemId::Browser,
+            Self::LocalAi | Self::LocalAiProgram => ItemId::LocalAi,
+        }
+    }
 }
 
 /// What a command refuses with. Only the code crosses to the window.
@@ -731,8 +756,8 @@ pub enum Action {
     RemoveModel {
         model: String,
     },
-    /// Removing the browser for the tax agency website from this computer.
-    RemoveBrowser,
+    /// Removing the browser, or the local AI or its program, from this computer.
+    Remove(Removal),
     GoogleSignIn,
     GoogleSignOut,
 }
@@ -808,9 +833,9 @@ pub fn remove_model_request(model: &str) -> Result<Action, ApplicationError> {
     })
 }
 
-/// Removing the browser for the tax agency website.
-pub fn remove_browser_request() -> Action {
-    Action::RemoveBrowser
+/// Removing what `removal` names from this computer.
+pub fn remove_request(removal: Removal) -> Action {
+    Action::Remove(removal)
 }
 
 /// Cancelling the setup this window started.
@@ -1069,7 +1094,10 @@ mod tests {
         );
         assert!(remove_model_request("").is_err());
         assert!(remove_model_request("not a model").is_err());
-        assert_eq!(remove_browser_request(), Action::RemoveBrowser);
+        assert_eq!(
+            remove_request(Removal::LocalAiProgram),
+            Action::Remove(Removal::LocalAiProgram)
+        );
     }
 
     fn with_parts() -> Value {
@@ -1208,6 +1236,7 @@ mod tests {
             (Refusal::ModelSelectionUnusable, "model_selection_unusable"),
             (Refusal::ModelNotRemoved, "model_not_removed"),
             (Refusal::BrowserNotRemoved, "browser_not_removed"),
+            (Refusal::LocalAiNotRemoved, "local_ai_not_removed"),
         ] {
             assert_eq!(
                 serde_json::to_value(CommandFailure::from(refusal)).unwrap(),

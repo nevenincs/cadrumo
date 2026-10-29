@@ -1084,7 +1084,13 @@ export type SetupRefusalCode =
   /** The engine did not remove the model. */
   | "model_not_removed"
   /** The engine did not remove the browser. */
-  | "browser_not_removed";
+  | "browser_not_removed"
+  /** The engine did not remove the local AI, or its program. */
+  | "local_ai_not_removed";
+
+/** What a removal deletes from this computer: the browser, the local AI with
+ * the models on the person's lists, or the local AI's program alone. */
+export type SetupRemoval = "browser" | "local_ai" | "local_ai_program";
 
 export type SetupRefusal = { code: SetupRefusalCode };
 
@@ -1728,8 +1734,12 @@ export interface HostCommands {
     args: Authorized<{ model: string }>;
     result: DesktopSetup;
   };
-  /** Removes the browser for the tax agency website from this computer. */
-  desktop_setup_remove_browser: { args: Authorized; result: DesktopSetup };
+  /** Removes the browser, or the local AI or its program alone, from this
+   * computer. */
+  desktop_setup_remove: {
+    args: Authorized<{ removal: SetupRemoval }>;
+    result: DesktopSetup;
+  };
   /** Opens Google's own sign-in page for the signed-in profile; `google`
    * follows the attempt. */
   desktop_google_sign_in: { args: Authorized; result: DesktopSetup };

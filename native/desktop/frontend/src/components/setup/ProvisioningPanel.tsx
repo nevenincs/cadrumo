@@ -15,7 +15,7 @@ import type { SetupRow } from "../../ipc/contract";
 import { useLocalAiLanes, type LocalAiSource } from "../../shell/localAiLanes";
 import { useProvisioning } from "../../shell/provisioning";
 import { useStrings } from "../../shell/strings";
-import { BrowserRemoval } from "./BrowserRemoval";
+import { ItemRemoval } from "./ItemRemoval";
 import { LocalAi } from "./LocalAi";
 import { ProvisioningRow, RowState } from "./ProvisioningRow";
 import { failureWords, itemName, refusalWords } from "./setupWords";
@@ -197,7 +197,9 @@ export function ProvisioningPanel({
                 />
               ) : (
                 <ProvisioningRow key={row.item} row={row} locale={locale}>
-                  {row.item === "browser" && <BrowserRemoval row={row} />}
+                  {row.item === "browser" && (
+                    <ItemRemoval row={row} removals={["browser"]} />
+                  )}
                 </ProvisioningRow>
               ),
             )}

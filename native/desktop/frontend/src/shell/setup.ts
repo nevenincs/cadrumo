@@ -4,6 +4,7 @@ import type {
   SetupCheckMode,
   SetupItemId,
   SetupModelDownload,
+  SetupRemoval,
   SetupRow,
   SetupRun,
   SetupSnapshot,
@@ -47,9 +48,9 @@ export type SetupControl = {
   /** Removes one local model no role selects; resolves with the refusal's
    * code, or null once it is removed. */
   removeModel(model: string): Promise<string | null>;
-  /** Removes the browser for the tax agency website; resolves with the
-   * refusal's code, or null once it is removed. */
-  removeBrowser(): Promise<string | null>;
+  /** Removes the browser, or the local AI or its program alone; resolves
+   * with the refusal's code, or null once it is removed. */
+  remove(removal: SetupRemoval): Promise<string | null>;
   /** The profile's Google account, which rides the same session but is not
    * setup: sign in through Google's own page, or remove the sign-in. */
   signInGoogle(): void;
@@ -300,7 +301,7 @@ export function useSetup(
         send((served) => served.cancel(run.operation_id));
       },
       removeModel: (model) => removal(setup?.removeModel(model)),
-      removeBrowser: () => removal(setup?.removeBrowser()),
+      remove: (what) => removal(setup?.remove(what)),
       signInGoogle: () => send((served) => served.signInGoogle()),
       signOutGoogle: () => send((served) => served.signOutGoogle()),
       clearRefusal: () =>

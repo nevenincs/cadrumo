@@ -281,7 +281,7 @@ impl SetupHost {
                 .map_err(Stop::from),
             Action::Cancel { operation_id } => self.components.cancel(operation_id).await,
             Action::RemoveModel { model } => self.components.remove_model(model).await,
-            Action::RemoveBrowser => self.components.remove_browser().await,
+            Action::Remove(removal) => self.components.remove(*removal).await,
         }
     }
 
@@ -534,7 +534,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         desktop_setup_answer,
         desktop_setup_cancel,
         desktop_setup_remove_model,
-        desktop_setup_remove_browser,
+        desktop_setup_remove,
         desktop_google_sign_in,
         desktop_google_sign_out,
         desktop_setup_observe,
@@ -609,12 +609,13 @@ async fn desktop_setup_remove_model(
         .await
 }
 
-/// Removes the browser for the tax agency website from this computer.
+/// Removes the browser, or the local AI or its program alone, from this computer.
 #[tauri::command]
-async fn desktop_setup_remove_browser(
+async fn desktop_setup_remove(
     host: State<'_, Arc<SetupHost>>,
+    removal: wire::Removal,
 ) -> std::result::Result<DesktopSetup, CommandFailure> {
-    host.exchange(wire::remove_browser_request(), true).await
+    host.exchange(wire::remove_request(removal), true).await
 }
 
 /// Signs the profile into Google: Google's own consent page is the approval.

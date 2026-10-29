@@ -842,16 +842,83 @@ test("a ready browser is removed only after a second confirmation, and then offe
     .getByRole("button", { name: label("desktop.setup.remove_keep") })
     .click();
   await expect(remove).toBeVisible();
-  expect(await hostCalls(target)).not.toContain("setup.removeBrowser");
+  expect(await hostCalls(target)).not.toContain("setup.remove browser");
   await remove.click();
   await row
     .getByRole("button", { name: label("desktop.setup.remove_confirm_yes") })
     .click();
   await expect(row).toContainText(NOT_SET_UP);
-  expect(await hostCalls(target)).toContain("setup.removeBrowser");
+  expect(await hostCalls(target)).toContain("setup.remove browser");
   await expect(setUpButton(row)).toBeVisible();
   // Nothing is left to remove.
   await expect(remove).toHaveCount(0);
+  await noInternalWords(target);
+});
+
+test("a ready local AI offers its removal two ways, each after a second confirmation", async ({
+  page: target,
+}) => {
+  await open(target, "ready");
+  await (await palette(target, paletteItem(LOCAL_AI))).click();
+  const row = programRow(target);
+  const removeAll = row.getByRole("button", {
+    name: label("desktop.setup.remove_local_ai"),
+    exact: true,
+  });
+  const removeProgram = row.getByRole("button", {
+    name: label("desktop.setup.remove_local_ai_program"),
+    exact: true,
+  });
+  await expect(removeAll).toBeVisible();
+  await expect(removeProgram).toBeVisible();
+  // Keeping it asks nothing of the host.
+  await removeProgram.click();
+  await expect(row).toContainText(
+    label("desktop.setup.remove_local_ai_program_confirm"),
+  );
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_keep") })
+    .click();
+  await expect(removeProgram).toBeVisible();
+  expect(
+    (await hostCalls(target)).filter((call) => call.startsWith("setup.remove")),
+  ).toEqual([]);
+  // The program alone goes, and the local AI offers its setup again.
+  await removeProgram.click();
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_confirm_yes") })
+    .click();
+  await once(localAi(target), NOT_SET_UP);
+  expect(await hostCalls(target)).toContain("setup.remove local_ai_program");
+  await expect(removeAll).toHaveCount(0);
+  await noInternalWords(target);
+});
+
+test("removing the whole local AI asks for a second confirmation and names the models", async ({
+  page: target,
+}) => {
+  await open(target, "ready");
+  await (await palette(target, paletteItem(LOCAL_AI))).click();
+  const row = programRow(target);
+  await row
+    .getByRole("button", {
+      name: label("desktop.setup.remove_local_ai"),
+      exact: true,
+    })
+    .click();
+  await expect(row).toContainText(
+    label("desktop.setup.remove_local_ai_confirm"),
+  );
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_confirm_yes") })
+    .click();
+  await once(localAi(target), NOT_SET_UP);
+  expect(await hostCalls(target)).toContain("setup.remove local_ai");
+  await expect(
+    localAi(target).locator(
+      '[data-slot="local-models"] li[data-installed="true"]',
+    ),
+  ).toHaveCount(0);
   await noInternalWords(target);
 });
 

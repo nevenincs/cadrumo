@@ -3785,6 +3785,8 @@ desktop:
     refused_browser_not_removed: Cadrumo couldn't remove the browser. Check it again,
       then try once more.
     refused_busy: Setup is already running elsewhere. Wait for it to finish.
+    refused_local_ai_not_removed: Cadrumo couldn't remove the local AI. Check it again,
+      then try once more.
     refused_model_selection_unusable: Cadrumo can't download that model. Check the
       local AI's model list in the agent settings, then try again.
     refused_not_cancellable: Setup can't be stopped right now. It will finish shortly.
@@ -3800,6 +3802,12 @@ desktop:
       later.
     remove_confirm_yes: Delete it
     remove_keep: Keep it
+    remove_local_ai: Remove local AI
+    remove_local_ai_confirm: Delete the local AI and the models on your lists from
+      your computer? You can set it up again later.
+    remove_local_ai_program: Remove the program only (keep models)
+    remove_local_ai_program_confirm: Delete the local AI program from your computer?
+      Your models stay, and you can set it up again later.
     result_already: Already set up
     result_done: Set up
     retry: Connection problem. Trying again in {seconds} seconds (attempt {attempt}).

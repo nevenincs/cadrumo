@@ -1227,11 +1227,56 @@ async fn removing_the_browser_deletes_its_staging_alone_and_reads_the_rows_after
     std::fs::write(staging.join("partial"), b"x").unwrap();
     std::fs::create_dir_all(&unrelated).unwrap();
     let (components, replies) = serving(&fixture, Replies::default());
-    assert_eq!(refusal(components.remove_browser().await), Ok(()));
+    assert_eq!(refusal(components.remove(Removal::Browser).await), Ok(()));
     assert!(!staging.exists());
     assert!(unrelated.exists(), "only the browser's own folders go");
     assert!(!components.view().rows.is_empty());
     assert!(replies.asked().is_empty(), "a removal consults no service");
+}
+
+#[tokio::test]
+async fn removing_the_local_ai_hands_the_engine_the_models_on_the_lists_and_reads_the_rows_after() {
+    // The fixture's pins carry no program, so what the engine deletes is its own test's
+    // to show; here the removal must read the lists it selects from and settle.
+    let fixture = Fixture::new(Serving::Whole);
+    let (components, replies) = serving(
+        &fixture,
+        Replies::serving(&[TEXT], &[ADDED], &[(TEXT, Some(GB))]),
+    );
+    assert_eq!(refusal(components.remove(Removal::LocalAi).await), Ok(()));
+    let asked = replies.asked();
+    for action in ["status", "catalog", "local_models"] {
+        assert!(
+            asked.iter().any(|seen| seen == action),
+            "{action}: {asked:?}"
+        );
+    }
+    assert!(!components.view().rows.is_empty());
+}
+
+#[tokio::test]
+async fn a_service_that_cannot_list_the_models_stops_the_local_ai_removal() {
+    let fixture = Fixture::new(Serving::Whole);
+    let kept = stored_model(&fixture, TEXT);
+    let (components, _) = serving(&fixture, Replies::default());
+    assert!(components.remove(Removal::LocalAi).await.is_err());
+    assert!(kept.exists());
+}
+
+#[tokio::test]
+async fn removing_the_local_ai_program_alone_keeps_every_model_and_asks_no_list() {
+    let fixture = Fixture::new(Serving::Whole);
+    let kept = stored_model(&fixture, TEXT);
+    let (components, replies) = serving(&fixture, Replies::default());
+    assert_eq!(
+        refusal(components.remove(Removal::LocalAiProgram).await),
+        Ok(())
+    );
+    assert!(kept.exists());
+    assert!(
+        replies.asked().is_empty(),
+        "the program alone selects no model"
+    );
 }
 
 #[tokio::test]
@@ -1240,7 +1285,7 @@ async fn the_browser_is_not_removed_while_its_setup_holds_its_lock() {
     let fixture = Fixture::new(Serving::Gated(gate.clone()));
     let components = running(&fixture).await;
     assert_eq!(
-        refusal(components.remove_browser().await),
+        refusal(components.remove(Removal::Browser).await),
         Err(Refusal::Busy)
     );
     gate.release();

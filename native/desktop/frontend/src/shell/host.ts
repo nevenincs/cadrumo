@@ -21,6 +21,7 @@ import type {
   SetupCheckMode,
   SetupItemId,
   SetupModelDownload,
+  SetupRemoval,
   WindowAction,
   WindowPresentation,
   PresentationOutcome,
@@ -104,8 +105,9 @@ export type Setup = {
   /** Removes the local model `model`, which no role may still select: the
    * roles that name it are cleared first. */
   removeModel(model: string): Promise<DesktopSetup>;
-  /** Removes the browser for the tax agency website from this computer. */
-  removeBrowser(): Promise<DesktopSetup>;
+  /** Removes the browser, or the local AI or its program alone, from this
+   * computer. */
+  remove(removal: SetupRemoval): Promise<DesktopSetup>;
   /** Opens Google's own sign-in page for the profile. */
   signInGoogle(): Promise<DesktopSetup>;
   /** Removes the profile's stored Google sign-in. */

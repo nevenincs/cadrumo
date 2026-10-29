@@ -44,7 +44,7 @@
 use super::{
     admission::Admission,
     reports::Reports,
-    wire::{self, CheckKind, CheckStage, Outcome, Refusal, RunStage, Stop},
+    wire::{self, CheckKind, CheckStage, Outcome, Refusal, Removal, RunStage, Stop},
 };
 use cadrumo_application::{
     component::Cancellation,
@@ -792,24 +792,31 @@ impl Components {
         })
     }
 
-    /// Removes the browser and takes the rows the removal reads after it. Refused while
-    /// the browser sets up, since that setup holds its writer lock.
-    pub async fn remove_browser(&self) -> Result<(), Stop> {
+    /// Removes what `removal` names and takes the rows the removal reads after it.
+    /// Refused while that item sets up, since a setup holds its writer lock. A removal of
+    /// the local AI takes the models on the person's lists with it; one of its program
+    /// alone selects none, and every model stays.
+    pub async fn remove(&self, removal: Removal) -> Result<(), Stop> {
+        let item = removal.item();
         let running = self.shared.update(|window| {
-            window.closed
-                || window
-                    .setups
-                    .get(&ItemId::Browser)
-                    .is_some_and(SetupTrack::live)
+            window.closed || window.setups.get(&item).is_some_and(SetupTrack::live)
         });
         if running {
             return Err(Refusal::Busy.into());
         }
         let engines = self.engines.clone();
+        let admission = self.admission.clone();
         let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
             let Installation { mut engine } =
                 engines().map_err(|error| Stop::Unavailable(engine_unavailable(error)))?;
-            Ok(engine.remove(&[ItemId::Browser], &mut |_| {}))
+            Ok(match removal {
+                Removal::Browser => engine.remove(&[item], &mut |_| {}),
+                Removal::LocalAi => {
+                    engine.select_local_models(admission.listed()?);
+                    engine.remove(&[item], &mut |_| {})
+                }
+                Removal::LocalAiProgram => engine.remove_program(&mut |_| {}),
+            })
         })
         .await
         .map_err(|error| Stop::unavailable("setup_worker_join").because(error))??;
@@ -819,7 +826,11 @@ impl Components {
                 Ok(())
             }
             Ended::Busy => Err(Refusal::Busy.into()),
-            _ => Err(Refusal::BrowserNotRemoved.into()),
+            _ => Err(match removal {
+                Removal::Browser => Refusal::BrowserNotRemoved,
+                Removal::LocalAi | Removal::LocalAiProgram => Refusal::LocalAiNotRemoved,
+            }
+            .into()),
         })
     }
 

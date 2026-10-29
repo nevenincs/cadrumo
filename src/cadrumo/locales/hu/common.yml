@@ -3817,6 +3817,8 @@ desktop:
     refused_browser_not_removed: A Cadrumo nem tudta eltávolítani a böngészőt. Ellenőrizd
       újra, majd próbáld meg még egyszer.
     refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
+    refused_local_ai_not_removed: A Cadrumo nem tudta eltávolítani a helyi MI-t. Ellenőrizd
+      újra, majd próbáld meg még egyszer.
     refused_model_selection_unusable: A Cadrumo nem tudja letölteni ezt a modellt.
       Ellenőrizd a helyi MI modelllistáját az ügynök beállításaiban, majd próbáld
       újra.
@@ -3833,6 +3835,12 @@ desktop:
     remove_confirm: Törlöd ezt a böngészőt a számítógépedről? Később újra beállíthatod.
     remove_confirm_yes: Törlöm
     remove_keep: Megtartom
+    remove_local_ai: Helyi MI eltávolítása
+    remove_local_ai_confirm: Törlöd a gépedről a helyi MI-t és a listáidon szereplő
+      modelleket? Később újra beállíthatod.
+    remove_local_ai_program: Csak a program eltávolítása (a modellek megmaradnak)
+    remove_local_ai_program_confirm: Törlöd a gépedről a helyi MI programját? A modelljeid
+      megmaradnak, és később újra beállíthatod.
     result_already: Már be volt állítva
     result_done: Beállítva
     retry: Kapcsolati hiba. Újrapróbálkozás {seconds} másodperc múlva ({attempt}.

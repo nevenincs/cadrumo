@@ -259,7 +259,7 @@ export function tauriHost(): Host {
         call("desktop_setup_answer", { operationId, planDigest, decision }),
       cancel: (operationId) => call("desktop_setup_cancel", { operationId }),
       removeModel: (model) => call("desktop_setup_remove_model", { model }),
-      removeBrowser: () => call("desktop_setup_remove_browser", {}),
+      remove: (removal) => call("desktop_setup_remove", { removal }),
       signInGoogle: () => call("desktop_google_sign_in", {}),
       signOutGoogle: () => call("desktop_google_sign_out", {}),
       async observe(listener) {
