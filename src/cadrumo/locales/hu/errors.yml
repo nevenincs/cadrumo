@@ -1133,8 +1133,6 @@ errors:
       meg olyan partnerazonosítóval, amely nem érvényes.
     refused_ledger_evidence_input: Egy megadott igazolás-bemenet sérti a vásárlási
       számla szerződést. Javítsd a bemenetet, és próbáld újra.
-    refused_ledger_evidence_local_ai_not_ready: A helyi MI nem áll készen, ezért semmi
-      sem lett beolvasva. Próbáld újra, amint készen áll.
     refused_ledger_evidence_not_found: Nem létezik vásárlási számla igazolás a megadott
       azonosítóval.
     refused_ledger_evidence_page_digest_mismatch: A tárolt dokumentum nem egyezik

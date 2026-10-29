@@ -1812,6 +1812,12 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
+  reader:
+    refusal:
+      column_names_unavailable: the model that reads this file's column names is not
+        available right now, so the file was not read. Try again once it is available.
+      statement_unavailable: the model that reads this PDF statement is not available
+        right now, so the statement was not read. Try again once it is available.
   reconciliation_export:
     actor: Actor
     advisory: Advisory

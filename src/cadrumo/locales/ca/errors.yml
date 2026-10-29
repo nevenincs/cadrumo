@@ -1214,8 +1214,6 @@ errors:
       amb un identificador de contrapart que no valida.
     refused_ledger_evidence_input: Una dada d'evidència indicada infringeix el contracte
       de la factura de compra. Corregeix l'entrada i torna-ho a provar.
-    refused_ledger_evidence_local_ai_not_ready: La IA local no està a punt, així que
-      no s'ha llegit res. Torna-ho a provar quan estigui a punt.
     refused_ledger_evidence_not_found: No existeix cap evidència de factura de compra
       amb l'identificador indicat.
     refused_ledger_evidence_page_digest_mismatch: El document desat no coincideix

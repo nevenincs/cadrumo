@@ -1928,6 +1928,14 @@ application:
     explain:
       errors:
         modelo_blank: L'identificador de model no pot estar en blanc.
+  reader:
+    refusal:
+      column_names_unavailable: el model que llegeix els noms de les columnes d'aquest
+        fitxer no està disponible ara mateix, així que no s'ha llegit el fitxer. Torna-ho
+        a provar quan estigui disponible.
+      statement_unavailable: el model que llegeix aquest extracte bancari en PDF no
+        està disponible ara mateix, així que no s'ha llegit l'extracte. Torna-ho a
+        provar quan estigui disponible.
   reconciliation_export:
     actor: Responsable
     advisory: Avís

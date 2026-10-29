@@ -1930,6 +1930,14 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
+  reader:
+    refusal:
+      column_names_unavailable: el modelo que lee los nombres de las columnas de este
+        archivo no está disponible ahora mismo, así que no se ha leído el archivo.
+        Vuelve a intentarlo cuando esté disponible.
+      statement_unavailable: el modelo que lee este extracto bancario en PDF no está
+        disponible ahora mismo, así que no se ha leído el extracto. Vuelve a intentarlo
+        cuando esté disponible.
   reconciliation_export:
     actor: Responsable
     advisory: Aviso

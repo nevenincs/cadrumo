@@ -6012,10 +6012,6 @@ tui:
             no té prou memòria lliure. {count} camps que les etiquetes no cobrien
             encara no s''han llegit i queden buits: {fields}. Allibera memòria i torna
             a llegir el document.'
-          local_ai_not_ready: 'La IA local no està a punt, així que el lector automàtic
-            no s''ha executat. {count} camps que les etiquetes no cobrien encara no
-            s''han llegit i queden buits: {fields}. Configura la IA local i torna
-            a llegir el document.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
             {fields}. Revisa el model que has triat i torna a llegir el document.'
@@ -6140,8 +6136,6 @@ tui:
             desats no es desen dues vegades.'
           paused: El model que has triat no ha pogut llegir els documents en pausa.
             Revisa el model que has triat i torna a llançar el lot per acabar-los.
-          paused_local_ai_not_ready: La IA local, que llegeix els documents en pausa,
-            no està a punt. Torna a llançar el lot quan estigui a punt per acabar-los.
           writes: 'Registres escrits: {count}.'
         prompt: Afegeix com a justificants de factura tots els documents que hi ha
           directament en una carpeta. Els documents es llegeixen en aquest equip.

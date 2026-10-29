@@ -6025,10 +6025,6 @@ tui:
             no tiene memoria libre suficiente para él. {count} campo(s) que las etiquetas
             no cubrían aún no se han leído y siguen vacíos: {fields}. Libera memoria
             y vuelve a leer el documento.'
-          local_ai_not_ready: 'La IA local no está lista, así que el lector automático
-            no se ejecutó. {count} campo(s) que las etiquetas no cubrían aún no se
-            han leído y siguen vacíos: {fields}. Configura la IA local y vuelve a
-            leer el documento.'
           reader_unavailable: 'El lector automático no pudo iniciarse. {count} campo(s)
             que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
             Revisa el modelo que elegiste y vuelve a leer el documento.'
@@ -6154,8 +6150,6 @@ tui:
             guardados no se guardan dos veces.'
           paused: El modelo que elegiste no ha podido leer los documentos en pausa.
             Revisa el modelo que elegiste y vuelve a lanzar el lote para terminarlos.
-          paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
-            no está lista. Vuelve a lanzar el lote cuando esté lista para terminarlos.
           writes: 'Registros escritos: {count}.'
         prompt: Añade como justificantes de factura todos los documentos que están
           directamente en una carpeta. Los documentos se leen en este equipo.

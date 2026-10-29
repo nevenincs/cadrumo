@@ -1894,6 +1894,12 @@ application:
     explain:
       errors:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
+  reader:
+    refusal:
+      column_names_unavailable: a fájl oszlopneveit olvasó modell jelenleg nem érhető
+        el, ezért a fájl nem lett beolvasva. Próbáld újra, amint elérhető.
+      statement_unavailable: a PDF-bankszámlakivonatot olvasó modell jelenleg nem
+        érhető el, ezért a kivonat nem lett beolvasva. Próbáld újra, amint elérhető.
   reconciliation_export:
     actor: Felelős
     advisory: Figyelmeztetés

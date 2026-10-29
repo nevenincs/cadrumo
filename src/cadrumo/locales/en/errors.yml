@@ -1115,8 +1115,6 @@ errors:
       be confirmed against a counterparty identifier that does not verify.
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
       contract. Correct the input and try again.
-    refused_ledger_evidence_local_ai_not_ready: Local AI is not ready, so nothing
-      was read. Try again once it is ready.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
       identifier provided.
     refused_ledger_evidence_page_digest_mismatch: The stored document does not match

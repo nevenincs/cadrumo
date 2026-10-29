@@ -5909,10 +5909,6 @@ tui:
             does not have enough free memory for it. {count} field(s) the labels did
             not cover have not been read yet and stay empty: {fields}. Free some memory
             and read the document again.'
-          local_ai_not_ready: 'Local AI is not ready, so the automatic reader did
-            not run. {count} field(s) the labels did not cover have not been read
-            yet and stay empty: {fields}. Set up the local AI, then read the document
-            again.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
             the labels did not cover have not been read yet and stay empty: {fields}.
             Check the model you picked, then read the document again.'
@@ -6033,8 +6029,6 @@ tui:
             are not stored twice.'
           paused: The model you picked could not read the paused documents. Check
             the model you picked, then run the batch again to finish them.
-          paused_local_ai_not_ready: Local AI, which reads the paused documents, is
-            not ready. Run the batch again once it is ready to finish them.
           writes: 'Records written: {count}.'
         prompt: Add every document directly inside one folder as invoice evidence.
           Documents are read on this machine.

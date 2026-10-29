@@ -5982,10 +5982,6 @@ tui:
             nincs elég szabad memória hozzá. A címkék által nem lefedett {count} mező
             még nem lett beolvasva, ezért üres marad: {fields}. Szabadíts fel memóriát,
             és olvasd be újra a dokumentumot.'
-          local_ai_not_ready: 'A helyi MI nem áll készen, ezért az automatikus olvasó
-            nem futott le. A címkék által nem lefedett {count} mező még nem lett beolvasva,
-            ezért üres marad: {fields}. Állítsd be a helyi MI-t, majd olvasd be újra
-            a dokumentumot.'
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
             nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
             Ellenőrizd a kiválasztott modellt, majd olvasd be újra a dokumentumot.'
@@ -6111,9 +6107,6 @@ tui:
           paused: A kiválasztott modell nem tudta beolvasni a szüneteltetett dokumentumokat.
             Ellenőrizd a kiválasztott modellt, majd a befejezésükhöz futtasd újra
             a beolvasást.
-          paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
-            olvassa, nem áll készen. A befejezésükhöz futtasd újra a beolvasást, amint
-            készen áll.
           writes: 'Kiírt rekordok: {count}.'
         prompt: Egy mappában közvetlenül található összes dokumentum hozzáadása számlabizonylatként.
           A dokumentumok beolvasása ezen a gépen történik.
