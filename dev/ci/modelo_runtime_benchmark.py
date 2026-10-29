@@ -438,6 +438,7 @@ def observe_worker_composition(
     composition_factory: Callable[[], AbstractContextManager[None]],
     *,
     profile_setup: bool = False,
+    observer: Callable[[RuntimeBenchmarkRecorder], AbstractContextManager[None]] = observe_runtime_boundaries,
 ) -> Generator[None]:
     """Separate fixture and observer setup before yielding on the same worker thread."""
     profile = cProfile.Profile(timer=time.perf_counter) if profile_setup else None
@@ -450,7 +451,7 @@ def observe_worker_composition(
                     with recorder.measure("startup.worker_fixture_entry"):
                         scope.enter_context(composition_factory())
                     with recorder.measure("startup.worker_observer_entry"):
-                        scope.enter_context(observe_runtime_boundaries(recorder))
+                        scope.enter_context(observer(recorder))
                 finally:
                     if profile is not None:
                         profile.disable()

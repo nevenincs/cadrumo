@@ -56,14 +56,17 @@ def copy_ledger_worker(output: Path) -> Path:
     """Instrument the canonical native fixture, refusing a changed bootstrap."""
     worker = copy_instrumented_worker(output)
     source = worker.read_text(encoding="utf-8")
-    original = "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_runtime_boundaries"
+    original = "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_worker_composition"
     replacement = (
-        "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder\n"
-        "    from dev.ci.ledger_runtime_benchmark import observe_ledger_boundaries as observe_runtime_boundaries"
+        "from dev.ci.modelo_runtime_benchmark import RuntimeBenchmarkRecorder, observe_worker_composition\n"
+        "    from dev.ci.ledger_runtime_benchmark import observe_ledger_boundaries"
     )
     if source.count(original) != 1:
         raise ValueError("instrumented worker bootstrap changed")
     source = source.replace(original, replacement)
+    if source.count("profile_setup=False):") != 1:
+        raise ValueError("instrumented worker observer setup changed")
+    source = source.replace("profile_setup=False):", "profile_setup=False, observer=observe_ledger_boundaries):")
     compile(source, str(worker), "exec")
     worker.write_text(source, encoding="utf-8")
     return worker
