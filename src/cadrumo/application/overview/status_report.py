@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_probe_ports import OperatorProbePorts
     from ..auth.operator_scope_ports import OperatorScopePorts
-    from ..state_projection import OperatorStateProjection
+    from ..state_projection_models import OperatorStateProjection
     from ..state_projection_ports import StateProjectionReadPorts
     from ..workflow.state_models import WorkflowState
 
@@ -155,7 +155,7 @@ def overview_status_report_from_projection(
     """Project the canonical state projection into the ``overview status`` emit shape.
 
     The :class:`OverviewStatusReport` is a CLI emit shape derived from
-    the one :class:`application.state_projection.OperatorStateProjection`;
+    the one :class:`application.state_projection_models.OperatorStateProjection`;
     it is not a second state-assembly path. Both the declaration-draft
     :class:`domain.filing.schema.ModeloDraft` count and the
     :class:`~WorkUnitCatalogue` count are carried

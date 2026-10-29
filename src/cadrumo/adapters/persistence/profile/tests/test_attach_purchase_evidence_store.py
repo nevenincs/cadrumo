@@ -34,7 +34,7 @@ __all__ = ["pdf_file"]
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )

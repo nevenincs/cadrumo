@@ -20,7 +20,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     detach_manual_transaction_attachments,
 )

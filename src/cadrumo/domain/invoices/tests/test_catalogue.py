@@ -16,6 +16,7 @@ from ...calculations.registry.authority import bundled_indexed_authority
 from ...iva.classification import TransactionKind
 from ...iva.oss import OssIossRegime
 from ...iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind
+from ..catalogue import InvoiceCatalogue
 from ..enums import (
     InvoiceClass,
     InvoiceLegalMention,
@@ -29,7 +30,7 @@ from ..errors import (
     InvoiceNotFoundError,
     InvoicePersistenceError,
 )
-from ..models import Invoice, InvoiceCatalogue, InvoiceLine
+from ..models import Invoice, InvoiceLine
 from ..service import (
     link_transaction,
 )

@@ -13,8 +13,9 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
 from ....core.period import Period
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingStalenessVerdict

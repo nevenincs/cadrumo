@@ -24,13 +24,13 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Button, Checkbox, Static
 
+from ......application.modelo.work_form_findings import ModeloFormIssue
 from ......application.modelo.work_form_models import (
     ModeloFormBindingAddressV1,
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormFieldBlock,
     ModeloFormGridBlock,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloWorkForm,
     address_key,

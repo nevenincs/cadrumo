@@ -46,7 +46,7 @@ from cadrumo.application.live.expedientes import (
 )
 from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
 from cadrumo.core.period import Period
-from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_expedientes_ports
 from cadrumo.tests.aeat_literal_fixtures import aeat_url, configured_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

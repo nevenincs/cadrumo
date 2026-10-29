@@ -51,7 +51,6 @@ from .....application.ledger.evidence_followup_contracts import (
     LedgerEvidenceAttachmentViewRequest,
     LedgerEvidenceConsentListProjection,
     LedgerEvidenceConsentListRequest,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
 )
@@ -76,6 +75,7 @@ from .....application.ledger.evidence_read_operation import (
     LedgerEvidenceViewRequest,
     LedgerEvidenceViewSuccess,
 )
+from .....application.ledger.evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from .....application.ledger.invoice_evidence_operation_dtos import (
     ConfirmationBlockerProjectionV1,
     InvoiceDraftProjectionV1,

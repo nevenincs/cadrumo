@@ -118,9 +118,7 @@ def _render_positioned_record(
     buffer = [" "] * length
     for field in sorted(record.fields, key=lambda item: item.offset or 0):
         active_for_row = _field_is_active_for_row(field, row)
-        if not active_for_row and any(
-            export_fields_overlap(field, other) for other in record.fields if other is not field
-        ):
+        if _skip_inactive_alternative(field, record, active_for_row):
             # An inactive alternative must not overwrite another binding's
             # slot. An unambiguous absent slot still needs its declared fill.
             continue
@@ -146,6 +144,16 @@ def _render_positioned_record(
     require_m190_signed_reintegro_context(record, wire, source_digests=source_digests)
     require_m280_negative_imputation_context(record, wire, source_digests=source_digests)
     return wire
+
+
+def _skip_inactive_alternative(
+    field: ExportFieldDefinition,
+    record: ExportRecordDefinition,
+    active_for_row: bool,
+) -> bool:
+    return not active_for_row and any(
+        export_fields_overlap(field, other) for other in record.fields if other is not field
+    )
 
 
 def _render_positioned_field_bytes(
@@ -350,23 +358,8 @@ def _header_field_value(
     if field.producer_key is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare producer_key")
     value = headers.get(field.producer_key)
-    if (
-        modelo == Modelo("369")
-        and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
-        and "aeat-dr-369-2021" in field.source_refs
-    ):
-        # DR369 v1.1 requires the slot itself, with [blank | constant "C"].
-        # No amendment evidence describes an ordinary return; neither that
-        # absence nor a false complementaria fact means a missing wire byte.
-        if field.data_type != "text" or field.length != 1:
-            raise FilingExportValidationError("Modelo 369 complementaria requires a one-byte text slot")
-        if field.producer_key not in headers:
-            raise FilingExportValidationError("Modelo 369 complementaria requires an amendment producer fact")
-        if value is True:
-            return "C"
-        if value is False or value is None:
-            return " "
-        raise FilingExportValidationError("Modelo 369 complementaria requires a typed amendment boolean")
+    if _m369_complementaria_slot(field, modelo):
+        return _complementaria_marker(field, headers, value)
     if _is_blank(value) and (field.required or _required_for_this_taxpayer(field, headers)):
         raise FilingExportValidationError(
             f"export producer {field.producer_key!r} is required",
@@ -375,6 +368,33 @@ def _header_field_value(
     if isinstance(value, bool) and field.data_type == "text":
         return _text_presence_marker(field, value)
     return value.strip() if isinstance(value, str) else value
+
+
+def _m369_complementaria_slot(field: ExportFieldDefinition, modelo: str | None) -> bool:
+    return (
+        modelo == Modelo("369")
+        and field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
+        and "aeat-dr-369-2021" in field.source_refs
+    )
+
+
+def _complementaria_marker(
+    field: ExportFieldDefinition,
+    headers: Mapping[FilingProducerKey, object],
+    value: object,
+) -> str:
+    # DR369 v1.1 requires the slot itself, with [blank | constant "C"].
+    # No amendment evidence describes an ordinary return; neither that
+    # absence nor a false complementaria fact means a missing wire byte.
+    if field.data_type != "text" or field.length != 1:
+        raise FilingExportValidationError("Modelo 369 complementaria requires a one-byte text slot")
+    if field.producer_key not in headers:
+        raise FilingExportValidationError("Modelo 369 complementaria requires an amendment producer fact")
+    if value is True:
+        return "C"
+    if value is False or value is None:
+        return " "
+    raise FilingExportValidationError("Modelo 369 complementaria requires a typed amendment boolean")
 
 
 def _text_presence_marker(field: ExportFieldDefinition, value: bool) -> str | None:

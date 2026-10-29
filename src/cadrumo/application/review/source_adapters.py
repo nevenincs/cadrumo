@@ -25,8 +25,9 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.filing.schema import ModeloDraft, ModeloValidationFinding
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue

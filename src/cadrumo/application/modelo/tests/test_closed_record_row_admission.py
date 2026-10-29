@@ -13,9 +13,10 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...aggregation.source_mesh import CalculationSourceResolution
-from .. import calculation_actions
+from .. import calculation_bucket_actions
 from ..action_errors import ModeloAggregationBindingError
 from ..calculation_action_ports import CalculationActionPorts
+from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..work_profile import ModeloWorkProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -59,12 +60,12 @@ def test_bucket_admission_refuses_caller_changes_to_closed_manual_slots(
         enum_binding_values={country.id: "DE"} if occupied else {},
         closed_record_row_sets=(closed,),
     )
-    monkeypatch.setattr(calculation_actions, "resolve_bucket_source_mesh", lambda *args, **kwargs: resolution)
+    monkeypatch.setattr(calculation_bucket_actions, "resolve_bucket_source_mesh", lambda *args, **kwargs: resolution)
     numeric_values = {country.id: value} if isinstance(value, Decimal) else {}
     enum_values = {country.id: value} if isinstance(value, str) else {}
     # These opaque dependencies only pass to the replaced producer. Any attempt
     # by admission to read or mutate persistence through them fails the test.
-    preparation = calculation_actions._BucketAggregationPreparation(
+    preparation = calculation_bucket_actions._BucketAggregationPreparation(
         snapshot=snapshot,
         binding_values=numeric_values,
         casilla_inputs={},
@@ -77,7 +78,7 @@ def test_bucket_admission_refuses_caller_changes_to_closed_manual_slots(
         source_relation_values=None,
     )
     with pytest.raises(ModeloAggregationBindingError) as raised:
-        calculation_actions._resolve_bucket_aggregation_source_resolution(
+        calculation_bucket_actions._resolve_bucket_aggregation_source_resolution(
             preparation=preparation,
             ports=cast(CalculationActionPorts, object()),
             foreign_asset_observations=(),
@@ -95,7 +96,7 @@ def test_bucket_admission_refuses_caller_changes_to_closed_manual_slots(
 def test_unclaimed_manual_enum_remains_editable() -> None:
     revision = published_snapshot("369", filing_year=2025, period="EXT-1T").revision
     manual = next(binding for binding in revision.bindings if isinstance(binding.provider, ManualInputProvider))
-    calculation_actions._reject_caller_overrides_of_source_bindings(
+    reject_caller_overrides_of_source_bindings(
         revision=revision,
         owned_sources=frozenset({BindingSourceKind.LEDGER_OSS_AGGREGATION}),
         caller_binding_values={},

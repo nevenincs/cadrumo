@@ -56,7 +56,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -194,7 +194,7 @@ def test_a_text_read_refused_for_its_missing_model_settles_with_the_local_ai_set
     detail = _assert_refused_by_the_reader(settled, EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
     assert verdict.action is not None
     assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
@@ -212,7 +212,7 @@ def test_an_image_read_refused_for_its_missing_vision_model_settles_with_the_loc
     detail = _assert_refused_by_the_reader(settled, EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert verdict.evidence[0].values["role"] == ModelRole.VISION_TRANSCRIPTION.value
     assert verdict.action is not None
     assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

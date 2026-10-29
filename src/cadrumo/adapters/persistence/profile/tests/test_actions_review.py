@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded, stash_manual_transaction
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.manual_read import (
     get_manual_transaction,
     list_manual_transactions,
     summarize_manual_transactions,

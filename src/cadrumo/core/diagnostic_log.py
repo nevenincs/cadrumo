@@ -173,6 +173,18 @@ def stamp_diagnostic_scalar_fields(record: logging.LogRecord) -> None:
     )
 
 
+def _diagnostic_level(event: str, fields: Mapping[str, DiagnosticValue] | None, level: int | None) -> int:
+    """Promote explicit failure events while preserving the caller's stronger level."""
+    outcome = fields.get("outcome") if fields is not None else None
+    failed = isinstance(outcome, str) and outcome in {"failed", "error", "unconfirmed"}
+    failed = failed or event.endswith(("_failed", " failed"))
+    if failed and (level is None or level < logging.ERROR):
+        level = logging.ERROR
+    elif level is None:
+        level = logging.DEBUG
+    return level
+
+
 def diagnostic_event(
     logger: logging.Logger,
     event: str,
@@ -183,13 +195,7 @@ def diagnostic_event(
 ) -> None:
     """Emit safe scalar diagnostics without displacing an existing primary."""
     try:
-        outcome = fields.get("outcome") if fields is not None else None
-        failed = isinstance(outcome, str) and outcome in {"failed", "error", "unconfirmed"}
-        failed = failed or event.endswith(("_failed", " failed"))
-        if failed and (level is None or level < logging.ERROR):
-            level = logging.ERROR
-        elif level is None:
-            level = logging.DEBUG
+        level = _diagnostic_level(event, fields, level)
         logger.log(level, event, extra=dict(fields or {}))
     except Exception:
         return
@@ -326,6 +332,43 @@ def _scalar(value: object) -> DiagnosticValue:
     return None
 
 
+def _base_diagnostic_context(record: logging.LogRecord) -> dict[str, DiagnosticValue]:
+    """Retain emitting process identity and only local thread/task identity."""
+    context: dict[str, DiagnosticValue] = {
+        "process_id": record.process or os.getpid(),
+        "process_role": _scalar(record.__dict__.get("_cadrumo_process_role", _process_role)),
+    }
+    # Foreign-process records are forwarded by a reader thread; its identity
+    # is not the emitting child's worker identity.
+    if record.process == os.getpid():
+        context["thread_id"] = record.thread
+        context["thread_name"] = _scalar(record.threadName)
+        for key in ("task_id", "task_name"):
+            value = record.__dict__.get(f"_cadrumo_{key}")
+            if value is not None:
+                context[key] = _scalar(value)
+    identifier = record.__dict__.get("_cadrumo_diagnostic_id")
+    if isinstance(identifier, str) and identifier:
+        context["diagnostic_id"] = _scalar(identifier)
+    return context
+
+
+def _append_lifecycle_context(record: logging.LogRecord, context: dict[str, DiagnosticValue]) -> None:
+    """Append only declared scalar lifecycle fields within the context bounds."""
+    scalar_fields = cast("tuple[str, ...] | None", record.__dict__.get("_cadrumo_scalar_fields"))
+    for key in _LIFECYCLE_FIELDS:
+        if key not in record.__dict__:
+            continue
+        value = record.__dict__[key]
+        if (key in {"run_id", "step_id"} and not value) or (scalar_fields is not None and key not in scalar_fields):
+            continue
+        if not isinstance(value, str | int | float | bool) and value is not None:
+            continue
+        if len(context) >= _MAX_CONTEXT_FIELDS:
+            break
+        context[key[:_MAX_CONTEXT_TEXT]] = _scalar(value)
+
+
 class DiagnosticFormatter(logging.Formatter):
     """Format scrubbed records with UTC time and a bounded JSON scalar suffix."""
 
@@ -337,34 +380,8 @@ class DiagnosticFormatter(logging.Formatter):
 
     @override
     def format(self, record: logging.LogRecord) -> str:
-        context: dict[str, DiagnosticValue] = {
-            "process_id": record.process or os.getpid(),
-            "process_role": _scalar(record.__dict__.get("_cadrumo_process_role", _process_role)),
-        }
-        # Foreign-process records are forwarded by a reader thread; its identity
-        # is not the emitting child's worker identity.
-        if record.process == os.getpid():
-            context["thread_id"] = record.thread
-            context["thread_name"] = _scalar(record.threadName)
-            for key in ("task_id", "task_name"):
-                value = record.__dict__.get(f"_cadrumo_{key}")
-                if value is not None:
-                    context[key] = _scalar(value)
-        identifier = record.__dict__.get("_cadrumo_diagnostic_id")
-        if isinstance(identifier, str) and identifier:
-            context["diagnostic_id"] = _scalar(identifier)
-        scalar_fields = cast("tuple[str, ...] | None", record.__dict__.get("_cadrumo_scalar_fields"))
-        for key in _LIFECYCLE_FIELDS:
-            if key not in record.__dict__:
-                continue
-            value = record.__dict__[key]
-            if (key in {"run_id", "step_id"} and not value) or (scalar_fields is not None and key not in scalar_fields):
-                continue
-            if not isinstance(value, str | int | float | bool) and value is not None:
-                continue
-            if len(context) >= _MAX_CONTEXT_FIELDS:
-                break
-            context[key[:_MAX_CONTEXT_TEXT]] = _scalar(value)
+        context = _base_diagnostic_context(record)
+        _append_lifecycle_context(record, context)
         record.__dict__["diagnostic_context"] = json.dumps(
             context, ensure_ascii=True, sort_keys=True, separators=(",", ":")
         )

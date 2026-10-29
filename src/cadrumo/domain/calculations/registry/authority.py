@@ -51,6 +51,7 @@ from .authority_artifact import (
     RuntimeCatalogueComponentQuery,
     SnapshotGlobalsComponentQuery,
 )
+from .authority_deadlines import DeadlineWindow, validated_deadline_windows
 from .authority_store import (
     AuthorityStoreError,
     SQLiteAuthorityReader,
@@ -67,8 +68,8 @@ if TYPE_CHECKING:
     from .facts.schema import GovernedFact
     from .governed_fact_scope import GovernedFactSource
     from .ids import RevisionId
-    from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
-    from .schema_deadlines import DeadlineWindowDefinition
+    from .schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+    from .schema_catalogues import RegistryCatalogues
     from .schema_exports import ExportLayoutDefinition
     from .schema_form_layouts import FormLayoutDefinition
     from .schema_references import LegalReference, SourceReference
@@ -80,7 +81,6 @@ if TYPE_CHECKING:
 _LOGGER = get_logger(__name__)
 
 _SnapshotKey = tuple[str, int, str, date | None, str | None, RegistryAuthorityGrade]
-type _DeadlineWindow = tuple[str, ModeloRevision, DeadlineWindowDefinition]
 
 
 type RegistryAuthorityProjection = RegistryRevisionInspection | RegistrySnapshot
@@ -476,7 +476,7 @@ class ValidatedRegistryAuthority:
         year: int,
         *,
         modelos: tuple[str, ...] | None = None,
-    ) -> tuple[_DeadlineWindow, ...]:
+    ) -> tuple[DeadlineWindow, ...]:
         """Return canonically owned, validated deadline windows for ``year``.
 
         Window rows retain their containing revision for provenance, but that
@@ -487,67 +487,14 @@ class ValidatedRegistryAuthority:
         stricter corpus validation verdict.  This is selection, not
         deduplication: every row in the selected revision remains observable.
         """
-        from .temporal import select_revision
-
-        out: list[_DeadlineWindow] = []
-        for modelo in self._selected_modelos(modelos):
-            candidates = tuple(
-                (revision, window)
-                for revision in modelo.revisions.values()
-                for window in revision.deadline_windows
-                if window.filing_year == year
-            )
-            if not candidates:
-                continue
-            try:
-                self.validate_modelo(modelo.id)
-            except RegistryValidationError:
-                raise
-            for containing_revision, window in candidates:
-                selected_revision = select_revision(
-                    modelo,
-                    filing_year=window.period.filing_year,
-                    period=window.period.registry_token,
-                    support=self.catalogues.supported_filing_years,
-                )
-                if selected_revision.id != containing_revision.id:
-                    continue
-                # Cold validation proves this ownership invariant.  Keep the
-                # guard at the projection boundary as a defence against a
-                # future traversal refactor accidentally returning provenance
-                # from a revision other than the canonical selector's result.
-                if containing_revision is not modelo.revisions[selected_revision.id]:
-                    raise RegistrySnapshotError(
-                        f"modelo {modelo.id} deadline provenance names revision "
-                        f"{containing_revision.id!r} while the canonical selector resolved "
-                        f"{selected_revision.id!r}",
-                    )
-                out.append((modelo.id, selected_revision, window))
-        out.sort(
-            key=lambda item: (
-                item[2].closes_on,
-                item[0],
-                *_deadline_window_period_sort_key(item[2]),
-                *_deadline_window_qualifier_sort_key(item[2]),
-            ),
+        return validated_deadline_windows(
+            self._selected_modelos(modelos), year, catalogues=self.catalogues, validate_modelo=self.validate_modelo
         )
-        return tuple(out)
 
     def _selected_modelos(self, modelos: tuple[str, ...] | None) -> tuple[ModeloDefinition, ...]:
         if modelos is None:
             return self.modelos
         return tuple(self.modelo(modelo_id) for modelo_id in modelos)
-
-
-def _deadline_window_period_sort_key(window: DeadlineWindowDefinition) -> tuple[int, str]:
-    return window.filing_year, window.period.registry_token
-
-
-def _deadline_window_qualifier_sort_key(window: DeadlineWindowDefinition) -> tuple[str, tuple[str, ...]]:
-    """Order qualified plazo variants without defining another vocabulary."""
-    resultado = "" if window.resultado_scope is None else window.resultado_scope.value
-    tipo_renta = () if window.tipo_renta_scope is None else tuple(sorted(window.tipo_renta_scope))
-    return resultado, tipo_renta
 
 
 @dataclass(frozen=True, slots=True)
@@ -835,8 +782,9 @@ class PinnedAuthorityOperation:
         governed_facts: GovernedFactSource | None = None,
     ) -> RegistrySnapshot:
         from .governed_fact_scope import validating_governed_facts
-        from .schema import RegistryCatalogues
-        from .snapshot import build_validated_snapshot, collect_snapshot_ref_ids
+        from .schema_catalogues import RegistryCatalogues
+        from .snapshot import build_validated_snapshot
+        from .snapshot_references import collect_snapshot_ref_ids
         from .temporal import select_revision_metadata
 
         directory = self.modelo_directory(normalized)
@@ -984,7 +932,7 @@ class PinnedAuthorityOperation:
         the snapshot admission path. The capture compares current against every
         coordinate read from the same admitted generation in this process.
         """
-        from .snapshot import collect_snapshot_ref_ids
+        from .snapshot_references import collect_snapshot_ref_ids
         from .static_inspection import RegistryRevisionInspection
         from .temporal import select_revision_metadata
 

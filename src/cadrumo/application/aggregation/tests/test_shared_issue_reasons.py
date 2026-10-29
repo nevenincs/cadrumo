@@ -13,7 +13,7 @@ import pytest
 from .. import _shared_issue_reasons
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssueReason
-from ..renta_ledger import RentaLedgerAggregationIssueReason
+from ..renta_ledger_models import RentaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

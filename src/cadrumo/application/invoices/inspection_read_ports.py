@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.invoices.models import StoredInvoiceCatalogue
+from ...domain.invoices.catalogue import StoredInvoiceCatalogue
 from .catalogue_reads_ports import InvoiceCatalogueReader
 
 

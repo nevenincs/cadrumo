@@ -11,11 +11,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import attach_manual_transaction_evidence
+from cadrumo.application.ledger.manual_update import attach_manual_transaction_evidence
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
 from cadrumo.domain.attachments.models import Attachment
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.errors import TransactionValidationError

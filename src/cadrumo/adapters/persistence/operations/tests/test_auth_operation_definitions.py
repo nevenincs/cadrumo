@@ -55,8 +55,8 @@ from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
+from cadrumo.application.browser_location import BROWSER_PROVISION_ACTION_ID
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
@@ -388,7 +388,7 @@ def test_sign_in_without_the_browser_refuses_before_any_credential_loads(
         assert detail.message_key == "adapters.browser.errors.not_provisioned"
         assert detail.precondition_verdict_json is not None
         verdict = json.loads(detail.precondition_verdict_json)
-        assert verdict["failed_condition_id"] == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
+        assert verdict["failed_condition_id"] == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
         assert verdict["action"]["action_id"] == BROWSER_PROVISION_ACTION_ID
 
         # With the browser set up, the same sign-in goes on to read credentials

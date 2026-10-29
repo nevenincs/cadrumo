@@ -107,18 +107,26 @@ class LedgerOwnAccountRequest(BaseModel):
         needs_id = self.action in {"show", "update", "close", "remove", "designate"}
         if needs_id != (self.own_account_id is not None):
             raise ValueError(f"own account action {self.action!r} {'requires' if needs_id else 'takes no'} account id")
-        if details and self.action not in {"add", "update"}:
-            raise ValueError(f"own account action {self.action!r} takes no account details")
-        if self.action == "add" and (self.label is None or self.holding is None or self.iban is None):
-            raise ValueError("adding an own account requires its label, holding and IBAN")
-        if self.action == "update" and not details:
-            raise ValueError("updating an own account requires at least one detail")
+        _validate_account_details(self, details)
         if (self.action == "close") != (self.closed_on is not None):
             raise ValueError("closed_on is given exactly when closing an own account")
-        designating = self.action in {"designate", "undesignate"}
-        if designating != (self.role is not None) or (self.modelo is not None and not designating):
-            raise ValueError("role and modelo are given only to designate or undesignate")
+        _validate_account_designation(self)
         return self
+
+
+def _validate_account_details(request: LedgerOwnAccountRequest, details: list[str]) -> None:
+    if details and request.action not in {"add", "update"}:
+        raise ValueError(f"own account action {request.action!r} takes no account details")
+    if request.action == "add" and (request.label is None or request.holding is None or request.iban is None):
+        raise ValueError("adding an own account requires its label, holding and IBAN")
+    if request.action == "update" and not details:
+        raise ValueError("updating an own account requires at least one detail")
+
+
+def _validate_account_designation(request: LedgerOwnAccountRequest) -> None:
+    designating = request.action in {"designate", "undesignate"}
+    if designating != (request.role is not None) or (request.modelo is not None and not designating):
+        raise ValueError("role and modelo are given only to designate or undesignate")
 
 
 class OwnAccountProjection(BaseModel):

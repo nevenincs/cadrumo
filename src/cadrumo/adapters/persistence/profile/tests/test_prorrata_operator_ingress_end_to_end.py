@@ -39,10 +39,8 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.iva_ledger import (
-    aggregate_iva_ledger_observations_from_repositories,
-    resolve_iva_ledger_binding_values,
-)
+from cadrumo.application.aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
+from cadrumo.application.aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from cadrumo.application.prorrata_register.service import ProrrataRegisterService
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period

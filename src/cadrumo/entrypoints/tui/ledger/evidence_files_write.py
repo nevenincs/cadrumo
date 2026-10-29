@@ -27,11 +27,11 @@ from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
-from ..setup.offer import SetupItemOffer
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .evidence_files_common import EVIDENCE_FILES_CSS, EvidenceFilesPager, paging_controls, paint_paging
 from .models import LedgerFlowState
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 type EvidenceFilesOutcomeRowV1 = tuple[str, tuple[str, ...]]
 """One outcome row: its semantic key and its cells."""
@@ -51,8 +51,6 @@ class EvidenceFilesOutcomeV1:
     """The worded names of the per-record outcome columns."""
     rows: tuple[EvidenceFilesOutcomeRowV1, ...] = ()
     """One row per record the operation reported on."""
-    setup_item: str | None = None
-    """The setup item whose setup the outcome's verdict names, offered while its row can set it up."""
 
 
 type EvidenceFilesWordingV1 = Callable[[], EvidenceFilesOutcomeV1]
@@ -135,7 +133,6 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
             yield Static("", id="ledger-flow-status", markup=False)
             yield Static("", id="ledger-refusal", classes="ledger-refusal", markup=False)
             yield Static("", id="evidence-files-outcome", classes="evidence-files-detail", markup=False)
-            yield SetupItemOffer(offer_id="evidence-files-setup")
             yield ContentDataTable[str](id="evidence-files-outcome-rows", cursor_type="row", zebra_stripes=True)
             yield from paging_controls("evidence-files-outcome")
             yield localized(
@@ -156,7 +153,6 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         await super().refresh_language()
         repaint_tables(self, self._paint)
         self._paint_words()
-        self.query_one(SetupItemOffer).repaint()
 
     def _paint(self) -> None:
         self.populate_navigation()
@@ -241,8 +237,6 @@ class LedgerEvidenceFilesWriteScreen(LedgerConfirmationFlowScreen):
         self._paint_words()
         self._paint_outcome_rows()
         self._show_outcome_controls()
-        outcome = self.outcome
-        await self.query_one(SetupItemOffer).show_for(None if outcome is None else outcome.setup_item)
 
     def _show_outcome_controls(self) -> None:
         settled = self.flow_state in {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED}

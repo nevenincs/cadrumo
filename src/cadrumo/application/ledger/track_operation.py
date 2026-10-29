@@ -20,8 +20,8 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import get_manual_transaction, ledger_transaction_payload, ledger_transaction_tracking_payload
 from .id_resolution import resolve_lineage_transaction
+from .manual_read import get_manual_transaction, ledger_transaction_payload, ledger_transaction_tracking_payload
 from .participation_read import TransactionParticipationIndexRepositoryFactory, get_transaction_participation
 from .read_access import resolve_ledger_read_access
 from .tracking_projection import (

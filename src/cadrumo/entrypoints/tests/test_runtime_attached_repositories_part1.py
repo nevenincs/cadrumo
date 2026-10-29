@@ -87,7 +87,7 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.usage_ratios.model import UsageRatioProfile
 from ...tests.log_records import delivered_text
-from ..adapter_composition import build_borrador_100_snapshot_repository
+from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 from ._runtime_attached_repositories_support import (
     _BUCKET_A_ATTACHMENT_PAYLOAD,
     _BUCKET_A_ID,

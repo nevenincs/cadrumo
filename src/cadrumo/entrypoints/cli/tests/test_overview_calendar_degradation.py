@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....core.json_contract import NoticeSeverity
-from ...adapter_composition import build_expedientes_ports
+from ...adapter_composition_work_ports import build_expedientes_ports
 from ...overview_evidence_composition import (
     local_calendar_filing_evidence,
     local_live_calendar_events,

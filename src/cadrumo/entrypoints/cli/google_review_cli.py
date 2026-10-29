@@ -48,15 +48,21 @@ def _require_google_review_reference(
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
-def accept_google_review(request: GoogleReviewRequest, review: GoogleReviewProjection) -> Literal["apply"]:
-    """Accept only the requested calculation and the runtime's exact readable destination."""
-    if (
+def _review_matches_request(request: GoogleReviewRequest, review: GoogleReviewProjection) -> bool:
+    return not (
         review.profile_id != request.profile_id
         or review.publication_id != request.publication_id
         or review.calculation_revision_id != request.calculation_revision_id
         or review.filing_record_id != request.filing_record_id
         or review.identity.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
         or review.identity.subject_ref != profile_operation_subject(str(request.profile_id))
+    )
+
+
+def accept_google_review(request: GoogleReviewRequest, review: GoogleReviewProjection) -> Literal["apply"]:
+    """Accept only the requested calculation and the runtime's exact readable destination."""
+    if (
+        not _review_matches_request(request, review)
         or not review.root_folder_id.strip()
         or not review.readable_by_authorized_users
         or ReadablePayloadCategory.CALCULATION not in review.payload_categories
@@ -64,6 +70,23 @@ def accept_google_review(request: GoogleReviewRequest, review: GoogleReviewProje
     ):
         raise ValueError("review does not match the selected readable spreadsheet publication")
     return "apply"
+
+
+def _require_review_receipt(
+    request: GoogleReviewRequest,
+    reviewed: GoogleReviewProjection | None,
+    completed: RegisteredOperationCompletion[GoogleReviewResult],
+) -> None:
+    result = completed.projection
+    if (
+        result.profile_id != request.profile_id
+        or result.publication_id != request.publication_id
+        or reviewed is None
+        or result.snapshot_digest != reviewed.snapshot_digest
+        or result.root_folder_id != reviewed.root_folder_id
+        or completed.operation_id != reviewed.identity.operation_id
+    ):
+        raise ValueError("publication receipt does not match the request")
 
 
 def publish_google_review_cli(
@@ -113,15 +136,7 @@ def publish_google_review_cli(
     if not isinstance(completed, RegisteredOperationCompletion):
         raise typer.BadParameter("Readable export requires --accept-readable-export for the selected revision.")
     result = completed.projection
-    if (
-        result.profile_id != request.profile_id
-        or result.publication_id != request.publication_id
-        or reviewed is None
-        or result.snapshot_digest != reviewed.snapshot_digest
-        or result.root_folder_id != reviewed.root_folder_id
-        or completed.operation_id != reviewed.identity.operation_id
-    ):
-        raise ValueError("publication receipt does not match the request")
+    _require_review_receipt(request, reviewed, completed)
     emit_envelope(
         ctx,
         command="modelo.spreadsheet.publish",

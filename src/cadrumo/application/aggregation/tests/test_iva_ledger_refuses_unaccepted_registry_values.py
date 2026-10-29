@@ -42,13 +42,9 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..errors import UnacceptedLedgerRegistryValueError
-from ..iva_ledger import (
-    IvaLedgerAggregation,
-    IvaLedgerAggregationIssueReason,
-    IvaLedgerProrrataApportionment,
-    resolve_iva_ledger_binding_values,
-)
-from ..modelo_bindings import LedgerIvaAggregationSourceResolver, _selected_scope_iva_evidence_diagnostics
+from ..iva_ledger import IvaLedgerAggregation, IvaLedgerAggregationIssueReason, IvaLedgerProrrataApportionment
+from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver, _selected_scope_iva_evidence_diagnostics
 from .iva_authority_support import aggregate_iva_ledger_observations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

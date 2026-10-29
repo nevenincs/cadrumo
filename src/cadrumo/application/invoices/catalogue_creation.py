@@ -2,7 +2,7 @@
 
 The operator-facing ``aeat app ledger invoice add`` verb mints a **linkable**
 invoice directly: the :class:`~domain.invoices.models.Invoice` in the
-:class:`~domain.invoices.models.InvoiceCatalogue` is the only invoice record, and it
+:class:`~domain.invoices.catalogue.InvoiceCatalogue` is the only invoice record, and it
 carries
 ``linked_transaction_ids`` and is the reconciliation authority ``link`` targets.
 
@@ -43,6 +43,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.currency.service import resolve_fx_conversion_stamp
 from ...domain.invoices.business_premises import BusinessPremisesLease
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import (
     InvoiceClass,
     IvaRate,
@@ -54,7 +55,7 @@ from ...domain.invoices.enums import (
     resolve_iva_rate_slot as resolve_iva_rate_slot_for_date,
 )
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ..aggregation.counterpart import counterpart_operation_catalogue_entries
@@ -438,8 +439,6 @@ def build_catalogue_invoice(
     referencia catastral (RD 1065/2007 art. 34.1.d), which Modelo 347 relates
     in its own declarado and inmueble records.
     """
-    from ...domain.invoices.enums import iva_rate_percentage
-
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return build_catalogue_invoice(
@@ -469,6 +468,66 @@ def build_catalogue_invoice(
                 rate_provider=rate_provider,
                 operation=indexed_operation,
             )
+
+    return _build_pinned_catalogue_invoice(
+        bucket_id=bucket_id,
+        kind=kind,
+        counterparty_name=counterparty_name,
+        counterparty_tax_id=counterparty_tax_id,
+        counterparty_country=counterparty_country,
+        invoice_number=invoice_number,
+        issued_at=issued_at,
+        currency=currency,
+        taxable_base=taxable_base,
+        iva_rate=iva_rate,
+        payment_status=payment_status,
+        notes=notes,
+        iva_category=iva_category,
+        operation_type=operation_type,
+        operation_date=operation_date,
+        retention_rate=retention_rate,
+        retention_amount=retention_amount,
+        invoice_class=invoice_class,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        recargo_amount=recargo_amount,
+        business_premises_lease=business_premises_lease,
+        lines=lines,
+        rate_provider=rate_provider,
+        operation=operation,
+    )
+
+
+def _build_pinned_catalogue_invoice(
+    *,
+    bucket_id: str | None,
+    kind: InvoiceKind,
+    counterparty_name: str,
+    counterparty_tax_id: str | None,
+    counterparty_country: str,
+    invoice_number: str,
+    issued_at: date,
+    currency: str,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
+    payment_status: PaymentStatus = PaymentStatus.PENDING,
+    notes: str = "",
+    iva_category: IvaCategory | None = None,
+    operation_type: IntracomOperationType | None = None,
+    operation_date: date | None = None,
+    retention_rate: Decimal | None = None,
+    retention_amount: Decimal | None = None,
+    invoice_class: InvoiceClass | None = None,
+    series: str | None = None,
+    rectifies_invoice_number: str | None = None,
+    recargo_amount: Decimal | None = None,
+    business_premises_lease: BusinessPremisesLease | None = None,
+    lines: Sequence[InvoiceLine] | None = None,
+    rate_provider: CatalogueInvoiceRateProviderPort,
+    operation: PinnedAuthorityOperation,
+) -> Invoice:
+    """Construct and validate the invoice inside its exact supplied authority operation."""
+    from ...domain.invoices.enums import iva_rate_percentage
 
     # Every governed fact this construction reads -- the rate slot, the invoice
     # class default, the Modelo 349 clave rule, the devengo role and the final

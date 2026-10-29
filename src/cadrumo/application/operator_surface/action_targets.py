@@ -82,9 +82,7 @@ class ActionTarget:
             or input_schema is None
             or policy is None
             or exposure is None
-            or leaf.mounted_family is None
-            or leaf.exclusions
-            or leaf.live_leaf.alias_cli_paths
+            or _leaf_has_unrecorded_shape(leaf)
             or not exposure.exposed
             or not policy.should_expose_externally
             or policy.classification not in {_PROFILE_BOUND_WRITE, _NON_PROFILE_BOUND}
@@ -98,6 +96,10 @@ class ActionTarget:
             profile_bound_write=policy.classification == _PROFILE_BOUND_WRITE,
             program=leaf.live_leaf.program,
         )
+
+
+def _leaf_has_unrecorded_shape(leaf: ReconciledOperatorLeaf) -> bool:
+    return leaf.mounted_family is None or bool(leaf.exclusions) or bool(leaf.live_leaf.alias_cli_paths)
 
 
 ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
@@ -165,9 +167,6 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
     ),
     ActionTarget("config.profile.list", ("config", "profile", "list"), "ConfigListResult"),
     ActionTarget("config.profile.status", ("config", "profile", "status"), "ConfigStatusResult"),
-    ActionTarget("config.provision.browser", ("config", "provision", "browser"), "ProvisionBrowserResult"),
-    ActionTarget("config.provision.setup", ("config", "provision", "setup"), "ProvisionSetupResult"),
-    ActionTarget("config.provision.status", ("config", "provision", "status"), "ProvisionStatusResult"),
     ActionTarget("config.repair", ("config", "repair"), "ConfigRepairResult"),
     ActionTarget("config.repair.profile", ("config", "repair", "profile"), "RepairProfileResult"),
     ActionTarget("config.repair.quarantine", ("config", "repair", "quarantine"), "RepairQuarantineResult"),
@@ -229,6 +228,22 @@ ACTION_TARGETS: Final[tuple[ActionTarget, ...]] = (
 """One record for each command a catalogue action targets, ordered by command key."""
 
 
+def _resolved_target_path(
+    target: ActionTarget,
+    canonical_cli_path: tuple[str, ...] | None,
+    command_key: str,
+) -> tuple[str, ...]:
+    if canonical_cli_path is None:
+        resolved_path = target.cli_path
+    else:
+        if not canonical_cli_path or canonical_cli_path[0] != target.program.executable_name:
+            raise ValueError(f"command graph executable contradicts recorded action target: {command_key}")
+        resolved_path = canonical_cli_path[1:]
+    if not resolved_path or resolved_path[-len(target.cli_path) :] != target.cli_path:
+        raise ValueError(f"command graph path contradicts recorded action target: {command_key}")
+    return resolved_path
+
+
 def recorded_action_target_reconciliation(
     command_key: str,
     /,
@@ -243,14 +258,7 @@ def recorded_action_target_reconciliation(
     target = next((item for item in ACTION_TARGETS if item.command_key == command_key), None)
     if target is None:
         raise LookupError(f"unknown command schema identity: {command_key}")
-    if canonical_cli_path is None:
-        resolved_path = target.cli_path
-    else:
-        if not canonical_cli_path or canonical_cli_path[0] != target.program.executable_name:
-            raise ValueError(f"command graph executable contradicts recorded action target: {command_key}")
-        resolved_path = canonical_cli_path[1:]
-    if not resolved_path or resolved_path[-len(target.cli_path) :] != target.cli_path:
-        raise ValueError(f"command graph path contradicts recorded action target: {command_key}")
+    resolved_path = _resolved_target_path(target, canonical_cli_path, command_key)
     return reconcile_operator_surface_inventory(
         live_leaves=(
             LiveLeafInventoryRow(

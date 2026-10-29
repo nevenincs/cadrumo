@@ -17,12 +17,11 @@ from ....core.tipos_actividad import TipoActividad
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...iva.prorrata import InputClassification
 from ...iva.schema import IvaCategory, IvaExemptionArticle
+from ..date_partition import OutOfWindowTransactionIndexEntry, OutOfWindowTransactionSummary
 from ..enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..errors import TransactionValidationError
 from ..lineage_models import ClassificationHistoryEntry, DecisionProvenance
 from ..models import (
-    OutOfWindowTransactionIndexEntry,
-    OutOfWindowTransactionSummary,
     Transaction,
     derive_import_fingerprint,
     derive_movement_day_key,

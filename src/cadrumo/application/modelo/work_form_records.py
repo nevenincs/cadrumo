@@ -217,6 +217,10 @@ def _rows_from_values(
     )
 
 
+def _has_projection_fields(block: FormRepeatingGroupBlock) -> bool:
+    return any(column.export_field_id is not None for column in block.columns)
+
+
 def saved_form_records(
     *,
     snapshot: RegistrySnapshot,
@@ -234,7 +238,7 @@ def saved_form_records(
     """
     if revision is None or block.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
         return False, ()
-    if any(column.export_field_id is not None for column in block.columns):
+    if _has_projection_fields(block):
         return saved_projection_form_records(snapshot=snapshot, revision=revision, block=block)
     matched = _matching_record(snapshot, block)
     if matched is None:
@@ -244,6 +248,16 @@ def saved_form_records(
     visible_targets, _ = _target_columns(fields, column_casillas)
     if not visible_targets:
         return False, ()
+    return _project_saved_record_rows(snapshot, revision, record, fields, column_casillas)
+
+
+def _project_saved_record_rows(
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision,
+    record: ExportRecordDefinition,
+    fields: tuple[tuple[ExportFieldDefinition, str | None], ...],
+    column_casillas: tuple[str | None, ...],
+) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
     # Sections may show only unknown fields of an otherwise saved record.
     # Discover rows across this exact record before projecting its visible
     # columns, so every section preserves the same recipient indices.

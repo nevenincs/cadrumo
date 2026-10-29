@@ -12,7 +12,6 @@ from pydantic import BaseModel
 
 from ...application.ledger.actions_common import build_manual_ledger_result
 from ...application.ledger.actions_lifecycle import archive_manual_transaction
-from ...application.ledger.actions_manual import ledger_transaction_result_payload
 from ...application.ledger.lifecycle_contracts import (
     LEDGER_ARCHIVE_OPERATION_DEFINITION_ID,
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
@@ -24,6 +23,7 @@ from ...application.ledger.lifecycle_contracts import (
     LedgerLifecycleReplacedStateProjection,
     LedgerLifecycleReversalOperationId,
 )
+from ...application.ledger.manual_read import ledger_transaction_result_payload
 from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.ledger.transaction_projection import LedgerTransactionProjection

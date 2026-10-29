@@ -20,7 +20,6 @@ from ..operations.models import (
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
-from .actions_manual import ledger_transaction_result_payload
 from .lifecycle_contracts import (
     LEDGER_EXCLUDE_OPERATION_DEFINITION_ID,
     LEDGER_LIFECYCLE_MAX_RECOVERY_TRANSACTION_IDS,
@@ -37,6 +36,7 @@ from .lifecycle_contracts import (
     LedgerLifecycleReversalOperationId,
     LedgerLifecycleValidationProjection,
 )
+from .manual_read import ledger_transaction_result_payload
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionResult
 from .transaction_projection import LedgerTransactionProjection
 

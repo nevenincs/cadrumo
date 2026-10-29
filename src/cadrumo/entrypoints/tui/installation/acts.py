@@ -127,6 +127,12 @@ class ActInputError(CadrumoError):
         self.fields = fields
 
 
+def _union_members(annotation: object, optional: bool) -> tuple[list[object], bool]:
+    arguments = get_args(annotation)
+    members: list[object] = [member for member in arguments if member is not NoneType]
+    return members, optional or len(members) != len(arguments)
+
+
 def _unwrapped(annotation: object) -> tuple[object, bool, bool]:
     """Reduce an annotation to its core type, whether it admits ``None``, and whether it is a host path."""
     optional = False
@@ -143,8 +149,7 @@ def _unwrapped(annotation: object) -> tuple[object, bool, bool]:
             current = get_args(current)[0]
             continue
         if origin is Union or origin is UnionType:
-            members = [member for member in get_args(current) if member is not NoneType]
-            optional = optional or len(members) != len(get_args(current))
+            members, optional = _union_members(current, optional)
             if len(members) != 1:
                 return current, optional, False
             current = members[0]
@@ -152,10 +157,14 @@ def _unwrapped(annotation: object) -> tuple[object, bool, bool]:
         return current, optional, host_path
 
 
-def _field_of(name: str, info: FieldInfo, *, supplied_by: InstallationAct | None) -> ActField:
-    core, optional, host_path = _unwrapped(info.annotation)
-    required = info.is_required() and not optional and supplied_by is None
-    default = info.default if isinstance(info.default, bool | int | str) else None
+def _classified_field(
+    name: str,
+    core: object,
+    required: bool,
+    default: bool | int | str | None,
+    host_path: bool,
+    supplied_by: InstallationAct | None,
+) -> ActField:
     if core is bool:
         return ActField(name, ActFieldKind.BOOLEAN, required=False, default=bool(default))
     if core is int:
@@ -169,6 +178,30 @@ def _field_of(name: str, info: FieldInfo, *, supplied_by: InstallationAct | None
         kind = ActFieldKind.PATH if host_path else ActFieldKind.TEXT
         return ActField(name, kind, required=required, default=default, supplied_by=supplied_by)
     return ActField(name, ActFieldKind.JSON, required=required, supplied_by=supplied_by)
+
+
+def _field_of(name: str, info: FieldInfo, *, supplied_by: InstallationAct | None) -> ActField:
+    core, optional, host_path = _unwrapped(info.annotation)
+    required = info.is_required() and not optional and supplied_by is None
+    default = info.default if isinstance(info.default, bool | int | str) else None
+    return _classified_field(name, core, required, default, host_path, supplied_by)
+
+
+def _add_form_values(
+    document: dict[str, object], fields: tuple[ActField, ...], values: Mapping[str, object]
+) -> list[str]:
+    malformed: list[str] = []
+    for field in fields:
+        try:
+            value = _member_value(field, values.get(field.name))
+        except ValueError:
+            malformed.append(field.name)
+            continue
+        if value is not None:
+            document[field.name] = value
+        elif field.required:
+            malformed.append(field.name)
+    return malformed
 
 
 @dataclass(frozen=True, slots=True)
@@ -208,17 +241,7 @@ class OfferedAct:
         }
         if self.asks_confirmation:
             document[CONFIRMATION_FIELD] = confirmed
-        malformed: list[str] = []
-        for field in self.fields:
-            try:
-                value = _member_value(field, values.get(field.name))
-            except ValueError:
-                malformed.append(field.name)
-                continue
-            if value is not None:
-                document[field.name] = value
-            elif field.required:
-                malformed.append(field.name)
+        malformed = _add_form_values(document, self.fields, values)
         if malformed:
             raise ActInputError(tuple(malformed))
         try:

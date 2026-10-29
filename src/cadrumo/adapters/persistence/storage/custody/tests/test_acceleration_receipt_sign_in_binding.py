@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.tests import receipt_binding_probe as binding_probe
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_runtime_resume import resume_receipt_as_runtime
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
@@ -43,7 +44,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _NOW = datetime(2026, 10, 5, 9, 0, tzinfo=UTC)
 _EPOCH = "binding-epoch"
-_SERVICE = receipt.PROFILE_SESSION_KEYCHAIN_SERVICE
+_SERVICE = acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE
 
 
 class _KeyringError(Exception):
@@ -76,7 +77,7 @@ class _Keyring:
 @pytest.fixture
 def keychain(monkeypatch: pytest.MonkeyPatch) -> _Keyring:
     store = _Keyring()
-    monkeypatch.setattr(receipt, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
     return store
 
 

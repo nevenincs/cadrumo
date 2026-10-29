@@ -10,7 +10,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from ....core.config import override_settings
 from ....core.i18n.render import tr
 from ....core.request_faults import RequestFault
-from ..operations.run_screen import OperationRunScreen
+from ..operations.run_wording import failure_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -24,7 +24,7 @@ _FAULTS = (
 def test_each_fault_the_runtime_returned_is_shown_under_the_refusal_as_the_form_spells_its_own() -> None:
     refused = FrontendRefusedError(AutomationCustodyCode.INVALID.value, request_faults=_FAULTS)
 
-    assert OperationRunScreen._failure_text(refused).splitlines() == [
+    assert failure_text(refused).splitlines() == [
         "invalid",
         "patch.taxable_base: a synthetic rule about a decimal",
         "lines.2: Field required",
@@ -33,7 +33,7 @@ def test_each_fault_the_runtime_returned_is_shown_under_the_refusal_as_the_form_
 
 
 def test_a_refusal_without_faults_is_shown_as_it_was() -> None:
-    assert OperationRunScreen._failure_text(FrontendRefusedError("operation_denied")) == "operation_denied"
+    assert failure_text(FrontendRefusedError("operation_denied")) == "operation_denied"
 
 
 def test_a_busy_refusal_names_the_operation_holding_the_subject() -> None:
@@ -41,7 +41,7 @@ def test_a_busy_refusal_names_the_operation_holding_the_subject() -> None:
     refused = FrontendRefusedError("subject_busy", holder_operation_id=holder)
 
     with override_settings(cadrumo_output_language="en"):
-        lines = OperationRunScreen._failure_text(refused).splitlines()
+        lines = failure_text(refused).splitlines()
         assert lines == ["subject_busy", tr("tui.operations.run.busy_holder", operation_id=holder)]
 
     assert holder in lines[1]

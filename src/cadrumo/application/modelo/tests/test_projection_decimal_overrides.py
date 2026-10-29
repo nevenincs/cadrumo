@@ -2,7 +2,7 @@
 
 The projection service's casilla overrides are a calculation input channel, so
 they carry the *uncapped* fractional posture of
-:func:`cadrumo.application.modelo.calculate_input._decimal`: sub-cent precision
+:func:`cadrumo.application.modelo.calculate_input_validation.decimal`: sub-cent precision
 is legitimate because the AEAT fixed-width encoder rounds such a value to cents
 with ``ROUND_HALF_UP`` per the AEAT Instrucciones. What the grammar refuses is
 text whose numeric meaning is not what it appears.

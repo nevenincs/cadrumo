@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from _typeshed import SupportsAllComparisons
 
     from .authority import PinnedAuthorityOperation
-    from .formula_runtime import EvalContext as _EvalContext
+    from .formula_expression import EvalContext as _EvalContext
     from .schema import ModeloRevision
 
 _COMPARISON_OPS = frozenset({"less_than", "less_equal", "greater_than", "greater_equal", "equal"})

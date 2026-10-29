@@ -6,7 +6,7 @@ staged values feed prorrata and bienes-inversion regularizacion resolvers and
 add diagnostics for source kinds that would otherwise default to a silent zero.
 
 See Also:
-    :func:`~application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+    :func:`~application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
         Bucket-backed calculate path that composes these staging helpers.
     :class:`~application.aggregation.source_mesh.CalculationSourceResolution`
         Source-mesh envelope merged and diagnosed by this module.

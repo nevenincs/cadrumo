@@ -77,7 +77,7 @@ MODELO_READINESS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".modelo_readiness_commands", "modelo_readiness", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".modelo_results", "ModeloReadinessResult", __package__),
+            target=DeferredTarget(".modelo_query_results", "ModeloReadinessResult", __package__),
             identity="modelo.readiness",
         ),
     ),

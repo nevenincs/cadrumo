@@ -433,7 +433,7 @@ def modelo_history(
 ) -> None:
     """Stream the bucket-event history for one modelo across all lifecycle stages."""
     from .common import emit_envelope
-    from .modelo_results import ModeloHistoryResult, ModeloLifecycleEventPayload
+    from .modelo_query_results import ModeloHistoryResult, ModeloLifecycleEventPayload
     from .operation_modelo_history import read_modelo_history
 
     matches = tuple(row.to_event() for row in read_modelo_history(ctx, modelo=modelo, year=year, period=period).events)

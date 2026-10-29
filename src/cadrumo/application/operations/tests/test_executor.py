@@ -137,6 +137,8 @@ class EphemeralSecretAccess:
 
 
 class ExecutorContext:
+    effect = OperationEffect.NONE
+
     def __init__(self) -> None:
         self.identity = OperationIdentity(operation_id="a" * 64, definition_id="profile.sync", subject_ref="profile:1")
         self.revision = 0

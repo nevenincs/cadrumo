@@ -16,7 +16,7 @@ result-disposition codes): the election is what the operator *chooses*, while
 filed disposition from that choice plus the
 :func:`~domain.iva.refund_eligibility.refund_disposition_available` eligibility gate.
 
-The enum is threaded by :class:`~application.modelo.export.ModeloExportCommand`
+The enum is threaded by :class:`~application.modelo.export_contracts.ModeloExportCommand`
 and :func:`~application.modelo.filing_actions.file_modelo_revision` into the same
 disposition resolver that
 :func:`~application.modelo.result_disposition_resolution.resolve_modelo_result_disposition` applies.

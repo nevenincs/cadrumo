@@ -108,8 +108,9 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
@@ -120,11 +121,8 @@ from ...domain.usage_ratios.model import UsageRatioProfile
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import UserProfileFact
-from ..adapter_composition import (
-    build_bienes_inversion_repository,
-    build_inventory_service_ports,
-    build_ledger_evidence_ports,
-)
+from ..adapter_composition_ports import build_bienes_inversion_repository, build_inventory_service_ports
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
 from .activity_asset_operation_test_support import activity_asset_revision, seed_activity_asset
@@ -264,14 +262,19 @@ def _payload(
         case "ledger.ratios.validate":
             values = {"profile_id": profile_id}
         case "ledger.ratios.set":
-            values = {"profile_id": profile_id, "year": 2025, "category": "vehiculo_combustible", "ratio": "0.5"}
+            values = {
+                "profile_id": profile_id,
+                "year": 2025,
+                "category": "arrendamiento_vivienda_afecto",
+                "ratio": "0.5",
+            }
         case "ledger.ratios.unset":
-            category = require_spending_category("vehiculo_combustible", authority=operation)
+            category = require_spending_category("arrendamiento_vivienda_afecto", authority=operation)
             save_usage_ratio_profile(
                 UsageRatioProfile(ratios={category: Decimal("0.50")}),
                 bucket_id=str(profile_id),
             )
-            values = {"profile_id": profile_id, "category": "vehiculo_combustible"}
+            values = {"profile_id": profile_id, "category": "arrendamiento_vivienda_afecto"}
         case "auth.session.logout" | "auth.session.reset":
             values = {"all_providers": True}
         case "user-profile.field-mutation":

@@ -19,7 +19,7 @@ a future audit query distinguish "who was trusted / what was sealed" from
 "what was actually read".
 
 Every function in this module is a thin, pure composition over
-:func:`~application.modelo.revision_persistence.emit_modelo_bucket_event`
+:func:`~application.modelo.modelo_bucket_events.emit_modelo_bucket_event`
 (``aeat-architecture-boundaries``): none of them open a
 :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` write path
 of their own for the recipient registry, the encryption primitives, or the
@@ -69,8 +69,8 @@ from typing import TYPE_CHECKING
 
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
+from .modelo_bucket_events import emit_modelo_bucket_event
 from .review_package_recipient_registry import RecipientFingerprintRecord
-from .revision_persistence import emit_modelo_bucket_event
 
 if TYPE_CHECKING:
     from ...domain.buckets.event import BucketEvent

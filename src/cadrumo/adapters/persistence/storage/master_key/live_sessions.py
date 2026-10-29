@@ -5,7 +5,7 @@ right shape for ordinary work: each thread and each ``asyncio.Task`` gets its
 own active session, and an encrypt path can never see a sibling context's key.
 An embedding host's lifetime watchdog also needs one public shutdown operation
 that can zeroise sessions held by other contexts before an abrupt exit. This
-module owns that process-wide emergency boundary.
+module owns that process-wide timeout boundary.
 
 Registration is a :class:`weakref.WeakSet`, so a session that is dropped
 without an explicit close is garbage collected normally and the registry never
@@ -41,7 +41,7 @@ _lock = threading.Lock()
 
 
 def register_live_session(session: BucketSession) -> None:
-    """Record ``session`` as a live key holder for emergency zeroisation."""
+    """Record ``session`` as a live key holder for timeout zeroisation."""
     with _lock:
         _live_sessions.add(session)
 

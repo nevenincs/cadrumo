@@ -51,6 +51,7 @@ from .action_errors import VerificationOutcomeIncompleteError
 from .metadata_projection import ModeloWorkMetadataSnapshot
 from .selectors import (
     ModeloCalculationRevisionDefault,
+    ModeloCalculationRevisionSelection,
     ModeloCalculationRevisionSelector,
     ModeloCalculationRevisionSelectorError,
     ModeloCalculationRevisionSelectorNotFoundError,
@@ -268,12 +269,13 @@ def _require_selected_revision_grant_evidence(
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
 
-def _capture(
-    payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, operation: OperationExecutorContext
-) -> ModeloWorkRevisionProjection:
-    unit, calculations = _unit_and_catalogue(payload, bundle, operation=operation.authority_operation)
-    if calculations is None:
-        calculations = bundle.calculation.load(operation=operation.authority_operation)
+def _pick_revision(
+    payload: ModeloWorkRevisionRequest,
+    unit: WorkUnit,
+    calculations: CalculationRevisionCatalogue,
+    bundle: VerificationRepositoryBundle,
+    operation: OperationExecutorContext,
+) -> ModeloCalculationRevisionSelection:
     selected_id = payload.calculation_revision_id
     if selected_id is not None and selected_id == unit.work_unit_id and calculations.get(selected_id) is None:
         selected_id = None
@@ -303,6 +305,16 @@ def _capture(
         if recovery is error:
             raise
         raise recovery from error
+    return selection
+
+
+def _capture(
+    payload: ModeloWorkRevisionRequest, bundle: VerificationRepositoryBundle, operation: OperationExecutorContext
+) -> ModeloWorkRevisionProjection:
+    unit, calculations = _unit_and_catalogue(payload, bundle, operation=operation.authority_operation)
+    if calculations is None:
+        calculations = bundle.calculation.load(operation=operation.authority_operation)
+    selection = _pick_revision(payload, unit, calculations, bundle, operation)
     revision = selection.revision
     if payload.default_for in {"verify", "file"}:
         require_revision_parent_active(

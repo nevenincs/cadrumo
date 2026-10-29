@@ -157,7 +157,7 @@ class ChangelogChecklist(BaseModel):
 
 
 class HotfixCycleTimes(BaseModel):
-    """Emergency hotfix cycle-time targets, in hours, by trigger category."""
+    """timeout hotfix cycle-time targets, in hours, by trigger category."""
 
     model_config = ConfigDict(extra="forbid")
 

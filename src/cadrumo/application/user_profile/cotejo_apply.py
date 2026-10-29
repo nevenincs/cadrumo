@@ -22,7 +22,7 @@ diagnostic.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -128,14 +128,7 @@ def open_censo_divergences(record: UserProfileRecord | None) -> tuple[CensoDiver
     from .projections import record_to_path_values
 
     values = record_to_path_values(record)
-    prefix = f"{CENSO_DIVERGENCE_PREFIX}."
-    indices: set[int] = set()
-    for path in values:
-        if not path.startswith(prefix):
-            continue
-        instance, _, field = path[len(prefix) :].partition(".")
-        if instance.isdigit() and field:
-            indices.add(int(instance))
+    indices = _divergence_indices(values)
     rows: list[tuple[int, CensoDivergence]] = []
     for index in sorted(indices):
         axis = values.get(_divergence_path(index, _DIVERGENCE_AXIS))
@@ -145,6 +138,18 @@ def open_censo_divergences(record: UserProfileRecord | None) -> tuple[CensoDiver
             continue
         rows.append((index, CensoDivergence(axis=axis, artefact_value=artefact_value, source=source)))
     return tuple(row for _index, row in rows)
+
+
+def _divergence_indices(paths: Iterable[str]) -> set[int]:
+    prefix = f"{CENSO_DIVERGENCE_PREFIX}."
+    indices: set[int] = set()
+    for path in paths:
+        if not path.startswith(prefix):
+            continue
+        instance, _, field = path[len(prefix) :].partition(".")
+        if instance.isdigit() and field:
+            indices.add(int(instance))
+    return indices
 
 
 def censo_divergence_notice(record: UserProfileRecord | None) -> Notice | None:

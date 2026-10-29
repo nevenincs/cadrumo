@@ -91,7 +91,7 @@ from ....domain.deadlines.models import (
     TaxpayerProfile,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import (
+from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_work_lifecycle_ports,

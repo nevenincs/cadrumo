@@ -8,7 +8,8 @@ from typing import TYPE_CHECKING
 from rich.cells import cell_len
 from textual.widgets import Static
 
-from .....application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from .....application.modelo.work_form_findings import ModeloFormAttention
+from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
 from .casilla_list import CasillaList

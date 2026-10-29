@@ -34,6 +34,7 @@ from ...operations.registry import (
     OperationSchemaBindingV1,
 )
 from ...operations.supervisor import OperationSupervisor
+from .. import calculation_operation, edit_operation, export_operation, operation_shared
 from .. import operation_definitions as definitions_module
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -143,9 +144,12 @@ class _HistoricalCalculatePublicResultV1(BaseModel):
 def _definition_factories() -> dict[str, Any]:
     """Return every enrolment factory this module exports."""
     factories = {
-        name: getattr(definitions_module, name)
-        for name in definitions_module.__all__
-        if name.startswith("build_") and name.endswith("_definition")
+        name: value
+        for module in (definitions_module, calculation_operation, edit_operation, export_operation)
+        for name, value in vars(module).items()
+        if name.startswith("build_")
+        and name.endswith("_definition")
+        and getattr(value, "__module__", None) == module.__name__
     }
     if not factories:
         pytest.fail("no enrolment factory is exported; the conformance denominator would be empty")
@@ -170,9 +174,7 @@ def _definitions() -> dict[str, OperationDefinition]:
 def test_the_denominator_covers_every_declared_definition_id() -> None:
     """Every declared operation id has an enrolment, and every enrolment an id."""
     declared = {
-        getattr(definitions_module, name)
-        for name in definitions_module.__all__
-        if name.endswith("_OPERATION_DEFINITION_ID")
+        getattr(operation_shared, name) for name in vars(operation_shared) if name.endswith("_OPERATION_DEFINITION_ID")
     }
     enrolled = {definition.definition_id for definition in _definitions().values()}
 
@@ -207,8 +209,8 @@ def test_each_enrolment_is_recorded_and_stores_its_request_safely(factory_name: 
 
     assert definition.capabilities.durability is OperationDurability.RECORDED
     if definition.definition_id in {
-        definitions_module.MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
-        definitions_module.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        operation_shared.MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
+        operation_shared.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     }:
         assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
         assert definition.capabilities.sensitive_input is OperationSensitiveInputPolicy.SECURE_REFERENCE
@@ -252,8 +254,8 @@ def test_calculate_request_no_longer_accepts_an_annual_volume_answer() -> None:
 
 def test_calculate_request_v4_and_result_v2_bind_the_full_writer_contract() -> None:
     """The full input and writer-returned projection cannot replay as earlier schemas."""
-    definition = _build(definitions_module.build_modelo_work_calculate_definition)
-    registration = definitions_module.build_modelo_work_calculate_registration(definition)
+    definition = _build(calculation_operation.build_modelo_work_calculate_definition)
+    registration = calculation_operation.build_modelo_work_calculate_registration(definition)
 
     request_schema = registration.contract.request_schema
     assert request_schema.schema_id == "modelo.work.calculate.request"
@@ -274,8 +276,8 @@ def _pending_superseded_invocation(
     credential_free_request_json: str | None,
 ) -> tuple[OperationSupervisor, OperationPersistedSnapshot]:
     """Pin one invocation to a superseded calculate contract under the current supervisor."""
-    current = _build(definitions_module.build_modelo_work_calculate_definition)
-    current_registration = definitions_module.build_modelo_work_calculate_registration(current)
+    current = _build(calculation_operation.build_modelo_work_calculate_definition)
+    current_registration = calculation_operation.build_modelo_work_calculate_registration(current)
     legacy_definition = OperationDefinition(
         definition_id=current.definition_id,
         request_type=request_type,
@@ -317,7 +319,7 @@ def _pending_superseded_invocation(
             for binding in current_registration.schema_bindings
             if binding.identity.schema_id.endswith(".workspace_refresh_target")
         ),
-        workspace_refresh_adapter=definitions_module.resolve_modelo_work_unit_refresh_target,
+        workspace_refresh_adapter=operation_shared.resolve_modelo_work_unit_refresh_target,
     )
     supervisor = OperationSupervisor.__new__(OperationSupervisor)
     supervisor.registry = OperationRegistry(
@@ -404,7 +406,7 @@ def test_each_executor_delegates_to_the_authorities_declared_for_it(factory_name
     # public service seam to the same canonical writer rather than treating
     # that extraction as an unobserved second write path.
     if "calculate_prepared_modelo_work" in called:
-        helper = ast.parse(textwrap.dedent(inspect.getsource(definitions_module.calculate_prepared_modelo_work)))
+        helper = ast.parse(textwrap.dedent(inspect.getsource(calculation_operation.calculate_prepared_modelo_work)))
         called.update(
             node.func.id for node in ast.walk(helper) if isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
         )

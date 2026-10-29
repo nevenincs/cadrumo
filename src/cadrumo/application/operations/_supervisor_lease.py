@@ -223,6 +223,14 @@ class OperationSupervisorLeaseMixin:
         # process that died between those two writes. One exact release and
         # one retry of the acquisition; any other outcome is a live conflict.
         await self._release_leftover_lease(holder, observed_at=observed_at)
+        return await self._reacquire_submission_lease(candidate, claim, observed_at)
+
+    async def _reacquire_submission_lease(
+        self,
+        candidate: OperationOwnerLease,
+        claim: OperationIdempotencyClaim | None,
+        observed_at: datetime,
+    ) -> OperationId | None:
         reacquired = await self._leases.acquire(candidate, observed_at=observed_at)
         if reacquired.disposition is OperationLeaseDisposition.ACQUIRED:
             return None

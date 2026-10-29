@@ -70,9 +70,10 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import link_attachment_invoice
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
 from ..invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice

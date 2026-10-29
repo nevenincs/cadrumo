@@ -112,7 +112,7 @@ def _ages(*offsets_days: int) -> list[datetime]:
 # ---------------------------------------------------------------------------
 
 
-def test_age_cutoff_is_exclusive_so_a_record_exactly_at_cutoff_is_retained() -> None:
+def test_age_timeout_is_exclusive_so_a_record_exactly_at_timeout_is_retained() -> None:
     """A record strictly older than the cutoff goes; one exactly at it stays.
 
     DISCRIMINATING. Fails when the cutoff comparison is made inclusive
@@ -146,7 +146,7 @@ def test_count_cap_evicts_the_oldest_survivors_first() -> None:
     assert removed == ["r0", "r1", "r2"]
 
 
-def test_count_cap_is_applied_only_to_records_surviving_the_age_cutoff() -> None:
+def test_count_cap_is_applied_only_to_records_surviving_the_age_timeout() -> None:
     """Age-expired records must not consume the retention budget.
 
     DISCRIMINATING. Fails when the cap is measured over all rows rather than

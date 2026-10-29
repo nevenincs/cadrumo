@@ -21,13 +21,14 @@ from .....core.config import override_settings
 from ...components.dialogs import ConfirmScreen
 from ...tests.frame import geometry_band
 from ...tests.settling import settle
-from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..controller import LedgerWorkspaceController
 from ..entries_add import LedgerEntryAddScreen
 from ..entries_browse import LedgerEntriesBrowseScreen
 from ..entries_export import LedgerEntriesExportScreen
 from ..entries_health import LedgerHealthScreen
 from ..entries_reset import LedgerResetScreen
 from ..entries_trace import LedgerEntryTraceScreen
+from ..workspace_screen import LedgerWorkspaceScreen
 from .entries_door_fixtures import (
     MemoryEntriesLedger,
     entries_controller,

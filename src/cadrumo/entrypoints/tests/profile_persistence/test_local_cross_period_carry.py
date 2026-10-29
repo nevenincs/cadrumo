@@ -61,11 +61,11 @@ from ....application.calculations.observations_repository import APP_FILING_SOUR
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.ledger.models import ManualLedgerTransactionCommand
 from ....application.ledger.tests.manual_transaction_support import create_manual_transaction
-from ....application.modelo.calculation_actions import (
-    calculate_modelo_revision,
+from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    resolve_bucket_source_mesh,
 )
+from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts

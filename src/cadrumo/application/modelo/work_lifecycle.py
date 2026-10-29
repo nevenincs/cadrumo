@@ -71,8 +71,8 @@ from .lifecycle_clock_gate import (
     require_lifecycle_clock_not_before,
     work_unit_ordering_instants,
 )
+from .modelo_bucket_events import build_modelo_bucket_event as _build_bucket_event
 from .preconditions import build_modelo_precondition_failure_for_scenario
-from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .work_lifecycle_ports import WorkLifecyclePorts
 
 if TYPE_CHECKING:
@@ -358,6 +358,46 @@ def reject_superseded_censo_modelo(*, modelo: str, operation: PinnedAuthorityOpe
     )
 
 
+def _require_matching_creation_year(modelo: str, filing_year: int, period: Period, revision_id: RevisionId) -> None:
+    if period.filing_year != filing_year:
+        evidence_values = {
+            "modelo": modelo,
+            "filing_year": filing_year,
+            "period_year": period.filing_year,
+            "period": period.registry_token,
+            "revision_id": revision_id,
+            "filing_year_matches_period": False,
+        }
+        raise WorkUnitMutationRefusedError(
+            translated_message="application.modelo.errors.work_unit_filing_year_period_mismatch",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.create",
+                scenario_id="modelo.work.create.period.filing_year.mismatch",
+                evidence_id="modelo.work.create.period.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+            ),
+        )
+
+
+def _require_existing_creation_unit(existing: WorkUnit) -> WorkUnit:
+    if existing.state is WorkUnitState.DESCARTADO:
+        evidence_values = _work_unit_lifecycle_facts(existing)
+        raise WorkUnitMutationRefusedError(
+            translated_message="application.modelo.errors.work_unit_create_discarded",
+            context=evidence_values,
+            precondition_failure=build_modelo_precondition_failure_for_scenario(
+                subject_leaf_key="modelo.work.create",
+                scenario_id="modelo.work.create.lifecycle.target_discarded",
+                evidence_id="modelo.work.create.lifecycle.observation",
+                evidence_values=evidence_values,
+                provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+            ),
+        )
+    return existing
+
+
 def create_work_unit(
     *,
     bucket_id: str,
@@ -402,26 +442,7 @@ def create_work_unit(
     not exist yet.
     """
     reject_superseded_censo_modelo(modelo=modelo, operation=operation)
-    if period.filing_year != filing_year:
-        evidence_values = {
-            "modelo": modelo,
-            "filing_year": filing_year,
-            "period_year": period.filing_year,
-            "period": period.registry_token,
-            "revision_id": revision_id,
-            "filing_year_matches_period": False,
-        }
-        raise WorkUnitMutationRefusedError(
-            translated_message="application.modelo.errors.work_unit_filing_year_period_mismatch",
-            context=evidence_values,
-            precondition_failure=build_modelo_precondition_failure_for_scenario(
-                subject_leaf_key="modelo.work.create",
-                scenario_id="modelo.work.create.period.filing_year.mismatch",
-                evidence_id="modelo.work.create.period.observation",
-                evidence_values=evidence_values,
-                provenance=ActionEvidenceProvenance.APPLICATION_STATE,
-            ),
-        )
+    _require_matching_creation_year(modelo, filing_year, period, revision_id)
     from .profile_readiness_gate import (
         require_existing_profile_baseline_ready_for_modelo_work,
         require_profile_ready_for_modelo_work,
@@ -477,20 +498,7 @@ def create_work_unit(
     )
     existing = catalogue.get(work_unit_id)
     if existing is not None:
-        if existing.state is WorkUnitState.DESCARTADO:
-            evidence_values = _work_unit_lifecycle_facts(existing)
-            raise WorkUnitMutationRefusedError(
-                translated_message="application.modelo.errors.work_unit_create_discarded",
-                context=evidence_values,
-                precondition_failure=build_modelo_precondition_failure_for_scenario(
-                    subject_leaf_key="modelo.work.create",
-                    scenario_id="modelo.work.create.lifecycle.target_discarded",
-                    evidence_id="modelo.work.create.lifecycle.observation",
-                    evidence_values=evidence_values,
-                    provenance=ActionEvidenceProvenance.PERSISTED_STATE,
-                ),
-            )
-        return existing
+        return _require_existing_creation_unit(existing)
     now = clock or _utc_now()
     unit = WorkUnit(
         work_unit_id=work_unit_id,

@@ -86,6 +86,36 @@ def _events(value: JsonValue) -> list[JsonValue]:
     return cleaned
 
 
+def _financial_snapshot(document: dict[str, JsonValue]) -> tuple[dict[str, JsonValue], dict[str, JsonValue]] | None:
+    candidate = document.get("snapshot")
+    if not isinstance(candidate, dict):
+        return None
+    identity = candidate.get("identity")
+    if not isinstance(identity, dict):
+        return None
+    definition_id = identity.get("definition_id")
+    if not isinstance(definition_id, str) or definition_id not in _FINANCIAL_DEFINITIONS:
+        return None
+    return candidate, identity
+
+
+def _scrub_snapshot(snapshot: dict[str, JsonValue]) -> dict[str, JsonValue]:
+    snapshot = {key: val for key, val in snapshot.items() if key in OperationPersistedSnapshot.model_fields}
+    snapshot["credential_free_request_json"] = _PURGED_REQUEST
+    snapshot["request_storage"] = "credential_free_journal"
+    snapshot["request_reference"] = _PURGED_REFERENCE
+    snapshot["manual_edit_values_purged"] = True
+    snapshot["idempotency_claim"] = None
+    snapshot["admission_provenance_reference"] = None
+    snapshot["events"] = _events(snapshot.get("events", []))
+    if snapshot.get("terminal_receipt") is not None:
+        receipt = _object(snapshot["terminal_receipt"])
+        snapshot["terminal_receipt"] = {
+            key: val for key, val in receipt.items() if key in OperationTerminalReceipt.model_fields
+        }
+    return snapshot
+
+
 def purge_legacy_financial_edit_journal(raw: str, *, operation_id: str) -> str | None:
     """Return safe replacement bytes, or None when no financial purge is needed.
 
@@ -98,15 +128,10 @@ def purge_legacy_financial_edit_journal(raw: str, *, operation_id: str) -> str |
         document = _decode_object(raw)
     except (ValidationError, ValueError):
         raise RepositoryError("invalid operation journal") from None
-    candidate = document.get("snapshot")
-    if not isinstance(candidate, dict):
+    selected = _financial_snapshot(document)
+    if selected is None:
         return None
-    identity_candidate = candidate.get("identity")
-    if not isinstance(identity_candidate, dict):
-        return None
-    definition_id = identity_candidate.get("definition_id")
-    if not isinstance(definition_id, str) or definition_id not in _FINANCIAL_DEFINITIONS:
-        return None
+    candidate, identity_candidate = selected
     try:
         snapshot = candidate
         identity = identity_candidate
@@ -119,19 +144,7 @@ def purge_legacy_financial_edit_journal(raw: str, *, operation_id: str) -> str |
         ) == "secure_reference"
         if not legacy:
             return None
-        snapshot = {key: val for key, val in snapshot.items() if key in OperationPersistedSnapshot.model_fields}
-        snapshot["credential_free_request_json"] = _PURGED_REQUEST
-        snapshot["request_storage"] = "credential_free_journal"
-        snapshot["request_reference"] = _PURGED_REFERENCE
-        snapshot["manual_edit_values_purged"] = True
-        snapshot["idempotency_claim"] = None
-        snapshot["admission_provenance_reference"] = None
-        snapshot["events"] = _events(snapshot.get("events", []))
-        if snapshot.get("terminal_receipt") is not None:
-            receipt = _object(snapshot["terminal_receipt"])
-            snapshot["terminal_receipt"] = {
-                key: val for key, val in receipt.items() if key in OperationTerminalReceipt.model_fields
-            }
+        snapshot = _scrub_snapshot(snapshot)
         document = {"snapshot": snapshot, "history": _events(document["history"])}
         validation_snapshot = dict(snapshot)
         validation_snapshot["schema_version"] = OperationPersistedSnapshot.model_fields["schema_version"].default

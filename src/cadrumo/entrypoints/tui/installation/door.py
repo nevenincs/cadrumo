@@ -83,6 +83,16 @@ class ActSecretDeclined:
 type ActOutcome = ActCompleted | ActRefused | ActFailed | ActUnreachable | ActSecretDeclined
 
 
+def _settled_outcome(
+    settled: InstallationCompleted | InstallationRefused | InstallationFailed, changes_records: bool
+) -> ActOutcome:
+    if isinstance(settled, InstallationRefused):
+        return ActRefused(settled)
+    if isinstance(settled, InstallationFailed):
+        return ActFailed(settled, may_have_changed_records=changes_records)
+    return ActCompleted(settled)
+
+
 async def perform_act(
     open_client: InstallationClientOpener,
     request: InstallationActRequest,
@@ -144,11 +154,7 @@ async def perform_act(
         for buffer in (passphrase, secret):
             if buffer is not None:
                 buffer[:] = bytes(len(buffer))
-    if isinstance(settled, InstallationRefused):
-        return ActRefused(settled)
-    if isinstance(settled, InstallationFailed):
-        return ActFailed(settled, may_have_changed_records=changes_records)
-    return ActCompleted(settled)
+    return _settled_outcome(settled, changes_records)
 
 
 async def _close(client: InstallationClient) -> None:

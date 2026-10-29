@@ -12,10 +12,8 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
-from ...domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationSourceIssue,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,

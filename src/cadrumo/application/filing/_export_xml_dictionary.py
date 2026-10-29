@@ -13,9 +13,9 @@ See Also:
         Approved declaration draft whose casilla and header values are rendered.
     :class:`~domain.calculations.registry.schema_exports.ExportLayoutDefinition`
         Registry export layout carrying dictionary and XSD source references.
-    :class:`~domain.calculations.registry.export_parse.XmlDictionaryEntry`
+    :class:`~domain.calculations.registry.export_xml_dictionary.XmlDictionaryEntry`
         Parsed dictionary row consumed while projecting XML fields.
-    :func:`~domain.calculations.registry.export_parse.xml_dictionary_entries`
+    :func:`~domain.calculations.registry.export_xml_dictionary.xml_dictionary_entries`
         Registry helper that reads the official dictionary source.
     :class:`~application.filing.runtime.RegistrySchemaAccessor`
         Runtime schema provider that resolves source roots and references.
@@ -39,7 +39,7 @@ from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.export_parse import (
+from ...domain.calculations.registry.export_xml_dictionary import (
     SINO_DICTIONARY_TYPE,
     XML_DICTIONARY_BOOLEAN_TYPES,
     XmlDictionaryEntry,

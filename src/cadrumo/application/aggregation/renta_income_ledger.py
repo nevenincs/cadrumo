@@ -42,9 +42,10 @@ from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from . import _renta_income_evidence, _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
@@ -344,7 +345,7 @@ def aggregate_renta_income_ledger(
 
     Args:
         transactions: The :class:`TransactionCatalogue` of ledger transactions to aggregate.
-        invoices: The bucket's :class:`~domain.invoices.models.InvoiceCatalogue`, whose
+        invoices: The bucket's :class:`~domain.invoices.catalogue.InvoiceCatalogue`, whose
             linked sales invoices supply the base, cuota and retención for rows
             that reference one. Optional so an in-process caller holding no
             invoices need not construct an empty catalogue; the production entry

@@ -379,6 +379,18 @@ def _opened_file_refusal(descriptor: int, max_bytes: int) -> HostPathRefusal | N
     return None
 
 
+def _confined_file_coordinates(path: Path, root: Path | None) -> tuple[Path, tuple[str, ...], HostPathRefusal | None]:
+    """Admit the lexical path and anchor before opening any native handles."""
+    refusal = host_path_form_refusal(path)
+    if refusal is None and root is not None and _parts_beneath(path, root) is None:
+        refusal = HostPathRefusal.OUTSIDE_ROOT
+    anchor = path.parent if root is None else root
+    parts = _parts_beneath(path, anchor) or ()
+    if refusal is None and not parts:
+        refusal = HostPathRefusal.NOT_REGULAR_FILE
+    return anchor, parts, refusal
+
+
 @contextmanager
 def opened_confined_file(
     path: Path,
@@ -399,13 +411,7 @@ def opened_confined_file(
         A :class:`ConfinedFile` open for the duration of the block, or the
         :class:`HostPathRefusal` that stopped the open.
     """
-    refusal = host_path_form_refusal(path)
-    if refusal is None and root is not None and _parts_beneath(path, root) is None:
-        refusal = HostPathRefusal.OUTSIDE_ROOT
-    anchor = path.parent if root is None else root
-    parts = _parts_beneath(path, anchor) or ()
-    if refusal is None and not parts:
-        refusal = HostPathRefusal.NOT_REGULAR_FILE
+    anchor, parts, refusal = _confined_file_coordinates(path, root)
     if refusal is not None:
         yield refusal
         return

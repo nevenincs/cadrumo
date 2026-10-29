@@ -39,51 +39,18 @@ mismatch only once the supplied proof has unwrapped it. The frontend's
 proof borrow reads only the keychain proof and the receipt locator, so no DEK
 reaches a frontend and no frontend deletes either half.
 
-A disk-only attacker sees ciphertext no more revealing than the
-already-persisted wrapped ``bucket.dek.json``; a keychain-only attacker
-holds a random key with nothing to decrypt; altering any persisted
-deadline breaks the GCM tag. Resume evaluation is FAIL-CLOSED: an
-expired, tampered, version-mismatched, or keychain-orphaned record is
-deleted and refused with a typed
-:class:`~cadrumo.core.profile_session.ProfileSessionRefusalReason`, never silently
-tolerated. No plaintext KEK, DEK, or session-key byte ever lands on disk.
-
-Zeroisation honesty: the session key and DEK are held in ``bytearray``
-buffers wiped through :func:`~adapters.persistence.storage.custody.zeroise.zeroise`
-on every exit path, but the AEAD primitives and the pydantic boundary
-require transient immutable ``bytes`` views whose lifetime the garbage
-collector owns — the same best-effort contract
-:class:`BucketSession` documents for the live in-process buffers.
-
-Keychain failures are normalised to :class:`KeyringUnavailableError` on every
-path, including failures raised OUTSIDE the ``keyring`` library's own
-exception hierarchy. A backend can pass the class-level usability probe and
-still fail at call time: the Windows credential store raises
-``win32ctypes.pywin32.pywintypes.error`` (for example ``WinError 1312``, "a
-specified logon session does not exist") from a process whose logon session
-the credential manager cannot reach, and that type derives directly from
-``Exception`` -- it is neither a ``KeyringError`` nor an ``OSError``, so a
-guard naming either lets it escape as a raw traceback. Normalising here is
-what makes the documented degradation reachable: no persisted artefact, a
-process-scoped login, and a warning to the operator. The error type is caught
-structurally rather than imported by name so this module carries no
-platform-specific import.
-
-See Also:
-    :class:`~adapters.persistence.storage.master_key.bucket_session.BucketSession`
-        The in-process materialisation this persisted record re-opens.
+The record and secret are both required; resume fails closed on invalid bindings.
 """
 
 from __future__ import annotations
 
-import binascii
 import json
 import secrets
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
-from typing import Final, Protocol, cast
+from typing import Final, cast
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
@@ -109,6 +76,12 @@ from ..errors import (
 )
 from ..storage_path_definitions import PROFILE_SESSION_FILENAME, PROFILE_SESSION_RETIREMENT_FILENAME
 from . import acceleration_receipt_crypto as _crypto
+from .acceleration_keychain import (
+    delete_acceleration_secret,
+    probe_profile_session_keychain,
+    read_acceleration_secret,
+    store_acceleration_secret,
+)
 from .acceleration_receipt_crypto import encryption_error
 from .errors import ProfileCustodyRecordError
 from .filesystem import (
@@ -128,23 +101,6 @@ from .sign_in_generation import (
 from .zeroise import zeroise as _zeroise
 
 _log = get_logger(__name__)
-
-PROFILE_SESSION_KEYCHAIN_SERVICE: Final[str] = "cadrumo:profile-session:v2"
-"""OS-keychain service name for current profile acceleration-receipt keys.
-
-The token deliberately lags the concept name. It addresses entries in the OS
-credential store, OUTSIDE the storage root, so a rename orphans every existing
-entry: deleting the storage root cannot reap them, and code that deleted under
-the old token first would be exactly the migration path this project forbids.
-Permanent credential residue on real machines is the worse outcome, so the
-wire identifier stays fixed while the code name says what the artefact is.
-"""
-
-_KEYCHAIN_PROBE_ACCOUNT: Final[str] = "availability-probe"
-"""An account no receipt names: never a ``<profile UUID>:<session UUID>`` pair, so a probe reads nothing real."""
-
-_ERROR_NO_SUCH_LOGON_SESSION: Final[int] = 1312
-"""Win32 ``ERROR_NO_SUCH_LOGON_SESSION``: the credential store has no credentials for this logon."""
 
 PROFILE_SESSION_RECORD_MAX_BYTES: Final[int] = 8 * 1024
 """Strict ceiling for one canonical ``session.v2.json`` receipt."""
@@ -253,248 +209,6 @@ class ProfileSessionResumeOutcome(BaseModel):
     deletion: ReceiptDeletion = ReceiptDeletion.NOT_REQUIRED
     binding: ReceiptBindingRefusal | None = None
     keychain: KeychainUnavailability | None = None
-
-
-class _ProfileSessionKeyring(Protocol):
-    """Direct subset of the OS keychain used by session acceleration."""
-
-    def set_password(self, service_name: str, username: str, password: str) -> None:
-        """Persist one secret under the immutable account."""
-        ...
-
-    def get_password(self, service_name: str, username: str) -> str | None:
-        """Load one exact secret, or return no entry."""
-        ...
-
-    def delete_password(self, service_name: str, username: str) -> None:
-        """Remove one exact secret."""
-        ...
-
-
-def _keyring() -> tuple[_ProfileSessionKeyring, type[BaseException], type[BaseException]]:
-    """Return the direct OS-keychain capability without master/provider reuse."""
-    try:
-        import keyring
-        from keyring.errors import KeyringError, PasswordDeleteError
-    except ImportError as exc:
-        raise KeyringUnavailableError(
-            f"keyring package not importable: {exc}", unavailability=KeychainUnavailability.NO_BACKEND
-        ) from exc
-    try:
-        priority = float(getattr(keyring.get_keyring(), "priority", 0))
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain cannot be inspected: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    if priority <= 0:
-        raise KeyringUnavailableError(
-            "no usable OS keychain is configured for profile-session acceleration",
-            unavailability=KeychainUnavailability.NO_BACKEND,
-        )
-    return cast(_ProfileSessionKeyring, keyring), KeyringError, PasswordDeleteError
-
-
-def keychain_unavailability(error: BaseException) -> KeychainUnavailability:
-    """Name the prerequisite a keychain failure shows to be missing.
-
-    The Windows credential store raises its own error type carrying the Win32
-    code first, so the code is read structurally along the cause chain rather
-    than by importing a platform type. A typed error that already names its
-    reason keeps it.
-    """
-    seen: set[int] = set()
-    current: BaseException | None = error
-    while current is not None and id(current) not in seen:
-        seen.add(id(current))
-        if isinstance(current, KeyringUnavailableError):
-            return current.unavailability
-        if type(current).__name__ == "NoKeyringError":
-            return KeychainUnavailability.NO_BACKEND
-        code = getattr(current, "winerror", None)
-        if code is None and current.args and isinstance(current.args[0], int):
-            code = current.args[0]
-        if code == _ERROR_NO_SUCH_LOGON_SESSION:
-            return KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
-        current = current.__cause__ or current.__context__
-    return KeychainUnavailability.REFUSED
-
-
-def probe_profile_session_keychain() -> KeychainUnavailability | None:
-    """Return why this process cannot use the keychain, or ``None`` when it can.
-
-    The probe only reads an account no receipt ever names, so it creates,
-    changes and deletes nothing. A process that cannot read the keychain can
-    neither keep a sign-in nor present one, which makes this the deciding
-    fact behind a sign-in that was not persisted or cannot be followed.
-    """
-    try:
-        keyring, _keyring_error, _password_delete_error = _keyring()
-        keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, _KEYCHAIN_PROBE_ACCOUNT)
-    except Exception as exc:
-        return keychain_unavailability(exc)
-    return None
-
-
-def _keychain_account(*, profile_id: UUID, session_id: UUID) -> str:
-    """Return the immutable UUID-pair account for one acceleration receipt."""
-    return f"{profile_id}:{session_id}"
-
-
-def _store_acceleration_secret(*, profile_id: UUID, session_id: UUID, session_key: bytes) -> None:
-    """Store and round-trip verify one fresh session key under its UUID pair."""
-    if len(session_key) != _crypto.PROFILE_SESSION_KEY_BYTES:
-        raise StorageValidationError(f"session_key must be exactly {_crypto.PROFILE_SESSION_KEY_BYTES} bytes")
-    keyring, keyring_error, _password_delete_error = _keyring()
-    account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    encoded = b64_encode(session_key)
-    try:
-        keyring.set_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account, encoded)
-        roundtrip = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key write: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly on the profile-session key write: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    if roundtrip != encoded:
-        _delete_acceleration_secret(profile_id=profile_id, session_id=session_id, suppress_unavailable=True)
-        raise KeyringUnavailableError("OS keychain accepted the session key but its round-trip read disagreed")
-
-
-def _read_acceleration_secret(*, profile_id: UUID, session_id: UUID) -> bytes | None:
-    """Read one receipt's session key without changing the keychain.
-
-    Raises:
-        KeyringUnavailableError: When the keychain cannot answer.
-        ValueError: When the stored entry is not one encoded session key.
-    """
-    keyring, keyring_error, _password_delete_error = _keyring()
-    account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    try:
-        stored = keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key read: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly on the profile-session key read: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    if stored is None:
-        return None
-    try:
-        key = b64_decode(stored)
-    except (ValueError, binascii.Error) as exc:
-        raise ValueError("profile-session keychain entry is not base64") from exc
-    if len(key) != _crypto.PROFILE_SESSION_KEY_BYTES:
-        raise ValueError("profile-session keychain entry has the wrong length")
-    return key
-
-
-def _read_keychain_entry_for_deletion(
-    keyring: _ProfileSessionKeyring,
-    keyring_error: type[BaseException],
-    account: str,
-    *,
-    refusal_detail: str,
-    unexpected_detail: str,
-) -> str | None:
-    """Read one account while preserving the deletion-phase error wording."""
-    try:
-        return keyring.get_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the {refusal_detail}: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly {unexpected_detail}: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
-
-
-def _delete_keychain_entry(
-    *,
-    profile_id: UUID,
-    session_id: UUID,
-) -> None:
-    """Delete and independently confirm one exact UUID-pair account."""
-    keyring, keyring_error, password_delete_error = _keyring()
-    account = _keychain_account(profile_id=profile_id, session_id=session_id)
-    present = _read_keychain_entry_for_deletion(
-        keyring,
-        keyring_error,
-        account,
-        refusal_detail="profile-session key read before deletion",
-        unexpected_detail="before profile-session key deletion",
-    )
-    if present is None:
-        return
-    try:
-        keyring.delete_password(PROFILE_SESSION_KEYCHAIN_SERVICE, account)
-    except password_delete_error:
-        # A concurrent owner may have deleted it after ``present``.  Do
-        # not turn that idempotent absence into a false unavailable
-        # outcome; only a second exact read decides it.
-        confirmed = _read_keychain_entry_for_deletion(
-            keyring,
-            keyring_error,
-            account,
-            refusal_detail="profile-session key deletion confirmation",
-            unexpected_detail="during profile-session key deletion confirmation",
-        )
-        if confirmed is None:
-            return
-        raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion") from None
-    except keyring_error as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key deletion: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    except Exception as exc:
-        raise KeyringUnavailableError(
-            f"OS keychain raised unexpectedly during profile-session key deletion: {exc}",
-            unavailability=keychain_unavailability(exc),
-        ) from exc
-    confirmed = _read_keychain_entry_for_deletion(
-        keyring,
-        keyring_error,
-        account,
-        refusal_detail="profile-session key deletion confirmation",
-        unexpected_detail="during profile-session key deletion confirmation",
-    )
-    if confirmed is not None:
-        raise KeyringUnavailableError("OS keychain did not confirm profile-session key deletion")
-
-
-def _delete_acceleration_secret(
-    *,
-    profile_id: UUID,
-    session_id: UUID,
-    suppress_unavailable: bool,
-) -> None:
-    """Prove one known UUID-pair acceleration entry is absent.
-
-    A missing account is an idempotent success.  A ``PasswordDeleteError``
-    alone is not evidence that the backend is unavailable: a sibling may have
-    retired this exact account after our first read.  Read once more and
-    accept only an observed absence; otherwise preserve the calling journal
-    under the typed unavailable path.
-    """
-    try:
-        _delete_keychain_entry(profile_id=profile_id, session_id=session_id)
-    except Exception as exc:
-        if suppress_unavailable:
-            _log.debug("profile-session key cleanup deferred error_type=%s", type(exc).__name__)
-            return
-        if isinstance(exc, KeyringUnavailableError):
-            raise
-        raise KeyringUnavailableError(
-            f"OS keychain refused the profile-session key deletion: {exc}", unavailability=keychain_unavailability(exc)
-        ) from exc
 
 
 def profile_session_path(*, storage_root: Path, profile_id: UUID) -> Path:
@@ -754,7 +468,7 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
     if current == successor:
         if predecessor is not None:
             prior = _decode_receipt(predecessor)
-            _delete_acceleration_secret(
+            delete_acceleration_secret(
                 profile_id=prior.profile_id,
                 session_id=prior.session_id,
                 suppress_unavailable=False,
@@ -768,7 +482,7 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
         return True
     if current == predecessor:
         successor_record = _decode_receipt(successor)
-        _delete_acceleration_secret(
+        delete_acceleration_secret(
             profile_id=successor_record.profile_id,
             session_id=successor_record.session_id,
             suppress_unavailable=False,
@@ -881,7 +595,7 @@ def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
                 translated_message="errors.fail.fail_acceleration_receipt_revocation",
                 context={"profile_id": canonical_profile_bucket_id(profile_id)},
             )
-        _delete_acceleration_secret(
+        delete_acceleration_secret(
             profile_id=record.profile_id,
             session_id=record.session_id,
             suppress_unavailable=False,
@@ -1081,7 +795,7 @@ def _mint_profile_session(
                 maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
             )
             try:
-                _store_acceleration_secret(
+                store_acceleration_secret(
                     profile_id=profile_id,
                     session_id=session_id,
                     session_key=bytes(session_key_buffer),
@@ -1123,6 +837,24 @@ def _mint_profile_session(
             _zeroise(session_key_buffer)
 
 
+def _refresh_record_matches(
+    record: _crypto.PersistedProfileSession | None,
+    *,
+    sign_in: SignInGenerationCustody,
+    login_id: str,
+    now: datetime,
+) -> bool:
+    binding = sign_in.binding
+    return (
+        record is not None
+        and record.profile_id == binding.profile_id
+        and record.custody_generation == binding.custody_generation
+        and record.dek_epoch == b64_encode(binding.dek_epoch.bytes)
+        and now >= record.issued_at
+        and _receipt_binding_refusal(record=record, login_id=login_id, generation=sign_in.observe()) is None
+    )
+
+
 def refresh_profile_session_with_key(
     *,
     sign_in: SignInGenerationCustody,
@@ -1156,14 +888,7 @@ def refresh_profile_session_with_key(
             return False
         payload, decoded = captured
         record = _current_record(decoded)
-        if (
-            record is None
-            or record.profile_id != binding.profile_id
-            or record.custody_generation != binding.custody_generation
-            or record.dek_epoch != b64_encode(binding.dek_epoch.bytes)
-            or now < record.issued_at
-            or _receipt_binding_refusal(record=record, login_id=login_id, generation=sign_in.observe()) is not None
-        ):
+        if record is None or not _refresh_record_matches(record, sign_in=sign_in, login_id=login_id, now=now):
             return False
         try:
             material = _crypto.unwrap_profile_session_dek(session_key=bytes(receipt_key), record=record)
@@ -1288,7 +1013,7 @@ def borrow_profile_session_key(
             if locator.profile_id != profile_id:
                 return _refusal(ProfileSessionRefusalReason.TAMPERED)
             try:
-                key = _read_acceleration_secret(profile_id=locator.profile_id, session_id=locator.session_id)
+                key = read_acceleration_secret(profile_id=locator.profile_id, session_id=locator.session_id)
             except KeyringUnavailableError as exc:
                 return _refusal(ProfileSessionRefusalReason.KEYRING_UNAVAILABLE, keychain=exc.unavailability)
             if key is None:
@@ -1489,7 +1214,7 @@ def _delete_refused_receipt(*, path: Path, payload: bytes, decoded: _DecodedRece
     """
     keychain_retained = False
     try:
-        _delete_acceleration_secret(
+        delete_acceleration_secret(
             profile_id=decoded.profile_id,
             session_id=decoded.session_id,
             suppress_unavailable=False,
@@ -1502,7 +1227,6 @@ def _delete_refused_receipt(*, path: Path, payload: bytes, decoded: _DecodedRece
 
 
 __all__ = [
-    "PROFILE_SESSION_KEYCHAIN_SERVICE",
     "ProfileSessionResumeOutcome",
     "ReceiptBindingRefusal",
     "ReceiptDeletion",

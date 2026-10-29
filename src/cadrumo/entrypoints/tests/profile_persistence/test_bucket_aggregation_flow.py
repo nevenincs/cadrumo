@@ -24,7 +24,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.action_errors import ModeloAggregationBindingError
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
@@ -49,7 +49,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

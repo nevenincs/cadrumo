@@ -454,25 +454,6 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="app.live.notifications.list",
         ),
         ActionCatalogueEntry(
-            action_id="operator.provision.browser",
-            target_command_key="config.provision.browser",
-        ),
-        # Only the desktop sets up the local AI, so no command performs this action: the
-        # command it resolves to reports the local AI's row, and each surface words the
-        # action as the pointer to the desktop.
-        ActionCatalogueEntry(
-            action_id="operator.provision.local_ai",
-            target_command_key="config.provision.status",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.provision.setup",
-            target_command_key="config.provision.setup",
-        ),
-        ActionCatalogueEntry(
-            action_id="operator.provision.status",
-            target_command_key="config.provision.status",
-        ),
-        ActionCatalogueEntry(
             action_id="operator.storage.init",
             target_command_key="config.storage.init",
         ),

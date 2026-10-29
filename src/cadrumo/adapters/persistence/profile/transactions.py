@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-import json
 import weakref
 from collections.abc import Iterable, Mapping
 from datetime import date
 from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
-from sqlalchemy import delete, func, select, update
+from sqlalchemy import func, select
 
 from ....core.config import load_settings
 from ....core.errors.hierarchy import InternalInvariantError
@@ -19,21 +18,16 @@ from ....core.logging import get_logger
 from ....core.time.clock import now
 from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
-    InvestmentAssetAcquisitionLink,
-    validate_investment_asset_reciprocity,
 )
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
-from ....domain.calculations.registry.iva_deduction_catalogue import is_iva_deduction_kind
-from ....domain.iva.deduction_facts import validate_iva_deduction_fact
-from ....domain.iva.flow import derive_flow_for_classification
-from ....domain.iva.schema import InvoiceKind
-from ....domain.transactions.dates import transaction_filing_date
-from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError, TransactionValidationError
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
+)
+from ....domain.transactions.dates import transaction_filing_date
+from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
+from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
     validate_authenticated_stored_transaction_json,
@@ -52,13 +46,24 @@ from ..storage.secure_object_namespaces import (
 from ..storage.sql.orm import TransactionDateIndexRow
 from ..storage.sql.secure_objects import SecureObjectMigrationTarget
 from .bienes_inversion import BienesInversionIvaRegisterRepository
+from .transaction_authority_validation import validate_iva_authority_migration
+from .transaction_date_index_storage import (
+    date_index_revision,
+    date_routing_unchanged,
+    read_date_index_rows,
+    write_date_index_rows,
+)
 from .transaction_date_projection import (
     OUT_OF_WINDOW_ROW_PROJECTION_LIMIT,
     IndexedTransactionDates,
     catalogue_from_loaded_transactions,
     project_out_of_window_index_entries,
 )
-from .transaction_iva_migration import migrated_iva_deduction_fact, migrated_iva_rate_kind
+from .transaction_revision_guards import (
+    absent_transaction_index_assertions,
+    require_transaction_edit_link_identity,
+    resolved_transaction_row_revisions,
+)
 from .transaction_row_contracts import (
     TransactionMembershipIndex,
     require_persisted_transaction_timestamps,
@@ -70,7 +75,6 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
     from ....core.secure_object_write import SecureObjectWrite
     from ..storage.envelope.contract import Envelope
-    from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
     from ..storage.sql.secure_object_records import SecureObjectDeletion, SecureObjectRevisionAssertion
     from ..storage.sql.secure_objects import SecureObjectRepository
 
@@ -370,118 +374,6 @@ class TransactionCatalogueRepository:
             raise StoredTransactionDriftError(self._bucket_id, exc) from exc
         return envelope
 
-    def _validated_migrated_transactions(self, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:
-        """Return the complete semantically validated upgraded transaction set."""
-        from ..storage.envelope.contract import Envelope
-
-        index_key = transaction_index_object_key(self._bucket_id)
-        index_payload = payloads.get(index_key)
-        if index_payload is None:
-            raise LedgerStorageError("transaction index is absent during schema migration")
-        index = Envelope[TransactionMembershipIndex].model_validate_json(index_payload).payload
-        missing = [
-            transaction_id
-            for transaction_id in index.transaction_ids
-            if transaction_object_key(self._bucket_id, transaction_id) not in payloads
-        ]
-        if missing:
-            raise LedgerStorageError(
-                "transaction rows absent for index ids during schema migration: " + ", ".join(sorted(missing)),
-            )
-        transactions: list[Transaction] = []
-        for transaction_id in index.transaction_ids:
-            payload = payloads[transaction_object_key(self._bucket_id, transaction_id)]
-            envelope = Envelope[Transaction].model_validate_json(payload)
-            self._assert_transaction_row_identity(envelope.payload, expected_transaction_id=transaction_id)
-            self._validate_migrated_deduction_fact(envelope.payload)
-            transactions.append(envelope.payload)
-        return tuple(transactions)
-
-    def _validate_migrated_deduction_fact(self, transaction: Transaction) -> None:
-        """Validate persisted v1 tax evidence without defaulting any semantic axis."""
-        fact = migrated_iva_deduction_fact(transaction)
-        if fact is None:
-            return
-        rate_kind = migrated_iva_rate_kind(transaction, fact)
-        invoice_kind = (
-            InvoiceKind.RECEIVED if transaction.direction is TransactionDirection.OUTGOING else InvoiceKind.ISSUED
-        )
-        flow_direction = derive_flow_for_classification(
-            category=fact.category,
-            invoice_direction=invoice_kind,
-        )
-        validate_iva_deduction_fact(
-            kind=fact.kind,
-            provenance=fact.provenance,
-            category=fact.category,
-            rate_kind=rate_kind,
-            flow_direction=flow_direction,
-            base_amount=fact.taxable_base,
-            iva_amount=fact.iva_amount,
-            investment_asset_id=transaction.investment_asset_id,
-            rectifies_ledger_id=transaction.rectifies_ledger_id,
-        )
-
-    def _migration_investment_links(
-        self,
-        transactions: Iterable[Transaction],
-    ) -> dict[int, list[InvestmentAssetAcquisitionLink]]:
-        """Group migrated investment deductions by filing year."""
-        links_by_year: dict[int, list[InvestmentAssetAcquisitionLink]] = {}
-        for transaction in transactions:
-            if not (
-                transaction.deduction_fact_kind is not None
-                and is_iva_deduction_kind(transaction.deduction_fact_kind, "kind.investment_acquisition")
-            ):
-                continue
-            investment_asset_id = transaction.investment_asset_id
-            if investment_asset_id is None:
-                raise LedgerStorageError(
-                    f"transaction {transaction.transaction_id!r} has an investment "
-                    "deduction kind without an asset link",
-                )
-            transaction_date = transaction.operation_date or transaction.raw.value_date or transaction.raw.booked_date
-            links_by_year.setdefault(transaction_date.year, []).append(
-                InvestmentAssetAcquisitionLink(
-                    ledger_id=transaction.transaction_id,
-                    transaction_date=transaction_date,
-                    deduction_fact_kind=transaction.deduction_fact_kind,
-                    investment_asset_id=investment_asset_id,
-                    prorrata_sector_id=transaction.prorrata_sector_id,
-                ),
-            )
-        return links_by_year
-
-    def _validate_iva_authority_migration(
-        self,
-        payloads: Mapping[tuple[str, str], bytes],
-        *,
-        bienes_definition: SecureObjectNamespaceDefinition,
-        bienes_key: str,
-        asset_profile_id: str,
-    ) -> None:
-        """Validate upgraded transaction rows against reciprocal bienes authority."""
-        transaction_payloads = {
-            key: payload
-            for (namespace, key), payload in payloads.items()
-            if namespace == TRANSACTION_CATALOGUE_NAMESPACE.namespace
-        }
-        transactions = self._validated_migrated_transactions(transaction_payloads)
-        register_payload = payloads.get((bienes_definition.namespace, bienes_key))
-        if register_payload is None:
-            raise LedgerStorageError("bienes-inversion register is absent during IVA authority migration")
-        register = BienesInversionIvaRegister.model_validate_json(register_payload)
-        links_by_year = self._migration_investment_links(transactions)
-        years = sorted(set(links_by_year) | {record.acquisition_year for record in register.records})
-        for filing_year in years:
-            validate_investment_asset_reciprocity(
-                observations=tuple(links_by_year.get(filing_year, [])),
-                register=register,
-                ledger_profile_id=self._bucket_id,
-                asset_profile_id=asset_profile_id,
-                filing_year=filing_year,
-            )
-
     def migrate_iva_deduction_authority(
         self,
         *,
@@ -519,7 +411,8 @@ class TransactionCatalogueRepository:
                     bienes_definition.schema_version,
                 ),
             ),
-            validate_upgraded_payloads=lambda payloads: self._validate_iva_authority_migration(
+            validate_upgraded_payloads=lambda payloads: validate_iva_authority_migration(
+                self._bucket_id,
                 payloads,
                 bienes_definition=bienes_definition,
                 bienes_key=bienes_key,
@@ -639,12 +532,12 @@ class TransactionCatalogueRepository:
         )
         index_revision = revisions.get(index_key)
         if not transaction_ids and index_revision is None:
-            assertions = _absent_transaction_index_assertions(index_key, include_assertions)
+            assertions = absent_transaction_index_assertions(index_key, include_assertions)
             return sha256_hex(b"transaction-catalogue:absent"), assertions
         row_revisions = {transaction_id: revisions.get(row_keys[transaction_id]) for transaction_id in transaction_ids}
         if index_revision is None:
             return None, ()
-        resolved_row_revisions = _resolved_transaction_row_revisions(row_revisions)
+        resolved_row_revisions = resolved_transaction_row_revisions(row_revisions)
         if resolved_row_revisions is None:
             return None, ()
         lines = [f"index\t{index_revision}"]
@@ -708,8 +601,7 @@ class TransactionCatalogueRepository:
         old_revision = str(records[0].revision_id)
         old_id = current.transaction_id
         new_id = replacement.transaction_id
-        _require_transaction_edit_link_identity(current, replacement)
-
+        require_transaction_edit_link_identity(current, replacement)
         writes: list[SecureObjectWrite] = [
             SecureObjectWrite(
                 namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
@@ -755,11 +647,8 @@ class TransactionCatalogueRepository:
             )
         self._objects.apply_batch((*writes, *extra_writes), deletions)
         try:
-            if old_id == new_id and IndexedTransactionDates.for_transaction(
-                current
-            ) == IndexedTransactionDates.for_transaction(replacement):
-                # A non-routing edit leaves this derived cache unchanged. Do not
-                # decrypt the whole ledger again merely to reproduce its dates.
+            if date_routing_unchanged(current, replacement):
+                # Non-routing edits leave the derived date cache unchanged.
                 return
             self._sync_date_index(self.load())
         except Exception:
@@ -963,7 +852,7 @@ class TransactionCatalogueRepository:
         ids are decrypted through one targeted batch
         :meth:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository.load_many_current`;
         out-of-window ids are reported as plaintext
-        :class:`~domain.transactions.models.OutOfWindowTransactionIndexEntry` rows (id +
+        :class:`~domain.transactions.date_partition.OutOfWindowTransactionIndexEntry` rows (id +
         filing date only, never decrypted). On a completeness MISMATCH -- a
         stale or partially-synced index -- this falls back to a full
         :meth:`load` and partitions the result in memory, so correctness never
@@ -985,7 +874,7 @@ class TransactionCatalogueRepository:
             end: Inclusive upper bound of the observation-date window.
 
         Returns:
-            The :class:`~domain.transactions.models.LedgerDatePartition` for ``[start, end]``.
+            The :class:`~domain.transactions.date_partition.LedgerDatePartition` for ``[start, end]``.
         """
         index_ids = self._load_index_ids()
         if not index_ids:
@@ -1007,19 +896,15 @@ class TransactionCatalogueRepository:
     def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
         """Load selected transaction rows through one targeted secure-object batch."""
         from ..storage.crypto.encrypted_columns import secure_object_key_digest
-        from ..storage.envelope.contract import Envelope
-        from ..storage.schema_lineage import inner_envelope_version_is_current
 
         selected_ids = tuple(sorted(transaction_ids))
         if not selected_ids:
             return []
-
         object_key_by_id = {
             transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids
         }
         transactions_by_id, missing_ids = self._cached_targeted_transactions(selected_ids, object_key_by_id)
         cache = self._transaction_revision_cache
-
         transaction_id_by_digest = {
             secure_object_key_digest(object_key_by_id[transaction_id]): transaction_id for transaction_id in missing_ids
         }
@@ -1034,23 +919,7 @@ class TransactionCatalogueRepository:
             transaction_id = transaction_id_by_digest.get(bytes(record.object_key))
             if transaction_id is None:
                 continue
-            try:
-                # The store decrypted this current-version row under its AEAD
-                # binding in this call; a row whose inner envelope names another
-                # schema version is validated in full instead.
-                envelope = validate_authenticated_stored_transaction_json(Envelope[Transaction], record.payload)
-                if not inner_envelope_version_is_current(
-                    envelope.schema_version, TRANSACTION_CATALOGUE_NAMESPACE.schema_version
-                ):
-                    envelope = Envelope[Transaction].model_validate_json(record.payload)
-            except ValidationError as exc:
-                _log.error(
-                    "transaction row schema drift bucket_id=%s (%s)",
-                    self._bucket_id,
-                    read_context,
-                    exc_info=True,
-                )
-                raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+            envelope = self._decode_targeted_row(record.payload, read_context=read_context)
             transaction = envelope.payload
             self._assert_transaction_row_identity(transaction, expected_transaction_id=transaction_id)
             transactions_by_id[transaction_id] = transaction
@@ -1060,6 +929,27 @@ class TransactionCatalogueRepository:
             for transaction_id in selected_ids
             if transaction_id in transactions_by_id
         ]
+
+    def _decode_targeted_row(self, payload: bytes, *, read_context: str) -> Envelope[Transaction]:
+        from ..storage.envelope.contract import Envelope
+        from ..storage.schema_lineage import inner_envelope_version_is_current
+
+        try:
+            # Validate in full when the authenticated inner envelope names another schema version.
+            envelope = validate_authenticated_stored_transaction_json(Envelope[Transaction], payload)
+            if not inner_envelope_version_is_current(
+                envelope.schema_version, TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+            ):
+                envelope = Envelope[Transaction].model_validate_json(payload)
+        except ValidationError as exc:
+            _log.error(
+                "transaction row schema drift bucket_id=%s (%s)",
+                self._bucket_id,
+                read_context,
+                exc_info=True,
+            )
+            raise StoredTransactionDriftError(self._bucket_id, exc) from exc
+        return envelope
 
     def _cached_targeted_transactions(
         self,
@@ -1190,12 +1080,12 @@ class TransactionCatalogueRepository:
 
         for attempt in range(3):
             with self._objects.guarded_session_scope() as session:
-                baseline = self._read_date_index_rows(session)
+                baseline = read_date_index_rows(self._bucket_id, session)
             if {key: value[1] for key, value in baseline.items()} == incoming:
                 return
 
             def commit(session: Session, baseline: dict[str, tuple[int, IndexedTransactionDates]] = baseline) -> None:
-                current = self._read_date_index_rows(session)
+                current = read_date_index_rows(self._bucket_id, session)
                 if current != baseline:
                     # No DML has occurred: the whole transaction is a proven
                     # prewrite conflict, including convergence by another writer.
@@ -1203,11 +1093,11 @@ class TransactionCatalogueRepository:
                         translated_message="errors.fail.fail_storage_secure_object_revision_conflict",
                         context={
                             "namespace": "transaction-date-index",
-                            "expected_revision_id": self._date_index_revision(baseline),
-                            "current_revision_id": self._date_index_revision(current),
+                            "expected_revision_id": date_index_revision(baseline),
+                            "current_revision_id": date_index_revision(current),
                         },
                     )
-                self._write_date_index_rows(session, incoming=incoming, existing=current)
+                write_date_index_rows(self._bucket_id, session, incoming=incoming, existing=current)
 
             try:
                 self._objects.write_transaction(commit)
@@ -1216,85 +1106,6 @@ class TransactionCatalogueRepository:
                     raise
             else:
                 return
-
-    @staticmethod
-    def _date_index_revision(rows: dict[str, tuple[int, IndexedTransactionDates]]) -> str:
-        """Identify a prepared routing baseline without persisting financial data."""
-        values = [
-            (key, row_id, dates.filing_date.isoformat(), dates.eligible_from.isoformat(), dates.eligible_to.isoformat())
-            for key, (row_id, dates) in sorted(rows.items())
-        ]
-        return sha256_hex(json.dumps(values, separators=(",", ":")).encode(UTF_8_ENCODING))
-
-    def _read_date_index_rows(self, session: Session) -> dict[str, tuple[int, IndexedTransactionDates]]:
-        """Read the exact bucket baseline used by the canonical routing diff."""
-        existing_rows = session.execute(
-            select(
-                TransactionDateIndexRow.id,
-                TransactionDateIndexRow.transaction_id,
-                TransactionDateIndexRow.filing_date,
-                TransactionDateIndexRow.eligible_from,
-                TransactionDateIndexRow.eligible_to,
-            ).where(TransactionDateIndexRow.bucket_id == self._bucket_id),
-        ).all()
-        return {
-            transaction_id: (
-                row_id,
-                IndexedTransactionDates(
-                    filing_date=filing_date,
-                    eligible_from=eligible_from,
-                    eligible_to=eligible_to,
-                ),
-            )
-            for row_id, transaction_id, filing_date, eligible_from, eligible_to in existing_rows
-        }
-
-    def _write_date_index_rows(
-        self,
-        session: Session,
-        *,
-        incoming: dict[str, IndexedTransactionDates],
-        existing: dict[str, tuple[int, IndexedTransactionDates]],
-    ) -> None:
-        """Apply the canonical routing diff after its complete baseline assertion."""
-        stale_ids = set(existing) - set(incoming)
-        if stale_ids:
-            session.execute(
-                delete(TransactionDateIndexRow).where(
-                    TransactionDateIndexRow.bucket_id == self._bucket_id,
-                    TransactionDateIndexRow.transaction_id.in_(stale_ids),
-                ),
-            )
-
-        new_rows: list[TransactionDateIndexRow] = []
-        for transaction_id, dates in incoming.items():
-            current = existing.get(transaction_id)
-            if current is not None and current[1] == dates:
-                continue  # unchanged: leave the existing row untouched
-            if current is not None:
-                session.execute(
-                    update(TransactionDateIndexRow)
-                    .where(TransactionDateIndexRow.id == current[0])
-                    .values(
-                        filing_date=dates.filing_date,
-                        filing_year=dates.filing_date.year,
-                        eligible_from=dates.eligible_from,
-                        eligible_to=dates.eligible_to,
-                    ),
-                )
-                continue
-            new_rows.append(
-                TransactionDateIndexRow(
-                    bucket_id=self._bucket_id,
-                    transaction_id=transaction_id,
-                    filing_date=dates.filing_date,
-                    filing_year=dates.filing_date.year,
-                    eligible_from=dates.eligible_from,
-                    eligible_to=dates.eligible_to,
-                ),
-            )
-        if new_rows:
-            session.add_all(new_rows)
 
     def _reconcile(
         self,
@@ -1437,44 +1248,3 @@ class TransactionCatalogueRepository:
             payload=transaction,
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)
-
-
-def _resolved_transaction_row_revisions(row_revisions: Mapping[str, str | None]) -> dict[str, str] | None:
-    """Refuse a revision digest when any addressed transaction lacks a revision."""
-    resolved_row_revisions: dict[str, str] = {}
-    for transaction_id, row_revision in row_revisions.items():
-        if row_revision is None:
-            return None
-        resolved_row_revisions[transaction_id] = row_revision
-    return resolved_row_revisions
-
-
-def _absent_transaction_index_assertions(
-    index_key: str, include_assertions: bool
-) -> tuple[SecureObjectRevisionAssertion, ...]:
-    """Prepare the absent membership witness only for an assertion-bearing read."""
-    from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-    from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
-
-    assertions = (
-        (
-            SecureObjectRevisionAssertion(
-                namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-                object_key=index_key,
-                expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
-            ),
-        )
-        if include_assertions
-        else ()
-    )
-    return assertions
-
-
-def _require_transaction_edit_link_identity(current: Transaction, replacement: Transaction) -> None:
-    """Require linked invoice identity to be changed through its reciprocal owner."""
-    old_id = current.transaction_id
-    new_id = replacement.transaction_id
-    if replacement.invoice_id != current.invoice_id:
-        raise TransactionValidationError("invoice associations require the reciprocal link operation")
-    if old_id != new_id and current.invoice_id is not None:
-        raise TransactionValidationError("linked transaction identity cannot change without updating its invoice link")

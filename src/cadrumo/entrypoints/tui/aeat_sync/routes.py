@@ -13,7 +13,10 @@ from ....application.operations.registry import OperationPublicContractSetV1
 from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from ..profile.aeat_auth_setup import AeatAuthSetupPort
+from .census_screen import AeatSyncCensusScreen
 from .controller import AeatSyncWorkspaceController
+from .evidence_comparison_screen import AeatSyncEvidenceComparisonScreen
+from .filed_declarations_screen import AeatSyncFiledDeclarationsScreen
 from .models import (
     AEAT_SYNC_DESTINATION_BY_ZONE,
     AeatSyncDestinationIdV1,
@@ -21,15 +24,10 @@ from .models import (
     AeatSyncOperationHandoffV1,
     AeatSyncRouteTargetV1,
 )
-from .screens import (
-    AeatSyncCensusScreen,
-    AeatSyncEvidenceComparisonScreen,
-    AeatSyncFiledDeclarationsScreen,
-    AeatSyncNotificationsScreen,
-    AeatSyncOverviewScreen,
-    AeatSyncReconciliationScreen,
-    AeatSyncWorkspaceScreen,
-)
+from .notifications_screen import AeatSyncNotificationsScreen
+from .overview_screen import AeatSyncOverviewScreen
+from .reconciliation_screen import AeatSyncReconciliationScreen
+from .screens import AeatSyncWorkspaceScreen
 
 type AeatSyncInternalScreenFactoryV1 = Callable[[AeatSyncWorkspaceController], AeatSyncWorkspaceScreen]
 

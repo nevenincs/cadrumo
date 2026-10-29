@@ -548,7 +548,7 @@ async def test_protected_authentication_password_is_persisted_and_reloaded(
     assert synthetic_value not in saved_results[0].model_dump_json()
     assert not any(encoded)
 
-    from cadrumo.application.auth.operator import reset_operator_auth
+    from cadrumo.application.auth.operator_revocation import reset_operator_auth
 
     reset = reset_operator_auth(
         provider=provider,

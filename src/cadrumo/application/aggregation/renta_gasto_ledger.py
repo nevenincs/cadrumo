@@ -76,8 +76,9 @@ from ...domain.renta.ledger_expenses import (
     normalize_spending_category,
     statutory_cap_trims,
 )
+from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.values import UserProfileRecord
 from . import _shared_issue_reasons

@@ -21,8 +21,8 @@ from cadrumo.application.auth.acquisition_lock import (
 )
 from cadrumo.application.auth.operator import configure_operator_auth
 from cadrumo.application.auth.protocols import BrowserContextPort, BrowserSessionFactoryPort
-from cadrumo.application.auth.sessions import (
-    ClaveCredentialsIncompleteError,
+from cadrumo.application.auth.sessions import ClaveCredentialsIncompleteError
+from cadrumo.application.auth.view_sessions import (
     ViewSessionBaseline,
     ViewSessionPublication,
     ViewSessionPublicationOutcome,

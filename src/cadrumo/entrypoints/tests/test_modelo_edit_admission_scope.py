@@ -19,7 +19,7 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, se
 
 from ...application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ...application.modelo.action_errors import ModeloEditBaselineStaleError
-from ...application.modelo.calculation_actions import (
+from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ...application.modelo.calculation_source_policy import (

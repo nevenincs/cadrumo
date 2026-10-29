@@ -18,10 +18,10 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.filing_record import derive_filing_record_id
 from ....domain.modelos.row_models import Modelo184MemberRow
 from ...user_profile.access_errors import ProfileAccessRefusedError

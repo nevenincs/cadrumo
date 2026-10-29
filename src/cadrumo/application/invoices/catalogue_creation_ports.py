@@ -18,7 +18,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.currency.models import EurRateLookup
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 
 
 class CatalogueInvoicePersistenceError(CadrumoError):
@@ -50,7 +50,7 @@ class CatalogueInvoiceRepositoryPort(Protocol):
         """Apply ``mutation`` as one revision-guarded catalogue write.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 
@@ -74,7 +74,7 @@ class CatalogueInvoiceAuditCommitPort(Protocol):
         """Commit ``mutation`` and ``event`` atomically under both revisions.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 

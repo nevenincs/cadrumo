@@ -30,6 +30,27 @@ def formula_may_read_transport_cell(formula: SheetFormulaCell, addresses: tuple[
     return False
 
 
+def _references_excluded(value: object, excluded: frozenset[str]) -> bool:
+    # Conservative exact identity matching also covers less common typed
+    # expression/binding arms. A coincident identifier refuses omission.
+    if isinstance(value, str):
+        return value in excluded
+    if isinstance(value, dict):
+        return any(_references_excluded(v, excluded) for v in cast(dict[object, object], value).values())
+    if isinstance(value, (list, tuple)):
+        return any(_references_excluded(v, excluded) for v in cast(list[object] | tuple[object, ...], value))
+    return False
+
+
+def _transport_exclusion_ids(revision: ModeloRevision) -> frozenset[str]:
+    return frozenset(
+        p.casilla_id
+        for layout in revision.form_layouts
+        for p in layout.placements
+        if p.workbook_exclusion == "transport_control"
+    )
+
+
 def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
     """Return authored transport controls, refusing calculation dependencies.
 
@@ -38,25 +59,9 @@ def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
 
     The ``revision`` parameter uses :class:`ModeloRevision`, which declares the form and its value contracts.
     """
-    excluded = frozenset(
-        p.casilla_id
-        for layout in revision.form_layouts
-        for p in layout.placements
-        if p.workbook_exclusion == "transport_control"
-    )
+    excluded = _transport_exclusion_ids(revision)
     if not excluded:
         return excluded
-
-    def references(value: object) -> bool:
-        # Conservative exact identity matching also covers less common typed
-        # expression/binding arms. A coincident identifier refuses omission.
-        if isinstance(value, str):
-            return value in excluded
-        if isinstance(value, dict):
-            return any(references(v) for v in cast(dict[object, object], value).values())
-        if isinstance(value, (list, tuple)):
-            return any(references(v) for v in cast(list[object] | tuple[object, ...], value))
-        return False
 
     casillas = {c.id: c for c in revision.casillas}
     if not excluded <= casillas.keys():
@@ -65,10 +70,14 @@ def workbook_transport_controls(revision: ModeloRevision) -> frozenset[str]:
         casilla = casillas[identifier]
         if casilla.data_type != "text" or casilla.formula is not None or casilla.binding is not None:
             raise CalcSheetsEngineError("workbook transport exclusion cannot remove a financial or bound value")
-    if any(references(f.model_dump(mode="json")) for f in revision.formulas) or any(
-        references(b.model_dump(mode="json")) for b in revision.bindings
+    _require_unreferenced_exclusions(revision, excluded)
+    return excluded
+
+
+def _require_unreferenced_exclusions(revision: ModeloRevision, excluded: frozenset[str]) -> None:
+    if any(_references_excluded(f.model_dump(mode="json"), excluded) for f in revision.formulas) or any(
+        _references_excluded(b.model_dump(mode="json"), excluded) for b in revision.bindings
     ):
         raise CalcSheetsEngineError("workbook transport exclusion is referenced by a calculation or binding")
     if any(page.condition_casilla_id in excluded for layout in revision.form_layouts for page in layout.pages):
         raise CalcSheetsEngineError("workbook transport exclusion controls a form page")
-    return excluded

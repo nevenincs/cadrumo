@@ -43,14 +43,13 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.ledger_filing_snapshot import row_fingerprint
 from .._calculation_helpers import build_typed_observations

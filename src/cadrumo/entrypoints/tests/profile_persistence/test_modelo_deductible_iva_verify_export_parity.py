@@ -40,11 +40,8 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
 )
-from cadrumo.application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from cadrumo.application.modelo.verification_gate_findings import missing_evidence_findings
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError

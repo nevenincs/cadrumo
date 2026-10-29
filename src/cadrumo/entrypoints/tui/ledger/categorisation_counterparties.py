@@ -60,6 +60,18 @@ def _resolution_text(identifier: str, resolution: CounterpartyResolutionProjecti
     return "\n".join(lines)
 
 
+def _confirmation_text(result: LedgerCounterpartyResult) -> str:
+    facts = result.facts
+    return tr(
+        "tui.ledger.categorisation.counterparty.confirmed"
+        if result.changed
+        else "tui.ledger.categorisation.counterparty.unchanged",
+        identifier=result.tax_identifier,
+        scope="-" if facts is None else facts.territorial_scope or "-",
+        state="-" if facts is None else facts.identification_state or "-",
+    )
+
+
 def counterparty_outcome_text(result: LedgerCounterpartyResult) -> str:
     """Say what one counterparty request found or changed."""
     if result.action == "view":
@@ -77,15 +89,7 @@ def counterparty_outcome_text(result: LedgerCounterpartyResult) -> str:
     if result.conflict_context is not None:
         detail = ", ".join(f"{name}: {value}" for name, value in result.conflict_context)
         return tr("tui.ledger.categorisation.counterparty.conflict", identifier=result.tax_identifier, detail=detail)
-    facts = result.facts
-    return tr(
-        "tui.ledger.categorisation.counterparty.confirmed"
-        if result.changed
-        else "tui.ledger.categorisation.counterparty.unchanged",
-        identifier=result.tax_identifier,
-        scope="-" if facts is None else facts.territorial_scope or "-",
-        state="-" if facts is None else facts.identification_state or "-",
-    )
+    return _confirmation_text(result)
 
 
 class LedgerCounterpartiesScreen(CategorisationScreen):

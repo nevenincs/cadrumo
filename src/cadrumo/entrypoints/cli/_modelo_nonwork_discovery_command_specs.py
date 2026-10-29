@@ -287,7 +287,7 @@ MODELO_NONWORK_DISCOVERY_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".modelo_discovery_commands", "requires", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_results", "ModeloRequiresResult", __package__),
+            DeferredTarget(".modelo_query_results", "ModeloRequiresResult", __package__),
             identity="modelo.requires",
         ),
     ),

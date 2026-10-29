@@ -19,10 +19,10 @@ from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceRef,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from ..calculation_revision_sources import CalculationSourceRef
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

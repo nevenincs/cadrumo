@@ -130,6 +130,10 @@ class ModeloWorkCalculatePublicResultV2(BaseModel):
             and self.replaced_head.calculation_revision_id == self.calculation_revision_id
         ):
             raise ValueError("a calculation does not replace the revision it returns")
+        self._require_parent_coordinates()
+        return self
+
+    def _require_parent_coordinates(self) -> None:
         if (
             self.work_unit_id != self.calculation.work_unit_id
             or self.work_unit_id != self.unit.work_unit_id
@@ -141,4 +145,3 @@ class ModeloWorkCalculatePublicResultV2(BaseModel):
             or self.calculation.registry_snapshot_ref.revision_id != self.unit.revision_id
         ):
             raise ValueError("calculation result does not match its writer-returned parent")
-        return self

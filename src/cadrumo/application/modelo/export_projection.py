@@ -26,7 +26,7 @@ from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ..calculations.observations_repository import PriorDomiciliationElectionProjection
 from ..operations.public_period import PublicPeriod
 from .calculation_report_export import ModeloCalculationReportResult
-from .export import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from .export_contracts import ModeloExportAccountReference, ModeloExportResult, ModeloIvaWalletDecisionProvenance
 
 
 class ModeloPriorDomiciliationPublicProvenance(BaseModel):

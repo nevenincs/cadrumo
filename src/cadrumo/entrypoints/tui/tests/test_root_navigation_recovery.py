@@ -12,10 +12,11 @@ from textual.widgets import Button, Static
 from ....application.overview.home import HomeProjectionV1
 from ....core.i18n.render import tr
 from ..account import AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from ..app import CadrumoTuiApp, RootBindingV1
+from ..app import CadrumoTuiApp
 from ..components.account_chrome import AccountActionV1, AccountChromeScreen
 from ..home import HomeScreen
 from ..navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
+from ..root_binding import RootBindingV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 from .test_app import MarkerScreen, _account_factories, _catalogue

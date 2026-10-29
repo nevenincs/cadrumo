@@ -17,7 +17,7 @@ from ...application.ledger.actions_classification import (
     add_classification_rule,
     plan_classification_rules,
 )
-from ...application.ledger.actions_manual import command_from_patch, prepare_manual_transaction_update
+from ...application.ledger.manual_update import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...application.ledger.rule_contracts import (
     LedgerRuleAddProjection,

@@ -23,15 +23,14 @@ from pydantic import ValidationError
 from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
-from ....domain.transactions.dates import transaction_eligible_date_span
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.dates import transaction_eligible_date_span
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile

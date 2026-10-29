@@ -9,6 +9,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
@@ -63,7 +64,7 @@ class _Keyring:
 @pytest.fixture
 def keyring(monkeypatch: pytest.MonkeyPatch) -> _Keyring:
     store = _Keyring()
-    monkeypatch.setattr(receipt, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
     return store
 
 
@@ -103,7 +104,9 @@ def test_password_candidate_publishes_once_without_promoting_custody(
     )
     other_path = receipt.profile_session_path(storage_root=root, profile_id=other_id)
     other_bytes = other_path.read_bytes()
-    other_entry = keyring.entries[(receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{other.session_id}")]
+    other_entry = keyring.entries[
+        (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{other.session_id}")
+    ]
     target_path = receipt.profile_session_path(storage_root=root, profile_id=profile_id)
     assert not target_path.exists()
 
@@ -133,7 +136,10 @@ def test_password_candidate_publishes_once_without_promoting_custody(
             assert current_active_bucket_session() is active
             assert resolve_active_bucket_id() == selected
     assert other_path.read_bytes() == other_bytes
-    assert keyring.entries[(receipt.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{other.session_id}")] == other_entry
+    assert (
+        keyring.entries[(acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{other_id}:{other.session_id}")]
+        == other_entry
+    )
 
 
 def test_unavailable_keyring_does_not_invalidate_password_candidate(

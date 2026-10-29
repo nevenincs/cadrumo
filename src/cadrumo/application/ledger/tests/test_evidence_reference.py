@@ -20,8 +20,9 @@ from pydantic import ValidationError
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ..evidence import MediaKind, PurchaseInvoiceEvidence
 from ..evidence_reference import (

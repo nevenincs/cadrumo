@@ -24,7 +24,8 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
     seed_revision,
 )
 from cadrumo.application.filing.runtime import build_runtime_schema_provider
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.core.period import Period

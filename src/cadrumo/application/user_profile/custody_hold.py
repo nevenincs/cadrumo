@@ -21,7 +21,8 @@ from .custody_hold_models import (
     ProfileCustodyHoldEvidence,
     evidence_from_owner_projection,
 )
-from .custody_ports import ProfileCustodyLocalRecordStore, default_profile_custody_local_record_store
+from .custody_ports import default_profile_custody_local_record_store
+from .custody_record_ports import ProfileCustodyLocalRecordStore
 from .custody_transactions import (
     ProfileCustodyTransactionCorruptError,
     ProfileCustodyTransactionError,

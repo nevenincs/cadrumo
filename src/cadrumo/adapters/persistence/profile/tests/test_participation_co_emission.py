@@ -27,7 +27,7 @@ from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegis
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.actions_common import blocking_modelo_references
-from cadrumo.application.modelo.revision_persistence import persist_filed_revision
+from cadrumo.application.modelo.filing_revision_persistence import persist_filed_revision
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.period import Period
 from cadrumo.core.result_disposition import ResultDisposition

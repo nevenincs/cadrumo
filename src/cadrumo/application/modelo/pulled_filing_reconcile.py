@@ -71,12 +71,12 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ._reconcile_population import resolve_casilla_population_scope
-from .reconcile_casilla import detect_casilla_divergences
+from .reconcile_casilla import CasillaDivergence, detect_casilla_divergences
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.schema import RegistrySnapshot
+    from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
     from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
     from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.work_unit import WorkUnit
@@ -134,6 +134,39 @@ def _law_resolved_snapshot(work_unit: WorkUnit, *, operation: PinnedAuthorityOpe
         return None
 
 
+def _divergence_findings(
+    divergences: tuple[CasillaDivergence, ...],
+    registry_revision: ModeloRevision,
+    work_unit: WorkUnit,
+) -> list[ModeloVerificationFinding]:
+    casillas_by_id: dict[CasillaId, CasillaDefinition] = {casilla.id: casilla for casilla in registry_revision.casillas}
+    findings: list[ModeloVerificationFinding] = []
+    for divergence in divergences:
+        casilla = casillas_by_id.get(divergence.casilla_id)
+        if casilla is None:
+            continue
+        findings.append(
+            ModeloVerificationFinding(
+                kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
+                severity=ModeloVerificationFindingSeverity.WARNING,
+                # The subject rides a field, never a locale-rendered message.
+                casilla_id=divergence.casilla_id,
+                message_locale_key="application.modelo.findings.pulled_filing_casilla_mismatch",
+                message_facts={
+                    "casilla_number": casilla.number,
+                    "period_code": work_unit.period.registry_token,
+                    "filing_year": work_unit.filing_year,
+                    "computed_value": divergence.computed_value if divergence.computed_value is not None else "absent",
+                    "filed_value": divergence.filed_value if divergence.filed_value is not None else "absent",
+                    "mismatch_kind": divergence.kind.value,
+                },
+                legal_refs=casilla.legal_refs,
+                source_refs=casilla.source_refs,
+            ),
+        )
+    return findings
+
+
 def pulled_filing_divergence_findings(
     *,
     work_unit: WorkUnit,
@@ -182,32 +215,7 @@ def pulled_filing_divergence_findings(
     if not divergences:
         return []
 
-    casillas_by_id: dict[CasillaId, CasillaDefinition] = {casilla.id: casilla for casilla in registry_revision.casillas}
-    findings: list[ModeloVerificationFinding] = []
-    for divergence in divergences:
-        casilla = casillas_by_id.get(divergence.casilla_id)
-        if casilla is None:
-            continue
-        findings.append(
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.RECONCILIATION_MISMATCH,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                # The subject rides a field, never a locale-rendered message.
-                casilla_id=divergence.casilla_id,
-                message_locale_key="application.modelo.findings.pulled_filing_casilla_mismatch",
-                message_facts={
-                    "casilla_number": casilla.number,
-                    "period_code": work_unit.period.registry_token,
-                    "filing_year": work_unit.filing_year,
-                    "computed_value": divergence.computed_value if divergence.computed_value is not None else "absent",
-                    "filed_value": divergence.filed_value if divergence.filed_value is not None else "absent",
-                    "mismatch_kind": divergence.kind.value,
-                },
-                legal_refs=casilla.legal_refs,
-                source_refs=casilla.source_refs,
-            ),
-        )
-    return findings
+    return _divergence_findings(divergences, registry_revision, work_unit)
 
 
 __all__ = ["pulled_filing_divergence_findings"]

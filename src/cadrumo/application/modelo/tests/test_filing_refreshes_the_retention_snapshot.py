@@ -30,7 +30,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ...filing.retention import FilingRetentionAuthority
-from ..revision_persistence import _refresh_filing_retention_snapshot
+from ..filing_revision_persistence import _refresh_filing_retention_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

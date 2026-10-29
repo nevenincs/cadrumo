@@ -29,8 +29,7 @@ from ....domain.iva.schema import InvoiceKind
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.widgets import ContentDataTable, ContentScroll
-from ..setup.offer import SetupItemOffer
-from .controller import LedgerEvidenceReviewRequested, LedgerWorkspaceController
+from .controller import LedgerWorkspaceController
 from .evidence_files_common import EvidenceFilesPager, paging_controls, paint_paging, short_identity
 from .evidence_files_review import review_reason_label
 from .evidence_records import LedgerEvidenceRecordActions
@@ -39,6 +38,7 @@ from .models import (
     LedgerEvidenceRecordRowV1,
 )
 from .workspace_presentation import door_refusal_text
+from .workspace_screen import LedgerEvidenceReviewRequested
 
 _KIND_LOCALE_KEYS: Final[dict[InvoiceKind, str]] = {
     InvoiceKind.RECEIVED: "tui.ledger.invoice.kind.received",
@@ -148,7 +148,6 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
                     "tui.ledger.evidence.extract",
                 )
                 yield Static("", id="ledger-evidence-draft", markup=False)
-                yield SetupItemOffer(offer_id="ledger-evidence-setup")
                 yield localized(
                     Static(tr("tui.ledger.invoice.field.kind"), markup=False), "tui.ledger.invoice.field.kind"
                 )
@@ -269,8 +268,6 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
         await super().refresh_language()
         if self.controller.evidence_review_door is not None:
             self._paint_review_queue()
-        if self.controller.evidence_door is not None:
-            self.query_one(SetupItemOffer).repaint()
 
     @on(Button.Pressed, f"#{_REVIEW_QUEUE}-previous")
     def _previous_review_page(self) -> None:

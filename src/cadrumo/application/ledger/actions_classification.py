@@ -4,7 +4,7 @@ CSV bulk classification parses
 :class:`~application.ledger.models.BulkClassifyRow` records, converts populated
 fields into :class:`~application.ledger.models.ManualLedgerTransactionPatch`,
 and applies them through
-:func:`~application.ledger.actions_manual.update_manual_transaction_fields`. Rule
+:func:`~application.ledger.manual_update.update_manual_transaction_fields`. Rule
 application evaluates :class:`~domain.transactions.classification_rule.LedgerClassificationRule`
 instances over active transactions and returns
 :class:`~application.ledger.models.ApplyRulesResult`.
@@ -50,17 +50,9 @@ from .actions_common import (
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
 )
-from .actions_manual import (
-    command_from_patch as _command_from_patch,
-)
-from .actions_manual import (
-    prepare_manual_transaction_update as _prepare_manual_transaction_update,
-)
-from .actions_manual import (
-    update_manual_transaction_fields,
-)
 from .classify_patch import build_bulk_row_classification_patch
 from .id_resolution import resolve_transaction_id
+from .manual_update import command_from_patch, prepare_manual_transaction_update, update_manual_transaction_fields
 from .models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
     BulkClassifyFailure,
@@ -265,14 +257,14 @@ def _apply_one_bulk_classify_row(
         )
         source_ids = transaction_modelo_source_ids(current)
         blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
-        command = _command_from_patch(
+        command = command_from_patch(
             bucket_id=bucket_id,
             current=current,
             patch=patch,
             actor=actor,
             source_command=source_command,
         )
-        prepared = _prepare_manual_transaction_update(
+        prepared = prepare_manual_transaction_update(
             current=current,
             command=command,
             previous_transaction_id=resolved_transaction_id,
@@ -379,7 +371,7 @@ def bulk_classify_from_csv(
     classification row preserves existing tax facts instead of clearing them
     accidentally. Populated tax facts ride the same
     :class:`~application.ledger.models.ManualLedgerTransactionPatch` and the
-    :func:`~application.ledger.actions_manual.update_manual_transaction_fields` write
+    :func:`~application.ledger.manual_update.update_manual_transaction_fields` write
     path the single-classify surface uses, so a bulk row persists the same typed
     ``taxable_base``/``iva_rate``/``iva_amount``/``iva_category``/
     ``irpf_category`` values as ``--id``-mode classify with identical

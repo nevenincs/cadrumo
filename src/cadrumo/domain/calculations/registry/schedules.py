@@ -16,7 +16,7 @@ from pydantic import ValidationError
 from ....core.type_adapters import STRICT_STR_KEYED_MAPPING_ADAPTER
 from .errors import RegistryValidationError
 from .schema_deadlines import ModeloScheduleDefinition
-from .schema_verification import ProfilePredicateDefinition, ProfilePredicateOp
+from .schema_live_verification import ProfilePredicateDefinition, ProfilePredicateOp
 
 __all__ = [
     "FilingScheduleCarrier",

@@ -58,7 +58,6 @@ from .errors import (
     BrowserError,
     BrowserFailureMode,
     BrowserNotReadyError,
-    BrowserNotUsableError,
     BrowserPreconditionCondition,
     browser_no_action_verdict,
 )
@@ -73,45 +72,33 @@ from .site_health_records import (
 logger = get_logger(__name__)
 
 
-#: The refusal for a browser that setup can install, naming that setup.
-_BROWSER_NOT_SET_UP_KEY = "adapters.browser.errors.not_provisioned"
-#: The refusal for a browser this copy cannot use, which setup cannot repair.
-_BROWSER_NOT_USABLE_KEY = "adapters.browser.errors.not_usable"
+#: The refusal for a browser that is not available.
+_BROWSER_NOT_AVAILABLE_KEY = "adapters.browser.errors.not_available"
 
 
 def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
-    """Refuse browser work while the browser setup item is not ready.
+    """Refuse browser work while the browser is not available.
 
     This is the one browser readiness check. Tax agency read and sign-in
     operations call it when they start, before they load a certificate or a
     secret, and :class:`BrowserSession` calls it again before every launch.
-    It locates the browser from the record the component engine wrote after
-    installing and checking it, and probes nothing itself. The refusal carries
-    the locate step's verdict, which names the browser setup action when
-    setting the browser up repairs it, so every caller refuses the same way.
-    The registered code and message key follow the verdict: a browser setup
-    can install says so, and one it cannot repair refuses with its own code,
-    whose sentence offers no setup.
+    It locates the installed browser builds and probes nothing itself. The
+    refusal carries the locate step's verdict, so every caller refuses the
+    same way.
     """
-    from .....application.provisioning_browser import probe_playwright_browser
+    from .....application.browser_location import probe_playwright_browser
 
     status = probe_playwright_browser(settings=settings)
     if status.available:
         return
     logger.error(
         "browser work refused failure_mode=%s profile=%s",
-        BrowserFailureMode.BROWSER_NOT_PROVISIONED,
+        BrowserFailureMode.BROWSER_NOT_AVAILABLE,
         profile_name,
     )
-    if status.precondition_verdict is None or status.precondition_verdict.action is None:
-        raise BrowserNotUsableError(
-            "Chromium browser build cannot be used",
-            translated_message=_BROWSER_NOT_USABLE_KEY,
-            precondition_verdict=status.precondition_verdict,
-        )
     raise BrowserNotReadyError(
-        "Chromium browser build is not provisioned",
-        translated_message=_BROWSER_NOT_SET_UP_KEY,
+        "Chromium browser build is not available",
+        translated_message=_BROWSER_NOT_AVAILABLE_KEY,
         precondition_verdict=status.precondition_verdict,
     )
 

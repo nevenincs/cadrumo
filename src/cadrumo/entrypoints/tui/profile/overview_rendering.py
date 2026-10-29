@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Mapping
 from dataclasses import replace
 from typing import TYPE_CHECKING
 
@@ -47,8 +48,58 @@ from .overview_contracts import (
 from .setup_journey import ProfileSetupStage
 
 if TYPE_CHECKING:
+    from textual.widgets._data_table import ColumnKey
+
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview, ProfileSectionView
     from .overview import ProfileManagerScreen
+
+
+def _sync_source_card(
+    screen: ProfileManagerScreen, source: ProfileAcquisitionSourceKey, door_ready: bool, credential_ready: bool
+) -> None:
+    # A saved profile can rebuild the source cards while a readiness
+    # read settles. The redraw calls this again after mounting them.
+    for card in screen.query(SourceActionCard).filter(f"#source-{source.value}"):
+        for button in card.query(Button):
+            button.display = door_ready
+            button.disabled = not (door_ready and credential_ready)
+
+
+def _repaint_profile_sections(
+    previous: ProfileOverview,
+    updated: ProfileOverview,
+    *,
+    tables: Mapping[str, DataTable[str]],
+    columns_by_section: Mapping[str, list[ColumnKey]],
+    fields_by_key: dict[str, ProfileFieldView],
+    fold: Callable[[str], DisclosureGroup],
+    fold_title: Callable[[ProfileOverview, ProfileSectionView], str],
+    visible_fields: Callable[[ProfileOverview, ProfileSectionView], tuple[ProfileFieldView, ...]],
+    rendered_row: Callable[[ProfileFieldView], tuple[str, str, str]],
+) -> bool:
+    for was, now in zip(previous.sections, updated.sections, strict=True):
+        table = tables.get(now.key)
+        columns = columns_by_section.get(now.key)
+        if table is None or columns is None:
+            # The page was never fully rendered, so there are no cells to
+            # address. Build it rather than silently dropping the update.
+            return False
+        fold(now.key).title = fold_title(updated, now)
+        for after in now.fields:
+            fields_by_key[after.path] = after
+        for before, after in zip(visible_fields(previous, was), visible_fields(updated, now), strict=True):
+            old_cells = rendered_row(before)
+            new_cells = rendered_row(after)
+            if old_cells == new_cells:
+                continue
+            for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
+                if old_cell != new_cell:
+                    # ``update_width`` defaults off, which would clip a value
+                    # that grew past the column's current width — the full
+                    # rebuild sizes columns as it adds rows, and this is the
+                    # equivalent for a cell written in place.
+                    table.update_cell(after.path, column, new_cell, update_width=True)
+    return True
 
 
 class ProfileOverviewRenderingMixin:
@@ -105,12 +156,7 @@ class ProfileOverviewRenderingMixin:
             credential_ready = posture is None or not posture.requires_aeat_authentication or posture.credential_held
             if self._aeat_auth_setup is not None and source.requires_aeat_authentication:
                 credential_ready = self._auth_readiness is not None and self._auth_readiness.ready
-            # A saved profile can rebuild the source cards while a readiness
-            # read settles. The redraw calls this again after mounting them.
-            for card in self.query(SourceActionCard).filter(f"#source-{source.key.value}"):
-                for button in card.query(Button):
-                    button.display = door_ready
-                    button.disabled = not (door_ready and credential_ready)
+            _sync_source_card(self, source.key, door_ready, credential_ready)
 
     async def _redraw(self: ProfileManagerScreen) -> None:
         """Rebuild the profile context and every schema section table.
@@ -239,31 +285,19 @@ class ProfileOverviewRenderingMixin:
             self._render_chrome()
             self._clear_notice()
             await self._render_profile_context()
-            for was, now in zip(previous.sections, updated.sections, strict=True):
-                table = self._table_by_section.get(now.key)
-                columns = self._columns_by_section.get(now.key)
-                if table is None or columns is None:
-                    # The page was never fully rendered, so there are no cells to
-                    # address. Build it rather than silently dropping the update.
-                    await self._redraw_now()
-                    return
-                self.query_one(f"#fold-{now.key}", DisclosureGroup).title = self._fold_title(updated, now)
-                for after in now.fields:
-                    self._field_by_key[after.path] = after
-                for before, after in zip(
-                    self._visible_fields(previous, was), self._visible_fields(updated, now), strict=True
-                ):
-                    old_cells = self._rendered_row(before)
-                    new_cells = self._rendered_row(after)
-                    if old_cells == new_cells:
-                        continue
-                    for column, old_cell, new_cell in zip(columns, old_cells, new_cells, strict=True):
-                        if old_cell != new_cell:
-                            # ``update_width`` defaults off, which would clip a value
-                            # that grew past the column's current width — the full
-                            # rebuild sizes columns as it adds rows, and this is the
-                            # equivalent for a cell written in place.
-                            table.update_cell(after.path, column, new_cell, update_width=True)
+            if not _repaint_profile_sections(
+                previous,
+                updated,
+                tables=self._table_by_section,
+                columns_by_section=self._columns_by_section,
+                fields_by_key=self._field_by_key,
+                fold=lambda key: self.query_one(f"#fold-{key}", DisclosureGroup),
+                fold_title=self._fold_title,
+                visible_fields=self._visible_fields,
+                rendered_row=self._rendered_row,
+            ):
+                await self._redraw_now()
+                return
             self._render_onboarding()
 
     async def _render_profile_context(self: ProfileManagerScreen) -> None:

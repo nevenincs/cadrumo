@@ -69,8 +69,8 @@ from .calculation_resolution import resolve_calculation_binding_channels as _res
 from .iva_wallet_gate import (
     apply_iva_compensation_decision_binding,
     resolve_iva_compensation_decision_for_calculation,
-    taxpayer_nif_from_path_values,
 )
+from .iva_wallet_values import taxpayer_nif_from_path_values
 from .lifecycle_clock_gate import (
     ModeloLifecycleClockOperation,
     require_lifecycle_clock_not_before,
@@ -110,6 +110,33 @@ class PreparedCalculation:
     backend_casilla_inputs: Mapping[CasillaId, Decimal] | None
     period_date: date
     channels: ResolvedCalculationChannels
+
+
+def _validate_calculation_inputs(
+    revision: ModeloRevision,
+    casilla_inputs: Mapping[CasillaId, Decimal],
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+) -> tuple[Mapping[CasillaId, Decimal], Mapping[CasillaId, Decimal] | None]:
+    casilla_inputs = _validate_casilla_input_ids(revision, casilla_inputs)
+    if backend_casilla_inputs is not None:
+        backend_casilla_inputs = _validate_casilla_input_ids(revision, backend_casilla_inputs)
+    return casilla_inputs, backend_casilla_inputs
+
+
+def _with_required_profile_bindings(
+    work_unit: WorkUnit, snapshot: RegistrySnapshot, profile: ModeloWorkProfile, channels: ResolvedCalculationChannels
+) -> ResolvedCalculationChannels:
+    required_profile_bindings = _resolved_required_profile_binding_values(
+        work_unit=work_unit,
+        registry_revision=snapshot.revision,
+        profile=profile,
+    )
+    if required_profile_bindings:
+        channels = _dataclass_replace(
+            channels,
+            bindings=dict(sorted({**required_profile_bindings, **channels.bindings}.items())),
+        )
+    return channels
 
 
 def prepare_calculation(
@@ -181,9 +208,9 @@ def prepare_calculation(
         grade=RegistryAuthorityGrade.CALCULATION,
         operation=operation,
     )
-    casilla_inputs = _validate_casilla_input_ids(snapshot.revision, casilla_inputs)
-    if backend_casilla_inputs is not None:
-        backend_casilla_inputs = _validate_casilla_input_ids(snapshot.revision, backend_casilla_inputs)
+    casilla_inputs, backend_casilla_inputs = _validate_calculation_inputs(
+        snapshot.revision, casilla_inputs, backend_casilla_inputs
+    )
     _raise_if_ledger_preflight_blocks_calculation(
         work_unit=work_unit,
         revision=snapshot.revision,
@@ -242,27 +269,9 @@ def prepare_calculation(
         operation=operation,
         profile=checked_profile,
     )
-    required_profile_bindings = _resolved_required_profile_binding_values(
-        work_unit=work_unit,
-        registry_revision=snapshot.revision,
-        profile=checked_profile,
-    )
-    if required_profile_bindings:
-        channels = _dataclass_replace(
-            channels,
-            bindings=dict(sorted({**required_profile_bindings, **channels.bindings}.items())),
-        )
-    _require_modelo_required_bindings_resolved(
-        work_unit=work_unit,
-        registry_revision=snapshot.revision,
-        resolved_binding_ids=_resolved_binding_ids_for_required_binding_gate(
-            revision=snapshot.revision,
-            channels=channels,
-            caller_binding_ids=caller_binding_values,
-            unresolved_relation_ids=unresolved_relation_ids,
-            unresolved_binding_ids=unresolved_binding_ids,
-        ),
-        action="calculate",
+    channels = _with_required_profile_bindings(work_unit, snapshot, checked_profile, channels)
+    _require_calculation_binding_resolution(
+        work_unit, snapshot, channels, caller_binding_values, unresolved_relation_ids, unresolved_binding_ids
     )
     return PreparedCalculation(
         work_units=work_units,
@@ -274,6 +283,28 @@ def prepare_calculation(
         backend_casilla_inputs=backend_casilla_inputs,
         period_date=period_date,
         channels=channels,
+    )
+
+
+def _require_calculation_binding_resolution(
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    channels: ResolvedCalculationChannels,
+    caller_binding_values: Mapping[BindingId, Decimal],
+    unresolved_relation_ids: tuple[RelationId, ...],
+    unresolved_binding_ids: tuple[BindingId, ...],
+) -> None:
+    _require_modelo_required_bindings_resolved(
+        work_unit=work_unit,
+        registry_revision=snapshot.revision,
+        resolved_binding_ids=_resolved_binding_ids_for_required_binding_gate(
+            revision=snapshot.revision,
+            channels=channels,
+            caller_binding_ids=caller_binding_values,
+            unresolved_relation_ids=unresolved_relation_ids,
+            unresolved_binding_ids=unresolved_binding_ids,
+        ),
+        action="calculate",
     )
 
 

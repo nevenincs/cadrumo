@@ -29,7 +29,7 @@ from ..schedules import (
     evaluate_profile_conditions,
     profile_condition_matches,
 )
-from ..schema_verification import ProfilePredicateDefinition
+from ..schema_live_verification import ProfilePredicateDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

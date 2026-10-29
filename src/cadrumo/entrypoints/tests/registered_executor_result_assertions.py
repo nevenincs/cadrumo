@@ -14,8 +14,8 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger.actions_manual import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.id_resolution import resolve_lineage_transaction_id
+from ...application.ledger.manual_update import command_from_patch, prepare_manual_transaction_update
 from ...application.ledger.models import ManualLedgerTransactionPatch
 from ...application.ledger.participation_operation import (
     LedgerParticipationProjection as LedgerParticipationLookupProjection,

@@ -9,7 +9,7 @@ import pytest
 from ....domain.modelos.work_unit import WorkUnit
 from ..calculate_input import WorkCalculateInputBundle
 from ..calculation_action_ports import CalculationActionPorts
-from ..operation_definitions import PreparedModeloWorkCalculation, replaced_calculation_head
+from ..calculation_operation import PreparedModeloWorkCalculation, replaced_calculation_head
 from ..work_calculation_contracts import (
     ModeloOperatorEntriesCarry,
     ModeloWorkCalculateCallerContext,

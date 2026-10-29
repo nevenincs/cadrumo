@@ -16,12 +16,11 @@ from datetime import UTC, datetime
 import pytest
 from textual.widgets import Static
 
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormExport,
     ModeloFormFiling,
-    ModeloFormIssue,
     ModeloWorkForm,
 )
 from ......application.modelo.work_form_next_step import ModeloFormNextAction, missing_count

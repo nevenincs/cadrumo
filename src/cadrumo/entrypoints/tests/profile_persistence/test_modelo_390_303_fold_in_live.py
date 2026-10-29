@@ -64,7 +64,7 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -82,10 +82,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import (
-    build_calculation_action_ports,
-    build_work_lifecycle_ports,
-)
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

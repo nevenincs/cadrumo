@@ -82,11 +82,12 @@ from cadrumo.application.aggregation.tests.withholding_filer_profile_support imp
     withholding_work_profile,
 )
 from cadrumo.application.aggregation.withholding_source import WithholdingSourceResolver
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.m193_settled_row_gate import Modelo193SettledRowAmountAuthorityUnresolvedError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts

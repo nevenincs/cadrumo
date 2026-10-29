@@ -29,7 +29,8 @@ from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from ..facts.schema import GovernedFact
 from ..governed_fact_scope import GovernedFactSource, validating_governed_facts
 from ..ids import RevisionId
-from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema import ModeloDefinition, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..snapshot_globals import SupportedFilingYearsCatalogue
 from ..snapshot_proof import (
     SnapshotCrossCheckProof,

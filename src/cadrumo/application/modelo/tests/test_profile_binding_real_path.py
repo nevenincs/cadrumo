@@ -53,14 +53,13 @@ from ....domain.user_profile.schema import derived_selector_for_path
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.inventory import REPO_ROOT
 from ...user_profile.projections import profile_fact_index
-from ..profile_binding import (
+from ..profile_binding import resolve_profile_binding_value, resolve_profile_sourced_bindings
+from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
     inject_derived_minimo_descendientes_facts,
     inject_ordinary_work_maritime_facts,
-    resolve_profile_binding_value,
-    resolve_profile_sourced_bindings,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]

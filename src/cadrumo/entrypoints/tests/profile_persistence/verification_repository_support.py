@@ -31,7 +31,8 @@ from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCert
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
 from cadrumo.application.workflow.persistence import WorkflowRunRepository
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports, build_ledger_membership_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_membership_ports
 
 
 def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:

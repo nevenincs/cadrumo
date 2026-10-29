@@ -205,7 +205,7 @@ def test_calculation_read_path_migrates_the_stored_catalogue(tmp_path: Path) -> 
     repository injected, so the assertion is that the wiring exists rather than
     that the migration works in isolation.
     """
-    from ....application.modelo.calculation_actions import list_calculation_revisions
+    from ....application.modelo.calculation_revision_queries import list_calculation_revisions
     from .file_flow_test_support import calculation_ports_for_test
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:

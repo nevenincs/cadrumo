@@ -13,16 +13,9 @@ from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable, ContentScroll
 from ..components.workspace_host import replace_workspace_body
 from .actividad_asset import ActivityAssetScreen
-from .controller import (
-    LedgerInvoiceCatalogueRequested,
-    LedgerInvoiceEntryRequested,
-    LedgerWorkspaceController,
-    LedgerWorkspaceScreen,
-    area_label,
-    item_count_label,
-    status_label,
-)
+from .controller import LedgerWorkspaceController, area_label, item_count_label, status_label
 from .own_accounts import LedgerOwnAccountsScreen
+from .workspace_screen import LedgerInvoiceCatalogueRequested, LedgerInvoiceEntryRequested, LedgerWorkspaceScreen
 
 
 class LedgerOverviewScreen(LedgerWorkspaceScreen):

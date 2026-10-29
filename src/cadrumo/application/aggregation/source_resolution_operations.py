@@ -31,11 +31,11 @@ from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceI
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.row_models import ModeloDetailRow
 from .errors import AggregationValidationError
+from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
     BorradorSourceProvenance,
     CalculationSourceContext,
     CalculationSourceDiagnostic,
-    CalculationSourceDiagnosticReason,
     CalculationSourceProvenance,
     CalculationSourceResolution,
     CompositeSourceResolverId,

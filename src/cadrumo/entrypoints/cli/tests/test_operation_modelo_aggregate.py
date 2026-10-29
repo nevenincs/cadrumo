@@ -42,7 +42,7 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....core.period import Period
 from .. import modelo_aggregate_commands as aggregate_cli
 from .. import operation_modelo_aggregate as bridge
-from ..modelo_results import ModeloAggregateResult
+from ..modelo_query_results import ModeloAggregateResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -50,17 +50,20 @@ def socket_directory(root: Path, *, create: bool = False) -> tuple[Path, bool]:
     return storage_directory(environment_name, location.subpath, root=root), False
 
 
-def manager_socket_name(manager_id: str, user: str, session: str) -> str:
-    """Encode the channel-qualified native owner/session tuple without path input."""
-    if (
+def _valid_manager_identifier(manager_id: str) -> bool:
+    """Accept only the bounded ASCII identifier grammar used by native socket names."""
+    return not (
         not manager_id
         or len(manager_id.encode("utf-8")) > MANAGER_SOCKET_MAX_IDENTIFIER_BYTES
         or manager_id.startswith(".")
         or manager_id.endswith(".")
         or not all(character.isascii() and (character.isalnum() or character in ".-_") for character in manager_id)
-        or not _native_decimal(user)
-        or not _native_decimal(session)
-    ):
+    )
+
+
+def manager_socket_name(manager_id: str, user: str, session: str) -> str:
+    """Encode the channel-qualified native owner/session tuple without path input."""
+    if not _valid_manager_identifier(manager_id) or not _native_decimal(user) or not _native_decimal(session):
         raise ValueError("manager socket identity requires an ASCII identifier and canonical native u32 coordinates")
     encoded = json.dumps(
         [MANAGER_SOCKET_DOMAIN, manager_id, user, session], ensure_ascii=False, separators=(",", ":")

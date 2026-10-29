@@ -26,7 +26,7 @@ import pytest
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..actions_manual import _carry_forward_fx
+from ..actions_manual import carry_forward_fx
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -77,7 +77,7 @@ def test_an_unrelated_edit_keeps_the_converted_euro_value() -> None:
     """The defect: a description fix used to erase the conversion."""
     rebuilt = _row(amount=Decimal("1000.00"), currency="USD", value_in_eur=None)
 
-    carried = _carry_forward_fx(_converted(), rebuilt)
+    carried = carry_forward_fx(_converted(), rebuilt)
 
     assert carried.value_in_eur == _CONVERTED
     assert carried.fx_rate == _RATE
@@ -91,28 +91,28 @@ def test_a_changed_amount_does_not_inherit_the_old_euro_value() -> None:
     """
     rebuilt = _row(amount=Decimal("900.00"), currency="USD", value_in_eur=None)
 
-    assert _carry_forward_fx(_converted(), rebuilt).value_in_eur is None
+    assert carry_forward_fx(_converted(), rebuilt).value_in_eur is None
 
 
 def test_a_changed_currency_does_not_inherit_the_old_euro_value() -> None:
     """The same sum in a different currency is a different sum."""
     rebuilt = _row(amount=Decimal("1000.00"), currency="GBP", value_in_eur=None)
 
-    assert _carry_forward_fx(_converted(), rebuilt).value_in_eur is None
+    assert carry_forward_fx(_converted(), rebuilt).value_in_eur is None
 
 
 def test_a_freshly_derived_conversion_is_never_overwritten() -> None:
     """When a normalizer did resolve a rate, that rate is the current one."""
     rebuilt = _row(amount=Decimal("1000.00"), currency="USD", value_in_eur=Decimal("1.00"))
 
-    assert _carry_forward_fx(_converted(), rebuilt).value_in_eur == Decimal("1.00")
+    assert carry_forward_fx(_converted(), rebuilt).value_in_eur == Decimal("1.00")
 
 
 def test_a_euro_row_gains_nothing() -> None:
     """Nothing to carry, and no field invented for a row that never had one."""
     euro = _row(amount=Decimal("50.00"), currency="EUR", value_in_eur=None)
 
-    carried = _carry_forward_fx(euro, _row(amount=Decimal("50.00"), currency="EUR", value_in_eur=None))
+    carried = carry_forward_fx(euro, _row(amount=Decimal("50.00"), currency="EUR", value_in_eur=None))
 
     assert carried.value_in_eur is None
     assert carried.fx_rate is None

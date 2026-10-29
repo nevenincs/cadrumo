@@ -49,7 +49,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
-from ..adapter_composition import build_work_lifecycle_ports
+from ..adapter_composition_work_ports import build_work_lifecycle_ports
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

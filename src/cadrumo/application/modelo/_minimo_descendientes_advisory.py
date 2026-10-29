@@ -32,7 +32,7 @@ from ...domain.contribuyente.family_fact_context import FamilyFactResolutionCont
 from ...domain.contribuyente.family_profile import RentaFamilyProfile
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
-from .profile_binding import renta_family_profile_from_facts, second_entitled_filer_indicated
+from .profile_derived_facts import renta_family_profile_from_facts, second_entitled_filer_indicated
 from .semantic_role_resolution import casilla_id_for_unambiguous_revision_semantic_role
 
 if TYPE_CHECKING:

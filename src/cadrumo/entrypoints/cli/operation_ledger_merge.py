@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from uuid import UUID
+
 import typer
 from pydantic import ValidationError
 
 from cadrumo_client.commands.profile_binding import bound_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
+from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
 from ...application.ledger.merge_operation import (
@@ -16,6 +19,24 @@ from ...application.ledger.merge_operation import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ._ledger_support import ledger_validation_bad
+
+
+def _require_merge_completion(
+    completed: RegisteredOperationCompletion[LedgerMergeOperationResult], request: LedgerMergeRequest, profile_id: UUID
+) -> None:
+    projection = completed.projection
+    resolved_children = _correlate_child_prefixes(request.child_ids, projection.source_child_ids)
+    invalid = (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not OperationEffect.UPDATED
+        or projection.profile_id != profile_id
+        or resolved_children is None
+        or projection.parent_transaction_id in projection.source_child_ids
+        or projection.merged_transaction_id in (projection.parent_transaction_id, *projection.source_child_ids)
+    )
+    if invalid:
+        raise invalid_completion_error(completed)
 
 
 def run_ledger_merge(
@@ -48,18 +69,7 @@ def run_ledger_merge(
         timeout=120,
     )
     projection = completed.projection
-    resolved_children = _correlate_child_prefixes(request.child_ids, projection.source_child_ids)
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not OperationEffect.UPDATED
-        or projection.profile_id != client.profile_id
-        or resolved_children is None
-        or projection.parent_transaction_id in projection.source_child_ids
-        or projection.merged_transaction_id in (projection.parent_transaction_id, *projection.source_child_ids)
-    )
-    if invalid:
-        raise invalid_completion_error(completed)
+    _require_merge_completion(completed, request, client.profile_id)
     return projection
 
 

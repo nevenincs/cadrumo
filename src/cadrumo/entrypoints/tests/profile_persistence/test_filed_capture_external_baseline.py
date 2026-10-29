@@ -50,17 +50,17 @@ from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support im
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from cadrumo.application.live.errors import LiveApplicationError
-from cadrumo.application.live.filed_data_capture import FiledCaptureAccumulator
+from cadrumo.application.live.filed_capture_accumulator import FiledCaptureAccumulator
 from cadrumo.application.live.filed_observation_ports import FiledObservationPersistencePorts
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.casilla_value_kind import CasillaValueKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
-from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import seed_ready_profile
 

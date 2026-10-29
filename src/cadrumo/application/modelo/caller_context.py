@@ -106,7 +106,7 @@ class CallerContextCalculationInputs:
     """A caller context projected onto the calculation boundary's own input channels.
 
     Every field maps one-to-one onto a keyword of
-    :func:`~cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`;
+    :func:`~cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`;
     a replaying caller passes each of them and sets ``record_operator_layer``,
     so the revision it produces records the same operator layer it replayed.
     """

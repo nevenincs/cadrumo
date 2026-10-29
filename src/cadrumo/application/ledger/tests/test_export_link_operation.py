@@ -19,7 +19,7 @@ from ....core.hashing import sha256_hex
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access

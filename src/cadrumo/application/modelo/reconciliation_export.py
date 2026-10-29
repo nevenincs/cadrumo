@@ -20,48 +20,36 @@ from ..storage.calc_sheets.records import (
     TabName,
 )
 from ..storage.calc_sheets.theme import StyleRole
-from .reconciliation_list_operation import ModeloReconciliationListProjection
+from .reconciliation_list_operation import ModeloReconciliationListEntryProjection, ModeloReconciliationListProjection
+from .verification_report_public_facts import ModeloVerificationRegistrySnapshotProjection
 
 
-def build_modelo_reconciliation_export_plan(
-    projection: ModeloReconciliationListProjection,
-    *,
-    publication_id: UUID,
-    exported_at: datetime,
-    label: Callable[[str], str],
-) -> SheetExportPlan[SheetReviewMetadata]:
-    """Render only persisted differences, references and advisories, with literal values.
-
-    The caller obtains this exact-profile projection through the registered read
-    operation and owns destination admission. No evidence file, present-day
-    registry, ledger or remote service is consulted to rebuild old comparisons.
-    Empty value strings remain missing rather than being translated to zero.
-    """
-    # Revalidate even when a caller used model_copy to construct a result.
-    projection = ModeloReconciliationListProjection.model_validate_json(projection.model_dump_json())
-    cells: list[SheetValueCell] = []
-    styles: list[SheetStyledRange] = []
-    widths: list[SheetColumnWidth] = []
-    freezes: list[SheetFrozenView] = []
-    protections: list[SheetProtectedRange] = []
+class _ReconciliationWorkbook:
+    def __init__(self, label: Callable[[str], str]) -> None:
+        self.label = label
+        self.cells: list[SheetValueCell] = []
+        self.styles: list[SheetStyledRange] = []
+        self.widths: list[SheetColumnWidth] = []
+        self.freezes: list[SheetFrozenView] = []
+        self.protections: list[SheetProtectedRange] = []
 
     def table(
-        tab: TabName, headers: Sequence[str], rows: Sequence[Sequence[str]], column_widths: Sequence[int]
+        self, tab: TabName, headers: Sequence[str], rows: Sequence[Sequence[str]], column_widths: Sequence[int]
     ) -> None:
-        if len(rows) > 10_000 or len(cells) + (len(rows) + 1) * len(headers) > 250_000:
+        if len(rows) > 10_000 or len(self.cells) + (len(rows) + 1) * len(headers) > 250_000:
             raise ValueError("reconciliation exceeds workbook limits; select one work unit")
-        for row_index, values in enumerate((tuple(label(header) for header in headers), *rows), 1):
+        for row_index, values in enumerate((tuple(self.label(header) for header in headers), *rows), 1):
             for column, value in enumerate(values, 1):
                 if len(value) > 40_000:
                     raise ValueError("reconciliation text exceeds workbook cell limit")
-                cells.append(
+                self.cells.append(
                     SheetValueCell(
                         address=SheetCellAddress.at(tab, row_index, column),
                         value=value,
                         role="source_value",
                     )
                 )
-        styles.append(
+        self.styles.append(
             SheetStyledRange(
                 tab=tab,
                 start_row=1,
@@ -72,21 +60,43 @@ def build_modelo_reconciliation_export_plan(
                 wrap=True,
             )
         )
-        widths.extend(
+        self.widths.extend(
             SheetColumnWidth(tab=tab, column=column, width=width) for column, width in enumerate(column_widths, 1)
         )
-        freezes.append(SheetFrozenView(tab=tab, frozen_rows=1, frozen_columns=1))
-        protections.append(
+        self.freezes.append(SheetFrozenView(tab=tab, frozen_rows=1, frozen_columns=1))
+        self.protections.append(
             SheetProtectedRange(
                 tab=tab,
                 start_row=1,
                 end_row=len(rows) + 1,
                 start_column=1,
                 end_column=len(headers),
-                description=label("saved_comparison_notice"),
+                description=self.label("saved_comparison_notice"),
             )
         )
 
+
+def _snapshot_columns(snapshot: ModeloVerificationRegistrySnapshotProjection | None) -> tuple[str, str, str, str]:
+    if snapshot is None:
+        return "", "", "", ""
+    return snapshot.modelo, str(snapshot.modelo_year), snapshot.period, snapshot.revision_id
+
+
+def _record_reference(
+    entry: ModeloReconciliationListEntryProjection, entries: tuple[ModeloReconciliationListEntryProjection, ...]
+) -> str:
+    prefix_length = 8
+    while any(
+        other.event_id != entry.event_id and other.event_id[:prefix_length] == entry.event_id[:prefix_length]
+        for other in entries
+    ):
+        prefix_length += 1
+    return f"R-{entry.event_id[:prefix_length]}"
+
+
+def _reconciliation_rows(
+    projection: ModeloReconciliationListProjection, label: Callable[[str], str]
+) -> tuple[list[tuple[str, ...]], list[tuple[str, ...]], list[tuple[str, ...]], list[tuple[str, ...]]]:
     records: list[tuple[str, ...]] = []
     references: list[tuple[str, ...]] = []
     differences: list[tuple[str, ...]] = []
@@ -94,23 +104,15 @@ def build_modelo_reconciliation_export_plan(
     for entry in projection.reconciliations:
         if entry.diff_count != len(entry.diffs) or entry.advisory_count != len(entry.advisories):
             raise ValueError("reconciliation detail is incomplete; export cannot discard findings")
-        snapshot = entry.registry_snapshot_ref
-        # A collision-free short reference joins the human rows to the full
-        # persisted identity retained in the supporting reference sheet.
-        prefix_length = 8
-        while any(
-            other.event_id != entry.event_id and other.event_id[:prefix_length] == entry.event_id[:prefix_length]
-            for other in projection.reconciliations
-        ):
-            prefix_length += 1
-        record_ref = f"R-{entry.event_id[:prefix_length]}"
+        modelo, year, period, revision_id = _snapshot_columns(entry.registry_snapshot_ref)
+        record_ref = _record_reference(entry, projection.reconciliations)
         records.append(
             (
                 f"{label('record')} {record_ref}",
                 entry.reconciled_at.strftime("%Y-%m-%d %H:%M UTC"),
-                snapshot.modelo if snapshot else "",
-                str(snapshot.modelo_year) if snapshot else "",
-                snapshot.period if snapshot else "",
+                modelo,
+                year,
+                period,
                 label(f"verdict_{entry.verdict.value}"),
                 label(f"evidence_kind_{entry.source_kind.value}"),
                 str(entry.diff_count),
@@ -123,10 +125,10 @@ def build_modelo_reconciliation_export_plan(
                 entry.event_id,
                 entry.reconciled_at.isoformat(),
                 entry.verdict.value,
-                snapshot.modelo if snapshot else "",
-                str(snapshot.modelo_year) if snapshot else "",
-                snapshot.period if snapshot else "",
-                snapshot.revision_id if snapshot else "",
+                modelo,
+                year,
+                period,
+                revision_id,
                 entry.work_unit_id,
                 entry.calculation_revision_id or "",
                 entry.source_kind.value,
@@ -156,7 +158,29 @@ def build_modelo_reconciliation_export_plan(
             )
             for advisory in entry.advisories
         )
-    table(
+    return records, references, differences, advisories
+
+
+def build_modelo_reconciliation_export_plan(
+    projection: ModeloReconciliationListProjection,
+    *,
+    publication_id: UUID,
+    exported_at: datetime,
+    label: Callable[[str], str],
+) -> SheetExportPlan[SheetReviewMetadata]:
+    """Render only persisted differences, references and advisories, with literal values.
+
+    The caller obtains this exact-profile projection through the registered read
+    operation and owns destination admission. No evidence file, present-day
+    registry, ledger or remote service is consulted to rebuild old comparisons.
+    Empty value strings remain missing rather than being translated to zero.
+    """
+    # Revalidate even when a caller used model_copy to construct a result.
+    projection = ModeloReconciliationListProjection.model_validate_json(projection.model_dump_json())
+    layout = _ReconciliationWorkbook(label)
+
+    records, references, differences, advisories = _reconciliation_rows(projection, label)
+    layout.table(
         TabName.FORM,
         (
             "record",
@@ -172,7 +196,7 @@ def build_modelo_reconciliation_export_plan(
         records,
         (32, 25, 12, 12, 12, 24, 24, 18, 18),
     )
-    table(
+    layout.table(
         TabName.PROVENANCE,
         (
             "record",
@@ -192,7 +216,7 @@ def build_modelo_reconciliation_export_plan(
         references,
         (18, 72, 28, 24, 12, 12, 12, 36, 72, 72, 24, 60, 28),
     )
-    table(
+    layout.table(
         TabName.DETALLE,
         (
             "record",
@@ -207,7 +231,7 @@ def build_modelo_reconciliation_export_plan(
         differences,
         (18, 24, 30, 24, 24, 36, 45, 45),
     )
-    table(TabName.EVIDENCIA, ("record", "advisory_code", "advisory", "context"), advisories, (18, 36, 70, 60))
+    layout.table(TabName.EVIDENCIA, ("record", "advisory_code", "advisory", "context"), advisories, (18, 36, 70, 60))
     return SheetExportPlan[SheetReviewMetadata](
         metadata=SheetReviewMetadata(
             kind="reconciliation",
@@ -218,10 +242,10 @@ def build_modelo_reconciliation_export_plan(
         ),
         human_presentation=True,
         tabs=(TabName.FORM, TabName.DETALLE, TabName.EVIDENCIA, TabName.PROVENANCE, TabName.GUIDE),
-        value_cells=tuple(cells),
-        styled_ranges=tuple(styles),
-        column_widths=tuple(widths),
-        frozen_views=tuple(freezes),
-        protected_ranges=tuple(protections),
+        value_cells=tuple(layout.cells),
+        styled_ranges=tuple(layout.styles),
+        column_widths=tuple(layout.widths),
+        frozen_views=tuple(layout.freezes),
+        protected_ranges=tuple(layout.protections),
         guide=SheetGuideContent(title=label("title"), paragraphs=(label("saved_comparison_notice"),)),
     )

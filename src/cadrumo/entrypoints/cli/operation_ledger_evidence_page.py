@@ -33,6 +33,21 @@ class EvidencePageRead:
     png: bytes
 
 
+def _page_matches_request(
+    projection: LedgerEvidencePageProjection,
+    evidence_id: str | None,
+    attachment_id: str | None,
+    page: int,
+    max_width: int,
+) -> bool:
+    return (
+        projection.evidence_id == evidence_id
+        and (attachment_id is None or projection.attachment_id == attachment_id)
+        and projection.page == page
+        and projection.width <= max_width
+    )
+
+
 def run_ledger_evidence_page(
     ctx: typer.Context,
     *,
@@ -67,10 +82,7 @@ def run_ledger_evidence_page(
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code is not None
         or projection.profile_id != client.profile_id
-        or projection.evidence_id != evidence_id
-        or (attachment_id is not None and projection.attachment_id != attachment_id)
-        or projection.page != page
-        or projection.width > max_width
+        or not _page_matches_request(projection, evidence_id, attachment_id, page, max_width)
     ):
         raise invalid_completion_error(completed)
     try:

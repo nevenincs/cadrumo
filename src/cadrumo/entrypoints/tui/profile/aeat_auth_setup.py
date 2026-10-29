@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, Protocol, override
+from typing import ClassVar, Protocol, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -66,6 +66,10 @@ def readiness_text(readiness: AuthSyncReadiness | None) -> str:
             ),
         )
     )
+
+
+def _fact_visible(index: int, path: str, *, certificate: bool, method_selected: bool, app_request: bool) -> bool:
+    return index == 0 or (not certificate and method_selected and (path == "auth.dni_nie" or app_request))
 
 
 class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | None]):
@@ -147,9 +151,9 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
     async def _apply(self, snapshot: tuple[ProfileOverview, AuthSyncReadiness]) -> None:
         self._snapshot = snapshot
         overview, readiness = snapshot
-        self.query_one("#aeat-auth-method", Select).value = readiness.provider or Select.NULL
+        cast("Select[str]", self.query_one("#aeat-auth-method", Select)).value = readiness.provider or Select.NULL
         if readiness.route:
-            self.query_one("#aeat-auth-route", Select).value = readiness.route
+            cast("Select[str]", self.query_one("#aeat-auth-route", Select)).value = readiness.route
         fields = {field.path: field for section in overview.sections for field in section.fields}
         for index, path in enumerate(_FACT_PATHS):
             field = fields.get(path)
@@ -166,18 +170,20 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
             self._visibility()
 
     def _visibility(self) -> None:
-        method = self.query_one("#aeat-auth-method", Select).value
-        route = self.query_one("#aeat-auth-route", Select).value
+        method = cast("Select[str]", self.query_one("#aeat-auth-method", Select)).value
+        route = cast("Select[str]", self.query_one("#aeat-auth-route", Select)).value
         movil = method == AuthProviderKind.CLAVE_MOVIL.value
         certificate = method == AuthProviderKind.CERTIFICATE.value
         for selector in ("#aeat-auth-route", "#aeat-auth-route-label"):
             self.query_one(selector).display = movil
         self.query_one("#aeat-auth-document-hint").display = movil and route == ClaveMovilRoute.APP_REQUEST.value
         for index, path in enumerate(_FACT_PATHS):
-            visible = index == 0 or (
-                not certificate
-                and method is not Select.NULL
-                and (path == "auth.dni_nie" or (movil and route == ClaveMovilRoute.APP_REQUEST.value))
+            visible = _fact_visible(
+                index,
+                path,
+                certificate=certificate,
+                method_selected=method is not Select.NULL,
+                app_request=movil and route == ClaveMovilRoute.APP_REQUEST.value,
             )
             self.query_one(f"#aeat-auth-field-{index}").display = visible
             self.query_one(f"#aeat-auth-label-{index}").display = visible
@@ -199,7 +205,7 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
             self.run_worker(self._save(), group="aeat-auth-save")
 
     async def _save(self) -> None:
-        method = self.query_one("#aeat-auth-method", Select).value
+        method = cast("Select[str]", self.query_one("#aeat-auth-method", Select)).value
         if not isinstance(method, str):
             self.query_one("#aeat-auth-message", Static).update(sync_requirement_reason("auth_method_required"))
             self._busy = False
@@ -216,7 +222,7 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
         self.query_one("#aeat-auth-save", Button).disabled = True
         self.query_one("#aeat-auth-close", Button).disabled = True
         try:
-            route = ClaveMovilRoute(str(self.query_one("#aeat-auth-route", Select).value))
+            route = ClaveMovilRoute(str(cast("Select[str]", self.query_one("#aeat-auth-route", Select)).value))
             snapshot = await self._door.save(
                 AuthProviderKind(method), route, fields, self.query_one("#aeat-auth-path", Input).value, secret
             )
@@ -224,39 +230,45 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
             self.query_one("#aeat-auth-path", Input).value = ""
             self.query_one("#aeat-auth-message", Static).update(tr("tui.aeat_auth.saved"))
         except Exception as error:
-            message = tr("tui.aeat_auth.failed")
-            cause = error.__cause__ if isinstance(error, AeatAuthFieldSaveError) else error
-            if isinstance(error, AeatAuthFieldSaveError):
-                field = (
-                    next(
-                        (
-                            field
-                            for section in self._snapshot[0].sections
-                            for field in section.fields
-                            if field.path == error.path
-                        ),
-                        None,
-                    )
-                    if self._snapshot
-                    else None
-                )
-                message = tr("tui.aeat_auth.field_failed", field=field.label if field else error.path)
-            if isinstance(cause, CadrumoError):
-                message += "\n" + resolve_error_message(cause)
-                if isinstance(cause, FrontendRefusedError):
-                    message += "\n" + "\n".join(request_fault_line(fault) for fault in cause.request_faults)
-            self.query_one("#aeat-auth-message", Static).update(message)
-            try:
-                await self._apply(await self._door.snapshot())
-            except Exception:
-                self._snapshot = None
-                self.query_one("#aeat-auth-readiness", Static).update(readiness_text(None))
+            await self._show_save_failure(error)
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
             self._busy = False
             self.query_one("#aeat-auth-save", Button).disabled = False
             self.query_one("#aeat-auth-close", Button).disabled = False
+
+    async def _show_save_failure(self, error: Exception) -> None:
+        message = tr("tui.aeat_auth.failed")
+        cause = error.__cause__ if isinstance(error, AeatAuthFieldSaveError) else error
+        if isinstance(error, AeatAuthFieldSaveError):
+            message = self._field_failure_message(error)
+        if isinstance(cause, CadrumoError):
+            message += "\n" + resolve_error_message(cause)
+            if isinstance(cause, FrontendRefusedError):
+                message += "\n" + "\n".join(request_fault_line(fault) for fault in cause.request_faults)
+        self.query_one("#aeat-auth-message", Static).update(message)
+        try:
+            await self._apply(await self._door.snapshot())
+        except Exception:
+            self._snapshot = None
+            self.query_one("#aeat-auth-readiness", Static).update(readiness_text(None))
+
+    def _field_failure_message(self, error: AeatAuthFieldSaveError) -> str:
+        field = (
+            next(
+                (
+                    field
+                    for section in self._snapshot[0].sections
+                    for field in section.fields
+                    if field.path == error.path
+                ),
+                None,
+            )
+            if self._snapshot
+            else None
+        )
+        return tr("tui.aeat_auth.field_failed", field=field.label if field else error.path)
 
     def action_close(self) -> None:
         """Return only after the current save settles."""
@@ -280,7 +292,7 @@ class AeatAuthSetupScreen(Screen[tuple[ProfileOverview, AuthSyncReadiness] | Non
                 ],
             ),
         ):
-            control = self.query_one(selector, Select)
+            control = cast("Select[str]", self.query_one(selector, Select))
             value = control.value
             with self.prevent(Select.Changed):
                 control.set_options(options)

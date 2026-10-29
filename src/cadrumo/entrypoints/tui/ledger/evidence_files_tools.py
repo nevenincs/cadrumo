@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .evidence_files_attachments import LedgerEvidenceFilesAttachmentsScreen
 from .evidence_files_batch import LedgerEvidenceFilesBatchScreen
 from .evidence_files_consent import LedgerEvidenceFilesConsentScreen
@@ -12,6 +12,7 @@ from .evidence_files_queue import LedgerEvidenceFilesQueueScreen
 from .evidence_files_records import LedgerEvidenceFilesRecordsScreen
 from .evidence_files_review import LedgerEvidenceFilesReviewScreen
 from .tools import LedgerToolV1
+from .workspace_screen import LedgerWorkspaceScreen
 
 
 def evidence_files_tools(doors: LedgerEvidenceFilesDoorsV1) -> tuple[LedgerToolV1, ...]:

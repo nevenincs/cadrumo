@@ -36,8 +36,8 @@ from typing import Final
 from rich.cells import cell_len
 from rich.text import Text
 
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormField,

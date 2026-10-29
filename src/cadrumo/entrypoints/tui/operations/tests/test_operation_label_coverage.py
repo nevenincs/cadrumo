@@ -27,8 +27,11 @@ _MODULES = (
     "interactions.py",
     "palette.py",
     "refusal_explanation.py",
+    "run_fields.py",
     "run_result.py",
     "run_screen.py",
+    "run_submission.py",
+    "run_wording.py",
 )
 _NEW_DESTINATIONS = ("workbench.operations", "workbench.installation", "workbench.reference")
 

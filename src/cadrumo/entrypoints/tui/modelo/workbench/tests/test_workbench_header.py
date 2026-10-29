@@ -20,13 +20,9 @@ import pytest
 from rich.cells import cell_len
 from textual.widgets import Static
 
+from ......application.modelo.work_form_findings import ModeloFormAttention
 from ......application.modelo.work_form_header import ModeloFormAttentionCount, ModeloFormDeadlineTone
-from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
-    ModeloFormOrigin,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
-)
+from ......application.modelo.work_form_models import ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
 from ......application.modelo.work_form_wording import modelo_number, period_words
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

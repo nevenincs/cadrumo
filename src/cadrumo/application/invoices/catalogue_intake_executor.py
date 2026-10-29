@@ -50,7 +50,7 @@ from .catalogue_intake_refusal import (
 )
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 from .creation_wizard import create_invoice_via_wizard
-from .source_resolver import iva_category_for_operation_type
+from .source_observations import iva_category_for_operation_type
 
 _PERSON_FRONTEND_ACTOR = "cli"
 """The audit label of an invoice a person's frontend enters; an automation's is derived from its session."""

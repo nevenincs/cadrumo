@@ -277,6 +277,12 @@ class ReferenceReadScreen(AccountChromeScreen):
         for read in ReferenceRead:
             self.query_one(f"#reference-link-{read.value}", Button).display = read in linked
         self.query_one("#reference-links", Horizontal).display = bool(linked)
+        self._lay_out_tables(view)
+        focusable = [slot for slot in range(len(view.tables)) if view.tables[slot].rows]
+        if focusable:
+            self.query_one(f"#reference-table-{focusable[0]}", DataTable).focus()
+
+    def _lay_out_tables(self, view: ReferenceView) -> None:
         for slot in range(_TABLE_SLOTS):
             heading = self.query_one(f"#reference-heading-{slot}", Static)
             table = cast("DataTable[str]", self.query_one(f"#reference-table-{slot}", DataTable))
@@ -292,9 +298,6 @@ class ReferenceReadScreen(AccountChromeScreen):
             for index, row in enumerate(shown.rows):
                 table.add_row(*row, key=str(index))
             cast("ContentDataTable[str]", table).absorb_surplus_width()
-        focusable = [slot for slot in range(len(view.tables)) if view.tables[slot].rows]
-        if focusable:
-            self.query_one(f"#reference-table-{focusable[0]}", DataTable).focus()
 
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         """Open the read that describes the chosen row, when one does."""

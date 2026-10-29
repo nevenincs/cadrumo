@@ -17,7 +17,7 @@ from .....core.secure_object_write import SecureObjectWrite
 from .....domain.buckets.event import BucketEventHistoryCatalogue, BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.iva.schema import InvoiceKind
 from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...storage.errors import SecureObjectRevisionConflictError

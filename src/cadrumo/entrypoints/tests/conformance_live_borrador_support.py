@@ -32,7 +32,7 @@ from ...domain.calculations.registry.schema_extraction import ExtractionProfileD
 from ...domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ...tests.fixtures.borrador import generate as borrador_fixtures
 from ...tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
-from ..adapter_composition import build_borrador_100_snapshot_repository
+from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,

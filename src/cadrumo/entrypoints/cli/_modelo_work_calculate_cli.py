@@ -200,6 +200,10 @@ def _run_work_calculate(
     projection = completed.projection
     if not isinstance(projection, ModeloWorkCalculatePublicResultV2):
         raise RefusalError(RefusalCode.INVALID_FRAME)
+    _emit_work_calculation(ctx, projection)
+
+
+def _emit_work_calculation(ctx: typer.Context, projection: ModeloWorkCalculatePublicResultV2) -> None:
     snapshot = projection.calculation
     advisories = projection.advisories
     language = OutputLanguage(current_output_language())

@@ -9,8 +9,9 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from ..errors import RegistryValidationError
 from ..facts.resolution import MappingFactQuery
-from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition
 from ..schema_base import DateAxis
+from ..schema_catalogues import RegistryCatalogues
 from .artifact_runtime_support import minimal_catalogues, minimal_modelo, minimal_revision
 from .snapshot_support import (
     _fixture_authority,

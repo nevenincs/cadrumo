@@ -19,18 +19,14 @@ from typing import Final, get_args
 import pytest
 from textual.widgets import OptionList
 
-from ......application.aggregation.source_mesh import CalculationSourceDiagnosticReason
+from ......application.aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ......application.modelo.calculation_notes import (
     CALCULATION_NOTE_ATTENTION,
     what_locale_key,
     what_to_do_locale_key,
 )
-from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
-    ModeloFormCalculationNote,
-    ModeloFormIssue,
-    ModeloWorkForm,
-)
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
+from ......application.modelo.work_form_models import ModeloFormCalculationNote, ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import lookup_translation

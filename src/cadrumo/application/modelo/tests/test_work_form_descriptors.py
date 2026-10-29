@@ -54,19 +54,21 @@ from ..edit_value_grammar import casilla_value_grammar
 from ..source_policy import SourceFamily
 from ..verification_cross_period import cross_period_clean_state_findings
 from ..work_form import build_modelo_work_form
-from ..work_form_models import (
+from ..work_form_findings import (
     EXPLANATORY_FINDING_MESSAGE_KEYS,
     ModeloFormAttention,
+    ModeloFormIssue,
+    finding_attention,
+)
+from ..work_form_models import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormEditClosure,
     ModeloFormField,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormResultDirection,
     ModeloWorkForm,
     address_key,
-    finding_attention,
 )
 from ..work_form_service import modelo_form_deadline, modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas

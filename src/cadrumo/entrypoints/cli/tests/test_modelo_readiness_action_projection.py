@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from ....application.ledger.preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
-from ....application.state_projection import (
+from ....application.state_projection_models import (
     CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS,
     ProjectionModeloBindingRequirement,
     ProjectionModeloReadiness,

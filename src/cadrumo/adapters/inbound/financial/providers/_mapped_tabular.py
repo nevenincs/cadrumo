@@ -33,7 +33,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import override
 
-from .....application.dependency_wording import column_reader_refusal_reason
+from .....application.reader_refusal_wording import column_reader_refusal_reason
 from .....application.ledger.column_roles import ColumnRoleReaderUnavailable, resolve_column_roles
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CoreValidationError
@@ -169,7 +169,7 @@ class MappedTabularProvider(FinancialProvider):
         if isinstance(mapping, ColumnRoleReaderUnavailable):
             return ProviderValidation(
                 is_valid=False,
-                warnings=(column_reader_refusal_reason(mapping.precondition_verdict),),
+                warnings=(column_reader_refusal_reason(),),
                 detected_encoding=table.dialect.encoding,
                 detected_dialect=dialect_note,
                 reader_unavailable_verdict=mapping.precondition_verdict,
@@ -275,7 +275,7 @@ class MappedTabularProvider(FinancialProvider):
         mapping = self.mapping_resolver(table)
         if isinstance(mapping, ColumnRoleReaderUnavailable):
             raise InvalidFinancialSourceError(
-                f"{path.name}: {column_reader_refusal_reason(mapping.precondition_verdict)}"
+                f"{path.name}: {column_reader_refusal_reason()}"
             )
         if mapping is None:
             raise InvalidFinancialSourceError(

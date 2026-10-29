@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )

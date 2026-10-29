@@ -354,7 +354,7 @@ def test_neither_row_reaches_a_declared_box_on_either_form(
     """
     from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-    from ..iva_ledger import resolve_iva_ledger_binding_values
+    from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 
     revision = published_snapshot(modelo, filing_year=2025, period=period).revision
     observations = _aggregate(

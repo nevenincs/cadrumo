@@ -26,7 +26,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..operator_actions.preconditions import PROFILE_SETUP_DECLARED_COMPLETE_CONDITION
 from ..operator_actions.projection import PreconditionVerdictSnapshot
-from ..state_projection import ModeloProfileRefusalCause, ProjectionModeloReadiness
+from ..state_projection_models import ModeloProfileRefusalCause, ProjectionModeloReadiness
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .query_read_contracts import (
     ModeloBindingsResolveRequest,

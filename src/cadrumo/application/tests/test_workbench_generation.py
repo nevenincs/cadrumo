@@ -55,12 +55,12 @@ from ..modelo.declarations_list_operation import (
 )
 from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 from ..modelo.work_addressing import ModeloExactWorkUnitTarget
-from ..modelo.workspace import resolve_static_inspection_result
 from ..modelo.workspace_models import (
     ModeloWorkspaceExactWorkUnitTargetV1,
     ModeloWorkspaceProjectionV1,
     ModeloWorkspaceStaticInspectionResultV1,
 )
+from ..modelo.workspace_schema import resolve_static_inspection_result
 from ..operations import profile_guard
 from ..operations.models import OperationIdentity, OperationRequest
 from ..operations.owner import OperationExecutorContext
@@ -407,7 +407,7 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """A malformed AEAT Sync row refuses its source with the projector reason."""
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
     from ..aeat_sync.workspace_reader import read_local_aeat_sync_workspace_projection
 
@@ -667,7 +667,7 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     generation could then carry a Ledger snapshot from a different instant
     than its Declarations with nothing to detect it.
     """
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
     profile = _Repository(_profile_record(authority_operation))
@@ -709,7 +709,7 @@ def test_a_quiet_ledger_publishes_its_generation(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The guard must not refuse a capture nothing wrote during."""
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
     profile = _Repository(_profile_record(authority_operation))
@@ -1266,7 +1266,7 @@ _PRIVATE_NAME = "synthetic-private-taxpayer-canary"
 def _declaration_list_door(operation: PinnedAuthorityOperation) -> SecureProfileWorkbenchGenerationReadDoorV1:
     """Read one declaration, an empty ledger and a census and custody reader, from in-memory stores."""
     from ...domain.buckets.event import BucketEventHistoryCatalogue
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import TransactionCatalogue
 
     unit = _declaration_work_unit(operation)

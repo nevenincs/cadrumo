@@ -51,7 +51,7 @@ from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

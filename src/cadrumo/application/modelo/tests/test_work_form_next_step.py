@@ -30,7 +30,8 @@ from ..calculation_notes import (
 )
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
-from ..work_form_models import ModeloFormAttention, ModeloFormCalculationNote, ModeloFormExport, ModeloWorkForm
+from ..work_form_findings import ModeloFormAttention
+from ..work_form_models import ModeloFormCalculationNote, ModeloFormExport, ModeloWorkForm
 from ..work_form_next_step import (
     ModeloFormNextAction,
     ModeloFormNextStep,

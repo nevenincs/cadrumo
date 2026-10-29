@@ -26,10 +26,10 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
-from ..profile_binding import (
-    _declared_profile_selectors,
+from ..profile_derived_facts import (
     _guarderia_cap_anual,
-    _inject_derived_incremento_guarderia_facts,
+    declared_profile_selectors,
+    inject_derived_incremento_guarderia_facts,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -76,7 +76,7 @@ def test_the_binding_declares_the_selector_the_injector_writes() -> None:
     that named a different key would leave the fact unwritten and the casilla
     silently unresolved — with no failure anywhere to say so.
     """
-    assert _KEY in _declared_profile_selectors(_snapshot().revision)
+    assert _KEY in declared_profile_selectors(_snapshot().revision)
 
 
 def test_the_cap_resolves_from_the_registry_parameter() -> None:
@@ -93,10 +93,10 @@ def test_the_injector_lands_the_manual_worked_figure() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index,
             _snapshot(),
-            _declared_profile_selectors(_snapshot().revision),
+            declared_profile_selectors(_snapshot().revision),
             operation=_authority_operation_for_test,
         )
 
@@ -112,7 +112,7 @@ def test_the_injector_is_inert_where_no_consumer_is_declared() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         index = _facts(_manual_worked_child())
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index, _snapshot(), frozenset(), operation=_authority_operation_for_test
         )
 
@@ -129,10 +129,10 @@ def test_a_stored_value_at_the_derived_key_is_overwritten() -> None:
         index = _facts(_manual_worked_child())
         index[_KEY] = Decimal("999999")
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index,
             _snapshot(),
-            _declared_profile_selectors(_snapshot().revision),
+            declared_profile_selectors(_snapshot().revision),
             operation=_authority_operation_for_test,
         )
 
@@ -148,10 +148,10 @@ def test_a_childless_profile_resolves_to_zero_rather_than_absent() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         index: dict[str, Any] = {}
 
-        _inject_derived_incremento_guarderia_facts(
+        inject_derived_incremento_guarderia_facts(
             index,
             _snapshot(),
-            _declared_profile_selectors(_snapshot().revision),
+            declared_profile_selectors(_snapshot().revision),
             operation=_authority_operation_for_test,
         )
 

@@ -23,13 +23,9 @@ from ..runtime_catalogues import (
     SpanishPostalTerritory,
     TerritoryCarveOut,
 )
-from ..schema import (
-    BindingDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from ..schema import BindingDefinition, ModeloDefinition, ModeloRevision
 from ..schema_base import EvidenceTier, RegistrySourceKind
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_exports import ExportLayoutDefinition
 from ..schema_input_kind import InputKind
 from ..schema_references import LegalReference, PeriodSelector, SourceReference

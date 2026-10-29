@@ -61,11 +61,13 @@ from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ._registry_helpers import validate_casilla_input_ids
-from .calculate_input import ModeloCalculateBindingInputError
-from .calculate_input import decimal_binding_value as _decimal_binding_value
-from .calculate_input import validated_binding_input_channel as _validated_binding_input_channel
+from .calculate_input_validation import (
+    ModeloCalculateBindingInputError,
+    decimal_binding_value,
+    validated_binding_input_channel,
+)
 from .calculation_action_ports import CalculationActionPorts
-from .calculation_actions import list_calculation_revisions
+from .calculation_revision_queries import list_calculation_revisions
 from .profile_binding import resolve_profile_sourced_bindings
 from .work_lifecycle import list_work_units
 
@@ -313,7 +315,7 @@ def _decimal_overrides(
 ) -> dict[CasillaId, Decimal]:
     """Validate operator-supplied ``--casilla`` overrides against the canonical grammar.
 
-    Mirrors :func:`cadrumo.application.modelo.calculate_input._decimal`: the
+    Mirrors :func:`cadrumo.application.modelo.calculate_input_validation.decimal`: the
     fractional part is deliberately uncapped, because a casilla value may
     legitimately carry sub-cent precision that the AEAT fixed-width encoder
     rounds to cents with ``ROUND_HALF_UP`` per the AEAT Instrucciones, so a
@@ -492,8 +494,8 @@ def _parse_projection_binding_overrides(
     refusing. Routing by the declared channel makes a malformed decimal refuse
     and leaves a genuine enum binding carrying its string verbatim.
 
-    This shares :func:`_validated_binding_input_channel` and
-    :func:`_decimal_binding_value` with the calculate path rather than deriving a
+    This shares :func:`validated_binding_input_channel` and
+    :func:`decimal_binding_value` with the calculate path rather than deriving a
     second channel-resolution shape, so the two surfaces cannot drift.
     """
     extra_bindings: dict[BindingId, Decimal] = {}
@@ -517,11 +519,11 @@ def _parse_projection_binding_overrides(
                 context={"key": binding_id},
                 translated_message="application.modelo.errors.calculate_binding_is_date_sourced",
             )
-        key, channel = _validated_binding_input_channel(binding_id, revision, known_binding_ids, enum_channel_ids)
+        key, channel = validated_binding_input_channel(binding_id, revision, known_binding_ids, enum_channel_ids)
         if channel == "enum":
             extra_enum_bindings[key] = value
         else:
-            extra_bindings[key] = _decimal_binding_value(value, bindings_by_id[key])
+            extra_bindings[key] = decimal_binding_value(value, bindings_by_id[key])
     return extra_bindings, extra_enum_bindings
 
 
@@ -603,6 +605,46 @@ def _apply_zero_maritime_projection_default(
     ):
         # Either statutory path yields zero when there is no maritime income.
         merged_boolean_bindings[maritime_path] = False
+
+
+def _m100_projection_result(values: Mapping[CasillaId, Decimal]) -> ModeloProjectM100Projection:
+    return ModeloProjectM100Projection(
+        base_liquidable_general_0505=_required_casilla_value(
+            values,
+            _M100_BASE_LIQUIDABLE_GENERAL_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+        pagos_fraccionados_0604=_required_casilla_value(
+            values,
+            _M100_PAGOS_FRACCIONADOS_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+        cuota_integra_estatal_0545=_required_casilla_value(
+            values,
+            _M100_CUOTA_INTEGRA_ESTATAL_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+        cuota_integra_autonomica_0546=_required_casilla_value(
+            values,
+            _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+        cuota_liquida_estatal_0595=_required_casilla_value(
+            values,
+            _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+        cuota_liquida_autonomica_0596=_required_casilla_value(
+            values,
+            _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+        cuota_resultante_0597=_required_casilla_value(
+            values,
+            _M100_CUOTA_RESULTANTE_CASILLA,
+            source="modelo 100 projection engine result",
+        ),
+    )
 
 
 def project_modelo_100_from_m130(
@@ -724,43 +766,7 @@ def project_modelo_100_from_m130(
             )
             for entry in engine_result.entries
         ),
-        m100_projection=ModeloProjectM100Projection(
-            base_liquidable_general_0505=_required_casilla_value(
-                engine_result.values,
-                _M100_BASE_LIQUIDABLE_GENERAL_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            pagos_fraccionados_0604=_required_casilla_value(
-                engine_result.values,
-                _M100_PAGOS_FRACCIONADOS_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_integra_estatal_0545=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_INTEGRA_ESTATAL_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_integra_autonomica_0546=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_INTEGRA_AUTONOMICA_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_liquida_estatal_0595=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_LIQUIDA_ESTATAL_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_liquida_autonomica_0596=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_LIQUIDA_AUTONOMICA_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-            cuota_resultante_0597=_required_casilla_value(
-                engine_result.values,
-                _M100_CUOTA_RESULTANTE_CASILLA,
-                source="modelo 100 projection engine result",
-            ),
-        ),
+        m100_projection=_m100_projection_result(engine_result.values),
     )
 
 

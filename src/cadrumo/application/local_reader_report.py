@@ -35,7 +35,7 @@ from .local_reader_contracts import (
     local_reader_verdict_condition,
     local_reader_verdict_facts,
 )
-from .local_reader_operation import bind_machine_provisioning_access
+from .local_reader_operation import bind_machine_reader_access
 from .operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from .operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from .operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -44,11 +44,8 @@ from .operations.owner import OperationExecutorContext
 from .operations.registry import OperationPublicDefinitionRegistrationV1
 from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.models import PreconditionVerdict
-from .provisioning import probe_hardware_profile
-from .provisioning_contracts import (
-    ProvisioningFactValue,
-    provisioning_no_recovery_verdict,
-)
+from .probe_outcomes import ProbeFactValue, probe_no_recovery_verdict
+from .workstation_probes import probe_hardware_profile
 
 __all__ = [
     "LOCAL_READER_REPORT_OPERATION_DEFINITION_ID",
@@ -77,7 +74,7 @@ class LocalReaderReportModel(BaseModel):
     role: ModelRole
     model: str | None = None
     selected: bool
-    facts: Mapping[str, ProvisioningFactValue] = Field(default_factory=dict)
+    facts: Mapping[str, ProbeFactValue] = Field(default_factory=dict)
     precondition_verdict: PreconditionVerdict | None = None
 
 
@@ -121,7 +118,7 @@ def read_local_reader_report(lanes: Mapping[ModelRole, RoleLane]) -> LocalReader
 def _report_model(role: ModelRole, answer: RoleLane | None) -> LocalReaderReportModel:
     if not isinstance(answer, ModelRunLane):
         code = (answer or ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)).code
-        facts: dict[str, ProvisioningFactValue] = {
+        facts: dict[str, ProbeFactValue] = {
             "role": role.value,
             "model_run_refusal": code.value,
             "role_selection_required": code is ModelRunRefusalCode.NO_SELECTION,
@@ -130,7 +127,7 @@ def _report_model(role: ModelRole, answer: RoleLane | None) -> LocalReaderReport
             role=role,
             selected=False,
             facts=facts,
-            precondition_verdict=provisioning_no_recovery_verdict(selected_model_condition(code), facts=facts),
+            precondition_verdict=probe_no_recovery_verdict(selected_model_condition(code), facts=facts),
         )
     if answer.reads_off_host:
         return LocalReaderReportModel(role=role, selected=True, facts={"role": role.value, "reads_off_host": True})
@@ -207,7 +204,7 @@ def resolve_local_reader_report_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind access to the machine's reader without COMMIT: a report changes no record."""
-    return bind_machine_provisioning_access(
+    return bind_machine_reader_access(
         request,
         context,
         definition_id=LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,

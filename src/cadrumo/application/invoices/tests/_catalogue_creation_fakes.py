@@ -11,7 +11,7 @@ from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import append_bucket_event
 from ....domain.currency.models import EurRateLookup
 from ....domain.currency.tests.fx_lookup import eur_rate_lookup
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ..catalogue_creation_ports import CatalogueCreationPorts
 
 

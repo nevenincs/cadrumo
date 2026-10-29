@@ -325,15 +325,7 @@ class CsvProvider(FinancialProvider):
                 detected_encoding=encoding,
                 detected_dialect=describe_dialect(dialect),
             )
-        warnings: list[str] = []
-        if not bool(find_column(lookup, STATEMENT_COLUMNS.currency)):
-            warnings.append(f"CSV has no currency column; falling back to {default_currency()}")
-        summary = summary_row_positions([_row_to_mapping(headers, row) for row in rows[header_index + 1 :]], lookup)
-        if summary:
-            warnings.append(
-                f"CSV ends with {len(summary)} summary row(s) that are not movements; "
-                "a printed total must equal the sum of the movements",
-            )
+        warnings = _csv_source_warnings(rows, header_index, headers, lookup)
         return ProviderValidation(
             is_valid=True,
             warnings=tuple(warnings),
@@ -364,27 +356,7 @@ class CsvProvider(FinancialProvider):
             source_row_index = header_index + 2 + position
             if row_is_blank(raw_fields) or position in summary:
                 continue
-            try:
-                parsed = parse_tabular_transaction_row(
-                    conventions=conventions,
-                    lookup=lookup,
-                    raw_fields=raw_fields,
-                    typed_fields=raw_fields,
-                    synthetic_provider_name=self.name,
-                    source_sha256=source_sha256,
-                    source_row_index=source_row_index,
-                    required_field_context="CSV row",
-                )
-            except (ValueError, FinancialValidationError) as exc:
-                _logger.warning(
-                    "csv_provider: parse error row=%d reason=%s",
-                    source_row_index,
-                    "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
-                )
-                raise InvalidFinancialSourceError(
-                    f"CSV row {source_row_index} could not be parsed: "
-                    f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
-                ) from None
+            parsed = self._parse_csv_transaction(conventions, lookup, raw_fields, source_sha256, source_row_index)
             movements.append(
                 build_provider_row(
                     provider=self,
@@ -399,6 +371,37 @@ class CsvProvider(FinancialProvider):
             (mapped_rows[position] for position in sorted(summary)), lookup, conventions, movements, "CSV"
         )
         yield from movements
+
+    def _parse_csv_transaction(
+        self,
+        conventions: StatementConventions,
+        lookup: Mapping[str, str],
+        raw_fields: Mapping[str, str],
+        source_sha256: str,
+        source_row_index: int,
+    ) -> ParsedTabularTransactionRow:
+        """Decode one movement and retain the CSV-specific bounded refusal wording."""
+        try:
+            return parse_tabular_transaction_row(
+                conventions=conventions,
+                lookup=lookup,
+                raw_fields=raw_fields,
+                typed_fields=raw_fields,
+                synthetic_provider_name=self.name,
+                source_sha256=source_sha256,
+                source_row_index=source_row_index,
+                required_field_context="CSV row",
+            )
+        except (ValueError, FinancialValidationError) as exc:
+            _logger.warning(
+                "csv_provider: parse error row=%d reason=%s",
+                source_row_index,
+                "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
+            )
+            raise InvalidFinancialSourceError(
+                f"CSV row {source_row_index} could not be parsed: "
+                f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
+            ) from None
 
     def _load_rows(
         self,
@@ -448,6 +451,22 @@ class CsvProvider(FinancialProvider):
         if best_score < 3:
             return None
         return best
+
+
+def _csv_source_warnings(
+    rows: list[list[str]], header_index: int, headers: list[str], lookup: Mapping[str, str]
+) -> list[str]:
+    """Report currency fallback and printed summary rows after convention admission."""
+    warnings: list[str] = []
+    if not bool(find_column(lookup, STATEMENT_COLUMNS.currency)):
+        warnings.append(f"CSV has no currency column; falling back to {default_currency()}")
+    summary = summary_row_positions([_row_to_mapping(headers, row) for row in rows[header_index + 1 :]], lookup)
+    if summary:
+        warnings.append(
+            f"CSV ends with {len(summary)} summary row(s) that are not movements; "
+            "a printed total must equal the sum of the movements",
+        )
+    return warnings
 
 
 def header_lookup(headers: list[str]) -> dict[str, str]:

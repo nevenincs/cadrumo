@@ -22,7 +22,7 @@ from cadrumo.domain.deadlines.models import IVARegime, M303RegimeComposition, M3
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
-from ...calculations.registry.schema_verification import ProfilePredicateDefinition
+from ...calculations.registry.schema_live_verification import ProfilePredicateDefinition
 from .. import engine as _engine_module
 from ..engine import (
     _MISSING_WINDOWS_MESSAGE_KEY,

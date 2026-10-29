@@ -38,7 +38,7 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -993,7 +993,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         import typer.main
 
         from cadrumo.application.modelo.calculate_input import ModeloWorkCalculationServiceResult
-        from cadrumo.application.modelo.operation_definitions import calculation_public_result
+        from cadrumo.application.modelo.calculation_operation import calculation_public_result
         from cadrumo.entrypoints.cli._modelo_work_wizard_cli import _emit_wizard_result
 
         from .modelo_work_scenarios import load_work_unit_by_id

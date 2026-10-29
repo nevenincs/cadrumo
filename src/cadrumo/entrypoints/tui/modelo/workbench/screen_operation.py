@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from .....application.export.calculation_review_xlsx_operation import CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID
 from .....application.modelo.action_errors import ModeloEditBaselineStaleError
-from .....application.modelo.operation_definitions import (
+from .....application.modelo.operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )

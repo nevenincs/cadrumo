@@ -63,7 +63,7 @@ from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.models import Attachment
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...tests.pdf_fixtures import multi_page_text_pdf_bytes
-from ..adapter_composition import build_ledger_evidence_ports
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..evidence_page_operation_composition import build_ledger_evidence_page_operation_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

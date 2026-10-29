@@ -91,7 +91,7 @@ from ..application.calculations.iva_wallet_reconciliation import reconcile_model
 from ..application.calculations.observations_repository import iva_wallet_decision_key
 from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
 from ..application.live.expedientes_ports import ExpedientesDeclaration
-from ..application.live.filed_data_capture import capture_report_path
+from ..application.live.filed_capture_accumulator import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
 from ..application.live.filed_history_events import FiledHistoryEventSink
 from ..application.live.filed_history_operation import FiledHistoryOperationRequest

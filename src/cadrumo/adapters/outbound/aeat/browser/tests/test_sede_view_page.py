@@ -43,8 +43,9 @@ from ......application.live.sede_view_ports import SedeViewEnd, SedeViewOpening
 from ......core.config import Settings
 from ......tests.component_record_support import record_shared_browser
 from ..profile import Profile
-from ..sede_view import SedeViewPage, safe_filename, view_state
+from ..sede_view import SedeViewPage
 from ..session import BrowserSession
+from ..view_presentation import safe_filename, view_state
 from .view_page_support import RecordingViewSink, until
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]

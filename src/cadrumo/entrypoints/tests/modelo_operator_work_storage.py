@@ -34,6 +34,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
+from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
 from cadrumo.application.modelo.edit_admission import (
     ModeloEditRenewalResultV1,
     admit_modelo_edit_baseline,
@@ -49,15 +50,14 @@ from cadrumo.application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from cadrumo.application.modelo.edit_operation import ModeloEditApplyExecutor
 from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2, prepare_modelo_edit_operand
 from cadrumo.application.modelo.edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 from cadrumo.application.modelo.edit_transient_operand import modelo_edit_financial_operand
 from cadrumo.application.modelo.iva_wallet_seed import seed_iva_compensation_period_for_bucket
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    ModeloEditApplyExecutor,
-    ModeloWorkCalculateExecutor,
 )
 from cadrumo.application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from cadrumo.application.modelo.work_calculation_contracts import ModeloWorkCalculateRequest
@@ -76,11 +76,13 @@ from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import (
     build_attachment_store,
-    build_calculation_action_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_iva_wallet_seed_ports,
+)
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
     build_work_lifecycle_ports,
 )
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry

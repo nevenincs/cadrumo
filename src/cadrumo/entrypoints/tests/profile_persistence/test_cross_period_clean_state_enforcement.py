@@ -49,10 +49,11 @@ from ....application.calculations.observations_repository import (
 )
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.action_errors import ModeloCrossPeriodCleanStateError
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -99,7 +100,7 @@ from ....domain.modelos.verification_report import (
 from ....domain.modelos.verification_repository import upsert_verification_report
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
-from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

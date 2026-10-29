@@ -23,7 +23,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import require_summary_period_span, summarize_manual_transactions
+from .manual_read import require_summary_period_span, summarize_manual_transactions
 from .models import LedgerStatusReport
 from .preflight import preflight_ledger_tax_readiness
 from .readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues

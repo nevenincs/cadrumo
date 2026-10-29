@@ -26,14 +26,15 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId
-from ..formula_runtime import (
+from ..formula_expression import (
     SPECIALIZED_EXPRESSION_EVALUATORS,
     EvalContext,
     evaluate_expression,
     evaluate_with_context,
 )
 from ..ids import BindingId, RelationId
-from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -34,7 +34,7 @@ from .google_review_operation_contracts import (
     GoogleReviewRequest,
     GoogleReviewResult,
 )
-from .managed_artifact_ports import ManagedArtifactKind
+from .managed_artifact_ports import ArtifactCreationReceipt, ManagedArtifactKind
 from .publication_receipt import (
     PublicationReceipt,
     PublicationState,
@@ -70,18 +70,30 @@ def require_review_approval(
     payload = require_review_request(request, context)
     pending = consumed.checkpoint
     if (
-        consumed.response_action != "apply"
-        or proposal.identity != context.identity
-        or proposal.request != payload
-        or pending.request.identity != proposal.identity
-        or pending.request.revision != proposal.revision
-        or proposal.revision > context.revision
+        not _approval_coordinates_match(consumed, proposal, payload, context)
         or pending.reviewed_proposal_digest != sha256_hex(serialize_operation_operand(proposal))
         or pending.request.continuation_digest != proposal.digest
         or pending.proposed_effect_digest != proposal.digest
         or pending.baseline_digest != content_hash_hex(payload.model_dump(mode="json"))
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
+
+
+def _approval_coordinates_match(
+    consumed: OperationConsumedInteraction,
+    proposal: GoogleReviewProposal,
+    payload: GoogleReviewRequest,
+    context: OperationExecutorContext,
+) -> bool:
+    pending = consumed.checkpoint
+    return not (
+        consumed.response_action != "apply"
+        or proposal.identity != context.identity
+        or proposal.request != payload
+        or pending.request.identity != proposal.identity
+        or pending.request.revision != proposal.revision
+        or proposal.revision > context.revision
+    )
 
 
 class _PublicationEffects:
@@ -132,6 +144,72 @@ class _PublicationEffects:
 
     def commit[ResultT](self, save: Callable[[], ResultT], *, changed: Callable[[ResultT], bool]) -> ResultT:
         return asyncio.run_coroutine_threadsafe(self._commit(save, changed), self.loop).result()
+
+
+def _pending_review_belongs_to_owner(checkpoint: OperationResumeCheckpoint, context: OperationExecutorContext) -> bool:
+    return (
+        type(checkpoint) is OperationPendingInteraction
+        and checkpoint.request.identity == context.identity
+        and checkpoint.request.kind is OperationInteractionKind.REVIEW
+        and checkpoint.request.revision <= context.revision
+        and checkpoint.request.response_schema_ref
+        == operation_public_schema_reference(GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity)
+    )
+
+
+def _require_approved_receipt(
+    receipt: PublicationReceipt,
+    payload: GoogleReviewRequest,
+    proposal: GoogleReviewProposal,
+    root: ArtifactCreationReceipt,
+) -> None:
+    if (
+        receipt.state is not PublicationState.PUBLISHED
+        or receipt.publication_id != payload.publication_id
+        or receipt.profile_id != payload.profile_id
+        or receipt.root != root
+        or receipt.snapshot_digest != proposal.snapshot_digest
+        or receipt.package_digest != proposal.publication.package_digest
+        or receipt.predecessor_publication_id != proposal.publication.predecessor_publication_id
+    ):
+        raise ValueError("publication did not return the approved verified receipt")
+
+
+async def _settle_approved_publication(
+    receipt: PublicationReceipt,
+    payload: GoogleReviewRequest,
+    proposal: GoogleReviewProposal,
+    root: ArtifactCreationReceipt,
+    tracker: _PublicationEffects,
+    admit: Callable[[], None],
+    ports: GoogleReviewOperationPorts,
+    context: OperationExecutorContext,
+) -> OperationExecutorResult:
+    _require_approved_receipt(receipt, payload, proposal, root)
+    admit()
+    retained = await asyncio.to_thread(ports.load_publication, payload.publication_id)
+    if retained != receipt:
+        raise ValueError("publication lacks exact durable receipt custody")
+    settled = tracker.effect()
+    sheets = tuple(item for item in receipt.artifacts if item.kind is ManagedArtifactKind.REVIEW_SHEET)
+    if len(sheets) != 1 or settled not in {OperationEffect.NONE, OperationEffect.UPDATED}:
+        raise ValueError("publication lacks one settled native spreadsheet")
+    result = GoogleReviewExecutionResult(
+        identity=context.identity,
+        effect="updated" if settled is OperationEffect.UPDATED else "none",
+        result=GoogleReviewResult(
+            profile_id=payload.profile_id,
+            publication_id=payload.publication_id,
+            snapshot_digest=receipt.snapshot_digest,
+            root_folder_id=root.artifact_id,
+            spreadsheet_id=sheets[0].artifact_id,
+            spreadsheet_url=f"https://docs.google.com/spreadsheets/d/{sheets[0].artifact_id}/edit",
+        ),
+    )
+    async with context.cancellation.irreversible_section():
+        admit()
+        await context.events.effect(settled)
+        return await context.operands.put(result, written_at=now())
 
 
 class GoogleReviewExecutor:
@@ -222,14 +300,7 @@ class GoogleReviewExecutor:
             # checkpoint. Its original human response capability cannot be
             # transferred to a fresh session. End this untouched publication
             # so a newly reviewed invocation can acquire the profile subject.
-            if (
-                type(checkpoint) is OperationPendingInteraction
-                and checkpoint.request.identity == context.identity
-                and checkpoint.request.kind is OperationInteractionKind.REVIEW
-                and checkpoint.request.revision <= context.revision
-                and checkpoint.request.response_schema_ref
-                == operation_public_schema_reference(GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity)
-            ):
+            if _pending_review_belongs_to_owner(checkpoint, context):
                 await context.events.effect(OperationEffect.NONE)
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         if type(checkpoint) is not OperationConsumedInteraction:
@@ -271,40 +342,7 @@ class GoogleReviewExecutor:
                 ),
                 task_name="google.review.publish",
             )
-            if (
-                receipt.state is not PublicationState.PUBLISHED
-                or receipt.publication_id != payload.publication_id
-                or receipt.profile_id != payload.profile_id
-                or receipt.root != root
-                or receipt.snapshot_digest != proposal.snapshot_digest
-                or receipt.package_digest != proposal.publication.package_digest
-                or receipt.predecessor_publication_id != proposal.publication.predecessor_publication_id
-            ):
-                raise ValueError("publication did not return the approved verified receipt")
-            admit()
-            retained = await asyncio.to_thread(ports.load_publication, payload.publication_id)
-            if retained != receipt:
-                raise ValueError("publication lacks exact durable receipt custody")
-            settled = tracker.effect()
-            sheets = tuple(item for item in receipt.artifacts if item.kind is ManagedArtifactKind.REVIEW_SHEET)
-            if len(sheets) != 1 or settled not in {OperationEffect.NONE, OperationEffect.UPDATED}:
-                raise ValueError("publication lacks one settled native spreadsheet")
-            result = GoogleReviewExecutionResult(
-                identity=context.identity,
-                effect="updated" if settled is OperationEffect.UPDATED else "none",
-                result=GoogleReviewResult(
-                    profile_id=payload.profile_id,
-                    publication_id=payload.publication_id,
-                    snapshot_digest=receipt.snapshot_digest,
-                    root_folder_id=root.artifact_id,
-                    spreadsheet_id=sheets[0].artifact_id,
-                    spreadsheet_url=f"https://docs.google.com/spreadsheets/d/{sheets[0].artifact_id}/edit",
-                ),
-            )
-            async with context.cancellation.irreversible_section():
-                admit()
-                await context.events.effect(settled)
-                return await context.operands.put(result, written_at=now())
+            return await _settle_approved_publication(receipt, payload, proposal, root, tracker, admit, ports, context)
         except BaseException:
             effect = tracker.effect()
             await context.events.effect(OperationEffect.PARTIAL if effect is OperationEffect.UPDATED else effect)

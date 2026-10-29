@@ -50,7 +50,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.schema import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
-from ..provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ..probe_outcomes import ProbePreconditionCondition
 from .invoice_draft_records import LabelReadingFallback
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -183,11 +183,11 @@ class BatchItemResult(BaseModel):
 
 def _validate_batch_item_refusal(item: BatchItemResult) -> None:
     refused = item.status == "refused"
-    if refused and not (item.refusal_code is not None and item.refusal_code):
+    if refused and not bool(item.refusal_code):
         raise ValueError("a refused batch item must carry the reason it was refused")
     if refused and item.refusal_verdict is None:
         raise ValueError("a refused batch item must carry the typed verdict explaining what was seen")
-    if not refused and (item.refusal_code is not None and item.refusal_code):
+    if not refused and bool(item.refusal_code):
         raise ValueError(f"refusal_code is only meaningful for a refused item; got status={item.status!r}")
     if not refused and item.refusal_verdict is not None:
         raise ValueError(f"refusal_verdict is only meaningful for a refused item; got status={item.status!r}")
@@ -231,7 +231,7 @@ class InferencePause(BaseModel):
     so N copies of it would be N identical messages an operator learns to scroll
     past, which is how a real refusal goes unread.
 
-    ``facts`` and ``precondition_verdict`` are the application-owned provisioning
+    ``facts`` and ``precondition_verdict`` are the application-owned probe
     outcome. This record deliberately does not restate a reason, rendered
     explanation, or recovery command: its consumer must resolve the exact verdict
     against the live operator surface.
@@ -464,8 +464,7 @@ class _InferenceLaneState:
     and then every text-layer PDF reads and no scan does. The service answers a
     role it cannot serve at its lookup, before anything is sent. So the first
     document of a role is attempted, and when its refusal carries the service's
-    typed model-run verdict -- the ``model_run_refusal`` fact, or the local AI
-    setup action -- that verdict closes the role it names, and every later
+    typed model-run verdict -- the ``model_run_refusal`` fact -- that verdict closes the role it names, and every later
     document of that role is paused with it. A role that is served keeps
     working while another is not. The batch carries no consent, so on a role
     whose lane reads off this computer the dispatch's consent gate refuses with
@@ -501,8 +500,7 @@ class _InferenceLaneState:
         A contention verdict closes the lane for the rest of the run,
         and ``True`` tells the caller the document itself was not at fault: it
         is deferred with every later model-bearing document, not refused. Only
-        the service's typed model-run refusal and the local AI setup refusal
-        close a role, and the role closed is the one the verdict names, so a
+        the service's typed model-run refusal closes a role, and the role closed is the one the verdict names, so a
         vision refusal reached by a text-layer PDF escalating to vision closes
         vision, not text. Any other refusal closes nothing.
         """
@@ -532,7 +530,7 @@ class _InferenceLaneState:
 
 
 #: The agent's refusal to load a model with the memory free; it is a property of the machine.
-_CONTENTION_CONDITIONS: Final = frozenset({ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value})
+_CONTENTION_CONDITIONS: Final = frozenset({ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value})
 
 
 def _verdict_facts(verdict: PreconditionVerdict) -> dict[str, str | int | bool]:
@@ -552,8 +550,7 @@ _MODEL_RUN_REFUSAL_FACT: Final[str] = "model_run_refusal"
 def _reader_refusal_role(verdict: PreconditionVerdict) -> ModelRole | None:
     """Return the role a reader refusal names, or ``None`` when the verdict is not a reader refusal."""
     facts = {key: value for evidence in verdict.evidence for key, value in evidence.values.items()}
-    sets_up_local_ai = verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    if _MODEL_RUN_REFUSAL_FACT not in facts and not sets_up_local_ai:
+    if _MODEL_RUN_REFUSAL_FACT not in facts:
         return None
     named = facts.get("model_role", facts.get("role"))
     if not isinstance(named, str):

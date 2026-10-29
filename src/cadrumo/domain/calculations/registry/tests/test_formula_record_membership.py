@@ -9,7 +9,8 @@ from pydantic import ValidationError
 from .....core.aggregation import BindingSourceKind
 from ...record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ..errors import RegistryValidationError
-from ..formula_runtime import calculate_registry_snapshot, evaluate_expression
+from ..formula_expression import evaluate_expression
+from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import UnresolvedFormulaDependencyError
 from ..schema_formula import FormulaExpression
 from .published_authority import published_snapshot

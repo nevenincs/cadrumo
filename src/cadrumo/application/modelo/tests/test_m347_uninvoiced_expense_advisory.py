@@ -18,8 +18,9 @@ from pathlib import Path
 
 import pytest
 
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from .._m347_uninvoiced_expense_advisory import (

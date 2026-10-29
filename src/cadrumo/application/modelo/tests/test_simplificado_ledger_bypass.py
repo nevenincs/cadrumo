@@ -32,14 +32,13 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import (
+from cadrumo.domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile

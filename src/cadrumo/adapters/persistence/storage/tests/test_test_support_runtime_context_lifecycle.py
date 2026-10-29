@@ -8,11 +8,13 @@ from uuid import UUID
 import keyring
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody.acceleration_keychain import PROFILE_SESSION_KEYCHAIN_SERVICE
+
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_location
 from .....core.time.clock import now as _now
 from .....tests.os_keychain_hook import require_os_credential_store
-from ..custody.acceleration_receipt import PROFILE_SESSION_KEYCHAIN_SERVICE, mint_profile_session, profile_session_path
+from ..custody.acceleration_receipt import mint_profile_session, profile_session_path
 from ..custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from ..master_key.active_session import has_active_bucket_session
 from ..sql.engine import get_engine

@@ -25,7 +25,7 @@ import pytest
 
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.export_parse import xml_dictionary_entries
+from ....domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.filing.errors import FilingExportValidationError

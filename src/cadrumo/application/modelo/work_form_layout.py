@@ -168,80 +168,90 @@ class LayoutWalker:
         | FormContextFieldBlock,
     ) -> ModeloFormBlock:
         """Project one declared field, grid, repeating group, or binding-input block."""
-        language = self.context.language
         if isinstance(block, FormContextFieldBlock):
-            owner = resolve_form_context_field(self.context.snapshot.revision, block)
-            label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
-            if block.box_number is not None:
-                label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
-            value = (
-                project_binding_field(owner.binding, self.context).value
-                if owner.binding is not None
-                else form_context_value(
-                    self.context.snapshot,
-                    block,
-                    producer_snapshot=self.producer_snapshot,
-                    revision=self.context.revision,
-                )
-            )
-            choice = form_context_choice(block, value)
-            if choice is not None:
-                value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
-            period = self.context.snapshot.filing_period
-            shows_period = (
-                owner.binding is None
-                and owner.draft_attribute is ExportDraftAttribute.PERIOD_CODE
-                and value is not None
-                and choice is None
-            )
-            return ModeloFormContextFieldBlock(
-                id=block.id,
-                label=label,
-                value=value,
-                value_text=context_value_text(value, language, period=period if shows_period else None),
-            )
+            return self._context_block(block)
         if isinstance(block, FormFieldBlock):
-            if block.casilla_id is not None and block.casilla_id in self.seen:
-                return self.alias(block)
-            field = (
-                self.casilla(
-                    block.casilla_id,
-                    design_constant=block.design_constant,
-                    literal_decimals=block.literal_decimals,
-                )
-                if block.casilla_id is not None
-                else project_binding_field(str(block.binding_id), self.context)
-            )
-            return ModeloFormFieldBlock(id=block.id, field=field)
+            return self._field_block(block)
         if isinstance(block, FormGridBlock):
-            columns = tuple(
-                ModeloFormGridColumn(
-                    key=column.key,
-                    heading=localized_heading(column.heading_key, column.official_heading, column.key, language),
-                )
-                for column in block.columns
-            )
-            rows = tuple(
-                ModeloFormGridRow(
-                    key=row.key,
-                    heading=localized_heading(row.heading_key, row.official_heading, row.key, language),
-                    cells=with_grounded_grid_rates(
-                        tuple(
-                            self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal, cell.literal_decimals)
-                            for cell in row.cells
-                        ),
-                        self.context,
-                    ),
-                )
-                for row in block.rows
-            )
-            return ModeloFormGridBlock(id=block.id, columns=columns, rows=with_printed_row_rates(rows))
+            return self._grid_block(block)
         if isinstance(block, FormRepeatingGroupBlock):
             return self.repeating(block)
         return ModeloFormBindingInputsBlock(
             id=block.id,
             fields=tuple(project_binding_field(binding_id, self.context) for binding_id in block.binding_ids),
         )
+
+    def _context_block(self, block: FormContextFieldBlock) -> ModeloFormContextFieldBlock:
+        language = self.context.language
+        owner = resolve_form_context_field(self.context.snapshot.revision, block)
+        label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
+        if block.box_number is not None:
+            label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
+        value = (
+            project_binding_field(owner.binding, self.context).value
+            if owner.binding is not None
+            else form_context_value(
+                self.context.snapshot,
+                block,
+                producer_snapshot=self.producer_snapshot,
+                revision=self.context.revision,
+            )
+        )
+        choice = form_context_choice(block, value)
+        if choice is not None:
+            value = localized_heading(choice.heading_key, choice.official_heading, "Opción", language).text
+        period = self.context.snapshot.filing_period
+        shows_period = (
+            owner.binding is None
+            and owner.draft_attribute is ExportDraftAttribute.PERIOD_CODE
+            and value is not None
+            and choice is None
+        )
+        return ModeloFormContextFieldBlock(
+            id=block.id,
+            label=label,
+            value=value,
+            value_text=context_value_text(value, language, period=period if shows_period else None),
+        )
+
+    def _field_block(self, block: FormFieldBlock) -> ModeloFormBlock:
+        if block.casilla_id is not None and block.casilla_id in self.seen:
+            return self.alias(block)
+        field = (
+            self.casilla(
+                block.casilla_id,
+                design_constant=block.design_constant,
+                literal_decimals=block.literal_decimals,
+            )
+            if block.casilla_id is not None
+            else project_binding_field(str(block.binding_id), self.context)
+        )
+        return ModeloFormFieldBlock(id=block.id, field=field)
+
+    def _grid_block(self, block: FormGridBlock) -> ModeloFormGridBlock:
+        language = self.context.language
+        columns = tuple(
+            ModeloFormGridColumn(
+                key=column.key,
+                heading=localized_heading(column.heading_key, column.official_heading, column.key, language),
+            )
+            for column in block.columns
+        )
+        rows = tuple(
+            ModeloFormGridRow(
+                key=row.key,
+                heading=localized_heading(row.heading_key, row.official_heading, row.key, language),
+                cells=with_grounded_grid_rates(
+                    tuple(
+                        self.cell(cell.kind, cell.casilla_id, cell.binding_id, cell.literal, cell.literal_decimals)
+                        for cell in row.cells
+                    ),
+                    self.context,
+                ),
+            )
+            for row in block.rows
+        )
+        return ModeloFormGridBlock(id=block.id, columns=columns, rows=with_printed_row_rates(rows))
 
     def alias(self, block: FormFieldBlock) -> ModeloFormContextFieldBlock:
         """Show a declared repeat without creating another editable address."""

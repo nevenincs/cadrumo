@@ -17,13 +17,9 @@ from typing import override
 
 import pytest
 
+from ....domain.transactions.date_partition import LedgerDatePartition, OutOfWindowTransactionIndexEntry
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
-    LedgerDatePartition,
-    OutOfWindowTransactionIndexEntry,
-    Transaction,
-    TransactionCatalogue,
-)
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from .._transaction_catalogue_cache import MemoizedTransactionCatalogueRepository

@@ -28,13 +28,8 @@ from ...domain.iva.classification import IvaInvoiceClassificationCriteria
 from ...domain.iva.schema import InvoiceKind
 from ...domain.iva.supply_nature import SupplyNature
 from ..invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
-from ..ledger.classification_assembly import (
-    ClassificationAssembly,
-    DeclaredFact,
-    DeclaredFacts,
-    IvaCategoryResolution,
-    MissingClassifierInput,
-)
+from ..ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts, MissingClassifierInput
+from ..ledger.classification_category_resolution import IvaCategoryResolution
 from ..ledger.confirm_establishment import ConfirmedEstablishment
 from ..ledger.confirmation_gate import ConfirmationBlocker
 from ..ledger.counterparty_establishment import CounterpartyEstablishmentContradiction
@@ -169,7 +164,6 @@ class LabelReadingFallbackProjectionV1(BaseModel):
     unread_fields: Annotated[tuple[_FieldName, ...], Field(min_length=1, max_length=128)]
     reader_error_type: Annotated[str, Field(min_length=1, max_length=2_048)]
     failed_condition_id: _ShortText | None = None
-    recovery_action_id: _ShortText | None = None
 
     @classmethod
     def from_fallback(cls, value: LabelReadingFallback) -> Self:
@@ -179,7 +173,6 @@ class LabelReadingFallbackProjectionV1(BaseModel):
             unread_fields=value.unread_fields,
             reader_error_type=value.reader_error_type,
             failed_condition_id=value.failed_condition_id,
-            recovery_action_id=value.recovery_action_id,
         )
 
     def to_fallback(self) -> LabelReadingFallback:
@@ -189,7 +182,6 @@ class LabelReadingFallbackProjectionV1(BaseModel):
             unread_fields=self.unread_fields,
             reader_error_type=self.reader_error_type,
             failed_condition_id=self.failed_condition_id,
-            recovery_action_id=self.recovery_action_id,
         )
 
 

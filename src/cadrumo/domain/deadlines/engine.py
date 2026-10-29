@@ -31,7 +31,7 @@ if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.authority_artifact import AuthorityGenerationPin
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
-    from ..calculations.registry.schema_verification import ProfilePredicateDefinition
+    from ..calculations.registry.schema_live_verification import ProfilePredicateDefinition
     from ..calculations.registry.temporal import RevisionSelectionMetadata
 
     type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]

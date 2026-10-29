@@ -42,7 +42,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import o
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.calculations.observations_repository import CalculationObservationPorts
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.iva_wallet_gate import taxpayer_nif_for_bucket
 from cadrumo.application.modelo.iva_wallet_seed import (
     ModeloIvaWalletCorrectionNoRecordError,
     ModeloIvaWalletCorrectionSealedError,
@@ -50,6 +49,7 @@ from cadrumo.application.modelo.iva_wallet_seed import (
     seed_iva_compensation_period_for_bucket,
 )
 from cadrumo.application.modelo.iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
+from cadrumo.application.modelo.iva_wallet_values import taxpayer_nif_for_bucket
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType

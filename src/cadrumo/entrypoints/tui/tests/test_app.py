@@ -27,7 +27,7 @@ from ..account import (
     AccountRecomposeRequiredV1,
     AccountSessionExpiredError,
 )
-from ..app import CadrumoTuiApp, RootPresentationV1
+from ..app import CadrumoTuiApp
 from ..components.account_chrome import AccountActionV1, AccountChromeScreen
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection
@@ -43,6 +43,7 @@ from ..navigation import (
     TuiScreenFactoryV1,
     build_destination_catalogue,
 )
+from ..root_binding import RootPresentationV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 

@@ -31,13 +31,8 @@ from .._modelo_revision_payload_parts import (
 )
 from .._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
 from .._modelo_work_wizard_payloads import WorkWizardResult
-from ..modelo_results import (
-    CalculationRevisionPayload,
-    CasillaObservationPayload,
-    DeltaRowPayload,
-    FindingPayload,
-    WorkCalculateResult,
-)
+from ..modelo_query_results import CasillaObservationPayload, DeltaRowPayload
+from ..modelo_results import CalculationRevisionPayload, FindingPayload, WorkCalculateResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

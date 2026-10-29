@@ -14,7 +14,7 @@ from typing import Protocol, runtime_checkable
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.buckets.event import BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -167,7 +167,7 @@ class InvoiceCatalogueCoCommitWriterProtocol(InvoiceCatalogueRepositoryProtocol,
         """Build the invoice secure-object write without committing it.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 

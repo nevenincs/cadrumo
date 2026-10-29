@@ -32,10 +32,9 @@ from textual.widgets import OptionList, Static
 
 from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, FindingFactKind
 from ......application.modelo.work_form import build_modelo_work_form
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormCasillaAddressV1,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormSection,

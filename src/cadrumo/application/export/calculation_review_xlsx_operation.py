@@ -46,6 +46,7 @@ from ..storage.calc_sheets.review_workbook import build_review_workbook
 from ..storage.calc_sheets.workbook_export import SheetWorkbookMaterializer
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .review_snapshot import CalculationReviewSelection, ReviewSnapshot, ReviewStatus
+from .terminal_result_validation import terminal_receipt_has_result_only
 
 CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID = "export.calculation-review-xlsx"
 
@@ -214,11 +215,7 @@ def _project_result(value: BaseModel, receipt: OperationTerminalReceipt, /) -> B
         or receipt.identity.subject_ref != profile_operation_subject(str(value.result.profile_id))
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
         or receipt.effect is not OperationEffect.UPDATED
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        or not terminal_receipt_has_result_only(receipt)
     ):
         raise ValueError("local calculation review result differs from its terminal receipt")
     return value.result

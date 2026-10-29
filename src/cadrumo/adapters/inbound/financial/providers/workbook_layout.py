@@ -11,7 +11,7 @@ and ``.xls`` exports of the same statement read identically.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Sequence
+from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -24,6 +24,8 @@ from .base import (
     archive_cell_text,
 )
 from .csv import (
+    ParsedTabularTransactionRow,
+    StatementConventions,
     build_provider_row,
     check_summary_totals,
     header_lookup,
@@ -82,6 +84,51 @@ def best_layout_match(sample_rows: Iterable[Sequence[object]]) -> WorksheetLayou
     return best
 
 
+def _worksheet_typed_fields(headers: Sequence[str], row: Sequence[object]) -> dict[str, object]:
+    """Map typed cells to the matched headers, retaining absent trailing columns."""
+    return {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
+
+
+def _worksheet_text_fields(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:
+    """Archive each matched cell as text without changing its typed parse value."""
+    return {header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
+
+
+def _parse_worksheet_transaction(
+    conventions: StatementConventions,
+    lookup: Mapping[str, str],
+    raw_fields: Mapping[str, str],
+    typed_fields: Mapping[str, object],
+    provider_name: str,
+    sheet_name: str,
+    source_sha256: str,
+    source_row_index: int,
+) -> ParsedTabularTransactionRow:
+    """Decode one worksheet movement and retain its row-specific refusal wording."""
+    try:
+        return parse_tabular_transaction_row(
+            conventions=conventions,
+            lookup=lookup,
+            raw_fields=raw_fields,
+            typed_fields=typed_fields,
+            synthetic_provider_name=f"{provider_name}-{sheet_name}",
+            source_sha256=source_sha256,
+            source_row_index=source_row_index,
+            required_field_context="worksheet row",
+        )
+    except (ValueError, FinancialValidationError) as exc:
+        _logger.warning(
+            "%s: parse error row=%d reason=%s",
+            provider_name,
+            source_row_index,
+            "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
+        )
+        raise InvalidFinancialSourceError(
+            f"worksheet row {source_row_index} could not be parsed: "
+            f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
+        ) from None
+
+
 def iter_worksheet_rows(
     *,
     provider: FinancialProvider,
@@ -105,47 +152,29 @@ def iter_worksheet_rows(
     data_rows = rows[match.header_index + 1 :]
     try:
         conventions = infer_statement_conventions(
-            (
-                {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
-                for row in data_rows
-            ),
+            (_worksheet_typed_fields(headers, row) for row in data_rows),
             match.lookup,
         )
     except FinancialValidationError as exc:
         raise InvalidFinancialSourceError(str(exc)) from None
-    text_rows = [
-        {header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
-        for row in data_rows
-    ]
+    text_rows = [_worksheet_text_fields(headers, row) for row in data_rows]
     summary = summary_row_positions(text_rows, match.lookup)
     movements: list[ParsedLedgerRow] = []
     for position, (row, raw_fields) in enumerate(zip(data_rows, text_rows, strict=True)):
         source_row_index = match.header_index + 2 + position
         if row_is_blank(raw_fields) or position in summary:
             continue
-        typed_fields = {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}
-        try:
-            parsed = parse_tabular_transaction_row(
-                conventions=conventions,
-                lookup=match.lookup,
-                raw_fields=raw_fields,
-                typed_fields=typed_fields,
-                synthetic_provider_name=f"{provider.name}-{sheet_name}",
-                source_sha256=source_sha256,
-                source_row_index=source_row_index,
-                required_field_context="worksheet row",
-            )
-        except (ValueError, FinancialValidationError) as exc:
-            _logger.warning(
-                "%s: parse error row=%d reason=%s",
-                provider.name,
-                source_row_index,
-                "financial_validation" if isinstance(exc, FinancialValidationError) else "invalid_value",
-            )
-            raise InvalidFinancialSourceError(
-                f"worksheet row {source_row_index} could not be parsed: "
-                f"{str(exc) if isinstance(exc, FinancialValidationError) else 'invalid field value'}",
-            ) from None
+        typed_fields = _worksheet_typed_fields(headers, row)
+        parsed = _parse_worksheet_transaction(
+            conventions,
+            match.lookup,
+            raw_fields,
+            typed_fields,
+            provider.name,
+            sheet_name,
+            source_sha256,
+            source_row_index,
+        )
         movements.append(
             build_provider_row(
                 provider=provider,

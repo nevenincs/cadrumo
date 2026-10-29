@@ -51,7 +51,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_work_lifecycle_ports
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

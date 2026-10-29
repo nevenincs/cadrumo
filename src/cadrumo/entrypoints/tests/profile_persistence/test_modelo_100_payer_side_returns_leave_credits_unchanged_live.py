@@ -54,12 +54,9 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....application.aggregation.source_mesh import (
-    CallerOverrideDisposition,
-    precedence_ladder_sources,
-)
+from ....application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

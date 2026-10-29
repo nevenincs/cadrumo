@@ -28,8 +28,9 @@ from ...adapters.persistence.profile.recipient_replay_guard import RecipientRepl
 from ...adapters.persistence.profile.review_package_recipient_encryption import build_recipient_encryption_capability
 from ...adapters.persistence.profile.review_package_recipient_registry import build_recipient_fingerprint_registry_ports
 from ...adapters.persistence.profile.review_package_signing import build_review_package_signing_keypair_capability
-from ...application.modelo.export import ModeloExportCommand, export_modelo_revision
-from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.export import export_modelo_revision
+from ...application.modelo.export_contracts import ModeloExportCommand
+from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.recipient_encryption import RecipientEncryptedPackage, RecipientEncryptionKeypair
 from ...application.modelo.review_package import build_review_package
 from ...application.modelo.review_package_counter_sign import (
@@ -78,7 +79,7 @@ from ...application.modelo.review_package_signing import (
 from ...core.corpus_manifest.manifest import verify_corpus_bundle
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.buckets.event import BucketEvent, BucketEventType
-from ..adapter_composition import build_modelo_export_ports
+from ..adapter_composition_ports import build_modelo_export_ports
 from ..review_package_exchange_operation_composition import build_review_package_exchange_operation_ports
 from . import modelo_operation_test_support
 from .conformance_family_contract import (

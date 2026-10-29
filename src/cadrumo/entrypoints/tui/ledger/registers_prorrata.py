@@ -34,24 +34,27 @@ from ....application.prorrata_register.projection_contracts import (
     ProrrataSectorDefinitionProjection,
 )
 from ....core.i18n.render import tr
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
+from .registers_input import (
+    blank_to_none,
+    decimal_text,
+    parse_public_decimal,
+    parse_whole_number,
+    request_summary,
+    require_text,
+)
 from .registers_presentation import (
     LedgerRegisterScreen,
     RegisterColumnV1,
     RegisterListV1,
     RegisterOutcomeV1,
     RegisterRow,
-    blank_to_none,
-    decimal_text,
     labelled_input,
     labelled_select,
-    parse_public_decimal,
-    parse_whole_number,
-    request_summary,
-    require_text,
     show_fields,
 )
 from .tools import LedgerToolV1
+from .workspace_screen import LedgerWorkspaceScreen
 
 type ProrrataMutationRequestV1 = (
     ProrrataDeclareSectorRequest
@@ -349,11 +352,7 @@ class LedgerProrrataRegisterScreen(LedgerRegisterScreen):
     @override
     def choose_row(self, table_id: str, key: str) -> None:
         if table_id == "prorrata-sectors":
-            sector = next(item for item in self.sectors if item.sector_id == key)
-            self.set_input("#prorrata-sector", sector.sector_id)
-            self.set_input("#prorrata-letra", sector.letra)
-            self.set_input("#prorrata-activities", ", ".join(sector.member_activity_codes))
-            self.query_one("#register-detail", Static).update(_sector_line(sector))
+            self._choose_sector(key)
             return
         entry = next(item for item in self.entries if prorrata_entry_key(item.ejercicio, item.sector_id) == key)
         self.set_input("#prorrata-ejercicio", str(entry.ejercicio))
@@ -365,6 +364,13 @@ class LedgerProrrataRegisterScreen(LedgerRegisterScreen):
         transition = entry.especial_transition
         self.set_input("#prorrata-evidence", transition.evidence_reference if transition is not None else "")
         self.query_one("#register-detail", Static).update(_entry_line(entry))
+
+    def _choose_sector(self, key: str) -> None:
+        sector = next(item for item in self.sectors if item.sector_id == key)
+        self.set_input("#prorrata-sector", sector.sector_id)
+        self.set_input("#prorrata-letra", sector.letra)
+        self.set_input("#prorrata-activities", ", ".join(sector.member_activity_codes))
+        self.query_one("#register-detail", Static).update(_sector_line(sector))
 
     def _request(self, action: str) -> ProrrataMutationRequestV1:
         """Build the chosen change's own request from the visible fields only."""

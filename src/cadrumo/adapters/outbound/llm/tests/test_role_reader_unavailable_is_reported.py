@@ -26,7 +26,7 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusal, ModelRunRefusal
 
 from .....application.ledger.column_roles import ColumnRoleReaderUnavailable
 from .....application.operator_actions.models import PreconditionVerdict
-from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from .....application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID
 from .....core.config import Settings
 from .....core.field_role import FieldRole
 from .....core.model_roles import ModelRole

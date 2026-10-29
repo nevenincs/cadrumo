@@ -151,6 +151,27 @@ _PROFILE_FLAG_OPERATORS: frozenset[VerificationPredicateOperator] = frozenset(
 )
 
 
+def _predicate_literals(
+    parsed: ParsedVerificationPredicate, route: VerificationPredicateRoute
+) -> tuple[Decimal | None, _date | None]:
+    operator = parsed.operator
+    threshold: Decimal | None = None
+    cutoff: _date | None = None
+    if operator is VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE:
+        threshold = _registry_threshold(parsed.threshold)
+        if threshold is None:
+            raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
+    elif operator is VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE:
+        cutoff = _parse_predicate_date(parsed.cutoff)
+        if cutoff is None:
+            raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
+    if operator in _LITERAL_OPERATORS and not parsed.literal:
+        raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
+    if operator in _PROFILE_FLAG_OPERATORS and parsed.profile_field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
+        raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
+    return threshold, cutoff
+
+
 def _required_parsed_predicate(expression: str, *, route: VerificationPredicateRoute) -> _AdmittedPredicate:
     """Admit one registry predicate to its route, refusing it before any evaluation.
 
@@ -175,20 +196,7 @@ def _required_parsed_predicate(expression: str, *, route: VerificationPredicateR
     ):
         raise _predicate_refusal(operator, VerificationPredicateRefusal.ARITY, route)
     casilla_ids = tuple(_predicate_casilla_ids(parsed))
-    threshold: Decimal | None = None
-    cutoff: _date | None = None
-    if operator is VerificationPredicateOperator.ADVISORY_WHEN_RATIO_GE:
-        threshold = _registry_threshold(parsed.threshold)
-        if threshold is None:
-            raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
-    elif operator is VerificationPredicateOperator.DEDUCCION_REQUIRES_ADQUISICION_BEFORE:
-        cutoff = _parse_predicate_date(parsed.cutoff)
-        if cutoff is None:
-            raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
-    if operator in _LITERAL_OPERATORS and not parsed.literal:
-        raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
-    if operator in _PROFILE_FLAG_OPERATORS and parsed.profile_field not in KNOWN_PROFILE_FLAG_ADVISORY_FIELDS:
-        raise _predicate_refusal(operator, VerificationPredicateRefusal.LITERAL, route)
+    threshold, cutoff = _predicate_literals(parsed, route)
     return _AdmittedPredicate(parsed=parsed, casilla_ids=casilla_ids, threshold=threshold, cutoff=cutoff)
 
 

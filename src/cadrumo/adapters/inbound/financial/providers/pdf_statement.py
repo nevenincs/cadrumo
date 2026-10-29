@@ -4,7 +4,7 @@
 page's text layer with ``pdfplumber``; a page that carries none is transcribed
 by the vision model instead. The text model then proposes the movements each
 page prints, as printed strings, and
-:mod:`._statement_grounding` decides deterministically which of those
+:mod:`.statement_grounding` decides deterministically which of those
 proposals the page really prints and whether they reconcile with the printed
 balances. Only anchored, reconciled movements are emitted.
 
@@ -31,7 +31,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import override
 
-from .....application.dependency_wording import statement_reader_refusal_reason
+from .....application.reader_refusal_wording import statement_reader_refusal_reason
 from .....application.ledger.document_transcription import DocumentTranscription
 from .....application.ledger.evidence_textlayer import text_layer_transcriber_identity
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
@@ -46,7 +46,7 @@ from .....core.logging import get_logger
 from .....core.optional_extras import MissingOptionalExtraError
 from .....domain.transactions.raw_transaction import SourceFormat
 from ...pdf.redaction import INPUT_PDF_SOURCE_LABEL as _INPUT_PDF_SOURCE_LABEL
-from ._statement_grounding import GroundedStatement, StatementPageText, ground_statement
+from ._statement_grounding import GroundedStatement, StatementPageText
 from .base import (
     FinancialProvider,
     FinancialProviderError,
@@ -57,6 +57,7 @@ from .base import (
     default_currency,
     synthesize_transaction_id,
 )
+from .statement_grounding import ground_statement
 
 __all__ = ["PdfStatementProvider"]
 
@@ -135,7 +136,7 @@ class PdfStatementProvider(FinancialProvider):
                 raise
             return ProviderValidation(
                 is_valid=False,
-                warnings=(statement_reader_refusal_reason(verdict),),
+                warnings=(statement_reader_refusal_reason(),),
                 reader_unavailable_verdict=verdict,
             )
         statement = read.statement

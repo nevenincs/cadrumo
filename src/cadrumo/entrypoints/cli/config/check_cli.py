@@ -11,7 +11,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ....application.operator_actions.models import PreconditionVerdict
 from ....application.preflight import PreflightCheck
-from ....application.provisioning import DependencyStatus
+from ....application.workstation_probes import DependencyStatus
 from ....application.workstation_check_operation import WorkstationCheckProjection
 from ....core.i18n.render import tr
 from ....core.json_contract import ResolvedPreconditionAction

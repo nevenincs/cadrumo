@@ -1,6 +1,6 @@
 """Typed request, port and result contracts for invoice withholding capture.
 
-Core types: :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+Core types: :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ...core.aggregation import BindingSourceKind
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ..aggregation.invoice_retencion import InvoiceRetencionProjectionDefect, InvoiceWithholdingEvidenceRequest
 from ..aggregation.retencion_observations_repository import RetencionObservationRepository
 from ..aggregation.service import PerModeloAggregationCommand, PerModeloAggregationContributor

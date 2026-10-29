@@ -20,7 +20,8 @@ from typing import Any, Final
 import pytest
 from pydantic import ValidationError
 
-from .....domain.invoices.models import Invoice, InvoiceCatalogue
+from .....domain.invoices.catalogue import InvoiceCatalogue
+from .....domain.invoices.models import Invoice
 from .....domain.invoices.tests.invoice_catalogue_seed import SeedCase, fields_set, seed_payload, seed_payloads
 from .....tests.inventory import production_python_files, repo_relative
 from ...storage.errors import EnvelopeVersionError
@@ -219,10 +220,10 @@ def _entry_point_references(source: str) -> list[str]:
 def test_the_reference_scan_sees_aliased_and_attribute_references() -> None:
     """Positive control: an aliased import and an attribute call in a write path are both found."""
     source = (
-        "from cadrumo.domain.invoices.models import decode_authenticated_invoice_catalogue as decode\n"
-        "from cadrumo.domain.invoices import models\n"
+        "from cadrumo.domain.invoices.catalogue import decode_authenticated_invoice_catalogue as decode\n"
+        "from cadrumo.domain.invoices import catalogue\n"
         "def mutate(records):\n"
-        "    return models.decode_authenticated_invoice_catalogue(records)\n"
+        "    return catalogue.decode_authenticated_invoice_catalogue(records)\n"
     )
     assert _entry_point_references(source) == ["<module>", "mutate"]
 

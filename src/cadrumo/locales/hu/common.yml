@@ -3815,6 +3815,8 @@ desktop:
     progress_label: 'Haladás: {name}'
     rail_busy: Az összetevők beállítása folyamatban
     rail_incomplete: A beállítás nem fejeződött be
+    refused_browser_not_removed: A Cadrumo nem tudta eltávolítani a böngészőt. Ellenőrizd
+      újra, majd próbáld meg még egyszer.
     refused_busy: Máshol már fut egy beállítás. Várd meg, amíg befejeződik.
     refused_model_selection_unusable: A Cadrumo nem tudja letölteni ezt a modellt.
       Ellenőrizd a helyi MI modelllistáját az ügynök beállításaiban, majd próbáld
@@ -3828,6 +3830,10 @@ desktop:
     refused_unavailable: A Cadrumo szolgáltatásai nem válaszolnak. Próbáld újra egy
       kicsit később.
     reject: Ne töltsd le
+    remove: Eltávolítás
+    remove_confirm: Törlöd ezt a böngészőt a számítógépedről? Később újra beállíthatod.
+    remove_confirm_yes: Törlöm
+    remove_keep: Megtartom
     result_already: Már be volt állítva
     result_done: Beállítva
     retry: Kapcsolati hiba. Újrapróbálkozás {seconds} másodperc múlva ({attempt}.

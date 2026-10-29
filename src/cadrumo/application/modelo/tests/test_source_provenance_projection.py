@@ -6,7 +6,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...aggregation.source_mesh import CalculationSourceProvenance, CalculationSourceResolution
-from ..calculation_actions import _source_provenance_refs
+from ..calculation_bucket_actions import _source_provenance_refs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

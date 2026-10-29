@@ -128,7 +128,7 @@ class BrowserFailureMode(StrEnum):
     OPTIONAL_EXTRA_UNAVAILABLE = "optional_extra_unavailable"
     PLAYWRIGHT_RUNTIME_START_FAILED = "playwright_runtime_start_failed"
     PLAYWRIGHT_RUNTIME_STOP_FAILED = "playwright_runtime_stop_failed"
-    BROWSER_NOT_PROVISIONED = "browser_not_provisioned"
+    BROWSER_NOT_AVAILABLE = "browser_not_available"
     BROWSER_LAUNCH_FAILED = "browser_launch_failed"
     CONTEXT_CREATE_FAILED = "context_create_failed"
     EVASION_FAILED = "evasion_failed"
@@ -140,20 +140,18 @@ class BrowserFailureMode(StrEnum):
 
 
 class BrowserNotReadyError(BrowserError):
-    """Raised when browser work starts while the browser setup item is not ready.
+    """Raised when browser work starts while the browser is not available.
 
     A refusal rather than a failure: it is raised before any browser, driver,
-    certificate or secret is touched, so the operation it stops had no effect,
-    and the carried verdict says whether setting the browser up repairs it.
+    certificate or secret is touched, so the operation it stops had no effect.
 
-    Its failure mode is always :attr:`BrowserFailureMode.BROWSER_NOT_PROVISIONED`
+    Its failure mode is always :attr:`BrowserFailureMode.BROWSER_NOT_AVAILABLE`
     and is read from the class. The base keeps the mode in the error context and
     as a public attribute, and both reach the person as context lines beside the
-    sentence; this refusal carries neither, so the person reads the sentence and
-    the verdict's setup action only.
+    sentence; this refusal carries neither, so the person reads the sentence only.
     """
 
-    failure_mode = BrowserFailureMode.BROWSER_NOT_PROVISIONED.value
+    failure_mode = BrowserFailureMode.BROWSER_NOT_AVAILABLE.value
 
     def __init__(
         self,
@@ -162,15 +160,6 @@ class BrowserNotReadyError(BrowserError):
         translated_message: str,
         precondition_verdict: PreconditionVerdict | None,
     ) -> None:
-        """Construct the refusal from its message key and the setup probe's verdict."""
+        """Construct the refusal from its message key and the probe's verdict."""
         super().__init__(message, translated_message=translated_message, precondition_verdict=precondition_verdict)
         del self.failure_mode
-
-
-class BrowserNotUsableError(BrowserNotReadyError):
-    """Raised when browser work starts and setting the browser up cannot make it usable.
-
-    Its own registered code carries the sentence that offers no setup, so a
-    reader that holds only the code, without the recorded detail, does not tell
-    the person to set up a browser setup cannot repair.
-    """

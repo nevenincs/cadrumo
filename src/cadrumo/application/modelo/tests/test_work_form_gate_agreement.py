@@ -28,9 +28,9 @@ from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -38,9 +38,10 @@ from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_
 from ..calculation_notes import PRINTED_BOX_REASONS, note_attention
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
+from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import ModeloFormExportHoldReason, export_hold
 from ..work_form_issue_lines import form_issue_lines
-from ..work_form_models import ModeloFormAttention, ModeloFormCasillaAddressV1, ModeloWorkForm
+from ..work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm
 from ..work_form_next_step import ModeloFormNextAction, form_next_step, result_fields
 from ..work_form_service import ModeloWorkFormLoadV1
 from ..workbench_projection import project_modelo_workbench_form

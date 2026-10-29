@@ -26,13 +26,8 @@ from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..business_proportion import business_proportion
 from ..errors import AggregationPeriodError
-from ..renta_ledger import (
-    RentaLedgerAggregationIssue,
-    RentaLedgerAggregationIssueReason,
-    _business_fact_amount,
-    _renta_direction_for,
-    _resolve_annual_period,
-)
+from ..renta_ledger import _business_fact_amount, _renta_direction_for, _resolve_annual_period
+from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 from .renta_income_aggregation_support import _period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

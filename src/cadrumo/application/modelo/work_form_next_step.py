@@ -46,12 +46,11 @@ from .edit_models import (
     ModeloEditRefusalCode,
     ModeloEditRefusedV1,
 )
+from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import (
-    ModeloFormAttention,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloWorkForm,
@@ -169,17 +168,21 @@ def is_result_field(form: ModeloWorkForm, field: ModeloFormField) -> bool:
     return address.casilla_id == settling or address.casilla_id in form.result_addresses
 
 
+def _blocking_named_boxes(form: ModeloWorkForm) -> set[str]:
+    return {
+        issue.box
+        for issue in form.issues
+        if issue.attention is ModeloFormAttention.BLOCKS and issue.box is not None and issue.box != ""
+    } | {note.box for note in form.blocking_calculation_notes if note.box is not None}
+
+
 def failed_results(form: ModeloWorkForm) -> tuple[ModeloFormField, ...]:
     """The result boxes the calculation could not produce that no blocking finding or note already names.
 
     Each blocks filing on its own: the counts count it once, and the check view
     lists it as its own line.
     """
-    named = {
-        issue.box
-        for issue in form.issues
-        if issue.attention is ModeloFormAttention.BLOCKS and issue.box is not None and issue.box != ""
-    } | {note.box for note in form.blocking_calculation_notes if note.box is not None}
+    named = _blocking_named_boxes(form)
     return tuple(
         field
         for field in result_fields(form).values()
@@ -346,23 +349,17 @@ def _next(form: ModeloWorkForm, *, verified: bool, filed: bool) -> tuple[ModeloF
     return _next_after_review(form, unboxed=unboxed, to_fill=to_fill, blocked=counts.blocked, verified=verified)
 
 
-def _next_after_review(
-    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, verified: bool
+def _after_verified_review(form: ModeloWorkForm) -> tuple[ModeloFormNextAction, int, bool]:
+    export = form.last_export
+    if export is None:
+        return ModeloFormNextAction.EXPORT, 0, False
+    action = ModeloFormNextAction.RECORD_AFTER_FILE if export.current else ModeloFormNextAction.EXPORT_AGAIN
+    return action, 0, False
+
+
+def _remaining_review_step(
+    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, blocking: int
 ) -> tuple[ModeloFormNextAction, int, bool]:
-    blocking = blocking_count(form)
-    awaiting = awaiting_the_check(form)
-    if verified and not blocking:
-        export = form.last_export
-        if export is None:
-            return ModeloFormNextAction.EXPORT, 0, False
-        action = ModeloFormNextAction.RECORD_AFTER_FILE if export.current else ModeloFormNextAction.EXPORT_AGAIN
-        return action, 0, False
-    if form.calculation_revision_id is None:
-        return ModeloFormNextAction.CALCULATE, 0, False
-    if awaiting and awaiting == blocking and not blocked:
-        # Only the check can say whether what blocks stands, and it also judges
-        # whether the values still missing are ones the declaration needs.
-        return ModeloFormNextAction.VERIFY, 0, False
     if unboxed and not (blocked or blocking or form.verification is VerificationCompletenessStatus.BLOCKED):
         # Only values are missing, so the step is filling them in, counted as the
         # missing chip counts them; findings name them, so they lead there.
@@ -373,6 +370,22 @@ def _next_after_review(
         # left to count.
         return ModeloFormNextAction.RESOLVE, (blocking + unboxed) or blocked, False
     return ModeloFormNextAction.VERIFY, 0, False
+
+
+def _next_after_review(
+    form: ModeloWorkForm, *, unboxed: int, to_fill: int, blocked: int, verified: bool
+) -> tuple[ModeloFormNextAction, int, bool]:
+    blocking = blocking_count(form)
+    awaiting = awaiting_the_check(form)
+    if verified and not blocking:
+        return _after_verified_review(form)
+    if form.calculation_revision_id is None:
+        return ModeloFormNextAction.CALCULATE, 0, False
+    if awaiting and awaiting == blocking and not blocked:
+        # Only the check can say whether what blocks stands, and it also judges
+        # whether the values still missing are ones the declaration needs.
+        return ModeloFormNextAction.VERIFY, 0, False
+    return _remaining_review_step(form, unboxed=unboxed, to_fill=to_fill, blocked=blocked, blocking=blocking)
 
 
 __all__ = [

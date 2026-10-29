@@ -121,17 +121,15 @@ from ....domain.modelos.filing_record import (
 )
 from ....domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
+from ..aeat_sync.census_screen import AeatSyncCensusScreen
 from ..aeat_sync.controller import AeatSyncWorkspaceController
+from ..aeat_sync.evidence_comparison_screen import AeatSyncEvidenceComparisonScreen
+from ..aeat_sync.filed_declarations_screen import AeatSyncFiledDeclarationsScreen
 from ..aeat_sync.models import AeatSyncOperationRequestV1
+from ..aeat_sync.notifications_screen import AeatSyncNotificationsScreen
+from ..aeat_sync.overview_screen import AeatSyncOverviewScreen
+from ..aeat_sync.reconciliation_screen import AeatSyncReconciliationScreen
 from ..aeat_sync.routes import resolve_aeat_sync_screen
-from ..aeat_sync.screens import (
-    AeatSyncCensusScreen,
-    AeatSyncEvidenceComparisonScreen,
-    AeatSyncFiledDeclarationsScreen,
-    AeatSyncNotificationsScreen,
-    AeatSyncOverviewScreen,
-    AeatSyncReconciliationScreen,
-)
 from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.controller import DeclarationsWorkspaceController

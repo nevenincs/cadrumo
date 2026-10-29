@@ -8,7 +8,8 @@ standing in for the catalogue's own behaviour.
 
 from __future__ import annotations
 
-from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.invoices.models import Invoice
 
 __all__ = ["InvoiceCatalogueFake"]
 

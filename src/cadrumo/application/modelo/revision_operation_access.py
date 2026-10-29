@@ -23,7 +23,7 @@ from ..operations.access_resolution import (
 )
 from ..operations.models import OperationRequest
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .operation_definitions import (
+from .operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,

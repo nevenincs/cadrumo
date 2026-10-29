@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....tests.aeat_literal_fixtures import aeat_host
-from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
 from .registry_tree import bundled_registry_tree
 
 _WWW1_HOST = aeat_host("www1")

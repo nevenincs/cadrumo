@@ -16,13 +16,8 @@ from ...domain.modelos.verification_report import ModeloVerificationFinding, Mod
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import gate_refuses
 from .calculation_notes import CHECK_REFUSED_REASONS, durable_binding_source, note_attention
-from .work_form_models import (
-    ModeloFormAttention,
-    ModeloFormCalculationNote,
-    ModeloFormCasillaAddressV1,
-    ModeloFormField,
-    ModeloFormIssue,
-)
+from .work_form_findings import ModeloFormAttention, ModeloFormIssue
+from .work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloFormField
 from .work_review import ModeloWorkReview
 
 _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {

@@ -41,12 +41,9 @@ from cadrumo.application.diagnostics_ports import (
     DiagnosticsPorts,
 )
 from cadrumo.application.state_projection import (
-    ModeloReadinessRequest,
-    OperatorStateProjection,
-)
-from cadrumo.application.state_projection import (
     build_operator_state_projection as _build_operator_state_projection,
 )
+from cadrumo.application.state_projection_models import ModeloReadinessRequest, OperatorStateProjection
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.workflow.state_models import WorkflowState
 from cadrumo.core.config import Settings

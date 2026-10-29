@@ -9,7 +9,7 @@ consumer can read exactly which stage the chain reached and where it halted.
 
 from __future__ import annotations
 
-from ...application.modelo.export import ModeloExportResult
+from ...application.modelo.export_contracts import ModeloExportResult
 from ...application.modelo.quickfile import QuickfileStage, QuickfileStageStatus
 from ...application.modelo.quickfile_operation_contracts import QuickfileReadinessSummary, QuickfileStageSnapshot
 from ...application.modelo.quickfile_operation_projections import QuickfileProjection

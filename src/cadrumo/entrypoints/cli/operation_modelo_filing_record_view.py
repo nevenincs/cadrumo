@@ -67,6 +67,25 @@ def _observation_layers_payload(layers: ModeloFilingObservationLayersProjection)
     )
 
 
+def _require_filing_view_scope(
+    record: ModeloRecordPayload,
+    projection: ModeloFilingRecordViewProjection,
+    profile_id: UUID,
+    request: ModeloFilingRecordViewRequest,
+) -> None:
+    layers = projection.observation_layers
+    if (
+        record.bucket_id != str(profile_id)
+        or record.filing_record_id != request.filing_record_id
+        or layers.modelo != str(record.modelo)
+        or layers.filing_year != record.filing_year
+        or layers.period != record.period.registry_token
+        or layers.member_nif != record.member_nif
+        or projection.historical_content.calculation_revision_id != record.calculation_revision_id
+    ):
+        raise ValueError("filing view record or observation layers exceed the submitted scope")
+
+
 def read_modelo_filing_record_view(
     ctx: typer.Context,
     *,
@@ -100,16 +119,7 @@ def read_modelo_filing_record_view(
             | {"period": Period.from_year_and_code(snapshot.filing_year, snapshot.period)}
         )
         layers = projection.observation_layers
-        if (
-            record.bucket_id != str(client.profile_id)
-            or record.filing_record_id != request.filing_record_id
-            or layers.modelo != str(record.modelo)
-            or layers.filing_year != record.filing_year
-            or layers.period != record.period.registry_token
-            or layers.member_nif != record.member_nif
-            or projection.historical_content.calculation_revision_id != record.calculation_revision_id
-        ):
-            raise ValueError("filing view record or observation layers exceed the submitted scope")
+        _require_filing_view_scope(record, projection, client.profile_id, request)
         payload = _observation_layers_payload(layers)
     except Exception:
         raise invalid_completion_error(completed) from None

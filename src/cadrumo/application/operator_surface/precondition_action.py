@@ -134,9 +134,18 @@ def _validate_action_bindings(
         matching_specifications = tuple(
             specification
             for specification in specifications_by_name[name]
-            if argument.source is specification.source
-            and argument.source_key == specification.source_key
-            and argument.source_evidence_id == specification.source_evidence_id
+            if _matches_binding_source(argument, specification)
         )
         if len(matching_specifications) != 1:
             raise ValueError(f"CLI policy action argument source contradicts catalogue: {name}")
+
+
+def _matches_binding_source(
+    argument: ActionArgumentBinding,
+    specification: ActionArgumentBindingSpecification,
+) -> bool:
+    return (
+        argument.source is specification.source
+        and argument.source_key == specification.source_key
+        and argument.source_evidence_id == specification.source_evidence_id
+    )

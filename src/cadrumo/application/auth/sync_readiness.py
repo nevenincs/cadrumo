@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from typing import Protocol
 
 from pydantic import BaseModel, model_validator
 
@@ -13,11 +14,11 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ..user_profile.projections import record_to_path_values
 from .certificate_secret_backend import CertificateSecretBackendFactory
 from .credentials import ActiveAuthProjectionSnapshot, active_auth_projection_span
-from .operator_probe_ports import ClaveIdentityFailure, OperatorProbePorts
+from .operator_probe_ports import ClaveIdentityFailure, ClaveIdentityObservation, OperatorProbePorts
 from .operator_probes import probe_certificate_bundle
 from .operator_scope_ports import OperatorScopePorts
 from .probes import ProviderProbeResult
-from .sessions import clave_auth_facts_from_profile_values, resolve_clave_credentials
+from .sessions import ClaveAuthFacts, ClaveCredentials, clave_auth_facts_from_profile_values, resolve_clave_credentials
 
 
 class AuthSyncRequirement(BaseModel):
@@ -89,61 +90,96 @@ def project_auth_sync_readiness(
     require("auth.provider", kind is not None, "auth_method_required")
     route = ""
     if kind is AuthProviderKind.CERTIFICATE:
-        credentials = snapshot.certificate_credentials
-        path = credentials.certificate_path if credentials is not None else None
-        require("certificate.file", path is not None and path.is_file(), "certificate_file_required")
-        probe = probe_certificate_bundle(
-            "", settings=resolved, certificate_credentials=credentials, operator_probe_ports=operator_probe_ports
-        )
-        healthy = probe.result in {ProviderProbeResult.OK, ProviderProbeResult.EXPIRING}
-        require(
-            "certificate.passphrase",
-            credentials is not None
-            and credentials.password is not None
-            and bool(credentials.password.get_secret_value()),
-            "certificate_passphrase_required",
-            secret=True,
-        )
-        require(
-            "certificate.health",
-            healthy,
-            probe.result.value,
-        )
+        _certificate_readiness(snapshot, resolved, operator_probe_ports, require)
     elif kind is AuthProviderKind.CLAVE_MOVIL or kind is AuthProviderKind.CLAVE_PERMANENTE:
-        credentials = resolve_clave_credentials(kind, settings=resolved, facts=facts)
-        if credentials is None:
-            raise ValueError("Cl@ve credential resolver returned no credentials")
-        classification = operator_probe_ports.clave_identity.classify(credentials.dni_nie)
-        valid_identity = bool(credentials.dni_nie) and not isinstance(classification, ClaveIdentityFailure)
-        require("auth.dni_nie", valid_identity, "clave_identity_required")
-        require(
-            "auth.identity_alignment",
-            bool(facts.tax_id) and valid_identity and same_tax_identifier(facts.tax_id, credentials.dni_nie),
-            "profile_identity_must_match",
-        )
-        if kind is AuthProviderKind.CLAVE_MOVIL:
-            selected_route = facts.clave_movil_route or (
-                ClaveMovilRoute.APP_REQUEST if resolved.cadrumo_clave_prefer_non_qr else ClaveMovilRoute.QR
-            )
-            route = selected_route.value
-            if selected_route is ClaveMovilRoute.APP_REQUEST:
-                is_nie = not isinstance(classification, ClaveIdentityFailure) and classification.kind == "NIE"
-                require(
-                    "auth.numero_soporte" if is_nie else "auth.fecha_validez",
-                    bool(credentials.numero_soporte if is_nie else credentials.fecha_validez),
-                    "nie_support_required" if is_nie else "dni_validity_required",
-                )
-        else:
-            password = snapshot.clave_permanente_password
-            require(
-                "auth.password",
-                password is not None and bool(password.get_secret_value()),
-                "clave_password_required",
-                secret=True,
-            )
+        route = _clave_readiness(snapshot, kind, facts, resolved, operator_probe_ports, require)
     return AuthSyncReadiness(
         provider=kind.value if kind is not None else "",
         route=route,
         ready=all(item.satisfied for item in requirements),
         requirements=tuple(requirements),
     )
+
+
+class _RequirementSink(Protocol):
+    def __call__(self, field: str, satisfied: bool, reason: str, *, secret: bool = False) -> None: ...
+
+
+def _certificate_readiness(
+    snapshot: ActiveAuthProjectionSnapshot,
+    resolved: Settings,
+    operator_probe_ports: OperatorProbePorts,
+    require: _RequirementSink,
+) -> None:
+    credentials = snapshot.certificate_credentials
+    path = credentials.certificate_path if credentials is not None else None
+    require("certificate.file", path is not None and path.is_file(), "certificate_file_required")
+    probe = probe_certificate_bundle(
+        "", settings=resolved, certificate_credentials=credentials, operator_probe_ports=operator_probe_ports
+    )
+    healthy = probe.result in {ProviderProbeResult.OK, ProviderProbeResult.EXPIRING}
+    require(
+        "certificate.passphrase",
+        credentials is not None and credentials.password is not None and bool(credentials.password.get_secret_value()),
+        "certificate_passphrase_required",
+        secret=True,
+    )
+    require(
+        "certificate.health",
+        healthy,
+        probe.result.value,
+    )
+
+
+def _clave_readiness(
+    snapshot: ActiveAuthProjectionSnapshot,
+    kind: AuthProviderKind,
+    facts: ClaveAuthFacts,
+    resolved: Settings,
+    operator_probe_ports: OperatorProbePorts,
+    require: _RequirementSink,
+) -> str:
+    route = ""
+    credentials = resolve_clave_credentials(kind, settings=resolved, facts=facts)
+    if credentials is None:
+        raise ValueError("Cl@ve credential resolver returned no credentials")
+    classification = operator_probe_ports.clave_identity.classify(credentials.dni_nie)
+    valid_identity = bool(credentials.dni_nie) and not isinstance(classification, ClaveIdentityFailure)
+    require("auth.dni_nie", valid_identity, "clave_identity_required")
+    require(
+        "auth.identity_alignment",
+        bool(facts.tax_id) and valid_identity and same_tax_identifier(facts.tax_id, credentials.dni_nie),
+        "profile_identity_must_match",
+    )
+    if kind is AuthProviderKind.CLAVE_MOVIL:
+        return _movil_route_requirements(credentials, facts, resolved, classification, require)
+    else:
+        password = snapshot.clave_permanente_password
+        require(
+            "auth.password",
+            password is not None and bool(password.get_secret_value()),
+            "clave_password_required",
+            secret=True,
+        )
+    return route
+
+
+def _movil_route_requirements(
+    credentials: ClaveCredentials,
+    facts: ClaveAuthFacts,
+    resolved: Settings,
+    classification: ClaveIdentityObservation | ClaveIdentityFailure,
+    require: _RequirementSink,
+) -> str:
+    selected_route = facts.clave_movil_route or (
+        ClaveMovilRoute.APP_REQUEST if resolved.cadrumo_clave_prefer_non_qr else ClaveMovilRoute.QR
+    )
+    route = selected_route.value
+    if selected_route is ClaveMovilRoute.APP_REQUEST:
+        is_nie = not isinstance(classification, ClaveIdentityFailure) and classification.kind == "NIE"
+        require(
+            "auth.numero_soporte" if is_nie else "auth.fecha_validez",
+            bool(credentials.numero_soporte if is_nie else credentials.fecha_validez),
+            "nie_support_required" if is_nie else "dni_validity_required",
+        )
+    return route

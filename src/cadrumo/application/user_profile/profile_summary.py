@@ -30,12 +30,9 @@ from ...core.paths import effective_storage_root
 from ...core.profile_discovery import ProfileSummaryOutcome
 from ...core.profile_publication import ProfilePublicationKindValue
 from ...core.time.utc import parse_iso_datetime
-from .custody_ports import (
-    ProfileCustodyCapsuleSummaryWitnessPort,
-    ProfileCustodyConcurrentChangeError,
-    ProfileCustodyRecordIntegrityError,
-    profile_custody_port,
-)
+from .custody_crypto_contracts import ProfileCustodyConcurrentChangeError, ProfileCustodyRecordIntegrityError
+from .custody_ports import profile_custody_port
+from .custody_record_ports import ProfileCustodyCapsuleSummaryWitnessPort
 
 _SUMMARY_MODEL_CONFIG = ConfigDict(strict=True, frozen=True, extra="forbid", hide_input_in_errors=True)
 

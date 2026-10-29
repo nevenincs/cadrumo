@@ -23,8 +23,8 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .actions_manual import ledger_transaction_payload
 from .list_query import LedgerTransactionListQuery, query_ledger_transaction_list
+from .manual_read import ledger_transaction_payload
 from .read_access import resolve_ledger_read_access
 from .read_ports import LedgerReadPortsFactory
 from .review_projection import ledger_transaction_review_status

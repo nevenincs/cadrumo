@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from ...core.identity.digest import ContentDigest
 from ...core.operations import OperationEffect
 from ...domain.transactions.models import Transaction
-from .actions_manual import ledger_transaction_result_payload
 from .classify_result_contracts import (
     LedgerClassifyOperationResult,
 )
@@ -16,6 +15,7 @@ from .llm_review_contracts import bound_ledger_llm_projection
 from .llm_review_operand import LedgerLlmReviewedOperand
 from .llm_review_results import LedgerLlmOperationResult
 from .llm_review_workflow import LlmReviewDecision
+from .manual_read import ledger_transaction_result_payload
 from .models import ManualLedgerTransactionResult
 from .transaction_projection import LedgerTransactionProjection
 

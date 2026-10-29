@@ -10,7 +10,7 @@ from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     _IMPORT_INCOME_CASILLA,
     _M303_PRINTED_RESULT_TOKEN,

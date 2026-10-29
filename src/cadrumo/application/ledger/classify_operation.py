@@ -30,7 +30,6 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
-from .actions_manual import update_manual_transaction_fields
 from .classify_patch import build_manual_classification_patch
 from .classify_requests import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
@@ -49,6 +48,7 @@ from .classify_validation import (
     classify_validation_messages,
 )
 from .id_resolution import resolve_transaction_id
+from .manual_update import update_manual_transaction_fields
 from .models import (
     ManualLedgerTransactionPatch,
     ManualLedgerTransactionResult,

@@ -13,7 +13,7 @@ from textual.widgets import Button, Footer, Input, Static
 from textual.widgets._footer import FooterKey
 
 from ......adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ......application.modelo.calculation_actions import (
+from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.work_form_models import address_key

@@ -7,7 +7,7 @@ import time
 from collections.abc import AsyncGenerator, Callable, Generator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, replace
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from threading import Lock
 from types import TracebackType
@@ -66,6 +66,16 @@ class _CapsuleProof:
         for error in (self.binding_error, self.material_error):
             if error is not None:
                 raise error
+
+
+def _session_matches(previous: BucketSession | None, opened: datetime, deadline: datetime, dek: bytes) -> bool:
+    return (
+        previous is not None
+        and not previous.sealed
+        and previous.opened_at == opened
+        and previous.idle_deadline == previous.absolute_deadline == deadline
+        and previous.dek == dek
+    )
 
 
 class ProfileWorkerCustodySection:
@@ -458,13 +468,7 @@ class ProfileWorkerCustody:
         opened = min(lease.issued_at for lease in leases.values())
         deadline = max(lease.expires_at for lease in leases.values())
         previous = current_active_bucket_session()
-        if (
-            previous is not None
-            and not previous.sealed
-            and previous.opened_at == opened
-            and previous.idle_deadline == previous.absolute_deadline == deadline
-            and previous.dek == dek
-        ):
+        if _session_matches(previous, opened, deadline, dek):
             # A child lapse does not change its parent's storage lifetime.
             # Keep the live engine and key session instead of disposing them
             # at every attended lease boundary.

@@ -41,7 +41,7 @@ if TYPE_CHECKING:
     from .schema import RegistrySnapshot
     from .schema_references import PeriodSelector
     from .snapshot_globals import SupportedFilingYearsCatalogue
-    from .temporal import ModeloRevisionDirectory
+    from .temporal import ModeloRevisionDirectory, RevisionSelectionMetadata
 
 SNAPSHOT_PROOF_DDL: Final[tuple[str, ...]] = (
     "CREATE TABLE snapshot_proof_contract (singleton INTEGER PRIMARY KEY CHECK (singleton = 1), "
@@ -225,6 +225,16 @@ def _search_locations(package: str) -> tuple[str, ...] | None:
     return None
 
 
+def _unloaded_source_origin(module: str) -> str | None:
+    """Locate an unloaded child where the parent package searches before find_spec."""
+    parent, _, name = module.rpartition(".")
+    for directory in (_search_locations(parent) or ()) if parent else ():
+        origin = _regular_source_in(directory, name)
+        if origin is not None:
+            return origin
+    return None
+
+
 def _module_origin(module: str) -> str | None:
     """Locate a module's Python source, preferring what the import system already knows.
 
@@ -236,11 +246,9 @@ def _module_origin(module: str) -> str | None:
     loaded = sys.modules.get(module)
     spec = getattr(loaded, "__spec__", None) if loaded is not None else None
     if spec is None:
-        parent, _, name = module.rpartition(".")
-        for directory in (_search_locations(parent) or ()) if parent else ():
-            origin = _regular_source_in(directory, name)
-            if origin is not None:
-                return origin
+        located = _unloaded_source_origin(module)
+        if located is not None:
+            return located
         try:
             spec = importlib.util.find_spec(module)
         except (ImportError, ValueError):
@@ -316,22 +324,29 @@ def _parsed_import_statements(module: str, source: bytes, digest: str) -> tuple[
     return parsed
 
 
+def _statement_modules(statement: _ImportStatement, package: str) -> set[str]:
+    """Resolve one static import and its package-member modules without importing them."""
+    found: set[str] = set()
+    if not statement.is_from:
+        found.add(statement.module)
+        return found
+    target = importlib.util.resolve_name("." * statement.level + statement.module, package)
+    found.add(target)
+    if not _in_closure_root(target) or not _is_package(target):
+        return found
+    for name in statement.names:
+        candidate = f"{target}.{name}"
+        if name != "*" and _module_origin(candidate) is not None:
+            found.add(candidate)
+    return found
+
+
 def _imported_modules(module: str, statements: Iterable[_ImportStatement]) -> set[str]:
     """Return every ``cadrumo`` module an import statement anywhere in a module can execute."""
     package = module if _is_package(module) else module.rpartition(".")[0]
     found: set[str] = set()
     for statement in statements:
-        if not statement.is_from:
-            found.add(statement.module)
-            continue
-        target = importlib.util.resolve_name("." * statement.level + statement.module, package)
-        found.add(target)
-        if not _in_closure_root(target) or not _is_package(target):
-            continue
-        for name in statement.names:
-            candidate = f"{target}.{name}"
-            if name != "*" and _module_origin(candidate) is not None:
-                found.add(candidate)
+        found.update(_statement_modules(statement, package))
     return {ancestor for name in found if _in_closure_root(name) for ancestor in _with_ancestors(name)}
 
 
@@ -509,6 +524,58 @@ def _is_expected_ladder_refusal(error: CadrumoError, grade: RegistryAuthorityGra
         return False
 
 
+@dataclass(slots=True)
+class _SelectorSweep:
+    """Accumulate one publication sweep over the operation's declared selector space."""
+
+    operation: SnapshotProofOperation
+    recorder: _RecordingFactSource
+    support: SupportedFilingYearsCatalogue
+    grades: tuple[RegistryAuthorityGrade, ...]
+    proofs: list[SnapshotCrossCheckProof]
+    failures: list[str]
+
+    def prove_directory(self, modelo_id: str) -> None:
+        """Select every available coordinate before testing its authority-grade ladder."""
+        from .temporal import select_revision_metadata
+
+        directory = self.operation.modelo_directory(modelo_id)
+        periods = sorted(
+            {token for revision in directory.revisions for token in revision.period_selector.declared_periods}
+        )
+        for filing_year in range(self.support.floor, self.support.horizon + 1):
+            for period in periods:
+                try:
+                    selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=None)
+                except CadrumoError:
+                    continue
+                self._prove_grades(selected, modelo_id, filing_year, period)
+
+    def _prove_grades(self, selected: RevisionSelectionMetadata, modelo_id: str, filing_year: int, period: str) -> None:
+        """Record passing grades and collect every unexpected refusal or selection mismatch."""
+        for grade in self.grades:
+            key = snapshot_proof_key(selected, modelo_id=modelo_id, filing_year=filing_year, period=period, grade=grade)
+            try:
+                snapshot = self.operation.build_unretained_snapshot(
+                    modelo_id,
+                    filing_year=filing_year,
+                    period=period,
+                    grade=grade,
+                    governed_facts=self.recorder,
+                )
+            except CadrumoError as exc:
+                if not _is_expected_ladder_refusal(exc, grade):
+                    self.failures.append(f"{modelo_id} {filing_year} {period} {grade.value}: {exc}")
+                continue
+            if snapshot.revision.id != selected.id:
+                self.failures.append(
+                    f"{modelo_id} {filing_year} {period} {grade.value}: snapshot selected "
+                    f"{snapshot.revision.id!r}, directory selected {selected.id!r}"
+                )
+                continue
+            self.proofs.append(SnapshotCrossCheckProof(key, str(selected.id)))
+
+
 def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProofSet:
     """Sweep the declared selector set through the full validator and return the proofs to publish.
 
@@ -532,8 +599,6 @@ def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProof
             contract, so its builds would not validate fully, or a cell failed
             at or below its revision's declared grade.
     """
-    from .temporal import select_revision_metadata
-
     if operation.snapshot_proof_contract() is not None:
         raise SnapshotProofPublicationError(
             "snapshot proofs must be swept over a database that records no proof contract yet",
@@ -544,40 +609,9 @@ def prove_snapshot_selectors(operation: SnapshotProofOperation) -> SnapshotProof
     grades = tuple(RegistryAuthorityGrade)
     proofs: list[SnapshotCrossCheckProof] = []
     failures: list[str] = []
+    sweep = _SelectorSweep(operation, recorder, support, grades, proofs, failures)
     for modelo_id in operation.modelo_ids():
-        directory = operation.modelo_directory(modelo_id)
-        periods = sorted(
-            {token for revision in directory.revisions for token in revision.period_selector.declared_periods}
-        )
-        for filing_year in range(support.floor, support.horizon + 1):
-            for period in periods:
-                try:
-                    selected = select_revision_metadata(directory, filing_year=filing_year, period=period, on=None)
-                except CadrumoError:
-                    continue
-                for grade in grades:
-                    key = snapshot_proof_key(
-                        selected, modelo_id=modelo_id, filing_year=filing_year, period=period, grade=grade
-                    )
-                    try:
-                        snapshot = operation.build_unretained_snapshot(
-                            modelo_id,
-                            filing_year=filing_year,
-                            period=period,
-                            grade=grade,
-                            governed_facts=recorder,
-                        )
-                    except CadrumoError as exc:
-                        if not _is_expected_ladder_refusal(exc, grade):
-                            failures.append(f"{modelo_id} {filing_year} {period} {grade.value}: {exc}")
-                        continue
-                    if snapshot.revision.id != selected.id:
-                        failures.append(
-                            f"{modelo_id} {filing_year} {period} {grade.value}: snapshot selected "
-                            f"{snapshot.revision.id!r}, directory selected {selected.id!r}"
-                        )
-                        continue
-                    proofs.append(SnapshotCrossCheckProof(key, str(selected.id)))
+        sweep.prove_directory(modelo_id)
     if failures:
         raise SnapshotProofPublicationError(
             "declared snapshot selectors fail at or below their declared authority grade:\n"

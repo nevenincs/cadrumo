@@ -43,7 +43,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from cadrumo.application.modelo.calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 
 # The custody ports are bound by an explicit composition root that a

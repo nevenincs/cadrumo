@@ -208,7 +208,7 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
         OperationPublicProgressEventV1,
     )
     from .....core.config import override_settings
-    from ..modal import _log_row_text
+    from ..modal_wording import log_row_text
 
     phase = OperationPublicPhaseEventV1(
         sequence=1,
@@ -245,10 +245,10 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
         "browser",
     )
     with override_settings(cadrumo_output_language="en"):
-        assert "25 B" in _log_row_text(view.rows[1])
-        assert "Browser for the tax agency website" in _log_row_text(view.rows[1])
-        assert "25%" in _log_row_text(view.rows[1])
-        assert _log_row_text(view.rows[0]) != "Operation phase"
+        assert "25 B" in log_row_text(view.rows[1])
+        assert "Browser for the tax agency website" in log_row_text(view.rows[1])
+        assert "25%" in log_row_text(view.rows[1])
+        assert log_row_text(view.rows[0]) != "Operation phase"
 
 
 @pytest.mark.parametrize(
@@ -262,8 +262,8 @@ def test_phase_progress_and_notice_rows_keep_their_actual_typed_payloads() -> No
 )
 def test_setup_notice_renders_the_localized_event_sentence(locale: str, expected: str) -> None:
     from .....core.config import override_settings
-    from ..modal import _log_row_text
+    from ..modal_wording import log_row_text
 
     row = _row(1).model_copy(update={"notice_code": "dependencies.setup.following"})
     with override_settings(cadrumo_output_language=locale):
-        assert _log_row_text(row) == expected
+        assert log_row_text(row) == expected

@@ -44,7 +44,6 @@ from cadrumo.application.modelo.work_review import (
     ModeloWorkReview,
     build_modelo_work_review_casillas,
 )
-from cadrumo.application.modelo.workspace import resolve_static_inspection_result
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceExactWorkUnitTargetV1,
@@ -55,6 +54,7 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceStaticInspectionResultV1,
     ModeloWorkspaceWorkReviewFacetV1,
 )
+from cadrumo.application.modelo.workspace_schema import resolve_static_inspection_result
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from cadrumo.application.operations.models import OperationIdentity, OperationRequest
 from cadrumo.application.operations.owner import OperationExecutorContext

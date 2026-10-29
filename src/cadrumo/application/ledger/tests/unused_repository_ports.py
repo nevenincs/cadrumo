@@ -6,7 +6,7 @@ from typing import Never
 
 from pydantic import BaseModel
 
-from ....domain.transactions.models import LedgerDatePartition
+from ....domain.transactions.date_partition import LedgerDatePartition
 
 
 class ProfileOnlyCatalogueRepository[CatalogueT: BaseModel]:

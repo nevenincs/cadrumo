@@ -23,10 +23,12 @@ from cadrumo.application.modelo.work_addressing import (
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
     ModeloWorkAddress,
+    resolve_modelo_revision_pick,
+)
+from cadrumo.application.modelo.work_capture import (
     ModeloWorkCaptureError,
     ModeloWorkCurrentCoordinate,
     capture_modelo_work_resolution,
-    resolve_modelo_revision_pick,
 )
 from cadrumo.application.modelo.work_lifecycle import (
     create_work_unit,
@@ -57,7 +59,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -543,13 +545,13 @@ def _capture_source_imports() -> str:
     """Return the capture region source so a registry reach would be visible."""
     import inspect
 
-    from cadrumo.application.modelo import work_addressing
+    from cadrumo.application.modelo import work_capture
 
     return "".join(
         inspect.getsource(member)
         for member in (
-            work_addressing.capture_modelo_work_resolution,
-            work_addressing._work_capture_observation,
+            work_capture.capture_modelo_work_resolution,
+            work_capture._work_capture_observation,
         )
     )
 

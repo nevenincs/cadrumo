@@ -18,6 +18,18 @@ from .schema_form_layouts import FormContextFieldBlock, FormFieldChoice
 
 def resolve_form_context_field(revision: ModeloRevision, block: FormContextFieldBlock) -> ExportFieldDefinition:
     """Resolve a :class:`ModeloRevision` context address, refusing ambiguous or unsupported fields."""
+    field = _context_field(revision, block)
+    _require_context_choices(field, block)
+    if field.kind is CasillaFieldKind.BINDING:
+        _require_context_binding(revision, field)
+        return field
+    if _supported_context_field(field):
+        return field
+    raise RegistryValidationError("form context requires a filing producer or supported filing coordinate")
+
+
+def _context_field(revision: ModeloRevision, block: FormContextFieldBlock) -> ExportFieldDefinition:
+    """Resolve one scalar export address before validating its presentation choices."""
     matches = [
         (record, field)
         for layout in derive_export_layouts_from_bindings(revision)
@@ -32,6 +44,11 @@ def resolve_form_context_field(revision: ModeloRevision, block: FormContextField
     record, field = matches[0]
     if record.repeat is not None:
         raise RegistryValidationError("scalar form context cannot address a repeating export record")
+    return field
+
+
+def _require_context_choices(field: ExportFieldDefinition, block: FormContextFieldBlock) -> None:
+    """Require choices to cover the header producer's exact closed value domain."""
     if block.choices and (
         field.kind is not CasillaFieldKind.HEADER
         or field.producer_key is None
@@ -39,28 +56,30 @@ def resolve_form_context_field(revision: ModeloRevision, block: FormContextField
         or {choice.value for choice in block.choices} != set(field.allowed_values)
     ):
         raise RegistryValidationError("context choices must cover the exact closed domain of a header producer")
-    if field.kind is CasillaFieldKind.BINDING:
-        bindings = [binding for binding in revision.bindings if binding.id == field.binding]
-        if len(bindings) != 1 or bindings[0].value.channel is BindingValueChannel.ROW_SET:
-            raise RegistryValidationError("form context requires one declared scalar binding")
-        # The field selects the semantic owner, not its fixed-width fragment.
-        # Integer/fractional/sign wire slices all refer to the whole typed value.
-        return field
+
+
+def _require_context_binding(revision: ModeloRevision, field: ExportFieldDefinition) -> None:
+    """Select the whole scalar semantic value rather than one fixed-width fragment."""
+    bindings = [binding for binding in revision.bindings if binding.id == field.binding]
+    if len(bindings) != 1 or bindings[0].value.channel is BindingValueChannel.ROW_SET:
+        raise RegistryValidationError("form context requires one declared scalar binding")
+
+
+def _supported_context_field(field: ExportFieldDefinition) -> bool:
+    """Recognise the declared filing producer and supported filing coordinate sources."""
     if field.kind is CasillaFieldKind.HEADER and field.producer_key is not None:
-        return field
+        return True
     if field.kind is CasillaFieldKind.PROJECTION and isinstance(
         field.projection_ref,
         (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef),
     ):
-        return field
-    if field.kind is CasillaFieldKind.DRAFT and field.draft_attribute in (
+        return True
+    return field.kind is CasillaFieldKind.DRAFT and field.draft_attribute in (
         ExportDraftAttribute.FILING_YEAR,
         ExportDraftAttribute.PERIOD_CODE,
         ExportDraftAttribute.PERIOD_START_DATE,
         ExportDraftAttribute.PERIOD_END_DATE,
-    ):
-        return field
-    raise RegistryValidationError("form context requires a filing producer or supported filing coordinate")
+    )
 
 
 def form_context_choice(block: FormContextFieldBlock, value: object) -> FormFieldChoice | None:

@@ -24,7 +24,7 @@ from ....domain.transactions.m210_income_classification import (
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...ledger.action_ports import LedgerActionPorts
-from ...ledger.actions_manual import ledger_transaction_payload
+from ...ledger.manual_read import ledger_transaction_payload
 from ...ledger.models import LedgerTransactionPayload
 from ...ledger.transaction_projection import LedgerM210IncomeProjection, LedgerTransactionProjection
 from ...ledger.view_operation import (

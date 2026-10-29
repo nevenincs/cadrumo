@@ -467,6 +467,16 @@ def _text_month_date(raw: str) -> date | None:
         return None
 
 
+def _compact_numeric_date(raw: str) -> date | None:
+    """Read a leading YYYYMMDD token without changing the later convention fallback."""
+    if raw.isdigit() and len(raw) >= 8:
+        try:
+            return datetime.strptime(raw[:8], "%Y%m%d").date()
+        except ValueError:
+            pass
+    return None
+
+
 def parse_date_value(value: object, *, day_first: bool = True, label: str = "date") -> date:
     """Parse a bank-statement date or date-time into a ``date``."""
     if isinstance(value, datetime):
@@ -480,11 +490,9 @@ def parse_date_value(value: object, *, day_first: bool = True, label: str = "dat
     if named_month is not None:
         return named_month
     raw = original_raw.replace(".", "/")
-    if raw.isdigit() and len(raw) >= 8:
-        try:
-            return datetime.strptime(raw[:8], "%Y%m%d").date()
-        except ValueError:
-            pass
+    compact_date = _compact_numeric_date(raw)
+    if compact_date is not None:
+        return compact_date
     formats: Sequence[str]
     if day_first:
         formats = (

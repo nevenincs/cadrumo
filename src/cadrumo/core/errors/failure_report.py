@@ -206,6 +206,27 @@ def root_cause_context(error: BaseException) -> dict[str, str]:
     return context
 
 
+def _failure_chain_fields(links: tuple[FailureLink, ...]) -> dict[str, object]:
+    """Render chain identity and the first declared code and reason independently."""
+    failure = links[0]
+    extra: dict[str, object] = {
+        "error_type": failure.exception_type,
+        "error_chain": _CHAIN_SEPARATOR.join(link.render() for link in links),
+    }
+    if failure.raised_at is not None:
+        extra["error_origin"] = failure.raised_at
+    if len(links) > 1:
+        extra["root_cause"] = links[-1].render()
+    for field, values in (
+        ("error_code", (link.code for link in links)),
+        ("reason", (link.reason for link in links)),
+    ):
+        first = next((value for value in values if value is not None), None)
+        if first is not None:
+            extra[field] = first
+    return extra
+
+
 def log_boundary_failure(
     logger: logging.Logger,
     boundary: str,
@@ -237,23 +258,7 @@ def log_boundary_failure(
         elif durable:
             configure_logging()
         links = failure_chain(error)
-        failure = links[0]
-        extra: dict[str, object] = {
-            "failure_boundary": boundary,
-            "trace_id": trace_id,
-            "error_type": failure.exception_type,
-            "error_chain": _CHAIN_SEPARATOR.join(link.render() for link in links),
-        }
-        if failure.raised_at is not None:
-            extra["error_origin"] = failure.raised_at
-        if len(links) > 1:
-            extra["root_cause"] = links[-1].render()
-        code = next((link.code for link in links if link.code is not None), None)
-        if code is not None:
-            extra["error_code"] = code
-        reason = next((link.reason for link in links if link.reason is not None), None)
-        if reason is not None:
-            extra["reason"] = reason
+        extra = {"failure_boundary": boundary, "trace_id": trace_id, **_failure_chain_fields(links)}
         invariant = _invariant_text(_chain(error))
         if invariant is not None:
             extra["invariant"] = invariant

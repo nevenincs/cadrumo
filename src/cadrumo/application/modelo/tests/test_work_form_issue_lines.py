@@ -37,14 +37,13 @@ from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..finding_message_text import finding_message_text
 from ..source_policy import SourceSurface
+from ..work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ..work_form_header import attention_counts
 from ..work_form_issue_lines import DETAIL_LOCALE_KEYS, form_issue_lines, form_verdict
 from ..work_form_models import (
-    ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloWorkForm,
     map_form_fields,

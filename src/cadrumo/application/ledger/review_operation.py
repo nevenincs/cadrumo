@@ -23,8 +23,8 @@ from ..review.errors import FilterParseError
 from ..review.filter import LedgerReviewFilterSpec, LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
-from .actions_manual import query_ledger_review_rows
 from .id_resolution import resolve_lineage_transaction_id
+from .manual_read import query_ledger_review_rows
 from .read_access import resolve_ledger_read_access
 from .review_filter import ledger_review_query_for_spec
 from .transaction_projection import LedgerTransactionProjection

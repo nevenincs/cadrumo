@@ -22,13 +22,14 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
-from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
+from ..export_contracts import ModeloExportEvidenceMissingError
+from ..export_preparation import raise_if_ledger_export_evidence_missing
 from ..verification_iva_evidence import (
     iva_compensation_annual_source_evidence_finding,
     iva_selected_scope_evidence_finding,
@@ -109,13 +110,13 @@ def test_export_refuses_ledger_revision_without_bundled_evidence_or_reference(
     revision = _revision(source_transaction_ids=(_TX_ID,), operation=operation)
 
     with pytest.raises(ModeloExportEvidenceMissingError):
-        _raise_if_ledger_export_evidence_missing(revision)
+        raise_if_ledger_export_evidence_missing(revision)
 
 
 def test_export_allows_non_ledger_revision_without_evidence(*, operation: PinnedAuthorityOperation) -> None:
     revision = _revision(source_transaction_ids=(), operation=operation)
 
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
 
 
 def test_export_allows_ledger_revision_with_snapshot_reference(*, operation: PinnedAuthorityOperation) -> None:
@@ -128,7 +129,7 @@ def test_export_allows_ledger_revision_with_snapshot_reference(*, operation: Pin
         operation=operation,
     )
 
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
 
 
 def test_export_refuses_a_revision_with_unresolved_selected_scope_iva_evidence(
@@ -149,7 +150,7 @@ def test_export_refuses_a_revision_with_unresolved_selected_scope_iva_evidence(
     )
 
     with pytest.raises(ModeloExportEvidenceMissingError):
-        _raise_if_ledger_export_evidence_missing(revision)
+        raise_if_ledger_export_evidence_missing(revision)
 
     reopened = CalculationRevision.model_validate_json(revision.model_dump_json())
     assert reopened.source_issues == revision.source_issues
@@ -172,7 +173,7 @@ def test_export_allows_a_revision_with_an_unrouted_non_iva_source_issue(*, opera
         operation=operation,
     )
 
-    _raise_if_ledger_export_evidence_missing(revision)
+    raise_if_ledger_export_evidence_missing(revision)
     assert iva_selected_scope_evidence_finding(revision) is None
 
 
@@ -195,7 +196,7 @@ def test_export_refuses_m390_when_required_annual_partition_evidence_is_unresolv
     )
 
     with pytest.raises(ModeloExportEvidenceMissingError):
-        _raise_if_ledger_export_evidence_missing(revision)
+        raise_if_ledger_export_evidence_missing(revision)
 
     finding = iva_compensation_annual_source_evidence_finding(revision)
     assert finding is not None

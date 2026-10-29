@@ -252,7 +252,7 @@ def test_nested_validation_fails_closed_without_one_typed_verdict(validate: Call
     [
         (
             MissingOptionalExtraError(OptionalExtra(extra="proof", import_name="absent.proof", feature="proof")),
-            "provisioning.optional_extra.importable",
+            "cli.optional_extra.importable",
             {"extra": "proof", "import_name": "absent.proof", "importable": False},
         ),
         (

@@ -32,6 +32,7 @@ from .persistence.leases import (
     OperationLeaseDisposition,
     OperationLeaseObservation,
     OperationLeaseObservationDisposition,
+    OperationLeaseResult,
     OperationOwnerLease,
     operation_conflict_scope_reference,
 )
@@ -41,6 +42,21 @@ from .settlement_snapshot import log_settlement, settlement_successor
 
 if TYPE_CHECKING:
     pass
+
+
+def _exact_takeover(claimed: OperationLeaseResult, candidate: OperationOwnerLease) -> bool:
+    return claimed.disposition is OperationLeaseDisposition.TAKEN_OVER and claimed.current == candidate
+
+
+def _lapsed_lease(observed: OperationLeaseObservation, now: datetime, grace: timedelta) -> OperationOwnerLease | None:
+    current = observed.current
+    return (
+        current
+        if observed.disposition is OperationLeaseObservationDisposition.EXPIRED
+        and current is not None
+        and now >= current.expires_at + grace
+        else None
+    )
 
 
 def _is_resumable_executor(executor: object) -> TypeIs[OperationResumableExecutor[BaseModel]]:
@@ -89,27 +105,15 @@ class SupervisorReconciliationMixin(SupervisorHost):
             await self._release_settled_leftover_lease(snapshot)
             return snapshot
         observed, now = await self._inspect_reconciliation_lease(operation_id, snapshot)
-        current = observed.current
         candidate = self._candidate(snapshot.identity, now)
-        lapsed = (
-            current
-            if observed.disposition is OperationLeaseObservationDisposition.EXPIRED
-            and current is not None
-            and now >= current.expires_at + grace
-            else None
-        )
+        lapsed = _lapsed_lease(observed, now, grace)
         if lapsed is not None and (lapsed.owner_id, lapsed.token) != (self._owner_id, self._lease_token):
             claimed = await self._leases.compare_and_swap(lapsed, candidate, observed_at=now)
-            if claimed.disposition is not OperationLeaseDisposition.TAKEN_OVER or claimed.current != candidate:
+            if not _exact_takeover(claimed, candidate):
                 return None
         elif observed.disposition is OperationLeaseObservationDisposition.ABSENT or lapsed is not None:
-            # This supervisor cannot take over a lease it holds itself: it gives its
-            # own lapsed lease back first, exactly, and claims the subject afresh.
-            if lapsed is not None:
-                await self._leases.release(lapsed, observed_at=now)
-                self._leases_by_operation.pop(operation_id, None)
-            claimed = await self._leases.acquire(candidate, observed_at=now)
-            if claimed.disposition is not OperationLeaseDisposition.ACQUIRED or claimed.current != candidate:
+            claimed = await self._claim_own_or_absent_lease(operation_id, lapsed, candidate, now)
+            if claimed is None:
                 return None
         else:
             return None
@@ -150,6 +154,23 @@ class SupervisorReconciliationMixin(SupervisorHost):
         log_settlement(receipt, cause="owner_lapsed")
         self._notify_durable_change(successor)
         return successor
+
+    async def _claim_own_or_absent_lease(
+        self,
+        operation_id: OperationId,
+        lapsed: OperationOwnerLease | None,
+        candidate: OperationOwnerLease,
+        now: datetime,
+    ) -> OperationLeaseResult | None:
+        # This supervisor cannot take over a lease it holds itself: it gives its
+        # own lapsed lease back first, exactly, and claims the subject afresh.
+        if lapsed is not None:
+            await self._leases.release(lapsed, observed_at=now)
+            self._leases_by_operation.pop(operation_id, None)
+        claimed = await self._leases.acquire(candidate, observed_at=now)
+        if claimed.disposition is not OperationLeaseDisposition.ACQUIRED or claimed.current != candidate:
+            return None
+        return claimed
 
     async def _inspect_reconciliation_lease(
         self,

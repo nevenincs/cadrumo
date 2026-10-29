@@ -13,12 +13,7 @@ from pydantic import BaseModel, Field
 
 from ..core.models import STRICT_FROZEN_CONFIG
 from .operator_actions.models import PreconditionVerdict
-from .provisioning_contracts import (
-    ProvisioningFactValue,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
-    provisioning_setup_verdict,
-)
+from .probe_outcomes import ProbeFactValue, ProbePreconditionCondition, probe_no_recovery_verdict
 
 __all__ = [
     "LOCAL_READER_OPERATION_SUBJECT",
@@ -26,7 +21,6 @@ __all__ = [
     "local_reader_fact_mapping",
     "local_reader_public_facts",
     "local_reader_public_verdict",
-    "local_reader_verdict_action",
     "local_reader_verdict_condition",
     "local_reader_verdict_facts",
 ]
@@ -43,8 +37,8 @@ class LocalReaderFactV1(BaseModel):
     value: str | int | bool
 
 
-def local_reader_public_facts(facts: Mapping[str, ProvisioningFactValue]) -> tuple[LocalReaderFactV1, ...]:
-    """Return provisioning facts as immutable pairs, in the order they were recorded."""
+def local_reader_public_facts(facts: Mapping[str, ProbeFactValue]) -> tuple[LocalReaderFactV1, ...]:
+    """Return facts as immutable pairs, in the order they were recorded."""
     return tuple(LocalReaderFactV1(key=key, value=value) for key, value in facts.items())
 
 
@@ -56,32 +50,22 @@ def local_reader_fact_mapping(facts: tuple[LocalReaderFactV1, ...]) -> dict[str,
 def local_reader_public_verdict(
     failed_condition_id: str | None,
     verdict_facts: tuple[LocalReaderFactV1, ...],
-    recovery_action_id: str | None = None,
 ) -> PreconditionVerdict | None:
-    """Rebuild the provisioning refusal a public result names, or ``None`` when nothing was refused.
+    """Rebuild the refusal a public result names, or ``None`` when nothing was refused.
 
-    A provisioning refusal is a runtime observation over its condition and
-    facts that either names the setup action recovering it or names none, so
-    the condition, the evidence facts and that action are the whole verdict;
-    the projector refuses to publish one that would not rebuild exactly.
+    A refusal is a runtime observation over its condition and facts, so the
+    condition and the evidence facts are the whole verdict; the projector
+    refuses to publish one that would not rebuild exactly.
     """
     if failed_condition_id is None:
         return None
-    condition = ProvisioningPreconditionCondition(failed_condition_id)
-    facts = local_reader_fact_mapping(verdict_facts)
-    if recovery_action_id is not None:
-        return provisioning_setup_verdict(condition, facts=facts, action_id=recovery_action_id)
-    return provisioning_no_recovery_verdict(condition, facts=facts)
+    condition = ProbePreconditionCondition(failed_condition_id)
+    return probe_no_recovery_verdict(condition, facts=local_reader_fact_mapping(verdict_facts))
 
 
 def local_reader_verdict_condition(verdict: PreconditionVerdict | None) -> str | None:
     """Return the refused condition a public result names, or ``None`` when nothing was refused."""
     return None if verdict is None else verdict.failed_condition_id
-
-
-def local_reader_verdict_action(verdict: PreconditionVerdict | None) -> str | None:
-    """Return the setup action a public result's refusal names, or ``None`` when it names none."""
-    return None if verdict is None or verdict.action is None else verdict.action.action_id
 
 
 def local_reader_verdict_facts(verdict: PreconditionVerdict | None) -> tuple[LocalReaderFactV1, ...]:
@@ -93,12 +77,12 @@ def local_reader_verdict_facts(verdict: PreconditionVerdict | None) -> tuple[Loc
     if verdict is None:
         return ()
     (evidence,) = verdict.evidence
-    published: dict[str, ProvisioningFactValue] = {}
+    published: dict[str, ProbeFactValue] = {}
     for key, value in evidence.values.items():
         if not isinstance(value, str | int | bool):
-            raise ValueError("provisioning refusal evidence must be locale-neutral scalars")
+            raise ValueError("refusal evidence must be locale-neutral scalars")
         published[key] = value
     facts = local_reader_public_facts(published)
-    if local_reader_public_verdict(verdict.failed_condition_id, facts, local_reader_verdict_action(verdict)) != verdict:
-        raise ValueError("provisioning refusal does not rebuild from its public condition and facts")
+    if verdict.action is not None or local_reader_public_verdict(verdict.failed_condition_id, facts) != verdict:
+        raise ValueError("refusal does not rebuild from its public condition and facts")
     return facts

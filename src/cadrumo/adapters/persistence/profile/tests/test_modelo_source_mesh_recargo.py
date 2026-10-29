@@ -8,7 +8,7 @@ from functools import cache
 
 import pytest
 
-import cadrumo.application.aggregation.modelo_bindings as modelo_bindings
+import cadrumo.application.aggregation.modelo_bindings_iva as modelo_bindings
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from .....application.aggregation.errors import AggregationValidationError
@@ -17,10 +17,12 @@ from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueRead
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.schema import ModeloRevision
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import InvoiceKind as CatalogueInvoiceKind
-from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from .....domain.transactions.date_partition import LedgerDatePartition
+from .....domain.transactions.models import TransactionCatalogue
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..catalogue_reads import InvoiceCatalogueReadAdapter
 from ..invoices import InvoiceCatalogueRepository

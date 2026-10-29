@@ -18,7 +18,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...operations.models import OperationIdentity, OperationRequest
 from ...operations.tests.financial_operand_delivery import deliver_financial_operand
-from .. import operation_definitions
+from .. import edit_operation as operation_definitions
 from .._edit_execution import _pre_effect_refusal
 from ..action_errors import ModeloEditRefusedError, modelo_edit_refusal_error
 from ..edit_contract import ModeloEditMutationFamily
@@ -32,6 +32,7 @@ from ..edit_models import (
 from ..edit_operation_requests import ModeloEditApplyOperationRequestV2
 from ..edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditRefusalProjectionStore
 from ..edit_transient_operand import modelo_edit_financial_operand
+from ..operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from .test_edit_models import _baseline as admitted_baseline
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -149,7 +150,7 @@ async def test_observer_failure_keeps_the_exact_registered_refusal_and_none_effe
         ),
     )
     request = OperationRequest(
-        definition_id=operation_definitions.MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+        definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
         subject_ref=baseline.work_unit_id,
         payload=ModeloEditApplyOperationRequestV2(
             profile_id=UUID(baseline.bucket_id),

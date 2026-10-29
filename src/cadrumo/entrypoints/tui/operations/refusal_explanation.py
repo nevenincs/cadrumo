@@ -7,7 +7,6 @@ from ....application.operator_surface.action_targets import resolve_recorded_pre
 from ....core.errors.error_codes import declared_error_codes_by_qualname, resolve_error_message
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
-from ..setup.offer import setup_item_for_action
 
 
 def public_refusal_explanation(code: str | None) -> str | None:
@@ -60,22 +59,8 @@ def recorded_remedy_line(detail: OperationErrorDetailV1 | None) -> str | None:
     return tr("tui.operations.stopped.remedy_command", command=command)
 
 
-def recorded_setup_item(detail: OperationErrorDetailV1 | None) -> str | None:
-    """Name the setup item whose setup the stopped operation's recorded verdict asks for.
-
-    Each setup item declares the one recovery action that sets it up. A
-    verdict naming that action needs that item; a verdict naming any other
-    action, or none, names no item.
-    """
-    verdict = None if detail is None else detail.precondition_verdict()
-    if verdict is None or verdict.action is None:
-        return None
-    return setup_item_for_action(verdict.action.action_id)
-
-
 __all__ = [
     "operation_error_explanation",
     "public_refusal_explanation",
     "recorded_remedy_line",
-    "recorded_setup_item",
 ]

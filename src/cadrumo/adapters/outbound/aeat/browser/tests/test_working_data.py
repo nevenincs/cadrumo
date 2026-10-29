@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 import psutil
 import pytest
 
-from ......application.provisioning_browser import playwright_browsers_root, probe_playwright_browser
+from ......application.browser_location import playwright_browsers_root, probe_playwright_browser
 from ......core.component_records import component_records_root
 from ......core.config import Settings, override_settings
 from ......tests.component_record_support import (

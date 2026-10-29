@@ -231,6 +231,9 @@ class LedgerRatiosScreen(CategorisationScreen):
         table_id = event.data_table.id
         if table_id not in {"categorisation-ratios-overrides", "categorisation-ratios-eligible"}:
             return
+        self._select_category(category)
+
+    def _select_category(self, category: str) -> None:
         served = next((row for row in self.eligible if row.category == category), None)
         if served is not None:
             self.show_outcome(lambda: served.notes)

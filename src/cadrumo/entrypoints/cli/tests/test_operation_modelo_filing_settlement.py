@@ -20,10 +20,10 @@ from cadrumo.application.auth.operator_scope_ports import (
 from cadrumo.application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from cadrumo.application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
 from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     build_modelo_work_file_definition,
     build_modelo_work_file_registration,
 )
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_filing_contracts import (
     ModeloWorkFileApproval,
     ModeloWorkFilePublicResultV2,

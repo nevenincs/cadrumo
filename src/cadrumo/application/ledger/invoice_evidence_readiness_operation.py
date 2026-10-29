@@ -12,12 +12,10 @@ from pydantic import BaseModel, Field
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.identifier_grammar import NamespacedId
 from ...core.model_roles import ModelRole
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
-from ..dependency_contracts import DependencyState
 from ..local_reader import LocalReaderDocumentReadiness, LocalReaderStatus, RoleLane, read_role_lanes
 from ..operations.access_resolution import (
     LIFECYCLE_PERIOD_INDEPENDENT_REGISTERED_RESULT_PROFILE_VALUES_ACCESS,
@@ -49,29 +47,11 @@ class LedgerEvidenceReaderReadinessRequest(BaseModel):
     profile_id: UUID
 
 
-class ReaderHostProjectionV1(BaseModel):
-    """The local AI program as the components role's status row reports it; no provisioning action is here.
-
-    ``state`` is absent when the role reported no row, which is unknown.
-    ``version`` is the program version the row reports.
-    """
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    state: DependencyState | None = None
-    version: Annotated[str, Field(min_length=1, max_length=128)] | None = None
-    available: bool
-    failed_condition_id: InvoiceEvidenceLabel | None = None
-
-
 class ReaderRoleProjectionV1(BaseModel):
     """One role's selected lane, judged locally when it stays on this computer, and its readiness.
 
     ``installed`` is whether the local AI server holds the model, as the
     agent's live catalogue states it, and absent when nobody stated it.
-    ``recovery_action_id`` is the operator action the judgement named for
-    ``failed_condition_id`` -- the local AI setup when the program is not set
-    up or the role's model is not installed -- and is absent when it named
-    none, as for a role this computer cannot run.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -80,7 +60,6 @@ class ReaderRoleProjectionV1(BaseModel):
     installed: bool | None = None
     ready: bool
     failed_condition_id: InvoiceEvidenceLabel | None = None
-    recovery_action_id: NamespacedId | None = None
 
 
 class LedgerEvidenceReaderReadinessProjection(BaseModel):
@@ -88,7 +67,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
-    host: ReaderHostProjectionV1
     roles: Annotated[tuple[ReaderRoleProjectionV1, ...], Field(max_length=32)]
     extraction_ready: bool
     document_readiness: LocalReaderDocumentReadiness
@@ -96,18 +74,9 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
 
     @classmethod
     def from_status(cls, profile_id: UUID, status: LocalReaderStatus) -> Self:
-        """Copy the program's row and the role facts, and the setup action a role's judgement named."""
-        program = status.program
+        """Copy the role facts."""
         return cls(
             profile_id=profile_id,
-            host=ReaderHostProjectionV1(
-                state=program.state,
-                version=program.version,
-                available=program.available,
-                failed_condition_id=(
-                    None if program.precondition_verdict is None else program.precondition_verdict.failed_condition_id
-                ),
-            ),
             roles=tuple(
                 ReaderRoleProjectionV1(
                     role=row.role.value,
@@ -115,7 +84,6 @@ class LedgerEvidenceReaderReadinessProjection(BaseModel):
                     installed=row.installed,
                     ready=row.ready,
                     failed_condition_id=row.failed_condition_id,
-                    recovery_action_id=row.recovery_action_id,
                 )
                 for row in status.roles
             ),
@@ -232,7 +200,6 @@ __all__ = [
     "LedgerEvidenceReaderReadinessExecutor",
     "LedgerEvidenceReaderReadinessProjection",
     "LedgerEvidenceReaderReadinessRequest",
-    "ReaderHostProjectionV1",
     "ReaderRoleProjectionV1",
     "build_ledger_evidence_reader_readiness_definition",
     "build_ledger_evidence_reader_readiness_registration",

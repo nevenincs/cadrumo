@@ -13,7 +13,7 @@ from ....core.modelo import Modelo
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     resolve_ledger_renta_income_aggregation_binding_values,
 )
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.models import TransactionCatalogue
 from ..renta_income_ledger import (
     RentaIncomeLedgerAggregationIssueReason,

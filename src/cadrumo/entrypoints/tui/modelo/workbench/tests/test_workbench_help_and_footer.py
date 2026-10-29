@@ -22,10 +22,10 @@ from textual.widgets import Footer, OptionList, Static
 
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1
 from ......application.modelo.source_policy import SourceSurface
+from ......application.modelo.work_form_findings import ModeloFormIssue
 from ......application.modelo.work_form_models import (
     ModeloFormGridBlock,
     ModeloFormGridCell,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormRepeatingRow,
     ModeloWorkForm,

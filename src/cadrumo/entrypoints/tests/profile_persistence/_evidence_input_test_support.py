@@ -14,7 +14,7 @@ from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidence, Purchas
 from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.core.config import Settings
 from cadrumo.core.document_shape import DocumentShape
-from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
 
 _PDF_BYTES = b"%PDF-1.4 evidence-input-roundtrip body"
 _BUCKET_ID = "30303030-3030-4030-8030-303030303030"

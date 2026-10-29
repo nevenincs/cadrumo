@@ -28,7 +28,8 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 from ..engine import build_export_plan
 from ..errors import CalcSheetsEngineError
 from ..export_tables import export_identity_stamps
-from ..form_workbook import _FormBuilder, add_form_workbook
+from ..form_builder import FormBuilder
+from ..form_workbook import add_form_workbook
 from ..human_workbook import human_workbook
 from ..records import (
     SheetCellAddress,
@@ -708,7 +709,7 @@ def test_repeated_grids_use_each_saved_record_without_scalar_leakage(form_source
         ModeloFormRepeatingRow(index=1, values=("000123", Decimal(0), None, *([Decimal(12)] * (width - 2)))),
         ModeloFormRepeatingRow(index=2, values=("000456", Decimal("7.25"), Decimal(9), *([Decimal(34)] * (width - 2)))),
     )
-    builder = _FormBuilder(
+    builder = FormBuilder(
         plan, snapshot.revision, "130", plan.metadata.period, layout, lambda _: None, lambda _: (True, rows)
     )
     builder.repeating(block)

@@ -35,12 +35,12 @@ from ...application.modelo.invoice_withholding_capture_contracts import (
 from ...application.workflow.persistence import workflow_state_repository
 from ...application.workflow.resume_operation import WORKFLOW_RESUME_OPERATION_DEFINITION_ID
 from ..actividad_asset_composition import build_activity_asset_operation_ports
-from ..adapter_composition import (
+from ..adapter_composition_ports import (
     build_bienes_inversion_repository,
     build_inventory_service_ports,
     build_prorrata_register_repository,
-    build_verification_repository_bundle,
 )
+from ..adapter_composition_work_ports import build_verification_repository_bundle
 from .conformance_family_contract import ConformanceFamily, RegisteredExecutorConformanceCase
 from .invoice_withholding_operation_test_support import (
     InvoiceWithholdingConformanceSeed,

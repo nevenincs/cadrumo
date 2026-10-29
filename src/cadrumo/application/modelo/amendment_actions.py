@@ -122,9 +122,9 @@ from .lifecycle_clock_gate import (
     require_lifecycle_clock_not_before,
 )
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from .modelo_bucket_events import build_modelo_bucket_event as _build_bucket_event
 from .profile_export_binding import resolve_export_identity
 from .result_disposition_resolution import base_modelo_result_disposition
-from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
 from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 
 
@@ -339,103 +339,20 @@ def _m303_rectificativa_evidence_matches_coordinate(
     )
 
 
-def amend_modelo_revision[CasillaKey](
+def _prepare_amendment_identity(
     *,
-    from_filing_record_id: str,
-    overrides: Mapping[CasillaKey, Decimal],
+    baseline: ModeloRecord,
+    baseline_revision: CalculationRevision,
+    source_revision: CalculationRevision,
+    work_unit: WorkUnit,
+    in_force: ModeloRecord,
+    revisions: CalculationRevisionCatalogue,
+    corrected_values: Mapping[CasillaId, Decimal],
     amendment_kind: CalculationRevisionAmendmentKind,
-    m303_rectificativa_motive: M303RectificativaMotive | None = None,
-    detail_rows: Sequence[ModeloDetailRow] | None = None,
-    reason: str,
-    actor: str,
-    ports: AmendmentActionPorts,
-    clock: datetime | None = None,
-    operation: PinnedAuthorityOperation | None = None,
-    result_disposition: ResultDisposition | None = None,
-) -> ModeloRecord:
-    """Build and file an amendment of the period's latest AEAT-confirmed declaration.
-
-    ``from_filing_record_id`` must identify the in-force
-    :class:`ModeloRecord` of the period, confirmed or still pending. Its
-    :class:`CalculationRevision` supplies the full casilla map; ``overrides``
-    replace only corrected casillas after registry validation, while unchanged
-    casillas are inherited. The amendment references the latest confirmed
-    declaration; a pending in-force entry is marked ``DESCARTADA``, and with no
-    confirmed declaration the amendment is refused. The resulting revision records the
-    requested :class:`CalculationRevisionAmendmentKind`,
-    stores the stripped ``reason``, receives registry-grounded observations,
-    transitions through ``VERIFICADO_COMPLETO`` to ``PRESENTADO``, and becomes
-    the current filed revision for the :class:`WorkUnit`.
-
-    The confirmed baseline is linked to the new current amendment record. The
-    new filing record is an internal filing envelope: the record stays
-    ``PENDIENTE``, ``external_evidence`` is cleared, and
-    ``amends_filing_record_id`` points back to the baseline. The amendment's
-    observations are written to the pending-local layer, and a
-    ``modelo.amended`` bucket event records the amendment kind, override count,
-    work-unit id, amended baseline id and any discarded entry, all in one unit
-    of work. ``result_disposition`` is the Modelo 303 declaration disposition of
-    the correction; when omitted, the period's effective recorded disposition
-    is kept.
-
-    Returns:
-        The new current :class:`ModeloRecord` for the
-        amended return.
-
-    See Also:
-        ``aeat app modelo work amend``:
-            CLI command that validates ``--from-filing-record``, ``--kind``,
-            ``--reason``, and ``--set`` before calling this service.
-        :func:`~cadrumo.application.modelo.external_import_actions.import_external_filing_evidence`:
-            Production import path that creates accepted external-evidence
-            baselines.
-        :func:`~cadrumo.application.modelo._calculation_helpers.amendment_observations`:
-            Builds the :class:`CasillaObservation`
-            rows persisted on the amendment revision.
-    """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return amend_modelo_revision(
-                from_filing_record_id=from_filing_record_id,
-                overrides=overrides,
-                amendment_kind=amendment_kind,
-                m303_rectificativa_motive=m303_rectificativa_motive,
-                detail_rows=detail_rows,
-                reason=reason,
-                actor=actor,
-                ports=ports,
-                clock=clock,
-                operation=indexed_operation,
-                result_disposition=result_disposition,
-            )
-    (
-        filing_catalogue,
-        in_force,
-        baseline,
-        work_units,
-        work_unit,
-        revisions,
-        baseline_revision,
-        source_revision,
-        canonical_overrides,
-        taxpayer_tax_id,
-        catalogue_revisions,
-    ) = _load_amendment_baseline(
-        from_filing_record_id=from_filing_record_id,
-        overrides=overrides,
-        ports=ports,
-        operation=operation,
-    )
-
-    now = clock or _utc_now()
-    require_lifecycle_clock_not_before(
-        now,
-        operation=ModeloLifecycleClockOperation.AMEND,
-        instants=amendment_ordering_instants(work_unit=work_unit, baseline=baseline, in_force=in_force),
-    )
-    corrected_values: dict[CasillaId, Decimal] = dict(source_revision.casilla_values)
-    corrected_values.update(canonical_overrides)
-
+    m303_rectificativa_motive: M303RectificativaMotive | None,
+    detail_rows: Sequence[ModeloDetailRow] | None,
+    operation: PinnedAuthorityOperation,
+) -> tuple[CalculationRevisionId, CalculationRevisionAmendmentIdentity, tuple[ModeloDetailRow, ...]]:
     # Period-aware amendment-kind routing: refuse a requested kind the
     # resolved (modelo, period) does not legally permit (e.g. rectificativa
     # requested for a pre-adoption period, or complementaria requested where
@@ -507,6 +424,119 @@ def amend_modelo_revision[CasillaKey](
             context={"calculation_revision_id": new_revision_id, "state": "duplicate_amendment_revision"},
         )
 
+    return new_revision_id, amendment_identity, amendment_detail_rows
+
+
+def _amendment_aggregate_context(
+    work_units: WorkUnitCatalogue,
+    filing_catalogue: ModeloRecordCatalogue,
+    ports: AmendmentActionPorts,
+    operation: PinnedAuthorityOperation,
+    taxpayer_tax_id: str | None,
+) -> CalculationRevisionAggregateContext:
+    justificantes = tuple(ports.justificante_repository.iter_justificantes())
+    aggregate_context = CalculationRevisionAggregateContext(
+        work_units=work_units,
+        filing_records=filing_catalogue,
+        justificantes=justificantes,
+        # The upsert revalidates every stored rectificativa, not only this
+        # period's, so each Modelo 303 work unit needs its own snapshot.
+        registry_snapshots={
+            unit.work_unit_id: operation.snapshot(
+                Modelo("303").value,
+                filing_year=unit.filing_year,
+                period=unit.period.registry_token,
+            )
+            for unit in work_units.values()
+            if unit.modelo == Modelo("303").value
+        },
+        expected_taxpayer_tax_id=taxpayer_tax_id,
+    )
+
+    return aggregate_context
+
+
+def amend_modelo_revision[CasillaKey](
+    *,
+    from_filing_record_id: str,
+    overrides: Mapping[CasillaKey, Decimal],
+    amendment_kind: CalculationRevisionAmendmentKind,
+    m303_rectificativa_motive: M303RectificativaMotive | None = None,
+    detail_rows: Sequence[ModeloDetailRow] | None = None,
+    reason: str,
+    actor: str,
+    ports: AmendmentActionPorts,
+    clock: datetime | None = None,
+    operation: PinnedAuthorityOperation | None = None,
+    result_disposition: ResultDisposition | None = None,
+) -> ModeloRecord:
+    """Amend a current filing against its latest AEAT-confirmed baseline.
+
+    Canonical overrides replace only the supplied casillas; unchanged values,
+    evidence and provenance remain tied to the saved source revision. The
+    amendment kind, motive and detail rows are validated before deriving the
+    revision identity. The corrected draft is checked, verified and filed, then
+    its record, observations and lifecycle event are committed together. A
+    pending prior filing is discarded; the new local envelope remains pending
+    and never fabricates external acceptance.
+    """
+    if operation is None:
+        with bundled_indexed_authority().operation() as indexed_operation:
+            return amend_modelo_revision(
+                from_filing_record_id=from_filing_record_id,
+                overrides=overrides,
+                amendment_kind=amendment_kind,
+                m303_rectificativa_motive=m303_rectificativa_motive,
+                detail_rows=detail_rows,
+                reason=reason,
+                actor=actor,
+                ports=ports,
+                clock=clock,
+                operation=indexed_operation,
+                result_disposition=result_disposition,
+            )
+    (
+        filing_catalogue,
+        in_force,
+        baseline,
+        work_units,
+        work_unit,
+        revisions,
+        baseline_revision,
+        source_revision,
+        canonical_overrides,
+        taxpayer_tax_id,
+        catalogue_revisions,
+    ) = _load_amendment_baseline(
+        from_filing_record_id=from_filing_record_id,
+        overrides=overrides,
+        ports=ports,
+        operation=operation,
+    )
+
+    now = clock or _utc_now()
+    require_lifecycle_clock_not_before(
+        now,
+        operation=ModeloLifecycleClockOperation.AMEND,
+        instants=amendment_ordering_instants(work_unit=work_unit, baseline=baseline, in_force=in_force),
+    )
+    corrected_values: dict[CasillaId, Decimal] = dict(source_revision.casilla_values)
+    corrected_values.update(canonical_overrides)
+
+    new_revision_id, amendment_identity, amendment_detail_rows = _prepare_amendment_identity(
+        baseline=baseline,
+        baseline_revision=baseline_revision,
+        source_revision=source_revision,
+        work_unit=work_unit,
+        in_force=in_force,
+        revisions=revisions,
+        corrected_values=corrected_values,
+        amendment_kind=amendment_kind,
+        m303_rectificativa_motive=m303_rectificativa_motive,
+        detail_rows=detail_rows,
+        operation=operation,
+    )
+
     # Carry regulatory grounding onto the amendment: build typed
     # CasillaObservation rows for the corrected casilla map so the
     # persisted amendment revision and its CLI emit preserve
@@ -527,24 +557,7 @@ def amend_modelo_revision[CasillaKey](
         observations=amendment_observations,
         operation=operation,
     )
-    justificantes = tuple(ports.justificante_repository.iter_justificantes())
-    aggregate_context = CalculationRevisionAggregateContext(
-        work_units=work_units,
-        filing_records=filing_catalogue,
-        justificantes=justificantes,
-        # The upsert revalidates every stored rectificativa, not only this
-        # period's, so each Modelo 303 work unit needs its own snapshot.
-        registry_snapshots={
-            unit.work_unit_id: operation.snapshot(
-                Modelo("303").value,
-                filing_year=unit.filing_year,
-                period=unit.period.registry_token,
-            )
-            for unit in work_units.values()
-            if unit.modelo == Modelo("303").value
-        },
-        expected_taxpayer_tax_id=taxpayer_tax_id,
-    )
+    aggregate_context = _amendment_aggregate_context(work_units, filing_catalogue, ports, operation, taxpayer_tax_id)
 
     amendment_draft = _build_amendment_draft_revision(
         new_revision_id=new_revision_id,
@@ -562,6 +575,49 @@ def amend_modelo_revision[CasillaKey](
     )
     revisions = upsert_calculation_revision(revisions, amendment_draft, aggregate_context=aggregate_context)
 
+    return _finalize_amendment(
+        revisions=revisions,
+        amendment_draft=amendment_draft,
+        work_unit=work_unit,
+        ports=ports,
+        operation=operation,
+        now=now,
+        actor=actor,
+        aggregate_context=aggregate_context,
+        baseline=baseline,
+        corrected_values=corrected_values,
+        in_force=in_force,
+        filing_catalogue=filing_catalogue,
+        new_revision_id=new_revision_id,
+        amendment_kind=amendment_kind,
+        result_disposition=result_disposition,
+        catalogue_revisions=catalogue_revisions,
+        work_units=work_units,
+        canonical_overrides=canonical_overrides,
+    )
+
+
+def _finalize_amendment(
+    *,
+    revisions: CalculationRevisionCatalogue,
+    amendment_draft: CalculationRevision,
+    work_unit: WorkUnit,
+    ports: AmendmentActionPorts,
+    operation: PinnedAuthorityOperation,
+    now: datetime,
+    actor: str,
+    aggregate_context: CalculationRevisionAggregateContext,
+    baseline: ModeloRecord,
+    corrected_values: Mapping[CasillaId, Decimal],
+    in_force: ModeloRecord,
+    filing_catalogue: ModeloRecordCatalogue,
+    new_revision_id: CalculationRevisionId,
+    amendment_kind: CalculationRevisionAmendmentKind,
+    result_disposition: ResultDisposition | None,
+    catalogue_revisions: _AmendmentCatalogueRevisions,
+    work_units: WorkUnitCatalogue,
+    canonical_overrides: Mapping[CasillaId, Decimal],
+) -> ModeloRecord:
     # Verify the corrected casilla map against the registry's
     # required-manual-input contract before transitioning. The amend
     # path mirrors the standard verify gate so a complementaria

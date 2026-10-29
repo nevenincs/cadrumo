@@ -59,7 +59,8 @@ from ..formula_runtime import RegistryCalculationResult, calculate_registry_snap
 from ..relation_dependency import RelationDependencyRole, RelationKind
 from ..relations import RegistryFoldRequirement, relation_prefill_bindings_for_period, relation_source_requirements
 from ..runtime_graph import expression_binding_refs
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from ..schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..withholding_bindings import WithholdingObservation, resolve_withholding_binding_values
 from ._cross_dependency_calculation_support import (
     _casilla_inputs,

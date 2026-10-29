@@ -37,7 +37,7 @@ from ...core.hashing import content_hash_hex
 from ...core.i18n.render import tr
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..adapter_composition import build_calculation_action_ports
+from ..adapter_composition_work_ports import build_calculation_action_ports
 from .modelo_operation_test_support import (
     FIRST_QUARTER_PRIOR_PERIOD_BINDINGS,
     MODELO_OPERATION_TEST_ACTOR,

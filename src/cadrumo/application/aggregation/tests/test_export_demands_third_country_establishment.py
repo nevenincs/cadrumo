@@ -37,11 +37,8 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2
-from ..iva_ledger import (
-    IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
-    IvaLedgerAggregationIssueReason,
-    validate_iva_ledger_counterparty_category,
-)
+from ..iva_ledger import IvaLedgerAggregationIssueReason
+from ..iva_ledger_classification import IVA_LEDGER_COUNTERPARTY_GATE_REASONS, validate_iva_ledger_counterparty_category
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

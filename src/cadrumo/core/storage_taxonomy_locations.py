@@ -101,8 +101,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.OLLAMA_HOME,
         "components/ollama/home",
         dormant_reason=(
-            "The native component engine installs the local AI here and the runtime manager's "
-            "server reads it; no Python product module reads or writes it."
+            "The local AI server reads it; no tax application module reads or writes it."
         ),
         settings_field="cadrumo_ollama_home_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
@@ -113,27 +112,11 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         StorageCategory.OLLAMA_MODELS,
         "models/ollama",
         dormant_reason=(
-            "The native component engine installs the local AI here and the runtime manager's "
-            "server reads it; no Python product module reads or writes it."
+            "The local AI server reads it; no tax application module reads or writes it."
         ),
         settings_field="cadrumo_ollama_models_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    # The local AI program, one folder per installed version, beside the home
-    # folder above. The outermost declaration subsumes that member in the
-    # inventory's aggregate, so the multi-gigabyte install is counted once.
-    _location(
-        StorageCategory.LOCAL_AI_PROGRAM,
-        "components/ollama",
-        dormant_reason=(
-            "The native component engine installs and removes the local AI program here and "
-            "the runtime manager starts it; no Python product module reads or writes it."
-        ),
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(
@@ -170,37 +153,10 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.PLAYWRIGHT_BROWSERS,
         "components/playwright",
-        consumer_module="application/provisioning_browser.py",
+        consumer_module="application/browser_location.py",
         settings_field="cadrumo_playwright_browsers_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.STATE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    # The native component engine's receipt and location record per installed
-    # item. They are evidence, never authority, and they sit beside the
-    # components they describe, so they follow the root rather than moving alone.
-    _location(
-        StorageCategory.DEPENDENCY_RECEIPTS,
-        "components/receipts",
-        consumer_module="core/component_records.py",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    # The native component engine's per-item writer locks, activity records and
-    # cancel requests. They survive a crash so an interrupted setup can be
-    # resumed, so they follow the root with the receipts they sit beside.
-    _location(
-        StorageCategory.DEPENDENCY_ACTIVITY,
-        "components/activity",
-        dormant_reason=(
-            "The native component engine owns every lock, activity record and cancel request "
-            "here; no Python product module reads or writes it."
-        ),
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
         fingerprint_participation=FingerprintParticipation.EXCLUDED,
     ),
     _location(

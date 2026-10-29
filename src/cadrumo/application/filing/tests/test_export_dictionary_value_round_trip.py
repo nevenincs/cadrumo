@@ -10,11 +10,8 @@ import pytest
 
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.resources.bundled_data import resolve_corpus_binary
-from ....domain.calculations.registry.export_parse import (
-    XML_DICTIONARY_BOOLEAN_TYPES,
-    parse_export_payload,
-    xml_dictionary_entries,
-)
+from ....domain.calculations.registry.export_parse import parse_export_payload
+from ....domain.calculations.registry.export_xml_dictionary import XML_DICTIONARY_BOOLEAN_TYPES, xml_dictionary_entries
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision,
     published_revision_definitions,

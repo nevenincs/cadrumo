@@ -75,6 +75,31 @@ class OwnAccountUpdateSecrets(MachineSecretPayload):
     bank_country_code: str | None = None
 
 
+def _account_target_mismatch(request: LedgerOwnAccountRequest, result: LedgerOwnAccountResult) -> bool:
+    names_account = request.own_account_id is not None or request.action == "add"
+    return (
+        (request.own_account_id is not None and result.own_account_id != request.own_account_id)
+        or (names_account and result.own_account_id is None)
+        or (request.action in {"list", "show"} and result.changed)
+    )
+
+
+def _require_account_completion(
+    completed: RegisteredOperationCompletion[LedgerOwnAccountResult], request: LedgerOwnAccountRequest, profile_id: UUID
+) -> None:
+    result = completed.projection
+    expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
+    if (
+        result.profile_id != profile_id
+        or result.action != request.action
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or _account_target_mismatch(request, result)
+    ):
+        raise invalid_completion_error(completed)
+
+
 def _run(ctx: typer.Context, request: LedgerOwnAccountRequest) -> LedgerOwnAccountResult:
     """Run one exact-profile request and correlate its receipt with what was asked."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
@@ -91,19 +116,7 @@ def _run(ctx: typer.Context, request: LedgerOwnAccountRequest) -> LedgerOwnAccou
         timeout=120,
     )
     result = completed.projection
-    expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
-    names_account = request.own_account_id is not None or request.action == "add"
-    if (
-        result.profile_id != client.profile_id
-        or result.action != request.action
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or (request.own_account_id is not None and result.own_account_id != request.own_account_id)
-        or (names_account and result.own_account_id is None)
-        or (request.action in {"list", "show"} and result.changed)
-    ):
-        raise invalid_completion_error(completed)
+    _require_account_completion(completed, request, client.profile_id)
     return result
 
 

@@ -28,7 +28,7 @@ from ....application.aggregation.service import (
 from ....core.aggregation import BindingSourceKind
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ..modelo_results import ModeloAggregateResult
+from ..modelo_query_results import ModeloAggregateResult
 from .aggregate_projection import from_aggregation_result
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

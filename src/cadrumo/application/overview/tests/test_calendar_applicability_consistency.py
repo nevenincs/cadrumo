@@ -27,7 +27,7 @@ from datetime import date
 
 import pytest
 
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile

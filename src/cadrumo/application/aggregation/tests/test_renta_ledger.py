@@ -31,8 +31,9 @@ from ....domain.categories.proportionality import (
     parse_http_url,
 )
 from ....domain.contribuyente.ccaa import CCAA
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
 from ....domain.renta.ledger_expenses import RentaExpenseDirection
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -40,10 +41,8 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.aeat_literal_fixtures import RENTA_REGIMEN_CITATION_URL_FIXTURE
-from ..renta_ledger import (
-    RentaLedgerAggregationIssueReason,
-    aggregate_renta_ledger_expenses,
-)
+from ..renta_ledger import aggregate_renta_ledger_expenses
+from ..renta_ledger_models import RentaLedgerAggregationIssueReason
 from .renta_income_aggregation_support import _period
 from .usage_ratio_support import (
     HOME_OFFICE_DEGREE_OF_USE,

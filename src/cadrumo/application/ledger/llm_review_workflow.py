@@ -41,7 +41,6 @@ from .extraction_draft_store import ExtractionDraftDocument, write_extraction_dr
 from .invoice_draft_records import InvoiceDraft
 from .llm_classification import (
     apply_evidence_classification,
-    apply_evidence_split,
     apply_llm_classification,
     apply_saturated_llm_classification,
     reject_llm_suggestion,
@@ -54,6 +53,7 @@ from .llm_classification_ports import (
     LLMSuggestionRejectionResult,
     OperatorIvaDerivationResult,
 )
+from .llm_evidence_split import apply_evidence_split
 from .models import ManualLedgerTransactionResult
 from .protocols import BucketEventHistoryCoCommitWriterProtocol
 

@@ -13,11 +13,11 @@ import pytest
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
 
-from .....application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+from .....application.modelo.calculation_operation import (
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
 )
+from .....application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from .....application.operations.error_detail import (
     OperationErrorContextEntryV1,
     OperationErrorDetailKind,

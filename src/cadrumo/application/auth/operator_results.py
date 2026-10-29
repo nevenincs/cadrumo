@@ -125,11 +125,11 @@ class AuthStatusResult(BaseModel):
     """Current local auth readiness state.
 
     Built from
-    :class:`application.state_projection.OperatorStateProjection`.
+    :class:`application.state_projection_models.OperatorStateProjection`.
     Provider readiness mirrors
     :class:`application.state_projection_auth.ProjectionAuthReadiness`;
     active-profile fields mirror
-    :class:`application.state_projection.ProjectionActiveProfile`.
+    :class:`application.state_projection_models.ProjectionActiveProfile`.
     """
 
     model_config = _STRICT_FROZEN

@@ -22,7 +22,7 @@ from cadrumo.domain.modelos.calculation_repository import (
     CalculationRevisionPersistenceError,
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,

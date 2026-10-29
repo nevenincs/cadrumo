@@ -27,8 +27,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.filing.draft_construction import build_draft
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
-from cadrumo.application.modelo.calculation_actions import (
-    calculate_modelo_revision,
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.revision_replay_inputs import revision_filing_replay_inputs

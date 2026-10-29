@@ -11,7 +11,7 @@ from __future__ import annotations
 import socket
 import ssl
 from collections.abc import Mapping
-from typing import Final
+from typing import Final, NamedTuple
 
 from cadrumo_client.contracts.failure_categories import DependencyFailureCategory
 from cadrumo_client.contracts.google_auth import GoogleAuthError, GoogleAuthPreconditionCondition
@@ -88,28 +88,43 @@ def google_failure_category(error: BaseException) -> DependencyFailureCategory:
     return DependencyFailureCategory.UNEXPECTED
 
 
-def _network_category(error: BaseException) -> DependencyFailureCategory | None:
-    """Classify the first connection failure in ``error``'s cause chain, by type."""
+class _ConnectionFailureTypes(NamedTuple):
+    """Native and optional requests-library error types in classification order."""
+
+    proxy: tuple[type[BaseException], ...]
+    secure: tuple[type[BaseException], ...]
+    unreachable: tuple[type[BaseException], ...]
+
+
+def _connection_failure_types() -> _ConnectionFailureTypes:
+    """Load optional transport error classes while retaining native fallback categories."""
     try:
         from requests import exceptions as requests_errors
     except ImportError:
         requests_errors = None
+    return _ConnectionFailureTypes(
+        () if requests_errors is None else (requests_errors.ProxyError,),
+        (ssl.SSLError,) if requests_errors is None else (ssl.SSLError, requests_errors.SSLError),
+        (ConnectionError, TimeoutError)
+        if requests_errors is None
+        else (ConnectionError, TimeoutError, requests_errors.ConnectionError, requests_errors.Timeout),
+    )
+
+
+def _network_category(error: BaseException) -> DependencyFailureCategory | None:
+    """Classify the first connection failure in ``error``'s cause chain, by type."""
+    types = _connection_failure_types()
     seen: set[int] = set()
     current: BaseException | None = error
     while current is not None and id(current) not in seen:
         seen.add(id(current))
-        if requests_errors is not None and isinstance(current, requests_errors.ProxyError):
+        if isinstance(current, types.proxy):
             return DependencyFailureCategory.BLOCKED_BY_NETWORK
-        if isinstance(current, ssl.SSLError) or (
-            requests_errors is not None and isinstance(current, requests_errors.SSLError)
-        ):
+        if isinstance(current, types.secure):
             return DependencyFailureCategory.SECURE_CONNECTION_FAILED
         if isinstance(current, socket.gaierror):
             return DependencyFailureCategory.OFFLINE
-        if isinstance(current, (ConnectionError, TimeoutError)) or (
-            requests_errors is not None
-            and isinstance(current, (requests_errors.ConnectionError, requests_errors.Timeout))
-        ):
+        if isinstance(current, types.unreachable):
             return DependencyFailureCategory.HOST_UNREACHABLE
         current = current.__cause__ or current.__context__
     return None

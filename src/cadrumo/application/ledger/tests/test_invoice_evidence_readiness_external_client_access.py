@@ -23,7 +23,7 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...provisioning_contracts import ProvisioningPreconditionCondition
+from ...probe_outcomes import ProbePreconditionCondition
 from ...tests.local_ai_program_rows import LOCAL_AI_VERSION, local_ai_row
 from ..invoice_evidence_readiness_operation import (
     LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
@@ -112,7 +112,7 @@ def test_an_absent_program_publishes_no_version_and_its_failed_condition() -> No
     assert projection.host.state is DependencyState.ABSENT
     assert projection.host.version is None, "an absent program's row names the version setup would install"
     assert projection.host.available is False
-    assert projection.host.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED.value
+    assert projection.host.failed_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED.value
 
 
 @pytest.mark.asyncio

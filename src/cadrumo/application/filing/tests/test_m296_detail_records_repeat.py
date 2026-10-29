@@ -23,7 +23,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ....core.filing_projection_ref import (
+from ....core.filing_projection_m296 import (
     M296AnexoCertificadoField,
     M296AnexoCertificadoProjectionRef,
     M296AnexoPagoField,
@@ -42,14 +42,16 @@ from .._m296_projection import build_m296_filing_projection_plan
 from ..producer_snapshot import (
     FilingElectionFacts,
     FilingProducerSnapshot,
+    PresenterIdentity,
+    TaxpayerIdentityFacts,
+    build_filing_producer_snapshot,
+)
+from ..producer_snapshot_m296 import (
     Modelo296AnexoCertificadoRow,
     Modelo296AnexoPagoRow,
     Modelo296PerceptorInteresesRow,
     Modelo296PerceptorRow,
     Modelo296ProfileFacts,
-    PresenterIdentity,
-    TaxpayerIdentityFacts,
-    build_filing_producer_snapshot,
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]

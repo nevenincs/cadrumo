@@ -13,7 +13,6 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .actions_manual import ledger_transaction_result_payload
 from .ledger_add_contracts import (
     LEDGER_ADD_OPERATION_DEFINITION_ID,
     LEDGER_ADD_VALIDATION_REFUSAL_CODE,
@@ -23,6 +22,7 @@ from .ledger_add_contracts import (
     LedgerAddOperationResult,
     LedgerAddValidationMessages,
 )
+from .manual_read import ledger_transaction_result_payload
 from .models import LedgerTransactionResultPayload
 from .transaction_projection import LedgerTransactionProjection
 

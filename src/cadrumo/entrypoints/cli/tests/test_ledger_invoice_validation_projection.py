@@ -10,9 +10,10 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from cadrumo.domain.invoices.errors import InvoiceValidationError
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.entrypoints.cli._ledger_support import ledger_invoice_validation_no_recovery
 from cadrumo.entrypoints.cli.common import cli_policy_refusal_projection
 

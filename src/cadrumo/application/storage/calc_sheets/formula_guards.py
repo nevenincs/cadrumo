@@ -19,65 +19,75 @@ def conditional_missing_input_guard(
     A missing predicate is checked before evaluating it; only the chosen
     branch's dependencies can make a populated predicate's result unknown.
     """
-    computed = {address.qualified(): key for key, address in layout.calculos_cells.items()}
-    checked: set[str] = set()
+    compiler = _ConditionalGuardCompiler(formulas, layout)
+    return compiler.compile(expression)
 
-    def validate_dependencies(node: FormulaExpression, visiting: frozenset[str]) -> None:
+
+class _ConditionalGuardCompiler:
+    def __init__(self, formulas: Mapping[CasillaId, FormulaExpression], layout: SheetLayout) -> None:
+        self._formulas = formulas
+        self._layout = layout
+        self._computed = {address.qualified(): key for key, address in layout.calculos_cells.items()}
+        self._checked: set[str] = set()
+
+    def compile(self, expression: FormulaExpression) -> str | None:
+        self._validate_dependencies(expression, frozenset())
+        if not self._branches(expression, frozenset()):
+            return None
+        condition, has_conditional = self._visit(expression, frozenset())
+        return condition if has_conditional else None
+
+    def _validate_dependencies(self, node: FormulaExpression, visiting: frozenset[str]) -> None:
         key = node.casilla_id
-        if key is not None and key in formulas:
+        if key is not None and key in self._formulas:
             if key in visiting:
                 raise CalcSheetsEngineError("conditional formula dependency cycle")
-            if key not in checked:
-                validate_dependencies(formulas[key], visiting | {key})
-                checked.add(key)
+            if key not in self._checked:
+                self._validate_dependencies(self._formulas[key], visiting | {key})
+                self._checked.add(key)
         for arg in node.args:
-            validate_dependencies(arg, visiting)
+            self._validate_dependencies(arg, visiting)
 
-    validate_dependencies(expression, frozenset())
-
-    def branches(node: FormulaExpression, visited: frozenset[str]) -> bool:
+    def _branches(self, node: FormulaExpression, visited: frozenset[str]) -> bool:
         if node.op in ("if_then_else", "require_condition", "record_row_unused", "text_equal"):
             return True
-        if node.casilla_id is not None and node.casilla_id in formulas:
+        if node.casilla_id is not None and node.casilla_id in self._formulas:
             if node.casilla_id in visited:
                 raise CalcSheetsEngineError("conditional formula dependency cycle")
-            return branches(formulas[node.casilla_id], visited | {node.casilla_id})
-        return any(branches(arg, visited) for arg in node.args)
+            return self._branches(self._formulas[node.casilla_id], visited | {node.casilla_id})
+        return any(self._branches(arg, visited) for arg in node.args)
 
-    if not branches(expression, frozenset()):
-        return None
-
-    def combine(parts: list[tuple[str, bool]]) -> tuple[str, bool]:
+    def _combine(self, parts: list[tuple[str, bool]]) -> tuple[str, bool]:
         conditions = tuple(dict.fromkeys(value for value, _ in parts if value != "FALSE"))
         condition = (
             "FALSE" if not conditions else conditions[0] if len(conditions) == 1 else f"OR({','.join(conditions)})"
         )
         return condition, any(branches for _, branches in parts)
 
-    def references(body: str, visited: frozenset[str]) -> tuple[str, bool]:
+    def _references(self, body: str, visited: frozenset[str]) -> tuple[str, bool]:
         parts: list[tuple[str, bool]] = []
         for reference in re.findall(r"'[^']+'!\$?[A-Z]+\$?[0-9]+", body):
-            key = computed.get(reference.replace("$", ""))
-            if key is not None and key in formulas:
+            key = self._computed.get(reference.replace("$", ""))
+            if key is not None and key in self._formulas:
                 if key in visited:
                     raise CalcSheetsEngineError("conditional formula dependency cycle")
                 # Form projection guards every calculated support cell before
                 # consumers read it. Test that result, rather than duplicating
                 # its complete dependency tree in every downstream formula.
                 # ISNUMBER is false for both errors and the unknown-value text.
-                parts.append((f"NOT(ISNUMBER({reference}))", branches(formulas[key], visited | {key})))
+                parts.append((f"NOT(ISNUMBER({reference}))", self._branches(self._formulas[key], visited | {key})))
             else:
                 parts.append((f"ISBLANK({reference})", False))
-        return combine(parts)
+        return self._combine(parts)
 
-    def visit(node: FormulaExpression, visited: frozenset[str]) -> tuple[str, bool]:
+    def _visit(self, node: FormulaExpression, visited: frozenset[str]) -> tuple[str, bool]:
         if node.op in ("record_row_unused", "text_equal"):
-            return f"ISERROR({translate_formula(node, layout=layout)})", True
+            return f"ISERROR({translate_formula(node, layout=self._layout)})", True
         if node.op == "require_condition":
             predicate, value = node.args
-            missing, _ = visit(predicate, visited)
-            value_missing, _ = visit(value, visited)
-            translated = translate_formula(predicate, layout=layout)
+            missing, _ = self._visit(predicate, visited)
+            value_missing, _ = self._visit(value, visited)
+            translated = translate_formula(predicate, layout=self._layout)
             condition = (
                 f"IF(ISERROR({translated}),TRUE,"
                 f"IF(OR(ISNUMBER({translated}),ISLOGICAL({translated})),"
@@ -86,10 +96,10 @@ def conditional_missing_input_guard(
             return (condition if missing == "FALSE" else f"IF({missing},TRUE,{condition})"), True
         if node.op == "if_then_else":
             predicate, yes, no = node.args
-            missing, _ = visit(predicate, visited)
-            yes_missing, _ = visit(yes, visited)
-            no_missing, _ = visit(no, visited)
-            condition = f"IF(({translate_formula(predicate, layout=layout)})<>0,{yes_missing},{no_missing})"
+            missing, _ = self._visit(predicate, visited)
+            yes_missing, _ = self._visit(yes, visited)
+            no_missing, _ = self._visit(no, visited)
+            condition = f"IF(({translate_formula(predicate, layout=self._layout)})<>0,{yes_missing},{no_missing})"
             return (condition if missing == "FALSE" else f"IF({missing},TRUE,{condition})"), True
         if node.op in (
             "lookup_bracket",
@@ -98,12 +108,9 @@ def conditional_missing_input_guard(
             "lookup_parameter_by_entity_type",
             "age_at_year_end",
         ):
-            return references(translate_formula(node, layout=layout), visited)
+            return self._references(translate_formula(node, layout=self._layout), visited)
         if node.op is not None:
-            return combine([visit(arg, visited) for arg in node.args])
+            return self._combine([self._visit(arg, visited) for arg in node.args])
         if node.date_binding is not None:
-            return references(layout.address_for_date_binding(node.date_binding).qualified(), visited)
-        return references(translate_formula(node, layout=layout), visited)
-
-    condition, has_conditional = visit(expression, frozenset())
-    return condition if has_conditional else None
+            return self._references(self._layout.address_for_date_binding(node.date_binding).qualified(), visited)
+        return self._references(translate_formula(node, layout=self._layout), visited)

@@ -26,11 +26,11 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
     evaluate_ledger_filing_staleness,
     row_fingerprint,
 )
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.attachment_mutation_operation import LedgerAttachRequest
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )
-from cadrumo.application.ledger.attachment_mutation_operation import LedgerAttachRequest
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot

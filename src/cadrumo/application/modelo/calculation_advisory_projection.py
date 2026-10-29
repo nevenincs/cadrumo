@@ -16,11 +16,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
+from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     DIAGNOSTIC_REMEDY_MAX_LENGTH,
     CalculationSourceDiagnostic,
-    CalculationSourceDiagnosticReason,
 )
 from .calculate_input import Modelo202ModalitySummary, ModeloWorkCalculationServiceResult
 from .lifecycle_advisories import ModeloM210PlazoAdvisoryV1

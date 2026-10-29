@@ -35,14 +35,11 @@ from ..declarations_list import (
     DECLARATION_GROUP_LOCALE_KEYS,
     DeclarationListGroup,
     DeclarationListNextStep,
-    ModeloDeclarationListRowV1,
     calendar_sources,
     deadline_note_words,
     declaration_list_rows,
     group_words,
     source_notices,
-    worded_creation_targets,
-    worded_list_row,
     zone_states,
 )
 from ..declarations_list_operation import (
@@ -50,6 +47,7 @@ from ..declarations_list_operation import (
     ModeloDeclarationsListRequest,
     project_declarations_list,
 )
+from ..declarations_list_projection import ModeloDeclarationListRowV1, worded_creation_targets, worded_list_row
 from ..declarations_workspace_contracts import (
     DeclarationsWorkspaceAvailability,
     DeclarationsWorkspaceDeclarationRefV1,

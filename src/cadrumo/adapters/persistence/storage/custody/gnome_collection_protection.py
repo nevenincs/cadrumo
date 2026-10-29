@@ -22,13 +22,14 @@ from typing import Any, Protocol, cast
 
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
+from .gnome_collection_identity import gnome_collection_id
+
 _MAX_FRAME = 65536
 _MAX_SLOTS = 8
 _BASE = 0x80000000 | 0x474E4D45
 _COLLECTION_CLASS = _BASE + 110
 _CLASS, _TOKEN, _TRUSTED, _ID = 0, 1, 0x86, 0x102
 _TRANSIENT, _LOCKED = _BASE + 201, _BASE + 210
-_PREFIX = "/org/freedesktop/secrets/collection/"
 _BUS = "org.freedesktop.DBus"
 _HANDSHAKE = b"PRIVATE-GNOME-KEYRING-PKCS11-PROTOCOL-V-1"
 _CALLS = {
@@ -142,29 +143,6 @@ def _close_on_exit(close: Callable[[], None]) -> Generator[None]:
         raise
     else:
         close()
-
-
-def gnome_collection_id(collection: str) -> bytes:
-    """Decode only canonical GNOME collection paths, with an exact roundtrip."""
-    _require(isinstance(collection, str) and collection.startswith(_PREFIX) and len(collection) <= 1024)
-    encoded = collection[len(_PREFIX) :]
-    result = bytearray()
-    index = 0
-    while index < len(encoded):
-        character = encoded[index]
-        if character.isascii() and character.isalnum():
-            result.append(ord(character))
-            index += 1
-        else:
-            _require(character == "_" and index + 2 < len(encoded))
-            hexadecimal = encoded[index + 1 : index + 3]
-            _require(all(value in "0123456789abcdef" for value in hexadecimal))
-            result.append(int(hexadecimal, 16))
-            index += 3
-    _require(bool(result) and 0 not in result)
-    roundtrip = _collection_path_spelling(result)
-    _require(roundtrip == encoded)
-    return bytes(result)
 
 
 def _u32(value: int) -> bytes:
@@ -447,13 +425,6 @@ def require_protected_gnome_collection(bus: GnomeCollectionBusProtocol, collecti
         raise AutomationCustodyError(AutomationCustodyCode.INVALID) from None
     except Exception:
         raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE) from None
-
-
-def _collection_path_spelling(result: bytearray) -> str:
-    roundtrip = "".join(
-        chr(value) if chr(value).isascii() and chr(value).isalnum() else f"_{value:02x}" for value in result
-    )
-    return roundtrip
 
 
 def _parent_directory_suitable(info: os.stat_result, uid: int) -> bool:

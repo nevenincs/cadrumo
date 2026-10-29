@@ -78,30 +78,28 @@ from .....tests.aeat_literal_fixtures import (
     CENSO_SOURCE_URL_FIXTURE,
     OBLIGACIONES_SOURCE_URL_FIXTURE,
 )
-from ....adapter_composition import build_censal_fetch_port
+from ....adapter_composition_ports import build_censal_fetch_port
 from ...components.host import ScreenHostApp
 from ...destination_alias import closed_destination_ids
 from ...navigation import TuiScreenContextV1
 from ...operations.controller_port import OperationControllerPort
 from ...operations.modal import OperationModal, OperationModalSettledOutcomeV1
 from ...tests.settling import settle
+from ..census_screen import AeatSyncCensusScreen
 from ..controller import AeatSyncWorkspaceController
+from ..evidence_comparison_screen import AeatSyncEvidenceComparisonScreen
+from ..filed_declarations_screen import AeatSyncFiledDeclarationsScreen
 from ..models import (
     AeatSyncDestinationIdV1,
     AeatSyncNotificationDocumentHandoffV1,
     AeatSyncOperationHandoffV1,
     AeatSyncOperationRequestV1,
 )
+from ..notifications_screen import AeatSyncNotificationsScreen
+from ..overview_screen import AeatSyncOverviewScreen
+from ..reconciliation_screen import AeatSyncReconciliationScreen
 from ..routes import AEAT_SYNC_ROUTES, resolve_aeat_sync_screen
-from ..screens import (
-    AeatSyncCensusScreen,
-    AeatSyncEvidenceComparisonScreen,
-    AeatSyncFiledDeclarationsScreen,
-    AeatSyncNotificationsScreen,
-    AeatSyncOverviewScreen,
-    AeatSyncReconciliationScreen,
-    AeatSyncWorkspaceScreen,
-)
+from ..screens import AeatSyncWorkspaceScreen
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -116,7 +116,7 @@ def test_m130_projects_each_claim_to_the_sole_expense_casilla(year: int) -> None
 
 
 @pytest.mark.parametrize("year", _supported_years())
-def test_m130_excludes_a_claim_covered_beyond_the_period_cutoff(year: int) -> None:
+def test_m130_excludes_a_claim_covered_beyond_the_period_timeout(year: int) -> None:
     """The year-to-date cutoff is the period end, so a later claim is not declared yet."""
     period = Period.from_year_and_code(year, "1T")
 

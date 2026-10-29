@@ -38,8 +38,9 @@ from ...core.config_support import LLMProvider
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.time.clock import now
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ..ledger_action_composition import compose_ledger_action_ports

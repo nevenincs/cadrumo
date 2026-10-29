@@ -218,7 +218,7 @@ def test_readiness_capture_carries_the_typed_profile_refusal_verdict() -> None:
     """
     from ....core.period import Period
     from ...operator_actions.preconditions import profile_setup_incomplete_verdict
-    from ...state_projection import ProjectionModeloReadiness
+    from ...state_projection_models import ProjectionModeloReadiness
     from ..workspace_producers import (
         MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
         ModeloWorkspaceReadinessProjectionV1,

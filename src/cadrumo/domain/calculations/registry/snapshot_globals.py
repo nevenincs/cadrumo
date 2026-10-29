@@ -20,7 +20,7 @@ from .schema_base import RegistryModel
 from .schema_references import TemporalSupportEnvelope
 
 if TYPE_CHECKING:
-    from .schema import RegistryCatalogues
+    from .schema_catalogues import RegistryCatalogues
 
 
 class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):

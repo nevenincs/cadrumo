@@ -10,7 +10,8 @@ import pytest
 from ..errors import CasillaConstraintViolationError, RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_text_inputs import validated_text_input_casilla_ids
-from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema import ModeloDefinition, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_surfaces import CasillaConstraints
 from ._formula_runtime_support import (
     _M130_AGRARIAN_VOLUME_CASILLA,

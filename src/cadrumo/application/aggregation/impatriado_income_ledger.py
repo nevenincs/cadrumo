@@ -26,8 +26,9 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
+from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._grouping import fold_casilla_observations

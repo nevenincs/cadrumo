@@ -9,15 +9,12 @@ from typing import Final, cast, override
 from pydantic import ValidationError
 from textual.widgets import Button, DataTable, Input, Select, Static
 
-from ....application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....domain.iva.schema import InvoiceKind
 from ..account import AccountSessionExpiredError
 from ..operations.outcome import OperationOutcomeUnknownError
-from ..setup.offer import SetupItemOffer, setup_item_for_action
-from .controller import LedgerWorkspaceScreen
-from .evidence_draft import draft_lines, label_reading_setup_item
+from .evidence_draft import draft_lines
 from .models import (
     LedgerEvidenceConfirmationV1,
     LedgerEvidenceDraftV1,
@@ -26,6 +23,7 @@ from .models import (
     LedgerReaderReadinessV1,
 )
 from .workspace_presentation import door_refusal_text
+from .workspace_screen import LedgerWorkspaceScreen
 
 _RECORD_STATUS_LOCALE_KEYS: Final[dict[LedgerEvidenceRecordStatus, str]] = {
     LedgerEvidenceRecordStatus.AWAITING: "tui.ledger.evidence.record_status.awaiting",
@@ -33,14 +31,6 @@ _RECORD_STATUS_LOCALE_KEYS: Final[dict[LedgerEvidenceRecordStatus, str]] = {
     LedgerEvidenceRecordStatus.DECLINED: "tui.ledger.evidence.record_status.declined",
     LedgerEvidenceRecordStatus.UNMEASURED: "tui.ledger.evidence.record_status.unmeasured",
 }
-
-
-def _refusal_setup_item(error: CadrumoError | ValidationError) -> str | None:
-    """The setup item a refused read names: its verdict's action is that item's setup."""
-    verdict = nested_terminal_precondition_verdict(error) if isinstance(error, CadrumoError) else None
-    if verdict is None or verdict.action is None:
-        return None
-    return setup_item_for_action(verdict.action.action_id)
 
 
 class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
@@ -195,7 +185,6 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         self._reviewed_evidence_id = None
         self.draft = None
         self.query_one("#ledger-evidence-draft", Static).update("")
-        self.query_one(SetupItemOffer).clear()
         self.query_one("#ledger-evidence-confirm", Button).disabled = True
 
     def _handle_expired_session(self, error: AccountSessionExpiredError) -> None:
@@ -218,24 +207,23 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
         except (CadrumoError, ValidationError) as error:
             status.update(tr("tui.ledger.evidence.read_failed"))
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
-            if self.selected_record_id == evidence_id:
-                # A read refused for a missing component offers its setup while its row can act.
-                await self.query_one(SetupItemOffer).show_for(_refusal_setup_item(error))
         else:
             status.update(tr("tui.ledger.evidence.read_done"))
             if self.selected_record_id == evidence_id and draft.evidence_id == evidence_id:
-                self.draft = draft
-                self._reviewed_evidence_id = evidence_id
-                self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
-                self.query_one("#ledger-evidence-confirm", Button).disabled = False
-                if draft.suggested_kind is not None:
-                    self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
-                counterparty = self.query_one("#ledger-evidence-counterparty", Input)
-                if not counterparty.value and (draft.supplier_name is not None and draft.supplier_name):
-                    counterparty.value = draft.supplier_name
-                await self.query_one(SetupItemOffer).show_for(label_reading_setup_item(draft.label_reading_fallback))
+                self._show_extracted_draft(evidence_id, draft)
         finally:
             self.reading = False
+
+    def _show_extracted_draft(self, evidence_id: str, draft: LedgerEvidenceDraftV1) -> None:
+        self.draft = draft
+        self._reviewed_evidence_id = evidence_id
+        self.query_one("#ledger-evidence-draft", Static).update("\n".join(draft_lines(draft)))
+        self.query_one("#ledger-evidence-confirm", Button).disabled = False
+        if draft.suggested_kind is not None:
+            self.query_one("#ledger-evidence-kind", Select).value = draft.suggested_kind.value
+        counterparty = self.query_one("#ledger-evidence-counterparty", Input)
+        if not counterparty.value and (draft.supplier_name is not None and draft.supplier_name):
+            counterparty.value = draft.supplier_name
 
     async def _confirm(self, confirmation: LedgerEvidenceConfirmationV1) -> None:
         # Cleared on every exit, a review withdrawn before this ran included: a body

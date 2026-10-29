@@ -52,7 +52,7 @@ from ...core.config import override_settings
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..adapter_composition import build_inventory_service_ports
+from ..adapter_composition_ports import build_inventory_service_ports
 from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance

@@ -46,7 +46,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -164,7 +164,7 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
     pause = run.inference_pause
     assert pause is not None, "the settled result lost the service's verdict"
     for verdict in (refused, pause.precondition_verdict):
-        assert verdict.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+        assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
         assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
         assert verdict.action is not None
         assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

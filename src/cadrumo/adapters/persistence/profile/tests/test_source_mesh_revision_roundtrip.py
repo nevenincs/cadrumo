@@ -50,10 +50,10 @@ from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
     CalculationRevisionState,
-    CalculationSourceRef,
     derive_calculation_revision_id,
     derive_calculation_revision_id_from_revision,
 )
+from .....domain.modelos.calculation_revision_sources import CalculationSourceRef
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from .....tests.log_records import delivered_text

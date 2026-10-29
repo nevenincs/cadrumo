@@ -46,13 +46,8 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from .value_presentation import format_casilla_value
-from .work_form_models import (
-    ModeloFormAttention,
-    ModeloFormField,
-    ModeloFormOrigin,
-    ModeloFormResultDirection,
-    ModeloWorkForm,
-)
+from .work_form_findings import ModeloFormAttention
+from .work_form_models import ModeloFormField, ModeloFormOrigin, ModeloFormResultDirection, ModeloWorkForm
 from .work_form_next_step import blocking_count, check_count, confirm_count, missing_count, result_fields
 from .work_form_wording import date_text, day_text, field_value_text, origin_words
 
@@ -514,6 +509,15 @@ def _directional_presentation(
     return _Presentation(full, short, words, amount)
 
 
+def _show_sign_help(selected: _SelectedResult, value: Decimal, presentation: _Presentation) -> bool:
+    return (
+        value < 0
+        and presentation.words is not None
+        and selected.direction is not ModeloFormResultDirection.UNKNOWN
+        and bool(selected.box)
+    )
+
+
 def _stated(
     selected: _SelectedResult, form: ModeloWorkForm, language: OutputLanguage, out_of_date: str | None
 ) -> ModeloFormResultView:
@@ -525,12 +529,7 @@ def _stated(
         presentation = _choice_presentation(value, selected.box, language, help_lines)
     else:
         presentation = _directional_presentation(selected.direction, value, selected.box, language, help_lines)
-    if (
-        value < 0
-        and presentation.words is not None
-        and selected.direction is not ModeloFormResultDirection.UNKNOWN
-        and (selected.box is not None and selected.box)
-    ):
+    if _show_sign_help(selected, value, presentation):
         help_lines.append(
             tr(_SIGN_HELP_LOCALE_KEY, box=selected.box, value=_money(value, language), locale=language.value)
         )

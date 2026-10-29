@@ -54,6 +54,17 @@ def run_ledger_evidence_list(ctx: typer.Context) -> EvidenceListResult:
     )
 
 
+def _evidence_view_refusal_invalid(
+    completed: RegisteredOperationCompletion[LedgerEvidenceViewProjection], profile_id: UUID
+) -> bool:
+    return (
+        completed.projection.profile_id != profile_id
+        or completed.terminal_condition is not OperationTerminalCondition.REFUSED
+        or completed.refusal_code != LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
+        or completed.effect is not OperationEffect.NONE
+    )
+
+
 def run_ledger_evidence_view(ctx: typer.Context, *, evidence_id: str) -> EvidenceViewResult:
     """Read and correlate one exact evidence identity for the bound profile."""
     client = bound_profile_client(ctx)
@@ -71,12 +82,7 @@ def run_ledger_evidence_view(ctx: typer.Context, *, evidence_id: str) -> Evidenc
     projection = completed.projection
     outcome = projection.outcome
     if isinstance(outcome, LedgerEvidenceViewRefusal):
-        if (
-            projection.profile_id != client.profile_id
-            or completed.terminal_condition is not OperationTerminalCondition.REFUSED
-            or completed.refusal_code != LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE
-            or completed.effect is not OperationEffect.NONE
-        ):
+        if _evidence_view_refusal_invalid(completed, client.profile_id):
             raise invalid_completion_error(completed)
         raise PurchaseInvoiceEvidenceNotFoundError(
             translated_message="errors.refused.refused_ledger_evidence_not_found",

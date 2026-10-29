@@ -5,7 +5,7 @@ from __future__ import annotations
 from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from ..application.actividad_asset.activity_asset_contracts import ActivityAssetOperationPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .adapter_composition import build_pinned_profile_read_ports
+from .adapter_composition_ports import build_pinned_profile_read_ports
 
 
 def build_activity_asset_operation_ports(

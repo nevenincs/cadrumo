@@ -6,8 +6,9 @@ import pytest
 
 from .....core.resources.bundled_data import bundled_path
 from ..errors import RegistryValidationError
-from ..export_parse import decode_dictionary_text, xml_dictionary_entries
-from ..schema import ModeloDefinition, RegistryCatalogues
+from ..export_xml_dictionary import decode_dictionary_text, xml_dictionary_entries
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

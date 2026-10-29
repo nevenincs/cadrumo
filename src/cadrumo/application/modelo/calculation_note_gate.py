@@ -24,7 +24,8 @@ from __future__ import annotations
 
 from ...core.aggregation import BindingSourceKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationSourceIssue
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin

@@ -34,7 +34,12 @@ from ...domain.calculations.registry.governed_fact_scope import governed_facts_i
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from .producer_snapshot import FilingProducerSnapshot, Modelo296ProfileFacts
+from .producer_snapshot import (
+    FilingProducerSnapshot,
+)
+from .producer_snapshot_m296 import (
+    Modelo296ProfileFacts,
+)
 from .projection import FilingProjectionPlan, FilingProjectionValue, FilingRecordRenderContext
 
 __all__ = ["build_m296_filing_projection_plan"]

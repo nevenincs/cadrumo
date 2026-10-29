@@ -16,8 +16,8 @@ from ...tests.settling import settle
 from ..categorisation_common import CategorisationScreen
 from ..categorisation_tools import ENTRY_LIST_TOOL_KEYS, categorisation_tools
 from ..classification import LedgerClassificationScreen
-from ..controller import LedgerWorkspaceScreen
 from ..entries import LedgerEntriesScreen
+from ..workspace_screen import LedgerWorkspaceScreen
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .categorisation_pilot import keys, text
 from .workspace_fixtures import WorkspaceHostApp

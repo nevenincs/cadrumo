@@ -56,13 +56,19 @@ def resume_flow(
         if not progressed:
             break
 
+    state = _retain_orphaned_answers(state, remaining)
+
+    cursor = first_unanswered_key(definition, state)
+    return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if (cursor is not None and cursor) else ()})
+
+
+def _retain_orphaned_answers(state: FlowState, remaining: Mapping[str, str]) -> FlowState:
     # Answers whose page the current definition never exposed: stale.
     orphaned = frozenset(key for key, value in remaining.items() if value)
     if orphaned:
         state = state.model_copy(update={"stale": frozenset(state.stale | orphaned)})
 
-    cursor = first_unanswered_key(definition, state)
-    return state.model_copy(update={"cursor": cursor, "visited": (cursor,) if (cursor is not None and cursor) else ()})
+    return state
 
 
 def _commit_persisted_answer(

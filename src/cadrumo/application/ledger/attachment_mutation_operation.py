@@ -60,12 +60,9 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
-from .actions_manual import (
-    attach_manual_transaction_evidence,
-    detach_manual_transaction_attachments,
-    ledger_transaction_result_payload,
-)
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
+from .manual_update import attach_manual_transaction_evidence, detach_manual_transaction_attachments
 from .models import LedgerRemovalBlocker, ManualLedgerTransactionResult
 from .read_access import resolve_ledger_commit_access
 from .transaction_projection import LedgerTransactionProjection

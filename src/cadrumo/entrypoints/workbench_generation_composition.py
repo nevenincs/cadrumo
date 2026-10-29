@@ -247,8 +247,8 @@ def resolve_modelo_workspace_static_inspection(
     """Read one exact work unit at static inspection admission."""
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..application.modelo.work_addressing import ModeloExactWorkUnitTarget
-    from ..application.modelo.workspace import resolve_static_inspection_result
     from ..application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
+    from ..application.modelo.workspace_schema import resolve_static_inspection_result
 
     return resolve_static_inspection_result(
         ModeloWorkspaceExactWorkUnitTargetV1(
@@ -272,13 +272,10 @@ def resolve_modelo_workspace_graded_snapshot(
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.work_addressing import ModeloExactWorkUnitTarget
-    from ..application.modelo.workspace import resolve_graded_snapshot_result
+    from ..application.modelo.workspace_graded import resolve_graded_snapshot_result
     from ..application.modelo.workspace_models import ModeloWorkspaceExactWorkUnitTargetV1
-    from .adapter_composition import (
-        build_calculation_action_ports,
-        build_diagnostics_ports,
-        build_state_projection_read_ports,
-    )
+    from .adapter_composition_ports import build_diagnostics_ports
+    from .adapter_composition_work_ports import build_calculation_action_ports, build_state_projection_read_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     objects = secure_object_repository_for_bucket(unit.bucket_id)

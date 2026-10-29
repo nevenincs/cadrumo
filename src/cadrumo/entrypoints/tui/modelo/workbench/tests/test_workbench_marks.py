@@ -13,9 +13,9 @@ from typing import Final, override
 import pytest
 from textual.app import App, ComposeResult
 
+from ......application.modelo.work_form_findings import ModeloFormAttention
 from ......application.modelo.work_form_models import (
     ORIGIN_STANDINGS,
-    ModeloFormAttention,
     ModeloFormBlocker,
     ModeloFormCounts,
     ModeloFormField,

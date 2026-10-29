@@ -21,6 +21,7 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.modelos.work_unit import WorkUnit
 from ..ledger.read_access import resolve_ledger_commit_access
 from ..live.filed_observation_ports import FiledObservationProtocol
 from ..live.justificante import (
@@ -152,6 +153,28 @@ def _project_reconciliation_pull(result: BaseModel, receipt: OperationTerminalRe
     return projection
 
 
+def _require_pull_projection(
+    payload: ModeloReconciliationPullRequest,
+    projection: ModeloReconciliationImportProjection,
+    profile_id: str,
+    work_unit_id: WorkUnitId,
+) -> None:
+    expected_source_ref = reconciliation_pull_source_ref(
+        payload.source_kind, payload.snapshot_id, payload.observation_id
+    )
+    if (
+        projection.bucket_id != profile_id
+        or projection.work_unit_id != work_unit_id
+        or (
+            payload.calculation_revision_id is not None
+            and projection.calculation_revision_id != payload.calculation_revision_id
+        )
+        or projection.source_kind is not payload.source_kind
+        or projection.source_path != expected_source_ref
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 class ModeloReconciliationPullExecutor:
     """Prepare against a captured PDF, then guard the atomic record/event write."""
 
@@ -166,6 +189,89 @@ class ModeloReconciliationPullExecutor:
         self._service_factory = service_factory
         self._observation_loader = observation_loader
         self._execution_caller_reader = execution_caller_reader
+
+    def _prepare(
+        self, payload: ModeloReconciliationPullRequest, context: OperationExecutorContext, profile_id: str, actor: str
+    ) -> tuple[WorkUnitId, PreparedModeloReconciliation]:
+        if require_active_bucket_id() != profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        unit = resolve_modelo_work_unit_for_operator_target(
+            work_unit_id=payload.work_unit_id,
+            modelo=payload.modelo,
+            year=payload.year,
+            period=payload.period.to_period() if payload.period is not None else None,
+            registry_revision_id=payload.revision,
+            bucket_id=profile_id,
+            catalogue=work_unit_catalogue_repository(bucket_id=profile_id).load(),
+            resolved_bucket_id=profile_id,
+            operation=context.authority_operation,
+        )
+        if unit.bucket_id != profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if payload.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
+            return self._prepare_declaration(payload, context, profile_id, actor, unit)
+        return self._prepare_receipt(payload, context, profile_id, actor, unit)
+
+    def _prepare_declaration(
+        self,
+        payload: ModeloReconciliationPullRequest,
+        context: OperationExecutorContext,
+        profile_id: str,
+        actor: str,
+        unit: WorkUnit,
+    ) -> tuple[WorkUnitId, PreparedModeloReconciliation]:
+        if self._observation_loader is None or payload.observation_id is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        observation = self._observation_loader(profile_id, payload.observation_id)
+        if (
+            observation.modelo != str(unit.modelo)
+            or observation.ejercicio != unit.filing_year
+            or observation.period != unit.period
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        with validating_governed_facts(context.authority_operation):
+            return unit.work_unit_id, prepare_filed_observation_reconciliation(
+                work_unit=unit,
+                observation=observation,
+                source_ref=reconciliation_pull_source_ref(payload.source_kind, None, payload.observation_id),
+                actor=actor,
+                calculation_revision_id=payload.calculation_revision_id,
+                operation=context.authority_operation,
+            )
+
+    def _prepare_receipt(
+        self,
+        payload: ModeloReconciliationPullRequest,
+        context: OperationExecutorContext,
+        profile_id: str,
+        actor: str,
+        unit: WorkUnit,
+    ) -> tuple[WorkUnitId, PreparedModeloReconciliation]:
+        if payload.snapshot_id is None:
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        snapshot = self._service_factory(profile_id).show(payload.snapshot_id)
+        if unit.bucket_id != profile_id or snapshot.bucket_id != profile_id:
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        if (
+            snapshot.modelo != str(unit.modelo)
+            or snapshot.filing_year != unit.filing_year
+            or snapshot.period != unit.period
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+        source_ref = reconciliation_pull_source_ref(
+            ModeloReconciliationEvidenceKind.JUSTIFICANTE, snapshot.snapshot_id, None
+        )
+        command = ModeloReconciliationBytesCommand(
+            work_unit_id=unit.work_unit_id,
+            source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
+            source_bytes=snapshot.decoded_pdf_bytes(),
+            source_ref=source_ref,
+            actor=actor,
+            calculation_revision_id=payload.calculation_revision_id,
+        )
+        with validating_governed_facts(context.authority_operation):
+            prepared = prepare_modelo_reconcile_bytes(command, operation=context.authority_operation)
+        return unit.work_unit_id, prepared
 
     async def execute(
         self,
@@ -182,88 +288,15 @@ class ModeloReconciliationPullExecutor:
         await context.events.phase(_PHASES[0])
         actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
 
-        def prepare() -> tuple[WorkUnitId, PreparedModeloReconciliation]:
-            if require_active_bucket_id() != profile_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            unit = resolve_modelo_work_unit_for_operator_target(
-                work_unit_id=payload.work_unit_id,
-                modelo=payload.modelo,
-                year=payload.year,
-                period=payload.period.to_period() if payload.period is not None else None,
-                registry_revision_id=payload.revision,
-                bucket_id=profile_id,
-                catalogue=work_unit_catalogue_repository(bucket_id=profile_id).load(),
-                resolved_bucket_id=profile_id,
-                operation=context.authority_operation,
-            )
-            if unit.bucket_id != profile_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            if payload.source_kind is ModeloReconciliationEvidenceKind.DECLARATION:
-                if self._observation_loader is None or payload.observation_id is None:
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                observation = self._observation_loader(profile_id, payload.observation_id)
-                if (
-                    observation.modelo != str(unit.modelo)
-                    or observation.ejercicio != unit.filing_year
-                    or observation.period != unit.period
-                ):
-                    raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-                with validating_governed_facts(context.authority_operation):
-                    return unit.work_unit_id, prepare_filed_observation_reconciliation(
-                        work_unit=unit,
-                        observation=observation,
-                        source_ref=reconciliation_pull_source_ref(payload.source_kind, None, payload.observation_id),
-                        actor=actor,
-                        calculation_revision_id=payload.calculation_revision_id,
-                        operation=context.authority_operation,
-                    )
-            if payload.snapshot_id is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            snapshot = self._service_factory(profile_id).show(payload.snapshot_id)
-            if unit.bucket_id != profile_id or snapshot.bucket_id != profile_id:
-                raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-            if (
-                snapshot.modelo != str(unit.modelo)
-                or snapshot.filing_year != unit.filing_year
-                or snapshot.period != unit.period
-            ):
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-            source_ref = reconciliation_pull_source_ref(
-                ModeloReconciliationEvidenceKind.JUSTIFICANTE, snapshot.snapshot_id, None
-            )
-            command = ModeloReconciliationBytesCommand(
-                work_unit_id=unit.work_unit_id,
-                source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
-                source_bytes=snapshot.decoded_pdf_bytes(),
-                source_ref=source_ref,
-                actor=actor,
-                calculation_revision_id=payload.calculation_revision_id,
-            )
-            with validating_governed_facts(context.authority_operation):
-                prepared = prepare_modelo_reconcile_bytes(command, operation=context.authority_operation)
-            return unit.work_unit_id, prepared
-
         try:
             work_unit_id, prepared = await await_cancellation_complete(
-                asyncio.to_thread(prepare), task_name="modelo-reconciliation-pull-prepare"
+                asyncio.to_thread(self._prepare, payload, context, profile_id, actor),
+                task_name="modelo-reconciliation-pull-prepare",
             )
         except CalculationRevisionNotFoundError as exc:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
         projection = ModeloReconciliationImportProjection.from_report(prepared.report)
-        expected_source_ref = reconciliation_pull_source_ref(
-            payload.source_kind, payload.snapshot_id, payload.observation_id
-        )
-        if (
-            projection.bucket_id != profile_id
-            or projection.work_unit_id != work_unit_id
-            or (
-                payload.calculation_revision_id is not None
-                and projection.calculation_revision_id != payload.calculation_revision_id
-            )
-            or projection.source_kind is not payload.source_kind
-            or projection.source_path != expected_source_ref
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        _require_pull_projection(payload, projection, profile_id, work_unit_id)
         if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _MAX_RESULT_DOCUMENT_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 

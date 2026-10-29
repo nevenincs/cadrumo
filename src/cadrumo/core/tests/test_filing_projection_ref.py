@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import sys
 from typing import get_args
 
 import pytest
@@ -294,10 +295,15 @@ def test_slotless_marker_rejects_legacy_slot_and_models_are_frozen() -> None:
 
 def test_defining_module_is_the_single_projection_union_owner() -> None:
     assert owner.FilingProjectionRef is FilingProjectionRef
-    declarations = {
-        node.name for node in ast.walk(ast.parse(inspect.getsource(owner))) if isinstance(node, ast.ClassDef)
-    }
-    assert {model_type.__name__ for model_type in _REF_MODELS} <= declarations
+    for model_type in _REF_MODELS:
+        defining_module = sys.modules[model_type.__module__]
+        declarations = {
+            node.name
+            for node in ast.walk(ast.parse(inspect.getsource(defining_module)))
+            if isinstance(node, ast.ClassDef)
+        }
+        assert model_type.__name__ in declarations
+        assert getattr(defining_module, model_type.__name__) is model_type
     assert owner.M303ProrrataActivityProjectionRef is not None
     assert owner.filing_projection_ref_casilla_id.__module__ == owner.__name__
 

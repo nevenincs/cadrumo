@@ -31,7 +31,8 @@ from ......adapters.persistence.profile.tests.modelo_export_support import (
     seed_profile,
     seed_revision,
 )
-from ......application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ......application.modelo.export import export_modelo_revision
+from ......application.modelo.export_contracts import ModeloExportCommand
 from ......application.modelo.work_form_models import ModeloFormExport, ModeloWorkForm
 from ......application.modelo.work_form_wording import day_text
 from ......core.casilla_id import validated_casilla_id

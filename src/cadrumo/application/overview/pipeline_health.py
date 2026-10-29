@@ -6,7 +6,7 @@ operator-observable question "is my pipeline healthy for this period?" by
 composing three already-existing read models for the requested
 ``(filing_year, period)`` scope into one typed report:
 
-* ledger health — :func:`~application.ledger.actions_manual.summarize_manual_transactions`
+* ledger health — :func:`~application.ledger.manual_read.summarize_manual_transactions`
   (active/pending-review/reviewed/skipped counts, readiness-issue count).
 * modelo readiness — one :class:`ModeloHealthRow` per
   :class:`~WorkUnit`
@@ -32,7 +32,7 @@ See Also:
         Sibling read-only overview builders (``status``, ``prepare``,
         ``calendar``, ``agenda``, ``backlog``, ``explain``) this module
         follows the same shape as.
-    :func:`~application.ledger.actions_manual.summarize_manual_transactions`
+    :func:`~application.ledger.manual_read.summarize_manual_transactions`
         Owns the ledger status counters this report's ledger section reuses
         rather than re-deriving.
     :class:`~WorkUnit`

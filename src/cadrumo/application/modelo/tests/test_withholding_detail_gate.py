@@ -35,9 +35,9 @@ from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ....domain.transactions.enums import (

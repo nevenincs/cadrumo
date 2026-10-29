@@ -153,11 +153,11 @@ from ...application.operations.registry import OperationPublicDefinitionRegistra
 from ...application.operations.subject_reference import OperationSubjectReferenceV1
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.operator_actions.models import PreconditionVerdict
-from ...application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
-from ...application.provisioning_contracts import (
+from ...application.browser_location import BROWSER_PROVISION_ACTION_ID
+from ...application.probe_outcomes import (
     LOCAL_AI_PROVISION_ACTION_ID,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
+    ProbePreconditionCondition,
+    probe_no_recovery_verdict,
 )
 from ...core.config import Settings, load_settings, override_settings
 from ...core.config_support import LLMProvider
@@ -175,12 +175,13 @@ from ...domain.transactions.llm import PromptSpec
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...tests.llm_vision_evidence_support import png_image
-from ..adapter_composition import build_ledger_evidence_ports, profile_adapter_composition
+from ..adapter_composition import profile_adapter_composition
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ..ledger_llm_composition import compose_ledger_llm
 from ..live_state_composition import preflight_filed_history_provider
-from ..operation_composition import _verify_live_preflight
+from ..operation_composition_inputs import verify_live_preflight
 from .dependency_operation_gating_support import (
     OperationSettler,
     RecordingRunsAuthority,
@@ -872,7 +873,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         units=frozenset({f"{_LLM}.supply_nature_proposal.SupplyNatureProposer"}),
         drivers={ModelRole.SUPPLY_NATURE_PROPOSAL: _drive_evidence_supply_nature},
     ),
-    "cadrumo.entrypoints.adapter_composition._resolve_column_roles": _LocalAiConsumer(
+    "cadrumo.entrypoints.adapter_composition_work_ports.resolve_column_roles": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.column_role_mapping.resolve_column_roles"}),
         drivers={ModelRole.COLUMN_ROLE_MAPPING: _drive_ledger_import_column_roles},
         operations=frozenset({"ledger.import"}),
@@ -882,7 +883,7 @@ _LOCAL_AI_CONSUMERS: Mapping[str, _LocalAiConsumer] = {
         drivers={ModelRole.COLUMN_ROLE_MAPPING: _drive_invoice_book_column_roles},
         operations=frozenset({"ledger.invoice.import"}),
     ),
-    "cadrumo.entrypoints.adapter_composition._statement_reader": _LocalAiConsumer(
+    "cadrumo.entrypoints.adapter_composition_work_ports.statement_reader": _LocalAiConsumer(
         units=frozenset({f"{_LLM}.statement_reading.StatementReader"}),
         drivers={ModelRole.TEXT_EXTRACTION: _drive_statement_text_read},
         operations=frozenset({"ledger.import"}),
@@ -1058,7 +1059,7 @@ def _drive_live_preflight(settings: Settings) -> object:
 
 def _drive_identity_check_preflight(settings: Settings) -> object:
     with bundled_indexed_authority().operation() as operation:
-        return _verify_live_preflight(settings, uuid4(), operation)
+        return verify_live_preflight(settings, uuid4(), operation)
 
 
 def _drive_sign_in_readiness(settings: Settings) -> object:
@@ -1068,7 +1069,7 @@ def _drive_sign_in_readiness(settings: Settings) -> object:
 #: Every preflight handed to a browser operation, with the driver that calls it as its executor does.
 _BROWSER_PREFLIGHTS: Mapping[str, Callable[[Settings], object]] = {
     "cadrumo.entrypoints.live_state_composition.preflight_filed_history_provider": _drive_live_preflight,
-    "cadrumo.entrypoints.operation_composition._verify_live_preflight": _drive_identity_check_preflight,
+    "cadrumo.entrypoints.operation_composition_inputs.verify_live_preflight": _drive_identity_check_preflight,
     _BROWSER_READY: _drive_sign_in_readiness,
 }
 
@@ -1317,8 +1318,8 @@ def test_a_consumer_that_skips_the_check_or_names_no_action_is_reported(tmp_path
         def names_no_action() -> object:
             raise InvoiceDraftReaderUnavailableError(
                 RuntimeError("reader"),
-                precondition_verdict=provisioning_no_recovery_verdict(
-                    ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+                precondition_verdict=probe_no_recovery_verdict(
+                    ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
                     facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
                 ),
             )

@@ -26,7 +26,10 @@ from ...application.export.google_review_operation_contracts import (
     GoogleReviewResult,
 )
 from ...application.export.publication_receipt import ReadablePayloadCategory
-from ...application.operations.frontend_projection import OperationReviewAvailableInteractionV1
+from ...application.operations.frontend_projection import (
+    OperationPublicProjectionV1,
+    OperationReviewAvailableInteractionV1,
+)
 from ...application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationResponseControlSuccessV1,
@@ -54,24 +57,47 @@ from .operations.interactions import OperationModalReviewInteractionV1
 from .operations.modal import OperationModal, OperationModalSettledOutcomeV1
 
 
+def _saved_review_matches_request(
+    request: GoogleReviewRequest, review: GoogleReviewProjection, operation_id: str
+) -> bool:
+    return (
+        review.identity.operation_id == operation_id
+        and review.identity.definition_id == GOOGLE_REVIEW_OPERATION_DEFINITION_ID
+        and review.identity.subject_ref == profile_operation_subject(str(request.profile_id))
+        and review.profile_id == request.profile_id
+        and review.publication_id == request.publication_id
+        and review.calculation_revision_id == request.calculation_revision_id
+        and review.filing_record_id == request.filing_record_id
+    )
+
+
 def validate_saved_google_review(
     request: GoogleReviewRequest, review: GoogleReviewProjection, *, operation_id: str
 ) -> None:
     """Bind the readable disclosure to this selected revision, filing and invocation."""
     if (
-        review.identity.operation_id != operation_id
-        or review.identity.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
-        or review.identity.subject_ref != profile_operation_subject(str(request.profile_id))
-        or review.profile_id != request.profile_id
-        or review.publication_id != request.publication_id
-        or review.calculation_revision_id != request.calculation_revision_id
-        or review.filing_record_id != request.filing_record_id
+        not _saved_review_matches_request(request, review, operation_id)
         or not review.root_folder_id.strip()
         or not review.readable_by_authorized_users
         or ReadablePayloadCategory.CALCULATION not in review.payload_categories
         or not set(review.payload_categories) <= {ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER}
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)
+
+
+def _rejectable_review(
+    projection: OperationPublicProjectionV1, rejection_sent: bool
+) -> OperationReviewAvailableInteractionV1 | None:
+    pending = projection.pending_interaction
+    if not rejection_sent and isinstance(pending, OperationReviewAvailableInteractionV1):
+        return pending
+    return None
+
+
+def _rejection_terminal_result(projection: OperationPublicProjectionV1, rejection_sent: bool) -> bool:
+    if rejection_sent and projection.terminal_condition is not OperationTerminalCondition.REFUSED:
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return rejection_sent
 
 
 class GoogleSavedReviewModal(OperationModal):
@@ -269,48 +295,12 @@ class GoogleSavedReviewScreen(Screen[None]):
                 if not isinstance(observed, OperationObservationSuccessV1):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 projection = observed.projection
-                if (
-                    projection.operation_id != controller.operation_id
-                    or projection.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
-                    or projection.subject_ref != profile_operation_subject(str(self._profile_id))
-                    or projection.effect is not OperationEffect.NONE
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                self._validate_rejection_projection(controller, projection)
                 if projection.lifecycle is OperationLifecycle.TERMINAL:
-                    if rejection_sent and projection.terminal_condition is not OperationTerminalCondition.REFUSED:
-                        raise RefusalError(RefusalCode.INVALID_FRAME)
-                    return rejection_sent
-                pending = projection.pending_interaction
-                if not rejection_sent and isinstance(pending, OperationReviewAvailableInteractionV1):
-                    if pending.response_schema != GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity:
-                        raise RefusalError(RefusalCode.INVALID_FRAME)
-                    control = await controller.response_control(
-                        interaction_id=pending.interaction_id, revision=pending.revision
-                    )
-                    allowed = await control.inspect()
-                    if (
-                        not isinstance(allowed, OperationResponseControlSuccessV1)
-                        or "reject" not in allowed.permitted_intents
-                        or (allowed.operation_id, allowed.interaction_id, allowed.revision)
-                        != (controller.operation_id, pending.interaction_id, pending.revision)
-                    ):
-                        raise RefusalError(RefusalCode.INVALID_FRAME)
-                    self._require_session()
-                    rejected = await control.reject(
-                        OperationResponseRejectRequestV1(
-                            operation_id=controller.operation_id,
-                            interaction_id=pending.interaction_id,
-                            revision=pending.revision,
-                            actor_ref=controller.actor_ref,
-                            responded_at=now(),
-                        )
-                    )
-                    if not isinstance(rejected, OperationResponseMutationSuccessV1) or (
-                        rejected.operation_id,
-                        rejected.interaction_id,
-                        rejected.response_action,
-                    ) != (controller.operation_id, pending.interaction_id, "reject"):
-                        raise RefusalError(RefusalCode.INVALID_FRAME)
+                    return _rejection_terminal_result(projection, rejection_sent)
+                pending = _rejectable_review(projection, rejection_sent)
+                if pending is not None:
+                    await self._reject_review(controller, pending)
                     rejection_sent = True
                     continue
                 if monotonic() >= deadline:
@@ -320,6 +310,48 @@ class GoogleSavedReviewScreen(Screen[None]):
                     changes.arm()
                     continue
                 await changes.wait(deadline - monotonic())
+
+    def _validate_rejection_projection(
+        self, controller: OperationController, projection: OperationPublicProjectionV1
+    ) -> None:
+        if (
+            projection.operation_id != controller.operation_id
+            or projection.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
+            or projection.subject_ref != profile_operation_subject(str(self._profile_id))
+            or projection.effect is not OperationEffect.NONE
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+
+    async def _reject_review(
+        self, controller: OperationController, pending: OperationReviewAvailableInteractionV1
+    ) -> None:
+        if pending.response_schema != GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING.identity:
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        control = await controller.response_control(interaction_id=pending.interaction_id, revision=pending.revision)
+        allowed = await control.inspect()
+        if (
+            not isinstance(allowed, OperationResponseControlSuccessV1)
+            or "reject" not in allowed.permitted_intents
+            or (allowed.operation_id, allowed.interaction_id, allowed.revision)
+            != (controller.operation_id, pending.interaction_id, pending.revision)
+        ):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
+        self._require_session()
+        rejected = await control.reject(
+            OperationResponseRejectRequestV1(
+                operation_id=controller.operation_id,
+                interaction_id=pending.interaction_id,
+                revision=pending.revision,
+                actor_ref=controller.actor_ref,
+                responded_at=now(),
+            )
+        )
+        if not isinstance(rejected, OperationResponseMutationSuccessV1) or (
+            rejected.operation_id,
+            rejected.interaction_id,
+            rejected.response_action,
+        ) != (controller.operation_id, pending.interaction_id, "reject"):
+            raise RefusalError(RefusalCode.INVALID_FRAME)
 
     async def _read_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection

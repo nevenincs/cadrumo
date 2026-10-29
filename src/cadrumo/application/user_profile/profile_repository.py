@@ -15,13 +15,12 @@ from ...core.paths import effective_storage_root
 from ...core.time.utc import parse_iso_datetime
 from ...domain.user_profile.errors import ProfileNotFoundError
 from .aggregate import CommittedProfileView
-from .custody_ports import (
+from .custody_crypto_contracts import ProfileCustodyConcurrentChangeError, ProfileCustodyRecordIntegrityError
+from .custody_ports import profile_custody_port
+from .custody_record_ports import (
     ProfileCustodyCapsuleLabelPort,
-    ProfileCustodyConcurrentChangeError,
     ProfileCustodyLabelHeadPort,
     ProfileCustodyPasswordMaterialPort,
-    ProfileCustodyRecordIntegrityError,
-    profile_custody_port,
 )
 from .custody_repository import ProfileCustodyTransactionRepository, profile_custody_transaction_lock
 from .custody_transactions import (

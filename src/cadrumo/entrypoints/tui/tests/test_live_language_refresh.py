@@ -29,7 +29,7 @@ from ....core.credentials import assess_profile_password
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import output_language, tr
 from ..account import AccountFactoriesV1, ProfileLanguageInvalidated
-from ..app import CadrumoTuiApp, RootPresentationV1
+from ..app import CadrumoTuiApp
 from ..components.dialogs import ConfirmScreen
 from ..components.host import ScreenHostApp
 from ..components.language import localized, refresh_localized_widgets
@@ -46,6 +46,7 @@ from ..operations.catalogue import OperationCatalogueSourceV1
 from ..operations.destination import OperationsCatalogueScreen
 from ..profile.edit_screens import FieldEditScreen
 from ..reference.destination import ReferenceScreen
+from ..root_binding import RootPresentationV1
 from ..secret.passphrase import PassphraseScreen
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until

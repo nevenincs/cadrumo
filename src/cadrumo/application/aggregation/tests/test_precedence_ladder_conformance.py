@@ -23,11 +23,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ...modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
-from ..source_mesh import (
-    CALLER_OVERRIDE_PRECEDENCE_LADDER,
-    CallerOverrideDisposition,
-    precedence_ladder_sources,
-)
+from ..source_precedence import CALLER_OVERRIDE_PRECEDENCE_LADDER, CallerOverrideDisposition, precedence_ladder_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

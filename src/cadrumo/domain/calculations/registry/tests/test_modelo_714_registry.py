@@ -13,7 +13,8 @@ from ..binding_temporal import TargetPeriods
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
-from ..schema import ModeloDefinition, RegistryCatalogues
+from ..schema import ModeloDefinition
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_input_kind import InputKind
 from ..schema_surfaces import CasillaDefinition
 from .authored_editions import authored_revisions

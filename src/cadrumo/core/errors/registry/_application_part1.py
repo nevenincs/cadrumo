@@ -758,7 +758,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.profile_binding.ProfileBindingResolutionError",
+        "cadrumo.application.modelo.profile_derived_facts.ProfileBindingResolutionError",
         ErrorCode(
             code="REFUSED_PROFILE_BINDING_RESOLUTION",
             category=ErrorCategory.REFUSED,
@@ -868,7 +868,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.reconciliation.ReconciliationDeclaracionSourceUnsupportedError",
+        "cadrumo.application.modelo.reconciliation_comparison.ReconciliationDeclaracionSourceUnsupportedError",
         ErrorCode(
             code="REFUSED_RECONCILIATION_DECLARATION_SOURCE_UNSUPPORTED",
             category=ErrorCategory.REFUSED,

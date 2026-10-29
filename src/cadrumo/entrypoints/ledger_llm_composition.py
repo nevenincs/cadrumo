@@ -21,8 +21,8 @@ from ..adapters.persistence.storage.attachment import AttachmentStore
 from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ..application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ..application.ledger.evidence_errors import (
+    EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
     PurchaseInvoiceEvidenceReaderError,
-    evidence_reader_refusal_key,
 )
 from ..application.ledger.evidence_input import (
     resolve_attachment_evidence_input,
@@ -47,7 +47,7 @@ from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ..domain.transactions.errors import LLMClassifierError, TransactionValidationError
 from ..domain.transactions.llm import LLMClassificationResponse, LLMClassifier, PromptSpec
 from ..domain.transactions.models import Transaction
-from .adapter_composition import build_ledger_evidence_ports
+from .adapter_composition_work_ports import build_ledger_evidence_ports
 from .ledger_evidence_extraction_composition import evidence_text_layer_ports
 
 
@@ -55,7 +55,7 @@ def _reader_unavailable(verdict: PreconditionVerdict) -> PurchaseInvoiceEvidence
     """Return the ledger reader refusal carrying the reader probe's own verdict."""
     return PurchaseInvoiceEvidenceReaderError(
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
-        translated_message=evidence_reader_refusal_key(verdict),
+        translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
         precondition_verdict=verdict,
     )
 

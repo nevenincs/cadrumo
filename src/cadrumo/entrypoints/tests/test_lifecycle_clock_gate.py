@@ -41,7 +41,7 @@ from cadrumo.domain.modelos.verification_report import VerificationReport, Verif
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,

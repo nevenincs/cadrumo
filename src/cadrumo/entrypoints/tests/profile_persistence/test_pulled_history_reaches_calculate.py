@@ -67,7 +67,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import ObservationSourceKind
 from ....application.live.filed_observation_persistence import persist_filed_calculation_observation
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit

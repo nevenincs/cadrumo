@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE
 from ...application.operations.public_scalar import PublicNamedScalar, PublicScalar
-from ...application.provisioning_browser import PLAYWRIGHT_BROWSER_SERVICE
+from ...application.browser_location import PLAYWRIGHT_BROWSER_SERVICE
 from ...application.workstation_check_operation import (
     WORKSTATION_CHECK_OPERATION_DEFINITION_ID,
     WorkstationCheckProjection,

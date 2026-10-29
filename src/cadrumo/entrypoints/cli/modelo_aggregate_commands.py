@@ -30,7 +30,7 @@ from ...domain.modelos.codes import ModeloCode
 from ._modelo_behavior_support import resolve_year_period
 from .common import emit_envelope
 from .modelo_aux_payloads import WithholdingClaveBreakdownPayload
-from .modelo_results import (
+from .modelo_query_results import (
     ModeloAggregateResult,
     WithholdingGenerationAuditPayload,
     WithholdingWindowBaselinePayload,
@@ -240,6 +240,42 @@ def _parse_typed_cli_observations[ObservationT: BaseModel](
 __all__ = ["aggregate_modelo"]
 
 
+def _aggregate_invoice_evidence(
+    ctx: typer.Context, command: PerModeloAggregationCommand, modelo: str, received_invoice_retencion: list[str]
+) -> ModeloAggregateResult:
+    invoice_withholding_requests = _parse_typed_cli_observations(
+        received_invoice_retencion,
+        model=InvoiceWithholdingEvidenceRequest,
+        flag="--received-invoice-retencion",
+    )
+    invoice_evidence = next(iter(invoice_withholding_requests), None)
+    if modelo not in _INVOICE_EVIDENCE_MODELOS:
+        raise typer.BadParameter(
+            tr(
+                "cli.app.modelo.aggregate.invoice_retencion_wrong_modelo",
+                modelo=modelo,
+                accepted_modelos=", ".join(sorted(_INVOICE_EVIDENCE_MODELOS)),
+            )
+        )
+    if invoice_evidence is None:
+        raise typer.BadParameter("one invoice withholding allocation is required per command")
+    if len(invoice_withholding_requests) > 1:
+        raise typer.BadParameter(
+            "one invoice withholding allocation is accepted per command; submit each allocation explicitly"
+        )
+    capture = aggregate_modelo_with_received_invoice_retencion(
+        ctx,
+        command=command,
+        evidence=invoice_evidence,
+    )
+    return _invoice_capture_aggregate_result(capture.projection)
+
+
+def _refuse_m123_invoice(modelo: str, received_invoice_retencion: list[str] | None) -> None:
+    if modelo == Modelo("123").value and (received_invoice_retencion is not None and received_invoice_retencion):
+        raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
+
+
 def aggregate_modelo(
     ctx: typer.Context,
     modelo: str,
@@ -258,8 +294,7 @@ def aggregate_modelo(
         counterpart_observation=counterpart_observation,
         foreign_asset_observation=foreign_asset_observation,
     )
-    if modelo == Modelo("123").value and (received_invoice_retencion is not None and received_invoice_retencion):
-        raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
+    _refuse_m123_invoice(modelo, received_invoice_retencion)
 
     command = PerModeloAggregationCommand(
         modelo=modelo,
@@ -283,32 +318,7 @@ def aggregate_modelo(
     )
     notices: list[Notice] = []
     if received_invoice_retencion is not None and received_invoice_retencion:
-        invoice_withholding_requests = _parse_typed_cli_observations(
-            received_invoice_retencion,
-            model=InvoiceWithholdingEvidenceRequest,
-            flag="--received-invoice-retencion",
-        )
-        invoice_evidence = next(iter(invoice_withholding_requests), None)
-        if modelo not in _INVOICE_EVIDENCE_MODELOS:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.aggregate.invoice_retencion_wrong_modelo",
-                    modelo=modelo,
-                    accepted_modelos=", ".join(sorted(_INVOICE_EVIDENCE_MODELOS)),
-                )
-            )
-        if invoice_evidence is None:
-            raise typer.BadParameter("one invoice withholding allocation is required per command")
-        if len(invoice_withholding_requests) > 1:
-            raise typer.BadParameter(
-                "one invoice withholding allocation is accepted per command; submit each allocation explicitly"
-            )
-        capture = aggregate_modelo_with_received_invoice_retencion(
-            ctx,
-            command=command,
-            evidence=invoice_evidence,
-        )
-        aggregate_result = _invoice_capture_aggregate_result(capture.projection)
+        aggregate_result = _aggregate_invoice_evidence(ctx, command, modelo, received_invoice_retencion)
     else:
         aggregate_projection = run_modelo_aggregate(
             ctx,

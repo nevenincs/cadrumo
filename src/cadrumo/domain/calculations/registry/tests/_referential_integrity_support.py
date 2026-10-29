@@ -19,15 +19,9 @@ from .....core.toml import freeze_toml
 from ..authority import ValidatedRegistryAuthority
 from ..errors import RegistryValidationError
 from ..reference_checks import check_all_id_references
-from ..schema import (
-    BindingDefinition,
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
+from ..schema import BindingDefinition, FormulaDefinition, ModeloDefinition, ModeloRevision, RegistrySnapshot
 from ..schema_base import EvidenceTier
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_deadlines import DeadlineWindowDefinition
 from ..schema_exports import (
     ExportFieldDefinition,
@@ -40,6 +34,7 @@ from ..schema_extraction import (
 )
 from ..schema_formula import FormulaExpression, ParameterDefinition
 from ..schema_input_kind import InputKind
+from ..schema_live_verification import LiveCrossReferenceDecision
 from ..schema_references import LegalReference, SourceReference
 from ..schema_revision_members import (
     ApplicationLinkDefinition,
@@ -51,7 +46,7 @@ from ..schema_surfaces import (
     CalculationCompletenessManifest,
     CasillaDefinition,
 )
-from ..schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
+from ..schema_verification import VerificationExpectationDefinition, WorkbookParityReference
 from ..snapshot import build_validated_snapshot as build_snapshot_at_grade
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

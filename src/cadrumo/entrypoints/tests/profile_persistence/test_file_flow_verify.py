@@ -18,7 +18,8 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
@@ -35,7 +36,7 @@ from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_work_lifecycle_ports,

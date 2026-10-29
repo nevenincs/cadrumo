@@ -9,12 +9,9 @@ from typing import NoReturn
 import pytest
 
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification import (
-    apply_evidence_classification,
-    apply_evidence_split,
-    suggest_evidence_split,
-)
+from .....application.ledger.llm_classification import apply_evidence_classification
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts
+from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....core.config import load_settings
 from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

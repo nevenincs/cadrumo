@@ -79,7 +79,7 @@ from ....domain.calculations.registry.tests.registry_observations import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

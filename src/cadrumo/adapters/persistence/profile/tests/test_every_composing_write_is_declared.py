@@ -96,7 +96,7 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
     ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
     "touching the same transaction; unclassified beyond that",
     (
-        "src/cadrumo/application/modelo/revision_persistence.py",
+        "src/cadrumo/application/modelo/filing_revision_persistence.py",
         "_build_filed_participation_writes",
     ): "per-transaction participation rows, as above; unclassified beyond that",
     (

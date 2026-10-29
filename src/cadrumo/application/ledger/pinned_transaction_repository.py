@@ -7,7 +7,8 @@ from dataclasses import dataclass
 from datetime import date
 
 from ...core.secure_object_write import SecureObjectWrite
-from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ...domain.transactions.date_partition import LedgerDatePartition
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from .persistence_ports import LedgerPersistenceConflictError
 from .protocols import RevisionGuardedTransactionCatalogueCoCommitWriterProtocol
 

@@ -28,13 +28,8 @@ from ....iva.schema import (
     IvaRateKind,
 )
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
-from ..ledger_iva_bindings import (
-    IvaLedgerObservation,
-    LedgerIvaProvider,
-    deducible_deduction_kind_overlaps,
-    invoice_ledger_screen_binding_ids,
-    resolve_ledger_iva_aggregation_binding_values,
-)
+from ..ledger_iva_bindings import IvaLedgerObservation, LedgerIvaProvider, resolve_ledger_iva_aggregation_binding_values
+from ..ledger_iva_screen_bindings import deducible_deduction_kind_overlaps, invoice_ledger_screen_binding_ids
 from ..schema import BindingDefinition, ModeloRevision
 from ..schema_references import PeriodSelector
 from .published_authority import published_snapshot

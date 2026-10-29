@@ -24,12 +24,7 @@ from cadrumo_client.contracts.model_runs import (
 
 from .....application.operations.model_runs import ModelRunPort
 from .....application.operator_actions.models import PreconditionVerdict
-from .....application.provisioning_contracts import (
-    LOCAL_AI_PROVISION_ACTION_ID,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
-    provisioning_setup_verdict,
-)
+from .....application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....core.operator_action_enums import ActionEvidenceProvenance
@@ -44,7 +39,7 @@ JSON_REASK_INSTRUCTION = (
 """Appended to the prompt for the single re-ask a reply without a JSON object earns."""
 
 _NO_SELECTION_LOCALE_KEY: Final = "errors.refused.refused_llm_no_model_selected"
-"""The refusal sentence for a role with no selected model: the person chooses one in the desktop app."""
+"""The refusal sentence for a role with no selected model."""
 
 _CANNOT_READ_IMAGES_LOCALE_KEY: Final = "errors.refused.refused_llm_model_cannot_read_images"
 """The refusal sentence for a selected model not stated to read images: the person picks one that can."""
@@ -69,26 +64,22 @@ def lane_model_label(lane: ModelRunLane | ModelRunOutput) -> str:
 
 
 def model_run_refusal_verdict(refusal: ModelRunRefusal, *, role: ModelRole) -> PreconditionVerdict:
-    """Return the typed verdict for a refused model run, naming its recovery where one is registered.
+    """Return the typed verdict for a refused model run.
 
-    A selected model the lane's local server does not hold is supplied by the
-    local AI setup, so that refusal names it. A model the agent could not load
-    with the memory free is the load-capacity refusal, a property of this
-    computer that no setup changes. A role with no selection says so in a
-    stable fact and names no action: the selection is made in the desktop app,
-    which no command of ours performs. Every other refusal keeps a no-recovery
-    verdict.
+    A selected model the lane's local server does not hold is the
+    model-installed refusal. A model the agent could not load with the memory
+    free is the load-capacity refusal, a property of this computer. A role with
+    no selection says so in a stable fact. Every refusal names no action.
     """
     facts: dict[str, str | int | bool] = {"model_run_refusal": refusal.code.value, "model_role": role.value}
     if refusal.code is ModelRunRefusalCode.MODEL_DOES_NOT_FIT:
-        return provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE, facts={**facts, "role": role.value}
+        return probe_no_recovery_verdict(
+            ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE, facts={**facts, "role": role.value}
         )
     if refusal.code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
-        return provisioning_setup_verdict(
-            ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+        return probe_no_recovery_verdict(
+            ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
             facts={**facts, "role": role.value, "role_model_installed": False},
-            action_id=LOCAL_AI_PROVISION_ACTION_ID,
         )
     if refusal.code is ModelRunRefusalCode.NO_SELECTION:
         facts |= {"role": role.value, "role_selection_required": True}

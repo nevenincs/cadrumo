@@ -248,7 +248,7 @@ def test_summary_rejects_row_set_binding(form_source):
 @pytest.mark.parametrize("wire_policy", [None, "integer-part", "fractional-digits"])
 @pytest.mark.parametrize("value", [None, Decimal("0"), Decimal("-125.37")])
 def test_summary_preserves_backing_scalar_and_live_reference(form_source, value, wire_policy):
-    from ..form_workbook import _binding_addresses
+    from ..form_authority import form_binding_addresses
 
     snapshot, _ = form_source
     from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
@@ -257,7 +257,7 @@ def test_summary_preserves_backing_scalar_and_live_reference(form_source, value,
         snapshot, wire_policy=ExportValuePolicy(wire_policy) if wire_policy else None
     )
     plan = build_export_plan(snapshot)
-    address = _binding_addresses(plan, snapshot.revision)[str(binding.id)]
+    address = form_binding_addresses(plan, snapshot.revision)[str(binding.id)]
     plan = plan.model_copy(
         update={
             "value_cells": tuple(

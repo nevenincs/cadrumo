@@ -19,7 +19,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 from ..ledger.preflight import LedgerPreflightIssueReason
 from ..operations.public_period import PublicPeriod
-from ..state_projection import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
+from ..state_projection_models import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
 from .query_read_contracts import ModeloBindingRowV1, ModeloReadinessMissingBindingV1
 
 MAX_TYPED_BINDING_VALUE_LENGTH = 16_384

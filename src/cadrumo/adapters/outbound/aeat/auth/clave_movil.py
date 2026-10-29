@@ -67,7 +67,7 @@ from .....core.config import Settings as _Settings
 from .....core.config_support import unwrap_optional_secret
 from .....core.errors.hierarchy import AeatLoginAssertionError, AuthError
 from .....core.i18n.render import tr
-from .....core.identity.tax_id import same_tax_identifier, tax_id_identity_token
+from .....core.identity.tax_id import tax_id_identity_token
 from .....core.logging import get_logger
 from .....core.time.clock import now
 from .....domain.user_profile.errors import UserProfileError
@@ -105,6 +105,11 @@ from .clave_movil_support import (
 from .clave_movil_support import (
     url_diagnostic as _url_diagnostic,
 )
+from .clave_profile_diagnostics import (
+    active_profile_context_defaults,
+    profile_identity_alignment,
+    unavailable_active_profile_context,
+)
 from .errors import AuthConfigurationError, AuthProviderCleanupError
 from .view_capture_identity import require_signed_in_taxpayer
 
@@ -120,52 +125,6 @@ _NAVIGATION_TIMEOUT_MS_DEFAULT: Final[int] = int(
 # Environment variable name referenced in operator-facing error messages.
 # Named constant so grepping for the env-var name surfaces every usage site.
 _CLAVE_MOVIL_DNI_NIE_ENV: Final[str] = "CADRUMO_CLAVE_MOVIL_DNI_NIE"
-
-
-def _active_profile_context_defaults(
-    bucket_id: str | None,
-    *,
-    profile_label_present: bool,
-    profile_registered: bool,
-) -> dict[str, object]:
-    """Build the redacted context shared by every profile-read outcome."""
-    return {
-        "active_profile_id": "",
-        "active_profile_ref": _diagnostic_fingerprint(bucket_id),
-        "active_profile_label": "",
-        "active_profile_label_present": profile_label_present,
-        "active_profile_registered": profile_registered,
-        "profile_record_present": False,
-        "profile_tax_id_present": False,
-        "profile_tax_id_fingerprint": "",
-        "identity_alignment": "profile_tax_id_missing",
-    }
-
-
-def _unavailable_active_profile_context() -> dict[str, object]:
-    """Return the fail-closed context when profile diagnostics cannot be read."""
-    return {
-        "active_profile_id": "",
-        "active_profile_ref": "",
-        "active_profile_label": "",
-        "active_profile_label_present": False,
-        "active_profile_registered": False,
-        "profile_record_present": False,
-        "profile_tax_id_present": False,
-        "profile_tax_id_fingerprint": "",
-        "identity_alignment": "profile_context_unavailable",
-    }
-
-
-def _profile_identity_alignment(provider_identity: str, profile_identity: str) -> str:
-    """Classify the redacted provider/profile identity relationship."""
-    if not provider_identity:
-        return "clave_identity_missing"
-    if not profile_identity:
-        return "profile_tax_id_missing"
-    if same_tax_identifier(profile_identity, provider_identity):
-        return "matches"
-    return "mismatch"
 
 
 class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvageMixin):
@@ -701,7 +660,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
             return self._build_active_profile_diagnostic_context(provider_identity)
         except (ImportError, KeyError, AttributeError, UserProfileError) as exc:
             log.debug("ClaveMovilAuthProvider: profile diagnostic context unavailable: %s", exc, exc_info=True)
-            return _unavailable_active_profile_context()
+            return unavailable_active_profile_context()
 
     def _build_active_profile_diagnostic_context(self, provider_identity: str) -> dict[str, object]:
         """Read the current profile only through its own live session."""
@@ -715,7 +674,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
 
         bucket_id = resolve_active_bucket_id()
         pointer = read_profile_bucket_by_id(bucket_id) if (bucket_id is not None and bucket_id) else None
-        context = _active_profile_context_defaults(
+        context = active_profile_context_defaults(
             bucket_id,
             profile_label_present=bool(pointer is not None and pointer.label),
             profile_registered=pointer is not None,
@@ -755,7 +714,7 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin, _ClaveMovilSessionSalvage
         context["profile_record_present"] = True
         context["profile_tax_id_present"] = bool(profile_identity)
         context["profile_tax_id_fingerprint"] = _diagnostic_fingerprint(profile_identity)
-        context["identity_alignment"] = _profile_identity_alignment(provider_identity, profile_identity)
+        context["identity_alignment"] = profile_identity_alignment(provider_identity, profile_identity)
         return context
 
     # ── Lifecycle helpers ───────────────────────────────────────────────────

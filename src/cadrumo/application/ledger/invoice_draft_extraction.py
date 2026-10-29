@@ -101,7 +101,6 @@ from .evidence_errors import (
     EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
     PurchaseInvoiceEvidenceInputError,
     PurchaseInvoiceEvidenceReaderError,
-    evidence_reader_refusal_key,
 )
 from .evidence_input import EvidenceInput
 from .evidence_textlayer import transcribe_text_layer
@@ -369,12 +368,12 @@ def _refuse_with_reader_verdict(verdict: PreconditionVerdict, *, cause: Exceptio
     the unavailable reader's cause. It is re-raised unchanged rather than
     wrapped in a second refusal: an operation's error detail keeps a verdict
     only when one registered error in the chain carries it, so two carriers of
-    the same verdict would settle with none, and no surface could offer setup.
+    the same verdict would settle with none.
     """
     if isinstance(cause, PurchaseInvoiceEvidenceReaderError) and cause.terminal_precondition_verdict == verdict:
         raise cause
     raise PurchaseInvoiceEvidenceReaderError(
-        translated_message=evidence_reader_refusal_key(verdict),
+        translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
         precondition_verdict=verdict,
     ) from cause
 
@@ -479,8 +478,7 @@ def _label_read_after_reader_unavailable(
     """Keep a partial label result, but refuse when no field has an anchor.
 
     The partial result stays a success. When the reader probe said why the
-    model could not run, the fallback records that condition and the setup
-    action it named, so a surface can offer setup beside the thinner draft.
+    model could not run, the fallback records that condition.
     """
     verdict = error.precondition_verdict
     if labels is None or not labels.read_fields:
@@ -490,7 +488,6 @@ def _label_read_after_reader_unavailable(
         cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
         reader_error=error.cause,
         failed_condition_id=None if verdict is None else verdict.failed_condition_id,
-        recovery_action_id=None if verdict is None or verdict.action is None else verdict.action.action_id,
     )
 
 
@@ -661,7 +658,6 @@ def _label_reading_fallback(
     cause: LabelReadingFallbackCause,
     reader_error: Exception,
     failed_condition_id: str | None,
-    recovery_action_id: str | None = None,
 ) -> LabelReadingFallback:
     """Record that a partial label reading stands because its model fill did not run.
 
@@ -680,7 +676,6 @@ def _label_reading_fallback(
         unread_fields=unread_fields,
         reader_error_type=type(reader_error).__name__,
         failed_condition_id=failed_condition_id,
-        recovery_action_id=recovery_action_id,
     )
 
 

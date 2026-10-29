@@ -24,16 +24,15 @@ from typing import TypedDict, override
 import pytest
 
 from ....core.irnr import M210PayerMode
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.errors import TransactionValidationError
-from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.errors import TransactionValidationError
+from ....domain.transactions.m210_income_classification import resolve_m210_payer_mode
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..m210_classification import resolve_m210_income_classification

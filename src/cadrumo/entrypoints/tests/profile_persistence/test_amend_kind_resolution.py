@@ -83,7 +83,7 @@ from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_amendment_action_ports
+from ...adapter_composition_work_ports import build_amendment_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

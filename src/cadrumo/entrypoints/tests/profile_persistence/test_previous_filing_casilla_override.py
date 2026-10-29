@@ -28,7 +28,7 @@ from cadrumo.domain.user_profile.values import (
     UserProfileFact,
     create_user_profile_record,
 )
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

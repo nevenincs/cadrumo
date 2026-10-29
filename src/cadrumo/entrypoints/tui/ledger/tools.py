@@ -16,7 +16,8 @@ from typing import TYPE_CHECKING, Final
 from ....application.ledger.workspace import LedgerWorkspaceArea
 
 if TYPE_CHECKING:
-    from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+    from .controller import LedgerWorkspaceController
+    from .workspace_screen import LedgerWorkspaceScreen
 
 _KEY_PATTERN: Final = re.compile(r"ledger\.tool\.[a-z][a-z0-9_]*\.[a-z][a-z0-9_]*")
 

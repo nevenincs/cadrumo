@@ -8,7 +8,8 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from ..authority import PinnedAuthorityOperation
 from ..errors import RegistryValidationError
 from ..governed_fact_scope import validating_governed_facts
-from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema import ModeloDefinition, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..snapshot import build_validated_snapshot
 from .registry_tree import bundled_modelo_components
 

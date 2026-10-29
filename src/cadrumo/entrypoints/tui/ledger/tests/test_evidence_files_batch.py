@@ -18,10 +18,10 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 from .....adapters.outbound.components.tests.recorded_rows import not_in_this_build_row, recorded_absent_row
 from .....application.ledger.batch_ingest import InferencePause
 from .....application.ledger.evidence_ingestion_contracts import LedgerEvidenceBatchRequest
-from .....application.provisioning_contracts import (
+from .....application.probe_outcomes import (
     LOCAL_AI_PROVISION_ACTION_ID,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
+    ProbePreconditionCondition,
+    probe_no_recovery_verdict,
     provisioning_setup_verdict,
 )
 from .....core.config import override_settings
@@ -152,7 +152,7 @@ async def test_a_refused_batch_is_shown_on_the_write_step(tmp_path: Path) -> Non
 def _local_ai_pause() -> InferencePause:
     """The pause a refused read gives when the role's selected model is not installed: it names the setup."""
     verdict = provisioning_setup_verdict(
-        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
         facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
         action_id=LOCAL_AI_PROVISION_ACTION_ID,
     )
@@ -163,8 +163,8 @@ def _unrecoverable_pause() -> InferencePause:
     """A pause setup cannot end, so its verdict names no action."""
     return InferencePause(
         facts={"role_model_selected": False},
-        precondition_verdict=provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+        precondition_verdict=probe_no_recovery_verdict(
+            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
             facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_selected": False},
         ),
     )

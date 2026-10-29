@@ -7,23 +7,11 @@ Core types: :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Mapping
-from dataclasses import dataclass
-from pathlib import Path
-from types import MappingProxyType
+from collections.abc import Callable
 from typing import TYPE_CHECKING
 
-from pydantic import BaseModel
-
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.calculation_report_format import CalculationReportDocumentFormat
 from ...core.errors.hierarchy import CadrumoError
-from ...core.identity.hex_ids import WorkUnitId
-from ...core.logging import get_logger
-from ...core.modelo_export_artefact import ModeloExportArtefact
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -38,7 +26,6 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ..operations.access_port import OperationAccessResolver
 from ..operations.capabilities import (
-    RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -47,10 +34,6 @@ from ..operations.capabilities import (
     OperationSensitiveInputPolicy,
 )
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
-from ..operations.models import (
-    OperationTerminalReceipt,
-    require_succeeded_terminal_receipt,
-)
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
@@ -58,85 +41,58 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
-from ._edit_execution import apply_modelo_edit
 from .action_errors import (
     CalculationRevisionNotFoundError,
-    M303FilingEvidenceError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
-    modelo_edit_refusal_error,
 )
 from .amendment_action_ports import AmendmentActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .amendment_projection import ModeloWorkAmendPublicResultV2
 from .calculation_action_ports import CalculationActionPortsFactory
-from .calculation_advisory_projection import ModeloCalculationAdvisories
-from .calculation_projection import ModeloCalculationSnapshot
-from .calculation_report_export import (
-    ModeloCalculationReportCommand,
-    ModeloCalculationReportResult,
-    export_modelo_calculation_report,
-)
-from .edit_apply_contracts import ModeloEditApplyPublicResultV1
-from .edit_baseline_projection import ModeloEditApplyBaselineV1
-from .edit_models import (
-    ModeloEditApplyRequestV1,
-    ModeloEditDomainRefusalV1,
-    ModeloEditExecutionNoEffectV1,
-    ModeloEditExecutionResultV1,
-    ModeloEditRefusalV1,
-    ModeloEditScalarAddressV1,
-    ModeloEditSubmissionV1,
-)
-from .edit_operation_requests import ModeloEditApplyOperationRequestV2
+from .calculation_operation import build_modelo_work_calculate_definition, build_modelo_work_calculate_registration
+from .edit_operation import build_modelo_edit_apply_definition, build_modelo_edit_apply_registration
 from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
-from .edit_refusal_projection import ModeloEditCalculationPrerequisiteV1, ModeloEditPrerequisiteObserver
-from .edit_transient_operand import modelo_edit_financial_operand
-from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
-from .export_ports import ModeloExportPorts, ModeloExportPortsFactory
-from .export_projection import (
-    ModeloCalculationReportPublicReceipt,
-    ModeloExportCompleteness,
-    ModeloExportEvidenceStatus,
-    ModeloExportPublicResultV3,
-    ModeloFicheroBoePublicReceipt,
-)
+from .edit_refusal_projection import ModeloEditPrerequisiteObserver
+from .export_operation import build_modelo_export_definition, build_modelo_export_registration
+from .export_ports import ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
 from .filing_projection import ModeloFilingRecordSnapshot
 from .lifecycle_advisories import ModeloLifecycleAdvisories, build_modelo_lifecycle_advisories
-from .m303_filing_evidence import m303_filing_evidence_failure
-from .m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
 from .metadata_projection import ModeloWorkMetadataSnapshot
+from .operation_shared import (
+    MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+    MODELO_EXPORT_OPERATION_DEFINITION_ID,
+    MODELO_WORK_AMEND_OPERATION_DEFINITION_ID,
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+    ModeloWorkVerifyProfileResolver,
+    modelo_workspace_refresh_target_binding,
+    resolve_active_workflow_profile,
+    resolve_modelo_work_unit_refresh_target,
+)
 from .review_package_signing_ports import ReviewPackageSigningKeypairCapabilityFactory
 from .verification_actions import verify_modelo_revision_with_preconditions
 from .verification_projection import ModeloVerificationSnapshot
 from .work_amend_contracts import ModeloWorkAmendRequest
-from .work_calculation_contracts import (
-    ModeloOperatorEntriesCarry,
-    ModeloWorkCalculateCallerContext,
-    ModeloWorkCalculatePublicResultV2,
-    ModeloWorkCalculateReplacedHead,
-    ModeloWorkCalculateRequest,
-)
 from .work_change_contracts import (
     ModeloWorkDiscardPublicResultV2,
     ModeloWorkDiscardRequest,
     ModeloWorkRenamePublicResultV2,
     ModeloWorkRenameRequest,
 )
-from .work_export_contracts import ModeloExportRequest, ModeloExportSettledResult
 from .work_filing_contracts import ModeloWorkFilePublicResultV2, ModeloWorkFileRequest
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory
 from .work_verification_contracts import ModeloWorkVerifyPublicResultV2, ModeloWorkVerifyRequest
-from .workspace_models import ModeloWorkspaceRefreshTargetV1
 
 if TYPE_CHECKING:
     from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.deadlines.models import TaxpayerProfile
-    from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
     from ...domain.modelos.work_unit import WorkUnit
@@ -145,34 +101,8 @@ if TYPE_CHECKING:
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..operations.models import OperationRequest
     from ..operations.owner import OperationExecutorContext
-    from .calculate_input import ModeloWorkCalculationServiceResult, WorkCalculateInputBundle
-    from .calculation_action_ports import CalculationActionPorts
     from .calculation_summary_pdf_ports import CalculationSummaryPdfWriter
     from .verification_repository_ports import VerificationRepositoryBundleFactory
-
-
-MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
-
-
-MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
-
-
-MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID = "modelo.work.calculate"
-
-
-MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
-
-
-MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
-
-
-MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
-
-
-MODELO_WORK_AMEND_OPERATION_DEFINITION_ID = "modelo.work.amend"
-
-
-MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID = "modelo.edit.apply"
 
 
 #: Suffix appended to a definition id to name that enrolment's refresh-target
@@ -180,42 +110,6 @@ MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID = "modelo.edit.apply"
 #: its own schema identity: the registry resolves a schema binding by scanning
 #: every registration and taking the first identity match, so one id shared
 #: across enrolments would stop that lookup being definition-scoped.
-MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX = "workspace_refresh_target"
-
-
-class _WorkUnitSubject(BaseModel):
-    """Validate an operation subject reference as a real work-unit identifier."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    work_unit_id: WorkUnitId
-
-
-def resolve_modelo_work_unit_refresh_target(
-    terminal_receipt: OperationTerminalReceipt,
-    /,
-) -> ModeloWorkspaceRefreshTargetV1:
-    """Derive the workspace read one settled Modelo work operation invalidates.
-
-    Every definition below addresses one work unit, so the settled receipt's
-    ``subject_ref`` is that unit's identifier. It is validated here rather
-    than trusted: a subject that is not a well-formed
-    :data:`~cadrumo.core.identity.hex_ids.WorkUnitId` raises, and the resolving
-    service turns that into a typed refusal instead of handing a frontend a
-    target it cannot read.
-    """
-    return ModeloWorkspaceRefreshTargetV1(
-        work_unit_id=_WorkUnitSubject(work_unit_id=terminal_receipt.identity.subject_ref).work_unit_id,
-    )
-
-
-def _modelo_workspace_refresh_target_binding(definition_id: str) -> OperationSchemaBindingV1:
-    """Bind one enrolment's refresh-target schema to the shared target model."""
-    return OperationSchemaBindingV1.bind(
-        schema_id=f"{definition_id}.{MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX}",
-        schema_version=1,
-        model_type=ModeloWorkspaceRefreshTargetV1,
-    )
 
 
 class ModeloWorkRenameExecutor:
@@ -292,353 +186,6 @@ class ModeloWorkRenameExecutor:
 
 class ModeloWorkDiscardApprovalStaleError(CadrumoError):
     """Raised when the approved unit is no longer the unit on disk."""
-
-
-def calculation_public_result(
-    result: ModeloWorkCalculationServiceResult,
-    *,
-    operation: PinnedAuthorityOperation,
-    replaced_head: ModeloWorkCalculateReplacedHead | None = None,
-) -> ModeloWorkCalculatePublicResultV2:
-    """Project the exact canonical return without post-publication catalogue reads."""
-    return ModeloWorkCalculatePublicResultV2(
-        work_unit_id=result.work_unit.work_unit_id,
-        calculation_revision_id=result.revision.calculation_revision_id,
-        calculation=ModeloCalculationSnapshot.from_revision(
-            result.revision, work_unit=result.work_unit, operation=operation
-        ),
-        advisories=ModeloCalculationAdvisories.from_result(result, operation=operation),
-        unit=ModeloWorkMetadataSnapshot.from_work_unit(result.work_unit),
-        revision_published=result.revision_published,
-        replaced_head=replaced_head,
-    )
-
-
-@dataclass(frozen=True, slots=True)
-class PreparedModeloWorkCalculation:
-    """One admitted work unit with canonical inputs and calculation authorities."""
-
-    work_unit: WorkUnit
-    ports: CalculationActionPorts
-    inputs: WorkCalculateInputBundle
-
-
-async def prepare_modelo_work_calculation(
-    payload: ModeloWorkCalculateRequest,
-    *,
-    operation: PinnedAuthorityOperation,
-    calculation_action_ports_factory: CalculationActionPortsFactory,
-    attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
-) -> PreparedModeloWorkCalculation:
-    """Apply the ordinary admission, M303 evidence, and input-channel policy."""
-    from ...core.bucket_pointer import require_active_bucket_id
-    from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
-
-    active_bucket_id = require_active_bucket_id()
-    ports = calculation_action_ports_factory(bucket_id=active_bucket_id, operation=operation)
-    if ports.work_unit_repository.bucket_id != active_bucket_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    work_unit = require_active_work_unit(
-        ports.work_unit_repository.load(),
-        work_unit_id=payload.work_unit_id,
-        repository_bucket_id=ports.work_unit_repository.bucket_id,
-        use=ActiveWorkUnitUse.CALCULATE,
-    )
-    if work_unit.bucket_id != active_bucket_id:
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if payload.caller_context is ModeloWorkCalculateCallerContext.REPLAY_HEAD:
-        replayed = await await_cancellation_complete(
-            asyncio.to_thread(
-                _replayed_head_inputs,
-                payload=payload,
-                work_unit=work_unit,
-                ports=ports,
-                operation=operation,
-                attachment_store_factory=attachment_store_factory,
-            ),
-            task_name="modelo-work-calculate-caller-context-replay",
-        )
-        return PreparedModeloWorkCalculation(work_unit=work_unit, ports=ports, inputs=replayed)
-    filing_instance_evidence = _ordinary_m303_filing_instance_evidence(
-        payload=payload,
-        work_unit=work_unit,
-        operation=operation,
-        attachment_store_factory=attachment_store_factory,
-    )
-    inputs = await await_cancellation_complete(
-        asyncio.to_thread(
-            payload.inputs.build_bundle,
-            work_unit_id=payload.work_unit_id,
-            ports=ports,
-            profile=None,
-            detail_rows=tuple(row.to_row() for row in payload.detail_rows),
-            filing_instance_evidence=filing_instance_evidence,
-        ),
-        task_name="modelo-work-calculate-input-preparation",
-    )
-    return PreparedModeloWorkCalculation(work_unit=work_unit, ports=ports, inputs=inputs)
-
-
-def _replayed_head_inputs(
-    *,
-    payload: ModeloWorkCalculateRequest,
-    work_unit: WorkUnit,
-    ports: CalculationActionPorts,
-    operation: PinnedAuthorityOperation,
-    attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
-) -> WorkCalculateInputBundle:
-    """Project the current head's caller context onto the calculation input channels.
-
-    A head stored before operator layers existed replays no values (they are
-    unknown, not empty), and the recalculation records no layer either, so that
-    uncertainty is carried rather than silently resolved.
-    """
-    from ...core.authority_grade import RegistryAuthorityGrade
-    from .calculate_input import WorkCalculateInputBundle
-    from .caller_context import caller_context_calculation_inputs, caller_context_of
-
-    head = (
-        ports.calculation_repository.load(operation=operation).get(work_unit.current_calculation_revision_id)
-        if work_unit.current_calculation_revision_id is not None
-        else None
-    )
-    caller_context = caller_context_of(head)
-    filing_instance_evidence = _ordinary_m303_filing_instance_evidence(
-        payload=payload,
-        work_unit=work_unit,
-        operation=operation,
-        attachment_store_factory=attachment_store_factory,
-        replayed=caller_context.filing_instance_evidence,
-    )
-    replay = caller_context_calculation_inputs(
-        caller_context,
-        revision=operation.snapshot(
-            str(work_unit.modelo),
-            filing_year=work_unit.filing_year,
-            period=work_unit.period.registry_token,
-            grade=RegistryAuthorityGrade.CALCULATION,
-        ).revision,
-    )
-    return WorkCalculateInputBundle.build(
-        casilla_inputs=replay.casilla_inputs,
-        text_casilla_inputs=replay.text_casilla_inputs,
-        binding_values=replay.binding_values,
-        enum_binding_values=replay.enum_binding_values,
-        relation_values={},
-        detail_rows=replay.detail_rows,
-        borrador_snapshot_id=replay.borrador_snapshot_id,
-        filing_instance_evidence=filing_instance_evidence,
-        m210_official_tipo_renta_code=replay.m210_official_tipo_renta_code,
-        m210_gross_income_source_mode=replay.m210_gross_income_source_mode,
-        cleared_casilla_ids=replay.cleared_casilla_ids,
-        record_operator_layer=caller_context.operator_layer_known,
-    )
-
-
-def replaced_calculation_head(
-    prepared: PreparedModeloWorkCalculation,
-    payload: ModeloWorkCalculateRequest,
-    returned_unit: WorkUnit,
-) -> ModeloWorkCalculateReplacedHead | None:
-    """Name the head a calculation replaced and what became of the person's entries in it.
-
-    Read from the unit admitted before the calculation and the unit the writer
-    returned, so it states what this calculation did and nothing a later one
-    changed.
-    """
-    earlier = prepared.work_unit.current_calculation_revision_id
-    if earlier is None or returned_unit.current_calculation_revision_id == earlier:
-        return None
-    if payload.caller_context is ModeloWorkCalculateCallerContext.EXPLICIT:
-        carry = ModeloOperatorEntriesCarry.REPLACED_BY_REQUEST
-    elif prepared.inputs.record_operator_layer:
-        carry = ModeloOperatorEntriesCarry.REPLAYED
-    else:
-        carry = ModeloOperatorEntriesCarry.NOT_RECORDED
-    return ModeloWorkCalculateReplacedHead(calculation_revision_id=earlier, operator_entries=carry)
-
-
-def calculate_prepared_modelo_work(
-    prepared: PreparedModeloWorkCalculation, *, actor: str
-) -> ModeloWorkCalculationServiceResult:
-    """Run the one canonical calculation service for prepared worker inputs."""
-    from .calculate_input import calculate_modelo_work_revision
-
-    return calculate_modelo_work_revision(
-        work_unit_id=prepared.work_unit.work_unit_id,
-        actor=actor,
-        inputs=prepared.inputs,
-        ports=prepared.ports,
-    )
-
-
-def _ordinary_m303_filing_instance_evidence(
-    *,
-    payload: ModeloWorkCalculateRequest,
-    work_unit: WorkUnit,
-    operation: PinnedAuthorityOperation,
-    attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
-    replayed: FilingInstanceEvidence | None = None,
-) -> FilingInstanceEvidence | None:
-    """Author the one supported M303 envelope, or replay the head's, before calculation.
-
-    Newly supplied facts are authored and win: the operator answered the
-    questions again. Absent a new answer, the head's recorded evidence is
-    replayed, because those are the operator's standing filing facts for this
-    declaration. Only when neither exists is the evidence missing.
-    """
-    from ...core.modelo import Modelo
-
-    supplied = payload.ordinary_m303_filing_evidence
-    if work_unit.modelo != Modelo("303"):
-        if supplied is None:
-            return None
-        raise M303FilingEvidenceError(
-            precondition_failure=m303_filing_evidence_failure(
-                "unsupported_modelo", {"modelo": str(work_unit.modelo), "evidence_present": True}
-            )
-        )
-    if supplied is None and replayed is not None:
-        return replayed
-    if supplied is None:
-        raise M303FilingEvidenceError(
-            precondition_failure=m303_filing_evidence_failure(
-                "missing", {"modelo": str(work_unit.modelo), "evidence_present": False}
-            )
-        )
-    return author_ordinary_m303_evidence_for_work(
-        work_unit=work_unit,
-        joint_return_elected=supplied.joint_return_elected,
-        exonerado_390_attachment_id=supplied.m303_exonerado_390_attachment_id,
-        exonerado_390_sha256=supplied.m303_exonerado_390_sha256,
-        operation=operation,
-        open_attachment_store=lambda: attachment_store_factory(work_unit.bucket_id),
-    )
-
-
-class ModeloWorkCalculateExecutor:
-    """Recalculate a declaration from its ledger under the request's caller context.
-
-    A replaying request is the workspace's Calculate action: it replays the
-    caller context of the current calculation head -- the operator's own values
-    and overrides, explicit clears, detail rows, Modelo 303 filing evidence,
-    Modelo 210 selections and borrador snapshot -- so new ledger data reaches
-    the declaration without discarding what the operator entered. A head stored
-    before operator layers existed replays no values (they are unknown, not
-    empty), and its recalculation records no layer either, so that uncertainty
-    is carried rather than silently resolved. An explicit request, such as the
-    CLI ``modelo work calculate`` command, keeps its full-specification
-    semantics: exactly the inputs and detail rows it carries.
-    """
-
-    def __init__(
-        self,
-        *,
-        calculation_action_ports_factory: CalculationActionPortsFactory,
-        attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
-        execution_caller_reader: OperationExecutionCallerReader | None = None,
-    ) -> None:
-        """Retain the composition-owned calculation and encrypted-attachment factories."""
-        self._calculation_action_ports_factory = calculation_action_ports_factory
-        self._attachment_store_factory = attachment_store_factory
-        self._execution_caller_reader = execution_caller_reader
-
-    async def execute(
-        self,
-        request: OperationRequest[ModeloWorkCalculateRequest],
-        context: OperationExecutorContext,
-    ) -> str | None:
-        """Delegate calculation without reinterpreting ledger or tax inputs."""
-        await context.events.phase("modelo.work.calculate.ledger")
-        payload = request.payload
-        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
-        prepared = await prepare_modelo_work_calculation(
-            payload=payload,
-            operation=context.authority_operation,
-            calculation_action_ports_factory=self._calculation_action_ports_factory,
-            attachment_store_factory=self._attachment_store_factory,
-        )
-
-        async def publish() -> str:
-            # The canonical service also owns migrations and IVA decisions.
-            # Hold COMMIT across all of it, including cancellation settlement.
-            async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
-                result = await asyncio.to_thread(
-                    calculate_prepared_modelo_work,
-                    prepared,
-                    actor=actor,
-                )
-                # A revision no-op alone cannot establish that preparatory
-                # migrations and IVA decisions also made no changes.
-                if result.revision_published:
-                    await context.events.effect(OperationEffect.UPDATED)
-                public_result = await asyncio.to_thread(
-                    calculation_public_result,
-                    result,
-                    operation=context.authority_operation,
-                    replaced_head=replaced_calculation_head(prepared, payload, result.work_unit),
-                )
-                return await context.operands.put(public_result, written_at=_utc_now())
-
-        return await await_cancellation_complete(publish(), task_name="modelo-work-calculate-publication")
-
-
-def build_modelo_work_calculate_definition(
-    *,
-    calculation_action_ports_factory: CalculationActionPortsFactory,
-    attachment_store_factory: Callable[[str], AttachmentStoreProtocol],
-    execution_caller_reader: OperationExecutionCallerReader | None = None,
-) -> OperationDefinition:
-    """Bind the canonical calculation service to the shared operation platform."""
-
-    def build() -> ModeloWorkCalculateExecutor:
-        return ModeloWorkCalculateExecutor(
-            calculation_action_ports_factory=calculation_action_ports_factory,
-            attachment_store_factory=attachment_store_factory,
-            execution_caller_reader=execution_caller_reader,
-        )
-
-    return OperationDefinition(
-        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-        request_type=ModeloWorkCalculateRequest,
-        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
-        result_type=ModeloWorkCalculatePublicResultV2,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloWorkCalculateRequest,
-            executor_type=ModeloWorkCalculateExecutor,
-            build=build,
-        ),
-        phase_codes=("modelo.work.calculate.ledger",),
-        interaction_kinds=frozenset[OperationInteractionKind](),
-        capabilities=RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES,
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        public_error_detail=True,
-    )
-
-
-def build_modelo_work_calculate_registration(
-    definition: OperationDefinition,
-    *,
-    access_resolver: OperationAccessResolver | None = None,
-) -> OperationPublicDefinitionRegistrationV1:
-    """Bind calculation to the exact refresh target carried by the receipt."""
-    return OperationPublicDefinitionRegistrationV1.compose(
-        definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id="modelo.work.calculate.request",
-            schema_version=4,
-            model_type=definition.request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id="modelo.work.calculate.result",
-            schema_version=2,
-            model_type=ModeloWorkCalculatePublicResultV2,
-        ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
-        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
-        access_resolver=access_resolver,
-    )
 
 
 class ModeloWorkDiscardExecutor:
@@ -776,13 +323,10 @@ def build_modelo_work_discard_registration(
             schema_version=2,
             model_type=ModeloWorkDiscardPublicResultV2,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_target_schema=modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
         access_resolver=access_resolver,
     )
-
-
-type ModeloWorkVerifyProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile]
 
 
 def _lifecycle_advisories(
@@ -809,19 +353,6 @@ def _lifecycle_advisories(
     return build_modelo_lifecycle_advisories(
         work_unit=unit, revision=revision, workflow_profile=workflow_profile, operation=operation
     )
-
-
-def resolve_active_workflow_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile:
-    """Resolve the active taxpayer profile when an operation actually runs.
-
-    Injected as a strategy rather than a value: a definition composed into the
-    production registry must not close over whichever profile happened to be
-    active when the registry was built.
-    """
-    from ..wizard.status import load_active_taxpayer_profile
-    from ..workflow.persistence import workflow_state_repository
-
-    return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
 
 
 # DELEGATED PHASE REPORTING, stated once for every executor in this module that
@@ -1011,7 +542,7 @@ def build_modelo_work_verify_registration(
             schema_version=2,
             model_type=ModeloWorkVerifyPublicResultV2,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_target_schema=modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
         access_resolver=access_resolver,
     )
@@ -1196,7 +727,7 @@ def build_modelo_work_file_registration(
             schema_version=2,
             model_type=ModeloWorkFilePublicResultV2,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_target_schema=modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
         access_resolver=access_resolver,
     )
@@ -1206,307 +737,9 @@ def build_modelo_work_file_registration(
 #: :class:`~cadrumo.core.modelo_export_artefact.ModeloExportArtefact` absent from
 #: this table is not a report artefact, which is what keeps the fichero-BOE member
 #: out of the report branch by construction rather than by a name comparison.
-_REPORT_DOCUMENT_FORMATS: Mapping[ModeloExportArtefact, CalculationReportDocumentFormat] = MappingProxyType(
-    {
-        ModeloExportArtefact.CALCULATION_REPORT_CSV: CalculationReportDocumentFormat.CSV,
-        ModeloExportArtefact.CALCULATION_REPORT_PDF: CalculationReportDocumentFormat.PDF,
-    },
-)
 
 
 #: The same table read back, so a report receipt names the artefact that was asked for.
-_REPORT_ARTEFACTS: Mapping[CalculationReportDocumentFormat, ModeloExportArtefact] = MappingProxyType(
-    {document_format: artefact for artefact, document_format in _REPORT_DOCUMENT_FORMATS.items()},
-)
-
-
-def _require_export_terminal_receipt(
-    receipt: ModeloExportResult | ModeloCalculationReportResult | None, terminal_receipt: OperationTerminalReceipt
-) -> None:
-    message = "export result contradicts its terminal receipt"
-    if receipt is None:
-        raise ValueError(message)
-    require_succeeded_terminal_receipt(
-        terminal_receipt,
-        definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
-        subject_ref=receipt.work_unit_id,
-        effect=OperationEffect.UPDATED,
-        message=message,
-    )
-
-
-def _project_modelo_export_result(result: BaseModel, terminal_receipt: OperationTerminalReceipt, /) -> BaseModel:
-    """Project the service's settled receipt into the public export result.
-
-    Every fact is read from the receipt the export service returned; the only
-    translation is from its field spelling into the closed public vocabulary.
-    """
-    settled = ModeloExportSettledResult.model_validate(result, strict=True)
-    receipt = settled.fichero_boe if settled.fichero_boe is not None else settled.calculation_report
-    _require_export_terminal_receipt(receipt, terminal_receipt)
-    if settled.fichero_boe is not None:
-        filing = settled.fichero_boe
-        return ModeloExportPublicResultV3(
-            calculation_revision_id=filing.calculation_revision_id,
-            artefact=ModeloExportArtefact.FICHERO_BOE,
-            export_format=filing.format,
-            output_path=str(filing.output_path),
-            byte_size=filing.byte_size,
-            file_sha256=filing.file_sha256,
-            software_identity_grade=filing.software_identity_grade,
-            evidence_status=ModeloExportEvidenceStatus(filing.local_evidence_status),
-            completeness=(
-                ModeloExportCompleteness.UNVERIFIED
-                if filing.completeness_unverified
-                else ModeloExportCompleteness.NOT_FLAGGED
-            ),
-            fichero_boe=ModeloFicheroBoePublicReceipt.from_result(filing),
-        )
-    report = settled.calculation_report
-    if report is None:
-        raise ValueError("a settled export carries exactly one receipt")
-    return ModeloExportPublicResultV3(
-        calculation_revision_id=report.calculation_revision_id,
-        artefact=_REPORT_ARTEFACTS[report.document_format],
-        export_format=report.document_format.value,
-        output_path=str(report.output_path),
-        byte_size=report.byte_size,
-        file_sha256=report.file_sha256,
-        software_identity_grade=report.software_identity_grade,
-        evidence_status=ModeloExportEvidenceStatus.LOCAL_CALCULATION_REPORT_NOT_OFFICIAL_AEAT_FILING_EVIDENCE,
-        completeness=ModeloExportCompleteness.NOT_ASSESSED,
-        calculation_report=ModeloCalculationReportPublicReceipt.from_result(report),
-    )
-
-
-class ModeloExportExecutor:
-    """Export one revision through the existing authority, locally only.
-
-    The authority is local by construction and never contacts AEAT; this
-    enrolment adds no transport of its own, so an exported artefact reaches
-    the tax authority only when a human carries it there.
-    """
-
-    def __init__(
-        self,
-        *,
-        profile_resolver: ModeloWorkVerifyProfileResolver,
-        export_ports_factory: ModeloExportPortsFactory,
-        signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
-        calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
-        execution_caller_reader: OperationExecutionCallerReader | None = None,
-    ) -> None:
-        """Bind the live profile the export gates are judged against, and the summary PDF writer.
-
-        The writer is the outbound adapter the composition root supplies,
-        because this layer cannot import it. It is handed to the report
-        service on every report export and used only for the summary PDF.
-        """
-        self._profile_resolver = profile_resolver
-        self._export_ports_factory = export_ports_factory
-        self._signing_keypair_capability_factory = signing_keypair_capability_factory
-        self._calculation_summary_pdf_writer = calculation_summary_pdf_writer
-        self._execution_caller_reader = execution_caller_reader
-
-    async def execute(
-        self,
-        request: OperationRequest[ModeloExportRequest],
-        context: OperationExecutorContext,
-    ) -> str | None:
-        """Delegate to the export authority and keep its receipt as the settled result.
-
-        The command is built from the journalled request, so the identity an
-        artefact is stamped with is the one this invocation recorded rather
-        than whatever a closure happened to hold when the definition was built.
-
-        The service's receipt is stored behind the secure operand boundary and
-        its reference settles the operation, so a surface reads the evidence
-        status, completeness and identity grade the service stated rather than
-        a digest it would have to explain on its own.
-
-        Publishes its entry phase only -- see DELEGATED PHASE REPORTING above.
-        """
-        await context.events.phase("modelo.export.preconditions")
-        payload = request.payload
-        actor = execution_actor_label(self._execution_caller_reader, context, supplied=payload.actor)
-        from ...core.bucket_pointer import require_active_bucket_id
-
-        def export() -> ModeloExportSettledResult:
-            with validating_governed_facts(context.authority_operation):
-                workflow_profile = self._profile_resolver(context.authority_operation)
-                active_bucket_id = require_active_bucket_id()
-                export_ports = self._export_ports_factory(
-                    bucket_id=active_bucket_id,
-                    m303_rectificativa_taxpayer_tax_id=workflow_profile.tax_id,
-                    operation=context.authority_operation,
-                )
-                if payload.artefact is ModeloExportArtefact.FICHERO_BOE:
-                    return ModeloExportSettledResult(
-                        fichero_boe=self._published_fichero_boe(
-                            payload,
-                            actor=actor,
-                            workflow_profile=workflow_profile,
-                            export_ports=export_ports,
-                            operation=context.authority_operation,
-                        )
-                    )
-                return ModeloExportSettledResult(
-                    calculation_report=self._published_calculation_report(
-                        payload,
-                        active_bucket_id=active_bucket_id,
-                        export_ports=export_ports,
-                        operation=context.authority_operation,
-                    )
-                )
-
-        async def publish() -> str:
-            async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
-                settled = await asyncio.to_thread(export)
-                await context.events.effect(OperationEffect.UPDATED)
-                return await context.operands.put(settled, written_at=_utc_now())
-
-        return await await_cancellation_complete(publish(), task_name="modelo-export-publication")
-
-    @staticmethod
-    def _published_fichero_boe(
-        payload: ModeloExportRequest,
-        *,
-        actor: str,
-        workflow_profile: TaxpayerProfile,
-        export_ports: ModeloExportPorts,
-        operation: PinnedAuthorityOperation,
-    ) -> ModeloExportResult:
-        """Publish the AEAT-compatible filing file and return the service's receipt."""
-        return export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=payload.calculation_revision_id,
-                output_path=Path(payload.output_path),
-                actor=actor,
-                refund_election=payload.refund_election,
-                payment_election=payload.payment_election,
-                prior_domiciliation_election=payload.prior_domiciliation_election,
-                charge_account_id=payload.charge_account_id,
-                refund_account_id=payload.refund_account_id,
-                replace_existing=payload.replace_existing,
-            ),
-            workflow_profile=workflow_profile,
-            operation=operation,
-            export_ports=export_ports,
-        )
-
-    def _published_calculation_report(
-        self,
-        payload: ModeloExportRequest,
-        *,
-        active_bucket_id: str,
-        export_ports: ModeloExportPorts,
-        operation: PinnedAuthorityOperation,
-    ) -> ModeloCalculationReportResult:
-        """Publish the calculation report and return the service's receipt.
-
-        The declaration-shaping elections are not threaded here and their absence
-        is not an omission: they decide the fichero's "Tipo de declaracion", and a
-        calculation report declares nothing. The service the command line reaches
-        is the one reached here, so the two surfaces cannot produce different
-        reports for one revision.
-
-        The report language is this invocation's own render language, so a
-        full-screen session set to Catalan produces a Catalan report exactly as
-        the command line does under ``--output-language ca``.
-
-        The summary PDF is drawn by the writer this enrolment was composed with,
-        the one the command line hands the same service. Where the optional
-        ``pdf`` extra is absent the service refuses the PDF with its own typed
-        error; nothing here substitutes another artefact.
-        """
-        return export_modelo_calculation_report(
-            ModeloCalculationReportCommand(
-                calculation_revision_id=payload.calculation_revision_id,
-                document_format=_REPORT_DOCUMENT_FORMATS[payload.artefact],
-                report_language=payload.report_language,
-                output_path=Path(payload.output_path),
-                replace_existing=payload.replace_existing,
-            ),
-            export_ports=export_ports,
-            signing_keypair=self._signing_keypair_capability_factory(bucket_id=active_bucket_id),
-            operation=operation,
-            pdf_writer=self._calculation_summary_pdf_writer,
-        )
-
-
-def build_modelo_export_definition(
-    *,
-    profile_resolver: ModeloWorkVerifyProfileResolver = resolve_active_workflow_profile,
-    export_ports_factory: ModeloExportPortsFactory,
-    signing_keypair_capability_factory: ReviewPackageSigningKeypairCapabilityFactory,
-    calculation_summary_pdf_writer: CalculationSummaryPdfWriter,
-    execution_caller_reader: OperationExecutionCallerReader | None = None,
-) -> OperationDefinition:
-    """Bind the export authority to its registered operation contract."""
-
-    def build() -> ModeloExportExecutor:
-        return ModeloExportExecutor(
-            profile_resolver=profile_resolver,
-            export_ports_factory=export_ports_factory,
-            signing_keypair_capability_factory=signing_keypair_capability_factory,
-            calculation_summary_pdf_writer=calculation_summary_pdf_writer,
-            execution_caller_reader=execution_caller_reader,
-        )
-
-    return OperationDefinition(
-        definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
-        request_type=ModeloExportRequest,
-        subject_reference=OperationSubjectReferenceV1.stored_work_unit("calculation_revision_id"),
-        result_type=ModeloExportSettledResult,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloExportRequest,
-            executor_type=ModeloExportExecutor,
-            build=build,
-        ),
-        phase_codes=("modelo.export.preconditions", "modelo.export.render"),
-        interaction_kinds=frozenset[OperationInteractionKind](),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
-            baseline=OperationBaselinePolicy.REQUEST_BOUND,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        public_error_detail=True,
-    )
-
-
-def build_modelo_export_registration(
-    definition: OperationDefinition,
-    *,
-    access_resolver: OperationAccessResolver | None = None,
-) -> OperationPublicDefinitionRegistrationV1:
-    """Bind the export definition to its stable public schemas."""
-    return OperationPublicDefinitionRegistrationV1.compose(
-        definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id="modelo.export.request",
-            schema_version=3,
-            model_type=definition.request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id="modelo.export.result",
-            schema_version=3,
-            model_type=ModeloExportPublicResultV3,
-        ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
-        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
-        access_resolver=access_resolver,
-        result_projector=_project_modelo_export_result,
-    )
 
 
 class ModeloWorkAmendExecutor:
@@ -1650,191 +883,7 @@ def build_modelo_work_amend_registration(
             schema_version=2,
             model_type=ModeloWorkAmendPublicResultV2,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
-        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
-        access_resolver=access_resolver,
-    )
-
-
-class ModeloEditApplyExecutor:
-    """Run the Edit Contract's guarded compare-and-swap apply under one recorded identity.
-
-    apply_modelo_edit already owns the commit-point baseline recheck, the
-    calculate/recalculate discrimination (recalculate refuses honestly, by
-    design, until it is wired) and the co-committed result receipt; this only
-    binds the running operation's own identity to that call and re-implements
-    no lifecycle policy.
-    """
-
-    def __init__(
-        self,
-        *,
-        calculation_action_ports_factory: CalculationActionPortsFactory,
-        receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
-        prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
-    ) -> None:
-        """Bind the calculation authorities supplied by the composition root."""
-        self._calculation_action_ports_factory = calculation_action_ports_factory
-        self._receipt_repository_factory = receipt_repository_factory
-        self._prerequisite_observer = prerequisite_observer
-
-    async def execute(
-        self,
-        request: OperationRequest[ModeloEditApplyOperationRequestV2],
-        context: OperationExecutorContext,
-    ) -> str | None:
-        """Delegate to apply_modelo_edit and return the settled receipt id.
-
-        A refused edit (ModeloEditExecutionNoEffectV1) changed nothing: the
-        effect is reported as NONE, then the refusal is raised as the
-        registered refusal error of its family, which the supervisor settles
-        as REFUSED under that error's code. Only the family travels; the
-        typed refusal's addresses, facts, and evidence stay out of the
-        operation's persisted record.
-
-        Unlike its delegating siblings this executor declares ONE phase and
-        publishes it, because there is no inner transition it cannot see.
-        """
-        await context.events.phase(MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID)
-        operation = context.authority_operation
-
-        def apply(submission: ModeloEditSubmissionV1) -> ModeloEditExecutionResultV1:
-            with validating_governed_facts(operation):
-                baseline = submission.baseline
-                return apply_modelo_edit(
-                    ModeloEditApplyRequestV1(operation_id=context.identity.operation_id, submission=submission),
-                    ports=self._calculation_action_ports_factory(bucket_id=baseline.bucket_id, operation=operation),
-                    receipt_repository=self._receipt_repository_factory(bucket_id=baseline.bucket_id),
-                    now=_utc_now(),
-                    result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
-                )
-
-        async def publish(submission: ModeloEditSubmissionV1) -> str:
-            async with context.cancellation.irreversible_section():
-                await context.events.effect(OperationEffect.UNKNOWN)
-                outcome = await asyncio.to_thread(apply, submission)
-                if isinstance(outcome, ModeloEditExecutionNoEffectV1):
-                    # A refused edit changed nothing, and NONE is the truthful report
-                    # of that -- distinct from the UNKNOWN carried while the outcome
-                    # was still open -- recorded before the refusal settles it.
-                    await context.events.effect(OperationEffect.NONE)
-                    self._deliver_prerequisite(
-                        outcome.refusal,
-                        operation_id=context.identity.operation_id,
-                        baseline=ModeloEditApplyBaselineV1.from_baseline(submission.baseline),
-                    )
-                    raise modelo_edit_refusal_error(outcome.refusal)
-                await context.events.effect(OperationEffect.UPDATED)
-                return await context.operands.put(
-                    ModeloEditApplyPublicResultV1(
-                        receipt_id=outcome.receipt.receipt_id,
-                        calculation_revision_id=outcome.receipt.calculation_revision_id,
-                    ),
-                    written_at=_utc_now(),
-                )
-
-        async with context.typed_financial_operand.consume(ModeloEditSubmissionV1) as submission:
-            try:
-                return await await_cancellation_complete(publish(submission), task_name="modelo-edit-apply-publication")
-            finally:
-                del submission
-
-    def _deliver_prerequisite(
-        self, refusal: ModeloEditRefusalV1, *, operation_id: str, baseline: ModeloEditApplyBaselineV1
-    ) -> None:
-        """Hand a calculation source the refused Apply named to the private observer, if any.
-
-        Private diagnostics never enter the operation record, and delivery cannot
-        change the truthful NONE effect or the refusal that settles the operation.
-        """
-        observer = self._prerequisite_observer
-        if (
-            observer is None
-            or not isinstance(refusal, ModeloEditDomainRefusalV1)
-            or not isinstance(refusal.address, ModeloEditScalarAddressV1)
-            or "calculation_source_unresolved" not in refusal.facts
-        ):
-            return
-        try:
-            observer(
-                ModeloEditCalculationPrerequisiteV1(
-                    operation_id=operation_id,
-                    work_unit_id=baseline.work_unit_id,
-                    baseline_id=baseline.baseline_id,
-                    calculation_revision_id=baseline.current_calculation_revision_id,
-                    casilla_id=refusal.address.casilla_id,
-                    binding_ids=refusal.evidence,
-                )
-            )
-        except Exception:
-            get_logger(__name__).warning("private edit diagnostic delivery was unavailable")
-
-
-def build_modelo_edit_apply_definition(
-    *,
-    calculation_action_ports_factory: CalculationActionPortsFactory,
-    receipt_repository_factory: ModeloEditReceiptRepositoryFactory,
-    prerequisite_observer: ModeloEditPrerequisiteObserver | None = None,
-) -> OperationDefinition:
-    """Bind the Edit Contract's guarded apply path to its registered operation contract."""
-
-    def build() -> ModeloEditApplyExecutor:
-        return ModeloEditApplyExecutor(
-            calculation_action_ports_factory=calculation_action_ports_factory,
-            receipt_repository_factory=receipt_repository_factory,
-            prerequisite_observer=prerequisite_observer,
-        )
-
-    return OperationDefinition(
-        definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
-        request_type=ModeloEditApplyOperationRequestV2,
-        subject_reference=OperationSubjectReferenceV1.payload_field("work_unit_id"),
-        result_type=ModeloEditApplyPublicResultV1,
-        executor_factory=OperationExecutorFactory(
-            request_type=ModeloEditApplyOperationRequestV2,
-            executor_type=ModeloEditApplyExecutor,
-            build=build,
-        ),
-        phase_codes=("modelo.edit.apply",),
-        interaction_kinds=frozenset({OperationInteractionKind.INPUT}),
-        capabilities=OperationCapabilities(
-            durability=OperationDurability.RECORDED,
-            cancellation=OperationCancellation.UNSUPPORTED,
-            deadline=OperationDeadline.ABSENT,
-            replay=OperationReplayPolicy.NONE,
-            baseline=OperationBaselinePolicy.EXACT_APPROVAL,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
-            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
-            owned_resources=frozenset(),
-            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
-            close_policy=OperationClosePolicy.DETACH_ALLOWED,
-        ),
-        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
-        transient_financial_operand=modelo_edit_financial_operand(receipt_repository_factory),
-        public_error_detail=False,
-    )
-
-
-def build_modelo_edit_apply_registration(
-    definition: OperationDefinition,
-    *,
-    access_resolver: OperationAccessResolver | None = None,
-) -> OperationPublicDefinitionRegistrationV1:
-    """Bind the edit-apply definition to its stable public schemas."""
-    return OperationPublicDefinitionRegistrationV1.compose(
-        definition=definition,
-        request_schema=OperationSchemaBindingV1.bind(
-            schema_id="modelo.edit.apply.request",
-            schema_version=2,
-            model_type=definition.request_type,
-        ),
-        result_schema=OperationSchemaBindingV1.bind(
-            schema_id="modelo.edit.apply.result",
-            schema_version=1,
-            model_type=ModeloEditApplyPublicResultV1,
-        ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_target_schema=modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
         access_resolver=access_resolver,
     )
@@ -1901,7 +950,7 @@ def build_modelo_work_rename_registration(
             schema_version=2,
             model_type=ModeloWorkRenamePublicResultV2,
         ),
-        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_target_schema=modelo_workspace_refresh_target_binding(definition.definition_id),
         workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
         access_resolver=access_resolver,
     )
@@ -2022,47 +1071,3 @@ def build_modelo_lifecycle_operation_registrations(
             registration = builders[definition.definition_id](definition)
         registrations.append(registration)
     return tuple(registrations)
-
-
-__all__ = [
-    "MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID",
-    "MODELO_EXPORT_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_AMEND_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
-    "MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID",
-    "ModeloEditApplyExecutor",
-    "ModeloExportExecutor",
-    "ModeloWorkAmendExecutor",
-    "ModeloWorkCalculateExecutor",
-    "ModeloWorkDiscardApprovalStaleError",
-    "ModeloWorkDiscardExecutor",
-    "ModeloWorkFileExecutor",
-    "ModeloWorkRenameExecutor",
-    "ModeloWorkVerifyExecutor",
-    "PreparedModeloWorkCalculation",
-    "build_modelo_edit_apply_definition",
-    "build_modelo_edit_apply_registration",
-    "build_modelo_export_definition",
-    "build_modelo_export_registration",
-    "build_modelo_lifecycle_operation_definitions",
-    "build_modelo_lifecycle_operation_registrations",
-    "build_modelo_work_amend_definition",
-    "build_modelo_work_amend_registration",
-    "build_modelo_work_calculate_definition",
-    "build_modelo_work_calculate_registration",
-    "build_modelo_work_discard_definition",
-    "build_modelo_work_discard_registration",
-    "build_modelo_work_file_definition",
-    "build_modelo_work_file_registration",
-    "build_modelo_work_rename_definition",
-    "build_modelo_work_rename_registration",
-    "build_modelo_work_verify_definition",
-    "build_modelo_work_verify_registration",
-    "calculate_prepared_modelo_work",
-    "calculation_public_result",
-    "prepare_modelo_work_calculation",
-    "replaced_calculation_head",
-]

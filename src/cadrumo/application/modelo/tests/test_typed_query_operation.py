@@ -29,10 +29,7 @@ from cadrumo.application.operations.access_resolution import OperationAccessCont
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
-from cadrumo.application.state_projection import (
-    ModeloProfileRefusalCause,
-    ProjectionModeloReadiness,
-)
+from cadrumo.application.state_projection_models import ModeloProfileRefusalCause, ProjectionModeloReadiness
 from cadrumo.core.aggregation import BindingTypedEnumKind
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.operations import profile_operation_subject

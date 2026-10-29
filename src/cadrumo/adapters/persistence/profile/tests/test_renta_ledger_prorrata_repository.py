@@ -14,10 +14,8 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from .....application.aggregation.renta_ledger import (
-    RentaLedgerExpenseAggregation,
-    aggregate_renta_ledger_expenses_from_repositories,
-)
+from .....application.aggregation.renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from .....application.aggregation.renta_ledger_models import RentaLedgerExpenseAggregation
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .....core.period import Period
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime

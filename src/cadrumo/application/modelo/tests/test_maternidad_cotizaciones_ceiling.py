@@ -46,7 +46,7 @@ from ....domain.contribuyente.descendant import DescendantInfo
 from ....domain.contribuyente.descendant_facts import descendant_facts_from_list
 from ....domain.contribuyente.family_fact_context import FamilyFactResolutionContext
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..profile_binding import resolve_maternidad_meses
+from ..profile_derived_facts import resolve_maternidad_meses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

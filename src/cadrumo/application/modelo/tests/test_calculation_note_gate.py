@@ -20,9 +20,9 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ..calculation_note_gate import (
     ModeloCalculationBlockedError,
     blocking_calculation_issues,
@@ -35,7 +35,7 @@ from ..calculation_notes import (
     EXPORT_REFUSED_REASONS,
     GATE_REFUSED_REASONS,
 )
-from ..work_form_models import ModeloFormAttention
+from ..work_form_findings import ModeloFormAttention
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

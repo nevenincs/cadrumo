@@ -67,7 +67,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort, session_store
-from ..auth.sessions import (
+from ..auth.view_sessions import (
     VIEW_ASSISTED_PROVIDERS,
     ViewSessionBaseline,
     ViewSessionPublication,

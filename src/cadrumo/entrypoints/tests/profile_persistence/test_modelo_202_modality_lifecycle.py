@@ -27,7 +27,7 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import (
+from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_verification_repository_bundle,
@@ -47,7 +47,8 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.action_errors import CalculationRevisionStateError, ModeloRequiredBindingsMissingError
 from ....application.modelo.calculation_actions import calculate_modelo_revision
-from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.filing_action_ports import FilingActionPorts
 from ....application.modelo.filing_actions import file_modelo_revision

@@ -5,12 +5,12 @@ from __future__ import annotations
 import pytest
 
 from ....application.overview.status_report import overview_status_report_from_projection
-from ....application.state_projection import (
+from ....application.state_projection_auth import ProjectionAuthReadiness
+from ....application.state_projection_models import (
     OperatorStateProjection,
     ProjectionActiveProfile,
     ProjectionWorkspaceSummary,
 )
-from ....application.state_projection_auth import ProjectionAuthReadiness
 from ....core.json_contract import strict_round_trip
 from ..overview_results import OverviewStatusResult
 

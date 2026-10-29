@@ -20,14 +20,13 @@ from ...domain.calculations.registry.formula_runtime_ops import RegistryUnresolv
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
-    CalculationSourceRef,
     derive_calculation_revision_id_from_revision,
 )
 from ...domain.modelos.calculation_revision_identity import (
     outputs_for_hash_from_mapping,
     outputs_for_hash_from_observations,
 )
+from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
 from ...domain.modelos.filing_record import ModeloRecord
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_projection import ModeloCalculationDetailSnapshot
@@ -183,19 +182,7 @@ class ModeloHistoricalFilingContentProjection(BaseModel):
         return self
 
 
-def project_historical_filing_content(
-    record: ModeloRecord, revision: CalculationRevision | None
-) -> ModeloHistoricalFilingContentProjection:
-    """Project exactly the record's saved revision, refusing identity or coordinate drift.
-
-    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
-    The ``record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
-    """
-    if revision is None:
-        return ModeloHistoricalFilingContentProjection(
-            calculation_revision_id=record.calculation_revision_id,
-            availability="missing",
-        )
+def _require_saved_filing_coordinates(record: ModeloRecord, revision: CalculationRevision) -> None:
     coordinate = revision.registry_snapshot_ref
     if (
         revision.calculation_revision_id != record.calculation_revision_id
@@ -209,6 +196,23 @@ def project_historical_filing_content(
         or set(revision.row_casilla_values) != set(revision.row_casilla_provenance)
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def project_historical_filing_content(
+    record: ModeloRecord, revision: CalculationRevision | None
+) -> ModeloHistoricalFilingContentProjection:
+    """Project exactly the record's saved revision, refusing identity or coordinate drift.
+
+    The ``revision`` parameter uses :class:`CalculationRevision`, which holds the saved calculation and its evidence.
+    The ``record`` parameter uses :class:`ModeloRecord`, which selects the saved filing content.
+    """
+    if revision is None:
+        return ModeloHistoricalFilingContentProjection(
+            calculation_revision_id=record.calculation_revision_id,
+            availability="missing",
+        )
+    _require_saved_filing_coordinates(record, revision)
+    coordinate = revision.registry_snapshot_ref
     return ModeloHistoricalFilingContentProjection(
         calculation_revision_id=revision.calculation_revision_id,
         availability="available",

@@ -24,9 +24,10 @@ from .schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from .schema_exports import ExportLayoutDefinition
 from .schema_extraction import ExtractionProfileDefinition
 from .schema_formula import ParameterDefinition
+from .schema_live_verification import LiveCrossReferenceDecision
 from .schema_revision_members import ApplicationLinkDefinition, ConstructDefinition, DependencyClassificationDefinition
 from .schema_surfaces import CasillaDefinition
-from .schema_verification import LiveCrossReferenceDecision, VerificationExpectationDefinition, WorkbookParityReference
+from .schema_verification import VerificationExpectationDefinition, WorkbookParityReference
 from .validate_revision_identity import collect_record_id_lists
 
 

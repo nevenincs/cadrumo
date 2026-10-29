@@ -124,15 +124,8 @@ class TimedRLock:
 
     def _enter(self, call_name: str | None, blocking: bool = True, timeout: float = -1) -> bool:
         requested = time.monotonic()
-        blocker: tuple[str, float] | None = None
-        if blocking and (timeout == -1 or timeout > self._slow_seconds):
-            if not self._lock.acquire(timeout=self._slow_seconds):
-                observed = self._holder
-                if observed is not None:
-                    blocker = (observed.call_name, time.monotonic() - observed.acquired)
-                if not self._lock.acquire(timeout=-1 if timeout == -1 else timeout - self._slow_seconds):
-                    return False
-        elif not self._lock.acquire(blocking, timeout):
+        acquired_lock, blocker = self._acquire_observing_holder(blocking, timeout)
+        if not acquired_lock:
             return False
         if self._depth:
             self._depth += 1
@@ -141,6 +134,19 @@ class TimedRLock:
         name = _caller_label() if call_name is None else call_name
         self._holder, self._depth = _Entry(get_ident(), name, acquired, acquired - requested, blocker), 1
         return True
+
+    def _acquire_observing_holder(self, blocking: bool, timeout: float) -> tuple[bool, tuple[str, float] | None]:
+        blocker: tuple[str, float] | None = None
+        if blocking and (timeout == -1 or timeout > self._slow_seconds):
+            if not self._lock.acquire(timeout=self._slow_seconds):
+                observed = self._holder
+                if observed is not None:
+                    blocker = (observed.call_name, time.monotonic() - observed.acquired)
+                if not self._lock.acquire(timeout=-1 if timeout == -1 else timeout - self._slow_seconds):
+                    return False, blocker
+        elif not self._lock.acquire(blocking, timeout):
+            return False, blocker
+        return True, blocker
 
     def _report(self, call_name: str, *, waited: float, held_for: float, blocker: tuple[str, float] | None) -> None:
         if waited < self._slow_seconds and held_for < self._slow_seconds:

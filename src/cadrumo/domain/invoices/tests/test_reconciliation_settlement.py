@@ -19,8 +19,9 @@ from ...iva.schema import InvoiceKind
 from ...transactions.enums import BusinessClassification, TransactionDirection
 from ...transactions.models import Transaction, TransactionCatalogue
 from ...transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ..catalogue import InvoiceCatalogue
 from ..enums import IvaRate, PaymentStatus
-from ..models import Invoice, InvoiceCatalogue, InvoiceLine
+from ..models import Invoice, InvoiceLine
 from ..service import suggest_reconciliations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

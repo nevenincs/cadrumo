@@ -386,6 +386,30 @@ class HandleVerifiedEvidenceParser(ReconciliationEvidenceParserPort):
         )
 
 
+def _require_import_projection(
+    payload: ModeloReconciliationImportRequest,
+    report: ModeloReconciliationImportProjection,
+    profile_id: str,
+    command: ModeloReconciliationCommand,
+    prepared: PreparedModeloReconciliation,
+    verified_parser: HandleVerifiedEvidenceParser,
+) -> None:
+    if (
+        report.bucket_id != profile_id
+        or report.work_unit_id != command.work_unit_id
+        or (
+            payload.calculation_revision_id is not None
+            and report.calculation_revision_id != payload.calculation_revision_id
+        )
+        or report.source_kind is not payload.source_kind
+        or report.source_path != str(command.source_path)
+        or verified_parser.verified_sha256 is None
+        or report.source_pdf_sha256 != verified_parser.verified_sha256
+        or prepared.record.source_pdf_sha256 != verified_parser.verified_sha256
+    ):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+
+
 class ModeloReconciliationImportExecutor:
     """Prepare a local comparison, then atomically persist its record and event."""
 
@@ -450,20 +474,7 @@ class ModeloReconciliationImportExecutor:
         except CalculationRevisionNotFoundError as exc:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED) from exc
         report = ModeloReconciliationImportProjection.from_report(prepared.report)
-        if (
-            report.bucket_id != profile_id
-            or report.work_unit_id != command.work_unit_id
-            or (
-                payload.calculation_revision_id is not None
-                and report.calculation_revision_id != payload.calculation_revision_id
-            )
-            or report.source_kind is not payload.source_kind
-            or report.source_path != str(command.source_path)
-            or verified_parser.verified_sha256 is None
-            or report.source_pdf_sha256 != verified_parser.verified_sha256
-            or prepared.record.source_pdf_sha256 != verified_parser.verified_sha256
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        _require_import_projection(payload, report, profile_id, command, prepared, verified_parser)
         if len(canonical_json_bytes(report.model_dump(mode="json"))) > _MAX_RESULT_DOCUMENT_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 

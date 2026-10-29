@@ -22,7 +22,8 @@ from .....core.i18n.render import tr
 from .....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ...components.dialogs import ConfirmScreen
 from ...tests.settling import settle
-from ..entries_browse import BROWSE_PAGE_SIZE, LedgerBrowseStateV1, LedgerEntriesBrowseScreen
+from ..entries_browse import LedgerEntriesBrowseScreen
+from ..entries_browse_model import BROWSE_PAGE_SIZE, LedgerBrowseStateV1
 from ..entries_common import entry_label, joined
 from ..entries_trace import LedgerEntryTraceScreen
 from .entries_door_fixtures import (

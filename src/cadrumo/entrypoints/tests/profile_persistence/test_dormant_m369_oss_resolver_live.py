@@ -37,12 +37,13 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
-    calculate_modelo_revision,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -55,13 +56,15 @@ from cadrumo.domain.calculations.registry.export_parse import parse_export_paylo
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.ledger_oss_bindings import OssIossLedgerObservation
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.schema import IvaRateKind
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from cadrumo.domain.transactions.date_partition import LedgerDatePartition
+from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
     _T0,
     _T1,

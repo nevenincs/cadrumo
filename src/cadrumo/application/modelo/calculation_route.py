@@ -17,10 +17,10 @@ from ..aggregation.inventory import InventorySourceResolver
 from ..aggregation.modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
-    LedgerIvaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
+from ..aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from ..aggregation.modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..aggregation.oss_ioss import OssIossLedgerSourceResolver

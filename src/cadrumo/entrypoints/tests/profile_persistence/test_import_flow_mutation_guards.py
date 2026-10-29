@@ -22,7 +22,8 @@ from ....application.modelo.action_errors import (
     WorkUnitNotFoundError,
 )
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_revision_queries import get_calculation_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.work_lifecycle import (
     create_work_unit,
@@ -43,10 +44,7 @@ from ....domain.modelos.calculation_revision_amendment import CalculationRevisio
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ...adapter_composition import (
-    build_amendment_action_ports,
-    build_calculation_action_ports,
-)
+from ...adapter_composition_work_ports import build_amendment_action_ports, build_calculation_action_ports
 from .file_flow_test_support import calculation_ports_for_test
 from .import_flow_support import (
     _IMPORT_INCOME_CASILLA,

@@ -72,11 +72,8 @@ from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.filing.schema import ModeloScalar, ModeloValueKind
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
-from ...domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    CalculationSourceRef,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.modelos.work_unit import WorkUnit
@@ -179,7 +176,7 @@ class ModeloCalculationReportSourceProvenance(BaseModel):
     """One resolver-level source trace the revision recorded for a casilla.
 
     The report-facing projection of
-    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationSourceRef`,
+    :class:`~cadrumo.domain.modelos.calculation_revision_sources.CalculationSourceRef`,
     narrowed to what a reader needs in order to recognise the source object
     without learning who it belongs to: which resolver produced the row, the
     upstream taxonomy token it came from, a keyed digest of the reference to the

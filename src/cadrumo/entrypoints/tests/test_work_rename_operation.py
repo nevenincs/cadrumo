@@ -17,18 +17,16 @@ from ...adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
 from ...application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
+from ...application.modelo.export_operation import ModeloExportExecutor, build_modelo_export_definition
 from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from ...application.modelo.lifecycle_advisories import ModeloLifecycleAdvisories
 from ...application.modelo.operation_definitions import (
-    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
-    ModeloExportExecutor,
     ModeloWorkAmendExecutor,
     ModeloWorkDiscardExecutor,
     ModeloWorkFileExecutor,
     ModeloWorkRenameExecutor,
     ModeloWorkVerifyExecutor,
-    build_modelo_export_definition,
     build_modelo_work_amend_definition,
     build_modelo_work_discard_definition,
     build_modelo_work_discard_registration,
@@ -38,6 +36,7 @@ from ...application.modelo.operation_definitions import (
     build_modelo_work_verify_definition,
     build_modelo_work_verify_registration,
 )
+from ...application.modelo.operation_shared import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.tests.operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from ...application.modelo.verification_preconditions import ModeloVerificationResult
@@ -84,11 +83,11 @@ from ...domain.modelos.verification_report import (
     VerificationReport,
     derive_verification_report_id,
 )
-from ..adapter_composition import (
+from ..adapter_composition_ports import build_modelo_export_ports
+from ..adapter_composition_work_ports import (
     build_active_work_lifecycle_ports,
     build_amendment_action_ports,
     build_filing_action_ports,
-    build_modelo_export_ports,
     build_verification_repository_bundle,
 )
 
@@ -196,13 +195,12 @@ def test_the_definition_module_is_public_and_importable_directly() -> None:
     """A composition root outside this package must be able to import it."""
     definition_path = Path(inspect.getfile(build_modelo_work_rename_registration))
     definition_tree = ast.parse(definition_path.read_text(encoding="utf-8"))
-    definition_all = next(
-        node.value
+    exported_names = {
+        node.name
         for node in definition_tree.body
-        if isinstance(node, ast.Assign)
-        and any(isinstance(target, ast.Name) and target.id == "__all__" for target in node.targets)
-    )
-    exported_names = set(ast.literal_eval(definition_all))
+        if isinstance(node, (ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef)) and not node.name.startswith("_")
+    }
+    assert build_modelo_work_rename_registration.__name__ in exported_names
 
     package_path = definition_path.with_name("__init__.py")
     package_tree = ast.parse(package_path.read_text(encoding="utf-8"))

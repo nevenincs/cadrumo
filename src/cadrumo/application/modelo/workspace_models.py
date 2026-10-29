@@ -32,11 +32,11 @@ from ...domain.calculations.registry.ids import (
     SourceRefId,
 )
 from ...domain.filing.schema import ModeloScalar
-from ...domain.modelos.calculation_revision import CalculationSourceRef
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.work_unit import WorkUnitState
 from ..operator_actions.models import ActionReference
-from ..state_projection import ProjectionModeloReadiness
+from ..state_projection_models import ProjectionModeloReadiness
 from . import _workspace_model_validation as _workspace_validation
 from .work_addressing import ModeloExactWorkUnitTarget, ModeloVisibleFilingTarget
 from .work_review import ModeloWorkReview
@@ -939,7 +939,7 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
     """The canonical readiness report for this exact target, when measured.
 
     Deliberately the producer's own
-    :class:`~cadrumo.application.state_projection.ProjectionModeloReadiness`
+    :class:`~cadrumo.application.state_projection_models.ProjectionModeloReadiness`
     rather than a Workspace-local restatement of it. Every axis this
     projection would carry -- profile requirements, registry availability,
     binding resolution, ledger preflight -- is already typed on that record,

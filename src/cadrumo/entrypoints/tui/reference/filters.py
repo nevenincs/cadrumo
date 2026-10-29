@@ -117,12 +117,7 @@ def _coordinate(reference_filter: ReferenceFilter, raw: object) -> object:
     return text
 
 
-def query_from_form(read: ReferenceRead, values: Mapping[str, object]) -> ReferenceQuery:
-    """Build one read's query from the form's values.
-
-    Raises:
-        ReferenceFilterError: A coordinate is missing or does not fit its type.
-    """
+def _form_coordinates(read: ReferenceRead, values: Mapping[str, object]) -> tuple[dict[str, object], list[str]]:
     coordinates: dict[str, object] = {}
     faults: list[str] = []
     for reference_filter in filters_of(read):
@@ -134,6 +129,16 @@ def query_from_form(read: ReferenceRead, values: Mapping[str, object]) -> Refere
         if value is None and reference_filter.required:
             faults.append(reference_filter.name)
         coordinates[reference_filter.name] = value
+    return coordinates, faults
+
+
+def query_from_form(read: ReferenceRead, values: Mapping[str, object]) -> ReferenceQuery:
+    """Build one read's query from the form's values.
+
+    Raises:
+        ReferenceFilterError: A coordinate is missing or does not fit its type.
+    """
+    coordinates, faults = _form_coordinates(read, values)
     if read in _YEAR_NEEDS_PERIOD and coordinates.get("year") is not None and coordinates.get("period") is None:
         faults.append("period")
     if faults:

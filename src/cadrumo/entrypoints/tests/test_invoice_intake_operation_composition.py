@@ -19,7 +19,7 @@ from ...application.invoices.bulk_import import import_invoices_from_rows, read_
 from ...application.invoices.creation_wizard import create_invoice_via_wizard
 from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ...application.operations.error_detail import build_operation_error_detail
-from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.config import override_settings
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -127,7 +127,7 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
     [
         (
             ModelRunRefusalCode.MODEL_NOT_INSTALLED,
-            ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+            ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
             LOCAL_AI_PROVISION_ACTION_ID,
         ),
         (ModelRunRefusalCode.NO_SELECTION, LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED, None),
@@ -138,7 +138,7 @@ def test_a_book_whose_mapping_reader_is_missing_refuses_with_its_typed_verdict(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
     refusal: ModelRunRefusalCode,
-    condition: LLMPreconditionCondition | ProvisioningPreconditionCondition,
+    condition: LLMPreconditionCondition | ProbePreconditionCondition,
     action_id: str | None,
 ) -> None:
     """The composed mapper reports the reader, and the book refuses with its verdict rather than missing columns.

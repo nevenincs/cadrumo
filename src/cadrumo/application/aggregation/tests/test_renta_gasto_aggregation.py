@@ -24,7 +24,7 @@ from ....domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindi
 )
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -34,10 +34,8 @@ from ..renta_gasto_ledger import (
     RentaGastoObservation,
     aggregate_renta_gasto_ledger,
 )
-from ..renta_ledger import (
-    RentaLedgerAggregationIssueReason,
-    aggregate_renta_ledger_expenses,
-)
+from ..renta_ledger import aggregate_renta_ledger_expenses
+from ..renta_ledger_models import RentaLedgerAggregationIssueReason
 from .renta_income_aggregation_support import _period
 from .usage_ratio_support import (
     HOME_OFFICE_SUMINISTRO_RATIO,

@@ -175,14 +175,7 @@ class VerifyCaptureExecutor:
         """Fetch remotely before a fresh COMMIT guard for the local event."""
         payload = request.payload
         bucket_id = str(payload.profile_id)
-        if (
-            request.definition_id != _definition_id(self._surface)
-            or request.subject_ref != profile_operation_subject(bucket_id)
-            or context.identity.definition_id != request.definition_id
-            or context.identity.subject_ref != request.subject_ref
-            or require_active_bucket_id() != bucket_id
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+        self._require_profile_binding(request, context, bucket_id)
         if self._surface is VerifySurface.NIF_IVA:
             raise LiveNifIvaCertificateRequiredError()
 
@@ -216,6 +209,21 @@ class VerifyCaptureExecutor:
             return await context.operands.put(
                 VerifyCaptureOperationReport(observation=record, newly_persisted=newly_persisted), written_at=now()
             )
+
+    def _require_profile_binding(
+        self,
+        request: OperationRequest[VerifyCaptureRequest],
+        context: OperationExecutorContext,
+        bucket_id: str,
+    ) -> None:
+        if (
+            request.definition_id != _definition_id(self._surface)
+            or request.subject_ref != profile_operation_subject(bucket_id)
+            or context.identity.definition_id != request.definition_id
+            or context.identity.subject_ref != request.subject_ref
+            or require_active_bucket_id() != bucket_id
+        ):
+            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
 
 
 def build_verify_capture_definition(

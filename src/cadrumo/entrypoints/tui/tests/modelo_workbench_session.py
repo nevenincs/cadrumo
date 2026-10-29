@@ -57,7 +57,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from ...operation_composition import build_production_operation_registry
 from ..modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 from ..modelo.workbench.factory import InstalledModeloWorkbench

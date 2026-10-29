@@ -12,18 +12,18 @@ from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.invoice_link import LinkInconsistencyDirection
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.invoices.service import verify_link_consistency
 from ....domain.iva.schema import InvoiceKind
-from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.enums import TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.service import link_invoice
 from ..catalogue_reads import verify_invoice_repository_links

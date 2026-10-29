@@ -15,7 +15,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..action_errors import ModeloDomiciliationPastCutoffError
-from ..export import ModeloExportCommand, _require_domiciliation_before_cutoff
+from ..export_accounts import require_domiciliation_before_cutoff
+from ..export_contracts import ModeloExportCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -69,7 +70,7 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
     )
 
     def gate(disposition: ResultDisposition | None) -> bool:
-        return _require_domiciliation_before_cutoff(
+        return require_domiciliation_before_cutoff(
             command,
             work_unit=work_unit,
             resolved_result_disposition=disposition,

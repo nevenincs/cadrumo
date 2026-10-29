@@ -36,7 +36,10 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 

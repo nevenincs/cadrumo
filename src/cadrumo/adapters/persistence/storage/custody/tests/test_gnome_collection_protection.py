@@ -17,6 +17,8 @@ import pytest
 from cadrumo.adapters.persistence.storage.custody import gnome_collection_protection as protection
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 
+from ..gnome_collection_identity import GNOME_COLLECTION_PATH_PREFIX, gnome_collection_id
+
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.hex_persistence_adapter,
@@ -239,13 +241,13 @@ def native_metadata(monkeypatch: pytest.MonkeyPatch) -> tuple[_Bus, _RepliesRpc]
 
 @pytest.mark.parametrize("suffix,identifier", [("login", b"login"), ("a_5fb_2fc", b"a_b/c"), ("_c3_a9", b"\xc3\xa9")])
 def test_collection_id_uses_canonical_gnome_byte_escaping(suffix: str, identifier: bytes) -> None:
-    assert protection.gnome_collection_id(protection._PREFIX + suffix) == identifier
+    assert gnome_collection_id(GNOME_COLLECTION_PATH_PREFIX + suffix) == identifier
 
 
 @pytest.mark.parametrize("suffix", ["", "login/1", "bare_", "_00", "_61", "_AF", "_gg", "Ã©"])
 def test_unsupported_collection_identity_is_refused(suffix: str) -> None:
     with pytest.raises(AutomationCustodyError):
-        protection.gnome_collection_id(protection._PREFIX + suffix)
+        gnome_collection_id(GNOME_COLLECTION_PATH_PREFIX + suffix)
 
 
 def test_protected_metadata_uses_exact_read_only_subset_and_original_deadline(
@@ -322,7 +324,7 @@ def test_native_owner_and_alias_remain_bound_to_selected_collection(
     elif defect == "owner_change":
         bus.owner_changes = True
     elif defect == "alias_change":
-        bus.alias = protection._PREFIX + "foreign"
+        bus.alias = GNOME_COLLECTION_PATH_PREFIX + "foreign"
     else:
         bus.locked = True
     with pytest.raises(AutomationCustodyError) as refused:

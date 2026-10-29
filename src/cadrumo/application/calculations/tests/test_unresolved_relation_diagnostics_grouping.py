@@ -1,6 +1,6 @@
 """One absent source filing produces one advisory, not one per relation reading it.
 
-Pure-function coverage over ``_unresolved_relation_diagnostics``: no secure
+Pure-function coverage over ``unresolved_relation_diagnostics``: no secure
 storage, no session, no registry snapshot — just the grouping logic against
 hand-built :class:`RegistryFoldRequirement` rows, so the property is pinned
 independently of any modelo-specific fixture. The Modelo 190 case the row
@@ -15,7 +15,7 @@ import pytest
 
 from ....core.casilla_id import validated_casilla_id
 from ....domain.calculations.registry.relations import RegistryFoldRequirement
-from ..relation_prefill import _unresolved_relation_diagnostics
+from ..relation_prefill_diagnostics import unresolved_relation_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -53,7 +53,7 @@ def test_ten_relations_over_one_absent_source_collapse_to_one_diagnostic() -> No
         for index in range(10)
     }
 
-    diagnostics = _unresolved_relation_diagnostics(
+    diagnostics = unresolved_relation_diagnostics(
         unresolved_relation_ids=frozenset(requirements),
         requirements_by_relation=requirements,
         resolver_id="relation_prefill",
@@ -92,7 +92,7 @@ def test_two_different_source_requirements_stay_two_diagnostics() -> None:
     )
     requirements = {**same_source, "rel-c": different_year}
 
-    diagnostics = _unresolved_relation_diagnostics(
+    diagnostics = unresolved_relation_diagnostics(
         unresolved_relation_ids=frozenset(requirements),
         requirements_by_relation=requirements,
         resolver_id="relation_prefill",
@@ -105,7 +105,7 @@ def test_two_different_source_requirements_stay_two_diagnostics() -> None:
 
 def test_a_relation_with_no_requirement_stays_its_own_diagnostic() -> None:
     """An orphan (no scoped requirement at all) has no source coordinate to group by."""
-    diagnostics = _unresolved_relation_diagnostics(
+    diagnostics = unresolved_relation_diagnostics(
         unresolved_relation_ids=frozenset({"orphan-rel"}),
         requirements_by_relation={},
         resolver_id="relation_prefill",
@@ -120,7 +120,7 @@ def test_a_single_unresolved_relation_still_carries_its_id_in_both_fields() -> N
     """The singular field stays populated even when grouping produces exactly one member."""
     requirement = _requirement(relation_id="solo-rel", casilla="fact-solo", binding="binding-solo")
 
-    diagnostics = _unresolved_relation_diagnostics(
+    diagnostics = unresolved_relation_diagnostics(
         unresolved_relation_ids=frozenset({"solo-rel"}),
         requirements_by_relation={"solo-rel": requirement},
         resolver_id="relation_prefill",

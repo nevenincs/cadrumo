@@ -15,7 +15,7 @@ against the span rather than by equality against the filing date.
 See Also:
     :class:`~domain.transactions.models.Transaction`
         Ledger row whose cash-accounting timing facts these read.
-    :class:`~domain.transactions.models.LedgerDatePartition`
+    :class:`~domain.transactions.date_partition.LedgerDatePartition`
         Partition contract the eligible span feeds.
 """
 

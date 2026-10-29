@@ -12,7 +12,8 @@ from __future__ import annotations
 import pytest
 
 from ......application.modelo.work_form import build_modelo_work_form
-from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_next_step import (
     ModeloFormNextAction,
     blocking_count,

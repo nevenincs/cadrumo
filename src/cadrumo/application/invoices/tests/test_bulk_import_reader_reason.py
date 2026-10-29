@@ -22,7 +22,7 @@ from ...dependency_wording import column_reader_refusal_reason
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
 from ...local_reader import probe_local_ai_program
-from ...provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from ...probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from ...tests.local_ai_program_rows import local_ai_row
 from ..bulk_import import read_bulk_invoice_import_source
 
@@ -57,8 +57,8 @@ def test_the_book_refusal_names_local_ai_and_its_setup() -> None:
 
 
 def test_a_role_this_computer_cannot_run_offers_no_setup() -> None:
-    verdict = provisioning_no_recovery_verdict(
-        ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+    verdict = probe_no_recovery_verdict(
+        ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
         facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "runtime_reachable": True, "role_model_selected": False},
     )
 

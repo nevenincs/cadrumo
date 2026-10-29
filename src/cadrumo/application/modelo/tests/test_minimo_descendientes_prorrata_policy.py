@@ -12,10 +12,10 @@ import pytest
 
 from cadrumo.domain.contribuyente.renta_codes import RentaMaritalStatus
 
-from ..profile_binding import (
-    _MARRIED_STATUS_TOKENS,
-    _PARTNERED_STATUS_TOKENS,
-    _UNMARRIED_STATUS_TOKENS,
+from ..profile_derived_facts import (
+    MARRIED_STATUS_TOKENS,
+    PARTNERED_STATUS_TOKENS,
+    UNMARRIED_STATUS_TOKENS,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -31,11 +31,11 @@ def test_the_partnered_tokens_carry_no_foreign_vocabulary() -> None:
     """
     storable = {member.value for member in RentaMaritalStatus}
     for name, tokens in (
-        ("married", _MARRIED_STATUS_TOKENS),
-        ("partnered", _PARTNERED_STATUS_TOKENS),
-        ("unmarried", _UNMARRIED_STATUS_TOKENS),
+        ("married", MARRIED_STATUS_TOKENS),
+        ("partnered", PARTNERED_STATUS_TOKENS),
+        ("unmarried", UNMARRIED_STATUS_TOKENS),
     ):
         assert tokens <= storable, f"{name} set carries tokens the schema cannot store: {sorted(tokens - storable)}"
     # Married and unmarried partition the enum: no code is both, none is neither.
-    assert storable == _MARRIED_STATUS_TOKENS | _UNMARRIED_STATUS_TOKENS
-    assert not _MARRIED_STATUS_TOKENS & _UNMARRIED_STATUS_TOKENS
+    assert storable == MARRIED_STATUS_TOKENS | UNMARRIED_STATUS_TOKENS
+    assert not MARRIED_STATUS_TOKENS & UNMARRIED_STATUS_TOKENS

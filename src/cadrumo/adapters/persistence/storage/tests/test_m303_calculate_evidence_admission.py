@@ -22,7 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     seed_modelo_ready_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.modelo import operation_definitions as definitions_module
+from cadrumo.application.modelo import calculation_operation as definitions_module
 from cadrumo.application.modelo.action_errors import (
     M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
@@ -33,6 +33,7 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
 )
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
@@ -149,7 +150,7 @@ def _calculate_request(
     evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None,
 ) -> OperationRequest[ModeloWorkCalculateRequest]:
     return OperationRequest(
-        definition_id=definitions_module.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
         subject_ref=work_unit.work_unit_id,
         payload=ModeloWorkCalculateRequest(
             work_unit_id=work_unit.work_unit_id,

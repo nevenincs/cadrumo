@@ -54,12 +54,10 @@ from ....application.modelo.action_errors import (
     StoredRowFieldScalarInputError,
 )
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
-from ....application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_revision_queries import get_calculation_revision
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import (
     create_work_unit,
@@ -97,7 +95,7 @@ from ....domain.modelos.work_unit import WorkUnit
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.write_unit_recorder import WriteUnitRecorder
-from ...adapter_composition import (
+from ...adapter_composition_work_ports import (
     build_amendment_action_ports,
     build_calculation_action_ports,
     build_filing_action_ports,

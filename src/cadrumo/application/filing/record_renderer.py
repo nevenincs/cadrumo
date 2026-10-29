@@ -147,14 +147,7 @@ def _require_m180_row_casillas(
     """
     if registry_snapshot.modelo.id != Modelo("180") or record.repeat != "binding_rows":
         return
-    required_casilla_ids = frozenset(casilla.id for casilla in registry_snapshot.revision.casillas if casilla.required)
-    required_binding_ids = frozenset(
-        binding.id
-        for binding in registry_snapshot.revision.bindings
-        if isinstance(binding.provider, RetencionesAggregationProvider)
-        and binding.provider.fact is RetencionesAggregationFact.ROW_FIELD
-        and binding.provider.target_casilla_id in required_casilla_ids
-    )
+    required_binding_ids = _required_m180_bindings(registry_snapshot)
     binding_fields = _record_binding_fields(record)
     for row_index in sorted({row.row_index for row in rows if row.row_index is not None}):
         _require_populated_row_bindings(
@@ -163,6 +156,18 @@ def _require_m180_row_casillas(
             row_index=row_index,
             registry_required_binding_ids=required_binding_ids,
         )
+
+
+def _required_m180_bindings(registry_snapshot: RegistrySnapshot) -> frozenset[BindingId]:
+    required_casilla_ids = frozenset(casilla.id for casilla in registry_snapshot.revision.casillas if casilla.required)
+    required_binding_ids = frozenset(
+        binding.id
+        for binding in registry_snapshot.revision.bindings
+        if isinstance(binding.provider, RetencionesAggregationProvider)
+        and binding.provider.fact is RetencionesAggregationFact.ROW_FIELD
+        and binding.provider.target_casilla_id in required_casilla_ids
+    )
+    return required_binding_ids
 
 
 def _render_record_bytes(

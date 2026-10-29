@@ -35,10 +35,10 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....application.filing.draft_construction import build_draft
 from ....application.filing.runtime import build_runtime_schema_provider, filing_profile_from_taxpayer
 from ....application.modelo.calculation_action_ports import CalculationActionPorts
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
-    list_calculation_revisions,
 )
+from ....application.modelo.calculation_revision_queries import list_calculation_revisions
 from ....application.modelo.revision_replay_inputs import revision_filing_replay_inputs
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation

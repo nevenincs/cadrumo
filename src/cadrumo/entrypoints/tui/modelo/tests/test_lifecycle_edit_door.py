@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from .....application.modelo.action_errors import ModeloEditBaselineStaleError
-from .....application.modelo.calculation_actions import (
+from .....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from .....application.modelo.edit_models import (
@@ -33,7 +33,7 @@ from .....application.modelo.work_lifecycle import discard_work_unit
 from .....application.modelo.workbench_read import read_modelo_workbench_form
 from .....core.casilla_id import validated_casilla_id
 from .....core.external_constants import OutputLanguage
-from ....adapter_composition import build_work_lifecycle_ports
+from ....adapter_composition_work_ports import build_work_lifecycle_ports
 from ....operation_composition import build_production_operation_registry
 from ....tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 from ...tests.modelo_workbench_session import RecordedSubmissions, application_lifecycle_door, workbench_read_ports

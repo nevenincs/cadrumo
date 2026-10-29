@@ -4,7 +4,7 @@ Both reads open the authenticated stored catalogue and validate only the
 invoices they return: the list each invoice it lists, the view the one invoice
 it selects. Selection itself reads stored ids alone.
 
-Core types: :class:`~cadrumo.domain.invoices.models.StoredInvoiceCatalogue`.
+Core types: :class:`~cadrumo.domain.invoices.catalogue.StoredInvoiceCatalogue`.
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.invoices.models import StoredInvoiceCatalogue
+from ...domain.invoices.catalogue import StoredInvoiceCatalogue
 from ...domain.iva.schema import InvoiceKind
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess

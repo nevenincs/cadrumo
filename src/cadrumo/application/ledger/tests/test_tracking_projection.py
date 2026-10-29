@@ -24,7 +24,7 @@ from ....domain.transactions.lineage_models import (
 )
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..actions_manual import ledger_transaction_tracking_payload
+from ..manual_read import ledger_transaction_tracking_payload
 from ..models import LedgerTransactionTrackingPayload
 from ..tracking_projection import (
     LedgerImportedProvenanceProjection,

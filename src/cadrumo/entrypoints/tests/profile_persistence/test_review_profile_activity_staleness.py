@@ -56,7 +56,7 @@ from cadrumo.domain.filing.protocols import CasillaSchemaProvider
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

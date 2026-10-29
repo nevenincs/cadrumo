@@ -338,12 +338,7 @@ def _apoderado_scopes(result: ApoderadoScopesListResult) -> ReferenceView:
     )
 
 
-def view_of(query: ReferenceQuery, result: BaseModel) -> ReferenceView:
-    """Lay out the result of one read.
-
-    Raises:
-        TypeError: The result is not one a reference read returns.
-    """
+def _modelo_view(query: ReferenceQuery, result: BaseModel) -> ReferenceView | None:
     if isinstance(result, ModeloListResult):
         return _modelos(result)
     if isinstance(result, ModeloSupportMatrixResult):
@@ -356,6 +351,18 @@ def view_of(query: ReferenceQuery, result: BaseModel) -> ReferenceView:
         return _casilla(result)
     if isinstance(result, FormulasResult):
         return _formulas(replace(query, modelo=result.code), result)
+    return None
+
+
+def view_of(query: ReferenceQuery, result: BaseModel) -> ReferenceView:
+    """Lay out the result of one read.
+
+    Raises:
+        TypeError: The result is not one a reference read returns.
+    """
+    model_view = _modelo_view(query, result)
+    if model_view is not None:
+        return model_view
     if isinstance(result, ModeloBindingsReport):
         return _bindings(result)
     if isinstance(result, LedgerCategoriesResult):

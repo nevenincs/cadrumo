@@ -42,12 +42,12 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
 from cadrumo.application.auth.models import AuthCleanupOperationKind, CertificateSecretMutationEventKind
-from cadrumo.application.auth.operator import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_cleanup import build_auth_cleanup_intent
 from cadrumo.application.auth.operator_results import (
     AuthCleanupInProgressError,
     CertificateSecretMutationInProgressError,
 )
+from cadrumo.application.auth.operator_revocation import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.sessions import ensure_authenticated_aeat_session, storage_state_paths
 from cadrumo.application.user_profile.profile_keys import profile_keys

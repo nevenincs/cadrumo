@@ -28,7 +28,7 @@ from .binding_selector_utils import (
 from .casilla_membership import casillas_by_id
 from .errors import RegistryValidationError
 from .export_field_casilla import layout_fields_in_emission_order
-from .export_parse import xml_dictionary_entries
+from .export_xml_dictionary import xml_dictionary_entries
 from .fixed_width_codec import ExportJustification, ExportPadding
 from .ids import ExportFieldId
 from .schema import BindingDefinition, ModeloRevision, RegistrySnapshot

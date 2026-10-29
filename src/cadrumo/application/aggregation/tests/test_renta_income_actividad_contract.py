@@ -15,7 +15,7 @@ from ....domain.calculations.registry.ledger_renta_income_bindings import (
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.schema_surfaces import CasillaDefinition
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification
 from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates

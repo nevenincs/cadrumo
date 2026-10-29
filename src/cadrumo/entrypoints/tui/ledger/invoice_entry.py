@@ -16,13 +16,14 @@ from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date_unless_blank
 from ....domain.invoices.business_premises import SituacionInmueble, require_situacion_inmueble
-from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
-from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController
+from .controller import LedgerWorkspaceController
+from .invoice_entry_wording import invoice_line_row, supplemental_summary_lines
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1, LedgerInvoiceLineEntryV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerInvoiceEntryRequested
 
 #: Text fields in form order, each with whether the writer requires it. The
 #: taxable base is required only when no line is entered, which the reader
@@ -267,81 +268,6 @@ def _build_invoice_entry(
     )
 
 
-def invoice_line_row(index: int, line: InvoiceLine | LedgerInvoiceLineEntryV1) -> str:
-    """Render one invoice line as its numbered row, for entry review and the detail view alike."""
-    return tr(
-        "tui.ledger.invoice.line.row",
-        index=str(index),
-        description=line.description,
-        quantity=format(line.quantity, "f"),
-        unit_price=format(line.unit_price, "f"),
-        subtotal=format(line.subtotal, "f"),
-        rate=str(line.iva_rate),
-        amount=format(line.iva_amount, "f"),
-    )
-
-
-def _operation_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.operation_type is not None or entry.operation_date is not None:
-        return tr(
-            "tui.ledger.invoice.summary.operation",
-            code="-" if entry.operation_type is None else entry.operation_type.value,
-            date="-" if entry.operation_date is None else entry.operation_date.isoformat(),
-        )
-    return None
-
-
-def _recargo_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.recargo_amount is not None:
-        return tr(
-            "tui.ledger.invoice.summary.recargo",
-            amount=format(entry.recargo_amount, "f"),
-            currency=entry.currency,
-        )
-    return None
-
-
-def _rectifies_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.rectifies_invoice_number is not None:
-        return tr("tui.ledger.invoice.summary.rectifies", number=entry.rectifies_invoice_number)
-    return None
-
-
-def _retention_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.retention_rate is not None or entry.retention_amount is not None:
-        return tr(
-            "tui.ledger.invoice.summary.retention",
-            rate="-" if entry.retention_rate is None else format(entry.retention_rate, "f"),
-            amount="-" if entry.retention_amount is None else format(entry.retention_amount, "f"),
-        )
-    return None
-
-
-def _lease_summary_line(entry: LedgerInvoiceEntryV1) -> str | None:
-    if entry.arrendamiento_local_negocio:
-        return tr(
-            "tui.ledger.invoice.summary.lease",
-            situacion=entry.situacion_inmueble or "-",
-            referencia=entry.referencia_catastral or "-",
-        )
-    return None
-
-
-def _supplemental_summary_lines(entry: LedgerInvoiceEntryV1) -> list[str]:
-    lines: list[str] = []
-    for render_line in (
-        _operation_summary_line,
-        _recargo_summary_line,
-        _rectifies_summary_line,
-        _retention_summary_line,
-        _lease_summary_line,
-    ):
-        line = render_line(entry)
-        if line is not None:
-            lines.append(line)
-    return lines
-
-
 class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
     """Collect every field ``invoice add`` takes, then write only after review."""
 
@@ -537,7 +463,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                     currency=entry.currency,
                 )
             )
-        lines.extend(_supplemental_summary_lines(entry))
+        lines.extend(supplemental_summary_lines(entry))
         return "\n".join(lines)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -648,4 +574,4 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
         again.focus()
 
 
-__all__ = ["LedgerInvoiceEntryScreen", "invoice_line_row"]
+__all__ = ["LedgerInvoiceEntryScreen"]

@@ -9,8 +9,8 @@ from ....domain.calculations.registry.binding_provider_registration import BINDI
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
 from ..action_errors import ModeloAggregationBindingError
-from ..calculation_actions import assert_no_novel_source_kinds
 from ..calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
+from ..calculation_source_guards import assert_no_novel_source_kinds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

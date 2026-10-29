@@ -63,11 +63,8 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..state_projection import (
-    ModeloReadinessRequest,
-    ProjectionModeloReadiness,
-    build_modelo_readiness_reports,
-)
+from ..state_projection import build_modelo_readiness_reports
+from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloReadiness
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .binding_readiness import profile_resolvable_binding_ids
 from .data_inventory import data_inventory_checklist

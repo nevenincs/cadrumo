@@ -36,8 +36,8 @@ from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveAuthFacts,
     ClaveCredentialsIncompleteError,
-    _prepare_clave_auth,
     clave_auth_facts_from_profile_values,
+    prepare_clave_auth,
 )
 from .leased_profile_authority import leased_profile_decode_context
 
@@ -98,7 +98,7 @@ def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID)) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -119,7 +119,7 @@ def test_settings_remain_the_identity_fallback_when_the_profile_chooses_qr() -> 
 
     _register_profile(**{"auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID)) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -145,7 +145,7 @@ def test_a_profile_that_never_chose_a_route_signs_in_with_the_app_request(
     settings = Settings(cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID), cadrumo_clave_movil_dni_fecha=None)
     assert "cadrumo_clave_prefer_non_qr" not in settings.model_fields_set
 
-    bound, expected_identity = _prepare_clave_auth(
+    bound, expected_identity = prepare_clave_auth(
         settings,
         AuthProviderKind.CLAVE_MOVIL,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -173,7 +173,7 @@ def test_an_unchosen_route_without_a_contraste_names_the_missing_contraste(
         cadrumo_clave_movil_dni_fecha=None,
     )
     with pytest.raises(ClaveCredentialsIncompleteError) as raised:
-        _prepare_clave_auth(
+        prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -207,7 +207,7 @@ def test_profile_numero_soporte_reaches_the_non_qr_contraste_setting() -> None:
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        bound, _expected_identity = _prepare_clave_auth(
+        bound, _expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -232,7 +232,7 @@ def test_rebinding_the_settings_preserves_every_other_secret() -> None:
         cadrumo_clave_movil_dni_nie=SecretStr(_OTHER_TAX_ID),
         cadrumo_clave_permanente_password=SecretStr("permanente-password"),
     ) as settings:
-        bound, _expected_identity = _prepare_clave_auth(
+        bound, _expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -256,7 +256,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
         override_settings(cadrumo_clave_movil_dni_nie=None) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(
+        prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -295,7 +295,7 @@ def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> 
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(
+        prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -320,7 +320,7 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
         cadrumo_clave_movil_dni_fecha=None,
         cadrumo_clave_prefer_non_qr=False,
     ) as settings:
-        _bound, expected_identity = _prepare_clave_auth(
+        _bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -342,7 +342,7 @@ def test_profile_qr_route_overrides_an_environment_app_request() -> None:
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -366,7 +366,7 @@ def test_profile_app_request_route_requires_contraste_and_reaches_provider_setti
         cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
         cadrumo_clave_prefer_non_qr=False,
     ) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -394,7 +394,7 @@ def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:
         cadrumo_clave_movil_dni_fecha=_FECHA_VALIDEZ,
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        _bound, expected_identity = _prepare_clave_auth(
+        _bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -427,7 +427,7 @@ def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -
         cadrumo_clave_movil_dni_fecha=None,
         cadrumo_clave_prefer_non_qr=True,
     ) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -458,7 +458,7 @@ def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -
         ) as settings,
         pytest.raises(ClaveCredentialsIncompleteError) as raised,
     ):
-        _prepare_clave_auth(
+        prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -477,7 +477,7 @@ def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
 
     _register_profile(**{"auth.dni_nie": _TAX_ID, "auth.clave_movil_route": ClaveMovilRoute.QR.value})
     with override_settings(cadrumo_clave_permanente_dni_nie=None) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CLAVE_PERMANENTE,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -506,7 +506,7 @@ def test_certificate_provider_needs_neither_clave_field() -> None:
 
     _register_profile()
     with override_settings(cadrumo_clave_movil_dni_nie=None) as settings:
-        bound, expected_identity = _prepare_clave_auth(
+        bound, expected_identity = prepare_clave_auth(
             settings,
             AuthProviderKind.CERTIFICATE,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -541,7 +541,7 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
             cadrumo_clave_movil_dni_nie=SecretStr(_TAX_ID),
             cadrumo_clave_permanente_dni_nie=SecretStr(_TAX_ID),
         ) as settings:
-            _bound, expected_identity = _prepare_clave_auth(
+            _bound, expected_identity = prepare_clave_auth(
                 settings,
                 kind,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -572,7 +572,7 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
             cadrumo_clave_permanente_dni_nie=SecretStr(_OTHER_TAX_ID),
         ) as settings:
             try:
-                _prepare_clave_auth(
+                prepare_clave_auth(
                     settings,
                     kind,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,

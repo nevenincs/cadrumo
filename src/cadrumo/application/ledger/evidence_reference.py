@@ -9,7 +9,7 @@ says so, in what order they are consulted, and which outcomes are acceptable:
    the encrypted attachment store. This is the only space that can supply document
    BYTES, so it is the only one an on-host reader can extract from.
 2. An imported received-invoice id in the rich
-   :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue` -- bucket-matched and
+   :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue` -- bucket-matched and
    :attr:`~cadrumo.domain.iva.schema.InvoiceKind.RECEIVED`. This space carries the fiscal
    TOTALS a calculation can fold in, but no bytes.
 
@@ -39,7 +39,8 @@ from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from .evidence import PurchaseInvoiceEvidence
 from .evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceNotFoundError

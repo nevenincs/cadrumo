@@ -11,22 +11,22 @@ import pytest
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ..operator_actions.models import PreconditionVerdict
-from ..provisioning_contracts import (
+from ..probe_outcomes import (
     LOCAL_AI_PROVISION_ACTION_ID,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
+    ProbePreconditionCondition,
+    probe_no_recovery_verdict,
     provisioning_setup_verdict,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _INSTALLED = provisioning_setup_verdict(
-    ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+    ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
     facts={"role": "text_extraction", "role_model_installed": False},
     action_id=LOCAL_AI_PROVISION_ACTION_ID,
 )
-_REACHABLE = provisioning_no_recovery_verdict(
-    ProvisioningPreconditionCondition.RUNTIME_REACHABLE, facts={"runtime_reachable": False}
+_REACHABLE = probe_no_recovery_verdict(
+    ProbePreconditionCondition.RUNTIME_REACHABLE, facts={"runtime_reachable": False}
 )
 
 

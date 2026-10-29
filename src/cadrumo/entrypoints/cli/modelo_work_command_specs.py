@@ -502,7 +502,7 @@ MODELO_WORK_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _LANG,
         ),
         _MODEL_READ,
-        ".modelo_results",
+        ".modelo_query_results",
         "WorkResumeResult",
     ),
     _leaf(

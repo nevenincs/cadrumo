@@ -31,11 +31,12 @@ from ..operations.registry import OperationSchemaBindingV1, operation_public_sch
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts
 from .id_resolution import resolve_transaction_id
-from .llm_classification import saturate_llm_classification, suggest_evidence_split, suggest_llm_classification
+from .llm_classification import saturate_llm_classification, suggest_llm_classification
 from .llm_classification_ports import (
     LLMClassificationPorts,
     LLMSplitSuggestion,
 )
+from .llm_evidence_split import suggest_evidence_split
 from .llm_review_contracts import (
     LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
     LEDGER_SPLIT_REVIEW_DEFINITION_ID,

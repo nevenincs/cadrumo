@@ -23,7 +23,8 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from .._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ..verification_revision_findings import collect_revision_verification_findings
 from .invoice_catalogue_fake import InvoiceCatalogueFake

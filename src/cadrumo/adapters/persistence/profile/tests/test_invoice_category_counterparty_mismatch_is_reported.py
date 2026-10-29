@@ -39,7 +39,7 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from .....application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from .....application.aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -51,7 +51,8 @@ from .....core.aggregation import IntracomOperationType
 from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.iva.schema import InvoiceKind, IvaCategory
-from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from .....domain.transactions.date_partition import LedgerDatePartition
+from .....domain.transactions.models import TransactionCatalogue
 from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..catalogue_reads import InvoiceCatalogueReadAdapter

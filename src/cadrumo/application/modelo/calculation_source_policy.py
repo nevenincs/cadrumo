@@ -9,7 +9,7 @@ whose values must not be caller-overridden on this path.
 carry-style sources whose absence can be supplied by explicit caller values.
 
 See Also:
-    :func:`application.modelo.calculation_actions.assert_no_novel_source_kinds`:
+    :func:`application.modelo.calculation_source_guards.assert_no_novel_source_kinds`:
         Rejects a registry source kind absent from both the enrolled and
         deferred policy sets before it can calculate as a silent blank.
 """
@@ -17,8 +17,8 @@ See Also:
 from __future__ import annotations
 
 from ...core.aggregation import BindingSourceKind
-from ..aggregation.source_mesh import CallerOverrideDisposition as _CallerOverrideDisposition
-from ..aggregation.source_mesh import precedence_ladder_sources as _precedence_ladder_sources
+from ..aggregation.source_precedence import CallerOverrideDisposition as _CallerOverrideDisposition
+from ..aggregation.source_precedence import precedence_ladder_sources as _precedence_ladder_sources
 
 # Caller-override lock / carry sets, DERIVED from the ordered precedence-ladder
 # declaration (``CALLER_OVERRIDE_PRECEDENCE_LADDER`` in the aggregation package)

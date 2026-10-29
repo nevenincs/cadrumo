@@ -6,8 +6,26 @@ from ....core.i18n.render import tr
 from .reads import ReferenceRead
 
 
+def _read_label_remaining(read: ReferenceRead) -> str | None:
+    match read:
+        case ReferenceRead.BINDINGS:
+            return tr("tui.reference.read.bindings")
+        case ReferenceRead.CATEGORIES:
+            return tr("tui.reference.read.categories")
+        case ReferenceRead.PORTALS:
+            return tr("tui.reference.read.portals")
+        case ReferenceRead.PORTAL:
+            return tr("tui.reference.read.portal")
+        case ReferenceRead.AUTH_PROVIDERS:
+            return tr("tui.reference.read.auth_providers")
+        case ReferenceRead.APODERADO_SCOPES:
+            return tr("tui.reference.read.apoderado_scopes")
+        case _:
+            return None
+
+
 def read_label(read: ReferenceRead) -> str:
-    """Name one reference read."""
+    """Render the wording for one reference read."""
     match read:
         case ReferenceRead.MODELOS:
             return tr("tui.reference.read.modelos")
@@ -21,22 +39,34 @@ def read_label(read: ReferenceRead) -> str:
             return tr("tui.reference.read.casilla")
         case ReferenceRead.FORMULAS:
             return tr("tui.reference.read.formulas")
+        case _:
+            pass
+    remaining = _read_label_remaining(read)
+    if remaining is None:
+        raise ValueError(f"unknown reference read: {read}")
+    return remaining
+
+
+def _read_summary_remaining(read: ReferenceRead) -> str | None:
+    match read:
         case ReferenceRead.BINDINGS:
-            return tr("tui.reference.read.bindings")
+            return tr("tui.reference.summary.bindings")
         case ReferenceRead.CATEGORIES:
-            return tr("tui.reference.read.categories")
+            return tr("tui.reference.summary.categories")
         case ReferenceRead.PORTALS:
-            return tr("tui.reference.read.portals")
+            return tr("tui.reference.summary.portals")
         case ReferenceRead.PORTAL:
-            return tr("tui.reference.read.portal")
+            return tr("tui.reference.summary.portal")
         case ReferenceRead.AUTH_PROVIDERS:
-            return tr("tui.reference.read.auth_providers")
+            return tr("tui.reference.summary.auth_providers")
         case ReferenceRead.APODERADO_SCOPES:
-            return tr("tui.reference.read.apoderado_scopes")
+            return tr("tui.reference.summary.apoderado_scopes")
+        case _:
+            return None
 
 
 def read_summary(read: ReferenceRead) -> str:
-    """Say in one sentence what one reference read shows."""
+    """Render the wording for one reference read."""
     match read:
         case ReferenceRead.MODELOS:
             return tr("tui.reference.summary.modelos")
@@ -50,18 +80,12 @@ def read_summary(read: ReferenceRead) -> str:
             return tr("tui.reference.summary.casilla")
         case ReferenceRead.FORMULAS:
             return tr("tui.reference.summary.formulas")
-        case ReferenceRead.BINDINGS:
-            return tr("tui.reference.summary.bindings")
-        case ReferenceRead.CATEGORIES:
-            return tr("tui.reference.summary.categories")
-        case ReferenceRead.PORTALS:
-            return tr("tui.reference.summary.portals")
-        case ReferenceRead.PORTAL:
-            return tr("tui.reference.summary.portal")
-        case ReferenceRead.AUTH_PROVIDERS:
-            return tr("tui.reference.summary.auth_providers")
-        case ReferenceRead.APODERADO_SCOPES:
-            return tr("tui.reference.summary.apoderado_scopes")
+        case _:
+            pass
+    remaining = _read_summary_remaining(read)
+    if remaining is None:
+        raise ValueError(f"unknown reference read: {read}")
+    return remaining
 
 
 def filter_label(name: str) -> str:

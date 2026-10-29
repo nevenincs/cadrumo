@@ -48,6 +48,26 @@ def ledger_update_validation_refusal(
     return None
 
 
+def _ledger_update_mismatched(
+    completed: RegisteredOperationCompletion[LedgerUpdateOperationResult],
+    profile_id: UUID,
+    transaction_id: str,
+    transaction: LedgerTransactionProjection,
+    expected_effect: OperationEffect,
+) -> bool:
+    projection = completed.projection
+    prefix = transaction_id.strip().lower()
+    return (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or projection.profile_id != profile_id
+        or projection.source_transaction_id is None
+        or not projection.source_transaction_id.startswith(prefix)
+        or (expected_effect is OperationEffect.NONE and transaction.transaction_id != projection.source_transaction_id)
+    )
+
+
 def require_ledger_update_correlation(
     completed: RegisteredOperationCompletion[LedgerUpdateOperationResult],
     profile_id: UUID,
@@ -59,17 +79,9 @@ def require_ledger_update_correlation(
     """Require ledger update correlation."""
     projection = completed.projection
     expected_effect = OperationEffect.UPDATED if projection.bucket_event_ids else OperationEffect.NONE
-    prefix = transaction_id.strip().lower()
-    invalid = (
-        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or projection.profile_id != profile_id
-        or projection.source_transaction_id is None
-        or not projection.source_transaction_id.startswith(prefix)
-        or (expected_effect is OperationEffect.NONE and transaction.transaction_id != projection.source_transaction_id)
-        or not _matches_patch(worker_patch, patch_fields, transaction, projection)
-    )
+    invalid = _ledger_update_mismatched(completed, profile_id, transaction_id, transaction, expected_effect)
+    if not invalid:
+        invalid = not _matches_patch(worker_patch, patch_fields, transaction, projection)
     if invalid:
         raise invalid_completion_error(completed)
 

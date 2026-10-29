@@ -241,7 +241,7 @@ def source_diagnostic_notice(
         "remedy": diagnostic.remedy,
     }
     from ...application.modelo.calculation_notes import note_attention, what_locale_key
-    from ...application.modelo.work_form_models import ModeloFormAttention
+    from ...application.modelo.work_form_findings import ModeloFormAttention
 
     box = None if boxes is None or diagnostic.casilla_id is None else boxes.number(str(diagnostic.casilla_id))
     attention = note_attention(diagnostic.reason, box=box)

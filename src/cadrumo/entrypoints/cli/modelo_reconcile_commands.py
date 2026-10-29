@@ -21,6 +21,7 @@ import typer
 
 from ...application.modelo.reconciliation import ModeloReconciliationReport
 from ...application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
+from ...application.modelo.reconciliation_list_operation import ModeloReconciliationListEntryProjection
 from ...core.i18n.render import tr
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ._modelo_cli_support import resolve_default_actor
@@ -156,6 +157,34 @@ def reconcile_file_verb(
     _render_reconciliation_report(ctx, report, command="modelo.reconcile.import")
 
 
+def _append_reconciliation_rows(lines: list[str], entries: tuple[ModeloReconciliationListEntryProjection, ...]) -> None:
+    if entries:
+        lines.append(
+            "reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tadvisory_count\tactor\tcalculation_revision_id"
+        )
+        lines.extend(
+            "\t".join(
+                (
+                    entry.reconciled_at.isoformat(),
+                    entry.work_unit_id,
+                    entry.source_kind.value,
+                    entry.verdict.value,
+                    str(entry.diff_count),
+                    str(entry.advisory_count),
+                    entry.actor,
+                    entry.calculation_revision_id or "unknown",
+                )
+            )
+            for entry in entries
+        )
+    else:
+        lines.append(
+            tr(
+                "cli.app.modelo.reconcile.list_empty",
+            )
+        )
+
+
 def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> None:
     """List past reconciliations recorded in the active profile."""
     from ...application.modelo.reconciliation_records import ModeloReconciliationAdvisory
@@ -202,31 +231,7 @@ def reconcile_list_verb(ctx: typer.Context, work_unit_id: str | None = None) -> 
         f"bucket_id\t{bucket_id}",
         f"reconciliation_count\t{projection.reconciliation_count}",
     ]
-    if entries:
-        lines.append(
-            "reconciled_at\twork_unit_id\tsource_kind\tverdict\tdiff_count\tadvisory_count\tactor\tcalculation_revision_id"
-        )
-        lines.extend(
-            "\t".join(
-                (
-                    entry.reconciled_at.isoformat(),
-                    entry.work_unit_id,
-                    entry.source_kind.value,
-                    entry.verdict.value,
-                    str(entry.diff_count),
-                    str(entry.advisory_count),
-                    entry.actor,
-                    entry.calculation_revision_id or "unknown",
-                )
-            )
-            for entry in entries
-        )
-    else:
-        lines.append(
-            tr(
-                "cli.app.modelo.reconcile.list_empty",
-            )
-        )
+    _append_reconciliation_rows(lines, entries)
     for entry in entries:
         lines.extend(
             f"diff\t{entry.event_id}\t{diff.field_name}\twork_unit={diff.work_unit_value}\tevidence={diff.evidence_value}"

@@ -34,7 +34,8 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.user_profile.values import UserProfileFact
-from ..adapter_composition import build_calculation_action_ports, build_modelo_history_ports, build_work_lifecycle_ports
+from ..adapter_composition_ports import build_modelo_history_ports
+from ..adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 from . import modelo_operation_test_support
 
 

@@ -29,7 +29,8 @@ from ......adapters.persistence.profile.tests.operator_scope_fakes import (
 )
 from ......application.calculations.m111_no_retenciones import M111_NO_RETENCIONES_PROFILE_PATH
 from ......application.modelo.verification_actions import verify_modelo_revision_with_preconditions
-from ......application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from ......application.modelo.work_form_findings import ModeloFormAttention
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......application.modelo.work_form_next_step import ModeloFormNextAction
 from ......application.modelo.work_form_service import ModeloWorkFormLoadV1
 from ......core.config import override_settings

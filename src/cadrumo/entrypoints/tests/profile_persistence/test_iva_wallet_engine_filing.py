@@ -37,7 +37,7 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordStatus,
 )
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,

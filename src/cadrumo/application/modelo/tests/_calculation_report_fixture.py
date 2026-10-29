@@ -34,9 +34,9 @@ from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceRef,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id

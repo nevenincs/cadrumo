@@ -84,7 +84,7 @@ from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.env_scope import ready_clave_settings
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

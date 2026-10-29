@@ -42,13 +42,14 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ..profile_binding import (
-    _AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY,
-    _UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY,
-    _inject_derived_state_attribution_facts,
+from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
     inject_derived_marriage_facts,
+    inject_derived_state_attribution_facts,
 )
+
+_AUTONOMIC_DEDUCCION_ELIGIBLE_COUNT_KEY = "renta_family.madrid_nacimiento_adopcion_eligible_count"
+_UNIDAD_FAMILIAR_OTROS_MIEMBROS_BASE_KEY = "renta_family.unidad_familiar_otros_miembros_base"
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -102,12 +103,12 @@ def test_marriage_facts_preserve_a_stored_value() -> None:
 def test_state_attribution_ratio_rejects_a_stored_value_as_authority() -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         seeded: dict[str, Any] = {**_common_regime_profile(), _STATE_ATTRIBUTION: _UNREACHABLE_RATIO}
-        _inject_derived_state_attribution_facts(seeded, operation=_authority_operation_for_test)
+        inject_derived_state_attribution_facts(seeded, operation=_authority_operation_for_test)
 
         assert seeded[_STATE_ATTRIBUTION] == Decimal("100")
 
         computed: dict[str, Any] = _common_regime_profile()
-        _inject_derived_state_attribution_facts(computed, operation=_authority_operation_for_test)
+        inject_derived_state_attribution_facts(computed, operation=_authority_operation_for_test)
         assert _STATE_ATTRIBUTION in computed
         assert computed[_STATE_ATTRIBUTION] != _UNREACHABLE_RATIO
 

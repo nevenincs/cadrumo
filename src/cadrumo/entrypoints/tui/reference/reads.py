@@ -123,20 +123,8 @@ def _bindings(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> Bas
     )
 
 
-def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
+def _pinned_modelo(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
     read = query.read
-    if read is ReferenceRead.MODELOS:
-        domain = TaxDomain(query.domain) if (query.domain is not None and query.domain) else None
-        return catalogue.list_modelos(year=query.year, domain=domain, operation=operation)
-    if read is ReferenceRead.SUPPORT_MATRIX:
-        return catalogue.read_support_matrix(operation=operation)
-    if read is ReferenceRead.APODERADO_SCOPES:
-        return catalogue.list_apoderado_scopes(operation=operation)
-    if read is ReferenceRead.CATEGORIES:
-        # The category vocabularies are governed facts, read under the pin.
-        return catalogue.read_ledger_categories()
-    if read is ReferenceRead.BINDINGS:
-        return _bindings(query, operation)
     modelo = _required(query.modelo, "modelo")
     year, period, as_of = query.year, query.period, query.as_of
     if read is ReferenceRead.DESCRIBE:
@@ -158,6 +146,23 @@ def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseM
             modelo, _required(query.casilla, "casilla"), year=year, period=period, as_of=as_of, operation=operation
         )
     return catalogue.list_formulas(modelo, year=year, period=period, as_of=as_of, operation=operation)
+
+
+def _pinned(query: ReferenceQuery, operation: PinnedAuthorityOperation) -> BaseModel:
+    read = query.read
+    if read is ReferenceRead.MODELOS:
+        domain = TaxDomain(query.domain) if (query.domain is not None and query.domain) else None
+        return catalogue.list_modelos(year=query.year, domain=domain, operation=operation)
+    if read is ReferenceRead.SUPPORT_MATRIX:
+        return catalogue.read_support_matrix(operation=operation)
+    if read is ReferenceRead.APODERADO_SCOPES:
+        return catalogue.list_apoderado_scopes(operation=operation)
+    if read is ReferenceRead.CATEGORIES:
+        # The category vocabularies are governed facts, read under the pin.
+        return catalogue.read_ledger_categories()
+    if read is ReferenceRead.BINDINGS:
+        return _bindings(query, operation)
+    return _pinned_modelo(query, operation)
 
 
 def _unpinned(query: ReferenceQuery) -> BaseModel:

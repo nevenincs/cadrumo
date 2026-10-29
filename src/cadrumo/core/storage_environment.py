@@ -411,6 +411,12 @@ def _expand_home(
         if head.startswith("~") and (path_type is PureWindowsPath or not head.startswith("~\\")):
             _refuse(StorageRootRefusal.INVALID_PATH_INPUT, "Named-user home expansion is not supported.")
         return path_type(value)
+    home = _home_base(platform, environ, path_type)
+    return home.joinpath(*(part for part in tail.split("/") if part))
+
+
+def _home_base(platform: StoragePlatform | None, environ: Mapping[str, str], path_type: type[PurePath]) -> PurePath:
+    """Resolve only the current user home and require an absolute platform path."""
     home_variable = "HOME" if platform is None else STORAGE_ROOT.installed_rule(platform).home_variable
     home = _environment_value(environ, home_variable, platform)
     if home is None or not path_type(home).is_absolute():
@@ -418,7 +424,7 @@ def _expand_home(
             StorageRootRefusal.HOME_UNAVAILABLE,
             f"{STORAGE_ROOT.variable} starts with '~' but {home_variable} is not an absolute path.",
         )
-    return path_type(home).joinpath(*(part for part in tail.split("/") if part))
+    return path_type(home)
 
 
 def _anchored_storage_root(
@@ -642,6 +648,53 @@ def withheld_child_settings() -> Generator[None]:
             os.environ.setdefault(name, value)
 
 
+def _child_relay_settings(
+    profile: ChildEnvironmentProfile, environment_in: Mapping[str, str], environment: dict[str, str]
+) -> None:
+    """Relay only the profile's declared settings and validate authority-root spellings."""
+    authority = authority_root_setting_names()
+    relayed = relayed_setting_names() if profile is ChildEnvironmentProfile.OPERATOR else authority
+    for name in relayed:
+        if name not in environment_in:
+            continue
+        value = environment_in[name]
+        if name in authority:
+            _normalized_absolute(_host_path_type()(_checked_path_value(value)))
+        environment[name] = value
+    if profile is ChildEnvironmentProfile.OPERATOR and storage_mode().mode is StorageMode.DEVELOPMENT:
+        development_image = environment_in.get(DEVELOPMENT_ROLE_IMAGE_VARIABLE)
+        if development_image is not None:
+            environment[DEVELOPMENT_ROLE_IMAGE_VARIABLE] = development_image
+
+
+def _child_temporary_root(
+    profile: ChildEnvironmentProfile,
+    resolved_root: Path,
+    environment_in: Mapping[str, str],
+    platform: StoragePlatform | None,
+) -> Path:
+    """Resolve the child's temporary directory and enforce explicit-member admission."""
+    from .storage_taxonomy import StorageCategory
+    from .storage_taxonomy_locations import storage_location
+
+    temporary = storage_location(StorageCategory.TEMPORARY_FILES)
+    temporary_value = temporary.relative_path().as_posix()
+    if temporary.settings_field is not None and profile is ChildEnvironmentProfile.OPERATOR:
+        temporary_value = (
+            _environment_value(environment_in, temporary.settings_field.upper(), platform) or temporary_value
+        )
+    temporary_root = resolve_storage_path(
+        temporary_value, root=resolved_root, received=environment_in, platform=platform
+    )
+    if (
+        not temporary.create_explicit_directory
+        and temporary_value != temporary.relative_path().as_posix()
+        and not temporary_root.is_dir()
+    ):
+        _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, "An explicit storage member must already exist.")
+    return temporary_root
+
+
 def child_environment(
     profile: ChildEnvironmentProfile,
     root: Path,
@@ -661,9 +714,6 @@ def child_environment(
     that starts the child for one profile passes ``profile_id``, and the child
     is told that profile's folder; a received folder is never relayed.
     """
-    from .storage_taxonomy import StorageCategory
-    from .storage_taxonomy_locations import storage_location
-
     resolved_root = normalize_storage_path(root)
     environment_in = os.environ if received is None else received
     platform = declared_platform(sys_platform)
@@ -674,34 +724,8 @@ def child_environment(
     own = _own_setting_names()
     prefix = PRODUCT_IDENTITY.environment_prefix
     environment = {name: value for name, value in ambient.items() if not (name.startswith(prefix) or name in own)}
-    authority = authority_root_setting_names()
-    relayed = relayed_setting_names() if profile is ChildEnvironmentProfile.OPERATOR else authority
-    for name in relayed:
-        if name not in environment_in:
-            continue
-        value = environment_in[name]
-        if name in authority:
-            _normalized_absolute(_host_path_type()(_checked_path_value(value)))
-        environment[name] = value
-    if profile is ChildEnvironmentProfile.OPERATOR and storage_mode().mode is StorageMode.DEVELOPMENT:
-        development_image = environment_in.get(DEVELOPMENT_ROLE_IMAGE_VARIABLE)
-        if development_image is not None:
-            environment[DEVELOPMENT_ROLE_IMAGE_VARIABLE] = development_image
-    temporary = storage_location(StorageCategory.TEMPORARY_FILES)
-    temporary_value = temporary.relative_path().as_posix()
-    if temporary.settings_field is not None and profile is ChildEnvironmentProfile.OPERATOR:
-        temporary_value = (
-            _environment_value(environment_in, temporary.settings_field.upper(), platform) or temporary_value
-        )
-    temporary_root = resolve_storage_path(
-        temporary_value, root=resolved_root, received=environment_in, platform=platform
-    )
-    if (
-        not temporary.create_explicit_directory
-        and temporary_value != temporary.relative_path().as_posix()
-        and not temporary_root.is_dir()
-    ):
-        _refuse(StorageRootRefusal.FILESYSTEM_PATH_REFUSED, "An explicit storage member must already exist.")
+    _child_relay_settings(profile, environment_in, environment)
+    temporary_root = _child_temporary_root(profile, resolved_root, environment_in, platform)
     ensure_storage_root(resolved_root)
     ensure_storage_root(temporary_root)
     environment[STORAGE_ROOT.variable] = str(resolved_root)

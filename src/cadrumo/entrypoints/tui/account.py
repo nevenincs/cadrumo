@@ -79,6 +79,22 @@ class AccountRecomposeReasonV1(StrEnum):
     UNAVAILABLE = "unavailable"
 
 
+def _validate_recompose_identity(
+    reason: AccountRecomposeReasonV1, profile_id: str | None, profile_label: str | None
+) -> None:
+    has_profile = profile_id is not None or profile_label is not None
+    if reason is AccountRecomposeReasonV1.CHANGE_USER:
+        if (profile_id is None) != (profile_label is None):
+            raise ValueError("change-user recomposition requires both profile identity fields or neither")
+        if has_profile and (
+            not (profile_id is not None and profile_id) or not (profile_label is not None and profile_label)
+        ):
+            raise ValueError("change-user profile identity fields must not be empty")
+        return
+    if has_profile:
+        raise ValueError("closed-session recomposition cannot retain a profile identity")
+
+
 @dataclass(frozen=True, slots=True)
 class AccountRecomposeRequiredV1:
     """Non-secret handoff asking the outer bootstrap owner for a fresh root."""
@@ -89,18 +105,7 @@ class AccountRecomposeRequiredV1:
 
     def __post_init__(self) -> None:
         """Keep handover identity complete and prohibit it on close outcomes."""
-        has_profile = self.profile_id is not None or self.profile_label is not None
-        if self.reason is AccountRecomposeReasonV1.CHANGE_USER:
-            if (self.profile_id is None) != (self.profile_label is None):
-                raise ValueError("change-user recomposition requires both profile identity fields or neither")
-            if has_profile and (
-                not (self.profile_id is not None and self.profile_id)
-                or not (self.profile_label is not None and self.profile_label)
-            ):
-                raise ValueError("change-user profile identity fields must not be empty")
-            return
-        if has_profile:
-            raise ValueError("closed-session recomposition cannot retain a profile identity")
+        _validate_recompose_identity(self.reason, self.profile_id, self.profile_label)
 
 
 @dataclass(frozen=True, slots=True)

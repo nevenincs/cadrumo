@@ -23,8 +23,9 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.own_accounts import (
     OwnAccountHolding,
     OwnAccountRegister,

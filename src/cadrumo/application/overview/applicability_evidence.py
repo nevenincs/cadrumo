@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Final
 from ...core.diagnostic_log import diagnostic_phase
 from ...core.logging import get_logger
 from ...core.period import Period
-from ...domain.calculations.registry.applicability import LedgerPayerFactDerivation
+from ...domain.calculations.registry.applicability_models import LedgerPayerFactDerivation
 from ...domain.calculations.registry.applicability_payer_facts import resolve_payer_fact_catalogue
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -48,7 +48,7 @@ from ..user_profile.projections import projection_for_taxpayer
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.user_profile.schema import ProfileSchemaDefinition
     from ...domain.user_profile.values import UserProfileRecord
 
@@ -115,7 +115,7 @@ def loaded_invoice_source_ports(catalogue: InvoiceCatalogue | None) -> InvoiceSo
     the catalogue as unreadable, so every ledger derivation is unknown rather
     than an empty ledger read as a ledger without operations.
 
-    Parameter types: ``catalogue`` (:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`).
+    Parameter types: ``catalogue`` (:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`).
     """
     return InvoiceSourceResolverPorts(catalogue_reader=_CatalogueAlreadyRead(catalogue))
 

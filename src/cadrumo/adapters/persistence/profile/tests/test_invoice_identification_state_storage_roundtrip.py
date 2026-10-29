@@ -23,8 +23,9 @@ from pathlib import Path
 import pytest
 
 from .....core.classification.policies import SensitivityClass
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..invoices import InvoiceCatalogueRepository

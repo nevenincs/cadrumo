@@ -32,8 +32,9 @@ from .m156_rows import Modelo156AfiliadoRow
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
 
 if TYPE_CHECKING:
-    from .calculation_revision import CalculationRevisionIdentityInputs, CalculationSourceIssue, CalculationSourceRef
+    from .calculation_revision import CalculationRevisionIdentityInputs
     from .calculation_revision_amendment import CalculationRevisionAmendmentIdentity
+    from .calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
 
 _BINDING_ID_ADAPTER: TypeAdapter[BindingId] = TypeAdapter(BindingId)
 
@@ -61,6 +62,32 @@ def _validated_relation_id(value: object, *, surface: str) -> RelationId:
         raise ModeloValidationError(f"{surface} contains non-canonical relation id {value!r}") from exc
 
 
+def _detail_row_payload(row: ModeloDetailRow) -> dict[str, object]:
+    d: dict[str, object] = {}
+    if isinstance(row, Modelo156AfiliadoRow):
+        d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
+        for month in row.cotizaciones:
+            d[f"month_{month.month:02d}_status"] = month.status
+            d[f"month_{month.month:02d}_amount"] = None if month.amount is None else str(month.amount.normalize())
+        return dict(sorted(d.items()))
+    for field_name, field_value in row.model_dump().items():
+        if isinstance(field_value, Decimal):
+            d[field_name] = str(field_value.normalize())
+        else:
+            d[field_name] = str(field_value)
+    return dict(sorted(d.items()))
+
+
+def _detail_row_identity_key(row: ModeloDetailRow) -> str:
+    if isinstance(row, Modelo156AfiliadoRow):
+        return f"{row.nif}|{row.numero_afiliacion}"
+    if isinstance(row, Modelo210AgrupacionRentaRow):
+        return row.source_id
+    if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):
+        return row.nif_comunitario
+    return row.nif
+
+
 def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, object]]:
     """Stable, sort-canonical projection of detail rows for the hash payload.
 
@@ -77,32 +104,7 @@ def _canonical_detail_rows(rows: Sequence[ModeloDetailRow]) -> list[dict[str, ob
     ModeloEditDetailRowIntentKind` for why ``MOVE_ROW`` has no addressable
     effect for this row family.
     """
-
-    def _row_payload(row: ModeloDetailRow) -> dict[str, object]:
-        d: dict[str, object] = {}
-        if isinstance(row, Modelo156AfiliadoRow):
-            d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
-            for month in row.cotizaciones:
-                d[f"month_{month.month:02d}_status"] = month.status
-                d[f"month_{month.month:02d}_amount"] = None if month.amount is None else str(month.amount.normalize())
-            return dict(sorted(d.items()))
-        for field_name, field_value in row.model_dump().items():
-            if isinstance(field_value, Decimal):
-                d[field_name] = str(field_value.normalize())
-            else:
-                d[field_name] = str(field_value)
-        return dict(sorted(d.items()))
-
-    def _row_identity_key(row: ModeloDetailRow) -> str:
-        if isinstance(row, Modelo156AfiliadoRow):
-            return f"{row.nif}|{row.numero_afiliacion}"
-        if isinstance(row, Modelo210AgrupacionRentaRow):
-            return row.source_id
-        if isinstance(row, (Modelo349OperadorRow, Modelo349RectificacionRow)):
-            return row.nif_comunitario
-        return row.nif
-
-    return [_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _row_identity_key(r)))]
+    return [_detail_row_payload(r) for r in sorted(rows, key=lambda r: (r.row_type, _detail_row_identity_key(r)))]
 
 
 def _validated_row_binding_index(value: object, *, surface: str) -> str:

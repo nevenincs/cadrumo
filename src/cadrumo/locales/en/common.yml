@@ -3783,6 +3783,8 @@ desktop:
     progress_label: Progress of {name}
     rail_busy: Setting up components
     rail_incomplete: Setup isn't finished
+    refused_browser_not_removed: Cadrumo couldn't remove the browser. Check it again,
+      then try once more.
     refused_busy: Setup is already running elsewhere. Wait for it to finish.
     refused_model_selection_unusable: Cadrumo can't download that model. Check the
       local AI's model list in the agent settings, then try again.
@@ -3794,6 +3796,11 @@ desktop:
       it.
     refused_unavailable: Cadrumo's services aren't answering. Try again in a moment.
     reject: Don't download
+    remove: Remove
+    remove_confirm: Delete this browser from your computer? You can set it up again
+      later.
+    remove_confirm_yes: Delete it
+    remove_keep: Keep it
     result_already: Already set up
     result_done: Set up
     retry: Connection problem. Trying again in {seconds} seconds (attempt {attempt}).

@@ -5,19 +5,10 @@ Rows map application-layer exception qualnames to stable
 """
 
 from ..error_codes import ErrorCategory, ErrorCode
+from ._application_modelo_work import MODELO_WORK_ERROR_CODES
 from ._application_profile_bundle import PROFILE_BUNDLE_ERROR_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
-    (
-        "cadrumo.application.components_operations.ComponentsOperationRefusedError",
-        ErrorCode(
-            code="REFUSED_COMPONENT_PROVISIONING",
-            category=ErrorCategory.REFUSED,
-            message_key="cli.config.provision.incomplete",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
     (
         "cadrumo.application.user_profile.google_configuration_operation_refusal.GoogleConfigurationRefusedError",
         ErrorCode(
@@ -79,7 +70,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.ledger.actions_manual.LedgerSummaryPeriodWithoutSpanError",
+        "cadrumo.application.ledger.manual_read.LedgerSummaryPeriodWithoutSpanError",
         ErrorCode(
             code="REFUSED_LEDGER_SUMMARY_PERIOD_WITHOUT_SPAN",
             category=ErrorCategory.REFUSED,
@@ -169,376 +160,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkCaptureError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_CAPTURE_NOT_CURRENT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_capture_not_current",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkNoActiveBucketError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_SELECTOR_NO_ACTIVE_BUCKET",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_selector_no_active_bucket",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkUnitNotFoundError",
-        ErrorCode(
-            code="ERROR_MODELO_WORK_SELECTOR_UNIT_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.modelo_work_selector_unit_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkSelectorContradictionError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_SELECTOR_CONTRADICTION",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_selector_contradiction",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkVisibleTargetAmbiguousError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_SELECTOR_AMBIGUOUS",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_selector_ambiguous",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkRevisionConflictError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_SELECTOR_REVISION_CONFLICT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_selector_revision_conflict",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorError",
-        ErrorCode(
-            code="ERROR_MODELO_CALCULATION_REVISION_SELECTOR",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.modelo_calculation_revision_selector",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorNotFoundError",
-        ErrorCode(
-            code="ERROR_MODELO_CALCULATION_REVISION_SELECTOR_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.modelo_calculation_revision_selector_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorStateError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_STATE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculation_revision_selector_state",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.selectors.ModeloCalculationRevisionSelectorAmbiguousError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATION_REVISION_SELECTOR_AMBIGUOUS",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculation_revision_selector_ambiguous",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkAddressNotFoundError",
-        ErrorCode(
-            code="ERROR_MODELO_WORK_ADDRESS_NOT_FOUND",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.modelo_work_address_not_found",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkRegistryYearMismatchError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_REGISTRY_YEAR_MISMATCH",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_registry_year_mismatch",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloWorkPeriodTokenError",
-        ErrorCode(
-            code="REFUSED_MODELO_WORK_PERIOD_TOKEN",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_work_period_token",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.work_addressing.ModeloRevisionPickError",
-        ErrorCode(
-            code="REFUSED_MODELO_REVISION_PICK",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_revision_pick",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateDetailRowsError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_DETAIL_ROWS",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_detail_rows",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateDecimalInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_DECIMAL_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_decimal_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateTextInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_TEXT_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_text_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateCasillaInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_CASILLA_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_casilla_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateBindingInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_BINDING_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_binding_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateRelationInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_RELATION_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_relation_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateShortcutInputError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_SHORTCUT_INPUT",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_shortcut_input",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculate_input.ModeloCalculateSemanticRoleError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATE_SEMANTIC_ROLE",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_calculate_semantic_role",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.m193_settled_row_gate.Modelo193SettledRowAmountAuthorityUnresolvedError",
-        ErrorCode(
-            code="REFUSED_MODELO_193_SETTLED_ROW_AMOUNT_AUTHORITY_UNRESOLVED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.canonical_modelo_193_settled_row_amount_authority_unresolved",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.export.ModeloExportCrossBucketRefusedError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_CROSS_BUCKET",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_export_cross_bucket",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.export.ModeloExportEvidenceMissingError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_EVIDENCE_MISSING",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.fail.modelo_export",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation_note_gate.ModeloCalculationBlockedError",
-        ErrorCode(
-            code="REFUSED_MODELO_CALCULATION_BLOCKED",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.error.error_modelos",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.filing_actions.ModeloFilingEvidenceMissingError",
-        ErrorCode(
-            code="REFUSED_MODELO_FILING_EVIDENCE_MISSING",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.error.error_modelos",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.export.ModeloExportNoActiveBucketError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_NO_ACTIVE_BUCKET",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.refused.modelo_export_no_active_bucket",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation_report.CalculationReportNoticeUnavailableError",
-        ErrorCode(
-            code="REFUSED_CALCULATION_REPORT_NOTICE_UNAVAILABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.calculation_report_notice_unavailable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation_report_export.ModeloCalculationReportTaxpayerUnknownError",
-        ErrorCode(
-            code="REFUSED_CALCULATION_REPORT_TAXPAYER_UNKNOWN",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.calculation_report_taxpayer_unknown",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation_report_document.CalculationSummaryPdfUnavailableError",
-        ErrorCode(
-            code="REFUSED_CALCULATION_SUMMARY_PDF_UNAVAILABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.calculation_summary_pdf_unavailable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation_summary_presentation.CalculationSummaryChromeUnavailableError",
-        ErrorCode(
-            code="REFUSED_CALCULATION_SUMMARY_CHROME_UNAVAILABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.calculation_summary_chrome_unavailable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.calculation_summary_pdf_ports.CalculationSummaryPdfUnreadableError",
-        ErrorCode(
-            code="REFUSED_CALCULATION_SUMMARY_PDF_UNREADABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.calculation_summary_pdf_unreadable",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.export.ModeloExportUnsupportedError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_UNSUPPORTED",
-            category=ErrorCategory.REFUSED,
-            message_key="application.modelo.errors.export_unsupported",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.modelo.export_sink.ModeloExportOutputPathError",
-        ErrorCode(
-            code="REFUSED_MODELO_EXPORT_OUTPUT_PATH",
-            category=ErrorCategory.REFUSED,
-            message_key="errors.fail.modelo_export",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.application.overview.errors.OverviewError",
-        ErrorCode(
-            code="FAIL_OVERVIEW",
-            category=ErrorCategory.FAIL,
-            message_key="errors.fail.overview",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
+    *MODELO_WORK_ERROR_CODES,
     (
         "cadrumo.application.overview.errors.OverviewCalendarError",
         ErrorCode(
@@ -866,7 +488,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.custody_ports.ProfileRecordCryptoError",
+        "cadrumo.application.user_profile.custody_crypto_contracts.ProfileRecordCryptoError",
         ErrorCode(
             code="INTEGRITY_PROFILE_RECORD_CRYPTO",
             category=ErrorCategory.INTEGRITY,
@@ -876,7 +498,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.custody_ports.ProfileCustodyRecordIntegrityError",
+        "cadrumo.application.user_profile.custody_crypto_contracts.ProfileCustodyRecordIntegrityError",
         ErrorCode(
             code="INTEGRITY_PROFILE_CUSTODY_PORT_RECORD",
             category=ErrorCategory.INTEGRITY,
@@ -886,7 +508,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.user_profile.custody_ports.ProfileCustodyConcurrentChangeError",
+        "cadrumo.application.user_profile.custody_crypto_contracts.ProfileCustodyConcurrentChangeError",
         ErrorCode(
             code="LOCKED_PROFILE_CUSTODY_PORT_CAPSULE_GENERATION",
             category=ErrorCategory.LOCKED,

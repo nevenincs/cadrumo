@@ -30,7 +30,6 @@ from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.retention.floor import RetentionFloorAssessment, assess_retention_floor
 from ..profile_deletion_hold_contract import ProfileDeletionHoldOwner, ProfileDeletionHoldOwnerProjection
 from ..user_profile.custody_ports import (
-    ProfileCustodyLocalRecordStore,
     canonical_snapshot_bytes,
     canonical_snapshot_digest,
     canonical_snapshot_payload,
@@ -38,6 +37,7 @@ from ..user_profile.custody_ports import (
     ensure_profile_custody_owner_root,
     profile_custody_owner_root,
 )
+from ..user_profile.custody_record_ports import ProfileCustodyLocalRecordStore
 
 _MAX_BYTES = 32 * 1024
 

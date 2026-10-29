@@ -18,7 +18,7 @@ See Also:
     :func:`~application.aggregation.ledger_filing_snapshot.stale_filed_revisions`
         System-level sweep that reports finalized snapshot-backed revisions whose
         ledger contributors drifted.
-    :func:`~application.ledger.actions_manual.update_manual_transaction_fields`
+    :func:`~application.ledger.manual_update.update_manual_transaction_fields`
         Ledger mutation path whose finalized-modelo write guard is exercised.
     :class:`~CalculationRevision`
         Revision record that carries the optional ledger filing snapshot.
@@ -46,7 +46,7 @@ from .....application.aggregation.ledger_filing_snapshot import (
     stale_filed_revisions,
 )
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from .....application.ledger.actions_manual import update_manual_transaction_fields
+from .....application.ledger.manual_update import update_manual_transaction_fields
 from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period

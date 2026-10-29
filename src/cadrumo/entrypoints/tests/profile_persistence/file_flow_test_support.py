@@ -87,10 +87,8 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import (
-    build_borrador_100_snapshot_repository,
-    build_filing_action_ports,
-)
+from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

@@ -20,7 +20,7 @@ from types import MappingProxyType
 import pytest
 
 from cadrumo.application.ledger.actions_common import build_manual_ledger_result
-from cadrumo.application.ledger.actions_manual import list_manual_transactions
+from cadrumo.application.ledger.manual_read import list_manual_transactions
 from cadrumo.application.ledger.read_ports import LedgerReadPorts
 
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

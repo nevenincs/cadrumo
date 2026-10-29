@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.models import (
     IVARegime,

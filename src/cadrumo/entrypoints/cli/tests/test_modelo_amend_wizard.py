@@ -50,9 +50,9 @@ from cadrumo.application.flows.errors import FlowAnswerError
 from cadrumo.application.flows.scripted import run_scripted_flow
 from cadrumo.application.modelo.action_errors import amendment_evidence_missing_precondition
 from cadrumo.application.modelo.amendment_context_operation import ModeloWorkAmendmentContextProjection
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
 from cadrumo.application.modelo.calculation_projection import ModeloCalculationSnapshot
 from cadrumo.application.modelo.calculation_repository import calculation_revision_catalogue_repository
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.filing_projection import ModeloFilingRecordSnapshot
 from cadrumo.application.modelo.filing_repository import modelo_record_catalogue_repository
@@ -79,7 +79,7 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
 )
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.cli.modelo_amend_wizard_commands import (
     _ACTIVE_RUNS,
     _KIND_PAGE_ID,

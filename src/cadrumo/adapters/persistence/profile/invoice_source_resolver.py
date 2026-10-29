@@ -1,7 +1,7 @@
 """Outward adapter for the invoice source-mesh read capability.
 
 Core types:
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
 """
 
 from __future__ import annotations
@@ -12,7 +12,7 @@ from ....application.invoices.source_resolver_ports import (
     InvoiceSourceCatalogueReader,
     InvoiceSourcePersistenceError,
 )
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ..storage.errors import STORAGE_DEGRADATION_ERRORS
 from .invoices import InvoiceCatalogueRepository
 

@@ -62,12 +62,12 @@ from .casilla_help_reach import ModeloHelpReachV1, build_casilla_help_reach
 from .printed_boxes import snapshot_printed_boxes
 from .source_policy import SourceSurface, source_policy
 from .work_form_localization import localized_text, unnamed_casilla_label
-from .workspace import formula_expression_operand_references
 from .workspace_models import (
     ModeloWorkspaceFormulaBindingOperandReferenceV1,
     ModeloWorkspaceFormulaCasillaOperandReferenceV1,
     ModeloWorkspaceFormulaDateBindingOperandReferenceV1,
 )
+from .workspace_schema import formula_expression_operand_references
 
 _HELP_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "constraint.at_least": "application.modelo.help.constraint.at_least",
@@ -228,6 +228,25 @@ def _legal_basis(casilla: CasillaDefinition, operation: PinnedAuthorityOperation
     )
 
 
+def _outside_casilla_figure(
+    reference: ModeloWorkspaceFormulaCasillaOperandReferenceV1,
+    casillas: Mapping[str, CasillaDefinition],
+    bindings: Mapping[str, BindingDefinition],
+    is_printed: Callable[[str], bool],
+    language: OutputLanguage,
+) -> tuple[str, ModeloHelpOutsideFigureV1] | None:
+    operand = casillas.get(reference.casilla_id)
+    if operand is None or is_printed(operand.id):
+        return None
+    bound = bindings.get(operand.binding) if operand.binding is not None else None
+    label = localized_text(operand.localization_keys, language) or unnamed_casilla_label(language)
+    return operand.id, ModeloHelpOutsideFigureV1(
+        label=label.text,
+        surface=SourceSurface.NONE if bound is None else source_policy(bound.source).surface,
+        casilla_id=operand.id,
+    )
+
+
 def _outside_figures(
     casilla: CasillaDefinition,
     *,
@@ -245,19 +264,9 @@ def _outside_figures(
     figures: dict[str, ModeloHelpOutsideFigureV1] = {}
     for reference in formula_expression_operand_references(formula.id, formula.expression):
         if isinstance(reference, ModeloWorkspaceFormulaCasillaOperandReferenceV1):
-            operand = casillas.get(reference.casilla_id)
-            if operand is None or is_printed(operand.id):
-                continue
-            bound = bindings.get(operand.binding) if operand.binding is not None else None
-            label = localized_text(operand.localization_keys, language) or unnamed_casilla_label(language)
-            figures.setdefault(
-                f"casilla:{operand.id}",
-                ModeloHelpOutsideFigureV1(
-                    label=label.text,
-                    surface=SourceSurface.NONE if bound is None else source_policy(bound.source).surface,
-                    casilla_id=operand.id,
-                ),
-            )
+            figure = _outside_casilla_figure(reference, casillas, bindings, is_printed, language)
+            if figure is not None:
+                figures.setdefault(f"casilla:{figure[0]}", figure[1])
         elif isinstance(
             reference,
             ModeloWorkspaceFormulaBindingOperandReferenceV1 | ModeloWorkspaceFormulaDateBindingOperandReferenceV1,

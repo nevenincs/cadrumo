@@ -16,7 +16,7 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import Settings
 from ..core.identity.bucket import canonical_bucket_id
 from ..domain.attachments.protocols import AttachmentStoreProtocol
-from .adapter_composition import build_attachment_store
+from .adapter_composition_ports import build_attachment_store
 
 
 def _require_profile(bucket_id: str) -> str:

@@ -42,10 +42,8 @@ from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-)
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.modelo_obligation_scope import (
     OUT_OF_SCOPE_OBLIGATIONS as _OUT_OF_SCOPE_OBLIGATIONS,
 )

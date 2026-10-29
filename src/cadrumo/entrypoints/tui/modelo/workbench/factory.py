@@ -151,6 +151,18 @@ class _PendingApply:
     registry_revision_id: str
 
 
+def _same_relocalized_coordinates(held: ModeloWorkbenchFormReadV1, read: ModeloWorkbenchFormReadV1) -> bool:
+    return not (
+        read.registry_revision_id != held.registry_revision_id
+        or read.calculation_revision_id != held.calculation_revision_id
+        or read.verification_report_id != held.verification_report_id
+        or read.load.form.work_unit_id != held.load.form.work_unit_id
+        or read.tax_id_format != held.tax_id_format
+        or read.asks_m303_evidence != held.asks_m303_evidence
+        or read.asks_modelo_390 != held.asks_modelo_390
+    )
+
+
 class InstalledModeloWorkbench:
     """Reads and acts on one declaration for the workbench, through the production services."""
 
@@ -212,15 +224,7 @@ class InstalledModeloWorkbench:
             volatile = {"baseline_id", "issued_at", "expires_at"}
             if held.baseline.model_dump(exclude=volatile) != admission.baseline.model_dump(exclude=volatile):
                 return None
-        if (
-            read.registry_revision_id != held.read.registry_revision_id
-            or read.calculation_revision_id != held.read.calculation_revision_id
-            or read.verification_report_id != held.read.verification_report_id
-            or read.load.form.work_unit_id != held.read.load.form.work_unit_id
-            or read.tax_id_format != held.read.tax_id_format
-            or read.asks_m303_evidence != held.read.asks_m303_evidence
-            or read.asks_modelo_390 != held.read.asks_modelo_390
-        ):
+        if not _same_relocalized_coordinates(held.read, read):
             return None
         # Do not assign _state: apply/parse still use the original baseline,
         # its lifetime and the revision the operator actually admitted.

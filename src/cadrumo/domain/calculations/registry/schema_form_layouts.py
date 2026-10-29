@@ -387,23 +387,36 @@ class FormRepeatingGroupBlock(RegistryModel):
         if self.max_rows is not None and self.max_rows < self.min_rows:
             raise RegistryValidationError(f"{owner} declares max_rows below min_rows")
         _require_unique(owner, "column keys", tuple(column.key for column in self.columns))
+        self._validate_projected_columns(owner)
+        self._validate_grids(owner)
+        return self
+
+    def _validate_projected_columns(self, owner: str) -> None:
+        """Require projected columns to have distinct fields in one export record."""
         projected = tuple(column.export_field_id for column in self.columns if column.export_field_id is not None)
         if projected:
             if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD or len(projected) != len(self.columns):
                 raise RegistryValidationError("projected form columns require one export-record field owner each")
             _require_unique(owner, "export fields", projected)
-        if self.grids:
-            if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
-                raise RegistryValidationError(f"{owner} grids require an export-record row source")
-            targets = tuple(column.casilla_id for column in self.columns)
-            if any(target is None for target in targets) or len(targets) != len(set(targets)):
-                raise RegistryValidationError(f"{owner} grids require uniquely addressed columns")
-            _require_unique(owner, "grid ids", tuple(grid.id for grid in self.grids))
-            cells = tuple(cell for grid in self.grids for row in grid.rows for cell in row.cells)
-            if any(cell.kind is not FormCellKind.CASILLA or cell.casilla_id not in targets for cell in cells):
-                raise RegistryValidationError(f"{owner} grid cells must address declared member columns")
-            _require_unique(owner, "grid casillas", tuple(str(cell.casilla_id) for cell in cells))
-        return self
+
+    def _validate_grids(self, owner: str) -> None:
+        """Require uniquely addressed export-record columns before validating grid cells."""
+        if not self.grids:
+            return
+        if self.row_source is not FormRepeatingRowSource.EXPORT_RECORD:
+            raise RegistryValidationError(f"{owner} grids require an export-record row source")
+        targets = tuple(column.casilla_id for column in self.columns)
+        if any(target is None for target in targets) or len(targets) != len(set(targets)):
+            raise RegistryValidationError(f"{owner} grids require uniquely addressed columns")
+        _require_unique(owner, "grid ids", tuple(grid.id for grid in self.grids))
+        self._validate_grid_cells(owner, targets)
+
+    def _validate_grid_cells(self, owner: str, targets: tuple[CasillaId | None, ...]) -> None:
+        """Require each grid cell to name a distinct declared member column."""
+        cells = tuple(cell for grid in self.grids for row in grid.rows for cell in row.cells)
+        if any(cell.kind is not FormCellKind.CASILLA or cell.casilla_id not in targets for cell in cells):
+            raise RegistryValidationError(f"{owner} grid cells must address declared member columns")
+        _require_unique(owner, "grid casillas", tuple(str(cell.casilla_id) for cell in cells))
 
 
 class FormBindingInputsBlock(RegistryModel):

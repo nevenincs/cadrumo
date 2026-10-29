@@ -59,7 +59,8 @@ from ..operations.registry import (
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
+from .export import export_modelo_revision
+from .export_contracts import ModeloExportCommand, ModeloExportResult
 from .export_ports import ModeloExportPortsFactory
 from .review_package import (
     ReviewPackageActor,

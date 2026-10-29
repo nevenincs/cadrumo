@@ -18,14 +18,13 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import RevisionId
 from ....domain.filing.schema import ModeloDraft
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.models import (
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ...calculations.observations_repository import (
     CalculationObservationStorageProtocol,
     ObservationEnvelopePayload,

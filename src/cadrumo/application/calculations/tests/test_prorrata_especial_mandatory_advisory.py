@@ -26,7 +26,7 @@ from ....domain.iva.prorrata_especial_parameters import (
     ProrrataEspecialMandatoryParameters,
     resolve_prorrata_especial_mandatory_parameters,
 )
-from ..prorrata_regularizacion import build_prorrata_especial_mandatory_advisory
+from ..prorrata_especial_advisory import build_prorrata_especial_mandatory_advisory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

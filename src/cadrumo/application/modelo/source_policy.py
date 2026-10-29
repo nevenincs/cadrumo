@@ -9,7 +9,7 @@ product surface owns the data.
 
 The override policy is not decided here. Whether a caller may override a source
 is the calculation's own precedence ladder
-(:data:`~cadrumo.application.aggregation.source_mesh.CALLER_OVERRIDE_PRECEDENCE_LADDER`),
+(:data:`~cadrumo.application.aggregation.source_precedence.CALLER_OVERRIDE_PRECEDENCE_LADDER`),
 and this table reads it rather than restating it: a locked source is fixed at
 its source, a carried one may be overridden with a reason. The few kinds the
 ladder does not govern carry an explicit policy only where the product already
@@ -32,7 +32,7 @@ from pydantic import BaseModel
 from ...core.aggregation import BindingSourceKind
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.models import STRICT_FROZEN_CONFIG
-from ..aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from ..aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 
 
 class SourceFamily(StrEnum):

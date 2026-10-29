@@ -16,7 +16,7 @@ import pytest
 
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, seeded_operator_work
 
-from ...application.modelo.calculation_actions import (
+from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ...application.modelo.edit_models import (

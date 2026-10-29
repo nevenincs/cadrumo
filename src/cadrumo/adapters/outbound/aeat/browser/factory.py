@@ -446,7 +446,7 @@ async def _start_playwright(settings: Settings | None = None) -> Playwright:
             ),
         ) from exc
     try:
-        from .....application.provisioning_browser import playwright_browsers_root
+        from .....application.browser_location import playwright_browsers_root
         from .....core.config import load_settings
         from .....core.storage_taxonomy import StorageCategory
         from .....core.storage_taxonomy_locations import storage_path

@@ -17,9 +17,9 @@ import pytest
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
-    link_manual_transaction_invoice,
     update_manual_transaction,
     update_manual_transaction_fields,
 )
@@ -249,7 +249,7 @@ def test_generic_field_edit_preserves_existing_evidence(
 
 
 def test_bulk_classify_columns_never_carry_evidence_fields() -> None:
-    # bulk_classify_from_csv reaches _prepare_manual_transaction_update (the
+    # bulk_classify_from_csv reaches prepare_manual_transaction_update (the
     # builder) directly, bypassing the wrapper's evidence guard. That is safe
     # ONLY because the bulk CSV column allowlist excludes every evidence field.
     # This gate keeps the two sets disjoint so a future column addition cannot

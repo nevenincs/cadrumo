@@ -78,13 +78,9 @@ def _resolve_manual_field_value(
     if field_name == "business_classification":
         return BusinessClassification(value)
     if field_name in {"business_pct", "taxable_base", "iva_rate", "iva_amount"}:
-        parsed = try_parse_canonical_decimal(value, signed=False)
-        if parsed is None:
-            raise TransactionValidationError(f"ledger classify {field_name} must be canonical decimal text")
-        return parsed
+        return _manual_decimal_value(field_name, value)
     if field_name == "category_id":
-        normalized = value.strip()
-        return require_spending_category(normalized, authority=operation).value if normalized else None
+        return _manual_spending_category(value, operation)
     if field_name == "irpf_category":
         return require_ledger_irpf_category(value, authority=operation) if value.strip() else None
     if field_name == "iva_category":
@@ -94,6 +90,18 @@ def _resolve_manual_field_value(
     if field_name == "counterparty_identification_state":
         return require_eu_member_state(value, authority=operation)
     return value
+
+
+def _manual_spending_category(value: str, operation: PinnedAuthorityOperation) -> str | None:
+    normalized = value.strip()
+    return require_spending_category(normalized, authority=operation).value if normalized else None
+
+
+def _manual_decimal_value(field_name: str, value: str) -> Decimal:
+    parsed = try_parse_canonical_decimal(value, signed=False)
+    if parsed is None:
+        raise TransactionValidationError(f"ledger classify {field_name} must be canonical decimal text")
+    return parsed
 
 
 def _resolve_m210_classification(

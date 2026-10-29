@@ -8,7 +8,7 @@ See Also:
     :class:`~application.aggregation.CalculationSourceResolution`
         Source-mesh result envelope whose owned sources, binding values, and
         diagnostics are asserted by this enrollment gate.
-    :func:`~application.modelo.calculation_actions.resolve_bucket_source_mesh`
+    :func:`~application.modelo.calculation_source_mesh_actions.resolve_bucket_source_mesh`
         Calculate-path mesh entry point that enrolls the prorrata resolver.
     :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
         Live resolver promoted from resolver-only proof into the application
@@ -34,7 +34,7 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import ResultDispositionProjection
-from ....application.modelo.calculation_actions import resolve_bucket_source_mesh
+from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period

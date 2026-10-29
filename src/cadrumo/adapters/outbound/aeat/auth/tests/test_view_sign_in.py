@@ -20,7 +20,7 @@ from pydantic import SecretStr
 
 from cadrumo.application.auth.acquisition_lock import AuthAcquisitionLockState
 from cadrumo.application.auth.protocols import BrowserSessionFactoryPort, BrowserSessionPort
-from cadrumo.application.auth.sessions import ViewSessionPublicationOutcome, view_context_provisioner
+from cadrumo.application.auth.view_sessions import ViewSessionPublicationOutcome, view_context_provisioner
 from cadrumo.application.live.sede_view_operation import SedeViewSessionSignIn
 from cadrumo.application.live.sede_view_ports import SedeViewEnd, SedeViewOpening
 from cadrumo.application.live.session import ensure_live_authenticated_session, open_live_view_session
@@ -48,7 +48,7 @@ from cadrumo_client.contracts.view_stream import (
     WheelInput,
 )
 
-from ...browser.sede_view import SedeViewPage, interrupts_assisted_login
+from ...browser.sede_view import SedeViewPage
 from ...browser.tests.real_http_boundary import (
     LocalHttpBoundary,
     open_real_browser_session,
@@ -56,6 +56,7 @@ from ...browser.tests.real_http_boundary import (
     real_browser_factory,
 )
 from ...browser.tests.view_page_support import RecordingViewSink, until
+from ...browser.view_presentation import interrupts_assisted_login
 from .. import session_store
 from .._clave_provider_common import default_sede_target_url
 from ..clave_movil import ClaveMovilAuthProvider

@@ -7,7 +7,6 @@ from decimal import Decimal
 
 from ...adapters.outbound.llm.models import RecordedLLMProvider, UsageRecord
 from ...adapters.persistence.llm.usage import UsageRecorder
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
 from ...application.ledger.llm_classification import apply_llm_classification
 from ...application.ledger.llm_classification_ports import LLMClassificationSuggestion
@@ -23,6 +22,7 @@ from ...application.ledger.llm_review_contracts import (
     ledger_llm_review_subject,
 )
 from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from ...application.ledger.manual_update import attach_manual_transaction_evidence
 from ...application.ledger.operator_iva_contracts import (
     LEDGER_OPERATOR_IVA_DEFINITION_ID,
     LedgerOperatorIvaRequest,
@@ -146,7 +146,7 @@ def _prepare_split_review(context: ConformanceFamilyContext) -> ConformancePrepa
     )
     ports = ledger_action_ports(context)
     # A split proposal is only ever read from image evidence by the on-host vision reader.
-    # llm_classification.py `_split_with_evidence`.
+    # llm_evidence.py `split_with_evidence`.
     attachment = add_attachment(
         ports.attachment_store,
         content=AttachmentBytesContent(data=_PNG_1X1),

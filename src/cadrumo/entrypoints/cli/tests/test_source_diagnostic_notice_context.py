@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.calculations import relation_prefill
+from ....application.calculations.relation_prefill_diagnostics import absent_bound_carry_diagnostics
 from ....domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
@@ -59,7 +59,7 @@ def _m200_bound_carry_diagnostics():
         "this gate needs at least two same-modelo carries on the M200 revision to compare; "
         f"found {sorted(self_carries)}"
     )
-    return relation_prefill._absent_bound_carry_diagnostics(
+    return absent_bound_carry_diagnostics(
         unresolved_relation_ids=self_carries,
         requirements_by_relation=requirements_by_relation,
         resolver_id="relation_prefill",

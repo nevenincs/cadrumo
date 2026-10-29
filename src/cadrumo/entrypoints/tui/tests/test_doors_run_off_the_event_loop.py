@@ -20,7 +20,7 @@ from textual.widgets import Button, DataTable, Static
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
-from ..app import CadrumoTuiApp, RootBindingV1
+from ..app import CadrumoTuiApp
 from ..components.host import ScreenHostApp
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection
@@ -41,6 +41,7 @@ from ..ledger.tests.workspace_fixtures import (
     ledger_review_action,
 )
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
+from ..root_binding import RootBindingV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import settle
 from .test_app import _account_factories, _catalogue

@@ -72,10 +72,8 @@ from ...domain.iva.prorrata_especial_parameters import (
 )
 from ...domain.prorrata_register.register import ProrrataRegisterError
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation.iva_ledger import (
-    aggregate_iva_ledger_observations_from_repositories,
-    compute_annual_deducible_totals_by_regime,
-)
+from ..aggregation.iva_ledger import aggregate_iva_ledger_observations_from_repositories
+from ..aggregation.iva_ledger_classification import compute_annual_deducible_totals_by_regime
 from ..aggregation.prorrata_volume import project_prorrata_declared_volume_rollup
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
@@ -83,10 +81,10 @@ from ..calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
     require_observation_envelope_coordinates_current,
 )
+from ..calculations.prorrata_especial_advisory import build_prorrata_especial_mandatory_advisory
 from ..calculations.prorrata_regularizacion import (
     ProrrataDeclaredVolumeLedgerRollup,
     build_prorrata_declared_volume_advisory,
-    build_prorrata_especial_mandatory_advisory,
     build_prorrata_missing_provisional_advisory,
     buildprorrata_regularizacion_advisory,
     derive_prorrata_applicability,
@@ -438,7 +436,7 @@ def _especial_mandatory_diagnostics(
     * CHECK branch (register regime ESPECIAL — the general shadow is mechanical —
       or regime GENERAL with every deducible soportado row classified): run the
       real art. 103.Dos.2.º comparison through
-      :func:`~application.calculations.prorrata_regularizacion.build_prorrata_especial_mandatory_advisory`
+      :func:`~application.calculations.prorrata_especial_advisory.build_prorrata_especial_mandatory_advisory`
       and surface its message verbatim as a ``prorrata_especial_obligatoria``
       diagnostic. A non-breach returns nothing (no noise).
     * PROMPT branch (register regime GENERAL with unclassified deducible soportado

@@ -11,13 +11,10 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
+from ....domain.transactions.date_partition import OutOfWindowTransactionIndexEntry
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.errors import TransactionValidationError
-from ....domain.transactions.models import (
-    OutOfWindowTransactionIndexEntry,
-    Transaction,
-    TransactionCatalogue,
-)
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     pass

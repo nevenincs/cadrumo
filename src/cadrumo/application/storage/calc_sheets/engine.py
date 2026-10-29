@@ -17,29 +17,16 @@ from collections.abc import Callable, Iterable, Mapping
 from datetime import date
 from typing import Final, Literal
 
-from ....core.aggregation import BindingAggregationOp, BindingSourceKind
 from ....core.casilla_id import CasillaId
 from ....core.hashing import sha256_hex
 from ....core.i18n.render import tr
 from ....core.period import Period, is_administrative_period_token
 from ....core.time.clock import now
 from ....domain.calculations.record_row_membership import ClosedRecordRowSet, resolve_closed_record_rows
-from ....domain.calculations.registry.binding_aggregation import binding_aggregation_op
-from ....domain.calculations.registry.binding_selector_utils import (
-    BindingRowSetSelector,
-    binding_row_set_selector,
-)
 from ....domain.calculations.registry.binding_value_contract import BindingDataType
 from ....domain.calculations.registry.casilla_membership import casillas_by_id
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.formula_runtime_ops import resolve_parameter
-from ....domain.calculations.registry.relation_prefill_bindings import RelationPrefillProvider
-from ....domain.calculations.registry.relations import (
-    RegistryFoldRequirement,
-    relation_prefill_bindings_for_period,
-    relation_requirement_index,
-    relation_source_requirements,
-)
 from ....domain.calculations.registry.schema import (
     BindingDefinition,
     FormulaDefinition,
@@ -62,7 +49,6 @@ from .layout import SheetLayout, plan_layout
 from .number_formats import numeric_format
 from .records import (
     OperatorInputs,
-    RelationValue,
     RelationValues,
     SheetAdministrativeFrame,
     SheetAnchor,
@@ -76,11 +62,8 @@ from .records import (
     SheetNumberFormat,
     SheetProtectedRange,
     SheetProvenanceRow,
-    SheetRelationProvenance,
     SheetRoundingRule,
     SheetRoundingRuleValue,
-    SheetRowSet,
-    SheetRowSetColumn,
     SheetSectionHeader,
     SheetTariffTable,
     SheetTariffTableRow,
@@ -88,6 +71,8 @@ from .records import (
     SheetValueCell,
     TabName,
 )
+from .relation_cells import relation_value_cells, relation_values_with_registry_grounding
+from .row_sets import collect_row_sets
 from .template_source import WorkbookTemplateSource
 
 # This stamp binds a rendered workbook to the layout compiler as well as the
@@ -702,131 +687,6 @@ def _provenance_value_cells(rows: Iterable[SheetProvenanceRow]) -> tuple[SheetVa
     return tuple(cells)
 
 
-def _relation_value_cells(
-    layout: SheetLayout,
-    relation_values: RelationValues,
-) -> tuple[SheetValueCell, ...]:
-    """Mirror caller-supplied cross-revision aggregations to `Tarifas` cells.
-
-    The engine reserves one cell per relation referenced by the
-    revision's formulas (see the layout planner's `relation_cells`
-    mapping). For each reserved cell we emit:
-
-    - a label cell at `column - 2` carrying the relation id, so the
-      operator reading the workbook can identify the aggregation
-      without consulting the registry, and
-    - the value cell itself at the relation's anchor, populated with
-      the caller's pre-resolved scalar when available; a blank cell
-      is emitted otherwise so the Sheets formula reads 0 (operators
-      who export without supplying relations get a valid workbook
-      with a clearly-blank cell to fill in by hand).
-    """
-    by_relation = relation_values.by_relation()
-    cells: list[SheetValueCell] = []
-    for relation_id, anchor in layout.relation_cells.items():
-        label_address = SheetCellAddress.at(anchor.tab, anchor.row, anchor.column - 2)
-        cells.append(
-            SheetValueCell(
-                address=label_address,
-                value=relation_id,
-                role="label",
-            ),
-        )
-        supplied = by_relation.get(relation_id)
-        cells.append(
-            SheetValueCell(
-                address=anchor,
-                value=supplied.value if supplied is not None else None,
-                note=supplied.note if supplied is not None else None,
-                role="parameter_value",
-            ),
-        )
-    return tuple(cells)
-
-
-def _relation_values_with_registry_grounding(
-    snapshot: RegistrySnapshot,
-    layout: SheetLayout,
-    relation_values: RelationValues,
-) -> RelationValues:
-    """Attach registry-owned source identity and grounding to relation scalar rows."""
-    supplied_by_relation = relation_values.by_relation()
-    folds_by_id = {
-        binding.id: (binding, provider) for binding, provider in relation_prefill_bindings_for_period(snapshot.revision)
-    }
-    requirements_by_relation = relation_requirement_index(
-        relation_source_requirements(
-            snapshot.revision,
-            filing_year=snapshot.filing_year,
-            period=snapshot.period,
-        )
-    )
-    values = tuple(
-        _relation_value_with_registry_grounding(
-            relation_id=relation_id,
-            provider=folds_by_id[relation_id][1],
-            binding=folds_by_id[relation_id][0],
-            supplied=supplied_by_relation.get(relation_id),
-            requirement=requirements_by_relation.get(relation_id),
-        )
-        for relation_id in layout.relation_cells
-    )
-    return RelationValues(values=values)
-
-
-def _relation_value_with_registry_grounding(
-    *,
-    relation_id: str,
-    provider: RelationPrefillProvider,
-    binding: BindingDefinition,
-    supplied: RelationValue | None,
-    requirement: RegistryFoldRequirement | None,
-) -> RelationValue:
-    source_modelo = requirement.source_modelo if requirement is not None else provider.source_modelo
-    source_periods = requirement.periods if requirement is not None else provider.required_source_periods
-    source_casilla_ids = (
-        requirement.source_casilla_ids if requirement is not None else provider.declared_source_casilla_ids
-    )
-    legal_refs = requirement.legal_refs if requirement is not None else tuple(binding.legal_refs)
-    source_refs = requirement.source_refs if requirement is not None else tuple(binding.source_refs)
-    return RelationValue(
-        relation=relation_id,
-        value=supplied.value if supplied is not None else None,
-        provenance=supplied.provenance if supplied is not None else SheetRelationProvenance.OPERATOR_MANUAL,
-        source_modelo=source_modelo,
-        source_filing_year=_relation_source_filing_year(requirement, supplied),
-        source_periods=source_periods,
-        source_casilla_ids=source_casilla_ids,
-        dependency_treatment=_relation_dependency_treatment(requirement, supplied),
-        legal_refs=legal_refs,
-        source_refs=source_refs,
-        resolved_at=supplied.resolved_at if supplied is not None else None,
-        note=supplied.note if supplied is not None else None,
-    )
-
-
-def _relation_source_filing_year(
-    requirement: RegistryFoldRequirement | None,
-    supplied: RelationValue | None,
-) -> int | None:
-    if requirement is not None:
-        return requirement.filing_year
-    if supplied is not None:
-        return supplied.source_filing_year
-    return None
-
-
-def _relation_dependency_treatment(
-    requirement: RegistryFoldRequirement | None,
-    supplied: RelationValue | None,
-) -> str:
-    if requirement is not None:
-        return requirement.dependency_treatment or ""
-    if supplied is not None:
-        return supplied.dependency_treatment
-    return ""
-
-
 def _protected_ranges(layout: SheetLayout) -> tuple[SheetProtectedRange, ...]:
     last_calc_row = max((row.row for row in layout.calculos_rows), default=1)
     return (
@@ -920,25 +780,26 @@ def _number_formats(
     for binding_id, address in {**layout.binding_cells, **layout.date_binding_cells}.items():
         if address.qualified() in formatted_addresses:
             continue
-        binding = bindings_by_id[binding_id]
-        data_type = binding.value.data_type
-        if data_type is BindingDataType.BOOLEAN:
-            # A boolean is neither numeric zero/one nor the strings TRUE/FALSE.
-            # Both transports already preserve literal bool payloads.
+        directive = _binding_number_format(bindings_by_id[binding_id], address)
+        if directive is None:
             continue
-        pattern = numeric_format(data_type)
-        if pattern is not None:
-            format_type, format_pattern = pattern
-            directive = SheetNumberFormat(address=address, data_type=format_type, pattern=format_pattern)
-        elif data_type is BindingDataType.DATE:
-            directive = SheetNumberFormat(address=address, data_type="date", pattern="yyyy-mm-dd")
-        elif data_type in (BindingDataType.TEXT, BindingDataType.ENUM):
-            directive = SheetNumberFormat(address=address, data_type="text", pattern="@")
-        else:
-            directive = SheetNumberFormat(address=address, data_type="decimal", pattern="0.############")
         formats.append(directive)
         formatted_addresses.add(address.qualified())
     return tuple(formats)
+
+
+def _binding_number_format(binding: BindingDefinition, address: SheetCellAddress) -> SheetNumberFormat | None:
+    data_type = binding.value.data_type
+    if data_type is BindingDataType.BOOLEAN:
+        return None
+    pattern = numeric_format(data_type)
+    if pattern is not None:
+        return SheetNumberFormat(address=address, data_type=pattern[0], pattern=pattern[1])
+    if data_type is BindingDataType.DATE:
+        return SheetNumberFormat(address=address, data_type="date", pattern="yyyy-mm-dd")
+    if data_type in (BindingDataType.TEXT, BindingDataType.ENUM):
+        return SheetNumberFormat(address=address, data_type="text", pattern="@")
+    return SheetNumberFormat(address=address, data_type="decimal", pattern="0.############")
 
 
 def _section_headers(layout: SheetLayout) -> tuple[SheetSectionHeader, ...]:
@@ -1044,6 +905,16 @@ def _untranslatable_internal_only_casillas(
         excluded |= newly_excluded
 
 
+def _select_relations(
+    snapshot: RegistrySnapshot, relation_values: RelationValues | None, relation_resolver: RelationResolver | None
+) -> RelationValues:
+    if relation_values is not None:
+        return relation_values
+    if relation_resolver is not None:
+        return relation_resolver(snapshot)
+    return RelationValues()
+
+
 def build_export_plan(
     snapshot: RegistrySnapshot,
     *,
@@ -1105,12 +976,7 @@ def build_export_plan(
         A complete :class:`SheetExportPlan` ready for the Google apply adapter.
     """
     inputs = operator_inputs if operator_inputs is not None else OperatorInputs()
-    if relation_values is not None:
-        supplied_relations = relation_values
-    elif relation_resolver is not None:
-        supplied_relations = relation_resolver(snapshot)
-    else:
-        supplied_relations = RelationValues()
+    supplied_relations = _select_relations(snapshot, relation_values, relation_resolver)
     revision = snapshot.revision
     # Anchor every temporal lookup (scalar parameter, bracket-table
     # window selection) at the snapshot's filing date so the workbook
@@ -1141,7 +1007,7 @@ def build_export_plan(
         },
     )
     layout = layout.model_copy(update={"record_rows": rows})
-    relations = _relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
+    relations = relation_values_with_registry_grounding(snapshot, layout, supplied_relations)
 
     evidence = (
         sheet_evidence_from_ledger_filing(
@@ -1239,7 +1105,7 @@ def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata
     calculos_labels = _label_cells_for_calculos(revision, layout)
     tariff_tables = _tariff_tables(revision, layout, filing_anchor)
     tariff_values = _tariff_value_cells(tariff_tables)
-    relation_value_cells = _relation_value_cells(layout, relations)
+    relation_cells = relation_value_cells(layout, relations)
     formula_cells = _formula_cells(revision, layout)
     provenance = _provenance_rows(revision, layout)
     provenance_values = _provenance_value_cells(provenance)
@@ -1266,9 +1132,7 @@ def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata
     cell_constraints = _collect_cell_constraints(revision, layout)
     row_sets = collect_row_sets(revision)
 
-    value_cells = (
-        entradas + calculos_labels + tariff_values + relation_value_cells + provenance_values + anchor_value_cells
-    )
+    value_cells = entradas + calculos_labels + tariff_values + relation_cells + provenance_values + anchor_value_cells
 
     styled_ranges, column_widths, frozen_views, auto_filters = compute_styling(
         layout=layout,
@@ -1297,115 +1161,6 @@ def assemble_workbook_plan[M: (SheetExportMetadata, SheetTemplatePreviewMetadata
         frozen_views=frozen_views,
         auto_filters=auto_filters,
         guide=guide,
-    )
-
-
-def collect_row_sets(revision: ModeloRevision) -> tuple[SheetRowSet, ...]:
-    """Collect row-producer bindings into per-grouping `SheetRowSet` blocks.
-
-    Args:
-        revision: The :class:`ModeloRevision` whose bindings are scanned for row-producer declarations.
-
-    Walks `revision.bindings` for invoice / counterpart bindings with
-    ``aggregation = { op = "rows" }``, groups them by ``selector.grouping``
-    (typically ``operator_clave`` or ``operator_clave_period``), and lays
-    them out as stacked header+data blocks in the `Detalle` tab. Each
-    grouping occupies a contiguous column block; groupings stack
-    vertically with a one-row gap between blocks. The pull adapter
-    reads row data from `first_data_row` downwards.
-
-    Each element in the returned tuple is a :class:`SheetRowSet`.
-    """
-    cohorts: dict[str, list[tuple[BindingDefinition, BindingRowSetSelector]]] = {}
-    cohort_legal: dict[str, set[str]] = {}
-    cohort_source: dict[str, set[str]] = {}
-    public_row_bindings_by_id = _collectible_row_bindings_by_id(revision)
-    for binding in revision.bindings:
-        if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
-            continue
-        selector = binding_row_set_selector(binding)
-        if selector is None:
-            continue
-        if _is_public_row_mirror(binding, selector, public_row_bindings_by_id):
-            continue
-        cohorts.setdefault(selector.grouping, []).append((binding, selector))
-        cohort_legal.setdefault(selector.grouping, set()).update(binding.legal_refs)
-        cohort_source.setdefault(selector.grouping, set()).update(binding.source_refs)
-
-    row_sets: list[SheetRowSet] = []
-    next_row = 1
-    for grouping in sorted(cohorts):
-        members = sorted(cohorts[grouping], key=lambda item: item[0].id)
-        header_row = next_row
-        first_data_row = next_row + 1
-        columns = tuple(
-            SheetRowSetColumn(
-                binding=binding.id,
-                header_address=SheetCellAddress.at(TabName.DETALLE, header_row, column_index),
-                header_label=_row_set_column_label(binding, selector),
-                legal_refs=tuple(sorted(binding.legal_refs)),
-            )
-            for column_index, (binding, selector) in enumerate(members, start=1)
-        )
-        row_sets.append(
-            SheetRowSet(
-                grouping=grouping,
-                tab=TabName.DETALLE,
-                header_row=header_row,
-                first_data_row=first_data_row,
-                columns=columns,
-                legal_refs=tuple(sorted(cohort_legal[grouping])),
-                source_refs=tuple(sorted(cohort_source[grouping])),
-            ),
-        )
-        # Reserve 50 data rows per grouping + one blank separator. The
-        # apply adapter does not protect this area; operators may extend
-        # downwards if more rows are needed.
-        next_row = first_data_row + 50 + 1
-    return tuple(row_sets)
-
-
-def _collectible_row_bindings_by_id(revision: ModeloRevision) -> dict[str, BindingDefinition]:
-    return {
-        binding.id: binding
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.COLLECTIBLE_INVOICE
-        and binding_aggregation_op(binding) == BindingAggregationOp.ROWS
-    }
-
-
-def _is_public_row_mirror(
-    binding: BindingDefinition,
-    selector: BindingRowSetSelector,
-    public_row_bindings_by_id: Mapping[str, BindingDefinition],
-) -> bool:
-    if binding.source != BindingSourceKind.PAYABLE_INVOICE:
-        return False
-    binding_id = binding.id
-    if not binding_id.endswith(_ACQUISITION_MIRROR_BINDING_SUFFIX):
-        return False
-    public_binding_id = binding_id.removesuffix(_ACQUISITION_MIRROR_BINDING_SUFFIX)
-    public_binding = public_row_bindings_by_id.get(public_binding_id)
-    if public_binding is None:
-        return False
-    public_selector = binding_row_set_selector(public_binding)
-    if public_selector is None:
-        return False
-    return selector.grouping == public_selector.grouping and selector.row_field == public_selector.row_field
-
-
-def _row_set_column_label(binding: BindingDefinition, selector: BindingRowSetSelector) -> str:
-    """Derive a human-readable column header for a row-set binding.
-
-    Resolves the operator-facing label through the i18n translation
-    catalogue keyed by ``selector.row_field``. Locale strings live
-    under ``sheets.detalle.headers.*``. There is no runtime fallback: the
-    locale gate enumerates every ``row_field`` the bundled registry declares
-    and requires this key for each in every catalogue, so an unlabelled
-    column fails that gate instead of reaching a workbook.
-    """
-    return tr(
-        f"sheets.detalle.headers.{selector.row_field}",
     )
 
 

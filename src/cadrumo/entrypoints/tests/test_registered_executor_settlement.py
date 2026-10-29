@@ -24,7 +24,7 @@ from ...application.ledger.models import ManualLedgerTransactionCommand
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.ledger.track_operation import LedgerTrackProjection, LedgerTrackRequest
 from ...application.modelo.amendment_action_ports import AmendmentActionPorts
-from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.work_amend_contracts import ModeloWorkAmendRequest
 from ...application.operations.frontend_projection import OperationNoPendingInteractionV1
 from ...application.operations.frontend_requests import OperationCancellationRequestV1, OperationCancellationSuccessV1
@@ -40,7 +40,7 @@ from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.filing_record import ModeloRecordCatalogue
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
-from ..adapter_composition import build_amendment_action_ports, build_filing_action_ports
+from ..adapter_composition_work_ports import build_amendment_action_ports, build_filing_action_ports
 from ..ledger_action_composition import compose_ledger_action_ports
 from . import modelo_operation_test_support
 from .registered_executor_case_support import (

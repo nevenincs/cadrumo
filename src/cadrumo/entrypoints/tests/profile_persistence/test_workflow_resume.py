@@ -12,7 +12,10 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 from ....adapters.outbound.aeat.browser.site_health_records import (
     SiteHealthEvidence,

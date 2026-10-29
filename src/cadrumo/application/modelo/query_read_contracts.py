@@ -21,7 +21,7 @@ from ...domain.calculations.registry.query_reports import ModeloBindingQueryRow,
 from ..operations.models import CredentialFreeOperationRequest
 from ..operations.public_period import PublicPeriod
 from ..operator_actions.projection import PreconditionVerdictSnapshot
-from ..state_projection import (
+from ..state_projection_models import (
     CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS,
     ProjectionModeloReadiness,
 )

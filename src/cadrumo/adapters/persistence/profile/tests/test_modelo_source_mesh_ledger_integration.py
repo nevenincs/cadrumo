@@ -22,7 +22,7 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import TRANSA
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
-from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts

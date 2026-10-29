@@ -36,16 +36,14 @@ from cadrumo.application.auth.certificate_source_operations import (
     set_operator_certificate_source_secret,
 )
 from cadrumo.application.auth.credentials import active_auth_projection_span, resolve_certificate_source_secret
-from cadrumo.application.auth.operator import (
-    login_operator_auth,
-    reset_operator_auth,
-)
+from cadrumo.application.auth.operator import login_operator_auth
 from cadrumo.application.auth.operator_probes import ProviderConfigurationProbe
 from cadrumo.application.auth.operator_results import (
     AuthLoginPreconditionError,
     AuthTestResult,
     LiveAuthPreflightReport,
 )
+from cadrumo.application.auth.operator_revocation import reset_operator_auth
 from cadrumo.application.auth.probes import ProviderProbeResult
 from cadrumo.application.auth.sessions import storage_state_paths
 from cadrumo.application.state_projection_auth import ProjectionAuthReadiness

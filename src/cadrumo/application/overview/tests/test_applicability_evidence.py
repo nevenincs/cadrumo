@@ -22,12 +22,12 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.tests.log_records import delivered_records
 
 from ....core.modelo import Modelo
-from ....domain.calculations.registry.applicability import (
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import (
     ApplicabilityProvenance,
     ApplicabilityVerdict,
     LedgerPayerFactDerivation,
     ModeloApplicability,
-    derive_modelo_applicability,
 )
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.third_party_declaration_roles import require_third_party_declaration_role
@@ -41,8 +41,9 @@ from ....domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...invoices.source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts

@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
+from ...core.filing_producer_key import FilingProducerKey
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
 from ...domain.calculations.registry.form_context import resolve_form_context_field
@@ -45,22 +46,39 @@ def form_context_value(
         return saved_projection_context_value(snapshot=snapshot, revision=revision, block=block)
     if field.binding is not None:
         raise RegistryValidationError("binding context requires the saved binding or workbook projection")
-    if field.draft_attribute is ExportDraftAttribute.FILING_YEAR:
+    if field.draft_attribute in (
+        ExportDraftAttribute.FILING_YEAR,
+        ExportDraftAttribute.PERIOD_CODE,
+        ExportDraftAttribute.PERIOD_START_DATE,
+        ExportDraftAttribute.PERIOD_END_DATE,
+    ):
+        return _draft_context_value(snapshot, field.draft_attribute)
+    return _producer_context_value(producer_snapshot, field.producer_key)
+
+
+def _draft_context_value(snapshot: RegistrySnapshot, attribute: ExportDraftAttribute | None) -> ModeloFormScalar:
+    if attribute is ExportDraftAttribute.FILING_YEAR:
         return snapshot.filing_year
-    if field.draft_attribute is ExportDraftAttribute.PERIOD_CODE:
+    if attribute is ExportDraftAttribute.PERIOD_CODE:
         return snapshot.period
-    if field.draft_attribute in (ExportDraftAttribute.PERIOD_START_DATE, ExportDraftAttribute.PERIOD_END_DATE):
+    if attribute in (ExportDraftAttribute.PERIOD_START_DATE, ExportDraftAttribute.PERIOD_END_DATE):
         # These exact draft fields use draft.period in the filing renderer.
         # A fiscal-start header producer is a different fact and never inferred here.
         period = snapshot.filing_period
         if period is None or not period.has_date_span():
             return None
-        return period.start_date if field.draft_attribute is ExportDraftAttribute.PERIOD_START_DATE else period.end_date
+        return period.start_date if attribute is ExportDraftAttribute.PERIOD_START_DATE else period.end_date
+    raise RegistryValidationError("unsupported draft context value")
+
+
+def _producer_context_value(
+    producer_snapshot: FilingProducerSnapshot | None, producer_key: FilingProducerKey | None
+) -> ModeloFormScalar:
     if producer_snapshot is None:
         return None
     value = (
-        filing_producer_values(producer_snapshot).get(field.producer_key)
-        if (field.producer_key is not None and field.producer_key)
+        filing_producer_values(producer_snapshot).get(producer_key)
+        if (producer_key is not None and producer_key)
         else None
     )
     if value is None or isinstance(value, (str, bool, int, Decimal, date)):

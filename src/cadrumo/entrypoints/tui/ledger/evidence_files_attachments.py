@@ -30,7 +30,7 @@ from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .evidence_files_common import (
     EvidenceFilesPager,
     EvidenceFilesToolScreen,
@@ -48,6 +48,7 @@ from .evidence_files_write import (
     LedgerEvidenceFilesWriteScreen,
 )
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _CONTROLS: Final = (
     "#evidence-files-attach-ids",

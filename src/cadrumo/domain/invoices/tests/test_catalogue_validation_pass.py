@@ -22,8 +22,9 @@ from pydantic import ValidationError
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from .. import models
+from ..catalogue import InvoiceCatalogue
 from ..enums import IvaRate
-from ..models import Invoice, InvoiceCatalogue
+from ..models import Invoice
 from .invoice_catalogue_seed import (
     CENT,
     SLOT_FRACTIONS,

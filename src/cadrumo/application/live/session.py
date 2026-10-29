@@ -36,13 +36,12 @@ from ..auth.protocols import (
     session_store,
 )
 from ..auth.session_types import AeatSession
-from ..auth.sessions import (
-    AuthenticatedAeatSessionResult,
+from ..auth.sessions import AuthenticatedAeatSessionResult, ensure_authenticated_aeat_session
+from ..auth.view_sessions import (
     ViewSessionBaseline,
     ViewSessionPublication,
     ViewSessionSeed,
     assist_view_login,
-    ensure_authenticated_aeat_session,
     publish_view_session_state,
     resume_view_session,
 )
@@ -204,7 +203,7 @@ async def publish_live_view_session(
 
     A view calls this when the person may have signed in inside it, and when
     it closes, with the view context still open. The read gate is checked
-    again, then :func:`~cadrumo.application.auth.sessions.publish_view_session_state`
+    again, then :func:`~cadrumo.application.auth.view_sessions.publish_view_session_state`
     captures, verifies and publishes under its digest precondition.
     """
     AeatAccessGate(settings).require_live_read()
@@ -237,7 +236,7 @@ async def assist_live_view_login(
     """Run the configured provider's login inside a signed-out view and publish it at once.
 
     The read gate is checked again, then
-    :func:`~cadrumo.application.auth.sessions.assist_view_login` runs the
+    :func:`~cadrumo.application.auth.view_sessions.assist_view_login` runs the
     canonical fresh acquisition against the view's own context and publishes
     under the digest precondition. The caller may cancel it until
     ``on_login_verified`` is called.

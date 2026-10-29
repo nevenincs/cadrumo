@@ -12,7 +12,6 @@ from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...application.export.tabular import ExportSerializationFormat
 from ...application.ledger.actions_common import build_manual_ledger_result
 from ...application.ledger.actions_lifecycle import archive_manual_transaction
-from ...application.ledger.actions_manual import ledger_transaction_result_payload
 from ...application.ledger.export_operation import (
     LEDGER_EXPORT_OPERATION_DEFINITION_ID,
     LedgerExportProjection,
@@ -25,13 +24,15 @@ from ...application.ledger.link_operation import (
     LedgerLinkProjection,
     LedgerLinkRequest,
 )
+from ...application.ledger.manual_read import ledger_transaction_result_payload
 from ...application.ledger.transaction_projection import LedgerTransactionProjection
 from ...application.operations.public_period import PublicPeriod
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from .conformance_family_contract import (
     ConformanceFamily,

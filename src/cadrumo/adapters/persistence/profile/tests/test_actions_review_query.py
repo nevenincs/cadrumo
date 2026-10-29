@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import query_ledger_review_rows
+from cadrumo.application.ledger.manual_read import query_ledger_review_rows
 from cadrumo.application.ledger.models import LedgerReviewQuery, ManualLedgerTransactionCommand
 from cadrumo.core.period import Period
 from cadrumo.domain.transactions.enums import TransactionDirection

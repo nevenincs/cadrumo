@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.tests.authored_editions import newest_
 
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ....domain.user_profile.values import UserProfileFactValue
-from ..profile_binding import inject_derived_autonomic_deduccion_facts
+from ..profile_derived_facts import inject_derived_autonomic_deduccion_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

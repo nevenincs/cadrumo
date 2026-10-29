@@ -238,7 +238,7 @@ def test_the_conjunta_branch_is_pinned_on_the_codes_the_schema_can_store() -> No
     These facts go through the real write path, so a value the schema would
     reject cannot reach the assertion.
     """
-    from .....application.modelo.profile_binding import second_entitled_filer_indicated
+    from .....application.modelo.profile_derived_facts import second_entitled_filer_indicated
 
     unmarried = {
         "renta_taxpayer.marital_status": RentaMaritalStatus.PAREJA_HECHO.value,

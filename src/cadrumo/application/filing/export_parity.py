@@ -73,7 +73,7 @@ from ...core.result_disposition import ResultDisposition, result_disposition_req
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
-from ...domain.calculations.registry.export_parse import xml_dictionary_entries
+from ...domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
     rate_box_coverage_shortfalls,

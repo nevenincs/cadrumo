@@ -36,8 +36,9 @@ from types import MappingProxyType
 from typing import Final, get_args
 
 from ...core.aggregation import BindingSourceKind
-from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceDiagnosticReason
-from .work_form_models import ModeloFormAttention
+from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
+from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from .work_form_findings import ModeloFormAttention
 
 _B = ModeloFormAttention.BLOCKS
 _M = ModeloFormAttention.MISSING

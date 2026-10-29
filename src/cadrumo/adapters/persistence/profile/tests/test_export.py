@@ -47,13 +47,13 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionStateError,
     ModeloCrossPeriodCleanStateError,
 )
-from cadrumo.application.modelo.export import (
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import (
     ModeloExportCommand,
     ModeloExportCrossBucketRefusedError,
     ModeloExportNoActiveBucketError,
     ModeloExportResult,
     ModeloIvaWalletDecisionProvenance,
-    export_modelo_revision,
 )
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period

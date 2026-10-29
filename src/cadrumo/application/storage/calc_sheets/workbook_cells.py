@@ -35,6 +35,7 @@ from .records import (
     AnySheetExportPlan,
     SheetCellAddress,
     SheetFormulaCell,
+    SheetMergedRange,
     SheetReviewMetadata,
     SheetRowSet,
     SheetTemplatePreviewMetadata,
@@ -173,14 +174,17 @@ def validate_merged_content(plan: AnySheetExportPlan) -> None:
         address for block in plan_value_blocks(plan) for address, value in block.addressed_values() if value is not None
     ) + tuple(cell.address for cell in plan.formula_cells)
     for region in plan.merged_ranges:
-        if any(
-            address.tab == region.tab
-            and region.start_row <= address.row <= region.end_row
-            and region.start_column <= address.column <= region.end_column
-            and (address.row, address.column) != (region.start_row, region.start_column)
-            for address in addresses
-        ):
+        if any(_is_discarded_by_merge(address, region) for address in addresses):
             raise ValueError("merged range would discard workbook content")
+
+
+def _is_discarded_by_merge(address: SheetCellAddress, region: SheetMergedRange) -> bool:
+    return (
+        address.tab == region.tab
+        and region.start_row <= address.row <= region.end_row
+        and region.start_column <= address.column <= region.end_column
+        and (address.row, address.column) != (region.start_row, region.start_column)
+    )
 
 
 __all__ = [

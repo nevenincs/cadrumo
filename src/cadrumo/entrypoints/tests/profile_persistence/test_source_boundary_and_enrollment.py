@@ -52,11 +52,11 @@ from cadrumo.application.aggregation.foreign_assets import ForeignAssetIngestObs
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError, ModeloProfileReadinessError
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
-    assert_no_novel_source_kinds,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_source_guards import assert_no_novel_source_kinds
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
@@ -457,7 +457,7 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
         revision=revision,
         calculated_at=_T1,
     )
-    from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+    from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
     from cadrumo.application.aggregation.modelo_bindings_renta_expenses import (
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
     )

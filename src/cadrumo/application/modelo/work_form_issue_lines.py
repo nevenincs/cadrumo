@@ -49,13 +49,12 @@ from ...domain.modelos.verification_report import (
 from .calculation_notes import RECORDS_REASONS, what_locale_key, what_to_do_locale_key
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
+from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import (
     ModeloFormAddressV1,
-    ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormRepeatingBlock,
     ModeloFormTextDisclosure,
@@ -372,14 +371,21 @@ def _failed_result_line(field: ModeloFormField, context: _Context) -> ModeloForm
     )
 
 
-def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
-    """One thing the latest calculation noticed, in the same parts as a finding."""
+def _note_identifiers(
+    note: ModeloFormCalculationNote, context: _Context
+) -> tuple[ModeloFormField | None, str, list[str]]:
     casilla_id = None if note.casilla_id is None else str(note.casilla_id)
     address = None if note.casilla_id is None else ModeloFormCasillaAddressV1(casilla_id=note.casilla_id)
     field = None if address is None else context.shown.get(address_key(address))
     named = None if casilla_id is None else (note.box or context.box_words.get(casilla_id))
     box_text = named or context.say(_UNNUMBERED_BOX_LOCALE_KEY)
     codes = [note.reason, *([] if casilla_id is None else [casilla_id])]
+    return field, box_text, codes
+
+
+def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloFormIssueLine:
+    """One thing the latest calculation noticed, in the same parts as a finding."""
+    field, box_text, codes = _note_identifiers(note, context)
     return ModeloFormIssueLine(
         # A note the filing gate refuses on is listed with what blocks filing, as the counts count it.
         level=ModeloFormAttention.BLOCKS if note.withholds_filing else note.attention,

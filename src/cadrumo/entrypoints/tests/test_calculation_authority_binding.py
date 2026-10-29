@@ -23,7 +23,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 
-from ..adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ..adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

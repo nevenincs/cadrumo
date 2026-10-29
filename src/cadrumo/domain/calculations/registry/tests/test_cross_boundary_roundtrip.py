@@ -47,8 +47,8 @@ from ..bindings import (
     CasillaObservation,
     RegistryModeloObservation,
 )
+from ..schema_live_verification import LiveCrossReferenceDecision
 from ..schema_references import RegistrySnapshotRef
-from ..schema_verification import LiveCrossReferenceDecision
 from .published_authority import published_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]

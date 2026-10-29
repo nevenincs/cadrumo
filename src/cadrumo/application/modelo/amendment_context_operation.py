@@ -13,6 +13,7 @@ from pydantic import BaseModel, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -92,6 +93,10 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
             self.permitted_amendment_kinds
         ):
             raise ValueError("amendment context has invalid permitted kinds")
+        self._require_correction_matches(row_ids)
+        return self
+
+    def _require_correction_matches(self, row_ids: tuple[CasillaId, ...]) -> None:
         correction = self.correction
         if correction is not None and (
             correction.filed.filing_record_id != self.record.filing_record_id
@@ -99,7 +104,6 @@ class ModeloWorkAmendmentContextProjection(BaseModel):
             or not {row.casilla_id for row in correction.rows} <= set(row_ids)
         ):
             raise ValueError("amendment context wording does not match its facts")
-        return self
 
 
 def _amendment_context_identity_differs(projection: ModeloWorkAmendmentContextProjection, profile_id: str) -> bool:

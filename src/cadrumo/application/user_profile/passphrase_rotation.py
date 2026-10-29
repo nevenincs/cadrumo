@@ -61,7 +61,7 @@ if TYPE_CHECKING:
     from uuid import UUID
 
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
-    from .custody_ports import ProfileCustodyEnvelopePort
+    from .custody_record_ports import ProfileCustodyEnvelopePort
 
 
 class ProfilePassphraseReplacementProof(StrEnum):

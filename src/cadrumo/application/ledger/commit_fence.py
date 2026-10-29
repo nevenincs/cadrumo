@@ -13,7 +13,8 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.secure_object_write import SecureObjectWrite
-from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ...domain.transactions.date_partition import LedgerDatePartition
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.owner import OperationExecutorContext
 from .persistence_ports import LedgerPersistenceConflictError
 from .protocols import (

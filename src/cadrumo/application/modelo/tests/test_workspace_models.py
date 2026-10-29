@@ -10,8 +10,8 @@ from ....core.external_constants import OutputLanguage
 from ....core.period import Period
 from ....core.revision_review import RevisionReviewStatus
 from ....core.schema_family_disposition import RegistrySchemaFamilyDisposition
-from ....domain.modelos.calculation_revision import CalculationSourceRef
-from ...state_projection import ProjectionModeloReadiness
+from ....domain.modelos.calculation_revision_sources import CalculationSourceRef
+from ...state_projection_models import ProjectionModeloReadiness
 from ..workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,

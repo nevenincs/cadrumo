@@ -129,14 +129,7 @@ def _read_page(
     """Load, verify and draw the requested page in the worker thread."""
     if require_active_bucket_id() != bucket_id:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    if payload.evidence_id is not None:
-        document = _evidence_document(ports, bucket_id, payload.evidence_id)
-    elif payload.attachment_id is not None:
-        document = _StoredDocument(
-            attachment_id=payload.attachment_id, expected_sha256=payload.attachment_id, file_name=None
-        )
-    else:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    document = _requested_document(ports, bucket_id, payload)
     manifest = _load_manifest(ports, bucket_id, document)
     file_name = document.file_name
     if payload.attachment_id is not None and manifest.source is AttachmentSource.LOCAL_FILE:
@@ -145,16 +138,7 @@ def _read_page(
     if media_type is None:
         raise LedgerEvidencePageUnsupportedMediaError()
     renderer = ports.renderer
-    if manifest.bytes_size > renderer.max_source_bytes:
-        raise LedgerEvidencePageTooLargeError()
-    try:
-        source = ports.attachment_store_factory(bucket_id).read_bytes(manifest.sha256)
-    except AttachmentNotFoundError:
-        raise LedgerEvidencePageNotFoundError() from None
-    if len(source) > renderer.max_source_bytes:
-        raise LedgerEvidencePageTooLargeError()
-    if sha256_hex(source) != document.expected_sha256:
-        raise LedgerEvidencePageDigestMismatchError()
+    source = _verified_document_bytes(ports, bucket_id, document, manifest, renderer.max_source_bytes)
     rendered = renderer.render(
         source,
         media_type=media_type,
@@ -178,6 +162,41 @@ def _read_page(
         file_name=file_name,
         image_data_url=EVIDENCE_PAGE_IMAGE_URL_PREFIX + base64.b64encode(rendered.png).decode("ascii"),
     )
+
+
+def _requested_document(
+    ports: LedgerEvidencePagePorts,
+    bucket_id: str,
+    payload: LedgerEvidencePageRequest,
+) -> _StoredDocument:
+    if payload.evidence_id is not None:
+        return _evidence_document(ports, bucket_id, payload.evidence_id)
+    elif payload.attachment_id is not None:
+        return _StoredDocument(
+            attachment_id=payload.attachment_id, expected_sha256=payload.attachment_id, file_name=None
+        )
+    else:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+
+
+def _verified_document_bytes(
+    ports: LedgerEvidencePagePorts,
+    bucket_id: str,
+    document: _StoredDocument,
+    manifest: Attachment,
+    max_source_bytes: int,
+) -> bytes:
+    if manifest.bytes_size > max_source_bytes:
+        raise LedgerEvidencePageTooLargeError()
+    try:
+        source = ports.attachment_store_factory(bucket_id).read_bytes(manifest.sha256)
+    except AttachmentNotFoundError:
+        raise LedgerEvidencePageNotFoundError() from None
+    if len(source) > max_source_bytes:
+        raise LedgerEvidencePageTooLargeError()
+    if sha256_hex(source) != document.expected_sha256:
+        raise LedgerEvidencePageDigestMismatchError()
+    return source
 
 
 class LedgerEvidencePageExecutor:

@@ -20,7 +20,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ..calculation_actions import _orphaned_override_diagnostics
+from ..calculation_bucket_actions import _orphaned_override_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

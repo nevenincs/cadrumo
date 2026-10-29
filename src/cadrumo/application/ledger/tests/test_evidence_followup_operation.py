@@ -17,7 +17,6 @@ from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.confirmation_gate import confirmation_blockers
 from ....application.ledger.consent_withdrawal import ConsentedDispatch
 from ....application.ledger.evidence_followup_contracts import (
-    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
     LEDGER_EVIDENCE_ATTACHMENT_QUEUE_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_ATTACHMENT_VIEW_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_CONSENT_LIST_OPERATION_DEFINITION_ID,
@@ -44,7 +43,6 @@ from ....application.ledger.evidence_followup_contracts import (
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
     LedgerEvidenceReviewSummaryExecutionResult,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewExecutionResult,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
@@ -72,6 +70,10 @@ from ....application.ledger.evidence_followup_registration import (
 )
 from ....application.ledger.evidence_followup_registration import (
     project_review_view_result as _project_review_view,
+)
+from ....application.ledger.evidence_review_summaries import (
+    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
+    LedgerEvidenceReviewSummaryProjection,
 )
 from ....application.ledger.extraction_draft_repository import ExtractionDraftRepositoryFactory
 from ....application.ledger.invoice_draft_records import (

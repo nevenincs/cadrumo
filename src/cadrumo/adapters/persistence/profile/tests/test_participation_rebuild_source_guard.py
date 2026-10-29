@@ -21,12 +21,12 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     MODELO_FILING_RECORD_CATALOGUE_NAMESPACE,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.filing_revision_persistence import persist_filed_revision
 from cadrumo.application.modelo.participation_index_rebuild import rebuild_participation_index
 from cadrumo.application.modelo.participation_index_rebuild_ports import (
     ParticipationIndexRebuildPorts,
     ParticipationRebuildSourceRevisions,
 )
-from cadrumo.application.modelo.revision_persistence import persist_filed_revision
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority

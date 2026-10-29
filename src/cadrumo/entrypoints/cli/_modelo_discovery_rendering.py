@@ -12,7 +12,7 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument
 from ...core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from .common import profile_grounding_index_for_operation, resolve_notice_action
-from .modelo_results import DataInventoryCasillaPayload
+from .modelo_query_results import DataInventoryCasillaPayload
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation

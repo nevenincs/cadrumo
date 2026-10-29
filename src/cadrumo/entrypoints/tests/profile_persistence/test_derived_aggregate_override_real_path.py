@@ -51,8 +51,8 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -68,7 +68,10 @@ from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 

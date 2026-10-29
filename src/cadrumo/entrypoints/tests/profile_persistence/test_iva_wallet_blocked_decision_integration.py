@@ -38,7 +38,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 )
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _DECIDED_AT,
     _TARGET_PERIOD,

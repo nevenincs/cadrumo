@@ -15,11 +15,8 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
     active_profile_isolated_backend_fixture,
 )
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.workflow.persistence import workflow_state_repository

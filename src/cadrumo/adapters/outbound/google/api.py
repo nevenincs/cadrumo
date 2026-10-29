@@ -112,7 +112,7 @@ def sheets_v4_service(credentials: Credentials, *, unavailable_condition_id: str
     return build("sheets", "v4", credentials=credentials, cache_discovery=False)
 
 
-class _ExecutableRequest[ResponseBodyT](Protocol):
+class ExecutableRequest[ResponseBodyT](Protocol):
     """Structural type for google-api-python-client request objects.
 
     ``google-api-python-client-stubs`` types the concrete ``HttpRequest`` class.
@@ -132,21 +132,23 @@ class _ExecutableRequest[ResponseBodyT](Protocol):
         self,
         http: httplib2.Http | HttpMock | None = ...,
         num_retries: int = ...,
-    ) -> ResponseBodyT: ...
+    ) -> ResponseBodyT:
+        """Execute with the declared transport and provider retry bound."""
+        ...
 
 
 class GoogleRequestExecutor(Protocol):
     """Typed Google request boundary that can bind fresh artifact admission."""
 
     def __call__[ResponseBodyT](
-        self, request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+        self, request: ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
     ) -> ResponseBodyT:
         """Execute one typed request under the supplied retry contract."""
         ...
 
 
 def execute_request[ResponseBodyT](
-    request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+    request: ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
 ) -> ResponseBodyT:
     """Execute a google-api-python-client request, translating failures.
 
@@ -226,7 +228,7 @@ def execute_request[ResponseBodyT](
         ) from exc
 
 
-def execute_media_request(request: _ExecutableRequest[bytes], *, action: str) -> bytes:
+def execute_media_request(request: ExecutableRequest[bytes], *, action: str) -> bytes:
     """Read admitted binary content once; transport failures never trigger hidden retries."""
     try:
         payload = request.execute(num_retries=0)

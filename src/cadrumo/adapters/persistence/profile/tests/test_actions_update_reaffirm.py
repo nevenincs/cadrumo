@@ -10,7 +10,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
+from cadrumo.application.ledger.manual_update import update_manual_transaction_fields
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,

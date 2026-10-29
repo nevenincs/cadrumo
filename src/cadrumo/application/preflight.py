@@ -1,7 +1,7 @@
 """Workstation preflight health probes for ``aeat config check``.
 
 This module is the read-only doctor surface for the health dimensions that sit
-*beside* the external-dependency probes in :mod:`application.provisioning`:
+*beside* the external-dependency probes in :mod:`application.workstation_probes`:
 per-auth-provider certificate / Cl@ve Móvil configuration health, secure-storage
 and bundled-corpus reachability, key configuration sanity, and portal-registry
 assembly health.
@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import os
 import sys
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from enum import StrEnum
 from pathlib import Path
 from typing import Final
@@ -45,13 +45,11 @@ from ..core.paths import (
 )
 from .auth.operator_probe_ports import OperatorProbePorts
 from .auth.probes import ProviderProbeResult
-from .dependency_contracts import DependencyBlockedReason, DependencyState, DependencyStatusRow
 from .operator_actions.models import ActionReference, ConditionEvidence, PreconditionVerdict
 
 __all__ = [
     "HealthSeverity",
     "PreflightCheck",
-    "dependency_preflight_checks",
     "grade_provider_probe_result",
     "probe_auth_providers",
     "probe_portal_registry_health",
@@ -84,7 +82,6 @@ class PreflightCondition(StrEnum):
     CORPUS_PRESENT = "preflight.corpus.present"
     WINDOWS_PATH_FITS = "preflight.storage.windows_path_fits"
     PORTAL_REGISTRY_HEALTHY = "preflight.portal.registry_healthy"
-    SETUP_ITEM_USABLE = "preflight.setup.item_usable"
 
 
 class PreflightCheck(BaseModel):
@@ -541,58 +538,6 @@ def probe_portal_registry_health() -> PreflightCheck:
     )
 
 
-# ── Setup items, as the native component engine reports them ──────────
-
-_SETUP_WARNING_STATES: Final = frozenset(
-    {DependencyState.STALE, DependencyState.UNKNOWN, DependencyState.PROVISIONING, DependencyState.VERIFYING}
-)
-
-
-def _setup_severity(row: DependencyStatusRow) -> HealthSeverity:
-    if row.state is DependencyState.READY:
-        return HealthSeverity.OK
-    if row.state in _SETUP_WARNING_STATES or row.blocked_reason is DependencyBlockedReason.HARDWARE:
-        # A hardware block is a limit of this computer, not a fault the person can fix.
-        return HealthSeverity.WARN
-    return HealthSeverity.ERROR
-
-
-def dependency_preflight_checks(rows: Iterable[DependencyStatusRow]) -> tuple[PreflightCheck, ...]:
-    """Turn the component engine's status rows into ``setup:<item>`` health rows, in the order given.
-
-    The rows come from the engine's quick check, so a doctor run moves no
-    network traffic and loads no model. The row's state is the engine's; this
-    only grades it for the report: a usable item is healthy (a stale one with
-    a warning), and every other state is unhealthy and names the item's
-    recovery action when the row offers one.
-    """
-    checks: list[PreflightCheck] = []
-    for row in rows:
-        facts: dict[str, str | int | bool] = {"item": row.item_id, "state": row.state.value}
-        if row.recovery is not None:
-            facts["recovery"] = row.recovery.value
-        reason = row.failure_category or row.blocked_reason or row.stale_reason
-        if reason is not None:
-            facts["reason"] = reason.value
-        if row.version is not None:
-            facts["version"] = row.version
-        check = f"setup:{row.item_id}"
-        severity = _setup_severity(row)
-        if row.state in {DependencyState.READY, DependencyState.STALE}:
-            checks.append(_healthy_check(check=check, severity=severity, facts=facts))
-            continue
-        checks.append(
-            _failed_check(
-                check=check,
-                severity=severity,
-                condition=PreflightCondition.SETUP_ITEM_USABLE,
-                facts=facts,
-                action_id=row.recovery_action_id,
-            )
-        )
-    return tuple(checks)
-
-
 def run_preflight_checks(
     *,
     object_path_suffix_length: int,
@@ -603,10 +548,7 @@ def run_preflight_checks(
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
     rows, the secure-storage / bundled-corpus / configuration rows, and the
-    portal-registry health / recorded-drift row. Setup rows are not probed
-    here: component state belongs to the native component engine, so a
-    frontend reads its ``components`` role and renders
-    :func:`dependency_preflight_checks` beside these rows. Every probe catches
+    portal-registry health / recorded-drift row. Every probe catches
     its own failures and reports them as ``error`` rows, so the aggregate
     never raises. The portal-drift row runs with the offline default (no
     recorded drift), reporting registered state rather than a live probe.

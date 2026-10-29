@@ -79,9 +79,10 @@ from .external_import_actions import (
     require_bound_justificante_artifact,
     resolve_external_filing_work_unit,
 )
+from .filing_revision_persistence import supersede_prior_current_filing
+from .modelo_bucket_events import build_modelo_bucket_event
 from .reconcile_casilla import detect_casilla_divergences
-from .reconciliation import reconcile_receipt_totals
-from .revision_persistence import build_modelo_bucket_event, supersede_prior_current_filing
+from .reconciliation_comparison import reconcile_receipt_totals
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import WorkLifecyclePorts
 
@@ -281,6 +282,21 @@ class _Context:
         )
 
 
+def _require_entry_target(entry: AeatRegisterEntry, ports: FilingReconciliationPorts) -> None:
+    repository = ports.work_lifecycle.work_unit_repository
+    if repository.bucket_id is not None and repository.bucket_id != entry.bucket_id:
+        raise ExternalModeloImportError(
+            translated_message="application.modelo.errors.external_import_target_mismatch",
+        )
+    if entry.target_work_unit_id is not None:
+        target = repository.load().get(entry.target_work_unit_id)
+        if target is None:
+            raise ExternalModeloImportError(
+                translated_message="application.modelo.errors.external_import_target_mismatch",
+            )
+        _require_matching_work_unit(entry, target)
+
+
 def reconcile_aeat_register_entry(
     entry: AeatRegisterEntry,
     *,
@@ -301,18 +317,7 @@ def reconcile_aeat_register_entry(
         ExternalModeloImportError: The entry's receipt evidence cannot be bound
             to the coordinate, or its casillas are not declared by the registry.
     """
-    repository = ports.work_lifecycle.work_unit_repository
-    if repository.bucket_id is not None and repository.bucket_id != entry.bucket_id:
-        raise ExternalModeloImportError(
-            translated_message="application.modelo.errors.external_import_target_mismatch",
-        )
-    if entry.target_work_unit_id is not None:
-        target = repository.load().get(entry.target_work_unit_id)
-        if target is None:
-            raise ExternalModeloImportError(
-                translated_message="application.modelo.errors.external_import_target_mismatch",
-            )
-        _require_matching_work_unit(entry, target)
+    _require_entry_target(entry, ports)
     catalogue, catalogue_revision_id = ports.filing_repository.load_revisioned()
     history = catalogue.history_for(
         bucket_id=entry.bucket_id,
@@ -460,6 +465,38 @@ def _pending_kind_notices(
     return kind_matches, kind_notices
 
 
+def _compare_filed_casillas(
+    context: _Context,
+    revision: CalculationRevision,
+    casilla_values: Mapping[CasillaId, Decimal],
+    kind_matches: bool,
+    kind_notices: tuple[FilingReconciliationNotice, ...],
+) -> _Comparison:
+    entry = context.entry
+    snapshot, filed = reject_unknown_import_casillas(
+        modelo=entry.modelo,
+        filing_year=entry.filing_year,
+        period=entry.period,
+        casilla_values=casilla_values,
+        operation=context.operation,
+    )
+    computed: Mapping[CasillaId, Decimal] = revision.casilla_values
+    divergences = detect_casilla_divergences(
+        computed=computed,
+        filed=filed,
+        scope=filed,
+        tolerance=snapshot.verification_policy().tolerance,
+    )
+    differing = tuple(divergence.casilla_id for divergence in divergences)
+    return _Comparison(
+        matches=kind_matches and not differing,
+        comparable=True,
+        differing_casilla_ids=differing,
+        evidence_basis="casillas",
+        notices=kind_notices,
+    )
+
+
 def _compare_with_pending(context: _Context, *, pending: ModeloRecord, historical: bool = False) -> _Comparison:
     entry = context.entry
     kind_matches, kind_notices = _pending_kind_notices(entry, pending)
@@ -478,28 +515,7 @@ def _compare_with_pending(context: _Context, *, pending: ModeloRecord, historica
         )
     require_calculation_revision_coordinates_current(revision, operation=context.operation)
     if entry.casilla_values is not None:
-        snapshot, filed = reject_unknown_import_casillas(
-            modelo=entry.modelo,
-            filing_year=entry.filing_year,
-            period=entry.period,
-            casilla_values=entry.casilla_values,
-            operation=context.operation,
-        )
-        computed: Mapping[CasillaId, Decimal] = revision.casilla_values
-        divergences = detect_casilla_divergences(
-            computed=computed,
-            filed=filed,
-            scope=filed,
-            tolerance=snapshot.verification_policy().tolerance,
-        )
-        differing = tuple(divergence.casilla_id for divergence in divergences)
-        return _Comparison(
-            matches=kind_matches and not differing,
-            comparable=True,
-            differing_casilla_ids=differing,
-            evidence_basis="casillas",
-            notices=kind_notices,
-        )
+        return _compare_filed_casillas(context, revision, entry.casilla_values, kind_matches, kind_notices)
     if entry.justificante is None:
         return _Comparison(
             matches=False,

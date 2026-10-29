@@ -23,8 +23,9 @@ from pydantic import TypeAdapter, ValidationError
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 from ...iva.schema import InvoiceKind
+from ..catalogue import InvoiceCatalogue, StoredInvoiceCatalogue, decode_authenticated_invoice_catalogue
 from ..errors import InvoiceValidationError
-from ..models import Invoice, InvoiceCatalogue, StoredInvoiceCatalogue, decode_authenticated_invoice_catalogue
+from ..models import Invoice
 from .invoice_catalogue_seed import SeedCase, fields_set, seed_payload, seed_payloads
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

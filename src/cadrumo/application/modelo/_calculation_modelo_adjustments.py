@@ -100,7 +100,7 @@ def require_detail_rows_declared_for_their_owning_modelo(
     refuses through one convention rather than five ad hoc call sites.
 
     This runs at the calculate boundary's single funnel
-    (:func:`~._calculation_actions._calculate_modelo_revision_with_trusted_mesh_sources`),
+    (:func:`~._calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`),
     so both the direct and bucket-aggregation calculate entry points are
     covered.
     """

@@ -23,7 +23,7 @@ from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharg
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..operations.outcome import OperationOutcomeUnknownError, unknown_outcome_of
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .models_actividad_asset import (
     ActivityAssetClaimRequestV1,
     ActivityAssetCorrectionRequestV1,
@@ -32,6 +32,7 @@ from .models_actividad_asset import (
     ActivityAssetForecastRequestV1,
     ActivityAssetInspectionV1,
 )
+from .workspace_screen import LedgerWorkspaceScreen
 
 #: The actions that change records; an unknown outcome withholds them until the asset is read again.
 _WRITE_BUTTONS = ("#asset-create", "#asset-correct", "#asset-claim")

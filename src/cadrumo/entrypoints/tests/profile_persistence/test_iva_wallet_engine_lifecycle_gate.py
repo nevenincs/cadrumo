@@ -30,7 +30,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,

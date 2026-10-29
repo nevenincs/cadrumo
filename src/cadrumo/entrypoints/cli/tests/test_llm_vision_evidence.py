@@ -22,8 +22,8 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 from ....adapters.outbound.llm.tests.model_run_support import serving_agent
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
-from ....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
 from ....application.ledger.llm_classification_ports import EvidenceImage
+from ....application.ledger.llm_evidence import ResolvedEvidence, classify_with_evidence, resolve_llm_evidence
 from ....application.ledger.preconditions import LedgerPreconditionCondition
 from ....core.config import Settings
 from ....core.image_media_type import ImageMediaType

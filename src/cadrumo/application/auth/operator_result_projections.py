@@ -17,7 +17,7 @@ from .operator_results import AuthConfigureResult, AuthStatusResult
 from .sessions import clave_auth_facts_from_profile_values, resolve_clave_credentials
 
 if TYPE_CHECKING:
-    from ..state_projection import OperatorStateProjection
+    from ..state_projection_models import OperatorStateProjection
     from ..workflow.state_models import WorkflowState
 
 

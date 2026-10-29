@@ -15,7 +15,7 @@ from cadrumo.application.modelo.work_lifecycle import discard_work_unit
 from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_work_lifecycle_ports,

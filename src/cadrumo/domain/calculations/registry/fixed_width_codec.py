@@ -231,6 +231,31 @@ def validate_fixed_width_shape(field: ExportField) -> None:
         _validate_sign_position(field)
 
 
+def _render_semantic_value(field: ExportField, value: object) -> tuple[object, str]:
+    """Settle absent slots before policy projection and render an admitted semantic value."""
+    if _is_absent_slot(field, value) and (
+        not policy_defines_absent_slot(field.value_policy)
+        or (field.required and field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN)
+    ):
+        # Absence is settled BEFORE projection for every policy that does not
+        # claim the empty slot. Those projectors refuse ``None`` -- correctly, an
+        # absent quantity is not a quantity -- so testing absence only after
+        # projection made the blank fill unreachable on any field declaring a
+        # policy, and an optional casilla the taxpayer legitimately lacks could
+        # not be exported at all. The post-projection test below is kept for a
+        # policy that projects an empty slot through to an empty value.
+        rendered = render_absent_slot(field)
+    else:
+        value = project_export_value(field.value_policy, value)
+        if _is_absent_slot(field, value):
+            rendered = render_absent_slot(field)
+        else:
+            require_allowed_value(field, value)
+            require_minimum_year(field, value)
+            rendered = _render_typed_value(field, value)
+    return value, rendered
+
+
 def render_fixed_width_export_field(field: ExportField, value: object) -> str:
     """Render one semantic field value to its complete exact-width wire text."""
     if field.length is None:
@@ -253,26 +278,7 @@ def render_fixed_width_export_field(field: ExportField, value: object) -> str:
         if len(value.raw) != field.length:
             raise RegistryValidationError(f"export field {field.id!r} parsed wire value has the wrong width")
         return value.raw
-    if _is_absent_slot(field, value) and (
-        not policy_defines_absent_slot(field.value_policy)
-        or (field.required and field.value_policy is ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN)
-    ):
-        # Absence is settled BEFORE projection for every policy that does not
-        # claim the empty slot. Those projectors refuse ``None`` -- correctly, an
-        # absent quantity is not a quantity -- so testing absence only after
-        # projection made the blank fill unreachable on any field declaring a
-        # policy, and an optional casilla the taxpayer legitimately lacks could
-        # not be exported at all. The post-projection test below is kept for a
-        # policy that projects an empty slot through to an empty value.
-        rendered = render_absent_slot(field)
-    else:
-        value = project_export_value(field.value_policy, value)
-        if _is_absent_slot(field, value):
-            rendered = render_absent_slot(field)
-        else:
-            require_allowed_value(field, value)
-            require_minimum_year(field, value)
-            rendered = _render_typed_value(field, value)
+    value, rendered = _render_semantic_value(field, value)
     if not _is_absent_slot(field, value):
         validate_export_wire_value(field.value_policy, rendered)
     return rendered

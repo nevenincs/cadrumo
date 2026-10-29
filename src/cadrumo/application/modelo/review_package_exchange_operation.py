@@ -299,6 +299,34 @@ def _envelope(path: Path, ports: ReviewPackageExchangeOperationPorts) -> Recipie
         raise RecipientEncryptionError(str(exc)) from exc
 
 
+def _encrypt_for_recipient(
+    payload: ModeloReviewPackageEncryptForRecipientRequest, ports: ReviewPackageExchangeOperationPorts, profile: str
+) -> ModeloReviewPackageEncryptForRecipientProjection:
+    ports.files.require_exists(payload.package)
+    recipient = get_recipient_fingerprint(payload.recipient_id, ports=ports.recipients)
+    package_bytes = ports.files.read_bytes(payload.package)
+    envelope = encrypt_review_package_for_recipient(
+        package_bytes,
+        recipient_public_key_hex=recipient.public_key_hex,
+        recipient_encryption=ports.encryption,
+        review_only=payload.review_only,
+        valid_for=timedelta(days=payload.valid_for_days) if payload.valid_for_days is not None else None,
+    )
+    ports.files.write_text(payload.output, envelope.model_dump_json(indent=2))
+    emit_collab_package_encrypted_event(envelope, bucket_id=profile, repository=ports.history)
+    return ModeloReviewPackageEncryptForRecipientProjection(
+        profile_id=payload.profile_id,
+        effect=OperationEffect.UPDATED,
+        package_path=str(payload.package),
+        output_path=str(payload.output),
+        recipient_id=payload.recipient_id,
+        recipient_public_key_hex=recipient.public_key_hex,
+        review_only=envelope.review_only,
+        issued_at=envelope.issued_at,
+        valid_until=envelope.valid_until,
+    )
+
+
 def _exchange(
     payload: _Request, ports: ReviewPackageExchangeOperationPorts, *, feedback_submitted_by: str | None
 ) -> ReviewPackageExchangeProjection:
@@ -341,29 +369,7 @@ def _exchange(
             counter_signed_at=receipt.counter_signed_at,
         )
     if isinstance(payload, ModeloReviewPackageEncryptForRecipientRequest):
-        ports.files.require_exists(payload.package)
-        recipient = get_recipient_fingerprint(payload.recipient_id, ports=ports.recipients)
-        package_bytes = ports.files.read_bytes(payload.package)
-        envelope = encrypt_review_package_for_recipient(
-            package_bytes,
-            recipient_public_key_hex=recipient.public_key_hex,
-            recipient_encryption=ports.encryption,
-            review_only=payload.review_only,
-            valid_for=timedelta(days=payload.valid_for_days) if payload.valid_for_days is not None else None,
-        )
-        ports.files.write_text(payload.output, envelope.model_dump_json(indent=2))
-        emit_collab_package_encrypted_event(envelope, bucket_id=profile, repository=ports.history)
-        return ModeloReviewPackageEncryptForRecipientProjection(
-            profile_id=payload.profile_id,
-            effect=OperationEffect.UPDATED,
-            package_path=str(payload.package),
-            output_path=str(payload.output),
-            recipient_id=payload.recipient_id,
-            recipient_public_key_hex=recipient.public_key_hex,
-            review_only=envelope.review_only,
-            issued_at=envelope.issued_at,
-            valid_until=envelope.valid_until,
-        )
+        return _encrypt_for_recipient(payload, ports, profile)
     if isinstance(payload, ModeloReviewPackageDecryptRequest):
         envelope = _envelope(payload.envelope_path, ports)
         keypair = ensure_recipient_encryption_keypair(bucket_id=profile, recipient_encryption=ports.encryption)

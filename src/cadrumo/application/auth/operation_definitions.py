@@ -630,76 +630,74 @@ def build_auth_operation_registrations(
     )
     from .teardown_operation_access import resolve_auth_teardown_access
 
+    def registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
+        if definition.definition_id == PROFILE_ROTATION_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose(
+                definition=definition,
+                request_schema=OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.request",
+                    schema_version=1,
+                    model_type=definition.request_type,
+                ),
+                result_schema=OperationSchemaBindingV1.bind(
+                    schema_id=PROFILE_ROTATION_RESULT_SCHEMA_ID,
+                    schema_version=1,
+                    model_type=ProfilePassphraseRotationResultProjection,
+                ),
+                result_projector=project_profile_rotation_result,
+                access_resolver=resolve_profile_rotation_access,
+            )
+        if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose(
+                definition=definition,
+                request_schema=OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.request",
+                    schema_version=1,
+                    model_type=AuthConfigureOperationRequest,
+                ),
+                result_schema=OperationSchemaBindingV1.bind(
+                    schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID, schema_version=2, model_type=AuthConfigurePublicResultV2
+                ),
+                result_projector=project_auth_configure_result,
+                access_resolver=resolve_auth_configure_access,
+            )
+        if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose(
+                definition=definition,
+                request_schema=OperationSchemaBindingV1.bind(
+                    schema_id=f"{definition.definition_id}.request",
+                    schema_version=1,
+                    model_type=AuthSessionAcquireOperationRequest,
+                ),
+                result_schema=OperationSchemaBindingV1.bind(
+                    schema_id=AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
+                    schema_version=1,
+                    model_type=AuthSessionAcquireOperationProjection,
+                ),
+                result_projector=project_auth_session_acquire_result,
+                access_resolver=resolve_auth_session_acquire_access,
+            )
+        if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}:
+            return OperationPublicDefinitionRegistrationV1.compose_request_result(
+                definition=definition,
+                public_result_type=AuthLogoutResult
+                if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
+                else AuthResetResult,
+                access_resolver=resolve_auth_teardown_access,
+            )
+        if definition.definition_id == AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID:
+            return OperationPublicDefinitionRegistrationV1.compose_request_result(
+                definition=definition,
+                public_result_type=AuthCredentialSaveResult,
+                access_resolver=resolve_auth_credential_access,
+            )
+        return OperationPublicDefinitionRegistrationV1.compose_request_only(
+            definition=definition, request_schema_id=f"{definition.definition_id}.request"
+        )
+
     return tuple(
         sorted(
-            (
-                OperationPublicDefinitionRegistrationV1.compose(
-                    definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=definition.request_type,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=PROFILE_ROTATION_RESULT_SCHEMA_ID,
-                        schema_version=1,
-                        model_type=ProfilePassphraseRotationResultProjection,
-                    ),
-                    result_projector=project_profile_rotation_result,
-                    access_resolver=resolve_profile_rotation_access,
-                )
-                if definition.definition_id == PROFILE_ROTATION_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose(
-                    definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=AuthConfigureOperationRequest,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=AUTH_CONFIGURE_RESULT_SCHEMA_ID,
-                        schema_version=2,
-                        model_type=AuthConfigurePublicResultV2,
-                    ),
-                    result_projector=project_auth_configure_result,
-                    access_resolver=resolve_auth_configure_access,
-                )
-                if definition.definition_id == AUTH_CONFIGURE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose(
-                    definition=definition,
-                    request_schema=OperationSchemaBindingV1.bind(
-                        schema_id=f"{definition.definition_id}.request",
-                        schema_version=1,
-                        model_type=AuthSessionAcquireOperationRequest,
-                    ),
-                    result_schema=OperationSchemaBindingV1.bind(
-                        schema_id=AUTH_SESSION_ACQUIRE_RESULT_SCHEMA_ID,
-                        schema_version=1,
-                        model_type=AuthSessionAcquireOperationProjection,
-                    ),
-                    result_projector=project_auth_session_acquire_result,
-                    access_resolver=resolve_auth_session_acquire_access,
-                )
-                if definition.definition_id == AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose_request_result(
-                    definition=definition,
-                    public_result_type=AuthLogoutResult
-                    if definition.definition_id == AUTH_LOGOUT_OPERATION_DEFINITION_ID
-                    else AuthResetResult,
-                    access_resolver=resolve_auth_teardown_access,
-                )
-                if definition.definition_id in {AUTH_LOGOUT_OPERATION_DEFINITION_ID, AUTH_RESET_OPERATION_DEFINITION_ID}
-                else OperationPublicDefinitionRegistrationV1.compose_request_result(
-                    definition=definition,
-                    public_result_type=AuthCredentialSaveResult,
-                    access_resolver=resolve_auth_credential_access,
-                )
-                if definition.definition_id == AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID
-                else OperationPublicDefinitionRegistrationV1.compose_request_only(
-                    definition=definition, request_schema_id=f"{definition.definition_id}.request"
-                )
-                for definition in definitions
-            ),
+            (registration(definition) for definition in definitions),
             key=lambda item: item.contract.definition_id,
         )
     )

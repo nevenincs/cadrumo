@@ -22,17 +22,18 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.verification_report import ModeloVerificationFinding
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..preconditions import ModeloPreconditionFailure
 from ..verification_iva_evidence import append_iva_selected_scope_evidence_finding
-from ..work_form_models import finding_action_locale_key
+from ..work_form_findings import finding_action_locale_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

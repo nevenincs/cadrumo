@@ -30,10 +30,8 @@ from ...core.errors.severity import BaseSeverity
 from ...core.modelo import Modelo
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.period import Period
-from ...domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-)
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import RevisionId

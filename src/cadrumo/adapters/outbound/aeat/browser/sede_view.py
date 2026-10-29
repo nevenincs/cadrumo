@@ -30,19 +30,11 @@ input and file bytes are never logged, persisted or journaled.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Mapping
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Final, Self
-from urllib.parse import urlsplit
-
-from pydantic import ValidationError
 
 from cadrumo_client.contracts.view_stream import (
-    VIEW_MAX_PATH_LENGTH,
-    VIEW_MAX_TITLE_LENGTH,
-    PointerAction,
-    PointerInput,
     ViewClose,
     ViewDialog,
     ViewImage,
@@ -50,20 +42,15 @@ from cadrumo_client.contracts.view_stream import (
     ViewNavigate,
     ViewNotice,
     ViewNoticeCode,
-    ViewPageSecurity,
     ViewPhase,
     ViewResize,
     ViewSinkInput,
-    ViewState,
     ViewStreamSink,
-    WheelInput,
 )
 from cadrumo_client.contracts.view_transfer import (
-    VIEW_MAX_FILENAME_LENGTH,
     VIEW_MAX_TRANSFER_ID,
     ViewDownload,
     ViewDownloadAnswer,
-    ViewDownloadOutcome,
     ViewFileChooser,
     ViewFileChooserAnswer,
     ViewFileChooserOutcome,
@@ -73,18 +60,18 @@ from cadrumo_client.contracts.view_transfer import (
     ViewUploadedFile,
 )
 
-from .....application.auth.protocols import BrowserContextProvisioner
 from .....application.live.sede_view_ports import SedeViewEnd, SedeViewOpening, SedeViewSignIn
 from .....core.async_cleanup import AsyncCloseable, close_async_resources
 from .....core.config import Settings
-from .....core.errors.hierarchy import InternalInvariantError
 from .....core.logging import get_logger
-from .....core.remote_authority import canonical_remote_hostname, is_current_aeat_host
 from .._playwright import BrowserContext, Page, PlaywrightError
 from .factory import default_browser_session_factory
 from .screencast import ScreencastImage, ScreencastProfile, ViewScreencast
 from .session import BrowserSession
+from .view_download import deliver_download, discard_download
 from .view_input import ViewInputAdapter
+from .view_login_session import ViewLoginSessionFactory
+from .view_presentation import interrupts_assisted_login, is_aeat_page, safe_filename, view_state
 
 if TYPE_CHECKING:
     from playwright.async_api import Dialog, Download, FileChooser, FilePayload
@@ -95,78 +82,7 @@ logger = get_logger(__name__)
 _RECEIVE_SECONDS: Final[float] = 0.25
 #: The screencast's own credit is kept full: the stream keeps only the newest image under the window's credit.
 _SCREENCAST_CREDIT: Final[int] = 2
-_FALLBACK_FILENAME: Final[str] = "download"
 _FALLBACK_MIME: Final[str] = "application/octet-stream"
-_UNSAFE_FILENAME_CHARACTERS: Final[frozenset[str]] = frozenset({"/", "\\", "\x7f"})
-
-
-def safe_filename(suggested: str) -> str:
-    """Return ``suggested`` as a plain file name the save dialog may offer, never a path."""
-    name = "".join(
-        "_" if character in _UNSAFE_FILENAME_CHARACTERS or ord(character) < 0x20 else character
-        for character in suggested
-    ).strip()
-    name = name[:VIEW_MAX_FILENAME_LENGTH]
-    return _FALLBACK_FILENAME if name in {"", ".", ".."} else name
-
-
-def interrupts_assisted_login(item: ViewSinkInput) -> bool:
-    """Whether the person's ``item`` stops an assisted login: anything but a pointer move, a wheel or a resize."""
-    if isinstance(item, ViewInput):
-        event = item.event
-        if isinstance(event, WheelInput):
-            return False
-        return not (isinstance(event, PointerInput) and event.action is PointerAction.MOVE)
-    return isinstance(item, ViewNavigate | ViewClose)
-
-
-def _is_aeat_page(url: str) -> bool:
-    host = canonical_remote_hostname(url)
-    return host is not None and is_current_aeat_host(host)
-
-
-def view_state(url: str, title: str, *, back: bool, forward: bool, loading: bool, phase: ViewPhase) -> ViewState:
-    """Return the state of the page at ``url``, whatever page it is.
-
-    An https page is stated by its origin and path, which the toolbar shows.
-    The page's whole ``url`` rides along as the host-only address when the
-    contract admits it, and is left out otherwise. Any other page is stated by
-    its marker alone: ``insecure`` for an ``http:`` page, ``unknown`` for one
-    whose origin cannot be stated. Either way the host learns that the person
-    left the page it held.
-    """
-
-    def state(security: ViewPageSecurity, origin: str | None, path: str | None, address: str | None) -> ViewState:
-        return ViewState(
-            security=security,
-            origin=origin,
-            path=path,
-            address=address,
-            title=title[:VIEW_MAX_TITLE_LENGTH],
-            can_go_back=back,
-            can_go_forward=forward,
-            loading=loading,
-            phase=phase,
-        )
-
-    try:
-        parts = urlsplit(url)
-        host = parts.hostname
-        port = parts.port
-    except ValueError:
-        return state(ViewPageSecurity.UNKNOWN, None, None, None)
-    if parts.scheme == "http":
-        return state(ViewPageSecurity.INSECURE, None, None, None)
-    if parts.scheme != "https" or host is None or host == "":
-        return state(ViewPageSecurity.UNKNOWN, None, None, None)
-    netloc = host if port is None else f"{host}:{port}"
-    path = (parts.path or "/")[:VIEW_MAX_PATH_LENGTH]
-    for address in (url, None):
-        try:
-            return state(ViewPageSecurity.SECURE, f"https://{netloc.lower()}", path, address)
-        except ValidationError:
-            continue
-    return state(ViewPageSecurity.UNKNOWN, None, None, None)
 
 
 @dataclass(slots=True)
@@ -295,7 +211,7 @@ class SedeViewPage:
         await asyncio.gather(*self._background, return_exceptions=True)
         downloads, self._downloads = tuple(self._downloads.values()), {}
         for download in downloads:
-            await self._discard(download)
+            await discard_download(download)
         self._choosers.clear()
         context, self._context = self._context, None
         await close_async_resources(context, self._owner, task_name="cadrumo-sede-view-close")
@@ -321,7 +237,7 @@ class SedeViewPage:
         """Offer the download to the person; its bytes wait in the browser's transient file."""
         del page
         if self._closed or self._last_transfer_id >= VIEW_MAX_TRANSFER_ID:
-            self._spawn(self._discard(download))
+            self._spawn(discard_download(download))
             return
         self._last_transfer_id += 1
         self._downloads[self._last_transfer_id] = download
@@ -373,16 +289,30 @@ class SedeViewPage:
             if adapter is not None:
                 self._spawn(self._navigate(adapter, item))
         elif isinstance(item, ViewResize):
-            self._viewport = item
-            if self._screencast is not None:
-                await self._screencast.resize(item)
+            await self._resize(item)
         elif isinstance(item, ViewDialog):
-            if self._input is not None:
-                await self._input.answer_dialog(item)
-        elif isinstance(item, ViewDownloadAnswer):
+            await self._answer_dialog(item)
+        else:
+            return self._dispatch_transfer(item)
+        return None
+
+    async def _resize(self, item: ViewResize) -> None:
+        self._viewport = item
+        if self._screencast is not None:
+            await self._screencast.resize(item)
+
+    async def _answer_dialog(self, item: ViewDialog) -> None:
+        if self._input is not None:
+            await self._input.answer_dialog(item)
+
+    def _dispatch_transfer(
+        self,
+        item: ViewDownloadAnswer | ViewFileChooserAnswer | ViewUploadedFile | ViewUploadCancelled | ViewTransferCancel,
+    ) -> SedeViewEnd | None:
+        if isinstance(item, ViewDownloadAnswer):
             download = self._downloads.pop(item.transfer_id, None)
             if download is not None:
-                self._spawn(self._deliver(item.transfer_id, download, item.outcome))
+                self._spawn(deliver_download(self._sink, item.transfer_id, download, item.outcome))
         elif isinstance(item, ViewFileChooserAnswer):
             return self._answer_chooser(item)
         elif isinstance(item, ViewUploadedFile):
@@ -422,7 +352,7 @@ class SedeViewPage:
         if cancel.direction is ViewTransferDirection.DOWNLOAD:
             download = self._downloads.pop(cancel.transfer_id, None)
             if download is not None:
-                self._spawn(self._discard(download))
+                self._spawn(discard_download(download))
 
     def _cancel_upload(self, chooser_id: int) -> None:
         # A cancelled upload leaves its chooser without all its files; the page keeps no partial set.
@@ -437,42 +367,6 @@ class SedeViewPage:
         ]
         pending.files.clear()
         await pending.chooser.set_files(payloads)
-
-    async def _deliver(self, transfer_id: int, download: Download, outcome: ViewDownloadOutcome) -> None:
-        """Stream an accepted download from the browser's transient file, then delete that file."""
-        try:
-            if outcome is not ViewDownloadOutcome.ACCEPTED:
-                await download.cancel()
-                return
-            try:
-                path = await download.path()
-            except PlaywrightError as exc:
-                logger.info("aeat view download failed exc_type=%s", type(exc).__name__)
-                self._sink.send(ViewTransferCancel(direction=ViewTransferDirection.DOWNLOAD, transfer_id=transfer_id))
-                return
-            streaming = asyncio.ensure_future(asyncio.to_thread(self._stream_file, transfer_id, path))
-            try:
-                await asyncio.shield(streaming)
-            except asyncio.CancelledError:
-                # The thread still holds the transient file open, which would keep it on disk: stop the stream
-                # and let the thread release the file before it is deleted.
-                self._sink.cancel_download(transfer_id)
-                await asyncio.wait({streaming})
-                raise
-        finally:
-            await self._discard(download)
-
-    def _stream_file(self, transfer_id: int, path: Path) -> bool:
-        with path.open("rb") as source:
-            return self._sink.send_download(transfer_id, source)
-
-    @staticmethod
-    async def _discard(download: Download) -> None:
-        try:
-            await download.cancel()
-            await download.delete()
-        except PlaywrightError as exc:
-            logger.debug("aeat view download discard skipped exc_type=%s", type(exc).__name__)
 
     # -- signing in ------------------------------------------------------------------------------------------------
 
@@ -495,7 +389,7 @@ class SedeViewPage:
         sign_in = self._sign_in
         if sign_in is None or self._closed or (self._assist is not None and not self._assist.done()):
             return
-        if not _is_aeat_page(page.url):
+        if not is_aeat_page(page.url):
             return
         check = self._sign_in_check
         if check is not None and not check.done():
@@ -640,71 +534,6 @@ class SedeViewPage:
         return task
 
 
-class _LentViewContext:
-    """The view context as a provider's login sees it: its pages open in the panel, and closing it is a no-op.
-
-    The view owns its context; the login only borrows it. Every page the
-    provider opens reaches the view's page observer and is shown, and a page
-    the provider leaves open when the person interrupts it stays for the person.
-    """
-
-    def __init__(self, context: BrowserContext) -> None:
-        self._context = context
-
-    async def new_page(self) -> Page:
-        """Open a page in the view; the panel shows it."""
-        return await self._context.new_page()
-
-    async def storage_state(self) -> Mapping[str, object]:
-        """Capture the view's cookies and local storage."""
-        return await self._context.storage_state()
-
-    async def close(self) -> None:
-        """Leave the view's context open: the view closes it."""
-        return
-
-
-class _LentViewSession:
-    """A browser session whose one context is the open view's own."""
-
-    def __init__(self, view: SedeViewPage) -> None:
-        self._view = view
-
-    async def create_context(
-        self,
-        *,
-        provisioner: BrowserContextProvisioner | None = None,
-        storage_state: Mapping[str, object] | None = None,
-    ) -> _LentViewContext:
-        """Lend the view's context; it already presents the configured provider's credential."""
-        del provisioner
-        if storage_state is not None:
-            raise InternalInvariantError("a running Sede view is never re-seeded")
-        return _LentViewContext(self._view.context)
-
-    async def close(self) -> None:
-        """Leave the view's browser running: the view closes it."""
-        return
-
-
-class ViewLoginSessionFactory:
-    """Lend a provider's login the Sede view, so its headless pages show in the person's panel."""
-
-    def __init__(self, view: SedeViewPage) -> None:
-        """Bind the factory to the open ``view``."""
-        self._view = view
-
-    @property
-    def lends_view(self) -> bool:
-        """Always ``True``: the provider never opens a browser or window of its own."""
-        return True
-
-    async def __call__(self, settings: Settings) -> _LentViewSession:
-        """Return a session over the view; ``settings`` cannot make it headed."""
-        del settings
-        return _LentViewSession(self._view)
-
-
 async def _settle(work: Coroutine[object, object, None]) -> None:
     try:
         await work
@@ -722,9 +551,5 @@ async def open_sede_view(opening: SedeViewOpening) -> SedeViewPage:
 
 __all__ = [
     "SedeViewPage",
-    "ViewLoginSessionFactory",
-    "interrupts_assisted_login",
     "open_sede_view",
-    "safe_filename",
-    "view_state",
 ]

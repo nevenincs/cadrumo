@@ -349,14 +349,12 @@ def _ledger_filter_values(
     str | None,
 ]:
     status: LedgerReviewStatus | None = None
-    period_code: str | None = None
     filing_year: int | None = None
     issue: LedgerImportDiagnosticKind | None = None
-    import_id: str | None = None
     classification: BusinessClassification | None = None
-    text: str | None = None
     direction: TransactionDirection | None = None
     account: str | None = None
+    text_fields: dict[str, str] = {}
     for clause in clauses:
         if clause.key == LedgerReviewFilterKey.STATUS:
             status = _enum_value_or_raise(
@@ -364,8 +362,8 @@ def _ledger_filter_values(
                 LedgerReviewStatus,
                 scope="ledger-status",
             )
-        elif clause.key == LedgerReviewFilterKey.PERIOD:
-            period_code = clause.value
+        elif clause.key in {LedgerReviewFilterKey.PERIOD, LedgerReviewFilterKey.IMPORT, LedgerReviewFilterKey.TEXT}:
+            text_fields[clause.key] = clause.value
         elif clause.key == LedgerReviewFilterKey.YEAR:
             filing_year = _filter_year_or_raise(clause)
         elif clause.key == LedgerReviewFilterKey.ISSUE:
@@ -374,8 +372,6 @@ def _ledger_filter_values(
                 LedgerImportDiagnosticKind,
                 scope="ledger-issue",
             )
-        elif clause.key == LedgerReviewFilterKey.IMPORT:
-            import_id = clause.value
         elif clause.key == LedgerReviewFilterKey.CLASSIFICATION:
             # case_fold so an operator may type the natural lowercase
             # (classification=business) as well as the enum-cased BUSINESS;
@@ -386,8 +382,6 @@ def _ledger_filter_values(
                 scope="ledger-classification",
                 case_fold=True,
             )
-        elif clause.key == LedgerReviewFilterKey.TEXT:
-            text = clause.value
         elif clause.key == LedgerReviewFilterKey.DIRECTION:
             # case_fold so direction=ingreso-equivalent lowercase (incoming /
             # outgoing / internal_transfer) resolves as well as the enum case.
@@ -399,7 +393,17 @@ def _ledger_filter_values(
             )
         elif clause.key == LedgerReviewFilterKey.ACCOUNT:
             account = _own_account_id_or_raise(clause)
-    return status, period_code, filing_year, issue, import_id, classification, text, direction, account
+    return (
+        status,
+        text_fields.get(LedgerReviewFilterKey.PERIOD),
+        filing_year,
+        issue,
+        text_fields.get(LedgerReviewFilterKey.IMPORT),
+        classification,
+        text_fields.get(LedgerReviewFilterKey.TEXT),
+        direction,
+        account,
+    )
 
 
 def _own_account_id_or_raise(clause: FilterClause) -> str:

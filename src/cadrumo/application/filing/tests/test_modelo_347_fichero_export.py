@@ -38,8 +38,9 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind
 from ....domain.submission.models import ModeloDraftStatus
 from ....domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test

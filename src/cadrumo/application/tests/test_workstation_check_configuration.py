@@ -14,7 +14,7 @@ from ..auth.operator_probe_ports import OperatorProbePorts
 from ..dependency_contracts import DependencyState
 from ..local_reader import ProgramRow
 from ..preflight import PreflightCheck
-from ..provisioning import DependencyStatus
+from ..workstation_probes import DependencyStatus
 from ..user_profile.capabilities import CapabilityDecision, CapabilitySource, resolve_capability_from_values
 from ..workstation_check import WorkstationCheckReport
 from .local_ai_program_rows import local_ai_row

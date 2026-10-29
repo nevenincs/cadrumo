@@ -10,8 +10,8 @@ import pytest
 
 from .....application.ledger.actions_split_merge import split_transaction_with_classified_children
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification import apply_evidence_split, suggest_evidence_split
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitApplyResult
+from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....application.ledger.models import ManualLedgerTransactionPatch, SplitChildCommand
 from .....core.config import load_settings
 from .....core.model_roles import ModelRole

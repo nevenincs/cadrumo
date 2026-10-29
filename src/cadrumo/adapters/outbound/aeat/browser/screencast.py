@@ -119,6 +119,18 @@ def image_matches_layout(pixel_width: int, pixel_height: int, css_width: int, cs
     return abs(pixel_height * css_width - pixel_width * css_height) <= css_width + css_height
 
 
+def _standalone_jpeg_marker(marker: int) -> bool:
+    return marker == _TEMPORARY_MARKER or marker in _RESTART_MARKERS
+
+
+def _jpeg_frame_size(data: bytes, position: int) -> tuple[int, int] | None:
+    if position + _FRAME_HEADER_BYTES > len(data):
+        return None
+    height = int.from_bytes(data[position + 5 : position + 7], "big")
+    width = int.from_bytes(data[position + 7 : position + 9], "big")
+    return (width, height) if width > 0 and height > 0 else None
+
+
 def jpeg_pixel_size(data: bytes) -> tuple[int, int] | None:
     """Return ``(width, height)`` from a JPEG's first frame header, or ``None``.
 
@@ -136,7 +148,7 @@ def jpeg_pixel_size(data: bytes) -> tuple[int, int] | None:
         if marker == _FILL_BYTE:
             position += 1
             continue
-        if marker == _TEMPORARY_MARKER or marker in _RESTART_MARKERS:
+        if _standalone_jpeg_marker(marker):
             position += 2
             continue
         if marker in {_END_OF_IMAGE, _START_OF_SCAN}:
@@ -147,11 +159,7 @@ def jpeg_pixel_size(data: bytes) -> tuple[int, int] | None:
         if length < 2:
             return None
         if marker in _START_OF_FRAME_MARKERS:
-            if position + _FRAME_HEADER_BYTES > len(data):
-                return None
-            height = int.from_bytes(data[position + 5 : position + 7], "big")
-            width = int.from_bytes(data[position + 7 : position + 9], "big")
-            return (width, height) if width > 0 and height > 0 else None
+            return _jpeg_frame_size(data, position)
         position += 2 + length
     return None
 

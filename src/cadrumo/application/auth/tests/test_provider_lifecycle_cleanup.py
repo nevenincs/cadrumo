@@ -8,7 +8,7 @@ from typing import cast
 import pytest
 
 from cadrumo.application.auth.providers import AuthProvider
-from cadrumo.application.auth.sessions import _provider_lifecycle
+from cadrumo.application.auth.sessions import provider_lifecycle
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -33,7 +33,7 @@ def test_provider_cleanup_preserves_primary_and_retry_owner(body: str, close_fai
 
     async def run() -> BaseException | None:
         try:
-            async with _provider_lifecycle(cast(AuthProvider, provider)):
+            async with provider_lifecycle(cast(AuthProvider, provider)):
                 if body != "success":
                     raise primary
         except BaseException as error:
@@ -71,7 +71,7 @@ def test_clean_provider_exit_does_not_borrow_an_unrelated_caller_exception() -> 
             raise unrelated
         except ValueError:
             with pytest.raises(AsyncResourceCleanupError) as caught:
-                async with _provider_lifecycle(cast(AuthProvider, provider)):
+                async with provider_lifecycle(cast(AuthProvider, provider)):
                     pass
             return caught.value
 

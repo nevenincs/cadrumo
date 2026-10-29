@@ -34,7 +34,7 @@ import pytest
 
 from ....domain.transactions.enums import TransactionDirection
 from ..actions_common import _command_idempotency_fields, _transaction_idempotency_fields
-from ..actions_manual import _transaction_from_command
+from ..actions_manual import transaction_from_command
 from ..models import ManualLedgerTransactionCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -80,7 +80,7 @@ def test_the_two_projections_share_one_ordered_key_sequence() -> None:
     which this property depends on.
     """
     command = _a_command()
-    transaction = _transaction_from_command(command, occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC))
+    transaction = transaction_from_command(command, occurred_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC))
 
     command_keys = tuple(_command_idempotency_fields(command))
     transaction_keys = tuple(_transaction_idempotency_fields(transaction))

@@ -20,7 +20,7 @@ from ......adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from ......adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from ......application.modelo.calculation_actions import (
+from ......application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

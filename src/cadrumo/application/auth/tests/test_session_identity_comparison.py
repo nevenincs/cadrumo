@@ -42,7 +42,7 @@ from ..session_types import AeatSession, CertificateSessionDetail, ClaveMovilSes
 from ..sessions import (
     AuthProfileIdentityMismatchError,
     ClaveAuthFacts,
-    _assert_session_identity_matches_expected,
+    assert_session_identity_matches_expected,
     resolve_clave_credentials,
 )
 from .leased_profile_authority import leased_profile_decode_context
@@ -53,7 +53,7 @@ _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 
 _LIVE_SESSION_RETURN_TYPES = ("AeatSession", "AuthenticatedAeatSessionResult")
-_GUARD = "_assert_session_identity_matches_expected"
+_GUARD = "assert_session_identity_matches_expected"
 
 
 def _clave_session(identity_nif: str) -> AeatSession:
@@ -118,7 +118,7 @@ def test_a_session_bound_to_another_taxpayer_is_refused() -> None:
     assert expected_identity == _TAX_ID
 
     with pytest.raises(AuthProfileIdentityMismatchError):
-        _assert_session_identity_matches_expected(_clave_session(_OTHER_TAX_ID).identity_nif, expected_identity)
+        assert_session_identity_matches_expected(_clave_session(_OTHER_TAX_ID).identity_nif, expected_identity)
 
 
 def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
@@ -134,7 +134,7 @@ def test_a_certificate_session_bound_to_another_taxpayer_is_refused() -> None:
     assert expected_identity == _TAX_ID
 
     with pytest.raises(AuthProfileIdentityMismatchError):
-        _assert_session_identity_matches_expected(
+        assert_session_identity_matches_expected(
             _certificate_session(_OTHER_TAX_ID).identity_nif,
             expected_identity,
         )
@@ -150,8 +150,8 @@ def test_the_taxpayers_own_session_is_accepted() -> None:
 
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
-    _assert_session_identity_matches_expected(_clave_session(_TAX_ID).identity_nif, expected_identity)
-    _assert_session_identity_matches_expected(_certificate_session(_TAX_ID).identity_nif, expected_identity)
+    assert_session_identity_matches_expected(_clave_session(_TAX_ID).identity_nif, expected_identity)
+    assert_session_identity_matches_expected(_certificate_session(_TAX_ID).identity_nif, expected_identity)
 
 
 def test_the_comparison_normalises_before_it_refuses() -> None:
@@ -165,7 +165,7 @@ def test_the_comparison_normalises_before_it_refuses() -> None:
 
     expected_identity = _expectation_for(AuthProviderKind.CLAVE_MOVIL)
 
-    _assert_session_identity_matches_expected(
+    assert_session_identity_matches_expected(
         _clave_session(f"  {_TAX_ID.lower()}  ").identity_nif,
         expected_identity,
     )
@@ -187,8 +187,8 @@ def test_a_profile_without_a_fiscal_id_has_nothing_to_compare() -> None:
     """
 
     session_identity = _clave_session(_OTHER_TAX_ID).identity_nif
-    _assert_session_identity_matches_expected(session_identity, "")
-    _assert_session_identity_matches_expected(session_identity, None)
+    assert_session_identity_matches_expected(session_identity, "")
+    assert_session_identity_matches_expected(session_identity, None)
 
 
 def test_every_path_that_hands_back_a_session_compares_its_identity() -> None:

@@ -37,10 +37,10 @@ from ..modelo.work_profile import ModeloWorkProfile
 from .modelo_bindings import (
     LedgerImpatriadoIncomeAggregationSourceResolver,
     LedgerIrnrIncomeAggregationSourceResolver,
-    LedgerIvaAggregationSourceResolver,
     LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     LedgerRentaIncomeAggregationSourceResolver,
 )
+from .modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from .modelo_bindings_renta_expenses import LedgerRentaGastosEstimacionDirectaAggregationSourceResolver
 from .oss_ioss import OssIossLedgerSourceResolver
 from .source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, ModeloSourceResolver

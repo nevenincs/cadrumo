@@ -29,6 +29,7 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 )
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.iva.components import registry_category_projection
+from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import (
     CalculationRevision,
@@ -56,7 +57,11 @@ from ..aggregation.ledger_membership import LedgerMembershipPorts, query_ledger_
 from ..aggregation.source_mesh import (
     CalculationSourceDiagnostic,
 )
-from ..calculations.cross_period_models import CrossPeriodDependencyEvidence, CrossPeriodExpectedMemberSet
+from ..calculations.cross_period_models import (
+    CrossPeriodCleanStateVerdict,
+    CrossPeriodDependencyEvidence,
+    CrossPeriodExpectedMemberSet,
+)
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ._ledger_drift_gate import ledger_drift_findings
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
@@ -254,108 +259,15 @@ def missing_evidence_findings(
     return findings
 
 
-def collect_verification_gate_findings(
-    *,
-    work_unit: WorkUnit,
-    target: CalculationRevision,
+def _append_cross_period_findings(
+    clean_state_verdict: CrossPeriodCleanStateVerdict | None,
+    iva_compensation_decision: IvaCompensationReconciliationDecision | None,
     workflow_profile: TaxpayerProfile,
-    observation_repository: CalculationObservationRepositoryProtocol,
-    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
-    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
-    verification_repository: VerificationReportCatalogueRepositoryProtocol,
-    justificante_repository: JustificanteRepositoryProtocol,
-    transaction_repository: TransactionCatalogueRepositoryProtocol,
-    invoice_repository: InvoiceCatalogueRepositoryProtocol,
-    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
-    iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
-    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
-    operation: PinnedAuthorityOperation,
-    work_profile: ModeloWorkProfile,
-    ledger_membership_ports: LedgerMembershipPorts,
-    evaluated_at: datetime | None = None,
-    calculation_catalogue: CalculationRevisionCatalogue | None = None,
-) -> tuple[
-    list[ModeloVerificationFinding],
-    list[CasillaId],
-    list[CasillaId],
-    dict[int, ModeloPreconditionFailure],
-]:
-    """Compose :class:`CalculationRevision` findings against a :class:`TaxpayerProfile`.
-
-    Pin registry, ledger, and cross-period evidence before publication.
-    """
-    findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
-        collect_revision_verification_findings(
-            work_unit=work_unit,
-            target=target,
-            profile=workflow_profile,
-            transaction_repository=transaction_repository,
-            invoice_repository=invoice_repository,
-            operation=operation,
-            work_profile=work_profile,
-        )
-    )
-    incomplete_modality_finding = registry_modality_finding(
-        work_unit=work_unit,
-        profile=workflow_profile,
-    )
-    if incomplete_modality_finding is not None:
-        findings.append(incomplete_modality_finding)
-        failures_by_finding_id[id(incomplete_modality_finding)] = build_verification_precondition_failure(
-            calculation_revision_id=target.calculation_revision_id,
-            work_unit_id=target.work_unit_id,
-            condition_id="modelo.work.verify.m202.modality.complete",
-            scenario_id="modelo.work.verify.m202.modality.incomplete",
-            evidence_id="modelo.work.verify.m202.modality",
-            evidence_values={
-                "modelo": str(work_unit.modelo),
-                "year": work_unit.filing_year,
-                "period": work_unit.period.registry_token,
-                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
-                "modality_code": "incomplete",
-            },
-            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
-        )
-    iva_compensation_decision = None
-    try:
-        iva_compensation_decision = _require_iva_compensation_revision_match(
-            work_unit,
-            target,
-            repository=iva_compensation_decision_repository,
-            observation_repository=observation_repository,
-            history_repository=iva_compensation_history_repository,
-            operation=operation,
-            subject_leaf_key="modelo.work.verify",
-            evaluated_at=evaluated_at,
-        )
-    except ModeloIvaWalletReconciliationBlocked as exc:
-        finding = iva_wallet_error_verification_finding(exc, work_unit=work_unit, operation=operation)
-        findings.append(finding)
-        failures_by_finding_id[id(finding)] = exc.precondition_failure
-    clean_state_verdict = cross_period_clean_state_verdict_for_work_unit(
-        work_unit,
-        observation_repository=observation_repository,
-        filing_repository=filing_repository,
-        calculation_repository=calculation_repository,
-        calculation_catalogue=calculation_catalogue,
-        verification_repository=verification_repository,
-        justificante_repository=justificante_repository,
-        expected_member_sets=cross_period_expected_member_sets_from_profile(
-            workflow_profile,
-            cross_period_expected_member_sets,
-        ),
-        taxpayer_tax_id=workflow_profile.tax_id,
-        activity_start_date=workflow_profile.activity_start_date,
-        modelo_202_modality=derive_modelo_202_modality(
-            workflow_profile,
-            effective_date=date(work_unit.filing_year, 12, 31),
-        ).modality,
-        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
-        workflow_profile=workflow_profile,
-        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
-        operation=operation,
-    )
-
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
     def _observe_cross_period_finding(
         finding: ModeloVerificationFinding,
         evidence: CrossPeriodDependencyEvidence | None,
@@ -400,6 +312,16 @@ def collect_verification_gate_findings(
             blocking_finding_observer=_observe_cross_period_finding,
         ),
     )
+
+
+def _append_ledger_evidence_findings(
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
     evidence_findings = missing_evidence_findings(
         target=target,
         work_unit=work_unit,
@@ -450,6 +372,132 @@ def collect_verification_gate_findings(
         ),
     )
     findings.extend(cuota_less_findings)
+
+
+def _append_modality_finding(
+    work_unit: WorkUnit,
+    workflow_profile: TaxpayerProfile,
+    target: CalculationRevision,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    incomplete_modality_finding = registry_modality_finding(
+        work_unit=work_unit,
+        profile=workflow_profile,
+    )
+    if incomplete_modality_finding is not None:
+        findings.append(incomplete_modality_finding)
+        failures_by_finding_id[id(incomplete_modality_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.m202.modality.complete",
+            scenario_id="modelo.work.verify.m202.modality.incomplete",
+            evidence_id="modelo.work.verify.m202.modality",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "year": work_unit.filing_year,
+                "period": work_unit.period.registry_token,
+                "profile_fact_id": "taxpayer_type.incn_prior_12_months",
+                "modality_code": "incomplete",
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+
+
+def collect_verification_gate_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    workflow_profile: TaxpayerProfile,
+    observation_repository: CalculationObservationRepositoryProtocol,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol,
+    justificante_repository: JustificanteRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol,
+    iva_compensation_history_repository: IvaCompensationHistoryRepositoryProtocol,
+    iva_compensation_decision_repository: IvaWalletDecisionRepositoryProtocol,
+    cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
+    operation: PinnedAuthorityOperation,
+    work_profile: ModeloWorkProfile,
+    ledger_membership_ports: LedgerMembershipPorts,
+    evaluated_at: datetime | None = None,
+    calculation_catalogue: CalculationRevisionCatalogue | None = None,
+) -> tuple[
+    list[ModeloVerificationFinding],
+    list[CasillaId],
+    list[CasillaId],
+    dict[int, ModeloPreconditionFailure],
+]:
+    """Compose :class:`CalculationRevision` findings against a :class:`TaxpayerProfile`.
+
+    Pin registry, ledger, and cross-period evidence before publication.
+    """
+    findings, resolved_casilla_ids, missing_required_casilla_ids, failures_by_finding_id = (
+        collect_revision_verification_findings(
+            work_unit=work_unit,
+            target=target,
+            profile=workflow_profile,
+            transaction_repository=transaction_repository,
+            invoice_repository=invoice_repository,
+            operation=operation,
+            work_profile=work_profile,
+        )
+    )
+    _append_modality_finding(work_unit, workflow_profile, target, findings, failures_by_finding_id)
+    iva_compensation_decision = None
+    try:
+        iva_compensation_decision = _require_iva_compensation_revision_match(
+            work_unit,
+            target,
+            repository=iva_compensation_decision_repository,
+            observation_repository=observation_repository,
+            history_repository=iva_compensation_history_repository,
+            operation=operation,
+            subject_leaf_key="modelo.work.verify",
+            evaluated_at=evaluated_at,
+        )
+    except ModeloIvaWalletReconciliationBlocked as exc:
+        finding = iva_wallet_error_verification_finding(exc, work_unit=work_unit, operation=operation)
+        findings.append(finding)
+        failures_by_finding_id[id(finding)] = exc.precondition_failure
+    clean_state_verdict = cross_period_clean_state_verdict_for_work_unit(
+        work_unit,
+        observation_repository=observation_repository,
+        filing_repository=filing_repository,
+        calculation_repository=calculation_repository,
+        calculation_catalogue=calculation_catalogue,
+        verification_repository=verification_repository,
+        justificante_repository=justificante_repository,
+        expected_member_sets=cross_period_expected_member_sets_from_profile(
+            workflow_profile,
+            cross_period_expected_member_sets,
+        ),
+        taxpayer_tax_id=workflow_profile.tax_id,
+        activity_start_date=workflow_profile.activity_start_date,
+        modelo_202_modality=derive_modelo_202_modality(
+            workflow_profile,
+            effective_date=date(work_unit.filing_year, 12, 31),
+        ).modality,
+        taxpayer_files_economic_activity=derive_taxpayer_files_economic_activity(workflow_profile),
+        workflow_profile=workflow_profile,
+        zero_value_previous_filing_binding_ids=zero_value_previous_filing_binding_ids(target),
+        operation=operation,
+    )
+
+    _append_cross_period_findings(
+        clean_state_verdict,
+        iva_compensation_decision,
+        workflow_profile,
+        target,
+        work_unit,
+        findings,
+        failures_by_finding_id,
+    )
+    _append_ledger_evidence_findings(
+        target, work_unit, transaction_repository, operation, findings, failures_by_finding_id
+    )
     # Runs beside the evidence gate, not inside it: that gate reads the live
     # ledger while the casilla values come from the stored draft, and this is
     # what refuses the case where those two views have drifted apart.

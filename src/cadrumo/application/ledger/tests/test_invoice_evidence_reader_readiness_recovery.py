@@ -21,7 +21,7 @@ from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, M
 from ....core.model_roles import ModelRole
 from ...dependency_contracts import DependencyState
 from ...local_reader import ProgramRow, RoleLane, read_local_reader_status
-from ...provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from ...tests.local_ai_program_rows import local_ai_row
 from ..invoice_evidence_readiness_operation import LedgerEvidenceReaderReadinessProjection, ReaderRoleProjectionV1
 
@@ -71,7 +71,7 @@ def test_a_missing_model_offers_the_local_ai_setup_and_an_installed_one_is_ready
     vision = rows[ModelRole.VISION_TRANSCRIPTION.value]
     assert vision.model == _VISION
     assert vision.installed is False and vision.ready is False
-    assert vision.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert vision.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert vision.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
     text = rows[ModelRole.TEXT_EXTRACTION.value]
     assert text.installed is True
@@ -87,7 +87,7 @@ def test_a_program_not_set_up_offers_the_local_ai_setup_on_every_on_host_role() 
     for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
         row = rows[role.value]
         assert not row.ready
-        assert row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED.value
+        assert row.failed_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED.value
         assert row.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
@@ -98,7 +98,7 @@ def test_an_unknown_program_offers_no_setup() -> None:
     for role in (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION):
         row = rows[role.value]
         assert not row.ready
-        assert row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED.value
+        assert row.failed_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED.value
         assert row.recovery_action_id is None
 
 
@@ -108,6 +108,6 @@ def test_a_role_with_no_selection_offers_no_setup() -> None:
     supply = rows[ModelRole.SUPPLY_NATURE_PROPOSAL.value]
     assert supply.ready is False
     assert supply.model is None
-    assert supply.failed_condition_id == ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE.value
+    assert supply.failed_condition_id == ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE.value
     assert supply.recovery_action_id is None
     assert rows[ModelRole.VISION_TRANSCRIPTION.value].recovery_action_id is None, "a ready role offers nothing"

@@ -599,13 +599,14 @@ def _ubl_header_child_values(
     recover nothing there while appearing to work on every domestic document.
     """
     name = _local(child.tag)
-    invoice_date = child.text.strip() if name == "IssueDate" and (child.text is not None and child.text) else None
-    currency = (
-        child.text.strip() if name == "DocumentCurrencyCode" and (child.text is not None and child.text) else None
-    )
+    text = child.text
+    if text is None or not text:
+        return None, None, existing_regime_legend
+    invoice_date = text.strip() if name == "IssueDate" else None
+    currency = text.strip() if name == "DocumentCurrencyCode" else None
     regime_legend = existing_regime_legend
-    if name == "Note" and (child.text is not None and child.text) and regime_legend is None:
-        regime_legend = child.text.strip() or None
+    if name == "Note" and regime_legend is None:
+        regime_legend = text.strip() or None
     return invoice_date, currency, regime_legend
 
 

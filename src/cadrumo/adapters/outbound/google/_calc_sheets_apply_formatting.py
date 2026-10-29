@@ -7,7 +7,7 @@ formatting, grid, protection, and input-validation facets.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from typing import TYPE_CHECKING, Final, Literal
 
 from ....application.storage.calc_sheets.number_formats import WORKBOOK_LOCALE
@@ -409,6 +409,42 @@ def build_auto_filter_requests(
     return requests
 
 
+def _bump_value_bounds(plan: AnySheetExportPlan, bump: Callable[[str, int, int], None]) -> None:
+    """Accumulate populated and working-grid extents in their original facet order."""
+    for vcell in plan.value_cells:
+        bump(vcell.address.tab.value, vcell.address.row, vcell.address.column)
+    for fcell in plan.formula_cells:
+        bump(fcell.address.tab.value, fcell.address.row, fcell.address.column)
+    for region in plan.merged_ranges:
+        bump(region.tab.value, region.end_row, region.end_column)
+    for height in plan.row_heights:
+        bump(height.tab.value, height.row, 1)
+    for hidden in plan.hidden_rows:
+        bump(hidden.tab.value, hidden.row, 1)
+    bump("Guía", 1 + len(plan.guide.paragraphs) + 10, 4)
+    for row_set in plan.row_sets:
+        bump(row_set.tab.value, row_set.first_data_row + 50, len(row_set.columns))
+
+
+def _bump_form_bounds(plan: AnySheetExportPlan, bump: Callable[[str, int, int], None]) -> None:
+    """Retain intentionally blank protected, styled and dimensioned form space."""
+    # The form's protected rectangle includes its final spacer row and narrow
+    # outside columns. Non-value facets can also own intentionally blank space.
+    for region in (*plan.styled_ranges, *plan.protected_ranges, *plan.auto_filters):
+        if region.tab is TabName.FORM:
+            bump(region.tab.value, region.end_row, region.end_column)
+    for width in plan.column_widths:
+        if width.tab is TabName.FORM:
+            bump(width.tab.value, 1, width.column)
+    for facet in (*plan.number_formats, *plan.cell_constraints):
+        address = facet.address
+        if address.tab is TabName.FORM:
+            bump(address.tab.value, address.row, address.column)
+    for frozen in plan.frozen_views:
+        if frozen.tab is TabName.FORM:
+            bump(frozen.tab.value, frozen.frozen_rows + 1, frozen.frozen_columns + 1)
+
+
 def build_grid_resize_requests(
     plan: AnySheetExportPlan,
     *,
@@ -433,35 +469,8 @@ def build_grid_resize_requests(
         if max_col.get(tab_value, 0) < column:
             max_col[tab_value] = column
 
-    for vcell in plan.value_cells:
-        bump(vcell.address.tab.value, vcell.address.row, vcell.address.column)
-    for fcell in plan.formula_cells:
-        bump(fcell.address.tab.value, fcell.address.row, fcell.address.column)
-    for region in plan.merged_ranges:
-        bump(region.tab.value, region.end_row, region.end_column)
-    for height in plan.row_heights:
-        bump(height.tab.value, height.row, 1)
-    for hidden in plan.hidden_rows:
-        bump(hidden.tab.value, hidden.row, 1)
-    bump("Guía", 1 + len(plan.guide.paragraphs) + 10, 4)
-    for row_set in plan.row_sets:
-        bump(row_set.tab.value, row_set.first_data_row + 50, len(row_set.columns))
-
-    # The form's protected rectangle includes its final spacer row and narrow
-    # outside columns. Non-value facets can also own intentionally blank space.
-    for region in (*plan.styled_ranges, *plan.protected_ranges, *plan.auto_filters):
-        if region.tab is TabName.FORM:
-            bump(region.tab.value, region.end_row, region.end_column)
-    for width in plan.column_widths:
-        if width.tab is TabName.FORM:
-            bump(width.tab.value, 1, width.column)
-    for facet in (*plan.number_formats, *plan.cell_constraints):
-        address = facet.address
-        if address.tab is TabName.FORM:
-            bump(address.tab.value, address.row, address.column)
-    for frozen in plan.frozen_views:
-        if frozen.tab is TabName.FORM:
-            bump(frozen.tab.value, frozen.frozen_rows + 1, frozen.frozen_columns + 1)
+    _bump_value_bounds(plan, bump)
+    _bump_form_bounds(plan, bump)
 
     requests: list[Request] = []
     for tab_value, max_r in max_row.items():

@@ -30,7 +30,8 @@ from ...core.aggregation import CalculationSourceLineageRole
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationSourceRef
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,

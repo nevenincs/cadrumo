@@ -18,7 +18,7 @@ from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
-from .adapter_composition import build_borrador_100_snapshot_repository
+from .adapter_composition_ports import build_borrador_100_snapshot_repository
 
 
 class _CanonicalBorradorParser:

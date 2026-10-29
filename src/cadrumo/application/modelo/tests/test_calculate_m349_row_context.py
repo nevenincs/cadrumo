@@ -17,7 +17,7 @@ from ....domain.modelos.row_models import (
     Modelo349RectificacionRow,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..calculate_input import ModeloCalculateDetailRowsError, _validate_detail_rows
+from ..calculate_input_validation import ModeloCalculateDetailRowsError, validate_detail_rows
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -51,7 +51,7 @@ def test_application_rejects_post_transition_gb_ordinary_row() -> None:
         importe=Decimal("25.00"),
     )
     with bundled_indexed_authority().operation() as operation, pytest.raises(Modelo349CountryPrefixContextError):
-        _validate_detail_rows((row,), work_unit=_unit(), operation=operation)
+        validate_detail_rows((row,), work_unit=_unit(), operation=operation)
 
 
 def test_application_rejects_country_specific_nif_format() -> None:
@@ -63,7 +63,7 @@ def test_application_rejects_country_specific_nif_format() -> None:
         importe=Decimal("25.00"),
     )
     with bundled_indexed_authority().operation() as operation, pytest.raises(ModeloCalculateDetailRowsError) as raised:
-        _validate_detail_rows((row,), work_unit=_unit(), operation=operation)
+        validate_detail_rows((row,), work_unit=_unit(), operation=operation)
     assert raised.value.context == {"nif": "DE123", "pais": "DE"}
 
 
@@ -79,4 +79,4 @@ def test_application_accepts_supported_rectification_context() -> None:
             base_rectificada=Decimal("25.00"),
             base_anterior=Decimal("30.00"),
         )
-        _validate_detail_rows((row,), work_unit=_unit(), operation=operation)
+        validate_detail_rows((row,), work_unit=_unit(), operation=operation)

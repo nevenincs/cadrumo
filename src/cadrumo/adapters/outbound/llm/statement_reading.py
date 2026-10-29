@@ -40,7 +40,7 @@ from collections.abc import Callable, Mapping
 
 from pydantic import TypeAdapter, ValidationError
 
-from ....application.dependency_wording import statement_reader_refusal_reason
+from ....application.reader_refusal_wording import statement_reader_refusal_reason
 from ....application.ledger.document_transcription import DocumentTranscription
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ....application.ledger.import_ports import LedgerImportReaderUnavailableError
@@ -236,7 +236,7 @@ def _reader_unavailable(verdict: PreconditionVerdict) -> LedgerImportReaderUnava
     """Return the import refusal for a statement whose reader could not be asked."""
     return LedgerImportReaderUnavailableError(
         translated_message="errors.transaction.ledger_import_failed",
-        context={"reason": statement_reader_refusal_reason(verdict)},
+        context={"reason": statement_reader_refusal_reason()},
         precondition_verdict=verdict,
     )
 

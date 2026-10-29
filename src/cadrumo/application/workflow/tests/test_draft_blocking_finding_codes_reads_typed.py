@@ -1,4 +1,4 @@
-"""``_draft_blocking_finding_codes`` must read severity/code typed, and fail loud on drift.
+"""``draft_blocking_finding_codes`` must read severity/code typed, and fail loud on drift.
 
 Sibling defect to the one fixed in
 ``test_validating_draft_stage_reads_severity_typed.py``: this helper backs
@@ -28,7 +28,7 @@ import pytest
 from ....core.errors.severity import BaseSeverity
 from ....core.i18n.translatable import Translatable as tr
 from ....domain.filing.schema import ModeloValidationFinding
-from ..engine import _draft_blocking_finding_codes
+from ..draft_findings import draft_blocking_finding_codes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -45,7 +45,7 @@ def _finding(*, severity: BaseSeverity, code: str) -> ModeloValidationFinding:
         casilla_id=None,
         severity=severity,
         code=code,
-        message=tr(f"workflow.test_draft_blocking_finding_codes.finding_{code}"),
+        message=tr(f"workflow.testdraft_blocking_finding_codes.finding_{code}"),
     )
 
 
@@ -56,7 +56,7 @@ def test_error_and_warning_codes_are_collected_sorted_and_deduplicated() -> None
         _finding(severity=BaseSeverity.ERROR, code="casilla-required-missing"),
     )
 
-    codes = _draft_blocking_finding_codes(cast(Any, _Draft(findings=findings)))
+    codes = draft_blocking_finding_codes(cast(Any, _Draft(findings=findings)))
 
     assert codes == ("casilla-required-missing", "rounding-tolerance-exceeded")
 
@@ -72,7 +72,7 @@ def test_info_findings_and_blank_codes_do_not_block() -> None:
         _finding(severity=BaseSeverity.ERROR, code="  "),
     )
 
-    assert _draft_blocking_finding_codes(cast(Any, _Draft(findings=findings))) == ()
+    assert draft_blocking_finding_codes(cast(Any, _Draft(findings=findings))) == ()
 
 
 def test_a_renamed_severity_field_fails_loud_instead_of_reporting_no_blockers() -> None:
@@ -87,7 +87,7 @@ def test_a_renamed_severity_field_fails_loud_instead_of_reporting_no_blockers() 
     object.__getattribute__(finding, "__dict__").pop("severity")
 
     with pytest.raises(AttributeError, match="severity"):
-        _draft_blocking_finding_codes(cast(Any, _Draft(findings=(finding,))))
+        draft_blocking_finding_codes(cast(Any, _Draft(findings=(finding,))))
 
 
 def test_a_renamed_code_field_fails_loud_instead_of_reporting_no_blockers() -> None:
@@ -96,4 +96,4 @@ def test_a_renamed_code_field_fails_loud_instead_of_reporting_no_blockers() -> N
     object.__getattribute__(finding, "__dict__").pop("code")
 
     with pytest.raises(AttributeError, match="code"):
-        _draft_blocking_finding_codes(cast(Any, _Draft(findings=(finding,))))
+        draft_blocking_finding_codes(cast(Any, _Draft(findings=(finding,))))

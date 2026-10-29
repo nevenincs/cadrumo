@@ -13,7 +13,7 @@ from cadrumo.application.ledger.actions_lifecycle import (
     restore_manual_transaction,
     stash_manual_transaction,
 )
-from cadrumo.application.ledger.actions_manual import summarize_manual_transactions
+from cadrumo.application.ledger.manual_read import summarize_manual_transactions
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState

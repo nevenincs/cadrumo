@@ -14,6 +14,7 @@ from .....core.operator_action_enums import ActionConditionality, ActionEvidence
 from .. import _google_drive as drive_module
 from .. import _key_validation as key_module
 from .. import factory as factory_module
+from .. import google_drive_validation as drive_validation_module
 from .. import local as local_module
 from .._key_validation import assert_admissible_object_key_hmac
 from ..errors import OutboundStorageValidationError
@@ -93,13 +94,13 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:_validate_namespace:adapters.outbound.storage.google_drive.errors.namespace_blank": _ValidationCarrier(
+    "google_drive_validation:validate_namespace:adapters.outbound.storage.google_drive.errors.namespace_blank": _ValidationCarrier(
         "storage.google_drive.namespace.valid",
         {"backend": "google_drive", "field": "namespace", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
         True,
     ),
-    "_google_drive:_validate_namespace:adapters.outbound.storage.google_drive.errors.namespace_forbidden_characters": _ValidationCarrier(
+    "google_drive_validation:validate_namespace:adapters.outbound.storage.google_drive.errors.namespace_forbidden_characters": _ValidationCarrier(
         "storage.google_drive.namespace.valid",
         {"backend": "google_drive", "field": "namespace", "valid": False},
         ActionEvidenceProvenance.RUNTIME_OBSERVATION,
@@ -137,7 +138,7 @@ _VALIDATION_CARRIER_TOTALITY: dict[str, _ValidationCarrier] = {
     ),
 }
 
-_SOURCE_MODULES = (key_module, factory_module, local_module, drive_module)
+_SOURCE_MODULES = (key_module, factory_module, local_module, drive_module, drive_validation_module)
 
 
 def _call_name(node: ast.expr) -> str | None:
@@ -255,7 +256,8 @@ def test_storage_validation_carrier_totality_and_canonical_construction() -> Non
         source = inspect.getsource(module)
         assert "PreconditionVerdict(" not in source
         assert "ConditionEvidence(" not in source
-        assert "no_action_precondition_verdict" in source
+        assert "no_action_precondition_verdict" in source or "drive_validation_verdict" in source
+    assert "no_action_precondition_verdict" in inspect.getsource(drive_validation_module)
 
 
 def test_factory_unhandled_kind_exclusion_is_closed_over_the_provider_enum() -> None:

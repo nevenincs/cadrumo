@@ -13,6 +13,7 @@ from .....core.operator_action_enums import ActionConditionality, ActionEvidence
 from .....tests.google_credentials import unused_google_credentials
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
+from .. import google_drive_requests as drive_requests_module
 from .._google_drive import GoogleDriveProvider
 from .._google_drive_metadata import (
     DriveStoragePreconditionCondition,
@@ -51,42 +52,42 @@ def _contract(
 
 
 _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
-    "_translate_http_error:OutboundStoragePermissionError:drive request failed": _contract(
+    "translate_http_error:OutboundStoragePermissionError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_AUTHORIZED,
         NoRecoveryOutcome.SAFETY,
         "operation",
         "status",
         "authorization_sufficient",
     ),
-    "_translate_http_error:OutboundStorageNotFoundError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageNotFoundError:drive request failed": _contract(
         DriveStoragePreconditionCondition.TARGET_PRESENT,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "operation",
         "status",
         "target_present",
     ),
-    "_translate_http_error:OutboundStorageConflictError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageConflictError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_CONFLICT_FREE,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "operation",
         "status",
         "conflict_detected",
     ),
-    "_translate_http_error:OutboundStorageQuotaError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageQuotaError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_WITHIN_QUOTA,
         NoRecoveryOutcome.SAFETY,
         "operation",
         "status",
         "quota_available",
     ),
-    "_translate_http_error:OutboundStorageUnavailableError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageUnavailableError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_AVAILABLE,
         NoRecoveryOutcome.SAFETY,
         "operation",
         "status",
         "available",
     ),
-    "_translate_http_error:OutboundStorageNetworkError:drive request failed": _contract(
+    "translate_http_error:OutboundStorageNetworkError:drive request failed": _contract(
         DriveStoragePreconditionCondition.REQUEST_TRANSPORT_AVAILABLE,
         NoRecoveryOutcome.SAFETY,
         "operation",
@@ -136,7 +137,7 @@ _FAILURE_CARRIER_TOTALITY: dict[str, _CarrierContract] = {
         "operation",
         "object_present",
     ),
-    "get:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": _contract(
+    "_download_drive_payload:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": _contract(
         DriveStoragePreconditionCondition.MEDIA_PAYLOAD_BYTES,
         NoRecoveryOutcome.OPERATOR_DECISION,
         "operation",
@@ -205,32 +206,32 @@ def _literal(value: str | bool) -> str:
 
 
 _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
-    "_translate_http_error:OutboundStoragePermissionError:drive request failed": (
+    "translate_http_error:OutboundStoragePermissionError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("authorization_sufficient", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageNotFoundError:drive request failed": (
+    "translate_http_error:OutboundStorageNotFoundError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("target_present", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageConflictError:drive request failed": (
+    "translate_http_error:OutboundStorageConflictError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("conflict_detected", _literal(True)),
     ),
-    "_translate_http_error:OutboundStorageQuotaError:drive request failed": (
+    "translate_http_error:OutboundStorageQuotaError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("quota_available", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageUnavailableError:drive request failed": (
+    "translate_http_error:OutboundStorageUnavailableError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("available", _literal(False)),
     ),
-    "_translate_http_error:OutboundStorageNetworkError:drive request failed": (
+    "translate_http_error:OutboundStorageNetworkError:drive request failed": (
         ("operation", "action"),
         ("status", "context['status']"),
         ("transport_available", _literal(False)),
@@ -264,7 +265,7 @@ _FAILURE_CARRIER_FACT_EXPRESSIONS: dict[str, tuple[tuple[str, str], ...]] = {
         ("operation", _literal("get")),
         ("object_present", _literal(False)),
     ),
-    "get:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": (
+    "_download_drive_payload:OutboundStorageNetworkError:drive files.get_media returned non-bytes payload": (
         ("operation", _literal("files.get_media")),
         ("payload_bytes", _literal(False)),
         ("payload_type", "type(payload).__name__"),
@@ -386,7 +387,7 @@ def _fact_expressions_from_precondition(call: ast.Call) -> tuple[tuple[str, str]
 
 def _external_failure_carriers() -> dict[str, ast.Call]:
     carriers: dict[str, ast.Call] = {}
-    for module in (drive_module, drive_metadata_module):
+    for module in (drive_module, drive_metadata_module, drive_requests_module):
         tree = ast.parse(inspect.getsource(module))
 
         class Visitor(ast.NodeVisitor):
@@ -472,7 +473,9 @@ def test_drive_failure_carrier_totality_uses_the_canonical_no_action_authority()
         assert _fact_keys_from_precondition(precondition) == expected.fact_keys, key
         assert _fact_expressions_from_precondition(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
 
-    source = "\n".join(inspect.getsource(module) for module in (drive_module, drive_metadata_module))
+    source = "\n".join(
+        inspect.getsource(module) for module in (drive_module, drive_metadata_module, drive_requests_module)
+    )
     assert "PreconditionVerdict(" not in source
     assert "ConditionEvidence(" not in source
 

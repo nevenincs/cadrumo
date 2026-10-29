@@ -18,8 +18,8 @@ from pydantic import BaseModel
 from ...core.aggregation import LedgerWithholdingDerivation
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import decompose_invoice
-from ...domain.invoices.models import InvoiceCatalogue
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
@@ -95,7 +95,7 @@ def sales_invoice_evidence_payload(
     does not describe the payment.
 
     Core types:
-    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+    :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
     """
     invoice_id = transaction.invoice_id
     if invoice_id is None:

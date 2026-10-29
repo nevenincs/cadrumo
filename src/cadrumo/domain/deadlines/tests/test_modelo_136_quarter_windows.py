@@ -13,7 +13,8 @@ import pytest
 
 from ....core.modelo import Modelo
 from ....core.period import Period
-from ...calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ...calculations.registry.applicability import derive_modelo_applicability
+from ...calculations.registry.applicability_models import ApplicabilityVerdict
 from ...calculations.registry.irpf_income_categories import require_irpf_income_category
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...contribuyente.entity_type import require_entity_type

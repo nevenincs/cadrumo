@@ -13,7 +13,7 @@ assembly boundary accidentally.
 
 Core types:
 :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
@@ -45,7 +45,7 @@ from ..domain.buckets.event import (
     bucket_event_order_key,
 )
 from ..domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ..domain.invoices.models import InvoiceCatalogue
+from ..domain.invoices.catalogue import InvoiceCatalogue
 from ..domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from ..domain.modelos.calculation_revision import (
     CalculationRevision,

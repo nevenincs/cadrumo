@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
 from cadrumo.application.modelo.calculation_request_fields import (
     ModeloCalculationInputFieldsV1,
     ModeloCalculationOverride,
@@ -28,10 +29,7 @@ from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation imp
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    ModeloWorkCalculateExecutor,
-)
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
@@ -48,7 +46,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

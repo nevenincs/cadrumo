@@ -20,9 +20,10 @@ from ....core.i18n.render import tr
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .evidence_files_doors import LEDGER_EVIDENCE_FILES_PAGE_SIZE, LedgerEvidenceFilesDoorsV1
 from .workspace_presentation import door_refusal_text
+from .workspace_screen import LedgerWorkspaceScreen
 
 EVIDENCE_FILES_CSS = tokenised(
     """

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 
 from ....core.hashing import sha256_hex
 from ....core.period import Period
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.modelos.filing_record import ExternalEvidenceKind
@@ -18,7 +18,7 @@ from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.justificante import JustificanteCaptureSnapshot, derive_justificante_capture_snapshot_id
 from ...live.snapshot_base import SnapshotLifecycleState
-from ..calendar import (
+from ..calendar_events import (
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_justificante_capture_snapshots,
     calendar_events_from_modelo_records,

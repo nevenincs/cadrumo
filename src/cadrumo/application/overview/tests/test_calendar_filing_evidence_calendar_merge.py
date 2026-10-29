@@ -9,7 +9,7 @@ import pytest
 from ....core.period import Period
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
-from ..calendar import calendar_events_from_expedientes_snapshots
+from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange, OverviewLocalFilingState
 from .calendar_test_support import (

@@ -32,7 +32,7 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
     row_fingerprint,
 )
 from cadrumo.application.ledger.actions_classification import bulk_classify_from_csv
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )

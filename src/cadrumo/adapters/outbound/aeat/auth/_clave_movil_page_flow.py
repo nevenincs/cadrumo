@@ -222,6 +222,15 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             raise AeatLoginAssertionError("Authentication left the trusted AEAT authority")
         return state
 
+    def _clave_entry_ready(self, state: ClaveMovilPageState) -> bool:
+        if state in {
+            ClaveMovilPageState.WAITING,
+            ClaveMovilPageState.REPRESENTATION,
+            ClaveMovilPageState.AUTHENTICATED,
+        }:
+            return True
+        return state is ClaveMovilPageState.QR and not self._settings.cadrumo_clave_prefer_non_qr
+
     async def _drive_clave_entry(self, page: BrowserPagePort, *, dni_nie: str, target_path: str) -> None:
         """Reach a challenge or accepted session from the state AEAT actually renders."""
         acted: set[ClaveMovilPageState] = set()
@@ -230,13 +239,7 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
                 while True:
                     state = await self._observe_clave_page(page, target_path)
                     await self._raise_if_pending_request_error(page)
-                    if state in {
-                        ClaveMovilPageState.WAITING,
-                        ClaveMovilPageState.REPRESENTATION,
-                        ClaveMovilPageState.AUTHENTICATED,
-                    }:
-                        return
-                    if state is ClaveMovilPageState.QR and not self._settings.cadrumo_clave_prefer_non_qr:
+                    if self._clave_entry_ready(state):
                         return
                     # Never send a second identity submission merely because its
                     # asynchronous response has not replaced the form yet.

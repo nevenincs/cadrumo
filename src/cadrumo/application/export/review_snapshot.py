@@ -24,6 +24,7 @@ from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
 from ...domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from .review_form_data import ReviewSavedForm
+from .review_snapshot_integrity import validate_review_snapshot_content
 
 
 class CalculationReviewSelection(BaseModel):
@@ -229,59 +230,7 @@ class ReviewSnapshotContent(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _reference_integrity(self) -> Self:
-        calculation = isinstance(self.selection, CalculationReviewSelection)
-        if self.schema_version == 1 and (
-            self.calculation_lifecycle is not None or self.saved_form is not None or self.text_values
-        ):
-            raise ValueError("v1 review snapshots cannot carry unbound lifecycle metadata")
-        if self.schema_version == 2 and calculation and self.calculation_lifecycle is None:
-            raise ValueError("v2 calculation review requires captured lifecycle metadata")
-        if not calculation and self.calculation_lifecycle is not None:
-            raise ValueError("ledger review cannot claim a calculation lifecycle")
-        if self.saved_form is not None:
-            if not isinstance(self.selection, CalculationReviewSelection):
-                raise ValueError("saved form requires a calculation selection")
-            rendering = self.saved_form.rendering
-            if (
-                rendering.registry_snapshot.snapshot_ref != self.selection.registry_snapshot_ref
-                or rendering.registry_digest != self.selection.registry_digest
-                or rendering.authority_generation != self.selection.authority_generation
-            ):
-                raise ValueError("saved form authority does not match the review selection")
-            scalars = {value.id: value.value for value in self.saved_form.scalars}
-            if any(amount.row_id is None and scalars.get(amount.casilla_id) != amount.value for amount in self.amounts):
-                raise ValueError("saved form values do not match the baseline amounts")
-            if any(scalars.get(item.casilla_id) != item.value for item in self.text_values):
-                raise ValueError("saved form text values do not match the retained baseline")
-        contribution_ids = {item.contribution_id for item in self.contributions}
-        evidence_ids = {item.evidence_id for item in self.evidence}
-        row_ids = {row.transaction_id for row in self.ledger_rows}
-        if (
-            len(contribution_ids) != len(self.contributions)
-            or len(evidence_ids) != len(self.evidence)
-            or len(row_ids) != len(self.ledger_rows)
-            or len({amount.amount_id for amount in self.amounts}) != len(self.amounts)
-            or len({item.value_id for item in self.text_values}) != len(self.text_values)
-        ):
-            raise ValueError("snapshot identities must be unique within each record family")
-        if isinstance(self.selection, LedgerReviewSelection) and (self.amounts or self.text_values):
-            raise ValueError("ledger-only review cannot invent calculated casilla values")
-        for amount in self.amounts:
-            if not set(amount.contribution_ids) <= contribution_ids:
-                raise ValueError("amount attribution refers to a missing contribution")
-        for item in self.text_values:
-            if not set(item.contribution_ids) <= contribution_ids:
-                raise ValueError("text attribution refers to a missing contribution")
-        for source in self.contributions:
-            if not set(source.evidence_ids) <= evidence_ids:
-                raise ValueError("source attribution refers to missing inventory entries")
-            if source.kind is ReviewSourceKind.LEDGER_ROW and source.source_id not in row_ids:
-                raise ValueError("ledger contribution lacks its captured row")
-        incomplete = any(
-            item.disposition in {EvidenceDisposition.MISSING, EvidenceDisposition.UNAVAILABLE} for item in self.evidence
-        ) or any(item.kind is ReviewSourceKind.UNAVAILABLE for item in self.contributions)
-        if incomplete and self.status is ReviewStatus.VERIFIED:
-            raise ValueError("unavailable evidence or provenance cannot be a verified complete review")
+        validate_review_snapshot_content(self)
         return self
 
 

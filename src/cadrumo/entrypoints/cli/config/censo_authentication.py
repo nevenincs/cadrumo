@@ -62,15 +62,19 @@ def read_censo_auth(client: FrontendClient) -> AuthSyncReadiness:
     return projection.sync_readiness
 
 
+def _show_missing_requirements(readiness: AuthSyncReadiness, interactive: bool) -> None:
+    if not readiness.ready and interactive:
+        for item in readiness.requirements:
+            if not item.satisfied:
+                write_stderr(f"{item.field}: {sync_requirement_reason(item.reason)}")
+
+
 def require_censo_auth(ctx: typer.Context, *, configure: bool = False) -> None:
     """Offer setup at a console, and return actionable failures for scripts."""
     client = bound_profile_client(ctx)
     readiness = read_censo_auth(client)
     interactive = format_of(ctx) is not OutputFormat.JSON and terminal_can_prompt_for_secrets()
-    if not readiness.ready and interactive:
-        for item in readiness.requirements:
-            if not item.satisfied:
-                write_stderr(f"{item.field}: {sync_requirement_reason(item.reason)}")
+    _show_missing_requirements(readiness, interactive)
     if configure and not interactive:
         raise _readiness_error(readiness, console_required=True)
     if configure or (not readiness.ready and interactive and typer.confirm(tr("cli.censo_auth.offer"), default=True)):
@@ -162,6 +166,11 @@ def _configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
     )
     if completed.projection.profile_id != client.profile_id or completed.projection.provider is not kind:
         raise invalid_completion_error(completed)
+    _prompt_provider_fields(client, kind, route)
+    write_stderr(tr("cli.censo_auth.saved"))
+
+
+def _prompt_provider_fields(client: FrontendClient, kind: AuthProviderKind, route: ClaveMovilRoute | None) -> None:
     _prompt_field(client, "identity.tax_id")
     if kind is not AuthProviderKind.CERTIFICATE:
         _prompt_field(client, "auth.dni_nie")
@@ -172,7 +181,6 @@ def _configure(client: FrontendClient, readiness: AuthSyncReadiness) -> None:
                     _prompt_field(client, item.field)
     if kind in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
         _save_password(client, kind)
-    write_stderr(tr("cli.censo_auth.saved"))
 
 
 def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:

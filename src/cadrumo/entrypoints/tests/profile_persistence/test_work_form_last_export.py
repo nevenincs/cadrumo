@@ -25,7 +25,8 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
     seed_profile,
     seed_revision,
 )
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form

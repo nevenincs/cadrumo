@@ -24,6 +24,7 @@ from ....domain.deadlines.errors import ScheduleComputationError
 from ....domain.deadlines.models import TaxpayerProfile
 from ...state_projection import build_pending_obligations
 from .. import _deadline_stage as deadline_stage_module
+from .. import deadline_decisions as deadline_decisions_module
 from .. import engine as engine_module
 from .. import engine_recording as engine_recording_module
 from ..errors import UnhandledWorkflowError
@@ -33,6 +34,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _WORKFLOW_PRODUCER_MODULES = (
     engine_module,
     deadline_stage_module,
+    deadline_decisions_module,
     engine_recording_module,
 )
 
@@ -125,17 +127,17 @@ def test_workflow_failure_producers_are_locale_keyed_and_verdict_complete() -> N
     assert sorted(failure_producers) == sorted(
         (
             ("_deadline_stage", "application.workflow.steps.deadline_missing", "no_action_precondition_verdict"),
-            ("engine", "application.workflow.steps.already_filed", "_no_recovery_verdict"),
-            ("engine", "application.workflow.steps.auth_certificate_invalid", "_no_recovery_verdict"),
-            ("engine", "application.workflow.steps.auth_certificate_load_failed", "_no_recovery_verdict"),
-            ("engine", "application.workflow.steps.auth_provider_unavailable", "_no_recovery_verdict"),
-            ("engine", "application.workflow.steps.deadline_closed", "_no_recovery_verdict"),
-            ("engine", "application.workflow.steps.deadline_future", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.already_filed", "no_recovery_verdict"),
+            ("engine", "application.workflow.steps.auth_certificate_invalid", "no_recovery_verdict"),
+            ("engine", "application.workflow.steps.auth_certificate_load_failed", "no_recovery_verdict"),
+            ("engine", "application.workflow.steps.auth_provider_unavailable", "no_recovery_verdict"),
+            ("deadline_decisions", "application.workflow.steps.deadline_closed", "no_recovery_verdict"),
+            ("deadline_decisions", "application.workflow.steps.deadline_future", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.draft_build_failed", "_conditional_action_verdict"),
-            ("engine", "application.workflow.steps.draft_identity_mismatch", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.draft_identity_mismatch", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.draft_not_ready", "_conditional_action_verdict"),
-            ("engine", "application.workflow.steps.inbox_blocked", "_no_recovery_verdict"),
-            ("engine", "application.workflow.steps.preflight_failed", "_no_recovery_verdict"),
+            ("engine", "application.workflow.steps.inbox_blocked", "no_recovery_verdict"),
+            ("engine", "application.workflow.steps.preflight_failed", "no_recovery_verdict"),
             ("engine", "application.workflow.steps.validation_failed", "_conditional_action_verdict"),
             ("engine_recording", "application.workflow.steps.site_unavailable", "_execution_failure_verdict"),
             ("engine_recording", "application.workflow.steps.workflow_failure", "_execution_failure_verdict"),

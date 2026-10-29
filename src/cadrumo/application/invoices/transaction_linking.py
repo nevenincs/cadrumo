@@ -16,8 +16,9 @@ from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.secure_object_write import SecureObjectWrite
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.errors import InvoiceLinkError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.invoices.service import link_transaction
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.transactions.service import link_invoice

@@ -9,7 +9,7 @@ import pytest
 from cadrumo.adapters.inbound.financial.ledger_import import build_ledger_import_ports
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.ledger.actions_manual import query_ledger_review_rows
+from cadrumo.application.ledger.manual_read import query_ledger_review_rows
 from cadrumo.application.ledger.models import LedgerReviewQuery, LedgerSourceImportCommand
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType

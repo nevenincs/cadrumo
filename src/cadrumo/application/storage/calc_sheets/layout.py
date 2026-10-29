@@ -35,7 +35,7 @@ closed-form `lookup_bracket` expansion.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import date
 from typing import Literal
@@ -61,9 +61,10 @@ from ....domain.calculations.registry.runtime_graph import (
     expression_date_binding_refs,
     expression_parameter_refs,
 )
-from ....domain.calculations.registry.schema import ModeloRevision
+from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
+    FormBlockDefinition,
     FormContextFieldBlock,
     FormFieldBlock,
     FormGridBlock,
@@ -493,36 +494,16 @@ def _layout_bindings(
     # an arithmetic expression (an activity code is a typical example).
     # Append these after formula operands to retain the existing graph's A1
     # addresses; never flatten a repeating record into a scalar input.
-    for binding_id in _form_input_bindings(revision):
-        binding = bindings_by_id.get(binding_id)
-        if binding is None:
-            raise _undeclared_layout_reference("form_binding")
-        if binding.value.channel is BindingValueChannel.ROW_SET:
-            raise CalcSheetsEngineError("scalar form input cannot address a row-set binding")
-        if binding_id in binding_cells or binding_id in date_binding_cells:
-            continue
-        if not isinstance(binding.provider, ManualInputProvider):
-            raise CalcSheetsEngineError("form-only scalar input requires a manual-input provider")
-        owners = [casilla.id for casilla in revision.casillas if casilla.binding == binding_id]
-        if binding.provider.casilla_id is not None:
-            owners.append(binding.provider.casilla_id)
-        if any(key not in existing_inputs for key in owners):
-            raise CalcSheetsEngineError("manual form binding target is not an editable casilla")
-        addresses = {existing_inputs[key].qualified(): existing_inputs[key] for key in owners if key in existing_inputs}
-        if len(addresses) > 1:
-            raise CalcSheetsEngineError("form binding has ambiguous existing casilla input cells")
-        address = (
-            next(iter(addresses.values()))
-            if addresses
-            else SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
-        )
-        target = date_binding_cells if binding.value.channel is BindingValueChannel.DATE else binding_cells
-        target[binding_id] = address
-        if not addresses:
-            binding_rows.append(
-                _BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id)
-            )
-            entradas_row += 1
+    entradas_row = _append_form_input_bindings(
+        revision,
+        bindings_by_id,
+        binding_cells,
+        date_binding_cells,
+        binding_rows,
+        existing_inputs,
+        entradas_row,
+        value_column,
+    )
     # Declared summary owners need a backing cell even when no arithmetic
     # expression consumes them. These are immutable source snapshots, not
     # additional operator inputs. Existing formula/input cells are reused.
@@ -539,35 +520,96 @@ def _layout_bindings(
     return _BindingPlan(binding_cells=binding_cells, binding_rows=binding_rows, date_binding_cells=date_binding_cells)
 
 
-def _form_summary_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
-    """Resolve exact scalar context owners before allocating readonly rows."""
-    bindings: set[BindingId] = set()
+def _append_form_input_bindings(
+    revision: ModeloRevision,
+    bindings_by_id: Mapping[BindingId, BindingDefinition],
+    binding_cells: dict[BindingId, SheetCellAddress],
+    date_binding_cells: dict[BindingId, SheetCellAddress],
+    binding_rows: list[_BindingRow],
+    existing_inputs: Mapping[CasillaId, SheetCellAddress],
+    entradas_row: int,
+    value_column: int,
+) -> int:
+    for binding_id in _form_input_bindings(revision):
+        binding = bindings_by_id.get(binding_id)
+        if binding is None:
+            raise _undeclared_layout_reference("form_binding")
+        if binding.value.channel is BindingValueChannel.ROW_SET:
+            raise CalcSheetsEngineError("scalar form input cannot address a row-set binding")
+        if binding_id in binding_cells or binding_id in date_binding_cells:
+            continue
+        address, new_row = _form_input_address(
+            revision, binding_id, binding, existing_inputs, entradas_row, value_column
+        )
+        target = date_binding_cells if binding.value.channel is BindingValueChannel.DATE else binding_cells
+        target[binding_id] = address
+        if new_row:
+            binding_rows.append(
+                _BindingRow(binding=binding_id, tab=TabName.ENTRADAS, row=entradas_row, label=binding_id)
+            )
+            entradas_row += 1
+    return entradas_row
+
+
+def _form_input_address(
+    revision: ModeloRevision,
+    binding_id: BindingId,
+    binding: BindingDefinition,
+    existing_inputs: Mapping[CasillaId, SheetCellAddress],
+    entradas_row: int,
+    value_column: int,
+) -> tuple[SheetCellAddress, bool]:
+    owners = _form_input_owners(revision, binding_id, binding)
+    if any(key not in existing_inputs for key in owners):
+        raise CalcSheetsEngineError("manual form binding target is not an editable casilla")
+    addresses = {existing_inputs[key].qualified(): existing_inputs[key] for key in owners if key in existing_inputs}
+    if len(addresses) > 1:
+        raise CalcSheetsEngineError("form binding has ambiguous existing casilla input cells")
+    address = (
+        next(iter(addresses.values()))
+        if addresses
+        else SheetCellAddress.at(TabName.ENTRADAS, entradas_row, value_column)
+    )
+    return address, not addresses
+
+
+def _form_input_owners(revision: ModeloRevision, binding_id: BindingId, binding: BindingDefinition) -> list[CasillaId]:
+    if not isinstance(binding.provider, ManualInputProvider):
+        raise CalcSheetsEngineError("form-only scalar input requires a manual-input provider")
+    owners = [casilla.id for casilla in revision.casillas if casilla.binding == binding_id]
+    if binding.provider.casilla_id is not None:
+        owners.append(binding.provider.casilla_id)
+    return owners
+
+
+def _form_blocks(revision: ModeloRevision) -> Iterator[FormBlockDefinition]:
     for layout in revision.form_layouts:
         for page in layout.pages:
             for section in page.sections:
-                for block in section.blocks:
-                    if isinstance(block, FormContextFieldBlock):
-                        field = resolve_form_context_field(revision, block)
-                        if field.binding is not None:
-                            bindings.add(field.binding)
+                yield from section.blocks
+
+
+def _form_summary_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
+    """Resolve exact scalar context owners before allocating readonly rows."""
+    bindings: set[BindingId] = set()
+    for block in _form_blocks(revision):
+        if isinstance(block, FormContextFieldBlock):
+            field = resolve_form_context_field(revision, block)
+            if field.binding is not None:
+                bindings.add(field.binding)
     return tuple(sorted(bindings))
 
 
 def _form_input_bindings(revision: ModeloRevision) -> tuple[BindingId, ...]:
     """Collect explicitly declared scalar form inputs, excluding repeating groups."""
     bindings: set[BindingId] = set()
-    for layout in revision.form_layouts:
-        for page in layout.pages:
-            for section in page.sections:
-                for block in section.blocks:
-                    if isinstance(block, FormFieldBlock) and block.binding_id is not None:
-                        bindings.add(block.binding_id)
-                    elif isinstance(block, FormGridBlock):
-                        bindings.update(
-                            cell.binding_id for row in block.rows for cell in row.cells if cell.binding_id is not None
-                        )
-                    elif isinstance(block, FormBindingInputsBlock):
-                        bindings.update(block.binding_ids)
+    for block in _form_blocks(revision):
+        if isinstance(block, FormFieldBlock) and block.binding_id is not None:
+            bindings.add(block.binding_id)
+        elif isinstance(block, FormGridBlock):
+            bindings.update(cell.binding_id for row in block.rows for cell in row.cells if cell.binding_id is not None)
+        elif isinstance(block, FormBindingInputsBlock):
+            bindings.update(block.binding_ids)
     return tuple(sorted(bindings))
 
 

@@ -1,17 +1,27 @@
 """Frozen form values and geometry projected solely from a saved calculation.
 
 :class:`CalculationRevision` holds the saved calculation and its evidence.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.casilla_id import CasillaId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.form_context import resolve_form_context_field
-from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
+from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_form_layouts import (
+    FormBlockDefinition,
+    FormContextFieldBlock,
+    FormRepeatingGroupBlock,
+)
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ..modelo.work_form_context_values import form_context_value
@@ -56,6 +66,53 @@ class ReviewSavedForm(BaseModel):
         return self
 
 
+def _context_value(
+    block: FormContextFieldBlock,
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision,
+    values: Mapping[CasillaId, ModeloFormScalar],
+) -> ModeloFormScalar:
+    field = resolve_form_context_field(snapshot.revision, block)
+    if field.binding is not None:
+        saved = revision.binding_overrides.get(field.binding)
+        if saved is not None:
+            return saved
+        owners = tuple(casilla.id for casilla in snapshot.revision.casillas if casilla.binding == field.binding)
+        return values.get(owners[0]) if len(owners) == 1 else None
+    return form_context_value(snapshot, block, revision=revision)
+
+
+def _captured_contexts(
+    blocks: tuple[FormBlockDefinition, ...],
+    snapshot: RegistrySnapshot,
+    revision: CalculationRevision,
+    values: Mapping[CasillaId, ModeloFormScalar],
+) -> tuple[ReviewFormValue, ...]:
+    return tuple(
+        ReviewFormValue(id=block.id, value=_context_value(block, snapshot, revision, values))
+        for block in blocks
+        if isinstance(block, FormContextFieldBlock)
+    )
+
+
+def _captured_records(
+    blocks: tuple[FormBlockDefinition, ...], snapshot: RegistrySnapshot, revision: CalculationRevision
+) -> tuple[ReviewFormRecords, ...]:
+    return tuple(
+        ReviewFormRecords(block_id=block.id, known=known, rows=rows)
+        for block in blocks
+        if isinstance(block, FormRepeatingGroupBlock)
+        for known, rows in (
+            saved_form_records(
+                snapshot=snapshot,
+                revision=revision,
+                block=block,
+                column_casillas=tuple(column.casilla_id for column in block.columns),
+            ),
+        )
+    )
+
+
 def capture_review_form(revision: CalculationRevision) -> ReviewSavedForm | None:
     """Project the original saved registry and channels without current-source resolution.
 
@@ -77,34 +134,8 @@ def capture_review_form(revision: CalculationRevision) -> ReviewSavedForm | None
         **revision.casilla_values,
     }
 
-    def context_value(block: FormContextFieldBlock) -> ModeloFormScalar:
-        field = resolve_form_context_field(snapshot.revision, block)
-        if field.binding is not None:
-            saved = revision.binding_overrides.get(field.binding)
-            if saved is not None:
-                return saved
-            owners = tuple(casilla.id for casilla in snapshot.revision.casillas if casilla.binding == field.binding)
-            return values.get(owners[0]) if len(owners) == 1 else None
-        return form_context_value(snapshot, block, revision=revision)
-
-    contexts = tuple(
-        ReviewFormValue(id=block.id, value=context_value(block))
-        for block in blocks
-        if isinstance(block, FormContextFieldBlock)
-    )
-    records = tuple(
-        ReviewFormRecords(block_id=block.id, known=known, rows=rows)
-        for block in blocks
-        if isinstance(block, FormRepeatingGroupBlock)
-        for known, rows in (
-            saved_form_records(
-                snapshot=snapshot,
-                revision=revision,
-                block=block,
-                column_casillas=tuple(column.casilla_id for column in block.columns),
-            ),
-        )
-    )
+    contexts = _captured_contexts(blocks, snapshot, revision, values)
+    records = _captured_records(blocks, snapshot, revision)
     return ReviewSavedForm(
         rendering=rendering,
         scalars=tuple(ReviewFormValue(id=key, value=value) for key, value in sorted(values.items())),

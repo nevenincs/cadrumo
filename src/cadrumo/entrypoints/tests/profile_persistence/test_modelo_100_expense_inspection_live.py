@@ -25,9 +25,9 @@ from ....adapters.persistence.profile.tests.secure_objects_fixture import secure
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
-from ....application.aggregation.source_mesh import CallerOverrideDisposition, precedence_ladder_sources
+from ....application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -43,13 +43,13 @@ from ....domain.calculations.registry.tests.registry_observations import (
     revision_id_for_observation,
 )
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

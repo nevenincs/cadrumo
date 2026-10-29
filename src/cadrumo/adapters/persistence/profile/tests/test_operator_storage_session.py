@@ -26,12 +26,12 @@ from cadrumo.application.auth.certificate_source_operations import (
     set_operator_certificate_source_secret,
 )
 from cadrumo.application.auth.credentials import resolve_certificate_source_secret
-from cadrumo.application.auth.operator import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_results import (
     AuthOperationRequiresCustodySessionError,
     AuthOperationScopeConflictError,
     AuthProviderNotConfiguredError,
 )
+from cadrumo.application.auth.operator_revocation import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.operator_scope import auth_mutation_span
 from cadrumo.application.auth.operator_scope_ports import OperatorScopeStorageError
 from cadrumo.application.auth.sessions import load_persisted_session, storage_state_paths

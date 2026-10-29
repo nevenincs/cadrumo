@@ -18,7 +18,8 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.auth.operator import configure_operator_auth, logout_operator_auth, reset_operator_auth
+from cadrumo.application.auth.operator import configure_operator_auth
+from cadrumo.application.auth.operator_revocation import logout_operator_auth, reset_operator_auth
 from cadrumo.application.auth.sessions import storage_state_paths
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.core.auth_provider import AuthProviderKind

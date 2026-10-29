@@ -9,7 +9,7 @@ recovered from the :class:`~domain.calculations.registry.schema.RegistrySnapshot
 only when the snapshot is still loadable. When a workflow
 :class:`TaxpayerProfile` is available, profile applicability can also synthesize
 explicit zeroes for relation slots whose source modelo is
-:class:`~domain.calculations.registry.applicability.ApplicabilityVerdict`
+:class:`~domain.calculations.registry.applicability_models.ApplicabilityVerdict`
 ``NOT_APPLICABLE``.
 
 This is not a recalculation path. It rehydrates the persisted replay surface the
@@ -30,10 +30,8 @@ from ...core.aggregation import OBSERVATION_BACKED_BINDING_SOURCE_KINDS
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.modelo import Modelo
-from ...domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    derive_modelo_applicability,
-)
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, revision_bindings_by_id
 from ...domain.calculations.registry.errors import RegistrySnapshotError

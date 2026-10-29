@@ -7,6 +7,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
+from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ...export.review_snapshot import CalculationReviewSelection, ReviewSnapshot, ReviewSourceKind
 from .form_workbook import add_saved_review_form
 from .number_formats import numeric_format
@@ -23,6 +24,7 @@ from .records import (
     SheetValueCell,
     TabName,
 )
+from .review_workbook_overview import append_calculation_overview
 from .theme import StyleRole
 from .workbook_cells import SheetCellValue
 
@@ -123,11 +125,7 @@ class _ReviewLayout:
         self.style(tab, 1, 1, len(headers), StyleRole.TITLE)
         self.style(tab, 2, 3, len(headers), StyleRole.BODY)
         self.style(tab, _HEADER_ROW, _HEADER_ROW, len(headers), StyleRole.HEADER)
-        if rows:
-            self.style(tab, _FIRST_ROW, end, len(headers), StyleRole.BODY)
-            for column, header in enumerate(headers, 1):
-                if header == "casilla":
-                    self.style(tab, _FIRST_ROW, end, column, StyleRole.CASILLA, start_column=column)
+        self._style_table_rows(tab, end, headers, rows)
         self.widths.extend(
             SheetColumnWidth(tab=tab, column=column, width=_column_width(header))
             for column, header in enumerate(headers, 1)
@@ -136,6 +134,15 @@ class _ReviewLayout:
         self.filters.append(
             SheetAutoFilter(tab=tab, start_row=_HEADER_ROW, end_row=end, start_column=1, end_column=len(headers))
         )
+
+    def _style_table_rows(
+        self, tab: TabName, end: int, headers: tuple[str, ...], rows: Sequence[Sequence[SheetCellValue]]
+    ) -> None:
+        if rows:
+            self.style(tab, _FIRST_ROW, end, len(headers), StyleRole.BODY)
+            for column, header in enumerate(headers, 1):
+                if header == "casilla":
+                    self.style(tab, _FIRST_ROW, end, column, StyleRole.CASILLA, start_column=column)
 
     def numeric(
         self,
@@ -184,15 +191,7 @@ def build_review_workbook(
         raise ValueError("review exceeds workbook output limits; select a smaller snapshot")
     layout = _ReviewLayout(label)
     selection = snapshot.selection
-    amount_addresses = {
-        item.amount_id: f"'Cálculos'!A{index}" for index, item in enumerate(snapshot.amounts, _FIRST_ROW)
-    }
-    amount_addresses.update(
-        {
-            item.value_id: f"'Cálculos'!A{index}"
-            for index, item in enumerate(snapshot.text_values, _FIRST_ROW + len(snapshot.amounts))
-        }
-    )
+    source_amounts = _source_amount_links(snapshot)
     source_addresses = {
         item.contribution_id: f"'Procedencia'!A{index}" for index, item in enumerate(snapshot.contributions, _FIRST_ROW)
     }
@@ -202,14 +201,53 @@ def build_review_workbook(
     evidence_addresses = {
         item.evidence_id: f"'Evidencia'!A{index}" for index, item in enumerate(snapshot.evidence, _FIRST_ROW)
     }
-    source_amounts: dict[str, list[str]] = {item.contribution_id: [] for item in snapshot.contributions}
-    for amount in snapshot.amounts:
-        for source_id in amount.contribution_ids:
-            source_amounts[source_id].append(amount_addresses[amount.amount_id])
-    for item in snapshot.text_values:
-        for source_id in item.contribution_ids:
-            source_amounts[source_id].append(amount_addresses[item.value_id])
+    _render_overview(snapshot, publication_id, exported_at, layout)
 
+    _render_results(snapshot, layout, source_addresses)
+
+    ledger_sources, ledger_results, ledger_evidence, invoice_evidence, evidence_sources = _source_links(
+        snapshot, source_addresses, source_amounts
+    )
+    ledger_rows = _ledger_rows(
+        snapshot, layout, ledger_sources, ledger_results, ledger_evidence, invoice_evidence, evidence_addresses
+    )
+    _render_ledger_table(layout, ledger_rows)
+    _render_support_tables(snapshot, layout, ledger_addresses, source_amounts, evidence_addresses, evidence_sources)
+    plan = SheetExportPlan[SheetReviewMetadata](
+        metadata=SheetReviewMetadata(
+            kind=selection.kind,
+            snapshot_digest=snapshot.snapshot_digest,
+            publication_id=publication_id,
+            title=(
+                f"Modelo {selection.modelo} · {selection.filing_year} · {selection.period} · "
+                + (
+                    label("calculation_state_" + snapshot.calculation_lifecycle.state.value)
+                    if snapshot.calculation_lifecycle
+                    else label("not_captured")
+                )
+                + f" · {selection.calculation_revision_id[:12]}"
+                if isinstance(selection, CalculationReviewSelection)
+                else label("ledger") + f" · {selection.ledger_snapshot_id[:12]}"
+            ),
+            exported_at=exported_at,
+        ),
+        tabs=tuple(layout.tabs),
+        value_cells=tuple(layout.cells),
+        number_formats=tuple(layout.formats),
+        styled_ranges=tuple(layout.styles),
+        column_widths=tuple(layout.widths),
+        frozen_views=tuple(layout.freezes),
+        auto_filters=tuple(layout.filters),
+        guide=SheetGuideContent(title=label("overview"), paragraphs=(label("baseline_notice"),)),
+    )
+    return add_saved_review_form(plan, snapshot.saved_form) if snapshot.saved_form is not None else plan
+
+
+def _render_overview(
+    snapshot: ReviewSnapshot, publication_id: UUID, exported_at: datetime, layout: _ReviewLayout
+) -> None:
+    label = layout.label
+    selection = snapshot.selection
     overview: list[tuple[SheetCellValue, ...]] = [
         (label("status"), snapshot.status.value),
         (label("review_quality"), label("status_" + snapshot.status.value)),
@@ -221,55 +259,7 @@ def build_review_workbook(
         (label("missing_data"), label("not_captured_notice")),
     ]
     if isinstance(selection, CalculationReviewSelection):
-        lifecycle = snapshot.calculation_lifecycle
-        overview.extend(
-            (
-                (
-                    label("calculation_state"),
-                    label("calculation_state_" + lifecycle.state.value) if lifecycle else label("not_captured"),
-                ),
-                (
-                    label("current_calculation"),
-                    label("yes")
-                    if lifecycle and lifecycle.is_current_calculation
-                    else label("no")
-                    if lifecycle
-                    else label("not_captured"),
-                ),
-                (
-                    label("current_filing"),
-                    label("yes")
-                    if lifecycle and lifecycle.is_current_filing
-                    else label("no")
-                    if lifecycle
-                    else label("not_captured"),
-                ),
-                (
-                    label("aeat_confirmation"),
-                    label("aeat_confirmation_" + lifecycle.aeat_confirmation.value)
-                    if lifecycle and (lifecycle.aeat_confirmation is not None and lifecycle.aeat_confirmation)
-                    else label("not_captured"),
-                ),
-                (
-                    label("filing_status"),
-                    label("filing_status_" + lifecycle.filing_status.value)
-                    if lifecycle and (lifecycle.filing_status is not None and lifecycle.filing_status)
-                    else label("not_captured"),
-                ),
-                (label("filing_record"), lifecycle.filing_record_id if lifecycle else None),
-            )
-        )
-        overview.extend(
-            (
-                (label("modelo"), selection.modelo),
-                (label("period"), f"{selection.filing_year} / {selection.period}"),
-                (label("work_unit"), selection.work_unit_id),
-                (label("calculation_revision"), selection.calculation_revision_id),
-                (label("registry_revision"), selection.registry_snapshot_ref.revision_id),
-                (label("authority"), selection.authority_generation),
-                (label("registry_digest"), selection.registry_digest),
-            )
-        )
+        append_calculation_overview(overview, snapshot, selection, label)
     else:
         overview.extend(
             ((label("ledger_snapshot"), selection.ledger_snapshot_id), (label("scope"), label("ledger_scope_notice")))
@@ -303,6 +293,10 @@ def build_review_workbook(
     layout.widths[-1] = SheetColumnWidth(tab=TabName.GUIDE, column=2, width=90)
     layout.style(TabName.GUIDE, _FIRST_ROW, _FIRST_ROW + 1, 2, StyleRole.SECTION_BANNER)
 
+
+def _render_results(snapshot: ReviewSnapshot, layout: _ReviewLayout, source_addresses: dict[str, str]) -> None:
+    label = layout.label
+    selection = snapshot.selection
     if isinstance(selection, CalculationReviewSelection):
         layout.table(
             TabName.CALCULOS,
@@ -364,6 +358,12 @@ def build_review_workbook(
                 TabName.CALCULOS, _FIRST_ROW, _HEADER_ROW + len(snapshot.amounts), 4, StyleRole.COMPUTED, start_column=4
             )
 
+
+def _source_links(
+    snapshot: ReviewSnapshot, source_addresses: dict[str, str], source_amounts: dict[str, list[str]]
+) -> tuple[
+    dict[str, list[str]], dict[str, list[str]], dict[str, list[str]], dict[str, list[str]], dict[str, list[str]]
+]:
     ledger_sources: dict[str, list[str]] = {}
     ledger_results: dict[str, list[str]] = {}
     ledger_evidence: dict[str, list[str]] = {}
@@ -378,6 +378,19 @@ def build_review_workbook(
             ledger_evidence.setdefault(source.source_id, []).extend(source.evidence_ids)
         elif source.kind is ReviewSourceKind.INVOICE:
             invoice_evidence.setdefault(source.source_id, []).extend(source.evidence_ids)
+    return ledger_sources, ledger_results, ledger_evidence, invoice_evidence, evidence_sources
+
+
+def _ledger_rows(
+    snapshot: ReviewSnapshot,
+    layout: _ReviewLayout,
+    ledger_sources: dict[str, list[str]],
+    ledger_results: dict[str, list[str]],
+    ledger_evidence: dict[str, list[str]],
+    invoice_evidence: dict[str, list[str]],
+    evidence_addresses: dict[str, str],
+) -> list[tuple[SheetCellValue, ...]]:
+    label = layout.label
     ledger_rows: list[tuple[SheetCellValue, ...]] = []
     for index, row in enumerate(snapshot.ledger_rows, _FIRST_ROW):
         booked = date.fromisoformat(row.booked_date)
@@ -454,26 +467,11 @@ def build_review_workbook(
                 _exact(row.m210_applicable_rate),
             )
         )
-        layout.formats.append(
-            SheetNumberFormat(
-                address=SheetCellAddress.at(TabName.DETALLE, index, 2), data_type="date", pattern="yyyy-mm-dd"
-            )
-        )
-        for column, value in (
-            (5, row.amount),
-            (7, row.value_in_eur),
-            (9, row.taxable_base),
-            (10, row.iva_amount),
-            (17, row.fx_rate),
-            (18, row.business_pct),
-            (19, row.iva_rate),
-            (20, row.recargo_amount),
-            (40, row.m210_gross_income_amount),
-            (41, row.m210_applicable_rate),
-        ):
-            unit = "ratio" if column in {18, 19, 41} else "decimal" if column == 17 else "money"
-            currency = "EUR" if column == 7 else row.currency
-            layout.numeric(TabName.DETALLE, index, column, value, unit=unit, currency=currency)
+        _format_ledger_row(layout, index, row)
+    return ledger_rows
+
+
+def _render_ledger_table(layout: _ReviewLayout, ledger_rows: list[tuple[SheetCellValue, ...]]) -> None:
     layout.table(
         TabName.DETALLE,
         "ledger",
@@ -536,6 +534,17 @@ def build_review_workbook(
         ),
         ledger_rows,
     )
+
+
+def _render_support_tables(
+    snapshot: ReviewSnapshot,
+    layout: _ReviewLayout,
+    ledger_addresses: dict[str, str],
+    source_amounts: dict[str, list[str]],
+    evidence_addresses: dict[str, str],
+    evidence_sources: dict[str, list[str]],
+) -> None:
+    label = layout.label
     layout.table(
         TabName.PROVENANCE,
         "sources",
@@ -615,31 +624,47 @@ def build_review_workbook(
         [(None,) * 6 for _ in range(_REVIEW_ROWS)],
     )
     layout.style(TabName.ENTRADAS, _FIRST_ROW, _HEADER_ROW + _REVIEW_ROWS, 6, StyleRole.INPUT)
-    plan = SheetExportPlan[SheetReviewMetadata](
-        metadata=SheetReviewMetadata(
-            kind=selection.kind,
-            snapshot_digest=snapshot.snapshot_digest,
-            publication_id=publication_id,
-            title=(
-                f"Modelo {selection.modelo} · {selection.filing_year} · {selection.period} · "
-                + (
-                    label("calculation_state_" + snapshot.calculation_lifecycle.state.value)
-                    if snapshot.calculation_lifecycle
-                    else label("not_captured")
-                )
-                + f" · {selection.calculation_revision_id[:12]}"
-                if isinstance(selection, CalculationReviewSelection)
-                else label("ledger") + f" · {selection.ledger_snapshot_id[:12]}"
-            ),
-            exported_at=exported_at,
-        ),
-        tabs=tuple(layout.tabs),
-        value_cells=tuple(layout.cells),
-        number_formats=tuple(layout.formats),
-        styled_ranges=tuple(layout.styles),
-        column_widths=tuple(layout.widths),
-        frozen_views=tuple(layout.freezes),
-        auto_filters=tuple(layout.filters),
-        guide=SheetGuideContent(title=label("overview"), paragraphs=(label("baseline_notice"),)),
+
+
+def _source_amount_links(snapshot: ReviewSnapshot) -> dict[str, list[str]]:
+    amount_addresses = {
+        item.amount_id: f"'Cálculos'!A{index}" for index, item in enumerate(snapshot.amounts, _FIRST_ROW)
+    }
+    amount_addresses.update(
+        {
+            item.value_id: f"'Cálculos'!A{index}"
+            for index, item in enumerate(snapshot.text_values, _FIRST_ROW + len(snapshot.amounts))
+        }
     )
-    return add_saved_review_form(plan, snapshot.saved_form) if snapshot.saved_form is not None else plan
+    source_amounts: dict[str, list[str]] = {item.contribution_id: [] for item in snapshot.contributions}
+    for amount in snapshot.amounts:
+        for source_id in amount.contribution_ids:
+            source_amounts[source_id].append(amount_addresses[amount.amount_id])
+    for item in snapshot.text_values:
+        for source_id in item.contribution_ids:
+            source_amounts[source_id].append(amount_addresses[item.value_id])
+
+    return source_amounts
+
+
+def _format_ledger_row(layout: _ReviewLayout, index: int, row: LedgerEvidenceRow) -> None:
+    layout.formats.append(
+        SheetNumberFormat(
+            address=SheetCellAddress.at(TabName.DETALLE, index, 2), data_type="date", pattern="yyyy-mm-dd"
+        )
+    )
+    for column, value in (
+        (5, row.amount),
+        (7, row.value_in_eur),
+        (9, row.taxable_base),
+        (10, row.iva_amount),
+        (17, row.fx_rate),
+        (18, row.business_pct),
+        (19, row.iva_rate),
+        (20, row.recargo_amount),
+        (40, row.m210_gross_income_amount),
+        (41, row.m210_applicable_rate),
+    ):
+        unit = "ratio" if column in {18, 19, 41} else "decimal" if column == 17 else "money"
+        currency = "EUR" if column == 7 else row.currency
+        layout.numeric(TabName.DETALLE, index, column, value, unit=unit, currency=currency)

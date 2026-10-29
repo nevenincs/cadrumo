@@ -160,6 +160,22 @@ class _AmendWizardTarget:
     bucket_id: str | None
 
 
+def _require_current_filing(unit: WorkUnit) -> str:
+    if unit.current_filing_record_id is None:
+        raise bad_parameter_from_error(
+            ModeloRecordNotFoundError(
+                translated_message="cli.app.modelo.work.amend_wizard_no_current_filing",
+                context={"work_unit_id": unit.work_unit_id},
+            )
+        )
+    return unit.current_filing_record_id
+
+
+def _require_corrections(rows: tuple[ModeloCasillaRow, ...]) -> None:
+    if not rows:
+        raise typer.BadParameter(tr("cli.app.modelo.work.amend_wizard_no_corrections"))
+
+
 def run_modelo_work_amend_wizard(
     *,
     ctx: typer.Context,
@@ -177,13 +193,7 @@ def run_modelo_work_amend_wizard(
         revision=target.revision,
         bucket_id=target.bucket_id,
     )
-    if unit.current_filing_record_id is None:
-        raise bad_parameter_from_error(
-            ModeloRecordNotFoundError(
-                translated_message="cli.app.modelo.work.amend_wizard_no_current_filing",
-                context={"work_unit_id": unit.work_unit_id},
-            )
-        )
+    filing_record_id = _require_current_filing(unit)
     profile_id = resolve_active_bucket_id()
     if profile_id is None:
         raise no_active_profile_refusal()
@@ -192,7 +202,7 @@ def run_modelo_work_amend_wizard(
         client,
         ModeloWorkAmendmentContextRequest(
             profile_id=client.profile_id,
-            filing_record_id=unit.current_filing_record_id,
+            filing_record_id=filing_record_id,
             output_language=OutputLanguage(output_language()),
         ),
     ).projection
@@ -223,24 +233,14 @@ def run_modelo_work_amend_wizard(
         raise RefusalError(RefusalCode.INVALID_FRAME) from None
     amendable = amendable_casilla_rows(context_projection.casilla_rows, baseline_values)
     grammars = {row.casilla_id: row.grammar for row in correction.rows}
-    if not amendable:
-        raise typer.BadParameter(
-            tr(
-                "cli.app.modelo.work.amend_wizard_no_corrections",
-            )
-        )
+    _require_corrections(amendable)
     run_token = uuid4().hex
     _ACTIVE_RUNS[run_token] = {}
     try:
         selected = _prompt_selection(
             amendable=amendable, baseline_values=baseline_values, unit=unit, run_token=run_token
         )
-        if not selected:
-            raise typer.BadParameter(
-                tr(
-                    "cli.app.modelo.work.amend_wizard_no_corrections",
-                )
-            )
+        _require_corrections(selected)
         corrections, amendment_kind, motive, reason = _prompt_values_kind_reason(
             selected=selected,
             baseline_values=baseline_values,

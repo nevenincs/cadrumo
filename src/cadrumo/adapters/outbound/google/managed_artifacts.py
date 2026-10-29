@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from io import BytesIO
 from typing import TYPE_CHECKING
 from uuid import UUID
@@ -40,6 +41,30 @@ _BINARY_KINDS = frozenset(
         ManagedArtifactKind.PROBE,
     }
 )
+
+
+def _reconciled_child(
+    parent: AdmittedArtifact,
+    entry: Mapping[str, object],
+    creation_id: UUID,
+    kind: ManagedArtifactKind,
+    publication_id: UUID,
+) -> ArtifactCreationReceipt:
+    """Bind one listed child to the exact recorded parent/creation intent before retaining it."""
+    identifier = entry.get("id")
+    if not isinstance(identifier, str) or not identifier.strip():
+        raise managed_artifact_refusal("reconciliation_identity_missing", uncertain=True)
+    receipt = ArtifactCreationReceipt(
+        profile_id=parent.receipt.profile_id,
+        root_folder_id=parent.receipt.root_folder_id,
+        artifact_id=identifier,
+        parent_id=parent.receipt.artifact_id,
+        creation_id=creation_id,
+        kind=kind,
+        publication_id=publication_id,
+    )
+    validate_creation_metadata(receipt, entry)
+    return receipt
 
 
 class ManagedGoogleArtifacts:
@@ -164,20 +189,7 @@ class ManagedGoogleArtifacts:
             )
             self._acknowledge("drive.files.list.reconcile_creation")
             for entry in page.get("files", []):
-                identifier = entry.get("id")
-                if not isinstance(identifier, str) or not identifier.strip():
-                    raise managed_artifact_refusal("reconciliation_identity_missing", uncertain=True)
-                receipt = ArtifactCreationReceipt(
-                    profile_id=parent.receipt.profile_id,
-                    root_folder_id=parent.receipt.root_folder_id,
-                    artifact_id=identifier,
-                    parent_id=parent.receipt.artifact_id,
-                    creation_id=attempt.creation_id,
-                    kind=kind,
-                    publication_id=publication_id,
-                )
-                validate_creation_metadata(receipt, entry)
-                candidates.append(receipt)
+                candidates.append(_reconciled_child(parent, entry, attempt.creation_id, kind, publication_id))
             page_token = next_drive_page_token(
                 page.get("nextPageToken"), seen_tokens=seen_tokens, action="drive.files.list.reconcile_creation"
             )

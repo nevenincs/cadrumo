@@ -195,7 +195,7 @@ class CliExceptionPrecondition(StrEnum):
     LEDGER_TRANSACTION_ID_RESOLVES = "cli.ledger.transaction_id.resolves"
     LEDGER_TRANSACTION_VALID = "cli.ledger.transaction.valid"
     LEDGER_INVOICE_VALID = "cli.ledger.invoice.valid"
-    OPTIONAL_EXTRA_IMPORTABLE = "provisioning.optional_extra.importable"
+    OPTIONAL_EXTRA_IMPORTABLE = "cli.optional_extra.importable"
     EXTERNAL_CONSTANTS_SECTION_VALID = "cli.external_constants.section_valid"
 
 

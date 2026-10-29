@@ -20,8 +20,9 @@ from cadrumo.application.calculations.observations_repository import Calculation
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.decimal.coercion import coerce_decimal_strict
 from ...core.operator_action_enums import ActionEvidenceProvenance
-from ...domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ...domain.calculations.registry.applicability import derive_modelo_applicability
 from ...domain.calculations.registry.applicability_modelo202 import Modelo202Modality
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId

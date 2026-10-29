@@ -32,9 +32,10 @@ from ...core.unit_proportion import UnitProportion
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.irnr_ledger_bindings import ledger_irnr_income_source_jurisdictions
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.m210_income_classification import M210IncomeClassification
-from ...domain.transactions.models import OutOfWindowTransactionSummary, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from . import _shared_issue_reasons
 from ._grouping import fold_casilla_observations

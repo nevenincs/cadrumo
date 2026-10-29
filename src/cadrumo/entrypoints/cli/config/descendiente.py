@@ -3,7 +3,7 @@
 The Art. 58/61 LIRPF minimo por descendientes engine
 (:meth:`~domain.contribuyente.family_profile.RentaFamilyProfile.minimo_descendientes_estatal`,
 consumed at calculate time by
-:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) reads the
+:func:`~application.modelo.profile_derived_facts.inject_derived_minimo_descendientes_facts`) reads the
 active profile's ``renta_family.descendiente.{n}.*`` facts. Before this module, no
 production CLI surface wrote those facts: :func:`~domain.contribuyente.descendant_facts.parse_descendiente_flag`
 and :func:`~domain.contribuyente.descendant_facts.descendant_facts_from_list` had zero non-test
@@ -112,7 +112,7 @@ def _ambiguous_relacion_indices(new_rows: list[DescendantInfo], *, index_offset:
 
     Fires only for a row BOTH declaring real working months AND left at the
     unstated default relación — the same narrow conjunction
-    :func:`~application.modelo.calculate_input._ambiguous_relacion_hijo_ids`
+    :func:`~application.modelo.calculate_maternidad_advisory.ambiguous_relacion_hijo_ids`
     checks at calculate time. Checked here too, immediately at declaration,
     because an operator actively answering questions is better served by
     disclosure at the point they typed the figure than by discovering it only
@@ -271,7 +271,7 @@ def descendiente_add(
     refuses instructively before any profile write. The new rows are appended after
     the existing declared descendants and the full set is rewritten so the
     Art. 58/61 LIRPF minimo por descendientes engine
-    (:func:`~application.modelo.profile_binding.inject_derived_minimo_descendientes_facts`) has
+    (:func:`~application.modelo.profile_derived_facts.inject_derived_minimo_descendientes_facts`) has
     real facts to compute from on the next M100 calculate.
 
     Parsing reads the registry's disability grades and relación default, and

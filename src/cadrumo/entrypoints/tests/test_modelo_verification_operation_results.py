@@ -59,7 +59,7 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 
-from ..adapter_composition import build_calculation_action_ports, build_verification_repository_bundle
+from ..adapter_composition_work_ports import build_calculation_action_ports, build_verification_repository_bundle
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 from .registered_executor_seeding_support import _seeded_modelo_filing_record
 

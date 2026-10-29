@@ -38,7 +38,7 @@ from .operations.registry import OperationPublicDefinitionRegistrationV1
 from .operations.subject_reference import OperationSubjectReferenceV1
 from .operator_actions.projection import PreconditionVerdictSnapshot
 from .preflight import HealthSeverity, PreflightCheck
-from .provisioning import DependencyStatus
+from .workstation_probes import DependencyStatus
 from .user_profile.access_errors import ProfileAccessRefusedError
 from .user_profile.capabilities import CapabilityDecision, CapabilitySource
 from .workstation_check import WorkstationCheckReport

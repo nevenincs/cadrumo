@@ -300,6 +300,16 @@ class LedgerInvoiceWizardScreen(LedgerConfirmationFlowScreen):
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Move between steps, review, record the reviewed invoice, cancel, or correct and retry."""
         button_id = event.button.id
+        if self._handle_editing_button(button_id):
+            return
+        if button_id == "ledger-invoices-wizard-cancel" and self.flow_state is LedgerFlowState.CONFIRMING:
+            self._cancel_flow()
+        elif button_id == "ledger-invoices-wizard-confirm" and self.flow_state is LedgerFlowState.CONFIRMING:
+            self._confirm()
+        elif button_id == "ledger-invoices-wizard-again":
+            self._start_again()
+
+    def _handle_editing_button(self, button_id: str | None) -> bool:
         editing = self.flow_state is LedgerFlowState.EDITING
         if button_id == "ledger-invoices-wizard-previous" and editing and self.step > 0:
             self.step -= 1
@@ -309,12 +319,9 @@ class LedgerInvoiceWizardScreen(LedgerConfirmationFlowScreen):
             self._show_step()
         elif button_id == "ledger-invoices-wizard-review" and editing:
             self._review()
-        elif button_id == "ledger-invoices-wizard-cancel" and self.flow_state is LedgerFlowState.CONFIRMING:
-            self._cancel_flow()
-        elif button_id == "ledger-invoices-wizard-confirm" and self.flow_state is LedgerFlowState.CONFIRMING:
-            self._confirm()
-        elif button_id == "ledger-invoices-wizard-again":
-            self._start_again()
+        else:
+            return False
+        return True
 
     def _review(self) -> None:
         refusal = self.query_one("#ledger-refusal", Static)

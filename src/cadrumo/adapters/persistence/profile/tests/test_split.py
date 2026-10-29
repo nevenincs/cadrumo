@@ -28,8 +28,8 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.ledger.actions_lifecycle import archive_manual_transaction
-from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
 from cadrumo.application.ledger.actions_split_merge import split_transaction
+from cadrumo.application.ledger.manual_update import update_manual_transaction_fields
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,

@@ -31,14 +31,14 @@ from ...domain.iva.flow import (
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_record_for_applied_rate
 from ...domain.iva.schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole
-from ...domain.transactions.models import OutOfWindowTransactionSummary
+from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
 )
-from .iva_ledger import validate_intracom_export_counterparty
+from .iva_ledger_classification import validate_intracom_export_counterparty
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

@@ -44,10 +44,8 @@ from .....domain.calculations.registry.errors import (
     RegistryValidationError,
 )
 from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
-from .....domain.calculations.registry.export_parse import (
-    ParsedExportFieldValue,
-    parse_filed_payload,
-)
+from .....domain.calculations.registry.export_parse import parse_filed_payload
+from .....domain.calculations.registry.export_parse_models import ParsedExportFieldValue
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
     M303_COMPENSATION_GENERADA_CASILLA,

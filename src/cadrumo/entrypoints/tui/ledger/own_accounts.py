@@ -33,8 +33,9 @@ from ..components.language import localized
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from ..operations.outcome import OperationOutcomeUnknownError
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _SECRET_INPUTS = ("#own-account-iban", "#own-account-bic")
 _TEXT_INPUTS = (

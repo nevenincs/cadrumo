@@ -10,8 +10,9 @@ from __future__ import annotations
 import pytest
 
 from ....core.aggregation import BindingSourceKind
-from ..calculation_revision import CalculationSourceIssue, derive_calculation_revision_id
+from ..calculation_revision import derive_calculation_revision_id
 from ..calculation_revision_identity import _source_issues_revision_id_payload
+from ..calculation_revision_sources import CalculationSourceIssue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

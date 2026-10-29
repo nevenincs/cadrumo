@@ -23,7 +23,8 @@ import pytest
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
 from ....core.hashing import content_hash_hex
-from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 from ...exchange_rate_provider import exchange_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice

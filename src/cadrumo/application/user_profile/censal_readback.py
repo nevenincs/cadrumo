@@ -9,6 +9,7 @@ from ...core.errors.hierarchy import InternalInvariantError
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
 from ..operations.persistence.journal import (
     OperationJournal,
+    OperationPersistedSnapshot,
     OperationRecoveryInventoryDisposition,
     OperationSecureReferenceStore,
 )
@@ -45,27 +46,37 @@ async def read_latest_censal_observation(
             if entry.disposition is not OperationRecoveryInventoryDisposition.TERMINAL:
                 continue
             snapshot = await journal.load(entry.operation_id)
-            if (
-                snapshot.identity.subject_ref != subjects.get(snapshot.identity.definition_id)
-                or snapshot.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            ):
-                continue
-            receipt = snapshot.terminal_receipt
-            if receipt is None or receipt.result_ref is None:
-                raise InternalInvariantError("settled census capture has no result reference")
-            if snapshot.identity.definition_id == CENSAL_PREVIEW_OPERATION_DEFINITION_ID:
-                preview = await operands.resolve(receipt.result_ref, CensalPreviewOperationResult)
-                if preview.profile_id != profile_id:
-                    raise InternalInvariantError("stored census preview belongs to another profile")
-                observation = preview.observation
-            else:
-                result = await operands.resolve(receipt.result_ref, CensalOperationResult)
-                reviewed = await operands.resolve(result.reviewed_proposal_digest, CensalReviewedOperand)
-                if reviewed.baseline.profile_id != str(profile_id):
-                    raise InternalInvariantError("stored census review belongs to another profile")
-                observation = reviewed.observation
+            observation = await _snapshot_observation(snapshot, profile_id, subjects, operands)
             if observation is not None and (latest is None or observation.captured_at > latest.captured_at):
                 latest = observation
         if not page.has_more:
             return latest
         after = page.next_cursor
+
+
+async def _snapshot_observation(
+    snapshot: OperationPersistedSnapshot,
+    profile_id: UUID,
+    subjects: dict[str, str],
+    operands: OperationSecureReferenceStore,
+) -> CensalObservation | None:
+    if (
+        snapshot.identity.subject_ref != subjects.get(snapshot.identity.definition_id)
+        or snapshot.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+    ):
+        return None
+    receipt = snapshot.terminal_receipt
+    if receipt is None or receipt.result_ref is None:
+        raise InternalInvariantError("settled census capture has no result reference")
+    if snapshot.identity.definition_id == CENSAL_PREVIEW_OPERATION_DEFINITION_ID:
+        preview = await operands.resolve(receipt.result_ref, CensalPreviewOperationResult)
+        if preview.profile_id != profile_id:
+            raise InternalInvariantError("stored census preview belongs to another profile")
+        observation = preview.observation
+    else:
+        result = await operands.resolve(receipt.result_ref, CensalOperationResult)
+        reviewed = await operands.resolve(result.reviewed_proposal_digest, CensalReviewedOperand)
+        if reviewed.baseline.profile_id != str(profile_id):
+            raise InternalInvariantError("stored census review belongs to another profile")
+        observation = reviewed.observation
+    return observation

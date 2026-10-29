@@ -31,7 +31,7 @@ from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentVali
 from ...domain.attachments.protocols import AttachmentStoreProtocol as _AttachmentStoreProtocol
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import append_bucket_event, build_bucket_event
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol

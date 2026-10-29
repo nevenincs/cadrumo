@@ -15,10 +15,10 @@ from decimal import Decimal
 import pytest
 
 from ......application.modelo.source_policy import SourceSurface
+from ......application.modelo.work_form_findings import ModeloFormIssue
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloWorkForm,
 )

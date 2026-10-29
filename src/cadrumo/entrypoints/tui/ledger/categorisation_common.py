@@ -32,8 +32,9 @@ from ..components.dialogs import ConfirmScreen
 from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
 from ..operations.outcome import OperationOutcomeUnknownError
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _CLASSIFICATION_LOCALE_KEYS: Final[dict[BusinessClassification, str]] = {
     BusinessClassification.BUSINESS: "tui.ledger.categorisation.classification.business",

@@ -12,7 +12,7 @@ import pytest
 from textual.pilot import Pilot
 from textual.widgets import Static
 
-from ......application.modelo.calculation_actions import (
+from ......application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ......application.modelo.casilla_help import ModeloCasillaHelpCardV1

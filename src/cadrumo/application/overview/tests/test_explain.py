@@ -19,7 +19,7 @@ from cadrumo.domain.deadlines.models import IrpfIncomeCategory, IVARegime
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.calendar_shift import shift_by_calendar_years
-from ....domain.calculations.registry.applicability import (
+from ....domain.calculations.registry.applicability_models import (
     ApplicabilityVerdict,
     ModeloApplicabilityExclusion,
     ModeloApplicabilityRule,

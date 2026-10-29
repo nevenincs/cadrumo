@@ -37,8 +37,9 @@ from ....application.filing.producer_snapshot import (
 )
 from ....application.modelo.action_errors import AmendmentM303RectificativaMotiveError
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.export import ModeloExportCommand, export_modelo_revision
+from ....application.modelo.export import export_modelo_revision
 from ....application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
+from ....application.modelo.export_contracts import ModeloExportCommand
 from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.filing_producer_key import FilingProducerKey
 from ....core.modelo import Modelo
@@ -96,10 +97,8 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ...adapter_composition import (
-    build_amendment_action_ports,
-    build_modelo_export_ports,
-)
+from ...adapter_composition_ports import build_modelo_export_ports
+from ...adapter_composition_work_ports import build_amendment_action_ports
 from ...calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 from ...ledger_action_composition import compose_ledger_action_ports
 from .cli_runner import invoke_cached_cli

@@ -39,9 +39,9 @@ from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ....application.ledger.evidence_ports import LedgerEvidencePorts
+from ....application.ledger.manual_update import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ....application.ledger.models import (
     LedgerRemovalBlocker,
     ManualLedgerTransactionCommand,

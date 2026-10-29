@@ -27,9 +27,10 @@ from types import MappingProxyType
 from typing import Final
 
 from .....application.modelo.source_policy import SourceFamily
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormBindingInputsBlock,
+    ModeloFormBlock,
     ModeloFormContextFieldBlock,
     ModeloFormField,
     ModeloFormFieldBlock,
@@ -487,6 +488,34 @@ def section_heading_text(
     return section.heading.text if mark is None else f"{mark.glyph} {section.heading.text}"
 
 
+def _context_note(block: ModeloFormContextFieldBlock) -> CasillaListNote:
+    value = (
+        block.value_text
+        if block.value_text is not None
+        else context_value_text(block.value, OutputLanguage(output_language()))
+    )
+    return CasillaListNote(f"{block.label.text}: {value}", indent=1)
+
+
+def _block_items(
+    block: ModeloFormBlock, staged: Mapping[AddressKey, StagedDisplay], mode: WorkbenchFilter, page: WorkbenchPage
+) -> list[CasillaListItem]:
+    items: list[CasillaListItem] = []
+    if isinstance(block, ModeloFormFieldBlock):
+        if _shown(block.field, staged, mode, page):
+            items.append(_entry(block.field, staged, page=page))
+    elif isinstance(block, ModeloFormBindingInputsBlock):
+        items.extend(_entry(field, staged, page=page) for field in block.fields if _shown(field, staged, mode, page))
+    elif isinstance(block, ModeloFormGridBlock):
+        items.extend(_grid_items(block, staged, mode, page))
+    elif isinstance(block, ModeloFormContextFieldBlock):
+        if mode is WorkbenchFilter.ALL:
+            items.append(_context_note(block))
+    elif mode is WorkbenchFilter.ALL:
+        items.extend(_record_items(block))
+    return items
+
+
 def _section_items(
     section: ModeloFormSection,
     staged: Mapping[AddressKey, StagedDisplay],
@@ -495,25 +524,7 @@ def _section_items(
 ) -> list[CasillaListItem]:
     items: list[CasillaListItem] = []
     for block in section.blocks:
-        if isinstance(block, ModeloFormFieldBlock):
-            if _shown(block.field, staged, mode, page):
-                items.append(_entry(block.field, staged, page=page))
-        elif isinstance(block, ModeloFormBindingInputsBlock):
-            items.extend(
-                _entry(field, staged, page=page) for field in block.fields if _shown(field, staged, mode, page)
-            )
-        elif isinstance(block, ModeloFormGridBlock):
-            items.extend(_grid_items(block, staged, mode, page))
-        elif isinstance(block, ModeloFormContextFieldBlock):
-            if mode is WorkbenchFilter.ALL:
-                value = (
-                    block.value_text
-                    if block.value_text is not None
-                    else context_value_text(block.value, OutputLanguage(output_language()))
-                )
-                items.append(CasillaListNote(f"{block.label.text}: {value}", indent=1))
-        elif mode is WorkbenchFilter.ALL:
-            items.extend(_record_items(block))
+        items.extend(_block_items(block, staged, mode, page))
     if not items:
         return []
     records = page.records.get(section.id)

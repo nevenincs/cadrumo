@@ -8,12 +8,11 @@ from typing import cast
 import pytest
 
 from cadrumo.application.state_projection import (
-    ModeloReadinessRequest,
-    ModeloRegistryRefusalCause,
     _registry_readiness_refusal,
     _registry_readiness_revision_mismatch_refusal,
     _resolve_modelo_readiness_registry,
 )
+from cadrumo.application.state_projection_models import ModeloReadinessRequest, ModeloRegistryRefusalCause
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 

@@ -23,14 +23,13 @@ from rich.console import Console
 from textual.content import Content
 from textual.widgets import OptionList, Static
 
+from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,
     ModeloFormFieldBlock,
-    ModeloFormIssue,
     ModeloFormOrigin,
     ModeloFormPage,
     ModeloFormSection,

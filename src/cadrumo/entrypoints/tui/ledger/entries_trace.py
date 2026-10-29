@@ -28,10 +28,11 @@ from ..components.language import localized, repaint_tables
 from ..components.theme import tokenised
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .entries_common import joined, lifecycle_label
 from .entries_doors import LedgerEntriesDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 
 def track_lines(track: LedgerTrackProjection) -> tuple[str, ...]:
@@ -242,22 +243,27 @@ class LedgerEntryTraceScreen(LedgerWorkspaceScreen):
                     key=event.event_id,
                 )
         elif self.typed is not None:
-            heading.update(tr("tui.ledger.entry_tools.trace.typed_heading", count=self.typed.event_count))
-            held = sum(1 for event in self.typed.events if event.model_reason_withheld or event.output_path_withheld)
-            withheld.update(tr("tui.ledger.entry_tools.trace.withheld", count=held) if held else "")
-            for typed_event in self.typed.events:
-                details = typed_event.details.model_dump(exclude_none=True)
-                table.add_row(
-                    typed_event.occurred_at.isoformat(timespec="minutes"),
-                    typed_event.event_type.value,
-                    typed_event.actor,
-                    "; ".join(f"{name}: {value}" for name, value in details.items()),
-                    key=typed_event.event_id,
-                )
+            self._paint_typed_history(table, heading, withheld, self.typed)
         else:
             heading.update("")
             withheld.update("")
         table.absorb_surplus_width()
+
+    def _paint_typed_history(
+        self, table: ContentDataTable[str], heading: Static, withheld: Static, typed: LedgerHistoryTypedProjection
+    ) -> None:
+        heading.update(tr("tui.ledger.entry_tools.trace.typed_heading", count=typed.event_count))
+        held = sum(1 for event in typed.events if event.model_reason_withheld or event.output_path_withheld)
+        withheld.update(tr("tui.ledger.entry_tools.trace.withheld", count=held) if held else "")
+        for typed_event in typed.events:
+            details = typed_event.details.model_dump(exclude_none=True)
+            table.add_row(
+                typed_event.occurred_at.isoformat(timespec="minutes"),
+                typed_event.event_type.value,
+                typed_event.actor,
+                "; ".join(f"{name}: {value}" for name, value in details.items()),
+                key=typed_event.event_id,
+            )
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Re-read the typed history, or read the full event record on request."""

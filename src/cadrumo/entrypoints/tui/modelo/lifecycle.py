@@ -48,7 +48,7 @@ from ....application.modelo.export_projection import ModeloExportPublicResultV3
 from ....application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
-from ....application.modelo.operation_definitions import (
+from ....application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
@@ -306,22 +306,7 @@ class ModeloWorkspaceLifecycleDoor:
         the facts the result would have carried.
         """
         if projection.definition_id == CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID:
-            if (
-                self.read_review_result is None
-                or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-            ):
-                return None
-            try:
-                result = await self.read_review_result(projection)
-                if (
-                    result.calculation_revision_id != self.calculation_revision_id
-                    or result.work_unit_id != self.work_unit_id
-                    or result.profile_id != self.profile_id
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return result
-            except (RefusalError, FrontendRefusedError):
-                return None
+            return await self._settled_review_result(projection)
         if (
             self.read_export_result is None
             or projection.definition_id != MODELO_EXPORT_OPERATION_DEFINITION_ID
@@ -331,6 +316,23 @@ class ModeloWorkspaceLifecycleDoor:
             return None
         try:
             return await self.read_export_result(projection)
+        except (RefusalError, FrontendRefusedError):
+            return None
+
+    async def _settled_review_result(
+        self, projection: OperationPublicProjectionV1
+    ) -> CalculationReviewXlsxResult | None:
+        if self.read_review_result is None or projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+            return None
+        try:
+            result = await self.read_review_result(projection)
+            if (
+                result.calculation_revision_id != self.calculation_revision_id
+                or result.work_unit_id != self.work_unit_id
+                or result.profile_id != self.profile_id
+            ):
+                raise RefusalError(RefusalCode.INVALID_FRAME)
+            return result
         except (RefusalError, FrontendRefusedError):
             return None
 

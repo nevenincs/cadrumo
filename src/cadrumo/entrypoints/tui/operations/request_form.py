@@ -155,6 +155,31 @@ def _classified(node: _Schema, definitions: _Schema) -> tuple[RequestFieldKind, 
     return RequestFieldKind.JSON, ()
 
 
+def _object_skeleton(resolved: _Schema, definitions: _Schema, depth: int) -> object:
+    properties = resolved.get("properties")
+    required = resolved.get("required")
+    if depth <= 0 or not isinstance(properties, Mapping) or not isinstance(required, list):
+        return {}
+    fields = cast("_Schema", properties)
+    return {
+        name: json_skeleton(fields.get(name), definitions, depth=depth - 1)
+        for name in cast("list[object]", required)
+        if isinstance(name, str)
+    }
+
+
+def _scalar_skeleton(kind: object) -> object:
+    if kind == "array":
+        return []
+    if kind == "string":
+        return ""
+    if kind in {"integer", "number"}:
+        return 0
+    if kind == "boolean":
+        return False
+    return None
+
+
 def json_skeleton(node: object, definitions: _Schema, *, depth: int = _SKELETON_DEPTH) -> object:
     """Return the smallest document shaped like ``node``, for a person to fill in."""
     resolved = _resolved(node, definitions)
@@ -173,25 +198,8 @@ def json_skeleton(node: object, definitions: _Schema, *, depth: int = _SKELETON_
         return json_skeleton(alternatives[0], definitions, depth=depth)
     kind = resolved.get("type")
     if kind == "object":
-        properties = resolved.get("properties")
-        required = resolved.get("required")
-        if depth <= 0 or not isinstance(properties, Mapping) or not isinstance(required, list):
-            return {}
-        fields = cast("_Schema", properties)
-        return {
-            name: json_skeleton(fields.get(name), definitions, depth=depth - 1)
-            for name in cast("list[object]", required)
-            if isinstance(name, str)
-        }
-    if kind == "array":
-        return []
-    if kind == "string":
-        return ""
-    if kind in {"integer", "number"}:
-        return 0
-    if kind == "boolean":
-        return False
-    return None
+        return _object_skeleton(resolved, definitions, depth)
+    return _scalar_skeleton(kind)
 
 
 def _initial_text(kind: RequestFieldKind, node: _Schema, definitions: _Schema, *, required: bool) -> str:
@@ -200,6 +208,15 @@ def _initial_text(kind: RequestFieldKind, node: _Schema, definitions: _Schema, *
             return json.dumps(node["default"], ensure_ascii=False, indent=2)
         return json.dumps(json_skeleton(node, definitions), ensure_ascii=False, indent=2) if required else ""
     return _scalar_text(node.get("default"))
+
+
+def _field_description(node: _Schema, definitions: _Schema) -> str:
+    description = node.get("description")
+    if not isinstance(description, str):
+        only = _alternatives(node, definitions)
+        nested = only[0].get("description") if len(only) == 1 else None
+        description = nested if isinstance(nested, str) else ""
+    return description
 
 
 def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1, ...]:
@@ -224,11 +241,7 @@ def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1
         kind, choices = _classified(node, definitions)
         required = name in required_names
         session_fixed = name == _PROFILE_FIELD and kind is RequestFieldKind.UUID
-        description = node.get("description")
-        if not isinstance(description, str):
-            only = _alternatives(node, definitions)
-            nested = only[0].get("description") if len(only) == 1 else None
-            description = nested if isinstance(nested, str) else ""
+        description = _field_description(node, definitions)
         fields.append(
             RequestFieldV1(
                 name=name,
@@ -245,6 +258,30 @@ def request_fields(schema: _Schema, *, profile_id: UUID) -> tuple[RequestFieldV1
     return tuple(fields)
 
 
+def _number_value(stripped: str) -> object:
+    try:
+        number = json.loads(stripped)
+    except ValueError:
+        return RequestFieldProblem.NUMBER
+    if isinstance(number, bool) or not isinstance(number, (int, float)):
+        return RequestFieldProblem.NUMBER
+    return number
+
+
+def _enum_value(field: RequestFieldV1, stripped: str) -> object:
+    for choice, label in zip(field.choices, field.choice_labels, strict=True):
+        if label == stripped:
+            return choice
+    return RequestFieldProblem.CHOICE
+
+
+def _json_value(text: str) -> object:
+    try:
+        return json.loads(text)
+    except ValueError:
+        return RequestFieldProblem.JSON
+
+
 def _field_value(field: RequestFieldV1, text: str) -> object:
     """Return the JSON value ``text`` stands for, or the problem that prevents reading it."""
     stripped = text.strip()
@@ -255,25 +292,13 @@ def _field_value(field: RequestFieldV1, text: str) -> object:
         except ValueError:
             return RequestFieldProblem.INTEGER
     if kind is RequestFieldKind.NUMBER:
-        try:
-            number = json.loads(stripped)
-        except ValueError:
-            return RequestFieldProblem.NUMBER
-        if isinstance(number, bool) or not isinstance(number, (int, float)):
-            return RequestFieldProblem.NUMBER
-        return number
+        return _number_value(stripped)
     if kind is RequestFieldKind.BOOLEAN:
         return stripped == "true" if stripped in {"true", "false"} else RequestFieldProblem.CHOICE
     if kind is RequestFieldKind.ENUM:
-        for choice, label in zip(field.choices, field.choice_labels, strict=True):
-            if label == stripped:
-                return choice
-        return RequestFieldProblem.CHOICE
+        return _enum_value(field, stripped)
     if kind is RequestFieldKind.JSON:
-        try:
-            return json.loads(text)
-        except ValueError:
-            return RequestFieldProblem.JSON
+        return _json_value(text)
     if kind is RequestFieldKind.PATH:
         # A relative path means what it means on the command line: relative to
         # where this process runs, which is not where the profile worker runs.

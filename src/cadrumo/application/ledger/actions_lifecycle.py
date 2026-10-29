@@ -20,13 +20,13 @@ from datetime import datetime
 from ...core.decimal.formatting import format_decimal
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.classification_origin import with_classification_origin, written_classification_origin
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
-from ...domain.transactions.lineage_models import TransactionLifecycleLineageEntry
+from ...domain.transactions.lineage_models import SplitLineage, TransactionLifecycleLineageEntry
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.execution_actor import actor_label_is_automation
 from .action_ports import LedgerActionPorts
@@ -759,17 +759,7 @@ def _require_no_double_count_with_merge(
         return
     if lineage.role is SplitRole.MERGED:
         active_originals = tuple(
-            sorted(
-                other.transaction_id
-                for other in catalogue.values()
-                if other.lifecycle_state is TransactionLifecycleState.ACTIVE
-                and other.split_lineage is not None
-                and other.split_lineage.split_group_id == lineage.split_group_id
-                and (
-                    other.split_lineage.role is SplitRole.PARENT
-                    or other.transaction_id in lineage.sibling_transaction_ids
-                )
-            ),
+            sorted(other.transaction_id for other in catalogue.values() if _active_merge_original(other, lineage)),
         )
         if active_originals:
             raise TransactionValidationError(
@@ -785,16 +775,7 @@ def _require_no_double_count_with_merge(
         return
     active_merged = tuple(
         sorted(
-            other.transaction_id
-            for other in catalogue.values()
-            if other.lifecycle_state is TransactionLifecycleState.ACTIVE
-            and other.split_lineage is not None
-            and other.split_lineage.role is SplitRole.MERGED
-            and other.split_lineage.split_group_id == lineage.split_group_id
-            and (
-                lineage.role is SplitRole.PARENT
-                or current.transaction_id in other.split_lineage.sibling_transaction_ids
-            )
+            other.transaction_id for other in catalogue.values() if _active_merge_successor(other, current, lineage)
         ),
     )
     if active_merged:
@@ -1013,3 +994,22 @@ __all__ = [
     "restore_manual_transaction",
     "stash_manual_transaction",
 ]
+
+
+def _active_merge_original(other: Transaction, lineage: SplitLineage) -> bool:
+    return (
+        other.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and other.split_lineage is not None
+        and other.split_lineage.split_group_id == lineage.split_group_id
+        and (other.split_lineage.role is SplitRole.PARENT or other.transaction_id in lineage.sibling_transaction_ids)
+    )
+
+
+def _active_merge_successor(other: Transaction, current: Transaction, lineage: SplitLineage) -> bool:
+    return (
+        other.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and other.split_lineage is not None
+        and other.split_lineage.role is SplitRole.MERGED
+        and other.split_lineage.split_group_id == lineage.split_group_id
+        and (lineage.role is SplitRole.PARENT or current.transaction_id in other.split_lineage.sibling_transaction_ids)
+    )

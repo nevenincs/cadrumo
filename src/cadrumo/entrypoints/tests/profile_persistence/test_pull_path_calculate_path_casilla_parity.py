@@ -84,7 +84,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.aggregation.retenciones import (
@@ -102,7 +102,7 @@ from cadrumo.application.calculations.relation_prefill import (
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.binding_resolution import resolve_declaration_period_inputs
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -141,7 +141,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation

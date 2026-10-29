@@ -102,8 +102,9 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import InvoiceKind, IvaRateKind
@@ -121,7 +122,8 @@ from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..oss_ioss import _candidate_for_invoice_line
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
-from ..renta_ledger import RentaCategoryDeductionRules, RentaLedgerAggregationIssue, _classify_renta_transaction
+from ..renta_ledger import RentaCategoryDeductionRules, _classify_renta_transaction
+from ..renta_ledger_models import RentaLedgerAggregationIssue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

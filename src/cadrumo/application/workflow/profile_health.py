@@ -19,7 +19,7 @@ See Also:
     :class:`~domain.user_profile.values.UserProfileRecord`
         Encrypted profile facts whose completeness determines the final health
         status.
-    :class:`~application.state_projection.ProjectionActiveProfile`
+    :class:`~application.state_projection_models.ProjectionActiveProfile`
         Operator-state projection that carries this redacted health verdict to
         status and diagnostics surfaces.
 """
@@ -48,7 +48,7 @@ from ..operator_actions.models import ActionArgumentBinding, ActionReference, Co
 from ..operator_actions.preconditions import active_profile_pointer_repair_verdict, no_action_precondition_verdict
 from ..profile_preconditions import inspect_active_profile_precondition, profile_session_failure_verdict
 from ..user_profile.completeness import conditional_profile_missing_required, missing_required_field_paths
-from ..user_profile.custody_ports import ProfileCustodyRecordIntegrityError
+from ..user_profile.custody_crypto_contracts import ProfileCustodyRecordIntegrityError
 from ..user_profile.keys_validation import validate_profile_values
 from ..user_profile.profile_keys import profile_keys
 from ..user_profile.profile_pointer import active_profile_pointer_transaction

@@ -74,7 +74,7 @@ def test_union_does_not_support_max_total_bytes() -> None:
 # --------------------------------------------------------------------- #
 
 
-def test_cutoff_alone_removes_only_expired_entries() -> None:
+def test_timeout_alone_removes_only_expired_entries() -> None:
     entries = [_entry("fresh", 10), _entry("stale", 1)]
 
     keep, remove = select_filesystem_retention_survivors(entries, timestamp=_timestamp, cutoff=5)
@@ -83,13 +83,13 @@ def test_cutoff_alone_removes_only_expired_entries() -> None:
     assert _names(remove) == {"stale"}
 
 
-def test_cutoff_boundary_is_exclusive() -> None:
+def test_timeout_boundary_is_exclusive() -> None:
     """An entry exactly at the cutoff survives; strictly older is removed."""
-    entries = [_entry("at_cutoff", 5), _entry("just_older", 4)]
+    entries = [_entry("at_timeout", 5), _entry("just_older", 4)]
 
     keep, remove = select_filesystem_retention_survivors(entries, timestamp=_timestamp, cutoff=5)
 
-    assert _names(keep) == {"at_cutoff"}
+    assert _names(keep) == {"at_timeout"}
     assert _names(remove) == {"just_older"}
 
 
@@ -121,7 +121,7 @@ def test_max_total_bytes_alone_removes_oldest_first_until_it_fits() -> None:
 # --------------------------------------------------------------------- #
 
 
-def test_cutoff_then_max_count_composed() -> None:
+def test_timeout_then_max_count_composed() -> None:
     entries = [
         _entry("expired", 1),
         _entry("survivor_a", 10),
@@ -142,7 +142,7 @@ def test_cutoff_then_max_count_composed() -> None:
     assert _names(keep) == {"survivor_b", "survivor_c"}
 
 
-def test_cutoff_then_bytes_composed_mirrors_run_trace_shape() -> None:
+def test_timeout_then_bytes_composed_mirrors_run_trace_shape() -> None:
     entries = [
         _entry("expired", 1, 5000),
         _entry("oldest", 10, 1000),

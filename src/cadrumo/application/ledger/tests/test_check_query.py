@@ -22,11 +22,13 @@ from pathlib import Path
 import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ..check_query import ledger_check_years, read_ledger_check

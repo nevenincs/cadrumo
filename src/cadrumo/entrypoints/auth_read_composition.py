@@ -12,7 +12,8 @@ from ..adapters.persistence.storage.operator_scope import build_operator_scope_p
 from ..application.auth.read_operation import AuthReadPorts
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
-from .adapter_composition import build_operator_probe_ports, build_state_projection_read_ports
+from .adapter_composition_ports import build_operator_probe_ports
+from .adapter_composition_work_ports import build_state_projection_read_ports
 
 
 def compose_auth_read_ports(profile_id: UUID) -> AuthReadPorts:

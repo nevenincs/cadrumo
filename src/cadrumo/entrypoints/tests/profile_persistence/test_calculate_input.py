@@ -11,12 +11,11 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.modelo.calculate_input import (
+from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle
+from cadrumo.application.modelo.calculate_input_validation import (
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
     ModeloCalculateTextInputError,
-    WorkCalculateInputBundle,
-    build_work_calculate_input_bundle,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -25,7 +24,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 

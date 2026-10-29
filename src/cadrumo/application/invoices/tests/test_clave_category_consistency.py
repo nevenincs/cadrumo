@@ -19,7 +19,7 @@ import pytest
 from ....core.aggregation import IntracomOperationType
 from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
 from ....domain.iva.schema import IvaCategory
-from ..source_resolver import iva_category_for_operation_type
+from ..source_observations import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

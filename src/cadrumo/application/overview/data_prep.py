@@ -54,7 +54,7 @@ from ..operator_actions.models import DeclaredNextAction
 from .next_actions import declare_next_action
 
 if TYPE_CHECKING:
-    from ...domain.invoices.models import InvoiceCatalogue
+    from ...domain.invoices.catalogue import InvoiceCatalogue
     from ...domain.transactions.models import Transaction
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
     from ..ledger.evidence import PurchaseInvoiceEvidence
@@ -173,7 +173,7 @@ def build_data_prep_walkthrough(
             :class:`~domain.transactions.protocols.TransactionCatalogueRepositoryProtocol`
             for ``bucket_id``.
         invoice_catalogue: Loaded
-            :class:`~domain.invoices.models.InvoiceCatalogue` for ``bucket_id``.
+            :class:`~domain.invoices.catalogue.InvoiceCatalogue` for ``bucket_id``.
         evidence_records: Loaded purchase-invoice evidence rows
             (``tuple[PurchaseInvoiceEvidence, ...]``) for ``bucket_id``.
         preflight_report: Loaded

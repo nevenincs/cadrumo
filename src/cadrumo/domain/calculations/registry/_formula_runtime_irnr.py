@@ -5,7 +5,7 @@ keep that module under its size budget (`aeat-architecture-boundaries`,
 `aeat-architecture-boundaries`). Holds the two IRNR-specific formula
 ops -- ``irnr_resolve_tipo_gravamen`` and ``m210_resolve_base_imponible`` --
 and their private argument-resolution and rate-computation helpers. Dispatch
-still lives in :func:`~domain.calculations.registry.formula_runtime.evaluate_with_context`,
+still lives in :func:`~domain.calculations.registry.formula_expression.evaluate_with_context`,
 which imports this module at package level and calls
 :func:`evaluate_irnr_resolve_tipo_gravamen` /
 :func:`evaluate_m210_resolve_base_imponible` exactly as it calls the sibling
@@ -17,7 +17,7 @@ runtime import cycle back into the dispatcher module.
 
 See Also:
     :mod:`~domain.calculations.registry.formula_runtime`
-        Owns the dispatcher and :class:`~domain.calculations.registry.formula_runtime.EvalContext`.
+        Owns the dispatcher and :class:`~domain.calculations.registry.formula_expression.EvalContext`.
     :mod:`~domain.calculations.registry.formula_runtime_ops`
         Owns the shared unresolved-formula error types,
         :class:`RegistryUnresolvedOutcomeReason`, and
@@ -61,7 +61,7 @@ from .renta_codes_catalogue import is_ue_eea_country_code
 from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
-    from .formula_runtime import EvalContext
+    from .formula_expression import EvalContext
 
     _EvalContext = EvalContext
 

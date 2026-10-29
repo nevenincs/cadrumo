@@ -49,7 +49,7 @@ from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .actions_common import build_manual_ledger_result, resolve_revision_guarded_transaction_repository
-from .actions_manual import ledger_transaction_result_payload, link_manual_transaction_invoice
+from .actions_manual import link_manual_transaction_invoice
 from .commit_fence import (
     LedgerCommitAttemptTracker,
     RevisionGuardedTrackedLedgerTransactionRepository,
@@ -60,6 +60,7 @@ from .export_link_operation_ports import (
     settle_export_link_failure,
 )
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_LINK_OPERATION_DEFINITION_ID = "ledger.link"

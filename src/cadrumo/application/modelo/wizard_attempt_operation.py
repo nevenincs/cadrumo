@@ -37,13 +37,13 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPortsFactory
-from .metadata_projection import ModeloWorkMetadataSnapshot
-from .operation_definitions import (
+from .calculation_operation import (
     calculate_prepared_modelo_work,
     calculation_public_result,
     prepare_modelo_work_calculation,
     replaced_calculation_head,
 )
+from .metadata_projection import ModeloWorkMetadataSnapshot
 from .work_calculation_contracts import ModeloWorkCalculatePublicResultV2, ModeloWorkCalculateRequest
 from .work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
 from .work_lifecycle_ports import ActiveWorkLifecyclePortsFactory

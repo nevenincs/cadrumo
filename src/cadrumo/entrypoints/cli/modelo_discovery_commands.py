@@ -27,7 +27,7 @@ from ...application.reference_catalogue import (
     ReferenceQueryError,
     refuse_ceded_autonomic_modelo,
 )
-from ...application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
+from ...application.state_projection_models import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
@@ -49,7 +49,7 @@ from .modelo_bindings_results import (
     ModeloBindingsListResult,
     ModeloBindingsPreviewResult,
 )
-from .modelo_results import ModeloRequiresResult
+from .modelo_query_results import ModeloRequiresResult
 from .operation_modelo_query_read import (
     read_modelo_bindings_list,
     read_modelo_bindings_resolve,

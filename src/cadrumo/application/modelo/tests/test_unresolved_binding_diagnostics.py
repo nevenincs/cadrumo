@@ -31,9 +31,7 @@ import pytest
 
 from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.formula_runtime import (
-    evaluate_expression,
-)
+from ....domain.calculations.registry.formula_expression import evaluate_expression
 from ....domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_formula import FormulaExpression

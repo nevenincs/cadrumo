@@ -75,7 +75,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.aggregation.foreign_assets import ForeignAssetIngestObservation
 from ....application.calculations.foreign_asset_redeclaration import modelo_720_evidence_observation
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -102,7 +102,7 @@ from ....domain.foreign_assets.valuation import M720ValuationEvent
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.verification_report import VerificationReport
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ...adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 

@@ -29,7 +29,7 @@ from ....domain.iva.classification import (
     resolve_iva_classification_inputs,
 )
 from ....domain.iva.schema import IvaCategory
-from ..source_resolver import iva_category_for_operation_type
+from ..source_observations import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

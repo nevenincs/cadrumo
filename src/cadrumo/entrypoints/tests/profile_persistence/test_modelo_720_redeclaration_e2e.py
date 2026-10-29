@@ -74,7 +74,8 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.foreign_asset_redeclaration import modelo_720_prior_baseline_observation
-from ....application.modelo.calculation_actions import calculate_modelo_revision, resolve_bucket_source_mesh
+from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.aggregation import BindingSourceKind

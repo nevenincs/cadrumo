@@ -97,7 +97,7 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
 from ....domain.calculations.registry.tests.registry_observations import revision_id_for_observation
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
 
 __all__ = ["register_wizard_catalogue", "secure_objects"]
 
@@ -110,7 +110,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.action_errors import ModeloRequiredBindingsMissingError
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )

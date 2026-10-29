@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from ....domain.user_profile.values import UserProfileFactValue
-from ..profile_binding import inject_ordinary_work_maritime_facts
+from ..profile_derived_facts import inject_ordinary_work_maritime_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

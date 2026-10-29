@@ -137,21 +137,30 @@ _DIAGNOSTIC_CARRYING_EVENTS = (
 )
 
 
+def _progress_values(
+    progress: OperationPublicProgressEventV1 | None,
+) -> tuple[int | None, int | None, str | None, str | None]:
+    if progress is None:
+        return None, None, None, None
+    return progress.completed, progress.total, progress.unit_code, progress.subject_code
+
+
 def _project_row(event: OperationPublicEventV1) -> OperationModalLogRowV1:
     severity = event.severity if isinstance(event, OperationPublicLogEventV1) else None
     diagnostic_ref = event.diagnostic_ref if isinstance(event, _DIAGNOSTIC_CARRYING_EVENTS) else None
     notice = event if isinstance(event, OperationPublicNoticeEventV1) else None
     progress = event if isinstance(event, OperationPublicProgressEventV1) else None
+    completed, total, unit_code, subject_code = _progress_values(progress)
     return OperationModalLogRowV1(
         sequence=event.sequence,
         timestamp=event.timestamp,
         kind=event.kind,
         code=event.code,
         phase_code=event.phase_code if isinstance(event, OperationPublicPhaseEventV1) else None,
-        completed=None if progress is None else progress.completed,
-        total=None if progress is None else progress.total,
-        unit_code=None if progress is None else progress.unit_code,
-        subject_code=None if progress is None else progress.subject_code,
+        completed=completed,
+        total=total,
+        unit_code=unit_code,
+        subject_code=subject_code,
         severity=severity,
         diagnostic_ref=diagnostic_ref,
         notice_code=None if notice is None else notice.notice_code,

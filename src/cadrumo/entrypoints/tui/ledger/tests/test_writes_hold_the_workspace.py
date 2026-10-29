@@ -61,7 +61,7 @@ from ..categorisation_doors import LedgerRuleAddDoorV1, LedgerRuleApplyDoorV1, L
 from ..categorisation_review import LedgerSuggestionReviewScreen
 from ..categorisation_rules import LedgerRulesScreen
 from ..classification import LedgerClassificationScreen
-from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..controller import LedgerWorkspaceController
 from ..entries_add import LedgerEntryAddScreen
 from ..entries_browse import LedgerEntriesBrowseScreen
 from ..entries_doors import LedgerAddDoorV1, LedgerExportDoorV1, LedgerRemoveDoorV1, LedgerResetDoorV1
@@ -72,6 +72,7 @@ from ..evidence_files_doors import LedgerEvidenceFilesDoorV1
 from ..evidence_files_records import LedgerEvidenceFilesRecordsScreen
 from ..evidence_files_write import LedgerEvidenceFilesWriteScreen
 from ..import_flow import LedgerImportScreen
+from ..invoice_detail import LedgerInvoiceDetailScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..invoices_import import LedgerInvoiceImportScreen
 from ..invoices_wizard import LedgerInvoiceWizardScreen
@@ -90,12 +91,12 @@ from ..models import (
 )
 from ..own_accounts import LedgerOwnAccountDoorV1, LedgerOwnAccountsScreen
 from ..reconciliation import LedgerReconciliationScreen
-from ..record_views import LedgerInvoiceDetailScreen
 from ..registers_capital_goods import LedgerCapitalGoodsDoorV1, LedgerCapitalGoodsScreen
 from ..review import LedgerReviewDoorV1, LedgerReviewScreen
 from ..tools import LedgerToolV1
 from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
+from ..workspace_screen import LedgerWorkspaceScreen
 from .categorisation_fixtures import MemoryDoor, MemoryRuleBook, synthetic_id
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .categorisation_review_fixtures import MemoryReviewController, MemoryReviewDoor

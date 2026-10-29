@@ -24,10 +24,12 @@ from cadrumo.application.modelo.calculation_summary_pdf_ports import (
     CalculationSummaryPdfRequest,
 )
 from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
-    MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,
     build_modelo_lifecycle_operation_definitions,
     build_modelo_lifecycle_operation_registrations,
+)
+from cadrumo.application.modelo.operation_shared import (
+    MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
+    MODELO_WORKSPACE_REFRESH_TARGET_SCHEMA_SUFFIX,
     resolve_modelo_work_unit_refresh_target,
 )
 from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenameRequest
@@ -48,7 +50,7 @@ from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.core.period import Period
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
-from cadrumo.entrypoints.adapter_composition import build_verification_repository_bundle
+from cadrumo.entrypoints.adapter_composition_work_ports import build_verification_repository_bundle
 
 from ...domain.calculations.registry.tests.published_authority import published_snapshot
 

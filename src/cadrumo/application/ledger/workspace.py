@@ -27,7 +27,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, InvoiceId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.service import (
     LinkInconsistency,
     ReconciliationSuggestion,
@@ -41,7 +41,7 @@ from ...domain.modelos.work_unit import WorkUnitCatalogue
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..review.filter import LedgerReviewStatus
-from .actions_manual import ledger_transaction_review_payload
+from .manual_read import ledger_transaction_review_payload
 from .models import LedgerReviewQueryResult, LedgerStatusReport, LedgerTransactionReviewPayload
 from .preflight import LedgerPreflightReport
 
@@ -530,7 +530,7 @@ def project_ledger_workspace(
 
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-    :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+    :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
     :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
     """
     bucket_id = summary.bucket_id

@@ -51,7 +51,7 @@ def compose_ledger_action_ports(
     from ..adapters.persistence.storage.attachment import AttachmentStore
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..core.config import load_settings
-    from .adapter_composition import build_ledger_evidence_ports
+    from .adapter_composition_work_ports import build_ledger_evidence_ports
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 
     settings = load_settings()

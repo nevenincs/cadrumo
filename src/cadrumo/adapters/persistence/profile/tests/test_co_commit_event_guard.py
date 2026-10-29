@@ -21,7 +21,8 @@ from cadrumo.application.ledger.actions_common import save_transaction_catalogue
 from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import build_bucket_event, emit_bucket_events
-from cadrumo.domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from cadrumo.domain.transactions.date_partition import LedgerDatePartition
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

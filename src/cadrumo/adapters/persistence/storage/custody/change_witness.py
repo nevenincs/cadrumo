@@ -154,17 +154,20 @@ class CustodyChangeWitness[T]:
         # Taken before the read: a change during it differs from this probe at the next aged check.
         unnotified = None if self._unnotified is None else self._unnotified()
         if held is not None and unnotified == held.unnotified:
-            with self._lock:
-                if self._held is held and generation == self._generation and not self._closed:
-                    self._held = _Held(generation, read_at, held.value, unnotified)
+            self._hold_if_current(held.value, unnotified, generation, read_at, previous=held)
             return held.value
         value = read()
         if watched:
-            with self._lock:
-                # An invalidation or a change seen by another check during this read is newer than it.
-                if generation == self._generation and not self._closed:
-                    self._held = _Held(generation, read_at, value, unnotified)
+            self._hold_if_current(value, unnotified, generation, read_at)
         return value
+
+    def _hold_if_current(
+        self, value: T, unnotified: object, generation: int, read_at: float, *, previous: _Held[T] | None = None
+    ) -> None:
+        with self._lock:
+            # Invalidation or another check during a read takes precedence over this observation.
+            if (previous is None or self._held is previous) and generation == self._generation and not self._closed:
+                self._held = _Held(generation, read_at, value, unnotified)
 
     def invalidate(self) -> None:
         """Forget the held observation; the owner published a change through its own write."""
@@ -186,13 +189,9 @@ class CustodyChangeWitness[T]:
         if not self._handles:
             self._watch()
             return None, False
-        changed = False
-        for handle in self._handles:
-            signaled = self._notifications.signaled(handle)
-            if signaled is None or (signaled and not self._notifications.rearm(handle)):
-                self._release()
-                return None, False
-            changed = changed or signaled
+        changed = self._consume_notifications()
+        if changed is None:
+            return None, False
         held = self._held
         aged = held is not None and self._monotonic() - held.read_at >= self._maximum_age
         if changed or held is None or (aged and self._unnotified is None):
@@ -200,6 +199,18 @@ class CustodyChangeWitness[T]:
             self._held = None
             return None, False
         return held, aged
+
+    def _consume_notifications(self) -> bool | None:
+        if self._notifications is None:
+            return None
+        changed = False
+        for handle in self._handles:
+            signaled = self._notifications.signaled(handle)
+            if signaled is None or (signaled and not self._notifications.rearm(handle)):
+                self._release()
+                return None
+            changed = changed or signaled
+        return changed
 
     def _watch(self) -> None:
         """Open every notification; a directory the first read creates is watched from the next check."""

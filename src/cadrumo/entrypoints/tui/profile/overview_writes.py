@@ -20,6 +20,16 @@ if TYPE_CHECKING:
     from .overview import ProfileManagerScreen
 
 
+def _stale_write_result(result: ProfileOverview, current: ProfileOverview) -> bool:
+    return result.record_revision < current.record_revision or (
+        result.record_revision == current.record_revision and result.content_digest != current.content_digest
+    )
+
+
+def _needs_auth_refresh(path: str | None) -> bool:
+    return path is None or path == "identity.tax_id" or path.startswith("auth.")
+
+
 class ProfileOverviewWriteMixin:
     """Implement profile write lifecycle, worker settlement, and refusal display."""
 
@@ -229,10 +239,7 @@ class ProfileOverviewWriteMixin:
                 # guard makes a broken host a refusal rather than a redirect.
                 self._refuse(tr("flows.manager.edit.write_failed"))
                 return
-            if worker.result.record_revision < self.overview.record_revision or (
-                worker.result.record_revision == self.overview.record_revision
-                and worker.result.content_digest != self.overview.content_digest
-            ):
+            if _stale_write_result(worker.result, self.overview):
                 self._refuse(tr("flows.manager.edit.stale_result"))
                 return
             changed = worker.result.record_revision > self.overview.record_revision
@@ -252,9 +259,7 @@ class ProfileOverviewWriteMixin:
                 return
             await self.apply_overview(
                 worker.result,
-                refresh_auth=written_path is None
-                or written_path == "identity.tax_id"
-                or written_path.startswith("auth."),
+                refresh_auth=_needs_auth_refresh(written_path),
             )
             self.query_one("#manager-status", PinnedStatusBar).show_success(
                 tr("flows.manager.edit.saved" if changed else "flows.manager.edit.no_change")

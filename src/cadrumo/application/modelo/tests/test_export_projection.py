@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.export_contracts import ModeloExportResult, ModeloIvaWalletDecisionProvenance
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....application.calculations.observations_repository import PriorDomiciliationElectionProjection
@@ -24,7 +25,7 @@ from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ..calculation_summary_pdf_ports import CalculationSummaryCertifier, CalculationSummaryPdfRequest
-from ..export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from ..export_operation import build_modelo_export_definition, build_modelo_export_registration
 from ..export_ports import ModeloExportPorts
 from ..export_projection import (
     ModeloExportCompleteness,
@@ -32,11 +33,7 @@ from ..export_projection import (
     ModeloExportPublicResultV3,
     ModeloFicheroBoePublicReceipt,
 )
-from ..operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    build_modelo_export_definition,
-    build_modelo_export_registration,
-)
+from ..operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from ..review_package_signing_ports import ReviewPackageSigningKeypairCapability
 from ..work_export_contracts import ModeloExportSettledResult
 

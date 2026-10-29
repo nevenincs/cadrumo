@@ -10,7 +10,8 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
-from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
+from ..calendar import build_overview_calendar
+from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_evidence import calendar_filing_evidence_from_sources
 from ..calendar_models import OverviewAeatSubmissionState, OverviewCalendarRange
 from .calendar_test_support import (

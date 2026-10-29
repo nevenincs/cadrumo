@@ -112,7 +112,7 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".modelo_aggregate_commands", "aggregate_modelo", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_results", "ModeloAggregateResult", __package__),
+            DeferredTarget(".modelo_query_results", "ModeloAggregateResult", __package__),
             identity="modelo.aggregate",
         ),
     ),
@@ -158,7 +158,7 @@ MODELO_NONWORK_CALCULATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".modelo_export_commands", "modelo_export_verb", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_results", "ModeloExportPayload", __package__),
+            DeferredTarget(".modelo_query_results", "ModeloExportPayload", __package__),
             identity="modelo.export",
         ),
     ),

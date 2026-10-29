@@ -25,9 +25,10 @@ from ....domain.transactions.enums import TransactionDirection
 from ..components.language import localized
 from ..components.theme import tokenised
 from ..operations.outcome import unknown_outcome_of
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .models import LedgerRecordDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _TEXT_FIELDS: Final[tuple[LedgerUpdatePatchField, ...]] = (
     "description",
@@ -194,18 +195,14 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
     def _stage(self, baseline: LedgerTransactionProjection) -> None:
         refusal = self.query_one("#ledger-refusal", Static)
         refusal.update("")
-        changes: dict[str, str | None] = {}
-        for name in _TEXT_FIELDS:
-            entered = self._entered(name)
-            if entered != _current(baseline, name):
-                changes[name] = None if not entered and name in _OPTIONAL_FIELDS else entered
-        direction = str(cast("Select[str]", self.query_one("#ledger-transaction-direction", Select)).value)
-        if direction != baseline.direction:
-            changes["direction"] = direction
+        changes, direction = self._entered_changes(baseline)
         if not changes:
             refusal.update(tr("tui.ledger.records.no_change"))
             return
-        fields = tuple(name for name in get_args(LedgerUpdatePatchField) if name in changes)
+        fields = cast(
+            "tuple[LedgerUpdatePatchField, ...]",
+            tuple(name for name in get_args(LedgerUpdatePatchField) if name in changes),
+        )
         try:
             patch = LedgerUpdatePatch.model_validate(changes)
         except ValidationError as error:
@@ -228,6 +225,17 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
         )
         self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.records.reviewed"))
         self._set_staged_controls(staged=True)
+
+    def _entered_changes(self, baseline: LedgerTransactionProjection) -> tuple[dict[str, str | None], str]:
+        changes: dict[str, str | None] = {}
+        for name in _TEXT_FIELDS:
+            entered = self._entered(name)
+            if entered != _current(baseline, name):
+                changes[name] = None if not entered and name in _OPTIONAL_FIELDS else entered
+        direction = str(cast("Select[str]", self.query_one("#ledger-transaction-direction", Select)).value)
+        if direction != baseline.direction:
+            changes["direction"] = direction
+        return changes, direction
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Stage a correction, then save exactly the staged fields once."""

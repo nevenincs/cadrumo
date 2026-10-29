@@ -46,12 +46,7 @@ from .actions_common import (
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
 )
-from .actions_manual import (
-    command_from_patch as _command_from_patch,
-)
-from .actions_manual import (
-    prepare_manual_transaction_update as _prepare_manual_transaction_update,
-)
+from .manual_update import command_from_patch, prepare_manual_transaction_update
 from .models import (
     ManualLedgerTransactionPatch,
     MergeTransactionsResult,
@@ -440,7 +435,7 @@ def split_transaction_with_classified_children(
     classified_children: list[Transaction] = []
     child_events: list[BucketEvent] = []
     for bare_child, patch in zip(bare_children, child_classifications, strict=True):
-        command = _command_from_patch(
+        command = command_from_patch(
             bucket_id=bucket_id,
             current=bare_child,
             patch=patch,
@@ -448,7 +443,7 @@ def split_transaction_with_classified_children(
             source_command=trimmed_source_command,
             classified_by_override=classified_by,
         )
-        prepared = _prepare_manual_transaction_update(
+        prepared = prepare_manual_transaction_update(
             current=bare_child,
             command=command,
             previous_transaction_id=bare_child.transaction_id,
@@ -475,7 +470,7 @@ def split_transaction_with_classified_children(
                     "produced_transaction_id": replacement.transaction_id,
                 },
             )
-        # _prepare_manual_transaction_update rebuilds the row from the command and
+        # prepare_manual_transaction_update rebuilds the row from the command and
         # does not carry split_lineage; restore the child's lineage so the split
         # group linkage survives the classification in the same atomic write.
         classified_children.append(replacement.model_copy(update={"split_lineage": bare_child.split_lineage}))

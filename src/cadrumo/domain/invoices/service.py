@@ -1,7 +1,7 @@
 """Service helpers for invoice catalogues.
 
 Exposes pure-function service operations over an
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`: lookup
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`: lookup
 (:func:`suggest_reconciliations`), in-memory linking
 (:func:`link_transaction`), reconciliation suggestions
 (:func:`suggest_reconciliations`), and bidirectional consistency checks
@@ -27,12 +27,13 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..iva.schema import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import Transaction, TransactionCatalogue
+from .catalogue import InvoiceCatalogue
 from .errors import (
     InvoiceLinkError,
     InvoiceNotFoundError,
     InvoiceValidationError,
 )
-from .models import Invoice, InvoiceCatalogue
+from .models import Invoice
 
 _LOGGER = get_logger(__name__)
 #: Default closeness for proposing an invoice-to-transaction link.

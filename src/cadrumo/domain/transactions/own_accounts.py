@@ -177,9 +177,13 @@ class OwnBankAccountDetails(BaseModel):
             raise OwnAccountRegisterValidationError(
                 "an account outside the SEPA zone needs its SWIFT-BIC and the full foreign-bank block",
             )
+        self._validate_date_window()
+        return self
+
+    def _validate_date_window(self) -> None:
+        """Refuse an account whose closure precedes its opening."""
         if self.opened_on is not None and self.closed_on is not None and self.closed_on < self.opened_on:
             raise OwnAccountRegisterValidationError("an account cannot close before it opened")
-        return self
 
     @property
     def country_code(self) -> str:
@@ -269,13 +273,17 @@ class OwnAccountRegister(BaseModel):
         ibans = [account.iban for account in self.accounts]
         if len(ibans) != len(set(ibans)):
             raise OwnAccountRegisterValidationError("register carries the same account number twice")
+        self._validate_designations(frozenset(ids))
+        return self
+
+    def _validate_designations(self, account_ids: frozenset[OwnAccountId]) -> None:
+        """Require one designation per role/scope and only registered account identities."""
         keys = [designation.key for designation in self.designations]
         if len(keys) != len(set(keys)):
             raise OwnAccountRegisterValidationError("register carries two designations for one role and scope")
-        unknown = sorted({designation.own_account_id for designation in self.designations} - set(ids))
+        unknown = sorted({designation.own_account_id for designation in self.designations} - account_ids)
         if unknown:
             raise OwnAccountRegisterValidationError(f"designations name unregistered accounts: {unknown}")
-        return self
 
     def next_account_id(self) -> str:
         """The identity the next added account receives."""

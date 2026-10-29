@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from .....application.user_profile.custody_ports import (
+from .....application.user_profile.custody_crypto_contracts import (
     ProfilePassphraseKdfParameters,
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,

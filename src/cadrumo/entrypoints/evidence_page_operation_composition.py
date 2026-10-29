@@ -15,7 +15,8 @@ from ..application.user_profile.access_errors import ProfileAccessRefusedError
 from ..core.bucket_pointer import require_active_bucket_id
 from ..core.identity.bucket import canonical_bucket_id
 from ..domain.attachments.protocols import AttachmentStoreProtocol
-from .adapter_composition import build_attachment_store, build_ledger_evidence_ports
+from .adapter_composition_ports import build_attachment_store
+from .adapter_composition_work_ports import build_ledger_evidence_ports
 
 
 class _DeferredPageRenderer:

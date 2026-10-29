@@ -25,7 +25,7 @@ from ....core.remote_authority import (
 )
 from .errors import RegistryValidationError
 from .schema_base import EvidenceTier
-from .schema_verification import READ_ONLY_HTTP_METHODS, LiveCrossReferenceDecision
+from .schema_live_verification import READ_ONLY_HTTP_METHODS, LiveCrossReferenceDecision
 
 CrossReferenceClassification = Literal[
     "open_simulator",

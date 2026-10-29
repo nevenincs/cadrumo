@@ -124,15 +124,14 @@ class OperationSupervisor(
         """Journal one exact successor checkpoint before process-local authority moves."""
         snapshot = await self.inspect(pending.request.identity.operation_id)
         if (
-            snapshot.identity.definition_id != "config.provision.setup"
-            or snapshot.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION
+            snapshot.lifecycle is not OperationLifecycle.WAITING_FOR_INTERACTION
             or snapshot.pending_interaction != pending
             or pending.review_claim is not None
             or pending.request.kind is not OperationInteractionKind.REVIEW
             or pending.request.revision != snapshot.revision
             or attribution.displayed_revision != snapshot.revision
         ):
-            raise ValueError("provisioning review is no longer claimable")
+            raise ValueError("review is no longer claimable")
         successor_pending = pending.model_copy(
             update={
                 "request": pending.request.model_copy(update={"revision": snapshot.revision + 1}),

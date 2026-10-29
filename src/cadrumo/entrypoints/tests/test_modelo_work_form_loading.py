@@ -43,9 +43,9 @@ from ...application.modelo.edit_models import (
     ModeloEditScalarIntentKind,
     ModeloScalarEditIntentV1,
 )
-from ...application.modelo.operation_definitions import (
+from ...application.modelo.operation_definitions import ModeloWorkVerifyExecutor
+from ...application.modelo.operation_shared import (
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-    ModeloWorkVerifyExecutor,
     resolve_active_workflow_profile,
 )
 from ...application.modelo.source_policy import SourceFamily
@@ -74,7 +74,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.verification_report import ModeloVerificationFindingKind
-from ..adapter_composition import build_verification_repository_bundle
+from ..adapter_composition_work_ports import build_verification_repository_bundle
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

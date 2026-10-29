@@ -17,8 +17,9 @@ from pydantic import ValidationError
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path
 from .....domain.invoices.business_premises import BusinessPremisesLease, SituacionInmueble
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.invoices.enums import IvaRate, PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.raw_transaction import RawProvenance, SourceFormat
 from ...storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE

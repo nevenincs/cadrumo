@@ -20,10 +20,10 @@ from .operations.models import OperationRequest
 from .operations.profile_guard import require_access_request_payload
 from .user_profile.access_errors import ProfileAccessRefusedError
 
-__all__ = ["bind_machine_provisioning_access"]
+__all__ = ["bind_machine_reader_access"]
 
 
-def bind_machine_provisioning_access(
+def bind_machine_reader_access(
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     *,

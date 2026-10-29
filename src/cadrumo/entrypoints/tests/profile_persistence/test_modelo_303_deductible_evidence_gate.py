@@ -45,19 +45,14 @@ from ....application.aggregation.ledger_filing_snapshot import (
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ....application.ledger.action_ports import LedgerActionPorts
-from ....application.ledger.actions_manual import (
-    attach_manual_transaction_evidence,
-    link_manual_transaction_invoice,
-)
+from ....application.ledger.actions_manual import link_manual_transaction_invoice
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
-from ....application.modelo.calculation_actions import (
+from ....application.ledger.manual_update import attach_manual_transaction_evidence
+from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.export import (
-    ModeloExportCommand,
-    ModeloExportEvidenceMissingError,
-    export_modelo_revision,
-)
+from ....application.modelo.export import export_modelo_revision
+from ....application.modelo.export_contracts import ModeloExportCommand, ModeloExportEvidenceMissingError
 from ....application.modelo.export_ports import ModeloExportPorts
 from ....application.modelo.filing_action_ports import FilingActionPorts
 from ....application.modelo.filing_actions import ModeloFilingEvidenceMissingError, file_modelo_revision
@@ -95,7 +90,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.env_scope import ready_clave_settings
-from ...adapter_composition import (
+from ...adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_ledger_evidence_ports,

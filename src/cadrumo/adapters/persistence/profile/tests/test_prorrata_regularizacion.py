@@ -27,7 +27,7 @@ from .....application.calculations.prorrata_regularizacion import (
     project_prorrata_regularizacion_feed,
 )
 from .....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from .....application.modelo.revision_persistence import persist_filed_revision
+from .....application.modelo.filing_revision_persistence import persist_filed_revision
 from .....application.prorrata_register.seed import evaluate_carried_prior_definitiva_seed_from_observations
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id

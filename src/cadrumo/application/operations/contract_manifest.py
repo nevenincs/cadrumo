@@ -197,13 +197,7 @@ class ManifestOperationRegistry(OperationRegistry):
         definitions = {definition.definition_id: definition for definition in built.definitions}
         registrations = {item.contract.definition_id: item for item in built.registrations}
         expected = self._manifest.groups[group]
-        if (
-            len(definitions) != len(built.definitions)
-            or len(registrations) != len(built.registrations)
-            or frozenset(definitions) != expected
-            or frozenset(registrations) != expected
-        ):
-            raise InternalInvariantError(f"operation group {group!r} does not compose what the contract manifest names")
+        _assert_group_population(group, built, definitions, registrations, expected)
         schema_models = dict(self._schema_models)
         for definition_id, definition in definitions.items():
             registration = registrations[definition_id]
@@ -278,18 +272,36 @@ class ManifestOperationRegistry(OperationRegistry):
         return tuple(lifetime for entry in self._manifest.operations if (lifetime := _lifetime(entry)) is not None)
 
 
+def _assert_group_population(
+    group: str,
+    built: OperationGroupBuild,
+    definitions: Mapping[str, OperationDefinition],
+    registrations: Mapping[str, OperationPublicDefinitionRegistrationV1],
+    expected: frozenset[str],
+) -> None:
+    if (
+        len(definitions) != len(built.definitions)
+        or len(registrations) != len(built.registrations)
+        or frozenset(definitions) != expected
+        or frozenset(registrations) != expected
+    ):
+        raise InternalInvariantError(f"operation group {group!r} does not compose what the contract manifest names")
+
+
 def _ordered_sets(value: object, dumped: object) -> object:
     """Sort every set-valued field of a JSON dump, which otherwise follows the process's hash seed."""
     if isinstance(value, BaseModel) and is_str_keyed_dict(dumped):
-        fields = type(value).model_fields
-        return {
-            key: _ordered_sets(getattr(value, key), item) if key in fields else item for key, item in dumped.items()
-        }
+        return _ordered_model_fields(value, dumped)
     if is_object_list_or_tuple(value) and is_object_list(dumped) and len(value) == len(dumped):
         return [_ordered_sets(member, item) for member, item in zip(value, dumped, strict=True)]
     if isinstance(value, frozenset | set) and is_object_list(dumped):
         return sorted(dumped, key=_canonical_json)
     return dumped
+
+
+def _ordered_model_fields(value: BaseModel, dumped: dict[str, object]) -> dict[str, object]:
+    fields = type(value).model_fields
+    return {key: _ordered_sets(getattr(value, key), item) if key in fields else item for key, item in dumped.items()}
 
 
 def _canonical_json(value: object) -> str:

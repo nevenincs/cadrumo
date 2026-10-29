@@ -1,7 +1,7 @@
 """M303 state attribution requires explicit canonical territory authority.
 
 Guards the explicit-authority projection:
-  1. ``_inject_derived_state_attribution_facts`` refuses absent territory,
+  1. ``inject_derived_state_attribution_facts`` refuses absent territory,
      maps explicit común to Decimal("100"), and explicit foral to Decimal("0").
   2. ``resolve_profile_sourced_bindings`` resolves a profile binding that feeds a
      ``bound`` numeric casilla (casilla 65 is ``ratio``), even though the binding id
@@ -31,11 +31,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileFactValue, UserProfileRecord
-from ..profile_binding import (
-    ProfileBindingResolutionError,
-    _inject_derived_state_attribution_facts,
-    resolve_profile_sourced_bindings,
-)
+from ..profile_binding import resolve_profile_sourced_bindings
+from ..profile_derived_facts import ProfileBindingResolutionError, inject_derived_state_attribution_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -58,18 +55,18 @@ def test_injector_refuses_absent_scope_instead_of_defaulting_common_regime(
 ) -> None:
     fact_index: dict[str, UserProfileFactValue] = {}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+        inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
 
 
 def test_injector_common_regime_resolves_to_one_hundred(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "common_regime"}
-    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 
 def test_injector_explicit_foral_resolves_to_zero(authority_operation: PinnedAuthorityOperation) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_SCOPE_KEY: "foral_unsupported"}
-    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("0")
 
 
@@ -78,7 +75,7 @@ def test_injector_refuses_legacy_ratio_as_authority_without_scope(
 ) -> None:
     fact_index: dict[str, UserProfileFactValue] = {_RATIO_KEY: Decimal("50")}
     with pytest.raises(ProfileBindingResolutionError, match="cannot default to common regime"):
-        _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+        inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
 
 
 def test_injector_overwrites_legacy_ratio_from_explicit_scope(
@@ -88,7 +85,7 @@ def test_injector_overwrites_legacy_ratio_from_explicit_scope(
         _SCOPE_KEY: "common_regime",
         _RATIO_KEY: Decimal("50"),
     }
-    _inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
+    inject_derived_state_attribution_facts(fact_index, operation=authority_operation)
     assert fact_index[_RATIO_KEY] == Decimal("100")
 
 

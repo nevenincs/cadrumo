@@ -7,7 +7,7 @@ from uuid import UUID
 
 import pytest
 
-from .....application.user_profile.custody_ports import (
+from .....application.user_profile.custody_crypto_contracts import (
     ProfilePassphraseEncryptedRecord,
     ProfileRecordCryptoError,
     ProfileRecordEncryptedBlob,

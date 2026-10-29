@@ -48,12 +48,13 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.modelo_fact_context import ModeloFactResolutionContext
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ...workflow.errors import WorkflowInputMismatchError
 from ..action_errors import ModeloAggregationBindingError
 from ..art20_advisory import art20_reduccion_advisory_finding
 from ..art52_advisory import art52_reduccion_advisory_finding
-from ..calculation_actions import _reject_caller_overrides_of_source_bindings
+from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..dt12_advisory import dt12_reduccion_advisory_finding
 from ..dt12_antiquity_advisory import dt12_antiquity_advisory_finding
 from ..iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
@@ -916,7 +917,7 @@ def test_source_bound_casilla_override_error_is_localised() -> None:
     revision = _source_bound_revision()
 
     with pytest.raises(ModeloAggregationBindingError) as raised:
-        _reject_caller_overrides_of_source_bindings(
+        reject_caller_overrides_of_source_bindings(
             revision=revision,
             owned_sources=frozenset({BindingSourceKind.LEDGER_IVA_AGGREGATION}),
             caller_binding_values={},
@@ -1142,7 +1143,8 @@ def test_iva_regime_cli_choices_cover_operator_selectable_wizard_values(operatio
     import click
 
     from ...wizard.catalogue import build_setup_flow
-    from ...wizard.commands import SETUP_OPTION_INFOS, build_wizard_command
+    from ...wizard.command_parameters import SETUP_OPTION_INFOS
+    from ...wizard.commands import build_wizard_command
 
     flow = build_setup_flow(operation)
     wizard_values = {

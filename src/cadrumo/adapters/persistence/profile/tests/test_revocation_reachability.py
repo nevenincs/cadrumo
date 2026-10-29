@@ -59,7 +59,7 @@ def test_reachability_answers_both_ways_and_an_open_session_removes_the_out_of_b
             register_operator_certificate_source,
             set_operator_certificate_source_secret,
         )
-        from cadrumo.application.auth.operator import reset_operator_auth
+        from cadrumo.application.auth.operator_revocation import reset_operator_auth
         from cadrumo.application.auth.operator_scope import operator_auth_revocation_is_reachable
 
         with isolated_profile_storage_root(tmp_path=tmp_path) as root:
@@ -132,9 +132,9 @@ def test_a_locked_profile_refuses_the_revocation_that_reachability_predicted(
     protecting against nothing.
     """
     from cadrumo.application.auth.acquisition_lock import clear_auth_acquisition_lock
-    from cadrumo.application.auth.operator import reset_operator_auth
     from cadrumo.application.auth.operator_cleanup import clear_operator_auth_acquisition_locks
     from cadrumo.application.auth.operator_results import AuthOperationRequiresCustodySessionError
+    from cadrumo.application.auth.operator_revocation import reset_operator_auth
     from cadrumo.application.auth.operator_scope import operator_auth_revocation_is_reachable
 
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:

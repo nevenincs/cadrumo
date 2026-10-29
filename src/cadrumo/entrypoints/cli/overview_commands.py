@@ -25,7 +25,7 @@ from ...application.overview.read_payload import (
     OverviewPrepareRead,
     OverviewStatusRead,
 )
-from ...application.overview.read_projection import OverviewNoticeSnapshot
+from ...application.overview.read_projection import OverviewCalendarSurveySnapshot, OverviewNoticeSnapshot
 from ...application.overview.read_request import OverviewReadKind, OverviewReadRequest
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import OutputLanguage
@@ -389,6 +389,19 @@ __all__ = [
 ]
 
 
+def _append_survey_profiles(lines: list[str], survey: OverviewCalendarSurveySnapshot) -> None:
+    for pointer in survey.locked:
+        lines.extend(
+            (
+                f"profile\t{pointer.profile_id}\t{pointer.label}",
+                f"profile_locked\t{pointer.profile_id}\t{pointer.label}",
+            )
+        )
+    lines.extend(
+        f"profile_setup_incomplete\t{pointer.profile_id}\t{pointer.label}" for pointer in survey.setup_incomplete
+    )
+
+
 def _overview_calendar_survey_output(
     completed: OverviewReadCompletion, payload: OverviewCalendarRead, allow_incomplete: bool
 ) -> tuple[OverviewCalendarResult, list[str], list[Notice]]:
@@ -401,16 +414,7 @@ def _overview_calendar_survey_output(
         f"to\t{survey.to_date.isoformat()}",
         f"profiles\t{int(survey.active_calendar is not None)}",
     ]
-    for pointer in survey.locked:
-        lines.extend(
-            (
-                f"profile\t{pointer.profile_id}\t{pointer.label}",
-                f"profile_locked\t{pointer.profile_id}\t{pointer.label}",
-            )
-        )
-    lines.extend(
-        f"profile_setup_incomplete\t{pointer.profile_id}\t{pointer.label}" for pointer in survey.setup_incomplete
-    )
+    _append_survey_profiles(lines, survey)
     profiles: list[dict[str, object]] = []
     notices: list[Notice] = []
     if (

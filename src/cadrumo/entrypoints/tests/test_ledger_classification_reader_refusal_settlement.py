@@ -61,7 +61,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
@@ -201,7 +201,7 @@ def _assert_refused_by_the_reader(
     service: RecordingModelRuns,
     *,
     message_key: str,
-    condition: LLMPreconditionCondition | ProvisioningPreconditionCondition,
+    condition: LLMPreconditionCondition | ProbePreconditionCondition,
 ) -> Mapping[str, str | int | bool | Decimal]:
     refused, refusal_ref, detail = settled
     assert refused is OperationTerminalCondition.REFUSED
@@ -235,7 +235,7 @@ def test_a_classification_refused_for_its_missing_text_model_settles_with_the_lo
         settled,
         service,
         message_key=EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY,
-        condition=ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+        condition=ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
     )
 
 

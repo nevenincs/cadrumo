@@ -7,10 +7,25 @@ from decimal import Decimal
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.iva_flow_catalogue import resolve_iva_flow_direction_catalogue
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.prorrata_volume_catalogue import resolve_prorrata_volume_catalogue
+from ...domain.iva.flow import IvaFlowDirection
 from ...domain.iva.schema import IvaLedgerObservationRole, is_iva_cash_accounting_none
 from ..calculations.prorrata_regularizacion import ProrrataDeclaredVolumeLedgerRollup
 from .iva_ledger import IvaLedgerAggregation
+
+
+def _counts_toward_prorrata(
+    observation: IvaLedgerObservation, annual: Period, output_flows: set[IvaFlowDirection], excluded: frozenset[str]
+) -> bool:
+    if observation.flow_direction not in output_flows or not annual.contains(observation.transaction_date):
+        return False
+    # The cash operation information carries its whole volume; payments carry only portions.
+    cash = not is_iva_cash_accounting_none(observation.cash_accounting_treatment)
+    role = IvaLedgerObservationRole.OPERATION_INFORMATIONAL if cash else IvaLedgerObservationRole.SETTLEMENT
+    if observation.observation_role is not role:
+        return False
+    return observation.ledger_id not in excluded
 
 
 def project_prorrata_declared_volume_rollup(
@@ -33,14 +48,7 @@ def project_prorrata_declared_volume_rollup(
     con_derecho = Decimal(0)
     sin_derecho = Decimal(0)
     for observation in aggregation.observations:
-        if observation.flow_direction not in output_flows or not annual.contains(observation.transaction_date):
-            continue
-        # The cash operation information carries its whole volume; payments carry only portions.
-        cash = not is_iva_cash_accounting_none(observation.cash_accounting_treatment)
-        role = IvaLedgerObservationRole.OPERATION_INFORMATIONAL if cash else IvaLedgerObservationRole.SETTLEMENT
-        if observation.observation_role is not role:
-            continue
-        if observation.ledger_id in excluded:
+        if not _counts_toward_prorrata(observation, annual, output_flows, excluded):
             continue
         if observation.category in catalogue.con_derecho:
             con_derecho += observation.base_amount

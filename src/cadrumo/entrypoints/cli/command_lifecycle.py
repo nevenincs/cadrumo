@@ -37,15 +37,7 @@ def dispatch_cli_behavior(
         from ._profile_authentication_gate import preflight_parsed_leaf
 
         try:
-            context = bound.arguments.get(context_parameter)
-            find_root = getattr(context, "find_root", None)
-            if context is None or not callable(find_root):
-                raise TypeError("command invocation context has an invalid type")
-            root = find_root()
-            ensure_object = getattr(root, "ensure_object", None)
-            if not callable(ensure_object) or not isinstance(ensure_object(dict), dict):
-                raise TypeError("command root context has an invalid type")
-            invocation_context = cast(typer.Context, context)
+            invocation_context = _invocation_context(bound, context_parameter)
             listing_scope = (
                 summary_inventory_snapshot() if spec.policy.side_effects == frozenset({"none"}) else nullcontext()
             )
@@ -80,6 +72,18 @@ def dispatch_cli_behavior(
 
         capture_refusal_spine(error)
         raise
+
+
+def _invocation_context(bound: BoundArguments, context_parameter: str) -> typer.Context:
+    context = bound.arguments.get(context_parameter)
+    find_root = getattr(context, "find_root", None)
+    if context is None or not callable(find_root):
+        raise TypeError("command invocation context has an invalid type")
+    root = find_root()
+    ensure_object = getattr(root, "ensure_object", None)
+    if not callable(ensure_object) or not isinstance(ensure_object(dict), dict):
+        raise TypeError("command root context has an invalid type")
+    return cast(typer.Context, context)
 
 
 def _governed_fact_scope(spec: CommandSpec, context: typer.Context) -> AbstractContextManager[None]:

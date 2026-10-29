@@ -26,7 +26,7 @@ from .m303_attestation_operation import (
     MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID,
     ModeloWorkM303AttestationRequest,
 )
-from .operation_definitions import (
+from .operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,

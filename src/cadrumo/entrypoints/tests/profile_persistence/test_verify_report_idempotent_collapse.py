@@ -24,7 +24,7 @@ from cadrumo.application.modelo.verification_actions import verify_modelo_revisi
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_verification_reports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     T1,

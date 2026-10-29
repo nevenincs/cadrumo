@@ -1,7 +1,7 @@
 """Extraction depends on the SET of word matches, never on their order.
 
 The real-render coverage gate cannot see this property, and that is why it is
-pinned separately. ``_find_bbox_casilla_hits`` reports multiple matches as
+pinned separately. ``find_bbox_casilla_hits`` reports multiple matches as
 ambiguous by COUNT, so the gate passing tells you the box-number matches still
 resolve; it tells you nothing about whether a different word ordering would have
 resolved them differently. Reading a green gate as clearing an ordering risk is

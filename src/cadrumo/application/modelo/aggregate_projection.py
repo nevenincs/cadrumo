@@ -214,16 +214,10 @@ def _require_aggregated_summary_fields(self: ModeloAggregateProjection, aggregat
 
 def _require_aggregate_row_metadata(self: ModeloAggregateProjection) -> None:
     """Require annual source revisions and refuse annual detail on periodic results."""
-    if (
-        (self.clave_breakdown is not None and self.clave_breakdown)
-        or (self.absent_source_families is not None and self.absent_source_families)
-    ) and self.calculation_revision_id is None:
+    has_rows = bool(self.clave_breakdown) or bool(self.absent_source_families)
+    if has_rows and self.calculation_revision_id is None:
         raise ValueError("calculation rows require the revision they were read for")
-    if self.modelo in AGGREGATE_WITHHOLDING_MODELOS and (
-        (self.clave_breakdown is not None and self.clave_breakdown)
-        or self.calculation_revision_id is not None
-        or (self.absent_source_families is not None and self.absent_source_families)
-    ):
+    if self.modelo in AGGREGATE_WITHHOLDING_MODELOS and (has_rows or self.calculation_revision_id is not None):
         raise ValueError("periodic withholding aggregate cannot carry annual detail metadata")
 
 

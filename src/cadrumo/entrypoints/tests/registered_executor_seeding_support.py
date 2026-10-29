@@ -37,7 +37,7 @@ from ...application.live.notifications import NotificationsService
 from ...application.modelo.calculation_actions import calculate_modelo_revision
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
 from ...application.modelo.external_import_actions import import_external_filing_evidence
-from ...application.modelo.operation_definitions import resolve_active_workflow_profile
+from ...application.modelo.operation_shared import resolve_active_workflow_profile
 from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ...application.operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ...application.user_profile.profile_record_repository import ProfileRecordRepository
@@ -53,8 +53,9 @@ from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 from ...domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from ...domain.deadlines.models import ObligationStatus
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.filing_record import ExternalEvidenceKind
@@ -62,10 +63,10 @@ from ...domain.modelos.verification_report import VerificationCompletenessStatus
 from ...domain.notifications.sancion import SancionLiquidacion
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...tests.aeat_literal_fixtures import aeat_url
-from ..adapter_composition import (
+from ..adapter_composition_ports import build_prorrata_register_repository
+from ..adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_expedientes_ports,
-    build_prorrata_register_repository,
     build_verification_repository_bundle,
 )
 from ..justificante_composition import build_justificante_capture_service

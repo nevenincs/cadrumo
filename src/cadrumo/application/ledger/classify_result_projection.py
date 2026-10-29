@@ -12,7 +12,6 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.transactions.errors import TransactionValidationError
 from ..operations.models import OperationTerminalReceipt
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .actions_manual import ledger_transaction_result_payload
 from .classify_requests import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
 )
@@ -22,6 +21,7 @@ from .classify_result_contracts import (
     LedgerClassifyExecutionResult,
     LedgerClassifyOperationResult,
 )
+from .manual_read import ledger_transaction_result_payload
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionResult
 from .transaction_projection import LedgerTransactionProjection
 

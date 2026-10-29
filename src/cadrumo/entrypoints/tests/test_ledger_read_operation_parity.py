@@ -38,11 +38,6 @@ from ...adapters.persistence.storage.sql import orm
 from ...adapters.persistence.storage.sql.session import session_scope
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.action_ports import LedgerActionPorts, LedgerActionPortsFactory
-from ...application.ledger.actions_manual import (
-    LedgerSummaryPeriodWithoutSpanError,
-    summarize_manual_transactions,
-    update_manual_transaction_fields,
-)
 from ...application.ledger.actions_split_merge import split_transaction
 from ...application.ledger.check_operation import (
     LEDGER_CHECK_OPERATION_DEFINITION_ID,
@@ -56,6 +51,8 @@ from ...application.ledger.history_operation import (
     LedgerHistoryProjection,
     LedgerHistoryRequest,
 )
+from ...application.ledger.manual_read import LedgerSummaryPeriodWithoutSpanError, summarize_manual_transactions
+from ...application.ledger.manual_update import update_manual_transaction_fields
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch, SplitChildCommand
 from ...application.ledger.participation_operation import (
     LEDGER_PARTICIPATION_OPERATION_DEFINITION_ID,
@@ -101,12 +98,13 @@ from ...core.period import Period
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import IvaCashAccountingPaymentEvidence, IvaCashAccountingTreatment, IvaCategory
+from ...domain.transactions.date_partition import LedgerDatePartition
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import StoredTransactionDriftError, TransactionIdPrefixError
-from ...domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...domain.transactions.repository import transaction_object_key
-from ..adapter_composition import build_verification_repository_bundle
+from ..adapter_composition_work_ports import build_verification_repository_bundle
 from ..ledger_action_composition import compose_ledger_action_ports, compose_ledger_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

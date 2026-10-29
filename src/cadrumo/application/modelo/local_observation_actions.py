@@ -68,7 +68,7 @@ from ..calculations.observations_repository import (
 )
 from ._registry_helpers import NUMERIC_CASILLA_DATA_TYPES
 from .action_errors import ModeloLocalObservationError
-from .revision_persistence import build_modelo_bucket_event
+from .modelo_bucket_events import build_modelo_bucket_event
 from .work_addressing import ModeloWorkSelectorError
 from .work_selection import ModeloWorkSelectionMode, ModeloWorkSelectorRequest, select_modelo_work_resolution
 

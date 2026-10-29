@@ -28,7 +28,8 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ..profile_binding import ProfileBindingResolutionError, resolve_profile_sourced_bindings
+from ..profile_binding import resolve_profile_sourced_bindings
+from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

@@ -10,12 +10,8 @@ import pytest
 from cadrumo.application.exchange_rate_provider import exchange_rate_provider
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
-from cadrumo.application.ledger.classification_assembly import (
-    ClassificationAssembly,
-    DeclaredFact,
-    DeclaredFacts,
-    IvaCategoryResolution,
-)
+from cadrumo.application.ledger.classification_assembly import ClassificationAssembly, DeclaredFact, DeclaredFacts
+from cadrumo.application.ledger.classification_category_resolution import IvaCategoryResolution
 from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment
 from cadrumo.application.ledger.confirmation_gate import ConfirmationBlocker
 from cadrumo.application.ledger.counterparty_establishment import CounterpartyEstablishmentContradiction

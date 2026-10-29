@@ -3843,6 +3843,8 @@ desktop:
     progress_label: Progrés de {name}
     rail_busy: S'estan configurant els components
     rail_incomplete: La configuració no ha acabat
+    refused_browser_not_removed: Cadrumo no ha pogut eliminar el navegador. Torna'l
+      a comprovar i prova-ho una altra vegada.
     refused_busy: Ja hi ha una configuració en curs en un altre lloc. Espera que acabi.
     refused_model_selection_unusable: Cadrumo no pot baixar aquest model. Revisa la
       llista de models de la IA local a la configuració de l'agent i torna-ho a provar.
@@ -3855,6 +3857,11 @@ desktop:
     refused_unavailable: Els serveis de Cadrumo no responen. Torna-ho a provar d'aquí
       a un moment.
     reject: No baixis res
+    remove: Elimina
+    remove_confirm: Vols esborrar aquest navegador del teu ordinador? Pots tornar-lo
+      a configurar més tard.
+    remove_confirm_yes: Esborra'l
+    remove_keep: Conserva'l
     result_already: Ja estava configurat
     result_done: Configurat
     retry: Problema de connexió. Es tornarà a provar d'aquí a {seconds} segons (intent

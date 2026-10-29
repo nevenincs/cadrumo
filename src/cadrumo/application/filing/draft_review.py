@@ -46,7 +46,7 @@ from ...domain.filing.protocols import CasillaSchemaProvider
 from ...domain.filing.schema import ModeloApprovalBasis, ModeloDraft
 from ...domain.filing.validator import ModeloValidator, derive_validation_status
 from ...domain.identifiers import canonical_decimal_string
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.submission.models import ModeloDraftStatus
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
@@ -184,7 +184,7 @@ def compute_current_approval_basis(
 
     The basis hashes the draft identity and validation surface, the persisted
     :class:`TransactionCatalogue`, the persisted
-    :class:`~domain.invoices.models.InvoiceCatalogue` (a calculation source
+    :class:`~domain.invoices.catalogue.InvoiceCatalogue` (a calculation source
     resolved through the source mesh), the bucket's prior filed observations (the
     ``previous_filing`` carry and relation fold-in source), the bucket's taxpayer
     profile facts that scope relation resolution, the supplied or bundled

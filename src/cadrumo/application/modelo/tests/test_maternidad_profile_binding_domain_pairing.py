@@ -18,7 +18,7 @@ class TestMesesMaternidadPorDescendienteHasAProductionConsumer:
         A resolver that recomposed the pairing itself would be untouched by this,
         which is precisely the state being removed.
         """
-        from ..profile_binding import resolve_maternidad_meses
+        from ..profile_derived_facts import resolve_maternidad_meses
 
         assert callable(resolve_maternidad_meses)
         assert hasattr(RentaFamilyProfile, "meses_maternidad_por_descendiente")

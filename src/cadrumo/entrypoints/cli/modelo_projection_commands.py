@@ -26,7 +26,7 @@ from ._modelo_cli_support import (
     parse_casilla_override,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .modelo_results import (
+from .modelo_query_results import (
     CasillaObservationPayload,
     CompareSectionPayload,
     DeltaRowPayload,

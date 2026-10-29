@@ -29,11 +29,11 @@ from ...application.operations.contract_manifest import (
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.resources.bundled_data import packaged_data
 from ..operation_composition import (
-    OperationCompositionInputs,
     build_manifest_operation_registry,
     build_production_operation_contract_manifest,
     compose_operation_group,
 )
+from ..operation_composition_inputs import OperationCompositionInputs
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

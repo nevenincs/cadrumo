@@ -17,7 +17,7 @@ from ...application import workstation_check as service
 from ...application.auth.operator_probe_ports import OperatorProbePorts
 from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE, ProgramRow
 from ...application.preflight import HealthSeverity, PreflightCheck
-from ...application.provisioning import DependencyStatus
+from ...application.workstation_probes import DependencyStatus
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...application.user_profile.capabilities import CapabilitySource
 from ...application.workstation_check_operation import WorkstationCheckProjection

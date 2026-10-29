@@ -321,6 +321,13 @@ def compute_styling(
     # Anchors last so the result accent wins over the broad value column.
     styled += _anchor_ranges(anchors)
 
+    widths, frozen, filters = _tab_geometry(entradas_last, calculos_last, provenance_last, evidencia_last)
+    return tuple(styled), widths, frozen, filters
+
+
+def _tab_geometry(
+    entradas_last: int, calculos_last: int, provenance_last: int, evidencia_last: int
+) -> tuple[tuple[SheetColumnWidth, ...], tuple[SheetFrozenView, ...], tuple[SheetAutoFilter, ...]]:
     widths: list[SheetColumnWidth] = []
     widths += _widths(TabName.ENTRADAS, _DATA_WIDTHS)
     widths += _widths(TabName.CALCULOS, _DATA_WIDTHS)
@@ -351,7 +358,7 @@ def compute_styling(
         ),
     )
 
-    return tuple(styled), tuple(widths), tuple(frozen), tuple(filters)
+    return tuple(widths), tuple(frozen), tuple(filters)
 
 
 __all__ = ["compute_styling"]

@@ -26,23 +26,26 @@ from ....application.bienes_inversion.registered_result_contracts import (
 )
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ....core.i18n.render import tr
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
-from .registers_presentation import (
-    LedgerRegisterScreen,
-    RegisterColumnV1,
-    RegisterListV1,
-    RegisterOutcomeV1,
-    RegisterRow,
+from .controller import LedgerWorkspaceController
+from .registers_input import (
     blank_to_none,
-    labelled_input,
-    labelled_select,
     parse_optional_whole_number,
     parse_public_decimal,
     parse_whole_number,
     request_summary,
     require_text,
 )
+from .registers_presentation import (
+    LedgerRegisterScreen,
+    RegisterColumnV1,
+    RegisterListV1,
+    RegisterOutcomeV1,
+    RegisterRow,
+    labelled_input,
+    labelled_select,
+)
 from .tools import LedgerToolV1
+from .workspace_screen import LedgerWorkspaceScreen
 
 CAPITAL_GOODS_TOOL_KEY: Final = "ledger.tool.registers.capital_goods"
 

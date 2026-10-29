@@ -22,7 +22,7 @@ from ...application.ledger.actions_classification import (
     apply_classification_rule_match,
     plan_classification_rules,
 )
-from ...application.ledger.actions_manual import attach_manual_transaction_evidence, update_manual_transaction_fields
+from ...application.ledger.manual_update import attach_manual_transaction_evidence, update_manual_transaction_fields
 from ...application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ...application.ledger.tests.manual_transaction_support import create_manual_transaction
 from ...application.operations.execution_actor import OperationExecutionCaller
@@ -37,8 +37,9 @@ from ...domain.attachments.enums import AttachmentKind, AttachmentSource
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import IvaRate, PaymentStatus
-from ...domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection
 from ...domain.transactions.models import Transaction

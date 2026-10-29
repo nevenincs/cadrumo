@@ -118,7 +118,7 @@ def test_history_retains_stored_coordinates_after_authority_changes(operation: P
 def test_optional_only_scope_discloses_zero_compared_fields(
     operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from .....application.modelo import reconciliation
+    from .....application.modelo import reconciliation_comparison
 
     unit = _seed_work_unit(modelo="131", filing_year=2024, period="1T")
     _persist_filed_revision(unit, total_ingresar=Decimal("600"))
@@ -129,8 +129,10 @@ def test_optional_only_scope_discloses_zero_compared_fields(
         computed_casilla_ids=frozenset(),
         reconcile_when_present_casilla_ids=frozenset({"15"}),
     )
-    monkeypatch.setattr(reconciliation, "_declaracion_registry_context", lambda *args, **kwargs: (snapshot, policy))
-    diffs, advisories = reconciliation._reconcile_casilla_values(
+    monkeypatch.setattr(
+        reconciliation_comparison, "_declaracion_registry_context", lambda *args, **kwargs: (snapshot, policy)
+    )
+    diffs, advisories = reconciliation_comparison.reconcile_casilla_values(
         work_unit=unit, revision=revision, filed_values={}, operation=operation
     )
     assert diffs == []

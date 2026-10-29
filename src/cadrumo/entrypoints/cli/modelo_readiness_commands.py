@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import typer
 
-from ...application.modelo.export import modelo_export_readiness_refusal
+from ...application.modelo.export_contracts import modelo_export_readiness_refusal
 from ...application.modelo.query_read_contracts import ModeloReadinessOperationRequest
 from ...application.operations.public_period import PublicPeriod
-from ...application.state_projection import ProjectionModeloReadiness
+from ...application.state_projection_models import ProjectionModeloReadiness
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.identity.digest import ContentDigest
@@ -17,7 +17,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ._action_rendering import resolved_precondition_action_json_cell
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from .common import active_bucket_id_or_refuse, emit_envelope, resolve_cli_precondition_action
-from .modelo_results import (
+from .modelo_query_results import (
     LedgerIssuePayload,
     ModeloReadinessMissingBindingPayload,
     ModeloReadinessMissingRequirementPayload,

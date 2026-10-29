@@ -21,7 +21,7 @@ from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...user_profile.operation_access_policy import operation_scope_refusal
-from ..declarations_list import DeclarationListGroup, DeclarationListInputs, ModeloDeclarationListRowV1
+from ..declarations_list import DeclarationListGroup, DeclarationListInputs
 from ..declarations_list_operation import (
     MODELO_DECLARATIONS_LIST_OPERATION_DEFINITION_ID,
     ModeloDeclarationsListProjectionV1,
@@ -29,6 +29,7 @@ from ..declarations_list_operation import (
     build_modelo_declarations_list_definition,
     build_modelo_declarations_list_registration,
 )
+from ..declarations_list_projection import ModeloDeclarationListRowV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

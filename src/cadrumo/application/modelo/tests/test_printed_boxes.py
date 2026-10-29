@@ -25,17 +25,18 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.codes import ModeloCode
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculation_actions import _unrouted_source_issues
+from ..calculation_bucket_actions import _unrouted_source_issues
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_no_blocking_calculation_notes
 from ..calculation_notes import note_attention
 from ..printed_boxes import PrintedBoxes, printed_boxes, snapshot_printed_boxes
 from ..work_form import build_modelo_work_form
-from ..work_form_models import ModeloFormAttention, ModeloFormCasillaAddressV1, ModeloWorkForm
+from ..work_form_findings import ModeloFormAttention
+from ..work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm
 from ..work_form_service import modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 

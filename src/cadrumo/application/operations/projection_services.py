@@ -474,6 +474,38 @@ class OperationWorkspaceRefreshTargetService:
         return await _resolve_refresh_target(self.registry, registration_or_refusal, target_type)
 
 
+type _ResultSnapshotKey = tuple[OperationId, UUID, OperationFrontendProjection, str, type[BaseModel], ContentDigest]
+
+
+def _result_snapshot_key(
+    request_or_refusal: OperationResultProjectionRequestV1,
+    snapshot_scope: tuple[UUID, OperationFrontendProjection] | None,
+    projection_type: type[BaseModel],
+    digest_or_refusal: ContentDigest,
+) -> _ResultSnapshotKey | None:
+    return (
+        (
+            request_or_refusal.operation_id,
+            *snapshot_scope,
+            request_or_refusal.model_dump_json(),
+            projection_type,
+            digest_or_refusal,
+        )
+        if snapshot_scope is not None
+        else None
+    )
+
+
+def _continued_result_snapshot(
+    key: _ResultSnapshotKey | None,
+    continue_snapshot: bool,
+    retained: tuple[_ResultSnapshotKey, BaseModel] | None,
+) -> BaseModel | None:
+    if key is not None and continue_snapshot and retained is not None and retained[0] == key:
+        return retained[1]
+    return None
+
+
 @dataclass(frozen=True, slots=True)
 class OperationResultProjectionService:
     """Resolve safe public settled-result projections after terminal success.
@@ -520,17 +552,7 @@ class OperationResultProjectionService:
         if isinstance(request_or_refusal, OperationResultProjectionRefusalV1):
             return request_or_refusal
         if request_or_refusal.result_schema == operation_error_detail_schema():
-            if not issubclass(OperationErrorDetailV1, projection_type):
-                return OperationResultProjectionRefusalV1(
-                    code=OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
-                    requested_version=1,
-                    diagnostic_ref=None,
-                )
-            detail = await resolve_operation_error_detail(self.reader, self.registry, self.operands, request_or_refusal)
-            # CAST-RATIONALE-OPERATION-ERROR-DETAIL: the branch above admits only a
-            # requested type the stored detail model is a subclass of, so the
-            # detail envelope is exactly the caller's requested result shape.
-            return cast("OperationResultProjectionResultV1[ResultProjectionT]", detail)
+            return await self._error_detail(request_or_refusal, projection_type)
         context_or_refusal = await _load_result_context(self.reader, request_or_refusal)
         if isinstance(context_or_refusal, OperationResultProjectionRefusalV1):
             return context_or_refusal
@@ -540,25 +562,16 @@ class OperationResultProjectionService:
         digest_or_refusal = _result_digest_or_refusal(context_or_refusal)
         if isinstance(digest_or_refusal, OperationResultProjectionRefusalV1):
             return digest_or_refusal
-        key = (
-            (
-                request_or_refusal.operation_id,
-                *snapshot_scope,
-                request_or_refusal.model_dump_json(),
-                projection_type,
-                digest_or_refusal,
-            )
-            if snapshot_scope is not None
-            else None
-        )
+        key = _result_snapshot_key(request_or_refusal, snapshot_scope, projection_type, digest_or_refusal)
         # Every continuation has already rechecked the terminal snapshot,
         # current registry contract, schema and operand digest above. The host
         # separately retains the exact session's disclosure guard on every page.
         retained = next(iter(self._snapshot), None)
-        if key is not None and continue_snapshot and retained is not None and retained[0] == key:
+        retained_model = _continued_result_snapshot(key, continue_snapshot, retained)
+        if retained_model is not None:
             # CAST-RATIONALE-PAGED-RESULT: the exact requested model class is
             # part of the key; only validated success envelopes are retained.
-            return cast("OperationResultProjectionResultV1[ResultProjectionT]", retained[1])
+            return cast("OperationResultProjectionResultV1[ResultProjectionT]", retained_model)
         if key is not None:
             self._snapshot.clear()
         result = await _resolve_result_projection(
@@ -571,6 +584,23 @@ class OperationResultProjectionService:
         if key is not None and isinstance(result, OperationResultProjectionSuccessV1):
             self._snapshot[:] = [(key, result)]
         return result
+
+    async def _error_detail[ResultProjectionT: BaseModel](
+        self,
+        request_or_refusal: OperationResultProjectionRequestV1,
+        projection_type: type[ResultProjectionT],
+    ) -> OperationResultProjectionResultV1[ResultProjectionT]:
+        if not issubclass(OperationErrorDetailV1, projection_type):
+            return OperationResultProjectionRefusalV1(
+                code=OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH,
+                requested_version=1,
+                diagnostic_ref=None,
+            )
+        detail = await resolve_operation_error_detail(self.reader, self.registry, self.operands, request_or_refusal)
+        # CAST-RATIONALE-OPERATION-ERROR-DETAIL: the branch above admits only a
+        # requested type the stored detail model is a subclass of, so the
+        # detail envelope is exactly the caller's requested result shape.
+        return cast("OperationResultProjectionResultV1[ResultProjectionT]", detail)
 
 
 @dataclass(frozen=True, slots=True)

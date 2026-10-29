@@ -42,17 +42,17 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         return tuple(str(index) for index in range(count))
 
     def test_withheld_advisory_stays_within_the_cap_at_many_descendants(self) -> None:
-        from ..calculate_input import _maternidad_meses_withheld_advisory
+        from ..calculate_maternidad_advisory import maternidad_meses_withheld_advisory
 
-        advisory = _maternidad_meses_withheld_advisory(self._ids(self.MANY), validated_casilla_id("0611"))
+        advisory = maternidad_meses_withheld_advisory(self._ids(self.MANY), validated_casilla_id("0611"))
 
         assert advisory is not None
         assert len(advisory.message) <= self.CAP
 
     def test_ambiguous_relacion_advisory_stays_within_the_cap_at_many_descendants(self) -> None:
-        from ..calculate_input import _maternidad_ambiguous_relacion_advisory
+        from ..calculate_maternidad_advisory import maternidad_ambiguous_relacion_advisory
 
-        advisory = _maternidad_ambiguous_relacion_advisory(
+        advisory = maternidad_ambiguous_relacion_advisory(
             frozenset(self._ids(self.MANY)),
             validated_casilla_id("0611"),
         )
@@ -66,12 +66,15 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         Kept alongside the larger case so a regression that merely RAISES the
         threshold rather than removing it is still caught here.
         """
-        from ..calculate_input import _maternidad_ambiguous_relacion_advisory, _maternidad_meses_withheld_advisory
+        from ..calculate_maternidad_advisory import (
+            maternidad_ambiguous_relacion_advisory,
+            maternidad_meses_withheld_advisory,
+        )
 
         casilla = validated_casilla_id("0611")
         for count in (13, 25, 26):
-            withheld = _maternidad_meses_withheld_advisory(self._ids(count), casilla)
-            ambiguous = _maternidad_ambiguous_relacion_advisory(frozenset(self._ids(count)), casilla)
+            withheld = maternidad_meses_withheld_advisory(self._ids(count), casilla)
+            ambiguous = maternidad_ambiguous_relacion_advisory(frozenset(self._ids(count)), casilla)
             assert withheld is not None
             assert ambiguous is not None
             assert len(withheld.message) <= self.CAP, f"withheld overran at {count}"
@@ -85,13 +88,13 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         well against a message that never approached the limit, and the tests
         would prove nothing about the defence.
         """
-        from ..calculate_input import _bounded_descendant_ids, _maternidad_meses_withheld_advisory
+        from ..calculate_maternidad_advisory import bounded_descendant_ids, maternidad_meses_withheld_advisory
 
         ids = self._ids(self.MANY)
-        advisory = _maternidad_meses_withheld_advisory(ids, validated_casilla_id("0611"))
+        advisory = maternidad_meses_withheld_advisory(ids, validated_casilla_id("0611"))
         assert advisory is not None
 
-        bounded_term = _bounded_descendant_ids(ids)
+        bounded_term = bounded_descendant_ids(ids)
         unbounded_term = ", ".join(ids)
         would_be = len(advisory.message) - len(bounded_term) + len(unbounded_term)
 
@@ -104,15 +107,15 @@ class TestMaternidadAdvisoryLengthIsBoundedByHouseholdSize:
         list was truncated rather than complete -- otherwise a household of
         sixty reads as a household of three.
         """
-        from ..calculate_input import _bounded_descendant_ids
+        from ..calculate_maternidad_advisory import bounded_descendant_ids
 
-        rendered = _bounded_descendant_ids(self._ids(self.MANY))
+        rendered = bounded_descendant_ids(self._ids(self.MANY))
 
         assert rendered.startswith("0, 1, 2")
         assert rendered.endswith(f"and {self.MANY - 3} more")
 
     def test_a_small_household_is_named_in_full_with_no_remainder_clause(self) -> None:
         """The bound must not degrade the ordinary case it was added to protect."""
-        from ..calculate_input import _bounded_descendant_ids
+        from ..calculate_maternidad_advisory import bounded_descendant_ids
 
-        assert _bounded_descendant_ids(("0", "1")) == "0, 1"
+        assert bounded_descendant_ids(("0", "1")) == "0, 1"

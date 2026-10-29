@@ -13,7 +13,8 @@ from ...adapters.persistence.storage.secure_object_namespaces import SECURE_OBJE
 from ...adapters.persistence.storage.tests.secure_sql import isolated_two_bucket_runtime
 from ...application.diagnostics import secure_object_unreadable_total
 from ...core.classification.policies import SensitivityClass
-from ..adapter_composition import build_diagnostics_ports, build_state_projection_read_ports
+from ..adapter_composition_ports import build_diagnostics_ports
+from ..adapter_composition_work_ports import build_state_projection_read_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

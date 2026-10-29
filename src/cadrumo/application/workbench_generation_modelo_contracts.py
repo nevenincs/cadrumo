@@ -42,7 +42,7 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceStaticInspectionScopeV1,
 )
 from cadrumo.application.operator_actions.models import ActionReference
-from cadrumo.application.state_projection import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
+from cadrumo.application.state_projection_models import ModeloProfileRefusalCause, ModeloRegistryRefusalCause
 from cadrumo.application.user_profile.commands import ProfilePreflightRequirement
 from cadrumo.application.workbench_generation_contracts import (
     WorkbenchGenerationAvailability,

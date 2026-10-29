@@ -1,6 +1,6 @@
 """Every enum the AEAT Sync screens render can be labelled, in every locale.
 
-``_label`` looks a rendered enum up in ``_LABEL_PREFIXES`` and RAISES when it
+``_label`` looks a rendered enum up in ``LABEL_PREFIXES`` and RAISES when it
 finds nothing. It is reached from ``on_mount``, so an unmapped enum does not
 degrade to a blank cell -- it takes the whole workspace down on open.
 
@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from ..screens import _LABEL_PREFIXES
+from ..screen_presentation import LABEL_PREFIXES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -53,7 +53,7 @@ def _resolve(catalogue: dict[str, object], dotted: str) -> str | None:
 
 
 def _expected_keys() -> tuple[str, ...]:
-    return tuple(f"{prefix}.{member.value}" for enum_type, prefix in _LABEL_PREFIXES.items() for member in enum_type)
+    return tuple(f"{prefix}.{member.value}" for enum_type, prefix in LABEL_PREFIXES.items() for member in enum_type)
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
@@ -82,7 +82,7 @@ def test_the_map_covers_a_plausible_population_of_screens() -> None:
     Pinned loosely -- a floor, not the exact count -- so adding a rendered enum
     does not fail this while still catching a map that collapsed.
     """
-    assert len(_LABEL_PREFIXES) >= 15
+    assert len(LABEL_PREFIXES) >= 15
     assert len(_expected_keys()) >= 70
 
 
@@ -92,6 +92,6 @@ def test_each_prefix_names_exactly_one_enum() -> None:
     Both would resolve the same catalogue key for equal member values, so one
     enum's wording would silently describe the other's state.
     """
-    prefixes = list(_LABEL_PREFIXES.values())
+    prefixes = list(LABEL_PREFIXES.values())
 
     assert len(set(prefixes)) == len(prefixes)

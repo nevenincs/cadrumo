@@ -6,7 +6,7 @@ import typer
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ...application.modelo.export import ModeloExportResult
+from ...application.modelo.export_contracts import ModeloExportResult
 from ...application.modelo.export_projection import ModeloExportPublicResultV3
 from ...application.modelo.operator_inputs import ModeloExportOperatorInput
 from ...application.modelo.work_export_contracts import ModeloExportRequest
@@ -18,7 +18,7 @@ from ._modelo_cli_support import (
     resolve_default_actor,
 )
 from .common import emit_envelope
-from .modelo_results import ModeloExportPayload
+from .modelo_query_results import ModeloExportPayload
 from .operation_modelo_export import run_modelo_export
 from .operation_modelo_verification import select_modelo_work_revision_for_cli
 

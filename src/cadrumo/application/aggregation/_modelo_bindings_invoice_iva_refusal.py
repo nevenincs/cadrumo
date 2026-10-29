@@ -9,10 +9,8 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
-    invoice_ledger_screen_binding_ids,
-)
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ...domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
 from ...domain.invoices.models import Invoice
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ._modelo_bindings_invoice_iva import (
@@ -24,10 +22,8 @@ from ._modelo_bindings_invoice_iva import (
 )
 from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
 from .errors import AggregationValidationError
-from .iva_ledger import (
-    IvaLedgerProrrataApportionment,
-    resolve_iva_ledger_binding_values,
-)
+from .iva_ledger import IvaLedgerProrrataApportionment
+from .iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .source_mesh import (
     CalculationSourceContext,
 )

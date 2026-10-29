@@ -25,6 +25,7 @@ from ....domain.modelos.verification_report import VerificationCompletenessStatu
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, GATE_REFUSED_REASONS
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
+from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import (
     ModeloFormDeadlineTone,
     ModeloFormExportHoldReason,
@@ -37,7 +38,6 @@ from ..work_form_header import (
     result_view,
 )
 from ..work_form_models import (
-    ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormDeadline,
     ModeloFormExport,

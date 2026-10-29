@@ -28,7 +28,7 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

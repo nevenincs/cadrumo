@@ -34,7 +34,7 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     resolve_provisional_percentage,
 )
-from ..iva_ledger import _sector_scoped_apportionment
+from ..iva_ledger import sector_scoped_apportionment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -81,7 +81,7 @@ def test_the_iva_gate_follows_the_shared_predicate_for_every_regime(
     anyone remembering to add it.
     """
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        apportionment = _sector_scoped_apportionment(
+        apportionment = sector_scoped_apportionment(
             _register(regime), _EJERCICIO, sector_id=None, operation=_authority_operation_for_test
         )
 
@@ -140,7 +140,7 @@ def test_an_entry_recording_a_regime_but_no_percentage_yields_no_apportionment()
 
         assert regime_apportions_deduction(ProrrataRegisterRegime.from_registry("general"))
         assert (
-            _sector_scoped_apportionment(register, _EJERCICIO, sector_id=None, operation=_authority_operation_for_test)
+            sector_scoped_apportionment(register, _EJERCICIO, sector_id=None, operation=_authority_operation_for_test)
             is None
         )
 
@@ -149,7 +149,7 @@ def test_an_absent_entry_yields_no_apportionment() -> None:
     """The ``entry is None`` half of the gate, which both ledgers also share."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         assert (
-            _sector_scoped_apportionment(
+            sector_scoped_apportionment(
                 ProrrataRegister(entries=()), _EJERCICIO, sector_id=None, operation=_authority_operation_for_test
             )
             is None

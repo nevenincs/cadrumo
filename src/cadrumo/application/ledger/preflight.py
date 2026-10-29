@@ -59,11 +59,11 @@ from ...domain.transactions.irpf_categories import has_employment_irpf_category
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.usage_ratios.errors import CensoRatioMismatchError
-from ..aggregation.iva_ledger import (
+from ..aggregation.iva_ledger import IvaLedgerAggregationIssueReason
+from ..aggregation.iva_ledger_classification import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_DEDUCTION_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
-    IvaLedgerAggregationIssueReason,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
     validate_iva_ledger_deduction_classification,
@@ -756,10 +756,10 @@ def _transaction_is_trabajo_income(
 #: The preflight counterpart of every aggregation reason that reaches preflight.
 #:
 #: Preflight consumes exactly three aggregation screens --
-#: :func:`~cadrumo.application.aggregation.iva_ledger.iva_ledger_missing_fact_reasons`,
-#: :func:`~cadrumo.application.aggregation.iva_ledger.validate_iva_ledger_counterparty_category`
+#: :func:`~cadrumo.application.aggregation.iva_ledger_classification.iva_ledger_missing_fact_reasons`,
+#: :func:`~cadrumo.application.aggregation.iva_ledger_classification.validate_iva_ledger_counterparty_category`
 #: and
-#: :func:`~cadrumo.application.aggregation.iva_ledger.validate_iva_ledger_deduction_classification`
+#: :func:`~cadrumo.application.aggregation.iva_ledger_classification.validate_iva_ledger_deduction_classification`
 #: -- so this mapping's domain is their union, not the whole enum. The lookup is
 #: a bare subscript and therefore total by construction: an arriving reason that
 #: is absent here raises rather than resolving to a wrong operator message.

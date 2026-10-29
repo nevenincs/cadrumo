@@ -73,7 +73,6 @@ __all__ = [
     "GroundedStatement",
     "ReconciliationOutcome",
     "StatementPageText",
-    "ground_statement",
 ]
 
 #: A word for the description check: a run of letters or digits.
@@ -224,7 +223,7 @@ class _Anchored:
 
 
 @dataclass(frozen=True, slots=True)
-class _Draft:
+class MovementDraft:
     """An anchored movement parsed from its printed forms, direction not yet settled."""
 
     item: _Anchored
@@ -312,7 +311,25 @@ def _amount_on_line(line: str, tokens: tuple[_Token, ...], printed: str) -> _Tok
     return None
 
 
-def _anchor_page(page: StatementPageText, warnings: list[str]) -> list[_Anchored]:
+def _find_unclaimed_anchor(
+    lines: Sequence[str],
+    compact_lines: Sequence[str],
+    line_tokens: Sequence[tuple[_Token, ...]],
+    claimed: set[int],
+    booked: str,
+    printed_amount: str,
+) -> tuple[int, _Token] | None:
+    """Choose the first unclaimed line carrying the proposal's printed date and amount."""
+    for index, line in enumerate(lines):
+        if index in claimed or booked not in compact_lines[index]:
+            continue
+        token = _amount_on_line(line, line_tokens[index], printed_amount)
+        if token is not None:
+            return index, token
+    return None
+
+
+def anchor_statement_page(page: StatementPageText, warnings: list[str]) -> list[_Anchored]:
     """Anchor each proposal of one page to an unclaimed line printing its date and amount."""
     if not page.proposal.reply_usable:
         warnings.append(f"page {page.page_number}: the reader's reply could not be used")
@@ -329,14 +346,7 @@ def _anchor_page(page: StatementPageText, warnings: list[str]) -> list[_Anchored
             warnings.append(f"{label}: no printed date or amount was proposed; dropped")
             continue
         booked = _compact(printed_booked)
-        found: tuple[int, _Token] | None = None
-        for index, line in enumerate(lines):
-            if index in claimed or booked not in compact_lines[index]:
-                continue
-            token = _amount_on_line(line, line_tokens[index], printed_amount)
-            if token is not None:
-                found = (index, token)
-                break
+        found = _find_unclaimed_anchor(lines, compact_lines, line_tokens, claimed, booked, printed_amount)
         if found is None:
             warnings.append(f"{label}: its date and amount are not printed together on one line; dropped")
             continue
@@ -346,7 +356,7 @@ def _anchor_page(page: StatementPageText, warnings: list[str]) -> list[_Anchored
     return anchored
 
 
-def _day_first(anchored: Sequence[_Anchored]) -> bool | None:
+def statement_day_first(anchored: Sequence[_Anchored]) -> bool | None:
     """Infer the statement's day order from its printed dates, or ``None`` on conflict."""
     return infer_day_first(
         printed
@@ -356,7 +366,7 @@ def _day_first(anchored: Sequence[_Anchored]) -> bool | None:
     )
 
 
-def _decimal_separator(anchored: Sequence[_Anchored], warnings: list[str]) -> DecimalSeparatorValue | None:
+def statement_decimal_separator(anchored: Sequence[_Anchored], warnings: list[str]) -> DecimalSeparatorValue | None:
     """Infer the statement's decimal convention from every amount its anchored lines print."""
     separator, mixed = infer_decimal_separator(token.text for item in anchored for token in (item.amount, *item.tokens))
     if mixed:
@@ -372,7 +382,7 @@ def _parse_signed(printed: str, separator: DecimalSeparatorValue | None) -> Deci
         return None
 
 
-def _resolve_currency_code(candidate: str | None, page_text: str) -> str | None:
+def resolve_statement_currency(candidate: str | None, page_text: str) -> str | None:
     """Return an ISO code for a printed currency mark the page actually prints."""
     if candidate is None or not candidate.strip():
         return None
@@ -383,7 +393,7 @@ def _resolve_currency_code(candidate: str | None, page_text: str) -> str | None:
     return code
 
 
-def _currency_beside(line: str, token: _Token) -> str | None:
+def currency_beside_amount(line: str, token: _Token) -> str | None:
     """Return the currency printed immediately beside an amount, if any.
 
     Only a mark touching the amount, or one space from it, counts. A code
@@ -426,7 +436,7 @@ def _line_remainder(line: str, printed: Sequence[str | None]) -> str:
 
 
 @dataclass(frozen=True, slots=True)
-class _StatementConventions:
+class StatementConventions:
     """Statement-wide readings every movement is parsed under."""
 
     day_first: bool
@@ -452,7 +462,32 @@ def _line_balance(item: _Anchored, separator: DecimalSeparatorValue | None) -> t
     return (value, chosen.text) if value is not None else (None, None)
 
 
-def _draft(item: _Anchored, conventions: _StatementConventions, warnings: list[str]) -> _Draft | None:
+def _direction_disagrees(movement: ProposedStatementMovement, sign: int | None) -> bool:
+    """Use the printed sign when an explicitly proposed direction contradicts it."""
+    return (
+        sign is not None
+        and movement.direction is not None
+        and (movement.direction is ProposedDirection.OUT) != (sign < 0)
+    )
+
+
+def _draft_value_date(item: _Anchored, conventions: StatementConventions) -> tuple[date | None, str | None]:
+    """Admit a proposed value date only when the page prints its complete parseable token."""
+    value_text = _present(item.movement.value_date)
+    value_date: date | None = None
+    if value_text is not None and _compact(value_text) in _compact(item.page.text):
+        try:
+            value_date = parse_date_value(value_text, day_first=conventions.day_first, label="value date")
+        except FinancialProviderError:
+            value_text = None
+    else:
+        value_text = None
+    return value_date, value_text
+
+
+def draft_anchored_movement(
+    item: _Anchored, conventions: StatementConventions, warnings: list[str]
+) -> MovementDraft | None:
     """Parse one anchored proposal's printed forms, or report why it cannot be a movement."""
     label = _label(item.page, item.position)
     movement = item.movement
@@ -464,33 +499,21 @@ def _draft(item: _Anchored, conventions: _StatementConventions, warnings: list[s
         warnings.append(f"{label}: the printed amount is zero; dropped")
         return None
     sign = -1 if amount < 0 else _token_sign(item.amount)
-    if (
-        sign is not None
-        and movement.direction is not None
-        and (movement.direction is ProposedDirection.OUT) != (sign < 0)
-    ):
+    if _direction_disagrees(movement, sign):
         warnings.append(f"{label}: the reader's direction disagrees with the printed sign; the printed sign is used")
     try:
         booked_date = parse_date_value(movement.booked_date or "", day_first=conventions.day_first, label="booked date")
     except FinancialProviderError:
         warnings.append(f"{label}: the printed booked date is not a complete date; dropped")
         return None
-    value_text = _present(movement.value_date)
-    value_date: date | None = None
-    if value_text is not None and _compact(value_text) in _compact(item.page.text):
-        try:
-            value_date = parse_date_value(value_text, day_first=conventions.day_first, label="value date")
-        except FinancialProviderError:
-            value_text = None
-    else:
-        value_text = None
+    value_date, value_text = _draft_value_date(item, conventions)
     balance, balance_text = _line_balance(item, conventions.separator)
     currency = (
-        _currency_beside(item.line, item.amount)
+        currency_beside_amount(item.line, item.amount)
         or conventions.page_currency.get(item.page.page_number)
         or conventions.default_currency
     )
-    return _Draft(
+    return MovementDraft(
         item=item,
         magnitude=abs(amount),
         printed_sign=sign,
@@ -504,7 +527,7 @@ def _draft(item: _Anchored, conventions: _StatementConventions, warnings: list[s
 
 
 @dataclass(frozen=True, slots=True)
-class _PrintedBalances:
+class PrintedBalances:
     """Opening and closing balances read off dated balance lines, before any reader claim.
 
     Attributes:
@@ -520,12 +543,12 @@ class _PrintedBalances:
     values: frozenset[Decimal]
 
 
-def _signed_value(draft: _Draft) -> Decimal:
+def _signed_value(draft: MovementDraft) -> Decimal:
     """Return the draft's printed value, signed only where the line prints a sign."""
     return -draft.magnitude if draft.printed_sign == -1 else draft.magnitude
 
 
-def _balance_line_role(index: int, drafts: Sequence[_Draft]) -> str | None:
+def _balance_line_role(index: int, drafts: Sequence[MovementDraft]) -> str | None:
     """Classify a dated line that prints only a balance among lines that print one.
 
     A ``brought forward`` or ``carried forward`` line prints a date and one
@@ -552,9 +575,11 @@ def _balance_line_role(index: int, drafts: Sequence[_Draft]) -> str | None:
     return None
 
 
-def _separate_balance_lines(drafts: Sequence[_Draft], warnings: list[str]) -> tuple[list[_Draft], _PrintedBalances]:
+def separate_balance_lines(
+    drafts: Sequence[MovementDraft], warnings: list[str]
+) -> tuple[list[MovementDraft], PrintedBalances]:
     """Drop dated balance lines from the movements and keep their values as printed balances."""
-    movements: list[_Draft] = []
+    movements: list[MovementDraft] = []
     opening: Decimal | None = None
     closing: Decimal | None = None
     lines: set[tuple[int, int]] = set()
@@ -571,12 +596,12 @@ def _separate_balance_lines(drafts: Sequence[_Draft], warnings: list[str]) -> tu
             opening = _signed_value(draft)
         elif role == "closing":
             closing = _signed_value(draft)
-    return movements, _PrintedBalances(
+    return movements, PrintedBalances(
         opening=opening, closing=closing, lines=frozenset(lines), values=frozenset(values)
     )
 
 
-def _balance_sign(index: int, movements: Sequence[_Draft], opening: Decimal | None) -> int | None:
+def _balance_sign(index: int, movements: Sequence[MovementDraft], opening: Decimal | None) -> int | None:
     """Return the direction the running balances prove for an unsigned amount, if they prove one.
 
     The balance printed before this movement -- the previous line's in an
@@ -599,13 +624,13 @@ def _balance_sign(index: int, movements: Sequence[_Draft], opening: Decimal | No
     return None
 
 
-def _settle(
-    movements: Sequence[_Draft],
+def settle_statement_drafts(
+    movements: Sequence[MovementDraft],
     opening: Decimal | None,
     warnings: list[str],
-) -> list[tuple[_Draft, Decimal, str]]:
+) -> list[tuple[MovementDraft, Decimal, str]]:
     """Give every movement its signed amount: printed sign, then running balance, then reader."""
-    settled: list[tuple[_Draft, Decimal, str]] = []
+    settled: list[tuple[MovementDraft, Decimal, str]] = []
     for index, draft in enumerate(movements):
         if draft.printed_sign is not None:
             settled.append((draft, draft.magnitude * draft.printed_sign, "printed_sign"))
@@ -625,7 +650,7 @@ def _settle(
     return settled
 
 
-def _movement(draft: _Draft, signed_amount: Decimal, direction_source: str) -> GroundedMovement:
+def grounded_movement(draft: MovementDraft, signed_amount: Decimal, direction_source: str) -> GroundedMovement:
     """Build the accepted movement and the printed forms it was parsed from."""
     item = draft.item
     movement = item.movement
@@ -659,7 +684,7 @@ def _movement(draft: _Draft, signed_amount: Decimal, direction_source: str) -> G
     )
 
 
-def _proposed_balance(
+def proposed_statement_balance(
     pages: Sequence[StatementPageText],
     separator: DecimalSeparatorValue | None,
     *,
@@ -721,6 +746,18 @@ class _BalanceWalk:
     complete: bool
 
 
+def _closing_balance_check(
+    running: Decimal | None, total: Decimal, closing: Decimal | None, pending: Sequence[int], confirmed: set[int]
+) -> tuple[int, bool]:
+    """Check the final pending span when both its starting and closing balances are printed."""
+    if closing is None or running is None:
+        return 0, True
+    if running + total == closing:
+        confirmed.update(pending)
+        return 1, True
+    return 1, False
+
+
 def _walk_balances(
     ordered: Sequence[GroundedMovement], opening: Decimal | None, closing: Decimal | None
 ) -> _BalanceWalk:
@@ -751,17 +788,14 @@ def _walk_balances(
         running = movement.balance
         pending = []
         total = Decimal(0)
-    if closing is not None and running is not None:
-        checks += 1
-        if running + total == closing:
-            confirmed.update(pending)
-        else:
-            agreed = False
+    closing_checks, closing_agreed = _closing_balance_check(running, total, closing, pending, confirmed)
+    checks += closing_checks
+    agreed = agreed and closing_agreed
     complete = agreed and opening is not None and closing is not None and len(confirmed) == len(ordered)
     return _BalanceWalk(checks=checks, agreed=agreed, confirmed=frozenset(confirmed), complete=complete)
 
 
-def _reconcile(
+def reconcile_statement(
     movements: Sequence[GroundedMovement],
     opening: Decimal | None,
     closing: Decimal | None,
@@ -801,11 +835,11 @@ def _prints_date(line: str, *, day_first: bool) -> bool:
     return False
 
 
-def _unaccounted_lines(
+def unaccounted_statement_lines(
     pages: Sequence[StatementPageText],
     accounted: frozenset[tuple[int, int]],
     balances: frozenset[Decimal],
-    conventions: _StatementConventions,
+    conventions: StatementConventions,
 ) -> list[str]:
     """Name every line that prints a date and a non-zero amount nothing accounts for.
 
@@ -826,105 +860,3 @@ def _unaccounted_lines(
             if values and not values <= balances:
                 found.append(f"page {page.page_number} line {index + 1}")
     return found
-
-
-def ground_statement(pages: Sequence[StatementPageText], *, default_currency: str) -> GroundedStatement:
-    """Decide which proposed movements a statement prints, and whether it reconciles.
-
-    Args:
-        pages: Every page of the statement in document order, transcribed and
-            read.
-        default_currency: The ISO code a movement takes when neither its amount
-            nor its page prints a currency.
-
-    Returns:
-        The accepted movements, every dropped proposal as a warning, any
-        statement-level refusal, and the reconciliation outcome.
-    """
-    warnings: list[str] = []
-    anchored = [item for page in pages for item in _anchor_page(page, warnings)]
-    day_first = _day_first(anchored)
-    if day_first is None:
-        return GroundedStatement(
-            movements=(),
-            warnings=tuple(warnings),
-            refusals=("the statement prints dates in both day-month and month-day order",),
-            reconciliation=ReconciliationOutcome.NOT_CHECKABLE,
-        )
-    separator = _decimal_separator(anchored, warnings)
-    page_currency = {page.page_number: _resolve_currency_code(page.proposal.currency, page.text) for page in pages}
-    conventions = _StatementConventions(
-        day_first=day_first,
-        separator=separator,
-        page_currency=page_currency,
-        default_currency=default_currency,
-    )
-    drafts = [draft for item in anchored if (draft := _draft(item, conventions, warnings)) is not None]
-    candidates, printed_balances = _separate_balance_lines(drafts, warnings)
-    opening = (
-        printed_balances.opening
-        if printed_balances.opening is not None
-        else _proposed_balance(pages, separator, opening=True)
-    )
-    closing = (
-        printed_balances.closing
-        if printed_balances.closing is not None
-        else _proposed_balance(pages, separator, opening=False)
-    )
-    movements = tuple(
-        _movement(draft, signed, source) for draft, signed, source in _settle(candidates, opening, warnings)
-    )
-    printed_currency = any(page_currency.values()) or any(
-        _currency_beside(movement_draft.item.line, movement_draft.item.amount) for movement_draft in candidates
-    )
-    if movements and not printed_currency:
-        warnings.append(
-            f"the statement prints no currency the reader could ground; reading amounts as {default_currency}",
-        )
-    reconciliation, confirmed, complete = _reconcile(movements, opening, closing)
-    contradictions: list[str] = []
-    if reconciliation is ReconciliationOutcome.CONTRADICTED:
-        contradictions.append("the printed balances do not follow from the accepted movements")
-    movements = tuple(
-        replace(
-            movement,
-            confirmed=position in confirmed,
-            printed={**movement.printed, "confirmed": str(position in confirmed).lower()},
-        )
-        for position, movement in enumerate(movements)
-    )
-    unconfirmed = [movement for movement in movements if not movement.confirmed]
-    if reconciliation is ReconciliationOutcome.NOT_CHECKABLE and movements:
-        warnings.append(
-            "the statement prints no balance the movements could be reconciled against; "
-            "review every row before importing",
-        )
-    elif unconfirmed and reconciliation is ReconciliationOutcome.RECONCILED:
-        warnings.append(f"{len(unconfirmed)} movement(s) are not spanned by a printed balance check; review them")
-    guessed = sum(1 for movement in unconfirmed if movement.direction_source == "reader")
-    if guessed:
-        contradictions.append(
-            f"{guessed} movement(s) print no sign and no printed balance confirms the reader's direction",
-        )
-    accounted = (
-        frozenset((movement.page_number, movement.line_number - 1) for movement in movements) | printed_balances.lines
-    )
-    known_balances = frozenset(
-        value
-        for value in (opening, closing, *(movement.balance for movement in movements), *printed_balances.values)
-        if value is not None
-    )
-    for line in _unaccounted_lines(pages, accounted, known_balances, conventions):
-        finding = f"{line} prints a date and an amount that no accepted movement accounts for"
-        if complete:
-            warnings.append(finding)
-        else:
-            contradictions.append(finding)
-    if not movements:
-        contradictions.append("no movement proposed for this statement is printed on it")
-    return GroundedStatement(
-        movements=movements,
-        warnings=tuple(warnings),
-        refusals=tuple(contradictions),
-        reconciliation=reconciliation,
-    )

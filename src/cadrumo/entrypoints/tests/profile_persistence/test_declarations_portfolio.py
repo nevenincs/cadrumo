@@ -28,7 +28,7 @@ from ....core.period import Period
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.filing_record import ModeloRecordCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue, WorkUnitState
-from ....entrypoints.adapter_composition import build_work_lifecycle_ports
+from ....entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 _FIRST = Period.from_year_and_code(2026, "1T")

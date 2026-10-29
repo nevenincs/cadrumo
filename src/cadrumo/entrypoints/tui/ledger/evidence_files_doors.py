@@ -26,7 +26,6 @@ from ....application.ledger.evidence_followup_contracts import (
     LedgerEvidenceAttachmentViewRequest,
     LedgerEvidenceConsentListProjection,
     LedgerEvidenceConsentListRequest,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
 )
@@ -46,6 +45,7 @@ from ....application.ledger.evidence_read_operation import (
     LedgerEvidenceViewProjection,
     LedgerEvidenceViewRequest,
 )
+from ....application.ledger.evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 
 LEDGER_EVIDENCE_FILES_PAGE_SIZE: Final = 100
 """The most rows any evidence list table holds at once."""

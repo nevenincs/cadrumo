@@ -28,7 +28,7 @@ from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, Se
 
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ...application.modelo.action_errors import ModeloEditBaselineStaleError
-from ...application.modelo.calculation_actions import (
+from ...application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ...application.modelo.edit_apply_contracts import ModeloEditApplySubmissionV1
@@ -106,7 +106,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_repository import CalculationRevisionPersistenceError
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ...domain.modelos.work_unit import WorkUnitCatalogue
-from ..adapter_composition import build_calculation_action_ports
+from ..adapter_composition_work_ports import build_calculation_action_ports
 from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

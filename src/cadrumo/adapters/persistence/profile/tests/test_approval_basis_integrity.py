@@ -63,12 +63,10 @@ from cadrumo.domain.calculations.registry.authority import (
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloDraft
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.submission.models import ModeloDraftStatus
-from cadrumo.domain.transactions.models import (
-    LedgerDatePartition,
-    TransactionCatalogue,
-)
+from cadrumo.domain.transactions.date_partition import LedgerDatePartition
+from cadrumo.domain.transactions.models import TransactionCatalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

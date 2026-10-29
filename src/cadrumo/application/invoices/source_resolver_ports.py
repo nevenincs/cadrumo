@@ -6,7 +6,7 @@ persistence failure; an outer composition root binds the encrypted repository
 adapter for each bucket.
 
 Core types:
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
 """
 
 from __future__ import annotations
@@ -15,7 +15,7 @@ from dataclasses import dataclass
 from typing import Protocol
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 
 
 class InvoiceSourcePersistenceError(CadrumoError):

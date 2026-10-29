@@ -35,7 +35,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
-from ..iva_ledger import iva_rate_kind_for
+from ..iva_ledger_classification import iva_rate_kind_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

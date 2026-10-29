@@ -15,7 +15,8 @@ from .....core.hashing import content_hash_hex
 from ..authority import ValidatedRegistryAuthority, bundled_indexed_authority
 from ..authority_component_codec import _json_value
 from ..ids import RevisionId
-from ..schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from ..schema import ModeloDefinition, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..snapshot import build_validated_snapshot as _build_validated_snapshot
 
 _SNAPSHOT_CACHE: dict[tuple[object, ...], tuple[ModeloDefinition, RegistryCatalogues, RegistrySnapshot]] = {}

@@ -14,7 +14,8 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionStateError,
     ModeloWorkflowGateError,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision, get_calculation_revision
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.filing_actions import file_modelo_revision, list_filing_records
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -32,7 +33,7 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecord,
     ModeloRecordStatus,
 )
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.filing_record_read_support import persisted_filing_record
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     _FILE_FLOW_PROFILE_ID,

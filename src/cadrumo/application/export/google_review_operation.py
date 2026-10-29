@@ -52,6 +52,7 @@ from .google_review_operation_contracts import (
     GoogleReviewResult,
 )
 from .google_review_operation_executor import GoogleReviewExecutor
+from .terminal_result_validation import terminal_receipt_has_result_only
 
 
 def resolve_google_review_access(
@@ -115,11 +116,7 @@ def project_google_review_result(value: BaseModel, receipt: OperationTerminalRec
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
         or receipt.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
         or receipt.effect.value != private.effect
-        or receipt.result_ref is None
-        or receipt.refusal_ref is not None
-        or receipt.refusal_detail_ref is not None
-        or receipt.failure_error_code is not None
-        or receipt.diagnostic_ref is not None
+        or not terminal_receipt_has_result_only(receipt)
     ):
         raise ValueError("Google review result differs from its terminal receipt")
     return private.result

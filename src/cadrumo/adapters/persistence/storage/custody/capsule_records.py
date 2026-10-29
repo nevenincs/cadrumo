@@ -38,6 +38,21 @@ if TYPE_CHECKING:
 PROFILE_CUSTODY_COMMIT_SCHEMA_VERSION: Final = 1
 PROFILE_CUSTODY_LAYOUT_VERSION: Final = 1
 PROFILE_CUSTODY_COMMIT_MAX_BYTES: Final = 512
+
+
+def validate_publication_identity(
+    *,
+    profile_id: UUID,
+    password_envelope: ProfileCustodyEnvelope,
+    sentinel: ProfileCustodySentinelRecord,
+) -> None:
+    """Require the password and sentinel records to identify one profile and DEK epoch."""
+    if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
+        raise ProfileCustodyRecordError("profile capsule custody identity does not match its immutable UUID")
+    if sentinel.dek_epoch != password_envelope.dek_epoch:
+        raise ProfileCustodyRecordError("profile capsule sentinel DEK epoch does not match password custody")
+
+
 PROFILE_CUSTODY_DELETION_FILENAME: Final = "profile.deletion.v1.json"
 PROFILE_CUSTODY_LABEL_FILENAME: Final = "profile-label.v1.json"
 PROFILE_CUSTODY_LABEL_MAX_BYTES: Final = 512

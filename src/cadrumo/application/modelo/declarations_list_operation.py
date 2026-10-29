@@ -47,17 +47,19 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .declarations_calendar import DeclarationsCalendarProjectionV1
 from .declarations_list import (
     DeclarationListInputs,
-    ModeloDeclarationCreationTargetV1,
-    ModeloDeclarationListRowV1,
     ModeloDeclarationsListSourceV1,
     ModeloDeclarationsListZoneV1,
     calendar_sources,
     deadline_note_words,
     declaration_list_rows,
     source_notices,
+    zone_states,
+)
+from .declarations_list_projection import (
+    ModeloDeclarationCreationTargetV1,
+    ModeloDeclarationListRowV1,
     worded_creation_targets,
     worded_list_row,
-    zone_states,
 )
 from .declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
 

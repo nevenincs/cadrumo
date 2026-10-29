@@ -36,13 +36,13 @@ from ...domain.user_profile.errors import ProfileNotFoundError, UserProfileError
 from .authentication import ProfilePasswordProofOperation
 from .capsule_record import ProfileRecordSession
 from .custody_ports import (
-    ProfileCustodyPasswordMaterialPort,
     load_profile_custody_password_material,
     map_profile_authentication_proof_failure,
     profile_is_keyring_unavailable,
     refuse_profile_login_without_password_channel,
     unlock_profile_custody_password,
 )
+from .custody_record_ports import ProfileCustodyPasswordMaterialPort
 from .language_resolver import refresh_active_profile_output_language
 from .login_session_port import (
     ProfileBucketSessionPort,

@@ -82,7 +82,6 @@ class MountedCommandDomain(StrEnum):
     BUCKET = "bucket"
     AUTH = "auth"
     DIAGNOSTICS = "diagnostics"
-    PROVISIONING = "provisioning"
     MAINTENANCE = "maintenance"
     STORAGE = "storage"
     GOOGLE = "google"

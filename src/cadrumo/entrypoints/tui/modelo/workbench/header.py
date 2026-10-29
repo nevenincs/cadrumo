@@ -34,6 +34,7 @@ from typing import Final
 from rich.cells import cell_len
 from textual.content import Content
 
+from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_header import (
     ModeloFormAttentionCount,
     ModeloFormDeadlineTone,
@@ -44,7 +45,7 @@ from .....application.modelo.work_form_header import (
 from .....application.modelo.work_form_header import deadline_view as form_deadline_view
 from .....application.modelo.work_form_header import file_view as form_file_view
 from .....application.modelo.work_form_header import result_view as form_result_view
-from .....application.modelo.work_form_models import ModeloFormAttention, ModeloWorkForm
+from .....application.modelo.work_form_models import ModeloWorkForm
 from .....application.modelo.work_form_wording import modelo_number, modelo_title, period_words
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr

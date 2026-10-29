@@ -5,7 +5,7 @@ table through neither. The convergence keeps both evidences and moves only the
 deciding: the document's declared UNTDID 5305 code arrives as a supplied FACT on
 :class:`~application.ledger.classification_assembly.DeclaredFacts`, the charged rate arrives as the
 criteria's own ``rate_tier`` axis, and
-:func:`~application.ledger.classification_assembly.resolve_ingestion_iva_category` weighs them.
+:func:`~application.ledger.classification_category_resolution.resolve_ingestion_iva_category` weighs them.
 
 **What is asserted here is the adjudication contract, never a tax figure.** No
 test below claims a category is the legally correct treatment of a synthetic
@@ -38,13 +38,8 @@ from ....domain.iva.establishment import record_country_code_status, stated_coun
 from ....domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
 from ....domain.iva.supply_nature import SupplyNature
 from ....tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
-from ..classification_assembly import (
-    DeclaredFact,
-    DeclaredFacts,
-    assemble_classification_criteria,
-    declared_category_from_document_record,
-    resolve_ingestion_iva_category,
-)
+from ..classification_assembly import DeclaredFact, DeclaredFacts, assemble_classification_criteria
+from ..classification_category_resolution import declared_category_from_document_record, resolve_ingestion_iva_category
 from ..classifier_inputs import collect_classifier_inputs
 from ..invoice_draft_records import InvoiceDraft
 

@@ -314,6 +314,10 @@ class SheetCellConstraint(BaseModel):
             clauses.append(f"LEN({address})>={self.min_length}")
         if self.max_length is not None:
             clauses.append(f"LEN({address})<={self.max_length}")
+        self._append_numeric_clauses(address, clauses)
+        return f"OR(ISBLANK({address}),AND({','.join(clauses)}))"
+
+    def _append_numeric_clauses(self, address: str, clauses: list[str]) -> None:
         lower, upper = self.resolved_bounds()
         if lower is not None or upper is not None:
             clauses.append(f"ISNUMBER({address})")
@@ -321,7 +325,6 @@ class SheetCellConstraint(BaseModel):
             clauses.append(f"{address}>={format(lower, 'f')}")
         if upper is not None:
             clauses.append(f"{address}<={format(upper, 'f')}")
-        return f"OR(ISBLANK({address}),AND({','.join(clauses)}))"
 
     def resolved_bounds(self) -> tuple[Decimal | None, Decimal | None]:
         """Return the tightest ``(minimum, maximum)`` the sign and the bounds together imply.
@@ -1093,6 +1096,12 @@ class SheetExportPlan[
     def _writable_cells_are_unique(self) -> SheetExportPlan[MetadataT]:
         if not self.tabs or len(set(self.tabs)) != len(self.tabs):
             raise ValueError("workbook tabs must be nonempty and unique")
+        seen = self._validate_writes()
+        self._validate_row_facets()
+        self._validate_merged_ranges(seen)
+        return self
+
+    def _validate_writes(self) -> set[tuple[TabName, int, int]]:
         seen: set[tuple[TabName, int, int]] = set()
         duplicate_count = 0
         for address in self.all_addresses():
@@ -1109,12 +1118,17 @@ class SheetExportPlan[
                 context={"duplicate_count": duplicate_count},
                 translated_message="application.storage.calc_sheets.records.errors.duplicate_write_address",
             )
+        return seen
+
+    def _validate_row_facets(self) -> None:
         for height in self.row_heights:
             if height.tab not in self.tabs:
                 raise ValueError("row height targets an undeclared tab")
         for hidden in self.hidden_rows:
             if hidden.tab not in self.tabs:
                 raise ValueError("hidden row targets an undeclared tab")
+
+    def _validate_merged_ranges(self, seen: set[tuple[TabName, int, int]]) -> None:
         active: list[SheetMergedRange] = []
         for region in sorted(self.merged_ranges, key=lambda item: (item.tab, item.start_row)):
             if region.tab not in self.tabs:
@@ -1125,15 +1139,17 @@ class SheetExportPlan[
             ):
                 raise ValueError("merged ranges overlap")
             active.append(region)
-            for tab, row, column in seen:
-                if (
-                    tab == region.tab
-                    and region.start_row <= row <= region.end_row
-                    and region.start_column <= column <= region.end_column
-                    and (row, column) != (region.start_row, region.start_column)
-                ):
-                    raise ValueError("merged range would discard a written cell")
-        return self
+            self._require_no_merged_writes(region, seen)
+
+    def _require_no_merged_writes(self, region: SheetMergedRange, seen: set[tuple[TabName, int, int]]) -> None:
+        for tab, row, column in seen:
+            if (
+                tab == region.tab
+                and region.start_row <= row <= region.end_row
+                and region.start_column <= column <= region.end_column
+                and (row, column) != (region.start_row, region.start_column)
+            ):
+                raise ValueError("merged range would discard a written cell")
 
     def all_addresses(self) -> tuple[SheetCellAddress, ...]:
         """Return every cell address referenced by value or formula cells.

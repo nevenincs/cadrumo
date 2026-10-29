@@ -227,7 +227,7 @@ MODELO_CORE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("period", ("--period",), TEXT_VALUE, "cli.app.modelo.history.period_help"),
         ),
         ENCRYPTED_READ,
-        ".modelo_results",
+        ".modelo_query_results",
         "ModeloHistoryResult",
         "modelo.history",
     ),

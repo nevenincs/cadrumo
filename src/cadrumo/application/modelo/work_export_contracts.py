@@ -18,7 +18,7 @@ from ..operations.models import CredentialFreeOperationRequest
 from .calculation_report_export import (
     ModeloCalculationReportResult,
 )
-from .export import ModeloExportResult
+from .export_contracts import ModeloExportResult
 
 
 class ModeloExportRequest(CredentialFreeOperationRequest):

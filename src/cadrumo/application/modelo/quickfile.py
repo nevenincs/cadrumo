@@ -67,7 +67,8 @@ from ..state_projection_ports import StateProjectionReadError, StateProjectionRe
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .calculation_action_ports import CalculationActionPorts
-from .export import ModeloExportCommand, ModeloExportResult, export_modelo_revision
+from .export import export_modelo_revision
+from .export_contracts import ModeloExportCommand, ModeloExportResult
 from .export_ports import ModeloExportPorts
 from .verification_actions import verify_modelo_revision_with_preconditions
 from .verification_repository_ports import VerificationRepositoryBundle
@@ -80,7 +81,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
-    from ..state_projection import ProjectionModeloReadiness
+    from ..state_projection_models import ProjectionModeloReadiness
     from .work_profile import ModeloWorkProfile
 
 _log = get_logger(__name__)
@@ -667,7 +668,8 @@ def _resolve_readiness(
     :class:`core.errors.hierarchy.CadrumoError` degrades to ``None`` (advisory only):
     readiness never blocks the chain, so a projection failure must not abort it.
     """
-    from ..state_projection import ModeloReadinessRequest, build_operator_state_projection
+    from ..state_projection import build_operator_state_projection
+    from ..state_projection_models import ModeloReadinessRequest
 
     try:
         projection = build_operator_state_projection(

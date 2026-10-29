@@ -33,7 +33,7 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.entrypoints.adapter_composition import build_draft_review_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

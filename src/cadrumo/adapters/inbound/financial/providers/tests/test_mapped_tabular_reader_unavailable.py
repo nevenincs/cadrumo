@@ -11,10 +11,10 @@ from __future__ import annotations
 import pytest
 
 from ......application.ledger.column_roles import ColumnRoleReaderUnavailable, bind_column_role_mapping_resolver
-from ......application.provisioning_contracts import (
+from ......application.probe_outcomes import (
     LOCAL_AI_PROVISION_ACTION_ID,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
+    ProbePreconditionCondition,
+    probe_no_recovery_verdict,
     provisioning_setup_verdict,
 )
 from ......tests.english_locale_fixture import english_locale_fixture
@@ -36,7 +36,7 @@ def _reader_unavailable() -> ColumnRoleReaderUnavailable:
     """The outcome a composed mapper reports when the role's model is not installed."""
     return ColumnRoleReaderUnavailable(
         precondition_verdict=provisioning_setup_verdict(
-            ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED,
+            ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
             facts={"role": "column_role_mapping", "runtime_reachable": True, "role_model_installed": False},
             action_id=LOCAL_AI_PROVISION_ACTION_ID,
         )
@@ -88,8 +88,8 @@ def test_the_reason_names_local_ai_and_its_setup_when_setup_repairs_it() -> None
 
 def test_the_reason_offers_no_setup_and_points_to_the_picked_model() -> None:
     unservable = ColumnRoleReaderUnavailable(
-        precondition_verdict=provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+        precondition_verdict=probe_no_recovery_verdict(
+            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
             facts={"role": "column_role_mapping", "runtime_reachable": True, "role_model_selected": False},
         )
     )

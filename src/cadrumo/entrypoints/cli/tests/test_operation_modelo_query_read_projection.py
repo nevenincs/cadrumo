@@ -37,10 +37,7 @@ from cadrumo.application.modelo.query_read_operation import (
 )
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationRegistry
-from cadrumo.application.state_projection import (
-    ProjectionModeloBindingRequirement,
-    ProjectionModeloReadiness,
-)
+from cadrumo.application.state_projection_models import ProjectionModeloBindingRequirement, ProjectionModeloReadiness
 from cadrumo.application.user_profile.commands import ProfilePreflightRequirement
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.external_constants import OutputLanguage

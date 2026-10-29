@@ -30,7 +30,6 @@ from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support imp
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
-from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
 from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationPorts
 from cadrumo.application.ledger.llm_review_contracts import (
@@ -47,6 +46,7 @@ from cadrumo.application.ledger.llm_review_operation import (
 )
 from cadrumo.application.ledger.llm_review_results import LedgerLlmOperationResult
 from cadrumo.application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
+from cadrumo.application.ledger.manual_update import update_manual_transaction_fields
 from cadrumo.application.ledger.models import ManualLedgerTransactionPatch
 from cadrumo.application.ledger.view_operation import (
     LEDGER_VIEW_OPERATION_DEFINITION_ID,

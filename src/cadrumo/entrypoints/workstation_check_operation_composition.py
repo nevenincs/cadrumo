@@ -9,8 +9,7 @@ from ..application.workstation_check import WorkstationCheckReport, require_work
 from ..application.workstation_check_operation import WorkstationCheckPorts
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from .adapter_composition import build_operator_probe_ports
-from .local_reader_operation_composition import read_local_ai_program
+from .adapter_composition_ports import build_operator_probe_ports
 
 
 def build_workstation_check_operation_ports(
@@ -27,7 +26,6 @@ def build_workstation_check_operation_ports(
                 profile_id=profile_id,
                 operator_probe_ports=operator_probe_ports,
                 object_path_suffix_length=windows_worst_case_object_path_suffix_length(),
-                read_local_ai_program=read_local_ai_program,
             )
 
     return WorkstationCheckPorts(

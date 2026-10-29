@@ -48,7 +48,7 @@ from ....core.operations import (
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ...auth.protocols import BrowserContextPort, ViewLoginSessionFactoryPort
-from ...auth.sessions import (
+from ...auth.view_sessions import (
     ViewSessionBaseline,
     ViewSessionPublication,
     ViewSessionPublicationOutcome,

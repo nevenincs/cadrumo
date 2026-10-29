@@ -427,18 +427,11 @@ def _overview_row(
     if area is AeatSyncOverviewArea.RECONCILIATION and reconciliations is not None:
         local_state = AeatSyncSourceState.PRESENT if reconciliations else AeatSyncSourceState.ABSENT
         local_observed_at = observed_at
-        if reconciliations:
-            rows = reconciliation_rows(
-                bucket_id=reconciliations[0].bucket_id, subject_key="overview", records=reconciliations
-            )
-            aeat_state = (
-                AeatSyncSourceState.CONFLICT
-                if any(fact.row.diffs for fact in rows)
-                else AeatSyncSourceState.INCOMPLETE
-                if any(fact.row.advisory_count for fact in rows)
-                else AeatSyncSourceState.PRESENT
-            )
-            aeat_observed_at = max(record.reconciled_at for record in reconciliations)
+        aeat_state, aeat_observed_at = _reconciliation_overview_state(
+            reconciliations,
+            aeat_state,
+            aeat_observed_at,
+        )
     return AeatSyncWorkspaceOverviewRowV1(
         area=area,
         local_state=local_state,
@@ -449,6 +442,26 @@ def _overview_row(
         supported_actions=actions,
         supported_operations=operations,
     )
+
+
+def _reconciliation_overview_state(
+    reconciliations: tuple[ModeloReconciliationRecord, ...],
+    aeat_state: AeatSyncSourceState,
+    aeat_observed_at: UtcInstant | None,
+) -> tuple[AeatSyncSourceState, UtcInstant | None]:
+    if reconciliations:
+        rows = reconciliation_rows(
+            bucket_id=reconciliations[0].bucket_id, subject_key="overview", records=reconciliations
+        )
+        aeat_state = (
+            AeatSyncSourceState.CONFLICT
+            if any(fact.row.diffs for fact in rows)
+            else AeatSyncSourceState.INCOMPLETE
+            if any(fact.row.advisory_count for fact in rows)
+            else AeatSyncSourceState.PRESENT
+        )
+        aeat_observed_at = max(record.reconciled_at for record in reconciliations)
+    return aeat_state, aeat_observed_at
 
 
 _CENSUS_FIELD_CATEGORIES: Final[dict[str, AeatSyncCensusCategory]] = {
@@ -536,45 +549,72 @@ def _filed_declaration_rows(
     area_actions, operations = _admitted_capabilities(AeatSyncOverviewArea.FILED_DECLARATIONS, contracts)
     # The whole-history pull is the area's offer on its overview row; one declaration's row does not carry it.
     actions = tuple(action for action in area_actions if action.action_id != "operator.live.filed.pull_all")
+    latest = _latest_filings(filings)
+    rows: list[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]] = []
+    for key in sorted(latest.keys() | observed.keys()):
+        record, evidence = latest.get(key), observed.get(key)
+        rows.append(
+            _filed_declaration_fact(
+                bucket_id,
+                subject_key,
+                key,
+                record,
+                evidence,
+                aeat_observed_at,
+                actions,
+                operations,
+            )
+        )
+    return tuple(rows)
+
+
+def _latest_filings(filings: tuple[ModeloRecord, ...]) -> dict[_NaturalKey, ModeloRecord]:
     latest: dict[_NaturalKey, ModeloRecord] = {}
     for record in filings:
         key = (str(record.modelo), record.filing_year, record.period.registry_token)
         current = latest.get(key)
         if current is None or record.filed_at > current.filed_at:
             latest[key] = record
-    rows: list[AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]] = []
-    for key in sorted(latest.keys() | observed.keys()):
-        record, evidence = latest.get(key), observed.get(key)
-        aeat_at = None if evidence is None else aeat_observed_at
-        verified = evidence is not None and evidence.justificante_verified
-        rows.append(
-            AeatSyncWorkspaceFactV1(
-                bucket_id=bucket_id,
-                subject_key=subject_key,
-                row=AeatSyncWorkspaceFiledDeclarationRowV1(
-                    modelo=record.modelo if record is not None else ModeloCode(key[0]),
-                    filing_year=key[1],
-                    period=record.period if record is not None else _evidence_period(evidence),
-                    local_filing_state=(
-                        AeatSyncLocalFilingState.NOT_OBSERVED if record is None else AeatSyncLocalFilingState.FILED
-                    ),
-                    local_filed_at=None if record is None else record.filed_at,
-                    aeat_observation_state=(
-                        AeatSyncAeatObservationState.NOT_OBSERVED
-                        if evidence is None
-                        else _AEAT_OBSERVATION_STATES[evidence.aeat_submission_state]
-                    ),
-                    aeat_observed_at=aeat_at,
-                    justificante_state=(
-                        AeatSyncJustificanteState.VERIFIED if verified else AeatSyncJustificanteState.NOT_OBSERVED
-                    ),
-                    justificante_observed_at=aeat_at if verified else None,
-                    supported_actions=actions,
-                    supported_operations=operations,
-                ),
-            )
-        )
-    return tuple(rows)
+    return latest
+
+
+def _filed_declaration_fact(
+    bucket_id: str,
+    subject_key: str,
+    key: _NaturalKey,
+    record: ModeloRecord | None,
+    evidence: OverviewCalendarFilingEvidence | None,
+    aeat_observed_at: UtcInstant | None,
+    actions: tuple[ActionReference, ...],
+    operations: tuple[OperationDefinitionId, ...],
+) -> AeatSyncWorkspaceFactV1[AeatSyncWorkspaceFiledDeclarationRowV1]:
+    aeat_at = None if evidence is None else aeat_observed_at
+    verified = evidence is not None and evidence.justificante_verified
+    return AeatSyncWorkspaceFactV1(
+        bucket_id=bucket_id,
+        subject_key=subject_key,
+        row=AeatSyncWorkspaceFiledDeclarationRowV1(
+            modelo=record.modelo if record is not None else ModeloCode(key[0]),
+            filing_year=key[1],
+            period=record.period if record is not None else _evidence_period(evidence),
+            local_filing_state=(
+                AeatSyncLocalFilingState.NOT_OBSERVED if record is None else AeatSyncLocalFilingState.FILED
+            ),
+            local_filed_at=None if record is None else record.filed_at,
+            aeat_observation_state=(
+                AeatSyncAeatObservationState.NOT_OBSERVED
+                if evidence is None
+                else _AEAT_OBSERVATION_STATES[evidence.aeat_submission_state]
+            ),
+            aeat_observed_at=aeat_at,
+            justificante_state=(
+                AeatSyncJustificanteState.VERIFIED if verified else AeatSyncJustificanteState.NOT_OBSERVED
+            ),
+            justificante_observed_at=aeat_at if verified else None,
+            supported_actions=actions,
+            supported_operations=operations,
+        ),
+    )
 
 
 def _evidence_period(evidence: OverviewCalendarFilingEvidence | None) -> Period:

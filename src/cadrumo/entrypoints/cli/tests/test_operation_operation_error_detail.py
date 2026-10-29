@@ -31,16 +31,20 @@ from cadrumo.application.cli_exception_preconditions import (
     cli_exception_no_recovery_verdict,
 )
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+from cadrumo.application.modelo.calculation_operation import (
     build_modelo_work_calculate_definition,
     build_modelo_work_calculate_registration,
+)
+from cadrumo.application.modelo.operation_definitions import (
     build_modelo_work_file_definition,
     build_modelo_work_file_registration,
     build_modelo_work_verify_definition,
     build_modelo_work_verify_registration,
+)
+from cadrumo.application.modelo.operation_shared import (
+    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
+    MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculatePublicResultV2,

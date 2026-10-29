@@ -74,9 +74,9 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationSourceRef,
     derive_calculation_revision_id_from_revision,
 )
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationSourceRef
 from cadrumo.domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -86,7 +86,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,

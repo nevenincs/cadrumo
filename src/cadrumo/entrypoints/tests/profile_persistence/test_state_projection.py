@@ -54,10 +54,8 @@ from cadrumo.application.modelo.work_lifecycle import (
     discard_work_unit,
 )
 from cadrumo.application.overview.status_report import build_overview_status_report
-from cadrumo.application.state_projection import (
-    ModeloReadinessRequest,
-    build_operator_state_projection,
-)
+from cadrumo.application.state_projection import build_operator_state_projection
+from cadrumo.application.state_projection_models import ModeloReadinessRequest
 from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.user_profile.login_session_port import profile_login_session_port
 from cadrumo.application.user_profile.profile_record_repository import close_active_profile_record_session
@@ -70,7 +68,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.tests.log_records import delivered_records
 
 from ....adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports

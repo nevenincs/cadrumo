@@ -7,7 +7,7 @@ today. Decoding a catalogue of thousands of invoices asked them thousands of
 times, and every answer was rebuilt from the registry each time.
 
 A pass is one outermost :class:`~cadrumo.domain.invoices.models.Invoice` or
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue` validation. Inside it,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue` validation. Inside it,
 :func:`answer_once` returns the first successful answer to an identical
 question instead of recomputing it. The memo is bounded by these invariants:
 

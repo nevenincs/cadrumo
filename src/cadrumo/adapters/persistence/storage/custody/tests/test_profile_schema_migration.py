@@ -32,7 +32,8 @@ from cadrumo.application.user_profile.projections import projection_for_taxpayer
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import storage_location
 from cadrumo.domain.buckets.event import BucketEventType
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
 from cadrumo.domain.user_profile.errors import UserProfileValidationError

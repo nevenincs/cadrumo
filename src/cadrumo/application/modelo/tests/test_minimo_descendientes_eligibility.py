@@ -41,7 +41,7 @@ from ....domain.contribuyente.family_fact_context import FamilyFactResolutionCon
 from ....domain.contribuyente.family_profile import RentaFamilyProfile
 from ....domain.contribuyente.family_types import MinimoDescendientesThresholds
 from ....domain.contribuyente.renta_codes import RentaMaritalStatus
-from ..profile_binding import (
+from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_minimo_descendientes_facts,
     second_entitled_filer_indicated,

@@ -40,7 +40,7 @@ from ..account import (
     AccountRecomposeReasonV1,
     AccountRecomposeRequiredV1,
 )
-from ..app import CadrumoTuiApp, HomeRefreshDoorV1
+from ..app import CadrumoTuiApp
 from ..components.account_chrome import AccountChromeScreen
 from ..home import HomeScreen
 from ..ledger.actividad_asset import ActivityAssetScreen, ActivityAssetTuiActionsV1
@@ -62,6 +62,7 @@ from ..navigation import (
     build_destination_catalogue,
 )
 from ..presentation import PagePresentationRequested
+from ..root_binding import HomeRefreshDoorV1
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from .settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until
 

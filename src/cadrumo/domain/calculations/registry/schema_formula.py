@@ -191,15 +191,23 @@ class FormulaExpression(RegistryModel):
         if sum(populated_leaves):
             raise RegistryValidationError("formula operator must not declare leaf sources")
         require_formula_operator_arity(self.op, len(self.args))
+        self._validate_operator_operands()
+        return self
+
+    def _validate_operator_operands(self) -> None:
+        """Require the exact leaf kinds admitted by text and record operators."""
+        self._validate_text_operands()
+        if self.op == "record_row_unused" and self.args[0].binding is None:
+            raise RegistryValidationError("record_row_unused requires one binding leaf")
+
+    def _validate_text_operands(self) -> None:
+        """Restrict text operands to text_equal and require its admitted leaf sources."""
         if self.op == "text_equal" and any(
             arg.binding is None and arg.casilla_id is None and arg.text_literal is None for arg in self.args
         ):
             raise RegistryValidationError("text_equal requires binding, casilla, or text_literal leaves")
         if self.op != "text_equal" and any(arg.text_literal is not None for arg in self.args):
             raise RegistryValidationError("text_literal may only be an operand of text_equal")
-        if self.op == "record_row_unused" and self.args[0].binding is None:
-            raise RegistryValidationError("record_row_unused requires one binding leaf")
-        return self
 
 
 class DatedValue(RegistryModel):

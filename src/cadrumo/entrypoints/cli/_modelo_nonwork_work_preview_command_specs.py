@@ -77,7 +77,7 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_results", "WorkPreviewMaritimeExemptionResult", __package__),
+            DeferredTarget(".modelo_query_results", "WorkPreviewMaritimeExemptionResult", __package__),
             identity="modelo.work.preview_maritime_exemption",
         ),
     ),

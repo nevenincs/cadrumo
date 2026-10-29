@@ -74,6 +74,31 @@ class _SecureObjectListRawRow(Protocol):
     previous_payload_hash: str | None
 
 
+def _require_expected_classification(
+    namespace: str, classification_str: str, expected_class: SensitivityClass
+) -> SensitivityClass:
+    try:
+        classification = SensitivityClass(classification_str)
+    except ValueError as exc:
+        raise ClassificationError(
+            context={
+                "namespace": namespace,
+                "classification": classification_str,
+            },
+            translated_message="errors.storage.namespace.unknown_classification",
+        ) from exc
+    if not inner_envelope_classification_is_expected(classification, expected_class):
+        raise ClassificationError(
+            context={
+                "namespace": namespace,
+                "classification": classification.value,
+                "expected": expected_class.value,
+            },
+            translated_message="errors.storage.namespace.classification_mismatch",
+        )
+    return classification
+
+
 def decode_secure_object_row(
     *,
     namespace: str,
@@ -165,25 +190,7 @@ def decode_secure_object_row(
             which includes a row carrying no revision metadata at all.
         DecryptionError: The AEAD did not open.
     """
-    try:
-        classification = SensitivityClass(classification_str)
-    except ValueError as exc:
-        raise ClassificationError(
-            context={
-                "namespace": namespace,
-                "classification": classification_str,
-            },
-            translated_message="errors.storage.namespace.unknown_classification",
-        ) from exc
-    if not inner_envelope_classification_is_expected(classification, expected_class):
-        raise ClassificationError(
-            context={
-                "namespace": namespace,
-                "classification": classification.value,
-                "expected": expected_class.value,
-            },
-            translated_message="errors.storage.namespace.classification_mismatch",
-        )
+    classification = _require_expected_classification(namespace, classification_str, expected_class)
     ensure_schema_version_readable(
         namespace=namespace,
         schema_version=schema_version,

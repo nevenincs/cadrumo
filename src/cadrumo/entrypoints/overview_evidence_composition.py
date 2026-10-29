@@ -20,7 +20,7 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 from ..application.calculations.revision_carry_gate import revision_carry_outcome
-from ..application.overview.calendar import build_overview_calendar_events, calendar_events_from_modelo_records
+from ..application.overview.calendar_events import build_overview_calendar_events, calendar_events_from_modelo_records
 from ..application.overview.calendar_evidence import no_aeat_history_notice
 from ..application.overview.calendar_models import (
     OverviewCalendarEvent,
@@ -197,7 +197,7 @@ def local_modelo_work_units(bucket_id: str) -> tuple[tuple[WorkUnit, ...], Notic
     """
     try:
         from ..application.modelo.work_lifecycle import list_work_units
-        from .adapter_composition import build_work_lifecycle_ports
+        from .adapter_composition_work_ports import build_work_lifecycle_ports
 
         return list_work_units(
             bucket_id=bucket_id,

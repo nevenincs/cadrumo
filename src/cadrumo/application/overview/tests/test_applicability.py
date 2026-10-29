@@ -36,12 +36,12 @@ from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime
 
 from ....domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
     derive_modelo_applicability,
     derive_tax_route,
     iter_modelo_applicability_rules,
     taxpayer_model_is_declared,
 )
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.applicability_routes import TaxRoute
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryFailureClassification, RegistryFailureCondition

@@ -27,10 +27,10 @@ from cadrumo.application.aggregation.modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
 )
 from cadrumo.application.aggregation.renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
-from cadrumo.application.aggregation.renta_ledger import (
+from cadrumo.application.aggregation.renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from cadrumo.application.aggregation.renta_ledger_models import (
     RentaLedgerAggregationIssueReason,
     RentaLedgerExpenseAggregation,
-    aggregate_renta_ledger_expenses_from_repositories,
 )
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
@@ -52,8 +52,9 @@ from cadrumo.domain.categories.proportionality import (
 )
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.ccaa import CCAA
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue

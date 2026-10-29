@@ -14,7 +14,8 @@ from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
-from ..calendar import build_overview_calendar, calendar_events_from_expedientes_snapshots
+from ..calendar import build_overview_calendar
+from ..calendar_events import calendar_events_from_expedientes_snapshots
 from ..calendar_models import OverviewCalendar, OverviewCalendarRange
 from .calendar_test_support import BUCKET_ID as _BUCKET_ID
 from .calendar_test_support import SOURCE_URL as _SOURCE_URL
@@ -276,7 +277,8 @@ def test_calendar_excludes_non_applicable_modelos(
     ``NOT_APPLICABLE`` row shown as confidently due is the regression defect.
     """
 
-    from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+    from ....domain.calculations.registry.applicability import derive_modelo_applicability
+    from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 
     profile = _objetiva_autonomo()
     rng = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31))

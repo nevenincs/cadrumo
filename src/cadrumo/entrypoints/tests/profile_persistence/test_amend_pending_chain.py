@@ -13,7 +13,7 @@ from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import AeatConfirmationState, FilingDeclarationKind, ModeloRecordStatus
-from cadrumo.entrypoints.adapter_composition import build_amendment_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_amendment_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.import_flow_support import (
     _IMPORT_EXPENSE_CASILLA,
     _IMPORT_INCOME_CASILLA,

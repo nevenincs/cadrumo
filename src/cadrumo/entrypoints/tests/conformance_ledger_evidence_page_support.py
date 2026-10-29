@@ -13,7 +13,7 @@ from ...application.ledger.evidence_page_contracts import (
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...tests.pdf_fixtures import multi_page_text_pdf_bytes
-from ..adapter_composition import build_ledger_evidence_ports
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,

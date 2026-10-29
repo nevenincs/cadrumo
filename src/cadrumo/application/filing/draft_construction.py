@@ -875,39 +875,15 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
             translated_message="application.filing.build_draft.errors.binding_data_type_unsupported",
             context={"binding_id": binding_id, "data_type": data_type},
         ) from exc
-    if family in {"int", "decimal"} and (value is None or value == ""):
+    if _empty_numeric_binding(family, value):
         # Row producers leave inapplicable amounts empty (for example M347's
         # quarterly amounts on an annual computation basis). Preserve absence
         # so the declared export slot decides its fill and requiredness.
         return None
     if family == "str":
-        # Coerce first so the generic ``text`` channel keeps accepting a
-        # non-string scalar (an integer ``rectified_year``); the canonical
-        # validator is an identity for ``text`` and a real check for the
-        # specific families, which previously bypassed their validators.
-        try:
-            return _validate_registry_text_scalar(
-                data_type,
-                str(value),
-                tax_id_format=_runtime_tax_id_format() if data_type == "nif" else None,
-            )
-        except _RegistryValidationError as exc:
-            raise _ModeloBuilderError(
-                translated_message="application.filing.build_draft.errors.binding_text_value_invalid",
-                context={
-                    "binding_id": binding_id,
-                    "data_type": data_type,
-                    "registry_error_type": type(exc).__name__,
-                },
-            ) from exc
+        return _text_binding_input(binding_id, value, data_type)
     if family == "int":
-        decimal_value = _decimal_input(binding_id, value)
-        if decimal_value != decimal_value.to_integral_value():
-            raise _ModeloBuilderError(
-                translated_message="application.filing.build_draft.errors.binding_value_not_integer",
-                context={"binding_id": binding_id, "data_type": data_type},
-            )
-        return int(decimal_value)
+        return _integer_binding_input(binding_id, value, data_type)
     if family == "bool":
         return _boolean_input(binding_id, value)
     if family == "decimal":
@@ -922,6 +898,42 @@ def _binding_input(binding_id: _BindingId, value: object, binding: _DataBindingD
             "value_family": family,
         },
     )
+
+
+def _empty_numeric_binding(family: str, value: object) -> bool:
+    return family in {"int", "decimal"} and (value is None or value == "")
+
+
+def _text_binding_input(binding_id: _BindingId, value: object, data_type: str) -> str:
+    # Coerce first so the generic ``text`` channel keeps accepting a
+    # non-string scalar (an integer ``rectified_year``); the canonical
+    # validator is an identity for ``text`` and a real check for the
+    # specific families, which previously bypassed their validators.
+    try:
+        return _validate_registry_text_scalar(
+            data_type,
+            str(value),
+            tax_id_format=_runtime_tax_id_format() if data_type == "nif" else None,
+        )
+    except _RegistryValidationError as exc:
+        raise _ModeloBuilderError(
+            translated_message="application.filing.build_draft.errors.binding_text_value_invalid",
+            context={
+                "binding_id": binding_id,
+                "data_type": data_type,
+                "registry_error_type": type(exc).__name__,
+            },
+        ) from exc
+
+
+def _integer_binding_input(binding_id: _BindingId, value: object, data_type: str) -> int:
+    decimal_value = _decimal_input(binding_id, value)
+    if decimal_value != decimal_value.to_integral_value():
+        raise _ModeloBuilderError(
+            translated_message="application.filing.build_draft.errors.binding_value_not_integer",
+            context={"binding_id": binding_id, "data_type": data_type},
+        )
+    return int(decimal_value)
 
 
 def _refuse_decimal_input(input_id: str, value: object) -> _ModeloBuilderError:

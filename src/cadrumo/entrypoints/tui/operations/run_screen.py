@@ -9,9 +9,7 @@ frame. Nothing is retried; a submission whose reply was lost stays unknown.
 
 from __future__ import annotations
 
-import asyncio
 import json
-import time
 from typing import ClassVar, cast, override
 
 from pydantic import BaseModel
@@ -21,18 +19,13 @@ from textual.containers import ItemGrid, Vertical, VerticalScroll
 from textual.screen import Screen
 from textual.widgets import Button, Input, Select, Static, TextArea
 
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController
 
-from ....core.async_cleanup import await_cancellation_complete
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
-from ....core.request_faults import request_fault_line
 from ..components.language import localized, refresh_localized_widgets
 from ..components.theme import BASE_CSS, tokenised
 from .catalogue import OperationCatalogueEntryV1
@@ -45,7 +38,6 @@ from .modal import (
 from .refusal_explanation import public_refusal_explanation
 from .request_form import (
     RequestFieldKind,
-    RequestFieldProblem,
     RequestFieldV1,
     derived_subject,
     field_texts,
@@ -54,44 +46,14 @@ from .request_form import (
     subject_is_entered,
     validate_request,
 )
-from .run_result import receipt_text, result_pages, stopped_operation_text
+from .run_fields import field_label, field_widget
+from .run_result import receipt_text, result_is_readable, result_pages, stopped_operation_text
+from .run_submission import submit_operation
+from .run_wording import failure_text, problem_text
 
-_CONTRACT_READ_SECONDS = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 _ACTION_MIN_COLUMN_WIDTH = 16
 _REPLAY_KEY_MAX_LENGTH = 256
 """The longest replay key the operation request model accepts."""
-_UNKNOWN_OUTCOME_CODES = frozenset({RefusalCode.TIMEOUT, RefusalCode.CONNECTION_CLOSED})
-"""Transport outcomes that leave unknown whether the runtime recorded the submission."""
-
-
-def _kind_hint(kind: RequestFieldKind) -> str:
-    """Say how one kind of value is entered, as the field's placeholder."""
-    if kind is RequestFieldKind.INTEGER:
-        return tr("tui.operations.form.hint.integer")
-    if kind is RequestFieldKind.NUMBER:
-        return tr("tui.operations.form.hint.number")
-    if kind is RequestFieldKind.DECIMAL:
-        return tr("tui.operations.form.hint.decimal")
-    if kind is RequestFieldKind.DATE:
-        return tr("tui.operations.form.hint.date")
-    if kind is RequestFieldKind.DATETIME:
-        return tr("tui.operations.form.hint.datetime")
-    if kind is RequestFieldKind.UUID:
-        return tr("tui.operations.form.hint.uuid")
-    if kind is RequestFieldKind.PATH:
-        return tr("tui.operations.form.hint.path")
-    return tr("tui.operations.form.hint.text")
-
-
-def _problem_text(problem: RequestFieldProblem) -> str:
-    """Word why a field's text could not be read."""
-    if problem is RequestFieldProblem.INTEGER:
-        return tr("tui.operations.form.error.integer")
-    if problem is RequestFieldProblem.NUMBER:
-        return tr("tui.operations.form.error.number")
-    if problem is RequestFieldProblem.JSON:
-        return tr("tui.operations.form.error.json")
-    return tr("tui.operations.form.error.choice")
 
 
 class OperationRunScreen(Screen[None]):
@@ -155,12 +117,12 @@ class OperationRunScreen(Screen[None]):
             with Vertical(id="operation-fields"):
                 for index, field in enumerate(self._fields):
                     yield Static(
-                        self._field_label(field),
+                        field_label(field),
                         id=f"operation-field-label-{index}",
                         classes="operation-field-label",
                         markup=False,
                     )
-                    yield self._field_widget(index, field)
+                    yield field_widget(index, field)
                     yield Static("", id=f"operation-field-error-{index}", classes="operation-field-error", markup=False)
             whole_request = TextArea("", id="operation-json", classes="operation-json")
             whole_request.display = False
@@ -201,32 +163,6 @@ class OperationRunScreen(Screen[None]):
     def on_mount(self) -> None:
         """Show the subject the untouched form already determines."""
         self._show_subject(request_document(self._fields, self._texts())[0])
-
-    @staticmethod
-    def _field_label(field: RequestFieldV1) -> str:
-        heading = field.name
-        if field.required:
-            heading = f"{heading} ({tr('tui.operations.form.required')})"
-        if field.session_fixed:
-            heading = f"{heading} ({tr('tui.operations.form.fixed')})"
-        return heading if not field.description else f"{heading}\n{field.description}"
-
-    @staticmethod
-    def _field_widget(index: int, field: RequestFieldV1) -> Static | Select[str] | TextArea | Input:
-        widget_id = f"operation-field-{index}"
-        if field.session_fixed:
-            return Static(field.initial, id=widget_id, markup=False)
-        if field.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}:
-            labels = ("true", "false") if field.kind is RequestFieldKind.BOOLEAN else field.choice_labels
-            return Select[str](
-                [(label, label) for label in labels],
-                prompt=tr("tui.operations.form.choose"),
-                value=field.initial if field.initial in labels else Select.NULL,
-                id=widget_id,
-            )
-        if field.kind is RequestFieldKind.JSON:
-            return TextArea(field.initial, id=widget_id, classes="operation-json")
-        return Input(value=field.initial, placeholder=_kind_hint(field.kind), id=widget_id)
 
     def _texts(self) -> dict[str, str]:
         """Read every field's current text; a field the session fixes reads as its fixed value."""
@@ -297,7 +233,7 @@ class OperationRunScreen(Screen[None]):
         """Read the request document from the fields, or from the whole-request editor."""
         if not self._json_mode:
             document, problems = request_document(self._fields, self._texts())
-            unplaced = self._show_field_errors({name: (_problem_text(problem),) for name, problem in problems.items()})
+            unplaced = self._show_field_errors({name: (problem_text(problem),) for name, problem in problems.items()})
             if problems:
                 self._notice("\n".join((tr("tui.operations.form.invalid"), *unplaced)))
                 return None
@@ -403,7 +339,7 @@ class OperationRunScreen(Screen[None]):
     async def _submit(self, payload: BaseModel, subject: str, secret: bytearray | None, replay_key: str | None) -> None:
         client, entry = self._client, self._entry
         try:
-            controller = await self._submitted(client, entry, payload, subject, secret, replay_key)
+            controller = await submit_operation(self._notice, client, entry, payload, subject, secret, replay_key)
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
@@ -417,7 +353,7 @@ class OperationRunScreen(Screen[None]):
             # The submission is recorded; only its start is unconfirmed.
             self._show_receipt(
                 f"{tr('tui.operations.receipt.operation')}: {controller.operation_id}\n"
-                f"{tr('tui.operations.run.start_unconfirmed')}\n{self._failure_text(error)}"
+                f"{tr('tui.operations.run.start_unconfirmed')}\n{failure_text(error)}"
             )
             return
 
@@ -425,53 +361,6 @@ class OperationRunScreen(Screen[None]):
             self._settled(controller, outcome)
 
         self.app.push_screen(OperationModal(controller), settled)
-
-    async def _submitted(
-        self,
-        client: FrontendClient,
-        entry: OperationCatalogueEntryV1,
-        payload: BaseModel,
-        subject: str,
-        secret: bytearray | None,
-        replay_key: str | None,
-    ) -> OperationController | None:
-        try:
-            live = await await_cancellation_complete(
-                asyncio.to_thread(
-                    client.contract, entry.definition_id, deadline=time.monotonic() + _CONTRACT_READ_SECONDS
-                ),
-                task_name="tui-operation-run-contract",
-            )
-            if live != entry.contract:
-                # The form was built from another contract than the runtime now serves.
-                self._notice(tr("tui.operations.run.contract_changed"))
-                return None
-            return await OperationController.submit(
-                client,
-                definition_id=entry.definition_id,
-                subject_ref=subject,
-                payload=payload,
-                expected_session_id=client.session_id,
-                financial_input=entry.typed_operator_input,
-                secret=secret,
-                idempotency_key=replay_key,
-            )
-        except CadrumoError as error:
-            self._notice(self._failure_text(error))
-            return None
-
-    @staticmethod
-    def _failure_text(error: CadrumoError) -> str:
-        message = resolve_error_message(error)
-        if isinstance(error, RefusalError) and error.reason in _UNKNOWN_OUTCOME_CODES:
-            return f"{tr('tui.operations.run.unknown')}\n{message}"
-        if isinstance(error, FrontendRefusedError) and error.request_faults:
-            # The runtime's request model refused a payload the form's own check let through.
-            return "\n".join((message, *(request_fault_line(fault) for fault in error.request_faults)))
-        if isinstance(error, FrontendRefusedError) and error.holder_operation_id is not None:
-            # A busy subject names the unsettled operation holding it, so the person can follow it.
-            return f"{message}\n{tr('tui.operations.run.busy_holder', operation_id=error.holder_operation_id)}"
-        return message
 
     def _show_receipt(self, text: str) -> None:
         self.query_one("#operation-result-receipt", Static).update(text)
@@ -497,16 +386,13 @@ class OperationRunScreen(Screen[None]):
 
     async def _show_result(self, controller: OperationController, outcome: OperationModalSettledOutcomeV1) -> None:
         projection = outcome.view_model.projection
-        contract = projection.definition_contract
         self._show_receipt(receipt_text(projection))
         condition = projection.terminal_condition
         if condition in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}:
             stopped = stopped_operation_text(await controller.settled_error_detail(projection))
             fallback = outcome.error_explanation or public_refusal_explanation(projection.refusal_ref) or ""
             self.query_one("#operation-result-stopped", Static).update(stopped or fallback)
-        readable = (condition is OperationTerminalCondition.SUCCEEDED and projection.result_ref is not None) or (
-            condition is OperationTerminalCondition.REFUSED and projection.refusal_ref in contract.refusal_detail_codes
-        )
+        readable = result_is_readable(projection)
         result_type = self._entry.result_type
         if not readable or result_type is None:
             return
@@ -537,7 +423,7 @@ class OperationRunScreen(Screen[None]):
             f"{tr('tui.operations.form.session')}: {self._client.session_id}"
         )
         for index, field in enumerate(self._fields):
-            self.query_one(f"#operation-field-label-{index}", Static).update(self._field_label(field))
+            self.query_one(f"#operation-field-label-{index}", Static).update(field_label(field))
             if not field.session_fixed and field.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}:
                 self.query_one(f"#operation-field-{index}", Select).prompt = tr("tui.operations.form.choose")
         self._show_subject(request_document(self._fields, self._texts())[0])

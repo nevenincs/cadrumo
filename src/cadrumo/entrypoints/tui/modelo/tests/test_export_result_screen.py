@@ -22,17 +22,14 @@ from .....adapters.persistence.profile.review_package_signing import (
     build_review_package_signing_keypair_capability,
 )
 from .....application.modelo.calculation_report_export import ModeloCalculationReportResult
-from .....application.modelo.export import ModeloExportAccountReference, ModeloExportResult
+from .....application.modelo.export_contracts import ModeloExportAccountReference, ModeloExportResult
+from .....application.modelo.export_operation import build_modelo_export_definition, build_modelo_export_registration
 from .....application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,
     ModeloExportPublicResultV3,
 )
-from .....application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    build_modelo_export_definition,
-    build_modelo_export_registration,
-)
+from .....application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from .....application.modelo.work_export_contracts import ModeloExportSettledResult
 from .....application.modelo.work_form_export_offer import EXPORT_ARTEFACT_LOCALE_KEYS
 from .....application.operations.models import OperationIdentity, OperationTerminalReceipt
@@ -45,7 +42,7 @@ from .....core.operations import OperationEffect, OperationTerminalCondition
 from .....core.period import Period
 from .....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from .....domain.transactions.own_accounts import OwnAccountRole
-from ....adapter_composition import build_modelo_export_ports
+from ....adapter_composition_ports import build_modelo_export_ports
 from ...components.widgets import ContentDataTable
 from ...tests.settling import settle
 from ..export_result import (
@@ -192,7 +189,7 @@ async def test_an_export_whose_completeness_is_unverified_says_so_in_its_facts_a
 
 
 @pytest.mark.asyncio
-async def test_an_unverified_cutoff_is_warned_and_the_account_is_named_by_role_and_id(tmp_path: Path) -> None:
+async def test_an_unverified_timeout_is_warned_and_the_account_is_named_by_role_and_id(tmp_path: Path) -> None:
     """A domiciliación with no declared cutoff is an advisory, and the account appears only by its opaque id."""
     result = _publicly_projected(
         _filing_file_receipt(

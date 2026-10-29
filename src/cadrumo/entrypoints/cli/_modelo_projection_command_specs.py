@@ -72,7 +72,7 @@ def _leaf(
         LazyBinding.available(DeferredTarget(".modelo_projection_commands", handler, __package__)),
         ResultSchemaSpec(
             SchemaState.TARGET,
-            DeferredTarget(".modelo_results", schema_name, __package__),
+            DeferredTarget(".modelo_query_results", schema_name, __package__),
             identity=f"modelo.{token}",
         ),
     )

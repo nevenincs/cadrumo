@@ -25,8 +25,8 @@ from typing import NoReturn
 import pytest
 
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification import suggest_evidence_split
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSplitSuggestion
+from .....application.ledger.llm_evidence_split import suggest_evidence_split
 from .....core.config import load_settings
 from .....core.model_roles import ModelRole
 from .....domain.calculations.registry.authority import (

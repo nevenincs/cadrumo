@@ -30,11 +30,13 @@ from ...components.host import ScreenHostApp
 from ...operations.outcome import OperationOutcomeUnknownError, SessionExpiredOutcomeUnknownError
 from ...tests.frame import geometry_band
 from ...tests.settling import settle, settle_until
-from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..controller import LedgerWorkspaceController
+from ..invoice_detail import LedgerInvoiceDetailScreen
 from ..models import LedgerRecordDoorsV1
-from ..record_views import INVOICE_PAGE_SIZE, LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen
+from ..record_views import INVOICE_PAGE_SIZE, LedgerInvoiceCatalogueScreen
 from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
+from ..workspace_screen import LedgerWorkspaceScreen
 from .invoices_fixtures import STALE_KEY, MemoryRecordDoors, invoice_snapshot, transaction_projection
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 

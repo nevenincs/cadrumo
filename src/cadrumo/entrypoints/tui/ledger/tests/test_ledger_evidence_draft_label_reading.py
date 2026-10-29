@@ -11,7 +11,7 @@ from __future__ import annotations
 import pytest
 
 from .....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
-from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from .....application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from .....core.config import override_settings
 from .....core.i18n.render import lookup_translation
 from .....domain.iva.schema import InvoiceKind
@@ -82,7 +82,7 @@ def test_a_reader_the_local_ai_setup_supplies_names_that_setup() -> None:
     """The probe named the setup: the line says the local AI is not ready and to set it up."""
     fallback = _fallback(LabelReadingFallbackCause.READER_UNAVAILABLE).model_copy(
         update={
-            "failed_condition_id": ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value,
+            "failed_condition_id": ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value,
             "recovery_action_id": LOCAL_AI_PROVISION_ACTION_ID,
         }
     )

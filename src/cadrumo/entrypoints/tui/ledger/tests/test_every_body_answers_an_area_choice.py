@@ -29,7 +29,7 @@ from ..categorisation_common import CategorisationScreen
 from ..categorisation_review import ReviewingCategorisationScreen
 from ..categorisation_tools import ENTRY_LIST_TOOL_KEYS, categorisation_tools
 from ..classification import LedgerClassificationScreen
-from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..entries_add import LedgerEntryAddScreen
 from ..entries_browse import LedgerEntriesBrowseScreen
@@ -43,6 +43,7 @@ from ..evidence_files_tools import evidence_files_tools
 from ..evidence_files_write import EvidenceFilesOutcomeV1, EvidenceFilesWordingV1, LedgerEvidenceFilesWriteScreen
 from ..evidence_records import LedgerEvidenceRecordActions
 from ..import_flow import LedgerImportScreen
+from ..invoice_detail import LedgerInvoiceDetailScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen
 from ..invoices_import import LedgerInvoiceImportScreen
 from ..invoices_wizard import LedgerInvoiceWizardScreen
@@ -50,7 +51,7 @@ from ..models import LedgerRecordDoorsV1
 from ..overview import LedgerOverviewScreen
 from ..own_accounts import LedgerOwnAccountDoorV1, LedgerOwnAccountsScreen
 from ..reconciliation import LedgerReconciliationScreen
-from ..record_views import LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen
+from ..record_views import LedgerInvoiceCatalogueScreen
 from ..registers_capital_goods import LedgerCapitalGoodsDoorV1, LedgerCapitalGoodsScreen
 from ..registers_inventory import LedgerInventoryDoorV1, LedgerInventoryScreen
 from ..registers_presentation import LedgerRegisterScreen
@@ -60,6 +61,7 @@ from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..transaction_views import LedgerTransactionDetailScreen
 from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import LedgerConfirmationFlowScreen
+from ..workspace_screen import LedgerWorkspaceScreen
 from .categorisation_memory_doors import MemoryCategorisationProfile, categorisation_controller
 from .entries_door_fixtures import MemoryEntriesLedger, entries_controller, entry_id
 from .evidence_files_fixtures import MemoryEvidenceFilesStore

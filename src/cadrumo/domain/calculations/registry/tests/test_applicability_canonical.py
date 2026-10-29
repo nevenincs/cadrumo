@@ -24,12 +24,12 @@ from cadrumo.domain.deadlines.models import (
     TaxpayerProfile,
 )
 
-from ..applicability import (
+from ..applicability import iter_modelo_applicability_rules
+from ..applicability_models import (
     ApplicabilityProvenance,
     ApplicabilityVerdict,
     LedgerPayerFactDerivation,
     ModeloApplicabilityRule,
-    iter_modelo_applicability_rules,
 )
 from ..applicability_payer_facts import PayerFactDeclaration, PayerFactProjection, payer_fact_declaration
 from ..authority import PinnedAuthorityOperation

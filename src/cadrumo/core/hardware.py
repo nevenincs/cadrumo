@@ -5,8 +5,8 @@ measures the machine and the operator-facing diagnostic rows route on one
 identifier set rather than on bare strings.
 
 The members are consumed by
-:class:`~application.provisioning.AcceleratorReading` and
-:class:`~application.provisioning.HardwareProfile`. They sit beside, not
+:class:`~application.workstation_probes.AcceleratorReading` and
+:class:`~application.workstation_probes.HardwareProfile`. They sit beside, not
 inside, :class:`~core.capabilities.ServiceCapability`: a capability records whether the
 operator *permits* local inference, whereas these values record what the machine
 *is*.

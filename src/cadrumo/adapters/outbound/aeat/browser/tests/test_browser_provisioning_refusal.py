@@ -22,8 +22,8 @@ from playwright.async_api import async_playwright
 
 from ......application.operations.error_detail import build_operation_error_detail
 from ......application.operator_actions.catalogue import lookup_action
-from ......application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
-from ......application.provisioning_contracts import ProvisioningPreconditionCondition
+from ......application.browser_location import BROWSER_PROVISION_ACTION_ID
+from ......application.probe_outcomes import ProbePreconditionCondition
 from ......core.config import Settings
 from ......core.errors.error_codes import (
     ErrorCategory,
@@ -82,7 +82,7 @@ def _assert_names_the_browser_setup(error: BrowserError, browsers_root: Path) ->
     assert error.translated_message == "adapters.browser.errors.not_provisioned"
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
+    assert verdict.failed_condition_id == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
     # The verdict is published with every refusal, so it names why the browser was not
     # located, never the folder.
     assert verdict.evidence[0].values["browser_record"] != "located"
@@ -164,7 +164,7 @@ def test_a_browser_setup_cannot_repair_is_refused_without_offering_setup(
     assert registered.message_key == "adapters.browser.errors.not_usable"
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_MANIFEST_READABLE.value
+    assert verdict.failed_condition_id == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_MANIFEST_READABLE.value
     assert verdict.action is None
     assert error.translated_message == "adapters.browser.errors.not_usable"
     sentence = resolve_error_message(error, locale="en")

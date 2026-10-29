@@ -101,7 +101,7 @@ async def test_remote_browser_state_is_discarded_when_commit_authority_is_revoke
         assert session_store.exists(session_path)
         return _authentication_result(identity, session_path)
 
-    monkeypatch.setattr("cadrumo.application.auth.sessions._build_provider", lambda *_a, **_kw: SyntheticProvider())
+    monkeypatch.setattr("cadrumo.application.auth.sessions.build_provider", lambda *_a, **_kw: SyntheticProvider())
     monkeypatch.setattr("cadrumo.application.auth.sessions._authenticate_and_verify_provider", remote_auth)
 
     @asynccontextmanager
@@ -168,7 +168,7 @@ async def test_live_capture_auth_denial_discards_staged_browser_state(
         )
         return _authentication_result(identity, session_path)
 
-    monkeypatch.setattr("cadrumo.application.auth.sessions._build_provider", lambda *_a, **_kw: SyntheticProvider())
+    monkeypatch.setattr("cadrumo.application.auth.sessions.build_provider", lambda *_a, **_kw: SyntheticProvider())
     monkeypatch.setattr("cadrumo.application.auth.sessions._authenticate_and_verify_provider", remote_auth)
 
     @asynccontextmanager

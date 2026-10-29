@@ -101,11 +101,11 @@ from ....application.aggregation.retenciones import (
     RetencionObservation,
 )
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
-from ....application.modelo.calculation_actions import (
+from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from ....application.modelo.revision_persistence import persist_filed_revision
+from ....application.modelo.filing_revision_persistence import persist_filed_revision
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts

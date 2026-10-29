@@ -59,10 +59,10 @@ from ..domain.calculations.registry.schema_base import DateAxis
 from ..domain.contribuyente.entity_type import entity_type_natural_person_token
 from ..domain.deadlines.models import TaxpayerProfile
 from ..domain.user_profile.values import UserProfileRecord
-from .adapter_composition import (
+from .adapter_composition_ports import build_operator_probe_ports
+from .adapter_composition_work_ports import (
     build_expedientes_ports,
     build_ledger_evidence_ports,
-    build_operator_probe_ports,
     build_state_projection_read_ports,
 )
 from .overview_evidence_composition import (
@@ -427,7 +427,7 @@ class _OverviewReadPorts:
         evidence: FilingYearApplicabilityEvidence,
     ) -> OverviewExplainRead:
         from ..application.overview.explain import build_overview_explain
-        from ..domain.calculations.registry.applicability import ApplicabilityVerdict
+        from ..domain.calculations.registry.applicability_models import ApplicabilityVerdict
         from .payer_fact_migration_notices import pending_payer_fact_notices
 
         if request.modelo is None:

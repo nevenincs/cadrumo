@@ -23,10 +23,11 @@ from ....core.invoice_link import LinkInconsistencyDirection
 from ..account import AccountSessionExpiredError
 from ..components.language import localized
 from ..components.theme import tokenised
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .entries_common import joined, period_label, period_options, read_period, selected_value, short_id
 from .entries_doors import LedgerEntriesDoorsV1
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _LINK_DIRECTION_LOCALE_KEYS: Final[dict[LinkInconsistencyDirection, str]] = {
     LinkInconsistencyDirection.INVOICE_ONLY: "tui.ledger.entry_tools.health.link.invoice_only",

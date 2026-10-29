@@ -8,7 +8,7 @@ See Also:
     :class:`~application.aggregation.CalculationSourceResolution`
         Source-mesh result envelope whose owned sources, binding values, and
         diagnostics are asserted by this enrollment gate.
-    :func:`~application.modelo.calculation_actions.resolve_bucket_source_mesh`
+    :func:`~application.modelo.calculation_source_mesh_actions.resolve_bucket_source_mesh`
         Calculate-path mesh entry point that enrolls the bienes-inversión
         resolver.
     :mod:`~application.calculations._bienes_inversion_regularizacion`
@@ -45,7 +45,7 @@ from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueR
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
-from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
+from cadrumo.application.modelo.calculation_source_mesh_actions import resolve_bucket_source_mesh
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
@@ -57,7 +57,7 @@ from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 

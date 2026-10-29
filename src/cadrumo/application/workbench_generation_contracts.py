@@ -13,7 +13,7 @@ assembly boundary accidentally.
 
 Core types:
 :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`,
 :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,

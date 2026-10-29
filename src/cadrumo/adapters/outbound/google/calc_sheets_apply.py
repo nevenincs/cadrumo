@@ -28,7 +28,12 @@ from typing import Any, Final
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ....application.export.managed_artifact_ports import AdmittedArtifact, ManagedArtifactKind, ManagedArtifactPurpose
+from ....application.export.managed_artifact_ports import (
+    AdmittedArtifact,
+    ArtifactCreationReceipt,
+    ManagedArtifactKind,
+    ManagedArtifactPurpose,
+)
 from ....application.export.publication_receipt import PublicationFailure, PublicationReceipt, PublicationState
 from ....application.storage.calc_sheets.export_tables import (
     IDENTITY_STAMP_KEYS,
@@ -70,9 +75,9 @@ from ._calc_sheets_apply_values import (
 )
 from ._preconditions import google_terminal_refusal
 from .api import (
+    ExecutableRequest,
     GoogleRequestExecutor,
     RequestRetryPolicy,
-    _ExecutableRequest,
     execute_request,
 )
 from .artifact_admission import managed_artifact_refusal
@@ -527,7 +532,7 @@ class _AdmittedSheetRequests:
         self.artifact = artifact
 
     def __call__[ResponseBodyT](
-        self, request: _ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
+        self, request: ExecutableRequest[ResponseBodyT], *, action: str, retry: RequestRetryPolicy
     ) -> ResponseBodyT:
         writes = action not in {"sheets.spreadsheets.get.publication", "sheets.spreadsheets.values.batchGet"}
         if writes and self.artifact.purpose is not ManagedArtifactPurpose.PUBLICATION:
@@ -556,29 +561,11 @@ def publish_review_plan(
     The caller supplies runtime-admitted transport and encrypted commit custody.
     """
     validate_merged_content(plan)
-    if (
-        publication.profile_id != artifacts.admission.profile_id
-        or publication.root != artifacts.admission.root
-        or plan.metadata.publication_id != publication.publication_id
-        or plan.metadata.snapshot_digest != publication.snapshot_digest
-    ):
-        raise managed_artifact_refusal("publication_binding_mismatch")
+    _require_publication_binding(plan, publication, artifacts)
     retained = artifacts.receipts.load_publication(publication.publication_id)
     name = plan.metadata.document_title
     if retained is not None:
-        if (
-            retained.profile_id != publication.profile_id
-            or retained.root != publication.root
-            or retained.snapshot_digest != publication.snapshot_digest
-            or retained.package_digest != publication.package_digest
-            or retained.predecessor_publication_id != publication.predecessor_publication_id
-        ):
-            raise managed_artifact_refusal("publication_replay_binding_mismatch")
-        if retained.state is not PublicationState.PUBLISHED:
-            raise managed_artifact_refusal("publication_requires_reconciliation", uncertain=True)
-        for receipt in retained.artifacts:
-            artifacts.admit(receipt, purpose=ManagedArtifactPurpose.ADMISSION)
-        return retained
+        return _replay_review_publication(retained, publication, artifacts)
     if publication.state is not PublicationState.PREPARED:
         raise managed_artifact_refusal("new_publication_not_prepared")
     artifacts.receipts.save_publication(publication, previous=None)
@@ -595,99 +582,13 @@ def publish_review_plan(
         artifacts.receipts.save_publication(created, previous=checkpoint)
         checkpoint = created
         failure = PublicationFailure.POPULATION
-        writes = _AdmittedSheetRequests(
-            artifacts, artifacts.admit(artifact, purpose=ManagedArtifactPurpose.PUBLICATION)
-        )
-        spreadsheet = writes(
-            sheets.spreadsheets().get(
-                spreadsheetId=artifact.artifact_id, fields="spreadsheetId,spreadsheetUrl,sheets.properties"
-            ),
-            action="sheets.spreadsheets.get.publication",
-            retry=RequestRetryPolicy.SINGLE_ATTEMPT,
-        )
-        _force_spreadsheet_locale(sheets=sheets, spreadsheet_id=artifact.artifact_id, execute=writes)
-        sheet_ids = _ensure_plan_tabs_and_grid(
-            sheets=sheets,
-            spreadsheet=spreadsheet,
-            spreadsheet_id=artifact.artifact_id,
-            plan=plan,
-            tab_titles=tuple(tab.value for tab in plan.tabs),
-            execute=writes,
-        )
-        # This identity was just created by this publication. Remove only its
-        # provider-supplied default tabs after all planned tabs exist; never
-        # apply this cleanup to a retained or previously published document.
-        default_tabs: list[Request] = [
-            {"deleteSheet": {"sheetId": identifier}}
-            for title, identifier in sheet_ids.items()
-            if title not in {tab.value for tab in plan.tabs}
-        ]
-        if default_tabs:
-            writes(
-                sheets.spreadsheets().batchUpdate(spreadsheetId=artifact.artifact_id, body={"requests": default_tabs}),
-                action="sheets.spreadsheets.batchUpdate.remove_default_tabs",
-                retry=RequestRetryPolicy.SINGLE_ATTEMPT,
-            )
-        _write_plan_values(sheets=sheets, spreadsheet_id=artifact.artifact_id, plan=plan, execute=writes)
-        _apply_plan_structural_requests(
-            sheets=sheets,
-            spreadsheet_id=artifact.artifact_id,
-            spreadsheet=spreadsheet,
-            plan=plan,
-            sheet_id_by_tab=sheet_ids,
-            execute=writes,
-        )
+        _populate_review_copy(plan, artifact, artifacts, sheets)
         failure = PublicationFailure.CUSTODY
         populated = checkpoint.advance(PublicationState.POPULATED)
         artifacts.receipts.save_publication(populated, previous=checkpoint)
         checkpoint = populated
         failure = PublicationFailure.INTEGRITY
-        reads = _AdmittedSheetRequests(
-            artifacts, artifacts.admit(artifact, purpose=ManagedArtifactPurpose.BASELINE_VERIFICATION)
-        )
-        structure = reads(
-            sheets.spreadsheets().get(spreadsheetId=artifact.artifact_id, fields="sheets.properties"),
-            action="sheets.spreadsheets.get.publication",
-            retry=RequestRetryPolicy.SINGLE_ATTEMPT,
-        )
-        expected = written_cell_values(
-            build_value_data(
-                cell
-                for cell in plan.value_cells
-                if (cell.address.tab is not TabName.ENTRADAS and cell.role != "operator_input")
-                or cell.role == "source_value"
-            )
-        )
-        current: dict[str, object] = {}
-        addresses = tuple(expected)
-        # Fixed exported baseline cells only. Never inspect editable review
-        # notes/scenarios, unused grid cells, or an earlier publication.
-        for offset in range(0, len(addresses), 100):
-            batch = addresses[offset : offset + 100]
-            response = reads(
-                sheets.spreadsheets()
-                .values()
-                .batchGet(
-                    spreadsheetId=artifact.artifact_id, ranges=list(batch), valueRenderOption="UNFORMATTED_VALUE"
-                ),
-                action="sheets.spreadsheets.values.batchGet",
-                retry=RequestRetryPolicy.SINGLE_ATTEMPT,
-            )
-            blocks = response.get("valueRanges", [])
-            if len(blocks) != len(batch):
-                raise managed_artifact_refusal("publication_baseline_response_incomplete")
-            for address, block in zip(batch, blocks, strict=True):
-                values = block.get("values", [])
-                current[address] = values[0][0] if values and values[0] else ""
-        actual_tabs = tuple(
-            str(str_keyed_mapping(item.get("properties")).get("title", ""))
-            for item in str_keyed_rows(structure, "sheets")
-        )
-        if actual_tabs != tuple(tab.value for tab in plan.tabs) or any(
-            current.get(address, "") != value for address, value in expected.items()
-        ):
-            raise managed_artifact_refusal("publication_baseline_mismatch")
-        artifacts.admit(artifact, purpose=ManagedArtifactPurpose.BASELINE_VERIFICATION)
+        _verify_review_baseline(plan, artifact, artifacts, sheets)
         failure = PublicationFailure.CUSTODY
         verified = checkpoint.advance(PublicationState.VERIFIED)
         artifacts.receipts.save_publication(verified, previous=checkpoint)
@@ -710,17 +611,7 @@ def publish_review_plan(
                 # Retain PREPARED; do not invent an uncertain remote creation.
                 raise
             artifact = attempt.receipt
-        incomplete = checkpoint.advance(
-            PublicationState.UNCERTAIN if artifact is None else PublicationState.PARTIAL,
-            artifacts=() if artifact is None else (artifact,),
-            failure=(
-                PublicationFailure.CANCELLED
-                if isinstance(error, CancelledError)
-                else PublicationFailure.CREATE_UNKNOWN
-                if artifact is None
-                else failure
-            ),
-        )
+        incomplete = _incomplete_publication(checkpoint, artifact, failure, error)
         try:
             artifacts.receipts.save_publication(incomplete, previous=checkpoint)
         except Exception as custody_error:
@@ -729,3 +620,174 @@ def publish_review_plan(
             )
             raise error from custody_error
         raise
+
+
+def _require_publication_binding(
+    plan: SheetExportPlan[SheetReviewMetadata], publication: PublicationReceipt, artifacts: ManagedGoogleArtifacts
+) -> None:
+    """Bind the review plan, publication and admitted profile/root before any remote action."""
+    if (
+        publication.profile_id != artifacts.admission.profile_id
+        or publication.root != artifacts.admission.root
+        or plan.metadata.publication_id != publication.publication_id
+        or plan.metadata.snapshot_digest != publication.snapshot_digest
+    ):
+        raise managed_artifact_refusal("publication_binding_mismatch")
+
+
+def _replay_review_publication(
+    retained: PublicationReceipt, publication: PublicationReceipt, artifacts: ManagedGoogleArtifacts
+) -> PublicationReceipt:
+    """Admit only a matching fully published receipt without repopulating its artifacts."""
+    if (
+        retained.profile_id != publication.profile_id
+        or retained.root != publication.root
+        or retained.snapshot_digest != publication.snapshot_digest
+        or retained.package_digest != publication.package_digest
+        or retained.predecessor_publication_id != publication.predecessor_publication_id
+    ):
+        raise managed_artifact_refusal("publication_replay_binding_mismatch")
+    if retained.state is not PublicationState.PUBLISHED:
+        raise managed_artifact_refusal("publication_requires_reconciliation", uncertain=True)
+    for receipt in retained.artifacts:
+        artifacts.admit(receipt, purpose=ManagedArtifactPurpose.ADMISSION)
+    return retained
+
+
+def _populate_review_copy(
+    plan: SheetExportPlan[SheetReviewMetadata],
+    artifact: ArtifactCreationReceipt,
+    artifacts: ManagedGoogleArtifacts,
+    sheets: SheetsResource,
+) -> None:
+    """Populate the freshly created identity through its per-request publication admission."""
+    writes = _AdmittedSheetRequests(artifacts, artifacts.admit(artifact, purpose=ManagedArtifactPurpose.PUBLICATION))
+    spreadsheet = writes(
+        sheets.spreadsheets().get(
+            spreadsheetId=artifact.artifact_id, fields="spreadsheetId,spreadsheetUrl,sheets.properties"
+        ),
+        action="sheets.spreadsheets.get.publication",
+        retry=RequestRetryPolicy.SINGLE_ATTEMPT,
+    )
+    _force_spreadsheet_locale(sheets=sheets, spreadsheet_id=artifact.artifact_id, execute=writes)
+    sheet_ids = _ensure_plan_tabs_and_grid(
+        sheets=sheets,
+        spreadsheet=spreadsheet,
+        spreadsheet_id=artifact.artifact_id,
+        plan=plan,
+        tab_titles=tuple(tab.value for tab in plan.tabs),
+        execute=writes,
+    )
+    # This identity was just created by this publication. Remove only its
+    # provider-supplied default tabs after all planned tabs exist; never
+    # apply this cleanup to a retained or previously published document.
+    default_tabs: list[Request] = [
+        {"deleteSheet": {"sheetId": identifier}}
+        for title, identifier in sheet_ids.items()
+        if title not in {tab.value for tab in plan.tabs}
+    ]
+    if default_tabs:
+        writes(
+            sheets.spreadsheets().batchUpdate(spreadsheetId=artifact.artifact_id, body={"requests": default_tabs}),
+            action="sheets.spreadsheets.batchUpdate.remove_default_tabs",
+            retry=RequestRetryPolicy.SINGLE_ATTEMPT,
+        )
+    _write_plan_values(sheets=sheets, spreadsheet_id=artifact.artifact_id, plan=plan, execute=writes)
+    _apply_plan_structural_requests(
+        sheets=sheets,
+        spreadsheet_id=artifact.artifact_id,
+        spreadsheet=spreadsheet,
+        plan=plan,
+        sheet_id_by_tab=sheet_ids,
+        execute=writes,
+    )
+
+
+def _verify_review_baseline(
+    plan: SheetExportPlan[SheetReviewMetadata],
+    artifact: ArtifactCreationReceipt,
+    artifacts: ManagedGoogleArtifacts,
+    sheets: SheetsResource,
+) -> None:
+    """Verify planned tabs and fixed baseline cells before recording publication success."""
+    reads = _AdmittedSheetRequests(
+        artifacts, artifacts.admit(artifact, purpose=ManagedArtifactPurpose.BASELINE_VERIFICATION)
+    )
+    structure = reads(
+        sheets.spreadsheets().get(spreadsheetId=artifact.artifact_id, fields="sheets.properties"),
+        action="sheets.spreadsheets.get.publication",
+        retry=RequestRetryPolicy.SINGLE_ATTEMPT,
+    )
+    expected = _review_expected_values(plan)
+    current = _read_review_baseline(sheets, artifact, reads, expected)
+    actual_tabs = tuple(
+        str(str_keyed_mapping(item.get("properties")).get("title", "")) for item in str_keyed_rows(structure, "sheets")
+    )
+    if actual_tabs != tuple(tab.value for tab in plan.tabs) or any(
+        current.get(address, "") != value for address, value in expected.items()
+    ):
+        raise managed_artifact_refusal("publication_baseline_mismatch")
+    artifacts.admit(artifact, purpose=ManagedArtifactPurpose.BASELINE_VERIFICATION)
+
+
+def _review_expected_values(plan: SheetExportPlan[SheetReviewMetadata]) -> dict[str, object]:
+    """Select fixed source/baseline values while excluding editable operator cells."""
+    expected = written_cell_values(
+        build_value_data(
+            cell
+            for cell in plan.value_cells
+            if (cell.address.tab is not TabName.ENTRADAS and cell.role != "operator_input")
+            or cell.role == "source_value"
+        )
+    )
+    return expected
+
+
+def _read_review_baseline(
+    sheets: SheetsResource,
+    artifact: ArtifactCreationReceipt,
+    reads: _AdmittedSheetRequests,
+    expected: Mapping[str, object],
+) -> dict[str, object]:
+    """Read only the addressed baseline in fixed batches and refuse incomplete responses."""
+    current: dict[str, object] = {}
+    addresses = tuple(expected)
+    # Fixed exported baseline cells only. Never inspect editable review
+    # notes/scenarios, unused grid cells, or an earlier publication.
+    for offset in range(0, len(addresses), 100):
+        batch = addresses[offset : offset + 100]
+        response = reads(
+            sheets.spreadsheets()
+            .values()
+            .batchGet(spreadsheetId=artifact.artifact_id, ranges=list(batch), valueRenderOption="UNFORMATTED_VALUE"),
+            action="sheets.spreadsheets.values.batchGet",
+            retry=RequestRetryPolicy.SINGLE_ATTEMPT,
+        )
+        blocks = response.get("valueRanges", [])
+        if len(blocks) != len(batch):
+            raise managed_artifact_refusal("publication_baseline_response_incomplete")
+        for address, block in zip(batch, blocks, strict=True):
+            values = block.get("values", [])
+            current[address] = values[0][0] if values and values[0] else ""
+    return current
+
+
+def _incomplete_publication(
+    checkpoint: PublicationReceipt,
+    artifact: ArtifactCreationReceipt | None,
+    failure: PublicationFailure,
+    error: BaseException,
+) -> PublicationReceipt:
+    """Retain the exact known artifact and failure stage when publication cannot complete."""
+    incomplete = checkpoint.advance(
+        PublicationState.UNCERTAIN if artifact is None else PublicationState.PARTIAL,
+        artifacts=() if artifact is None else (artifact,),
+        failure=(
+            PublicationFailure.CANCELLED
+            if isinstance(error, CancelledError)
+            else PublicationFailure.CREATE_UNKNOWN
+            if artifact is None
+            else failure
+        ),
+    )
+    return incomplete

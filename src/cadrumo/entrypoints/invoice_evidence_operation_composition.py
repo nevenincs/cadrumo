@@ -24,7 +24,7 @@ from ..core.bucket_pointer import require_active_bucket_id
 from ..core.config import load_settings
 from ..core.config_support import LLMProvider
 from ..core.identity.bucket import canonical_bucket_id
-from .adapter_composition import build_ledger_evidence_ports
+from .adapter_composition_work_ports import build_ledger_evidence_ports
 from .ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 
 

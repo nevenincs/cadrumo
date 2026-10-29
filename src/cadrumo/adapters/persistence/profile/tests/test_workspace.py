@@ -35,27 +35,10 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.modelo.workspace import (
     STATIC_INSPECTION_WORK_REVIEW_FACET,
-    ModeloWorkspaceStaleCursorError,
-    binding_schema_records,
     capture_modelo_workspace_locale_summary,
     capture_modelo_workspace_target_captures,
     contributors_still_current,
-    fold_slots,
-    formula_operand_references_for_casilla,
-    formula_schema_records,
     modelo_work_selector_request_for_target,
-    paginate_modelo_workspace_facet,
-    parameter_schema_records,
-    relation_source_endpoints_for_casilla,
-    relation_target_endpoints_for_binding,
-    resolve_static_inspection_baseline,
-    resolve_static_inspection_result,
-    resolve_static_inspection_schema_identity,
-    static_inspection_casilla_schema_records,
-    static_inspection_contributors,
-    static_inspection_evidence_horizon,
-    static_inspection_family_dispositions,
-    static_inspection_schema_records,
 )
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceBoundedFacetV1,
@@ -74,6 +57,25 @@ from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceVisibleFilingTargetV1,
 )
 from cadrumo.application.modelo.workspace_producers import ModeloWorkspaceWorkPortV1
+from cadrumo.application.modelo.workspace_schema import (
+    ModeloWorkspaceStaleCursorError,
+    binding_schema_records,
+    fold_slots,
+    formula_operand_references_for_casilla,
+    formula_schema_records,
+    paginate_modelo_workspace_facet,
+    parameter_schema_records,
+    relation_source_endpoints_for_casilla,
+    relation_target_endpoints_for_binding,
+    resolve_static_inspection_baseline,
+    resolve_static_inspection_result,
+    resolve_static_inspection_schema_identity,
+    static_inspection_casilla_schema_records,
+    static_inspection_contributors,
+    static_inspection_evidence_horizon,
+    static_inspection_family_dispositions,
+    static_inspection_schema_records,
+)
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.core.schema_family_disposition import RegistrySchemaFamilyDisposition
@@ -876,7 +878,7 @@ def test_a_cursor_naming_a_facet_the_resolver_does_not_paginate_refuses(
     the caller believed it was continuing, which is the failure the cursor
     exists to make impossible.
     """
-    from cadrumo.application.modelo.workspace import ModeloWorkspaceStaleCursorError
+    from cadrumo.application.modelo.workspace_schema import ModeloWorkspaceStaleCursorError
     from cadrumo.core.external_constants import OutputLanguage
 
     bucket_id, repository = workspace_repos

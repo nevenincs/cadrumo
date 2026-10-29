@@ -44,7 +44,7 @@ from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Final, Literal, TypedDict, override
+from typing import Final, TypedDict, override
 
 from pydantic import (
     BaseModel,
@@ -58,10 +58,8 @@ from pydantic import (
     model_validator,
 )
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.filing_year import FilingYear
 from ...core.identity.hex_ids import CalculationRevisionId, SnapshotId, WorkUnitId
 from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -91,6 +89,11 @@ from .calculation_revision_m303_handoff import (
 )
 from .calculation_revision_operator_layer import CalculationOperatorLayer
 from .calculation_revision_rendering import CalculationRenderingSnapshot
+from .calculation_revision_sources import (
+    CalculationSourceIssue,
+    CalculationSourceRef,
+    validate_revision_source_provenance,
+)
 from .errors import ModeloError, ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 from .ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
@@ -339,170 +342,6 @@ def derive_calculation_revision_id(
     )
 
 
-class CalculationSourceRef(BaseModel):
-    """One resolver-level source-object trace persisted on a calculation revision.
-
-    The calculation source mesh (``cadrumo.application.aggregation``) resolves each
-    registry binding source through an enrolled resolver and produces a typed
-    ``CalculationSourceProvenance`` row per contributing source object. This is
-    the DOMAIN-side, persistence-shaped projection of that provenance: it carries
-    exactly the resolverâ†’source-objectâ†’fingerprint trace that lets an audit reader
-    reconstruct which resolver mesh and which upstream source objects produced a
-    revision, and whether those objects have since drifted.
-
-    It deliberately does NOT carry ``legal_refs`` / ``source_refs`` â€” those are the
-    per-casilla regulatory grounding already carried by
-    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation` on the same
-    revision; duplicating them here would fragment the grounding across two
-    surfaces.
-
-    ``source_casilla_ids`` is NOT grounding and the rationale above does
-    not extend to it. It is a subject IDENTITY -- which casilla(s), if any,
-    this source object's resolution feeds -- and nothing else on the revision
-    carries it for the general (non-row-materialized) case; dropping it here
-    was an omission the application-side
-    :class:`~cadrumo.application.aggregation.source_mesh.CalculationSourceProvenance` did
-    not itself make (it already carries the field). An empty tuple is honest
-    when the originating resolver call site did not associate this row with a
-    casilla â€” it is not fabricated as a claim of "no subject", only carried as
-    "not linked at resolution time".
-
-    Attributes:
-        resolver_id: Exact canonical resolver identity that produced this row.
-        resolved_binding_source: Canonical binding source owned by the resolver.
-        contributor_source_kind: Upstream taxonomy token for this source node.
-        contributor_binding_source: Canonical :class:`BindingSourceKind` when
-            ``contributor_source_kind`` belongs to the binding taxonomy; ``None``
-            for an external or non-binding contributor.
-        lineage_role: Whether this row is the resolver-owned primary or supporting contributor.
-        source_ref: Stable reference to the contributing source object
-            (e.g. ``collectible_invoice:{invoice_id}``).
-        fingerprint: Data-dependent digest of the contributing source object when
-            the resolver produced one; ``None`` when the resolver emits a
-            reference without a content digest.
-        source_casilla_ids: Casilla identities this source object's resolution
-            feeds, when the originating resolver associated one; empty when it
-            did not. Carried straight from
-    :attr:`~cadrumo.application.aggregation.source_mesh.CalculationSourceProvenance.source_casilla_ids`.
-        dependency_treatment: The registry's declared dependency treatment for
-            this carry, empty when the revision declares none. Unlike
-            ``legal_refs`` / ``source_refs`` this carries no grounding duplicated
-            elsewhere on the revision â€” it is the sole persisted trace of whether
-            a carry is a ``factual_evidence`` fact to reconcile against or a
-            ``direct_annual_settlement`` figure that settles the return, and an
-            audit reader has no other way to recover that distinction after the
-            fact. Carried here rather than gated here: the value is NOT withheld
-            on the basis of its treatment.
-        source_filing_year: The filing year of the source this node rests on,
-            when the resolver recorded one: the source modelo's year for a
-            relation carry, and the accrual year for a Modelo 193 disclosure
-            phase row, which tells a pending row from a settled prior-accrual
-            one. ``None`` means the year is unknown, including on every revision
-            persisted before the field existed; it never means "the current
-            year". It joins the revision identity only when present, so those
-            revisions keep their content-addressed ids.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    resolver_id: str = Field(min_length=1, max_length=128)
-    resolved_binding_source: BindingSourceKind
-    contributor_source_kind: str = Field(min_length=1, max_length=64)
-    contributor_binding_source: BindingSourceKind | None
-    lineage_role: CalculationSourceLineageRole
-    source_ref: str = Field(min_length=1, max_length=256)
-    parent_source_ref: str | None = Field(min_length=1, max_length=256)
-    fingerprint: str | None = Field(default=None, min_length=1, max_length=256)
-    source_casilla_ids: tuple[CasillaId, ...] = ()
-    dependency_treatment: str = ""
-    source_filing_year: FilingYear | None = None
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _require_coherent_lineage(self) -> CalculationSourceRef:
-        try:
-            contributor_kind = BindingSourceKind(self.contributor_source_kind)
-        except ValueError:
-            contributor_kind = None
-        if self.contributor_binding_source is None:
-            if contributor_kind is not None:
-                raise ModeloValidationError(
-                    "source provenance contributor_binding_source is required when contributor_source_kind "
-                    "is a binding source kind",
-                )
-        elif contributor_kind is not self.contributor_binding_source:
-            raise ModeloValidationError(
-                "source provenance contributor_binding_source must equal contributor_source_kind",
-            )
-        if self.lineage_role is CalculationSourceLineageRole.PRIMARY:
-            if self.parent_source_ref is not None:
-                raise ModeloValidationError("primary source provenance cannot have a parent")
-        elif self.parent_source_ref is None:
-            raise ModeloValidationError("contributor source provenance requires a parent")
-        return self
-
-
-class CalculationSourceIssue(BaseModel):
-    """One durable unresolved source condition found while calculating a revision.
-
-    Resolver diagnostics are useful calculate-time operator feedback, but a
-    filing-grade verification runs later against the persisted calculation
-    revision.  This narrow envelope carries a source condition that reached no
-    binding, without misrepresenting it as source provenance for a computed
-    output.
-
-    Every reason below must survive to the persisted revision, because each
-    describes a condition the filing cannot treat as complete.
-    ``unrouted_observation`` is a row no binding consumes at all.
-    ``unrouted_declarable_quantity`` is an independent quantity that consumed
-    rows carry and no binding drawing that quantity reaches â€” the row-keyed
-    screens are silent on it by construction, so a verify or export gate that
-    saw only the row condition would read their silence as confirmation.
-    ``iva_selected_scope_evidence_failure`` is a ledger IVA row whose selected
-    filing scope cannot be completed from its recorded tax evidence.
-    ``iva_compensation_annual_source_evidence_failure`` is a required Modelo
-    390 annual partition whose filed Modelo 303 source set is incomplete or
-    stale. ``withholding_detail_absent`` is an annual withholding summary whose
-    per-perceptor-clave detail store held no observation for the year, so its
-    percepciones count rests on a zero the store cannot support. A contradictory
-    source is refused during calculation before a revision can be persisted.
-
-    The remaining reasons each mean a filed figure is missing or cannot be
-    trusted. ``unresolved_binding`` is a box printed on the form whose declared
-    source produced no value, named by ``casilla_id``, which must never read as
-    a zero. ``unhandled_binding_source`` is a declared source with no
-    executable route. ``source_domain_not_ready`` is a source store that could
-    not be read yet. ``invoice_reverse_charge_cuota_not_derivable`` is a
-    reverse-charge invoice whose IVA owed could not be derived. These four block
-    filing until a recalculation clears them. ``terminal_origin_mismatch`` is a
-    value that reached the declaration by an undeclared route; it persists so
-    a reopened declaration still shows it, but withholds nothing, because the
-    route it reports may lack a terminal origin by design.
-    ``binding_source`` is ``None`` only where the condition names no binding
-    source kind.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    reason: Literal[
-        "unrouted_observation",
-        "unrouted_declarable_quantity",
-        "iva_selected_scope_evidence_failure",
-        "iva_compensation_annual_source_evidence_failure",
-        "withholding_detail_absent",
-        "unresolved_binding",
-        "terminal_origin_mismatch",
-        "unhandled_binding_source",
-        "source_domain_not_ready",
-        "invoice_reverse_charge_cuota_not_derivable",
-    ]
-    binding_source: BindingSourceKind | None
-    message: str = Field(min_length=1, max_length=512)
-    resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
-    source_ref: str | None = Field(default=None, min_length=1, max_length=256)
-    casilla_id: CasillaId | None = None
-
-
 def _validate_revision_identity(revision: CalculationRevision, derived: CalculationRevisionId) -> None:
     if derived != revision.calculation_revision_id:
         raise ModeloValidationError(
@@ -693,21 +532,6 @@ def _validate_secure_revision_context(
         )
     ):
         raise ModeloValidationError("secure calculation revision is missing required row materialization fields")
-
-
-def _validate_source_provenance(revision: CalculationRevision) -> None:
-    primary_refs = tuple(
-        row.source_ref for row in revision.source_provenance if row.lineage_role is CalculationSourceLineageRole.PRIMARY
-    )
-    if len(primary_refs) != len(set(primary_refs)):
-        raise ModeloValidationError("source provenance primary reference is ambiguous")
-    primary_ref_set = frozenset(primary_refs)
-    if any(
-        row.parent_source_ref not in primary_ref_set
-        for row in revision.source_provenance
-        if row.lineage_role is CalculationSourceLineageRole.CONTRIBUTOR
-    ):
-        raise ModeloValidationError("source provenance contributor parent does not resolve to a primary")
 
 
 def _source_decimal_for_row_casilla(
@@ -1024,7 +848,7 @@ class CalculationRevision(BaseModel):
             self.rendering_snapshot.registry_snapshot.snapshot_ref != self.registry_snapshot_ref
         ):
             raise ModeloValidationError("saved rendering snapshot belongs to another calculation coordinate")
-        _validate_source_provenance(self)
+        validate_revision_source_provenance(self.source_provenance)
         derived = derive_calculation_revision_id_from_revision(self)
         _validate_revision_identity(self, derived)
         _validate_annual_summary_handoff_target(self)
@@ -1400,7 +1224,6 @@ __all__ = [
     "CalculationRevisionAmendmentKind",
     "CalculationRevisionCatalogue",
     "CalculationRevisionState",
-    "CalculationSourceRef",
     "FilingInstanceEvidence",
     "LedgerFilingCoverageError",
     "M303RegimenSimplificadoAnnualSummaryHandoff",

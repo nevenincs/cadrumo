@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from typing import Final
 from weakref import WeakSet
 
-from .....application.modelo.operation_definitions import (
+from .....application.modelo.operation_shared import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,

@@ -28,7 +28,8 @@ from ..components.theme import tokenised
 from ..components.widgets import DisclosureGroup
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController, review_status_label
-from .entries_browse import BROWSE_PAGE_SIZE, LedgerBrowseStateV1, LedgerEntriesBrowseScreen
+from .entries_browse import LedgerEntriesBrowseScreen
+from .entries_browse_model import BROWSE_PAGE_SIZE, LedgerBrowseStateV1
 from .entries_common import CLASSIFICATION_LOCALE_KEYS, DIRECTION_LOCALE_KEYS, entry_label, joined
 from .entries_doors import LedgerEntriesDoorsV1
 from .models import LedgerFlowState

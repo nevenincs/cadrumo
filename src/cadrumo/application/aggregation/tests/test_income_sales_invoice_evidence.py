@@ -29,8 +29,9 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.aggregation import LedgerIncomeGrounding, LedgerWithholdingDerivation
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue

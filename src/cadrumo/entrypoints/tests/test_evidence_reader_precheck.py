@@ -37,7 +37,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ...tests.llm_vision_evidence_support import png_image
 from ...tests.pdf_fixtures import text_pdf_bytes
-from ..adapter_composition import build_ledger_evidence_ports
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

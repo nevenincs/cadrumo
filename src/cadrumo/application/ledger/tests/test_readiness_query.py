@@ -27,14 +27,13 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..preflight import preflight_ledger_tax_readiness

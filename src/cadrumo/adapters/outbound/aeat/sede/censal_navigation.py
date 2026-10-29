@@ -113,6 +113,20 @@ async def _open_consultation(
     return popup
 
 
+def _premises_parent_indices(observation: CensalConsultation) -> tuple[int, ...]:
+    return tuple(
+        index
+        for index, row in enumerate(row for section in observation.sections for row in section.rows)
+        if any(census_key(cell.column or "") == "locales" and cell.text for cell in row.cells)
+    )
+
+
+async def _require_unchanged_activities(current: Page, observation: CensalConsultation) -> None:
+    refreshed = parse_censal_table(await current.content(), kind="actividades", source_url=current.url)
+    if refreshed.sections != observation.sections:
+        raise _refusal("activities changed while reading their premises")
+
+
 async def _premises(
     landing: Page,
     activities: Page,
@@ -122,11 +136,7 @@ async def _premises(
     timeout_ms: int,
 ) -> tuple[CensalConsultation, ...]:
     count = await activities.get_by_role("link", name="Locales", exact=True).count()
-    parent_indices = tuple(
-        index
-        for index, row in enumerate(row for section in observation.sections for row in section.rows)
-        if any(census_key(cell.column or "") == "locales" and cell.text for cell in row.cells)
-    )
+    parent_indices = _premises_parent_indices(observation)
     if len(parent_indices) != count:
         raise _refusal("premises controls do not match activity records")
     result: list[CensalConsultation] = []
@@ -144,12 +154,8 @@ async def _premises(
             )
         )
         try:
-            if (
-                index
-                and parse_censal_table(await current.content(), kind="actividades", source_url=current.url).sections
-                != observation.sections
-            ):
-                raise _refusal("activities changed while reading their premises")
+            if index:
+                await _require_unchanged_activities(current, observation)
             assert_query_browser_action_for(policy, "censal-consult-locales")
             async with current.expect_navigation(wait_until="domcontentloaded", timeout=timeout_ms):
                 await current.get_by_role("link", name="Locales", exact=True).nth(index).click(timeout=timeout_ms)

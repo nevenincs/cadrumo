@@ -34,7 +34,7 @@ from ....core.i18n.render import tr
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .evidence_files_common import (
     EvidenceFilesPager,
     EvidenceFilesToolScreen,
@@ -54,6 +54,7 @@ from .evidence_files_write import (
     LedgerEvidenceFilesWriteScreen,
 )
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 _EDITABLE_FIELDS: Final[tuple[LedgerEvidenceUpdateField, ...]] = (
     "supplier",
@@ -234,7 +235,12 @@ class LedgerEvidenceFilesRecordsScreen(EvidenceFilesToolScreen):
             index = next(index for index, row in enumerate(result.rows) if row.evidence_id == self.selected_id)
             self.records.offset = index - index % self.records.page_size
         self._paint_records()
-        if result.count == 0:
+        self._show_load_status(result.count)
+        if self.selected_id is not None:
+            await self._view(self.selected_id)
+
+    def _show_load_status(self, count: int) -> None:
+        if count == 0:
             key = (
                 "tui.ledger.evidence_files.records.none_found"
                 if self.filter_id is not None
@@ -243,8 +249,6 @@ class LedgerEvidenceFilesRecordsScreen(EvidenceFilesToolScreen):
             self.status(tr(key))
         else:
             self.status("")
-        if self.selected_id is not None:
-            await self._view(self.selected_id)
 
     async def _view(self, evidence_id: str) -> None:
         result = await self.ask(

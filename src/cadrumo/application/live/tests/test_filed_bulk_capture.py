@@ -24,16 +24,18 @@ from ....domain.calculations.registry.schema_references import RegistrySnapshotR
 from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
+from ..filed_capture_accumulator import FiledCaptureAccumulator
+from ..filed_capture_queries import (
+    await_filed_register_walk,
+    filed_data_capture_failure_row,
+    list_filed_data_bulk,
+    walk_or_failure_row,
+)
 from ..filed_data_capture import (
-    FiledCaptureAccumulator,
     _absorb_declarations,
-    _await_filed_register_walk,
-    _walk_or_failure_row,
     capture_filed_data,
     capture_filed_data_bulk,
     capture_source_filed_data,
-    filed_data_capture_failure_row,
-    list_filed_data_bulk,
 )
 from ..filed_data_ports import (
     FiledDataCapturePort,
@@ -347,7 +349,7 @@ def test_register_authority_loss_stops_pair_walk_without_a_failure_row(refusal: 
     failures: list[FiledDataCaptureFailureRow] = []
     with pytest.raises(type(refusal)):
         asyncio.run(
-            _walk_or_failure_row(
+            walk_or_failure_row(
                 revoked(),
                 modelo="303",
                 year=2025,
@@ -379,7 +381,7 @@ def test_bulk_failure_row_preserves_declaration_coordinates() -> None:
 def test_filed_register_walk_timeout_reports_modelo_year_context() -> None:
     with pytest.raises(LiveIvaSurfaceTimeoutError) as raised:
         asyncio.run(
-            _await_filed_register_walk(
+            await_filed_register_walk(
                 _slow_empty_declarations(),
                 modelo="303",
                 year=2026,
@@ -608,7 +610,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
     failures: list[FiledDataCaptureFailureRow] = []
 
     refused = asyncio.run(
-        _walk_or_failure_row(
+        walk_or_failure_row(
             _refusing_walk(),
             modelo="100",
             year=2026,
@@ -623,7 +625,7 @@ def test_walk_failure_is_absorbed_into_a_row_and_signals_the_pair_be_skipped() -
     assert "declares 8 in total" in failures[0].message
 
     healthy = asyncio.run(
-        _walk_or_failure_row(
+        walk_or_failure_row(
             _one_declaration_walk(),
             modelo="303",
             year=2025,

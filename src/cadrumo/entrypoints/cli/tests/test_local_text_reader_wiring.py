@@ -20,7 +20,7 @@ import inspect
 
 import pytest
 
-from ....application.ledger.llm_classification import classify_with_evidence
+from ....application.ledger.llm_evidence import classify_with_evidence
 from ... import ledger_llm_composition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

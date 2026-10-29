@@ -44,7 +44,7 @@ from ...application.invoices.simplificada_advisory import (
     resolve_simplificada_tax_id_advisory,
     resolve_simplificada_tax_id_legal_refs,
 )
-from ...application.invoices.source_resolver import iva_category_for_operation_type
+from ...application.invoices.source_observations import iva_category_for_operation_type
 from ...application.operations.public_scalar import PublicDecimal
 from ...core.aggregation import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY

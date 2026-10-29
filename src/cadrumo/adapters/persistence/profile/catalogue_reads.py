@@ -1,7 +1,7 @@
 """Persistence adapters for the invoice link-consistency read port.
 
 Core types:
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
 :class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 """
@@ -17,10 +17,11 @@ from ....application.invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPorts,
     TransactionCatalogueReader,
 )
+from ....domain.invoices.catalogue import InvoiceCatalogue, StoredInvoiceCatalogue
 from ....domain.invoices.errors import InvoicePersistenceError
-from ....domain.invoices.models import InvoiceCatalogue, StoredInvoiceCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.errors import TransactionPersistenceError
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.models import TransactionCatalogue
 from ..storage.errors import StorageError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.sql.secure_objects import SecureObjectRepository

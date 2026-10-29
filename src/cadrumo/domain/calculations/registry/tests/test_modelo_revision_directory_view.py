@@ -10,7 +10,8 @@ from .....core.tax_domain import TaxDomain
 from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ..authority_artifact import AuthorityComponentQuery, ModeloDirectoryComponentQuery, ModeloRevisionComponentQuery
 from ..errors import RegistryValidationError
-from ..queries import PinnedRegistryQueryService, ResolvedRegistryQueryContext
+from ..queries import PinnedRegistryQueryService
+from ..query_builders import ResolvedRegistryQueryContext
 from ..query_reports import ModeloListRow
 from ..revision_contracts import DeclaredPredecessor
 from ..schema import ModeloDefinition

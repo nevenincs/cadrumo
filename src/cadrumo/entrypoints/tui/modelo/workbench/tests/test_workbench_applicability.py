@@ -14,7 +14,7 @@ import pytest
 from rich.text import Text
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.work_form_models import ModeloFormAttention
+from ......application.modelo.work_form_findings import ModeloFormAttention
 from ......application.modelo.work_form_next_step import ModeloFormNextAction, inapplicable_pages
 from ......application.modelo.work_form_wording import does_not_apply_words
 from ......core.config import override_settings

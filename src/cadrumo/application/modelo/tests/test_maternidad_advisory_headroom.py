@@ -95,9 +95,9 @@ class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
         expressible rather than at fifty -- and, per ``_WORST_FIRST_ID``, at a
         qualifying run that starts partway into it rather than at zero.
         """
-        from ..calculate_input import _maternidad_meses_withheld_advisory
+        from ..calculate_maternidad_advisory import maternidad_meses_withheld_advisory
 
-        advisory = _maternidad_meses_withheld_advisory(self._ids(), validated_casilla_id("0611"))
+        advisory = maternidad_meses_withheld_advisory(self._ids(), validated_casilla_id("0611"))
 
         assert advisory is not None
         headroom = DIAGNOSTIC_MESSAGE_MAX_LENGTH - len(advisory.message)
@@ -107,9 +107,9 @@ class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
         )
 
     def test_the_ambiguous_relacion_advisory_keeps_headroom_at_its_worst_case(self) -> None:
-        from ..calculate_input import _maternidad_ambiguous_relacion_advisory
+        from ..calculate_maternidad_advisory import maternidad_ambiguous_relacion_advisory
 
-        advisory = _maternidad_ambiguous_relacion_advisory(
+        advisory = maternidad_ambiguous_relacion_advisory(
             frozenset(self._ids()),
             validated_casilla_id("0611"),
         )
@@ -128,11 +128,14 @@ class TestTaxpayerScaledMessagesKeepAuthoringHeadroom:
         filing and the operator still lost words — which is the state the
         headroom assertions above exist to prevent reaching.
         """
-        from ..calculate_input import _maternidad_ambiguous_relacion_advisory, _maternidad_meses_withheld_advisory
+        from ..calculate_maternidad_advisory import (
+            maternidad_ambiguous_relacion_advisory,
+            maternidad_meses_withheld_advisory,
+        )
 
         casilla = validated_casilla_id("0611")
-        withheld = _maternidad_meses_withheld_advisory(self._ids(), casilla)
-        ambiguous = _maternidad_ambiguous_relacion_advisory(frozenset(self._ids()), casilla)
+        withheld = maternidad_meses_withheld_advisory(self._ids(), casilla)
+        ambiguous = maternidad_ambiguous_relacion_advisory(frozenset(self._ids()), casilla)
         marker = _elision_marker()
 
         assert withheld is not None

@@ -18,11 +18,21 @@ from ....application.operations.frontend_projection import OperationPublicProjec
 from ....core.errors.error_codes import render_error_text
 from ....core.errors.hierarchy import RecordedRegisteredError
 from ....core.i18n.render import tr
+from ....core.operations import OperationTerminalCondition
 from .projection import build_operation_modal_view_model
 from .refusal_explanation import recorded_remedy_line
 
 RESULT_PAGE_LINES: Final = 200
 """How many formatted lines one result page shows before the next is asked for."""
+
+
+def result_is_readable(projection: OperationPublicProjectionV1) -> bool:
+    """Require a successful result or an admitted refusal-detail receipt."""
+    condition = projection.terminal_condition
+    return (condition is OperationTerminalCondition.SUCCEEDED and projection.result_ref is not None) or (
+        condition is OperationTerminalCondition.REFUSED
+        and projection.refusal_ref in projection.definition_contract.refusal_detail_codes
+    )
 
 
 def result_pages(result: BaseModel) -> tuple[str, ...]:
@@ -72,4 +82,4 @@ def stopped_operation_text(detail: OperationErrorDetailV1 | None) -> str:
     return "\n".join(lines)
 
 
-__all__ = ["RESULT_PAGE_LINES", "receipt_text", "result_pages", "stopped_operation_text"]
+__all__ = ["RESULT_PAGE_LINES", "receipt_text", "result_is_readable", "result_pages", "stopped_operation_text"]

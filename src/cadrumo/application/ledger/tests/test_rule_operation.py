@@ -46,8 +46,9 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.transactions.classification_rule import LedgerClassificationRule
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.enums import BusinessClassification
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..rule_contracts import (
     LedgerRuleAddProjection,
     LedgerRuleAddRequest,

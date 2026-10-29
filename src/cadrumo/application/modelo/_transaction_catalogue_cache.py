@@ -7,7 +7,8 @@ from datetime import date
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ...domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+    from ...domain.transactions.date_partition import LedgerDatePartition
+    from ...domain.transactions.models import TransactionCatalogue
     from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 

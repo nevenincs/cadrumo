@@ -29,11 +29,8 @@ from collections.abc import Sequence
 from ...application.operator_actions.models import ActionReference, DeclaredNextAction
 from ...application.overview.agenda import OverviewAgenda
 from ...application.overview.backlog import OverviewBacklog
-from ...application.overview.calendar import (
-    actionable_post_filing_events,
-    holiday_coverage_statement,
-    shift_reason_statement,
-)
+from ...application.overview.calendar import holiday_coverage_statement, shift_reason_statement
+from ...application.overview.calendar_events import actionable_post_filing_events
 from ...application.overview.calendar_evidence import NO_AEAT_HISTORY_NOTICE_CODE
 from ...application.overview.calendar_models import (
     CalendarWarning,
@@ -936,6 +933,17 @@ def _filing_obligation_lines(report: OverviewStatusReport) -> tuple[str, ...]:
     return tuple(lines)
 
 
+def _append_filing_evidence_details(fields: list[str], filing_evidence: OverviewCalendarFilingEvidence) -> None:
+    if filing_evidence.aeat_evidence_kind is not None and filing_evidence.aeat_evidence_kind:
+        fields.append(f"aeat_kind={filing_evidence.aeat_evidence_kind}")
+    if filing_evidence.aeat_evidence_conflict_reference_ids:
+        fields.append("aeat_conflict_refs=" + ",".join(filing_evidence.aeat_evidence_conflict_reference_ids))
+    if filing_evidence.verified_justificante_csv is not None and filing_evidence.verified_justificante_csv:
+        fields.append(f"verified_justificante_csv={filing_evidence.verified_justificante_csv}")
+    if filing_evidence.evidence_source is not None and filing_evidence.evidence_source:
+        fields.append(f"evidence_source={filing_evidence.evidence_source}")
+
+
 def _calendar_filing_evidence_text_fields(filing_evidence: OverviewCalendarFilingEvidence) -> str:
     """Return stable text metrics for one calendar row's filing evidence."""
     fields = [
@@ -949,14 +957,7 @@ def _calendar_filing_evidence_text_fields(filing_evidence: OverviewCalendarFilin
         fields.append(f"aeat_ref={filing_evidence.aeat_reference_id}")
     if filing_evidence.aeat_submitted_at:
         fields.append(f"aeat_submitted_at={filing_evidence.aeat_submitted_at.isoformat()}")
-    if filing_evidence.aeat_evidence_kind is not None and filing_evidence.aeat_evidence_kind:
-        fields.append(f"aeat_kind={filing_evidence.aeat_evidence_kind}")
-    if filing_evidence.aeat_evidence_conflict_reference_ids:
-        fields.append("aeat_conflict_refs=" + ",".join(filing_evidence.aeat_evidence_conflict_reference_ids))
-    if filing_evidence.verified_justificante_csv is not None and filing_evidence.verified_justificante_csv:
-        fields.append(f"verified_justificante_csv={filing_evidence.verified_justificante_csv}")
-    if filing_evidence.evidence_source is not None and filing_evidence.evidence_source:
-        fields.append(f"evidence_source={filing_evidence.evidence_source}")
+    _append_filing_evidence_details(fields, filing_evidence)
     return "\t".join(fields)
 
 
@@ -969,6 +970,19 @@ def _calendar_entry_work_unit_text_fields(entry: OverviewCalendarEntry) -> str:
     if entry.local_work_unit_revision_id is not None and entry.local_work_unit_revision_id:
         fields.append(f"work_revision={entry.local_work_unit_revision_id}")
     return "\t".join(fields)
+
+
+def _append_calendar_event_status(parts: list[str], event: OverviewCalendarEvent) -> None:
+    if event.status is not None and event.status:
+        parts.append(f"status={event.status}")
+    if event.aeat_submission_state is not None and event.aeat_submission_state:
+        parts.append(f"aeat={event.aeat_submission_state.value}")
+    if event.aeat_submitted_at:
+        parts.append(f"aeat_submitted_at={event.aeat_submitted_at.isoformat()}")
+    if event.justificante_verified is not None:
+        parts.append(f"justificante={str(event.justificante_verified).lower()}")
+    if event.verified_justificante_csv is not None and event.verified_justificante_csv:
+        parts.append(f"verified_justificante_csv={event.verified_justificante_csv}")
 
 
 def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
@@ -989,16 +1003,7 @@ def _calendar_event_text_line(event: OverviewCalendarEvent) -> str:
         parts.append(f"year={event.filing_year}")
     if event.period:
         parts.append(f"period={event.period}")
-    if event.status is not None and event.status:
-        parts.append(f"status={event.status}")
-    if event.aeat_submission_state is not None and event.aeat_submission_state:
-        parts.append(f"aeat={event.aeat_submission_state.value}")
-    if event.aeat_submitted_at:
-        parts.append(f"aeat_submitted_at={event.aeat_submitted_at.isoformat()}")
-    if event.justificante_verified is not None:
-        parts.append(f"justificante={str(event.justificante_verified).lower()}")
-    if event.verified_justificante_csv is not None and event.verified_justificante_csv:
-        parts.append(f"verified_justificante_csv={event.verified_justificante_csv}")
+    _append_calendar_event_status(parts, event)
     return "\t".join(parts)
 
 

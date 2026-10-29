@@ -10,7 +10,7 @@ from pydantic import BaseModel, NonNegativeInt, model_validator
 from ...core.filing_year import FilingYear
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import PublicNamedScalar, project_facts, restore_facts
 from .calendar_models import OverviewStatusReport

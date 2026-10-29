@@ -112,7 +112,7 @@ class BucketSession:
         # cannot wipe in place.
         self._hmac_subkeys: dict[bytes, bytes] = {}
         # Registered at construction, not at binding: a session owns its key buffer
-        # from this point on, and the emergency-zeroisation path must cover it
+        # from this point on, and the timeout-zeroisation path must cover it
         # whether or not it is ever bound to a context (and whichever thread
         # binds it). Weak, so this never keeps the buffers alive.
         register_live_session(self)

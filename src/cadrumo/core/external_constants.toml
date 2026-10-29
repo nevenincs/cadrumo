@@ -308,13 +308,3 @@ portal_sede_root = "/"
 openid = "openid"
 email = "https://www.googleapis.com/auth/userinfo.email"
 drive_file = "https://www.googleapis.com/auth/drive.file"
-
-## Hosts each setup item reaches; the local AI reaches its program's hosts and
-## the model registry. The network preflight resolves, connects, completes TLS
-## and sends one bounded HEAD request to each before a setup starts. Model
-## blobs are served from whatever storage host the model registry redirects to,
-## so only the registry itself is declared.
-[dependency_hosts]
-browser = ["cdn.playwright.dev", "playwright.download.prss.microsoft.com", "storage.googleapis.com"]
-model_runtime = ["github.com", "release-assets.githubusercontent.com"]
-model_registry = ["registry.ollama.ai"]

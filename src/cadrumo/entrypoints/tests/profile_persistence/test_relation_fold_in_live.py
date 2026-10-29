@@ -56,7 +56,7 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions
 from cadrumo.application.calculations.relation_prefill import RelationPrefillSourceResolver
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -84,9 +84,9 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
-    build_retencion_observation_ports,
     build_work_lifecycle_ports,
 )
 

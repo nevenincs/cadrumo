@@ -49,12 +49,12 @@ from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
 from .source_policy import SourceFamily
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt
+from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_models import (
     ModeloFormAddressV1,
     ModeloFormAeatData,
-    ModeloFormAttention,
     ModeloFormBinding,
     ModeloFormBlocker,
     ModeloFormCalculationNote,
@@ -512,6 +512,21 @@ def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchForm
     )
 
 
+def _require_projection_roundtrip(read: ModeloWorkbenchFormReadV1, projection: ModeloWorkbenchFormProjectionV1) -> None:
+    restored = _restore(projection)
+    if (
+        restored != read
+        or restored.typing_effects != projection.typing_effects
+        or restored.next_step != projection.next_step
+        or restored.admission_refusal_words != projection.admission_refusal_words
+        or restored.rules_incomplete is not projection.rules_incomplete
+        or restored.header != projection.header
+        or restored.issue_lines != projection.issue_lines
+        or restored.verdict != projection.verdict
+    ):
+        raise ValueError("workbench form public projection changed canonical meaning")
+
+
 def project_modelo_workbench_form(
     profile_id: UUID, work_unit_id: str, read: ModeloWorkbenchFormReadV1
 ) -> ModeloWorkbenchFormProjectionV1:
@@ -545,18 +560,7 @@ def project_modelo_workbench_form(
         export_offer=read.export_offer,
         receipt=read.receipt,
     )
-    restored = _restore(projection)
-    if (
-        restored != read
-        or restored.typing_effects != projection.typing_effects
-        or restored.next_step != projection.next_step
-        or restored.admission_refusal_words != projection.admission_refusal_words
-        or restored.rules_incomplete is not projection.rules_incomplete
-        or restored.header != projection.header
-        or restored.issue_lines != projection.issue_lines
-        or restored.verdict != projection.verdict
-    ):
-        raise ValueError("workbench form public projection changed canonical meaning")
+    _require_projection_roundtrip(read, projection)
     return projection
 
 

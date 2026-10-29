@@ -45,7 +45,7 @@ from ..operations.public_scalar import PublicNamedScalar
 from ..operations.registry import OperationFrontendProjection, OperationRegistry
 from ..operator_actions.models import ConditionEvidence, PreconditionVerdict
 from ..preflight import HealthSeverity, PreflightCheck
-from ..provisioning import DependencyStatus
+from ..workstation_probes import DependencyStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..user_profile.capabilities import CapabilityDecision, CapabilitySource
 from ..workstation_check import WorkstationCheckReport

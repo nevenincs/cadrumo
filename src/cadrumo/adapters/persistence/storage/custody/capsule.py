@@ -102,6 +102,7 @@ from .capsule_records import (
     ProfileCustodyPasswordMaterial,
     parse_profile_custody_capsule_label,
     parse_profile_custody_commit,
+    validate_publication_identity,
 )
 from .capsule_records import (
     parse_profile_custody_deletion_marker as _parse_profile_custody_deletion_marker,
@@ -446,7 +447,7 @@ def publish_profile_custody_capsule(
     transaction-named sibling stage in place for journal verification before the
     sole final rename.  It is not a second publication API.
     """
-    _validate_publication_identity(
+    validate_publication_identity(
         profile_id=profile_id,
         password_envelope=password_envelope,
         sentinel=sentinel,
@@ -1199,18 +1200,6 @@ def load_committed_profile_password_material(
         sentinel=sentinel,
         access_trace=tuple(trace),
     )
-
-
-def _validate_publication_identity(
-    *,
-    profile_id: UUID,
-    password_envelope: ProfileCustodyEnvelope,
-    sentinel: ProfileCustodySentinelRecord,
-) -> None:
-    if password_envelope.profile_id != profile_id or sentinel.profile_id != profile_id:
-        raise ProfileCustodyRecordError("profile capsule custody identity does not match its immutable UUID")
-    if sentinel.dek_epoch != password_envelope.dek_epoch:
-        raise ProfileCustodyRecordError("profile capsule sentinel DEK epoch does not match password custody")
 
 
 __all__ = [

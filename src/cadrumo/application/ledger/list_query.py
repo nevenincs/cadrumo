@@ -29,7 +29,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ..review.filter import LedgerReviewFilterSpec
 from .actions_common import resolve_transaction_repository
-from .actions_manual import list_manual_transactions, query_ledger_review_rows
+from .manual_read import list_manual_transactions, query_ledger_review_rows
 from .models import ManualLedgerTransactionResult
 from .read_ports import LedgerReadPorts
 from .review_filter import ledger_review_query_for_spec

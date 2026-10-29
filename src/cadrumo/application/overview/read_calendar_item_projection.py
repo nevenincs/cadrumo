@@ -15,7 +15,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio
 from ...core.period import Period
 from ...core.post_filing_event import PostFilingEventKind
-from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage, HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus, RecargoBand, Recovery
 from ..operations.public_scalar import PublicDecimal

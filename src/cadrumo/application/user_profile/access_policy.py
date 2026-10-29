@@ -28,7 +28,13 @@ def scope_is_subset(child: AccessScope, parent: AccessScope) -> bool:
         and all(_category_covers(parent, item) for item in child.disclosures - parent.disclosures)
         and child.disclosure_categories <= parent.disclosure_categories
         and (parent.periods is None or (child.periods is not None and child.periods <= parent.periods))
-        and (not child.allow_period_independent or parent.allow_period_independent)
+        and _boolean_grants_subset(child, parent)
+    )
+
+
+def _boolean_grants_subset(child: AccessScope, parent: AccessScope) -> bool:
+    return (
+        (not child.allow_period_independent or parent.allow_period_independent)
         and (not child.allow_delegation or parent.allow_delegation)
         and (not child.allow_changes_records or parent.allow_changes_records)
         and (not child.allow_network or parent.allow_network)
@@ -103,12 +109,7 @@ def _intersect(
         categories &= scope.disclosure_categories
         if scope.periods is not None:
             periods = scope.periods if periods is None else periods & scope.periods
-    disclosures = listed
-    for scope in scopes:
-        # A refused item leaves the set, so each listed item is refused at most once.
-        refused = frozenset(item for item in disclosures - scope.disclosures if not _category_covers(scope, item))
-        if refused:
-            disclosures -= refused
+    disclosures = _intersect_disclosures(scopes, listed)
     return AccessScope(
         operations=operations,
         actions=actions,
@@ -120,6 +121,19 @@ def _intersect(
         allow_changes_records=all(scope.allow_changes_records for scope in scopes),
         allow_network=all(scope.allow_network for scope in scopes),
     )
+
+
+def _intersect_disclosures(
+    scopes: tuple[AccessScope, ...],
+    listed: frozenset[DisclosurePermission],
+) -> frozenset[DisclosurePermission]:
+    disclosures = listed
+    for scope in scopes:
+        # A refused item leaves the set, so each listed item is refused at most once.
+        refused = frozenset(item for item in disclosures - scope.disclosures if not _category_covers(scope, item))
+        if refused:
+            disclosures -= refused
+    return disclosures
 
 
 def _category_covers(scope: AccessScope, permission: DisclosurePermission) -> bool:

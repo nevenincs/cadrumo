@@ -28,14 +28,12 @@ from typing import TYPE_CHECKING
 from ...core.modelo import Modelo as _Modelo
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.applicability import (
-    ModeloApplicabilityRule,
-)
-from ...domain.calculations.registry.applicability import (
     iter_modelo_applicability_rules as _iter_modelo_applicability_rules,
 )
 from ...domain.calculations.registry.applicability import (
     modelo_requires_iva_regime as _modelo_requires_iva_regime,
 )
+from ...domain.calculations.registry.applicability_models import ModeloApplicabilityRule
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys
 from ...domain.calculations.registry.irpf_regimes import irpf_estimation_regime_objetiva_token
 from ...domain.calculations.registry.iva_regime_vocabulary import iva_regime_simplificado_token

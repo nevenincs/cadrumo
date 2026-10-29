@@ -364,7 +364,7 @@ def test_the_namespace_divergence_stays_permitted_and_stated() -> None:
     are answering different questions -- unlike the object key, which is one
     contract-level value both were answering differently.
     """
-    from .._google_drive import _validate_namespace as drive_namespace
+    from ..google_drive_validation import validate_namespace as drive_namespace
     from ..local import _validate_namespace as local_namespace
 
     with pytest.raises(OutboundStorageValidationError):

@@ -35,8 +35,9 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import (
     InvoiceCatalogueReader,
     InvoiceCatalogueReadPersistenceError,

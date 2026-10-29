@@ -120,11 +120,7 @@ class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
             alternatives = choices.get(original)
             if not (alternatives is not None and alternatives):
                 return super()._build_definitions_remapping()
-            for alternative in alternatives:
-                if alternative in owners and owners[alternative] != original:
-                    owners[alternative] = None
-                else:
-                    owners[alternative] = original
+            _register_alternative_owners(original, alternatives, owners)
         if any(owners[choices[original][0]] != original for original in self.definitions):
             return super()._build_definitions_remapping()
         definitions: dict[DefsRef, DefsRef] = {}
@@ -142,6 +138,18 @@ class _UnambiguousDefinitionsSchemaGenerator(GenerateJsonSchema):
         remapping.defs_remapping.update(definitions)
         remapping.json_remapping.update(references)
         return remapping
+
+
+def _register_alternative_owners(
+    original: DefsRef,
+    alternatives: list[DefsRef],
+    owners: dict[DefsRef, DefsRef | None],
+) -> None:
+    for alternative in alternatives:
+        if alternative in owners and owners[alternative] != original:
+            owners[alternative] = None
+        else:
+            owners[alternative] = original
 
 
 @contextmanager
@@ -214,10 +222,7 @@ def _model_schema_graph_state(
         elif isinstance(annotation, type) and issubclass(annotation, BaseModel):
             if annotation in graph:
                 return
-            if not annotation.__pydantic_complete__:
-                annotation.model_rebuild()
-                if rebuilt_models is not None:
-                    rebuilt_models.add(annotation)
+            _complete_graph_model(annotation, rebuilt_models)
             graph[annotation] = (
                 _schema_state(annotation.model_config, snapshots),
                 annotation.model_json_schema,
@@ -231,6 +236,13 @@ def _model_schema_graph_state(
 
     visit(model_type)
     return graph
+
+
+def _complete_graph_model(annotation: type[BaseModel], rebuilt_models: set[type[BaseModel]] | None) -> None:
+    if not annotation.__pydantic_complete__:
+        annotation.model_rebuild()
+        if rebuilt_models is not None:
+            rebuilt_models.add(annotation)
 
 
 def _field_schema_state(field: FieldInfo, snapshots: dict[int, tuple[object, object]]) -> object:

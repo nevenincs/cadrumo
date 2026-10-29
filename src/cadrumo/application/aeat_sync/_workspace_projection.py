@@ -145,22 +145,9 @@ def project_aeat_sync_workspace(
     TypeAdapter(BucketId).validate_python(bucket_id)
     if not subject_key.strip():
         raise AeatSyncWorkspaceProjectionError("subject key cannot be blank")
-    if census_observation is not None and (
-        census_observation.bucket_id != bucket_id
-        or census_observation.subject_key != subject_key
-        or not same_tax_identifier(census_observation.row.identity.nif, subject_key)
-    ):
-        raise AeatSyncWorkspaceProjectionError("census observation belongs to another profile or taxpayer")
+    _validate_census_scope(census_observation, bucket_id, subject_key)
     obs = _observations(zone_observations)
-    if census_observation is not None:
-        for zone in (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceZone.CENSUS):
-            source = next(item for item in obs[zone].sources if item.source is AeatSyncWorkspaceSource.AEAT_CENSUS)
-            if (
-                source.availability
-                not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
-                or source.observed_at != census_observation.row.captured_at
-            ):
-                raise AeatSyncWorkspaceProjectionError("census evidence contradicts its source observation")
+    _validate_census_source_observations(census_observation, obs)
     _validate_action_catalogue(action_catalogue)
     groups = {
         AeatSyncWorkspaceZone.OVERVIEW: overview,
@@ -215,6 +202,34 @@ def project_aeat_sync_workspace(
         evidence_comparison=out_comparison,
         reconciliation=out_reconciliation,
     )
+
+
+def _validate_census_scope(
+    census_observation: AeatSyncWorkspaceFactV1[CensalObservation] | None,
+    bucket_id: BucketId,
+    subject_key: str,
+) -> None:
+    if census_observation is not None and (
+        census_observation.bucket_id != bucket_id
+        or census_observation.subject_key != subject_key
+        or not same_tax_identifier(census_observation.row.identity.nif, subject_key)
+    ):
+        raise AeatSyncWorkspaceProjectionError("census observation belongs to another profile or taxpayer")
+
+
+def _validate_census_source_observations(
+    census_observation: AeatSyncWorkspaceFactV1[CensalObservation] | None,
+    obs: Mapping[AeatSyncWorkspaceZone, AeatSyncWorkspaceZoneObservationV1],
+) -> None:
+    if census_observation is not None:
+        for zone in (AeatSyncWorkspaceZone.OVERVIEW, AeatSyncWorkspaceZone.CENSUS):
+            source = next(item for item in obs[zone].sources if item.source is AeatSyncWorkspaceSource.AEAT_CENSUS)
+            if (
+                source.availability
+                not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
+                or source.observed_at != census_observation.row.captured_at
+            ):
+                raise AeatSyncWorkspaceProjectionError("census evidence contradicts its source observation")
 
 
 def _validate_fact_scope(

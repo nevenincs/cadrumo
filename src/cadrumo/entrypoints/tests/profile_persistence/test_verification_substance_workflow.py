@@ -40,7 +40,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.verification_report import ModeloVerificationFindingKind, VerificationReport
-from ...adapter_composition import build_calculation_action_ports
+from ...adapter_composition_work_ports import build_calculation_action_ports
 from .verification_substance_support import (
     _ABSENT_REGISTRY_CASILLA,
     _CASILLA_01,

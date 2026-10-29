@@ -208,17 +208,7 @@ def _project_operation_projection(
         progress=progress,
         close_policy=contract.close_policy,
         cancellation=contract.cancellation,
-        cancellable_now=(
-            (
-                financial_pending
-                or (
-                    contract.cancellation is not OperationCancellation.UNSUPPORTED
-                    and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
-                )
-            )
-            and snapshot.cancellation_requested_at is None
-            and not snapshot.cancellation_deferred
-        ),
+        cancellable_now=_cancellable_now(snapshot, contract, financial_pending),
         financial_operand_pending=financial_pending,
         financial_operand_cancelled_before_delivery=(
             snapshot.financial_requirement is not None
@@ -234,6 +224,24 @@ def _project_operation_projection(
         refusal_ref=None if receipt is None else receipt.refusal_ref,
         failure_error_code=None if receipt is None else receipt.failure_error_code,
         diagnostic_ref=None if receipt is None else receipt.diagnostic_ref,
+    )
+
+
+def _cancellable_now(
+    snapshot: OperationPersistedSnapshot,
+    contract: OperationPublicDefinitionContractV1,
+    financial_pending: bool,
+) -> bool:
+    return (
+        (
+            financial_pending
+            or (
+                contract.cancellation is not OperationCancellation.UNSUPPORTED
+                and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+            )
+        )
+        and snapshot.cancellation_requested_at is None
+        and not snapshot.cancellation_deferred
     )
 
 

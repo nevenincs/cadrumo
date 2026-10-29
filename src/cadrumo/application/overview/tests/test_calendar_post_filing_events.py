@@ -20,7 +20,7 @@ from ...live.expedientes import PersistedExpedientesSnapshot
 from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
-from ..calendar import (
+from ..calendar_events import (
     actionable_post_filing_events,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,

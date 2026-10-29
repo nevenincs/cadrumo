@@ -287,7 +287,12 @@ def _validate_mode_shape(envelope: WithholdingMutationEnvelope) -> None:
     elif envelope.mode is WithholdingMutationMode.REPLACE:
         if not envelope.entries or envelope.baseline is None:
             raise ValueError("replace requires entries and an exact baseline")
-    elif envelope.entries or envelope.baseline is None or not (envelope.reason is not None and envelope.reason):
+    else:
+        _validate_clear_shape(envelope)
+
+
+def _validate_clear_shape(envelope: WithholdingMutationEnvelope) -> None:
+    if envelope.entries or envelope.baseline is None or not (envelope.reason is not None and envelope.reason):
         raise ValueError("clear requires a baseline, a reason, and no entries")
 
 

@@ -437,9 +437,6 @@ class LabelReadingFallback(BaseModel):
             one; the agent's load refusal names the precondition it failed,
             and an unavailable reader names what the reader probe found
             missing, such as an unanswering runtime or an uninstalled model.
-        recovery_action_id: The operator action that would let the model fill
-            run, when the refusal named one; an unavailable reader the local AI
-            setup can supply names that setup, so a surface can offer it.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -448,7 +445,6 @@ class LabelReadingFallback(BaseModel):
     unread_fields: tuple[str, ...] = Field(min_length=1)
     reader_error_type: str = Field(min_length=1)
     failed_condition_id: str | None = None
-    recovery_action_id: str | None = None
 
 
 class InvoiceDraftIdentityDocumentFields(BaseModel):

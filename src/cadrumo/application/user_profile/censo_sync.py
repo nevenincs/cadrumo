@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypeGuard
 
 from pydantic import BaseModel
 
@@ -191,6 +191,10 @@ class CensalReconciliation(BaseModel):
     divergences: tuple[tuple[str, str], ...] = ()
 
 
+def _visible_address_part(part: str | None) -> TypeGuard[str]:
+    return part is not None and bool(part) and bool(part.strip())
+
+
 def _compose_address(domicilio: CensalObservationAddress) -> str | None:
     """Render the decomposed censal address as one display string.
 
@@ -214,12 +218,12 @@ def _compose_address(domicilio: CensalObservationAddress) -> str | None:
             domicilio.puerta,
             domicilio.complemento,
         )
-        if (part is not None and part) and part.strip()
+        if _visible_address_part(part)
     ).strip()
     tail = " ".join(
         part
         for part in (domicilio.codigo_postal, domicilio.municipio, domicilio.provincia)
-        if (part is not None and part) and part.strip()
+        if _visible_address_part(part)
     ).strip()
     composed = ", ".join(part for part in (street, tail) if part)
     return composed or None

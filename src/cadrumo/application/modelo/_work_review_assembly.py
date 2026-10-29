@@ -25,7 +25,7 @@ from ...domain.calculations.registry.export import (
     clasificar_casillas_oficiales,
     derive_export_layouts_from_bindings,
 )
-from ...domain.calculations.registry.export_parse import xml_dictionary_entries
+from ...domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ...domain.calculations.registry.handoffs import (
     RelationConsumptionChannel,
     relation_consumption_channels,

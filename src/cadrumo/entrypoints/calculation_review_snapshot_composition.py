@@ -1,7 +1,13 @@
-"""Compose the same selected saved baseline for native and local review exports."""
+"""Compose the same selected saved baseline for native and local review exports.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+:class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
+"""
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from uuid import UUID
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -13,7 +19,50 @@ from ..core.hashing import content_hash_hex
 from ..core.hex import Hex64Str
 from ..core.identity.hex_ids import CalculationRevisionId
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from .adapter_composition import build_verification_repository_bundle
+from ..domain.modelos.calculation_revision import CalculationRevision
+from ..domain.modelos.filing_record import ModeloRecord
+from .adapter_composition_work_ports import build_verification_repository_bundle
+
+
+def _review_selection(
+    revision: CalculationRevision, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> CalculationReviewSelection:
+    reference = revision.registry_snapshot_ref
+    rendering = revision.rendering_snapshot
+    return CalculationReviewSelection(
+        profile_id=profile_id,
+        work_unit_id=revision.work_unit_id,
+        calculation_revision_id=revision.calculation_revision_id,
+        modelo=reference.modelo,
+        filing_year=reference.modelo_year,
+        period=reference.period,
+        registry_snapshot_ref=reference,
+        authority_generation=rendering.authority_generation
+        if rendering is not None
+        else operation.generation.logical_generation,
+        # A legacy coordinate digest identifies only retained coordinates. It
+        # neither resolves today's template nor claims original schema custody.
+        registry_digest=rendering.registry_digest
+        if rendering is not None
+        else content_hash_hex(reference.model_dump(mode="json")),
+    )
+
+
+def _selected_filing_record(
+    records: Iterable[ModeloRecord], revision: CalculationRevision, work_unit_id: str, filing_record_id: Hex64Str | None
+) -> ModeloRecord | None:
+    records = tuple(
+        record
+        for record in records
+        if record.calculation_revision_id == revision.calculation_revision_id
+        and record.work_unit_id == work_unit_id
+        and (filing_record_id is None or record.filing_record_id == filing_record_id)
+    )
+    # A group/member filing needs an explicit member selection. Never silently
+    # choose one member's confirmation or current record as the whole review's.
+    if len(records) > 1 or (filing_record_id is not None and not records):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    return records[0] if records else None
 
 
 def load_calculation_review_snapshot(
@@ -34,39 +83,13 @@ def load_calculation_review_snapshot(
     unit = bundle.work_unit.load().get(revision.work_unit_id)
     if unit is None or unit.bucket_id != profile:
         raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    reference = revision.registry_snapshot_ref
-    rendering = revision.rendering_snapshot
-    selection = CalculationReviewSelection(
-        profile_id=profile_id,
-        work_unit_id=revision.work_unit_id,
-        calculation_revision_id=revision.calculation_revision_id,
-        modelo=reference.modelo,
-        filing_year=reference.modelo_year,
-        period=reference.period,
-        registry_snapshot_ref=reference,
-        authority_generation=rendering.authority_generation
-        if rendering is not None
-        else operation.generation.logical_generation,
-        # A legacy coordinate digest identifies only retained coordinates. It
-        # neither resolves today's template nor claims original schema custody.
-        registry_digest=rendering.registry_digest
-        if rendering is not None
-        else content_hash_hex(reference.model_dump(mode="json")),
+    selection = _review_selection(revision, profile_id, operation)
+    filing_record = _selected_filing_record(
+        bundle.filing.load().records.values(), revision, unit.work_unit_id, filing_record_id
     )
-    records = tuple(
-        record
-        for record in bundle.filing.load().records.values()
-        if record.calculation_revision_id == revision.calculation_revision_id
-        and record.work_unit_id == unit.work_unit_id
-        and (filing_record_id is None or record.filing_record_id == filing_record_id)
-    )
-    # A group/member filing needs an explicit member selection. Never silently
-    # choose one member's confirmation or current record as the whole review's.
-    if len(records) > 1 or (filing_record_id is not None and not records):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return build_calculation_review_snapshot(
         selection=selection,
         revision=revision,
         work_unit=unit,
-        filing_record=records[0] if records else None,
+        filing_record=filing_record,
     )

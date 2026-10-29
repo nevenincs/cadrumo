@@ -111,13 +111,7 @@ class GoogleArtifactAdmission:
         current = receipt
         seen: set[str] = set()
         for _ in range(_MAX_ANCESTORS):
-            if (
-                current.profile_id != self.profile_id
-                or current.root_folder_id != self.root.artifact_id
-                or current.artifact_id in seen
-                or self.receipts.load(current.artifact_id) != current
-            ):
-                raise _refused("creation_identity_mismatch")
+            self._require_current_receipt(current, seen)
             seen.add(current.artifact_id)
             self._check_metadata(current)
             if current == self.root:
@@ -130,7 +124,26 @@ class GoogleArtifactAdmission:
             current = parent
         raise _refused("ancestry_bound_exceeded")
 
+    def _require_current_receipt(self, current: ArtifactCreationReceipt, seen: set[str]) -> None:
+        """Require exact retained profile/root identity before reading each ancestor."""
+        if (
+            current.profile_id != self.profile_id
+            or current.root_folder_id != self.root.artifact_id
+            or current.artifact_id in seen
+            or self.receipts.load(current.artifact_id) != current
+        ):
+            raise _refused("creation_identity_mismatch")
+
     def _check_metadata(self, receipt: ArtifactCreationReceipt) -> None:
+        entry = self._read_metadata(receipt)
+        validate_creation_metadata(receipt, entry)
+        if receipt.kind is ManagedArtifactKind.ROOT:
+            placement = self.receipts.root_placement(receipt.artifact_id)
+            if placement is not None:
+                self._check_root_placement(entry, placement)
+
+    def _read_metadata(self, receipt: ArtifactCreationReceipt) -> Mapping[str, object]:
+        """Perform one bounded acknowledged admission read for a known identity."""
         try:
             if self.before_handoff is not None:
                 self.before_handoff("drive.files.get.admission")
@@ -143,36 +156,50 @@ class GoogleArtifactAdmission:
                 self.acknowledged("drive.files.get.admission")
         except OutboundStorageNotFoundError:
             raise _refused("identity_unavailable") from None
-        validate_creation_metadata(receipt, entry)
-        if receipt.kind is ManagedArtifactKind.ROOT:
-            placement = self.receipts.root_placement(receipt.artifact_id)
-            if placement is not None:
-                parent_id, creation_id, my_drive = placement
-                if entry.get("parents") != [parent_id]:
-                    raise _refused("root_outside_application_parent")
-                if self.before_handoff is not None:
-                    self.before_handoff("drive.files.get.layout-parent")
-                parent = execute_request(
-                    self.drive.files().get(fileId=parent_id, fields=_IDENTITY_FIELDS + ",ownedByMe"),
-                    action="drive.files.get.layout-parent",
-                    retry=RequestRetryPolicy.SINGLE_ATTEMPT,
-                )
-                if self.acknowledged is not None:
-                    self.acknowledged("drive.files.get.layout-parent")
-                props = parent.get("appProperties")
-                if (
-                    parent.get("id") != parent_id
-                    or parent.get("ownedByMe") is not True
-                    or parent.get("parents") != [my_drive]
-                    or parent.get("mimeType") != GOOGLE_DRIVE_FOLDER_MIME_TYPE
-                    or parent.get("trashed") is not False
-                    or not is_str_keyed_dict(props)
-                    or props.get(OWNERSHIP_KEY) != OWNERSHIP_VALUE
-                    or props.get(KIND_MARKER) != "application_root"
-                    or props.get(CREATION_MARKER) != creation_id
-                    or props.get("cadrumo_application_root_id") != parent_id
-                ):
-                    raise _refused("application_parent_identity_mismatch")
+        return entry
+
+    def _check_root_placement(self, entry: Mapping[str, object], placement: tuple[str, str, str]) -> None:
+        """Recheck the application parent retained for this exact managed root."""
+        parent_id, creation_id, my_drive = placement
+        if entry.get("parents") != [parent_id]:
+            raise _refused("root_outside_application_parent")
+        if self.before_handoff is not None:
+            self.before_handoff("drive.files.get.layout-parent")
+        parent = execute_request(
+            self.drive.files().get(fileId=parent_id, fields=_IDENTITY_FIELDS + ",ownedByMe"),
+            action="drive.files.get.layout-parent",
+            retry=RequestRetryPolicy.SINGLE_ATTEMPT,
+        )
+        if self.acknowledged is not None:
+            self.acknowledged("drive.files.get.layout-parent")
+        props = parent.get("appProperties")
+        _require_application_parent_identity(parent, props, parent_id, creation_id, my_drive)
+
+
+def _require_application_parent_identity(
+    parent: Mapping[str, object], props: object, parent_id: str, creation_id: str, my_drive: str
+) -> None:
+    """Require the exact acknowledged parent location, kind and creation markers."""
+    if (
+        parent.get("id") != parent_id
+        or parent.get("ownedByMe") is not True
+        or parent.get("parents") != [my_drive]
+        or parent.get("mimeType") != GOOGLE_DRIVE_FOLDER_MIME_TYPE
+        or parent.get("trashed") is not False
+        or not _application_parent_markers_match(props, parent_id, creation_id)
+    ):
+        raise _refused("application_parent_identity_mismatch")
+
+
+def _application_parent_markers_match(props: object, parent_id: str, creation_id: str) -> bool:
+    """Match all root markers together without trusting one marker in isolation."""
+    return (
+        is_str_keyed_dict(props)
+        and props.get(OWNERSHIP_KEY) == OWNERSHIP_VALUE
+        and props.get(KIND_MARKER) == "application_root"
+        and props.get(CREATION_MARKER) == creation_id
+        and props.get("cadrumo_application_root_id") == parent_id
+    )
 
 
 def validate_creation_metadata(receipt: ArtifactCreationReceipt, entry: Mapping[str, object]) -> None:

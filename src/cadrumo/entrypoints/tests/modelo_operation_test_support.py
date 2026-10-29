@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
-from cadrumo.application.modelo.operation_definitions import resolve_active_workflow_profile
+from cadrumo.application.modelo.operation_shared import resolve_active_workflow_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period
@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_verification_repository_bundle,
     build_work_lifecycle_ports,

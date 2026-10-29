@@ -18,6 +18,7 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.receipt_proof import borrow_receipt_proof, keychain_unavailability
 
@@ -37,7 +38,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _OPENED = datetime(2026, 10, 5, 9, 0, tzinfo=UTC)
 _EPOCH = "proof-only-epoch"
-_SERVICE = receipt.PROFILE_SESSION_KEYCHAIN_SERVICE
+_SERVICE = acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE
 
 
 class _KeyringError(Exception):
@@ -81,7 +82,7 @@ class _RecordingKeyring:
 @pytest.fixture
 def keychain(monkeypatch: pytest.MonkeyPatch) -> _RecordingKeyring:
     store = _RecordingKeyring()
-    monkeypatch.setattr(receipt, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
     return store
 
 
@@ -337,13 +338,13 @@ def _raised_from(error: Exception, cause: Exception) -> Exception:
     ids=["logon_1312", "logon_1312_wrapped", "other_win32_code", "no_backend", "typed", "other"],
 )
 def test_a_keychain_failure_names_its_failed_prerequisite(error: Exception, expected: KeychainUnavailability) -> None:
-    assert receipt.keychain_unavailability(error) is expected
+    assert acceleration_keychain.keychain_unavailability(error) is expected
 
 
 def test_the_probe_reads_one_unnamed_account_and_changes_nothing(keychain: _RecordingKeyring) -> None:
-    assert receipt.probe_profile_session_keychain() is None
+    assert acceleration_keychain.probe_profile_session_keychain() is None
     keychain.failure = _NO_SUCH_LOGON_SESSION
-    assert receipt.probe_profile_session_keychain() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
+    assert acceleration_keychain.probe_profile_session_keychain() is KeychainUnavailability.LOGON_WITHOUT_CREDENTIALS
     assert keychain.entries == {} and keychain.mutations == []
 
 
@@ -351,8 +352,8 @@ def test_the_probe_reports_a_missing_backend(monkeypatch: pytest.MonkeyPatch) ->
     def no_backend() -> None:
         raise KeyringUnavailableError("none", unavailability=KeychainUnavailability.NO_BACKEND)
 
-    monkeypatch.setattr(receipt, "_keyring", no_backend)
-    assert receipt.probe_profile_session_keychain() is KeychainUnavailability.NO_BACKEND
+    monkeypatch.setattr(acceleration_keychain, "_keyring", no_backend)
+    assert acceleration_keychain.probe_profile_session_keychain() is KeychainUnavailability.NO_BACKEND
 
 
 def test_an_absent_receipt_names_a_keychain_this_process_cannot_use(

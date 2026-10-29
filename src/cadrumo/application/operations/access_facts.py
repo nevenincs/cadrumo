@@ -32,7 +32,6 @@ class OperationAccessFacts:
 
 
 _LOCAL_READS: Final = (
-    "config.provision.status",
     "app.review.queue",
     "app.review.view",
     # The apoderado check contacts nothing: its remote step is not built.
@@ -47,8 +46,8 @@ _LOCAL_READS: Final = (
     "config.google.status",
     "diagnostics.read",
     "diagnostics.secure-objects.check",
-    # The workstation check and the three reader reads ask the components role
-    # and the agent service on this machine; none asks the local AI server.
+    # The workstation check and the reader reads ask the agent service on this
+    # machine; none asks the local AI server.
     "diagnostics.workstation.check",
     "ledger.actividad-asset.filing-handoff",
     "ledger.actividad-asset.forecast",
@@ -159,13 +158,11 @@ _LOCAL_READS: Final = (
 )
 
 _NETWORK_READS: Final = (
-    "config.provision.verify",
     # The probe browses once to the tax agency's public landing page and reads its answer.
     "diagnostics.connectivity.probe",
 )
 
 _LOCAL_WRITES: Final = (
-    "config.provision.remove",
     "auth.apoderado.clear",
     "auth.apoderado.configure",
     "auth.certificate.secret.remove",
@@ -302,7 +299,6 @@ _LOCAL_WRITES: Final = (
 )
 
 _NETWORK_WRITES: Final = (
-    "config.provision.setup",
     "auth.session.acquire",
     "config.google.folder.organize",
     "config.google.login",

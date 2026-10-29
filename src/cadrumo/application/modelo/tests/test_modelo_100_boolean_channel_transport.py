@@ -26,10 +26,8 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.errors import RegistryValidationError
-from ....domain.calculations.registry.formula_runtime import (
-    calculate_registry_snapshot,
-    evaluate_expression,
-)
+from ....domain.calculations.registry.formula_expression import evaluate_expression
+from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import (
     published_revision_definitions,
@@ -43,11 +41,11 @@ from ...aggregation.source_resolution_operations import (
     merge_source_resolutions_by_precedence,
 )
 from ..profile_binding import (
-    ProfileBindingResolutionError,
     profile_resolved_binding_ids,
     resolve_profile_binding_channels,
     resolve_profile_sourced_bindings,
 )
+from ..profile_derived_facts import ProfileBindingResolutionError
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

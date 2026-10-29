@@ -9,12 +9,9 @@ from typing import NoReturn
 import pytest
 
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
-from .....application.ledger.llm_classification import (
-    apply_evidence_split,
-    reject_llm_suggestion,
-    suggest_evidence_split,
-)
+from .....application.ledger.llm_classification import reject_llm_suggestion
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMClassificationSuggestion
+from .....application.ledger.llm_evidence_split import apply_evidence_split, suggest_evidence_split
 from .....core.config import load_settings
 from .....core.model_roles import ModelRole
 from .....domain.buckets.event import BucketEventType

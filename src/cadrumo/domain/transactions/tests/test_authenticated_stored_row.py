@@ -32,7 +32,7 @@ _MODELS_PATH = Path("src/cadrumo/domain/transactions/models.py")
 _REPOSITORY_PATH = Path("src/cadrumo/adapters/persistence/profile/transactions.py")
 #: The only functions allowed to decode a row as authenticated: the repository's
 #: read paths, each running on bytes the store decrypted in the same call.
-_AUTHENTICATED_READERS = frozenset({"_decode_catalogue_row", "_load_transactions_by_ids"})
+_AUTHENTICATED_READERS = frozenset({"_decode_catalogue_row", "_decode_targeted_row"})
 
 
 @pytest.fixture(autouse=True)

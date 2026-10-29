@@ -23,13 +23,10 @@ from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.export_parse import (
-    XmlDictionaryEntry,
-    parse_export_payload,
-    xml_dictionary_entries,
-)
+from ...domain.calculations.registry.export_parse import parse_export_payload
+from ...domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ...domain.calculations.registry.fixed_width_codec import render_empty_block_slot, render_fixed_width_export_field
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
@@ -398,6 +395,10 @@ def exported_casilla_provenance(
     )
 
 
+def _export_fields_by_identity(layout: ExportLayoutDefinition) -> dict[tuple[str, str], ExportFieldDefinition]:
+    return {(record.id, field.id): field for record in layout.records for field in record.fields}
+
+
 def _mismatched_casilla_ids(
     layout: ExportLayoutDefinition, *, draft: ModeloDraft, payload: bytes, schema_provider: RegistrySchemaAccessor
 ) -> tuple[tuple[CasillaId, ...], tuple[CasillaId, ...]]:
@@ -409,7 +410,7 @@ def _mismatched_casilla_ids(
             schema_provider=schema_provider,
         )
     values = {value.casilla_id: value.value for value in draft.values}
-    fields_by_identity = {(record.id, field.id): field for record in layout.records for field in record.fields}
+    fields_by_identity = _export_fields_by_identity(layout)
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     for parsed in parse_export_payload(

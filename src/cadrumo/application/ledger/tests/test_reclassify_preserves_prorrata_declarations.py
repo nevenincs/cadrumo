@@ -1,6 +1,6 @@
 """Reclassifying a row must not erase its prorrata declarations.
 
-``_command_from_patch`` rebuilds a full command from the stored row plus a
+``command_from_patch`` rebuilds a full command from the stored row plus a
 patch, and it carried twenty-odd fields across while omitting three:
 ``art_104_tres_exclusion`` (LIVA art. 104.Tres), ``input_classification``
 (art. 106 prorrata especial) and ``prorrata_sector_id`` (arts. 9.1.c / 101
@@ -29,7 +29,7 @@ from ....domain.iva.prorrata import InputClassification
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ..actions_manual import _command_from_patch
+from ..manual_update import command_from_patch
 from ..models import ManualLedgerTransactionPatch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -78,7 +78,7 @@ def _declared_row() -> Transaction:
 
 
 def _rebuild(patch: ManualLedgerTransactionPatch):
-    return _command_from_patch(
+    return command_from_patch(
         bucket_id=_BUCKET,
         current=_declared_row(),
         patch=patch,
@@ -119,7 +119,7 @@ def test_a_row_that_declared_none_gains_none() -> None:
         update={"art_104_tres_exclusion": None, "input_classification": None, "prorrata_sector_id": None},
     )
 
-    rebuilt = _command_from_patch(
+    rebuilt = command_from_patch(
         bucket_id=_BUCKET,
         current=plain,
         patch=ManualLedgerTransactionPatch(notes="n"),

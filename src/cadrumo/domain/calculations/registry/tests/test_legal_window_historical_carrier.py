@@ -24,7 +24,8 @@ from datetime import date
 import pytest
 
 from ..errors import RegistryValidationError
-from ..schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from ..schema import ModeloDefinition, ModeloRevision
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_formula import BracketEntry, ParameterDefinition
 from ..schema_references import LegalReference, PeriodSelector
 from ..snapshot import _historical_carrier_admits, check_revision_scoped_legal_windows

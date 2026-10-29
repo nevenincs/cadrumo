@@ -21,10 +21,33 @@ from ...domain.calculations.registry.m303_regimen_simplificado_projection import
     validate_m303_regimen_simplificado_endpoint_epoch,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock, FormRepeatingGroupBlock
 from ...domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimplificado
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
+from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoFilingEvidence
 from .work_form_models import ModeloFormRepeatingRow
+
+
+def _annual_evidence(
+    snapshot: RegistrySnapshot, revision: CalculationRevision | None
+) -> M303Exonerado390FilingEvidence | None:
+    if revision is None:
+        return None
+    if revision.registry_snapshot_ref != snapshot.snapshot_ref:
+        raise RegistryValidationError("saved projection value belongs to another registry coordinate")
+    envelope = revision.filing_instance_evidence
+    if envelope is None:
+        return None
+    if envelope.m303.period != snapshot.filing_period:
+        raise RegistryValidationError("saved annual evidence belongs to another filing period")
+    evidence = envelope.m303.exonerado_390
+    if evidence is None:
+        return None
+    if evidence.applicable and snapshot.period not in ("4T", "12"):
+        raise RegistryValidationError("annual activity evidence requires the final filing period")
+    return evidence
 
 
 def saved_projection_context_value(
@@ -45,34 +68,65 @@ def saved_projection_context_value(
         raise RegistryValidationError("unsupported scalar form projection")
     if snapshot.modelo.id != "303":
         raise RegistryValidationError("annual activity projection requires Modelo 303")
-    if revision is None:
-        return None
-    if revision.registry_snapshot_ref != snapshot.snapshot_ref:
-        raise RegistryValidationError("saved projection value belongs to another registry coordinate")
-    envelope = revision.filing_instance_evidence
-    if envelope is None:
-        return None
-    if envelope.m303.period != snapshot.filing_period:
-        raise RegistryValidationError("saved annual evidence belongs to another filing period")
-    evidence = envelope.m303.exonerado_390
+    evidence = _annual_evidence(snapshot, revision)
     if evidence is None:
         return None
-    if evidence.applicable and snapshot.period not in ("4T", "12"):
-        raise RegistryValidationError("annual activity evidence requires the final filing period")
-    record = next(
+    return _annual_projection_value(snapshot, block, field.projection_ref, evidence)
+
+
+def _annual_export_record(snapshot: RegistrySnapshot, block: FormContextFieldBlock) -> ExportRecordDefinition:
+    return next(
         record
         for layout in derive_export_layouts_from_bindings(snapshot.revision)
         if layout.id == block.export_layout_id
         for record in layout.records
         if record.id == block.export_record_id
     )
-    refs = tuple(item.projection_ref for item in record.fields if isinstance(item.projection_ref, supported))
+
+
+def _annual_projection_value(
+    snapshot: RegistrySnapshot,
+    block: FormContextFieldBlock,
+    projection_ref: M303Exonerado390ActivityProjectionRef | M303Exonerado390OperacionesTercerosProjectionRef,
+    evidence: M303Exonerado390FilingEvidence,
+) -> str | bool | None:
+    record = _annual_export_record(snapshot, block)
+    refs = tuple(
+        item.projection_ref
+        for item in record.fields
+        if isinstance(
+            item.projection_ref,
+            (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef),
+        )
+    )
     projected = project_m303_exonerado_390_activity_rows(projection_refs=refs, evidence=evidence)
     if projected is None:
         return None
-    if isinstance(field.projection_ref, M303Exonerado390OperacionesTercerosProjectionRef):
+    if isinstance(projection_ref, M303Exonerado390OperacionesTercerosProjectionRef):
         return evidence.operaciones_terceros_declarables
-    return next(item.value for item in projected.fields if item.projection_ref == field.projection_ref)
+    return next(item.value for item in projected.fields if item.projection_ref == projection_ref)
+
+
+def _simplified_evidence(
+    snapshot: RegistrySnapshot, revision: CalculationRevision
+) -> M303RegimenSimplificadoFilingEvidence | None:
+    envelope = revision.filing_instance_evidence
+    if envelope is None:
+        return None
+    facts = envelope.m303
+    if facts.period != snapshot.filing_period:
+        raise RegistryValidationError("saved activity evidence belongs to another filing period")
+    evidence = facts.regimen_simplificado
+    if (
+        evidence.regimen_snapshot.registry_revision_id != snapshot.revision.id
+        or evidence.regimen_snapshot.orden.registry_revision_id != snapshot.revision.id
+    ):
+        raise RegistryValidationError("saved activity evidence belongs to another registry revision")
+    design = evidence.regimen_snapshot.record_design
+    current_design = snapshot.sources.get(design.id)
+    if current_design is None or current_design.sha256 != design.sha256:
+        raise RegistryValidationError("saved activity evidence uses a different record-design source")
+    return evidence
 
 
 def saved_projection_form_records(
@@ -101,23 +155,24 @@ def saved_projection_form_records(
         return False, ()
     if snapshot.modelo.id != "303":
         raise RegistryValidationError("simplified-regime projection requires Modelo 303")
-    envelope = revision.filing_instance_evidence
-    if envelope is None:
+    evidence = _simplified_evidence(snapshot, revision)
+    if evidence is None:
         return False, ()
-    facts = envelope.m303
-    if facts.period != snapshot.filing_period:
-        raise RegistryValidationError("saved activity evidence belongs to another filing period")
-    evidence = facts.regimen_simplificado
-    if (
-        evidence.regimen_snapshot.registry_revision_id != snapshot.revision.id
-        or evidence.regimen_snapshot.orden.registry_revision_id != snapshot.revision.id
-    ):
-        raise RegistryValidationError("saved activity evidence belongs to another registry revision")
-    design = evidence.regimen_snapshot.record_design
-    current_design = snapshot.sources.get(design.id)
-    if current_design is None or current_design.sha256 != design.sha256:
-        raise RegistryValidationError("saved activity evidence uses a different record-design source")
     regimen_refs = tuple(ref for ref in refs if isinstance(ref, supported))
+    return _project_simplified_rows(snapshot, block, evidence, regimen_refs)
+
+
+def _project_simplified_rows(
+    snapshot: RegistrySnapshot,
+    block: FormRepeatingGroupBlock,
+    evidence: M303RegimenSimplificadoFilingEvidence,
+    regimen_refs: tuple[
+        M303RegimenSimplificadoActivityProjectionRef
+        | M303RegimenSimplificadoFactProjectionRef
+        | M303RegimenSimplificadoModuleProjectionRef,
+        ...,
+    ],
+) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
     validate_m303_regimen_simplificado_endpoint_epoch(regimen_refs, revision_id=snapshot.revision.id)
     projected = project_m303_regimen_simplificado_rows(
         projection_refs=regimen_refs,

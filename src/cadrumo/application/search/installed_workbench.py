@@ -18,6 +18,7 @@ from ..aeat_sync.workspace import (
     AeatSyncNotificationReadState,
     AeatSyncReconciliationState,
     AeatSyncWorkspaceProjectionV1,
+    AeatSyncWorkspaceReconciliationRowV1,
 )
 from ..ledger.workspace import LedgerWorkspaceProjectionV1
 from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProjectionV1
@@ -240,6 +241,22 @@ def _declaration_status(
     }[state]
 
 
+def _reconciliation_identity_basis(row: AeatSyncWorkspaceReconciliationRowV1) -> SecretStr:
+    return SecretStr(
+        "|".join(
+            (
+                str(row.modelo),
+                str(row.filing_year),
+                row.period.registry_token,
+                row.work_unit_id or "",
+                row.evidence_kind.value if row.evidence_kind is not None else "",
+                row.evidence_id or "",
+                row.calculation_revision_id or row.comparison_id or "",
+            )
+        )
+    )
+
+
 def _aeat_sync_documents(
     projection: AeatSyncWorkspaceProjectionV1,
     admission: WorkbenchDestinationAdmission,
@@ -258,19 +275,7 @@ def _aeat_sync_documents(
                 ),
                 label_key=WorkbenchSearchLabelKey.RECONCILIATION,
                 admission=admission,
-                identity_basis=SecretStr(
-                    "|".join(
-                        (
-                            str(row.modelo),
-                            str(row.filing_year),
-                            row.period.registry_token,
-                            row.work_unit_id or "",
-                            row.evidence_kind.value if row.evidence_kind is not None else "",
-                            row.evidence_id or "",
-                            row.calculation_revision_id or row.comparison_id or "",
-                        )
-                    )
-                ),
+                identity_basis=_reconciliation_identity_basis(row),
             )
         )
     for row in projection.notifications:

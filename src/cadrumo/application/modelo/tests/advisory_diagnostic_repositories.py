@@ -25,7 +25,8 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     SectorDefinition,
 )
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ...calculations.observations_repository import (

@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from enum import Enum
-from typing import TYPE_CHECKING, ClassVar, Final, Protocol, cast, override
+from typing import TYPE_CHECKING, ClassVar, Final, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
@@ -12,36 +11,16 @@ from textual.message import Message
 from textual.widgets import Button, DataTable, Static
 
 from ....application.aeat_sync.workspace import (
-    AeatSyncAeatObservationState,
-    AeatSyncCensusCategory,
-    AeatSyncCensusStatus,
-    AeatSyncDiscrepancyKind,
-    AeatSyncDocumentCustodyState,
-    AeatSyncJustificanteState,
-    AeatSyncLocalFilingState,
-    AeatSyncNotificationCategory,
     AeatSyncNotificationReadState,
-    AeatSyncOverviewArea,
-    AeatSyncReconciliationState,
-    AeatSyncSourceState,
-    AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceNotificationRowV1,
     AeatSyncWorkspaceProjectionV1,
-    AeatSyncWorkspaceSource,
     AeatSyncWorkspaceZone,
 )
-from ....application.live.notifications_read_operation import NotificationsListPublicResultV1
 from ....application.operations.access_facts import operation_access_facts
 from ....application.operations.frontend_projection import OperationPublicProjectionV1
-from ....application.operations.models import OperationDefinitionId
-from ....application.operator_actions.models import ActionReference
-from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
 from ....core.operations import OperationTerminalCondition
-from ....core.period import Period
-from ....domain.modelos.codes import ModeloCode
 from ..components.account_chrome import AccountChromeScreen
-from ..components.cell_text import ellipsize
 from ..components.language import localized, repaint_tables
 from ..components.theme import BASE_CSS, tokenised
 from ..components.widgets import ContentDataTable, ContentScroll
@@ -51,146 +30,21 @@ from ..operations.modal import OperationModal, OperationModalOutcomeV1, Operatio
 from ..profile.aeat_auth_setup import AeatAuthSetupScreen, readiness_text
 from .controller import AeatSyncWorkspaceController
 from .models import AeatSyncOperationRequestV1, AeatSyncRouteTargetV1
+from .operation_results import read_notifications_summary
+from .screen_presentation import (
+    status_label,
+)
+from .screen_rows import OperationRow
+from .workspace_rendering import closed_zone_copy, render_navigation
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    pass
 
-#: Which catalogue prefix names each rendered enum's members.
-#:
-#: Keyed by the enum CLASS, not by its name as a string. The string form made a
-#: rename silently unmappable: nothing referenced the class, so the name drifted
-#: while the key stayed, and the first symptom was ``_label`` raising at mount
-#: and taking the whole workspace down. A class key is a real reference -- a
-#: rename updates it, and a deletion fails the import here rather than a render
-#: later.
-_LABEL_PREFIXES: Final[Mapping[type[Enum], str]] = {
-    AeatSyncWorkspaceZone: "tui.aeat_sync.zone",
-    AeatSyncWorkspaceAvailability: "tui.aeat_sync.availability",
-    AeatSyncWorkspaceSource: "tui.aeat_sync.source",
-    AeatSyncOverviewArea: "tui.aeat_sync.area",
-    AeatSyncSourceState: "tui.aeat_sync.source_state",
-    AeatSyncDiscrepancyKind: "tui.aeat_sync.discrepancy",
-    AeatSyncCensusCategory: "tui.aeat_sync.census_category",
-    AeatSyncCensusStatus: "tui.aeat_sync.census_status",
-    AeatSyncLocalFilingState: "tui.aeat_sync.local_filing_state",
-    AeatSyncAeatObservationState: "tui.aeat_sync.aeat_observation_state",
-    AeatSyncJustificanteState: "tui.aeat_sync.justificante_state",
-    AeatSyncNotificationCategory: "tui.aeat_sync.notification_category",
-    AeatSyncNotificationReadState: "tui.aeat_sync.notification_read_state",
-    AeatSyncDocumentCustodyState: "tui.aeat_sync.document_custody_state",
-    AeatSyncReconciliationState: "tui.aeat_sync.reconciliation_state",
-}
 _OPERATION_LABEL_LOCALE_KEYS: Final = {
     ("operator.profile.edit", "user-profile.censo-review"): "tui.aeat_sync.action.review_census",
     ("operator.live.filed.pull_all", "live.filed-history.pull"): "tui.aeat_sync.action.pull_filed_all",
     ("operator.live.notifications.list", "live.notifications.list"): "tui.search.action.list_notifications",
 }
-
-
-def _label(value: Enum | None) -> str:
-    """Render a public enum through its authored semantic catalogue key."""
-    if value is None:
-        return tr("tui.aeat_sync.value.none")
-    prefix = _LABEL_PREFIXES.get(type(value))
-    if prefix is None:
-        raise ValueError("unsupported AEAT Sync operator label")
-    return tr(f"{prefix}.{value.value}")
-
-
-def _fit_columns(
-    width: int,
-    standalone: tuple[tuple[str, str, int], ...],
-    pair: tuple[tuple[str, str, int], ...] = (),
-) -> tuple[tuple[str, str, int], ...]:
-    """Take columns in priority order, and a comparison pair whole or not at all.
-
-    Shared by every AEAT Sync screen that compares two sides, because the rule
-    is the same wherever a comparison is rendered and three copies of it would
-    drift. `standalone` columns are taken while they fit; `pair` is taken only
-    if BOTH fit after them.
-
-    Dropping one half of a pair is the failure this exists to prevent: a column
-    headed "Local value" beside nothing to compare against reads as a value
-    AEAT does not hold, rather than a column the terminal had no room for.
-    """
-    taken: list[tuple[str, str, int]] = []
-    used = 0
-
-    def _sized(column: tuple[str, str, int]) -> tuple[str, str, int, int]:
-        header = tr(column[1])
-        size = max(column[2], len(header))
-        return column[0], header, size, size + 2
-
-    for name, header, size, cost in (_sized(column) for column in standalone):
-        if used + cost > width - 1:
-            break
-        taken.append((name, header, size))
-        used += cost
-
-    sized_pair = [_sized(column) for column in pair]
-    if sized_pair and used + sum(cost for *_, cost in sized_pair) <= width - 1:
-        for name, header, size, _cost in sized_pair:
-            taken.append((name, header, size))
-    return tuple(taken)
-
-
-def _census_value(value: str | None) -> str:
-    """Render one side of a census comparison, naming an unobserved side."""
-    if value is None:
-        return tr("tui.aeat_sync.value.unobserved")
-    return ellipsize(value, 24)
-
-
-def _census_identity(path: str) -> str:
-    """Derive a stable key from the safe canonical census path only."""
-    return f"census:{' '.join(path.split()).casefold()}"
-
-
-def _natural_identity(row: _NaturalRow, *, prefix: str) -> str:
-    """Derive a stable key from a public declaration coordinate."""
-    return f"{prefix}:{row.modelo}|{row.filing_year}|{row.period.registry_token}"
-
-
-def _notification_identity(row: AeatSyncWorkspaceNotificationRowV1) -> str:
-    """Use the application-projected opaque semantic notification identity."""
-    if row.selection_key is None:
-        raise ValueError("projected notification row requires a selection key")
-    return row.selection_key
-
-
-class _OperationRow(Protocol):
-    """Safe operation axes which S397 already admitted into a row."""
-
-    supported_actions: tuple[ActionReference, ...]
-    supported_operations: tuple[OperationDefinitionId, ...]
-
-
-class _NotificationsListResultReader(Protocol):
-    """Typed public result door offered by the installed runtime handoff."""
-
-    async def read_notifications_list_result(
-        self, projection: OperationPublicProjectionV1, /
-    ) -> NotificationsListPublicResultV1:
-        """Read the exact settled notifications-list result."""
-        ...
-
-
-class _NaturalRow(Protocol):
-    """Public declaration coordinate needed for a safe display label."""
-
-    modelo: ModeloCode
-    filing_year: FilingYear
-    period: Period
-
-
-def _address(row: _NaturalRow) -> str:
-    """Render only the public Modelo/year/period natural coordinate."""
-    return tr(
-        "tui.aeat_sync.address.declaration",
-        modelo=row.modelo,
-        filing_year=row.filing_year,
-        period=row.period.registry_token,
-    )
 
 
 class AeatSyncRouteRequested(Message):
@@ -221,7 +75,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
     )
 
     zone: AeatSyncWorkspaceZone
-    heading: str
+    HEADING_LOCALE_KEY: str
 
     def __init__(self, controller: AeatSyncWorkspaceController, *, id: str) -> None:
         """Retain the controller and initially empty local button catalogue."""
@@ -240,7 +94,9 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
 
     @override
     def compose(self) -> ComposeResult:
-        yield localized(Static(tr(self.heading), classes="cadrumo-banner", markup=False), self.heading)
+        yield localized(
+            Static(tr(self.HEADING_LOCALE_KEY), classes="cadrumo-banner", markup=False), self.HEADING_LOCALE_KEY
+        )
         with ContentScroll(id="aeat-sync-page", classes="cadrumo-scroll"):
             if self.controller.aeat_auth_setup is not None:
                 yield Static(
@@ -278,7 +134,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
         navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
         navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
-        self._render_navigation(navigation)
+        render_navigation(navigation, self.controller)
         rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
         self.populate_rows(rows)
         self._render_operation_refusal()
@@ -321,32 +177,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         rendered_count = (
             tr("tui.aeat_sync.status.items", count=count) if count is not None else tr("tui.aeat_sync.value.none")
         )
-        status.update(f"{_label(self.zone)} · {_label(state.availability)} · {rendered_count}")
-
-    def _render_navigation(self, navigation: DataTable[str]) -> None:
-        """Render every zone with its independent source axes."""
-        navigation.clear(columns=False)
-        for zone in AeatSyncWorkspaceZone:
-            state = self.controller.state_for(zone)
-            navigation.add_row(
-                _label(zone),
-                _label(state.availability),
-                tr(
-                    "tui.aeat_sync.sources.joined",
-                    entries=", ".join(
-                        ellipsize(
-                            tr(
-                                "tui.aeat_sync.sources.entry",
-                                source=_label(source.source),
-                                availability=_label(source.availability),
-                            ),
-                            42,
-                        )
-                        for source in state.sources
-                    ),
-                ),
-                key=zone.value,
-            )
+        status.update(f"{status_label(self.zone)} · {status_label(state.availability)} · {rendered_count}")
 
     def _restore_focus(self, navigation: DataTable[str], rows: DataTable[str]) -> None:
         """Restore the stable selected row after refresh or child return."""
@@ -372,7 +203,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
             navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
             navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
-            self._render_navigation(navigation)
+            render_navigation(navigation, self.controller)
             rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
             self.populate_rows(rows)
             self._render_zone_status(rows)
@@ -400,7 +231,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         navigation.clear(columns=False)
         rows.clear(columns=True)
         self.query_one("#aeat-sync-status", Static).update("")
-        self._render_navigation(navigation)
+        render_navigation(navigation, self.controller)
         self.populate_rows(rows)
         self._render_operation_refusal()
         self._render_zone_status(rows)
@@ -415,7 +246,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         """Populate one safe public zone body in subclasses."""
         raise NotImplementedError
 
-    def add_operation(self, row: _OperationRow) -> None:
+    def add_operation(self, row: OperationRow) -> None:
         """Render an explicit mutation button only for a closed admitted pair.
 
         One admitted operation gets one door however many areas declare it.
@@ -463,19 +294,14 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         """Hand the exact admitted request to the optional owning host door."""
         request_id = event.button.id or ""
         if request_id == "aeat-sync-auth-edit":
-            if self.controller.aeat_auth_setup is not None and self._in_flight_id is None:
-                self.app.push_screen(AeatAuthSetupScreen(self.controller.aeat_auth_setup), self._auth_edited)
+            self._edit_auth()
             return
         request = self._requests.get(request_id)
         if request is None:
             return
         handoff = self.controller.operation_handoff
         status = self.query_one("#aeat-sync-status", Static)
-        if request_id in self._consumed_request_ids:
-            status.update(tr("tui.aeat_sync.operation.already_handled"))
-            return
-        if self._in_flight_id is not None:
-            status.update(tr("tui.aeat_sync.operation.in_flight"))
+        if not self._operation_can_start(request_id, status):
             return
         if operation_access_facts(str(request.operation)).reaches_network and not await self._refresh_auth():
             status.update(readiness_text(self.controller.auth_readiness))
@@ -502,6 +328,19 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             self._in_flight_id = None
             self._set_operation_buttons_disabled(False)
             event.button.disabled = True
+
+    def _edit_auth(self) -> None:
+        if self.controller.aeat_auth_setup is not None and self._in_flight_id is None:
+            self.app.push_screen(AeatAuthSetupScreen(self.controller.aeat_auth_setup), self._auth_edited)
+
+    def _operation_can_start(self, request_id: str, status: Static) -> bool:
+        if request_id in self._consumed_request_ids:
+            status.update(tr("tui.aeat_sync.operation.already_handled"))
+            return False
+        if self._in_flight_id is not None:
+            status.update(tr("tui.aeat_sync.operation.in_flight"))
+            return False
+        return True
 
     def _show_operation_modal(self, controller: OperationControllerPort) -> None:
         """Mount the canonical progress surface for a host-started operation."""
@@ -536,23 +375,9 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
     ) -> None:
         """Read the safe list summaries before rebuilding the workspace snapshot."""
         refresh = self.controller.refresh_snapshot
-        notification_list = request is not None and (
-            request.action.action_id == "operator.live.notifications.list"
-            and request.operation == "live.notifications.list"
+        notification_summary, result_failed = await read_notifications_summary(
+            request, operation_controller, operation_projection
         )
-        notification_summary: str | None = None
-        result_failed = False
-        if notification_list:
-            if operation_controller is None:
-                result_failed = True
-            else:
-                try:
-                    result = await cast(
-                        _NotificationsListResultReader, operation_controller
-                    ).read_notifications_list_result(operation_projection)
-                    notification_summary = self._notifications_list_summary(result)
-                except Exception:  # do not disclose protected operation result details
-                    result_failed = True
 
         if refresh is not None:
             try:
@@ -565,16 +390,6 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             self.query_one("#aeat-sync-status", Static).update(tr("tui.aeat_sync.operation.failed"))
         elif notification_summary is not None:
             self.query_one("#aeat-sync-status", Static).update(notification_summary)
-
-    @staticmethod
-    def _notifications_list_summary(result: NotificationsListPublicResultV1) -> str:
-        """Render only snapshot capture times and public notification-row counts."""
-        lines = [f"{tr('tui.aeat_sync.notifications.title')} · {tr('tui.aeat_sync.status.items', count=result.count)}"]
-        lines.extend(
-            f"{row.captured_at.isoformat()} · {tr('tui.aeat_sync.status.items', count=row.row_count)}"
-            for row in result.rows
-        )
-        return "\n".join(lines)
 
     def _set_operation_buttons_disabled(self, disabled: bool) -> None:
         """Make the one-shot operation guard visible during a host handoff."""
@@ -638,29 +453,9 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
             return
         zone = AeatSyncWorkspaceZone(event.row_key.value)
         if not self.controller.can_open(zone):
-            self.query_one("#aeat-sync-status", Static).update(self._closed_zone_copy(zone))
+            self.query_one("#aeat-sync-status", Static).update(closed_zone_copy(self.controller.state_for(zone)))
             return
         self.post_message(AeatSyncRouteRequested(self.controller.target(zone)))
-
-    def _closed_zone_copy(self, zone: AeatSyncWorkspaceZone) -> str:
-        """Name the sources a closed zone is still waiting for.
-
-        The zone carries no reason of its own, but its sources say which of
-        them could not be observed, and that is what the operator needs to
-        know: which data has to arrive before the area can open.
-        """
-        missing = [
-            tr(
-                "tui.aeat_sync.sources.entry",
-                source=_label(source.source),
-                availability=_label(source.availability),
-            )
-            for source in self.controller.state_for(zone).sources
-            if source.availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}
-        ]
-        if not missing:
-            return tr("tui.aeat_sync.refusal.source")
-        return tr("tui.aeat_sync.refusal.sources_missing", sources=", ".join(missing))
 
     def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
         """Track semantic identity instead of a mutable row position."""
@@ -685,393 +480,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         replace_workspace_body(self.app, resolve_aeat_sync_screen(self.controller, event.target))
 
 
-class AeatSyncOverviewScreen(AeatSyncWorkspaceScreen):
-    """Overview preserving local, AEAT, and discrepancy axes per area."""
-
-    zone = AeatSyncWorkspaceZone.OVERVIEW
-    heading = "tui.aeat_sync.overview.title"
-
-    def __init__(self, controller: AeatSyncWorkspaceController) -> None:
-        """Build the overview body."""
-        super().__init__(controller, id="aeat-sync-overview-screen")
-
-    @override
-    def populate_rows(self, table: DataTable[str]) -> None:
-        """Render public overview states without collapsing either source."""
-        table.add_column(tr("tui.aeat_sync.column.area"), width=15)
-        table.add_column(tr("tui.aeat_sync.column.local"), width=13)
-        table.add_column(tr("tui.aeat_sync.column.aeat"), width=13)
-        table.add_column(tr("tui.aeat_sync.column.difference"), width=16)
-        for row in self.controller.projection.overview:
-            table.add_row(
-                _label(row.area),
-                _label(row.local_state),
-                _label(row.aeat_state),
-                _label(row.discrepancy_kind),
-                key=f"overview:{row.area.value}",
-            )
-            self.add_operation(cast("_OperationRow", row))
-
-
-class AeatSyncCensusScreen(AeatSyncWorkspaceScreen):
-    """Local census comparison and complete persisted AEAT evidence."""
-
-    zone = AeatSyncWorkspaceZone.CENSUS
-    heading = "tui.aeat_sync.census.title"
-
-    def __init__(self, controller: AeatSyncWorkspaceController) -> None:
-        """Build the census body."""
-        super().__init__(controller, id="aeat-sync-census-screen")
-
-    @override
-    def compose_evidence(self) -> ComposeResult:
-        yield Static(id="aeat-sync-census-captured", markup=False)
-        yield ContentDataTable[str](id="aeat-sync-census-evidence", cursor_type="row", zebra_stripes=True)
-        yield Static(id="aeat-sync-census-value", markup=False)
-
-    @override
-    def reword_evidence(self) -> None:
-        """Reword census headings while keeping the selected observed value."""
-        value = self.query_one("#aeat-sync-census-value", Static).content
-        self._populate_evidence()
-        self.query_one("#aeat-sync-census-value", Static).update(value)
-
-    def _populate_evidence(self) -> None:
-        observation = self.controller.projection.census_observation
-        table = cast("DataTable[str]", self.query_one("#aeat-sync-census-evidence", DataTable))
-        table.clear(columns=True)
-        self.query_one("#aeat-sync-census-value", Static).update("")
-        captured = self.query_one("#aeat-sync-census-captured", Static)
-        table.display = observation is not None
-        if observation is None:
-            captured.update("")
-            return
-        captured.update(f"{observation.captured_at.isoformat()} · {observation.source_url}")
-        available = max(18, self.app.size.width - 18)
-        area_width, field_width = available // 4, available // 3
-        table.add_column(tr("tui.aeat_sync.column.area"), width=area_width)
-        table.add_column(tr("tui.aeat_sync.column.field"), width=field_width)
-        table.add_column(tr("tui.aeat_sync.column.aeat_value"), width=available - area_width - field_width)
-        for group, record in (
-            ("Datos Identificativos", observation.identity),
-            ("Domicilio Fiscal", observation.domicilio_fiscal),
-            ("Domicilio de Notificación", observation.domicilio_notificacion),
-        ):
-            for field, value in record.model_dump(mode="json").items():
-                table.add_row(group, field.replace("_", " "), "" if value is None else str(value))
-        for consultation in observation.consultations:
-            for section in consultation.sections:
-                area = section.title
-                if consultation.activity_row_index is not None:
-                    area = f"{area} · Actividad {consultation.activity_row_index + 1}"
-                if not section.rows:
-                    table.add_row(area, "", "")
-                for index, row in enumerate(section.rows, start=1):
-                    for cell in row.cells:
-                        role = "Casilla" if cell.role == "casilla" else None
-                        field = " · ".join(filter(None, (str(index), row.label, cell.column, role)))
-                        table.add_row(area, field, cell.text or "")
-
-    @override
-    async def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
-        table = cast("DataTable[str]", event.data_table)
-        if table.id == "aeat-sync-census-evidence":
-            event.stop()
-            self.query_one("#aeat-sync-census-value", Static).update(
-                "\n".join(str(value) for value in table.get_row(event.row_key))
-            )
-            return
-        await super().on_data_table_row_selected(event)
-
-    _COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
-        ("field", "tui.aeat_sync.column.field", 26),
-        ("status", "tui.aeat_sync.column.status", 16),
-        ("category", "tui.aeat_sync.column.category", 16),
-    )
-    """Census columns that stand alone, in priority order.
-
-    Status ranks above the values, and a first ordering that put them below it
-    was wrong: the values are the EVIDENCE, the status is the VERDICT, and an
-    operator who cannot see whether a field is adopted or in conflict has lost
-    the thing that tells them to act. Showing evidence for a verdict they
-    cannot read is the worse trade.
-    """
-
-    _VALUE_COLUMNS: ClassVar[tuple[tuple[str, str, int], ...]] = (
-        ("local_value", "tui.aeat_sync.column.local_value", 22),
-        ("aeat_value", "tui.aeat_sync.column.aeat_value", 22),
-    )
-    """The comparison pair, taken together or not at all.
-
-    Dropping ONE side would leave a column headed "Local value" beside nothing
-    to compare it against, which reads as a value AEAT does not hold rather
-    than a column the terminal had no room for. Both or neither.
-    """
-
-    @override
-    def populate_rows(self, table: DataTable[str]) -> None:
-        """Render the census comparison, dropping columns before overflowing."""
-        taken = _fit_columns(self.app.size.width, self._COLUMNS, self._VALUE_COLUMNS)
-        for name, header, size in taken:
-            table.add_column(header, key=name, width=size)
-        for row in self.controller.projection.census:
-            cells = {
-                "field": ellipsize(row.path, 32),
-                "category": _label(row.category),
-                "status": _label(row.status),
-                # An unobserved side is WORDED. A blank cell beside a populated
-                # one reads as "AEAT holds nothing", which is a different claim
-                # from "nobody has looked" -- and the second is the truth
-                # before any pull.
-                "local_value": _census_value(row.local_value),
-                "aeat_value": _census_value(row.aeat_value),
-            }
-            table.add_row(
-                *(cells[name] for name, _, _ in taken),
-                key=_census_identity(row.path),
-            )
-        self._populate_evidence()
-
-
-class AeatSyncFiledDeclarationsScreen(AeatSyncWorkspaceScreen):
-    """Filed declaration observation retaining local and AEAT state separately."""
-
-    zone = AeatSyncWorkspaceZone.FILED_DECLARATIONS
-    heading = "tui.aeat_sync.filed_declarations.title"
-
-    def __init__(self, controller: AeatSyncWorkspaceController) -> None:
-        """Build the filed-declarations body."""
-        super().__init__(controller, id="aeat-sync-filed-declarations-screen")
-
-    @override
-    def populate_rows(self, table: DataTable[str]) -> None:
-        """Render only public filing and receipt state."""
-        table.add_column(tr("tui.aeat_sync.column.declaration"), width=22)
-        table.add_column(tr("tui.aeat_sync.column.local_filing"), width=14)
-        table.add_column(tr("tui.aeat_sync.column.aeat"), width=14)
-        table.add_column(tr("tui.aeat_sync.column.receipt"), width=14)
-        for row in self.controller.projection.filed_declarations:
-            table.add_row(
-                _address(row),
-                _label(row.local_filing_state),
-                _label(row.aeat_observation_state),
-                _label(row.justificante_state),
-                key=_natural_identity(row, prefix="filed"),
-            )
-        for overview in self.controller.projection.overview:
-            if overview.area is AeatSyncOverviewArea.FILED_DECLARATIONS:
-                self.add_operation(cast("_OperationRow", overview))
-
-
-class AeatSyncNotificationsScreen(AeatSyncWorkspaceScreen):
-    """Notification metadata surface with no identity or document content."""
-
-    zone = AeatSyncWorkspaceZone.NOTIFICATIONS
-    heading = "tui.aeat_sync.notifications.title"
-
-    def __init__(self, controller: AeatSyncWorkspaceController) -> None:
-        """Build the notifications body."""
-        super().__init__(controller, id="aeat-sync-notifications-screen")
-
-    @override
-    def populate_rows(self, table: DataTable[str]) -> None:
-        """Render dates and public read/custody metadata only."""
-        table.add_column(tr("tui.aeat_sync.column.issued"), width=12)
-        table.add_column(tr("tui.aeat_sync.column.read"), width=12)
-        table.add_column(tr("tui.aeat_sync.column.category"), width=16)
-        table.add_column(tr("tui.aeat_sync.column.document_custody"), width=18)
-        self._notification_rows.clear()
-        for row in self.controller.projection.notifications:
-            key = _notification_identity(row)
-            self._notification_rows[key] = row
-            table.add_row(
-                str(row.issued_on),
-                _label(row.read_state),
-                _label(row.category),
-                _label(row.document_custody_state),
-                key=key,
-            )
-
-
-class AeatSyncEvidenceComparisonScreen(AeatSyncWorkspaceScreen):
-    """Evidence comparison screen retaining the two observed source states."""
-
-    zone = AeatSyncWorkspaceZone.EVIDENCE_COMPARISON
-    heading = "tui.aeat_sync.evidence_comparison.title"
-
-    def __init__(self, controller: AeatSyncWorkspaceController) -> None:
-        """Build the evidence-comparison body."""
-        super().__init__(controller, id="aeat-sync-evidence-comparison-screen")
-
-    @override
-    def populate_rows(self, table: DataTable[str]) -> None:
-        """Render a safe public comparison coordinate and discrepancy."""
-        taken = _fit_columns(
-            self.app.size.width,
-            (
-                ("declaration", "tui.aeat_sync.column.declaration", 22),
-                ("difference", "tui.aeat_sync.column.difference", 16),
-                ("local", "tui.aeat_sync.column.local", 13),
-                ("aeat", "tui.aeat_sync.column.aeat", 13),
-            ),
-            (
-                ("local_value", "tui.aeat_sync.column.local_value", 18),
-                ("aeat_value", "tui.aeat_sync.column.aeat_value", 18),
-            ),
-        )
-        for name, header, size in taken:
-            table.add_column(header, key=name, width=size)
-        for row in self.controller.projection.evidence_comparison:
-            cells = {
-                "declaration": _address(row),
-                "local": _label(row.local_state),
-                "aeat": _label(row.aeat_state),
-                "difference": _label(row.discrepancy_kind),
-                "local_value": _census_value(row.local_value),
-                "aeat_value": _census_value(row.aeat_value),
-            }
-            table.add_row(
-                *(cells[name] for name, _, _ in taken),
-                key=_natural_identity(row, prefix="comparison"),
-            )
-            self.add_operation(cast("_OperationRow", row))
-
-
-class AeatSyncReconciliationScreen(AeatSyncWorkspaceScreen):
-    """Reconciliation status surface without a generic mutation path."""
-
-    zone = AeatSyncWorkspaceZone.RECONCILIATION
-    heading = "tui.aeat_sync.reconciliation.title"
-
-    def __init__(self, controller: AeatSyncWorkspaceController) -> None:
-        """Build the reconciliation body."""
-        super().__init__(controller, id="aeat-sync-reconciliation-screen")
-
-    @override
-    def populate_rows(self, table: DataTable[str]) -> None:
-        """Render source states, discrepancy, and application-set resolution."""
-        if any(row.evidence_kind is not None for row in self.controller.projection.reconciliation):
-            self._populate_comparisons(table)
-            return
-        taken = _fit_columns(
-            self.app.size.width,
-            (
-                ("declaration", "tui.aeat_sync.column.declaration", 20),
-                ("resolution", "tui.aeat_sync.column.resolution", 14),
-                ("difference", "tui.aeat_sync.column.difference", 14),
-                ("local", "tui.aeat_sync.column.local", 10),
-                ("aeat", "tui.aeat_sync.column.aeat", 10),
-            ),
-            (
-                ("local_value", "tui.aeat_sync.column.local_value", 16),
-                ("aeat_value", "tui.aeat_sync.column.aeat_value", 16),
-            ),
-        )
-        for name, header, size in taken:
-            table.add_column(header, key=name, width=size)
-        for row in self.controller.projection.reconciliation:
-            cells = {
-                "declaration": _address(row),
-                "local": _label(row.local_state),
-                "aeat": _label(row.aeat_state),
-                "difference": _label(row.discrepancy_kind),
-                # The resolution outranks the raw states here: it is what the
-                # operator is being asked to accept or change.
-                "resolution": _label(row.reconciliation_state),
-                "local_value": _census_value(row.local_value),
-                "aeat_value": _census_value(row.aeat_value),
-            }
-            table.add_row(
-                *(cells[name] for name, _, _ in taken),
-                key=_natural_identity(row, prefix="reconciliation"),
-            )
-
-    @override
-    def compose_evidence(self) -> ComposeResult:
-        yield Static(id="aeat-sync-reconciliation-detail", markup=False)
-
-    @override
-    def on_data_table_row_highlighted(self, event: DataTable.RowHighlighted) -> None:
-        super().on_data_table_row_highlighted(event)
-        table = cast("DataTable[str]", event.data_table)
-        if table.id == "aeat-sync-rows" and hasattr(self, "_comparison_details"):
-            self.query_one("#aeat-sync-reconciliation-detail", Static).update(
-                self._comparison_details.get(str(event.row_key.value), "")
-            )
-
-    def _populate_comparisons(self, table: DataTable[str]) -> None:
-        """Show every diff with both values and the selected row's full provenance."""
-        columns = _fit_columns(
-            self.app.size.width,
-            (("declaration", "tui.aeat_sync.column.declaration", 18), ("field", "tui.aeat_sync.column.field", 16)),
-            (
-                ("local_value", "tui.aeat_sync.column.local_value", 14),
-                ("aeat_value", "tui.aeat_sync.column.aeat_value", 14),
-            ),
-        )
-        for name, header, width in columns:
-            table.add_column(header, key=name, width=width)
-        self._comparison_details: dict[str, str] = {}
-        for row in self.controller.projection.reconciliation:
-            evidence = (
-                tr("tui.aeat_sync.reconciliation.evidence.justificante")
-                if row.evidence_kind is not None and row.evidence_kind.value == "justificante"
-                else tr("tui.aeat_sync.reconciliation.evidence.declaration")
-            )
-            advisory = (
-                tr("tui.aeat_sync.reconciliation.advisories_withheld", count=row.advisory_count)
-                if row.advisory_count
-                else "0"
-            )
-            for index, diff in enumerate(row.diffs or (None,)):
-                cells = {
-                    "declaration": _address(row),
-                    "field": (
-                        diff.field_name
-                        if diff is not None
-                        else tr("tui.aeat_sync.reconciliation.incomplete")
-                        if row.advisory_count
-                        else tr("tui.aeat_sync.reconciliation.matches")
-                    ),
-                    "local_value": _census_value(row.local_value if diff is None else diff.work_unit_value),
-                    "aeat_value": _census_value(row.aeat_value if diff is None else diff.evidence_value),
-                }
-                key = f"{_natural_identity(row, prefix='reconciliation')}:{row.comparison_id or 'legacy'}:{index}"
-                table.add_row(*(cells[name] for name, _, _ in columns), key=key)
-                details = [
-                    f"{cells['declaration']} | {evidence} | {row.local_observed_at}",
-                    cells["field"],
-                    f"{tr('tui.aeat_sync.column.local_value')}: {cells['local_value']}",
-                    f"{tr('tui.aeat_sync.column.aeat_value')}: {cells['aeat_value']}",
-                ]
-                if row.historical:
-                    details.insert(0, tr("tui.aeat_sync.reconciliation.historical"))
-                details.append(
-                    tr("tui.aeat_sync.reconciliation.calculation_revision", revision=row.calculation_revision_id)
-                    if row.calculation_revision_id is not None
-                    else tr("tui.aeat_sync.reconciliation.calculation_revision_unknown")
-                )
-                if row.work_unit_id is not None and row.evidence_id is not None:
-                    details.append(
-                        tr("tui.aeat_sync.reconciliation.identity", work=row.work_unit_id, evidence=row.evidence_id)
-                    )
-                if diff is not None:
-                    details.extend((f"{diff.diff_kind.value}: {diff.kind}", *diff.legal_refs, *diff.source_refs))
-                if row.advisory_count:
-                    details.append(advisory)
-                self._comparison_details[key] = "\n".join(details)
-        self.query_one("#aeat-sync-reconciliation-detail", Static).update(
-            next(iter(self._comparison_details.values()), "")
-        )
-
-
 __all__ = [
-    "AeatSyncCensusScreen",
-    "AeatSyncEvidenceComparisonScreen",
-    "AeatSyncFiledDeclarationsScreen",
-    "AeatSyncNotificationsScreen",
-    "AeatSyncOverviewScreen",
-    "AeatSyncReconciliationScreen",
     "AeatSyncRouteRequested",
     "AeatSyncWorkspaceScreen",
 ]

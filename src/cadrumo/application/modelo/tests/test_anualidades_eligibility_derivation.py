@@ -23,7 +23,7 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
-from ..profile_binding import inject_derived_anualidades_eligibility_facts
+from ..profile_derived_facts import inject_derived_anualidades_eligibility_facts
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

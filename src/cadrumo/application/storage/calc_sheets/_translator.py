@@ -145,23 +145,34 @@ def _translate(expression: FormulaExpression, *, layout: SheetLayout) -> str:
         return _translate_lookup_bracket_by_binding(expression, layout=layout, op=op)
     if op == "lookup_parameter_by_entity_type":
         return _translate_lookup_parameter_by_entity_type(expression, layout=layout)
-    if op == "age_at_year_end":
-        return _translate_age_at_year_end(expression, layout=layout)
-    if op == "record_row_unused":
-        return _translate_record_row_unused(expression, layout=layout)
-    if op == "text_equal":
-        args = [
-            '"' + arg.text_literal.replace('"', '""') + '"'
-            if arg.text_literal is not None
-            else _translate_leaf(arg, layout=layout)
-            for arg in expression.args
-        ]
-        return _ARG_OP_BUILDERS[op](op, args)
+    specialized = _translate_special_op(op, expression, layout=layout)
+    if specialized is not None:
+        return specialized
     args = [_translate(arg, layout=layout) for arg in expression.args]
     builder = _ARG_OP_BUILDERS.get(op)
     if builder is None:
         raise TranslationError(op=op)
     return builder(op, args)
+
+
+def _translate_special_op(op: str, expression: FormulaExpression, *, layout: SheetLayout) -> str | None:
+    if op == "age_at_year_end":
+        return _translate_age_at_year_end(expression, layout=layout)
+    if op == "record_row_unused":
+        return _translate_record_row_unused(expression, layout=layout)
+    if op == "text_equal":
+        return _translate_text_equal(expression, layout=layout)
+    return None
+
+
+def _translate_text_equal(expression: FormulaExpression, *, layout: SheetLayout) -> str:
+    args = [
+        '"' + arg.text_literal.replace('"', '""') + '"'
+        if arg.text_literal is not None
+        else _translate_leaf(arg, layout=layout)
+        for arg in expression.args
+    ]
+    return _ARG_OP_BUILDERS["text_equal"]("text_equal", args)
 
 
 def _translate_record_row_unused(expression: FormulaExpression, *, layout: SheetLayout) -> str:

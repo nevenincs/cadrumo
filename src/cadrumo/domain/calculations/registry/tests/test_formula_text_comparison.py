@@ -6,7 +6,7 @@ import pytest
 from pydantic import ValidationError
 
 from ..errors import RegistryValidationError
-from ..formula_runtime import evaluate_expression
+from ..formula_expression import evaluate_expression
 from ..formula_runtime_ops import UnresolvedFormulaDependencyError
 from ..schema_formula import FormulaExpression
 

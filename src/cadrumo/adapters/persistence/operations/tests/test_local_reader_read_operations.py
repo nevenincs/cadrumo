@@ -30,7 +30,7 @@ from .....application.local_reader_status_operation import (
     LOCAL_READER_STATUS_OPERATION_DEFINITION_ID,
     LocalReaderStatusPublicResultV1,
 )
-from .....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
+from .....application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
 from .....application.tests.local_reader_operation_requests import (
     build_local_reader_report_request,
     build_local_reader_status_request,
@@ -70,7 +70,7 @@ def test_status_publishes_the_program_and_every_role_without_loading_a_model(tmp
     vision = rows[ModelRole.VISION_TRANSCRIPTION]
     assert vision.model == VISION_MODEL
     assert vision.installed is False and vision.ready is False
-    assert vision.failed_condition_id == ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED
+    assert vision.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED
     assert status.extraction_ready is False
     assert status.document_readiness is direct.document_readiness
     assert status.text_layer_model_fill_available is True
@@ -92,7 +92,7 @@ def test_status_reports_an_absent_program_as_a_state_with_its_setup(tmp_path: Pa
     program = run.result.program
     assert program.state is DependencyState.ABSENT
     assert program.available is False and program.version is None
-    assert program.verdict_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+    assert program.verdict_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED
     assert program.verdict_action_id == LOCAL_AI_PROVISION_ACTION_ID
     verdict = local_reader_public_verdict(
         program.verdict_condition_id, program.verdict_facts, program.verdict_action_id
@@ -103,7 +103,7 @@ def test_status_reports_an_absent_program_as_a_state_with_its_setup(tmp_path: Pa
     on_host = [row for row in run.result.roles if row.model is not None]
     assert on_host, "the selection names models that load on this computer"
     assert all(
-        not row.ready and row.failed_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+        not row.ready and row.failed_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED
         for row in on_host
     )
     assert run.result.extraction_ready is False
@@ -115,7 +115,7 @@ def test_status_reports_a_role_that_cannot_answer_as_unknown_with_no_setup(tmp_p
     program = run.result.program
     assert program.state is None
     assert program.available is False
-    assert program.verdict_condition_id == ProvisioningPreconditionCondition.RUNTIME_INSTALLED
+    assert program.verdict_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED
     assert program.verdict_action_id is None
     assert local_reader_fact_mapping(program.facts) == {"local_ai_state": "unknown"}
 

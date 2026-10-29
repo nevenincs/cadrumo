@@ -159,14 +159,4 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    (
-        "cadrumo.adapters.outbound.components.protocol.ComponentsContractMismatchError",
-        ErrorCode(
-            code="INTERNAL_COMPONENTS_CONTRACT_MISMATCH",
-            category=ErrorCategory.INTERNAL,
-            message_key="adapters.outbound.components.errors.contract_mismatch",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
 )

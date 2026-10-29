@@ -3,7 +3,7 @@
 This is the annual first-slice expense projection behind the
 ``ledger_renta_gastos_estimacion_directa_aggregation`` source. It loads both a
 :class:`~domain.transactions.models.TransactionCatalogue` and a
-:class:`~domain.invoices.models.InvoiceCatalogue` from the application-owned catalogue
+:class:`~domain.invoices.catalogue.InvoiceCatalogue` from the application-owned catalogue
 read capabilities, uses purchase-invoice evidence to validate deductible-expense
 facts, and returns
 binding-ready :class:`~domain.renta.ledger_expenses.RentaDeductibleExpenseObservation`
@@ -27,20 +27,13 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
-from enum import StrEnum
 from typing import TYPE_CHECKING, overload
-
-from pydantic import BaseModel, Field
 
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
-from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as tr
-from ...core.identity.transaction_ids import TransactionId
 from ...core.modelo import Modelo
-from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.period import Period, PeriodKind
-from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_regime_vocabulary import (
@@ -58,8 +51,7 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
     seguro_enfermedad_insured_counts_from_facts,
 )
 from ...domain.contribuyente.tax_residence import parse_tax_region
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
-from ...domain.iva.schema import InvoiceKind
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
@@ -85,7 +77,7 @@ from ..prorrata_register.service import require_prorrata_register_coordinates_cu
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import fact_value, profile_fact_index
 from . import _shared_issue_reasons
-from ._models import CasillaAggregation, CasillaProvenance, LedgerAggregationResultBase
+from ._models import CasillaAggregation, CasillaProvenance
 from ._renta_business_eligibility import (
     exclusive_business_use,
     relies_on_activity_marker,
@@ -95,14 +87,19 @@ from ._renta_business_eligibility import (
 from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .currency_predicates import (
     effective_eur_amount,
-    effective_eur_iva_amount,
-    effective_eur_taxable_base,
     is_non_eur_without_conversion,
 )
 from .errors import AggregationPeriodError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
+
+from .renta_ledger_evidence import iva_amount_for, purchase_invoice_evidence_payload, taxable_base_for
+from .renta_ledger_models import (
+    RentaLedgerAggregationIssue,
+    RentaLedgerAggregationIssueReason,
+    RentaLedgerExpenseAggregation,
+)
 
 _LEDGER_CATALOGUE_ID = "ledger"
 
@@ -171,97 +168,12 @@ def _registry_renta_iva_ratio_declarations(
     return entries
 
 
-class RentaLedgerAggregationIssueReason(StrEnum):
-    """Machine-readable reasons why a ledger row did not produce an observation.
-
-    The five upstream filter rejections (``UNSUPPORTED_DIRECTION``,
-    ``UNSUPPORTED_CURRENCY``, ``UNCLASSIFIED_BUSINESS_STATE``,
-    ``PERSONAL_TRANSACTION``, ``OUTSIDE_PERIOD``) are shared with
-    :class:`~application.aggregation.iva_ledger.IvaLedgerAggregationIssueReason`
-    through :mod:`._shared_issue_reasons`. ``UNSUPPORTED_PERIOD`` is a
-    Renta-only refusal raised against quarter-level requests; the
-    remaining values describe Renta-specific deductibility checks.
-    """
-
-    UNSUPPORTED_PERIOD = "unsupported_period"
-    UNSUPPORTED_DIRECTION = _shared_issue_reasons.UNSUPPORTED_DIRECTION
-    UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
-    UNCLASSIFIED_BUSINESS_STATE = _shared_issue_reasons.UNCLASSIFIED_BUSINESS_STATE
-    ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW = "activity_marked_pending_annual_review"
-    """An actividad-marked expense the quarterly M130 accepts but the annual declaration holds for review.
-
-    Narrower than ``UNCLASSIFIED_BUSINESS_STATE``: the row carries an explicit
-    ``actividad_economica`` IRPF category, so it is not unclassified -- it is
-    awaiting the business-classification review the filing-grade annual
-    projection requires. Naming it separately tells the operator that the same
-    row already fed a pago fraccionado and what action clears it.
-    """
-    PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
-    MISSING_CATEGORY = "missing_category"
-    UNKNOWN_CATEGORY = _shared_issue_reasons.UNKNOWN_CATEGORY
-    MISSING_CATEGORY_PROFILE = _shared_issue_reasons.MISSING_CATEGORY_PROFILE
-    OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
-    MISSING_PURCHASE_INVOICE_EVIDENCE = "missing_purchase_invoice_evidence"
-    UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND = "unsupported_purchase_invoice_evidence_kind"
-    PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH = "purchase_invoice_evidence_bucket_mismatch"
-    PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH = "purchase_invoice_evidence_link_mismatch"
-    PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE = "partial_or_multi_transaction_purchase_invoice_evidence"
-    AMOUNT_MISMATCH = "amount_mismatch"
-    INVALID_LEDGER_FACT = _shared_issue_reasons.INVALID_LEDGER_FACT
-    INELIGIBLE_DEDUCTIBILITY = _shared_issue_reasons.INELIGIBLE_DEDUCTIBILITY
-    EXCLUSIVE_USE_REQUIRED = _shared_issue_reasons.EXCLUSIVE_USE_REQUIRED
-    MISSING_OWNERSHIP_SHARE = _shared_issue_reasons.MISSING_OWNERSHIP_SHARE
-    ASSET_REGISTER_REQUIRED = _shared_issue_reasons.ASSET_REGISTER_REQUIRED
-    REGION_UNDECLARED_FOR_OVERRIDE = _shared_issue_reasons.REGION_UNDECLARED_FOR_OVERRIDE
-
-
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
 #:
 #: These issues explain why a ledger row was excluded, so refusing one over its
 #: length would drop the explanation for the exclusion AND fail the aggregation
 #: that produced it -- a silent under-declaration dressed as a validation error.
 #: Shortening the sentence is strictly the lesser loss.
-
-
-class RentaLedgerAggregationIssue(BaseModel):
-    """Traceable exclusion emitted while aggregating ledger rows."""
-
-    model_config = _STRICT_FROZEN
-
-    transaction_id: TransactionId
-    purchase_invoice_evidence_id: str | None = Field(default=None, min_length=1, max_length=128)
-    category_id: str | None = Field(default=None, min_length=1, max_length=128)
-    reason: RentaLedgerAggregationIssueReason
-    detail: IssueDetail
-
-
-class _PurchaseInvoiceEvidencePayload(BaseModel):
-    """Typed enrichment fields copied from a reconciled linked invoice."""
-
-    model_config = _STRICT_FROZEN
-
-    invoice_issue_date: date | None = None
-    taxable_base: Decimal | None = None
-    iva_amount: Decimal | None = None
-
-
-class RentaLedgerExpenseAggregation(
-    LedgerAggregationResultBase[RentaDeductibleExpenseObservation, RentaLedgerAggregationIssue],
-):
-    """First-slice Renta observations plus binding-ready casilla totals.
-
-    Carries no ``out_of_window_summary``: this annual first-slice aggregation
-    has no repository-backed date partition, unlike the base's four other
-    known subclasses -- deliberately not declared here (see
-    :class:`~._models.LedgerAggregationResultBase`).
-    """
-
-    profile_year: FilingYear
-
-    @property
-    def casilla_values(self) -> Mapping[CasillaId, Decimal]:
-        """Return the frozen mapping of binding-ready casilla totals."""
-        return self.casilla_aggregation.casilla_values
 
 
 def _seguro_enfermedad_person_counts(
@@ -979,7 +891,7 @@ def _renta_expense_fact_or_issue(
     proportion: Decimal,
 ) -> RentaDeductibleExpenseFact | RentaLedgerAggregationIssue:
     """Enrich a transaction with invoice evidence and construct its expense fact."""
-    evidence_payload = _purchase_invoice_evidence_payload(
+    evidence_payload = purchase_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction_id=transaction.transaction_id,
@@ -998,8 +910,8 @@ def _renta_expense_fact_or_issue(
             invoice_issue_date=evidence_payload.invoice_issue_date,
             posting_date=transaction.raw.booked_date,
             gross_amount=_business_fact_amount(eur_amount, proportion),
-            taxable_base=_business_fact_amount(_taxable_base_for(transaction, evidence_payload), proportion),
-            iva_amount=_business_fact_amount(_iva_amount_for(transaction, evidence_payload), proportion),
+            taxable_base=_business_fact_amount(taxable_base_for(transaction, evidence_payload), proportion),
+            iva_amount=_business_fact_amount(iva_amount_for(transaction, evidence_payload), proportion),
             direction=direction,
             category=category,
             activity_key=activity_key,
@@ -1147,182 +1059,6 @@ def _business_fact_amount(amount: Decimal | None, proportion: Decimal) -> Decima
     return amount * proportion
 
 
-def _purchase_invoice_evidence_payload(
-    *,
-    invoices: InvoiceCatalogue,
-    bucket_id: str,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str | None,
-    category_id: str | None,
-    transaction_amount: Decimal,
-) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
-    if purchase_invoice_evidence_id is None:
-        return _PurchaseInvoiceEvidencePayload()
-    invoice = invoices.get(purchase_invoice_evidence_id)
-    if invoice is None:
-        return _missing_purchase_invoice_issue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-        )
-    reference_issue = _purchase_invoice_reference_issue(
-        invoice,
-        bucket_id=bucket_id,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-    )
-    if reference_issue is not None:
-        return reference_issue
-    return _purchase_invoice_payload_for_totals(
-        invoice,
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-        transaction_amount=transaction_amount,
-    )
-
-
-def _missing_purchase_invoice_issue(
-    *,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str,
-    category_id: str | None,
-) -> RentaLedgerAggregationIssue:
-    """Describe an evidence reference absent from the confirmed invoice catalogue."""
-    # The evidence reference addresses two id spaces and only the invoice
-    # catalogue carries the fiscal totals this fold-in needs, so a miss here is
-    # NOT proof the reference is broken: it is also what a legitimately
-    # registered, not-yet-confirmed evidence record looks like from this side.
-    # Naming both cases keeps the operator from hunting a phantom missing record.
-    return RentaLedgerAggregationIssue(
-        transaction_id=transaction_id,
-        purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-        reason=RentaLedgerAggregationIssueReason.MISSING_PURCHASE_INVOICE_EVIDENCE,
-        detail=(
-            "transaction references no confirmed invoice in the catalogue, so this expense carries no "
-            "invoice totals to fold in; if the reference names a registered evidence record, confirming "
-            "it into an invoice does NOT repoint this transaction, and no verb currently replaces an "
-            "already-set purchase-invoice-evidence reference -- so record the expense against the "
-            "confirmed invoice on a transaction that has no evidence reference yet"
-        ),
-    )
-
-
-def _purchase_invoice_reference_issue(
-    invoice: Invoice,
-    *,
-    bucket_id: str,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str,
-    category_id: str | None,
-) -> RentaLedgerAggregationIssue | None:
-    """Validate bucket, kind, and reciprocal-link constraints for one invoice."""
-    if invoice.bucket_id != bucket_id:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_BUCKET_MISMATCH,
-            detail="transaction references purchase invoice evidence outside the active bucket",
-        )
-    if invoice.kind is not InvoiceKind.RECEIVED:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.UNSUPPORTED_PURCHASE_INVOICE_EVIDENCE_KIND,
-            detail=f"purchase invoice evidence kind {invoice.kind.value!r} is not RECEIVED",
-        )
-    if transaction_id not in invoice.linked_transaction_ids:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.PURCHASE_INVOICE_EVIDENCE_LINK_MISMATCH,
-            detail="transaction and purchase invoice evidence links are not reciprocal",
-        )
-    if len(invoice.linked_transaction_ids) != 1:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.PARTIAL_OR_MULTI_TRANSACTION_PURCHASE_INVOICE_EVIDENCE,
-            detail="first-slice aggregation only accepts one transaction per purchase invoice evidence record",
-        )
-    return None
-
-
-def _purchase_invoice_payload_for_totals(
-    invoice: Invoice,
-    *,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str,
-    category_id: str | None,
-    transaction_amount: Decimal,
-) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
-    """Reconcile EUR totals and project the linked invoice's evidence payload."""
-    # invoice.grand_total is denominated in invoice.currency (native), while
-    # transaction_amount is the caller's already-EUR-converted eur_amount (see
-    # effective_eur_amount). Comparing them directly mixes currencies: a
-    # legitimate foreign-currency invoice would compare its native total
-    # against a converted EUR figure and mismatch even when the two documents
-    # agree, so this compares grand_total_eur instead. An invoice that cannot
-    # itself resolve a EUR total (foreign currency, unconverted) has no EUR
-    # figure to compare or fold in, so it is refused the same way rather than
-    # silently treated as a domestic-currency match.
-    invoice_grand_total_eur = invoice.grand_total_eur
-    if invoice_grand_total_eur is None or transaction_amount != invoice_grand_total_eur:
-        return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
-            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
-            reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
-            detail="linked transaction amount does not match invoice grand total",
-        )
-    # invoice.base_total / invoice.iva_total are native-currency (same
-    # currency as invoice.currency); the EUR-safe *_eur properties are the
-    # ones that already exist for exactly this purpose (used correctly in
-    # invoice_retencion.py). base_total_eur cannot be None here: the
-    # grand_total_eur check above already proved the invoice resolves to EUR.
-    base_total_eur = invoice.base_total_eur
-    iva_total_eur = invoice.iva_total_eur
-    if base_total_eur is None or iva_total_eur is None:
-        msg = (
-            f"purchase invoice {purchase_invoice_evidence_id} resolves a EUR grand total but no EUR "
-            "base or cuota; its EUR-equivalent totals disagree with one another"
-        )
-        raise ValueError(msg)
-    return _PurchaseInvoiceEvidencePayload(
-        invoice_issue_date=invoice.issued_at,
-        taxable_base=base_total_eur,
-        iva_amount=iva_total_eur,
-    )
-
-
-def _taxable_base_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
-    """Return the EUR taxable_base: the linked invoice's (already EUR), else the transaction's own.
-
-    ``transaction.taxable_base`` is native-currency (see
-    ``domain.transactions.tests.test_gross_invariant``), so the fallback goes
-    through the EUR-equivalent accessor rather than the raw field.
-    """
-    if evidence_payload.taxable_base is not None:
-        return evidence_payload.taxable_base
-    return effective_eur_taxable_base(transaction)
-
-
-def _iva_amount_for(transaction: Transaction, evidence_payload: _PurchaseInvoiceEvidencePayload) -> Decimal | None:
-    """Return the EUR iva_amount: the linked invoice's (already EUR), else the transaction's own.
-
-    Via the EUR-equivalent accessor -- see :func:`_taxable_base_for`.
-    """
-    if evidence_payload.iva_amount is not None:
-        return evidence_payload.iva_amount
-    return effective_eur_iva_amount(transaction)
-
-
 def _casilla_aggregation(
     period: Period,
     observations: Sequence[RentaDeductibleExpenseObservation],
@@ -1357,9 +1093,6 @@ def _casilla_aggregation(
 __all__ = [
     "CategoryRuleRefusal",
     "RentaCategoryDeductionRules",
-    "RentaLedgerAggregationIssue",
-    "RentaLedgerAggregationIssueReason",
-    "RentaLedgerExpenseAggregation",
     "aggregate_renta_ledger_expenses",
     "aggregate_renta_ledger_expenses_from_repositories",
     "resolve_category_deduction_rules",

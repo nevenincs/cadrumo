@@ -1,7 +1,7 @@
 """Governed-persistence repository for the invoice catalogue.
 
 :class:`InvoiceCatalogueRepository` is the sanctioned read/write path for the
-:class:`~domain.invoices.models.InvoiceCatalogue`. It stores the catalogue as an
+:class:`~domain.invoices.catalogue.InvoiceCatalogue`. It stores the catalogue as an
 encrypted byte object via
 :class:`~adapters.persistence.storage.sql.secure_objects.SecureObjectRepository` at
 ``FINANCIAL`` :class:`~core.classification.policies.SensitivityClass` using
@@ -16,7 +16,7 @@ This concrete repository is the persistence adapter behind the read-side
 :class:`~domain.invoices.protocols.InvoiceCatalogueRepositoryProtocol`. It lives in
 the persistence adapter (not in :mod:`domain.invoices`) because its
 secure-object coupling is SQL/crypto-bound; the domain package owns only the
-typed :class:`~domain.invoices.models.InvoiceCatalogue` model, its narrow port,
+typed :class:`~domain.invoices.catalogue.InvoiceCatalogue` model, its narrow port,
 and the :class:`~domain.invoices.errors.InvoicePersistenceError` boundary error.
 """
 
@@ -30,8 +30,12 @@ from pydantic import BaseModel, Field
 from ....core.logging import get_logger
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID, SecureObjectWrite
+from ....domain.invoices.catalogue import (
+    InvoiceCatalogue,
+    StoredInvoiceCatalogue,
+    decode_authenticated_invoice_catalogue,
+)
 from ....domain.invoices.errors import InvoicePersistenceError
-from ....domain.invoices.models import InvoiceCatalogue, StoredInvoiceCatalogue, decode_authenticated_invoice_catalogue
 from ..storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
 from ._secure_enveloped_document import ProfileEnvelopedModelSecurePersistence
 
@@ -274,7 +278,7 @@ class InvoiceCatalogueRepository:
             The catalogue as written.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
 
         def _guarded(current: InvoiceCatalogue) -> InvoiceCatalogue:
@@ -363,7 +367,7 @@ class InvoiceCatalogueRepository:
         nor an audit entry behind.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         invoice_write = self.to_secure_object_write(
             catalogue,

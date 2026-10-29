@@ -50,7 +50,8 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ..iva_ledger import aggregate_iva_ledger_observations, resolve_iva_ledger_binding_values
+from ..iva_ledger import aggregate_iva_ledger_observations
+from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from .ledger_transaction_support import ledger_raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

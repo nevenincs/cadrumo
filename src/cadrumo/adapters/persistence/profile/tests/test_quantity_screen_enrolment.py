@@ -31,26 +31,23 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import (
     bucket_scoped_transaction_catalogue_fixture,
 )
-from cadrumo.application.aggregation.modelo_bindings import (
-    LedgerIvaAggregationSourceResolver,
-    LedgerRentaIncomeAggregationSourceResolver,
-)
+from cadrumo.application.aggregation.modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
+from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.iva.schema import IvaCategory
-from cadrumo.domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import (
+from cadrumo.domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from cadrumo.domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
+from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
 from .published_authority_support import published_authority_operation

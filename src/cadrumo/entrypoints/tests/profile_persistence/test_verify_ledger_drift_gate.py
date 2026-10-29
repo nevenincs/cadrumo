@@ -40,11 +40,11 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.aggregation.ledger_filing_snapshot import row_fingerprint
 from cadrumo.application.aggregation.ledger_membership import LedgerSourceMembership, query_ledger_membership
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
-from cadrumo.application.ledger.actions_manual import (
+from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
+from cadrumo.application.ledger.manual_update import (
     attach_manual_transaction_evidence,
     update_manual_transaction_fields,
 )
-from cadrumo.application.ledger.evidence import PurchaseInvoiceEvidenceService
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.application.modelo.profile_readiness_gate import load_modelo_work_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -64,7 +64,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_ledger_evidence_ports,
     build_ledger_membership_ports,
     build_verification_repository_bundle,

@@ -19,12 +19,7 @@ from ....core.period import Period
 from ...calculations.registry.schema_references import RegistrySnapshotRef
 from ...calculations.row_source_identity import RowSourceIdentity
 from ...filing_evidence import FilingEvidenceReference
-from ..calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    CalculationSourceRef,
-    derive_calculation_revision_id,
-)
+from ..calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from ..calculation_revision_m303_evidence import (
     M303Exonerado390ActivityRowEvidence,
     M303Exonerado390EndpointEvidence,
@@ -33,6 +28,7 @@ from ..calculation_revision_m303_evidence import (
     M303InsolvencyFilingSubtype,
 )
 from ..calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
+from ..calculation_revision_sources import CalculationSourceRef
 from ._calculation_revision_test_support import (
     _INPUT_CASILLA_001,
     _OUTPUT_CASILLA_002,

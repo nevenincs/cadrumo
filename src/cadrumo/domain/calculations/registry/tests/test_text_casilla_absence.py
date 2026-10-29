@@ -20,8 +20,9 @@ from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..bindings import CasillaObservation, CasillaObservationValueKind
 from ..casilla_membership import casillas_by_id, text_family_casilla_ids
 from ..errors import RegistryValidationError
+from ..formula_expression import evaluate_expression
 from ..formula_initial_values import materialise_observations
-from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot, evaluate_expression
+from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..runtime_graph import expression_binding_refs
 from ..schema import RegistrySnapshot
 from ..schema_formula import FormulaExpression

@@ -251,18 +251,14 @@ from ...domain.attachments.m303_filing_evidence import (
 )
 from ...domain.buckets.event import BucketEventType
 from ...domain.categories.spending_category_catalogue import require_spending_category
-from ...domain.invoices.models import InvoiceCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.service import LinkInconsistency
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.work_unit import WorkUnitState
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import TransactionCatalogue
-from ..adapter_composition import (
-    build_bienes_inversion_repository,
-    build_ledger_evidence_ports,
-    build_prorrata_register_repository,
-    build_verification_repository_bundle,
-)
+from ..adapter_composition_ports import build_bienes_inversion_repository, build_prorrata_register_repository
+from ..adapter_composition_work_ports import build_ledger_evidence_ports, build_verification_repository_bundle
 from . import modelo_operation_test_support
 from .activity_asset_operation_test_support import assert_activity_asset_conformance_result
 from .aggregate_operation_test_support import aggregate_conformance_command
@@ -745,7 +741,7 @@ def _assert_registered_executor_conformance_outcome(
         else:
             ratios_after = load_usage_ratio_profile(bucket_id=str(profile_id), operation=operation)
             events_after = bucket_event_history_repository(bucket_id=str(profile_id)).load()
-            category = require_spending_category("vehiculo_combustible", authority=operation)
+            category = require_spending_category("arrendamiento_vivienda_afecto", authority=operation)
             if case.definition_id == "ledger.ratios.set":
                 assert ratios_after.ratios[category] == Decimal("0.5")
                 assert any(
@@ -761,12 +757,14 @@ def _assert_registered_executor_conformance_outcome(
             if case.definition_id == "ledger.ratios.eligible":
                 served = {row["category"]: row for row in document["rows"]}
                 assert document["count"] == len(served) > 0
-                assert served["vehiculo_combustible"]["label"] == "Vehicle fuel"
-                assert served["vehiculo_combustible"]["notes"] == (
-                    "Deductible on proof of exclusive business use "
-                    "(Reglamento IRPF art. 22, exclusive affectation of the vehicle)."
+                assert served["amortizacion_vivienda_afecto"]["label"] == "Depreciation of home used for business"
+                assert served["amortizacion_vivienda_afecto"]["notes"] == (
+                    "Deductible in proportion to the home's floor area used for the business and to your "
+                    "ownership share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, "
+                    "Reglamento IRPF art. 22.3, depreciation of the home used for business)."
                 )
-                assert served["vehiculo_combustible"]["proportionality_kind"] == "usage_ratio_personal"
+                assert served["amortizacion_vivienda_afecto"]["proportionality_kind"] == "usage_ratio_home_area"
+                assert "vehiculo_combustible" not in served
                 assert served["suministros_home_office_luz"]["label"] == "Home-office electricity"
                 assert served["suministros_home_office_luz"]["proportionality_kind"] == "usage_ratio_home_area"
     if case.expected_terminal is OperationTerminalCondition.FAILED:

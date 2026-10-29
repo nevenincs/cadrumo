@@ -481,7 +481,7 @@ def _resolve_resume_from_calculation_revision(
     ports: CalculationActionPorts,
     runs: WorkflowRunReader,
 ) -> WorkflowResumeSelection:
-    from ..modelo.calculation_actions import get_recorded_calculation_revision
+    from ..modelo.calculation_revision_queries import get_recorded_calculation_revision
     from ..modelo.work_lifecycle import get_work_unit
 
     revision = get_recorded_calculation_revision(calculation_revision_id, ports=ports)

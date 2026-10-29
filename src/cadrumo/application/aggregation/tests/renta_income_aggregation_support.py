@@ -13,17 +13,16 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.governed_fact_scope import GovernedFactSource
-from ....domain.invoices.models import InvoiceCatalogue
-from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
-from ....domain.transactions.models import (
+from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.irpf_categories import has_activity_irpf_category, has_employment_irpf_category
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 

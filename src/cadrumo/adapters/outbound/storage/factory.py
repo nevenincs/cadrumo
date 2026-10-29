@@ -228,42 +228,12 @@ def get_storage_provider(
         return LocalFileSystemProvider(root)
 
     if kind is ProviderKind.GOOGLE_DRIVE:
-        from uuid import UUID
-
-        from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-        from ..google.artifact_receipt_store import GoogleArtifactReceiptStore
-        from ._google_drive import GoogleDriveProvider
-
-        root_folder_id = resolve_required_drive_root_folder_id(profile=profile)
-        receipts = GoogleArtifactReceiptStore(
-            secure_object_repository_for_active_bucket(), profile_id=UUID(profile), commit=commit
-        )
-        if before_handoff is None and acknowledged is None:
-            credentials = build_google_credentials(profile=profile)
-            require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
-            return GoogleDriveProvider(
-                credentials=credentials,
-                root_folder_id=root_folder_id,
-                receipts=receipts,
-                vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
-            )
-        if before_handoff is not None:
-            before_handoff("google.credentials-acquisition")
-        credentials = build_google_credentials(profile=profile)
-        if acknowledged is not None:
-            acknowledged("google.credentials-acquisition")
-        if before_handoff is not None:
-            before_handoff("drive.root-folder.verification")
-        require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
-        if acknowledged is not None:
-            acknowledged("drive.root-folder.verification")
-        return GoogleDriveProvider(
-            credentials=credentials,
-            root_folder_id=root_folder_id,
-            receipts=receipts,
-            vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
+        return _google_storage_provider(
+            settings_resolved,
+            profile,
             before_handoff=before_handoff,
             acknowledged=acknowledged,
+            commit=commit,
         )
 
     # Should never be reached — _parse_kind already refused unknown kinds.
@@ -271,6 +241,53 @@ def get_storage_provider(
         "unhandled ProviderKind",
         context={"kind": kind.value},
         translated_message="adapters.outbound.storage._factory.errors.kind_unhandled",
+    )
+
+
+def _google_storage_provider(
+    settings_resolved: Settings,
+    profile: str,
+    *,
+    before_handoff: GoogleConfigurationHandoff | None,
+    acknowledged: GoogleConfigurationAcknowledgement | None,
+    commit: GoogleConfigurationCommit | None,
+) -> StorageProvider:
+    from uuid import UUID
+
+    from ...persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+    from ..google.artifact_receipt_store import GoogleArtifactReceiptStore
+    from ._google_drive import GoogleDriveProvider
+
+    root_folder_id = resolve_required_drive_root_folder_id(profile=profile)
+    receipts = GoogleArtifactReceiptStore(
+        secure_object_repository_for_active_bucket(), profile_id=UUID(profile), commit=commit
+    )
+    if before_handoff is None and acknowledged is None:
+        credentials = build_google_credentials(profile=profile)
+        require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
+        return GoogleDriveProvider(
+            credentials=credentials,
+            root_folder_id=root_folder_id,
+            receipts=receipts,
+            vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
+        )
+    if before_handoff is not None:
+        before_handoff("google.credentials-acquisition")
+    credentials = build_google_credentials(profile=profile)
+    if acknowledged is not None:
+        acknowledged("google.credentials-acquisition")
+    if before_handoff is not None:
+        before_handoff("drive.root-folder.verification")
+    require_application_drive_root(credentials, root_folder_id=root_folder_id, profile=profile)
+    if acknowledged is not None:
+        acknowledged("drive.root-folder.verification")
+    return GoogleDriveProvider(
+        credentials=credentials,
+        root_folder_id=root_folder_id,
+        receipts=receipts,
+        vault_folder_name=settings_resolved.cadrumo_google_drive_vault_folder_name,
+        before_handoff=before_handoff,
+        acknowledged=acknowledged,
     )
 
 

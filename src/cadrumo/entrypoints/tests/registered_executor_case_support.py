@@ -92,8 +92,10 @@ from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.user_profile.values import UserProfileFact
 from ...tests.aeat_literal_fixtures import aeat_url
 from ...tests.component_record_support import engine_browser_record, installed_driver_version
-from ..adapter_composition import build_amendment_action_ports, build_censal_fetch_port
-from ..operation_composition import build_auth_operation_ports, build_production_operation_registry
+from ..adapter_composition_ports import build_censal_fetch_port
+from ..adapter_composition_work_ports import build_amendment_action_ports
+from ..operation_composition import build_production_operation_registry
+from ..operation_composition_inputs import build_auth_operation_ports
 from . import modelo_operation_test_support
 from .conformance_diagnostics_repair_support import observe_synthetic_site
 from .conformance_families import conformance_family_for

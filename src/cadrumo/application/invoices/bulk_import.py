@@ -61,7 +61,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.raw_transaction import RawProvenance, SourceFormat
-from ..dependency_wording import column_reader_refusal_reason
+from ..reader_refusal_wording import column_reader_refusal_reason
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ._bulk_import_columns import (
     BulkImportColumnResolution,
@@ -500,7 +500,7 @@ def _assert_required_fields_present(resolution: BulkImportColumnResolution) -> N
     if verdict is not None:
         raise LedgerImportReaderUnavailableError(
             translated_message="errors.transaction.ledger_import_failed",
-            context={"reason": column_reader_refusal_reason(verdict)},
+            context={"reason": column_reader_refusal_reason()},
             precondition_verdict=verdict,
         )
     raise InvoiceValidationError(

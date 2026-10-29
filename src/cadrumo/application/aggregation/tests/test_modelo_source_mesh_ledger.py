@@ -22,8 +22,9 @@ from ....domain.bienes_inversion.register import BienesInversionIvaRegister
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import InvoiceOperationDateRole, IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
@@ -48,15 +49,14 @@ from ....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -67,10 +67,8 @@ from ..errors import (
 from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
-from ..modelo_bindings import (
-    LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver,
-)
 from ..modelo_bindings import LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
+from ..modelo_bindings_iva import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
 )

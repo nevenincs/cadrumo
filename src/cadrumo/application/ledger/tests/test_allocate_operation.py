@@ -16,7 +16,7 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.transactions.enums import TransactionDirection

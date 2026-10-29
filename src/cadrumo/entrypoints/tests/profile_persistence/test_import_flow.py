@@ -17,7 +17,7 @@ import pytest
 
 from cadrumo.application.modelo.action_errors import ExternalModeloImportError
 from cadrumo.application.modelo.amendment_actions import amend_modelo_revision
-from cadrumo.application.modelo.calculation_actions import get_calculation_revision
+from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.hashing import sha256_hex
@@ -26,7 +26,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.calculation_revision_amendment import CalculationRevisionAmendmentKind
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind, ModeloRecordStatus
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_amendment_action_ports,
     build_calculation_action_ports,
     build_filing_action_ports,

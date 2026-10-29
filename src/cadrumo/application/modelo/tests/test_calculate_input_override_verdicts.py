@@ -37,13 +37,12 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...cli_exception_preconditions import nested_terminal_precondition_verdict
 from ...operator_actions.models import PreconditionVerdict
-from ..calculate_input import (
+from ..calculate_input import _resolve_casilla_overrides, resolve_binding_overrides
+from ..calculate_input_validation import (
     ModeloCalculateBindingInputError,
     ModeloCalculateCasillaInputError,
     ModeloCalculateDecimalInputError,
-    _resolve_casilla_overrides,
-    _validated_binding_input_channel,
-    resolve_binding_overrides,
+    validated_binding_input_channel,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -164,7 +163,7 @@ def test_unknown_binding_refusal_carries_its_bindings_list_verdict() -> None:
 
     # A caller that is not the calculate verb names no calculate target and gets no verdict.
     with pytest.raises(ModeloCalculateBindingInputError) as untargeted:
-        _validated_binding_input_channel(
+        validated_binding_input_channel(
             "no-such-binding-id",
             revision,
             known,

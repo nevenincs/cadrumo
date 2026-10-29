@@ -23,9 +23,9 @@ from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
-from ..ledger.actions_manual import summarize_manual_transactions
+from ..ledger.manual_read import summarize_manual_transactions
 from ..ledger.read_access import resolve_ledger_read_access
-from ..modelo.calculation_actions import get_recorded_calculation_revision
+from ..modelo.calculation_revision_queries import get_recorded_calculation_revision
 from ..modelo.work_lifecycle import list_work_units
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES

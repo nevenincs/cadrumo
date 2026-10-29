@@ -9,7 +9,7 @@ This module is the single source of truth for those extras. It lives in ``core``
 — the innermost layer — so an adapter can guard its own external-library import
 without importing the application layer, and the application doctor can probe the
 same :data:`OPTIONAL_EXTRAS` registry through
-:func:`application.provisioning.probe_optional_extra`. :func:`require_optional_extra`
+:func:`application.workstation_probes.probe_optional_extra`. :func:`require_optional_extra`
 is the seam every feature boundary calls before its lazy import so a missing
 extra becomes one instructive :class:`MissingOptionalExtraError` naming
 ``pip install cadrumo[<extra>]`` instead of a raw deep-stack
@@ -107,7 +107,7 @@ class MissingOptionalExtraError(CoreError):
     Descends from :class:`~core.errors.hierarchy.CoreError` so the project-wide
     :class:`~core.errors.hierarchy.CadrumoError` boundary sees the refusal. Application
     probes report the same missing package as a
-    :class:`application.provisioning.DependencyStatus`; feature guards raise
+    :class:`application.workstation_probes.DependencyStatus`; feature guards raise
     this exception only when the operator reaches the guarded boundary.
 
     The operator-facing text is the registered error code's own translation

@@ -13,8 +13,9 @@ from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable, ContentScroll
-from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LedgerWorkspaceController
 from .models import LedgerFlowState
+from .workspace_screen import LedgerWorkspaceScreen
 
 #: The legal moves of a confirmed Ledger flow, as a state a caller can read.
 #:

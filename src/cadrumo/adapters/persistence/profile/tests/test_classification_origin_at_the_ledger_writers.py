@@ -18,13 +18,11 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.ledger.actions_lifecycle import mark_transaction_reviewed_excluded
-from cadrumo.application.ledger.actions_manual import (
-    detach_manual_transaction_attachments,
-    link_manual_transaction_invoice,
-)
+from cadrumo.application.ledger.actions_manual import link_manual_transaction_invoice
 from cadrumo.application.ledger.actions_split_merge import split_transaction, split_transaction_with_classified_children
 from cadrumo.application.ledger.llm_classification import apply_llm_classification, derive_operator_iva_substrate
 from cadrumo.application.ledger.llm_classification_ports import LLMClassificationSuggestion
+from cadrumo.application.ledger.manual_update import detach_manual_transaction_attachments
 from cadrumo.application.ledger.models import (
     ManualLedgerTransactionPatch,
     SplitChildCommand,

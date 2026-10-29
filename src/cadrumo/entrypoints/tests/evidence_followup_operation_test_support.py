@@ -24,8 +24,6 @@ from ...application.ledger.evidence_followup_contracts import (
     CloudDerivedArtefactProjection,
     ConsentedDispatchProjection,
     ConsentWithdrawalSurveyProjection,
-    CountryVocabularyAdvisoryProjection,
-    CountryVocabularyWarningProjection,
     EvidenceReviewQueueRowProjection,
     LedgerEvidenceAttachmentQueueProjection,
     LedgerEvidenceAttachmentQueueRequest,
@@ -37,6 +35,10 @@ from ...application.ledger.evidence_followup_contracts import (
     LedgerEvidenceReviewListRequest,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
+)
+from ...application.ledger.evidence_review_advisories import (
+    CountryVocabularyAdvisoryProjection,
+    CountryVocabularyWarningProjection,
     PartyAttributionAdvisoryProjection,
     PartyAttributionWarningProjection,
 )
@@ -58,7 +60,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ...domain.user_profile.values import UserProfileFact
-from ..adapter_composition import build_attachment_store
+from ..adapter_composition_ports import build_attachment_store
 from ..evidence_followup_operation_composition import build_ledger_evidence_followup_operation_ports
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
 

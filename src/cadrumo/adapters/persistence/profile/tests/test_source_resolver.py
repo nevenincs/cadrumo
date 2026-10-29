@@ -11,7 +11,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
-from cadrumo.application.invoices.source_resolver import invoice_direction_to_source_kind
+from cadrumo.application.invoices.source_observations import invoice_direction_to_source_kind
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourcePersistenceError
 from cadrumo.core.aggregation import BindingSourceKind, IntracomOperationType
 from cadrumo.core.errors.error_codes import get_registered_error_code, resolve_error_message
@@ -22,7 +22,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.m347_threshold import m347_threshold_decimal
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.modelos.row_models import Modelo349CountryPrefixContextError

@@ -391,7 +391,7 @@ PERMITTED_PIN_SITES: Final[frozenset[tuple[str, str]]] = frozenset(
         # Independent resolver oracles for the managed Playwright cache and
         # the repository-local storage-root default.
         (
-            "application/tests/test_provisioning_browser.py",
+            "application/tests/test_browser_location.py",
             "test_browsers_root_defaults_under_the_configured_storage_root",
         ),
         (

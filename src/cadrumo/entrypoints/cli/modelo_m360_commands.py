@@ -64,6 +64,25 @@ class _SolicitudDocument(BaseModel):
     representante_account: Modelo360RepresentanteAccountInput | None = None
 
 
+def _require_solicitud_completion(
+    completed: RegisteredOperationCompletion[Modelo360SolicitudResult],
+    request: Modelo360SolicitudRequest,
+    profile_id: UUID,
+) -> None:
+    result = completed.projection
+    expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
+    if (
+        result.profile_id != profile_id
+        or result.action != request.action
+        or result.filing_year != request.filing_year
+        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or completed.effect is not expected_effect
+        or (request.action == "list" and result.changed)
+    ):
+        raise invalid_completion_error(completed)
+
+
 def _run(ctx: typer.Context, request: Modelo360SolicitudRequest) -> Modelo360SolicitudResult:
     """Run one exact-profile request and correlate its receipt with what was asked."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
@@ -80,17 +99,7 @@ def _run(ctx: typer.Context, request: Modelo360SolicitudRequest) -> Modelo360Sol
         timeout=120,
     )
     result = completed.projection
-    expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
-    if (
-        result.profile_id != client.profile_id
-        or result.action != request.action
-        or result.filing_year != request.filing_year
-        or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
-        or completed.refusal_code is not None
-        or completed.effect is not expected_effect
-        or (request.action == "list" and result.changed)
-    ):
-        raise invalid_completion_error(completed)
+    _require_solicitud_completion(completed, request, client.profile_id)
     return result
 
 

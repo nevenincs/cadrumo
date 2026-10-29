@@ -228,7 +228,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.workspace.ModeloWorkspaceMaterializationProvenanceMissingError",
+        "cadrumo.application.modelo.workspace_graded.ModeloWorkspaceMaterializationProvenanceMissingError",
         ErrorCode(
             code="INTEGRITY_MODELO_WORKSPACE_MATERIALIZATION_PROVENANCE_MISSING",
             category=ErrorCategory.INTEGRITY,
@@ -248,7 +248,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.workspace.ModeloWorkspaceStaleCursorError",
+        "cadrumo.application.modelo.workspace_schema.ModeloWorkspaceStaleCursorError",
         ErrorCode(
             code="REFUSED_MODELO_WORKSPACE_STALE_CURSOR",
             category=ErrorCategory.REFUSED,

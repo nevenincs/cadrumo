@@ -11,6 +11,7 @@ from typing import Any, cast
 import pytest
 
 import cadrumo.application.ledger.actions_manual as actions_manual
+import cadrumo.application.ledger.manual_update as manual_update
 
 from ....core.classification.policies import SensitivityClass
 from ....core.secure_object_write import SecureObjectWrite
@@ -22,14 +23,15 @@ from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.iva.schema import IvaCategory
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.work_unit import WorkUnitCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.dates import transaction_filing_date
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
-from ....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..action_ports import LedgerActionPorts
 from ..actions_classification import bulk_classify_from_csv
-from ..actions_manual import update_manual_transaction_fields
+from ..manual_update import update_manual_transaction_fields
 from ..models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from ..persistence_ports import LedgerPersistenceConflictError
 from .manual_transaction_support import create_manual_transaction
@@ -249,7 +251,7 @@ def _repositories(catalogue: TransactionCatalogue) -> tuple[_TransactionReposito
 
 def _stored_catalogue(*descriptions: str) -> TransactionCatalogue:
     return TransactionCatalogue.from_transactions(
-        actions_manual._transaction_from_command(_command(description=description), occurred_at=_NOW)
+        actions_manual.transaction_from_command(_command(description=description), occurred_at=_NOW)
         for description in descriptions
     )
 
@@ -395,13 +397,13 @@ def test_none_and_declared_non_declarable_categories_are_not_remapped(
     transactions, events = _repositories(TransactionCatalogue())
     ports = _ports(operation=operation, transactions=transactions, events=events)
 
-    actions_manual._require_declared_iva_category(_command(), ports=ports)
-    actions_manual._require_declared_iva_category(_command(iva_category=IvaCategory("unknown")), ports=ports)
-    actions_manual._require_declared_iva_category(
+    actions_manual.require_declared_iva_category(_command(), ports=ports)
+    actions_manual.require_declared_iva_category(_command(iva_category=IvaCategory("unknown")), ports=ports)
+    actions_manual.require_declared_iva_category(
         _command(iva_category=IvaCategory("domestic_not_subject")),
         ports=ports,
     )
-    actions_manual._require_declared_iva_category(
+    actions_manual.require_declared_iva_category(
         _command(iva_category=IvaCategory("erroneous_invoice")),
         ports=ports,
     )
@@ -433,7 +435,7 @@ def test_stale_baseline_refuses_both_manual_edit_doors_before_a_write(
             occurred_at=_NOW,
         )
 
-    command = actions_manual._command_from_patch(
+    command = manual_update.command_from_patch(
         bucket_id=_BUCKET,
         current=baseline,
         patch=ManualLedgerTransactionPatch(notes="operator correction"),
@@ -443,7 +445,7 @@ def test_stale_baseline_refuses_both_manual_edit_doors_before_a_write(
     with pytest.raises(
         TransactionValidationError, match="transaction changed since it was opened; reopen it before editing"
     ):
-        actions_manual.update_manual_transaction(
+        manual_update.update_manual_transaction(
             transaction_id=baseline.transaction_id,
             command=command,
             ports=ports,
@@ -512,7 +514,7 @@ def test_description_edit_does_not_reconcile_an_unchanged_attachment_after_commi
     operation: PinnedAuthorityOperation,
 ) -> None:
     """A post-commit manifest failure must not turn a committed description edit into a reported failure."""
-    baseline = actions_manual._transaction_from_command(
+    baseline = actions_manual.transaction_from_command(
         _command(description="attached transaction", attachment_ids=(_ATTACHMENT_ID,)),
         occurred_at=_NOW,
     )

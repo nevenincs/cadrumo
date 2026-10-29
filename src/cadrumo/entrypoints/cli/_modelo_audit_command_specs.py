@@ -80,7 +80,7 @@ def _leaf(
         handler=LazyBinding.available(DeferredTarget(".modelo_audit_commands", handler, __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".modelo_results", schema_name, __package__),
+            target=DeferredTarget(".modelo_aux_payloads", schema_name, __package__),
             identity=identity,
         ),
     )

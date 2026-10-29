@@ -45,7 +45,7 @@ from ....domain.calculations.registry.bindings import CasillaObservation, Regist
 from ....domain.filing.protocols import CasillaSchemaProvider
 from ....domain.filing.schema import ModeloDraft
 from ....domain.submission.models import ModeloDraftStatus
-from ...adapter_composition import build_draft_review_ports
+from ...adapter_composition_ports import build_draft_review_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

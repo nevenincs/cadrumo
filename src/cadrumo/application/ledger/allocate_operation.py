@@ -34,8 +34,9 @@ from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_common import display_decimal
-from .actions_manual import ledger_transaction_result_payload, update_manual_transaction_fields
 from .id_resolution import resolve_transaction_id
+from .manual_read import ledger_transaction_result_payload
+from .manual_update import update_manual_transaction_fields
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionPatch, ManualLedgerTransactionResult
 from .read_access import resolve_ledger_commit_access
 from .transaction_projection import LedgerTransactionProjection

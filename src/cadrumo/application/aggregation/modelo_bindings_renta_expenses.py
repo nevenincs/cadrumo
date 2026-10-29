@@ -38,10 +38,8 @@ from .modelo_bindings_actividad_assets import (
     register_acquisition_transaction_ids,
     register_owned_acquisition_diagnostics,
 )
-from .renta_ledger import (
-    RentaLedgerExpenseAggregation,
-    aggregate_renta_ledger_expenses_from_repositories,
-)
+from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
+from .renta_ledger_models import RentaLedgerExpenseAggregation
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,

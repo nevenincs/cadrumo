@@ -98,6 +98,14 @@ class ModeloWorkHistoryProjection(BaseModel):
             str(event.bucket_id) != self.history.bucket_id for event in self.history.events
         ):
             raise ValueError("work history contains another profile")
+        self._require_ordered_events()
+        if tuple(entry.event_id for entry in self.entries) != tuple(
+            event.event_id for event in reversed(self.history.events)
+        ):
+            raise ValueError("the worded history says each event once, newest first")
+        return self
+
+    def _require_ordered_events(self) -> None:
         if len({event.event_id for event in self.history.events}) != len(self.history.events):
             raise ValueError("work history repeats an event")
         if (
@@ -105,11 +113,6 @@ class ModeloWorkHistoryProjection(BaseModel):
             != self.history.events
         ):
             raise ValueError("work history is not chronologically ordered")
-        if tuple(entry.event_id for entry in self.entries) != tuple(
-            event.event_id for event in reversed(self.history.events)
-        ):
-            raise ValueError("the worded history says each event once, newest first")
-        return self
 
 
 def bind_profile_history_ports(

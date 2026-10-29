@@ -27,8 +27,8 @@ from ......core.errors.hierarchy import CoreValidationError
 from ......core.profile_session import ProfileSessionRefusalReason
 from ......tests.os_keychain_hook import require_os_credential_store
 from ...errors import DecryptionError, EncryptionError, KeyringUnavailableError, StorageValidationError
+from ..acceleration_keychain import PROFILE_SESSION_KEYCHAIN_SERVICE
 from ..acceleration_receipt import (
-    PROFILE_SESSION_KEYCHAIN_SERVICE,
     PROFILE_SESSION_RECORD_MAX_BYTES,
     AccelerationReceiptRevocationError,
     ReceiptDeletion,
@@ -514,7 +514,7 @@ print(outcome.refusal.value if outcome.refusal is not None else 'resumed')
         def unavailable(**_coordinates: object) -> None:
             raise KeyringUnavailableError("synthetic keychain refusal")
 
-        monkeypatch.setattr(receipt_owner, "_delete_acceleration_secret", unavailable)
+        monkeypatch.setattr(receipt_owner, "delete_acceleration_secret", unavailable)
         profile_id = _profile_id()
         self._prepare_sidecar(tmp_path, profile_id)
         successor = _receipt_bytes(

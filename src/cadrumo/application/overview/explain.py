@@ -37,12 +37,11 @@ from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now, today_madrid
-from ...domain.calculations.registry.applicability import (
+from ...domain.calculations.registry.applicability import derive_modelo_applicability, iter_modelo_applicability_rules
+from ...domain.calculations.registry.applicability_models import (
     ApplicabilityVerdict,
     LedgerPayerFactDerivation,
     ModeloApplicabilityRule,
-    derive_modelo_applicability,
-    iter_modelo_applicability_rules,
 )
 from ...domain.calculations.registry.applicability_payer_facts import payer_fact_profile_keys, profile_path_value
 from ...domain.calculations.registry.authority import bundled_indexed_authority

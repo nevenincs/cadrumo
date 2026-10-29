@@ -11,11 +11,10 @@ Core types:
 from __future__ import annotations
 
 import importlib
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import Enum, auto
-from typing import Protocol
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.errors.hierarchy import InternalInvariantError
@@ -29,11 +28,13 @@ from .orden_applicability import RevisionLegalApplicabilityWindow, validate_orde
 from .period_selector_match import registry_period_for_request
 from .reference_checks import check_all_id_references
 from .revision_context import records_by_id
-from .schema import ModeloDefinition, ModeloRevision, RegistryCatalogues, RegistrySnapshot
+from .schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
 from .schema_base import DateAxis, filing_period_from_scope
+from .schema_catalogues import RegistryCatalogues
 from .schema_references import LegalReference, SourceReference, governed_period_span
-from .schema_surfaces import CasillaContinuidadEvolutionDefinition, CasillaDefinition
+from .schema_surfaces import CasillaContinuidadEvolutionDefinition
 from .snapshot_proof import SnapshotCrossCheckProof, snapshot_proof_key
+from .snapshot_references import collect_snapshot_ref_ids
 from .temporal import (
     ModeloRevisionDirectory,
     RevisionSelectionMetadata,
@@ -43,82 +44,9 @@ from .temporal import (
 from .validate_revision_identity import revision_reference_identity_failures
 
 
-class _GroundedRecord(Protocol):
-    legal_refs: tuple[str, ...]
-    source_refs: tuple[str, ...]
-
-
 def _catalogue_slice[RecordT](catalogue: Mapping[str, RecordT], record_ids: set[str]) -> dict[str, RecordT]:
     """Project the selected catalogue records in deterministic id order."""
     return {record_id: catalogue[record_id] for record_id in sorted(record_ids)}
-
-
-def _collect_grounded_record_refs(
-    records: Iterable[_GroundedRecord],
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-) -> None:
-    for record in records:
-        legal_ids.update(record.legal_refs)
-        source_ids.update(record.source_refs)
-        if not isinstance(record, CasillaDefinition):
-            continue
-        if record.constraints is not None:
-            legal_ids.update(record.constraints.legal_refs)
-            source_ids.update(record.constraints.source_refs)
-        for alias in record.aliases:
-            legal_ids.update(alias.legal_refs)
-            source_ids.update(alias.source_refs)
-
-
-def _collect_cross_reference_predicate_refs(
-    revision: ModeloRevision,
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-) -> None:
-    for cross_reference in revision.live_cross_references:
-        for predicate in cross_reference.applicability_predicates:
-            legal_ids.update(predicate.legal_refs)
-            source_ids.update(predicate.source_refs)
-
-
-def _collect_export_layout_refs(
-    revision: ModeloRevision,
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-) -> None:
-    for layout in revision.export_layouts:
-        legal_ids.update(layout.legal_refs)
-        source_ids.update(layout.source_refs)
-        for export_record in layout.records:
-            for field in export_record.fields:
-                legal_ids.update(field.legal_refs)
-                source_ids.update(field.source_refs)
-
-
-def _collect_deadline_schedule_refs(
-    revision: ModeloRevision,
-    *,
-    legal_ids: set[str],
-    source_ids: set[str],
-    include_deadline_windows: bool = True,
-) -> None:
-    if include_deadline_windows:
-        for window in revision.deadline_windows:
-            legal_ids.update(window.legal_refs)
-            source_ids.update(window.source_refs)
-            for condition in window.applicability_conditions:
-                legal_ids.update(condition.legal_refs)
-                source_ids.update(condition.source_refs)
-    for schedule in revision.filing_schedules:
-        legal_ids.update(schedule.legal_refs)
-        source_ids.update(schedule.source_refs)
-        for condition in schedule.profile_conditions:
-            legal_ids.update(condition.legal_refs)
-            source_ids.update(condition.source_refs)
 
 
 # Peer-domain modules that register a ``CrossDomainSnapshotCheck`` with the
@@ -1025,12 +953,12 @@ def _revision_scoped_source_window_failures(
     catalogues: RegistryCatalogues,
     revision_directory: ModeloRevisionDirectory | None = None,
 ) -> list[str]:
-    _revision_legal_ids, revision_source_ids = _collect_snapshot_ref_ids(
+    _revision_legal_ids, revision_source_ids = collect_snapshot_ref_ids(
         modelo,
         revision,
         include_historical_continuity=False,
     )
-    _elsewhere_legal_ids, elsewhere_source_ids = _collect_snapshot_ref_ids(
+    _elsewhere_legal_ids, elsewhere_source_ids = collect_snapshot_ref_ids(
         modelo,
         revision,
         include_deadline_windows=False,
@@ -1235,104 +1163,6 @@ def _source_window_failure(
     )
 
 
-def _collect_snapshot_ref_ids(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    *,
-    include_deadline_windows: bool = True,
-    include_constructs: bool = True,
-    include_parameters: bool = True,
-    include_historical_continuity: bool = True,
-) -> tuple[set[str], set[str]]:
-    """Walk every record kind and return its (legal_ids, source_ids) pair.
-
-    The snapshot's ``legal`` / ``sources`` mappings carry only the
-    refs actually exercised by the slice — this helper aggregates the
-    every-record-kind union the calculation-grounding rule mandates
-    (legal_refs + source_refs preserved through every domain
-    boundary). Flat records share one walk; nesting record
-    kinds carry
-    their own explicit blocks because they nest inner records that
-    also carry refs.
-    """
-    legal_ids = set(modelo.legal_refs).union(revision.legal_refs)
-    source_ids = set(modelo.source_refs).union(revision.source_refs)
-    if revision.completeness_manifest is not None:
-        legal_ids.update(revision.completeness_manifest.legal_refs)
-        source_ids.update(revision.completeness_manifest.source_refs)
-    if include_historical_continuity:
-        for evolution in revision.casilla_continuidad_evolutions:
-            legal_ids.update(evolution.legal_refs)
-            source_ids.update(evolution.source_refs)
-        for relation in revision.casilla_structural_successions:
-            legal_ids.update(relation.legal_refs)
-            source_ids.update(relation.from_source_refs)
-            source_ids.update(relation.to_source_refs)
-    for predicate in revision.verification_predicates:
-        legal_ids.update(predicate.legal_refs)
-    # Applicability rules ground WHO the modelo applies to, and they were the one
-    # grounded record kind this walk omitted. The snapshot still CARRIED the
-    # rules, so `snapshot.legal` could not resolve the article a rule cites:
-    # modelo 130's `m130-seed` names `trlirnr-rdleg-5-2004:art-2`, the provision
-    # deciding whether a non-resident files at all, and a consumer resolving that
-    # rule's grounding through the snapshot found a dangling id. Nineteen
-    # revisions across eight modelos were affected.
-    #
-    # Legal-only, beside the verification predicates: an applicability rule
-    # carries `legal_refs` and no `source_refs`, so it cannot join the flat
-    # grounded-record walk below.
-    for rule in revision.applicability:
-        legal_ids.update(rule.legal_refs)
-    flat_records = (
-        revision.casillas,
-        revision.formulas,
-        *((revision.parameters,) if include_parameters else ()),
-        revision.bindings,
-        revision.projection_endpoints,
-        revision.extraction_profiles,
-        revision.live_cross_references,
-        revision.workbook_parity_refs,
-        revision.verification_expectations,
-        revision.application_links,
-        *((revision.constructs,) if include_constructs else ()),
-        revision.dependency_classifications,
-    )
-    for kind_records in flat_records:
-        _collect_grounded_record_refs(kind_records, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_cross_reference_predicate_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_export_layout_refs(revision, legal_ids=legal_ids, source_ids=source_ids)
-    _collect_deadline_schedule_refs(
-        revision,
-        legal_ids=legal_ids,
-        source_ids=source_ids,
-        include_deadline_windows=include_deadline_windows,
-    )
-    return legal_ids, source_ids
-
-
-def collect_snapshot_ref_ids(
-    modelo: ModeloDefinition,
-    revision: ModeloRevision,
-    *,
-    include_deadline_windows: bool = True,
-    include_constructs: bool = True,
-    include_parameters: bool = True,
-) -> tuple[set[str], set[str]]:
-    """Return the complete reference closure carried by a registry snapshot.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloDefinition`,
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
-    """
-    return _collect_snapshot_ref_ids(
-        modelo,
-        revision,
-        include_deadline_windows=include_deadline_windows,
-        include_constructs=include_constructs,
-        include_parameters=include_parameters,
-    )
-
-
 __all__ = [
     "SUBSTANTIVE_LAW_KINDS",
     "build_validated_snapshot",
@@ -1340,7 +1170,6 @@ __all__ = [
     "check_revision_scoped_source_windows",
     "check_snapshot_filing_capability",
     "check_snapshot_filing_review_tier",
-    "collect_snapshot_ref_ids",
     "legal_window_covers_devengo",
     "validate_materialized_export_record_families",
 ]

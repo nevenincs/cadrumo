@@ -32,7 +32,7 @@ from ....domain.iva.classification import (
     classify_iva,
 )
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, IvaTerritorialScope
-from ..source_resolver import iva_category_for_operation_type
+from ..source_observations import iva_category_for_operation_type
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 

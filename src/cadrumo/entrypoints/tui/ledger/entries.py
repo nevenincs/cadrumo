@@ -12,16 +12,10 @@ from ....core.i18n.render import tr
 from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
-from .controller import (
-    LEDGER_TRANSACTION_FOCUS,
-    LedgerEntrySelected,
-    LedgerTransactionDetailRequested,
-    LedgerWorkspaceController,
-    LedgerWorkspaceScreen,
-    review_status_label,
-)
+from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController, review_status_label
 from .models import LedgerEntryRowV1
 from .workspace_presentation import ledger_workspace_page, restore_transaction_focus
+from .workspace_screen import LedgerEntrySelected, LedgerTransactionDetailRequested, LedgerWorkspaceScreen
 
 
 def _description_fill_column(columns: tuple[tuple[str, str, int], ...]) -> int:

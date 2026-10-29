@@ -20,7 +20,7 @@ from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ...aggregation.iva_ledger import IvaLedgerAggregation
-from ..export import _resolve_m303_export_arrivals
+from ..export_preparation import resolve_m303_export_arrivals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -59,7 +59,7 @@ def test_m303_export_arrivals_use_the_work_unit_bound_bienes_register(*, operati
     secondary_register = BienesInversionIvaRegister(
         records=(_record("secondary-bien", initial_percentage=Decimal("80")),),
     )
-    contributions, resolved_register, regularisation, _bienes_parameters = _resolve_m303_export_arrivals(
+    contributions, resolved_register, regularisation, _bienes_parameters = resolve_m303_export_arrivals(
         period=period,
         prorrata_register=prorrata_register,
         iva_aggregation=IvaLedgerAggregation(period=period),
@@ -104,7 +104,7 @@ def test_m303_export_parameter_lookup_uses_the_selected_filing_period_end(
     assert snapshot.revision.id == revision_id
     register = BienesInversionIvaRegister(records=())
 
-    contributions, returned_register, regularisation, parameters = _resolve_m303_export_arrivals(
+    contributions, returned_register, regularisation, parameters = resolve_m303_export_arrivals(
         period=period,
         prorrata_register=ProrrataRegister(entries=()),
         iva_aggregation=IvaLedgerAggregation(period=period),

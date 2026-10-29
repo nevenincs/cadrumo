@@ -49,7 +49,7 @@ from cadrumo.application.user_profile.projections import record_to_path_values
 from cadrumo.core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
+from cadrumo.entrypoints.adapter_composition_ports import build_censal_fetch_port
 from cadrumo.tests.inventory import FIXTURES_DIR
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 

@@ -44,8 +44,8 @@ from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliat
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES
 from ...domain.modelos.errors import ModeloError
 from ..calculations.iva_compensation_history import correct_iva_compensation_period, seed_iva_compensation_period
-from .iva_wallet_gate import taxpayer_nif_for_bucket
 from .iva_wallet_seed_ports import ModeloIvaWalletSeedPorts
+from .iva_wallet_values import taxpayer_nif_for_bucket
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 if TYPE_CHECKING:
@@ -80,7 +80,7 @@ class ModeloIvaWalletSeedError(ModeloError):
 class ModeloIvaWalletSeedNoTaxpayerError(ModeloIvaWalletSeedError):
     """Raised when the selected bucket cannot provide a taxpayer NIF.
 
-    The seed facade uses :func:`cadrumo.application.modelo.iva_wallet_gate.taxpayer_nif_for_bucket`
+    The seed facade uses :func:`cadrumo.application.modelo.iva_wallet_values.taxpayer_nif_for_bucket`
     so the same bucket/profile identity authority feeds seed, correction, override,
     and persisted-decision replay paths.
     """
@@ -384,6 +384,40 @@ def _emit_iva_wallet_corrected_event(
     )
 
 
+def _require_override_inputs(bucket_id: str, amount: Decimal, reason: str, evidence_locator: str) -> str:
+    _require_non_negative_wallet_amount(amount)
+    for field_name, value in (("reason", reason), ("evidence_locator", evidence_locator)):
+        if len(value) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
+            # The same values are written to the audit event after the decision.
+            # Refuse before either write when the event cannot represent them.
+            raise ValueError(f"{field_name} exceeds the bucket-event payload limit")
+    taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
+    if taxpayer_nif is None:
+        raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.override")
+
+    return taxpayer_nif
+
+
+def _require_no_fresh_wallet(existing: IvaCompensationReconciliationDecision | None, period: Period) -> None:
+    from ...core.time.clock import now
+    from ...domain.iva_compensation.reconciliation import DEFAULT_MAX_WALLET_AGE_DAYS, is_wallet_stale
+
+    if (
+        existing is not None
+        and not existing.blocked
+        and existing.selected_authority == "aeat_wallet"
+        and existing.wallet_captured_at is not None
+        and not is_wallet_stale(existing.wallet_captured_at, now(), DEFAULT_MAX_WALLET_AGE_DAYS)
+    ):
+        raise ModeloIvaWalletOverrideFreshWalletError(
+            translated_message="application.modelo.iva_wallet.override_fresh_wallet_blocked",
+            context={
+                "filing_year": period.filing_year,
+                "period": period.registry_token,
+            },
+        )
+
+
 def record_iva_compensation_override_for_bucket(
     *,
     bucket_id: str,
@@ -449,15 +483,7 @@ def record_iva_compensation_override_for_bucket(
         Replay gate that ensures exported/filed revisions still match the
         persisted decision.
     """
-    _require_non_negative_wallet_amount(amount)
-    for field_name, value in (("reason", reason), ("evidence_locator", evidence_locator)):
-        if len(value) > BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH:
-            # The same values are written to the audit event after the decision.
-            # Refuse before either write when the event cannot represent them.
-            raise ValueError(f"{field_name} exceeds the bucket-event payload limit")
-    taxpayer_nif = taxpayer_nif_for_bucket(bucket_id)
-    if taxpayer_nif is None:
-        raise _missing_taxpayer_error(bucket_id=bucket_id, subject_leaf_key="modelo.iva_wallet.override")
+    taxpayer_nif = _require_override_inputs(bucket_id, amount, reason, evidence_locator)
 
     blocker = _sealed_modelo_303_blocker_for_period(
         bucket_id=bucket_id, period=period, ports=ports, operation=operation
@@ -481,22 +507,8 @@ def record_iva_compensation_override_for_bucket(
     observation_ports = ports.calculation_observation_ports
     existing = observation_ports.iva_wallet_decision_repository.load_decision(taxpayer_nif, period)
     from ...core.time.clock import now
-    from ...domain.iva_compensation.reconciliation import DEFAULT_MAX_WALLET_AGE_DAYS, is_wallet_stale
 
-    if (
-        existing is not None
-        and not existing.blocked
-        and existing.selected_authority == "aeat_wallet"
-        and existing.wallet_captured_at is not None
-        and not is_wallet_stale(existing.wallet_captured_at, now(), DEFAULT_MAX_WALLET_AGE_DAYS)
-    ):
-        raise ModeloIvaWalletOverrideFreshWalletError(
-            translated_message="application.modelo.iva_wallet.override_fresh_wallet_blocked",
-            context={
-                "filing_year": period.filing_year,
-                "period": period.registry_token,
-            },
-        )
+    _require_no_fresh_wallet(existing, period)
 
     from ...domain.iva_compensation.reconciliation import IvaCompensationOverride
 

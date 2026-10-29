@@ -43,11 +43,11 @@ from cadrumo.application.filing.producer_snapshot_m360 import (
     Modelo360SolicitudFacts,
 )
 from cadrumo.application.modelo.action_errors import ModeloRefundAccountMissingError
-from cadrumo.application.modelo.export import (
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import (
     ModeloExportAccountReference,
     ModeloExportCommand,
     ModeloExportResult,
-    export_modelo_revision,
 )
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code

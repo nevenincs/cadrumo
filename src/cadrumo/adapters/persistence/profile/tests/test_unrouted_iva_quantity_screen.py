@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from .....application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
+from .....application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from .....application.aggregation.source_mesh import CalculationSourceContext
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .....core.casilla_id import validated_casilla_id
@@ -18,11 +18,12 @@ from .....core.period import Period
 from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
 from .....domain.calculations.registry.schema import ModeloRevision
-from .....domain.invoices.models import InvoiceCatalogue
+from .....domain.invoices.catalogue import InvoiceCatalogue
 from .....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from .....domain.iva.schema import IvaCategory
+from .....domain.transactions.date_partition import LedgerDatePartition
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from .....domain.transactions.models import LedgerDatePartition, Transaction, TransactionCatalogue
+from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..prorrata_register import ProrrataRegisterRepository

@@ -35,8 +35,9 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.iva_regime_vocabulary import require_iva_regime
 from ....domain.deadlines.models import TaxpayerProfile
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoiceValidationError
-from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

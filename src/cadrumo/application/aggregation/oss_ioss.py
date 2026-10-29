@@ -51,8 +51,9 @@ from ...domain.calculations.registry.ledger_oss_bindings import (
     unsupported_ledger_oss_observations,
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
-from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -491,6 +492,16 @@ def _assign_exterior_detail_bindings(
     # projection instead of silently exporting only its representable prefix.
     if targets.keys() != required:
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    _copy_exterior_values(targets, fields, decimals, decimal_values, enum_values)
+
+
+def _copy_exterior_values(
+    targets: dict[str, BindingId],
+    fields: dict[str, str],
+    decimals: dict[str, Decimal],
+    decimal_values: dict[BindingId, Decimal],
+    enum_values: dict[BindingId, str],
+) -> None:
     for field, binding_id in targets.items():
         if field in fields:
             enum_values[binding_id] = fields[field]
@@ -517,34 +528,13 @@ def _exterior_record_slots(revision: ModeloRevision) -> tuple[tuple[BindingId, .
     if len(records) != 1 or len(bindings) != len(revision.bindings):
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
     for field in records[0].fields:
-        if field.binding is None:
-            continue
-        binding = bindings.get(field.binding)
-        if binding is None:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        provider = binding.provider
-        if not isinstance(provider, ManualInputProvider) or provider.field is None:
-            continue
-        if not provider.field.startswith(_EXTERIOR_DETAIL_PREFIX):
-            continue
-        column, _, coordinate = provider.field.removeprefix(_EXTERIOR_DETAIL_PREFIX).rpartition("-")
-        if (
-            provider.record != _EXTERIOR_DETAIL_RECORD
-            or provider.offset != field.offset
-            or provider.length != field.length
-            or column not in _EXTERIOR_DETAIL_COLUMNS
-            or not coordinate.isascii()
-            or not coordinate.isdecimal()
-            or coordinate.startswith("0")
-            or field.binding in seen
-        ):
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        row = rows.setdefault(int(coordinate), {})
-        if column in row:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        row[column] = field.binding
-        seen.add(field.binding)
-    declared = {
+        _collect_exterior_slot(field, bindings, rows, seen)
+    _require_complete_exterior_slots(revision, rows, seen)
+    return tuple(tuple(sorted(rows[index].values())) for index in sorted(rows))
+
+
+def _declared_exterior_bindings(revision: ModeloRevision) -> set[BindingId]:
+    return {
         binding.id
         for binding in revision.bindings
         if isinstance(binding.provider, ManualInputProvider)
@@ -552,6 +542,12 @@ def _exterior_record_slots(revision: ModeloRevision) -> tuple[tuple[BindingId, .
         and binding.provider.field is not None
         and binding.provider.field.startswith(_EXTERIOR_DETAIL_PREFIX)
     }
+
+
+def _require_complete_exterior_slots(
+    revision: ModeloRevision, rows: dict[int, dict[str, BindingId]], seen: set[BindingId]
+) -> None:
+    declared = _declared_exterior_bindings(revision)
     if (
         not rows
         or sorted(rows) != list(range(1, len(rows) + 1))
@@ -559,7 +555,70 @@ def _exterior_record_slots(revision: ModeloRevision) -> tuple[tuple[BindingId, .
         or any(row.keys() != _EXTERIOR_DETAIL_COLUMNS for row in rows.values())
     ):
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    return tuple(tuple(sorted(rows[index].values())) for index in sorted(rows))
+
+
+def _collect_exterior_slot(
+    field: ExportFieldDefinition,
+    bindings: dict[BindingId, BindingDefinition],
+    rows: dict[int, dict[str, BindingId]],
+    seen: set[BindingId],
+) -> None:
+    if field.binding is None:
+        return
+    binding = bindings.get(field.binding)
+    if binding is None:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    provider = binding.provider
+    if not isinstance(provider, ManualInputProvider) or provider.field is None:
+        return
+    if not provider.field.startswith(_EXTERIOR_DETAIL_PREFIX):
+        return
+    column, _, coordinate = provider.field.removeprefix(_EXTERIOR_DETAIL_PREFIX).rpartition("-")
+    _require_exterior_slot_geometry(provider, field, column, coordinate, seen)
+    row = rows.setdefault(int(coordinate), {})
+    if column in row:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    row[column] = field.binding
+    seen.add(field.binding)
+
+
+def _require_exterior_slot_geometry(
+    provider: ManualInputProvider, field: ExportFieldDefinition, column: str, coordinate: str, seen: set[BindingId]
+) -> None:
+    if (
+        provider.record != _EXTERIOR_DETAIL_RECORD
+        or provider.offset != field.offset
+        or provider.length != field.length
+        or column not in _EXTERIOR_DETAIL_COLUMNS
+        or not coordinate.isascii()
+        or not coordinate.isdecimal()
+        or coordinate.startswith("0")
+        or field.binding in seen
+    ):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+
+
+def _can_close_exterior_rows(
+    context: CalculationSourceContext, projection: OssIossInvoiceProjection, supplied_binding_ids: frozenset[BindingId]
+) -> bool:
+    return not (
+        context.revision.id != "esquema-exterior"
+        or context.work_unit_id is None
+        or projection.source_bucket_id != context.bucket_id
+        or projection.catalogue_fingerprint is None
+        or not projection.candidates
+        or not supplied_binding_ids
+    )
+
+
+def _require_slot_coverage(
+    slots: tuple[tuple[BindingId, ...], ...], supplied_binding_ids: frozenset[BindingId]
+) -> None:
+    covered = frozenset(binding for row in slots for binding in row)
+    if not supplied_binding_ids.issubset(covered) or any(
+        bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
+    ):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
 
 
 def _closed_exterior_record_rows(
@@ -570,14 +629,9 @@ def _closed_exterior_record_rows(
     operation: PinnedAuthorityOperation,
 ) -> tuple[ClosedRecordRowSet, ...]:
     """Close only this source's services table after a complete bound read."""
-    if (
-        context.revision.id != "esquema-exterior"
-        or context.work_unit_id is None
-        or projection.source_bucket_id != context.bucket_id
-        or projection.catalogue_fingerprint is None
-        or not projection.candidates
-        or not supplied_binding_ids
-    ):
+    if not _can_close_exterior_rows(context, projection, supplied_binding_ids):
+        return ()
+    if context.work_unit_id is None or projection.catalogue_fingerprint is None:
         return ()
     revision = context.revision
     if not revision.export_layouts:
@@ -592,11 +646,7 @@ def _closed_exterior_record_rows(
         if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
     slots = _exterior_record_slots(revision)
-    covered = frozenset(binding for row in slots for binding in row)
-    if not supplied_binding_ids.issubset(covered) or any(
-        bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
-    ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+    _require_slot_coverage(slots, supplied_binding_ids)
     return (
         ClosedRecordRowSet(
             record_id=_EXTERIOR_DETAIL_RECORD,
@@ -714,6 +764,20 @@ class OssIossInvoiceProjection(BaseModel):
     catalogue_fingerprint: ContentDigest | None = Field(default=None, exclude=True, repr=False)
 
 
+def _project_oss_invoice(invoice: Invoice, projection_period: Period) -> list[OssIossLedgerCandidate]:
+    if invoice.kind is not InvoiceKind.ISSUED:
+        return []
+    if not invoice_devengo_in_period(invoice, period=projection_period):
+        return []
+    devengo_date = resolve_invoice_devengo(invoice).devengo_date
+    return [
+        candidate
+        for index, line in enumerate(invoice.lines, start=1)
+        if (candidate := _candidate_for_invoice_line(invoice, line, line_index=index, devengo_date=devengo_date))
+        is not None
+    ]
+
+
 def project_oss_ioss_invoices_from_repositories(
     *,
     period: Period,
@@ -748,17 +812,7 @@ def project_oss_ioss_invoices_from_repositories(
     contributing: list[Invoice] = []
     catalogue = ports.invoice_reader.load()
     for invoice in catalogue:
-        if invoice.kind is not InvoiceKind.ISSUED:
-            continue
-        if not invoice_devengo_in_period(invoice, period=projection_period):
-            continue
-        devengo_date = resolve_invoice_devengo(invoice).devengo_date
-        projected = [
-            candidate
-            for index, line in enumerate(invoice.lines, start=1)
-            if (candidate := _candidate_for_invoice_line(invoice, line, line_index=index, devengo_date=devengo_date))
-            is not None
-        ]
+        projected = _project_oss_invoice(invoice, projection_period)
         if projected:
             candidates.extend(projected)
             contributing.append(invoice)
@@ -897,13 +951,7 @@ class OssIossLedgerSourceResolver:
         """
         try:
             with source_context_operation(context) as indexed_operation:
-                if (
-                    self._candidates is None
-                    and isinstance(self._ports.invoice_reader, BucketBoundCatalogueReader)
-                    and self._ports.invoice_reader.bucket_id is not None
-                    and self._ports.invoice_reader.bucket_id != context.bucket_id
-                ):
-                    raise AggregationValidationError(tr("aggregation.source_mesh.errors.closed_record_rows_unadmitted"))
+                self._require_source_bucket(context)
                 projection = (
                     project_oss_ioss_invoices_from_repositories(
                         period=context.period,
@@ -996,6 +1044,15 @@ class OssIossLedgerSourceResolver:
                 for observation in observations
             ),
         )
+
+    def _require_source_bucket(self, context: CalculationSourceContext) -> None:
+        if (
+            self._candidates is None
+            and isinstance(self._ports.invoice_reader, BucketBoundCatalogueReader)
+            and self._ports.invoice_reader.bucket_id is not None
+            and self._ports.invoice_reader.bucket_id != context.bucket_id
+        ):
+            raise AggregationValidationError(tr("aggregation.source_mesh.errors.closed_record_rows_unadmitted"))
 
     def _no_live_source_diagnostics(self, context: CalculationSourceContext) -> tuple[CalculationSourceDiagnostic, ...]:
         """Return one ``oss_no_live_source`` advisory per OSS binding on the revision.

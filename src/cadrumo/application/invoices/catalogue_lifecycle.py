@@ -31,9 +31,10 @@ from pydantic import BaseModel
 from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice, InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import IvaCategory
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from .catalogue_selection import select_catalogue_invoice_id

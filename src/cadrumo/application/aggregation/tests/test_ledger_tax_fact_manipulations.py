@@ -30,7 +30,7 @@ from cadrumo.domain.iva.schema import IvaCategory
 
 from ....core.period import Period
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

@@ -40,8 +40,8 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.provisioning_browser import BROWSER_PROVISION_ACTION_ID
-from ...application.provisioning_contracts import ProvisioningPreconditionCondition
+from ...application.browser_location import BROWSER_PROVISION_ACTION_ID
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.component_records import component_records_root
 from ...core.config import Settings, override_settings
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -122,7 +122,7 @@ def _assert_browser_refusal(profile: TestRuntimeProfile, terminal: OperationPers
     assert detail.message_key == "adapters.browser.errors.not_provisioned"
     assert detail.precondition_verdict_json is not None
     verdict = json.loads(detail.precondition_verdict_json)
-    assert verdict["failed_condition_id"] == ProvisioningPreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
+    assert verdict["failed_condition_id"] == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
     assert verdict["action"]["action_id"] == BROWSER_PROVISION_ACTION_ID
 
 

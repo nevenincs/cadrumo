@@ -4,10 +4,8 @@ from __future__ import annotations
 
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.evidence_followup_contracts import (
-    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
     LEDGER_EVIDENCE_REVIEW_SUMMARY_OPERATION_DEFINITION_ID,
     LEDGER_EVIDENCE_REVIEW_VIEW_OPERATION_DEFINITION_ID,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewProjection,
 )
 from ...application.ledger.evidence_read_operation import (
@@ -16,8 +14,12 @@ from ...application.ledger.evidence_read_operation import (
     LedgerEvidenceQueryProjection,
     LedgerEvidenceQueryRequest,
 )
+from ...application.ledger.evidence_review_summaries import (
+    DRAFT_TEXT_FIELDS_WITHHELD_FROM_AUTOMATION,
+    LedgerEvidenceReviewSummaryProjection,
+)
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
-from ..adapter_composition import build_ledger_evidence_ports
+from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from .conformance_family_contract import (
     ConformanceFamily,
     ConformanceFamilyContext,

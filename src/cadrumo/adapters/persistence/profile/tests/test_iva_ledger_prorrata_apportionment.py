@@ -10,7 +10,7 @@ See Also:
     :mod:`~domain.prorrata_register`
         Register model used to record ``NINGUNA`` and active ``GENERAL``
         scenarios in these regressions.
-    :class:`~application.aggregation.modelo_bindings.LedgerIvaAggregationSourceResolver`
+    :class:`~application.aggregation.modelo_bindings_iva.LedgerIvaAggregationSourceResolver`
         Production source-mesh route that threads the same aggregation and
         binding resolver.
 """
@@ -32,7 +32,7 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation import iva_ledger
 from cadrumo.application.aggregation.errors import AggregationValidationError
-from cadrumo.application.aggregation.iva_ledger import resolve_iva_ledger_binding_values
+from cadrumo.application.aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from cadrumo.core.period import Period
 from cadrumo.core.prorrata_register import (

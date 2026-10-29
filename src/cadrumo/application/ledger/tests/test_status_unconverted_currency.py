@@ -32,24 +32,23 @@ from ....domain.attachments.models import Attachment
 from ....domain.attachments.protocols import AttachmentStoreProtocol
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.invoices.models import InvoiceCatalogue
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.modelos.calculation_revision import CalculationRevisionCatalogue
 from ....domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ....domain.modelos.work_unit import WorkUnitCatalogue
 from ....domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection
-from ....domain.transactions.models import (
+from ....domain.transactions.date_partition import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
     OutOfWindowTransactionSummary,
-    Transaction,
-    TransactionCatalogue,
 )
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from ..action_ports import LedgerActionPorts
-from ..actions_manual import summarize_manual_transactions
+from ..manual_read import summarize_manual_transactions
 from ..protocols import (
     BucketEventHistoryCoCommitWriterProtocol,
     InvoiceCatalogueCoCommitWriterProtocol,

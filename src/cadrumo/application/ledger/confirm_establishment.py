@@ -84,8 +84,10 @@ from .classification_assembly import (
     ClassificationAssembly,
     DeclaredFact,
     DeclaredFacts,
-    IvaCategoryResolution,
     assemble_classification_criteria,
+)
+from .classification_category_resolution import (
+    IvaCategoryResolution,
     declared_category_from_document_record,
     resolve_ingestion_iva_category,
 )
@@ -412,22 +414,7 @@ def resolve_confirmed_establishment(
     except WizardStatusError:
         profile = None
 
-    declared = _declared_facts(
-        kind=kind,
-        counterparty=counterparty,
-        filer_scope=filer_scope,
-        # Read through the classification authority, never minted beside the
-        # document reader: what a tax-category token means about the operation
-        # is a classification question, and a reader answering it was a second
-        # authority working from weaker evidence than the rule table.
-        stated_category=declared_category_from_document_record(draft.iva_category, operation=operation),
-        supply_nature=supply_nature,
-        # The mention the reader already recovers, handed to the citation axis.
-        # Both readers carry it -- the structured path reads it exactly from the
-        # record, the model path transcribes it -- so wiring it here reaches
-        # every lane rather than the one it was written for.
-        printed_citation=draft.regime_legend,
-    )
+    declared = _confirmed_declared_facts(operation, draft, kind, counterparty, filer_scope, supply_nature)
     assembly = assemble_classification_criteria(
         operation=operation,
         # The operator's override layers over the printed date, parsed through
@@ -486,4 +473,30 @@ def resolve_confirmed_establishment(
         assembly=assembly,
         category=category,
         review_items=items,
+    )
+
+
+def _confirmed_declared_facts(
+    operation: PinnedAuthorityOperation,
+    draft: InvoiceDraft,
+    kind: InvoiceKind,
+    counterparty: CounterpartyEstablishment,
+    filer_scope: IvaTerritorialScope | None,
+    supply_nature: SupplyNature | None,
+) -> DeclaredFacts:
+    return _declared_facts(
+        kind=kind,
+        counterparty=counterparty,
+        filer_scope=filer_scope,
+        # Read through the classification authority, never minted beside the
+        # document reader: what a tax-category token means about the operation
+        # is a classification question, and a reader answering it was a second
+        # authority working from weaker evidence than the rule table.
+        stated_category=declared_category_from_document_record(draft.iva_category, operation=operation),
+        supply_nature=supply_nature,
+        # The mention the reader already recovers, handed to the citation axis.
+        # Both readers carry it -- the structured path reads it exactly from the
+        # record, the model path transcribes it -- so wiring it here reaches
+        # every lane rather than the one it was written for.
+        printed_citation=draft.regime_legend,
     )

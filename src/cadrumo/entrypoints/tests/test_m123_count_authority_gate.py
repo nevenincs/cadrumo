@@ -36,7 +36,8 @@ from cadrumo.application.aggregation.tests.withholding_filer_profile_support imp
     quarterly_filer_cadence_for,
 )
 from cadrumo.application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.m123_count_authority_gate import Modelo123CountAuthorityUnresolvedError
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -53,7 +54,7 @@ from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,

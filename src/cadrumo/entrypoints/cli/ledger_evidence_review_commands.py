@@ -20,9 +20,9 @@ from typing import Final
 import typer
 
 from ...application.ledger.confirmation_gate import FindingResolution
-from ...application.ledger.evidence_followup_contracts import (
+from ...application.ledger.evidence_followup_contracts import LedgerEvidenceReviewViewProjection
+from ...application.ledger.evidence_review_advisories import (
     CountryVocabularyAdvisoryProjection,
-    LedgerEvidenceReviewViewProjection,
     PartyAttributionAdvisoryProjection,
 )
 from ...application.ledger.invoice_draft_payloads import EvidenceDraftDiscrepancyPayload

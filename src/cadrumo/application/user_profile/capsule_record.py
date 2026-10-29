@@ -39,17 +39,19 @@ from ...domain.user_profile.schema_migration import (
 from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
 from .custody_ports import (
     ProfileCustodySecureObjectNamespace,
-    ProfileCustodySecureObjectRawRowPort,
-    ProfileCustodySecureObjectRecordPort,
-    ProfileCustodySecureObjectRepositoryPort,
     default_profile_bucket_event_history_repository,
     profile_custody_secure_object_namespace,
     profile_custody_secure_object_repository,
 )
+from .custody_record_ports import (
+    ProfileCustodySecureObjectRawRowPort,
+    ProfileCustodySecureObjectRecordPort,
+    ProfileCustodySecureObjectRepositoryPort,
+)
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileCreateContext, ProfileDecodeContext
-    from .custody_ports import ProfileCustodyEnvelopePort
+    from .custody_record_ports import ProfileCustodyEnvelopePort
 
 
 _RECORD_NAMESPACE = "cadrumo.application.user_profile.value"

@@ -15,10 +15,9 @@ The :class:`ServiceCapability` members are consumed by
 :func:`~application.user_profile.capabilities.resolve_capability`,
 :func:`~application.user_profile.capabilities.resolve_active_capability`, and by the
 setup wizard's capability questions. The product doctor renders those same
-members beside :class:`~application.provisioning.DependencyStatus` rows
-from :func:`~application.local_reader.probe_local_ai_program`,
-:func:`~application.provisioning.probe_local_inference_hardware`, and
-:func:`~application.provisioning.probe_optional_extras`, keeping operator
+members beside :class:`~application.workstation_probes.DependencyStatus` rows
+from :func:`~application.workstation_probes.probe_local_inference_hardware` and
+:func:`~application.workstation_probes.probe_optional_extras`, keeping operator
 intent separate from dependency availability.
 
 This enum is deliberately separate from

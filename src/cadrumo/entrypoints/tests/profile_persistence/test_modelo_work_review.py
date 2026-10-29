@@ -25,7 +25,7 @@ from cadrumo.application.modelo.work_review import (
     capture_modelo_work_review,
     read_modelo_work_review_current_coordinate,
 )
-from cadrumo.application.modelo.workspace import resolve_graded_snapshot_result
+from cadrumo.application.modelo.workspace_graded import resolve_graded_snapshot_result
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityDisposition,
     ModeloWorkspaceCapabilityName,
@@ -74,7 +74,7 @@ from cadrumo.domain.modelos.verification_report import (
 from cadrumo.domain.modelos.verification_repository import upsert_verification_report
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_state_projection_read_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_state_projection_read_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,

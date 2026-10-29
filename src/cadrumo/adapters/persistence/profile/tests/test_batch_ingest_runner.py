@@ -39,7 +39,7 @@ from cadrumo.application.ledger.extraction_draft_store import load_extraction_dr
 from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from cadrumo.application.local_reader import EXTRACTION_READER_ROLES
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
@@ -524,7 +524,7 @@ class TestInferencePacing:
         assert [item.status for item in result.items] == ["paused"] * 3
         assert result.inference_pause is not None, "three paused documents must carry one stated cause"
         assert result.inference_pause.precondition_verdict.failed_condition_id == (
-            ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
+            ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
         )
         # No per-item refusal text: the model forbids a reason under a non-refused
         # status, so this also proves the pause did not smuggle one in per row.

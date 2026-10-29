@@ -10,10 +10,8 @@ from ...core.aggregation import BindingSourceKind
 from ...core.iva_deduction_fact import IvaDeductionEvidenceAuthority
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.iva.deduction_facts import deduction_evidence_authority_for_row
-from ...domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationSourceIssue,
-)
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,

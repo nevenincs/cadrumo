@@ -18,7 +18,7 @@ from ..destination_alias import closed_destination_ids
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
 from .actividad_asset import ActivityAssetTuiActionsV1
 from .classification import LedgerClassificationScreen
-from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController, LedgerWorkspaceScreen
+from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController
 from .entries import LedgerEntriesScreen
 from .evidence import LedgerEvidenceReviewListDoorV1, LedgerEvidenceScreen
 from .import_flow import LedgerImportScreen
@@ -43,6 +43,7 @@ from .review import LedgerReviewDoorV1, LedgerReviewScreen
 from .tools import LedgerToolV1
 from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshDoorV1
 from .workspace_presentation import ledger_workspace_page
+from .workspace_screen import LedgerWorkspaceScreen
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
 

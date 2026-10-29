@@ -34,7 +34,7 @@ from ...core.post_filing_event import PostFilingEventKind as _PostFilingEventKin
 from ...core.prose_elision import ElidedProse
 from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
-from ...domain.calculations.registry.applicability import ApplicabilityVerdict
+from ...domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
@@ -536,7 +536,7 @@ class OverviewCalendar(BaseModel):
 class OverviewStatusReport(BaseModel):
     """Current active-profile readiness counters for ``overview status``.
 
-    Produced from :class:`~application.state_projection.OperatorStateProjection`
+    Produced from :class:`~application.state_projection_models.OperatorStateProjection`
     by :func:`application.overview.status_report.overview_status_report_from_projection`.
     """
 

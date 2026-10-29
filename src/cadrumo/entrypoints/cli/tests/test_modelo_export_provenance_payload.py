@@ -7,11 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo.export import ModeloExportResult, ModeloIvaWalletDecisionProvenance
+from cadrumo.application.modelo.export_contracts import ModeloExportResult, ModeloIvaWalletDecisionProvenance
 from cadrumo.application.modelo.export_projection import ModeloFicheroBoePublicReceipt
 from cadrumo.core.period import Period
 
-from ..modelo_results import ModeloExportPayload
+from ..modelo_query_results import ModeloExportPayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

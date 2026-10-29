@@ -1,7 +1,7 @@
 """Application-owned read capabilities for invoice and transaction catalogues.
 
 Core types:
-:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`,
 :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
@@ -12,8 +12,9 @@ from datetime import date
 from typing import Protocol, runtime_checkable
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.invoices.models import InvoiceCatalogue
-from ...domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.transactions.date_partition import LedgerDatePartition
+from ...domain.transactions.models import TransactionCatalogue
 
 
 class InvoiceCatalogueReadPersistenceError(CadrumoError):

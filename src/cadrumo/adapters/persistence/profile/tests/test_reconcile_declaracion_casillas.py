@@ -36,9 +36,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
-from cadrumo.application.modelo.reconciliation import (
-    ReconciliationDeclaracionSourceUnsupportedError,
-)
+from cadrumo.application.modelo.reconciliation_comparison import ReconciliationDeclaracionSourceUnsupportedError
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id

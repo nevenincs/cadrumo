@@ -20,10 +20,8 @@ from ....core.aggregation import AggregationCaptureKind
 from ....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....core.period import Period
-from ....domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
-    invoice_ledger_screen_binding_ids,
-)
+from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_binding_ids
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.invoices.enums import IvaRate, PaymentStatus

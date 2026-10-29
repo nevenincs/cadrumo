@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
 
-from ..models import Invoice, InvoiceCatalogue
+from ..catalogue import InvoiceCatalogue
+from ..models import Invoice
 
 
 def build_invoice_catalogue(invoices: Iterable[Invoice | Mapping[str, object]]) -> InvoiceCatalogue:

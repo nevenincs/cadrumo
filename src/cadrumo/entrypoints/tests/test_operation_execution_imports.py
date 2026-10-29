@@ -31,7 +31,7 @@ from ...core.identity_check_verdict import IdentityCheckVerdictValue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.offline_seal import OfflineGuard, offline_guard_fixture
-from .. import operation_composition
+from .. import operation_composition, operation_composition_inputs
 
 __all__ = ["offline_guard_fixture"]
 
@@ -229,7 +229,7 @@ def test_verify_branch_forwards_settings_expectation_and_converts_real_observati
     name = "collect_nif_iva_check_observations" if surface is VerifySurface.NIF_IVA else "collect_groi_observations"
     monkeypatch.setattr(owner, name, collect)
     acquired = asyncio.run(
-        operation_composition._acquire_registry_verify_observation(
+        operation_composition_inputs.acquire_registry_verify_observation(
             surface, _NIF, expected, unread_authority_operation(), resolved_settings=settings
         )
     )
@@ -254,7 +254,7 @@ def test_verify_branch_preserves_the_canonical_collector_refusal(
     monkeypatch.setattr(owner, name, collect)
     with pytest.raises(ValueError) as escaped:
         asyncio.run(
-            operation_composition._acquire_registry_verify_observation(
+            operation_composition_inputs.acquire_registry_verify_observation(
                 surface, _NIF, None, unread_authority_operation(), resolved_settings=Settings(_env_file=None)
             )
         )
@@ -285,7 +285,7 @@ def test_verify_branch_still_refuses_non_singleton_observations(
     monkeypatch.setattr(owner, name, collect)
     with pytest.raises(ValueError, match="exactly one observation"):
         asyncio.run(
-            operation_composition._acquire_registry_verify_observation(
+            operation_composition_inputs.acquire_registry_verify_observation(
                 surface, _NIF, None, unread_authority_operation(), resolved_settings=Settings(_env_file=None)
             )
         )

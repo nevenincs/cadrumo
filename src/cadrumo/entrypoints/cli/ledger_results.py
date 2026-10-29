@@ -56,32 +56,6 @@ from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...core.text_bounds import NonEmptyStr
 from ...core.unit_proportion import is_unit_proportion
-from .ledger_business_payloads import (
-    AttachmentReviewPayload,
-    AttachmentReviewQueueResult,
-    AttachmentReviewViewResult,
-    EvidenceAddResult,
-    EvidenceConfirmResult,
-    EvidenceListResult,
-    EvidenceRecordPayload,
-    EvidenceRemoveResult,
-    EvidenceUpdateResult,
-    EvidenceViewResult,
-    InventoryClosingAuthorityRecordResult,
-    InventoryCreateResult,
-    InventoryLedgerPayload,
-    InventoryListResult,
-    InventoryListRowPayload,
-    InventoryMovementAddResult,
-    InventoryMovementPayload,
-    InventoryStockLayerPayload,
-    InventoryValuationPreviewPayload,
-)
-from .ledger_rule_results import (
-    ClassificationRulePayload,
-    RuleApplyAppliedPayload,
-    RuleApplyMatchPayload,
-)
 
 if TYPE_CHECKING:
     from ...application.ledger.models import LedgerExportResult as _AppLedgerExportResult
@@ -1207,34 +1181,8 @@ class LedgerLinkResult(OutputSchema):
 # Usage-ratios sub-app result schemas
 # ---------------------------------------------------------------------------
 
-#: The payload surface this module publishes. Thirty-four of these are
-#: imported from their defining modules and re-exported here, which callers
-#: rely on; the rest are declared below. Naming them explicitly is what keeps
-#: those imports alive. Three private tuples used to do that job by merely
-#: MENTIONING each type, which worked but read as dead code to every reader
-#: and to the reachability audit, because nothing consumed the tuples.
 __all__ = [
-    "AttachmentReviewPayload",
-    "AttachmentReviewQueueResult",
-    "AttachmentReviewViewResult",
     "BulkClassifyFailurePayload",
-    "ClassificationRulePayload",
-    "EvidenceAddResult",
-    "EvidenceConfirmResult",
-    "EvidenceListResult",
-    "EvidenceRecordPayload",
-    "EvidenceRemoveResult",
-    "EvidenceUpdateResult",
-    "EvidenceViewResult",
-    "InventoryClosingAuthorityRecordResult",
-    "InventoryCreateResult",
-    "InventoryLedgerPayload",
-    "InventoryListResult",
-    "InventoryListRowPayload",
-    "InventoryMovementAddResult",
-    "InventoryMovementPayload",
-    "InventoryStockLayerPayload",
-    "InventoryValuationPreviewPayload",
     "LedgerAddResult",
     "LedgerAllocateResult",
     "LedgerArchiveResult",
@@ -1286,8 +1234,6 @@ __all__ = [
     "LedgerUpdateResult",
     "LedgerViewResult",
     "M210IncomeClassificationPayload",
-    "RuleApplyAppliedPayload",
-    "RuleApplyMatchPayload",
     "TransactionPayload",
     "_LedgerMutationResult",
 ]

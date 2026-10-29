@@ -190,15 +190,25 @@ class _VerifiedRegistryMemo:
             owner_ref = ref(owner)
         except TypeError:
             return snapshot
+        self._retain_validated(key, owner_ref, snapshot, len(payload))
+        return snapshot
+
+    def _retain_validated(
+        self,
+        key: _RegistryKey,
+        owner: ReferenceType[GovernedFactSource],
+        snapshot: RegistrySnapshot,
+        payload_bytes: int,
+    ) -> None:
+        """Evict dead owners and admit one validated snapshot within the shared byte bound."""
         with self._lock:
             for stale in [item for item, held in self._entries.items() if held.owner() is None]:
                 self._forget(stale)
             retained = sum(held.payload_bytes for held in self._entries.values())
-            if key not in self._entries and retained + len(payload) <= self._max_payload_bytes:
-                entry = _VerifiedRegistry(owner=owner_ref, snapshot=snapshot, payload_bytes=len(payload))
+            if key not in self._entries and retained + payload_bytes <= self._max_payload_bytes:
+                entry = _VerifiedRegistry(owner=owner, snapshot=snapshot, payload_bytes=payload_bytes)
                 self._entries[key] = entry
                 self._by_snapshot[id(snapshot)] = entry
-        return snapshot
 
     def registry_digest(self, snapshot: RegistrySnapshot, compute: Callable[[], str]) -> str:
         """Return the content digest of a :class:`RegistrySnapshot`, computing it once."""
@@ -262,19 +272,24 @@ class SavedRenderingLabel(BaseModel):
     text: str
 
 
+def _model_label_keys(value: BaseModel) -> set[str]:
+    """Collect scalar and tuple localization keys while recursively visiting other fields."""
+    keys: set[str] = set()
+    for name in type(value).model_fields:
+        item = getattr(value, name)
+        if name.endswith("_key") and isinstance(item, str):
+            keys.add(item)
+        elif name.endswith("_keys") and isinstance(item, tuple):
+            items = _OBJECT_SEQUENCE_ADAPTER.validate_python(item)
+            keys.update(key for key in items if isinstance(key, str))
+        else:
+            keys.update(_label_keys(item))
+    return keys
+
+
 def _label_keys(value: object) -> set[str]:
     if isinstance(value, BaseModel):
-        keys: set[str] = set()
-        for name in type(value).model_fields:
-            item = getattr(value, name)
-            if name.endswith("_key") and isinstance(item, str):
-                keys.add(item)
-            elif name.endswith("_keys") and isinstance(item, tuple):
-                items = _OBJECT_SEQUENCE_ADAPTER.validate_python(item)
-                keys.update(key for key in items if isinstance(key, str))
-            else:
-                keys.update(_label_keys(item))
-        return keys
+        return _model_label_keys(value)
     if isinstance(value, tuple | list):
         items = _OBJECT_SEQUENCE_ADAPTER.validate_python(value)
         sequence_keys: set[str] = set()

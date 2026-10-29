@@ -14,13 +14,14 @@ from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr
 from ...tests.settling import settle
-from ..controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..routes import resolve_ledger_screen
 from ..tools import LedgerToolV1
 from ..workspace_injection import LedgerWorkspaceInjection
 from ..workspace_presentation import ledger_workspace_page
+from ..workspace_screen import LedgerWorkspaceScreen
 from .workspace_fixtures import WorkspaceHostApp, ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

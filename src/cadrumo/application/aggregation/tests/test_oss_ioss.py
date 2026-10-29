@@ -40,13 +40,15 @@ from ....domain.calculations.registry.ledger_oss_bindings import OssIossLedgerOb
 from ....domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.invoices import enums as invoice_enums
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role, resolve_iva_rate_slot
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ....tests.inventory import REPO_ROOT
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .. import oss_ioss as oss_ioss_module

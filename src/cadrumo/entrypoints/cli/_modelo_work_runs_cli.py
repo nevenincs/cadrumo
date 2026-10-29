@@ -58,7 +58,7 @@ from .modelo_aux_payloads import (
     WorkRunResult,
     WorkRunsResult,
 )
-from .modelo_results import WorkResumeResult
+from .modelo_query_results import WorkResumeResult
 from .operation_workflow_resume import read_workflow_resume_context
 from .operation_workflow_runs import read_workflow_run, read_workflow_runs
 

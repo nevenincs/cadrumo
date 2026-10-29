@@ -115,24 +115,30 @@ class _CadrumoEnvSettingsSource(EnvSettingsSource):
         set_names = [name for name, value in original_env_vars.items() if value is not None and value != ""]
         if any(name.upper().startswith(SETTINGS_OWNED_NAME_PREFIXES) for name in set_names):
             require_no_unread_setting_names(set_names, Settings.env_var_names())
-        self.env_vars = _without_severed_names(original_env_vars)
-        controls = Settings.storage_env_var_names()
-        for key, value in tuple(self.env_vars.items()):
-            if key.upper() in controls and isinstance(value, str):
-                if cleaned := value.strip():
-                    self.env_vars[key] = cleaned
-                else:
-                    self.env_vars.pop(key)
-        variables = {name.upper(): value for name, value in self.env_vars.items() if isinstance(value, str)}
-        root = configured_root_value(variables, storage_mode().mode)
-        if root is not None:
-            self.env_vars[STORAGE_ROOT.variable.lower()] = root
-        else:
-            self.env_vars.pop(STORAGE_ROOT.variable.lower(), None)
+        normalized_env_vars = _without_severed_names(original_env_vars)
+        self.env_vars = normalized_env_vars
+        _normalize_storage_controls(normalized_env_vars)
         try:
             return super().__call__()
         finally:
             self.env_vars = original_env_vars
+
+
+def _normalize_storage_controls(env_vars: dict[str, str | None]) -> None:
+    """Trim storage controls and bind the canonical root before Pydantic reads them."""
+    controls = Settings.storage_env_var_names()
+    for key, value in tuple(env_vars.items()):
+        if key.upper() in controls and isinstance(value, str):
+            if cleaned := value.strip():
+                env_vars[key] = cleaned
+            else:
+                env_vars.pop(key)
+    variables = {name.upper(): value for name, value in env_vars.items() if isinstance(value, str)}
+    root = configured_root_value(variables, storage_mode().mode)
+    if root is not None:
+        env_vars[STORAGE_ROOT.variable.lower()] = root
+    else:
+        env_vars.pop(STORAGE_ROOT.variable.lower(), None)
 
 
 class AuthorityRootSettings(BaseSettings):

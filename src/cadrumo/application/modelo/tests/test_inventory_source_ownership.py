@@ -14,7 +14,7 @@ from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from .._registry_helpers import validate_casilla_input_ids
 from ..action_errors import ModeloAggregationBindingError
-from ..calculation_actions import _reject_caller_overrides_of_source_bindings
+from ..calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ..calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -96,7 +96,7 @@ def _revision(*, declared: bool = True, alias: bool = False) -> ModeloRevision:
 @pytest.mark.parametrize("value", [Decimal("100.00"), Decimal("999.99")])
 def test_declared_inventory_binding_refuses_equal_and_different_caller_values(value: Decimal) -> None:
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        _reject_caller_overrides_of_source_bindings(
+        reject_caller_overrides_of_source_bindings(
             revision=_revision(),
             owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
             caller_binding_values={"inventory-0181": value},
@@ -110,7 +110,7 @@ def test_declared_inventory_binding_refuses_equal_and_different_caller_values(va
 def test_declared_inventory_refuses_partial_and_complete_casilla_overrides(targets: tuple[str, ...]) -> None:
     values = {validated_casilla_id(target): Decimal("0.00") for target in targets}
     with pytest.raises(ModeloAggregationBindingError) as exc_info:
-        _reject_caller_overrides_of_source_bindings(
+        reject_caller_overrides_of_source_bindings(
             revision=_revision(),
             owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
             caller_binding_values={},
@@ -137,7 +137,7 @@ def test_undeclared_inventory_leaves_manual_casilla_available_and_policy_is_repl
     first = validate_casilla_input_ids(revision, manual)
     second = validate_casilla_input_ids(revision, manual)
 
-    _reject_caller_overrides_of_source_bindings(
+    reject_caller_overrides_of_source_bindings(
         revision=revision,
         owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
         caller_binding_values={},

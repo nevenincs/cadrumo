@@ -23,8 +23,9 @@ from ....domain.calculations.registry.schema import BindingDefinition
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ....domain.invoices.business_premises import BusinessPremisesLease
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from ....domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.modelos.row_models import Modelo349OperadorRow
 from ...aggregation.source_mesh import (
@@ -33,10 +34,9 @@ from ...aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ...aggregation.terminal_origin_audit import collect_terminal_origin_diagnostics
+from ..source_observations import intracommunity_clave, invoice_sources_for_revision
 from ..source_resolver import (
     InvoiceCatalogueSourceResolver,
-    _intracommunity_clave,
-    _invoice_sources_for_revision,
 )
 from ..source_resolver_ports import InvoiceSourcePersistenceError, InvoiceSourceResolverPorts
 
@@ -112,12 +112,12 @@ class TestInvoiceDirectionToSourceKind:
     """The application direction-to-settlement mapping is total."""
 
     def test_issued_maps_to_collectible(self) -> None:
-        from ..source_resolver import invoice_direction_to_source_kind
+        from ..source_observations import invoice_direction_to_source_kind
 
         assert invoice_direction_to_source_kind(InvoiceKind.ISSUED) is BindingSourceKind.COLLECTIBLE_INVOICE
 
     def test_received_maps_to_payable(self) -> None:
-        from ..source_resolver import invoice_direction_to_source_kind
+        from ..source_observations import invoice_direction_to_source_kind
 
         assert invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BindingSourceKind.PAYABLE_INVOICE
 
@@ -144,7 +144,7 @@ def test_source_resolver_translates_reader_failure_to_diagnostic() -> None:
     resolution = resolver.resolve(context)
 
     # One diagnostic per invoice source the selected revision activates.
-    active_sources = _invoice_sources_for_revision(context)
+    active_sources = invoice_sources_for_revision(context)
     assert active_sources
     assert tuple(d.reason for d in resolution.diagnostics) == ("storage_degraded",) * len(set(active_sources))
 
@@ -296,8 +296,8 @@ def test_service_categories_resolve_directional_m349_claves_without_storage() ->
         category=IvaCategory("intra_community_service_acquisition_reverse_charge"),
     )
 
-    assert _intracommunity_clave(issued) == "S"
-    assert _intracommunity_clave(received) == "I"
+    assert intracommunity_clave(issued) == "S"
+    assert intracommunity_clave(received) == "I"
 
 
 def _domestic_invoice(

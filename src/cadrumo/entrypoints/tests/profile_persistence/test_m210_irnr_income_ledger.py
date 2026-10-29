@@ -31,10 +31,10 @@ from cadrumo.application.aggregation.ledger_filing_snapshot import (
     compute_ledger_filing_snapshot,
     evaluate_ledger_filing_staleness,
 )
-from cadrumo.application.ledger.actions_manual import update_manual_transaction_fields
+from cadrumo.application.ledger.manual_update import update_manual_transaction_fields
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionPatch
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -57,7 +57,7 @@ from cadrumo.domain.user_profile.values import (
     UserProfileFact,
     create_user_profile_record,
 )
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,

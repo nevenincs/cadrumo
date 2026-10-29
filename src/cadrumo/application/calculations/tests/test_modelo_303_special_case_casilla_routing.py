@@ -57,11 +57,8 @@ from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue, derive_transaction_id
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...aggregation.iva_ledger import (
-    IvaLedgerAggregationIssueReason,
-    aggregate_iva_ledger_observations,
-    resolve_iva_ledger_binding_values,
-)
+from ...aggregation.iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
+from ...aggregation.iva_ledger_apportionment import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

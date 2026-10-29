@@ -38,7 +38,8 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
 from cadrumo.adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine, get_engine
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.application.modelo.export import ModeloExportCommand, export_modelo_revision
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -46,7 +47,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
     _blocked_wallet_decision,
     _filed_history_only_wallet_decision,

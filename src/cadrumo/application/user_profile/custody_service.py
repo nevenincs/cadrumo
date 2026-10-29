@@ -17,12 +17,8 @@ from ...core.profile_publication import ProfilePublicationKind, ProfilePublicati
 from ...core.time.clock import now as _utc_now
 from .custody_hold import ProfileCustodyHoldAuthority
 from .custody_hold_models import ProfileCustodyRetentionOverride, hold_permits_local_deletion
-from .custody_ports import (
-    ProfileCustodyEnvelopePort,
-    ProfileCustodyPort,
-    ProfileCustodySentinelPort,
-    profile_custody_port,
-)
+from .custody_ports import ProfileCustodyPort, profile_custody_port
+from .custody_record_ports import ProfileCustodyEnvelopePort, ProfileCustodySentinelPort
 from .custody_repository import (
     ProfileCustodyTransactionRepository,
     profile_custody_transaction_lock,

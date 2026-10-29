@@ -30,8 +30,8 @@ from ....domain.buckets.event_repository import BucketEventHistoryPersistenceErr
 from ....domain.currency.errors import ExchangeRateProviderError
 from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import ExchangeRateProvider
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
-from ....domain.invoices.models import InvoiceCatalogue
 from ..storage.errors import SecureObjectRevisionConflictError, StorageError
 from .buckets import BucketEventHistoryRepository
 from .catalogue_reads import build_invoice_catalogue_read_ports
@@ -55,7 +55,7 @@ class _InvoiceAuditRepository(Protocol):
         """Commit the guarded invoice write with related secure objects.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         ...
 
@@ -97,7 +97,7 @@ class CatalogueCreationInvoiceRepositoryAdapter(CatalogueInvoiceRepositoryPort):
         """Apply one guarded mutation, preserving domain validation refusals.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         try:
             return self._repository.mutate(mutation)
@@ -205,7 +205,7 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
         """Retry guarded composition without exposing a partial write.
 
         Core types:
-        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
         """
         last_conflict: SecureObjectRevisionConflictError | None = None
         for _attempt in range(attempts):

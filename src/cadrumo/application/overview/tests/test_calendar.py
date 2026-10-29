@@ -12,7 +12,8 @@ from pydantic import ValidationError
 from ....core.config import override_settings
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
 from ....core.period import Period
-from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
@@ -43,10 +44,12 @@ from ..calendar import (
     _entry_intersects_range,
     _registry_window_for_work_unit,
     build_overview_calendar,
+    holiday_coverage_statement,
+)
+from ..calendar_events import (
     build_overview_calendar_events,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,
-    holiday_coverage_statement,
 )
 from ..calendar_models import (
     OverviewCalendar,

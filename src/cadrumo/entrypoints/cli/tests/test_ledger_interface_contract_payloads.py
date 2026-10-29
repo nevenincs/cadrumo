@@ -61,7 +61,7 @@ from ..ledger_results import (
     _LedgerMutationResult,
 )
 from ..ledger_rule_results import RuleApplyAppliedPayload, RuleApplyResult
-from ..modelo_results import LedgerIssuePayload
+from ..modelo_query_results import LedgerIssuePayload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 

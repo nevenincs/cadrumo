@@ -23,8 +23,8 @@ from textual.color import Color
 from textual.widgets import Static
 
 from ......application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
+from ......application.modelo.work_form_findings import ModeloFormAttention
 from ......application.modelo.work_form_models import (
-    ModeloFormAttention,
     ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormExport,

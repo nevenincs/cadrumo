@@ -20,10 +20,12 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
 from ....core.period import Period
+from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
-from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.schema import InvoiceKind
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from .._modelo_bindings_invoice_iva import (
     recargo_unattributable_diagnostics,

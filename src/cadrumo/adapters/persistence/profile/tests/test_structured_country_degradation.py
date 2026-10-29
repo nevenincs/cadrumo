@@ -75,8 +75,8 @@ from cadrumo.application.ledger.classification_assembly import (
     DeclaredFact,
     DeclaredFacts,
     assemble_classification_criteria,
-    resolve_ingestion_iva_category,
 )
+from cadrumo.application.ledger.classification_category_resolution import resolve_ingestion_iva_category
 from cadrumo.application.ledger.classifier_inputs import collect_classifier_inputs
 from cadrumo.application.ledger.confirm_establishment import ConfirmedEstablishment, resolve_confirmed_establishment
 from cadrumo.application.ledger.counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol

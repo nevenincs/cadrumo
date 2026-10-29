@@ -7,13 +7,9 @@ from decimal import Decimal
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
-from ..formula_runtime import evaluate_expression
-from ..schema import (
-    BindingDefinition,
-    ModeloDefinition,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
+from ..formula_expression import evaluate_expression
+from ..schema import BindingDefinition, ModeloDefinition, RegistrySnapshot
+from ..schema_catalogues import RegistryCatalogues
 from ..schema_formula import FormulaExpression, ParameterDefinition
 from .snapshot_support import build_snapshot
 

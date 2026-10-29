@@ -26,7 +26,7 @@ import pytest
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.resources.bundled_data import bundled_path
 from ......domain.calculations.registry.binding_selector_utils import selector_as_dict
-from ......domain.calculations.registry.export_parse import xml_dictionary_entries
+from ......domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from ..declarations_observations import _observed_value_kind
 

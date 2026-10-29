@@ -3,7 +3,7 @@
 The Madrid nacimiento/adopción deducción autonómica (casilla 1039, DL 1/2010
 arts. 4 y 18.1) auto-populates on the calculate path only for the determinable
 single/monoparental individual filer
-(:func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`);
+(:func:`~application.modelo.profile_derived_facts.inject_derived_autonomic_deduccion_facts`);
 a tributación conjunta declaration or a married/pareja-de-hecho filer is
 fail-closed by design because the unidad-familiar 61.860 € límite needs the
 spouse's base imponible, which the app does not persist. That fail-closed
@@ -27,10 +27,10 @@ for the target modelo revision, the same authority the calculate path resolves
 its registry formula against.
 
 See Also:
-    :func:`~application.modelo.profile_binding.inject_derived_autonomic_deduccion_facts`
+    :func:`~application.modelo.profile_derived_facts.inject_derived_autonomic_deduccion_facts`
         The calculate-path injector whose fail-closed branch this advisory
         surfaces to the operator.
-    :func:`~application.modelo.profile_binding.madrid_nacimiento_adopcion_candidate_weighted_count`
+    :func:`~application.modelo.profile_derived_facts.madrid_nacimiento_adopcion_candidate_weighted_count`
         Shared candidate-count primitive: evaluates only the per-descendant
         window/cohabitation condition, independent of the unit's determinability.
     :func:`~application.modelo.verification_revision_findings.collect_revision_verification_findings`
@@ -63,7 +63,7 @@ from ...domain.user_profile.errors import ProfileNotFoundError
 from ...domain.user_profile.values import UserProfileFactValue
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import profile_fact_index
-from .profile_binding import (
+from .profile_derived_facts import (
     is_indeterminate_unidad_familiar,
     is_madrid_autonomic_deduccion_filing_year,
     is_madrid_resident,

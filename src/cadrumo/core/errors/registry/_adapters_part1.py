@@ -162,17 +162,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_BROWSER_NOT_READY",
             category=ErrorCategory.REFUSED,
-            message_key="adapters.browser.errors.not_provisioned",
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.outbound.aeat.browser.errors.BrowserNotUsableError",
-        ErrorCode(
-            code="REFUSED_BROWSER_NOT_USABLE",
-            category=ErrorCategory.REFUSED,
-            message_key="adapters.browser.errors.not_usable",
+            message_key="adapters.browser.errors.not_available",
             retryable=False,
             runbook_id=None,
         ),

@@ -17,7 +17,7 @@ re-implementing them:
   :class:`~domain.calculations.registry.schema_surfaces.CasillaContinuidadEvolutionDefinition`
   entries (the ``casilla_continuidad_evolutions`` field);
 * portal-compatibility tracking reads the revision's declared
-  :class:`~domain.calculations.registry.schema_verification.LiveCrossReferenceDecision` entries
+  :class:`~domain.calculations.registry.schema_live_verification.LiveCrossReferenceDecision` entries
   (surface kind and evidence tier).
 
 Coverage honesty (``no-silent-under-declaration``): a modelo missing a
@@ -162,7 +162,7 @@ class ModeloRenameRecord(BaseModel):
 class ModeloPortalCompatibilityRef(BaseModel):
     """One declared AEAT-portal cross-reference for a modelo revision.
 
-    Projects a :class:`~domain.calculations.registry.schema_verification.LiveCrossReferenceDecision`
+    Projects a :class:`~domain.calculations.registry.schema_live_verification.LiveCrossReferenceDecision`
     already declared on the revision — the registry's own record of which live
     AEAT surface the modelo has been cross-checked against and under what
     evidence tier.

@@ -27,7 +27,7 @@ from .ids import ParameterId
 from .schema_formula import FormulaExpression
 
 if TYPE_CHECKING:
-    from .formula_runtime import EvalContext as _EvalContext
+    from .formula_expression import EvalContext as _EvalContext
 
 
 @dataclass(frozen=True, slots=True)

@@ -80,6 +80,22 @@ def _validate_observation(
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
+def _validate_review(
+    pending: OperationReviewAvailableInteractionV1,
+    operation_id: OperationId,
+    contract: OperationPublicDefinitionContractV1,
+) -> None:
+    reference = pending.review_reference
+    if (
+        pending.operation_id != operation_id
+        or pending.response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
+        or reference.operation_id != operation_id
+        or reference.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
+        or reference.definition_contract_digest != contract.definition_contract_digest
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+
+
 def _review_interaction(
     client: FrontendClient,
     *,
@@ -113,15 +129,7 @@ def _review_interaction(
                 return observed, None
             pending = projection.pending_interaction
             if isinstance(pending, OperationReviewAvailableInteractionV1):
-                reference = pending.review_reference
-                if (
-                    pending.operation_id != operation_id
-                    or pending.response_schema != CENSAL_REVIEW_RESPONSE_SCHEMA_BINDING.identity
-                    or reference.operation_id != operation_id
-                    or reference.review_projection_schema != CENSAL_REVIEW_PROJECTION_SCHEMA_BINDING.identity
-                    or reference.definition_contract_digest != contract.definition_contract_digest
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                _validate_review(pending, operation_id, contract)
                 return observed, pending
             if projection.lifecycle is OperationLifecycle.WAITING_FOR_INTERACTION:
                 raise RefusalError(RefusalCode.INVALID_FRAME)

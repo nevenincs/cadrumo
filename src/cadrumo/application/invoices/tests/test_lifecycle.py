@@ -19,7 +19,8 @@ from ....domain.invoices.business_premises import BusinessPremisesLease, Situaci
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import Invoice
 from ....domain.iva.schema import InvoiceKind
-from ....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
+from ....domain.transactions.date_partition import LedgerDatePartition
+from ....domain.transactions.models import TransactionCatalogue
 from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ..catalogue_lifecycle import CatalogueInvoicePatch, resolve_catalogue_invoice, update_catalogue_invoice

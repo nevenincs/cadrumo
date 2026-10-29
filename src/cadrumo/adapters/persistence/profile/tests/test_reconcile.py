@@ -16,10 +16,10 @@ from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
 from cadrumo.application.modelo.reconciliation import (
     ModeloReconciliationCommand,
-    ReconciliationDeclaracionSourceUnsupportedError,
     ReconciliationEvidenceInvalidError,
     prepare_modelo_reconcile,
 )
+from cadrumo.application.modelo.reconciliation_comparison import ReconciliationDeclaracionSourceUnsupportedError
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType

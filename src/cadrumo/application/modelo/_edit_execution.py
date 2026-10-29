@@ -62,7 +62,7 @@ from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.row_models import ModeloDetailRow
 from .action_errors import ModeloClearedCasillaSourceFedError
 from .calculation_action_ports import CalculationActionPorts
-from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+from .calculation_bucket_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .caller_context import CalculationCallerContext, caller_context_calculation_inputs, caller_context_of
 from .edit_contract import ModeloEditMutationFamily, ModeloEditMutationResultReceiptV1

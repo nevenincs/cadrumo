@@ -316,23 +316,7 @@ def _windows_directory_anchor_shared(
         component_paths = windows_component_paths(path)
         for index, current in enumerate(component_paths):
             access = final_access if index == len(component_paths) - 1 else 0
-            if access & _DELETE:
-                # A handle that can rename or delete its directory is never
-                # offered to another anchor: once moved, it no longer names
-                # the path it would be shared under.
-                private = _HeldComponent(handle=_open_verified_component(current, access, errors=errors), access=access)
-                private.users += 1
-                relied_on.append((None, private))
-                continue
-            key = os.path.normcase(current)
-            held = session.held.setdefault(key, [])
-            component = next((candidate for candidate in held if candidate.access & access == access), None)
-            if component is None:
-                opened = _open_verified_component(current, access, errors=errors)
-                component = _HeldComponent(handle=opened, access=access)
-                held.append(component)
-            component.users += 1
-            relied_on.append((key, component))
+            relied_on.append(_retain_windows_component(session, current, access, errors))
         if not relied_on:
             raise ProfileCustodyRecordError(errors.empty_path)
         yield relied_on[-1][1].handle
@@ -343,6 +327,27 @@ def _windows_directory_anchor_shared(
                 kernel32.CloseHandle(component.handle)
                 if key is not None:
                     session.held[key].remove(component)
+
+
+def _retain_windows_component(
+    session: _AnchorSession, current: str, access: int, errors: WindowsDirectoryAnchorErrors
+) -> tuple[str | None, _HeldComponent]:
+    if access & _DELETE:
+        # A handle that can rename or delete its directory is never
+        # offered to another anchor: once moved, it no longer names
+        # the path it would be shared under.
+        private = _HeldComponent(handle=_open_verified_component(current, access, errors=errors), access=access)
+        private.users += 1
+        return None, private
+    key = os.path.normcase(current)
+    held = session.held.setdefault(key, [])
+    component = next((candidate for candidate in held if candidate.access & access == access), None)
+    if component is None:
+        opened = _open_verified_component(current, access, errors=errors)
+        component = _HeldComponent(handle=opened, access=access)
+        held.append(component)
+    component.users += 1
+    return key, component
 
 
 def _open_verified_component(current: str, access: int, *, errors: WindowsDirectoryAnchorErrors) -> int:

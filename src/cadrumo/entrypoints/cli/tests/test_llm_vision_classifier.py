@@ -18,8 +18,8 @@ from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunMediaKind,
 from ....adapters.outbound.llm.tests.model_run_support import TEXT_ONLY_LANE, serving_agent
 from ....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
-from ....application.ledger.llm_classification import ResolvedEvidence, classify_with_evidence
 from ....application.ledger.llm_classification_ports import EvidenceImage, LLMClassificationPorts
+from ....application.ledger.llm_evidence import ResolvedEvidence, classify_with_evidence
 from ....core.config import Settings, load_settings
 from ....core.errors.error_codes import build_error_envelope
 from ....core.image_media_type import ImageMediaType

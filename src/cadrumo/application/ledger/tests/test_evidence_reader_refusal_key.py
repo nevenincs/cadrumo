@@ -13,7 +13,7 @@ from ....core.model_roles import ModelRole
 from ...dependency_contracts import DependencyState
 from ...local_reader import probe_local_ai_program
 from ...operator_actions.models import PreconditionVerdict
-from ...provisioning_contracts import ProvisioningPreconditionCondition, provisioning_no_recovery_verdict
+from ...probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from ...tests.local_ai_program_rows import local_ai_row
 from ..evidence_errors import (
     EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY,
@@ -44,8 +44,8 @@ def test_a_local_ai_not_set_up_is_named_with_its_setup() -> None:
     "verdict",
     [
         None,
-        provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+        probe_no_recovery_verdict(
+            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
             facts={"role": ModelRole.TEXT_EXTRACTION.value, "runtime_reachable": True, "role_model_selected": False},
         ),
         ledger_no_recovery_verdict(

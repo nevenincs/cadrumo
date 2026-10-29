@@ -17,7 +17,7 @@ from cadrumo.application.ledger.actions_lifecycle import (
     restore_manual_transaction,
     stash_manual_transaction,
 )
-from cadrumo.application.ledger.actions_manual import update_manual_transaction
+from cadrumo.application.ledger.manual_update import update_manual_transaction
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation

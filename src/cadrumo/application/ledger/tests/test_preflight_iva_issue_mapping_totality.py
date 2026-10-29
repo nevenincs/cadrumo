@@ -36,10 +36,10 @@ from ....domain.iva.schema import EUMemberState, IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from ...aggregation.iva_ledger import (
+from ...aggregation.iva_ledger import IvaLedgerAggregationIssueReason
+from ...aggregation.iva_ledger_classification import (
     IVA_LEDGER_COUNTERPARTY_GATE_REASONS,
     IVA_LEDGER_MISSING_FACT_REASONS,
-    IvaLedgerAggregationIssueReason,
     iva_ledger_missing_fact_reasons,
     validate_iva_ledger_counterparty_category,
 )

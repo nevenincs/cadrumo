@@ -49,7 +49,7 @@ from ....domain.user_profile.values import (
 )
 from .. import _autonomic_deduccion_advisory as advisory_module
 from .._autonomic_deduccion_advisory import madrid_nacimiento_adopcion_eligibility_advisory_finding
-from ..profile_binding import (
+from ..profile_derived_facts import (
     inject_derived_autonomic_deduccion_facts,
     madrid_nacimiento_adopcion_candidate_weighted_count,
 )

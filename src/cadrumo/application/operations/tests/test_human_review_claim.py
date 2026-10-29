@@ -27,12 +27,12 @@ def _pending() -> OperationPendingInteraction:
         request=OperationInteractionRequest(
             interaction_id="b" * 64,
             identity=OperationIdentity(
-                operation_id="a" * 64, definition_id="config.provision.setup", subject_ref="config:provision"
+                operation_id="a" * 64, definition_id="export.google-review", subject_ref="export:review"
             ),
             revision=4,
             kind=OperationInteractionKind.REVIEW,
-            presentation_code="config.provision.review",
-            response_schema_ref="schema:config.provision.review",
+            presentation_code="export.google-review.review",
+            response_schema_ref="schema:export.google-review.review",
             continuation_digest="c" * 64,
         ),
         response_token="d" * 64,
