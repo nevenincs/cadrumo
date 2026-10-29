@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#rust-component-provisioning'
 date: '2026-10-24'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:13e18506c6084fbe8ae81f823b7605c072c4e4715529c754d62f137e6245d668'
+body_hash: 'sha256:37ce14d68a9dd04d9b0c72f6f4ec125a59bfac3dbd40b7c596568337acdac5c8'
 related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
   - '[[2026-10-24-rust-component-provisioning-audit]]'
@@ -15,8 +15,6 @@ related:
   - '[[2026-10-24-rust-component-provisioning-reference]]'
   - '[[2026-10-26-rust-component-provisioning-ledger]]'
   - '[[2026-10-26-rust-component-provisioning-plan]]'
-  - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
-  - '[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]'
   - '[[2026-10-27-rust-component-provisioning-human-review-authority-reference]]'
   - '[[2026-10-27-rust-component-provisioning-registered-operations-audit]]'
 ---
@@ -30,8 +28,6 @@ Auto-generated index of all documents tagged with `#rust-component-provisioning`
 ### adr
 
 - `2026-10-24-rust-component-provisioning-adr` - `rust-component-provisioning` adr: `Rust owns component provisioning` | (**status:** `accepted`)
-- `2026-10-26-rust-component-provisioning-registered-operations-adr` - `rust-component-provisioning` adr: `Component setup as registered operations` | (**status:** `accepted`)
-- `2026-10-27-rust-component-provisioning-human-review-authority-adr` - `rust-component-provisioning` adr: `Explicit human claim of a provisioning review` | (**status:** `accepted`)
 
 ### audit
 

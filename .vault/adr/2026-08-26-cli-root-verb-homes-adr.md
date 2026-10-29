@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#cli-root-verb-homes'
 date: '2026-08-26'
-modified: '2026-10-04'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:06448e8eb78343dc380be7d321bfeae96dfc002bb9b46ed73e0c17249e8f7e7a'
+body_hash: 'sha256:ef23c61ff227ee2610c0dc38759fb0bf86fdc633020c545fbbe3ce8d5d7938fe'
 related:
   - "[[2026-08-25-cli-root-verb-homes-audit]]"
   - '[[2026-10-04-google-app-identity-adr]]'
@@ -173,9 +173,9 @@ graph, `config google sync calc` to `app` and `app maintenance` to `config`, and
 demands no splits. Those are precisely D5's moves.
 
 **D1 is a refusal criterion, not a placement criterion, and the record does not
-claim otherwise.** Simulated over all 67 mountable subjects, 46 of them — 68% —
+claim otherwise.** Simulated over all 66 mountable subjects, 45 of them — 68% —
 carry no signal in either direction. D1 says nothing about where `app live`,
-`app overview`, `config auth` or `config provision` belong; it only refuses a
+`app overview` or `config auth` belong; it only refuses a
 subject that has landed demonstrably wrong. Every no-signal subject stays where it
 is, and its placement rests on the charter prose in D7, not on this criterion.
 Claiming more than that is what made the first draft's gate untestable.
@@ -183,7 +183,7 @@ Claiming more than that is what made the first draft's gate untestable.
 ### D2 — Transport verbs are keyed on the counterparty
 
 Two axes, four tokens. A **remote counterparty** — the AEAT sede, a Drive or
-Sheets store, a model distribution host — is read with `pull`, written with
+Sheets store — is read with `pull`, written with
 `push`. A **local filesystem** counterparty is read with `import`, written with
 `export`.
 
@@ -224,8 +224,6 @@ dispositions:
 - `config profile archive`: `push` outbound to the remote replica; `pull` absent
   — **declared gap**, the restore path does not exist and is owed a follow-on
   record. (Listed as `config profile mirror` before the D5 amendment.)
-- `config provision`: `pull` inbound; outbound absent **by policy** — the app
-  never publishes a model.
 **A verb that CREATES a record names what it creates.** Amended 2026-08-26 after
 sweeping the whole graph against this grammar. The record first carved out
 credential enrolment (`config auth certificate register`, `config auth
@@ -383,8 +381,6 @@ one, and it is left open rather than fixed by deletion. `config profile prefligh
 law-determined resolution — cheap, because the projection already resolves
 law-determined and asserts equality — and on adopting preflight's exit-2 contract.
 Ten `.seq` contracts call preflight and are re-pointed in the same change.
-
-`config provision pull` is already conformant and is not touched.
 
 ### D6 — Two gates, each testing a stated property
 

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-design-system'
 date: '2026-10-05'
-modified: '2026-10-21'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:a5ada921a60de961b3cce973862923809fa5ebff372d6bbce3f57d31f0f71d2b'
+body_hash: 'sha256:e1a955c817e25bfce8ef8ec9385b3b77393447cce4e0cbdedb6fe54213cbcd2a'
 related:
   - "[[2026-10-05-desktop-design-system-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -150,9 +150,9 @@ Settings and the palette reuse the existing select and styling. Supported langua
 
 Authorized by the user's sidebar simplification request. The 2026-10-06 rail-order amendment is refined: after the shortcuts group, one bottom-panel toggle replaces the Console, Python and Logs rail buttons. Search and documentation home retain their first two positions, Settings remains in the last group, and the panel retains its three tabs and action-registry shortcuts. The log error badge moves to the single toggle; the Messages notification badge stays unchanged. The original ruling started the panel collapsed on every launch. That clause is superseded by the desktop-shell 2026-10-21 amendment: the panel now restores its saved visibility, tab and size. This authorizes the corresponding browser presentation selectors and rail-count assertions to follow the new visible controls; packaged assertions that address Search and Docs home by position stay unchanged. Shared primitives, token ownership and native host boundaries remain binding.
 
-### Amendment 2026-10-18: component setup surfaces
+### Component setup surfaces
 
-Accepted under the owner's advance authorization of 2026-10-18 recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` (D10). The Settings constraint, which read "Settings retains frontend preferences and no account section" after the 2026-10-09 amendment, gains one backend-reaching section, Components, built from the existing primitives. The setup dialog, progress bars, first-run and blocked-feature prompts, and the Settings rail badge compose existing primitives. A progress primitive may be added from the official registry on the already-bundled `radix-ui`, with no new runtime dependency. The development scenario host gains synthetic setup scenarios for every state, failure category and phase, labelled as simulated like the others. Rail order, stable hooks and the single colour authority are unchanged.
+Settings carries one backend-reaching provisioning section, built from the existing primitives (`2026-10-18-dependency-provisioning-unified-setup-adr` D10). The provisioning panel, its per-element progress bars, the first-run and blocked-feature prompts, and the spinner overlay on the rail's Settings button compose existing primitives. A progress primitive may be added from the official registry on the already-bundled `radix-ui`, with no new runtime dependency. The development scenario host gains synthetic setup scenarios for every state, failure category and phase, labelled as simulated like the others. Rail order, stable hooks and the single colour authority are unchanged.
 
 ### Amendment 2026-10-21: saved views and single pane headings
 

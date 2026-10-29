@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-packaging'
 date: '2026-10-03'
-modified: '2026-10-04'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:e9522378c4ba3005b8759ff031a09be7fb7d5b172d018649b7e420fab60f19c6'
+body_hash: 'sha256:6b350c95fd64b94c3a8788746ac84067cd7fcaf8bc50e8d415c3907f744466f0'
 related:
   - "[[2026-10-03-application-packaging-research]]"
   - "[[2026-10-03-runtime-without-service-manager-adr]]"
@@ -22,7 +22,7 @@ related:
 
 ## Problem Statement
 
-CADRUMO needs an application that installs and manages its existing Python CLI, TUI, MCP and runtime. Those interfaces do not yet provide the native desktop package, dependency provisioning or application lifecycle owner. This decision defines that boundary and its layouts; evidence is in `2026-10-03-application-packaging-research`.
+CADRUMO needs a native desktop application that installs and manages its existing Python CLI, TUI, MCP and runtime and owns dependency provisioning and the application lifecycle. This decision defines that boundary and its layouts; evidence is in `2026-10-03-application-packaging-research`.
 
 ## Considerations
 
@@ -32,7 +32,7 @@ Tauri is **settled by the user's instruction on 2026-10-03**, not a provisional 
 
 - **Tauri application + controlled CPython + shared native foundation:** proposed; satisfies desktop, terminal and isolation requirements while retaining Python services.
 - **Ambient Python and host-installed dependencies:** rejected; cannot ensure the package's own interpreter, libraries and paths.
-- **Separate C/Rust/Python implementations of configuration and provisioning:** rejected; creates competing authorities.
+- **Separate implementations of configuration and provisioning across languages:** rejected; creates competing authorities.
 - **Machine service, on-demand user supervisor, or detached runtime:** resolved by `2026-10-04-runtime-manager-architecture-adr`. A per-session manager starts at sign-in and owns the runtime's lifecycle. The on-demand supervisor hypothesis is retired, and unsupervised detachment remains rejected.
 
 ## Constraints
@@ -53,7 +53,7 @@ The user explicitly authorized the controlled C interpreter foundation, generate
 
 Authored native projects live in `native/interpreter/` and `native/platform/`; package-only declarations in `native/package-layout.json`; contract generation and package assembly in `dev/packaging/native/`. Generated inputs, builds and staging live beneath `.artifacts/native/`. `native/CONTRACT.md` records the platform matrix and ownership map. Reuse the existing exact builder pin, `dev/packaging/release-python-version` (3.13.11), and the existing locked base dependency exporter.
 
-The user subsequently narrowed this work to application packaging and Python provisioning: do not change core development storage defaults, inspect or migrate existing local storage, or block the foundation on that state. The proposed old-data rollout policy remains future work. Native bootstrap sets the packaged effective environment; existing Python services retain their semantics. No installed-runtime or UI management is introduced.
+The user subsequently narrowed this work to application packaging and the packaged Python environment: do not change core development storage defaults, inspect or migrate existing local storage, or block the foundation on that state. The proposed old-data rollout policy remains future work. Native bootstrap sets the packaged effective environment; existing Python services retain their semantics. No installed-runtime or UI management is introduced.
 
 Static and DLL C consumers have both compiled and passed ABI version, error ownership and buffer release checks with Rust 1.96.0. Prefer static platform linkage in the bootstrap: the resulting executable imports only Windows system libraries before main. A private Python bridge loads after native loader setup and uses the full CPython 3.13 initialization API. Upstream CPython source is unmodified. This is a custom compiled host consuming a pinned CPython binary build, not a claim that CPython was rebuilt from source here.
 
@@ -111,7 +111,7 @@ C and Rust can reuse a DLL through a **versioned C ABI**. Use opaque handles, ex
 
 ### Provisioning and implementation order
 
-Prefer core installation followed by explicit first-run capability downloads, deferred to first use if skipped. Chromium is pinned to Playwright. Local AI provisions a managed engine and selected models, reusing Python admission controls. Google authorizes on Connect. CLI/MCP must return actionable missing-component status without silently starting large downloads.
+Prefer core installation followed by explicit first-run capability downloads in the desktop, deferred to first use if skipped. Chromium is pinned to Playwright. Local AI sets up a managed engine and selected models. Google authorizes on Connect.
 
 | Order | Exit evidence |
 | --- | --- |

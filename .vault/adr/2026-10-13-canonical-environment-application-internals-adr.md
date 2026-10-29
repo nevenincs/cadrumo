@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-environment'
 date: '2026-10-13'
-modified: '2026-10-24'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:0ec0f114354979521c423a4d74087c40ec3bce14f783aa1fa5bca5f5073256d4'
+body_hash: 'sha256:afdf62be318cc29f2de69555a62a8aa0ed75e2a6cc748e0b13a878ff59c078e0'
 related:
   - "[[2026-10-04-canonical-environment-adr]]"
   - "[[2026-10-03-application-packaging-interpreter-foundation-adr]]"
@@ -155,7 +155,7 @@ Binding; accepted 2026-10-13.
      - session and lock policy (`CADRUMO_BUCKET_DEFAULT_*`, the lock timings);
      - retention and size limits, which govern custody lifecycle;
      - calculation semantics (`FINANCIAL_BASE_CURRENCY`, `CADRUMO_DRAFT_FAIL_ON_WARNING`);
-     - network routing (`CADRUMO_PROXY_*`). (Noted 2026-10-18 under the ruling recorded in `2026-10-18-dependency-provisioning-unified-setup-adr` D6, where the principal took the integration agent's recommendation: the proxy address, user name and bypass list enter as pass-through names of the `cadrumo-runtime` and `python` profiles only, so setup that the runtime's profile worker runs follows the operator's proxy; the password setting stays out under constraint 12, and no operator-facing image admits them. Noted 2026-10-24 under `2026-10-24-rust-component-provisioning-adr` constraint 10: setup now runs in the Rust `components` role, which the `aeat` and `cadrumo-mcp` images start, so those images also pass the proxy address, user name and bypass list to the role it starts; the password setting still stays out, and work the runtime performs keeps its strict rule.)
+     - network routing (`CADRUMO_PROXY_*`). (The proxy address, user name and bypass list are declared pass-through names that the native component engine follows when it downloads, `2026-10-18-dependency-provisioning-unified-setup-adr` D6 and `2026-10-24-rust-component-provisioning-adr` constraint 10; the password setting stays out under constraint 12, and work the runtime performs keeps its strict rule.)
      - development and test names (`CADRUMO_DEV_*`, `CADRUMO_LIVE_TESTS_*`, `CADRUMO_LLM_CONTENTION_CHECK_OVERRIDE`, `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION`);
      - the severed `CADRUMO_ACTIVE_PROFILE` (rule 13).
    - **Remote-interaction set (user decision, 2026-10-13: "yes include browser and network settings as overrides"),** for the same images. These are timing and display settings only:

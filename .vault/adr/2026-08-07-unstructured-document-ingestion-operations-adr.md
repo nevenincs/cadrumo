@@ -3,38 +3,35 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-09-08'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6ec31253a77dcf0a4685519a12488b2def7b29f42c8b36db6815d0dbd9e1796'
+body_hash: 'sha256:24faba70fe18895e45a6c4dab9a54f24cbc8b2408242ada6b3d1db07f88807ad'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
-  - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
   - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
 ---
 
-# `unstructured-document-ingestion` adr: `Operational surface: batch ingestion, the human review process, the consent lifecycle, and deinstallation` | (**status:** `proposed`)
+# `unstructured-document-ingestion` adr: `Operational surface: batch ingestion, the human review process, the consent lifecycle` | (**status:** `proposed`)
 
 ## Problem Statement
 
 The sibling pipeline record decides how one document becomes filing-grade
-data, and the provisioning record decides what stands under the models. The
-operator's ruling is that together they are still a fragment: the feature is
+data. The operator's ruling is that it is still a fragment: the feature is
 an epic whose remaining tentacles — batch ingestion, the human review gate
 and process, consent withdrawal, secure-storage blob integration, ledger
-integration end to end, the CLI-only boundary, conformance honesty and
-deinstallation — must be designed, not deferred. Two of those were until now
+integration end to end, the CLI-only boundary and conformance honesty —
+must be designed, not deferred. Two of those were until now
 explicitly out of scope somewhere in the corpus (batch in the package-split
 ADR's "scale verbs", withdrawal nowhere at all), and an epic that leaves the
 operational surface undesigned repeats the session's measured defect class:
 capability with a ceiling above it, correct and unreachable.
 
 This record is the seam for exactly the decisions that are *operator
-workflows over the pipeline* rather than pipeline stages or provisioning
-substrate: how many documents flow at once, how a human reviews and corrects
+workflows over the pipeline* rather than pipeline stages: how many documents flow at once, how a human reviews and corrects
 what the pipeline produced, how consent is granted, recorded and withdrawn,
 how the produced records reach the ledger with their evidence, and how the
 whole apparatus is removed. Each is CLI-reachable end-operator behaviour;
@@ -50,8 +47,8 @@ why they are one record and not amendments scattered across two.
 - **The transcription cache makes resume cheap.** Pipeline S1's encrypted
   cache means a re-run re-reads no bytes and re-transcribes nothing already
   transcribed; batch resumability is mostly already-designed substrate.
-- **Admission control is per-load, but a batch is many loads.** Provisioning
-  D3 refuses an unsafe load; a batch must respect that refusal without
+- **Admission control is per-load, but a batch is many loads.** The agent
+  service refuses an unsafe load; a batch must respect that refusal without
   dying, and must pace rather than fan out — the concurrency bound (default
   one) is the pacing mechanism.
 - **Consent is per-invocation and non-sticky by D8a**, which shapes
@@ -104,8 +101,8 @@ why they are one record and not amendments scattered across two.
 
 ## Constraints
 
-- Every decision here operates over the pipeline, provisioning and consent
-  contracts of the two sibling records and changes none of them.
+- Every decision here operates over the pipeline and consent contracts of
+  the sibling record and changes none of them.
 - Sensitive bytes: encrypted at rest, in-memory in flight, never on disk in
   the clear — batch introduces no spool files, no temp queues, no plaintext
   progress journals. Batch state that must persist (completed-item keys)
@@ -140,8 +137,8 @@ each load-bearing:
 - **Ordering is deterministic** (sorted by content address) so two re-runs
   report identically; nothing depends on filesystem enumeration order.
 - **Contention and rate limits are batch-wide.** Inference-bearing items
-  pass the provisioning admission check; a standing contention refusal
-  pauses the inference lane and completes every non-inference item rather
+  pass the agent service's load admission; a standing `MODEL_DOES_NOT_FIT`
+  refusal pauses the inference lane and completes every non-inference item rather
   than failing the batch. The cloud engine route, where consented, applies
   its provider rate limits across the run with the shared backoff policy,
   never per item in isolation.
@@ -231,8 +228,7 @@ results and never ships in the product wheel.
 
 The seam of this record is operator workflow versus pipeline mechanics, and
 it holds under pressure: batch changes throughput, review changes who
-asserts, consent changes where bytes may go, deinstallation changes what is
-installed — none changes what a stage computes, which is why the pipeline
+asserts, consent changes where bytes may go — none changes what a stage computes, which is why the pipeline
 record needs no amendment beyond its scope note. Batch as a bounded
 CLI run wins because every hard property it needs (idempotent re-entry,
 cached transcription, admission control, backoff) was already decided as
@@ -266,9 +262,7 @@ is an exception by design. The end-to-end gate is the plan's most expensive
 test and runs in the CI lane without any model by using an exact-parse
 fixture.
 
-**Coupling.** Consumes: pipeline D1 through D9 and D8a, provisioning D3, D5
-(deinstallation mechanics live there; this record only binds their
-user-facing guarantees), package-split D13, the canonical-invoice writer,
+**Coupling.** Consumes: pipeline D1 through D9 and D8a, package-split D13, the canonical-invoice writer,
 and the ledger evidence contract. Changes none of them.
 
 **Deliberately out of scope, named.** Bulk or rules-based auto-confirmation;

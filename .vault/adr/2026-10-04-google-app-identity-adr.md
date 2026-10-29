@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#google-app-identity'
 date: '2026-10-04'
-modified: '2026-10-19'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:f7159aa4afc59e4b56c2a12b7558979d566b5769cf3e19a7ee7e9445ac8adeb6'
+body_hash: 'sha256:c424381a837268e5ba85998f7ec871822fee29dcbdbf09457aa841a2516b92d4'
 related:
   - "[[2026-10-04-google-app-identity-research]]"
   - "[[2026-10-04-google-app-identity-reference]]"
@@ -164,18 +164,14 @@ Binding commitments:
 
 Out of scope: the publisher's Google verification and publishing status, and
 the remote-mirror policy for the OAuth token namespace. The last is an open
-question recorded in `2026-10-04-google-app-identity-reference`. The desktop
-Connect interface is governed by
-`2026-10-18-dependency-provisioning-unified-setup-adr` (amended 2026-10-18;
-before that it was listed here as out of scope). Under that record, sign-in
-status also checks that the token is present and bound to the client, not
-only the sign-in metadata, and a full check refreshes the token; commitment 8
-is otherwise unchanged. Noted 2026-10-18 under the owner's runtime-boundary
-ruling recorded in that record: a sign-in started from the desktop or the TUI
-is this product's registered `config.google.login` operation, which admits
-only a person's session; the command line keeps its controlling-terminal
-check, and the runtime carries no Google sign-in code of its own. A refused
-sign-in names its closed setup failure category in the refusal detail.
+question recorded in `2026-10-04-google-app-identity-reference`. Sign-in
+status checks that the token is present and bound to the client, not only the
+sign-in metadata, and a full check refreshes the token; commitment 8 is
+otherwise unchanged. A sign-in started from the desktop or the TUI is this
+product's registered `config.google.login` operation, which admits only a
+person's session; the command line keeps its controlling-terminal check, and
+the runtime carries no Google sign-in code of its own. A refused sign-in names
+its closed failure category in the refusal detail.
 
 Affected prior rulings. These amendments were applied to the named accepted
 records when this record was accepted:

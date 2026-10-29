@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#tui-architecture'
 date: '2026-08-11'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:24296b426674602a7d60b210a0f9c83a0d00a6d233a33001a147fbb58665cbe2'
+body_hash: 'sha256:6074c85a675d3c1ab3e08a9a10a3b899620b7485d190a2b54cfe0141492a491b'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -24,7 +24,6 @@ related:
   - '[[2026-08-26-tui-architecture-m184-socio-clave-subclave-research]]'
   - '[[2026-09-08-tui-entrypoint-separation-command-capability-decoupling-research]]'
   - '[[2026-09-26-mcp-purpose-authentication-audit]]'
-  - '[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]'
 ---
 # `tui-architecture` adr: `Application-owned operation envelope and supervisor API` | (**status:** `accepted`)
 
@@ -510,18 +509,6 @@ actor, and expiry. Apply/reject controls are available only when that service
 confirms the bearer and the projected interaction remains current. Observation
 after detach or from a fresh process cannot recreate response authority.
 
-Amended 2026-10-27 on the owner's explicit approval of guarded human claim A in
-`2026-10-27-rust-component-provisioning-human-review-authority-adr`: for
-`config.provision.setup` only, the runtime may explicitly assign the live current
-REVIEW bearer to a separately verified HUMAN session on the same exact active
-profile while the original invocation admission and execution lease remain live.
-This dedicated claim is a fresh guarded issuance transition bound to the exact
-operation, interaction, revision, proposal, claimant connection/session, profile,
-boot and authority generation. It grants only current REVIEW response authority;
-MCP cannot claim or answer it. Observation, reattachment and replay still confer
-no response authority, and all other operation response guards remain unchanged.
-Claimant or invocation retirement and binding drift invalidate the claim; the
-journal attributes the verified human decision separately from invocation origin.
 `INPUT` and `CHOICE` project `unsupported` with a stable code while lifecycle,
 phase, progress, cancellation, and settlement remain observable.
 

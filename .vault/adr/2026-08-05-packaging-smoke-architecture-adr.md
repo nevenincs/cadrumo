@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#packaging-smoke-architecture'
 date: '2026-08-05'
-modified: '2026-10-21'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:7a654a9c2550a3340e305a86beeb8e77606be01890ba547428931b01b7b97c4a'
+body_hash: 'sha256:67a745a80abfc9157be7dac6574b06d9b3032694a6dfc9fa9ec5beb481fb9bae'
 related:
   - "[[2026-08-05-packaging-smoke-architecture-audit]]"
   - "[[2026-06-28-product-packaging-research]]"
@@ -141,7 +141,7 @@ proof; a form varies exactly one axis of how that invariant is reached.
 - **Core** — invariant: the exact-version wheel cohort installs, and the installed CLI
   performs grounded tax work. Forms: uv-virtualenv, plain-pip, source-distribution,
   aggregate-extras, joined-cohort, container.
-- **Browser** — invariant: the installed wheel provisions Chromium. Forms: host,
+- **Browser** — invariant: the installed wheel launches a Chromium browser build. Forms: host,
   host-with-deps, container.
 - **Dev** — standalone, one form: the frozen lock materialises a working developer
   toolchain. It is a lane rather than a Core form because its invariant is not

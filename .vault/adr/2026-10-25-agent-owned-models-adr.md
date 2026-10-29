@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-owned-models'
 date: '2026-10-25'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:9d662e3f4ddf7e87d6a63aa691eea3934b2e0a404f1489088a18f1d0f81f33b0'
+body_hash: 'sha256:315501ae418e79a7c34fdf32c37f6fdef306e0e598a0dd64c9a0445c6be93f59'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -13,7 +13,6 @@ related:
   - "[[2026-10-19-provider-settings-tax-model-runs-adr]]"
   - "[[2026-10-13-provider-settings-adr]]"
   - "[[2026-06-13-llm-evidence-classification-adr]]"
-  - "[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]"
   - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-13-agent-attachments-adr]]"
   - '[[2026-10-25-agent-owned-models-hosted-vision-declaration-research]]'
@@ -25,7 +24,7 @@ related:
 Cadrumo defines AI models in four places, and cadrumo-agent already owns the same question.
 
 - Pins: `src/cadrumo/_data/dependencies/local_ai_models.toml`, read by `src/cadrumo/core/local_ai_pins.py`, name each local model with a manifest digest, size and licence.
-- A second table: `src/cadrumo/core/model_catalogue.py:80-588` lists candidate models per role with rankings, licences, memory figures and a hardcoded hosted Claude id. `src/cadrumo/application/provisioning.py:748-879` ranks them and `src/cadrumo/application/local_reader.py:344-410` resolves a role to one.
+- A second table: `src/cadrumo/core/model_catalogue.py:80-588` lists candidate models per role with rankings, licences, memory figures and a hardcoded hosted Claude id. `src/cadrumo/application/local_reader.py:344-410` resolves a role to one.
 - Settings: four model-name fields with defaults (`src/cadrumo/core/config_runtime_fields.py:54-183`), and hosted ids with no production reader (`src/cadrumo/domain/transactions/model_tier.py:108-159`).
 - Rust: `native/application/src/provisioning/pins.rs:292-392`, `items.rs:50-126` and `local_ai/models.rs:86-216` carry the same pins, and the desktop fixtures repeat them (`native/desktop/frontend/src/dev/setupFixture.ts:116-122`). The dev lanes `dev/runtime_lifecycle/mcp_proof_support.py:34-35` and `dev/env/local_ai_model_pins.py`, with the `pin-local-ai` recipe in `justfile`, maintain them.
 
@@ -37,7 +36,7 @@ The owner ruled on 2026-10-25, first-hand in conversation: "don't hardcode model
 
 - Providers and models are already cadrumo-agent's capability. Cadrumo keeps no provider list (`2026-10-13-provider-settings-adr` constraint 3 as amended 2026-10-14), and Claude model ids come from the Models API. Local models are the one place Cadrumo still keeps its own list.
 - The catalogue parser accepts schema 3, an https-only base URL and three auth kinds (`src/cadrumo_agent_service/providers/domain/catalog.py:42-232`). A loopback Ollama needs a keyless auth kind and a loopback address, which that parser refuses today.
-- Local reading through Ollama is a legitimate feature. The program is a component, not a model, so its archive pins stay (`2026-10-24-rust-component-provisioning-adr` constraint 7 and its 2026-10-24 amendment).
+- Local reading through Ollama is a legitimate feature. The program is a component, not a model, so its archive pins stay (`2026-10-24-rust-component-provisioning-adr` constraint 7).
 - Off-host consent is digest-bound per call (`2026-10-19-provider-settings-tax-model-runs-adr` constraint 8). Today "on-host" means "uses `LocalAdapter`". Once local reads go through the agent, on-host has to be a fact the catalogue states, not an inference from the path.
 - Ollama verifies a pulled model against its content-addressed manifest, so Cadrumo needs no model digest of its own for integrity.
 - The settings store for provider choices is per profile and sits in the agent service (`2026-10-13-provider-settings-adr` constraints 1 and 2). The person's local model list belongs beside it.
@@ -66,8 +65,8 @@ Accepted 2026-10-25 on the owner's first-hand rulings in conversation, recorded 
 6. **One picked model; a local model list.** Model roles and capabilities are internal vocabulary; the person never sees or chooses a role. Documents are read with the one model the person picks in the agent column's model picker, on any lane the catalogue reports, local or cloud. There is no per-task choice. The desktop stores the pick in the agent service's own encrypted per-profile record capability. Each local lane, a keyless lane at a loopback address, has a model list: the models cadrumo-agent's catalogue recommends for the lane, followed by the models the person added by name. The recommended entries are the catalogue's and are not stored; the added names are user data kept in the same record. The picker offers a local lane's models from its list. `ModelRunService.lookup(role)` answers with the picked model when the role can use it. The vision role needs a model the lane's current entries mark vision-capable, on a lane whose background runs take images; every other role reads text. Current entries are the declared ones and, while the agent runs, the live ones, which state what the local server holds.
 7. **Catalogue contract.** Cadrumo consumes cadrumo-agent's new catalogue schema version and its typed fields: vision, installed, size_bytes, context_length, licence and reads_off_host. It also consumes the keyless loopback auth kind, a cadrumo-agent-owned recommended set, and the run options temperature, maximum output tokens, num_ctx and response format. Cadrumo does not default or rank any of them. Work that needs the new shape waits for cadrumo-agent to deliver it.
 8. **cadrumo-agent admits the load.** Cadrumo performs no hardware or contention admission. cadrumo-agent admits each model load and refuses one that does not fit with `model_does_not_fit`, at run start or mid-turn. Cadrumo reads either as the typed `MODEL_DOES_NOT_FIT` refusal and does not retry it.
-9. **Engine input is one admitted download, not a lookup.** The Rust engine does not read the agent service. Only the desktop host hands its in-process engine a model, and only for a download the person started from a turned-on keyless lane's list. The host admits it when the catalogue recommends the model for that lane or the person's list holds it, and passes the catalogue's positive `size_bytes` when the catalogue states one. A model whose size the catalogue does not state, such as one added by name, is planned with an unknown download size: the plan says so, the hardware check applies only to a known size, and pull progress follows the totals the server streams. The plan digest binds the model and its size, known or unknown. A general setup, check, verification or removal admits the program alone and consults no service. The `components` role takes no model, and no Python module or cadrumo-agent can hand the engine a model or start a pull (`2026-10-24-rust-component-provisioning-adr` constraint 2).
-10. **No fallback, no silent substitute.** With no picked model, or a picked local model since taken off its lane's list, the lookup refuses `NO_SELECTION`. A picked model the lane's current entries do not mark vision-capable refuses the vision role `MODEL_CANNOT_READ_IMAGES`, whose words tell the person to pick a model that can read images. A picked model the local server is known to lack refuses `MODEL_NOT_INSTALLED`. A lane that is not reported, turned on, signed in or runnable refuses with its answer or `LANE_UNAVAILABLE`. An unreadable record refuses every role `LANE_UNAVAILABLE`. Each verdict names the agent's model picker or setup. No other lane, no other model and no default stands in.
+9. **Engine input is one admitted download, not a lookup.** The Rust engine does not read the agent service. Only the desktop host hands its in-process engine a model, and only for a download the person started from a turned-on keyless lane's list. The host admits it when the catalogue recommends the model for that lane or the person's list holds it, and passes the catalogue's positive `size_bytes` when the catalogue states one. A model whose size the catalogue does not state, such as one added by name, is planned with an unknown download size: the plan says so, the hardware check applies only to a known size, and pull progress follows the totals the server streams. The plan digest binds the model and its size, known or unknown. A general setup, check, verification or removal admits the program alone and consults no service.
+10. **No fallback, no silent substitute.** With no picked model, or a picked local model since taken off its lane's list, the lookup refuses `NO_SELECTION`. A picked model the lane's current entries do not mark vision-capable refuses the vision role `MODEL_CANNOT_READ_IMAGES`, whose words tell the person to pick a model that can read images. A picked model the local server is known to lack refuses `MODEL_NOT_INSTALLED`. A lane that is not reported, turned on, signed in or runnable refuses with its answer or `LANE_UNAVAILABLE`. An unreadable record refuses every role `LANE_UNAVAILABLE`. Each verdict names the agent's model picker. No other lane, no other model and no default stands in.
 
 ## Implementation
 
@@ -79,7 +78,7 @@ Outline:
 - `src/cadrumo_agent_service/providers/domain/catalog.py` reads the catalogue's typed fields and admits the keyless loopback auth kind.
 - `ModelRole` is internal vocabulary in a module that holds only roles (`src/cadrumo/core/model_roles.py`).
 - The Rust engine has no model pins. The desktop hands its in-process engine one admitted download; the engine pulls it through the server the manager supervises and reports a row from Ollama's installed list. Program pins, supervision and the managed loopback address are unchanged.
-- The model list lives in the keyless lane's entry of the desktop provider settings. Each entry shows its licence and, where the catalogue states them, its download size and installed state, and offers Download and Remove; a field adds a model by name. No surface names a role or a capability. The agent column's model picker offers a local lane's models from its list, and the desktop stores the person's pick as the reading model. The ledger's readers name no reading task; they show only what keeps documents from being read, and lead to the picker. The CLI, TUI and MCP change no list and pick no model; a refusal there names the agent's model picker in the desktop. Documentation and the four-language locale catalogues follow.
+- The model list lives in the keyless lane's entry of the desktop provider settings. Each entry shows its licence and, where the catalogue states them, its download size and installed state, and offers Download and Remove; a field adds a model by name. No surface names a role or a capability. The agent column's model picker offers a local lane's models from its list, and the desktop stores the person's pick as the reading model. The ledger's readers name no reading task; they show only what keeps documents from being read, and lead to the picker. Documentation and the four-language locale catalogues follow.
 
 ## Rationale
 
@@ -100,22 +99,6 @@ The owner's rulings make one source of models and one dispatch path the only arr
 
 Basis: the owner's rulings of 2026-10-25, first-hand in conversation. Each accepted record below receives a dated "Amendment 2026-10-25" section appended to its body. Proposed records receive a short note only.
 
-### `2026-10-24-rust-component-provisioning-adr`
-
-- **Constraint 3 (unchanged contracts).** The item ids `browser` and `local_ai` and their recovery actions stay. Added: the `local_ai` item is the program, plus the one model a desktop download names.
-- **Constraint 5 (pins are data).** Replaced by: "The browser archive pins and the local AI program pins are declarative data staged into the package. The local AI pins cover the program archive per platform only. They carry no model name, digest, size or licence, and Python reads no role defaults from them. Regenerating program pins stays a developer tool under `dev/`."
-- **Constraint 7 (local AI program).** Unchanged. Added: a system-installed Ollama is still detected and never modified, and the managed server is the one the cadrumo-agent `ollama` provider connects to.
-- **Constraint 8 (models).** Replaced by: "Rust pulls the model a desktop download names, through the pull endpoint of the server it supervises, with byte progress. The name, and the catalogue's `size_bytes` when it states one, come from the desktop. Integrity is Ollama's content-addressed manifest. Cadrumo compares no digest to a pin. A model missing from Ollama's installed list is `absent`, a failed pull is `failed`, and there is no digest-based `stale`. The full check is a one-token generation on that server. Role fitness is not component state."
-- **Constraint 9 (hardware floor).** Replaced by: "Rust decides `blocked hardware` from total memory and, on NVIDIA, VRAM, against the `size_bytes` of the downloaded model's catalogue entry when it states one. A model of unknown size, and a computer with no model to download, are not blocked. No floor table carries model figures."
-- **Constraint 12 (removed Python).** The last sentence, "Load, unload and the fitness probe stay in Python as consumption", is replaced by: "Python keeps no hardware or contention admission; cadrumo-agent admits each model load. The direct load, unload and fitness probe that go through `LocalAdapter` are deleted with it."
-
-### `2026-10-18-dependency-provisioning-unified-setup-adr`
-
-- **D1 and the 2026-10-19 amendment, ruling 1.** "`local_ai` is the program and the model each catalogue role reads with" is replaced by: "`local_ai` is the program, plus the one model a desktop download names. The parts of its plan are the program, then that model's pull when it is not installed. There is no catalogue role list in Cadrumo."
-- **D7 (verification).** "The catalogue gains an expected digest per model. When the installed digest differs ... `stale`" is withdrawn. Replaced by: "A local model's integrity is Ollama's content-addressed manifest. Cadrumo keeps no expected digest, and a model has no digest-based `stale` state."
-- **D8 and the 2026-10-19 amendment, ruling 1.** `--model` and `aeat config provision pull` are removed. The local AI is set up from the desktop alone, and its models are downloaded from the local lane's model list (`2026-10-24-rust-component-provisioning-adr` amendment 2026-10-26).
-- **D13 scope.** "a Cadrumo-owned model runtime" stays out of scope as narrowed on 2026-10-24. Added to the out-of-scope list: any Cadrumo-defined model.
-
 ### `2026-10-19-provider-settings-tax-model-runs-adr`
 
 - **Constraint 1 (retirement).** "`LocalAdapter` stays." is replaced by: "`LocalAdapter` and the `LLMProvider.LOCAL` member are deleted, with their tests and the four local-model settings and their defaults."
@@ -134,14 +117,6 @@ Basis: the owner's rulings of 2026-10-25, first-hand in conversation. Each accep
 
 - **Constraints and Implementation.** The setting `aeat_llm_ollama_vision_model` and its default `qwen2.5vl:3b` are deleted. The tiering text (3b default, 7b upgrade, moondream fallback) no longer describes the product. Scanned pages are read with the model the person picked, which the agent's catalogue must mark vision-capable. The "operator must `ollama pull`" prerequisite becomes a desktop download from that list.
 
-### `2026-08-07-unstructured-document-ingestion-provisioning-adr` (proposed)
-
-- **Note only.** D4 (the typed model catalogue and licence-aware selection) is superseded in substance. The catalogue now lives in cadrumo-agent, the person keeps a local model list and picks the reading model, and licence is shown, not gated. D2 and D3 (hardware and contention) stand, reading size from the catalogue entry.
-
-### `2026-10-13-application-distribution-native-bundle-llm-extra-adr`
-
-- **Constraint "No model weights enter any artifact" and the Implementation verification.** Stand. The verification sentence "`ledger.classify.review` runs past `ledger.llm.acquire` against a locally provisioned model" is read as a picked model from the person's local model list that the engine pulled. The "local inference closure" language no longer implies a Cadrumo-owned adapter: local reads go through the agent.
-
 ### `2026-10-13-agent-attachments-adr`
 
 - **Constraint 7 (eligibility and lanes).** "Local model reading needs no external-disclosure grant." is replaced by: "A lane whose catalogue entry sets `reads_off_host` false needs no external-disclosure grant. A lane with it true does. The flag is typed catalogue data, not inferred from a transport." The "A model the person runs on this machine needs no grant" sentence in the historical text reads the same way.
@@ -152,10 +127,6 @@ Basis: the owner's first-hand ruling in conversation on 2026-10-25, "Choice can 
 
 - **Storage.** The person's local model list is stored in the agent service's own encrypted per-profile record capability, `model-role-selections`, in its own secure-object namespace `cadrumo.model_role_selections`, under one fixed record key. It is not a provider-settings record, so a list change never moves the provider-settings generation and never replaces the running agent tree. The capability mirrors provider settings: a runtime descriptor entry with its namespace and classification, the read, write, delete and generation actions, encryption under the profile key and revision-guarded compare-and-swap, bound to the exact admitted service session and lease.
 - **States.** Absent means the person added no model and picked none. A record that does not decrypt or validate is unreadable, never absent, and only a guarded reset removes it.
-
-## Amendment 2026-10-26: desktop-only provisioning
-
-Basis: the owner's first-hand ruling of 2026-10-26 in conversation, recorded in `2026-10-24-rust-component-provisioning-adr` amendment 2026-10-26: only the desktop provisions the local AI program and models, and no Python module or cadrumo-agent can pull, download or install them. Constraint 9 and the Implementation outline state the result.
 
 ## Amendment 2026-10-27: a model list, no roles
 
