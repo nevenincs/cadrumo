@@ -1130,7 +1130,6 @@ fn a_download_two_roles_share_is_counted_once_in_the_review() {
             part("text_extraction", TEXT),
             part("column_role_mapping", TEXT),
         ],
-        Destination::OllamaModels,
     )
     .unwrap();
     let plan = SetupPlan::new(vec![entry], Some(512 * GIB), 0).unwrap();
@@ -1143,6 +1142,47 @@ fn a_download_two_roles_share_is_counted_once_in_the_review() {
             .collect::<Vec<_>>(),
         [Some(100), Some(0)]
     );
+}
+
+#[test]
+fn the_review_names_the_folder_each_part_is_stored_in() {
+    use cadrumo_application::{
+        provisioning::plan::{PlanEntry, PlanPart},
+        value::HostName,
+    };
+    let locations = Locations::under(Path::new("/state"));
+    let program_folder = locations
+        .destination(Destination::LocalAiProgram)
+        .display()
+        .to_string();
+    let models_folder = locations
+        .destination(Destination::OllamaModels)
+        .display()
+        .to_string();
+    assert_ne!(program_folder, models_folder);
+    let part = |id: &str, destination: Destination, version: &str| PlanPart {
+        part_id: id.into(),
+        download_bytes: Some(100),
+        source_hosts: vec![HostName::new(MODEL_HOST).unwrap()],
+        destination: Some(destination),
+        installs_outside_program: false,
+        target_version: Some(version.into()),
+    };
+    let program = part(PROGRAM_PART, Destination::LocalAiProgram, "9.9.9");
+    let model = part("text_extraction", Destination::OllamaModels, TEXT);
+    let shown = |parts: Vec<PlanPart>| {
+        let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).unwrap();
+        let plan = SetupPlan::new(vec![entry], Some(512 * GIB), 0).unwrap();
+        review_view(&plan, &locations).entries[0]
+            .destination
+            .clone()
+    };
+    assert_eq!(shown(vec![program.clone()]), Some(program_folder.clone()));
+    assert_eq!(
+        shown(vec![program, model.clone()]),
+        Some(format!("{program_folder}, {models_folder}"))
+    );
+    assert_eq!(shown(vec![model]), Some(models_folder));
 }
 
 /// The plan a start of the local AI alone puts under review, downloading `download` when
@@ -1755,7 +1795,11 @@ fn local_ai_entry() -> PlanEntry {
         part_id: id.into(),
         download_bytes: Some(bytes),
         source_hosts: vec![HostName::new(MODEL_HOST).unwrap()],
-        destination: Some(Destination::OllamaModels),
+        destination: Some(if id == PROGRAM_PART {
+            Destination::LocalAiProgram
+        } else {
+            Destination::OllamaModels
+        }),
         installs_outside_program: false,
         target_version: Some(version.into()),
     };
@@ -1766,7 +1810,6 @@ fn local_ai_entry() -> PlanEntry {
             part("text_extraction", TEXT, 300),
             part("column_role_mapping", TEXT, 300),
         ],
-        Destination::OllamaModels,
     )
     .unwrap()
 }

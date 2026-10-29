@@ -69,9 +69,9 @@ fn the_program_part_plans_its_own_folder_and_nothing_outside_cadrumo() {
             .collect::<Vec<_>>(),
         ["github.com", "release-assets.githubusercontent.com"]
     );
-    let entry =
-        PlanEntry::of_parts(ItemId::LocalAi, vec![part], Destination::OllamaModels).unwrap();
+    let entry = PlanEntry::of_parts(ItemId::LocalAi, vec![part]).unwrap();
     assert!(!entry.installs_outside_program);
+    assert_eq!(entry.destinations(), [Destination::LocalAiProgram]);
     let artifact = program.artifact();
     assert_eq!(artifact.id, "ollama");
     assert_eq!(artifact.executable.as_str(), "ollama.exe");

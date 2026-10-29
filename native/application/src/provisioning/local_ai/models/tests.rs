@@ -235,9 +235,12 @@ fn the_plan_has_a_part_per_selected_role_and_counts_a_shared_model_once() {
     let entry = PlanEntry::of_parts(
         ItemId::LocalAi,
         std::iter::once(program).chain(parts).collect(),
-        Destination::OllamaModels,
     )
     .unwrap();
+    assert_eq!(
+        entry.destinations(),
+        [Destination::LocalAiProgram, Destination::OllamaModels]
+    );
     assert_eq!(
         entry.download_bytes,
         Some(1000 + fixture.text.size() + fixture.vision.size())

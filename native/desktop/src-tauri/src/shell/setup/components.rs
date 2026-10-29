@@ -1202,6 +1202,17 @@ fn download_key(destination: Option<Destination>, version: Option<&String>) -> O
     Some((destination?, version?.clone()))
 }
 
+/// Where the entry stores what it downloads: each folder once, the local AI's program
+/// folder before the models folder where it plans both.
+fn folders(entry: &PlanEntry, locations: &Locations) -> Option<String> {
+    let folders: Vec<String> = entry
+        .destinations()
+        .into_iter()
+        .map(|destination| locations.destination(destination).display().to_string())
+        .collect();
+    (!folders.is_empty()).then(|| folders.join(", "))
+}
+
 fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
     let mut first_by_download: BTreeMap<DownloadKey, ItemId> = BTreeMap::new();
     let entries = plan
@@ -1239,9 +1250,7 @@ fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
                     .iter()
                     .map(|host| host.as_str().to_owned())
                     .collect(),
-                destination: entry
-                    .destination
-                    .map(|destination| locations.destination(destination).display().to_string()),
+                destination: folders(entry, locations),
                 installs_outside_program: entry.installs_outside_program,
                 shares_download_with,
                 parts,

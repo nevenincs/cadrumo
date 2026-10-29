@@ -108,12 +108,10 @@ impl PlanEntry {
         })
     }
 
-    /// The local AI's entry: exactly the sum of its ordered parts.
-    pub fn of_parts(
-        item: ItemId,
-        parts: Vec<PlanPart>,
-        destination: Destination,
-    ) -> Result<Self, Error> {
+    /// The local AI's entry: exactly the sum of its ordered parts. The entry names no
+    /// destination of its own: the program and a model are stored in different folders, so
+    /// each part carries its own and `destinations` lists them.
+    pub fn of_parts(item: ItemId, parts: Vec<PlanPart>) -> Result<Self, Error> {
         if item != ItemId::LocalAi {
             return Err(invalid("only the local AI is planned in parts"));
         }
@@ -140,11 +138,23 @@ impl PlanEntry {
             item,
             download_bytes: Some(known_part_bytes(&parts)),
             source_hosts: hosts,
-            destination: Some(destination),
+            destination: None,
             installs_outside_program: parts.iter().any(|part| part.installs_outside_program),
             target_version: None,
             parts,
         })
+    }
+
+    /// Every folder the entry stores something in, once each and in the order its parts
+    /// are carried out.
+    pub fn destinations(&self) -> Vec<Destination> {
+        let mut folders: Vec<Destination> = self.destination.into_iter().collect();
+        for destination in self.parts.iter().filter_map(|part| part.destination) {
+            if !folders.contains(&destination) {
+                folders.push(destination);
+            }
+        }
+        folders
     }
 
     /// Whether the entry, or any of its parts, downloads an amount its source does not
@@ -316,8 +326,8 @@ mod tests {
             part_id: "program".into(),
             download_bytes: Some(1_586_229_413),
             source_hosts: hosts(&["github.com", "release-assets.githubusercontent.com"]),
-            destination: None,
-            installs_outside_program: true,
+            destination: Some(Destination::LocalAiProgram),
+            installs_outside_program: false,
             target_version: Some("0.40.10".into()),
         };
         let local = PlanEntry::of_parts(
@@ -329,7 +339,6 @@ mod tests {
                 model("text_extraction", Some(5_000), Some(TEXT)),
                 model("vision_transcription", Some(7_000), Some(VISION)),
             ],
-            Destination::OllamaModels,
         )
         .unwrap();
         SetupPlan::new(vec![browser, local], Some(10), 0).unwrap()
@@ -342,7 +351,7 @@ mod tests {
         // product's Python canonical JSON (`content_hash_hex`), not by this crate.
         assert_eq!(
             plan.digest().as_str(),
-            "4d8d19a2ea5da69c0ebc4275ae72a0ac56b086218a0c61230afa4da5a9ffe546"
+            "83c9541667180e37cf8cd322e597c32d4596018a7b207bd3170af0caac4fbdb5"
         );
         assert_eq!(plan.entries[1].download_bytes, Some(1_586_241_413));
         assert_eq!(plan.space.required_bytes, 3_367_785_403);
@@ -421,29 +430,58 @@ mod tests {
             )
             .is_err()
         );
-        assert!(
-            PlanEntry::of_parts(
-                ItemId::Browser,
-                vec![model("a", None, None)],
-                Destination::OllamaModels
-            )
-            .is_err()
-        );
+        assert!(PlanEntry::of_parts(ItemId::Browser, vec![model("a", None, None)]).is_err());
         assert!(
             PlanEntry::of_parts(
                 ItemId::LocalAi,
                 vec![model("a", None, None), model("a", None, None)],
-                Destination::OllamaModels,
             )
             .is_err()
         );
         let mut nowhere = model("a", None, None);
         nowhere.destination = None;
-        assert!(
-            PlanEntry::of_parts(ItemId::LocalAi, vec![nowhere], Destination::OllamaModels).is_err()
+        assert!(PlanEntry::of_parts(ItemId::LocalAi, vec![nowhere]).is_err());
+        assert!(PlanEntry::of_parts(ItemId::LocalAi, Vec::new()).is_err());
+    }
+
+    fn program() -> PlanPart {
+        sample().entries[1].parts[0].clone()
+    }
+
+    #[test]
+    fn a_program_only_plan_names_the_program_folder_and_not_the_models_folder() {
+        let entry = PlanEntry::of_parts(ItemId::LocalAi, vec![program()]).unwrap();
+        assert_eq!(entry.destinations(), [Destination::LocalAiProgram]);
+    }
+
+    #[test]
+    fn a_plan_of_program_and_models_names_both_folders_once_in_part_order() {
+        let sample = sample();
+        assert_eq!(
+            sample.entries[1].destinations(),
+            [Destination::LocalAiProgram, Destination::OllamaModels]
         );
-        assert!(
-            PlanEntry::of_parts(ItemId::LocalAi, Vec::new(), Destination::OllamaModels).is_err()
+        let models_only =
+            PlanEntry::of_parts(ItemId::LocalAi, vec![model("a", None, None)]).unwrap();
+        assert_eq!(models_only.destinations(), [Destination::OllamaModels]);
+    }
+
+    #[test]
+    fn the_browser_keeps_its_one_destination() {
+        assert_eq!(
+            sample().entries[0].destinations(),
+            [Destination::PlaywrightBrowsers]
         );
+    }
+
+    #[test]
+    fn the_digest_binds_where_each_part_is_stored() {
+        let plan = sample();
+        let mut moved = plan.clone();
+        moved.entries[1].parts[0].destination = Some(Destination::OllamaModels);
+        assert_ne!(moved.digest(), plan.digest());
+        let mut rehomed = plan.clone();
+        rehomed.entries[1].parts[1].destination = Some(Destination::LocalAiProgram);
+        assert_ne!(rehomed.digest(), plan.digest());
     }
 }
