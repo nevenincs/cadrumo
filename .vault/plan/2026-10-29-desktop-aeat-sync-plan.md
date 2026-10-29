@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:d493fabdf148801cb25f691195acc8b314694a872fe789abddb159ecb43b56e7'
+body_hash: 'sha256:52267106f6c17b5d495138bb064e2e714f74086e25ffa5c2a3d31eccb876eeaa'
 ---
 
 # `desktop-aeat-sync` plan
@@ -61,9 +61,9 @@ Serve per-area AEAT sync state from the backend and remove paths, tax numbers an
 Give the host named aeat_sync commands and a profile-held area queue with stop, resume and a closed outcome table.
 
 - [x] `P03.S08` - add the aeat_sync host module with the closed admitted definition list, the named commands and their registration, checked by test against the manifest; `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs (new), native/desktop/src-tauri/src/app.rs`.
-- [ ] `P03.S09` - implement the profile-held run: area order, per-year filed items, census session reuse, stop between items, reattach, discard on sign-out and profile change, settle waits that never become unknown; `native/desktop/src-tauri/src/shell/aeat_sync/run.rs (new), native/desktop/src-tauri/src/shell/user_profile.rs`.
-- [ ] `P03.S10` - implement the closed outcome table, session-ended pause and resume from the first item not brought, person-initiated retry, preflight from setup rows, sign-in through auth.session.acquire, and observation-event progress; `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs (new), native/desktop/src-tauri/src/shell/relay.rs`.
-- [ ] `P03.S11` - cover the run model and outcome table in desktop-host-unit-test, including unknown never retried and no id, code or path in any reply to the window; `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs (new)`.
+- [x] `P03.S09` - implement the profile-held run: area order, per-year filed items, census session reuse, stop between items, reattach, discard on sign-out and profile change, settle waits that never become unknown; `native/desktop/src-tauri/src/shell/aeat_sync/run.rs (new), native/desktop/src-tauri/src/shell/user_profile.rs`.
+- [x] `P03.S10` - implement the closed outcome table, session-ended pause and resume from the first item not brought, person-initiated retry, preflight from setup rows, sign-in through auth.session.acquire, and observation-event progress; `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs (new), native/desktop/src-tauri/src/shell/relay.rs`.
+- [x] `P03.S11` - cover the run model and outcome table in desktop-host-unit-test, including unknown never retried and no id, code or path in any reply to the window; `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs (new)`.
 
 ### Phase `P04` - Frontend page
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:451075f2d0cdb2d5115c8a163d9b9a47d1a5bfacac456e3b653f896dc7ce0477'
+body_hash: 'sha256:b788fad461126a8bdc8fad10b060a6996a3b55b2ac31ed5dfb296615fedb1223'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -197,6 +197,19 @@ related:
 - `S16` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
 - `S16` `verify:` `npm run check` -> `pass`
 - `S16` `verify:` `playwright aeat-sync user-profile censo-palette navigation-register 65` -> `pass`
+- `S09` `M` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S09` `A` `native/desktop/src-tauri/src/shell/aeat_sync/run.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/picked_files.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S09` `M` `native/desktop/src-tauri/src/shell/user_profile/censo.rs`
+- `S10` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S10` `M` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S10` `A` `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S11` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S11` `verify:` `desktop-host-unit-test aeat_sync 30` -> `pass`
+- `S11` `verify:` `just check-rust clippy rustfmt` -> `pass`
 
 ## Notes
 
@@ -214,3 +227,5 @@ related:
 - `S07` manifest regenerated content landed in 29d0663d16 by another session; session-ended is a plain refusal so it is not a declared refusal-detail code in the manifest; en cli.yml line uncommitted (foreign hunks); remaining gate failures are in other sessions' dev/locales and dev/docs files and the live.sede.view conformance case
 - `S23` App.tsx onCensus hunk lands with the screen-connection commit; census reattach across profile remount unproven (useCensoSync has no status read on mount) - for P06.S24
 - `S16` screens connected into one page flow; stopgap word tables removed; includes the Modelo census App.tsx hunk
+- `S09` builds only together with S10 outcome.rs
+- `S10` gaps: filed result rows need a backend extension; access readiness reuses auth.local-read outside the closed list (decision pending)
