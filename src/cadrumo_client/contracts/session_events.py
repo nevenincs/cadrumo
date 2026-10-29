@@ -1,6 +1,6 @@
 """Nonsecret retirement frames on the connection that owned the retired lease."""
 
-from typing import Annotated, Literal, Self
+from typing import Annotated, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field, RootModel, model_validator

@@ -3510,7 +3510,6 @@
         "cadrumo_client.contracts.model_runs",
         "cadrumo_client.contracts.navigation",
         "cadrumo_client.contracts.operation_access",
-        "cadrumo_client.contracts.presentation",
         "cadrumo_client.contracts.profile_access",
         "cadrumo_client.contracts.profile_selection",
         "cadrumo_client.contracts.projection_pages",
