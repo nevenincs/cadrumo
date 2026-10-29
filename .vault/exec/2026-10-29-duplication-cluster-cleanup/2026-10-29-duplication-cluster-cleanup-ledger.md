@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d01257245172672a5f22b41fd2ab6c3059c580c73101b7c280e05818e146e01'
+body_hash: 'sha256:450eacbc9602767712f0930116c43b0cb8adbd278382dc17e9dd38da4d5000e3'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -67,6 +67,13 @@ related:
 - `S07` `by:` `Terra 6.1 xhigh`
 - `S02` `verify:` `relative canonical baseline import owning integration pytest 27 cases` -> `pass`
 - `S02` `verify:` `relative import correction Ruff format and Windows ty` -> `pass`
+- `S04` `verify:` `exact current relay integration suite after foreign test-helper migration 26 cases` -> `pass`
+- `S04` `verify:` `exact current relay Ruff format and Windows ty` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py`
+- `S08` `verify:` `PDF reader refusal focused regression pytest 1 case` -> `pass`
+- `S08` `verify:` `ledger reader refusal settlement owning integration module pytest 4 cases` -> `pass`
+- `S08` `verify:` `scoped Ruff format and Windows ty` -> `pass`
+- `S08` `by:` `Terra 6.1 xhigh`
 
 ## Notes
 
@@ -78,3 +85,5 @@ related:
 - `S06` Intermediate 21/22 and 57/58 durable failures were investigated with preimage controls. One-line test readiness signal moved after custody fixture entry; assertions and production session policy unchanged. Final combined 58 passed.
 - `S07` Broad gate reproduced stale condition-ID assertion. Both refusal codes intentionally share the completion condition; exact expected refusal-evidence diagnostic replaces obsolete substring oracle. No production change.
 - `S02` Independent final review found the newly added absolute test import contradicted the active relative-import rule. Corrected only that import spelling and sorted position; production and scanner controls unchanged.
+- `S04` S04 checkpoint also adopted a concurrent foreign ViewDownstreamReader test-support import migration. Targeted postimage rerun passed26; relay/helper/admission hashes unchanged during rerun. Existing worker-loss background thread `runtime_connection_closed` warning remained visible.
+- `S08` Original failure was only the stale first-line text prefix. Expected full categorized line is independently grounded in English locale and registered REFUSED rendering; preceding ordinary notices remain allowed. PDB was diagnostic only, not passing evidence. All typed verdict, no-model-run, settlement, exit and no-desktop assertions preserved.

@@ -213,8 +213,10 @@ def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_its_re
     exit_code, text = _cli_import_text(monkeypatch, result, effect, _PDF_STATEMENT)
     assert exit_code != 0
     lines = text.splitlines()
-    assert lines[0].startswith("Statement not read:")
-    assert _PDF_STATEMENT.name in lines[0]
+    assert (
+        "Refused. Statement not read: the model you picked is not available right now to read "
+        f"{_PDF_STATEMENT.name}. Try again once it is available."
+    ) in lines
     assert "desktop" not in text.lower()
 
 
