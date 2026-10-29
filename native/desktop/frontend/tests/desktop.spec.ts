@@ -55,8 +55,6 @@ async function signInHost(
         terminalStarts: [] as string[],
         terminalWrites: [] as string[],
         deferTui: false,
-        deferReady: false,
-        tuiOutput: null as ((text: string) => void) | null,
         releaseTui: null as (() => void) | null,
         terminalCloses: 0,
         rawPassword: false,
@@ -264,16 +262,7 @@ async function signInHost(
                   const frames = args.frames as {
                     onmessage: (data: ArrayBuffer) => void;
                   };
-                  state.tuiOutput = (text) =>
-                    frames.onmessage(
-                      Uint8Array.from([0, ...new TextEncoder().encode(text)])
-                        .buffer,
-                    );
                   frames.onmessage(Uint8Array.from([1]).buffer);
-                  if (!state.deferReady)
-                    state.tuiOutput(
-                      "\x1b]777;cadrumo;presentation;ready\x1b\\",
-                    );
                   if (state.deferTui) {
                     (
                       args.frames as { onmessage: (data: ArrayBuffer) => void }
@@ -346,87 +335,6 @@ const signInState = (target: Page) =>
       (window as unknown as { __signInTest: Record<string, unknown> })
         .__signInTest,
   );
-
-test("TUI startup stays covered through sign-in and loading until a screen is rendered", async ({
-  page,
-}) => {
-  // The page's clock runs at its own pace until the settle window below,
-  // which the test then moves through itself.
-  await page.clock.install();
-  await signInHost(page);
-  await page.evaluate(() => {
-    Object.assign(
-      (window as unknown as { __signInTest: object }).__signInTest,
-      { submitCode: "", deferReady: true },
-    );
-  });
-  await page
-    .getByLabel(label("desktop.signin.password"), { exact: true })
-    .fill("fixture");
-  await page
-    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
-    .click();
-  const terminal = page.locator('[data-terminal="tui"]');
-  const content = terminal.locator(".terminal-host");
-  await expect(terminal).toHaveAttribute("aria-busy", "true");
-  await expect(content).toBeHidden();
-  await expect(terminal.getByRole("status")).toBeVisible();
-  const workspace = page
-    .getByRole("navigation", { name: label("desktop.rail.label") })
-    .getByRole("button", { name: label("desktop.rail.tui"), exact: true });
-  await workspace.click();
-  await workspace.click();
-  const output = (text: string) =>
-    page.evaluate((text) => {
-      (
-        window as unknown as {
-          __signInTest: { tuiOutput: (text: string) => void };
-        }
-      ).__signInTest.tuiOutput(text);
-    }, text);
-  await output(
-    "\x1b[?1049hSign-in form\x1b[?1049l\x1b[?1049hLoading workbench\x1b[6n",
-  );
-  // Hidden output is still parsed, including the cursor reply ConPTY needs.
-  await expect
-    .poll(async () => (await signInState(page)).terminalWrites)
-    .not.toEqual([]);
-  await expect(content).toBeHidden();
-  // Split the readiness sequence across frames, as a real PTY may do.
-  await output("\x1b[2J\x1b[HReady workspace\x1b]777;cadrumo;presentation;");
-  await expect(content).toBeHidden();
-  await output("ready\x1b\\");
-  await expect(terminal).toHaveAttribute("aria-busy", "false");
-  await expect(content).toBeVisible();
-  await expect(terminal.locator("textarea")).toBeFocused();
-  expect((await signInState(page)).tuiStarts).toBe(1);
-  expect((await signInState(page)).tuiCloses).toBe(0);
-  await output("\x1b]777;cadrumo;presentation;loading\x1b\\\x1b[2J");
-  await expect(content).toBeHidden();
-  // The clock stops, so the pane's settle window ends when the test moves
-  // time on, not when a busy machine is slow to send the next output.
-  await page.clock.pauseAt(await page.evaluate(() => Date.now() + 1000));
-  // ConPTY can forward OSC first and buffer the following screen repaint.
-  await output("\x1b]777;cadrumo;presentation;ready\x1b\\");
-  await page.clock.runFor(50);
-  await expect(content).toBeHidden();
-  await output("Next screen");
-  await page.clock.runFor(50);
-  await expect(content).toBeHidden();
-  await page.clock.resume();
-  await expect(content).toBeVisible();
-  expect((await signInState(page)).tuiStarts).toBe(1);
-  // A process that exits before readiness must not strand a loading cover.
-  await output("\x1b]777;cadrumo;presentation;loading\x1b\\");
-  await expect(content).toBeHidden();
-  await page.evaluate(() => {
-    (
-      window as unknown as { __signInTest: { exitTui: () => void } }
-    ).__signInTest.exitTui();
-  });
-  await expect(content).toBeVisible();
-  await expect(terminal).toHaveAttribute("aria-busy", "false");
-});
 
 test("terminal cursor replies survive output arriving before session opening completes", async ({
   page,

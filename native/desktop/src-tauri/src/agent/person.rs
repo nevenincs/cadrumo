@@ -394,7 +394,6 @@ impl Person {
                 "language_read" => Some("person_action_language_read"),
                 "language_observe" => Some("person_action_language_observe"),
                 "language_set" => Some("person_action_language_set"),
-                "present_destination" => Some("person_action_present_destination"),
                 "observe_events" => Some("person_action_observe_events"),
                 "operation_submit" => Some("person_action_operation_submit"),
                 "operation_secret_submit" => Some("person_action_operation_secret_submit"),
@@ -505,7 +504,6 @@ impl Person {
             Some("language_read" | "language_observe" | "language_set") => {
                 language_reply(&self.identity, &reply)
             }
-            Some("present_destination") => presented_reply(&self.identity, document, &reply),
             Some("observe_events") => reply["kind"] == "events_observed",
             // The caller parses a relayed document itself; here only its kind and session are checked.
             Some(action) => relay_reply(&self.identity, action, &reply),
@@ -544,19 +542,6 @@ fn relay_reply(identity: &Value, action: &str, reply: &Value) -> bool {
                 && reply["profile_id"] == identity["profile_id"]
                 && reply["session_id"] == identity["session_id"]
         })
-}
-
-/// Whether `reply` says the runtime passed the requested view, with exactly
-/// the requested parameters, to this person's TUIs on the held profile, and
-/// how many it reached.
-fn presented_reply(identity: &Value, request: &Value, reply: &Value) -> bool {
-    reply["kind"] == "destination_presented"
-        && reply["profile_id"] == identity["profile_id"]
-        && reply["session_id"] == identity["session_id"]
-        && reply["destination"] == request["destination"]
-        && request["params"].is_object()
-        && reply["params"] == request["params"]
-        && reply["delivered"].as_u64().is_some()
 }
 
 fn language_reply(identity: &Value, reply: &Value) -> bool {
@@ -639,30 +624,6 @@ mod language_tests {
         let mut unset = reply;
         unset["language"] = Value::Null;
         assert!(language_reply(&identity, &unset));
-    }
-
-    #[test]
-    fn presented_replies_bind_profile_session_and_the_asked_view() {
-        let identity = json!({"profile_id":"profile", "session_id":"session"});
-        let select = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-        let request = json!({"action":"present_destination", "destination":"ledger", "params":{"select": select}});
-        let reply = json!({"kind":"destination_presented", "profile_id":"profile", "session_id":"session", "destination":"ledger", "params":{"select": select}, "delivered":0});
-        assert!(presented_reply(&identity, &request, &reply));
-        for (key, value) in [
-            ("kind", json!("profile_status")),
-            ("profile_id", json!("other")),
-            ("session_id", json!("other")),
-            ("destination", json!("aeat-sync")),
-            ("params", json!({})),
-            ("params", json!({"select": select, "zoom": "2"})),
-            ("params", json!(null)),
-            ("delivered", json!(-1)),
-            ("delivered", json!(null)),
-        ] {
-            let mut invalid = reply.clone();
-            invalid[key] = value;
-            assert!(!presented_reply(&identity, &request, &invalid), "{key}");
-        }
     }
 }
 

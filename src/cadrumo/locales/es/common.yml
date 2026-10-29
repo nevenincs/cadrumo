@@ -3486,7 +3486,6 @@ desktop:
     modal: Termina o cierra primero el cuadro de diálogo abierto.
     notice:
       ancestor: '{requested} no se puede abrir aquí, así que se ha abierto {view}.'
-      in_tui: '{view} se ha abierto en el espacio de trabajo.'
       in_window: '{view} se ha abierto en la ventana.'
       params_dropped: '{view} se ha abierto, pero el elemento al que apunta el enlace
         aún no se puede mostrar ahí.'
@@ -3976,10 +3975,6 @@ desktop:
   toast:
     copied: Copiado
     copy_failed: No se ha podido copiar.
-    link_failed: No se ha podido abrir esa página en el espacio de trabajo.
-    link_not_received: El espacio de trabajo no ha recibido la página. Espera a que
-      termine de cargar y vuelve a intentarlo.
-    link_sign_in: Inicia sesión para abrir esa página en el espacio de trabajo.
     open_failed: No se ha podido abrir.
     paste_failed: No se ha podido pegar.
     paste_too_large: Es demasiado texto para pegar de una vez.

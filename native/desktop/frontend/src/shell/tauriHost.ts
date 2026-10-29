@@ -221,9 +221,6 @@ export function tauriHost(): Host {
         };
       },
     },
-    presentation: {
-      present: (view, params) => call("desktop_present_view", { view, params }),
-    },
     environment: () => call("desktop_environment", {}),
     about: () => call("about_info", {}),
     language: {

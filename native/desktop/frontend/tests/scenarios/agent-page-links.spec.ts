@@ -11,9 +11,9 @@ import { label } from "../support/strings";
 import { windowToast } from "../support/toast";
 
 // `cadrumo://view/{id}` links in an agent's reply, opened by the window's
-// navigator: in the window, in the TUI, with a notice when they open other
-// than asked, refused with a toast when nothing opens them, and asked about
-// when they would take down work staged on the page shown.
+// navigator: in the window, with a notice when they open other than asked,
+// refused with a toast when nothing opens them, and asked about when they
+// would take down work staged on the page shown.
 
 const calls = (page: Page) =>
   page.evaluate(() => window.__scenarioHostCalls ?? []);
@@ -33,7 +33,7 @@ async function noLinkLeftTheWindow(page: Page) {
   );
 }
 
-test("a setup link opens the AEAT access editor in the window, asks the TUI for nothing and offers a fresh check", async ({
+test("a setup link opens the AEAT access editor in the window, starts no TUI and offers a fresh check", async ({
   page,
 }) => {
   await page.goto("/scenarios.html?scenario=aeat-setup&latency=0&bar=off");
@@ -60,8 +60,6 @@ test("a setup link opens the AEAT access editor in the window, asks the TUI for 
   await expect(personTurns(page).last()).toContainText(
     label("desktop.agent.aeat_setup_resume_message"),
   );
-  const made = await calls(page);
-  expect(made.some((call) => call.startsWith("presentView "))).toBe(false);
   expect(await terminals()).toBe(before);
   await noLinkLeftTheWindow(page);
 });
@@ -76,22 +74,17 @@ test("a window link opens its page and gives it the keyboard", async ({
   await expect(calendar).toBeFocused();
   // A view that opened as asked says nothing.
   await expect(windowToast(page)).toHaveText("");
-  const made = await calls(page);
-  expect(made.some((call) => call.startsWith("presentView "))).toBe(false);
   await noLinkLeftTheWindow(page);
 });
 
-test("a TUI view shows the TUI with the keyboard and asks the host for it", async ({
-  page,
-}) => {
+test("a view only the TUI had says why and opens nothing", async ({ page }) => {
   await linksReply(page, "signed-in");
   await link(page, "la sincronización con la AEAT").click();
-  await expect
-    .poll(() => calls(page))
-    .toContain("presentView aeat-sync presented");
-  const tui = page.locator('[data-terminal="tui"]');
-  await expect(tui).toBeVisible();
-  await expect(tui.locator(".xterm-helper-textarea")).toBeFocused();
+  await expect(windowToast(page)).toHaveText(
+    label("desktop.navigation.refused.not_implemented", {
+      view: label("navigation.view.aeat_sync.label"),
+    }),
+  );
   await noLinkLeftTheWindow(page);
 });
 
@@ -106,8 +99,6 @@ test("a window view asked of the TUI opens in the window and says so", async ({
       view: label("navigation.view.panel.logs.label"),
     }),
   );
-  const made = await calls(page);
-  expect(made.some((call) => call.startsWith("presentView "))).toBe(false);
 });
 
 test("an unknown view and a link in the retired profile form say why and open nothing", async ({
@@ -122,8 +113,6 @@ test("an unknown view and a link in the retired profile form say why and open no
   await expect(windowToast(page)).toHaveText(
     label("desktop.navigation.refused.link"),
   );
-  const made = await calls(page);
-  expect(made.some((call) => call.startsWith("presentView "))).toBe(false);
   await noLinkLeftTheWindow(page);
 });
 

@@ -3435,7 +3435,6 @@ desktop:
     modal: Finish or close the open dialog first.
     notice:
       ancestor: '{requested} can''t be opened here, so {view} opened instead.'
-      in_tui: '{view} opened in the workspace.'
       in_window: '{view} opened in the window.'
       params_dropped: '{view} opened, but the item the link points to can''t be shown
         there yet.'
@@ -3910,10 +3909,6 @@ desktop:
   toast:
     copied: Copied
     copy_failed: Couldn't copy that.
-    link_failed: Couldn't open that page in the workspace.
-    link_not_received: The workspace didn't get the page. Wait for it to finish loading,
-      then try again.
-    link_sign_in: Sign in to open that page in the workspace.
     open_failed: Couldn't open that.
     paste_failed: Could not paste that.
     paste_too_large: That is too much text to paste at once.

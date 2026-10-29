@@ -3456,7 +3456,6 @@ desktop:
     modal: Előbb fejezd be vagy zárd be a nyitott párbeszédablakot.
     notice:
       ancestor: '{requested} itt nem nyitható meg, ezért ez nyílt meg helyette: {view}.'
-      in_tui: 'Megnyílt a munkaterületen: {view}.'
       in_window: 'Megnyílt az ablakban: {view}.'
       params_dropped: 'Megnyílt: {view}, de a hivatkozott elemet ott még nem lehet
         megjeleníteni.'
@@ -3945,10 +3944,6 @@ desktop:
   toast:
     copied: Másolva
     copy_failed: Nem sikerült a másolás.
-    link_failed: Nem sikerült megnyitni ezt az oldalt a munkaterületen.
-    link_not_received: A munkaterület nem kapta meg az oldalt. Várd meg, amíg betöltődik,
-      majd próbáld újra.
-    link_sign_in: Jelentkezz be, hogy megnyithasd ezt az oldalt a munkaterületen.
     open_failed: Nem sikerült megnyitni.
     paste_failed: Nem sikerült a beillesztés.
     paste_too_large: Ez túl sok szöveg egyszerre a beillesztéshez.

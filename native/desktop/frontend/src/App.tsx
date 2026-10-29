@@ -35,7 +35,7 @@ import {
   type DocsFrameApi,
   type DocsMenuRequest,
 } from "./components/DocsFrame";
-import type { DocsTheme, PresentationOutcome } from "./ipc/contract";
+import type { DocsTheme } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
 import { AgentColumn, type AgentColumnControl } from "./components/AgentColumn";
@@ -157,7 +157,7 @@ import {
   parseViewLink,
 } from "./shell/navigation/links";
 import { NAVIGATION } from "./shell/navigation/projection";
-import { elementOf, type ViewParams } from "./shell/navigation/register";
+import { elementOf } from "./shell/navigation/register";
 import {
   refusalReasonText,
   useNavigator,
@@ -175,8 +175,6 @@ const TOAST_MS = 2400;
 const SAVE_DELAY_MS = 250;
 // How long a wish to focus a view waits for that view to be shown.
 const FOCUS_WISH_MS = 1000;
-// How long a page a link opens waits for a TUI still starting.
-const TUI_START_WAIT_MS = 30_000;
 const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
   ["console", "desktop.rail.console", "console"],
   ["python", "desktop.rail.python", "python"],
@@ -305,9 +303,7 @@ export function App({ host }: { host: Host }) {
     }),
     hasPort: (port) => host[port] !== undefined,
     signedIn: () => accountRef.current.phase === "signed-in",
-    presents: () => host.presentation !== undefined,
     showInWindow: (id, entry) => showInWindow(id, entry),
-    showInTui: (view, params) => presentView(view, params),
     askSignIn: () => askSignIn(),
   });
   const guardNavigation = nav.guard;
@@ -1079,78 +1075,6 @@ export function App({ host }: { host: Host }) {
     patch({ tuiShown: true });
     focusView("tui");
   }, [patch, focusView, setMaximized]);
-  // The TUI's phase as last drawn, and the pages waiting for it to run.
-  const tuiPhase = useRef(status.tui.phase);
-  const tuiWaiters = useRef(new Set<() => void>());
-  useEffect(() => {
-    tuiPhase.current = status.tui.phase;
-    for (const wake of [...tuiWaiters.current]) wake();
-  }, [status.tui.phase]);
-  // Whether the TUI runs, once it does or `ms` have passed.
-  const tuiRunning = useCallback(
-    (ms: number) =>
-      new Promise<boolean>((resolve) => {
-        if (tuiPhase.current === "running") {
-          resolve(true);
-          return;
-        }
-        const wake = () => {
-          if (tuiPhase.current !== "running") return;
-          window.clearTimeout(timer);
-          tuiWaiters.current.delete(wake);
-          resolve(true);
-        };
-        const timer = window.setTimeout(() => {
-          tuiWaiters.current.delete(wake);
-          resolve(false);
-        }, ms);
-        tuiWaiters.current.add(wake);
-      }),
-    [],
-  );
-  // A view of the person's own TUI: the window comes forward and the TUI is
-  // shown with the keyboard, on the view, for the profile signed in here.
-  // A view that cannot open says why. True once a TUI was passed it.
-  const presentView = useCallback(
-    async (view: string, params: ViewParams): Promise<boolean> => {
-      void host.window?.action("focus").catch(() => undefined);
-      // The TUI pane first, with the keyboard; then the view is asked for.
-      showTui();
-      if (!signedIn) {
-        say(t("desktop.toast.link_sign_in"));
-        return false;
-      }
-      const presentation = host.presentation;
-      if (!presentation) {
-        say(t("desktop.toast.link_failed"));
-        return false;
-      }
-      // Only a running TUI hears the view: one still starting is waited for.
-      if (tuiPhase.current !== "running") {
-        if (!(await tuiRunning(TUI_START_WAIT_MS))) {
-          say(t("desktop.toast.link_not_received"));
-          return false;
-        }
-      }
-      let outcome: PresentationOutcome;
-      try {
-        outcome = await presentation.present(view, params);
-      } catch {
-        say(t("desktop.toast.link_failed"));
-        return false;
-      }
-      if (outcome.outcome === "signed_out") {
-        say(t("desktop.toast.link_sign_in"));
-        return false;
-      }
-      if (outcome.delivered === 0) {
-        say(t("desktop.toast.link_not_received"));
-        return false;
-      }
-      return true;
-    },
-    [host, signedIn, showTui, say, t, tuiRunning],
-  );
   // Whether the last render showed a gate the person could act on, with
   // the dialog put aside. The first status read is a gate too, but not one
   // anybody was standing at: being let through it at startup moves no
@@ -1451,9 +1375,6 @@ export function App({ host }: { host: Host }) {
         label: t("desktop.palette.open_link", {
           view: element ? t(element.label) : resolved.opened,
         }),
-        ...(resolved.surface === "tui"
-          ? { badge: t("navigation.view.terminal.label") }
-          : {}),
         open: () => openViewLink(text),
       };
     },
@@ -1947,9 +1868,7 @@ export function App({ host }: { host: Host }) {
             params: {},
             prefer: null,
           });
-          return resolved.kind === "opened" && resolved.opened === id
-            ? resolved.surface
-            : null;
+          return resolved.kind === "opened" && resolved.opened === id;
         },
         (id) => openView(id),
       ),
@@ -2860,12 +2779,6 @@ export function App({ host }: { host: Host }) {
         if (s.phase === "exited" || s.phase === "failed") account.tuiExited();
       }}
       onMenu={terminalMenu}
-      onAppearanceToggle={() =>
-        setPrefs((previous) => ({
-          ...previous,
-          appearance: scheme === "dark" ? "light" : "dark",
-        }))
-      }
       register={(k, api) => {
         terminals.current[k] = api;
       }}

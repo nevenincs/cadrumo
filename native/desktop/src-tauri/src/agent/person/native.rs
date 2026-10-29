@@ -245,7 +245,6 @@ impl NativeSession {
             }
             "attendance_decision" => &["attendance_id", "approve"],
             "language_set" => &["language"],
-            "present_destination" => &["destination", "params"],
             "observe_events"
             | "status"
             | "activity"
@@ -315,7 +314,6 @@ impl NativeSession {
                 );
                 self.passed_through(&request_id, &asked, EXCHANGE)
             }
-            "present_destination" => self.present(&request_id, request),
             "language_read" | "language_observe" | "language_set" => {
                 self.language(&request_id, action, request)
             }
@@ -435,40 +433,6 @@ impl NativeSession {
             }
             Err(refusal) => self.failed_request(request_id, &refusal),
         }
-    }
-
-    fn present(&mut self, request_id: &str, request: &Value) -> Value {
-        let params = &request["params"];
-        let Some(destination) = request["destination"]
-            .as_str()
-            .filter(|destination| crate::shell::presentation::admitted_value(destination, params))
-        else {
-            return self.refuse(request_id, "invalid", None, true);
-        };
-        let asked = self.request(
-            "present_destination",
-            request_id,
-            json!({"destination": destination, "params": params}),
-        );
-        let reply = match self.ask(&asked, EXCHANGE) {
-            Ok(reply) => reply,
-            Err(Refusal::Denied { code, .. }) => return self.denied(request_id, &code),
-            Err(refusal) => return self.failed_request(request_id, &refusal),
-        };
-        let delivered = reply.get("delivered").and_then(Value::as_u64);
-        if reply.get("kind").and_then(Value::as_str) != Some("presentation_delivered")
-            || reply.get("destination").and_then(Value::as_str) != Some(destination)
-            || reply.get("params") != Some(params)
-            || delivered.is_none()
-        {
-            return self.failed_request(request_id, &Refusal::InvalidFrame);
-        }
-        let mut fields = Map::new();
-        fields.insert("kind".into(), json!("destination_presented"));
-        fields.insert("destination".into(), json!(destination));
-        fields.insert("params".into(), params.clone());
-        fields.insert("delivered".into(), json!(delivered));
-        self.stamped(request_id, fields)
     }
 
     fn language(&mut self, request_id: &str, action: &str, request: &Value) -> Value {
@@ -1209,70 +1173,6 @@ mod tests {
         assert_eq!(asked[0]["action"], "service_admission");
         assert_eq!(asked[1]["action"], "session_status");
         assert!(held.is_open());
-    }
-
-    const TRANSACTION: &str = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
-
-    #[test]
-    fn a_view_is_presented_only_for_the_registers_tui_views() {
-        let select = json!({"select": TRANSACTION});
-        let delivered = Answer::Reply(json!({
-            "kind": "presentation_delivered",
-            "destination": "ledger",
-            "params": select,
-            "delivered": 2,
-        }));
-        let runtime = Runtime::answering([delivered]);
-        let mut held = person(&runtime);
-        let reply = held
-            .exchange(
-                json!({"action": "present_destination", "destination": "ledger", "params": select}),
-            )
-            .unwrap();
-        assert_eq!(reply["kind"], "destination_presented");
-        assert_eq!(reply["params"], select);
-        assert_eq!(reply["delivered"], 2);
-        assert_eq!(reply["session_id"], SESSION);
-        assert_eq!(runtime.asked()[0]["destination"], "ledger");
-        assert_eq!(runtime.asked()[0]["params"], select);
-        // A view only the window implements is never asked of the runtime.
-        held.exchange(
-            json!({"action": "present_destination", "destination": "calendar", "params": {}}),
-        )
-        .unwrap_err();
-        assert_eq!(
-            runtime.asked().len(),
-            1,
-            "a view no TUI implements is never asked for"
-        );
-        assert!(!held.is_open());
-    }
-
-    #[test]
-    fn a_view_with_an_undeclared_parameter_is_never_asked_for() {
-        let runtime = Runtime::answering([]);
-        let mut held = person(&runtime);
-        held.exchange(json!({"action": "present_destination", "destination": "ledger", "params": {"zoom": "2"}}))
-            .unwrap_err();
-        assert!(runtime.asked().is_empty());
-    }
-
-    #[test]
-    fn a_delivery_that_echoes_other_parameters_is_refused() {
-        let delivered = Answer::Reply(json!({
-            "kind": "presentation_delivered",
-            "destination": "ledger",
-            "params": {"select": TRANSACTION},
-            "delivered": 1,
-        }));
-        let runtime = Runtime::answering([delivered]);
-        let mut held = person(&runtime);
-        held.exchange(
-            json!({"action": "present_destination", "destination": "ledger", "params": {}}),
-        )
-        .unwrap_err();
-        assert_eq!(runtime.asked().len(), 1);
-        assert!(!held.is_open());
     }
 
     #[test]

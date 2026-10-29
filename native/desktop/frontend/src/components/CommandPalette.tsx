@@ -30,8 +30,6 @@ export type DocsSearch =
  * with no `open`, the reason it cannot. */
 export type PastedLink = {
   readonly label: string;
-  /** Where it opens, when that is not the window. */
-  readonly badge?: string;
   readonly open: (() => void) | null;
 };
 
@@ -304,7 +302,6 @@ export function CommandPalette({
                       <span className="palette-title min-w-0 flex-1 truncate font-medium">
                         {pasted.label}
                       </span>
-                      {pasted.badge && <Badge>{pasted.badge}</Badge>}
                     </CommandItem>
                   </CommandGroup>
                 </section>
@@ -390,7 +387,6 @@ export function CommandPalette({
                             </span>
                           )}
                         </span>
-                        {action.badge && <Badge>{action.badge}</Badge>}
                         {primaryChord(action) && (
                           <Kbd className="palette-chord">
                             {primaryChord(action)}

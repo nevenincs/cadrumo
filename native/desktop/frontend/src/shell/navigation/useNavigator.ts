@@ -15,7 +15,6 @@ import {
 } from "./register";
 import { RevealRegister } from "./reveal";
 import {
-  declaredImplementation,
   resolveView,
   type Implemented,
   type ViewOpened,
@@ -55,22 +54,17 @@ export type NavigatorWindow = {
   /** Whether the host offers a port a window view needs. */
   hasPort(port: WindowPort): boolean;
   signedIn(): boolean;
-  /** Whether this host can ask a TUI to present a view at all. */
-  presents(): boolean;
   /** Applies a window view through the layout store. Panes, terminals and
    * panel tabs take the keyboard as the window gives it to them; a page's
    * and the agent's focus is asked of the focus register. */
   showInWindow(id: string, entry: WindowViewEntry): void;
-  /** Shows the TUI with the keyboard and asks the host to present the
-   * view; true once a TUI was passed it. Says itself why it was not. */
-  showInTui(view: string, params: ViewParams): Promise<boolean>;
   /** A view of the profile was asked for while nobody is signed in. */
   askSignIn(): void;
 };
 
 /** Where a navigation came from, for what follows it. */
 export type NavigationOptions = {
-  /** Called once the view is shown (or, for a TUI view, delivered). */
+  /** Called once the view is shown. */
   readonly opened?: (opened: ViewOpened) => void;
 };
 
@@ -252,9 +246,6 @@ export function useNavigator(window: NavigatorWindow) {
     const window = host.current;
     const implemented: Implemented = {
       gui: windowImplementation(window.hasPort),
-      ...(window.presents()
-        ? { tui: declaredImplementation(window.register).tui }
-        : {}),
     };
     return resolveView(request, implemented, window.register);
   }, []);
@@ -273,19 +264,6 @@ export function useNavigator(window: NavigatorWindow) {
         if (resolved.noticeDue)
           say(noticeText(t, register, resolved, request.viewId));
       };
-      if (resolved.surface === "tui") {
-        // Showing the TUI takes nothing down: only a dialog holds it.
-        guard({ kind: "navigate", unmounted: new Set() }, () => {
-          void window
-            .showInTui(resolved.opened, resolved.params)
-            .then((delivered) => {
-              if (!delivered) return;
-              notice();
-              options.opened?.(resolved);
-            });
-        });
-        return;
-      }
       const entry = WINDOW_VIEWS[resolved.opened];
       if (!entry) return;
       if (entry.signedIn && !window.signedIn()) {
@@ -425,12 +403,7 @@ function noticeText(
     });
   const where =
     opened.fallback === "other_surface"
-      ? t(
-          opened.surface === "tui"
-            ? "desktop.navigation.notice.in_tui"
-            : "desktop.navigation.notice.in_window",
-          { view },
-        )
+      ? t("desktop.navigation.notice.in_window", { view })
       : null;
   const dropped =
     Object.keys(opened.params).length <

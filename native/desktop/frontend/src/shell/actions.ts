@@ -9,11 +9,7 @@ import {
   type ChordKeys,
 } from "@/shared/chords";
 import type { BridgeChord } from "../ipc/contract";
-import {
-  elementOf,
-  type NavigationRegister,
-  type Surface,
-} from "./navigation/register";
+import { elementOf, type NavigationRegister } from "./navigation/register";
 import type { Translate } from "./strings";
 
 /** Where a chord fires. "global": everywhere, focused terminals included.
@@ -36,8 +32,6 @@ export type Action = {
   /** Said after the label where the label alone is ambiguous: a section's
    * page. */
   context?: string;
-  /** Where it opens, when that is not the window. */
-  badge?: string;
   /** The view's own name, where the label wraps it in "Show" or "Hide". */
   name?: string;
   chords?: readonly Chord[];
@@ -119,11 +113,9 @@ export type ViewActionSpec = {
 };
 
 /**
- * The palette's view actions, one per register element some surface can
- * open now: the window's first, in register order, then those only the TUI
- * implements, badged with where they open. `opensIn` says which surface
- * opens an element itself, not an ancestor; `open` opens it through the
- * navigator. A pane or the panel names whether it is shown, and its entry
+ * The palette's view actions, one per register element the window draws, in
+ * register order. `opensHere` says whether the window opens an element
+ * itself, not an ancestor; `open` opens it through the navigator. A pane or the panel names whether it is shown, and its entry
  * then hides or shows it. A section without a chord of its own is quiet:
  * it is listed only for a query that finds it.
  */
@@ -131,16 +123,16 @@ export function viewActions(
   register: NavigationRegister,
   t: Translate,
   specs: Readonly<Record<string, ViewActionSpec>>,
-  opensIn: (id: string) => Surface | null,
+  opensHere: (id: string) => boolean,
   open: (id: string) => void,
 ): Action[] {
-  const window: Action[] = [];
-  const terminal: Action[] = [];
+  const actions: Action[] = [];
   for (const element of register.elements) {
+    if (!element.surfaces.includes("gui")) continue;
     const spec = Object.hasOwn(specs, element.id)
       ? specs[element.id]
       : undefined;
-    const where = opensIn(element.id);
+    const opens = opensHere(element.id);
     const parent =
       element.parent === null ? undefined : elementOf(register, element.parent);
     const show = () => open(element.id);
@@ -159,21 +151,18 @@ export function viewActions(
             ),
       ...(spec?.shown === undefined ? {} : { name }),
       ...(parent ? { context: t(parent.label) } : {}),
-      ...(where === "tui"
-        ? { badge: t("navigation.view.terminal.label") }
-        : {}),
       group: spec?.group ?? "views",
-      icon: spec?.icon ?? (where === "tui" ? "tui" : "page"),
+      icon: spec?.icon ?? "page",
       keywords: element.keywords,
       ...(spec?.chords ? { chords: spec.chords } : {}),
       quiet: element.parent !== null && !spec?.chords?.length,
-      enabled: () => where !== null && (spec?.enabled?.() ?? true),
+      enabled: () => opens && (spec?.enabled?.() ?? true),
       run: spec?.run ?? show,
       choose: spec?.shown === true && spec.run ? spec.run : show,
     };
-    (element.surfaces.includes("gui") ? window : terminal).push(action);
+    actions.push(action);
   }
-  return [...window, ...terminal];
+  return actions;
 }
 
 /** Palette relevance: every query word must start or occur in the text: the
@@ -187,7 +176,6 @@ export function scoreAction(action: Action, query: string): number {
     action.keywords,
     action.group,
     action.context,
-    action.badge,
     action.view,
   ]
     .filter((part) => part !== undefined)

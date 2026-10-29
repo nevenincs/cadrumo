@@ -14,7 +14,6 @@ import type {
   LogBatch,
   LogLevel,
   ManagerStatus,
-  PresentationOutcome,
   SignInSignal,
   SignInStatus,
   WindowAction,
@@ -26,8 +25,6 @@ import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import type { Host } from "../shell/host";
-import { NAVIGATION } from "../shell/navigation/projection";
-import { admitsTuiView } from "../shell/navigation/register";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
 import type { ProfileViews } from "../shell/views";
@@ -687,25 +684,6 @@ export function scenarioHost(
     },
     userProfile,
     censo: censoFixture(userProfile, scenario.censo),
-    presentation: {
-      async present(view, params) {
-        await wait(options.latencyMs);
-        // As the host does: only a TUI view of the projection, with only
-        // its declared parameters, is ever sent.
-        if (!admitsTuiView(NAVIGATION, view, params))
-          throw failure("invalid_arguments", "cli");
-        const outcome: PresentationOutcome =
-          presence !== "present"
-            ? { outcome: "signed_out" }
-            : { outcome: "presented", delivered: 1 };
-        const shown = Object.entries(params)
-          .sort(([a], [b]) => (a < b ? -1 : 1))
-          .map(([name, value]) => ` ${name}=${value}`)
-          .join("");
-        say(`presentView ${view}${shown} ${outcome.outcome}`);
-        return outcome;
-      },
-    },
     available: true,
     ...(options.window ? { window: windowFixture() } : {}),
     ...(scenario.views === "none"

@@ -94,24 +94,3 @@ export function admitsValue(
     [...value].every((character) => declared.alphabet.includes(character))
   );
 }
-
-/** Whether a TUI may be asked to show `view` with `params`: a register view
- * whose surfaces include the TUI, with only parameters it declares, each a
- * value of its kind. The host admits a request by the same rule. */
-export function admitsTuiView(
-  register: NavigationRegister,
-  view: string,
-  params: ViewParams,
-): boolean {
-  const element = elementOf(register, view);
-  return (
-    element !== undefined &&
-    element.surfaces.includes("tui") &&
-    Object.entries(params).every(([name, value]) => {
-      const kind = Object.hasOwn(element.params, name)
-        ? element.params[name]
-        : undefined;
-      return kind !== undefined && admitsValue(register, kind, value);
-    })
-  );
-}

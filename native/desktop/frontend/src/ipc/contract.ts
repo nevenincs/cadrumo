@@ -1668,17 +1668,6 @@ export interface HostCommands {
     args: Authorized<{ language: string }>;
     result: DesktopLanguage;
   };
-  /** Shows register view `view` in the person's own TUI on the profile
-   * signed in here. Refuses `invalid_arguments` for a view the navigation
-   * projection does not give the TUI, or a parameter it does not declare
-   * with a value of its kind. */
-  desktop_present_view: {
-    args: Authorized<{
-      view: string;
-      params: Readonly<Record<string, string>>;
-    }>;
-    result: PresentationOutcome;
-  };
   desktop_language_observe: {
     args: Authorized<{ updates: Channel<DesktopLanguage> }>;
     result: number;
@@ -2133,14 +2122,6 @@ export type WindowAction =
   /** The page's answers to a close it was asked about. */
   | "close_now"
   | "keep_open";
-
-/**
- * What became of a TUI view asked for. `delivered` counts the person's
- * signed-in TUIs on the profile that were passed it; none is zero. A view is
- * only where to look, never access to anything.
- */
-export type PresentationOutcome =
-  { outcome: "presented"; delivered: number } | { outcome: "signed_out" };
 
 export type HostCommand = keyof HostCommands;
 export type HostArguments<C extends HostCommand> = HostCommands[C]["args"];

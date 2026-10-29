@@ -9,7 +9,6 @@ pub mod ledger;
 pub mod modelo;
 pub mod navigation;
 mod picked_files;
-pub mod presentation;
 pub mod provider_settings;
 pub(crate) mod relay;
 #[cfg(all(test, windows))]

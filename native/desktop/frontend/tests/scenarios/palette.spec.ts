@@ -123,22 +123,13 @@ test("choosing a Ledger section opens that section with the keyboard in it", asy
   ).toHaveCount(1);
 });
 
-test("a view only the TUI has opens in the workspace, and says so", async ({
+test("a view the window does not draw is not offered", async ({
   page: target,
 }) => {
   await open(target);
   const withholding = label("navigation.view.withholding.label");
   await search(target, withholding);
-  const option = optionTitled(target, withholding);
-  await expect(option).toHaveCount(1);
-  await expect(option).toContainText(label("navigation.view.terminal.label"));
-  await target.keyboard.press("Enter");
-  await expect
-    .poll(() => calls(target))
-    .toContain("presentView withholding presented");
-  const tui = target.locator('[data-terminal="tui"]');
-  await expect(tui).toBeVisible();
-  await expect(tui.locator(".xterm-helper-textarea")).toBeFocused();
+  await expect(optionTitled(target, withholding)).toHaveCount(0);
 });
 
 test("the views keep their action ids, and their chords still toggle", async ({

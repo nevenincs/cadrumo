@@ -53,14 +53,6 @@ const aeatEditor = (page: Page) =>
     name: label("desktop.profile.action.aeat_access"),
     exact: true,
   });
-const hostCalls = (page: Page) =>
-  page.evaluate(() => window.__scenarioHostCalls ?? []);
-/** The TUI was asked to present nothing: the window did it all. */
-const noTui = async (page: Page) =>
-  expect(
-    (await hostCalls(page)).filter((call) => call.startsWith("presentView ")),
-  ).toEqual([]);
-
 /** Chooses an item of the profile's actions menu. */
 async function profileAction(page: Page, key: string) {
   await page
@@ -243,7 +235,6 @@ test("details open for editing by double click, Enter, F2 and the hover button",
   await row(profile, "auth.provider").focus();
   await page.keyboard.press("Enter");
   await expect(aeatEditor(page)).toBeVisible();
-  await noTui(page);
 });
 
 test("the keyboard walks details and sections, and finds search and help", async ({
@@ -863,7 +854,6 @@ test("saved Cl@ve setup asks specifically for the NIE support number", async ({
       exact: true,
     }),
   ).toBeEnabled();
-  await noTui(page);
 });
 
 test("discarding Censo changes does not write profile data", async ({
@@ -1174,7 +1164,6 @@ test("authentication facts are edited in the page and a masked one is write-only
     .click();
   await expect(support).not.toContainText("••••");
   expect(await page.evaluate(() => window.__scenarioProfile!.writes())).toBe(2);
-  await noTui(page);
 });
 
 test("the method and its route are edited in the window, with the facts each asks for", async ({
@@ -1235,7 +1224,6 @@ test("the method and its route are edited in the window, with the facts each ask
   );
   await expect(row(profile, "auth.fecha_validez")).toContainText("••••");
   await expect(profile).not.toContainText("2030-01-31");
-  await noTui(page);
 });
 
 test("a certificate is chosen in the native dialog and its passphrase is kept out of the page", async ({
@@ -1301,7 +1289,6 @@ test("a certificate is chosen in the native dialog and its passphrase is kept ou
   await row(profile, "auth.provider").focus();
   await page.keyboard.press("Enter");
   await expect(secret).toHaveValue("");
-  await noTui(page);
 });
 
 test("a credential that did not reach the runtime or was left unconfirmed is reported and never retried", async ({
@@ -1367,7 +1354,6 @@ test("a credential that did not reach the runtime or was left unconfirmed is rep
   );
   // No profile edit was repeated for it.
   expect(await writes()).toBe(2);
-  await noTui(page);
 });
 
 test("the AEAT editor does not save over a profile that changed elsewhere", async ({

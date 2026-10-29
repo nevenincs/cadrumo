@@ -24,7 +24,6 @@ import type {
   SetupRemoval,
   WindowAction,
   WindowPresentation,
-  PresentationOutcome,
 } from "../ipc/contract";
 import type { ProfileAccounts } from "./profiles";
 import type { AgentAccess } from "./agentAccess";
@@ -138,14 +137,6 @@ export interface Host {
     read(): Promise<DesktopLanguage>;
     set(language: string): Promise<DesktopLanguage>;
     observe(listener: (state: DesktopLanguage) => void): Promise<() => void>;
-  };
-  /** Shows a register view whose surfaces include the TUI in the person's
-   * own TUI, on the profile signed in here, where this host can reach it. */
-  readonly presentation?: {
-    present(
-      view: string,
-      params: Readonly<Record<string, string>>,
-    ): Promise<PresentationOutcome>;
   };
   signInStatus(): Promise<SignInStatus>;
   /** Reports a person gesture; background observations must never call it. */

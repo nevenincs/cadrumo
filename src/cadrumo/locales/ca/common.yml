@@ -3484,7 +3484,6 @@ desktop:
     modal: Acaba o tanca primer el quadre de diàleg obert.
     notice:
       ancestor: '{requested} no es pot obrir aquí, així que s''ha obert {view}.'
-      in_tui: '{view} s''ha obert a l''espai de treball.'
       in_window: '{view} s''ha obert a la finestra.'
       params_dropped: '{view} s''ha obert, però l''element al qual apunta l''enllaç
         encara no es pot mostrar allà.'
@@ -3977,10 +3976,6 @@ desktop:
   toast:
     copied: Copiat
     copy_failed: No s'ha pogut copiar.
-    link_failed: No s'ha pogut obrir aquesta pàgina a l'espai de treball.
-    link_not_received: L'espai de treball no ha rebut la pàgina. Espera que acabi
-      de carregar i torna-ho a provar.
-    link_sign_in: Inicia la sessió per obrir aquesta pàgina a l'espai de treball.
     open_failed: No s'ha pogut obrir.
     paste_failed: No s'ha pogut enganxar.
     paste_too_large: És massa text per enganxar d'una vegada.
