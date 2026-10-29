@@ -1,4 +1,5 @@
 pub mod about;
+pub mod aeat_sync;
 pub mod agent_access;
 pub mod channel;
 mod clipboard;
