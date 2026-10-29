@@ -62,7 +62,7 @@ def _refusal_message(refusal: LedgerImportFileRefusal) -> str:
 
 
 def _reader_verdict(refusal: LedgerImportFileRefusal) -> PreconditionVerdict | None:
-    """Return the reader probe's verdict a file was refused with, or ``None``."""
+    """Return the reader refusal verdict a file was refused with, or ``None``."""
     snapshot = refusal.precondition_verdict
     return None if snapshot is None else snapshot.to_verdict()
 
@@ -165,7 +165,7 @@ def ledger_import(
         verdict = _reader_verdict(refusal)
         if verdict is not None:
             # The one statement named needs a reader that could not be asked.
-            # The refusal carries the probe's verdict for the error boundary.
+            # The refusal carries the reader's verdict for the error boundary.
             raise LedgerImportReaderUnavailableError(
                 translated_message="cli.ledger.import.file_reader_unavailable",
                 context={"file": refusal.file_name},

@@ -117,9 +117,8 @@ def work_report(
     """Publish the addressed work target's sealed revision as a calculation report."""
     activate_subcommand_output_language(ctx, output_language)
     if document_format is CalculationReportDocumentFormat.PDF:
-        # Refused before the store is opened, as its own registered refusal: an
-        # installation that cannot write the summary learns so, and how to fix
-        # it, before any figure is read.
+        # Refused before the store is opened, as its own registered refusal, so
+        # a missing summary writer is reported before any figure is read.
         require_calculation_summary_pdf_available()
     from ...application.modelo.selectors import ModeloCalculationRevisionSelector
     from ...application.modelo.work_export_contracts import ModeloExportRequest
