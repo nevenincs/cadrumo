@@ -6,8 +6,10 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:9f6b94783b4b09e4bada95f6c32df016331f1ac0ec17582b3ae0ca6018578d86'
+body_hash: 'sha256:0c7ab355af2ea58639beb68032296b4ac7975a5ab2d22475fdf512db80ef844a'
 related:
+  - '[[2026-10-29-gate-findings-repair-audit]]'
+  - '[[2026-10-29-gate-findings-repair-ledger]]'
   - '[[2026-10-29-gate-findings-repair-plan]]'
 ---
 
@@ -16,6 +18,14 @@ related:
 Auto-generated index of all documents tagged with `#gate-findings-repair`.
 
 ## Documents
+
+### audit
+
+- `2026-10-29-gate-findings-repair-audit` - `gate-findings-repair` audit: requested gates and integrated repairs
+
+### exec
+
+- `2026-10-29-gate-findings-repair-ledger` - `gate-findings-repair` ledger
 
 ### plan
 

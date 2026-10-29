@@ -5,40 +5,14 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:d21e6938c58f3624d67b8ebd8b095c31307360d64cecb35ec115f9404f7e622d'
+body_hash: 'sha256:02eecf3f478995be7986fe5f4be3c8d132771445cc813d6f813027717fe9e031'
 related:
   - "[[2026-10-29-gate-findings-repair-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `gate-findings-repair` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S02` `M` `.importlinter`
 - `S02` `M` `conftest.py`
@@ -132,6 +106,19 @@ related:
 - `S05` `verify:` `uv run --no-sync ruff format --check dev/test_runs/logging.py dev/test_runs/tests/test_logging.py` -> `pass`
 - `S05` `verify:` `uv run --no-sync ty check dev/test_runs/logging.py dev/test_runs/tests/test_logging.py` -> `pass`
 - `S05` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S03` `A` `.vault/audit/2026-10-29-gate-findings-repair-audit.md`
+- `S03` `M` `.vault/index/gate-findings-repair.index.md`
+- `S03` `verify:` `just check-registry-gate` -> `pass`
+- `S03` `verify:` `just check-bindings` -> `pass`
+- `S03` `verify:` `just check-locales` -> `fail`
+- `S03` `verify:` `just check-corpus-sidecars` -> `pass`
+- `S03` `verify:` `just check-corpus-text` -> `pass`
+- `S03` `verify:` `just check-security-full` -> `pass`
+- `S03` `verify:` `just check-workflow-security` -> `pass`
+- `S03` `verify:` `just check-hooks` -> `pass`
+- `S03` `verify:` `just test-packaging-preflight` -> `fail`
+- `S03` `verify:` `just test-coverage` -> `fail`
+- `S03` `verify:` `just report-code-health` -> `pass`
 
 ## Notes
 
@@ -139,3 +126,4 @@ related:
 - `S01` 88 owner tests plus numeric and real-dictionary controls passed; renderer B10. Canonical casilla generation passed58modelos/14154casillas. Final locale gate10109 affected cells, zero missing/tool/placeholder failures; remaining content and mixed-language inventory debt retained. External exact Google/Drive spellings excluded from authored repair.
 - `S04` 100 focused tests and real two-build artifact reproducibility passed. Both independent medium cleanup findings resolved; false removal preserves exact path, primary failure, and SystemExit status with visible stderr. Native validator unchanged.
 - `S05` 7 real coverage controls,16 logging controls and1 nested packaging case passed; threshold unchanged. Foreign commit c8c3e350b4 captured authored pyproject bootstrap while retiring llm extra; remaining foreign edits preserved. Secondary copied database78.8845 does not replace original recipe5.46/exit1. Independent review PASS.
+- `S03` All11 exact commands completed;8 observed pass and3 nonzero outcomes retained. All8 packaging failures corrected with passing affected reruns;2 stale taxonomy failures fresh10pass. Coverage lifecycle fixed with7 realprobes,16 controls,1 nested collection; copies-only78.8845 remains secondary. Independent authored-repair reviewPASS. User explicitly accepted live-tree drift; residual locale debt and blocked scratch cleanup documented.
