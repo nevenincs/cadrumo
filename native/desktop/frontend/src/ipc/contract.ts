@@ -1055,13 +1055,16 @@ export type SetupSnapshot = {
 
 /** What the observe channel carries and every setup command answers.
  * `revision` grows with every change; `snapshot` is present exactly when
- * `state` is "ready", which the window offers only to a signed-in profile
- * whose runtime answers. */
+ * `state` is "ready". */
 export type DesktopSetup = {
   revision: number;
-  /** `ready` with the snapshot whether or not anyone is signed in: the
-   * components are this installation's. Signed out, `google` reads
-   * `signed_out` and what is a profile's is refused as `not_signed_in`. */
+  /** `ready` with the snapshot whether or not anyone is signed in and
+   * whether or not the profile's runtime answers: the components are this
+   * installation's. Signed out, `google` reads `signed_out` and what is a
+   * profile's is refused as `not_signed_in`; signed in while the runtime
+   * does not answer, `google` reads `unknown` and what is the profile's is
+   * refused as `unavailable`. `unavailable` only while this window's own
+   * setup engine cannot be read. */
   state: "unavailable" | "ready";
   snapshot: SetupSnapshot | null;
 };
@@ -1079,7 +1082,7 @@ export type SetupRefusalCode =
   | "not_pending"
   /** The setup cannot be cancelled now. */
   | "not_cancellable"
-  /** The runtime could not carry the request. */
+  /** The runtime or the profile's session could not carry the request. */
   | "unavailable"
   /** The requested model cannot be handed to the engine: it is not on a
    * turned-on local lane's model list, or its name is not one the engine

@@ -165,6 +165,8 @@ declare global {
     __scenarioPassword?: { uncertain(): void; changes(): number };
     /** The made-up window port, where the scenario offers one. */
     __scenarioWindow?: ScenarioWindowControls;
+    /** The signed-in profile's runtime stops answering, or answers again. */
+    __scenarioRuntime?: { lose(): void; restore(): void };
   }
 }
 
@@ -323,6 +325,20 @@ export function scenarioHost(
       pendingStatus?.reject({ code: "runtime_timeout" });
       pendingStatus = null;
     },
+  };
+  const runtimeAnswers = (answers: boolean) => {
+    runtimeAvailable = answers;
+    signInListener?.({
+      kind: "sign-in-state",
+      revision: ++signInRevision,
+      status: status(),
+    });
+    // The setup host reads again on the session's cue.
+    window.__scenarioSetup?.reread();
+  };
+  window.__scenarioRuntime = {
+    lose: () => runtimeAnswers(false),
+    restore: () => runtimeAnswers(true),
   };
   const scheduleReadiness = () => {
     if (
@@ -562,6 +578,7 @@ export function scenarioHost(
         latencyMs: options.latencyMs,
         say,
         readable: () => presence === "present",
+        answers: () => runtimeAvailable,
         models: modelPresence,
       })
     : undefined;

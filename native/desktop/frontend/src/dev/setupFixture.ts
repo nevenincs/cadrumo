@@ -25,7 +25,10 @@ import {
 // setup item. Like the host, it serves the items whether or not anyone is
 // signed in, and refuses only what is a profile's while nobody is: the
 // Google account, beside which it shows no sign-in, and a model of the
-// person's list. Like the host, it sends codes only, which the window words.
+// person's list. Signed in while the profile's runtime does not answer, it
+// still serves the items, shows the account as unreadable and refuses what is
+// the profile's as `unavailable`. Like the host, it sends codes only, which
+// the window words.
 // Nothing is downloaded: every plan, byte count and receipt is synthetic. Each
 // item has a setup of its own, and items set up side by side. The local AI's
 // setup installs its program when it is missing, then the one model asked
@@ -73,6 +76,9 @@ export type SetupFixtureControls = {
   setGoogle(account: GoogleAccount): void;
   /** The first status read settles: an `unread` setup has its rows. */
   readRows(): void;
+  /** The host reads again after the sign-in status changed, as it does on
+   * the session's cue. */
+  reread(): void;
 };
 
 declare global {
@@ -246,12 +252,15 @@ export function setupFixture({
   latencyMs,
   say,
   readable,
+  answers = () => true,
   models,
 }: {
   shape: SetupShape;
   latencyMs: number;
   say: (call: string) => void;
   readable: () => boolean;
+  /** Whether the signed-in profile's runtime answers. */
+  answers?: () => boolean;
   /** Where a model this setup downloads or removes is marked on or off this
    * computer, for the catalog to report. */
   models?: FixtureModelPresence;
@@ -299,10 +308,19 @@ export function setupFixture({
     shape === "hardware";
 
   const rows = () => items.map((seed) => seed.row);
-  // Signed out there is no profile, so no Google sign-in either.
+  // Signed out there is no profile, so no Google sign-in either; signed in
+  // with no runtime to ask, the profile's sign-in cannot be read.
   const account = (): GoogleAccount =>
     readable()
-      ? google
+      ? answers()
+        ? google
+        : {
+            state: "unknown",
+            email: null,
+            drive_folder_id: null,
+            stage: "idle",
+            failure: null,
+          }
       : {
           state: "signed_out",
           email: null,
@@ -361,7 +379,12 @@ export function setupFixture({
   };
   // What is a profile's: its Google account and its person's model list.
   const personal = () =>
-    ready() ?? (readable() ? null : refuse("not_signed_in"));
+    ready() ??
+    (!readable()
+      ? refuse("not_signed_in")
+      : answers()
+        ? null
+        : refuse("unavailable"));
 
   const review = (wanted: Seed[]): SetupReview => {
     plans += 1;
@@ -768,6 +791,9 @@ export function setupFixture({
     },
     readRows() {
       unread = false;
+      publish();
+    },
+    reread() {
       publish();
     },
     finishGoogle(succeeded) {

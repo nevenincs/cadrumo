@@ -1166,3 +1166,57 @@ test("Google authentication supports keyboard navigation inside the profile menu
   await page.keyboard.press("Escape");
   await expect(trigger).toBeFocused();
 });
+
+/** The signed-in profile's runtime stops answering, or answers again. */
+const runtime = (target: Page, answers: boolean) =>
+  target.evaluate((back) => {
+    const control = window.__scenarioRuntime;
+    if (!control) throw new Error("no runtime controls");
+    if (back) control.restore();
+    else control.lose();
+  }, answers);
+
+test("signed in, a runtime that stops answering keeps setup shown and its run going", async ({
+  page: target,
+}) => {
+  await open(target, "fresh");
+  await expect(panel(target)).toBeVisible();
+  await startBrowser(target);
+  await steps(target, 1, "browser");
+  await runtime(target, false);
+  // The services' own notice takes the window; put away, setup is back:
+  // the components are this computer's, so the panel, its rows and the run
+  // stay while the profile's runtime does not answer.
+  const notice = target.locator(".sign-in");
+  await expect(notice).toBeVisible();
+  await notice
+    .getByRole("button", { name: label("desktop.signin.dismiss") })
+    .click();
+  await expect(notice).toBeHidden();
+  const row = browserRow(target);
+  await expect(panel(target)).toBeVisible();
+  await expect(row.locator("[data-setup-progress]")).toHaveCount(1);
+  await expect(localAi(target)).toContainText(LOCAL_AI);
+  await closePanel(target);
+  const rail = target.locator("[data-rail=settings]");
+  await expect(rail.locator("[data-pin=busy]")).toHaveCount(1);
+  await rail.click();
+  await expect(
+    target.locator(".settings [data-settings-provisioning]"),
+  ).toHaveCount(1);
+  await target.keyboard.press("Escape");
+  await (await palette(target, label("desktop.setup.palette_open"))).click();
+  await expect(panel(target)).toBeVisible();
+  await steps(target, 1, "browser");
+  await expect(row.locator("[data-setup-progress]")).toHaveCount(1);
+  // The runtime answers again mid-run: the same run carries on to ready.
+  await runtime(target, true);
+  await expect(row.locator("[data-setup-progress]")).toHaveCount(1);
+  await stepUntil(target, "browser", async () =>
+    (await row.innerText()).includes(label("desktop.setup.state.ready")),
+  );
+  const calls = await hostCalls(target);
+  expect(calls.filter((call) => call === "setup.start browser")).toHaveLength(
+    1,
+  );
+});
