@@ -20,6 +20,7 @@ use std::{
     sync::{
         Arc, Condvar, Mutex,
         atomic::{AtomicBool, Ordering},
+        mpsc,
     },
     thread::JoinHandle,
 };
@@ -167,6 +168,10 @@ pub enum Reply {
         rest: Vec<u8>,
         gate: Arc<Released>,
     },
+    /// Every chunk the test sends, one write each, until the test drops its sender; then
+    /// an orderly close. The connection stays open between chunks, so a test decides when
+    /// each byte arrives.
+    Fed(Mutex<mpsc::Receiver<Vec<u8>>>),
 }
 
 pub fn response(status: &str, headers: &[(&str, String)], body: &[u8]) -> Vec<u8> {
@@ -330,6 +335,20 @@ impl TlsServer {
                     let _ = stream.flush();
                     gate.wait();
                     let _ = stream.write_all(&rest);
+                    stream.conn.send_close_notify();
+                    let _ = stream.flush();
+                }
+                Reply::Fed(chunks) => {
+                    let chunks = chunks.lock().unwrap();
+                    while let Ok(chunk) = chunks.recv() {
+                        if stream
+                            .write_all(&chunk)
+                            .and_then(|()| stream.flush())
+                            .is_err()
+                        {
+                            return;
+                        }
+                    }
                     stream.conn.send_close_notify();
                     let _ = stream.flush();
                 }

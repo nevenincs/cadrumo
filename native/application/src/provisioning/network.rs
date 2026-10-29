@@ -23,11 +23,7 @@ use super::{
 };
 use crate::{component::Cancellation, value::HostName};
 use serde::Serialize;
-use std::{
-    collections::BTreeSet,
-    io::BufReader,
-    time::{Duration, Instant},
-};
+use std::{collections::BTreeSet, io::BufReader, time::Duration};
 
 /// Bound for one host's whole preflight: resolution, connection, TLS and the answer.
 pub const HOST_TIMEOUT: Duration = Duration::from_secs(3);
@@ -161,29 +157,32 @@ fn check(
     let Ok(url) = HttpsUrl::parse(&format!("https://{host}/")) else {
         return answer;
     };
-    let deadline = Instant::now() + timeout;
-    let mut stream = match network.open_unless_cancelled(&url, Some(deadline), Some(cancellation)) {
-        Ok(stream) => stream,
-        Err(failure) => {
-            answer.connected = failure.connected;
-            answer.outcome = match failure.stage {
-                Stage::Tls => Reachability::SecureConnectionFailed,
-                Stage::Tunnel(Some(403 | 407)) => Reachability::BlockedByNetwork,
-                Stage::Resolve | Stage::Connect | Stage::Tunnel(_) | Stage::Io => {
-                    Reachability::HostUnreachable
+    let deadline = network.deadline_after(timeout);
+    let mut stream =
+        match network.open_unless_cancelled(&url, Some(deadline.clone()), Some(cancellation)) {
+            Ok(stream) => stream,
+            Err(failure) => {
+                answer.connected = failure.connected;
+                answer.outcome = match failure.stage {
+                    Stage::Tls => Reachability::SecureConnectionFailed,
+                    Stage::Tunnel(Some(403 | 407)) => Reachability::BlockedByNetwork,
+                    Stage::Resolve | Stage::Connect | Stage::Tunnel(_) | Stage::Io => {
+                        Reachability::HostUnreachable
+                    }
+                };
+                if let Stage::Tunnel(status) = failure.stage {
+                    answer.status = status;
                 }
-            };
-            if let Stage::Tunnel(status) = failure.stage {
-                answer.status = status;
+                return answer;
             }
-            return answer;
-        }
-    };
+        };
     answer.connected = true;
     if http::write_request(&mut stream, "HEAD", url.target(), &url.authority(), &[]).is_err() {
         return answer;
     }
-    let expired = || cancellation.is_cancelled() || Instant::now() >= deadline;
+    // Every read of the stream is held to the deadline itself; this stop only ends the
+    // wait between lines at once, and for a cancellation.
+    let expired = || cancellation.is_cancelled() || deadline.left().is_zero();
     if let Ok(head) = http::read_head(&mut BufReader::new(stream), &expired) {
         answer.outcome = Reachability::Reachable;
         answer.status = Some(head.status);
@@ -195,7 +194,7 @@ fn check(
 mod tests {
     use super::*;
     use crate::provisioning::{
-        connection::Resolve,
+        connection::{ManualClock, Resolve},
         pins::committed_tables,
         proxy::{PROXY_URL, ProxySettings},
         test_servers::{
@@ -416,6 +415,92 @@ mod tests {
         );
         assert_eq!(report.outcome(), Reachability::HostUnreachable);
         assert!(report.hosts[0].connected);
+    }
+
+    #[test]
+    fn a_host_dripping_its_answer_is_unreachable_once_its_bound_has_passed() {
+        let certificate = TestCertificate::new(&["cdn.example.com"]);
+        let (chunks, fed) = mpsc::channel::<Vec<u8>>();
+        let (asked, request_seen) = mpsc::channel::<()>();
+        let fed = Mutex::new(Some(fed));
+        let asked = Mutex::new(asked);
+        let server = TlsServer::start(&certificate, move |_: &Request| {
+            asked.lock().unwrap().send(()).unwrap();
+            Reply::Fed(Mutex::new(fed.lock().unwrap().take().unwrap()))
+        });
+        let clock = ManualClock::new();
+        let network =
+            network_to(certificate.roots(), server.address(), None).with_clock(clock.clone());
+        let report = std::thread::scope(|scope| {
+            let checking = scope.spawn(|| {
+                preflight(
+                    &network,
+                    &[host("cdn.example.com")],
+                    HOST_TIMEOUT,
+                    &Cancellation::default(),
+                )
+            });
+            // The connection is up and the host has the request; it answers byte by byte
+            // and sends the last byte of the head only after the bound has passed.
+            request_seen.recv().unwrap();
+            chunks.send(b"HTTP/1.1 200 OK\r\n\r".to_vec()).unwrap();
+            clock.advance(HOST_TIMEOUT);
+            chunks.send(b"\n".to_vec()).unwrap();
+            let report = checking.join().unwrap();
+            drop(chunks);
+            report
+        });
+        assert_eq!(report.outcome(), Reachability::HostUnreachable);
+        assert!(report.hosts[0].connected);
+        assert_eq!(report.hosts[0].status, None);
+    }
+
+    #[test]
+    fn a_host_dripping_its_answer_inside_its_bound_is_still_found() {
+        let certificate = TestCertificate::new(&["cdn.example.com"]);
+        let (chunks, fed) = mpsc::channel::<Vec<u8>>();
+        let (asked, request_seen) = mpsc::channel::<()>();
+        let fed = Mutex::new(Some(fed));
+        let asked = Mutex::new(asked);
+        let server = TlsServer::start(&certificate, move |_: &Request| {
+            asked.lock().unwrap().send(()).unwrap();
+            Reply::Fed(Mutex::new(fed.lock().unwrap().take().unwrap()))
+        });
+        let clock = ManualClock::new();
+        let network =
+            network_to(certificate.roots(), server.address(), None).with_clock(clock.clone());
+        let report = std::thread::scope(|scope| {
+            let checking = scope.spawn(|| {
+                preflight(
+                    &network,
+                    &[host("cdn.example.com")],
+                    HOST_TIMEOUT,
+                    &Cancellation::default(),
+                )
+            });
+            request_seen.recv().unwrap();
+            chunks
+                .send(
+                    b"HTTP/1.1 204 No Content
+X-Slow: "
+                        .to_vec(),
+                )
+                .unwrap();
+            clock.advance(HOST_TIMEOUT - Duration::from_millis(1));
+            chunks
+                .send(
+                    b"drip
+
+"
+                    .to_vec(),
+                )
+                .unwrap();
+            let report = checking.join().unwrap();
+            drop(chunks);
+            report
+        });
+        assert_eq!(report.outcome(), Reachability::Reachable);
+        assert_eq!(report.hosts[0].status, Some(204));
     }
 
     /// A resolver that never answers on its own: each lookup reports itself on `entered`

@@ -44,7 +44,82 @@ pub(crate) struct ConnectFailure {
     pub os_code: Option<i32>,
 }
 
-pub(crate) type TlsStream = StreamOwned<ClientConnection, TcpStream>;
+pub(crate) type TlsStream = StreamOwned<ClientConnection, BoundedTcp>;
+
+/// The time a bound is measured against; the engine's is the system's, and a test's moves
+/// only when the test says so.
+pub(crate) trait Clock: Send + Sync {
+    fn now(&self) -> Instant;
+}
+
+struct SystemClock;
+
+impl Clock for SystemClock {
+    fn now(&self) -> Instant {
+        Instant::now()
+    }
+}
+
+/// A point in time that bounds everything one operation does on a connection, read by
+/// the clock it was made with.
+#[derive(Clone)]
+pub(crate) struct Deadline {
+    at: Instant,
+    clock: Arc<dyn Clock>,
+}
+
+impl Deadline {
+    /// What is left of the bound; zero once it has passed.
+    pub fn left(&self) -> Duration {
+        self.at.saturating_duration_since(self.clock.now())
+    }
+}
+
+/// A connected socket whose every read and write first limits itself to what is left of
+/// its deadline, so a peer that sends a byte just inside a per-read timeout cannot hold
+/// an operation past the deadline: with nothing left the call ends as a timeout without
+/// touching the socket. Without a deadline the socket keeps the timeouts it was given.
+pub(crate) struct BoundedTcp {
+    tcp: TcpStream,
+    deadline: Option<Deadline>,
+    /// Bound for one read or write, which the time left can only shorten.
+    io_timeout: Duration,
+}
+
+impl BoundedTcp {
+    fn bound(&self) -> io::Result<Option<Duration>> {
+        let Some(deadline) = &self.deadline else {
+            return Ok(None);
+        };
+        let left = deadline.left();
+        if left.is_zero() {
+            return Err(io::Error::from(io::ErrorKind::TimedOut));
+        }
+        Ok(Some(left.min(self.io_timeout)))
+    }
+}
+
+impl Read for BoundedTcp {
+    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        if let Some(bound) = self.bound()? {
+            self.tcp.set_read_timeout(Some(bound))?;
+        }
+        self.tcp.read(buffer)
+    }
+}
+
+impl Write for BoundedTcp {
+    fn write(&mut self, buffer: &[u8]) -> io::Result<usize> {
+        if let Some(bound) = self.bound()? {
+            self.tcp.set_write_timeout(Some(bound))?;
+        }
+        self.tcp.write(buffer)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.tcp.flush()
+    }
+}
 
 /// The engine's network: trust anchors, name resolution, the operator's proxy and the
 /// time bounds of one connection.
@@ -56,6 +131,7 @@ pub struct Network {
     pub connect_timeout: Duration,
     /// Bound for each read or write once connected; a stall past it is a timeout.
     pub io_timeout: Duration,
+    clock: Arc<dyn Clock>,
 }
 
 impl std::fmt::Debug for Network {
@@ -98,6 +174,22 @@ impl Network {
             proxy,
             connect_timeout: Duration::from_secs(10),
             io_timeout: Duration::from_secs(30),
+            clock: Arc::new(SystemClock),
+        }
+    }
+
+    /// This network measuring every deadline it hands out by `clock`.
+    #[cfg(test)]
+    pub(crate) fn with_clock(mut self, clock: Arc<dyn Clock>) -> Self {
+        self.clock = clock;
+        self
+    }
+
+    /// A deadline `timeout` from now by this network's clock.
+    pub(crate) fn deadline_after(&self, timeout: Duration) -> Deadline {
+        Deadline {
+            at: self.clock.now() + timeout,
+            clock: self.clock.clone(),
         }
     }
 
@@ -113,11 +205,12 @@ impl Network {
     }
 
     /// Opens a verified TLS session to `url`'s host, through the proxy unless bypassed.
-    /// `deadline` bounds every stage together; without one each stage has its own bound.
+    /// `deadline` bounds every stage together, and every later read and write on the
+    /// stream; without one each stage has its own bound.
     pub(crate) fn open(
         &self,
         url: &HttpsUrl,
-        deadline: Option<Instant>,
+        deadline: Option<Deadline>,
     ) -> Result<TlsStream, ConnectFailure> {
         self.open_unless_cancelled(url, deadline, None)
     }
@@ -128,7 +221,7 @@ impl Network {
     pub(crate) fn open_unless_cancelled(
         &self,
         url: &HttpsUrl,
-        deadline: Option<Instant>,
+        deadline: Option<Deadline>,
         cancellation: Option<&Cancellation>,
     ) -> Result<TlsStream, ConnectFailure> {
         let host = url.host().as_str();
@@ -143,10 +236,8 @@ impl Network {
             Some(proxy) => (proxy.host(), proxy.port()),
             None => (host, url.port()),
         };
-        let remaining = |bound: Duration| match deadline {
-            Some(deadline) => deadline
-                .saturating_duration_since(Instant::now())
-                .min(bound),
+        let remaining = |bound: Duration| match &deadline {
+            Some(deadline) => deadline.left().min(bound),
             None => bound,
         };
         let addresses = match self.resolved(
@@ -180,23 +271,28 @@ impl Network {
                 Err(error) => last = Some(error),
             }
         }
-        let Some(mut tcp) = tcp else {
+        let Some(tcp) = tcp else {
             return Err(match last {
                 Some(error) => failure.with_io(&error),
                 None => failure,
             });
         };
+        let mut tcp = BoundedTcp {
+            tcp,
+            deadline: deadline.clone(),
+            io_timeout: self.io_timeout,
+        };
         failure.connected = true;
         failure.stage = Stage::Io;
-        let timeouts = |tcp: &TcpStream| {
+        let timeouts = |tcp: &BoundedTcp| {
             let bound = remaining(self.io_timeout);
             if bound.is_zero() {
                 return Err(io::Error::from(io::ErrorKind::TimedOut));
             }
-            tcp.set_read_timeout(Some(bound))?;
-            tcp.set_write_timeout(Some(bound))
+            tcp.tcp.set_read_timeout(Some(bound))?;
+            tcp.tcp.set_write_timeout(Some(bound))
         };
-        if let Err(error) = timeouts(&tcp).and_then(|()| tcp.set_nodelay(true)) {
+        if let Err(error) = timeouts(&tcp).and_then(|()| tcp.tcp.set_nodelay(true)) {
             return Err(failure.with_io(&error));
         }
         if let Some(proxy) = proxy {
@@ -280,7 +376,7 @@ impl ConnectFailure {
 
 /// Opens a `CONNECT` tunnel; on refusal returns the proxy's status, or the socket error.
 fn tunnel(
-    tcp: &mut TcpStream,
+    tcp: &mut BoundedTcp,
     url: &HttpsUrl,
     proxy: &ProxySettings,
 ) -> Result<(), (Option<u16>, Option<io::Error>)> {
@@ -308,11 +404,129 @@ fn tunnel(
     }
 }
 
-struct ByteReader<'a>(&'a mut TcpStream);
+struct ByteReader<'a, S>(&'a mut S);
 
-impl Read for ByteReader<'_> {
+impl<S: Read> Read for ByteReader<'_, S> {
     fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
         let limit = buffer.len().min(1);
         self.0.read(&mut buffer[..limit])
+    }
+}
+
+#[cfg(test)]
+pub(crate) use tests::ManualClock;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::{
+        net::TcpListener,
+        sync::Mutex,
+        thread::{self, JoinHandle},
+    };
+
+    /// A clock that moves only when a test advances it.
+    pub(crate) struct ManualClock {
+        start: Instant,
+        elapsed: Mutex<Duration>,
+    }
+
+    impl ManualClock {
+        pub(crate) fn new() -> Arc<Self> {
+            Arc::new(Self {
+                start: Instant::now(),
+                elapsed: Mutex::new(Duration::ZERO),
+            })
+        }
+
+        pub(crate) fn advance(&self, by: Duration) {
+            *self.elapsed.lock().unwrap() += by;
+        }
+    }
+
+    impl Clock for ManualClock {
+        fn now(&self) -> Instant {
+            self.start + *self.elapsed.lock().unwrap()
+        }
+    }
+
+    /// A peer that sends one byte for each signal and then holds the connection open
+    /// until the signals stop.
+    fn feeding_peer() -> (TcpStream, mpsc::Sender<u8>, JoinHandle<()>) {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        let (signals, signalled) = mpsc::channel::<u8>();
+        let peer = thread::spawn(move || {
+            let (mut accepted, _) = listener.accept().unwrap();
+            while let Ok(byte) = signalled.recv() {
+                accepted.write_all(&[byte]).unwrap();
+            }
+        });
+        (TcpStream::connect(address).unwrap(), signals, peer)
+    }
+
+    #[test]
+    fn every_read_is_limited_to_what_is_left_of_the_deadline_and_ends_when_none_is() {
+        let clock = ManualClock::new();
+        let network = Network::new(None).with_clock(clock.clone());
+        let deadline = network.deadline_after(Duration::from_secs(3));
+        let (tcp, signals, peer) = feeding_peer();
+        let mut bounded = BoundedTcp {
+            tcp,
+            deadline: Some(deadline),
+            io_timeout: Duration::from_secs(30),
+        };
+        let mut byte = [0u8; 1];
+
+        signals.send(b'a').unwrap();
+        assert_eq!(bounded.read(&mut byte).unwrap(), 1);
+        assert_eq!(
+            bounded.tcp.read_timeout().unwrap(),
+            Some(Duration::from_secs(3))
+        );
+
+        clock.advance(Duration::from_millis(2_500));
+        signals.send(b'b').unwrap();
+        assert_eq!(bounded.read(&mut byte).unwrap(), 1);
+        assert_eq!(
+            bounded.tcp.read_timeout().unwrap(),
+            Some(Duration::from_millis(500)),
+            "the socket's own bound is cut to the time left"
+        );
+
+        // The peer has sent a byte and would send more, yet nothing is left: the read
+        // ends as a timeout without waiting on the socket, and so does a write.
+        clock.advance(Duration::from_millis(500));
+        signals.send(b'c').unwrap();
+        assert_eq!(
+            bounded.read(&mut byte).unwrap_err().kind(),
+            io::ErrorKind::TimedOut
+        );
+        assert_eq!(
+            bounded.write(b"x").unwrap_err().kind(),
+            io::ErrorKind::TimedOut
+        );
+        drop(signals);
+        peer.join().unwrap();
+    }
+
+    #[test]
+    fn a_socket_without_a_deadline_keeps_the_timeouts_it_was_given() {
+        let (tcp, signals, peer) = feeding_peer();
+        tcp.set_read_timeout(Some(Duration::from_secs(7))).unwrap();
+        let mut bounded = BoundedTcp {
+            tcp,
+            deadline: None,
+            io_timeout: Duration::from_secs(30),
+        };
+        signals.send(b'a').unwrap();
+        let mut byte = [0u8; 1];
+        assert_eq!(bounded.read(&mut byte).unwrap(), 1);
+        assert_eq!(
+            bounded.tcp.read_timeout().unwrap(),
+            Some(Duration::from_secs(7))
+        );
+        drop(signals);
+        peer.join().unwrap();
     }
 }
