@@ -40,7 +40,6 @@ from cadrumo.application.modelo.workspace import (
     contributors_still_current,
     modelo_work_selector_request_for_target,
 )
-from cadrumo.application.modelo.workspace_baseline import resolve_workspace_baseline
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
@@ -86,6 +85,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 
+from .....application.modelo.workspace_baseline import resolve_workspace_baseline
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
