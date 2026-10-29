@@ -77,6 +77,7 @@ type Args = {
   signedOut?: boolean;
   deadlines?: boolean;
   aeatFiling?: boolean;
+  census?: boolean;
   language?: OutputLanguage;
 };
 
@@ -85,6 +86,7 @@ function Page({
   signedOut,
   deadlines,
   aeatFiling,
+  census,
   language = "en",
 }: Args) {
   const t = useStrings();
@@ -115,6 +117,7 @@ function Page({
         page={page}
         memory={memory}
         onOpen={noop}
+        onCensus={census ? noop : undefined}
         pane={{
           title: t("workspace.declarations.destination.overview"),
           controls: [],
@@ -170,6 +173,10 @@ export const AeatFiling: Story = {
       row.querySelector<HTMLElement>("[role=gridcell]") ?? row,
     );
   },
+};
+export const Census: Story = {
+  name: "With the census entry",
+  args: { census: true },
 };
 export const Reading: Story = { args: { shape: "slow" } };
 export const Unavailable: Story = { args: { shape: "unavailable" } };

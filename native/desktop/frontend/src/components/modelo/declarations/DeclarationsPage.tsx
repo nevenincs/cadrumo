@@ -265,6 +265,7 @@ export function DeclarationsPage({
   pane,
   memory,
   onOpen,
+  onCensus,
 }: {
   port: ModeloPort;
   /** Whose declarations, or null while the account withholds them. */
@@ -285,6 +286,9 @@ export function DeclarationsPage({
   memory: RefObject<DeclarationsMemory>;
   /** Opens one declaration's workspace. */
   onOpen(workUnitId: string): void;
+  /** Asks for the window's one census flow; absent where the window has
+   * none to offer. */
+  onCensus?: () => void;
 }) {
   const t = useStrings();
   const { read, reread } = useDeclarationsList(
@@ -454,6 +458,16 @@ export function DeclarationsPage({
               onChange={(event) => setQuery(event.target.value)}
             />
           </div>
+          {onCensus && (
+            <Button
+              variant="outline"
+              className="declarations-census"
+              onClick={onCensus}
+            >
+              <Icon name="sync" size="xs" />
+              {t("desktop.profile.censo.title")}
+            </Button>
+          )}
           <Button
             className="declarations-new"
             onClick={() => setCreating(null)}
