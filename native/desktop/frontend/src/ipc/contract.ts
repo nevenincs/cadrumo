@@ -913,6 +913,8 @@ export type SetupPlanPart = {
   model?: string | null;
   /** Null when the size is not known before the download starts. */
   download_bytes: number | null;
+  /** The folder this part is stored in. */
+  destination: string | null;
 };
 
 /** One entry of the plan a person approves: what, how large, from where and
@@ -922,7 +924,8 @@ export type SetupPlanEntry = {
   /** Null when the size is not known before the download starts. */
   download_bytes: number | null;
   source_hosts: string[];
-  /** The folder it goes into; null when only an outside program installs. */
+  /** The folder the entry as a whole goes into; null where only an outside
+   * program installs, and for the local AI, whose parts each name theirs. */
   destination: string | null;
   installs_outside_program: boolean;
   /** Another entry of this plan that downloads the same files. */

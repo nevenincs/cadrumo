@@ -1202,15 +1202,9 @@ fn download_key(destination: Option<Destination>, version: Option<&String>) -> O
     Some((destination?, version?.clone()))
 }
 
-/// Where the entry stores what it downloads: each folder once, the local AI's program
-/// folder before the models folder where it plans both.
-fn folders(entry: &PlanEntry, locations: &Locations) -> Option<String> {
-    let folders: Vec<String> = entry
-        .destinations()
-        .into_iter()
-        .map(|destination| locations.destination(destination).display().to_string())
-        .collect();
-    (!folders.is_empty()).then(|| folders.join(", "))
+/// The folder a download is stored in, as the person's machine names it.
+fn folder(destination: Option<Destination>, locations: &Locations) -> Option<String> {
+    destination.map(|destination| locations.destination(destination).display().to_string())
 }
 
 fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
@@ -1239,6 +1233,7 @@ fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
                         download_bytes: part
                             .download_bytes
                             .map(|bytes| if shared { 0 } else { bytes }),
+                        destination: folder(part.destination, locations),
                     }
                 })
                 .collect();
@@ -1250,7 +1245,7 @@ fn review_view(plan: &SetupPlan, locations: &Locations) -> wire::Review {
                     .iter()
                     .map(|host| host.as_str().to_owned())
                     .collect(),
-                destination: folders(entry, locations),
+                destination: folder(entry.destination, locations),
                 installs_outside_program: entry.installs_outside_program,
                 shares_download_with,
                 parts,

@@ -247,6 +247,35 @@ test("the local AI is a dropdown holding its program and the model list", async 
   await noInternalWords(target);
 });
 
+test("the local AI's plan names the folder of its program and of its model, each once", async ({
+  page: target,
+}) => {
+  await open(target, "fresh");
+  await openLocalAi(target);
+  await localAi(target)
+    .locator('[data-slot="local-models"] li[data-model]')
+    .first()
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  const plan = programRow(target).locator('[data-setup-plan="local_ai"]');
+  const program = plan.locator('[data-setup-part="program"]');
+  const model = plan.locator('[data-setup-part="download"]');
+  await expect(program).toContainText(
+    label("desktop.setup.plan_destination", { folder: "components/ollama" }),
+  );
+  await expect(model).toContainText(
+    label("desktop.setup.plan_destination", { folder: "models/ollama" }),
+  );
+  // Neither folder is on the other part, and the entry as a whole names none.
+  await expect(program).not.toContainText("models/ollama");
+  await expect(model).not.toContainText("components/ollama");
+  await expect(plan.locator("[data-setup-part-destination]")).toHaveCount(2);
+  await expect(plan.getByText("components/ollama")).toHaveCount(1);
+  await expect(plan.getByText("models/ollama")).toHaveCount(1);
+});
+
 test("an element's plan is reviewed inside its own row", async ({
   page: target,
 }) => {

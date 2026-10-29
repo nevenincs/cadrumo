@@ -99,6 +99,16 @@ export function PlanEntry({
               {part.download_bytes !== 0 && (
                 <span>{size(part.download_bytes)}</span>
               )}
+              {part.destination !== null && (
+                <span
+                  data-setup-part-destination
+                  className="basis-full wrap-anywhere"
+                >
+                  {t("desktop.setup.plan_destination", {
+                    folder: part.destination,
+                  })}
+                </span>
+              )}
             </li>
           ))}
         </ul>

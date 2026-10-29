@@ -105,6 +105,10 @@ const recoveryAction = (item: SetupItemId) => `operator.provision.${item}`;
 
 const GOOGLE_EMAIL = "persona@example.com";
 
+/** The folders the local AI's program and its models are stored in. */
+const PROGRAM_FOLDER = "components/ollama";
+const MODELS_FOLDER = "models/ollama";
+
 const row = (
   item: SetupItemId,
   kind: SetupRow["kind"],
@@ -144,7 +148,8 @@ function seeds(): Seed[] {
       plan: {
         download_bytes: null,
         source_hosts: ["github.com", "registry.ollama.ai"],
-        destination: "models",
+        // The program and each model name their own folder.
+        destination: null,
         installs_outside_program: true,
         shares_download_with: null,
         parts: [],
@@ -683,7 +688,13 @@ export function setupFixture({
     }
     const parts: SetupPlanPart[] = [
       ...(!programReady || !model
-        ? [{ part: "program", download_bytes: null }]
+        ? [
+            {
+              part: "program",
+              download_bytes: null,
+              destination: PROGRAM_FOLDER,
+            },
+          ]
         : []),
       ...(model
         ? [
@@ -691,6 +702,7 @@ export function setupFixture({
               part: "download",
               model: model.id,
               download_bytes: model.sizeBytes,
+              destination: MODELS_FOLDER,
             },
           ]
         : []),

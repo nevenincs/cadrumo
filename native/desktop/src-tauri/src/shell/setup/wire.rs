@@ -392,6 +392,8 @@ pub struct PlanPart {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
     pub download_bytes: Option<u64>,
+    /// The folder this part is stored in.
+    pub destination: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -400,6 +402,8 @@ pub struct PlanEntry {
     pub item: String,
     pub download_bytes: Option<u64>,
     pub source_hosts: Vec<String>,
+    /// The folder the entry as a whole is stored in; none for the local AI, whose parts
+    /// each carry their own.
     pub destination: Option<String>,
     pub installs_outside_program: bool,
     pub shares_download_with: Option<String>,
@@ -600,6 +604,7 @@ impl PlanEntry {
             && unique(self.parts.iter().map(|part| &part.part))
             && self.parts.iter().all(|part| {
                 PARTS.contains(&part.part.as_str())
+                    && plain_option(part.destination.as_ref(), PATH_LIMIT)
                     && if part.part == "download" {
                         part.model
                             .as_deref()
@@ -1114,8 +1119,10 @@ mod tests {
         let entry = &mut planned["runs"][0]["review"]["entries"][0];
         entry["item"] = json!("local_ai");
         entry["parts"] = json!([
-            {"part": "program", "download_bytes": null},
-            {"part": "text_extraction", "download_bytes": 100},
+            {"part": "program", "download_bytes": null,
+             "destination": "/state/components/ollama"},
+            {"part": "text_extraction", "download_bytes": 100,
+             "destination": "/state/models/ollama"},
         ]);
         planned
     }
@@ -1124,8 +1131,11 @@ mod tests {
     fn the_local_ais_entry_carries_its_program_and_the_roles_it_pulls_for() {
         let shown = parsed(with_parts()).expect("a valid snapshot");
         assert_eq!(serde_json::to_value(&shown).unwrap(), with_parts());
-        let cases: [Case; 4] = [
+        let cases: [Case; 5] = [
             ("an entry of another item", |e| e["item"] = json!("browser")),
+            ("a part folder past the path bound", |e| {
+                e["parts"][0]["destination"] = json!("x".repeat(PATH_LIMIT + 1))
+            }),
             ("a part outside the roles", |e| {
                 e["parts"][1]["part"] = json!("weather")
             }),

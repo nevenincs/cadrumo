@@ -1173,16 +1173,30 @@ fn the_review_names_the_folder_each_part_is_stored_in() {
     let shown = |parts: Vec<PlanPart>| {
         let entry = PlanEntry::of_parts(ItemId::LocalAi, parts).unwrap();
         let plan = SetupPlan::new(vec![entry], Some(512 * GIB), 0).unwrap();
-        review_view(&plan, &locations).entries[0]
-            .destination
-            .clone()
+        let view = review_view(&plan, &locations).entries.remove(0);
+        // The folders are the parts' own; the entry as a whole names none, so no folder
+        // is shown twice.
+        assert_eq!(view.destination, None);
+        view.parts
+            .into_iter()
+            .map(|part| (part.part, part.destination))
+            .collect::<Vec<_>>()
     };
-    assert_eq!(shown(vec![program.clone()]), Some(program_folder.clone()));
+    assert_eq!(
+        shown(vec![program.clone()]),
+        [(PROGRAM_PART.to_owned(), Some(program_folder.clone()))]
+    );
     assert_eq!(
         shown(vec![program, model.clone()]),
-        Some(format!("{program_folder}, {models_folder}"))
+        [
+            (PROGRAM_PART.to_owned(), Some(program_folder)),
+            ("text_extraction".to_owned(), Some(models_folder.clone())),
+        ]
     );
-    assert_eq!(shown(vec![model]), Some(models_folder));
+    assert_eq!(
+        shown(vec![model]),
+        [("text_extraction".to_owned(), Some(models_folder))]
+    );
 }
 
 /// The plan a start of the local AI alone puts under review, downloading `download` when
