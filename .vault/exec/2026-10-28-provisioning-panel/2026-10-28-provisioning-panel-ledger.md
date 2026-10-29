@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9d5b099358f6ff860ddfda286fbd218093160b92a9c032f8bc5bd8a1360483e'
+body_hash: 'sha256:2b394496f83295f382fc92a65485cc3757f76ffc6f93d86237fc8faeaaaad69b'
 related:
   - "[[2026-10-28-provisioning-panel-plan]]"
 ---
@@ -185,6 +185,34 @@ related:
 - `S05` `verify:` `eslint touched files` -> `pass`
 - `S05` `verify:` `prettier --check touched files` -> `pass`
 - `S05` `verify:` `playwright local-models+setup repeat-each=3 (new test 6/6; other failures are Close-context teardown timeouts or concurrent build removing chrome-strings.json)` -> `pass`
+- `S05` `verify:` `just build-native Release bundle at 58ce4ff11d tree (retries after peer edits and inputs-changed refusals)` -> `pass`
+- `S05` `verify:` `just build-native Debug bundle at 58ce4ff11d after just setup-desktop-frontend repaired node_modules lock drift` -> `pass`
+- `S05` `verify:` `just build-native Debug desktop-packaged-host and dev.desktop_agent_live.stage_host` -> `pass`
+- `S05` `verify:` `built Debug host on throwaway root: provisioning panel, local AI dropdown, concurrent setup, rail spinner, Settings section, Sede offer, feature_refused log (no profile: provisioning not offered, needs sign-in)` -> `fail`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/mod.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/components.rs`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/components_tests.rs`
+- `S05` `M` `native/desktop/frontend/src/shell/setup.ts`
+- `S05` `M` `native/desktop/frontend/src/App.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/LocalAi.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx`
+- `S05` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/setup.spec.ts`
+- `S05` `M` `src/cadrumo/locales/en/common.yml`
+- `S05` `M` `src/cadrumo/locales/es/common.yml`
+- `S05` `M` `src/cadrumo/locales/ca/common.yml`
+- `S05` `M` `src/cadrumo/locales/hu/common.yml`
+- `S05` `M` `dev/locales/desktop_interface_keys.py`
+- `S05` `verify:` `desktop-host-unit-test shell::setup` -> `pass`
+- `S05` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `verify:` `playwright setup local-models sede-browser ledger-provisioning` -> `pass`
+- `S05` `verify:` `tsc eslint prettier` -> `pass`
+- `S05` `M` `native/desktop/frontend/src/shell/provisioning.ts`
+- `S05` `verify:` `playwright setup+local-models+accessibility scenarios (142 tests)` -> `pass`
+- `S05` `verify:` `tsc eslint prettier` -> `pass`
+- `S05` `verify:` `tauri.mjs test-unit shell::setup` -> `pass`
+- `S05` `verify:` `tauri.mjs clippy-backend` -> `pass`
+- `S05` `verify:` `playwright scenarios setup.spec.ts local-models.spec.ts` -> `pass`
 
 ## Notes
 
@@ -197,3 +225,4 @@ related:
 - `S04` dev/locales `test_desktop_chrome:` 2 failures from another session's `service_timeout/payment_cutoff` keys; none from this Step. `desktop_chrome.py` committed as HEAD minus the `browser_open` line; working-tree copy holds another session's refactor, its `desktop_interface_keys.py` line removed there too.
 - `S05` Rebuild blocked by other sessions' uncommitted work: src/agent/person/native.rs:1549 E0599 unwrap on `Vec<Sender<Pushed>>;` `src/shell/sign_in/process.rs:493-494` E0373 closure borrows wake. Rebuilt-app check not run; S05 left open.
 - `S05` fixture holdPublication/publish committed in 0b064efd2f; spec poll fixes in a007e37053 (auto-commits)
+- `S05` Built-app checks need a signed-in profile; creating one needs the operator's password. Builds pass; S05 left open.
