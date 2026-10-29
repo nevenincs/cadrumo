@@ -1,5 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { AEAT_SYNC_AREAS } from "../../src/shell/aeatSync";
+import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The AEAT data page draws what the host serves for each area: whether it
@@ -252,6 +253,94 @@ test("leaving the checks asks nothing of the host", async ({
     "desktop.aeat_sync.before.not_now",
   ).click();
   await expect(area(page, "census")).toBeVisible();
+  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+});
+
+test("signed out, the page says so and offers no update; signing in shows the overview", async ({
+  page: target,
+}) => {
+  await seedLayout(target, { layout: { page: "aeat-sync" } });
+  await target.goto("/scenarios.html?scenario=signed-out&latency=0&bar=off");
+  const page = target.locator(".aeat-sync-page");
+  await expect(target.locator(".pane-docs")).toContainText(
+    label("desktop.aeat_sync.signed_out"),
+  );
+  await expect(page).toHaveCount(0);
+  await expect(update(target.locator("body"))).toHaveCount(0);
+  await target.locator("#profile-password").fill("anything");
+  await target
+    .locator(".sign-in")
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(page).toBeVisible();
+  await expect(page.locator("[data-area]")).toHaveCount(AEAT_SYNC_AREAS.length);
+  await expect(update(page)).toBeEnabled();
+  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+});
+
+test("waiting for the phone shows the approval and carries the update on once approved", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-phone");
+  await update(page).click();
+  const phone = page.getByTestId("aeat-sync-phone");
+  await expect(phone).toContainText(
+    label("desktop.aeat_sync.before.phone_title"),
+  );
+  await expect(phone).toContainText(
+    label("desktop.aeat_sync.before.phone_body"),
+  );
+  await expect(button(phone, "desktop.aeat_sync.before.cancel")).toBeVisible();
+  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await target.evaluate(() => window.__scenarioAeatPhone?.approve());
+  await expect
+    .poll(() => calls(target, "aeatSync.start"))
+    .toEqual(["aeatSync.start census,filed,notifications,vat,identity"]);
+  await expect(phone).toHaveCount(0);
+  await expect(results(page)).toBeVisible();
+});
+
+test("cancelling the wait for the phone returns to the overview and starts nothing", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-phone");
+  await update(page).click();
+  const phone = page.getByTestId("aeat-sync-phone");
+  await button(phone, "desktop.aeat_sync.before.cancel").click();
+  await expect(phone).toHaveCount(0);
+  await expect(update(page)).toBeEnabled();
+  await expect(page.locator("[data-area]")).toHaveCount(AEAT_SYNC_AREAS.length);
+  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  expect(await calls(target, "aeatSyncRun")).toHaveLength(0);
+});
+
+test("a browser that cannot be downloaded says why, offers another try and a way back, and starts nothing", async ({
+  page: target,
+}) => {
+  await target.goto(
+    "/scenarios.html?scenario=aeat-sync-browser-blocked&latency=0&bar=off",
+  );
+  await target
+    .getByRole("dialog", { name: label("desktop.setup.title") })
+    .getByRole("button", { name: label("desktop.setup.not_now") })
+    .click();
+  const page = await reach(target);
+  await update(page).click();
+  const card = page.getByTestId("aeat-sync-browser");
+  await button(card, "desktop.aeat_sync.before.browser_install").click();
+  await expect(card.getByRole("alert")).toHaveText(
+    label("desktop.setup.failure.host_unreachable"),
+  );
+  await expect(
+    card.getByRole("button", {
+      name: label("desktop.setup.action.set_up"),
+      exact: true,
+    }),
+  ).toBeEnabled();
+  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await button(card, "desktop.aeat_sync.before.not_now").click();
+  await expect(card).toHaveCount(0);
+  await expect(update(page)).toBeEnabled();
   expect(await calls(target, "aeatSync.start")).toHaveLength(0);
 });
 

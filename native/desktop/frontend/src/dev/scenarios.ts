@@ -331,6 +331,33 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "aeat-sync-browser-blocked",
+    title: "AEAT data: the browser cannot be downloaded",
+    summary:
+      "Update from AEAT stops for the missing browser; its install finds the download host unreachable, says why and offers another try.",
+    aeatUpdate: { before: "browser_missing" },
+    setup: "unreachable",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-phone",
+    title: "AEAT data: AEAT waits for approval on the phone",
+    summary:
+      "Update from AEAT waits for the Cl@ve approval on the phone; approving carries the update on, and cancelling leaves it.",
+    aeatUpdate: { before: "phone" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
     id: "aeat-sync-access",
     title: "AEAT data: AEAT access not set up",
     summary:

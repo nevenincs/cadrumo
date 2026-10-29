@@ -18,6 +18,13 @@ export type AeatSyncPrepareMode =
   /** The sign-in is refused. */
   | "refused";
 
+declare global {
+  interface Window {
+    /** Approves the sign-in that waits on the phone, as the person would. */
+    __scenarioAeatPhone?: { approve(): void };
+  }
+}
+
 const MB = 1024 * 1024;
 
 /** A synthetic pre-update check. `browserReady` lets a story that stages the
@@ -47,6 +54,13 @@ export function aeatSyncPrepareFixture(
         if (mode !== "phone") return resolve();
         stage("waiting_for_phone");
         const timer = setTimeout(resolve, options.waitMs ?? 60_000);
+        const phone = {
+          approve: () => {
+            clearTimeout(timer);
+            resolve();
+          },
+        };
+        if (typeof window !== "undefined") window.__scenarioAeatPhone = phone;
         cancel = () => {
           clearTimeout(timer);
           reject({ code: "cancelled" });
