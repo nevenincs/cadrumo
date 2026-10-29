@@ -184,6 +184,7 @@ from .operation_composition_live import (
     compose_live_notifications_capture_operation,
     compose_live_notifications_read_operation,
     compose_live_sede_view_operation,
+    compose_live_sync_status_operation,
     compose_live_verify_capture_operation,
     compose_live_verify_read_operation,
 )
@@ -250,6 +251,7 @@ _CLEANUP_TIMEOUT = timedelta(minutes=2)
 #: operation is enrolled here as well as in its owning module.
 _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.actividad_asset.registered_operations": compose_actividad_asset_registered_operations,
+    "application.aeat_sync.status_operation": compose_live_sync_status_operation,
     "application.auth.apoderado_operation": compose_auth_apoderado_operation,
     "application.auth.certificate_secret_operation": compose_auth_certificate_secret_operation,
     "application.auth.certificate_source_operation": compose_auth_certificate_source_operation,

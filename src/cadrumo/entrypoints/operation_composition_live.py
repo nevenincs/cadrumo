@@ -372,6 +372,18 @@ def compose_live_expedientes_capture_operation(inputs: OperationCompositionInput
     )
 
 
+def compose_live_sync_status_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose live sync status operation."""
+    from ..application.aeat_sync.status_operation import (
+        build_aeat_sync_status_definition,
+        build_aeat_sync_status_registration,
+    )
+    from .aeat_sync_status_composition import compose_aeat_sync_status_ports
+
+    definition = build_aeat_sync_status_definition(partial(compose_aeat_sync_status_ports, inputs.resolved_settings))
+    return built((definition,), (build_aeat_sync_status_registration(definition),))
+
+
 def compose_live_verify_capture_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose live verify capture operation."""
     from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope

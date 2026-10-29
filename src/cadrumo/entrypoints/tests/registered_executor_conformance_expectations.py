@@ -362,6 +362,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "live.verify.latest", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
         RegisteredExecutorConformanceCase(
+            "live.sync.status",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("sync-status.read", "sync-status.result"),
+        ),
+        RegisteredExecutorConformanceCase(
             "live.justificante.list",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

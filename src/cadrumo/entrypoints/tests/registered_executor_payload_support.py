@@ -423,6 +423,9 @@ def _payload(
         case "live.verify.nif-iva" | "live.verify.tgvi":
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id, "nif": "12345678Z"}
+        case "live.sync.status":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"profile_id": profile_id}
         case "live.verify.list" | "live.verify.view" | "live.verify.latest":
             subject_ref = profile_operation_subject(str(profile_id))
             observation = VerifyService(persistence=VerifyObservationRepository(bucket_id=str(profile_id))).record(

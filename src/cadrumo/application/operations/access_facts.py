@@ -96,6 +96,7 @@ _LOCAL_READS: Final = (
     "live.notifications.latest",
     "live.notifications.list",
     "live.notifications.show",
+    "live.sync.status",
     "live.verify.latest",
     "live.verify.list",
     "live.verify.view",
