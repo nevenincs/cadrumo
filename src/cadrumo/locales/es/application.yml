@@ -665,9 +665,6 @@ application:
           y esta confirmación difiere en: %{divergent_fields}. Corrige o elimina la
           factura almacenada en lugar de confirmar dos veces el mismo documento.'
       label_reading:
-        local_ai_not_ready: 'La IA local no está lista, así que los %{count} campo(s)
-          que las etiquetas no cubrían no se han leído y siguen vacíos: %{fields}.
-          Vuelve a extraer cuando esté lista.'
         reader_unavailable: 'El lector automático no ha podido funcionar, así que
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
           Revisa el modelo que elegiste y vuelve a extraer, o rellénalos tú.'
@@ -1933,77 +1930,6 @@ application:
     explain:
       errors:
         modelo_blank: El identificador de modelo no puede estar en blanco.
-  provisioning:
-    action:
-      check_again: Volver a comprobar
-      resume: Reanudar
-      set_up: Configurar
-      set_up_in_desktop: Configurar en la aplicación de escritorio de Cadrumo
-      try_again: Volver a intentarlo
-      update: Actualizar
-    blocked:
-      hardware: Este ordenador no tiene memoria suficiente para esto.
-      needs_person: Espera a que lo apruebes o lo instales tú.
-      not_in_this_build: Esta versión de Cadrumo no lo incluye.
-      offline: No tienes conexión. Conéctate a internet para configurarlo.
-    dependency:
-      browser:
-        name: Navegador para la web de la Agencia Tributaria
-      local_ai:
-        name: IA local
-    failure:
-      blocked_by_network: Tu red ha bloqueado la descarga.
-      cancelled: Has cancelado la configuración.
-      damaged_download: La descarga estaba dañada y no se ha podido usar.
-      disk_full: No hay suficiente espacio libre en el disco.
-      host_unreachable: No se ha podido contactar con el servidor de descarga.
-      interrupted: La configuración se interrumpió antes de terminar.
-      memory_busy: Hay demasiada memoria en uso ahora mismo. Cierra otros programas
-        y vuelve a intentarlo.
-      needs_sign_in: Tienes que iniciar sesión en Google.
-      no_permission: Cadrumo no ha tenido permiso para escribir los archivos.
-      not_enough_memory: Este ordenador no tiene memoria suficiente para esto.
-      not_in_this_build: Esta versión de Cadrumo no lo incluye.
-      offline: No tienes conexión.
-      program_missing: El programa de IA local no está instalado.
-      program_not_running: El programa de IA local no está en marcha.
-      program_proxy_differs: El servicio en segundo plano de Cadrumo se está ejecutando
-        con otra configuración de proxy. Reinicia Cadrumo, o cierra la sesión y vuelve
-        a iniciarla, para que arranque con la actual.
-      secure_connection_failed: No se ha podido establecer una conexión segura. Puede
-        que un filtro de red lo impida.
-      unexpected: Algo ha salido mal.
-    in_desktop: Configúrala en la aplicación de escritorio de Cadrumo.
-    refusal:
-      column_names_local_ai_not_ready: la IA local, que lee los nombres de las columnas
-        de este archivo, no está lista, así que no se ha leído el archivo. Configura
-        la IA local en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
-      column_names_local_ai_unavailable: el modelo que lee los nombres de las columnas
-        de este archivo no está disponible ahora mismo, así que no se ha leído el
-        archivo. Revisa el modelo que elegiste en el selector de modelos del agente
-        en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
-      statement_local_ai_not_ready: la IA local, que lee este extracto bancario en
-        PDF, no está lista, así que no se ha leído el extracto. Configura la IA local
-        en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
-      statement_local_ai_unavailable: el modelo que lee este extracto bancario en
-        PDF no está disponible ahora mismo, así que no se ha leído el extracto. Revisa
-        el modelo que elegiste en el selector de modelos del agente en la aplicación
-        de escritorio de Cadrumo y vuelve a intentarlo.
-    retry: Problema de conexión. Se volverá a intentar en %{seconds} segundos (intento
-      %{attempt}).
-    space_needed: La configuración necesita %{required} libres y hay %{free} disponibles.
-    stale:
-      older_revision: Funciona, pero hace falta una versión más reciente.
-      program_too_old: Funciona, pero esta versión es demasiado antigua para Cadrumo.
-    state:
-      absent: Aún no está configurado.
-      blocked: Ahora mismo no se puede configurar.
-      failed: La configuración no ha terminado.
-      provisioning: Configurándose ahora.
-      ready: Listo.
-      stale: Funciona, pero necesita una actualización.
-      unknown: Cadrumo no ha podido comprobarlo ahora.
-      verifying: Comprobando que funciona.
   reconciliation_export:
     actor: Responsable
     advisory: Aviso

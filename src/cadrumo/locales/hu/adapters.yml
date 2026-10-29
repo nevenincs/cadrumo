@@ -139,11 +139,6 @@ adapters:
         tag_plan_mismatch: A számítási összesítő megrajzolt oldalai nem egyeznek a
           címkézési tervvel a(z) {page}. oldalon ({detail}); az összesítő elkészítése
           elutasítva a pontatlan címkézés helyett.
-    components:
-      errors:
-        contract_mismatch: Ennek a telepítésnek az előkészítő programja olyan verziót
-          beszél, amelyet a Cadrumo e példánya nem olvas, ezért semmi sem készült
-          elő.
     storage:
       _factory:
         errors:

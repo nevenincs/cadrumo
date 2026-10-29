@@ -588,13 +588,6 @@ core:
     errors:
       output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
         lennie szöveges formában.
-dependencies:
-  setup:
-    cancel_requested: A telepítés leállítása…
-    following: Egy már futó telepítés követése…
-    input_refused: A telepítési kérés nem fogadható el.
-    retrying: A letöltés újrapróbálása…
-    waiting_for_server: Várakozás a letöltési kiszolgálóra…
 desktop:
   about:
     agent: Ügynök
@@ -4326,8 +4319,6 @@ navigation:
       label: Profil
     reference:
       label: Kézikönyv
-    setup:
-      label: Összetevők
     terminal:
       label: Munkaterület
     withholding:
@@ -6024,8 +6015,7 @@ tui:
       queue_heading: Ellenőrzésre váró mellékletek
       read_done: Beolvasva. Ellenőrizd az értékeket, majd erősítsd meg a számlát.
       read_failed: A dokumentumot nem sikerült beolvasni.
-      reader_not_ready: 'A dokumentumolvasó nem áll készen ({condition}). Ellenőrizd
-        ezzel: `aeat config provision status`.'
+      reader_not_ready: A dokumentumolvasó nem áll készen ({condition}).
       reader_ready: A dokumentumolvasó készen áll ezen a gépen.
       reading: A dokumentum beolvasása ezen a gépen…
       record_detail: '{kind} · szállító: {supplier} · hozzáadva: {added} · {status}'
@@ -6959,8 +6949,7 @@ tui:
   local_reader:
     card:
       action: Dokumentumolvasó megnyitása
-      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen. Az
-        olvasót és a modelljeit a Cadrumo asztali alkalmazásában kell beállítani.
+      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen.
       title: Dokumentumolvasó
   modelo:
     editor:
@@ -7438,51 +7427,6 @@ tui:
         reconciliation_resolved: Rendezett
         revision_current: Aktuális
         revision_superseded: Felváltva
-  setup:
-    check_again: Újraellenőrzés
-    checking: Ellenőrzés…
-    column:
-      action: Művelet
-      item: Összetevő
-      state: Állapot
-    complete: A Cadrumo elő van készítve.
-    hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
-    hint: Az Enter futtatja a kijelölt sor műveletét. Előkészítéskor megjelenik a
-      terv, és a Cadrumo megkérdez, mielőtt bármit letöltene.
-    incomplete: Néhány összetevő még nem áll készen.
-    intro: 'Amire a Cadrumónak szüksége van ezen a számítógépen: az adóhivatal webhelyéhez
-      használt böngésző és a helyi MI. Válassz egy sort a műveletének futtatásához.
-      A helyi MI-t a Cadrumo asztali alkalmazásában kell beállítani.'
-    plan:
-      destination: '  Helye: %{path}'
-      entry: '%{name}: %{size}, innen: %{hosts}'
-      heading: 'A Cadrumo ezeket készíti elő:'
-      installs_program: '  Ez egy programot telepít erre a számítógépre. A telepítője
-        engedélyt kérhet tőled.'
-      size_unknown: a méret még nem ismert
-      total: 'Teljes letöltés: %{size}.'
-      total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
-        kezdetekor derül ki.'
-    progress: '%{name}: %{step}'
-    progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
-    review:
-      open: A telepítés áttekintésének megnyitása
-      reference: A telepítés hivatkozása
-    set_up_all: Mindent előkészít
-    sign_in_first: Jelentkezz be az összetevők ellenőrzéséhez vagy telepítéséhez.
-    size:
-      gigabytes: '%{value} GB'
-      megabytes: '%{value} MB'
-    step:
-      cleanup: rendrakás
-      download: letöltés
-      install: telepítés
-      plan: tervezés
-      preflight: a kapcsolat ellenőrzése
-      verify: működés ellenőrzése
-    title: Összetevők
-    unavailable: Az összetevőket nem sikerült ellenőrizni. Próbáld újra.
-    working: A terv készül…
 workspace:
   declarations:
     availability:

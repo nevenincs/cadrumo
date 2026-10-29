@@ -108,8 +108,6 @@ cli:
           los tengan; cada fila indica el motivo. Al confirmar un documento se vuelve
           a leer, así que esos campos se rellenan entonces si el motivo ya se ha resuelto,
           o puedes rellenarlos tú.'
-        batch_paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
-          no está lista.
         batch_paused_local_ai_unavailable: El modelo que elegiste no ha podido leer
           los documentos en pausa. Comprueba que esté disponible.
         batch_pending_review_message: Algunos borradores contienen una incidencia
@@ -2074,7 +2072,6 @@ cli:
       missing: ausente
       preflight_label: Comprobación previa
       profile_label: perfil
-      setup_unavailable: No se ha podido comprobar la preparación ahora mismo.
     collab:
       help: Gestiona los destinatarios de confianza para la colaboración con paquetes
         de revisión.
@@ -2681,87 +2678,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; por defecto el perfil
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
-    provision:
-      approval_needed: Esto necesita tu aprobación. Vuelve a ejecutar la orden con
-        --yes para aprobar el plan anterior.
-      approve_prompt: ¿Descargar y preparar esto ahora?
-      browser:
-        help: Prepara el navegador que Cadrumo usa para la web de la Agencia Tributaria.
-          Muestra el plan y te pregunta antes.
-      check_status: 'Consulta el estado de los componentes: {command}'
-      complete: Cadrumo está preparado.
-      fix: 'Para solucionarlo, ejecuta: %{command}'
-      hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
-      help: Comprueba lo que Cadrumo necesita en este ordenador y prepara el navegador
-        para la web de la Agencia Tributaria. La IA local, con su programa y sus modelos,
-        se configura en la aplicación de escritorio de Cadrumo.
-      incomplete: Algunos componentes aún no están listos.
-      outcome:
-        busy: Otra preparación está cambiando esto ahora mismo. Vuelve a intentarlo
-          cuando termine.
-        cancelled: Has cancelado la preparación.
-        completed: La preparación ha terminado.
-        followed_plan_mismatch: Otra configuración está usando un plan aprobado diferente.
-          El resultado es incierto. Inicia una nueva configuración y revisa su plan.
-        nothing_to_do: Todo está ya preparado.
-        plan_changed: El plan cambió después de que lo aprobaras, así que no se ha
-          descargado nada. Vuelve a ejecutar la orden para ver el plan nuevo.
-        rejected: No se ha descargado nada.
-      plan:
-        destination: '  Se guarda en %{path}'
-        entry: '%{name}: %{size} desde %{hosts}'
-        heading: 'Cadrumo va a preparar:'
-        installs_program: '  Esto instala un programa en este ordenador.'
-        size_unknown: tamaño aún desconocido
-        total: 'Descarga total: %{size}.'
-        total_unknown: 'Descarga total: al menos %{size}. Algunos tamaños solo se
-          conocen al empezar la descarga.'
-      probe:
-        help: 'Comprueba a fondo cada componente: contacta con los servidores de descarga,
-          abre el navegador y prueba cada modelo. No descarga nada.'
-      progress: '%{name}: %{step}'
-      progress_bytes: '%{name}: descargando %{done} de %{total} (%{percent}%)'
-      remove:
-        confirm_prompt: '%{name}: ¿lo borras de este ordenador?'
-        help: Borra el navegador de este ordenador. Te pregunta antes; puedes volver
-          a prepararlo cuando quieras. La IA local se elimina en la aplicación de
-          escritorio de Cadrumo.
-        item_help: 'Componente que borrar: browser.'
-        needs_confirmation: '%{name}: no se ha borrado nada. Vuelve a ejecutar la
-          orden con --yes para borrarlo.'
-        removed: '%{name}: se ha borrado de este ordenador.'
-        yes_help: Lo borra sin preguntar.
-      report:
-        help: Indica la memoria de este ordenador y el modelo elegido para cada rol.
-      review:
-        help: Revisa y responde a una operación de instalación pendiente.
-        operation_help: Identificador de la operación pendiente de revisión.
-        reject_help: Rechaza el plan de instalación mostrado.
-      setup:
-        help: 'Prepara lo que esta línea de comandos puede preparar: el navegador.
-          Muestra qué se va a descargar, cuánto ocupa y dónde se guarda, y te pregunta
-          antes de descargar nada. La IA local se configura en la aplicación de escritorio
-          de Cadrumo.'
-      sign_in_first: Inicia sesión primero con 'aeat config login NOMBRE' para consultar
-        o cambiar los componentes.
-      size:
-        gigabytes: '%{value} GB'
-        megabytes: '%{value} MB'
-      status:
-        help: Muestra si cada componente está listo, a partir de lo que este ordenador
-          ya tiene. Es rápido y no descarga nada.
-      step:
-        cleanup: ordenando
-        download: descargando
-        install: instalando
-        plan: planificando
-        preflight: comprobando la conexión
-        verify: comprobando que funciona
-      verify:
-        help: Comprueba a fondo un componente, o todos si no indicas ninguno. No descarga
-          nada.
-        item_help: 'Componente que comprobar: browser o local_ai. Por defecto, todos.'
-      yes_help: Aprueba el plan que muestra la orden, sin preguntar.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       help: Diagnosticar y reparar configuración local, definiciones de los modelos,
@@ -2796,8 +2712,6 @@ cli:
         con --yes para confirmar o pasa --dry-run para ver qué se borraría.
       reset_progress_yes_help: Confirmar el borrado del progreso guardado de un comando
         interrumpido
-      setup_status_hint: No se ha podido comprobar la preparación ahora mismo. La
-        orden de estado de abajo la vuelve a comprobar.
       yes_help: Confirmar la reparación.
     reset:
       help: Inicia, consulta o reanuda el reinicio irreversible de todos los perfiles
@@ -3399,8 +3313,6 @@ cli:
       empty_directory: 'No se encontraron ficheros de extracto importables en el directorio:
         {path}'
       file_help: Ruta al archivo del extracto bancario o directorio
-      file_reader_not_ready: 'Extracto no leído: {file} lo lee la IA local, que no
-        está lista.'
       file_reader_unavailable: 'Extracto no leído: el modelo que elegiste no está
         disponible ahora mismo para leer {file}. Vuelve a intentarlo cuando esté disponible.'
       file_refused: 'Extracto rechazado y omitido: {file}. El resto de la carpeta

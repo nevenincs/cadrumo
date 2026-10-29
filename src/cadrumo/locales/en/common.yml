@@ -582,13 +582,6 @@ core:
     errors:
       output_language_type: The profile output language must be a supported language
         code in text form.
-dependencies:
-  setup:
-    cancel_requested: Stopping setup…
-    following: Following a setup that is already running…
-    input_refused: The setup request could not be accepted.
-    retrying: Retrying the download…
-    waiting_for_server: Waiting for the download server…
 desktop:
   about:
     agent: Agent
@@ -4275,8 +4268,6 @@ navigation:
       label: Profile
     reference:
       label: Reference
-    setup:
-      label: Components
     terminal:
       label: Workspace
     withholding:
@@ -5950,8 +5941,7 @@ tui:
       queue_heading: Attachments awaiting review
       read_done: Read. Check the values, then confirm the invoice.
       read_failed: The document could not be read.
-      reader_not_ready: The document reader is not ready ({condition}). Check it with
-        `aeat config provision status`.
+      reader_not_ready: The document reader is not ready ({condition}).
       reader_ready: The document reader is ready on this machine.
       reading: Reading the document on this machine…
       record_detail: '{kind} · supplier {supplier} · added {added} · {status}'
@@ -6872,8 +6862,7 @@ tui:
   local_reader:
     card:
       action: Open document reader
-      description: See whether invoice documents can be read on this machine. The
-        reader and its models are set up in the Cadrumo desktop app.
+      description: See whether invoice documents can be read on this machine.
       title: Document reader
   modelo:
     editor:
@@ -7343,51 +7332,6 @@ tui:
         reconciliation_resolved: Resolved
         revision_current: Current
         revision_superseded: Replaced
-  setup:
-    check_again: Check again
-    checking: Checking…
-    column:
-      action: Action
-      item: Component
-      state: State
-    complete: Cadrumo is set up.
-    hardware_limited: This computer does not have enough memory for the local AI.
-    hint: Enter runs the action of the selected row. Setting up shows the plan and
-      asks before anything is downloaded.
-    incomplete: Some components are not ready yet.
-    intro: 'What Cadrumo needs on this computer: the browser for the tax agency website
-      and the local AI. Choose a row to run its action. The local AI is set up in
-      the Cadrumo desktop app.'
-    plan:
-      destination: '  Stored in %{path}'
-      entry: '%{name}: %{size} from %{hosts}'
-      heading: 'Cadrumo will set up:'
-      installs_program: '  This installs a program on this computer. Its installer
-        may ask for your permission.'
-      size_unknown: size not known yet
-      total: 'Total download: %{size}.'
-      total_unknown: 'Total download: at least %{size}. Some sizes are only known
-        once the download starts.'
-    progress: '%{name}: %{step}'
-    progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
-    review:
-      open: Open setup review
-      reference: Setup reference
-    set_up_all: Set up everything
-    sign_in_first: Sign in first to check or set up components.
-    size:
-      gigabytes: '%{value} GB'
-      megabytes: '%{value} MB'
-    step:
-      cleanup: tidying up
-      download: downloading
-      install: installing
-      plan: planning
-      preflight: checking the connection
-      verify: checking that it works
-    title: Components
-    unavailable: Components could not be checked. Try again.
-    working: Preparing the plan…
 workspace:
   declarations:
     availability:

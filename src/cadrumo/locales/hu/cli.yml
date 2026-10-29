@@ -104,8 +104,6 @@ cli:
           nem pedig azért, mert a dokumentumokból hiányoznának; minden sor megnevezi
           az okot. A dokumentum megerősítése újra beolvassa azt, így ezek a mezők
           akkor kitöltődnek, ha az ok már megszűnt, vagy te magad is kitöltheted őket.'
-        batch_paused_local_ai_not_ready: A helyi MI, amely a szüneteltetett dokumentumokat
-          olvassa, nem áll készen.
         batch_paused_local_ai_unavailable: A kiválasztott modell nem tudta beolvasni
           a szüneteltetett dokumentumokat. Ellenőrizd, hogy elérhető-e.
         batch_pending_review_message: Néhány piszkozat olyan problémát hordoz, amelyet
@@ -2052,7 +2050,6 @@ cli:
       missing: hiányzik
       preflight_label: Előzetes ellenőrzés
       profile_label: profil
-      setup_unavailable: Az előkészítés most nem ellenőrizhető.
     collab:
       help: Bizalmi címzettek kezelése az ellenőrző csomag együttműködéshez.
       recipient:
@@ -2649,86 +2646,6 @@ cli:
       validate_name_help: 'A validálandó profil opcionális címkéje; alapértelmezett:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
-    provision:
-      approval_needed: Ehhez a jóváhagyásodra van szükség. Futtasd újra a parancsot
-        a --yes kapcsolóval a fenti terv jóváhagyásához.
-      approve_prompt: Letöltöd és előkészíted ezeket most?
-      browser:
-        help: Előkészíti a böngészőt, amelyet a Cadrumo az adóhivatal webhelyéhez
-          használ. Előbb megmutatja a tervet és megkérdez.
-      check_status: 'Ellenőrizd az összetevők állapotát: {command}'
-      complete: A Cadrumo elő van készítve.
-      fix: 'A javításhoz futtasd: %{command}'
-      hardware_limited: Ennek a számítógépnek nincs elég memóriája a helyi MI-hez.
-      help: Ellenőrzi, amire a Cadrumónak szüksége van ezen a számítógépen, és előkészíti
-        az adóhivatal webhelyéhez használt böngészőt. A helyi MI-t a programjával
-        és a modelljeivel a Cadrumo asztali alkalmazásában kell beállítani.
-      incomplete: Néhány összetevő még nem áll készen.
-      outcome:
-        busy: Egy másik előkészítés éppen ezt módosítja. Próbáld újra, ha befejeződött.
-        cancelled: Megszakítottad az előkészítést.
-        completed: Az előkészítés befejeződött.
-        followed_plan_mismatch: Egy másik beállítás eltérő jóváhagyott tervet használ.
-          Az eredmény bizonytalan. Indíts új beállítást, és ellenőrizd a tervét.
-        nothing_to_do: Már minden elő van készítve.
-        plan_changed: A terv megváltozott, miután jóváhagytad, ezért semmi sem töltődött
-          le. Futtasd újra a parancsot az új terv megtekintéséhez.
-        rejected: Semmi sem töltődött le.
-      plan:
-        destination: '  Helye: %{path}'
-        entry: '%{name}: %{size}, innen: %{hosts}'
-        heading: 'A Cadrumo ezeket készíti elő:'
-        installs_program: '  Ez egy programot telepít erre a számítógépre.'
-        size_unknown: a méret még nem ismert
-        total: 'Teljes letöltés: %{size}.'
-        total_unknown: 'Teljes letöltés: legalább %{size}. Néhány méret csak a letöltés
-          kezdetekor derül ki.'
-      probe:
-        help: 'Alaposan ellenőriz minden összetevőt: eléri a letöltési kiszolgálókat,
-          megnyitja a böngészőt és kipróbálja a modelleket. Semmit sem tölt le.'
-      progress: '%{name}: %{step}'
-      progress_bytes: '%{name}: letöltés, %{done} / %{total} (%{percent}%)'
-      remove:
-        confirm_prompt: '%{name}: törlöd erről a számítógépről?'
-        help: Törli a böngészőt erről a számítógépről. Előbb megkérdez; bármikor újra
-          előkészítheted. A helyi MI-t a Cadrumo asztali alkalmazásában távolíthatod
-          el.
-        item_help: 'A törlendő összetevő: browser.'
-        needs_confirmation: '%{name}: semmi sem törlődött. Futtasd újra a parancsot
-          a --yes kapcsolóval a törléshez.'
-        removed: '%{name}: törölve erről a számítógépről.'
-        yes_help: Kérdés nélkül törli.
-      report:
-        help: Jelzi a számítógép memóriáját és az egyes szerepekhez választott modellt.
-      review:
-        help: Tekintsd át és válaszold meg a függőben lévő telepítést.
-        operation_help: Az áttekintésre váró művelet azonosítója.
-        reject_help: A megjelenített telepítési terv elutasítása.
-      setup:
-        help: 'Előkészíti, amit ez a parancssor elő tud készíteni: a böngészőt. Megmutatja,
-          mi töltődik le, mekkora és hová kerül, és megkérdez, mielőtt bármit letöltene.
-          A helyi MI-t a Cadrumo asztali alkalmazásában kell beállítani.'
-      sign_in_first: Az összetevők ellenőrzéséhez vagy módosításához előbb jelentkezz
-        be az 'aeat config login NÉV' paranccsal.
-      size:
-        gigabytes: '%{value} GB'
-        megabytes: '%{value} MB'
-      status:
-        help: Megmutatja, hogy az egyes összetevők készen állnak-e, abból, ami már
-          megvan ezen a számítógépen. Gyors, semmit sem tölt le.
-      step:
-        cleanup: rendrakás
-        download: letöltés
-        install: telepítés
-        plan: tervezés
-        preflight: a kapcsolat ellenőrzése
-        verify: működés ellenőrzése
-      verify:
-        help: Alaposan ellenőriz egy összetevőt, vagy mindet, ha nem adsz meg egyet
-          sem. Semmit sem tölt le.
-        item_help: 'Az ellenőrzendő összetevő: browser vagy local_ai. Alapértelmezés
-          szerint mind.'
-      yes_help: Kérdés nélkül jóváhagyja a parancs által megmutatott tervet.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       help: Helyi konfiguráció, nyomtatványdefiníciók, profil, hitelesítés és naplók
@@ -2764,8 +2681,6 @@ cli:
         mi törlődne.
       reset_progress_yes_help: Megszakított parancs mentett folyamatainak törlésének
         megerősítése.
-      setup_status_hint: Az előkészítés most nem ellenőrizhető. Az alábbi állapotparancs
-        újra ellenőrzi.
       yes_help: Javítás megerősítése.
     reset:
       help: Elindítja, megjeleníti vagy folytatja az összes helyben tárolt profil
@@ -3346,8 +3261,6 @@ cli:
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
       file_help: A bankikivonati fájl vagy könyvtár elérési útja.
-      file_reader_not_ready: 'A kivonat nem lett beolvasva: a(z) {file} fájlt a helyi
-        MI olvassa, amely nem áll készen.'
       file_reader_unavailable: 'A kivonat nem lett beolvasva: a kiválasztott modell
         jelenleg nem érhető el a(z) {file} fájl olvasásához. Próbáld újra, amint elérhető.'
       file_refused: 'Elutasított és kihagyott kivonat: {file}. A mappa többi része

@@ -617,9 +617,6 @@ application:
           and this confirmation differs on: %{divergent_fields}. Correct or remove
           the stored invoice instead of confirming the same document twice.'
       label_reading:
-        local_ai_not_ready: 'Local AI is not ready, so the %{count} field(s) the labels
-          did not cover were not read and stay empty: %{fields}. Extract again once
-          it is ready.'
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
           the labels did not cover stay empty: %{fields}. Check the model you picked
           and extract again, or fill them in yourself.'
@@ -1815,74 +1812,6 @@ application:
     explain:
       errors:
         modelo_blank: Modelo identifier must not be blank.
-  provisioning:
-    action:
-      check_again: Check again
-      resume: Resume
-      set_up: Set up
-      set_up_in_desktop: Set up in the Cadrumo desktop app
-      try_again: Try again
-      update: Update
-    blocked:
-      hardware: This computer does not have enough memory for this.
-      needs_person: Waiting for you to approve it, or to install it yourself.
-      not_in_this_build: This version of Cadrumo does not include this.
-      offline: You are offline. Connect to the internet to set this up.
-    dependency:
-      browser:
-        name: Browser for the tax agency website
-      local_ai:
-        name: Local AI
-    failure:
-      blocked_by_network: Your network blocked the download.
-      cancelled: You cancelled the setup.
-      damaged_download: The download was damaged and could not be used.
-      disk_full: There is not enough free disk space.
-      host_unreachable: The download server could not be reached.
-      interrupted: Setup was interrupted before it finished.
-      memory_busy: Too much memory is in use right now. Close other programs and try
-        again.
-      needs_sign_in: You need to sign in to Google.
-      no_permission: Cadrumo was not allowed to write the files.
-      not_enough_memory: This computer does not have enough memory for this.
-      not_in_this_build: This version of Cadrumo does not include this.
-      offline: You are offline.
-      program_missing: The local AI program is not installed.
-      program_not_running: The local AI program is not running.
-      program_proxy_differs: Cadrumo's background service is running with a different
-        proxy setting. Restart Cadrumo, or sign out and back in, so it starts with
-        the current one.
-      secure_connection_failed: A secure connection could not be made. A network filter
-        may be in the way.
-      unexpected: Something went wrong.
-    in_desktop: Set it up in the Cadrumo desktop app.
-    refusal:
-      column_names_local_ai_not_ready: Local AI, which reads this file's column names,
-        is not ready, so the file was not read. Set it up in the Cadrumo desktop app,
-        then try again.
-      column_names_local_ai_unavailable: The model that reads this file's column names
-        is not available right now, so the file was not read. Check the model you
-        picked in the agent's model picker in the Cadrumo desktop app, then try again.
-      statement_local_ai_not_ready: Local AI, which reads this PDF statement, is not
-        ready, so the statement was not read. Set it up in the Cadrumo desktop app,
-        then try again.
-      statement_local_ai_unavailable: The model that reads this PDF statement is not
-        available right now, so the statement was not read. Check the model you picked
-        in the agent's model picker in the Cadrumo desktop app, then try again.
-    retry: Connection problem. Trying again in %{seconds} seconds (attempt %{attempt}).
-    space_needed: Setup needs %{required} free and %{free} is available.
-    stale:
-      older_revision: Works, but a newer version is needed.
-      program_too_old: Works, but this version is too old for Cadrumo.
-    state:
-      absent: Not set up yet.
-      blocked: This cannot be set up right now.
-      failed: Setup did not finish.
-      provisioning: Setting up now.
-      ready: Ready.
-      stale: Works, but needs an update.
-      unknown: Cadrumo could not check this right now.
-      verifying: Checking that it works.
   reconciliation_export:
     actor: Actor
     advisory: Advisory

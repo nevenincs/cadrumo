@@ -107,8 +107,6 @@ cli:
           cada fila indica el motiu. En confirmar un document es torna a llegir, de
           manera que aquests camps s''emplenen llavors si el motiu ja s''ha resolt,
           o pots emplenar-los tu.'
-        batch_paused_local_ai_not_ready: La IA local, que llegeix els documents en
-          pausa, no està a punt.
         batch_paused_local_ai_unavailable: El model que has triat no ha pogut llegir
           els documents en pausa. Comprova que estigui disponible.
         batch_pending_review_message: Alguns esborranys contenen una incidència que
@@ -2058,7 +2056,6 @@ cli:
       missing: absent
       preflight_label: Comprovació prèvia
       profile_label: perfil
-      setup_unavailable: No s'ha pogut comprovar la preparació ara mateix.
     collab:
       help: Gestiona els destinataris de confiança per a la col.laboració amb paquets
         de revisió.
@@ -2659,88 +2656,6 @@ cli:
       validate_name_help: Etiqueta opcional del perfil a validar; per defecte el perfil
         actiu.
       view_help: Mostrar els fets d'un perfil (per defecte el perfil actiu)
-    provision:
-      approval_needed: Això necessita la teva aprovació. Torna a executar l'ordre
-        amb --yes per aprovar el pla anterior.
-      approve_prompt: Vols baixar i preparar això ara?
-      browser:
-        help: Prepara el navegador que Cadrumo fa servir per al web de l'Agència Tributària.
-          Mostra el pla i et pregunta abans.
-      check_status: 'Consulta l''estat dels components: {command}'
-      complete: Cadrumo està preparat.
-      fix: 'Per solucionar-ho, executa: %{command}'
-      hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
-      help: Comprova el que Cadrumo necessita en aquest ordinador i prepara el navegador
-        per al web de l'Agència Tributària. La IA local, amb el seu programa i els
-        seus models, es configura a l'aplicació d'escriptori de Cadrumo.
-      incomplete: Alguns components encara no estan a punt.
-      outcome:
-        busy: Una altra preparació està canviant això ara mateix. Torna-ho a provar
-          quan acabi.
-        cancelled: Has cancel·lat la preparació.
-        completed: La preparació ha acabat.
-        followed_plan_mismatch: Una altra configuració està fent servir un pla aprovat
-          diferent. El resultat és incert. Inicia una configuració nova i revisa’n
-          el pla.
-        nothing_to_do: Tot ja està preparat.
-        plan_changed: El pla va canviar després que l'aprovessis, així que no s'ha
-          baixat res. Torna a executar l'ordre per veure el pla nou.
-        rejected: No s'ha baixat res.
-      plan:
-        destination: '  Es desa a %{path}'
-        entry: '%{name}: %{size} des de %{hosts}'
-        heading: 'Cadrumo prepararà:'
-        installs_program: '  Això instal·la un programa en aquest ordinador.'
-        size_unknown: mida encara desconeguda
-        total: 'Baixada total: %{size}.'
-        total_unknown: 'Baixada total: com a mínim %{size}. Algunes mides només es
-          coneixen quan comença la baixada.'
-      probe:
-        help: 'Comprova a fons cada component: contacta amb els servidors de baixada,
-          obre el navegador i prova cada model. No baixa res.'
-      progress: '%{name}: %{step}'
-      progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
-      remove:
-        confirm_prompt: '%{name}: vols esborrar-ho d''aquest ordinador?'
-        help: Esborra el navegador d'aquest ordinador. Et pregunta abans; el pots
-          tornar a preparar quan vulguis. La IA local s'elimina a l'aplicació d'escriptori
-          de Cadrumo.
-        item_help: 'Component que cal esborrar: browser.'
-        needs_confirmation: '%{name}: no s''ha esborrat res. Torna a executar l''ordre
-          amb --yes per esborrar-ho.'
-        removed: '%{name}: s''ha esborrat d''aquest ordinador.'
-        yes_help: L'esborra sense preguntar.
-      report:
-        help: Indica la memòria d'aquest ordinador i el model triat per a cada rol.
-      review:
-        help: Revisa i respon a una operació d'instal·lació pendent.
-        operation_help: Identificador de l'operació pendent de revisió.
-        reject_help: Rebutja el pla d'instal·lació mostrat.
-      setup:
-        help: 'Prepara el que aquesta línia d''ordres pot preparar: el navegador.
-          Mostra què es baixarà, quant ocupa i on es desa, i et pregunta abans de
-          baixar res. La IA local es configura a l''aplicació d''escriptori de Cadrumo.'
-      sign_in_first: Inicia sessió primer amb 'aeat config login NOM' per consultar
-        o canviar els components.
-      size:
-        gigabytes: '%{value} GB'
-        megabytes: '%{value} MB'
-      status:
-        help: Mostra si cada component està a punt, a partir del que aquest ordinador
-          ja té. És ràpid i no baixa res.
-      step:
-        cleanup: endreçant
-        download: baixant
-        install: instal·lant
-        plan: planificant
-        preflight: comprovant la connexió
-        verify: comprovant que funciona
-      verify:
-        help: Comprova a fons un component, o tots si no n'indiques cap. No baixa
-          res.
-        item_help: 'Component que cal comprovar: browser o local_ai. Per defecte,
-          tots.'
-      yes_help: Aprova el pla que mostra l'ordre, sense preguntar.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       help: Diagnosticar i reparar configuració local, definicions dels models, perfil,
@@ -2776,8 +2691,6 @@ cli:
         amb --yes per confirmar o passa --dry-run per veure què s'esborraria.
       reset_progress_yes_help: Confirmar l'esborrat del progrés desat d'una ordre
         interrompuda
-      setup_status_hint: No s'ha pogut comprovar la preparació ara mateix. L'ordre
-        d'estat de sota la torna a comprovar.
       yes_help: Confirmar la reparació.
     reset:
       help: Inicia, consulta o reprèn el reinici irreversible de tots els perfils
@@ -3381,8 +3294,6 @@ cli:
       empty_directory: 'No s''han trobat fitxers d''extracte importables al directori:
         {path}'
       file_help: Ruta a l'arxiu de l'extracte bancari o directori
-      file_reader_not_ready: 'Extracte no llegit: {file} el llegeix la IA local, que
-        no està a punt.'
       file_reader_unavailable: 'Extracte no llegit: el model que has triat no està
         disponible ara mateix per llegir {file}. Torna-ho a provar quan estigui disponible.'
       file_refused: 'Extracte rebutjat i omès: {file}. La resta de la carpeta s''ha

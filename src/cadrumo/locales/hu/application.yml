@@ -643,9 +643,6 @@ application:
           Javítsd vagy töröld a tárolt számlát ahelyett, hogy ugyanazt a dokumentumot
           kétszer erősítenéd meg.'
       label_reading:
-        local_ai_not_ready: 'A helyi MI nem áll készen, ezért a címkék által nem lefedett
-          %{count} mező nem lett beolvasva, és üres marad: %{fields}. Futtasd újra
-          a kinyerést, amint készen áll.'
         reader_unavailable: 'Az automatikus olvasó nem tudott elindulni, ezért a címkék
           által nem lefedett %{count} mező üres marad: %{fields}. Ellenőrizd a kiválasztott
           modellt, majd futtasd újra a kinyerést, vagy töltsd ki ezeket a mezőket.'
@@ -1897,77 +1894,6 @@ application:
     explain:
       errors:
         modelo_blank: A nyomtatvány azonosítója nem lehet üres.
-  provisioning:
-    action:
-      check_again: Újraellenőrzés
-      resume: Folytatás
-      set_up: Beállítás
-      set_up_in_desktop: Beállítás a Cadrumo asztali alkalmazásában
-      try_again: Újrapróbálás
-      update: Frissítés
-    blocked:
-      hardware: Ebben a számítógépben nincs elég memória ehhez.
-      needs_person: Arra vár, hogy jóváhagyd, vagy magad telepítsd.
-      not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
-      offline: Nincs internetkapcsolatod. Csatlakozz az internethez a beállításhoz.
-    dependency:
-      browser:
-        name: Böngésző az adóhivatal webhelyéhez
-      local_ai:
-        name: Helyi MI
-    failure:
-      blocked_by_network: A hálózatod letiltotta a letöltést.
-      cancelled: Leállítottad a beállítást.
-      damaged_download: A letöltés sérült volt, ezért nem használható.
-      disk_full: Nincs elég szabad hely a lemezen.
-      host_unreachable: A letöltési kiszolgáló nem érhető el.
-      interrupted: A beállítás a befejezés előtt megszakadt.
-      memory_busy: Most túl sok memória van használatban. Zárj be más programokat,
-        és próbáld újra.
-      needs_sign_in: Be kell jelentkezned a Google-fiókodba.
-      no_permission: A Cadrumo nem kapott engedélyt a fájlok írására.
-      not_enough_memory: Ebben a számítógépben nincs elég memória ehhez.
-      not_in_this_build: A Cadrumo ezen verziója ezt nem tartalmazza.
-      offline: Nincs internetkapcsolatod.
-      program_missing: A helyi MI-program nincs telepítve.
-      program_not_running: A helyi MI-program nem fut.
-      program_proxy_differs: A Cadrumo háttérszolgáltatása másik proxybeállítással
-        fut. Indítsd újra a Cadrumót, vagy jelentkezz ki és újra be, hogy a mostani
-        beállítással induljon.
-      secure_connection_failed: Nem sikerült biztonságos kapcsolatot létesíteni. Lehet,
-        hogy egy hálózati szűrő akadályozza.
-      unexpected: Valami hiba történt.
-    in_desktop: Állítsd be a Cadrumo asztali alkalmazásában.
-    refusal:
-      column_names_local_ai_not_ready: a helyi MI, amely a fájl oszlopneveit olvassa,
-        nem áll készen, ezért a fájl nem lett beolvasva. Állítsd be a Cadrumo asztali
-        alkalmazásában, majd próbáld újra.
-      column_names_local_ai_unavailable: a fájl oszlopneveit olvasó modell jelenleg
-        nem érhető el, ezért a fájl nem lett beolvasva. Ellenőrizd a kiválasztott
-        modellt az ügynök modellválasztójában a Cadrumo asztali alkalmazásában, majd
-        próbáld újra.
-      statement_local_ai_not_ready: a helyi MI, amely ezt a PDF-bankszámlakivonatot
-        olvassa, nem áll készen, ezért a kivonat nem lett beolvasva. Állítsd be a
-        Cadrumo asztali alkalmazásában, majd próbáld újra.
-      statement_local_ai_unavailable: a PDF-bankszámlakivonatot olvasó modell jelenleg
-        nem érhető el, ezért a kivonat nem lett beolvasva. Ellenőrizd a kiválasztott
-        modellt az ügynök modellválasztójában a Cadrumo asztali alkalmazásában, majd
-        próbáld újra.
-    retry: Kapcsolati hiba. Újrapróbálkozás %{seconds} másodperc múlva (%{attempt}.
-      próbálkozás).
-    space_needed: A beállításhoz %{required} szabad hely kell, és %{free} érhető el.
-    stale:
-      older_revision: Működik, de újabb verzióra van szükség.
-      program_too_old: Működik, de ez a verzió túl régi a Cadrumóhoz.
-    state:
-      absent: Még nincs beállítva.
-      blocked: Most nem lehet beállítani.
-      failed: A beállítás nem fejeződött be.
-      provisioning: Beállítás folyamatban.
-      ready: Kész.
-      stale: Működik, de frissítésre szorul.
-      unknown: A Cadrumo most nem tudta ellenőrizni.
-      verifying: Működés ellenőrzése folyamatban.
   reconciliation_export:
     actor: Felelős
     advisory: Figyelmeztetés

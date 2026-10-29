@@ -100,8 +100,6 @@ cli:
           not been read yet, not because the documents lack them; each row gives the
           reason. Confirming a document reads it again, so those fields are filled
           then if the reason has cleared, or you can fill them in yourself.'
-        batch_paused_local_ai_not_ready: Local AI, which reads the paused documents,
-          is not ready.
         batch_paused_local_ai_unavailable: The model you picked could not read the
           paused documents. Check that it is available.
         batch_pending_review_message: Some drafts carry an issue you must resolve
@@ -1935,7 +1933,6 @@ cli:
       missing: missing
       preflight_label: Preflight check
       profile_label: profile
-      setup_unavailable: Setup could not be checked right now.
     collab:
       help: Manage trusted recipients for review-package collaboration.
       recipient:
@@ -2481,84 +2478,6 @@ cli:
       validate_name_help: Optional profile label to validate; defaults to the active
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
-    provision:
-      approval_needed: This needs your approval. Run the command again with --yes
-        to approve the plan above.
-      approve_prompt: Download and set these up now?
-      browser:
-        help: Set up the browser Cadrumo uses for the tax agency website. Shows the
-          plan and asks first.
-      check_status: 'Check component status: {command}'
-      complete: Cadrumo is set up.
-      fix: 'To fix it, run: %{command}'
-      hardware_limited: This computer does not have enough memory for the local AI.
-      help: Check what Cadrumo needs on this computer and set up the browser for the
-        tax agency website. The local AI, its program and models, is set up in the
-        Cadrumo desktop app.
-      incomplete: Some components are not ready yet.
-      outcome:
-        busy: Another setup is changing this right now. Try again when it has finished.
-        cancelled: You cancelled the setup.
-        completed: Setup finished.
-        followed_plan_mismatch: Another setup is using a different approved plan.
-          The outcome is uncertain. Start a new setup and review its plan.
-        nothing_to_do: Everything is already set up.
-        plan_changed: The plan changed after you approved it, so nothing was downloaded.
-          Run the command again to see the new plan.
-        rejected: Nothing was downloaded.
-      plan:
-        destination: '  Stored in %{path}'
-        entry: '%{name}: %{size} from %{hosts}'
-        heading: 'Cadrumo will set up:'
-        installs_program: '  This installs a program on this computer.'
-        size_unknown: size not known yet
-        total: 'Total download: %{size}.'
-        total_unknown: 'Total download: at least %{size}. Some sizes are only known
-          once the download starts.'
-      probe:
-        help: 'Check every component fully: reach the download servers, open the browser
-          and try each model. Downloads nothing.'
-      progress: '%{name}: %{step}'
-      progress_bytes: '%{name}: downloading %{done} of %{total} (%{percent}%)'
-      remove:
-        confirm_prompt: '%{name}: delete it from this computer?'
-        help: Delete the browser from this computer. Asks first; you can set it up
-          again any time. The local AI is removed in the Cadrumo desktop app.
-        item_help: 'Component to delete: browser.'
-        needs_confirmation: '%{name}: nothing was deleted. Run the command again with
-          --yes to delete it.'
-        removed: '%{name}: deleted from this computer.'
-        yes_help: Delete it without asking.
-      report:
-        help: Report this computer's memory and the model chosen for each role.
-      review:
-        help: Review and answer a pending component setup operation.
-        operation_help: ID of the setup operation awaiting review.
-        reject_help: Reject the displayed setup plan.
-      setup:
-        help: 'Set up what this command line can set up: the browser. Shows what will
-          be downloaded, how large it is and where it is stored, and asks before anything
-          is downloaded. The local AI is set up in the Cadrumo desktop app.'
-      sign_in_first: Sign in first with 'aeat config login NAME' to check or change
-        components.
-      size:
-        gigabytes: '%{value} GB'
-        megabytes: '%{value} MB'
-      status:
-        help: Show whether each component is ready, from what this computer already
-          has. Quick; downloads nothing.
-      step:
-        cleanup: tidying up
-        download: downloading
-        install: installing
-        plan: planning
-        preflight: checking the connection
-        verify: checking that it works
-      verify:
-        help: Check one component fully, or every component when none is named. Downloads
-          nothing.
-        item_help: 'Component to check: browser or local_ai. Defaults to every component.'
-      yes_help: Approve the plan the command shows, without asking.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       help: Diagnose and repair local configuration, modelo definitions, profile,
@@ -2590,8 +2509,6 @@ cli:
       reset_progress_requires_yes: This operation is destructive. Re-run with --yes
         to confirm or pass --dry-run to see what would be cleared.
       reset_progress_yes_help: Confirm clearing saved interrupted-command progress
-      setup_status_hint: Setup could not be checked right now. The status command
-        below checks it again.
       yes_help: Confirm repair.
     reset:
       help: Start, inspect, or resume the irreversible reset of all locally stored
@@ -3149,8 +3066,6 @@ cli:
         of what a real import would add and skip.'
       empty_directory: 'No importable statement files found in directory: {path}'
       file_help: Path to the bank statement file or directory
-      file_reader_not_ready: 'Statement not read: {file} is read by the local AI,
-        which is not ready.'
       file_reader_unavailable: 'Statement not read: the model you picked is not available
         right now to read {file}. Try again once it is available.'
       file_refused: 'Statement refused and skipped: {file}. The rest of the folder

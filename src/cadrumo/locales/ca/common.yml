@@ -605,13 +605,6 @@ core:
     errors:
       output_language_type: L'idioma de sortida del perfil ha de ser un codi d'idioma
         admès en forma de text.
-dependencies:
-  setup:
-    cancel_requested: Aturant la instal·lació…
-    following: Seguint una instal·lació que ja està en curs…
-    input_refused: No s’ha pogut acceptar la sol·licitud d’instal·lació.
-    retrying: Tornant a provar la descàrrega…
-    waiting_for_server: Esperant el servidor de descàrrega…
 desktop:
   about:
     agent: Agent
@@ -4348,8 +4341,6 @@ navigation:
       label: Perfil
     reference:
       label: Referència
-    setup:
-      label: Components
     terminal:
       label: Espai de treball
     withholding:
@@ -6054,8 +6045,7 @@ tui:
       queue_heading: Adjunts pendents de revisió
       read_done: Llegit. Revisa els valors i confirma la factura.
       read_failed: No s'ha pogut llegir el document.
-      reader_not_ready: El lector de documents no està a punt ({condition}). Comprova-ho
-        amb `aeat config provision status`.
+      reader_not_ready: El lector de documents no està a punt ({condition}).
       reader_ready: El lector de documents està a punt en aquest equip.
       reading: S'està llegint el document en aquest equip…
       record_detail: '{kind} · proveïdor {supplier} · afegit el {added} · {status}'
@@ -6991,8 +6981,7 @@ tui:
     card:
       action: Obre el lector de documents
       description: Comprova si els documents de factura es poden llegir en aquest
-        equip. El lector i els seus models es configuren a l'aplicació d'escriptori
-        de Cadrumo.
+        equip.
       title: Lector de documents
   modelo:
     editor:
@@ -7471,51 +7460,6 @@ tui:
         reconciliation_resolved: Resolta
         revision_current: Vigent
         revision_superseded: Substituïda
-  setup:
-    check_again: Torna a comprovar
-    checking: Comprovant…
-    column:
-      action: Acció
-      item: Component
-      state: Estat
-    complete: Cadrumo està preparat.
-    hardware_limited: Aquest ordinador no té prou memòria per a la IA local.
-    hint: Retorn executa l'acció de la fila triada. En preparar, es mostra el pla
-      i se't pregunta abans de baixar res.
-    incomplete: Alguns components encara no estan a punt.
-    intro: 'El que Cadrumo necessita en aquest ordinador: el navegador per al web
-      de l''Agència Tributària i la IA local. Tria una fila per executar-ne l''acció.
-      La IA local es configura a l''aplicació d''escriptori de Cadrumo.'
-    plan:
-      destination: '  Es desa a %{path}'
-      entry: '%{name}: %{size} des de %{hosts}'
-      heading: 'Cadrumo prepararà:'
-      installs_program: '  Això instal·la un programa en aquest ordinador. El seu
-        instal·lador et pot demanar permís.'
-      size_unknown: mida encara desconeguda
-      total: 'Baixada total: %{size}.'
-      total_unknown: 'Baixada total: com a mínim %{size}. Algunes mides només es coneixen
-        quan comença la baixada.'
-    progress: '%{name}: %{step}'
-    progress_bytes: '%{name}: baixant %{done} de %{total} (%{percent}%)'
-    review:
-      open: Obre la revisió de la instal·lació
-      reference: Referència de la instal·lació
-    set_up_all: Prepara-ho tot
-    sign_in_first: Inicia la sessió per comprovar o instal·lar els components.
-    size:
-      gigabytes: '%{value} GB'
-      megabytes: '%{value} MB'
-    step:
-      cleanup: endreçant
-      download: baixant
-      install: instal·lant
-      plan: planificant
-      preflight: comprovant la connexió
-      verify: comprovant que funciona
-    title: Components
-    unavailable: No s’han pogut comprovar els components. Torna-ho a provar.
-    working: Preparant el pla…
 workspace:
   declarations:
     availability:

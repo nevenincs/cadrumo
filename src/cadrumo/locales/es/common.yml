@@ -612,13 +612,6 @@ core:
     errors:
       output_language_type: El idioma de salida del perfil debe ser un código de idioma
         admitido en formato texto.
-dependencies:
-  setup:
-    cancel_requested: Deteniendo la instalación…
-    following: Siguiendo una instalación que ya está en curso…
-    input_refused: No se ha podido aceptar la solicitud de instalación.
-    retrying: Reintentando la descarga…
-    waiting_for_server: Esperando al servidor de descarga…
 desktop:
   about:
     agent: Agente
@@ -4353,8 +4346,6 @@ navigation:
       label: Perfil
     reference:
       label: Referencia
-    setup:
-      label: Componentes
     terminal:
       label: Espacio de trabajo
     withholding:
@@ -6068,8 +6059,7 @@ tui:
       queue_heading: Adjuntos pendientes de revisión
       read_done: Leído. Revisa los valores y confirma la factura.
       read_failed: No se ha podido leer el documento.
-      reader_not_ready: El lector de documentos no está listo ({condition}). Compruébalo
-        con `aeat config provision status`.
+      reader_not_ready: El lector de documentos no está listo ({condition}).
       reader_ready: El lector de documentos está listo en este equipo.
       reading: Leyendo el documento en este equipo…
       record_detail: '{kind} · proveedor {supplier} · añadido el {added} · {status}'
@@ -7009,7 +6999,6 @@ tui:
     card:
       action: Abrir lector de documentos
       description: Comprueba si los documentos de factura se pueden leer en este equipo.
-        El lector y sus modelos se configuran en la aplicación de escritorio de Cadrumo.
       title: Lector de documentos
   modelo:
     editor:
@@ -7490,51 +7479,6 @@ tui:
         reconciliation_resolved: Resuelta
         revision_current: Vigente
         revision_superseded: Sustituida
-  setup:
-    check_again: Comprobar de nuevo
-    checking: Comprobando…
-    column:
-      action: Acción
-      item: Componente
-      state: Estado
-    complete: Cadrumo está preparado.
-    hardware_limited: Este ordenador no tiene memoria suficiente para la IA local.
-    hint: Intro ejecuta la acción de la fila elegida. Al preparar, se muestra el plan
-      y se te pregunta antes de descargar nada.
-    incomplete: Algunos componentes aún no están listos.
-    intro: 'Lo que Cadrumo necesita en este ordenador: el navegador para la web de
-      la Agencia Tributaria y la IA local. Elige una fila para ejecutar su acción.
-      La IA local se configura en la aplicación de escritorio de Cadrumo.'
-    plan:
-      destination: '  Se guarda en %{path}'
-      entry: '%{name}: %{size} desde %{hosts}'
-      heading: 'Cadrumo va a preparar:'
-      installs_program: '  Esto instala un programa en este ordenador. Su instalador
-        puede pedirte permiso.'
-      size_unknown: tamaño aún desconocido
-      total: 'Descarga total: %{size}.'
-      total_unknown: 'Descarga total: al menos %{size}. Algunos tamaños solo se conocen
-        al empezar la descarga.'
-    progress: '%{name}: %{step}'
-    progress_bytes: '%{name}: descargando %{done} de %{total} (%{percent}%)'
-    review:
-      open: Abrir revisión de la instalación
-      reference: Referencia de la instalación
-    set_up_all: Preparar todo
-    sign_in_first: Inicia sesión para comprobar o instalar los componentes.
-    size:
-      gigabytes: '%{value} GB'
-      megabytes: '%{value} MB'
-    step:
-      cleanup: ordenando
-      download: descargando
-      install: instalando
-      plan: planificando
-      preflight: comprobando la conexión
-      verify: comprobando que funciona
-    title: Componentes
-    unavailable: No se han podido comprobar los componentes. Inténtalo de nuevo.
-    working: Preparando el plan…
 workspace:
   declarations:
     availability:
