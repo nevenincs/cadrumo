@@ -5,12 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:2ef00407f92406fe83b3d6f4203ebe176b33cd2f238f026178bf477f2ecf95e0'
+body_hash: 'sha256:c104dca3c918dde69c439a33806c9933e006c5c6bde3b52bfc70fa9e4b70617e'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
-  - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
@@ -64,8 +63,7 @@ operator's standing, unmet demand is that this functionality is *never tested*
 — so the architecture must be independently measurable stage by stage, or it
 does not answer the question.
 
-A decision is needed now because `2026-08-06-llm-package-split-adr` deliberately
-left the internal pipeline shape open (its D8), the measurement corpus that can
+A decision is needed now because the internal pipeline shape is open, the measurement corpus that can
 settle it now exists (302 documents, key v5, stage-separated oracles), and
 peer campaigns (`2026-08-06-invoice-canonical-structure-adr`'s multi-line
 writer, the direction threading of
@@ -75,7 +73,7 @@ this record must define.
 Out of this record's lane, decided elsewhere: canonical structured e-invoice
 formats — Facturae 3.2.x, EN16931 CII/UBL, VeriFactu/SII — are read exactly by
 deterministic parsers in the core and reach no model
-(`2026-08-06-llm-package-split-adr` D7, the `DocumentShape` routing probe).
+(the `DocumentShape` routing probe).
 This pipeline begins where exact reading is impossible.
 
 ## Considerations
@@ -136,13 +134,12 @@ This pipeline begins where exact reading is impossible.
   inference needs no consent gate; off-host transmission of real taxpayer
   documents is explicitly consented, per-invocation, gestor-barred
   (`sensitive-financial-data-secure-storage-only`,
-  `2026-06-10-llm-evidence-classification-adr` operator ruling,
-  `2026-08-06-llm-package-split-adr` D9/D10). The corpus itself is
+  `2026-06-10-llm-evidence-classification-adr` operator ruling). The corpus itself is
   public/synthetic and carries no taxpayer data.
-- **The engine substrate exists.** `cadrumo.llm` carries `LLMClient`, a
+- **The engine substrate exists.** The model client layer carries `LLMClient`, a
   provider enum with a LOCAL (Ollama) transport, multimodal image inputs keyed
-  by content hash, and pricing/caching plumbing. The package-split ADR deletes
-  the cloud subprocess family (its D5). The GPU being contended today is a
+  by content hash, and pricing/caching plumbing. The cloud subprocess family is
+  deleted. The GPU being contended today is a
   deployment fact, not an architectural constraint.
 - **Regulated numbers are never model-derived.** The accepted
   `llm-selects-system-derives-tax-numbers` discipline holds: a reader recovers
@@ -174,8 +171,7 @@ This pipeline begins where exact reading is impossible.
   what makes anchoring — the anti-fabrication mechanism — enforceable by
   deterministic code.
 - **D — Cloud-scale document-AI service.** Categorically rejected: off-host by
-  construction, colliding with the confidentiality guarantee and with the
-  package-split ADR's deletion of the cloud path.
+  construction, colliding with the confidentiality guarantee.
 - **For tabular inputs, a sub-choice:** per-row semantic extraction (each row
   through the model) versus **schema-level semantic mapping** (the model maps
   column headers to closed field roles once; deterministic code copies every
@@ -188,9 +184,7 @@ This pipeline begins where exact reading is impossible.
 - **Confidentiality (absolute).** All processing of real taxpayer documents is
   in-memory and on-host by default; any persisted intermediate (transcription
   cache, drafts) writes through the core's encrypted secure storage; the
-  inference subpackage holds no storage handle
-  (`2026-08-06-llm-package-split-adr` D3/D9/D10, which this record inherits
-  unchanged).
+  inference layer holds no storage handle.
 - **Regulated numbers stay registry-derived**; readers recover printed values
   only (`llm-selects-system-derives-tax-numbers`, reaffirmed by
   `2026-06-10-llm-evidence-classification-adr`).
@@ -199,7 +193,7 @@ This pipeline begins where exact reading is impossible.
   of `2026-08-06-invoice-canonical-structure-adr` stays at the core boundary.
 - **Typed boundaries.** All model output crosses into the core as strict
   pydantic v2 payloads with closed StrEnum axes in `core/`; free text never
-  crosses the seam as an interchange value (package-split D4).
+  crosses the seam as an interchange value.
 - **Local model quality is the frontier risk.** The default local vision model
   is bound to a consumer-hardware constraint
   (`2026-06-13-llm-evidence-classification-adr`); the corpus vision cells
@@ -210,11 +204,6 @@ This pipeline begins where exact reading is impossible.
   gates cannot depend on it, and CI cannot invoke live local inference (live
   local inference has destabilised the development host; the GPU is shared).
   The measurement design must be honest about this split.
-- **Parent stability.** The package-split ADR is `proposed`; its D5 (cloud
-  deletion) and D7 (structured parsing) are in flight. This record couples to
-  its boundary decisions and to the accepted canonical-invoice ADR; if the
-  package-split record moves materially, the coupling points named here are
-  the review checklist.
 
 ## Implementation
 
@@ -238,11 +227,10 @@ scan-only PDF it is the local vision model in *transcription* role: read the
 page, emit the text, interpret nothing. The output is one typed record,
 `DocumentTranscription`: reading-order text, page count, source content
 address, and its own origin (`TEXT_LAYER` exact vs `VISION` with model
-identity and revision). This record is the `NormalizedDocument` seam the
-package-split ADR specified obligations for without building: it is a single
+identity and revision). This record is the `NormalizedDocument` seam: it is a single
 typed record (not a tagged union), it inherits the `EvidenceInput`
-serialization tripwires, and its cache — the extracted-document cache that
-ADR's D9 authorises — persists only through the core's encrypted secure
+serialization tripwires, and its cache — the extracted-document cache —
+persists only through the core's encrypted secure
 storage, keyed by source content address plus transcriber identity.
 
 **S2 — semantic extraction.** A local text model reads the transcription and
@@ -315,21 +303,17 @@ boundary — facts are grounded, judgments are selected from closed sets and
 reviewed. Each seam exists because something must be independently measured
 or enforced there; none exists for layering aesthetics.
 
-### D2 — This record closes the package-split ADR's D8, and supersedes its precondition
+### D2 — The staged shape is adopted on measurability, not on a prior accuracy gate
 
-`2026-08-06-llm-package-split-adr` D8 left one-shot versus two-stage open,
-requiring a stage-isolation measurement before any ADR adopts two-stage. This
-record adopts the staged shape and **supersedes that precondition**, on two
-grounds it could not have weighed: the operator has since directed the staged
-shape explicitly ("OCR/vision → text representation →
-categorization/classification"), and the decisive criterion is not the
-relative accuracy D8 wanted measured but *measurability itself* — a one-shot
-design cannot be stage-measured at all, so no measurement outcome could
-justify it against the operator's testing demand. The stage-isolation run
-remains valuable and becomes the pipeline's *baseline measurement* rather
-than its gate.
+This record adopts the staged shape on two grounds: the operator has directed
+it explicitly ("OCR/vision → text representation →
+categorization/classification"), and the decisive criterion is not relative
+accuracy but *measurability itself* — a one-shot design cannot be
+stage-measured at all, so no measurement outcome could justify it against the
+operator's testing demand. The stage-isolation run is the pipeline's
+*baseline measurement* rather than its gate.
 
-The obligations D8 attached to the staged shape are carried, not dodged: the
+The obligations attached to the staged shape are carried, not dodged: the
 injection hazard of promoting hostile document text across a stage boundary
 is bounded by S2's closed output schema (anchored candidates only, no free
 text crosses), by S3 grounding every value against the transcription, by S4
@@ -549,7 +533,7 @@ one name matching, plus retención) must map fully, and does under this
 design because retención is a role, not a column name.
 
 Semantic field mapping is thereby **one capability** — role assignment over a
-closed vocabulary, owned by `cadrumo.llm` — with two consumers: the invoice
+closed vocabulary, owned by the model-reading layer — with two consumers: the invoice
 book importer, and the bank-statement lane, where it enrols strictly *after*
 the exact fixed-layout providers (exact-first routing, the same control as
 the S0 probe: a known bank export never reaches a model). Redesigning
@@ -567,8 +551,7 @@ production binding is **on-host by default**: whether the local runtime
 serves the model on GPU or CPU is Ollama's deployment concern, invisible at
 this seam — today's GPU contention constrains *when measurement runs*, never
 the architecture. A model that does not fit is refused by cadrumo-agent when
-it admits the load (package-split ADR D6), never by a measurement in this
-product.
+it admits the load, never by a measurement in this product.
 
 **Amended by operator ruling ("gated cloud is ok for measurement"):** a
 gated cloud engine is admissible behind the same abstraction, and the two
@@ -582,8 +565,8 @@ the corpus is public, synthetic and licence-clean, carrying no taxpayer
 data, which is what makes the route admissible rather than a
 confidentiality breach. Standing up the cloud multimodal transport (the
 in-memory HTTP providers only, never a subprocess or file-writing route —
-consistent with the accepted 2026-06-10 ruling and untouched by the
-package-split ADR's deletion of the subprocess family) is therefore
+consistent with the accepted 2026-06-10 ruling and with the deletion of the
+subprocess family) is therefore
 authorised work. Second, **cloud is NOT the production binding.** Production
 defaults stay on-host; any off-host route over real taxpayer documents
 carries the consent gate `sensitive-financial-data-secure-storage-only`
@@ -592,20 +575,13 @@ only, no decrypted bytes reaching disk. Which provider a run selects stays
 configuration behind `LLMProvider`; the confidentiality guarantee is an
 operator directive and is not weakened by this amendment.
 
-### D8a — the reinstated consent gate, partially superseding an executed deletion
+### D8a — the consent gate over cloud reading
 
 **Operator ruling (second amendment): cloud reading over real taxpayer
-evidence is sanctioned behind a reinstated consent gate.** This must be
-reconciled honestly with the corpus: `2026-08-06-llm-package-split-adr` D5 is
-accepted AND executed — it deleted not only the subprocess transport but the
-entire consent apparatus (`cloud_evidence_read_permitted`,
-`ServiceCapability.CLOUD_EVIDENCE_UPLOAD`,
-`cadrumo_evidence_cloud_upload_permitted`, `--evidence-acknowledged`), and
-those symbols now exist in exactly one file,
-the former source file, a gate asserting
-they are gone. **This record therefore partially supersedes an accepted,
-executed decision, and says so** rather than diverging quietly. What returns:
-the consent apparatus, over the in-memory HTTP providers only. What stays
+evidence is sanctioned behind a consent gate.** The consent apparatus
+(`cloud_evidence_read_permitted`, `ServiceCapability.CLOUD_EVIDENCE_UPLOAD`,
+`cadrumo_evidence_cloud_upload_permitted`, `--evidence-acknowledged`) exists
+over the in-memory HTTP providers only. What stays
 deleted permanently: the subprocess CLI-agent family, every file-writing
 transport, and any sticky enablement. What is unchanged: production defaults
 on-host, the gestor bar, per-invocation acknowledgement, provenance
@@ -643,10 +619,9 @@ set with its anti-gutting anchors kept. Any interval in which the symbols
 return while the gate still lists them as deleted is a red tree, which is why
 the re-scope cannot land separately.
 Confidentiality survives by inheritance, not re-argument: images and text
-move as in-memory base64/strings through the existing client, the subpackage
-holds no storage handle (D3 of the split ADR), every persisted intermediate
-routes through core secure storage (D9), and the persistence gates keep
-scanning the code (D10/D11). Nothing in this pipeline adds a file-writing
+move as in-memory base64/strings through the existing client, the inference layer
+holds no storage handle, every persisted intermediate routes through core
+secure storage, and the persistence gates keep scanning the code. Nothing in this pipeline adds a file-writing
 transport, and the S1 cache is encrypted by construction.
 
 ### D8b — the prompt is a compiled, registry-derived, tier-bounded artefact
@@ -676,9 +651,8 @@ year's document under another year's rates. The enumeration is also the
 low-context answer — it converts an inference problem into a selection
 problem, which is exactly what a simple model can do. **The compiler runs
 in the application layer**, which already holds the authority, and the
-extension receives the compiled prompt as data — the dependency direction
-of the package boundary is preserved, and the compiler works on a host
-with no extra installed.
+model-reading layer receives the compiled prompt as data — the dependency
+direction stays from the application layer to the adapter.
 
 **The field-form contract is declared once and compiled into both sides.**
 The live worked example that forces this decision: the prompt demands
@@ -1255,10 +1229,9 @@ measured stage by stage, and unmeasurable designs are non-answers to the
 question as posed. The operator's directive independently mandates the same
 shape, and the corpus was built with oracles at exactly these seams — twins
 for reading, reference text for reasoning, `null`-truth for fabrication, a
-poisoned control for the harness itself. Where D8 of the package-split ADR
-worried that adopting two-stage without measurement repeats a conflation,
-this record answers that the choice is not being made on unmeasured accuracy
-but on measurability, and then makes the measurement the pipeline's first
+poisoned control for the harness itself. Adopting two-stage without measurement
+could repeat a conflation, but the choice is not made on unmeasured accuracy
+but on measurability, and the measurement is the pipeline's first
 deliverable.
 
 Anchoring wins over confidence scores and prompt discipline because it is the
@@ -1305,31 +1278,17 @@ precisely, and the recourse is model selection, not architecture. S2 over a
 long transcription may stress small local context windows — chunking is an
 S2-internal concern that must never leak into the contract. Deleting the
 regex extractor removes the only current text-path reader before its
-replacement lands; sequencing mirrors the package-split ADR's D5 window
-discipline: the semantic reader lands wired before the deletion commit. The
+replacement lands; sequencing closes the window: the semantic reader lands wired before the deletion commit. The
 anchor check requires transcription and extraction to agree on printed form;
 normalisation drift between S1 and S3 would manifest as false rejections —
 visible, annoying, and safe-side, but a real tuning cost. The corpus's
 Spanish optimism bias means Spanish-vision floors are provisional until real
 Spanish rendered documents are acquired.
 
-**Supersessions and contradictions, consolidated.** This record: closes
-`2026-08-06-llm-package-split-adr` D8 (staged shape adopted) and supersedes
-its stage-isolation-measurement precondition on the grounds stated in D2;
-**partially supersedes that ADR's accepted and executed D5** per D8a — the
-consent apparatus returns over the in-memory HTTP providers under an operator
-ruling, while the subprocess-family deletion, the on-host production default
-and the gestor bar all stand, and that ADR's status note is amended to record
-the partial supersession in the same change that lands the reinstated gate.
-**`2026-06-10-llm-evidence-classification-adr`'s own "Partial supersession
-(2026-08-07)" section is also stale by the same reinstatement** — it states
-that D5 deleted the consent apparatus "outright" so the exception "no longer
-exists in the tree," which was true of D5 alone but is no longer true once
-D8a lands; that section needs the same follow-up note in the same change,
-not only `llm-package-split-adr`'s status line. Found by the 2026-08-07 ADR
-corpus reconciliation audit, which left it uncorrected because this record
-was still `proposed` at the time;
-supersedes in part `2026-08-06-llm-invoice-read-reconciliation-adr` (the
+**Relationships, consolidated.** This record adopts the staged shape (D2) and
+sanctions the consent gate over the in-memory HTTP providers under an operator
+ruling (D8a), while the subprocess-family deletion, the on-host production
+default and the gestor bar all stand. It supersedes in part `2026-08-06-llm-invoice-read-reconciliation-adr` (the
 extraction-side framing of the counterparty defect and the Spanish-label
 anchoring remedy), while consuming its direction threading and rename and
 leaving its two open operator rulings open; and completes the re-targeting of
@@ -1348,14 +1307,13 @@ different authority. Bank-statement auto-detection redesign beyond fallback
 enrolment of the mapping capability. `.eml` ingestion. Acquisition of real
 rendered Spanish documents and the hand transcription of the 12 real
 photographs — corpus work, outside this repository. The sanitizer-wiring
-hardening pass, already named by the package-split ADR for its own campaign.
+hardening pass.
 
 **Pathways opened.** The `DocumentTranscription` artefact makes
 re-extraction cheap (re-run S2 on a cached transcription when a model
 improves, without re-reading bytes), gives audits a durable answer to "what
 did the reader see", and is the natural substrate for the batch and resume
-verbs the package-split ADR cleared ground for — which are no longer merely
-a pathway: the sibling operations record of this feature
+verbs, which are decided scope: the sibling operations record of this feature
 (`2026-08-07-unstructured-document-ingestion-operations-adr`) claims batch
 ingestion, the human review process, the consent lifecycle and
 deinstallation as decided scope over this pipeline.

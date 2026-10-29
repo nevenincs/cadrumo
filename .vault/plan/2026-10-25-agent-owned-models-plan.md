@@ -11,9 +11,8 @@ related:
   - '[[2026-10-19-provider-settings-tax-model-runs-adr]]'
   - '[[2026-10-13-provider-settings-adr]]'
   - '[[2026-06-13-llm-evidence-classification-adr]]'
-  - '[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]'
   - '[[2026-10-13-agent-attachments-adr]]'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: body-v2
 body_hash: 'sha256:11639dae54d3246a3f6dac589e87af1e3f30d23815eba44ba45ccc320e966f69'
 ---

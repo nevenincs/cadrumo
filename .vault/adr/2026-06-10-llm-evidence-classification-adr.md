@@ -4,7 +4,7 @@ tags:
   - '#llm-evidence-classification'
 date: '2026-06-10'
 modified: '2026-10-29'
-body_hash: 'sha256:6d1c40155ebd9a2852466251cd45b54abab8c89917f002dfd02ccf6757583e09'
+body_hash: 'sha256:37676d30bfbf71f2b0b8f35c8667e75f4cf94e0b9087c1860939dac93889e763'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -339,71 +339,13 @@ The downstream research finding and the implementation plan are corrected to mat
 this ruling (on-host reader Waves replace the temp-file/cloud-first design; the
 consent gate is its own Phase).
 
-## Partial supersession (2026-08-07)
+## Cloud exception: current posture
 
-**Ruling 2 of the operator ruling above — the consent-gated cloud exception — is
-superseded in part by `2026-08-06-llm-package-split-adr` (D5).** That record
-deletes the consent gate, the `cloud_evidence_upload` capability, the
-`cadrumo_evidence_gestor_mode` and `cadrumo_evidence_cloud_upload_permitted`
-settings, the `--evidence-acknowledged` flag and the subprocess provider family
-outright, so the narrow cloud exception this record sanctioned no longer exists
-in the tree.
+Ruling 2 of the operator ruling above stands: on-host/local-first reading, with a cloud read only behind a consent gate. `cloud_evidence_read_permitted`, `ServiceCapability.CLOUD_EVIDENCE_UPLOAD`, the two deployment settings and a per-invocation off-host acknowledgement exist over the in-memory HTTP providers, and the gestor bar applies. The subprocess CLI-agent family and every file-writing transport are deleted permanently, so the exception is narrower than the ruling originally sanctioned.
 
-This is recorded here, in the same change as the deletion, rather than left to
-be inferred. Two accepted records — one sanctioning a capability the other
-removes — is the ADR-versus-ADR conflict the curate pass exists to catch, and
-the window in which the corpus carries both is exactly as long as the gap
-between deleting the code and amending the record.
+Both document classes take the same on-host route by default: a scan is read locally by a vision model, and a text-layer PDF by a local TEXT reader. On-host reading as the default posture, the in-memory-only custody discipline, the exclusion of the file-writing CLI-agent route, and first-class local-model support are unchanged.
 
-**The narrowing runs WITH this record's headline, not against it.** The title
-says on-host/local-first reading, and the exception existed only because a
-text-layer PDF had no on-host reader: a scan was read locally by a vision model
-while the more machine-readable document had to leave the host. The successor
-wires a local TEXT reader first and deletes the cloud path second — that
-ordering is mandated, not preferred — so both document classes now take the same
-on-host route. What is removed is the exception, and with it the gestor bar that
-applied to one arm of the fork and not the other.
-
-**Everything else in this record stands.** On-host reading as the default and
-only posture acceptable for serious use, the in-memory-only custody discipline,
-the exclusion of the file-writing CLI-agent route, and first-class local-model
-support are all unchanged and are in fact strengthened: the successor makes them
-the only posture rather than the preferred one.
-
-One consequence rides with the deletion and is authorised there rather than
-discovered later. The `llm:<provider>:<model>` provenance stamp's provider axis
-collapses to the local runtime, so every stamp written after the deletion names
-a local transport. The stamp's SHAPE is unchanged and no persisted record is
-rewritten — pre-existing records keep the provider they were stamped with, which
-is the honest history — but a reader who assumes the axis is still multi-valued
-would be wrong.
-## Follow-up: the supersession above is itself partly reversed (2026-08-08)
-
-**The section above is stale, and this note corrects it rather than rewriting it.** It
-records that `2026-08-06-llm-package-split-adr` D5 deleted the consent gate outright, so
-this record's ruling-2 cloud exception "no longer exists in the tree". That was true of D5
-alone. It stopped being true when `2026-08-07-unstructured-document-ingestion-adr` D8a
-partially superseded D5 under an operator ruling and reinstated the consent apparatus over
-the in-memory HTTP providers.
-
-**So ruling 2 is un-superseded in part, and this record's headline is back in force as
-written.** On-host/local-first reading with a cloud read only behind a consent gate is
-again the posture the tree implements: `cloud_evidence_read_permitted`,
-`ServiceCapability.CLOUD_EVIDENCE_UPLOAD`, the two deployment settings and a
-per-invocation off-host acknowledgement all exist again, and the gestor bar applies. What
-does NOT return is the subprocess CLI-agent family and every file-writing transport, which
-stay deleted permanently — so the exception is narrower than this record originally
-sanctioned, not identical to it.
-
-**The one consequence recorded above that did not survive** is the provenance-stamp
-claim: the provider axis did not stay collapsed to the local runtime. Readers that accept
-a provider stamp the transport they actually ran at, so a stamp may again name an off-host
-transport, and anything surveying cloud-derived artefacts by that segment must assume the
-axis is multi-valued.
-
-The reversal is left as a dated follow-up because the prior section was true when written
-and reading it as an error would misdescribe the corpus. Both notes together are the
-history; either alone is wrong about HEAD.
+The provider axis of the `llm:<provider>:<model>` provenance stamp is multi-valued. Readers that accept a provider stamp the transport they actually ran at, so a stamp may name an off-host transport, and anything surveying cloud-derived artefacts by that segment must treat the axis as multi-valued.
 
 ## Amendment (2026-10-13): session and remembered consent scopes for agent reads
 

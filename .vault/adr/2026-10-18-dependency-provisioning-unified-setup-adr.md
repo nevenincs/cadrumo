@@ -5,7 +5,7 @@ tags:
 date: '2026-10-18'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:82ce7b2dc1a00909eeb2ba76d5a1391ab4c69ae830e5c85bead182f57ba54098'
+body_hash: 'sha256:529b2be8e09fb7dd57aaab37844209d42988de1eba61d5009509d3899150433d'
 related:
   - "[[2026-10-18-dependency-provisioning-mechanisms-reference]]"
   - "[[2026-06-15-dependency-provisioning-adr]]"
@@ -15,8 +15,8 @@ related:
   - "[[2026-10-04-google-app-identity-adr]]"
   - "[[2026-07-14-google-optional-adapter-boundary-adr]]"
   - "[[2026-10-17-idle-churn-operation-observation-adr]]"
-  - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-17-single-binary-process-tree-adr]]"
+  - '[[2026-10-04-application-distribution-adr]]'
 ---
 # `dependency-provisioning` adr: `One setup system for the browser and the local AI` | (**status:** `accepted`)
 
@@ -30,7 +30,7 @@ The browser that the tax agency reads need and the local AI that the document re
 
 - Component state is read only by the native engine's probes, which are read-only and return a typed status. Python holds no probe, no readiness report and no hardware measurement. A Python consumer that reaches a missing component refuses at the point of use and names the component alone (`2026-06-15-dependency-provisioning-adr`).
 - Component setup is a desktop capability driven by the native engine of `native/application` (`2026-10-24-rust-component-provisioning-adr`). The desktop host links the engine in process, so setup needs no runtime connection and no signed-in profile (`2026-10-04-desktop-shell-adr`).
-- Browsers, models and the model runtime are not package data. The model runtime is an external program with its own process tree (`2026-10-13-application-distribution-native-bundle-llm-extra-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver ship in the native bundle and launch the browser at use time.
+- Browsers, models and the model runtime are not package data. The model runtime is an external program with its own process tree (`2026-10-04-application-distribution-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver ship in the native bundle and launch the browser at use time.
 - Ollama verifies layer digests and resumes partial pulls itself. Playwright installs per build and publishes no content hashes, and the Chrome for Testing builds carry no code signature. Cadrumo therefore pins the size and SHA-256 of every browser archive itself.
 - Cadrumo defines no AI model name, digest, size, licence, default or ranking. cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included (`2026-10-25-agent-owned-models-adr`).
 

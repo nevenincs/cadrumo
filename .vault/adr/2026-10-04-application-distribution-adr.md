@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#application-distribution'
 date: '2026-10-04'
-modified: '2026-10-13'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:d4d54b6be44249a4f9a690147bf5d7f5248e2e4ffb3a4d009d45da836ecc187b'
+body_hash: 'sha256:42cbfd5a72a7d871788c9dac00ce5f65a28911d4449a9862a9a09267dd37f147'
 related:
   - '[[2026-10-04-application-distribution-research]]'
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
@@ -78,6 +78,16 @@ Operator direction 2026-10-12: CMake is the only surface that controls the build
 - The documentation is optional in every target. `ON` remains the default, and with `ON` the release verification also runs the documentation checks. With `OFF` every target, release targets included, builds and verifies the package without it. All outputs of either configuration stay in the canonical build tree.
 
 This supersedes the earlier packaging behaviour in which a package assembled without documentation omitted the desktop image ("desktop payloads refuse it"). It does not change identity, installation scopes, signing, lifecycle ownership or the Linux runtime-prerequisite contract. The desktop's behaviour without documentation is recorded in the 2026-10-12 amendment of `2026-10-04-desktop-shell-adr`.
+
+### Native bundle Python closure
+
+The native application package owns its locked Python closure privately: the locked base closure of the `cadrumo` distribution plus the locked `[browser]` extra closure, installed into the package's private site-packages. A person who installs the desktop app has no supported way to add a Python extra to that interpreter, so a surface gated on an extra the bundle omits is an absent capability. The `[browser]` closure is `playwright` with its platform wheel's bundled Node driver, `playwright-stealth`, and their locked dependencies (`pyee`, `greenlet`). The bundled extras are declared once as `BUNDLED_EXTRAS` and passed only by native provisioning, assembly and the CMake build, so wheel planning, assembly verification and the CMake build select the same set; the default constraint export omits every extra. Authorization is the owner's ruling of 2026-10-18, "Ship it".
+
+- The added distributions come from the same `uv.lock` resolution, version-pinned, wheel-only and target-selected, under the same assembly refusals as the base closure. Every native target has a locked wheel for the closure: `playwright` 1.64.0 ships `win_amd64`, `manylinux1_x86_64`, `manylinux_2_17_aarch64` and `macosx_11_0_arm64` wheels, and the other additions are pure-Python or already locked for each target.
+- Every other extra stays out of the bundle, and the wheel's default install stays core-only.
+- Chromium builds are not bundled. They are provisioned on demand into the installation-wide storage root (`components/playwright`) by the Rust component engine of `2026-10-24-rust-component-provisioning-adr`, so the packaged app's probe reports a browser that is not provisioned rather than an unavailable extra. The `[browser]` extra ships because Playwright's Python package and driver launch the browser at use time.
+- No model weights and no browser binary enter any artifact. Models are never package data; every tax model call goes through the agent service (`2026-10-25-agent-owned-models-adr`).
+- The bundle grows by the `[browser]` closure, which is dominated by the per-platform Node driver.
 
 ## Rationale
 

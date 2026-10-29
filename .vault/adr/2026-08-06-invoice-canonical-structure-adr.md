@@ -10,13 +10,12 @@ related:
   - '[[2026-08-06-invoice-canonical-structure-naming-and-capability-reference]]'
   - '[[2026-06-10-ledger-invoice-unification-adr]]'
   - '[[2026-08-05-ledger-invoice-decomposition-adr]]'
-  - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
 supersedes:
   - '2026-06-10-ledger-invoice-unification-adr'
-modified: '2026-10-03'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:f5b0a17db4babde52a8fbe5341f7b4b314283ff0c31a43cf79dc86aa8cfc9f67'
+body_hash: 'sha256:86da04edcbe0cc2bbb61685a1807266060d34d999ed8325bcdc5211020fe7667'
 ---
 # `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
 
@@ -170,7 +169,7 @@ or a regime in.
 - **Capability conservation outranks every other constraint here** (D-R). No
   capability of either store may be lost, across all three evidence lanes, and no
   deletion precedes a proven replacement.
-- **A separate team executes `2026-08-06-llm-package-split-adr` in this same
+- **A separate team executes the document-ingestion work in this same
   worktree, and the file boundary between us is settled.** They own the
   `InvoiceDraft` model and the extraction path — the line-carrying draft
   structure, the per-rate breakdown their deterministic parsers produce, and the
@@ -921,15 +920,14 @@ legitimately re-scopes that work rather than embarrassing it.
 
 ## Dependencies
 
-The document-ingestion and inference path is under active decision: it may be
-extracted from the `cadrumo` base package into an optional local-inference
-extension emitting a validated artefact the CLI consumes. **This ADR does not
-decide that architecture**, and two of its decisions are framed to survive either
+The document-ingestion and inference path is decided separately
+(`2026-08-07-unstructured-document-ingestion-adr`). **This ADR does not decide
+that architecture**, and two of its decisions are framed to survive any
 outcome — D-E and D-F as assertion-authority questions rather than
 where-extraction-runs questions, and D-K as a core-boundary gate independent of
 the producer.
 
-If the extension split is accepted, what needs revisiting is narrow: the reader
+What the ingestion architecture can change is narrow: the reader
 half of D-G (per-rate extraction), and the regex-versus-vision extraction fork,
 which is recorded in the research as a duplication finding with **no resolution
 prescribed here**. Everything else — D-A through D-D, D-H through D-K — is

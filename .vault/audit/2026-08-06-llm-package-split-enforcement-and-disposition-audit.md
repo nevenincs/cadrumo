@@ -3,11 +3,10 @@ tags:
   - '#audit'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-10-03'
+modified: '2026-10-29'
 body_schema: 'body-v1'
 body_hash: 'sha256:ac3083f8118ff4b9e7dc696a7fa6a45437a6fbd45d75b311ea6124bd2420216c'
-related:
-  - "[[2026-08-06-llm-package-split-adr]]"
+related: []
 ---
 
 # `llm-package-split` audit: `Enforcement gaps, the vacuous-green defect class, and the disposition register`

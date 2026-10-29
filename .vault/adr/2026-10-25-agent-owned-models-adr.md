@@ -13,9 +13,9 @@ related:
   - "[[2026-10-19-provider-settings-tax-model-runs-adr]]"
   - "[[2026-10-13-provider-settings-adr]]"
   - "[[2026-06-13-llm-evidence-classification-adr]]"
-  - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-13-agent-attachments-adr]]"
   - '[[2026-10-25-agent-owned-models-hosted-vision-declaration-research]]'
+  - '[[2026-10-04-application-distribution-adr]]'
 ---
 # `agent-owned-models` adr: `Agent-owned AI models` | (**status:** `accepted`)
 

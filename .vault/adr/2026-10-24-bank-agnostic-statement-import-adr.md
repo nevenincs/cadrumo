@@ -3,15 +3,14 @@ tags:
   - '#adr'
   - '#bank-agnostic-statement-import'
 date: '2026-10-24'
-modified: '2026-10-24'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:51e0bdf59fe7f2136ee4e2dff1c5a1455721f4681d2af36072234d5c6548ec8d'
+body_hash: 'sha256:45a699292d12f3f17f8aebe36522d8a9f0261c8fbcd2228f1bfe18eb12cbf5f0'
 related:
   - "[[2026-10-24-bank-agnostic-statement-import-reference]]"
   - "[[2026-08-07-unstructured-document-ingestion-adr]]"
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---
-
 # `bank-agnostic-statement-import` adr: `Bank-agnostic statement import: no bank-specific product code, PDF statements read by the local model and anchored deterministically` | (**status:** `accepted`)
 
 ## Problem Statement
@@ -36,7 +35,7 @@ Bank-statement import was pegged to named banks. The only PDF reader accepted Ge
 
 - Inbound adapters do not import outbound adapters; the reader is an application port bound by the composition root, like the column-role mapper.
 - Reads stay on-host: every request is marked evidence-derived, so a misconfigured off-host provider refuses at the client's consent gate.
-- A host without the `llm` extra keeps importing CSV, OFX and spreadsheets whose headers the vocabulary names; only a PDF statement, or an export outside the vocabulary, meets the typed missing-extra refusal.
+- CSV, OFX and spreadsheets whose headers the vocabulary names import with no model; only a PDF statement, or an export outside the vocabulary, needs the model lane, which runs through the agent service and refuses with its typed model or runtime reason when no model is available.
 
 ## Implementation
 
@@ -66,10 +65,10 @@ Anchoring every value to a printed line and reconciling printed balances is the 
 
 ## Consequences
 
-- PDF statement import needs the `llm` extra and a local model runtime; without them it refuses with the typed missing-extra facts.
+- PDF statement import needs a model chosen through the agent service; without one it refuses with the typed model or runtime reason.
 - Statements whose dates print without a year, or whose movements wrap date and amount onto different lines, are refused row by row until a later decision widens anchoring.
 - Synthetic transaction ids for CSV and spreadsheet rows without an id column change prefix for new imports.
-- A CSV or spreadsheet whose header names fall outside the vocabulary needs the `llm` extra for the mapping lane.
+- A CSV or spreadsheet whose header names fall outside the vocabulary needs the model-backed mapping lane.
 - The on-host 2B vision model was measured on 2026-10-24 ignoring the reasoning switch and intermittently spending its whole output budget without returning text. Retries reduce this but do not remove it; a scanned page still unread refuses the statement rather than importing it short.
 - The desktop frontend type union must follow the token change.
 - Measured on 2026-10-24 with the on-host `qwen3:1.7b`: 106 text-layer statements, the ledger corpus rendered month by month in five layouts plus the three N26 fixtures. 101 imported exactly the expected movements, and 4 were refused by the balance or coverage checks for a model error: a lone movement missed on a second page, a mis-copied amount, and a running balance given as the closing balance. One could not be read because the host had no free memory for the model. None imported a wrong or missing movement.

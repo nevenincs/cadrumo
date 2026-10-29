@@ -11,8 +11,8 @@ related:
   - "[[2026-10-18-dependency-provisioning-unified-setup-adr]]"
   - "[[2026-10-17-single-binary-process-tree-adr]]"
   - "[[2026-10-04-runtime-manager-architecture-adr]]"
-  - "[[2026-10-13-application-distribution-native-bundle-llm-extra-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
+  - '[[2026-10-04-application-distribution-adr]]'
 ---
 # `rust-component-provisioning` adr: `Rust owns component provisioning` | (**status:** `accepted`)
 

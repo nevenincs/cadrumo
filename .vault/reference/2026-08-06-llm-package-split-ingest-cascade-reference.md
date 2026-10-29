@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-08-07'
+modified: '2026-10-29'
 body_schema: 'body-v1'
 body_hash: 'sha256:77292d521ead2e4cf8483a1482c564af8ce640c4ad85925709ac0c641e46f4c4'
-related:
-  - "[[2026-08-06-llm-package-split-adr]]"
+related: []
 ---
 
 # `llm-package-split` reference: `Ingest cascade blueprint, format coverage, and injection posture`

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#canonical-identifiers'
 date: '2026-08-07'
-modified: '2026-10-03'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:3c7cb0dcf33af9c5700437ca077a2391b45d4fc81351a1952f3f05192625777e'
+body_hash: 'sha256:5d97ac017592aef923841cf85ce8ce61db8895cd64b4c874b6ba34959ee15b71'
 related:
   - "[[2026-08-07-canonical-identifiers-reference]]"
   - "[[2026-08-07-justificante-identity-matching-adr]]"
@@ -563,8 +563,8 @@ calc-sheet transport exports casilla numbers and formulas, not taxpayer
 identity — so a retype cannot reach it structurally; the export constraint
 from the original Constraints section is narrowed to fixed-width
 fichero-BOE only. The locale catalogues are clean: every tax-id reference
-found is prose ABOUT an identifier, never a format declaration. `src/cadrumo/llm/`
-is confirmed well-governed, not a leak: LLM-extracted identifiers land in
+found is prose ABOUT an identifier, never a format declaration. The model
+extraction path is confirmed well-governed, not a leak: LLM-extracted identifiers land in
 an unvalidated draft model first, `_agreed_counterparty_tax_id()` REFUSES
 confirmation when operator-supplied and extracted NIFs disagree, and the
 persisted path runs `validate_spanish_tax_id()` / `validate_iva_number()`

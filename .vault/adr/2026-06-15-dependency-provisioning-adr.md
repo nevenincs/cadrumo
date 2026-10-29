@@ -4,7 +4,7 @@ tags:
   - '#dependency-provisioning'
 date: '2026-06-15'
 modified: '2026-10-29'
-body_hash: 'sha256:86f7375e1dafb6a4ab16af84b8bf6d2e316d5cc775e75aaad2e65ffcabc41731'
+body_hash: 'sha256:231a479cd98fe0457dd626b0e13a57a2c535534f3f0f590182c9e1a4e899f5c0'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"
@@ -69,7 +69,7 @@ extras structure over a lean core.**
    missing browser when the failure is browser-not-installed.
 
 3. **Optional extras.** The capability-mapped `[project.optional-dependencies]`
-   extras (`google`, `browser`, cloud-LLM and others) sit over a lean core. Each
+   extras (`google`, `browser` and others) sit over a lean core. Each
    library is imported lazily, and the feature that needs it raises
    `MissingOptionalExtraError` naming the missing extra when it is absent.
 

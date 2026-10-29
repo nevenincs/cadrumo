@@ -5,12 +5,11 @@ tags:
 date: '2026-08-07'
 modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:baa1739aee297d8fe0cd6a91791fc37135851ae4934b485dabbcce974f653a8f'
+body_hash: 'sha256:f7ab47b38e1c1269138ae5e96db32b20f6a6b5c1e8cdc6500953e7c94870184b'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
   - '[[2026-08-07-unstructured-document-ingestion-adr]]'
-  - '[[2026-08-06-llm-package-split-adr]]'
   - '[[2026-08-06-invoice-canonical-structure-adr]]'
   - '[[2026-06-10-llm-evidence-classification-adr]]'
   - '[[2026-08-07-unstructured-document-ingestion-provisioning-adr]]'
@@ -25,9 +24,9 @@ operator's ruling is that together they are still a fragment: the feature is
 an epic whose remaining tentacles — batch ingestion, the human review gate
 and process, consent withdrawal, secure-storage blob integration, ledger
 integration end to end, the CLI-only boundary, conformance honesty and
-deinstallation — must be designed, not deferred. Two of those were until now
-explicitly out of scope somewhere in the corpus (batch in the package-split
-ADR's "scale verbs", withdrawal nowhere at all), and an epic that leaves the
+deinstallation — must be designed, not deferred. Two of those were
+unaddressed elsewhere in the corpus (batch among the scale verbs, withdrawal
+nowhere at all), and an epic that leaves the
 operational surface undesigned repeats the session's measured defect class:
 capability with a ceiling above it, correct and unreachable.
 
@@ -42,8 +41,8 @@ why they are one record and not amendments scattered across two.
 
 ## Considerations
 
-- **The idempotency prerequisite is decided.** Package-split D13: evidence
-  `add` gains a caller-supplied idempotency key with a full-field no-op
+- **The idempotency prerequisite is decided.** Evidence
+  `add` takes a caller-supplied idempotency key with a full-field no-op
   match; the blob layer is already content-addressed. Batch re-run safety
   builds on that, not beside it.
 - **The transcription cache makes resume cheap.** Pipeline S1's encrypted
@@ -131,8 +130,8 @@ each load-bearing:
   plus a summary; exit status reflects "any item failed", not "first item
   failed".
 - **Idempotent re-run by construction.** Each item derives its idempotency
-  key from content address plus declared direction, riding package-split
-  D13: a re-run over the same directory re-ingests nothing, re-transcribes
+  key from content address plus declared direction, riding the evidence
+  idempotency key: a re-run over the same directory re-ingests nothing, re-transcribes
   nothing cached, and reports each such item as a no-op row. Resume after a
   crash is therefore re-run, with no journal format to invent; the
   completed-item record IS the store's idempotent state.
@@ -267,7 +266,7 @@ fixture.
 
 **Coupling.** Consumes: pipeline D1 through D9 and D8a, provisioning D3, D5
 (deinstallation mechanics live there; this record only binds their
-user-facing guarantees), package-split D13, the canonical-invoice writer,
+user-facing guarantees), the evidence idempotency key, the canonical-invoice writer,
 and the ledger evidence contract. Changes none of them.
 
 **Deliberately out of scope, named.** Bulk or rules-based auto-confirmation;
