@@ -33,7 +33,7 @@ def test_resolve_log_level_defaults_to_default_mode() -> None:
 
 
 @pytest.mark.parametrize("level", ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"))
-def test_severity_environment_override_is_accepted_by_desktop_cli_children(level: str) -> None:
+def test_severity_environment_override_is_accepted_by_cli_children(level: str) -> None:
     assert resolve_log_level(env={"CADRUMO_LOG_LEVEL": f" {level} "}).value == level.lower()
 
 

@@ -98,14 +98,14 @@ def test_each_sign_in_refusal_keeps_its_own_message_and_wire_facts(
     assert expected != key
     context = rendered["context"]
     assert isinstance(context, dict)
-    # The desktop and scripts read the runtime's code and provenance, unchanged.
+    # Callers read the runtime's code and provenance, unchanged.
     assert context["reason"] == code.value
     if sign_in is not None:
         assert context["sign_in_reason"] == sign_in.reason
         if sign_in.binding is not None:
             assert context["sign_in_binding"] == sign_in.binding
         if sign_in.remaining_seconds is not None:
-            # The envelope carries context values as text; the desktop parses the number back.
+            # The envelope carries context values as text; callers parse the number back.
             assert context["seconds"] == str(sign_in.remaining_seconds)
 
 

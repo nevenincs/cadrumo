@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING
 
 from cadrumo_client.commands.payloads import ConfigStatusResult
 
-from ..component_recovery_text import component_recovery_lines
-
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
@@ -55,9 +53,6 @@ def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tupl
     """Render the exact resolved action DTO without synthesising recovery prose."""
     if action is None:
         return ()
-    recovery = component_recovery_lines(action)
-    if recovery is not None:
-        return tuple(f"precondition_action\t{line}" for line in recovery)
     document = action.model_dump(mode="json")
     fields = (
         "failed_condition_id",

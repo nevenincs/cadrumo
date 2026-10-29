@@ -38,7 +38,7 @@ from ....application.diagnostics_repair_documents import (
     reset_progress_document as _reset_progress_document,
 )
 from ....core.bucket_pointer import resolve_active_bucket_id as _resolve_active_bucket_id
-from ....core.json_contract import Notice, NoticeSeverity, strict_round_trip
+from ....core.json_contract import strict_round_trip
 from ..common import emit_envelope, resolve_cli_precondition_action
 from .connectivity_rendering import render_browser_connectivity_text as _render_browser_connectivity_text
 
@@ -53,58 +53,17 @@ def repair(ctx: typer.Context) -> None:
         return
     from cadrumo_client.commands.payloads import ConfigRepairResult
 
-    from ...diagnostics_repair_composition import component_setup_checks
     from ..state_projection_support import diagnostics_ports
-    from .check_cli import read_setup_rows
 
-    setup_rows = read_setup_rows(ctx)
-    setup_checks = None if setup_rows is None else component_setup_checks(setup_rows)
-    report = _build_config_repair_report(ports=diagnostics_ports(ctx), setup_checks=setup_checks or ())
+    report = _build_config_repair_report(ports=diagnostics_ports(ctx))
     document = _repair_report_document(report, resolve_action=resolve_cli_precondition_action)
     result = strict_round_trip(ConfigRepairResult, document)
     lines = _render_config_repair_text(report).splitlines()
-    notices = () if setup_checks is not None else (_setup_status_notice(),)
-    if setup_checks is not None:
-        from ..component_recovery_text import component_recovery_lines, component_recovery_notice
-
-        for check in setup_checks:
-            if check.precondition_verdict is not None:
-                recovery = component_recovery_lines(resolve_cli_precondition_action(check.precondition_verdict))
-                if recovery is not None and recovery[0] not in check.summary:
-                    lines.extend(recovery)
-                    if check.name == "setup.local_ai":
-                        notices += (
-                            Notice(
-                                severity=NoticeSeverity.INFO,
-                                code="config.provision.local_ai_desktop",
-                                message=recovery[0],
-                            ),
-                        )
-                if check.name == "setup.browser":
-                    recovery_notice = component_recovery_notice(
-                        resolve_cli_precondition_action(check.precondition_verdict)
-                    )
-                    if recovery_notice is not None:
-                        notices += (recovery_notice,)
     emit_envelope(
         ctx,
         command="config.repair",
         result=result,
         lines=lines,
-        notices=notices,
-    )
-
-
-def _setup_status_notice() -> Notice:
-    """Say setup could not be checked, and point at the command that checks it again."""
-    from ....application.operator_actions.catalogue import next_action
-    from ....core.i18n.render import tr
-
-    return Notice(
-        severity=NoticeSeverity.INFO,
-        code="config.repair.setup_status",
-        message=tr("cli.config.repair.setup_status_hint"),
-        action=next_action("operator.provision.status"),
     )
 
 

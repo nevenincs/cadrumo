@@ -48,28 +48,9 @@ if TYPE_CHECKING:
 
 
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
-_PROVISION_CONNECTION_KEYS = frozenset(
-    {
-        "config_provision_status",
-        "config_provision_probe",
-        "config_provision_verify",
-        "config_provision_setup",
-        "config_provision_browser",
-        "config_provision_remove",
-        "config_provision_review",
-    }
-)
 _PROFILE_CONNECTION_KEYS = frozenset(
     {
         "config_check",
-        "config_provision_status",
-        "config_provision_probe",
-        "config_provision_verify",
-        "config_provision_setup",
-        "config_provision_browser",
-        "config_provision_remove",
-        "config_provision_review",
-        "config_provision_report",
         "config_google_folder_view",
         "config_google_folder_organize",
         "config_google_probe",
@@ -896,10 +877,6 @@ def _activate_profile_connection_leaf(
             from .common import _no_active_profile_refusal
 
             if resolve_active_bucket_id() is None:
-                if spec.key in _PROVISION_CONNECTION_KEYS:
-                    from cadrumo_client.commands.errors import CliRefusedBoundaryError
-
-                    raise CliRefusedBoundaryError(translated_message="cli.config.provision.sign_in_first")
                 raise _no_active_profile_refusal()
         activate_connection = (
             require_bound_profile_connection if load_connection_activator is None else load_connection_activator()

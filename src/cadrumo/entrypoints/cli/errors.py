@@ -64,7 +64,6 @@ from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
 from ...core.terminal_encoding import encode_terminal_field, encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
-from .component_recovery_text import component_recovery_lines, component_recovery_notice
 
 _log = logging.getLogger(__name__)
 
@@ -479,10 +478,6 @@ def _render_precondition_action_text(
 
     """
     lines = [text.rstrip("\n")]
-    recovery = component_recovery_lines(action)
-    if recovery is not None:
-        lines.extend(f"  {line}" for line in recovery)
-        return "\n".join(lines) + "\n"
     if command is not None:
         lines.append(f"  command: {command}")
     action_document = action.model_dump(mode="json")
@@ -503,6 +498,17 @@ def _render_precondition_action_text(
         )
         lines.append(f"  action.{field_name}: {value}")
     return "\n".join(lines) + "\n"
+
+
+def _error_remedy_context(error: BaseException) -> dict[str, str] | None:
+    reason = getattr(error, "reason", None)
+    if reason is None and isinstance(error, CadrumoError):
+        reason = (error.context or {}).get("reason")
+    if reason is None and isinstance(error, _client_commands_errors.CliRefusedBoundaryError) and error.args:
+        reason = error.args[0]
+    remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
+    remedy_context = {"remedy": remedy} if remedy is not None else None
+    return remedy_context
 
 
 def render_error_payload(
@@ -536,23 +542,15 @@ def render_error_payload(
     authentication_notices = resolve_notice_actions(
         (*drain_profile_authentication_notices(), *drain_payer_fact_migration_notices()),
     )
-    reason = getattr(error, "reason", None)
-    if reason is None and isinstance(error, CadrumoError):
-        reason = (error.context or {}).get("reason")
-    if reason is None and isinstance(error, _client_commands_errors.CliRefusedBoundaryError) and error.args:
-        reason = error.args[0]
-    remedy = connection_unavailable_remedy(reason if isinstance(reason, str) else None)
-    remedy_context = {"remedy": remedy} if remedy is not None else None
+    remedy_context = _error_remedy_context(error)
     if as_json:
-        recovery = component_recovery_notice(action)
-        recovery_notices = resolve_notice_actions(() if recovery is None else (recovery,))
         return render_error_json(
             error,
             context=remedy_context,
             action=action,
             active_profile=active_profile_label_for_error(error),
             command=command,
-            notices=(*(() if notice is None else (notice,)), *authentication_notices, *recovery_notices),
+            notices=(*(() if notice is None else (notice,)), *authentication_notices),
         )
     text = render_error_text(error, context=remedy_context)
     if action is not None:

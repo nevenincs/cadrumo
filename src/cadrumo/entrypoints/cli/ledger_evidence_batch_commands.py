@@ -51,7 +51,6 @@ from .common import (
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
-from .component_recovery_text import component_recovery_notice
 from .config.status_rendering import precondition_action_lines
 from .ledger_evidence_batch_results import EvidenceBatchResult
 
@@ -245,10 +244,7 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
     pause = run.inference_pause
     if run.any_deferred and pause is not None:
         action = resolve_cli_precondition_action(pause.precondition_verdict)
-        recovery = component_recovery_notice(action)
         message = tr("cli.app.ledger.evidence.batch_work_deferred_message")
-        if recovery is not None:
-            message = f"{message} {recovery.message}"
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,
@@ -260,8 +256,6 @@ def _run_notices(run: BatchRunResult) -> list[Notice]:
                 },
             ),
         )
-        if recovery is not None and recovery.action is not None:
-            notices.append(recovery)
     held = run.count_of("pending_review")
     if held:
         notices.append(
@@ -398,22 +392,14 @@ def _batch_text_lines(run: BatchRunResult, *, bucket_id: str, direction: Invoice
 def _append_batch_pause_lines(run: BatchRunResult, lines: list[str]) -> None:
     """Append why the paused documents were not read, then what the pause's action allows.
 
-    Text names the local AI, which reads the paused documents, and then the
-    setup line its verdict resolves to. The pause's raw facts stay in the JSON
-    payload only.
+    Text says why the paused documents were not read, then the action its
+    verdict resolves to. The pause's raw facts stay in the JSON payload only.
     """
     pause = run.inference_pause
     if pause is None:
         return
-    from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
-
     verdict = pause.precondition_verdict
-    names_setup = verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    reason = (
-        tr("cli.app.ledger.evidence.batch_paused_local_ai_not_ready")
-        if names_setup
-        else tr("cli.app.ledger.evidence.batch_paused_local_ai_unavailable")
-    )
+    reason = tr("cli.app.ledger.evidence.batch_paused_local_ai_unavailable")
     # MACHINE-FORMAT-RATIONALE-LEDGER-EVIDENCE-BATCH-PAUSE: tab-separated machine
     # record (marker, localized reason).
     lines.append(f"paused\t{reason}")

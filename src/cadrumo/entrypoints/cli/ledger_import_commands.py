@@ -17,13 +17,11 @@ from ...application.ledger.import_operation import (
 )
 from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ...application.operator_actions.models import PreconditionVerdict
-from ...application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.transactions.errors import TransactionValidationError
 from ._ledger_support import ledger_transaction_validation_no_recovery
-from .common import bad, emit_envelope, resolve_cli_precondition_action
-from .component_recovery_text import component_recovery_lines, component_recovery_notice
+from .common import bad, emit_envelope
 from .ledger_results import LedgerImportPayload
 from .operation_ledger_import import import_ledger_sources_for_cli
 from .period_parsing import _optional_canonical_period
@@ -59,12 +57,7 @@ def _refusal_message(refusal: LedgerImportFileRefusal) -> str:
         return tr("cli.ledger.import.file_refused_account_mismatch", file=refusal.file_name)
     verdict = _reader_verdict(refusal)
     if verdict is not None:
-        return tr(
-            "cli.ledger.import.file_reader_not_ready"
-            if _setup_readies_reader(verdict)
-            else "cli.ledger.import.file_reader_unavailable",
-            file=refusal.file_name,
-        )
+        return tr("cli.ledger.import.file_reader_unavailable", file=refusal.file_name)
     return tr("cli.ledger.import.file_refused", file=refusal.file_name)
 
 
@@ -72,11 +65,6 @@ def _reader_verdict(refusal: LedgerImportFileRefusal) -> PreconditionVerdict | N
     """Return the reader probe's verdict a file was refused with, or ``None``."""
     snapshot = refusal.precondition_verdict
     return None if snapshot is None else snapshot.to_verdict()
-
-
-def _setup_readies_reader(verdict: PreconditionVerdict) -> bool:
-    """Whether setting the local AI up readies the reader; otherwise this computer cannot run it."""
-    return verdict.action is not None and verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
 
 
 class _ImportReport:
@@ -105,18 +93,6 @@ def _refused_file_report(refusals: Sequence[LedgerImportFileRefusal]) -> _Import
                 context=context,
             ),
         )
-    for refusal in refusals:
-        verdict = _reader_verdict(refusal)
-        if verdict is None:
-            continue
-        action = resolve_cli_precondition_action(verdict)
-        recovery = component_recovery_lines(action)
-        if recovery is not None:
-            lines.extend(f"  {line}" for line in recovery)
-            notice = component_recovery_notice(action)
-            if notice is not None:
-                notices.append(notice)
-            break
     return _ImportReport(lines=lines, notices=notices)
 
 
@@ -193,12 +169,6 @@ def ledger_import(
         if verdict is not None:
             # The one statement named needs a reader that could not be asked.
             # The refusal carries the probe's verdict for the error boundary.
-            if _setup_readies_reader(verdict):
-                raise LedgerImportReaderUnavailableError(
-                    translated_message="cli.ledger.import.file_reader_not_ready",
-                    context={"file": refusal.file_name},
-                    precondition_verdict=verdict,
-                )
             raise LedgerImportReaderUnavailableError(
                 translated_message="cli.ledger.import.file_reader_unavailable",
                 context={"file": refusal.file_name},

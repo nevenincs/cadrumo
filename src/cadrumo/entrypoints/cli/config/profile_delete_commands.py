@@ -168,7 +168,7 @@ def config_profile_delete(
     assessment, label = preflight.assessment, preflight.label
     if assessment is None or label is None:
         raise CliRefusedBoundaryError("custody_changed")
-    # Desktop confirmation binds the name and content seen in its review.
+    # The confirmation binds the name and content seen in its review.
     # Never silently re-resolve a reused label into a different capsule.
     if (expected_profile_id is None) != (expected_digest is None):
         raise CliRefusedBoundaryError("custody_changed")

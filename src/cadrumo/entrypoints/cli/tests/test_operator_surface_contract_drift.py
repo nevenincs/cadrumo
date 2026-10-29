@@ -38,9 +38,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PINNED_ROOTS: frozenset[str] = frozenset({"config", "app"})
 _PINNED_FAMILIES = {
     "app": frozenset({"diagnostics", "ledger", "live", "modelo", "overview", "quickfile", "review"}),
-    "config": frozenset(
-        {"check", "collab", "google", "login", "logout", "profile", "provision", "repair", "reset", "storage"}
-    ),
+    "config": frozenset({"check", "collab", "google", "login", "logout", "profile", "repair", "reset", "storage"}),
 }
 
 

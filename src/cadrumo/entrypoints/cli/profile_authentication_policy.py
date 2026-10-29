@@ -39,9 +39,7 @@ def root_profile_secret_model(*, graph: CommandSpecGraph | None = None) -> type[
 #: Capabilities that reach nothing a profile holds. A leaf declaring only these
 #: runs without a profile session, so an active profile the host cannot unlock
 #: never stands between the operator and a command that does not read it.
-#: ``components`` is the installation-wide component storage the native
-#: component engine changes, which sits outside every profile.
-PROFILE_FREE_CAPABILITIES: frozenset[Capability] = frozenset({"state-free", "network", "components"})
+PROFILE_FREE_CAPABILITIES: frozenset[Capability] = frozenset({"state-free", "network"})
 
 
 def command_is_profile_free(spec: CommandSpec) -> bool:

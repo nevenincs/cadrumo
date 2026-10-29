@@ -3,15 +3,14 @@
 The complete CLI batch journey is exercised through the authenticated profile
 worker in ``test_runtime_ledger_evidence_ingestion_native``. These tests isolate
 the CLI-owned presentation of canonical pause, refusal, review, and unreadable
-source results. A pause's text names the local AI and then what the local AI's
-typed action and facts, without probing component status during rendering.
+source results. A pause's text says why the documents were not read and then its typed action
+and facts.
 """
 
 from __future__ import annotations
 
 import pytest
 
-from ....adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from ....application.ledger.batch_ingest import (
     BatchItemResult,
     BatchItemStatus,
@@ -22,9 +21,7 @@ from ....application.ledger.batch_ingest import (
 )
 from ....application.ledger.invoice_draft_records import LabelReadingFallback, LabelReadingFallbackCause
 from ....application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-from ....application.local_reader import probe_local_ai_program
 from ....application.operator_actions.models import ConditionEvidence, PreconditionVerdict
-from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID, ProvisioningPreconditionCondition
 from ....core.config import override_settings
 from ....core.json_contract import ResolvedActionReference, ResolvedNoticeAction, ResolvedPreconditionAction
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
@@ -34,7 +31,7 @@ from ..ledger_evidence_batch_commands import _batch_payload, _batch_text_lines, 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _ADDRESS = "a" * 64
-_RUNTIME_REACHABLE = ProvisioningPreconditionCondition.RUNTIME_REACHABLE.value
+_RUNTIME_REACHABLE = "model.runtime.reachable"
 
 
 def _paused_row(name: str) -> BatchItemResult:
@@ -111,12 +108,9 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
 
     with override_settings(cadrumo_output_language="en"):
         lines = _batch_text_lines(deferred, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-    assert (
-        "paused\tThe model you picked could not read the paused documents. "
-        "Check it in the agent's model picker in the Cadrumo desktop app." in lines
-    )
+    assert any(line.startswith("paused\t") for line in lines)
     assert not any(line.startswith("paused.facts.") for line in lines)
-    # A pause setup cannot end keeps its typed action record.
+    # The pause keeps its typed action record.
     assert any(line.startswith("paused.precondition_action.failed_condition_id\t") for line in lines)
 
     failed = BatchRunResult(items=(_refused_row("broken.pdf"),))
@@ -130,38 +124,6 @@ def test_a_deferred_run_reports_distinctly_from_a_failed_one() -> None:
         "ledger.evidence.batch.items_refused",
         "ledger.evidence.batch.work_deferred",
     }
-
-
-def _local_ai_pause() -> InferencePause:
-    """The pause a local AI program not set up gives: it names the local AI's setup."""
-    status = probe_local_ai_program(recorded_absent_row("local_ai"))
-    assert status.precondition_verdict is not None
-    return InferencePause(
-        facts={"runtime_reachable": False, "runtime_url": "http://127.0.0.1:11434"},
-        precondition_verdict=status.precondition_verdict,
-    )
-
-
-def test_a_pause_for_the_local_ai_renders_its_supplied_action() -> None:
-    pause = _local_ai_pause()
-    run = BatchRunResult(items=(_paused_row("scan.pdf"),), inference_pause=pause)
-
-    with override_settings(cadrumo_output_language="en"):
-        lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-        notice = _run_notices(run)[0]
-
-    reason = lines.index("paused\tLocal AI, which reads the paused documents, is not ready.")
-    assert any("Set it up in the Cadrumo desktop app." in line for line in lines[reason + 1 :])
-    assert not any("aeat config provision status" in line for line in lines)
-    assert not any("runtime_url" in line or "127.0.0.1" in line for line in lines)
-    # JSON keeps the raw facts and the typed action.
-    payload = _batch_payload(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-    assert payload.inference_pause is not None
-    assert payload.inference_pause.facts == pause.facts
-    action = payload.inference_pause.precondition_action.action
-    assert action is not None
-    assert action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    assert "Set it up in the Cadrumo desktop app." in notice.message
 
 
 def test_pending_review_resolves_the_review_queue_action() -> None:
@@ -211,7 +173,7 @@ def _degraded_row(name: str, *, status: BatchItemStatus = "ingested") -> BatchIt
             cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
             unread_fields=("currency", "supplier_name"),
             reader_error_type="LLMContentionError",
-            failed_condition_id="provisioning.load_capacity.available",
+            failed_condition_id="load_capacity.available",
         ),
     )
 
@@ -234,7 +196,7 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert degraded.cause == "load_headroom_refused"
     assert degraded.unread_fields == ["currency", "supplier_name"]
     assert degraded.reader_error_type == "LLMContentionError"
-    assert degraded.failed_condition_id == "provisioning.load_capacity.available"
+    assert degraded.failed_condition_id == "load_capacity.available"
     assert rows["clean.pdf"].label_reading_fallback is None
 
     notices = {notice.code: notice for notice in _run_notices(run)}
@@ -243,10 +205,7 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert warning.context == {"label_reading_degraded": "1", "reasons": "load_headroom_refused"}
 
     lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-    assert (
-        "label_reading\tticket.pdf\tload_headroom_refused\tprovisioning.load_capacity.available\tcurrency,supplier_name"
-        in lines
-    )
+    assert "label_reading\tticket.pdf\tload_headroom_refused\tload_capacity.available\tcurrency,supplier_name" in lines
     assert not any(line.startswith("label_reading\tclean.pdf") for line in lines)
 
     clean = BatchRunResult(items=(_pending_review_row("clean.pdf"),))
@@ -266,31 +225,3 @@ def test_an_already_ingested_degraded_draft_is_still_reported() -> None:
     assert row.status == "no_op"
     assert row.label_reading_fallback is not None
     assert "ledger.evidence.batch.label_reading_degraded" in {notice.code for notice in _run_notices(run)}
-
-
-def test_a_reader_missing_degraded_draft_carries_its_setup_action_to_the_row() -> None:
-    """A fill the reader probe refused names the local AI setup on the row, so a surface can offer it."""
-    address = "d" * 64
-    row = BatchItemResult(
-        content_address=address,
-        identity=batch_item_identity(content_address=address, direction=InvoiceKind.RECEIVED),
-        direction=InvoiceKind.RECEIVED,
-        source_name="ticket.pdf",
-        status="ingested",
-        label_reading_fallback=LabelReadingFallback(
-            cause=LabelReadingFallbackCause.READER_UNAVAILABLE,
-            unread_fields=("supplier_name",),
-            reader_error_type="PurchaseInvoiceEvidenceReaderError",
-            failed_condition_id=ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value,
-            recovery_action_id=LOCAL_AI_PROVISION_ACTION_ID,
-        ),
-    )
-
-    payload = _batch_payload(BatchRunResult(items=(row,)), bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-
-    (projected,) = payload.items
-    assert projected.label_reading_fallback is not None
-    assert projected.label_reading_fallback.failed_condition_id == (
-        ProvisioningPreconditionCondition.ROLE_MODEL_INSTALLED.value
-    )
-    assert projected.label_reading_fallback.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID

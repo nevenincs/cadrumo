@@ -9,13 +9,12 @@ with one refusal code and records every run it is sent. The result is then read
 back the way a frontend in another process reads it: as the settled public
 projection.
 
-One file of a folder can need the local AI while the others import, so the
+One file of a folder can need a model while the others import, so the
 verdict rides on that file's refusal rather than refusing the operation: the
 CSV lane imports a readable statement beside an export only the column-naming
 model reads, and the PDF lane refuses a statement only the statement reader
-reads. A selected model that is not installed must carry the verdict naming the
-local AI setup; a role with no selection must carry its typed verdict naming no
-action. No run may be sent first. The CLI then renders each settled
+reads. A selected model that is not installed and a role with no selection each
+carry their typed verdict naming no action. No run may be sent first. The CLI then renders each settled
 result through its real error boundary and live action resolver, with the
 file's sentence and the typed facts already carried by the refusal.
 """
@@ -51,7 +50,6 @@ from ....application.ledger.import_operation import (
 from ....application.ledger.statement_reading import bind_statement_reader_factory
 from ....application.operations.frontend_requests import OperationObservationSuccessV1
 from ....application.operations.registry import OperationRegistry
-from ....application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
 from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -153,15 +151,13 @@ def _assert_carries_the_refusal(refusal: LedgerImportFileRefusal, role: ModelRol
     assert {str(item.values.get("role")) for item in verdict.evidence} == {role.value}
 
 
-def _assert_names_the_local_ai_setup(refusal: LedgerImportFileRefusal, role: ModelRole) -> None:
+def _assert_names_no_action(refusal: LedgerImportFileRefusal, role: ModelRole) -> None:
     _assert_carries_the_refusal(refusal, role, ModelRunRefusalCode.MODEL_NOT_INSTALLED)
     assert refusal.precondition_verdict is not None
-    action = refusal.precondition_verdict.to_verdict().action
-    assert action is not None
-    assert action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert refusal.precondition_verdict.to_verdict().action is None
 
 
-def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_export_it_needs(
+def test_a_folder_imports_its_readable_statement_and_refuses_the_export_it_needs_a_model_for(
     tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     del operation
@@ -182,17 +178,17 @@ def test_a_folder_imports_its_readable_statement_and_names_the_local_ai_for_the_
     assert (result.rows, result.imported) == (1, 1), "the readable statement is imported beside the refused export"
     (refusal,) = result.refused_files
     assert refusal.file_name == "b_expenses_export.csv"
-    _assert_names_the_local_ai_setup(refusal, ModelRole.COLUMN_ROLE_MAPPING)
+    _assert_names_no_action(refusal, ModelRole.COLUMN_ROLE_MAPPING)
     assert service.runs == [], "a run was sent although the lookup refused"
 
     exit_code, text = _cli_import_text(monkeypatch, result, effect, folder)
     assert exit_code == 0, text
     lines = text.splitlines()
     assert "  refused\tb_expenses_export.csv\treader_unavailable" in lines
-    assert "  Set it up in the Cadrumo desktop app." in lines
+    assert not any("desktop" in line.lower() for line in lines)
 
 
-def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_the_local_ai_setup(
+def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_its_refusal_verdict(
     tmp_path: Path, operation: PinnedAuthorityOperation, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     del operation
@@ -211,15 +207,15 @@ def test_a_pdf_statement_whose_reader_model_is_not_installed_settles_with_the_lo
     assert (result.rows, result.imported, result.validations) == (0, 0, ())
     (refusal,) = result.refused_files
     assert refusal.file_name == _PDF_STATEMENT.name
-    _assert_names_the_local_ai_setup(refusal, ModelRole.TEXT_EXTRACTION)
+    _assert_names_no_action(refusal, ModelRole.TEXT_EXTRACTION)
     assert service.runs == [], "a run was sent although the lookup refused"
 
     exit_code, text = _cli_import_text(monkeypatch, result, effect, _PDF_STATEMENT)
     assert exit_code != 0
     lines = text.splitlines()
-    assert f"Statement not read: {_PDF_STATEMENT.name} is read by the local AI, which is not ready." in lines[0]
-    assert lines[-1] == "  Set it up in the Cadrumo desktop app."
-    assert "aeat config provision status" not in text
+    assert lines[0].startswith("Statement not read:")
+    assert _PDF_STATEMENT.name in lines[0]
+    assert "desktop" not in text.lower()
 
 
 def test_an_export_whose_role_has_no_selection_settles_with_its_typed_refusal(

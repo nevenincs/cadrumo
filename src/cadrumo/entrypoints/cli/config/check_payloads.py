@@ -2,14 +2,13 @@
 
 The command is the workstation doctor: it reports every
 :class:`ServiceCapability` resolved for the active profile beside the
-external dependency probes that must be provisioned for opted-in capabilities.
+external dependency probes for opted-in capabilities.
 These strict :class:`OutputSchema` subclasses
 document only the transport shape referenced by production-authored CommandSpec
 as deferred public schema targets and emitted through
 :class:`SchemaEnvelope` by
 :func:`emit_envelope`. Capability semantics live
-in :mod:`user_profile`, and provisioning semantics live in
-:mod:`provisioning`.
+in :mod:`user_profile`.
 """
 
 from __future__ import annotations
@@ -24,8 +23,8 @@ from ....core.identity.profile import ProfileId
 from ....core.json_contract import OutputSchema, ResolvedPreconditionAction
 from ....core.text_bounds import NonEmptyStr
 
-ProvisioningFactPayload = Mapping[str, str | int | bool]
-"""Locale-neutral scalar facts projected from a provisioning outcome."""
+CheckFactPayload = Mapping[str, str | int | bool]
+"""Locale-neutral scalar facts projected from a probe outcome."""
 
 
 class CheckCapabilityPayload(OutputSchema):
@@ -50,17 +49,15 @@ class CheckDependencyPayload(OutputSchema):
     Nested in
     :class:`ConfigCheckResult`
     and mirrors
-    :class:`DependencyStatus` rows from
-    :func:`~application.local_reader.probe_local_ai_program`,
-    :func:`~application.provisioning_browser.probe_playwright_browser`, and
-    :func:`probe_optional_extras`. The application-owned facts and verdict are
+    :class:`DependencyStatus` rows from the workstation dependency probes.
+    The application-owned facts and verdict are
     the full dependency explanation; this boundary resolves the verdict against
     the live action surface without recreating a command string.
     """
 
     service: NonEmptyStr
     available: bool
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    facts: CheckFactPayload = Field(default_factory=dict)
     precondition_action: ResolvedPreconditionAction | None = None
 
 
@@ -87,7 +84,7 @@ class CheckPreflightPayload(OutputSchema):
     check: NonEmptyStr
     healthy: bool
     severity: HealthSeverity
-    facts: ProvisioningFactPayload = Field(default_factory=dict)
+    facts: CheckFactPayload = Field(default_factory=dict)
     precondition_action: ResolvedPreconditionAction | None = None
 
     @model_validator(mode="after")
@@ -111,7 +108,7 @@ class ConfigCheckResult(OutputSchema):
     :class:`CheckDependencyPayload`
     rows. ``ok`` is false (and the command exits
     non-zero) when a capability the profile opted into has a missing dependency,
-    meaning the operator asked for a service that is not provisioned. ``issues``
+    meaning the operator asked for a service that is not available. ``issues``
     names those capability/dependency gaps while ``dependencies`` still reports
     every probe row for diagnostics.
     """

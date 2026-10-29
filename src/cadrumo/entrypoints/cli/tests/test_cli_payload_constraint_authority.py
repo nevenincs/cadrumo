@@ -83,7 +83,6 @@ RECONCILED_MODULES: frozenset[str] = frozenset(
         "app_live_iva_wallet_results.py",
         "config/archive_reconcile_results.py",
         "config/check_payloads.py",
-        "config/provision_payloads.py",
         "ledger_counterparty_results.py",
         "modelo_reconcile_results.py",
         "overview_results.py",

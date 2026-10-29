@@ -295,14 +295,7 @@ def label_reading_fallback_notices(fallback: LabelReadingFallback | None) -> lis
     match fallback.cause:
         case LabelReadingFallbackCause.READER_UNAVAILABLE:
             code = "ledger.evidence.label_reading.reader_unavailable"
-            # The sentence offers the local AI setup only when the probe named it.
-            message = tr(
-                "application.ledger.evidence.label_reading.local_ai_not_ready"
-                if fallback.recovery_action_id is not None
-                else "application.ledger.evidence.label_reading.reader_unavailable",
-                count=count,
-                fields=unread,
-            )
+            message = tr("application.ledger.evidence.label_reading.reader_unavailable", count=count, fields=unread)
         case LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED:
             code = "ledger.evidence.label_reading.headroom_refused"
             message = tr("cli.app.ledger.evidence.label_reading_headroom_refused", count=count, fields=unread)

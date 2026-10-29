@@ -30,7 +30,6 @@ from pathlib import Path
 
 sys.path.insert(0, sys.argv[1])
 blocked = {
-    'cadrumo.application.provisioning',
     'cadrumo.domain.calculations.registry.authority',
     'cadrumo.domain.calculations.registry.authority_component_codec',
     'cadrumo.domain.calculations.registry.schema',
