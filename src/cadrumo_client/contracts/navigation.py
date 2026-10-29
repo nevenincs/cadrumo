@@ -218,6 +218,12 @@ class NavigationRegister(BaseModel):
 
     @model_validator(mode="after")
     def _closed_tree(self) -> Self:
+        self._validate_tree_membership()
+        self._validate_parameter_kinds()
+        return self
+
+    def _validate_tree_membership(self) -> None:
+        """Require unique active ids, no reuse of retired ids and declared parents."""
         ids = [element.id for element in self.elements]
         duplicated = sorted({item for item in ids if ids.count(item) > 1})
         if duplicated:
@@ -231,13 +237,15 @@ class NavigationRegister(BaseModel):
         )
         if orphans:
             raise ValueError(f"elements {orphans!r} name a parent the register does not declare")
+
+    def _validate_parameter_kinds(self) -> None:
+        """Require a declared value grammar for every element parameter."""
         kinds = {kind.name for kind in self.kinds}
         undeclared = sorted(
             element.id for element in self.elements if any(kind not in kinds for kind in element.params.values())
         )
         if undeclared:
             raise ValueError(f"elements {undeclared!r} take a value kind the register does not declare")
-        return self
 
     @cached_property
     def _by_id(self) -> Mapping[str, NavigationElement]:
@@ -447,6 +455,13 @@ def _link_syntax_refusal(text: str) -> ViewLinkRefusal | None:
     return None
 
 
+def _valid_query_pair(key: str, has_value: str, value: str, pairs: Mapping[str, str]) -> bool:
+    """Require an explicit nonempty value and a unique well-formed parameter key."""
+    if not has_value or not value or "=" in value or "?" in value:
+        return False
+    return _NAME.fullmatch(key) is not None and key not in pairs
+
+
 def _query_pairs(query: str) -> dict[str, str] | None:
     """Return the query's ``key=value`` pairs, or ``None`` when it breaks the query's shape.
 
@@ -457,9 +472,7 @@ def _query_pairs(query: str) -> dict[str, str] | None:
     pairs: dict[str, str] = {}
     for pair in query.split("&"):
         key, has_value, value = pair.partition("=")
-        if not has_value or not value or "=" in value or "?" in value:
-            return None
-        if _NAME.fullmatch(key) is None or key in pairs:
+        if not _valid_query_pair(key, has_value, value, pairs):
             return None
         pairs[key] = value
     surface = pairs.get(PREFER_KEY)
@@ -556,26 +569,60 @@ def resolve_view(
     order = (first, NavigationSurface.TUI if first is NavigationSurface.GUI else NavigationSurface.GUI)
     names = frozenset(name for name, _ in request.params)
 
-    def honours(surface: NavigationSurface, view_id: str, wanted: frozenset[str]) -> bool:
-        implementation = surfaces.get(surface)
-        return implementation is not None and implementation.honours(view_id, wanted)
+    opened = _open_same_element(request, order, surfaces, names)
+    if opened is not None:
+        return opened
+    return _open_ancestor(request, active, order, surfaces)
 
-    def same_element(surface: NavigationSurface, params: ViewParams) -> ViewOpened:
-        fallback: ViewFallback = "none" if surface is first else "other_surface"
-        return ViewOpened(request, request.view_id, surface, fallback, params)
 
-    for surface in order:
-        if honours(surface, request.view_id, names):
-            return same_element(surface, request.params)
-    if names:
+def _open_ancestor(
+    request: ViewLink,
+    register: NavigationRegister,
+    order: tuple[NavigationSurface, NavigationSurface],
+    surfaces: Mapping[NavigationSurface, SurfaceImplementation],
+) -> ViewOpened | ViewRefused:
+    """Try nearest ancestors on each surface only after exact-element attempts fail."""
+    for ancestor in register.lineage(request.view_id)[1:]:
         for surface in order:
-            if honours(surface, request.view_id, frozenset()):
-                return same_element(surface, ())
-    for ancestor in active.lineage(request.view_id)[1:]:
-        for surface in order:
-            if honours(surface, ancestor.id, frozenset()):
+            if _honours_view(surfaces, surface, ancestor.id, frozenset()):
                 return ViewOpened(request, ancestor.id, surface, "ancestor", ())
     return ViewRefused(requested=request, reason="not_implemented")
+
+
+def _honours_view(
+    surfaces: Mapping[NavigationSurface, SurfaceImplementation],
+    surface: NavigationSurface,
+    view_id: str,
+    wanted: frozenset[str],
+) -> bool:
+    """Test one surface's declared implementation without changing the request."""
+    implementation = surfaces.get(surface)
+    return implementation is not None and implementation.honours(view_id, wanted)
+
+
+def _same_element_opening(
+    request: ViewLink, surface: NavigationSurface, first: NavigationSurface, params: ViewParams
+) -> ViewOpened:
+    """Record the selected surface and whether the original preference was retained."""
+    fallback: ViewFallback = "none" if surface is first else "other_surface"
+    return ViewOpened(request, request.view_id, surface, fallback, params)
+
+
+def _open_same_element(
+    request: ViewLink,
+    order: tuple[NavigationSurface, NavigationSurface],
+    surfaces: Mapping[NavigationSurface, SurfaceImplementation],
+    names: frozenset[str],
+) -> ViewOpened | None:
+    """Try the exact element with all parameters, then without them when necessary."""
+    for surface in order:
+        if _honours_view(surfaces, surface, request.view_id, names):
+            return _same_element_opening(request, surface, order[0], request.params)
+    if names:
+        for surface in order:
+            if _honours_view(surfaces, surface, request.view_id, frozenset()):
+                return _same_element_opening(request, surface, order[0], ())
+    return None
 
 
 def _declared_implementation(register: NavigationRegister) -> Mapping[NavigationSurface, SurfaceImplementation]:

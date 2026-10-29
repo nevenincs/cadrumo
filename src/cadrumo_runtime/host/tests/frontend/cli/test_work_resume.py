@@ -43,7 +43,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.deadlines.models import ObligationStatus
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from .cli_runner import invoke_cached_cli

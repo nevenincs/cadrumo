@@ -12,7 +12,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.entrypoints.tui.app import RootBindingV1
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 from cadrumo.entrypoints.tui.tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
+from dataclasses import dataclass
 from threading import RLock
 from typing import NoReturn
 from uuid import UUID, uuid4
@@ -68,6 +69,14 @@ _PROBE_POLL_SECONDS = 0.02
 _LOGGER = get_logger(__name__)
 
 
+@dataclass(slots=True)
+class ExchangeAttempt:
+    """Track whether a request entered its worker channel and its queue wait."""
+
+    dispatched: bool = False
+    queue_seconds: float = 0.0
+
+
 class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
     """Own the worker capability while retaining native custody and deadlines."""
 
@@ -85,30 +94,14 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         deadline: float | None = None,
     ) -> Result:
         lock = self._operation_lock if operation else self._lock
-        dispatched = False
+        attempt = ExchangeAttempt()
         started = time.monotonic()
         default_seconds = _OPERATION_EXCHANGE_SECONDS if operation else _CONTROL_EXCHANGE_SECONDS
         wire_deadline = started + default_seconds if deadline is None else deadline
-        queue_seconds = 0.0
         try:
             _acquire_exchange_lock(lock, wire_deadline, request, operation=operation)
             try:
-                channel = self._exchange_channel(operation)
-                queue_seconds = time.monotonic() - started
-                dispatched = True
-                try:
-                    if not operation and not self._settle_unanswered_probe(channel, wire_deadline):
-                        # Nothing of this request was sent; the worker has not answered an earlier probe yet.
-                        dispatched = False
-                        raise RefusalError(RefusalCode.TIMEOUT)
-                    return self._read_exchange_reply(channel, request, response, secret, wire_deadline)
-                except (AutomationCustodyError, ProfileAccessRefusedError):
-                    raise
-                except BaseException:
-                    if dispatched:
-                        # Fence the failed stream before a queued caller can borrow it.
-                        self._stopping.set()
-                    raise
+                return self._exchange_under_lock(request, response, secret, operation, wire_deadline, started, attempt)
             finally:
                 lock.release()
         except (AutomationCustodyError, ProfileAccessRefusedError):
@@ -116,12 +109,12 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         except BaseException as error:
             # No frame was sent when a caller merely timed out waiting for
             # this shared channel. Keep other sessions' worker alive.
-            if dispatched:
+            if attempt.dispatched:
                 self._retire_failed_dispatch(
                     request,
                     error,
                     operation=operation,
-                    queue_seconds=queue_seconds,
+                    queue_seconds=attempt.queue_seconds,
                     elapsed_seconds=time.monotonic() - started,
                     budget_seconds=wire_deadline - started,
                     deadline=deadline,
@@ -130,6 +123,34 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
+
+    def _exchange_under_lock[Result: BaseModel](
+        self,
+        request: ProfileWorkerRequest,
+        response: type[Result],
+        secret: bytearray | None,
+        operation: bool,
+        wire_deadline: float,
+        started: float,
+        attempt: ExchangeAttempt,
+    ) -> Result:
+        """Transfer under the already-held lock and fence any dispatched stream failure."""
+        channel = self._exchange_channel(operation)
+        attempt.queue_seconds = time.monotonic() - started
+        attempt.dispatched = True
+        try:
+            if not operation and not self._settle_unanswered_probe(channel, wire_deadline):
+                # Nothing of this request was sent; the worker has not answered an earlier probe yet.
+                attempt.dispatched = False
+                raise RefusalError(RefusalCode.TIMEOUT)
+            return self._read_exchange_reply(channel, request, response, secret, wire_deadline)
+        except (AutomationCustodyError, ProfileAccessRefusedError):
+            raise
+        except BaseException:
+            if attempt.dispatched:
+                # Fence the failed stream before a queued caller can borrow it.
+                self._stopping.set()
+            raise
 
     def _retire_failed_dispatch(
         self,
@@ -325,32 +346,29 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
                     raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         return channel
 
-    def _read_exchange_reply[Result: BaseModel](
-        self,
-        channel: WorkerChannel,
-        request: ProfileWorkerRequest,
-        response: type[Result],
-        secret: bytearray | None,
-        wire_deadline: float,
-    ) -> Result:
-        """Exchange one addressed request and preserve exact application refusals."""
+    def _proof_cancelled(self) -> bool:
+        """Observe the current proof cancellation without changing its owner."""
+        if self._human_cancellation is None:
+            return False
+        try:
+            self._human_cancellation.raise_if_cancelled()
+        except ProfileProofCancelledError:
+            return True
+        return False
+
+    def _write_exchange_request(
+        self, channel: WorkerChannel, request: ProfileWorkerRequest, secret: bytearray | None, wire_deadline: float
+    ) -> None:
+        """Transfer one request and its proof under the original cancellation checks."""
         proof = request.root if isinstance(request.root, ProfileWorkerControlRequest) else None
-        if proof is not None and proof.proof_attempt_id is not None and self._human_cancellation is not None:
-            try:
-                self._human_cancellation.raise_if_cancelled()
-            except ProfileProofCancelledError:
-                raise AutomationCustodyError(AutomationCustodyCode.REQUESTER_DISCONNECTED) from None
+        if proof is not None and proof.proof_attempt_id is not None and self._proof_cancelled():
+            raise AutomationCustodyError(AutomationCustodyCode.REQUESTER_DISCONNECTED)
         if isinstance(request.root, ProfileWorkerLeaseRequest | ProfileWorkerHumanBindingRequest):
             write_worker_lease(channel, request, deadline=wire_deadline)
         else:
             write_document(channel, request, deadline=wire_deadline)
         if proof is not None and proof.proof_attempt_id is not None:
-            cancelled = False
-            if self._human_cancellation is not None:
-                try:
-                    self._human_cancellation.raise_if_cancelled()
-                except ProfileProofCancelledError:
-                    cancelled = True
+            cancelled = self._proof_cancelled()
             write_document(
                 channel,
                 ProfileWorkerProofTransfer(proof_attempt_id=proof.proof_attempt_id, cancelled=cancelled),
@@ -360,6 +378,17 @@ class ProfileWorkerTransport(ProfileWorkerNativeLifetime):
                 secret = None
         if secret is not None:
             write_secret(channel, secret, deadline=wire_deadline)
+
+    def _read_exchange_reply[Result: BaseModel](
+        self,
+        channel: WorkerChannel,
+        request: ProfileWorkerRequest,
+        response: type[Result],
+        secret: bytearray | None,
+        wire_deadline: float,
+    ) -> Result:
+        """Exchange one addressed request and preserve exact application refusals."""
+        self._write_exchange_request(channel, request, secret, wire_deadline)
         result = read_document(channel, ProfileWorkerReply, deadline=wire_deadline).root
         if result.identity != self.identity or result.request_id != request.root.request_id:
             raise RefusalError(RefusalCode.INVALID_FRAME)

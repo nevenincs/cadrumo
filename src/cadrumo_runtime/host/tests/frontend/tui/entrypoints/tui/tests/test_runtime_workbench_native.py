@@ -32,7 +32,7 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
     current_active_bucket_session,
 )
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyPublicResultV2
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.frontend_requests import (
@@ -70,7 +70,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
-from cadrumo.entrypoints.tui.app import CadrumoTuiApp, RootPresentationV1
+from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
 from cadrumo.entrypoints.tui.declarations.overview import DeclarationsOverviewScreen
 from cadrumo.entrypoints.tui.home import HomeScreen
@@ -79,6 +79,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.factory import InstalledModeloWork
 from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScreen
 from cadrumo.entrypoints.tui.navigation import TuiFocusIdentityV1, TuiNavigationTargetV1, TuiScreenContextV1
 from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
+from cadrumo.entrypoints.tui.root_binding import RootPresentationV1
 from cadrumo.entrypoints.tui.tests.settled_click import click_when_laid_out
 from cadrumo.entrypoints.tui.tests.settling import settle, settle_until
 from cadrumo.entrypoints.workbench_generation_composition import compose_secure_workbench_generation_provider

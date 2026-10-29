@@ -136,6 +136,12 @@ class SessionAuthorityRebind(SessionAuthorityCore):
         if isinstance(decision, AccessDenied):
             self._retire({child.session_id}, reason=decision.code)
             return None
+        return self._publish_restored_child(child, parent, restored)
+
+    def _publish_restored_child(
+        self, child: AccessSession, parent: AccessSession, restored: AccessSession
+    ) -> AccessSession | None:
+        """Share custody before publishing the still-suspended child."""
         try:
             with self._activation(child.session_id):
                 self.owner.share(restored, parent)

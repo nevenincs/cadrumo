@@ -6,7 +6,6 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel
 
-from cadrumo.application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationResultProjectionRequestV1,
@@ -15,7 +14,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationId, OperationRequest
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionDescriptionV1
 from cadrumo.application.operations.secret_submission import OperationSecretRequirement
-from cadrumo.core.identity.digest import ContentDigest
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import exchange_deadline
 from cadrumo_client.contracts.operation_access import OperationManagementRequest
@@ -26,8 +24,6 @@ from cadrumo_client.contracts.submission_payload import (
     SubmissionPayloadDescriptor,
 )
 from cadrumo_runtime.contracts.profile_worker import (
-    ProfileWorkerClaimableReviews,
-    ProfileWorkerClaimableReviewsRequest,
     ProfileWorkerContractRequest,
     ProfileWorkerManageRequest,
     ProfileWorkerObservation,
@@ -41,8 +37,6 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerProjectRequest,
     ProfileWorkerRequest,
     ProfileWorkerResumeRequest,
-    ProfileWorkerReviewClaimed,
-    ProfileWorkerReviewClaimRequest,
     ProfileWorkerSecretRequest,
     ProfileWorkerSubmission,
     ProfileWorkerSubmissionAbortRequest,
@@ -53,40 +47,11 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerUploadAccepted,
 )
 
-from ..contracts.worker_authorization import RuntimeHumanReviewClaimAttestation
 from .profile_worker_transport import ProfileWorkerTransport
 
 
 class ProfileWorkerOperationClient(ProfileWorkerTransport):
     """Own the worker capability while retaining native custody and deadlines."""
-
-    def claim_review(
-        self,
-        proof: RuntimeHumanReviewClaimAttestation,
-        reference: OperationReviewProjectionReferenceV1,
-        reviewed_document_digest: ContentDigest,
-    ) -> ProfileWorkerReviewClaimed:
-        """Forward only the runtime parent's independently verified person attestation."""
-        return self._exchange(
-            ProfileWorkerRequest(
-                ProfileWorkerReviewClaimRequest(
-                    request_id=uuid4(),
-                    attestation=proof,
-                    reference=reference,
-                    reviewed_document_digest=reviewed_document_digest,
-                )
-            ),
-            ProfileWorkerReviewClaimed,
-            operation=True,
-        )
-
-    def claimable_reviews(self, proof: RuntimeHumanReviewClaimAttestation) -> ProfileWorkerClaimableReviews:
-        """Ask which reviews the runtime parent's verified desktop person may claim."""
-        return self._exchange(
-            ProfileWorkerRequest(ProfileWorkerClaimableReviewsRequest(request_id=uuid4(), attestation=proof)),
-            ProfileWorkerClaimableReviews,
-            operation=True,
-        )
 
     def describe(self, session_id: UUID, definition_id: str) -> OperationPublicDefinitionDescriptionV1:
         """Read one exact canonical contract and request schema through live custody."""

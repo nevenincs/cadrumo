@@ -10,6 +10,7 @@ from typing import Literal
 from uuid import UUID, uuid4
 
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerProofAcknowledged
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerProofControl as ProofControlRequest
@@ -23,6 +24,17 @@ class _ProofCommand:
     deadline: float
     finished: Event = field(default_factory=Event)
     failure: BaseException | None = None
+
+
+def _proof_reply_matches(
+    reply: ProfileWorkerProofAcknowledged, command: _ProofCommand, identity: ProfileWorkerIdentity
+) -> bool:
+    """Require the exact worker, request and proof attempt in the acknowledgement."""
+    return (
+        reply.identity == identity
+        and reply.request_id == command.request.request_id
+        and reply.proof_attempt_id == command.request.proof_attempt_id
+    )
 
 
 class ProfileWorkerProofControl(ProfileWorkerOperationClient):
@@ -52,11 +64,7 @@ class ProfileWorkerProofControl(ProfileWorkerOperationClient):
                     raise failure
                 write_document(channel, command.request, deadline=command.deadline)
                 reply = read_document(channel, ProfileWorkerProofAcknowledged, deadline=command.deadline)
-                if (
-                    reply.identity != self.identity
-                    or reply.request_id != command.request.request_id
-                    or reply.proof_attempt_id != command.request.proof_attempt_id
-                ):
+                if not _proof_reply_matches(reply, command, self.identity):
                     raise RefusalError(RefusalCode.PEER_UNTRUSTED)
             except BaseException as error:
                 command.failure = failure = self._proof_failure = error

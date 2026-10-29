@@ -30,7 +30,7 @@ from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, Orc
 
 from ..host.controller import AgentHostError, AgentHostRefusal
 from ..host.launch_environment import system_environment
-from ..host.store_lifecycle import AgentInvocationRunner, InvocationCancellation
+from ..host.store_lifecycle import AgentInvocationResult, AgentInvocationRunner, InvocationCancellation
 from ..providers.application.ports import (
     ProviderCatalogSource,
     ProviderCatalogUnavailableError,
@@ -232,11 +232,7 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
                     output_limit=CATALOG_OUTPUT_MAX_BYTES,
                 )
             finally:
-                if owned is not None:
-                    with self._runner_lock:
-                        self._active_runners.discard(owned)
-                        if not owned.settled:
-                            self._unsettled_runners.add(owned)
+                self._release_runner(owned)
         except AgentHostError as error:
             if error.reason in {AgentHostRefusal.CANCELLED, AgentHostRefusal.TIMEOUT}:
                 raise
@@ -245,14 +241,27 @@ class AgentProviderCatalogSource(ProviderCatalogSource):
             raise
         except (OSError, RefusalError) as error:
             raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED) from error
-        if completed.status is None:
-            raise AgentHostError(AgentHostRefusal.TIMEOUT)
-        if completed.status != 0:
-            _LOGGER.warning("agent provider catalog command failed status=%s", completed.status)
-            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED)
-        if len(completed.standard_output) > CATALOG_OUTPUT_MAX_BYTES:
-            raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED)
-        return completed.standard_output
+        return _require_catalogue_result(completed)
+
+    def _release_runner(self, owned: WindowsAgentInvocationRunner | None) -> None:
+        """Retain unsettled invocation trees after the active call releases them."""
+        if owned is not None:
+            with self._runner_lock:
+                self._active_runners.discard(owned)
+                if not owned.settled:
+                    self._unsettled_runners.add(owned)
+
+
+def _require_catalogue_result(completed: AgentInvocationResult) -> bytes:
+    """Admit only a successful bounded catalogue response."""
+    if completed.status is None:
+        raise AgentHostError(AgentHostRefusal.TIMEOUT)
+    if completed.status != 0:
+        _LOGGER.warning("agent provider catalog command failed status=%s", completed.status)
+        raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_FAILED)
+    if len(completed.standard_output) > CATALOG_OUTPUT_MAX_BYTES:
+        raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.CATALOG_MALFORMED)
+    return completed.standard_output
 
 
 __all__ = ["CATALOG_ARGUMENTS", "AgentProviderCatalogSource"]

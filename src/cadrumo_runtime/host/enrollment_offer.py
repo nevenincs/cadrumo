@@ -24,7 +24,8 @@ from ..application.enrollment_recipient import VolatileEnrollmentRecipient
 if TYPE_CHECKING:
     from cadrumo.application.user_profile.automation_enrollment import ProtectedEnrollmentRecipient
 
-    from .profile_host import ProfileConnection, RuntimeProfileHost
+    from .profile_connection import ProfileConnection
+    from .profile_host import RuntimeProfileHost
 
 
 @dataclass(slots=True)

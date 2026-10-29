@@ -7,7 +7,6 @@ from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.operation_access import (
     OperationAcknowledged,
-    OperationClaimableReviewsListed,
     OperationContractReply,
     OperationFinancialInput,
     OperationManaged,
@@ -17,7 +16,6 @@ from ..contracts.operation_access import (
     OperationProjected,
     OperationReply,
     OperationRequest,
-    OperationReviewClaimed,
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
@@ -65,8 +63,6 @@ class OperationTransport(EnrollmentTransport):
                     | OperationProjected
                     | OperationPage
                     | OperationManaged
-                    | OperationReviewClaimed
-                    | OperationClaimableReviewsListed
                     | AccessRefusal,
                 ):
                     raise RefusalError(RefusalCode.INVALID_FRAME)

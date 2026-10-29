@@ -35,9 +35,9 @@ from cadrumo_client.contracts.session_events import (
 )
 from cadrumo_client.contracts.transport import ConnectionContext
 
-from ..profile_connection_services import ServiceConnection
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection
+from ..service_connection_records import ServiceConnection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -7,15 +7,15 @@ from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.modelo.calculation_operation import (
+    build_modelo_work_calculate_definition,
+    build_modelo_work_calculate_registration,
+)
 from cadrumo.application.modelo.calculation_request_fields import (
     ModeloCalculationInputFieldsV1,
     ModeloCalculationOverride,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
-    build_modelo_work_calculate_definition,
-    build_modelo_work_calculate_registration,
-)
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_calculation_contracts import (
     ModeloWorkCalculateCallerContext,
     ModeloWorkCalculateRequest,

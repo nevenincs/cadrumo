@@ -97,9 +97,9 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityReques
 
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
-from .. import operation_host
-from ..operation_authority import WorkerOperationBinding
+from .. import operation_settlement
 from ..operation_host import ProfileWorkerOperationHost
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -246,13 +246,13 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
         return now() + self.elapsed
 
     @override
-    def _composed(self) -> OperationComposedServices:
-        if self._services is None:
+    def composed(self) -> OperationComposedServices:
+        if self.services is None:
             registry = _registry()
             journal = OperationJournalRepository(storage_root=self.custody.root)
-            self._services = compose_operation_services(
+            self.services = compose_operation_services(
                 registry=registry,
-                authority_operation=self._pinned(),
+                authority_operation=self.pinned(),
                 journal=journal,
                 reader=journal,
                 event_stream=journal,
@@ -266,7 +266,7 @@ class _SealedDocumentHost(ProfileWorkerOperationHost):
                 cleanup_timeout=timedelta(minutes=2),
                 execution_authority=self._bind_execution(registry),
             )
-        return super()._composed()
+        return super().composed()
 
 
 def _session(identity: ProfileWorkerIdentity, kind: SessionKind) -> AccessSession:
@@ -338,7 +338,7 @@ class _Worker:
         return submitted.receipt.operation_id
 
     async def settled(self, operation_id: OperationId) -> None:
-        await self.host._composed().submission.settled(operation_id)
+        await self.host.composed().submission.settled(operation_id)
 
     async def run(
         self,
@@ -420,7 +420,7 @@ class _Worker:
 
     async def admitting_frontend(self, operation_id: OperationId) -> OperationFrontendProjection | None:
         """Read the frontend the worker stored with the invocation's admission."""
-        invocation = await self.host._composed().submission.stored_invocation(operation_id)
+        invocation = await self.host.composed().submission.stored_invocation(operation_id)
         return None if invocation.provenance is None else invocation.provenance.admitting_frontend
 
 
@@ -580,8 +580,8 @@ def test_an_operation_stored_without_an_admission_releases_nothing_on_any_fronte
     """A read needs the admission the worker recorded, whoever reads and wherever."""
 
     async def scenario(worker: _Worker) -> None:
-        services = worker.host._composed()
-        execution = worker.host._execution
+        services = worker.host.composed()
+        execution = worker.host.execution
         assert execution is not None
         request = worker.request()
         operation_id = new_operation_id()
@@ -639,7 +639,7 @@ def test_an_admission_whose_receipt_is_refused_settles_and_frees_its_subject(tmp
             async with worker.host.release_submission(worker.key.session_id, operation_id, _EXTERNAL_CLIENT):
                 pytest.fail("a refused submitter must not receive its receipt")
 
-        settled = await worker.host._composed().submission.supervisor.inspect(operation_id)
+        settled = await worker.host.composed().submission.supervisor.inspect(operation_id)
         assert settled.lifecycle is OperationLifecycle.TERMINAL
         assert settled.terminal_condition is OperationTerminalCondition.REFUSED
         assert settled.effect is OperationEffect.NONE
@@ -671,10 +671,10 @@ def test_an_admission_nobody_starts_settles_once_its_owner_has_lapsed(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """A submitter that vanishes after its receipt leaves no operation unsettled and no subject held for good."""
-    monkeypatch.setattr(operation_host, "_LAPSE_CHECK_SECONDS", 0.0)
+    monkeypatch.setattr(operation_settlement, "_LAPSE_CHECK_SECONDS", 0.0)
 
     async def scenario(worker: _Worker) -> None:
-        supervisor = worker.host._composed().submission.supervisor
+        supervisor = worker.host.composed().submission.supervisor
         abandoned = await worker.submit(worker.key, _EXTERNAL_CLIENT, worker.request())
 
         # The lease has run out, but its submitter still has the grace to start it.
@@ -698,7 +698,7 @@ def test_a_new_submission_interrupts_an_admission_nobody_started_within_its_leas
     """The same runtime that admitted the abandoned operation gives its subject to the next submitter."""
 
     async def scenario(worker: _Worker) -> None:
-        supervisor = worker.host._composed().submission.supervisor
+        supervisor = worker.host.composed().submission.supervisor
         abandoned = await worker.submit(worker.key, _EXTERNAL_CLIENT, worker.request())
         assert await _refusal(worker.submit(worker.person, _CLI, worker.request())) is AccessDenialCode.SUBJECT_BUSY
 

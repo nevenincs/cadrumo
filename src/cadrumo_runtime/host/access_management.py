@@ -37,7 +37,8 @@ from cadrumo_client.transport.frame_io import read_secret, write_document, write
 from ..application.automation_lifecycle_service import (
     AutomationLifecycleService,
 )
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 
 @dataclass(frozen=True)

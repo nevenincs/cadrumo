@@ -20,6 +20,16 @@ from .operations.runtime_profile_session import RuntimeProfileSession
 _READ_ACTIONS = frozenset({"list", "show"})
 
 
+def _account_result_matches(result: LedgerOwnAccountResult, request: LedgerOwnAccountRequest) -> bool:
+    """Match the named account and enforce read-only result semantics."""
+    names_account = request.own_account_id is not None or request.action == "add"
+    return (
+        (request.own_account_id is None or result.own_account_id == request.own_account_id)
+        and (not names_account or result.own_account_id is not None)
+        and not (request.action in _READ_ACTIONS and result.changed)
+    )
+
+
 def _result_matches(
     result: LedgerOwnAccountResult,
     request: LedgerOwnAccountRequest,
@@ -28,16 +38,13 @@ def _result_matches(
 ) -> bool:
     """Whether the masked result answers exactly the request under its settled receipt."""
     expected_effect = OperationEffect.UPDATED if result.changed else OperationEffect.NONE
-    names_account = request.own_account_id is not None or request.action == "add"
     return (
         result.profile_id == request.profile_id
         and result.action == request.action
         and condition is OperationTerminalCondition.SUCCEEDED
         and terminal.refusal_ref is None
         and terminal.effect is expected_effect
-        and (request.own_account_id is None or result.own_account_id == request.own_account_id)
-        and (not names_account or result.own_account_id is not None)
-        and not (request.action in _READ_ACTIONS and result.changed)
+        and _account_result_matches(result, request)
     )
 
 

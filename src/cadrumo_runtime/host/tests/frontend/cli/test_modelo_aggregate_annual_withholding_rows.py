@@ -66,7 +66,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.user_profile.values import ProfileSetupState
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import (
     build_percepcion_observation_ports,
     build_retencion_observation_ports,
 )

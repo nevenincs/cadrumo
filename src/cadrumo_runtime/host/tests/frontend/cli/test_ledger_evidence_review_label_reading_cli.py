@@ -37,7 +37,7 @@ from cadrumo.application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings
 
@@ -58,7 +58,7 @@ _REFUSALS: dict[LabelReadingFallbackCause, tuple[str, str | None]] = {
     LabelReadingFallbackCause.READER_UNAVAILABLE: ("InvoiceDraftReaderUnavailableError", None),
     LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED: (
         "InvoiceDraftReaderHeadroomRefusedError",
-        ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
+        ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
     ),
 }
 

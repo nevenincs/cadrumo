@@ -19,6 +19,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from cadrumo.core.async_cleanup import close_async_resources
 from cadrumo.tests.log_records import delivered_records
 from cadrumo.tests.process_support import fixture_arguments, fixture_environment, launch_fixture, native_python
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from .. import windows_process
@@ -497,7 +498,7 @@ def _events(caplog: pytest.LogCaptureFixture, name: str) -> list[logging.LogReco
     return [record for record in delivered_records(caplog, _LOGGER_NAME) if record.getMessage() == name]
 
 
-def _sleeping_child(scope: WindowsProcessScope, tmp_path: Path, code: str) -> windows_process.WindowsOwnedProcess:
+def _sleeping_child(scope: WindowsProcessScope, tmp_path: Path, code: str) -> WindowsOwnedProcess:
     return scope.launch(
         executable=native_python(),
         arguments=("-c", code),
@@ -538,7 +539,7 @@ def test_a_child_that_outlives_its_bound_is_watched_until_it_exits_and_the_total
         process = _sleeping_child(scope, tmp_path, "import time; time.sleep(0.5); raise SystemExit(23)")
         with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
             started = time.monotonic()
-            watcher = windows_process._watch_late_exit([process], started=started, seconds=30)
+            watcher = windows_process.watch_windows_late_exit([process], started=started, seconds=30)
             assert watcher is not None and watcher.daemon
             watcher.join(timeout=30)
             assert not watcher.is_alive()
@@ -562,7 +563,7 @@ def test_the_late_watch_gives_up_at_its_bound_and_reports_the_child_still_runnin
     try:
         process = _sleeping_child(scope, tmp_path, "import time; time.sleep(30)")
         with caplog.at_level(logging.DEBUG, logger=_LOGGER_NAME):
-            watcher = windows_process._watch_late_exit([process], started=time.monotonic(), seconds=0.3)
+            watcher = windows_process.watch_windows_late_exit([process], started=time.monotonic(), seconds=0.3)
             assert watcher is not None
             watcher.join(timeout=10)
             assert not watcher.is_alive()

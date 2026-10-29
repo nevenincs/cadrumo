@@ -21,7 +21,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.core.redaction.rules import redact_structured_for_cli_output
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.adapter_composition import build_modelo_history_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_modelo_history_ports
 from cadrumo.entrypoints.cli.modelo_results import WorkReviewPayload, WorkReviewResult
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result

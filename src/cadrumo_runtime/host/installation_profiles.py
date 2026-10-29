@@ -28,7 +28,7 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
-from cadrumo.application.user_profile.custody_ports import ProfileCustodyRecordIntegrityError
+from cadrumo.application.user_profile.custody_crypto_contracts import ProfileCustodyRecordIntegrityError
 from cadrumo.application.user_profile.profile_summary import profile_listing, selected_profile_id
 from cadrumo.core.errors.hierarchy import NoActiveProfileError
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError

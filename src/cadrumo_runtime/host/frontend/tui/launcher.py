@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
 
     from cadrumo.entrypoints.tui.account import AccountRecomposeRequiredV1
-    from cadrumo.entrypoints.tui.app import RootBindingV1
+    from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 
 
 async def run_precomposed_runtime_root_session(

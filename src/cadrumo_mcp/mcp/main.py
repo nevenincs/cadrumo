@@ -11,12 +11,8 @@ from typing import BinaryIO, TextIO, cast
 from uuid import UUID
 
 
-def main() -> None:
-    """Serve the person's sign-in on the selected profile, or one profile's enrolled key."""
-    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
-    if isinstance(sys.stderr, io.TextIOWrapper):
-        # The generic form is for static analysis; TextIOWrapper is not subscriptable at runtime.
-        cast("io.TextIOWrapper[BinaryIO]", sys.stderr).reconfigure(newline="\n")
+def _argument_parser() -> argparse.ArgumentParser:
+    """Declare the profile, protected-reference and surface arguments of the MCP server."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--profile-id",
@@ -29,6 +25,16 @@ def main() -> None:
         help="the protected reference of a key the person issued with config automation; requires --profile-id",
     )
     parser.add_argument("--surface", help="the named surface to serve; every tool and operation when omitted")
+    return parser
+
+
+def main() -> None:
+    """Serve the person's sign-in on the selected profile, or one profile's enrolled key."""
+    os.environ.setdefault("PYDANTIC_DISABLE_PLUGINS", "__all__")
+    if isinstance(sys.stderr, io.TextIOWrapper):
+        # The generic form is for static analysis; TextIOWrapper is not subscriptable at runtime.
+        cast("io.TextIOWrapper[BinaryIO]", sys.stderr).reconfigure(newline="\n")
+    parser = _argument_parser()
     args = parser.parse_args()
     if args.credential_reference is not None and args.profile_id is None:
         parser.error("--credential-reference names the key of one profile; give that profile with --profile-id")

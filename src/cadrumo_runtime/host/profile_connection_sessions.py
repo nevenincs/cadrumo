@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -15,7 +15,6 @@ from cadrumo.adapters.persistence.storage.profile_persistence_composition import
 from cadrumo.application.user_profile.access_contracts import AccessSession
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_policy import intersect_scopes
-from cadrumo.application.user_profile.automation_custody_port import AutomationCustodySnapshot
 from cadrumo.application.user_profile.profile_pointer import (
     ActiveProfilePointerTransactionError,
     active_profile_pointer_transaction,
@@ -28,7 +27,7 @@ from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.logging import get_logger
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied
-from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessScope, Availability
 from cadrumo_client.contracts.attendance import (
     AttendanceAsk,
     AttendanceDecide,
@@ -62,7 +61,9 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, Sig
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from ..application.session_authority_contracts import HumanAdmissionControl
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
+from .profile_session_reading import issued_key_can_admit, login_completed, presentation_events
 from .sign_in_status import observe_active_profile, observe_sign_in, resolve_login_target
 from .sign_in_sweep import revoke_other_saved_sign_ins
 
@@ -72,27 +73,21 @@ if TYPE_CHECKING:
 _LOGGER = get_logger(__name__)
 
 
-def _issued_key_can_admit(snapshot: AutomationCustodySnapshot, instant: datetime) -> bool:
-    """Say whether an issued key could still admit an automation: a sign-out ends no key session."""
-    if not snapshot.automation_enabled:
-        return False
-    live_grants = {
-        grant.grant_id
-        for grant in snapshot.grants
-        if grant.state is AuthorityState.ACTIVE and grant.unattended and grant.valid_from <= instant < grant.expires_at
-    }
-    return any(
-        key.grant_id in live_grants
-        and key.state is AuthorityState.ACTIVE
-        and key.valid_from <= instant < key.expires_at
-        for key in snapshot.keys
-    )
-
-
 @dataclass(frozen=True, slots=True)
 class _ApiKeyLogin:
     credential: SecretBytes
     scope: AccessScope
+
+
+def _human_admission_cancelled(
+    host: RuntimeProfileHost, connection: ProfileConnection, control: HumanAdmissionControl
+) -> bool:
+    with host.guard:
+        return control.cancelled or connection.disconnecting
+
+
+def _without_handover(request: ProfileLogin) -> bool:
+    return request.method == "api_key" or (request.method == "receipt" and not request.hand_over)
 
 
 class ProfileConnectionSessionMixin:
@@ -131,6 +126,28 @@ class ProfileConnectionSessionMixin:
             status=status,
         )
 
+    def _admit_api_login(
+        self: RuntimeProfileConnections,
+        connection: ProfileConnection,
+        host: RuntimeProfileHost,
+        context: ConnectionContext,
+        request: ProfileLogin,
+        secret: bytearray,
+        control: HumanAdmissionControl,
+    ) -> AccessSession | AccessDenied:
+        api_login = self._prepare_api_key_login(connection, host, secret, request)
+        if isinstance(api_login, AccessDenied):
+            return api_login
+        with host.guard:
+            if control.cancelled:
+                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+        return host.authority.admit_api_key(
+            connection_id=context.connection_id,
+            target=host.store.binding,
+            credential=api_login.credential,
+            scope=api_login.scope,
+        )
+
     def _login_proof(
         self: RuntimeProfileConnections,
         connection: ProfileConnection,
@@ -141,25 +158,15 @@ class ProfileConnectionSessionMixin:
         control: HumanAdmissionControl,
         deadline: TimeoutDeadline,
     ) -> ProfileStatus | AccessDenied:
-        with host.guard:
-            if control.cancelled or connection.disconnecting:
-                return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+        if _human_admission_cancelled(host, connection, control):
+            return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
         if request.method in {"password", "receipt"}:
             admitted = self._admit_human_login(connection, host, context, secret, control, deadline)
         else:
-            api_login = self._prepare_api_key_login(connection, host, secret, request)
-            if isinstance(api_login, AccessDenied):
-                return api_login
-            with host.guard:
-                if control.cancelled:
-                    return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-            admitted = host.authority.admit_api_key(
-                connection_id=context.connection_id,
-                target=host.store.binding,
-                credential=api_login.credential,
-                scope=api_login.scope,
-            )
-        if request.method == "api_key" or (request.method == "receipt" and not request.hand_over):
+            admitted = self._admit_api_login(connection, host, context, request, secret, control)
+            if isinstance(admitted, AccessDenied):
+                return admitted
+        if _without_handover(request):
             # Only a person's sign-in hands the profile over: a password, or a
             # saved sign-in the person logs in with. A command, a terminal start
             # or a hold resuming continues the sign-in, and sweeping there would
@@ -171,13 +178,7 @@ class ProfileConnectionSessionMixin:
         # its revoked lease before it can perform another cross-profile sweep.
         with self._human_handover_guard:
             finished = self._finish_login(connection, host, context, request, admitted)
-            if (
-                isinstance(finished, ProfileStatus)
-                and finished.status.denial is None
-                and finished.status.connected
-                and finished.status.credential_authenticated
-                and finished.status.profile_bound
-            ):
+            if login_completed(finished):
                 signed_out = self._sign_out_other_profiles(keep=request.profile_id)
                 if request.persist_receipt or request.hand_over:
                     # The person's own sign-in, which keeps a stored sign-in for later commands,
@@ -383,6 +384,13 @@ class ProfileConnectionSessionMixin:
             page=page,
         )
 
+    def _presentation_recipients(
+        self: RuntimeProfileConnections, connection: ProfileConnection, request: PresentationRequest
+    ) -> tuple[PresentationRequested, ...]:
+        with self._guard:
+            recipients = presentation_events(self.boot, connection, request, self._connections.values())
+        return recipients
+
     def _present(
         self: RuntimeProfileConnections, context: ConnectionContext, request: PresentationRequest
     ) -> PresentationDelivered | AccessDenied:
@@ -415,22 +423,7 @@ class ProfileConnectionSessionMixin:
             return status
         if status.status.denial is not None:
             return AccessDenied(code=status.status.denial)
-        with self._guard:
-            recipients = tuple(
-                PresentationRequested(
-                    runtime_boot_id=self.boot,
-                    connection_id=recipient.context.connection_id,
-                    profile_id=recipient.profile_id,
-                    session_id=recipient.session_id,
-                    destination=request.destination,
-                    params=request.params,
-                )
-                for recipient in self._connections.values()
-                if recipient.context.presentation
-                and recipient.profile_id == connection.profile_id
-                and recipient.session_id is not None
-                and recipient.login.login_id == connection.login.login_id
-            )
+        recipients = self._presentation_recipients(connection, request)
         for event in recipients:
             self._events.publish(event)
         return PresentationDelivered(
@@ -456,7 +449,7 @@ class ProfileConnectionSessionMixin:
             automation_enabled = None
         deletion, retired = host.revoke_human_sign_in()
         try:
-            automation_access_remains: bool | None = _issued_key_can_admit(host.store.snapshot(), now())
+            automation_access_remains: bool | None = issued_key_can_admit(host.store.snapshot(), now())
         except AutomationCustodyError as error:
             # A profile that never published automation control has issued no key; any other failure is unknown.
             automation_access_remains = False if error.reason is AutomationCustodyCode.MISSING else None
@@ -553,6 +546,88 @@ class ProfileConnectionSessionMixin:
             presence=presence,
         )
 
+    def _sign_in_query(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: SignInStatusRequest
+    ) -> SignInStatusReply:
+        login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
+        if login.os_owner_id != context.peer.os_owner_id:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="sign_in_status_owner_mismatch")
+        if request.watch:
+            # Watch before reading, so a change racing this read still cues the watcher.
+            self.watch_sign_in(context)
+        status = observe_sign_in(
+            root=self.root,
+            storage_identity=self.storage_identity,
+            profile_id=request.profile_id,
+            login=login,
+            instant=self._wall_clock(),
+        )
+        if request.watch and status.presence is not SignInPresence.PRESENT:
+            self.prepare_for_sign_in(request.profile_id, context)
+        return SignInStatusReply(
+            request_id=request.request_id,
+            runtime_boot_id=self.boot,
+            connection_id=context.connection_id,
+            profile_id=request.profile_id,
+            status=status,
+        )
+
+    def _dispatch_profile_request(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: AttendanceAsk
+        | AttendanceDecide
+        | ProfileLoginStatusQuery
+        | ProfileLogin
+        | ProfileDisclosurePageRequest
+        | PresentationRequest
+        | SessionRequest,
+    ) -> (
+        AttendancePending
+        | AttendanceInventory
+        | AttendanceDecided
+        | ProfileStatus
+        | ProfileLoginPending
+        | ProfileDisclosurePage
+        | PresentationDelivered
+        | SessionsLocked
+        | HumanSignedOut
+        | AccessDenied
+        | AccessRefusal
+    ):
+        if isinstance(request, AttendanceAsk):
+            result = self._attendance_ask(context, channel, request)
+        elif isinstance(request, AttendanceDecide):
+            result = self._attendance_decide(context, request)
+        elif isinstance(request, ProfileLoginStatusQuery):
+            result = self._login_status(context, request)
+        elif isinstance(request, ProfileLogin):
+            result = self._login(context, channel, request)
+            if not isinstance(result, AccessDenied):
+                # Admission has published the session and minted any receipt.
+                self._sign_in_changed()
+        elif isinstance(request, ProfileDisclosurePageRequest):
+            result = self._disclosure_page(context, request)
+        elif isinstance(request, PresentationRequest):
+            result = self._present(context, request)
+        else:
+            result = self._session(context, request)
+        return result
+
+    def _require_session_request(
+        self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: object
+    ) -> None:
+        if context.runtime_boot_id != self.boot or context.peer != channel.peer:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="session_context_rebound")
+        if not self._admitting():
+            raise RefusalError(RefusalCode.DRAINING)
+        if (
+            (isinstance(request, SessionRequest) and request.action == "session_activity")
+            or isinstance(request, PresentationRequest)
+        ) and self._nonhuman_peer(context, channel):
+            raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
+
     def handle(
         self: RuntimeProfileConnections,
         context: ConnectionContext,
@@ -586,57 +661,12 @@ class ProfileConnectionSessionMixin:
         sign_in = None
         recovery: int | None = None
         try:
-            if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="session_context_rebound")
-            if not self._admitting():
-                raise RefusalError(RefusalCode.DRAINING)
-            if (
-                (isinstance(request, SessionRequest) and request.action == "session_activity")
-                or isinstance(request, PresentationRequest)
-            ) and self._nonhuman_peer(context, channel):
-                raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
+            self._require_session_request(context, channel, request)
             if isinstance(request, SignInStatusRequest):
-                login = self._capture(channel).observe(credential_facilities=Availability.UNAVAILABLE)
-                if login.os_owner_id != context.peer.os_owner_id:
-                    raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="sign_in_status_owner_mismatch")
-                if request.watch:
-                    # Watch before reading, so a change racing this read still cues the watcher.
-                    self.watch_sign_in(context)
-                status = observe_sign_in(
-                    root=self.root,
-                    storage_identity=self.storage_identity,
-                    profile_id=request.profile_id,
-                    login=login,
-                    instant=self._wall_clock(),
-                )
-                if request.watch and status.presence is not SignInPresence.PRESENT:
-                    self.prepare_for_sign_in(request.profile_id, context)
-                return SignInStatusReply(
-                    request_id=request.request_id,
-                    runtime_boot_id=self.boot,
-                    connection_id=context.connection_id,
-                    profile_id=request.profile_id,
-                    status=status,
-                )
+                return self._sign_in_query(context, channel, request)
             if isinstance(request, ActiveProfileRequest | LoginTargetRequest):
                 return self._profile_selection(context, channel, request)
-            if isinstance(request, AttendanceAsk):
-                result = self._attendance_ask(context, channel, request)
-            elif isinstance(request, AttendanceDecide):
-                result = self._attendance_decide(context, request)
-            elif isinstance(request, ProfileLoginStatusQuery):
-                result = self._login_status(context, request)
-            elif isinstance(request, ProfileLogin):
-                result = self._login(context, channel, request)
-                if not isinstance(result, AccessDenied):
-                    # Admission has published the session and minted any receipt.
-                    self._sign_in_changed()
-            elif isinstance(request, ProfileDisclosurePageRequest):
-                result = self._disclosure_page(context, request)
-            elif isinstance(request, PresentationRequest):
-                result = self._present(context, request)
-            else:
-                result = self._session(context, request)
+            result = self._dispatch_profile_request(context, channel, request)
             if not isinstance(result, AccessDenied):
                 return result
             code = result.code

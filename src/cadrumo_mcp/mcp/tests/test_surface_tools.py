@@ -35,7 +35,7 @@ from cadrumo.core import logging as cadrumo_logging
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_mcp.mcp.access_scope import surface_scope
 
@@ -260,7 +260,7 @@ async def test_an_admission_names_the_finite_scope_ceiling_for_every_surface(
         "profile_id": profile_id,
         "credential_reference": reference,
         "frontend": OperationFrontendProjection.EXTERNAL_CLIENT,
-        "timeout": PROFILE_ADMISSION_TIMEOUT_SECONDS,
+        "timeout": DEFAULT_TIMEOUT_POLICY.timeout_seconds,
         "scope": surface_scope(surface),
     }
     assert opened == [expected]

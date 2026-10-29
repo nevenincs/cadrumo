@@ -42,7 +42,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
@@ -62,7 +62,8 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,

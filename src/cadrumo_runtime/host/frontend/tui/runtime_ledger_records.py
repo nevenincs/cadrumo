@@ -330,6 +330,15 @@ class RuntimeLedgerRecordDoorsV1:
         )
 
 
+def _link_result_names_request(result: LedgerLinkOperationResult, request: LedgerLinkRequest) -> bool:
+    """Match the profile, transaction and invoice of the submitted link."""
+    return (
+        result.profile_id == request.profile_id
+        and result.transaction_id == request.transaction_id
+        and result.invoice_id == request.invoice_id
+    )
+
+
 class RuntimeLedgerLinkSubmitterV1:
     """Link one invoice to one transaction of the exact TUI profile through ``ledger.link``."""
 
@@ -353,11 +362,7 @@ class RuntimeLedgerLinkSubmitterV1:
             terminal: OperationPublicProjectionV1,
             _operation_id: str,
         ) -> None:
-            if (
-                result.profile_id != request.profile_id
-                or result.transaction_id != request.transaction_id
-                or result.invoice_id != request.invoice_id
-            ):
+            if not _link_result_names_request(result, request):
                 raise _invalid()
             if result.outcome == "refused":
                 if not _refused_with(condition, terminal, LEDGER_LINK_VALIDATION_REFUSAL_CODE) or result.reason is None:

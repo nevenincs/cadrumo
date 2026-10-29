@@ -17,7 +17,7 @@ asked, and answers every later question from that one read.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Mapping, Sequence
 from enum import Enum
 from typing import Final, Literal, override
 
@@ -74,11 +74,7 @@ class ServedCatalogModels(LiveCatalogModels):
         if not isinstance(support, Mapping):
             return None
         taken = [support.get(field) for _, field in _MEDIA_FIELDS]
-        media = (
-            tuple(kind for (kind, _), accepted in zip(_MEDIA_FIELDS, taken, strict=True) if accepted)
-            if all(isinstance(accepted, bool) for accepted in taken)
-            else None
-        )
+        media = _accepted_background_media(taken)
         listed = support.get("options")
         named = {name for name in listed if isinstance(name, str)} if isinstance(listed, list) else set()
         return LiveLaneBackground(
@@ -100,6 +96,15 @@ class ServedCatalogModels(LiveCatalogModels):
             ):
                 return {key: value for key, value in record.items() if isinstance(key, str)}
         return None
+
+
+def _accepted_background_media(taken: Sequence[object]) -> tuple[ModelRunMediaKind, ...] | None:
+    """Keep unspecified media admission unknown rather than inventing support."""
+    return (
+        tuple(kind for (kind, _), accepted in zip(_MEDIA_FIELDS, taken, strict=True) if accepted)
+        if all(isinstance(accepted, bool) for accepted in taken)
+        else None
+    )
 
 
 class _Unread(Enum):

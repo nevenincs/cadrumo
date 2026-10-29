@@ -18,7 +18,8 @@ from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.native_wake import NativeWake
-from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from .linux_worker_process import LinuxOwnedProcess, LinuxProcessScope
 from .macos_worker_process import MacosOwnedProcess, MacosProcessScope

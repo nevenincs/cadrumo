@@ -39,7 +39,7 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 )
 from cadrumo.application.ledger.ledger_add_contracts import LEDGER_ADD_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,

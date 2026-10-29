@@ -38,7 +38,8 @@ from ...application.automation_lifecycle_service import (
     AutomationLifecycleService,
 )
 from ..enrollment_offer import RuntimeEnrollmentOffer
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_connection import ProfileConnection
+from ..profile_host import RuntimeProfileHost
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

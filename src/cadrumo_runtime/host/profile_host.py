@@ -3,15 +3,13 @@
 from __future__ import annotations
 
 import asyncio
-import secrets
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager, suppress
-from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from threading import Lock
-from typing import Final, override
+from typing import Final
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
@@ -21,7 +19,6 @@ from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     inspect_profile_session,
     revoke_profile_sign_in,
 )
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_matches
 from cadrumo.adapters.persistence.storage.custody.automation_crypto import CustodyAutomationKeyIssuer
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.automation_store import AutomationControlStore
@@ -31,31 +28,22 @@ from cadrumo.adapters.persistence.storage.errors import StorageError
 from cadrumo.adapters.persistence.storage.master_key.timed_lock import TimedRLock
 from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
 from cadrumo.application.auth.operation_definitions import PROFILE_ROTATION_OPERATION_DEFINITION_ID
-from cadrumo.application.operations.disclosure_projections import registered_disclosure_projections
-from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.operations.models import OperationId, OperationIdentity
-from cadrumo.application.operations.person_acts import is_persons_frontend
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
-    OperationPublicContractSetV1,
     OperationRegistry,
 )
 from cadrumo.application.user_profile.access_contracts import (
     AccessEvaluationContext,
     AccessSession,
-    LoginEligibility,
     OsLockState,
     ProfileAccessState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.automation_administration import (
-    enrollment_review_digest,
     inspect_automation_inventory,
 )
 from cadrumo.application.user_profile.automation_administration_service import AutomationAdministrationService
 from cadrumo.application.user_profile.automation_enrollment import (
-    AdministrationFacts,
-    EnrollmentCustodyPort,
     EnrollmentRequester,
     EnrollmentTransition,
     ProtectedEnrollmentRecipient,
@@ -66,7 +54,6 @@ from cadrumo.application.user_profile.automation_operations import (
     AUTOMATION_DECLINE_OPERATION_DEFINITION_ID,
 )
 from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-from cadrumo.application.user_profile.proof_cancellation import ProfileProofCancellation
 from cadrumo.application.user_profile.session_retirement import SessionRetirement, SessionRetirementKind
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.core.time.clock import now
@@ -75,9 +62,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     Availability,
-    DisclosureCategory,
-    DisclosureCategoryGrant,
-    DisclosurePermission,
 )
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalError, ShutdownIncompleteError
@@ -85,15 +69,12 @@ from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.model_runs import ModelRunOutcome, ModelRunRefusalCode
 from cadrumo_client.contracts.profile_access import HumanProof
 from cadrumo_client.contracts.session_events import SessionEvent
-from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_runtime.contracts.worker_authorization import (
-    RuntimeHumanReviewClaimAttestation,
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
     WorkerAutomationInventoryAllowed,
     WorkerAutomationInventoryRequest,
-    WorkerHumanReviewScopeRequest,
     WorkerModelRun,
     WorkerResponseScopeRequest,
 )
@@ -108,115 +89,14 @@ from ..application.approval_sessions import RuntimeApprovalSessions
 from ..application.session_authority import ProfileSessionAuthority
 from ..application.session_authority_contracts import SessionAuthorityFacts
 from ..application.session_authority_core import CustodyRecoveryPolicy
+from .automation_owner import RuntimeAutomationAdministrationOwner, RuntimeAutomationInventoryOwner
+from .profile_connection import ProfileConnection
+from .profile_lock_observation import locked_login_ids
+from .profile_scope import delegated_profile_scope, person_profile_scope
 from .session_owner import ProfileWorkerSessionOwner
 
 _GUARD_SLOW_SECONDS: Final = 1.0
 """A wait for, or a hold of, the profile guard this long is reported with the code that entered it."""
-
-
-@dataclass
-class ProfileConnection:
-    """Host-owned connection state, excluded from all wire and persisted documents."""
-
-    context: ConnectionContext
-    login: LoginEvidence
-    client_id: UUID
-    profile_id: UUID
-    frontend: OperationFrontendProjection
-    session_id: UUID | None = None
-    method: str = "password"
-    human_secret: bytearray | None = field(default=None, repr=False)
-    persist_human_receipt: bool = False
-    recovery_generation: int | None = None
-    bootstrap_digest: str | None = None
-    requested_scope: AccessScope | None = None
-    owner_scope: tuple[OperationPublicContractSetV1, UUID, AccessScope] | None = field(
-        default=None, repr=False, compare=False
-    )
-    disconnecting: bool = False
-    human_admission_deadline: float | None = None
-    human_proof_attempt_id: UUID | None = None
-    human_proof_cancellation: ProfileProofCancellation | None = field(default=None, repr=False)
-
-
-@dataclass(frozen=True)
-class RuntimeAutomationInventoryOwner:
-    """A live authority binding supplied by the authenticated runtime callback."""
-
-    authority: ProfileSessionAuthority
-    connection_id: UUID
-    session_id: UUID
-
-    def facts(self) -> AdministrationFacts:
-        """Reobserve this exact session and its originating native login."""
-        return self.authority.human_administration_facts(connection_id=self.connection_id, session_id=self.session_id)
-
-    @contextmanager
-    def administration_guard(self) -> Generator[None]:
-        """Share the same lifecycle fence as operation execution and disclosure."""
-        with self.authority.owner.admission_guard():
-            yield
-
-
-@dataclass(frozen=True)
-class RuntimeAutomationAdministrationOwner(RuntimeAutomationInventoryOwner):
-    """Bind canonical approval to human facts and a separately owned recipient."""
-
-    recipient_lookup: Callable[[EnrollmentRequester], ProtectedEnrollmentRecipient]
-    approval_binding: RuntimeApprovalBinding
-    custody: EnrollmentCustodyPort
-
-    @override
-    def facts(self) -> AdministrationFacts:
-        """Apply the owner's delegation ceiling to this exact reviewed recipient.
-
-        Ordinary human operation authority keeps its original destination. Only
-        this request-bound administration view may delegate its registered
-        projection permissions to the recipient whose consent digest was reviewed.
-        No permission is copied from the proposal itself.
-        """
-        with self.administration_guard():
-            current = super().facts()
-            state = self.custody.enrollment_state()
-            record = next(
-                (item for item in state.requests if item.request_id == self.approval_binding.enrollment_request_id),
-                None,
-            )
-            if (
-                state.binding != self.approval_binding.profile_binding
-                or record is None
-                or record.binding != state.binding
-                or not secrets.compare_digest(enrollment_review_digest(record), self.approval_binding.review_digest)
-            ):
-                raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-            permissions = frozenset(
-                permission.model_copy(update={"destination_id": record.requester.destination_id})
-                for permission in current.profile.scope.disclosures
-                if permission.destination_id == current.context.authenticated_client_id
-            )
-            categories = frozenset(
-                grant.model_copy(update={"destination_id": record.requester.destination_id})
-                for grant in current.profile.scope.disclosure_categories
-                if grant.destination_id == current.context.authenticated_client_id
-            )
-            scope = current.profile.scope.model_copy(
-                update={"disclosures": permissions, "disclosure_categories": categories}
-            )
-            return current.model_copy(update={"profile": current.profile.model_copy(update={"scope": scope})})
-
-    def requester(self) -> EnrollmentRequester:
-        """Derive requester coordinates from the original live human connection."""
-        facts = self.facts()
-        return EnrollmentRequester(
-            runtime_boot_id=facts.context.runtime_boot_id,
-            connection_id=self.connection_id,
-            client_id=facts.context.authenticated_client_id,
-            destination_id=facts.context.authenticated_client_id,
-        )
-
-    def recipient(self, requester: EnrollmentRequester) -> ProtectedEnrollmentRecipient:
-        """Resolve the exact original requesting client through protected transport."""
-        return self.recipient_lookup(requester)
 
 
 class RuntimeProfileHost:
@@ -486,30 +366,6 @@ class RuntimeProfileHost:
     @contextmanager
     def authorize(self, request: WorkerAuthorityRequest) -> Generator[AccessAllowed | OperationResponseScopeAllowed]:
         """Retain fresh profile authority for a kernel-verified owned worker."""
-        if isinstance(request, WorkerHumanReviewScopeRequest):
-            with self.guard:
-                self._require_review_person(request.attestation)
-                with (
-                    self.authorize(request.invocation) as original,
-                    self.authorize(request.review) as reviewed,
-                    self.authorize(
-                        WorkerResponseScopeRequest(
-                            request_id=request.request_id,
-                            connection_id=request.connection_id,
-                            session_id=request.session_id,
-                            operation_id=request.operation_id,
-                            request=request.request,
-                            policy=request.policy,
-                        )
-                    ) as claimant,
-                ):
-                    self._require_review_person(request.attestation)
-                    yield OperationResponseScopeAllowed(
-                        profile_id=claimant.profile_id,
-                        session_id=claimant.session_id,
-                        expires_at=min(original.expires_at, reviewed.expires_at, claimant.expires_at),
-                    )
-            return
         guard = (
             self.authority.response_scope_guard
             if isinstance(request, WorkerResponseScopeRequest)
@@ -533,48 +389,6 @@ class RuntimeProfileHost:
                     subject_ref=profile_operation_subject(str(self.store.binding.profile_id)),
                 )
             yield allowed
-
-    def _require_review_person(self, proof: RuntimeHumanReviewClaimAttestation) -> None:
-        """Reobserve both native admission coordinates and the live HUMAN login."""
-        connection = self._connected(proof.connection_id)
-        if (
-            proof.worker_id != self.owner.identity.worker_id
-            or proof.runtime_boot_id != self.owner.identity.runtime_boot_id
-            or proof.profile_binding != self.store.binding
-            or connection.context.runtime_boot_id != proof.runtime_boot_id
-            or connection.session_id != proof.session_id
-            or connection.profile_id != self.store.binding.profile_id
-            or connection.frontend != proof.frontend
-            or not is_persons_frontend(connection.frontend)
-            or connection.method == "api_key"
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-        facts = self.authority.human_administration_facts(
-            connection_id=proof.connection_id, session_id=proof.session_id
-        )
-        if facts.originating_login_id != proof.source_ref:
-            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-
-    def review_person_attestation(self, connection: ProfileConnection) -> RuntimeHumanReviewClaimAttestation:
-        """Issue only parent-observed identity; it cannot be requested as client provenance."""
-        if connection.session_id is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.AUTHENTICATION_REQUIRED)
-        with self.guard:
-            facts = self.authority.human_administration_facts(
-                connection_id=connection.context.connection_id, session_id=connection.session_id
-            )
-            proof = RuntimeHumanReviewClaimAttestation(
-                worker_id=self.owner.identity.worker_id,
-                profile_binding=self.store.binding,
-                runtime_boot_id=self.owner.identity.runtime_boot_id,
-                connection_id=connection.context.connection_id,
-                session_id=connection.session_id,
-                frontend=connection.frontend,
-                source_ref=facts.originating_login_id,
-                verified_at=self._wall_clock(),
-            )
-            self._require_review_person(proof)
-            return proof
 
     @contextmanager
     def automation_inventory(
@@ -616,54 +430,10 @@ class RuntimeProfileHost:
             # current locks, custody, logins and availability at every boundary;
             # delegated scopes always reread their live grants below.
             return cached[2]
-        categories = frozenset[DisclosureCategoryGrant]()
-        registered = frozenset(str(item.definition_id) for item in self._contracts.definitions)
-        operations = registered
         if connection.method == "api_key":
-            snapshot = self.store.snapshot()
-            grants = tuple(grant for grant in snapshot.grants if grant.client_id == connection.client_id)
-            # A category grant is resolved against the operations registered now,
-            # so the lease lists every projection the category covers today.
-            projections = registered_disclosure_projections(self._contracts) | {OPERATION_OBSERVATION_PROJECTION_ID}
-            permissions = frozenset(
-                permission for grant in grants for permission in grant.scope.disclosures
-            ) | frozenset(
-                DisclosurePermission(
-                    destination_id=item.destination_id, projection_id=projection, category=item.category
-                )
-                for grant in grants
-                for item in grant.scope.disclosure_categories
-                for projection in projections
-            )
-            operations = registered & frozenset(item for grant in grants for item in grant.scope.operations)
+            scope = delegated_profile_scope(self._contracts, self.store.snapshot(), connection.client_id)
         else:
-            permissions = frozenset(
-                DisclosurePermission(destination_id=connection.client_id, projection_id=projection, category=category)
-                for projection in registered_disclosure_projections(self._contracts)
-                for category in DisclosureCategory
-            )
-            categories = frozenset(
-                DisclosureCategoryGrant(destination_id=connection.client_id, category=category)
-                for category in DisclosureCategory
-            )
-            permissions |= frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=connection.client_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        scope = AccessScope(
-            operations=operations,
-            actions=frozenset(AccessAction),
-            disclosures=permissions,
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=True,
-            disclosure_categories=categories,
-        )
+            scope = person_profile_scope(self._contracts, connection.client_id)
         if connection.method != "api_key":
             connection.owner_scope = (self._contracts, connection.client_id, scope)
         return scope
@@ -772,19 +542,7 @@ class RuntimeProfileHost:
                 )
             except (OSError, ValueError, StorageError, ProfileCustodyRecordError):
                 receipt = None
-            positive = {
-                login.login_id
-                for login in observed
-                if login.os_owner_id == self.store.binding.os_owner_id
-                and (
-                    login.login_id in relevant
-                    or (receipt is not None and profile_session_login_matches(record=receipt, login_id=login.login_id))
-                )
-                and (
-                    login.lock_state is OsLockState.LOCKED
-                    or (not login.active and login.unattended is LoginEligibility.INELIGIBLE)
-                )
-            }
+            positive = locked_login_ids(observed, relevant, self.store.binding.os_owner_id, receipt)
             unlocked = {login.login_id for login in observed if login.active and login.unlocked}
             self._locked_logins.difference_update(unlocked)
             if positive <= self._locked_logins:

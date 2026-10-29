@@ -28,7 +28,7 @@ from cadrumo.application.modelo.edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
 )
 from cadrumo.application.modelo.edit_operator_input import ModeloEditOperatorInputV2
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_change_contracts import ModeloWorkRenamePublicResultV2, ModeloWorkRenameRequest
 from cadrumo.application.operations.financial_operand_contract import (
     OperationFinancialOperandRefusalCode,

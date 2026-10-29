@@ -42,7 +42,7 @@ from cadrumo.core.config import override_settings
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
-from cadrumo.entrypoints.operation_composition import build_auth_operation_ports
+from cadrumo.entrypoints.operation_composition_inputs import build_auth_operation_ports
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
@@ -56,7 +56,8 @@ from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityReques
 from ...adapters.tests.profile_worker_support import changed, lease, worker_profiles
 from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
-from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from ..operation_authority import ProfileWorkerOperationAuthority
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

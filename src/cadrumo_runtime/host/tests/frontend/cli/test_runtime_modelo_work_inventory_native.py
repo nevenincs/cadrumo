@@ -19,7 +19,7 @@ from cadrumo.application.user_profile.login_session import resolve_login_target
 from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (

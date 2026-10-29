@@ -15,6 +15,7 @@ from uuid import UUID, uuid4
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
 from cadrumo.adapters.persistence.storage.custody.automation_profile import current_automation_profile_binding
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
@@ -113,7 +114,7 @@ def test_installed_cli_resumes_other_profile_without_retiring_independent_api_se
         monkeypatch.setattr(f"{owner}.terminal_can_prompt_for_secrets", lambda: True)
         monkeypatch.setattr(f"{owner}.prompt_secret_no_echo", lambda _: pytest.fail("prompted"))
     keyring = _Keyring()
-    monkeypatch.setattr(receipt_store, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
     passphrase = dev_test_database_password()
     endpoint = WindowsEndpoint(storage_root=_isolated_cli_backend)
     installed = installation(

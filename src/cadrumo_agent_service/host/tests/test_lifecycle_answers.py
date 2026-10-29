@@ -1,10 +1,8 @@
 """Retiring the agent's tree is answered at once and reported by the service's events.
 
-A stop, and a browser or device sign-in, retire the running agent: its gateway
-settles its run, ends its worker and exits, and the service confirms the whole
-job is gone. That takes longer than an administration exchange may wait, so the
-request is answered as soon as the work is admitted, and the end is the
-``stopped`` event the desktop already reads.
+An admitted stop retires the running agent and reports a ``stopped`` event.
+An unsupported sign-in method is refused before the existing tree or an auth
+helper can be started or changed.
 
 The tree here is a real hosted cadrumo-agent gateway with its worker, run from
 the checkout ``CADRUMO_DEV_AGENT_CHECKOUT`` names, inside the service's own
@@ -35,12 +33,13 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from ...adapters.agent_programs import AGENT_COMMAND_LINE, GATEWAY_ARGUMENTS, PACKAGE_AGENT_VARIABLE
+from ...gateway_credentials import GatewayCredentials
 from ...providers.application.agent_credentials import ProviderSettingsAgentCredentialSource
 from ...providers.application.ports import StoreGenerations
 from ...providers.application.resolution import ProviderCredentialResolver
 from ...providers.application.service import ProviderSettingsService
 from ...providers.application.tests.memory_store import MemoryProviderSettingsStore
-from ...service import AgentService, _GatewayCredentials
+from ...service import AgentService
 from ..controller import (
     AgentGenerations,
     AgentHostController,
@@ -189,7 +188,7 @@ def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(tmp
         service.close()
 
 
-def test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_then_runs(
+def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     checkout = _checkout()
@@ -203,7 +202,7 @@ def test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_th
     service._providers = ProviderSettingsService(
         store=store, catalog_source=service._catalog, storage_mode=storage_mode().mode
     )
-    service._credentials = _GatewayCredentials(
+    service._credentials = GatewayCredentials(
         ProviderSettingsAgentCredentialSource(store=store, resolver=resolver, catalog_source=service._catalog),
         bytearray(b"g" * 43),
         bytearray(b"h" * 43),
@@ -211,7 +210,9 @@ def test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_th
     )
     # The running service read both at its start; this test reads them before it times anything.
     assert service._catalog.catalog().entry("claude_cli") is not None
-    assert "claude" in service._catalog.gui_sign_in_providers()
+    methods = service._catalog.gui_sign_in_methods()
+    assert "claude" in methods
+    assert "device" not in methods["claude"]
     controller = _running_tree(checkout, tmp_path / "tree")
     service._controller = controller
     try:
@@ -221,25 +222,14 @@ def test_a_sign_in_is_answered_starting_while_the_tree_retires_and_its_helper_th
         )
         answered = time.monotonic() - started
 
-        assert answer.get("event") == "starting", answer
+        assert answer == {"kind": "refused", "code": "sign_in_unavailable"}
         assert answered < ANSWER_BOUND_SECONDS, f"the sign-in took {answered:.3f} s to answer"
-        # Anything else that would change the tree waits for the attempt.
-        assert service.admin("start") == {"kind": "refused", "code": "busy"}
-        assert events.wait_for("stopped", timeout=30) == {"event": "stopped", "code": "agent_retired"}
-        assert controller.state is AgentHostState.DETACHED
-
-        # The helper starts once the tree is gone; this lane offers no device sign-in.
-        deadline = time.monotonic() + 60
-        snapshot = answer
-        while snapshot["event"] in {"starting", "started"} and time.monotonic() < deadline:
-            time.sleep(0.1)
-            snapshot = service.admin("connect_status", attempt_id=answer["attempt_id"])
-        assert snapshot == {
-            "attempt_id": answer["attempt_id"],
-            "provider": "claude_cli",
-            "event": "failed",
-            "reason": "unsupported_flow",
-        }
+        assert service._auth_attempt is None
+        assert service._auth_resume_valid is None
+        assert service._stop_thread is None
+        assert service._controller is controller
+        assert controller.state is AgentHostState.READY
+        assert events.seen == []
     finally:
         controller.stop()
         service.close()

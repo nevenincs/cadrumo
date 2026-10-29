@@ -23,8 +23,6 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
-    OperationClaimableReviews,
-    OperationClaimableReviewsListed,
     OperationContract,
     OperationContractReply,
     OperationControl,
@@ -37,8 +35,6 @@ from cadrumo_client.contracts.operation_access import (
     OperationResult,
     OperationResultPage,
     OperationReview,
-    OperationReviewClaim,
-    OperationReviewClaimed,
     OperationSecret,
     OperationSubmit,
     OperationSubmitPayload,
@@ -60,9 +56,11 @@ from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerOperationReceipt
 
 from .operation_projection import prepare_operation_projection
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 from .submission_stream import stream_operation_submission
-from .view_stream_relay import ViewAttachGrant, open_worker_view_leg
+from .view_stream_state import ViewAttachGrant
+from .view_stream_worker_link import open_worker_view_leg
 
 _log = get_logger(__name__)
 
@@ -83,8 +81,6 @@ type _RuntimeOperationReplyRequest = (
     | OperationResultPage
     | OperationReview
     | OperationManage
-    | OperationReviewClaim
-    | OperationClaimableReviews
 )
 
 
@@ -141,12 +137,7 @@ def _carries_change(request: OperationRequest) -> bool:
     """Whether ``request`` asks the worker for a change, rather than to read or describe what exists."""
     return not isinstance(
         request,
-        OperationContract
-        | OperationObserve
-        | OperationResult
-        | OperationResultPage
-        | OperationReview
-        | OperationClaimableReviews,
+        OperationContract | OperationObserve | OperationResult | OperationResultPage | OperationReview,
     )
 
 
@@ -156,11 +147,91 @@ def _named_operation(request: OperationRequest) -> OperationId | None:
         return request.operation_id
     if isinstance(request, OperationManage):
         return request.management.operation_id
-    if isinstance(request, OperationReviewClaim):
-        return request.reference.operation_id
     if isinstance(request, OperationSecret):
         return request.requirement.identity.operation_id
     return None
+
+
+def log_operation_refusal(
+    error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+    lost: ProfileAccessRefusedError | None,
+    request: OperationRequest,
+    unknown: bool,
+) -> None:
+    """Log only refusal metadata, never private operands."""
+    # A typed refusal is an answer, not a fault: name the request and the
+    # registered fault codes, never a traceback, a payload or a message.
+    _log.warning(
+        "runtime operation refused code=%s request=%s definition=%s faults=%s effect=%s",
+        error.reason if lost is None else lost.reason,
+        type(request).__name__,
+        request.definition_id if isinstance(request, OperationSubmit) else "-",
+        ",".join(fault.type for fault in error.request_faults)
+        if isinstance(error, AutomationCustodyError) and error.request_faults
+        else "-",
+        OperationEffect.UNKNOWN.value if unknown else "-",
+    )
+
+
+def operation_refusal(
+    error: AutomationCustodyError | RefusalError | ProfileAccessRefusedError,
+    served_by: RuntimeProfileHost | None,
+    request: OperationRequest,
+    context: ConnectionContext,
+    boot: UUID,
+) -> AccessRefusal:
+    """Report a typed refusal and identify an uncertain in-flight effect."""
+    lost = None if served_by is None else _lost_in_flight(served_by, request, error)
+    unknown = lost is not None and _carries_change(request)
+    log_operation_refusal(error, lost, request, unknown)
+    if lost is not None:
+        # The worker was lost while it served this request: the session is recovering,
+        # and a change it carried may have taken effect, so it is never offered as safe to repeat.
+        return AccessRefusal(
+            request_id=request.request_id,
+            runtime_boot_id=boot,
+            connection_id=context.connection_id,
+            code=lost.reason,
+            recovery_remaining_seconds=lost.recovery_remaining_seconds,
+            effect=OperationEffect.UNKNOWN if unknown else None,
+            operation_id=_named_operation(request) if unknown else None,
+        )
+    else:
+        return AccessRefusal(
+            request_id=request.request_id,
+            runtime_boot_id=boot,
+            connection_id=context.connection_id,
+            code=error.reason,
+            sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
+            request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
+            holder_operation_id=error.holder_operation_id if isinstance(error, ProfileAccessRefusedError) else None,
+            recovery_remaining_seconds=error.recovery_remaining_seconds
+            if isinstance(error, ProfileAccessRefusedError)
+            else None,
+        )
+
+
+def operation_change_cues(
+    boot: UUID,
+    profile_id: UUID,
+    reported: set[OperationId],
+    operation_watches: dict[UUID, dict[OperationId, UUID]],
+    connections: dict[UUID, ProfileConnection],
+) -> list[OperationChanged]:
+    """Build cues for live sessions watching one of the reported operations."""
+    return [
+        OperationChanged(
+            runtime_boot_id=boot,
+            connection_id=connection_id,
+            profile_id=profile_id,
+            session_id=connection.session_id,
+        )
+        for connection_id, watches in operation_watches.items()
+        if (connection := connections.get(connection_id)) is not None
+        and connection.profile_id == profile_id
+        and connection.session_id is not None
+        and any(watches.get(operation_id) == connection.session_id for operation_id in reported)
+    ]
 
 
 class ProfileConnectionOperationMixin:
@@ -239,12 +310,6 @@ class ProfileConnectionOperationMixin:
             try:
                 release_guard.enter_context(self.operation_admission())
                 connection, host = self._operation_target(context, channel, request)
-                if isinstance(
-                    request, OperationReviewClaim | OperationClaimableReviews
-                ) and self._refused_as_persons_act(
-                    context, channel, request_id=request.request_id, frontend=connection.frontend
-                ):
-                    return
                 if isinstance(request, OperationFinancialInput):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 # A suspended session learns how long it may still rebind before any worker is borrowed for it.
@@ -261,47 +326,7 @@ class ProfileConnectionOperationMixin:
                 deadline = self._operation_deadline(expires_at)
             except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
                 release_guard.close()
-                lost = None if served_by is None else _lost_in_flight(served_by, request, error)
-                unknown = lost is not None and _carries_change(request)
-                # A typed refusal is an answer, not a fault: name the request and the
-                # registered fault codes, never a traceback, a payload or a message.
-                _log.warning(
-                    "runtime operation refused code=%s request=%s definition=%s faults=%s effect=%s",
-                    error.reason if lost is None else lost.reason,
-                    type(request).__name__,
-                    request.definition_id if isinstance(request, OperationSubmit) else "-",
-                    ",".join(fault.type for fault in error.request_faults)
-                    if isinstance(error, AutomationCustodyError) and error.request_faults
-                    else "-",
-                    OperationEffect.UNKNOWN.value if unknown else "-",
-                )
-                if lost is not None:
-                    # The worker was lost while it served this request: the session is recovering,
-                    # and a change it carried may have taken effect, so it is never offered as safe to repeat.
-                    reply = AccessRefusal(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.boot,
-                        connection_id=context.connection_id,
-                        code=lost.reason,
-                        recovery_remaining_seconds=lost.recovery_remaining_seconds,
-                        effect=OperationEffect.UNKNOWN if unknown else None,
-                        operation_id=_named_operation(request) if unknown else None,
-                    )
-                else:
-                    reply = AccessRefusal(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.boot,
-                        connection_id=context.connection_id,
-                        code=error.reason,
-                        sign_in=error.sign_in if isinstance(error, ProfileAccessRefusedError) else None,
-                        request_faults=error.request_faults if isinstance(error, AutomationCustodyError) else (),
-                        holder_operation_id=error.holder_operation_id
-                        if isinstance(error, ProfileAccessRefusedError)
-                        else None,
-                        recovery_remaining_seconds=error.recovery_remaining_seconds
-                        if isinstance(error, ProfileAccessRefusedError)
-                        else None,
-                    )
+                reply = operation_refusal(error, served_by, request, context, self.boot)
                 deadline = time.monotonic() + 5
             # Write errors propagate: a partially written frame is never retried
             # as a refusal. No private payload escapes the scope of its fence.
@@ -352,19 +377,7 @@ class ProfileConnectionOperationMixin:
                 self._events.publish_cue(cue)
         reported = set(operation_ids)
         with self._guard:
-            cues = [
-                OperationChanged(
-                    runtime_boot_id=self.boot,
-                    connection_id=connection_id,
-                    profile_id=profile_id,
-                    session_id=connection.session_id,
-                )
-                for connection_id, watches in self._operation_watches.items()
-                if (connection := self._connections.get(connection_id)) is not None
-                and connection.profile_id == profile_id
-                and connection.session_id is not None
-                and any(watches.get(operation_id) == connection.session_id for operation_id in reported)
-            ]
+            cues = operation_change_cues(self.boot, profile_id, reported, self._operation_watches, self._connections)
         for cue in cues:
             self._events.publish_cue(cue)
 
@@ -419,44 +432,6 @@ class ProfileConnectionOperationMixin:
         *,
         release_guard: ExitStack,
     ) -> tuple[OperationReply, datetime | None]:
-        if isinstance(request, OperationClaimableReviews):
-            # Only the desktop surfaces these reviews; the claim itself stays open to every person frontend.
-            if connection.frontend is not OperationFrontendProjection.DESKTOP:
-                raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
-            listed = host.owner.operation_worker().claimable_reviews(host.review_person_attestation(connection))
-            # The listing releases no operation, so the session's own expiry bounds its delivery.
-            release_guard.enter_context(host.guard)
-            status = _admitted_status(self._status(connection, host, request.request_id, request.session_id))
-            return OperationClaimableReviewsListed(
-                request_id=request.request_id,
-                runtime_boot_id=self.boot,
-                connection_id=context.connection_id,
-                operation_ids=listed.operation_ids,
-            ), status.status.session_expires_at
-        if isinstance(request, OperationReviewClaim):
-            proof = host.review_person_attestation(connection)
-            claimed = host.owner.operation_worker().claim_review(
-                proof, request.reference, request.reviewed_document_digest
-            )
-            from .operation_projection import validate_operation_release
-
-            validate_operation_release(
-                claimed.release,
-                connection=connection,
-                profile_id=request.profile_id,
-                session_id=request.session_id,
-                action=AccessAction.RESPOND,
-                operation_id=request.reference.operation_id,
-            )
-            allowed = release_guard.enter_context(host.authorize(claimed.release))
-            return OperationReviewClaimed(
-                request_id=request.request_id,
-                runtime_boot_id=self.boot,
-                connection_id=context.connection_id,
-                reference=claimed.reference,
-                reviewed_document_digest=claimed.reviewed_document_digest,
-                allowed_intents=claimed.allowed_intents,
-            ), allowed.expires_at
         if isinstance(request, OperationContract):
             return self._contract_reply(connection, host, context, request, release_guard=release_guard)
         if isinstance(request, OperationSubmitPayload):

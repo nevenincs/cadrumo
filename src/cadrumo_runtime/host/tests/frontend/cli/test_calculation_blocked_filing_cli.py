@@ -34,9 +34,9 @@ from cadrumo.core.i18n.render import tr
 from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
-    CalculationSourceIssue,
     derive_calculation_revision_id_from_revision,
 )
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnitCatalogue
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import operator_profile_facts

@@ -23,21 +23,22 @@ from cadrumo.core import descriptor_write
 from cadrumo_client.contracts.contracts import Peer, RefusalCode, RefusalError
 from cadrumo_client.transport.posix_channel import PosixChannel
 
-from .. import macos_login, macos_worker_process
+from .. import macos_login, macos_worker_host, macos_worker_process
 from ..containment_commands import ContainmentCommandResult
+from ..macos_job_print import MacosJobCoalition, parse_macos_job_print
 from ..macos_login import MacosPeerAuditToken
 from ..macos_process import MacosProcessIncarnation, MacosProcessObservation
-from ..macos_worker_process import (
-    MacosJobCoalition,
-    MacosProcessScope,
+from ..macos_worker_markers import (
     MacosWorkerMarker,
     decode_macos_worker_marker,
     encode_macos_worker_marker,
+    stale_macos_worker_markers,
+)
+from ..macos_worker_process import (
+    MacosProcessScope,
     macos_worker_job_definition,
     macos_worker_label,
     macos_worker_scope_key,
-    parse_macos_job_print,
-    stale_macos_worker_markers,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -802,7 +803,7 @@ def test_native_host_translates_nonpositive_writes_before_publication(
     write_result: int,
 ) -> None:
     """A stalled native file write refuses before launchd or marker publication."""
-    native = macos_worker_process._NativeMacosWorkerHost()
+    native = macos_worker_host.NativeMacosWorkerHost()
     directory_fd = 41
     file_fd = 42
     label = "com.cadrumo.worker.0123456789abcdef.0123456789abcdef0123456789abcdef"
@@ -855,12 +856,12 @@ def test_native_host_translates_nonpositive_writes_before_publication(
         replace=fake_replace,
     )
     monkeypatch.setattr(native, "_directory", lambda *, create: (tmp_path, directory_fd))
-    monkeypatch.setattr(macos_worker_process, "os", native_os)
+    monkeypatch.setattr(macos_worker_host, "os", native_os)
     monkeypatch.setattr(descriptor_write, "os", native_os)
-    monkeypatch.setattr(macos_worker_process, "_private_open_flags", lambda *, nonblocking=False: 0)
-    monkeypatch.setattr(macos_worker_process, "posix_owner_uid", lambda: _UID)
+    monkeypatch.setattr(macos_worker_host, "_private_open_flags", lambda *, nonblocking=False: 0)
+    monkeypatch.setattr(macos_worker_host, "posix_owner_uid", lambda: _UID)
     monkeypatch.setattr(
-        macos_worker_process,
+        macos_worker_host,
         "run_containment_command_sync",
         lambda *args, **kwargs: pytest.fail("launchctl must not run after a failed definition write"),
     )

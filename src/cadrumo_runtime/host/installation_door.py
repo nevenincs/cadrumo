@@ -332,6 +332,32 @@ class InstallationActExchange:
             return tuple(self._owner._profiles)
 
 
+def require_installation_peer(context: ConnectionContext, channel: ByteChannel, boot: UUID) -> None:
+    """Require the verified native peer and current runtime boot."""
+    if context.runtime_boot_id != boot or context.peer != channel.peer:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+
+
+def validate_installation_reply(
+    reply: InstallationCompleted,
+    contract: InstallationActContract,
+    request: InstallationActRequest,
+    boot: UUID,
+    context: ConnectionContext,
+    lifecycle: _LifecycleHold,
+    exchange: InstallationActExchange,
+) -> None:
+    """Reject a mismatched reply or unmarked lifecycle mutation."""
+    if type(reply) is not contract.reply or (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
+        request.request_id,
+        boot,
+        context.connection_id,
+    ):
+        raise InternalInvariantError("an installation handler returned another act's reply")
+    if lifecycle.held and not exchange.changes_began:
+        raise InternalInvariantError("an installation handler changed records without saying where it began")
+
+
 class RuntimeInstallationDoorMixin:
     """Admit, dispatch and settle installation acts for the profile connection service."""
 
@@ -381,8 +407,7 @@ class RuntimeInstallationDoorMixin:
         contract = INSTALLATION_ACT_CONTRACTS[act]
         exchange: InstallationActExchange | None = None
         try:
-            if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            require_installation_peer(context, channel, self.boot)
             login = self._installation_login(context, channel)
             exchange = InstallationActExchange(
                 self,
@@ -403,16 +428,7 @@ class RuntimeInstallationDoorMixin:
             # count a submitted operation holds until its reply is decided.
             with self.operation_admission():
                 reply = handler(request, exchange)
-            if type(reply) is not contract.reply or (reply.request_id, reply.runtime_boot_id, reply.connection_id) != (
-                request.request_id,
-                self.boot,
-                context.connection_id,
-            ):
-                raise InternalInvariantError("an installation handler returned another act's reply")
-            if lifecycle.held and not exchange.changes_began:
-                # A handler cannot leave the mark out: without it a refusal
-                # raised after its change would be read as nothing changed.
-                raise InternalInvariantError("an installation handler changed records without saying where it began")
+            validate_installation_reply(reply, contract, request, self.boot, context, lifecycle, exchange)
             return reply
         except (AutomationCustodyError, RefusalError, ProfileAccessRefusedError) as error:
             if exchange is not None and exchange.changes_began:

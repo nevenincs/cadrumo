@@ -67,7 +67,6 @@ from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.view_stream import (
     AssembledViewImage,
-    ViewDownstreamReader,
     ViewTransferChunk,
     ViewTransferReceiver,
     ViewTransferSender,
@@ -76,11 +75,14 @@ from cadrumo_client.transport.view_stream import (
     write_view_transfer_chunk,
     write_view_transfer_document,
 )
+from cadrumo_client.transport.view_stream_readers import ViewDownstreamReader
 
 from ...adapters.connection_handshake import accept_connection_handshake
 from ...adapters.worker_native_identity import worker_view_namespace
 from ...adapters.worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
-from ..view_stream_relay import ViewAttachGrant, ViewStreamRelay, open_worker_view_leg
+from ..view_stream_relay import ViewStreamRelay
+from ..view_stream_state import ViewAttachGrant
+from ..view_stream_worker_link import open_worker_view_leg
 from ..worker_view_stream import WorkerViewStream, WorkerViewStreams
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

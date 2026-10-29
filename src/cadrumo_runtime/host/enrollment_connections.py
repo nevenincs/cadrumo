@@ -55,7 +55,8 @@ from ..application.enrollment_recipient import (
 from .enrollment_offer import RuntimeEnrollmentOffer, RuntimeEnrollmentRequestOwner
 
 if TYPE_CHECKING:
-    from .profile_host import ProfileConnection, RuntimeProfileHost
+    from .profile_connection import ProfileConnection
+    from .profile_host import RuntimeProfileHost
 
 
 class RuntimeEnrollmentConnections:

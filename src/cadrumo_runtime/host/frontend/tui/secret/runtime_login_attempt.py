@@ -7,7 +7,7 @@ import sys
 import time
 from collections.abc import Callable
 from logging import ERROR, INFO, WARNING
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeGuard
 from uuid import UUID
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -39,6 +39,51 @@ _LOGGER = get_logger(__name__)
 
 _NO_SAVED_SIGN_IN = frozenset({ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING})
 """Resume refusals that only mean nobody is signed in, so the password is simply next."""
+
+
+def resume_missing_saved_sign_in(error: BaseException, resume_first: bool) -> TypeGuard[ProfileReceiptRefusedError]:
+    """Recognize a harmless missing receipt on the first resume attempt."""
+    return (
+        resume_first
+        and isinstance(error, ProfileReceiptRefusedError)
+        and error.binding is None
+        and error.reason in _NO_SAVED_SIGN_IN
+    )
+
+
+def login_refusal_details(
+    error: FrontendRefusedError | RefusalError | ProfileReceiptRefusedError,
+) -> tuple[str, int | None]:
+    """Select the existing safe reason and retry interval."""
+    code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
+    sign_in = error.sign_in if isinstance(error, FrontendRefusedError) else None
+    if sign_in is not None:
+        code = sign_in.binding or sign_in.reason
+    if isinstance(error, ProfileReceiptRefusedError) and error.binding is not None:
+        code = error.binding
+    return code, None if sign_in is None else sign_in.remaining_seconds
+
+
+def wipe_login_proof(proof: bytearray | None, pending: bytearray | None) -> bool:
+    """Erase this attempt's proof and identify whether it owns the pending slot."""
+    if proof is None:
+        return False
+    proof[:] = bytes(len(proof))
+    return pending is proof
+
+
+def log_login_finished(state: LoginAttemptState, started: float) -> None:
+    """Log completion and cleanup status without disclosing the proof."""
+    diagnostic_event(
+        _LOGGER,
+        "tui_login_finished",
+        fields={
+            "handoff_transferred": state.transferred,
+            "elapsed_seconds": time.monotonic() - started,
+            "cleanup_incomplete": state.primary_error is not None and bool(async_cleanup_failures(state.primary_error)),
+        },
+        primary_error=state.primary_error or sys.exception(),
+    )
 
 
 class RuntimeLoginAttemptMixin:
@@ -247,12 +292,7 @@ class RuntimeLoginAttemptMixin:
 
     def _handle_login_failure(self: RuntimeLoginScreen, error: BaseException, *, transferred: bool) -> bool:
         resume_first, self._resume_first = self._resume_first, False
-        if (
-            resume_first
-            and isinstance(error, ProfileReceiptRefusedError)
-            and error.binding is None
-            and error.reason in _NO_SAVED_SIGN_IN
-        ):
+        if resume_missing_saved_sign_in(error, resume_first):
             diagnostic_event(
                 _LOGGER,
                 "tui_login_resume_absent",
@@ -261,12 +301,7 @@ class RuntimeLoginAttemptMixin:
             self._password_first()
             return False
         if isinstance(error, (FrontendRefusedError, RefusalError, ProfileReceiptRefusedError)):
-            code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
-            sign_in = error.sign_in if isinstance(error, FrontendRefusedError) else None
-            if sign_in is not None:
-                code = sign_in.binding or sign_in.reason
-            if isinstance(error, ProfileReceiptRefusedError) and error.binding is not None:
-                code = error.binding
+            code, remaining_seconds = login_refusal_details(error)
             diagnostic_event(
                 _LOGGER,
                 "tui_login_refused",
@@ -279,7 +314,7 @@ class RuntimeLoginAttemptMixin:
                 level=WARNING,
                 primary_error=error,
             )
-            self._status_refused(code, remaining_seconds=None if sign_in is None else sign_in.remaining_seconds)
+            self._status_refused(code, remaining_seconds=remaining_seconds)
             return False
         if isinstance(error, asyncio.CancelledError):
             diagnostic_event(
@@ -354,10 +389,8 @@ class RuntimeLoginAttemptMixin:
             finally:
                 if state.unsubscribe_notice is not None:
                     state.unsubscribe_notice()
-                if proof is not None:
-                    proof[:] = bytes(len(proof))
-                    if self._pending_proof is proof:
-                        self._pending_proof = None
+                if wipe_login_proof(proof, self._pending_proof):
+                    self._pending_proof = None
                 if state.client is not None and not state.transferred:
                     await self._close_untransferred(
                         state.client,
@@ -365,17 +398,7 @@ class RuntimeLoginAttemptMixin:
                     )
         finally:
             try:
-                diagnostic_event(
-                    _LOGGER,
-                    "tui_login_finished",
-                    fields={
-                        "handoff_transferred": state.transferred,
-                        "elapsed_seconds": time.monotonic() - started,
-                        "cleanup_incomplete": state.primary_error is not None
-                        and bool(async_cleanup_failures(state.primary_error)),
-                    },
-                    primary_error=state.primary_error or sys.exception(),
-                )
+                log_login_finished(state, started)
             finally:
                 self._busy = False
                 if self._active():

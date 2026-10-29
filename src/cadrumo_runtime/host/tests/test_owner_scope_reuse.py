@@ -20,7 +20,8 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.contracts import Peer
 from cadrumo_client.contracts.transport import ConnectionContext
 
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_connection import ProfileConnection
+from ..profile_host import RuntimeProfileHost
 from .test_login_scope_binding import _Login
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

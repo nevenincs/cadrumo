@@ -80,26 +80,10 @@ class SecureProviderSettingsStore:
                     else self._client.record_read(PROVIDER_RECORD_CAPABILITY, provider_id, timeout_deadline=deadline)
                 )
                 try:
-                    refusal = _refusal(reply)
-                    if refusal is not None:
-                        return refusal
-                    if reply.state == "absent":
-                        values.append(AbsentProviderRecord(provider=provider_id))
-                        continue
-                    unreadable = UnreadableProviderRecord(provider=provider_id, revision=reply.revision)
-                    if reply.state != "present" or reply.revision is None:
-                        values.append(unreadable)
-                        continue
-                    try:
-                        record = parse_provider_settings_record(bytes(material))
-                    except (ValidationError, UnicodeDecodeError):
-                        values.append(unreadable)
-                        continue
-                    values.append(
-                        StoredProviderRecord(record=record, revision=reply.revision)
-                        if record.provider == provider_id
-                        else unreadable
-                    )
+                    value = _decode_provider_record(provider_id, reply, material)
+                    if isinstance(value, StoreRefusal):
+                        return value
+                    values.append(value)
                 finally:
                     material[:] = b"\0" * len(material)
         except RefusalError as error:
@@ -160,17 +144,7 @@ class SecureProviderSettingsStore:
                 if deadline is None
                 else self._client.observe_generation(PROVIDER_RECORD_CAPABILITY, timeout_deadline=deadline)
             )
-            if (
-                reply.state != "generation"
-                or _refusal(reply) is not None
-                or reply.custody_generation is None
-                or reply.records_generation is None
-                or self._client.lease is None
-                or _lease_binding(self._client.lease) != binding
-            ):
-                return None
-            sign_in = sha256_hex("\x1f".join((reply.custody_generation, *binding)).encode("utf-8"))
-            return StoreGenerations(sign_in=sign_in, provider_settings=reply.records_generation)
+            return _observed_generation(reply, self._client, binding)
         except RefusalError as error:
             if deadline is not None and error.reason is RefusalCode.TIMEOUT:
                 raise
@@ -224,6 +198,46 @@ class SecureLocalModelListStore:
     def delete(self, *, expected_revision: str) -> StoreRefusal | None:
         """Delete the model list record only at the exact revision the caller observed."""
         return _record_delete(self._client, LOCAL_MODEL_LIST_CAPABILITY, LOCAL_MODEL_LIST_KEY, expected_revision)
+
+
+def _decode_provider_record(
+    provider_id: str,
+    reply: ExtensionRecordReply,
+    material: bytearray,
+) -> ProviderRecordRead | StoreRefusal:
+    refusal = _refusal(reply)
+    if refusal is not None:
+        return refusal
+    if reply.state == "absent":
+        return AbsentProviderRecord(provider=provider_id)
+    unreadable = UnreadableProviderRecord(provider=provider_id, revision=reply.revision)
+    if reply.state != "present" or reply.revision is None:
+        return unreadable
+    try:
+        record = parse_provider_settings_record(bytes(material))
+    except (ValidationError, UnicodeDecodeError):
+        return unreadable
+    return (
+        StoredProviderRecord(record=record, revision=reply.revision) if record.provider == provider_id else unreadable
+    )
+
+
+def _observed_generation(
+    reply: ExtensionRecordReply,
+    client: InstalledServiceClient,
+    binding: tuple[str, ...],
+) -> StoreGenerations | None:
+    if (
+        reply.state != "generation"
+        or _refusal(reply) is not None
+        or reply.custody_generation is None
+        or reply.records_generation is None
+        or client.lease is None
+        or _lease_binding(client.lease) != binding
+    ):
+        return None
+    sign_in = sha256_hex("\x1f".join((reply.custody_generation, *binding)).encode("utf-8"))
+    return StoreGenerations(sign_in=sign_in, provider_settings=reply.records_generation)
 
 
 def _record_write(

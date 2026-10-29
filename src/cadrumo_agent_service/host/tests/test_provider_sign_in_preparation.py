@@ -14,7 +14,7 @@ import pytest
 
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
-from ... import service as service_module
+from ... import service_startup as service_module
 from ...adapters.agent_programs import AgentImage
 from ...providers.application.contracts import (
     ProviderSettingsActionAccepted,

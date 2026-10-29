@@ -24,7 +24,10 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_work_lifecycle_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import (
+    build_calculation_action_ports,
+    build_work_lifecycle_ports,
+)
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 

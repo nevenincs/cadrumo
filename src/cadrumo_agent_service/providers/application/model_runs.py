@@ -270,17 +270,7 @@ class _LaneAnswers:
         if isinstance(decided, ModelRunRefusal):
             return selected, decided
         accepted, entries = decided
-        background = entry.background
-        if not background.runnable:
-            return selected, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-        facts = next((held for held in entries if held.id == reading.model), None)
-        if capability is ModelCapability.VISION and (
-            BackgroundInput.IMAGE not in background.inputs or facts is None or facts.vision is not True
-        ):
-            return selected, ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
-        if isinstance(facts, LiveCatalogModel) and facts.installed is False:
-            return selected, ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
-        return selected, _model_lane(entry, accepted, reading.model, facts)
+        return selected, _selected_model_lane(entry, accepted, entries, reading, capability)
 
     def _decided(self, entry: ProviderCatalogEntry) -> _DecidedLane | ModelRunRefusal:
         decided = self._lanes.get(entry.id)
@@ -309,6 +299,26 @@ class _LaneAnswers:
             except ProviderCatalogUnavailableError:
                 self._catalog = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         return self._catalog
+
+
+def _selected_model_lane(
+    entry: ProviderCatalogEntry,
+    accepted: tuple[ModelRunMediaKind, ...] | None,
+    entries: tuple[CatalogModelFacts, ...],
+    reading: ListedModel,
+    capability: ModelCapability,
+) -> ModelRunLane | ModelRunRefusal:
+    background = entry.background
+    if not background.runnable:
+        return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+    facts = next((held for held in entries if held.id == reading.model), None)
+    if capability is ModelCapability.VISION and (
+        BackgroundInput.IMAGE not in background.inputs or facts is None or facts.vision is not True
+    ):
+        return ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
+    if isinstance(facts, LiveCatalogModel) and facts.installed is False:
+        return ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
+    return _model_lane(entry, accepted, reading.model, facts)
 
 
 def _model_lane(

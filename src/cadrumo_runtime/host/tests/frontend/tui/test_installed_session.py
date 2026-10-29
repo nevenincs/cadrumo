@@ -40,7 +40,7 @@ from .test_runtime_admission import _OwnedClient
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
 
-    from cadrumo.entrypoints.tui.app import RootBindingV1
+    from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

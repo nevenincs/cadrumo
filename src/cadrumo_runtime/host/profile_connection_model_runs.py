@@ -10,6 +10,7 @@ direction is a credential.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from threading import Event
 from typing import TYPE_CHECKING
@@ -27,15 +28,15 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRequested,
 )
 from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SecretReady
-from cadrumo_client.contracts.service_access import ServiceCapability
+from cadrumo_client.contracts.service_access import ServiceCapability, ServiceLease
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.model_run_frames import read_secret_chunks, write_secret_chunks
 from cadrumo_runtime.contracts.worker_authorization import WorkerModelRun
 
 if TYPE_CHECKING:
-    from .profile_connection_services import ServiceConnection
     from .profile_connections import RuntimeProfileConnections
+    from .service_connection_records import ServiceConnection
 
 _LOOKUP_ANSWER_SECONDS = 30.0
 """How long a lane lookup or selections read waits for the service; it reads settings and runs nothing."""
@@ -170,9 +171,7 @@ class ProfileConnectionModelRunsMixin:
                 or service is None
                 or lease is None
                 or not _admitted_lease(self, context, request)
-                or pending.connection_id != context.connection_id
-                or pending.lease_id != lease.lease_id
-                or pending.fetched
+                or not fetch_pending_matches(pending, context, lease)
             ):
                 return _refuse(self, context, channel, request.request_id)
             pending.fetched = True
@@ -241,21 +240,17 @@ class ProfileConnectionModelRunsMixin:
         accepted = False
         if (
             pending is not None
-            and pending.connection_id == context.connection_id
-            and pending.lease_id == request.lease_id
-            and pending.fetched
-            and _answers_its_phase(pending.command, outcome)
+            and completion_pending_matches(pending, context, request)
             and _service_still_admitted(self, context, channel, request)
         ):
             with self._guard:
-                if (
-                    service is not None
-                    and lease is not None
-                    and service.lease is lease
-                    and self._services.get(context.connection_id) is service
-                    and self._model_runs.get(request.run_id) is pending
-                    and _admitted_lease(self, context, request)
-                    and not pending.answered.is_set()
+                if completion_is_current(
+                    service,
+                    lease,
+                    self._services.get(context.connection_id),
+                    self._model_runs.get(request.run_id),
+                    pending,
+                    lambda: _admitted_lease(self, context, request),
                 ):
                     pending.answer(outcome, text)
                     accepted = True
@@ -272,6 +267,45 @@ class ProfileConnectionModelRunsMixin:
             ),
             deadline=time.monotonic() + _REPLY_WRITE_SECONDS,
         )
+
+
+def fetch_pending_matches(pending: PendingModelRun, context: ConnectionContext, lease: ServiceLease) -> bool:
+    """Allow only the announced service to fetch a request once."""
+    return pending.connection_id == context.connection_id and pending.lease_id == lease.lease_id and not pending.fetched
+
+
+def completion_pending_matches(
+    pending: PendingModelRun | None, context: ConnectionContext, request: ModelRunCompleteRequest
+) -> bool:
+    """Match the fetched proof owner and answer to the announced phase."""
+    return (
+        pending is not None
+        and pending.connection_id == context.connection_id
+        and pending.lease_id == request.lease_id
+        and pending.fetched
+        and _answers_its_phase(pending.command, request.outcome)
+    )
+
+
+def completion_is_current(
+    service: ServiceConnection | None,
+    lease: ServiceLease | None,
+    current_service: ServiceConnection | None,
+    current_pending: PendingModelRun | None,
+    pending: PendingModelRun | None,
+    admitted: Callable[[], bool],
+) -> bool:
+    """Recheck the same lease and unanswered owner while holding the guard."""
+    return (
+        service is not None
+        and lease is not None
+        and service.lease is lease
+        and current_service is service
+        and pending is not None
+        and current_pending is pending
+        and admitted()
+        and not pending.answered.is_set()
+    )
 
 
 def _model_run_service(connections: RuntimeProfileConnections, profile_id: UUID) -> ServiceConnection | None:

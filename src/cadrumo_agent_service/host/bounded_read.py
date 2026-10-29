@@ -88,6 +88,10 @@ class BoundedRead[T]:
                 except BaseException:
                     self._running = None
                     raise
+        return self._await_running(running, within=within)
+
+    def _await_running(self, running: tuple[Hashable, int, Future[T]], *, within: float) -> T | dict[str, str]:
+        """Wait for this generation without releasing unfinished work ownership."""
         try:
             value = running[2].result(timeout=within)
         except FutureTimeoutError:

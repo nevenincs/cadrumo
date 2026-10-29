@@ -41,7 +41,8 @@ from ...adapters.worker_authorization_client import WorkerAuthorizationClient
 from ...adapters.worker_authorization_connections import WorkerAuthorizationConnections
 from ...adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ...application.approval_binding import RuntimeApprovalBinding
-from ..operation_authority import ProfileWorkerOperationAuthority, WorkerOperationBinding
+from ..operation_authority import ProfileWorkerOperationAuthority
+from ..worker_operation_binding import WorkerOperationBinding
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

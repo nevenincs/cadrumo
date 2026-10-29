@@ -108,6 +108,23 @@ class RuntimeLedgerInvoiceImportTuiDoorV1:
         )
 
 
+def _wizard_success_matches(
+    result: InvoiceWizardOutcome,
+    request: InvoiceWizardRequest,
+    condition: OperationTerminalCondition,
+    terminal: OperationPublicProjectionV1,
+) -> bool:
+    """Match a recorded invoice to its request and settled effect."""
+    recorded = result.result
+    return (
+        recorded is not None
+        and condition is OperationTerminalCondition.SUCCEEDED
+        and terminal.refusal_ref is None
+        and terminal.effect is (OperationEffect.NONE if recorded.already_existed else OperationEffect.UPDATED)
+        and recorded.invoice.kind is request.kind
+    )
+
+
 class RuntimeLedgerInvoiceWizardTuiDoorV1:
     """Record one invoice through the wizard for the exact TUI profile and session."""
 
@@ -139,15 +156,7 @@ class RuntimeLedgerInvoiceWizardTuiDoorV1:
                 ):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 return
-            recorded = result.result
-            if (
-                recorded is None
-                or condition is not OperationTerminalCondition.SUCCEEDED
-                or terminal.refusal_ref is not None
-                or terminal.effect
-                is not (OperationEffect.NONE if recorded.already_existed else OperationEffect.UPDATED)
-                or recorded.invoice.kind is not request.kind
-            ):
+            if not _wizard_success_matches(result, request, condition, terminal):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
 
         return await self._session.run_operation(

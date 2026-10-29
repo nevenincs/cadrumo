@@ -149,12 +149,7 @@ class ProviderSettingsService:
         stored_base_url = _resolved_base_url(current, base_url)
         if stored_base_url is None and entry.auth_kind.accepts_base_url and entry.default_base_url is None:
             return _refused(ProviderSettingsRefusalCode.BASE_URL_REJECTED)
-        previous = current.record if isinstance(current, StoredProviderRecord) else None
-        assistant_auth = (
-            previous.assistant_auth
-            if previous is not None and previous.assistant_auth is not AssistantAuth.DISABLED
-            else AssistantAuth.DIRECT_API
-        )
+        assistant_auth = _credential_assistant_auth(current)
         record = self._record(
             entry,
             assistant_auth=assistant_auth,
@@ -176,9 +171,7 @@ class ProviderSettingsService:
             return entry
         if not entry.serves(ProviderConsumer.ASSISTANT):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
-        if choice is AssistantAuthChoice.PROVIDER_SIGN_IN and not entry.auth_kind.accepts_provider_sign_in:
-            return _refused(ProviderSettingsRefusalCode.UNKNOWN)
-        if choice is AssistantAuthChoice.DIRECT_API and not entry.auth_kind.accepts_direct_credential:
+        if not _auth_choice_supported(entry, choice):
             return _refused(ProviderSettingsRefusalCode.UNKNOWN)
         current = self._current(entry, expected_revision)
         if isinstance(current, ProviderSettingsRefusal):
@@ -372,6 +365,21 @@ class ProviderSettingsService:
                 cli_state=self._cli_state(entry),
             ),
         )
+
+
+def _credential_assistant_auth(current: ProviderRecordRead) -> AssistantAuth:
+    previous = current.record if isinstance(current, StoredProviderRecord) else None
+    return (
+        previous.assistant_auth
+        if previous is not None and previous.assistant_auth is not AssistantAuth.DISABLED
+        else AssistantAuth.DIRECT_API
+    )
+
+
+def _auth_choice_supported(entry: ProviderCatalogEntry, choice: AssistantAuthChoice) -> bool:
+    if choice is AssistantAuthChoice.PROVIDER_SIGN_IN and not entry.auth_kind.accepts_provider_sign_in:
+        return False
+    return not (choice is AssistantAuthChoice.DIRECT_API and not entry.auth_kind.accepts_direct_credential)
 
 
 def _resolved_base_url(current: ProviderRecordRead, change: str | BaseUrlChange) -> str | None:

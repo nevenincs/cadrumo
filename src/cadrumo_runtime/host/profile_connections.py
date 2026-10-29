@@ -6,21 +6,18 @@ import logging
 import time
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
-from threading import BoundedSemaphore, Condition, Event, Lock, RLock, Thread
+from threading import BoundedSemaphore, Condition, Event, RLock, Thread
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.bucket.output_language_hint import read_bucket_output_language_hint
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
 from cadrumo.adapters.persistence.storage.custody.paths import profile_custody_path
 from cadrumo.application.operations.models import OperationId
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
-    LoginEligibility,
     OsLockState,
     OsLoginContext,
 )
@@ -39,18 +36,17 @@ from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.contracts.service_access import InstalledServiceDescriptor, NativeServiceVerifier
 from cadrumo_client.contracts.session_events import (
     ConnectionEvent,
-    ProfileLanguageChanged,
     ServiceLeaseChanged,
     SessionEvent,
     SignInChanged,
 )
 from cadrumo_client.contracts.transport import ConnectionContext
-from cadrumo_client.transport.installation import read_runtime_installation
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_runtime.contracts.profile_host import ProfileDrainResult
 
 from ..adapters.login import capture_runtime_login
-from ..adapters.service_verification import InstalledNativeServiceVerifier, installed_service_descriptors
+from ..adapters.service_descriptors import installed_service_descriptors
+from ..adapters.service_verification import InstalledNativeServiceVerifier
 from ..application.session_authority_core import CustodyRecoveryPolicy
 from .access_management import RuntimeAccessManagement
 from .bootstrap_delete import RuntimeBootstrapDeleteMixin
@@ -58,7 +54,19 @@ from .bootstrap_reset import RuntimeBootstrapMixin
 from .enrollment_connections import RuntimeEnrollmentConnections
 from .installation_door import RuntimeInstallationDoorMixin
 from .lifecycle_guard import RuntimeLifecycleGuard
+from .login_inventory_reading import (
+    HeldLogin,
+    LoginObservation,
+    has_eligible_login,
+    has_unknown_login_lock,
+    has_unreported_login,
+    login_witness_loss_fields,
+    read_login_inventory,
+)
+from .login_sign_in_sweep import sweep_observed_sign_ins
 from .notice_observation import NoticeObservation, start_notice_observation
+from .notice_upgrade import flush_upgrade_notices
+from .profile_connection import ProfileConnection
 from .profile_connection_access import ProfileConnectionAccessMixin
 from .profile_connection_admission import ProfileConnectionAdmissionMixin
 from .profile_connection_attendance import AttendedConnection, PendingAttendance, ProfileConnectionAttendanceMixin
@@ -68,12 +76,13 @@ from .profile_connection_login import PendingProfileLogin, ProfileConnectionLogi
 from .profile_connection_model_runs import PendingModelRun, ProfileConnectionModelRunsMixin
 from .profile_connection_operations import ProfileConnectionOperationMixin
 from .profile_connection_person_acts import ProfileConnectionPersonActMixin
-from .profile_connection_services import PendingServiceAdmission, ProfileConnectionServicesMixin, ServiceConnection
+from .profile_connection_services import ProfileConnectionServicesMixin
 from .profile_connection_sessions import ProfileConnectionSessionMixin
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_host import RuntimeProfileHost
+from .profile_language_observation import observe_language
+from .service_connection_records import PendingServiceAdmission, ServiceConnection
 from .session_events import RuntimeSessionEvents
 from .shutdown import request_runtime_stop
-from .sign_in_sweep import sweep_saved_sign_ins
 from .view_stream_relay import ViewStreamRelay
 
 if TYPE_CHECKING:
@@ -84,39 +93,6 @@ _LOGGER = get_logger(__name__)
 # Lifecycle passes stay this far apart, and where nothing reports a login's
 # changes it is also how often that login is observed.
 _LIFECYCLE_INTERVAL_SECONDS = 0.5
-
-
-class _HeldLogin:
-    """One logon as observed when its inventory was taken, observed again only for another credential availability."""
-
-    def __init__(self, evidence: LoginEvidence, observed: OsLoginContext) -> None:
-        self._evidence = evidence
-        self._lock = Lock()
-        self._observed = {Availability.UNAVAILABLE: observed}
-
-    @property
-    def login_id(self) -> str:
-        return self._evidence.login_id
-
-    def observe(self, *, credential_facilities: Availability) -> OsLoginContext:
-        with self._lock:
-            held = self._observed.get(credential_facilities)
-        if held is None:
-            held = self._evidence.observe(credential_facilities=credential_facilities)
-            with self._lock:
-                self._observed[credential_facilities] = held
-        return held
-
-
-@dataclass(frozen=True, slots=True)
-class _LoginObservation:
-    """One logon observation and what it was taken under: the OS change count, its instant and the held peers."""
-
-    changes: int
-    observed_at: float
-    peers: frozenset[str]
-    logins: tuple[LoginEvidence, ...]
-    unknown_lock: bool
 
 
 class RuntimeProfileConnections(
@@ -230,7 +206,7 @@ class RuntimeProfileConnections(
         # Profiles whose worker a sign-in watch has started, or is starting, ahead of their sign-in.
         self._prepared_profiles: set[UUID] = set()
         # The last logon observation, which request-path checks reuse until the OS reports a session change.
-        self._login_observation: _LoginObservation | None = None
+        self._login_observation: LoginObservation | None = None
         self._login_changes = 0
         self._enrollments = RuntimeEnrollmentConnections(prepare=self._prepare_enrollment, admitting=self._admitting)
         self._management = RuntimeAccessManagement(
@@ -338,34 +314,16 @@ class RuntimeProfileConnections(
         exact-profile session; a hint and its notification confer neither a value
         nor access authority.
         """
-        try:
-            language = read_bucket_output_language_hint(storage_root=self.root, bucket_id=str(profile_id))
-        except Exception:
-            return
-        changed: list[ProfileLanguageChanged] = []
-        with self._guard:
-            for connection_id, connection in self._connections.items():
-                session_id = connection.session_id
-                if connection.profile_id != profile_id or session_id is None:
-                    continue
-                previous = self._language_observations.get(connection_id)
-                if previous == (session_id, language):
-                    continue
-                self._language_observations[connection_id] = session_id, language
-                if establish_baseline and (previous is None or previous[0] != session_id):
-                    # Before its first operation this session has no canonical
-                    # read to invalidate. Later changes still publish a cue.
-                    continue
-                changed.append(
-                    ProfileLanguageChanged(
-                        runtime_boot_id=self.boot,
-                        connection_id=connection_id,
-                        profile_id=profile_id,
-                        session_id=session_id,
-                    )
-                )
-        for event in changed:
-            self._events.publish(event)
+        observe_language(
+            profile_id,
+            root=self.root,
+            boot=self.boot,
+            guard=self._guard,
+            connections=self._connections,
+            observations=self._language_observations,
+            events=self._events,
+            establish_baseline=establish_baseline,
+        )
 
     def event_flushed(self, context: ConnectionContext, event: ConnectionEvent) -> None:
         """Record transport completion without granting session or user acknowledgement."""
@@ -392,17 +350,7 @@ class RuntimeProfileConnections(
             return False
         if eligible is None or time.monotonic() >= deadline:
             return False
-        pending: list[Event] = []
-        for context in eligible:
-            if time.monotonic() >= deadline:
-                return False
-            flushed = self._events.upgrade_pending(context)
-            if flushed is not None:
-                pending.append(flushed)
-        return (
-            all(flushed.wait(max(0.0, deadline - time.monotonic())) for flushed in pending)
-            and time.monotonic() < deadline
-        )
+        return flush_upgrade_notices(self._events, eligible, deadline)
 
     def _connected(self, connection_id: UUID) -> ProfileConnection:
         with self._guard:
@@ -435,32 +383,11 @@ class RuntimeProfileConnections(
             return held.logins
         return self._login_contexts()
 
-    def _login_contexts(self) -> tuple[LoginEvidence, ...]:
-        changes = self._login_changes
+    def _claim_sign_in_sweep(
+        self, logins_seen: frozenset[tuple[str, bool, OsLockState]], complete: bool, eligible: bool
+    ) -> tuple[bool, bool, float]:
         with self._guard:
-            peers = tuple(self._logins.values())
-        if self._login_inventory is None:
-            return peers
-        inventory_started = time.monotonic()
-        inventory = self._login_inventory()
-        inventory_elapsed_ms = round((time.monotonic() - inventory_started) * 1000, 3)
-        logins = {login.login_id: login for login in inventory.logins}
-        # Preserve the original captured incarnation for human/attended leases.
-        # A fresh login cannot replace their originating native proof.
-        logins.update((login.login_id, login) for login in peers)
-        observation_started = time.monotonic()
-        observed = tuple(login.observe(credential_facilities=Availability.UNAVAILABLE) for login in logins.values())
-        observation_elapsed_ms = round((time.monotonic() - observation_started) * 1000, 3)
-        # A sign-in status reads its peer's login and lock state, so a change there moves it too.
-        logins_seen = frozenset((login.login_id, login.active, login.lock_state) for login in observed)
-        with self._guard:
-            logins_moved, self._observed_logins = logins_seen != self._observed_logins, logins_seen
-        if logins_moved:
-            self._sign_in_changed()
-        eligible = any(login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed)
-        # Request threads observe the logins too: one decides under the guard, claiming the sweep it runs.
-        with self._guard:
-            sweep = (logins_seen, inventory.complete, frozenset(self._profiles) if eligible else frozenset())
+            sweep = (logins_seen, complete, frozenset(self._profiles) if eligible else frozenset())
             instant = time.monotonic()
             sweeping = not eligible or instant - self._last_sign_in_sweep >= 1.0
             # A pass observes logins again through each profile's checks: only
@@ -470,14 +397,17 @@ class RuntimeProfileConnections(
             if sweeping:
                 self._last_sign_in_sweep, self._swept = instant, sweep
             last_sweep = self._last_sign_in_sweep
-        if sweeping:
-            self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
-        elif held_back:
-            self._owe_lifecycle_pass(last_sweep + 1.0)
-        # A logon without a lock surface, or one in an unknown state, changes with no session notification.
-        self._unreported_logins = any(
-            login.lock_state in (OsLockState.NOT_APPLICABLE, OsLockState.UNKNOWN) for login in observed
-        )
+        return sweeping, held_back, last_sweep
+
+    def _record_login_availability(
+        self,
+        eligible: bool,
+        inventory: LoginInventory,
+        peers: tuple[LoginEvidence, ...],
+        observed: tuple[OsLoginContext, ...],
+        inventory_elapsed_ms: float,
+        observation_elapsed_ms: float,
+    ) -> None:
         with self._guard:
             self._login_lifecycle_available = eligible
             if eligible:
@@ -491,55 +421,62 @@ class RuntimeProfileConnections(
                     _LOGGER,
                     "no eligible login witness remains; stopping the runtime",
                     level=logging.WARNING,
-                    fields={
-                        "reason_code": "login_witness_loss",
-                        "inventory_complete": inventory.complete,
-                        "inventory_login_count": len(inventory.logins),
-                        "retained_peer_witness_count": len(peers),
-                        "observed_active_count": sum(login.active for login in observed),
-                        "observed_eligible_count": sum(
-                            login.active and login.unattended is LoginEligibility.ELIGIBLE for login in observed
-                        ),
-                        "observed_unknown_count": sum(
-                            login.unattended is LoginEligibility.UNKNOWN for login in observed
-                        ),
-                        "inventory_elapsed_ms": inventory_elapsed_ms,
-                        "observation_elapsed_ms": observation_elapsed_ms,
-                    },
+                    fields=login_witness_loss_fields(
+                        inventory, peers, observed, inventory_elapsed_ms, observation_elapsed_ms
+                    ),
                 )
                 request_runtime_stop(self.stop, ExitReason.LOGIN_WITNESS_LOSS)
-        held = tuple(_HeldLogin(login, seen) for login, seen in zip(logins.values(), observed, strict=True))
+
+    def _login_contexts(self) -> tuple[LoginEvidence, ...]:
+        changes = self._login_changes
         with self._guard:
-            self._login_observation = _LoginObservation(
+            peers = tuple(self._logins.values())
+        if self._login_inventory is None:
+            return peers
+        reading = read_login_inventory(self._login_inventory, peers)
+        inventory, logins, observed = reading.inventory, reading.logins, reading.observed
+        inventory_started = reading.started
+        inventory_elapsed_ms, observation_elapsed_ms = reading.inventory_elapsed_ms, reading.observation_elapsed_ms
+        # A sign-in status reads its peer's login and lock state, so a change there moves it too.
+        logins_seen = frozenset((login.login_id, login.active, login.lock_state) for login in observed)
+        with self._guard:
+            logins_moved, self._observed_logins = logins_seen != self._observed_logins, logins_seen
+        if logins_moved:
+            self._sign_in_changed()
+        eligible = has_eligible_login(observed)
+        # Request threads observe the logins too: one decides under the guard, claiming the sweep it runs.
+        sweeping, held_back, last_sweep = self._claim_sign_in_sweep(logins_seen, inventory.complete, eligible)
+        if sweeping:
+            self._sweep_sign_ins(observed, complete=inventory.complete, include_hosted=not eligible)
+        elif held_back:
+            self._owe_lifecycle_pass(last_sweep + 1.0)
+        # A logon without a lock surface, or one in an unknown state, changes with no session notification.
+        self._unreported_logins = has_unreported_login(observed)
+        self._record_login_availability(
+            eligible, inventory, peers, observed, inventory_elapsed_ms, observation_elapsed_ms
+        )
+        held = tuple(HeldLogin(login, seen) for login, seen in zip(logins, observed, strict=True))
+        with self._guard:
+            self._login_observation = LoginObservation(
                 changes,
                 inventory_started,
                 frozenset(login.login_id for login in peers),
                 held,
-                any(login.lock_state is OsLockState.UNKNOWN for login in observed),
+                has_unknown_login_lock(observed),
             )
-        return tuple(logins.values())
+        return logins
 
     def _sweep_sign_ins(self, logins: tuple[OsLoginContext, ...], *, complete: bool, include_hosted: bool) -> None:
-        owner = self._os_owner_id
-        if owner is None and self._installation is not None:
-            owner = self._installation.os_owner_id
-        if owner is None:
-            return
-        try:
-            installation = read_runtime_installation(
-                storage_root=self.root, os_owner_id=owner, storage_identity=self.storage_identity
-            )
-        except RefusalError:
-            # No validated installation means no saved receipt can be attributed.
-            return
-        with self._guard:
-            hosted = frozenset() if include_hosted else frozenset(self._profiles)
-        sweep_saved_sign_ins(
+        sweep_observed_sign_ins(
+            logins,
+            complete=complete,
+            include_hosted=include_hosted,
+            os_owner_id=self._os_owner_id,
+            current_installation=self._installation,
             root=self.root,
-            installation=installation,
-            logins=logins,
-            inventory_complete=complete,
-            hosted_profiles=hosted,
+            storage_identity=self.storage_identity,
+            guard=self._guard,
+            profiles=self._profiles,
         )
 
     def _private_work_available(self) -> bool:
@@ -703,6 +640,36 @@ class RuntimeProfileConnections(
         with self._guard:
             self._lifecycle_owed = due if self._lifecycle_owed is None else min(self._lifecycle_owed, due)
 
+    def _poll_profile(self, host: RuntimeProfileHost) -> float | None:
+        retired = host.retire_replaced_binding(deadline=time.monotonic() + 15)
+        if retired is None:
+            # Another owner holds its fence; look again shortly.
+            self._owe_lifecycle_pass()
+            return None
+        if retired:
+            self._remove_retired_host(host)
+            return None
+        host.approvals.expire()
+        self._retired(host.observe_human_lock_down())
+        self._retired(host.authority.revalidate_sessions())
+        if host.owner.lost:
+            host.close()
+            self._remove_retired_host(host)
+            return None
+        try:
+            host.settle_lost_owners(deadline=time.monotonic() + 2)
+        except ExceptionGroup as failure:
+            # The lost incarnation stays owned; a later pass, or the host's close, settles it.
+            diagnostic_event(
+                _LOGGER,
+                "lost_worker_settlement_pending",
+                fields={"failures": len(failure.exceptions)},
+                level=logging.WARNING,
+            )
+            self._owe_lifecycle_pass()
+        due = host.lifecycle_due()
+        return due
+
     def _poll_profiles(self) -> None:
         """Fence idle leases on expiry, native logout/lock or unavailable custody."""
         instant = time.monotonic()
@@ -724,33 +691,7 @@ class RuntimeProfileConnections(
             self._owe_lifecycle_pass()
         dues: dict[UUID, float] = {}
         for host in hosts:
-            retired = host.retire_replaced_binding(deadline=time.monotonic() + 15)
-            if retired is None:
-                # Another owner holds its fence; look again shortly.
-                self._owe_lifecycle_pass()
-                continue
-            if retired:
-                self._remove_retired_host(host)
-                continue
-            host.approvals.expire()
-            self._retired(host.observe_human_lock_down())
-            self._retired(host.authority.revalidate_sessions())
-            if host.owner.lost:
-                host.close()
-                self._remove_retired_host(host)
-                continue
-            try:
-                host.settle_lost_owners(deadline=time.monotonic() + 2)
-            except ExceptionGroup as failure:
-                # The lost incarnation stays owned; a later pass, or the host's close, settles it.
-                diagnostic_event(
-                    _LOGGER,
-                    "lost_worker_settlement_pending",
-                    fields={"failures": len(failure.exceptions)},
-                    level=logging.WARNING,
-                )
-                self._owe_lifecycle_pass()
-            due = host.lifecycle_due()
+            due = self._poll_profile(host)
             if due is not None:
                 dues[host.store.binding.profile_id] = due
         with self._guard:

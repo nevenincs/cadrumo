@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import cast
 
 from cadrumo.application.ledger.actions_common import display_decimal
 from cadrumo.application.ledger.classify_requests import (
@@ -41,6 +42,17 @@ def build_runtime_ledger_classification_patch(values: dict[str, object]) -> Ledg
     return LedgerClassifyPatch.model_validate({name: _wire_value(value) for name, value in values.items()})
 
 
+def _normalized_patch_value(field: str, expected: object, *, business: bool) -> object:
+    """Mirror the canonical classification writer's selected-field normalization."""
+    if field == "category_id":
+        return (cast("str", expected).strip() or None) if expected is not None and business else None
+    if field in {"taxable_base", "iva_rate", "iva_amount", "irpf_category"} and not business:
+        return None
+    if field == "notes":
+        return expected or ""
+    return expected
+
+
 def _patch_matches(result: LedgerClassifyOperationResult, request: LedgerClassifyRequest) -> bool:
     """Correlate the selected fields with the canonical writer's normalization."""
     transaction = result.transaction
@@ -59,15 +71,31 @@ def _patch_matches(result: LedgerClassifyOperationResult, request: LedgerClassif
             actual = getattr(result, field)
         else:
             actual = getattr(transaction, field)
-        if field == "category_id":
-            expected = (expected.strip() or None) if expected is not None and business else None
-        elif field in {"taxable_base", "iva_rate", "iva_amount", "irpf_category"} and not business:
-            expected = None
-        elif field == "notes":
-            expected = expected or ""
+        expected = _normalized_patch_value(field, expected, business=business)
         if actual != expected:
             return False
     return True
+
+
+def _settled_classification_matches(
+    result: LedgerClassifyOperationResult,
+    request: LedgerClassifyRequest,
+    condition: OperationTerminalCondition,
+    terminal: OperationPublicProjectionV1,
+    expected_effect: OperationEffect,
+) -> bool:
+    """Require the expected settled receipt and the selected resulting fields."""
+    return (
+        condition is OperationTerminalCondition.SUCCEEDED
+        and result.outcome == "classified"
+        and result.profile_id == request.profile_id
+        and terminal.effect is expected_effect
+        and terminal.refusal_ref is None
+        and terminal.failure_error_code is None
+        and terminal.diagnostic_ref is None
+        and terminal.result_ref is not None
+        and _patch_matches(result, request)
+    )
 
 
 class RuntimeLedgerClassificationTuiDoorV1:
@@ -101,17 +129,7 @@ class RuntimeLedgerClassificationTuiDoorV1:
             _operation_id: str,
         ) -> None:
             expected_effect = OperationEffect.UPDATED if result.bucket_event_ids else OperationEffect.NONE
-            if (
-                condition is not OperationTerminalCondition.SUCCEEDED
-                or result.outcome != "classified"
-                or result.profile_id != request.profile_id
-                or terminal.effect is not expected_effect
-                or terminal.refusal_ref is not None
-                or terminal.failure_error_code is not None
-                or terminal.diagnostic_ref is not None
-                or terminal.result_ref is None
-                or not _patch_matches(result, request)
-            ):
+            if not _settled_classification_matches(result, request, condition, terminal, expected_effect):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
 
         await self._session.run_operation(

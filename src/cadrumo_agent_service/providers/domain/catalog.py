@@ -16,7 +16,7 @@ import re
 from enum import StrEnum
 from itertools import pairwise
 from typing import Annotated, Final, Literal, Self
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
 from pydantic import (
     BaseModel,
@@ -111,6 +111,29 @@ class ProviderTransport(StrEnum):
     CLI = "cli"
 
 
+def _validate_url_spelling(value: str) -> None:
+    if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
+        raise ValueError("base URL must be a non-empty trimmed string within the length bound")
+    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
+        raise ValueError("base URL must be printable ASCII without whitespace")
+
+
+def _validate_gateway_components(parts: SplitResult) -> None:
+    if parts.username is not None or parts.password is not None:
+        raise ValueError("base URL must not embed credentials")
+    if parts.query or parts.fragment:
+        raise ValueError("base URL must not carry a query or fragment")
+
+
+def _validate_loopback_port(parts: SplitResult) -> None:
+    try:
+        port = parts.port
+    except ValueError:
+        raise ValueError("base URL port must be a number") from None
+    if parts.netloc.endswith(":") or (port is not None and not 0 < port <= _MAX_PORT):
+        raise ValueError("base URL port must be a number from 1 to 65535")
+
+
 def validate_https_base_url(value: str) -> str:
     """Return ``value`` when it is an acceptable provider gateway URL.
 
@@ -124,10 +147,7 @@ def validate_https_base_url(value: str) -> str:
     Raises:
         ValueError: When the URL is not an acceptable gateway URL.
     """
-    if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
-        raise ValueError("base URL must be a non-empty trimmed string within the length bound")
-    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
-        raise ValueError("base URL must be printable ASCII without whitespace")
+    _validate_url_spelling(value)
     if value.startswith("-") or any(character in _BASE_URL_FORBIDDEN for character in value):
         raise ValueError("base URL must not start with '-' or carry a shell or pattern character")
     parts = urlsplit(value)
@@ -135,10 +155,7 @@ def validate_https_base_url(value: str) -> str:
         raise ValueError("base URL must use https")
     if not (parts.hostname is not None and parts.hostname):
         raise ValueError("base URL must name a host")
-    if parts.username is not None or parts.password is not None:
-        raise ValueError("base URL must not embed credentials")
-    if parts.query or parts.fragment:
-        raise ValueError("base URL must not carry a query or fragment")
+    _validate_gateway_components(parts)
     return value
 
 
@@ -153,10 +170,7 @@ def validate_loopback_http_base_url(value: str) -> str:
     Raises:
         ValueError: When the URL is not a loopback ``http`` origin.
     """
-    if not value or len(value) > BASE_URL_MAX_LENGTH or value != value.strip():
-        raise ValueError("base URL must be a non-empty trimmed string within the length bound")
-    if any(character.isspace() or not 0x20 < ord(character) < 0x7F for character in value):
-        raise ValueError("base URL must be printable ASCII without whitespace")
+    _validate_url_spelling(value)
     # The brackets of ``[::1]`` are the one pattern character a loopback origin may carry.
     if any(mark in value for mark in "?#@\\") or any(character in _BASE_URL_FORBIDDEN - {"["} for character in value):
         raise ValueError("base URL must not carry credentials, a query, a fragment or a pattern character")
@@ -167,12 +181,7 @@ def validate_loopback_http_base_url(value: str) -> str:
         raise ValueError("a keyless lane's base URL must carry no path")
     if parts.hostname not in _LOOPBACK_HOSTS:
         raise ValueError("a keyless lane's base URL must name 127.0.0.1, localhost or [::1]")
-    try:
-        port = parts.port
-    except ValueError:
-        raise ValueError("base URL port must be a number") from None
-    if parts.netloc.endswith(":") or (port is not None and not 0 < port <= _MAX_PORT):
-        raise ValueError("base URL port must be a number from 1 to 65535")
+    _validate_loopback_port(parts)
     return value
 
 
@@ -328,18 +337,21 @@ class ProviderCatalogEntry(BaseModel):
             raise ValueError("cli programs must not repeat")
         if (self.agent_credential_id is not None) != self.auth_kind.accepts_direct_credential:
             raise ValueError("a lane declares a credential id exactly when it takes a credential")
-        if self.auth_kind is ProviderAuthKind.NONE:
-            if self.default_base_url is None:
-                raise ValueError("a keyless lane declares its loopback base URL")
-            validate_loopback_http_base_url(self.default_base_url)
-        elif self.default_base_url is not None:
-            validate_https_base_url(self.default_base_url)
+        self._validate_endpoint()
         model_ids = [model.id for model in self.models]
         if len(model_ids) != len(set(model_ids)):
             raise ValueError("a lane's model ids must be unique")
         if not set(self.recommended.values()) <= set(model_ids):
             raise ValueError("a recommended entry names one of its lane's models")
         return self
+
+    def _validate_endpoint(self) -> None:
+        if self.auth_kind is ProviderAuthKind.NONE:
+            if self.default_base_url is None:
+                raise ValueError("a keyless lane declares its loopback base URL")
+            validate_loopback_http_base_url(self.default_base_url)
+        elif self.default_base_url is not None:
+            validate_https_base_url(self.default_base_url)
 
     def model(self, model_id: str) -> ProviderCatalogModel | None:
         """Return the model this lane declares under ``model_id``, or ``None`` when it declares none."""

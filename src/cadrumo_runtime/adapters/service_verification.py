@@ -3,16 +3,15 @@
 from __future__ import annotations
 
 import ctypes
-import json
 import os
 import sys
 from dataclasses import dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Final
 from uuid import UUID
 
 from cadrumo.core.diagnostic_log import diagnostic_slow_call
-from cadrumo.core.hashing import canonical_json_bytes, reject_duplicate_json_members, reject_json_constant, sha256_hex
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.logging import get_logger
 from cadrumo.core.path_confinement import HostPathRefusal, opened_confined_file
@@ -27,6 +26,7 @@ from .boot_record import runtime_package_directory
 from .macos_login import macos_peer_audit_token
 from .macos_process import read_macos_process
 from .native_peer import require_live_native_peer
+from .service_descriptors import package_member_path
 
 _log = get_logger(__name__)
 
@@ -46,28 +46,7 @@ class NativeProcessIdentity:
     image: str
 
 
-def native_process_identity(pid: int, owner: str) -> NativeProcessIdentity:
-    """Read current kernel image, parent and creation identity; unknown facts refuse."""
-    if sys.platform == "linux":
-        directory = Path("/proc") / str(pid)
-        if str(directory.stat().st_uid) != owner:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        fields = (directory / "stat").read_text(encoding="ascii").rsplit(") ", 1)[1].split()
-        return NativeProcessIdentity(pid, int(fields[1]), int(fields[19]), os.readlink(directory / "exe"))
-    if sys.platform == "darwin":
-        observed = read_macos_process(pid, expected_owner=owner)
-        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
-        query = native.proc_pidpath
-        query.argtypes, query.restype = (ctypes.c_int, ctypes.c_void_p, ctypes.c_uint32), ctypes.c_int
-        buffer = ctypes.create_string_buffer(4096)
-        if query(pid, buffer, len(buffer)) <= 0:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        return NativeProcessIdentity(
-            pid,
-            observed.parent_pid,
-            observed.started_seconds * 1_000_000 + observed.started_microseconds,
-            os.fsdecode(buffer.value),
-        )
+def _windows_process_identity(pid: int, owner: str) -> NativeProcessIdentity:
     if sys.platform != "win32":
         raise RefusalError(RefusalCode.UNAVAILABLE)
     from ctypes import wintypes
@@ -118,17 +97,37 @@ def native_process_identity(pid: int, owner: str) -> NativeProcessIdentity:
         close(handle)
 
 
-_MAXIMUM_COMMAND_LINE_BYTES = 2 * 32768 + 64
-
-
-def native_process_arguments(pid: int, owner: str) -> tuple[str, ...]:
-    """Read the arguments a process was started with, after its image; unknown facts refuse."""
+def native_process_identity(pid: int, owner: str) -> NativeProcessIdentity:
+    """Read current kernel image, parent and creation identity; unknown facts refuse."""
     if sys.platform == "linux":
         directory = Path("/proc") / str(pid)
         if str(directory.stat().st_uid) != owner:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        parts = (directory / "cmdline").read_bytes().split(b"\0")
-        return tuple(os.fsdecode(part) for part in parts[1:-1])
+        fields = (directory / "stat").read_text(encoding="ascii").rsplit(") ", 1)[1].split()
+        return NativeProcessIdentity(pid, int(fields[1]), int(fields[19]), os.readlink(directory / "exe"))
+    if sys.platform == "darwin":
+        observed = read_macos_process(pid, expected_owner=owner)
+        native = ctypes.CDLL("/usr/lib/libproc.dylib", use_errno=True)
+        query = native.proc_pidpath
+        query.argtypes, query.restype = (ctypes.c_int, ctypes.c_void_p, ctypes.c_uint32), ctypes.c_int
+        buffer = ctypes.create_string_buffer(4096)
+        if query(pid, buffer, len(buffer)) <= 0:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        return NativeProcessIdentity(
+            pid,
+            observed.parent_pid,
+            observed.started_seconds * 1_000_000 + observed.started_microseconds,
+            os.fsdecode(buffer.value),
+        )
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    return _windows_process_identity(pid, owner)
+
+
+_MAXIMUM_COMMAND_LINE_BYTES = 2 * 32768 + 64
+
+
+def _windows_process_arguments(pid: int, owner: str) -> tuple[str, ...]:
     if sys.platform != "win32":
         raise RefusalError(RefusalCode.UNAVAILABLE)
     from ctypes import wintypes
@@ -177,6 +176,19 @@ def native_process_arguments(pid: int, owner: str) -> tuple[str, ...]:
         free(ctypes.cast(arguments, ctypes.c_void_p))
 
 
+def native_process_arguments(pid: int, owner: str) -> tuple[str, ...]:
+    """Read the arguments a process was started with, after its image; unknown facts refuse."""
+    if sys.platform == "linux":
+        directory = Path("/proc") / str(pid)
+        if str(directory.stat().st_uid) != owner:
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        parts = (directory / "cmdline").read_bytes().split(b"\0")
+        return tuple(os.fsdecode(part) for part in parts[1:-1])
+    if sys.platform != "win32":
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    return _windows_process_arguments(pid, owner)
+
+
 def _require_channel(channel: ByteChannel, identity: NativeProcessIdentity) -> None:
     if isinstance(channel, (WindowsChannel, PosixChannel)):
         require_live_native_peer(channel)
@@ -205,6 +217,62 @@ def _running_image_identity(identity: NativeProcessIdentity) -> str:
     return _file_identity(Path(identity.image).stat())
 
 
+def _verified_service_image(
+    identity: NativeProcessIdentity, descriptor: InstalledServiceDescriptor
+) -> tuple[Path, str, str] | None:
+    candidate = Path(identity.image)
+    if any(is_link_like(part) for part in (candidate, *candidate.parents)):
+        return None
+    image = candidate.resolve(strict=True)
+    if image != Path(descriptor.launch_image).resolve(strict=True):
+        return None
+    with opened_confined_file(candidate, max_bytes=128 * 1024 * 1024) as opened:
+        if isinstance(opened, HostPathRefusal):
+            return None
+        payload = opened.read_bytes()
+        if isinstance(payload, HostPathRefusal):
+            return None
+        digest = sha256_hex(payload)
+        image_identity = _file_identity(opened.status())
+    if digest != descriptor.image_digest or _running_image_identity(identity) != image_identity:
+        return None
+    return image, digest, image_identity
+
+
+def _installed_parent_path(package: str, image_path: str, descriptor_path: str) -> tuple[Path, Path] | None:
+    root = Path(package)
+    if any(is_link_like(part) for part in (root, *root.parents)):
+        return None
+    root = root.resolve(strict=True)
+    observed = Path(image_path)
+    expected = Path(descriptor_path)
+    if any(is_link_like(part) for part in (observed, *observed.parents, expected, *expected.parents)):
+        return None
+    resolved_observed = observed.resolve(strict=True)
+    resolved_expected = expected.resolve(strict=True)
+    if resolved_observed != resolved_expected or not resolved_expected.is_relative_to(root):
+        return None
+    member = package_member_path(root, resolved_expected.relative_to(root).as_posix())
+    if member is None or member[1] != resolved_expected:
+        return None
+    return root, resolved_expected
+
+
+def _descendant_chain(child: NativeProcessIdentity, service_peer: VerifiedServicePeer, owner: str) -> bool:
+    chain = [child]
+    for _ in range(64):
+        if child.pid == service_peer.process_id:
+            if str(child.born) != service_peer.process_incarnation or child.image != service_peer.image_path:
+                return False
+            return all(native_process_identity(item.pid, owner) == item for item in chain)
+        parent = native_process_identity(child.parent_pid, owner)
+        if parent.born > child.born or parent.pid in {item.pid for item in chain}:
+            return False
+        chain.append(parent)
+        child = parent
+    return False
+
+
 class InstalledNativeServiceVerifier:
     """Match dedicated package images and rechecked kernel ancestry."""
 
@@ -217,22 +285,10 @@ class InstalledNativeServiceVerifier:
                 return None
             identity = native_process_identity(context.peer.process_id, context.peer.os_owner_id)
             _require_channel(channel, identity)
-            candidate = Path(identity.image)
-            if any(is_link_like(part) for part in (candidate, *candidate.parents)):
+            verified_image = _verified_service_image(identity, descriptor)
+            if verified_image is None:
                 return None
-            image = candidate.resolve(strict=True)
-            if image != Path(descriptor.launch_image).resolve(strict=True):
-                return None
-            with opened_confined_file(candidate, max_bytes=128 * 1024 * 1024) as opened:
-                if isinstance(opened, HostPathRefusal):
-                    return None
-                payload = opened.read_bytes()
-                if isinstance(payload, HostPathRefusal):
-                    return None
-                digest = sha256_hex(payload)
-                image_identity = _file_identity(opened.status())
-            if digest != descriptor.image_digest or _running_image_identity(identity) != image_identity:
-                return None
+            image, digest, image_identity = verified_image
             expected = descriptor.launch_arguments
             if expected:
                 started = native_process_arguments(identity.pid, context.peer.os_owner_id)
@@ -289,22 +345,11 @@ class InstalledNativeServiceVerifier:
             package = runtime_package_directory(Path(sys.executable), mode=storage_mode().mode)
             if package is None:
                 return False
-            root = Path(package)
-            if any(is_link_like(part) for part in (root, *root.parents)):
+            resolved_expected = _installed_parent_path(package, image_path, descriptor_path)
+            if resolved_expected is None:
                 return False
-            root = root.resolve(strict=True)
-            observed = Path(image_path)
-            expected = Path(descriptor_path)
-            if any(is_link_like(part) for part in (observed, *observed.parents, expected, *expected.parents)):
-                return False
-            resolved_observed = observed.resolve(strict=True)
-            resolved_expected = expected.resolve(strict=True)
-            if resolved_observed != resolved_expected or not resolved_expected.is_relative_to(root):
-                return False
-            member = _package_member_path(root, resolved_expected.relative_to(root).as_posix())
-            if member is None or member[1] != resolved_expected:
-                return False
-            with opened_confined_file(resolved_expected, max_bytes=128 * 1024 * 1024, root=root) as opened:
+            root, expected_image = resolved_expected
+            with opened_confined_file(expected_image, max_bytes=128 * 1024 * 1024, root=root) as opened:
                 if isinstance(opened, HostPathRefusal):
                     return False
                 payload = opened.read_bytes()
@@ -326,125 +371,6 @@ class InstalledNativeServiceVerifier:
         try:
             child = native_process_identity(context.peer.process_id, context.peer.os_owner_id)
             _require_channel(channel, child)
-            chain = [child]
-            for _ in range(64):
-                if child.pid == service_peer.process_id:
-                    if str(child.born) != service_peer.process_incarnation or child.image != service_peer.image_path:
-                        return False
-                    return all(native_process_identity(item.pid, context.peer.os_owner_id) == item for item in chain)
-                parent = native_process_identity(child.parent_pid, context.peer.os_owner_id)
-                if parent.born > child.born or parent.pid in {item.pid for item in chain}:
-                    return False
-                chain.append(parent)
-                child = parent
-            return False
+            return _descendant_chain(child, service_peer, context.peer.os_owner_id)
         except (RefusalError, OSError, ValueError, IndexError):
             return False
-
-
-def installed_service_descriptors() -> tuple[InstalledServiceDescriptor, ...]:
-    """Load package-owned capabilities, with image identity fixed by package inventory."""
-    package = runtime_package_directory(Path(sys.executable), mode=storage_mode().mode)
-    if package is None:
-        return ()
-    root = Path(package)
-    if any(is_link_like(part) for part in (root, *root.parents)):
-        return ()
-    try:
-        root = root.resolve(strict=True)
-    except OSError:
-        return ()
-    path = root / "data" / "service-descriptors.json"
-    try:
-        manifest_raw = _read_package_member(
-            root / "data" / "package-manifest.json", root=root, maximum_bytes=_MAXIMUM_PACKAGE_MANIFEST_BYTES
-        )
-        raw = _read_package_member(path, root=root, maximum_bytes=_MAXIMUM_SERVICE_DESCRIPTOR_BYTES)
-        manifest = json.loads(
-            manifest_raw, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
-        )
-        if type(manifest) is not dict or type(manifest.get("files")) is not dict:
-            return ()
-        files = manifest["files"]
-        expected = files.get("data/service-descriptors.json")
-        if type(expected) is not str or sha256_hex(raw) != expected:
-            return ()
-        documents = json.loads(
-            raw, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
-        )
-        if type(documents) is not list:
-            return ()
-        descriptors: list[InstalledServiceDescriptor] = []
-        service_ids: set[str] = set()
-        for item in documents:
-            if type(item) is not dict:
-                return ()
-            document = dict(item)
-            digest_document = {key: value for key, value in document.items() if key != "descriptor_digest"}
-            if sha256_hex(canonical_json_bytes(digest_document)) != document["descriptor_digest"]:
-                return ()
-            service_id = document["service_id"]
-            if type(service_id) is not str or service_id in service_ids:
-                return ()
-            service_ids.add(service_id)
-            if type(document.get("record_capabilities")) is not list:
-                return ()
-            capabilities = []
-            for record in document["record_capabilities"]:
-                if type(record) is not dict or type(record.get("capability")) is not str:
-                    return ()
-                capabilities.append(record["capability"])
-            if len(capabilities) != len(set(capabilities)):
-                return ()
-            launch_image = _package_member_path(root, document.get("launch_image"))
-            if launch_image is None:
-                return ()
-            _image, resolved_image = launch_image
-            if files.get(document["launch_image"]) != document["image_digest"]:
-                return ()
-            document["launch_image"] = str(resolved_image)
-            parents = document.get("allowed_parent_images", [])
-            if type(parents) is not list:
-                return ()
-            for parent in parents:
-                if type(parent) is not dict:
-                    return ()
-                parent_path = _package_member_path(root, parent.get("launch_image"))
-                if parent_path is None:
-                    return ()
-                _parent_image, resolved_parent = parent_path
-                if files.get(parent.get("launch_image")) != parent.get("image_digest"):
-                    return ()
-                parent["launch_image"] = str(resolved_parent)
-            descriptors.append(InstalledServiceDescriptor.model_validate_json(canonical_json_bytes(document)))
-        return tuple(descriptors)
-    except (OSError, ValueError, TypeError, KeyError):
-        return ()
-
-
-def _read_package_member(path: Path, *, root: Path, maximum_bytes: int) -> bytes:
-    with opened_confined_file(path, max_bytes=maximum_bytes, root=root) as opened:
-        if isinstance(opened, HostPathRefusal):
-            raise ValueError("package member is not a confined regular file")
-        payload = opened.read_bytes()
-    if isinstance(payload, HostPathRefusal):
-        raise ValueError("package member exceeds its byte bound")
-    return payload
-
-
-def _package_member_path(root: Path, member: object) -> tuple[Path, Path] | None:
-    if type(member) is not str or not member or "\\" in member:
-        return None
-    relative = PurePosixPath(member)
-    if relative.is_absolute() or relative.as_posix() != member or any(part in {".", ".."} for part in relative.parts):
-        return None
-    path = root.joinpath(*relative.parts)
-    if any(is_link_like(part) for part in (path, *path.parents)):
-        return None
-    try:
-        resolved = path.resolve(strict=True)
-    except OSError:
-        return None
-    if not resolved.is_relative_to(root):
-        return None
-    return path, resolved

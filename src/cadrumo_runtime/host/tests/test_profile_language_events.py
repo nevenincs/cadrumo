@@ -14,8 +14,8 @@ from cadrumo_client.contracts.login import LoginEvidence
 from cadrumo_client.contracts.session_events import ProfileLanguageChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

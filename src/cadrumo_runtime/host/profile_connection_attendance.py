@@ -13,6 +13,7 @@ existing order of the profile guard before the connections guard holds.
 from __future__ import annotations
 
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import TYPE_CHECKING
@@ -36,14 +37,16 @@ from cadrumo_client.contracts.attendance import (
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.profile_access import ProfileStatus
+from cadrumo_client.contracts.service_access import ServiceLease
 from cadrumo_client.contracts.session_events import AttendanceAnswered, AttendanceChanged
 from cadrumo_client.contracts.transport import ConnectionContext
 
-from .profile_host import ProfileConnection
+from .profile_connection import ProfileConnection
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
     from .profile_host import RuntimeProfileHost
+    from .service_connection_records import ServiceConnection
 
 ATTENDANCE_METHOD = "attendance"
 """The method of a connection admitted only by attendance; it never presented a credential."""
@@ -71,6 +74,55 @@ class AttendedConnection:
 
     holder_connection_id: UUID
     parent_session_id: UUID
+
+
+def attendance_has_holder(spent: bool, holder_present: Callable[[], bool]) -> bool:
+    """Do not ask for a holder after this connection's approval was spent."""
+    return not spent and holder_present()
+
+
+def enqueue_attendance(attendance: dict[UUID, PendingAttendance], ask: PendingAttendance) -> bool:
+    """Reserve a bounded pending ask while the caller holds the guard."""
+    pending = [item for item in attendance.values() if item.profile_id == ask.profile_id]
+    if any(item.connection_id == ask.connection_id for item in pending):
+        raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+    if sum(item.approved is None for item in pending) >= ATTENDANCE_PENDING_LIMIT:
+        return False
+    attendance[ask.attendance_id] = ask
+    return True
+
+
+def delegate_service_attendance(
+    owner: ServiceConnection,
+    lease: ServiceLease,
+    connection: ProfileConnection,
+    host: RuntimeProfileHost,
+    context: ConnectionContext,
+    request: AttendanceAsk,
+    connected: Callable[[UUID], ProfileConnection],
+    record: Callable[[AttendedConnection], None],
+    status: Callable[[ProfileConnection, RuntimeProfileHost, UUID, UUID], ProfileStatus | AccessDenied],
+) -> ProfileStatus | AccessDenied:
+    """Delegate only under the installed service's exact existing human root."""
+    if lease.profile_id != request.profile_id:
+        return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
+    parent_connection = connected(owner.peer.connection_id)
+    connection.client_id = parent_connection.client_id
+    scope = request.scope.model_copy(
+        update={"operations": request.scope.operations & owner.descriptor.operation_scope.operations}
+    )
+    child = host.authority.attend(
+        connection_id=owner.peer.connection_id,
+        parent_session_id=lease.session_id,
+        recipient_connection_id=context.connection_id,
+        scope=scope,
+        delegated_parent=True,
+    )
+    if isinstance(child, AccessDenied):
+        return child
+    connection.session_id = child.session_id
+    record(AttendedConnection(owner.peer.connection_id, lease.session_id))
+    return status(connection, host, request.request_id, child.session_id)
 
 
 class ProfileConnectionAttendanceMixin:
@@ -101,33 +153,25 @@ class ProfileConnectionAttendanceMixin:
                 return renewed
             owner = self._service_tree_owner(context, channel)
             if owner is not None and owner.lease is not None:
-                if owner.lease.profile_id != request.profile_id:
-                    return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
-                parent_connection = self._connected(owner.peer.connection_id)
-                connection.client_id = parent_connection.client_id
-                # Delegation follows the original human root and installed ceiling;
-                # the service has no power to create new human authority.
-                scope = request.scope.model_copy(
-                    update={"operations": request.scope.operations & owner.descriptor.operation_scope.operations}
+
+                def record_attendance(holder: AttendedConnection) -> None:
+                    with self._guard:
+                        self._attended[context.connection_id] = holder
+
+                return delegate_service_attendance(
+                    owner,
+                    owner.lease,
+                    connection,
+                    host,
+                    context,
+                    request,
+                    self._connected,
+                    record_attendance,
+                    self._status,
                 )
-                child = host.authority.attend(
-                    connection_id=owner.peer.connection_id,
-                    parent_session_id=owner.lease.session_id,
-                    recipient_connection_id=context.connection_id,
-                    scope=scope,
-                    delegated_parent=True,
-                )
-                if isinstance(child, AccessDenied):
-                    return child
-                connection.session_id = child.session_id
-                with self._guard:
-                    self._attended[context.connection_id] = AttendedConnection(
-                        owner.peer.connection_id, owner.lease.session_id
-                    )
-                return self._status(connection, host, request.request_id, child.session_id)
             with self._guard:
                 spent = context.connection_id in self._attendance_spent
-            if spent or not self._attendance_holder_present(request.profile_id):
+            if not attendance_has_holder(spent, lambda: self._attendance_holder_present(request.profile_id)):
                 # A connection whose approval ended is let go and asks again on a new
                 # connection, so an ask made here would wait for nobody.
                 return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
@@ -145,12 +189,8 @@ class ProfileConnectionAttendanceMixin:
             )
             with self._guard:
                 self._expire_attendance()
-                pending = [item for item in self._attendance.values() if item.profile_id == request.profile_id]
-                if any(item.connection_id == context.connection_id for item in pending):
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-                if sum(item.approved is None for item in pending) >= ATTENDANCE_PENDING_LIMIT:
+                if not enqueue_attendance(self._attendance, ask):
                     return AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
-                self._attendance[ask.attendance_id] = ask
         self._attendance_changed(request.profile_id)
         return AttendancePending(
             request_id=request.request_id,

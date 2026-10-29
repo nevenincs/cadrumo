@@ -32,6 +32,7 @@ from ..contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     INSTALLATION_ACT_DEFAULT_DEADLINE_SECONDS,
     INSTALLATION_SECRET_HANDOVER_SECONDS,
+    InstallationActContract,
     InstallationActRequest,
     InstallationCompleted,
     InstallationFailed,
@@ -187,12 +188,7 @@ class InstallationClient:
         """
         try:
             contract = INSTALLATION_ACT_CONTRACTS[installation_act_of(request)]
-            if (
-                contract.reply is not reply_type
-                or contract.takes_secret != (secret is not None)
-                or contract.delivers_secret != (hold_secret is not None)
-            ):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
+            _require_act_contract(contract, reply_type, secret, hold_secret)
             if timeout is None:
                 timeout = contract.deadline_seconds + (
                     INSTALLATION_SECRET_HANDOVER_SECONDS if contract.delivers_secret else 0
@@ -212,6 +208,20 @@ class InstallationClient:
         finally:
             if secret is not None:
                 secret[:] = bytes(len(secret))
+
+
+def _require_act_contract(
+    contract: InstallationActContract,
+    reply_type: type[InstallationCompleted],
+    secret: bytearray | None,
+    hold_secret: InstallationSecretHolder | None,
+) -> None:
+    if (
+        contract.reply is not reply_type
+        or contract.takes_secret != (secret is not None)
+        or contract.delivers_secret != (hold_secret is not None)
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _raise_wire_refusal(reply: AccessRefusal) -> NoReturn:

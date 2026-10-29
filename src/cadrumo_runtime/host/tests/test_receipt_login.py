@@ -16,7 +16,7 @@ import keyring
 import pytest
 from keyring.errors import KeyringError, PasswordDeleteError
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_custody
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import profile_session_path
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt_crypto import profile_session_login_binding
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
@@ -118,7 +118,7 @@ def test_receipt_proof_reenters_without_password_or_api_promotion(
     # The backend's priority was fixed when collection imported it, before the
     # selection above, so the receipt writer's usability probe would refuse it.
     # Hand the writer the same selected store directly.
-    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
     try:
         with administration_subject(
             tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
@@ -319,12 +319,12 @@ _KEYCHAIN_WORKER = """
 # variables, so the receipt writer is handed an in-process store instead.
 from keyring.errors import KeyringError, PasswordDeleteError
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo_runtime.host.worker import run
 from cadrumo.tests.in_memory_keyring import InMemoryKeyring
 
 _store = InMemoryKeyring()
-acceleration_receipt._keyring = lambda: (_store, KeyringError, PasswordDeleteError)
+acceleration_keychain._keyring = lambda: (_store, KeyringError, PasswordDeleteError)
 raise SystemExit(run())
 """
 
@@ -342,7 +342,7 @@ def test_password_login_mints_its_receipt_only_after_publication(
     )
     store = InMemoryKeyring()
     # Storage teardown deletes receipts through this process's writer.
-    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
     after_bind: list[Callable[[], None]] = []
     after_capture: list[Callable[[], object]] = []
     captured: list[SignInGeneration | None] = []
@@ -468,7 +468,7 @@ def test_a_receipt_bound_elsewhere_is_refused_typed_and_deleted_by_the_worker(
     # The client's proof store. The worker runs with its own, so a keychain
     # half that survives here shows this process deleted nothing.
     store = InMemoryKeyring()
-    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
     with administration_subject(
         tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
     ) as enrollment:
@@ -489,7 +489,7 @@ def test_a_receipt_bound_elsewhere_is_refused_typed_and_deleted_by_the_worker(
             sign_in.advance()
         receipt_path = profile_session_path(storage_root=root, profile_id=profile_id)
         session_id = json.loads(receipt_path.read_bytes())["session_id"]
-        account = (receipt_custody.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{session_id}")
+        account = (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{profile_id}:{session_id}")
         assert store.get_password(*account) is not None
 
         stop, boot = Event(), uuid4()

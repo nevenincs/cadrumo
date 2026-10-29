@@ -39,6 +39,20 @@ class ProfileDrainRecord:
     guard: RLock = field(default_factory=RLock, repr=False)
 
 
+def containment_retry_needed(record: ProfileDrainRecord) -> bool:
+    """Retry only a completed containment attempt that did not contain its worker."""
+    thread = record.containment
+    if thread is None or thread.ident is None or thread.is_alive():
+        return False
+    with record.guard:
+        return not record.contained
+
+
+def drain_record_can_settle(record: ProfileDrainRecord, contained: bool, running: bool) -> bool:
+    """Settle only after every drain thread and worker containment is complete."""
+    return not running and (record.worker is None or contained)
+
+
 class ProfileConnectionDrainMixin:
     """Own the drain behavior of the profile connection service."""
 
@@ -148,15 +162,8 @@ class ProfileConnectionDrainMixin:
                 self._start_drain_request(record, deadline=deadline)
             # A prior terminal failed containment may have left its request
             # blocked. Retry containment before joining that original request.
-            if (
-                record.containment is not None
-                and record.containment.ident is not None
-                and not record.containment.is_alive()
-            ):
-                with record.guard:
-                    contained = record.contained
-                if not contained:
-                    self._start_drain_containment(record, deadline=deadline)
+            if containment_retry_needed(record):
+                self._start_drain_containment(record, deadline=deadline)
         return approval_failures
 
     def _settle_terminated_operations(
@@ -261,7 +268,7 @@ class ProfileConnectionDrainMixin:
             if not record.host.owner.wait_construction(deadline=deadline):
                 uncontained.append(profile_id)
                 continue
-            if running or (record.worker is not None and not contained):
+            if not drain_record_can_settle(record, contained, running):
                 continue
             self._settle_drained_record(profile_id, record, unsettled, deadline=deadline)
         unsettled.extend(self._settle_pending_logins(deadline=deadline))

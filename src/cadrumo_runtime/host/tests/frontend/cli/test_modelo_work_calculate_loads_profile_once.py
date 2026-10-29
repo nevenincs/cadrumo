@@ -54,7 +54,7 @@ from cadrumo.application.modelo.invoice_withholding_capture_contracts import (
 )
 from cadrumo.application.modelo.m303_attestation_operation import MODELO_WORK_M303_ATTESTATION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.profile_readiness_gate import (
     load_modelo_work_profile,
     require_profile_ready_for_work_unit,
@@ -69,7 +69,7 @@ from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import (
     m111_withholding_aggregate_arguments,
     m111_withholding_invoice_arguments,

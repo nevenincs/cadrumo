@@ -43,7 +43,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.modelos.filing_repository import upsert_filing_record
 from cadrumo.domain.user_profile.values import ProfileSetupState, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_expedientes_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_expedientes_ports
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 from cadrumo.entrypoints.overview_evidence_composition import live_censo_verified_profile_keys
 

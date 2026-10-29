@@ -17,7 +17,7 @@ import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.contracts.session_events import LifecycleNotice
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -103,7 +103,7 @@ async def _authenticated(
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT
         asked.append(credential_reference)

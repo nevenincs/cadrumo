@@ -28,8 +28,9 @@ from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (

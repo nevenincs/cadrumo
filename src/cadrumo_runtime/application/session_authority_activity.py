@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from uuid import UUID
 
 from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
@@ -37,26 +37,27 @@ class SessionAuthorityActivity(SessionAuthorityCore):
             # Bound writes even if an admitted frontend sends every keystroke.
             if deadline - session.expires_at < min(timedelta(seconds=15), idle_window / 2):
                 return session
-            for current in tuple(self._sessions.values()):
-                if (
-                    current.kind is not SessionKind.HUMAN
-                    or current.originating_login_id != session.originating_login_id
-                ):
-                    continue
-                observed = self._facts(current.connection_id)
-                if isinstance(observed, AccessDenied) or isinstance(
-                    self._evaluate(current, observed, None, None), AccessDenied
-                ):
-                    continue
-                if current.expires_at >= deadline:
-                    continue
-                renewed = AccessSession.model_validate(
-                    {
-                        **{name: getattr(current, name) for name in AccessSession.model_fields},
-                        "expires_at": deadline,
-                    }
-                )
-                with self._activation(current.session_id):
-                    self.owner.refresh(renewed)
-                self._sessions[current.session_id] = renewed
+            self._renew_related_human_sessions(session, deadline)
             return self._sessions.get(session_id) or AccessDenied(code=AccessDenialCode.AUTHENTICATION_REQUIRED)
+
+    def _renew_related_human_sessions(self, session: AccessSession, deadline: datetime) -> None:
+        """Renew only still-admitted human leases on the same originating login."""
+        for current in tuple(self._sessions.values()):
+            if current.kind is not SessionKind.HUMAN or current.originating_login_id != session.originating_login_id:
+                continue
+            observed = self._facts(current.connection_id)
+            if isinstance(observed, AccessDenied) or isinstance(
+                self._evaluate(current, observed, None, None), AccessDenied
+            ):
+                continue
+            if current.expires_at >= deadline:
+                continue
+            renewed = AccessSession.model_validate(
+                {
+                    **{name: getattr(current, name) for name in AccessSession.model_fields},
+                    "expires_at": deadline,
+                }
+            )
+            with self._activation(current.session_id):
+                self.owner.refresh(renewed)
+            self._sessions[current.session_id] = renewed

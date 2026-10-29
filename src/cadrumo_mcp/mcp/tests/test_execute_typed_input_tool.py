@@ -21,11 +21,11 @@ import pytest
 
 from cadrumo.application.auth.auth_read_contracts import AUTH_READ_OPERATION_DEFINITION_ID
 from cadrumo.application.auth.read_operation import build_auth_read_definition, build_auth_read_registration
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+from cadrumo.application.modelo.edit_operation import (
     build_modelo_edit_apply_definition,
     build_modelo_edit_apply_registration,
 )
+from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OperationSubmissionReceiptV1
 from cadrumo.application.operations.models import new_operation_id
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1, OperationRegistry

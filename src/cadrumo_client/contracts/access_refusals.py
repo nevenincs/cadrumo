@@ -56,8 +56,6 @@ class AccessDenialCode(StrEnum):
     AUTHORITY_UNAVAILABLE = "authority_unavailable"
     PROVIDER_REQUIRED = "provider_required"
     RESPONSE_AUTHORITY_REQUIRED = "response_authority_required"
-    REVIEW_ALREADY_CLAIMED = "review_already_claimed"
-    REVIEW_CLAIM_STALE = "review_claim_stale"
     TRANSACTION_AUTHORITY_REQUIRED = "transaction_authority_required"
     HUMAN_AUTHORITY_REQUIRED = "human_authority_required"
     FRESH_PASSWORD_REQUIRED = "fresh_password_required"  # noqa: S105 -- public refusal code.

@@ -24,7 +24,7 @@ from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ...adapters.agent_process import WindowsAgentInvocationRunner, WindowsAgentProcessLauncher
 from ...adapters.agent_programs import AGENT_COMMAND_LINE
-from ...service import service_failure
+from ...service_support import service_failure
 from ..controller import (
     AgentGenerations,
     AgentHostController,

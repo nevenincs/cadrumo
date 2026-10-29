@@ -66,16 +66,15 @@ from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_client.transport.view_stream import (
-    ViewImageOutbox,
     ViewTransferChunk,
     ViewTransferReceiver,
     ViewTransferSender,
-    ViewUpstreamReader,
     write_view_document,
     write_view_image,
     write_view_transfer_chunk,
     write_view_transfer_document,
 )
+from cadrumo_client.transport.view_stream_readers import ViewImageOutbox, ViewUpstreamReader
 
 from ..adapters.connection_handshake import accept_connection_handshake
 from ..adapters.native_peer import require_live_native_peer
@@ -387,25 +386,9 @@ class WorkerViewStream:
         if isinstance(item, ViewCredit):
             self._outbox.grant(item.images)
         elif isinstance(item, ViewTransferCredit):
-            sender = self._sender
-            if sender is not None and sender.transfer_id == item.transfer_id and self._sender_result is None:
-                sender.grant(item.chunks)
-            elif sender is None or sender.transfer_id != item.transfer_id:
-                credit = self._early_credit.get(item.transfer_id, 0) + item.chunks
-                if credit > VIEW_TRANSFER_CREDIT_MAX_CHUNKS:
-                    raise RefusalError(RefusalCode.INVALID_FRAME, check="view_transfer_credit")
-                self._early_credit[item.transfer_id] = credit
+            self._take_transfer_credit(item)
         elif isinstance(item, ViewTransferCancel):
-            if item.direction is ViewTransferDirection.DOWNLOAD:
-                self._early_credit.pop(item.transfer_id, None)
-                self._cancel_download(item.transfer_id)
-                self._inbox.append(item)
-            else:
-                upload = self._receiving.pop(item.transfer_id, None)
-                if upload is not None:
-                    upload.wipe()
-                    # Only this file's chooser loses its files; other choosers keep waiting.
-                    self._inbox.append(ViewUploadCancelled(chooser_id=upload.upload.chooser_id))
+            self._take_transfer_cancel(item)
         elif isinstance(item, ViewUpload):
             self._uploads.expect(item.transfer_id, size=item.size)
             upload = _Upload(item)
@@ -418,12 +401,37 @@ class WorkerViewStream:
         elif isinstance(item, ViewDownloadAnswer | ViewFileChooserAnswer):
             self._inbox.append(item)
         elif isinstance(item, ViewClose):
-            if not self._close_requested:
-                self._close_requested = True
-                self._inbox.append(item)
+            self._take_close(item)
         elif self._wait_for_input_room():
             self._person_inputs += 1
             self._inbox.append(item)
+
+    def _take_close(self, item: ViewClose) -> None:
+        if not self._close_requested:
+            self._close_requested = True
+            self._inbox.append(item)
+
+    def _take_transfer_credit(self, item: ViewTransferCredit) -> None:
+        sender = self._sender
+        if sender is not None and sender.transfer_id == item.transfer_id and self._sender_result is None:
+            sender.grant(item.chunks)
+        elif sender is None or sender.transfer_id != item.transfer_id:
+            credit = self._early_credit.get(item.transfer_id, 0) + item.chunks
+            if credit > VIEW_TRANSFER_CREDIT_MAX_CHUNKS:
+                raise RefusalError(RefusalCode.INVALID_FRAME, check="view_transfer_credit")
+            self._early_credit[item.transfer_id] = credit
+
+    def _take_transfer_cancel(self, item: ViewTransferCancel) -> None:
+        if item.direction is ViewTransferDirection.DOWNLOAD:
+            self._early_credit.pop(item.transfer_id, None)
+            self._cancel_download(item.transfer_id)
+            self._inbox.append(item)
+        else:
+            upload = self._receiving.pop(item.transfer_id, None)
+            if upload is not None:
+                upload.wipe()
+                # Only this file's chooser loses its files; other choosers keep waiting.
+                self._inbox.append(ViewUploadCancelled(chooser_id=upload.upload.chooser_id))
 
     def _wait_for_input_room(self) -> bool:
         """Hold the reader until the executor has room for one more person input; hold ``_signal``.

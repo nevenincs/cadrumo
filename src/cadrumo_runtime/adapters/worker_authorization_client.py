@@ -8,6 +8,7 @@ import time
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import TypeGuard
 from uuid import UUID, uuid4
 
 from pydantic import SecretBytes
@@ -146,11 +147,7 @@ class WorkerAuthorizationClient:
         try:
             write_document(channel, request, deadline=deadline)
             first = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
-            if (
-                not isinstance(first, AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult)
-                or first.request_id != request.request_id
-                or first.runtime_boot_id != self.identity.runtime_boot_id
-            ):
+            if not _approval_first_valid(first, request.request_id, self.identity.runtime_boot_id):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             reply = first
             if isinstance(first, WorkerApprovalReady):
@@ -159,10 +156,8 @@ class WorkerAuthorizationClient:
                     raise RefusalError(RefusalCode.INVALID_FRAME)
                 write_secret(channel, bytearray(password.get_secret_value()), deadline=deadline)
                 reply = read_document(channel, WorkerAuthorizationReply, deadline=deadline).root
-                if (
-                    not isinstance(reply, AccessRefusal | WorkerApprovalPhaseResult)
-                    or reply.request_id != request.request_id
-                    or reply.runtime_boot_id != self.identity.runtime_boot_id
+                if not isinstance(reply, AccessRefusal | WorkerApprovalPhaseResult) or not _approval_reply_addressed(
+                    reply, request.request_id, self.identity.runtime_boot_id
                 ):
                     raise RefusalError(RefusalCode.INVALID_FRAME)
             if isinstance(reply, AccessRefusal):
@@ -170,9 +165,7 @@ class WorkerAuthorizationClient:
                 # A refusal after the proof was sent closes the connection, as the runtime does.
                 clean = reply is first
                 raise_worker_access_refusal(reply)
-            if not isinstance(reply, WorkerApprovalPhaseResult) or (
-                (request.phase == "inspect_recipient") != (reply.needs_candidate is not None)
-            ):
+            if not _approval_result_matches(reply, request.phase):
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             write_document(
                 channel, WorkerAuthorizationAcknowledgement(request_id=request.request_id), deadline=deadline
@@ -181,6 +174,31 @@ class WorkerAuthorizationClient:
             return reply.needs_candidate
         finally:
             self.connections.checkin(channel, reusable=clean)
+
+
+def _approval_first_valid(
+    reply: object, request_id: UUID, boot: UUID
+) -> TypeGuard[AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult]:
+    """Require a phase reply of an allowed type addressed to this exchange."""
+    return isinstance(reply, AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult) and (
+        _approval_reply_addressed(reply, request_id, boot)
+    )
+
+
+def _approval_result_matches(
+    reply: AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult, phase: str
+) -> TypeGuard[WorkerApprovalPhaseResult]:
+    """Check the phase-specific shape of the final approval reply."""
+    return isinstance(reply, WorkerApprovalPhaseResult) and (
+        (phase == "inspect_recipient") == (reply.needs_candidate is not None)
+    )
+
+
+def _approval_reply_addressed(
+    reply: AccessRefusal | WorkerApprovalReady | WorkerApprovalPhaseResult, request_id: UUID, boot: UUID
+) -> bool:
+    """Require an approval reply to name its exact request and runtime."""
+    return reply.request_id == request_id and reply.runtime_boot_id == boot
 
 
 def _acknowledge_refusal(

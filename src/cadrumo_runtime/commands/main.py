@@ -81,6 +81,16 @@ def _emit_error(error: CadrumoError, arguments: Sequence[str], *, click_context:
         return _render_error(error, arguments, click_context=click_context)
 
 
+def _context_requests_json(click_context: object | None) -> bool:
+    """Read the optional Click context without masking other rendering failures."""
+    if click_context is not None:
+        try:
+            return context_chain_requests_json(click_context)
+        except (AttributeError, TypeError):
+            return False
+    return False
+
+
 def _render_error(error: CadrumoError, arguments: Sequence[str], *, click_context: object | None = None) -> int:
     """Render while the invocation's captured language is active."""
     from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
@@ -88,12 +98,7 @@ def _render_error(error: CadrumoError, arguments: Sequence[str], *, click_contex
     captured = runtime_error_context(error)
     verdict = nested_terminal_precondition_verdict(error)
     action = None if verdict is None else resolve_cli_precondition_action(verdict)
-    context_requests_json = False
-    if click_context is not None:
-        try:
-            context_requests_json = context_chain_requests_json(click_context)
-        except (AttributeError, TypeError):
-            context_requests_json = False
+    context_requests_json = _context_requests_json(click_context)
     as_json = (
         (captured is not None and captured.output_format == "json")
         or context_requests_json

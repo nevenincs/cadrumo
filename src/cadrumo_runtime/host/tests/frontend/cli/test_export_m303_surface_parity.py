@@ -23,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.modelo.calculation_report_document import CALCULATION_REPORT_CSV_PREAMBLE_PREFIX
-from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,

@@ -301,9 +301,9 @@ def test_a_lapsed_attended_lease_is_issued_again_to_the_approved_connection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """The short attended lease ends; the same approved connection is admitted again while the person's session lives."""
-    from ...application import session_authority_admission
+    from ...application import session_authority_delegation
 
-    monkeypatch.setattr(session_authority_admission, "ACCESS_LEASE_MAXIMUM", timedelta(seconds=3))
+    monkeypatch.setattr(session_authority_delegation, "ACCESS_LEASE_MAXIMUM", timedelta(seconds=3))
     external_client, cli = OperationFrontendProjection.EXTERNAL_CLIENT, OperationFrontendProjection.CLI
     with (
         _runtime(tmp_path) as (profile_id, _other, launch),

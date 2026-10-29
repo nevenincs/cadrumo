@@ -11,8 +11,9 @@ from __future__ import annotations
 
 import base64
 import hashlib
+from collections.abc import Mapping
 from importlib import import_module
-from importlib.metadata import PackageNotFoundError, distribution
+from importlib.metadata import PackageNotFoundError, PackagePath, distribution
 from importlib.util import find_spec
 from pathlib import Path
 from types import ModuleType
@@ -26,6 +27,21 @@ DECLARED_CATALOG_KIND: Final = "declared"
 """The envelope kind of a declared catalogue; a served catalogue carries no ``kind``."""
 
 
+def _verify_wheel_module(base: Path, records: Mapping[str, PackagePath], module_name: str) -> None:
+    """Verify a module against its installed wheel record before importing it."""
+    spec = find_spec(module_name)
+    if spec is None or spec.origin is None:
+        raise ValueError("agent_module_unavailable")
+    path = Path(spec.origin).resolve(strict=True)
+    relative = path.relative_to(base).as_posix()
+    record = records.get(relative)
+    if record is None or record.hash is None or record.hash.mode != "sha256":
+        raise ValueError("agent_module_not_in_wheel")
+    digest = base64.urlsafe_b64encode(hashlib.sha256(path.read_bytes()).digest()).rstrip(b"=").decode("ascii")
+    if digest != record.hash.value:
+        raise ValueError("agent_module_changed")
+
+
 def _cohort_module() -> ModuleType:
     """Refuse missing, editable or shadowed agent code before loading the declaration module."""
     try:
@@ -36,17 +52,7 @@ def _cohort_module() -> ModuleType:
             raise ValueError("different_wheel_cohort")
         records = {str(item).replace("\\", "/"): item for item in agent.files or ()}
         for module_name in ("cadrumo_agent", DECLARED_CATALOG_MODULE):
-            spec = find_spec(module_name)
-            if spec is None or spec.origin is None:
-                raise ValueError("agent_module_unavailable")
-            path = Path(spec.origin).resolve(strict=True)
-            relative = path.relative_to(base).as_posix()
-            record = records.get(relative)
-            if record is None or record.hash is None or record.hash.mode != "sha256":
-                raise ValueError("agent_module_not_in_wheel")
-            digest = base64.urlsafe_b64encode(hashlib.sha256(path.read_bytes()).digest()).rstrip(b"=").decode("ascii")
-            if digest != record.hash.value:
-                raise ValueError("agent_module_changed")
+            _verify_wheel_module(base, records, module_name)
         return import_module(DECLARED_CATALOG_MODULE)
     except (PackageNotFoundError, ImportError, OSError, ValueError) as error:
         raise ProviderCatalogUnavailableError(ProviderCatalogUnavailableReason.AGENT_NOT_FOUND) from error

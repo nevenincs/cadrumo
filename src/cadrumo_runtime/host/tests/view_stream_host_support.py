@@ -18,7 +18,8 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.view_stream import ViewWorkerBind
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
-from ..view_stream_relay import ViewStreamRelay, open_worker_view_leg
+from ..view_stream_relay import ViewStreamRelay
+from ..view_stream_worker_link import open_worker_view_leg
 from .test_view_stream_relay import _same_process_worker
 
 _LISTEN_SECONDS = 30.0

@@ -15,10 +15,11 @@ import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.tests.log_records import delivered_records
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from .. import windows_process
-from ..windows_process import WindowsOwnedProcess, WindowsProcessScope, unreturned_windows_process_scope
+from ..windows_process import WindowsProcessScope, unreturned_windows_process_scope
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -113,7 +114,7 @@ def native(monkeypatch: pytest.MonkeyPatch) -> _Native:
             WinDLL=lambda *args, **kwargs: SimpleNamespace(CreateJobObjectW=_CreateJob()),
         ),
     )
-    monkeypatch.setattr(windows_process, "_launch_in_job", port.launch)
+    monkeypatch.setattr(windows_process, "launch_in_windows_job", port.launch)
     # The synthetic Job lists PIDs with no process objects behind them; only the active count is observed here.
     monkeypatch.setattr(windows_process, "_retain_job_members", lambda job: ())
     monkeypatch.setattr(windows_process, "_job_process_ids", lambda job: (101, 102, 103) if port.active else ())
@@ -301,7 +302,7 @@ def test_a_missed_bound_is_reported_as_expired_and_starts_the_watch_of_the_late_
         assert isinstance(children, list)
         watched.append((len(children), seconds))
 
-    monkeypatch.setattr(windows_process, "_watch_late_exit", watch)
+    monkeypatch.setattr(windows_process, "watch_windows_late_exit", watch)
     scope = WindowsProcessScope()
     _children(scope, tmp_path)
     native.active = 3
@@ -327,7 +328,7 @@ def test_another_termination_failure_is_reported_with_its_error_and_is_not_watch
     native: _Native, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
 ) -> None:
     watched: list[object] = []
-    monkeypatch.setattr(windows_process, "_watch_late_exit", lambda *args, **kwargs: watched.append(args))
+    monkeypatch.setattr(windows_process, "watch_windows_late_exit", lambda *args, **kwargs: watched.append(args))
     scope = WindowsProcessScope()
     _children(scope, tmp_path, count=1)
     native.terminate_error = RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)

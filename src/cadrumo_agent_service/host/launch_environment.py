@@ -26,7 +26,7 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, TypeGuard
 
 from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
 from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
@@ -36,6 +36,7 @@ from cadrumo.core.storage_environment import (
     child_environment,
     normalize_storage_path,
 )
+from cadrumo.core.type_guards import is_str_keyed_dict
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE
 
 if TYPE_CHECKING:
@@ -120,9 +121,55 @@ def system_environment(received: Mapping[str, str], *, sys_platform: str | None 
     return {name: received[name] for name in names if name in received}
 
 
+def _valid_packaged_python(python: Path | None) -> TypeGuard[Path]:
+    return python is not None and python.is_absolute() and python.is_file()
+
+
+def _manifest_package_paths(package_root: Path) -> dict[str, object] | None:
+    manifest_path = (package_root / "data" / "package-manifest.json").resolve(strict=True)
+    if not manifest_path.is_relative_to(package_root) or not manifest_path.is_file():
+        return None
+    manifest: object = json.loads(manifest_path.read_text(encoding="utf-8"))
+    layout = manifest.get("layout") if is_str_keyed_dict(manifest) else None
+    paths = layout.get("paths") if is_str_keyed_dict(layout) else None
+    if not is_str_keyed_dict(paths):
+        return None
+
+    return paths
+
+
+def _resolved_node_directory(packages: Path, package_root: Path, platform: str) -> Path | None:
+    node_root = packages.parent / "node"
+    node_executable = node_root / "node.exe" if platform == "win32" else node_root / "bin" / "node"
+    node_executable = node_executable.resolve(strict=True)
+    if not node_executable.is_relative_to(package_root) or not node_executable.is_file():
+        return None
+    return node_executable.parent
+
+
+def _external_binary_directories(received: Mapping[str, str], platform: str) -> str | None:
+    return next(
+        (
+            value
+            for name, value in received.items()
+            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
+        ),
+        None,
+    )
+
+
+def _desktop_image_path(root: Path, name: object, placement_value: object) -> Path | None:
+    parts = _package_relative_parts(name)
+    placement = () if placement_value == "." else _package_relative_parts(placement_value)
+    if parts is None or placement is None:
+        return None
+    candidate = _resolve_package_path(root, (*placement, *parts))
+    return candidate if candidate is not None and candidate.is_file() else None
+
+
 def _packaged_node_bin_directory(python: Path | None, *, platform: str) -> Path | None:
     """Return the packaged Node bin beside the manifest-declared packages, if present."""
-    if python is None or not python.is_absolute() or not python.is_file():
+    if not _valid_packaged_python(python):
         return None
     try:
         package_root = python.parent.resolve(strict=True)
@@ -130,34 +177,34 @@ def _packaged_node_bin_directory(python: Path | None, *, platform: str) -> Path 
         if not resolved_python.is_relative_to(package_root):
             return None
 
-        manifest_path = (package_root / "data" / "package-manifest.json").resolve(strict=True)
-        if not manifest_path.is_relative_to(package_root) or not manifest_path.is_file():
+        paths = _manifest_package_paths(package_root)
+        if paths is None:
             return None
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        layout = manifest.get("layout") if isinstance(manifest, dict) else None
-        paths = layout.get("paths") if isinstance(layout, dict) else None
-        if not isinstance(paths, dict):
+        packages = _packaged_python_packages(package_root, resolved_python, paths)
+        if packages is None:
             return None
-
-        executable_parts = _package_relative_parts(paths.get("executable"))
-        package_parts = _package_relative_parts(paths.get("packages"))
-        if executable_parts is None or len(executable_parts) != 1 or package_parts is None:
-            return None
-        executable = package_root.joinpath(*executable_parts).resolve(strict=True)
-        if executable != resolved_python or not executable.is_file():
-            return None
-        packages = _resolve_package_path(package_root, package_parts)
-        if packages is None or not packages.is_dir():
-            return None
-
-        node_root = packages.parent / "node"
-        node_executable = node_root / "node.exe" if platform == "win32" else node_root / "bin" / "node"
-        node_executable = node_executable.resolve(strict=True)
-        if not node_executable.is_relative_to(package_root) or not node_executable.is_file():
-            return None
-        return node_executable.parent
+        return _resolved_node_directory(packages, package_root, platform)
     except (OSError, RuntimeError, TypeError, ValueError, RecursionError):
         return None
+
+
+def _packaged_python_packages(
+    package_root: Path,
+    resolved_python: Path,
+    paths: dict[str, object],
+) -> Path | None:
+    executable_parts = _package_relative_parts(paths.get("executable"))
+    package_parts = _package_relative_parts(paths.get("packages"))
+    if executable_parts is None or len(executable_parts) != 1 or package_parts is None:
+        return None
+    executable = package_root.joinpath(*executable_parts).resolve(strict=True)
+    if executable != resolved_python or not executable.is_file():
+        return None
+    packages = _resolve_package_path(package_root, package_parts)
+    if packages is None or not packages.is_dir():
+        return None
+
+    return packages
 
 
 def _package_relative_parts(value: object) -> tuple[str, ...] | None:
@@ -181,14 +228,7 @@ def agent_binary_directories(
 ) -> str | None:
     """Return public provider directories with the packaged Node directory prepended when present."""
     platform = sys.platform if sys_platform is None else sys_platform
-    external = next(
-        (
-            value
-            for name, value in received.items()
-            if (name.upper() if platform == "win32" else name) == EXTERNAL_BIN_DIRECTORIES_VARIABLE
-        ),
-        None,
-    )
+    external = _external_binary_directories(received, platform)
     node_bin = _packaged_node_bin_directory(python, platform=platform)
     if node_bin is not None:
         path_separator = ";" if platform == "win32" else ":"
@@ -200,7 +240,7 @@ def agent_binary_directories(
 
 def auth_browser_executable(python: Path | None) -> Path | None:
     """Locate the declared desktop image that relays a provider's browser hook."""
-    if python is None or not python.is_absolute() or not python.is_file():
+    if not _valid_packaged_python(python):
         return None
     try:
         root = python.parent.resolve(strict=True)
@@ -215,12 +255,7 @@ def auth_browser_executable(python: Path | None) -> Path | None:
         if len(images) != 1:
             return None
         image = images[0]
-        parts = _package_relative_parts(image["name"] + layout["entrypoint_suffix"])
-        placement = () if image["placement"] == "." else _package_relative_parts(image["placement"])
-        if parts is None or placement is None:
-            return None
-        candidate = _resolve_package_path(root, (*placement, *parts))
-        return candidate if candidate is not None and candidate.is_file() else None
+        return _desktop_image_path(root, image["name"] + layout["entrypoint_suffix"], image["placement"])
     except (OSError, RuntimeError, KeyError, TypeError, ValueError, RecursionError):
         return None
 

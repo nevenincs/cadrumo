@@ -10,8 +10,6 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, RootModel, SecretBytes, model_validator
 
 from cadrumo.application.operations.models import OperationId
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.automation_enrollment import AutomationInventory, EnrollmentTransition
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
 from cadrumo.core.identity.digest import ContentDigest
@@ -92,74 +90,6 @@ class WorkerAutomationInventoryRequest(BaseModel):
         return self
 
 
-class RuntimeHumanReviewClaimAttestation(BaseModel):
-    """Parent-issued person evidence carried only on its verified worker transport."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    worker_id: UUID
-    profile_binding: ProfileAccessBinding
-    runtime_boot_id: UUID
-    connection_id: UUID
-    session_id: UUID
-    frontend: OperationFrontendProjection
-    source_ref: Annotated[str, Field(min_length=1, max_length=256)]
-    verified_at: UtcInstant
-
-
-class WorkerHumanReviewScopeRequest(BaseModel):
-    """One held fence for both the original invocation and its verified human responder."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    kind: Literal["human_review_scope"] = "human_review_scope"
-    request_id: UUID
-    connection_id: UUID
-    session_id: UUID
-    operation_id: OperationId
-    request: OperationAccessRequest
-    policy: OperationAccessPolicy
-    invocation: WorkerAuthorizationRequest
-    review: WorkerAuthorizationRequest
-    attestation: RuntimeHumanReviewClaimAttestation
-
-    @model_validator(mode="after")
-    def _require_review_scope(self) -> WorkerHumanReviewScopeRequest:
-        if not self._invocation_matches() or not self._claimant_matches():
-            raise ValueError("human review requires exact claimant and original invocation")
-        return self
-
-    def _invocation_matches(self) -> bool:
-        """Require the original START invocation for the exact reviewed operation."""
-        return (
-            self.request.action is AccessAction.RESPOND
-            and self.invocation.request.action is AccessAction.START
-            and self.invocation.request.definition_id == self.request.definition_id
-            and self.invocation.operation_id == self.operation_id
-            and self.invocation.request.profile_id == self.request.profile_id
-        )
-
-    def _claimant_matches(self) -> bool:
-        """Match review, response and native attestation to the same human claimant."""
-        return (
-            self.review.request.action is AccessAction.REVIEW
-            and self.review.operation_id == self.operation_id
-            and self.review.request.definition_id == self.request.definition_id
-            and self.review.request.profile_id == self.request.profile_id
-            and self.review.session_id == self.session_id
-            and self.review.connection_id == self.connection_id
-            and self._claimant_identity_matches()
-        )
-
-    def _claimant_identity_matches(self) -> bool:
-        """Match frontend, destination and attested connection identity."""
-        return (
-            self.review.request.frontend == self.request.frontend
-            and self.request.frontend == self.attestation.frontend
-            and self.review.request.destination_id == self.request.destination_id
-            and self.attestation.connection_id == self.connection_id
-            and self.attestation.session_id == self.session_id
-        )
-
-
 WORKER_OPERATIONS_ADVANCED_MAX = 64
 """Operations one progress report may name; a busier worker sends another."""
 
@@ -180,7 +110,7 @@ class WorkerOperationsAdvanced(BaseModel):
 
 
 type WorkerAuthorityRequest = Annotated[
-    WorkerAuthorizationRequest | WorkerResponseScopeRequest | WorkerHumanReviewScopeRequest, Field(discriminator="kind")
+    WorkerAuthorizationRequest | WorkerResponseScopeRequest, Field(discriminator="kind")
 ]
 
 
@@ -206,7 +136,6 @@ class WorkerAuthorityCheck(BaseModel):
 type WorkerAuthorityEnvelopeRequest = Annotated[
     WorkerAuthorizationRequest
     | WorkerResponseScopeRequest
-    | WorkerHumanReviewScopeRequest
     | WorkerAutomationInventoryRequest
     | WorkerApprovalRequest
     | WorkerOperationsAdvanced

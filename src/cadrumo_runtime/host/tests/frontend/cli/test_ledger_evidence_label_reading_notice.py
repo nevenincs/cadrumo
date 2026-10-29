@@ -38,7 +38,7 @@ from click.testing import Result
 
 from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from cadrumo.adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns
-from cadrumo.application.provisioning_contracts import ProvisioningPreconditionCondition
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.config import load_settings
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
@@ -56,7 +56,7 @@ _LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE}
 _BATCH_LABEL_READING_DEGRADED = "ledger.evidence.batch.label_reading_degraded"
 
 #: The precondition the agent's refusal to load a model too large for the free memory fails.
-_LOAD_CAPACITY = ProvisioningPreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
+_LOAD_CAPACITY = ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
 _DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
 
 _SUPPLIER_NAME = "Estacion de Servicio Albufera SL"
@@ -159,7 +159,7 @@ def _store_reading_for_review(evidence_id: str) -> None:
     from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-    from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
     from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 
     bucket_id = require_active_bucket_id()

@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import time
+from collections.abc import Callable, Mapping
+from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
 
@@ -31,10 +33,104 @@ from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import write_document
 
-from .profile_host import ProfileConnection
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 if TYPE_CHECKING:
+    from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
+
     from .profile_connections import RuntimeProfileConnections
+
+
+def delete_connection_matches(
+    prior: ProfileConnection, context: ConnectionContext, request: ProfileDeletePrepare | ProfileDelete
+) -> bool:
+    """Retain only the exact existing bootstrap deletion connection."""
+    return (
+        prior.context == context
+        and prior.profile_id == request.profile_id
+        and prior.frontend == request.frontend
+        and prior.method == "bootstrap-delete"
+    )
+
+
+def validate_delete_peer(context: ConnectionContext, channel: ByteChannel, boot: UUID) -> None:
+    """Reject a connection whose boot or native peer does not match."""
+    if context.runtime_boot_id != boot or context.peer != channel.peer:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+
+
+def validate_delete_connection(
+    prior: ProfileConnection | None, context: ConnectionContext, request: ProfileDeletePrepare | ProfileDelete
+) -> None:
+    """Reject a prior connection that cannot own this deletion."""
+    if prior is not None and not delete_connection_matches(prior, context, request):
+        raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+
+
+def reserve_delete(mutations: set[UUID], profile_id: UUID) -> None:
+    """Reserve deletion under the caller's existing custody guard."""
+    if profile_id in mutations:
+        raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+    mutations.add(profile_id)
+
+
+def require_delete_login(
+    connection: ProfileConnection, context: ConnectionContext, admitting: Callable[[], bool]
+) -> None:
+    """Reobserve the deletion caller before each authority-sensitive phase."""
+    observed = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
+    if not admitting():
+        raise RefusalError(RefusalCode.DRAINING)
+    if not observed.active or not observed.unlocked or observed.os_owner_id != context.peer.os_owner_id:
+        raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
+
+
+def drain_delete_host(host: RuntimeProfileHost, remove_host: Callable[[RuntimeProfileHost], None]) -> None:
+    """Contain the existing worker before deleting its profile."""
+    with host.guard:
+        worker = host.owner.begin_drain()
+    deadline = time.monotonic() + 15
+    if worker is not None:
+        worker.drain(deadline=deadline)
+    if not host.owner.wait_construction(deadline=deadline):
+        raise ShutdownIncompleteError()
+    host.close()
+    remove_host(host)
+
+
+def execute_confirmed_delete(
+    request: ProfileDelete,
+    *,
+    transaction_id: UUID,
+    lifecycle: ProfileCapsuleLifecycle,
+    root: Path,
+    host: RuntimeProfileHost | None,
+    coordinates: Mapping[str, UUID],
+    require_login: Callable[[], None],
+    remove_host: Callable[[RuntimeProfileHost], None],
+    sign_in_changed: Callable[[], None],
+) -> ProfileDeleted:
+    """Recheck confirmation, contain the worker, then finish the owned journal."""
+    repository = ProfileCustodyTransactionRepository(root=root)
+    journal = repository.load_journal(transaction_id)
+    if (
+        journal.operation is not ProfileCustodyTransactionOperation.DELETE
+        or journal.retention_override is not None
+        or lifecycle.confirm_delete(journal) != request.confirmation
+    ):
+        raise ProfileCustodyTransactionConflictError("deletion confirmation changed")
+    require_login()
+    if host is not None:
+        drain_delete_host(host, remove_host)
+    # Unknown lock evidence is never authorization for cleanup.
+    # Once execution starts, the serving owner finishes its journal
+    # even if the client disconnects before receiving the receipt.
+    with active_profile_pointer_transaction(root):
+        require_login()
+        receipt = lifecycle.delete(request.confirmation)
+    sign_in_changed()
+    return ProfileDeleted.model_validate({**coordinates, "receipt": receipt})
 
 
 class RuntimeBootstrapDeleteMixin:
@@ -85,17 +181,10 @@ class RuntimeBootstrapDeleteMixin:
         transaction_id: UUID | None = None
         reserved = False
         try:
-            if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            validate_delete_peer(context, channel, self.boot)
             with self._guard:
                 prior = self._connections.get(context.connection_id)
-                if prior is not None and (
-                    prior.context != context
-                    or prior.profile_id != request.profile_id
-                    or prior.frontend != request.frontend
-                    or prior.method != "bootstrap-delete"
-                ):
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
+                validate_delete_connection(prior, context, request)
             connection = prior or ProfileConnection(
                 context,
                 self._capture(channel),
@@ -106,17 +195,11 @@ class RuntimeBootstrapDeleteMixin:
             )
 
             def require_login() -> None:
-                observed = connection.login.observe(credential_facilities=Availability.UNAVAILABLE)
-                if not self._admitting():
-                    raise RefusalError(RefusalCode.DRAINING)
-                if not observed.active or not observed.unlocked or observed.os_owner_id != context.peer.os_owner_id:
-                    raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
+                require_delete_login(connection, context, self._admitting)
 
             require_login()
             with self._guard:
-                if request.profile_id in self._custody_mutations:
-                    raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-                self._custody_mutations.add(request.profile_id)
+                reserve_delete(self._custody_mutations, request.profile_id)
                 reserved = True
                 self._connections[context.connection_id] = connection
                 self._logins[connection.login.login_id] = connection.login
@@ -142,33 +225,17 @@ class RuntimeBootstrapDeleteMixin:
                         )
                 else:
                     transaction_id = request.confirmation.transaction_id
-                    repository = ProfileCustodyTransactionRepository(root=self.root)
-                    journal = repository.load_journal(transaction_id)
-                    if (
-                        journal.operation is not ProfileCustodyTransactionOperation.DELETE
-                        or journal.retention_override is not None
-                        or lifecycle.confirm_delete(journal) != request.confirmation
-                    ):
-                        raise ProfileCustodyTransactionConflictError("deletion confirmation changed")
-                    require_login()
-                    if host is not None:
-                        with host.guard:
-                            worker = host.owner.begin_drain()
-                        deadline = time.monotonic() + 15
-                        if worker is not None:
-                            worker.drain(deadline=deadline)
-                        if not host.owner.wait_construction(deadline=deadline):
-                            raise ShutdownIncompleteError()
-                        host.close()
-                        self._remove_retired_host(host)
-                    # Unknown lock evidence is never authorization for cleanup.
-                    # Once execution starts, the serving owner finishes its journal
-                    # even if the client disconnects before receiving the receipt.
-                    with active_profile_pointer_transaction(self.root):
-                        require_login()
-                        receipt = lifecycle.delete(request.confirmation)
-                    self._sign_in_changed()
-                    result = ProfileDeleted.model_validate({**coordinates, "receipt": receipt})
+                    result = execute_confirmed_delete(
+                        request,
+                        transaction_id=transaction_id,
+                        lifecycle=lifecycle,
+                        root=self.root,
+                        host=host,
+                        coordinates=coordinates,
+                        require_login=require_login,
+                        remove_host=self._remove_retired_host,
+                        sign_in_changed=self._sign_in_changed,
+                    )
         except ProfileCustodyTransactionConflictError:
             result = ProfileDeleteRefused.model_validate(
                 {

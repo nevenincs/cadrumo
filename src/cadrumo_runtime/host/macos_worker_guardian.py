@@ -116,40 +116,57 @@ def run(arguments: list[str] | None = None) -> int:
             worker_arguments = validated_worker_arguments(worker_arguments, worker_script=options.worker_script)
         except RefusalError:
             return 2
-        try:
-            own = read_macos_incarnation(os.getpid())
-            coalition = read_macos_resource_coalition(os.getpid())
-            parent = read_macos_incarnation(options.parent_pid)
-            parent_coalition = read_macos_resource_coalition(options.parent_pid)
-            # launchd gave this job a fresh coalition; sharing the parent's
-            # would make coalition termination reach the runtime itself.
-            if (
-                own is None
-                or coalition is None
-                or parent is None
-                or parent_coalition is None
-                or parent_coalition == coalition
-                or parent.version != options.parent_version
-            ):
-                return 2
-            watch = MacosProcessWatch(read_macos_process(options.parent_pid, expected_owner=str(os.getuid())))
-        except RefusalError:
-            return 2
-        try:
-            # The PID may have been reused before the watch was registered.
-            # Recheck the exact incarnation while holding the kernel exit filter.
-            try:
-                if watch.exited or read_macos_incarnation(options.parent_pid) != parent:
-                    return 2
-            except RefusalError:
-                return 2
-            environment = dict(_CLEAN_ENVIRONMENT)
-            allowed_paths = worker_path_environment_names()
-            environment.update({name: value for name, value in os.environ.items() if name in allowed_paths})
-            return asyncio.run(_launch_and_supervise(watch, tuple(worker_arguments), environment, coalition, own))
-        finally:
-            watch.close()
+        return supervise_native_guardian(options.parent_pid, options.parent_version, worker_arguments)
     return 2
+
+
+def guardian_parent_matches(
+    parent: MacosProcessIncarnation, parent_coalition: int | None, coalition: int, parent_version: int
+) -> bool:
+    """Keep the parent incarnation outside the guardian's coalition."""
+    return parent_coalition is not None and parent_coalition != coalition and parent.version == parent_version
+
+
+def guardian_parent_watched(watch: MacosProcessWatch, parent_pid: int, parent: MacosProcessIncarnation) -> bool:
+    """Recheck the exact parent while its kernel exit filter is held."""
+    try:
+        return not watch.exited and read_macos_incarnation(parent_pid) == parent
+    except RefusalError:
+        return False
+
+
+def supervise_native_guardian(parent_pid: int, parent_version: int, worker_arguments: tuple[str, ...]) -> int:
+    """Verify native parent and coalition identities, then own supervision."""
+    if sys.platform != "darwin":
+        return 2
+    try:
+        own = read_macos_incarnation(os.getpid())
+        coalition = read_macos_resource_coalition(os.getpid())
+        parent = read_macos_incarnation(parent_pid)
+        parent_coalition = read_macos_resource_coalition(parent_pid)
+        # launchd gave this job a fresh coalition; sharing the parent's
+        # would make coalition termination reach the runtime itself.
+        if (
+            own is None
+            or coalition is None
+            or parent is None
+            or not guardian_parent_matches(parent, parent_coalition, coalition, parent_version)
+        ):
+            return 2
+        watch = MacosProcessWatch(read_macos_process(parent_pid, expected_owner=str(os.getuid())))
+    except RefusalError:
+        return 2
+    try:
+        # The PID may have been reused before the watch was registered.
+        # Recheck the exact incarnation while holding the kernel exit filter.
+        if not guardian_parent_watched(watch, parent_pid, parent):
+            return 2
+        environment = dict(_CLEAN_ENVIRONMENT)
+        allowed_paths = worker_path_environment_names()
+        environment.update({name: value for name, value in os.environ.items() if name in allowed_paths})
+        return asyncio.run(_launch_and_supervise(watch, tuple(worker_arguments), environment, coalition, own))
+    finally:
+        watch.close()
 
 
 if __name__ == "__main__":

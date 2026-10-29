@@ -62,8 +62,6 @@ from cadrumo_client.contracts.deadline_budget import (
 )
 from cadrumo_client.contracts.operation_access import (
     OperationAcknowledged,
-    OperationClaimableReviews,
-    OperationClaimableReviewsListed,
     OperationControl,
     OperationFinancialInput,
     OperationManage,
@@ -74,8 +72,6 @@ from cadrumo_client.contracts.operation_access import (
     OperationReply,
     OperationRequest,
     OperationReview,
-    OperationReviewClaim,
-    OperationReviewClaimed,
     OperationSubmitted,
 )
 from cadrumo_client.contracts.submission_payload import SUBMISSION_PAYLOAD_MAX_BYTES
@@ -92,8 +88,6 @@ RELAY_ACTION_KEYS: Final[Mapping[str, frozenset[str]]] = {
     "operation_observe": frozenset({"operation_id", "after_cursor"}),
     "operation_result": frozenset({"operation_id"}),
     "operation_review": frozenset({"operation_id"}),
-    "operation_review_claimable": frozenset[str](),
-    "operation_review_claim": frozenset({"operation_id", "interaction_id", "revision", "review_digest"}),
     "operation_respond": frozenset({"operation_id", "interaction_id", "revision", "review_digest", "decision"}),
     "operation_cancel": frozenset({"operation_id", "expected_revision"}),
 }
@@ -156,32 +150,8 @@ class OperationRelay:
                 return self._submit(request, deadline=deadline)
             if action == "operation_financial_submit":
                 return self._submit_financial(request, deadline=deadline)
-            if action == "operation_review_claimable":
-                return self._claimable_reviews(deadline=deadline)
             operation_id = _text(request["operation_id"])
-            if action == "operation_observe":
-                observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
-                return {"kind": "operation_observed", "observation": _document(observation)}
-            if action == "operation_result":
-                return self._result(operation_id, deadline=deadline)
-            if action == "operation_review":
-                pending, document = self._review(operation_id, deadline=deadline)
-                return {
-                    "kind": "operation_review",
-                    "operation_id": operation_id,
-                    "interaction_id": pending.interaction_id,
-                    "revision": pending.revision,
-                    "expires_at": None if pending.expires_at is None else pending.expires_at.isoformat(),
-                    "review_digest": content_hash_hex(document),
-                    "document": document,
-                }
-            if action == "operation_review_claim":
-                return self._claim_review(operation_id, request, deadline=deadline)
-            if action == "operation_respond":
-                return self._respond(operation_id, request, deadline=deadline)
-            if action == "operation_cancel":
-                return self._cancel(operation_id, _count(request["expected_revision"]), deadline=deadline)
-            raise ValueError("unknown relay action")
+            return self._handle_named(action, request, operation_id, deadline=deadline)
         except CustodyRecoveringEffectUnknownError:
             # The lost worker may have committed the change: the relay's own unknown, never a refusal to repeat.
             raise RelayRefusedError("unavailable") from None
@@ -201,6 +171,32 @@ class OperationRelay:
             raise RelayRefusedError("unavailable") from None
 
     # ── Exchanges ───────────────────────────────────────────────────────────
+
+    def _handle_named(
+        self, action: str, request: Mapping[str, object], operation_id: str, *, deadline: float
+    ) -> dict[str, object]:
+        """Dispatch actions that name an existing operation."""
+        if action == "operation_observe":
+            observation = self._observe(operation_id, _count(request["after_cursor"]), deadline=deadline)
+            return {"kind": "operation_observed", "observation": _document(observation)}
+        if action == "operation_result":
+            return self._result(operation_id, deadline=deadline)
+        if action == "operation_review":
+            pending, document = self._review(operation_id, deadline=deadline)
+            return {
+                "kind": "operation_review",
+                "operation_id": operation_id,
+                "interaction_id": pending.interaction_id,
+                "revision": pending.revision,
+                "expires_at": None if pending.expires_at is None else pending.expires_at.isoformat(),
+                "review_digest": content_hash_hex(document),
+                "document": document,
+            }
+        if action == "operation_respond":
+            return self._respond(operation_id, request, deadline=deadline)
+        if action == "operation_cancel":
+            return self._cancel(operation_id, _count(request["expected_revision"]), deadline=deadline)
+        raise ValueError("unknown relay action")
 
     def _exchange(self, request: OperationRequest, *, deadline: float) -> OperationReply:
         remaining_budget(deadline)
@@ -367,61 +363,6 @@ class OperationRelay:
         if not isinstance(document, dict):
             raise RelayRefusedError("unavailable")
         return pending, {str(key): value for key, value in document.items()}
-
-    def _claimable_reviews(self, *, deadline: float) -> dict[str, object]:
-        reply = self._exchange(
-            OperationClaimableReviews(
-                request_id=uuid4(), profile_id=self._client.profile_id, session_id=self._client.session_id
-            ),
-            deadline=deadline,
-        )
-        if not isinstance(reply, OperationClaimableReviewsListed):
-            raise RelayRefusedError("unavailable")
-        return {"kind": "operation_reviews_claimable", "operation_ids": list(reply.operation_ids)}
-
-    def _claim_review(self, operation_id: str, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
-        pending, document = self._review(operation_id, deadline=deadline)
-        digest = _text(request["review_digest"])
-        if (pending.interaction_id, pending.revision) != (
-            _text(request["interaction_id"]),
-            _count(request["revision"]),
-        ):
-            raise RelayRefusedError("not_pending")
-        if content_hash_hex(document) != digest:
-            raise RelayRefusedError("review_changed")
-        reference = pending.review_reference
-        reply = self._exchange(
-            OperationReviewClaim(
-                request_id=uuid4(),
-                profile_id=self._client.profile_id,
-                session_id=self._client.session_id,
-                reference=reference,
-                reviewed_document_digest=digest,
-            ),
-            deadline=deadline,
-        )
-        if (
-            not isinstance(reply, OperationReviewClaimed)
-            or reply.reviewed_document_digest != digest
-            or reply.reference.model_copy(update={"revision": reference.revision}) != reference
-            or reply.reference.revision not in (reference.revision, reference.revision + 1)
-            or not {"apply", "reject"}.issubset(reply.allowed_intents)
-        ):
-            raise RelayRefusedError("unavailable")
-        # The claim commits a successor checkpoint. Display its exact current document
-        # and use only the coordinates acknowledged by the runtime for the answer.
-        successor, document = self._review(operation_id, deadline=deadline)
-        if successor.review_reference != reply.reference:
-            raise RelayRefusedError("not_pending")
-        return {
-            "kind": "operation_review_claimed",
-            "operation_id": operation_id,
-            "interaction_id": successor.interaction_id,
-            "revision": successor.revision,
-            "expires_at": None if successor.expires_at is None else successor.expires_at.isoformat(),
-            "review_digest": content_hash_hex(document),
-            "document": document,
-        }
 
     def _respond(self, operation_id: str, request: Mapping[str, object], *, deadline: float) -> dict[str, object]:
         decision = request["decision"]

@@ -72,7 +72,6 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
-from cadrumo.tests.component_record_support import record_shared_browser
 from cadrumo.tests.offline_seal import OfflineGuard, offline_guard_fixture
 from cadrumo_client.commands.compiler import build_command_app
 from cadrumo_client.commands.graph import CommandSpecGraph
@@ -495,9 +494,6 @@ def _drive(key: str, tmp_path: Path, *, json_output: bool = False) -> tuple[Aeat
             tmp_path, extra_facts=_PROFILE_FACTS.get(key, ()), certificate_path=certificate
         ) as runtime,
     ):
-        # The browser is set up under the seeded storage root, so a command reaches
-        # the tax agency rather than the browser refusal.
-        record_shared_browser()
         seeder = _SEEDERS.get(key)
         if seeder is not None:
             seeder(runtime)

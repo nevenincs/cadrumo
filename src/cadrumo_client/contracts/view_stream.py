@@ -183,6 +183,31 @@ class ViewPageSecurity(StrEnum):
     """A page whose origin cannot be stated, such as ``data:``, ``about:blank``, an error page or an unreadable URL."""
 
 
+def _require_secure_origin(origin: str) -> None:
+    """Require the exact lower-case credential-free HTTPS origin grammar."""
+    parts = urlsplit(origin)
+    if (
+        parts.scheme != "https"
+        or parts.hostname in {None, ""}
+        or parts.username is not None
+        or parts.password is not None
+        or parts.path
+        or parts.query
+        or parts.fragment
+        or origin != f"https://{parts.netloc}"
+        or parts.netloc != parts.netloc.lower()
+    ):
+        raise ValueError("origin must be a lower-case https origin alone")
+
+
+def _require_view_path(origin: str, path: str) -> None:
+    """Require an absolute query-free path and control-free public coordinates."""
+    if not path.startswith("/") or "?" in path or "#" in path:
+        raise ValueError("path must be an absolute path without query or fragment")
+    if _has_control_character(origin + path):
+        raise ValueError("origin and path must not carry control characters")
+
+
 class ViewState(BaseModel):
     """The page: its security marker, origin and path for the toolbar, and the full address for the desktop host alone.
 
@@ -219,23 +244,8 @@ class ViewState(BaseModel):
         if self.origin is None or self.path is None:
             raise ValueError("a secure page states its origin and path")
         origin, path = self.origin, self.path
-        parts = urlsplit(origin)
-        if (
-            parts.scheme != "https"
-            or parts.hostname in {None, ""}
-            or parts.username is not None
-            or parts.password is not None
-            or parts.path
-            or parts.query
-            or parts.fragment
-            or origin != f"https://{parts.netloc}"
-            or parts.netloc != parts.netloc.lower()
-        ):
-            raise ValueError("origin must be a lower-case https origin alone")
-        if not path.startswith("/") or "?" in path or "#" in path:
-            raise ValueError("path must be an absolute path without query or fragment")
-        if _has_control_character(origin + path):
-            raise ValueError("origin and path must not carry control characters")
+        _require_secure_origin(origin)
+        _require_view_path(origin, path)
         if self.address is not None and not _is_address_of(self.address, origin):
             raise ValueError("address must be a credential-free https URL on the stated origin")
         return self

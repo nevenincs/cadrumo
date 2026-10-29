@@ -100,14 +100,14 @@ class PausedHost(ProfileWorkerOperationHost):
         self.paused_journal = PausedJournal(storage_root=custody.root)
 
     @override
-    def _composed(self) -> OperationComposedServices:
-        if self._services is None:
+    def composed(self) -> OperationComposedServices:
+        if self.services is None:
             services = compose_operation_dependencies(
-                authority_operation=self._pinned(), execution_authority_factory=self._bind_execution
+                authority_operation=self.pinned(), execution_authority_factory=self._bind_execution
             )
             services.submission.supervisor._journal = self.paused_journal
-            self._services = services
-        return super()._composed()
+            self.services = services
+        return super().composed()
 
 
 async def _exercise_composed(tmp_path: Path) -> None:
@@ -140,7 +140,7 @@ async def _exercise_composed(tmp_path: Path) -> None:
             )
             # Finish fixture startup before timing the journal cancellation
             # boundary; lazy registry composition can outlast its pause budget.
-            host._composed()
+            host.composed()
             submitting = asyncio.create_task(
                 host.submit(
                     session_id=session.session_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT, request=request
@@ -172,7 +172,7 @@ async def _exercise_composed(tmp_path: Path) -> None:
 
             assert AccessAction.SUBMIT not in client.held
             assert await host.start(operation_id, session.session_id) == operation_id
-            await asyncio.wait_for(host._composed().submission.settled(operation_id), 20)
+            await asyncio.wait_for(host.composed().submission.settled(operation_id), 20)
             settled = await OperationJournalRepository(storage_root=root).load(operation_id)
             record = ProfileRecordRepository.for_current_session(
                 identity.binding.profile_id, profile_decode_context=host.profile_decode_context()

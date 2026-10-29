@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.custody.kdf_supervision import Profile
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.errors import PersistenceError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
+from cadrumo.application.user_profile.access_contracts import AccessSession, ProfileAccessBinding, SessionKind
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
 from cadrumo.application.user_profile.login_session import ProfileLoginCandidate, authenticate_profile_candidate
@@ -69,6 +69,23 @@ class _PendingReceipt:
     deadline: UtcInstant
     monotonic_deadline: float
     lifetime: ExitStack = field(repr=False)
+
+
+def require_human_binding(
+    lease: AccessSession, outcome: ProfileLoginOutcome, resumed_login: str | None, binding: ProfileAccessBinding
+) -> str:
+    """Reject a lease that cannot be bound to the exact candidate and deadlines."""
+    login_id = lease.originating_login_id
+    if (
+        lease.kind is not SessionKind.HUMAN
+        or login_id is None
+        or (resumed_login is not None and login_id != resumed_login)
+        or lease.binding != binding
+        or lease.issued_at < outcome.authenticated_at
+        or lease.expires_at > min(outcome.idle_deadline, outcome.absolute_deadline)
+    ):
+        raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+    return login_id
 
 
 class ProfileWorkerHumanLogin:
@@ -250,16 +267,7 @@ class ProfileWorkerHumanLogin:
                 self.require_attempt(self._candidate_attempt).raise_if_cancelled()
             _, candidate, deadline, monotonic_deadline = current
             outcome = candidate.outcome
-            login_id = lease.originating_login_id
-            if (
-                lease.kind is not SessionKind.HUMAN
-                or login_id is None
-                or (self._resumed_login is not None and login_id != self._resumed_login)
-                or lease.binding != self.custody.identity.binding
-                or lease.issued_at < outcome.authenticated_at
-                or lease.expires_at > min(outcome.idle_deadline, outcome.absolute_deadline)
-            ):
-                raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
+            login_id = require_human_binding(lease, outcome, self._resumed_login, self.custody.identity.binding)
             material = bytearray(candidate.session.dek)
             try:
                 self.custody.install(lease, material)

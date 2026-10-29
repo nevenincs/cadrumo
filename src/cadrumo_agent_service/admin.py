@@ -232,34 +232,17 @@ class AdminServer:
             _write_document(stream, {"kind": "refused", "code": "unauthenticated"})
             return
         request = AdminRequest.model_validate_json(_read_frame(stream, ADMIN_DOCUMENT_MAX_BYTES, deadline=deadline))
+        result = self._handle_request(stream, request, deadline)
+        _write_document(stream, {"version": 1, "request_id": str(request.request_id), "result": result})
+
+    def _handle_request(self, stream: socket.socket, request: AdminRequest, deadline: float) -> JsonValue:
         secret: bytearray | None = None
         result: JsonValue
         try:
-            if request.action in {"set", "connect_submit_code"}:
-                if request.secret_bytes is None:
-                    raise ValueError("missing_secret_length")
-                if request.action == "connect_submit_code" and request.secret_bytes > 2048:
-                    raise ValueError("invalid_secret_length")
-                _write_document(stream, {"event": "secret_ready", "request_id": str(request.request_id)})
-                maximum = 2048 if request.action == "connect_submit_code" else ADMIN_SECRET_MAX_BYTES
-                secret = _read_frame(stream, maximum, deadline=deadline)
-                if len(secret) != request.secret_bytes:
-                    raise ValueError("secret_length_mismatch")
-            elif request.secret_bytes is not None:
-                raise ValueError("unexpected_secret")
-            if self._stop.is_set() or time.monotonic() >= deadline:
-                raise ValueError("admin_request_expired")
-            result = self._service.admin(
-                request.action,
-                provider=request.provider,
-                expected_revision=request.expected_revision,
-                base_url=request.base_url,
-                choice=request.choice,
-                method=request.method,
-                attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
-                model=request.model,
-                secret=secret,
-            )
+            secret = _read_request_secret(stream, request, deadline)
+            if secret is not None and len(secret) != request.secret_bytes:
+                raise ValueError("secret_length_mismatch")
+            result = self._dispatch_request(request, secret, deadline)
         except ProviderCatalogUnavailableError:
             result = {"kind": "refused", "code": "catalog_unavailable"}
         except (ValueError, UnicodeDecodeError):
@@ -273,7 +256,22 @@ class AdminServer:
         finally:
             if secret is not None:
                 wipe(secret)
-        _write_document(stream, {"version": 1, "request_id": str(request.request_id), "result": result})
+        return result
+
+    def _dispatch_request(self, request: AdminRequest, secret: bytearray | None, deadline: float) -> JsonValue:
+        if self._stop.is_set() or time.monotonic() >= deadline:
+            raise ValueError("admin_request_expired")
+        return self._service.admin(
+            request.action,
+            provider=request.provider,
+            expected_revision=request.expected_revision,
+            base_url=request.base_url,
+            choice=request.choice,
+            method=request.method,
+            attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
+            model=request.model,
+            secret=secret,
+        )
 
     def close(self) -> None:
         """Close admission and await the bounded current exchange."""
@@ -290,3 +288,17 @@ class AdminServer:
                 stream.close()
         self._thread.join(6)
         self._workers.shutdown(wait=True, cancel_futures=True)
+
+
+def _read_request_secret(stream: socket.socket, request: AdminRequest, deadline: float) -> bytearray | None:
+    if request.action in {"set", "connect_submit_code"}:
+        if request.secret_bytes is None:
+            raise ValueError("missing_secret_length")
+        if request.action == "connect_submit_code" and request.secret_bytes > 2048:
+            raise ValueError("invalid_secret_length")
+        _write_document(stream, {"event": "secret_ready", "request_id": str(request.request_id)})
+        maximum = 2048 if request.action == "connect_submit_code" else ADMIN_SECRET_MAX_BYTES
+        return _read_frame(stream, maximum, deadline=deadline)
+    elif request.secret_bytes is not None:
+        raise ValueError("unexpected_secret")
+    return None

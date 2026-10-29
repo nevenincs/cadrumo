@@ -17,6 +17,7 @@ from cadrumo.application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
     CalculationReviewXlsxRequest,
 )
+from cadrumo.application.modelo.export_operation import build_modelo_export_definition, build_modelo_export_registration
 from cadrumo.application.modelo.export_projection import (
     ModeloCalculationReportPublicReceipt,
     ModeloExportCompleteness,
@@ -28,11 +29,7 @@ from cadrumo.application.modelo.m303_attestation_operation import (
     build_modelo_work_m303_attestation_definition,
     build_modelo_work_m303_attestation_registration,
 )
-from cadrumo.application.modelo.operation_definitions import (
-    MODELO_EXPORT_OPERATION_DEFINITION_ID,
-    build_modelo_export_definition,
-    build_modelo_export_registration,
-)
+from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,

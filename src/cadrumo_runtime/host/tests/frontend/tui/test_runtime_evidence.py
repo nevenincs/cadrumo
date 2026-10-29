@@ -14,7 +14,6 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot
 from cadrumo.application.ledger.evidence import MediaKind
@@ -26,9 +25,8 @@ from cadrumo.application.ledger.evidence_add_operation import (
     build_ledger_evidence_add_registration,
 )
 from cadrumo.application.ledger.evidence_errors import (
-    EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY,
+    EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
     PurchaseInvoiceEvidenceReaderError,
-    evidence_reader_refusal_key,
 )
 from cadrumo.application.ledger.evidence_ports import LedgerEvidencePortsFactory
 from cadrumo.application.ledger.evidence_read_operation import (
@@ -64,7 +62,6 @@ from cadrumo.application.ledger.invoice_evidence_operation_dtos import (
     StructuredInvoiceClassProjectionV1,
 )
 from cadrumo.application.ledger.structured_invoice_ports import StructuredInvoiceClassificationKind
-from cadrumo.application.local_reader import probe_local_ai_program
 from cadrumo.application.operations.error_detail import OperationErrorDetailV1, build_operation_error_detail
 from cadrumo.application.operations.frontend_requests import OperationObservationSuccessV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
@@ -73,7 +70,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
-from cadrumo.application.provisioning_contracts import LOCAL_AI_PROVISION_ACTION_ID
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.errors.error_codes import resolve_error_message
@@ -685,16 +682,17 @@ async def test_an_extraction_whose_result_disagrees_with_a_receipt_that_saved_no
 
 
 @pytest.mark.asyncio
-async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_naming_the_local_ai_setup(
+async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_naming_the_missing_model(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The recorded detail is the one the real program probe's refusal publishes, read back as another process reads it."""
-    status = probe_local_ai_program(recorded_absent_row("local_ai"))
-    verdict = status.precondition_verdict
-    assert verdict is not None
+    """The recorded detail is the one the reader's refusal publishes, read back as another process reads it."""
+    verdict = probe_no_recovery_verdict(
+        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
+        facts={"role": "invoice_reading", "model": "reader", "role_model_installed": False},
+    )
     detail = build_operation_error_detail(
         PurchaseInvoiceEvidenceReaderError(
-            translated_message=evidence_reader_refusal_key(verdict), precondition_verdict=verdict
+            translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY, precondition_verdict=verdict
         )
     )
     assert detail is not None
@@ -710,12 +708,9 @@ async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_
         await door.extract("f" * 16)
 
     assert raised.value.recorded_code == detail.error_code
-    assert raised.value.translated_message == EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY
+    assert raised.value.translated_message == EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY
     assert resolve_error_message(raised.value, locale="en") == (
-        "Local AI is not ready, so nothing was read. Set it up in the Cadrumo desktop app, then try again."
+        "The automatic reader could not run, so nothing was read. Check the model you picked, then try again."
     )
     restored = nested_terminal_precondition_verdict(raised.value)
     assert restored == verdict
-    assert restored is not None
-    assert restored.action is not None
-    assert restored.action.action_id == LOCAL_AI_PROVISION_ACTION_ID

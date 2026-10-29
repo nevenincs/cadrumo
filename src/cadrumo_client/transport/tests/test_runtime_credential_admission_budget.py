@@ -12,9 +12,9 @@ import pytest
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo_client.contracts.access_vocabulary import AccessScope
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 
 from ...contracts import deadline_budget
-from ...contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
 from .. import credentials
 from ..frontend_client import FrontendClient
 
@@ -67,9 +67,9 @@ async def test_protected_reference_uses_profile_admission_budget_and_preserves_e
             frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
             timeout=explicit_timeout,
         )
-    expected = PROFILE_ADMISSION_TIMEOUT_SECONDS if explicit_timeout is None else explicit_timeout
+    expected = DEFAULT_TIMEOUT_POLICY.timeout_seconds if explicit_timeout is None else explicit_timeout
     assert admitted is client
     assert opened == [expected] and authenticated == [100.0 + expected]
     assert inspect.signature(FrontendClient.login_api_key).parameters["timeout"].default == (
-        PROFILE_ADMISSION_TIMEOUT_SECONDS
+        DEFAULT_TIMEOUT_POLICY.timeout_seconds
     )

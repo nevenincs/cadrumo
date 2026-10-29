@@ -57,7 +57,8 @@ from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.connection_handshake import accept_connection_handshake
-from ..view_stream_relay import ViewAttachGrant, ViewStreamRelay
+from ..view_stream_relay import ViewStreamRelay
+from ..view_stream_state import ViewAttachGrant
 from ..worker_view_stream import WorkerViewStream, WorkerViewStreams
 from .view_stream_host_support import bind_worker_leg, synthetic_worker_identity
 

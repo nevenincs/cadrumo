@@ -363,9 +363,20 @@ async def test_unmount_clears_rows_and_drains_inflight_read_without_late_publish
     screen = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(screen).run_test(size=(130, 45)) as pilot:
         assert await asyncio.to_thread(started.wait, SETTLE_TIMEOUT_SECONDS)
+        worker = screen._worker
+        assert worker is not None
+        cancellation_started = asyncio.Event()
+        cancel = worker.cancel
+
+        def cancel_and_signal() -> None:
+            cancel()
+            cancellation_started.set()
+
+        monkeypatch.setattr(worker, "cancel", cancel_and_signal)
         closing = asyncio.ensure_future(pilot.app.pop_screen())
         try:
-            await settle(pilot, workers=False)
+            await asyncio.wait_for(cancellation_started.wait(), SETTLE_TIMEOUT_SECONDS)
+            assert not screen._live
             assert not closing.done()
             assert not finished.is_set()
             assert screen._inventory is None
@@ -619,8 +630,20 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
             assert str(modal.query_one("#automation-decision-review", Static).content) == ""
             assert password_field.value == ""
             assert not finished.is_set()
+            worker = modal._worker
+            assert worker is not None
+            cancellation_started = asyncio.Event()
+            cancel = worker.cancel
+
+            def cancel_and_signal() -> None:
+                cancel()
+                cancellation_started.set()
+
+            monkeypatch.setattr(worker, "cancel", cancel_and_signal)
             closing = asyncio.ensure_future(pilot.app.pop_screen())
-            await settle(pilot, workers=False)
+            await asyncio.wait_for(cancellation_started.wait(), SETTLE_TIMEOUT_SECONDS)
+            assert not modal._live
+            assert not finished.is_set()
             assert not closing.done()
         finally:
             release.set()

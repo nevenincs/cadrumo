@@ -29,7 +29,8 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.posix import posix_owner_uid
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.windows import WindowsEndpoint
-from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 
 from ...adapters.boot_record import RuntimeBootRecordUnavailable, read_runtime_boot_record
 

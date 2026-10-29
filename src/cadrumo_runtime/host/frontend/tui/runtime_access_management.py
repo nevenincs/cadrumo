@@ -3,9 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 from contextlib import suppress
-from typing import TYPE_CHECKING, ClassVar, Protocol, cast, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 from uuid import UUID
 
 from textual.app import App, ComposeResult
@@ -23,36 +22,16 @@ from cadrumo.core.time.clock import now
 from cadrumo.entrypoints.tui.components.theme import tokenised
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeReceipt
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.contracts.profile_access import status_admits_session
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from .profile.automation_inventory import RuntimeAutomationInventoryScreen
 from .runtime_access_actions import _BUTTON_ACTIONS, _RuntimeAccessActionsMixin
 from .runtime_access_projection import session_rows
+from .runtime_recovery_client import RecoveryClientCleanup, RecoveryClientOpener
 
 if TYPE_CHECKING:
     from .secret.automation_requester import HumanAutomationRequesterFactory
-
-
-class RecoveryClientOpener(Protocol):
-    """Open a fresh connection within the recovery operation's remaining budget."""
-
-    async def __call__(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
-        """Return an owned connection before the supplied timeout."""
-        ...
-
-
-class _RecoveryClientCleanup:
-    """Retain one blocking connection until its native close succeeds."""
-
-    def __init__(self, client: FrontendClient, *, released: Callable[[], None]) -> None:
-        self._client = client
-        self._released = released
-
-    async def close(self) -> None:
-        await asyncio.to_thread(self._client.close)
-        self._released()
 
 
 class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None]):
@@ -100,7 +79,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
         self._screen_live = True
         self._worker: Worker[None] | None = None
         self._password_input: Input | None = None
-        self._recovery_clients: dict[int, _RecoveryClientCleanup] = {}
+        self._recovery_clients: dict[int, RecoveryClientCleanup] = {}
         self._resume_dispatched = False
         self._resume_uncertain_code: str | None = None
         self._resume_receipt: AutomationResumeReceipt | None = None
@@ -283,7 +262,7 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
                 def released() -> None:
                     self._recovery_clients.pop(identity, None)
 
-                cleanup = _RecoveryClientCleanup(recovery_client, released=released)
+                cleanup = RecoveryClientCleanup(recovery_client, released=released)
                 self._recovery_clients[identity] = cleanup
             try:
                 if not self._active():
@@ -385,4 +364,4 @@ class RuntimeAccessManagementScreen(_RuntimeAccessActionsMixin, ModalScreen[None
             self.dismiss(None)
 
 
-__all__ = ["RecoveryClientOpener", "RuntimeAccessManagementScreen"]
+__all__ = ["RuntimeAccessManagementScreen"]

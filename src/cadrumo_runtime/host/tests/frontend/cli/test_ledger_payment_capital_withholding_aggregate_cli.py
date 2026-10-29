@@ -48,7 +48,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import build_retencion_observation_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,

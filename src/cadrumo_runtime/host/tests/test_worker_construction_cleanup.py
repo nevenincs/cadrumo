@@ -281,7 +281,7 @@ def test_cancelled_proof_leaves_shared_construction_and_its_next_joiner_untouche
                 pending.result(timeout=3)
             assert refused.value.reason is AutomationCustodyCode.REQUESTER_DISCONNECTED
             assert secret == bytearray(len(secret))
-            assert owner._human_slot_owner is None
+            assert owner._human_queue._owner is None
             assert not owner.lost and not owner._stopping.is_set()
             assert not prepared.done() and not owner._construction_done.is_set()
             assert candidate.close_calls == 0 and not owner._retiring

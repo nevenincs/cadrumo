@@ -24,6 +24,7 @@ from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY, OrchestrationTimeoutError
@@ -131,8 +132,6 @@ _CONTROL_ACTIONS = frozenset(
         "operation_project",
         "operation_project_page",
         "operation_manage",
-        "operation_review_claim",
-        "operation_review_claimable",
         "extension_record",
     }
 )
@@ -185,7 +184,6 @@ async def _expire_custody(
         changed.clear()
         try:
             live_sessions = await asyncio.to_thread(custody.live_sessions)
-            operations.retire_review_claims(live_sessions)
             uploads.expire(live_sessions=live_sessions)
             await asyncio.to_thread(human.expire)
             deadlines = [
@@ -210,31 +208,36 @@ async def _expire_custody(
         delay = min(deadlines) if deadlines else None
 
 
-async def _handle_custody_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
-    if isinstance(request, ProfileWorkerLeaseRequest):
-        if request.action == "install":
+async def _handle_lease_control(context: _WorkerControl, request: ProfileWorkerLeaseRequest) -> None:
+    """Install, refresh or share one lease without detaching its cancellation owner."""
+    if request.action == "install":
 
-            def install() -> None:
-                with read_secret(context.channel, deadline=time.monotonic() + 5) as secret:
-                    context.custody.install(request.lease, secret)
+        def install() -> None:
+            with read_secret(context.channel, deadline=time.monotonic() + 5) as secret:
+                context.custody.install(request.lease, secret)
 
-            await await_cancellation_complete(asyncio.to_thread(install), task_name="worker-lease-install")
+        await await_cancellation_complete(asyncio.to_thread(install), task_name="worker-lease-install")
+        await await_cancellation_complete(
+            asyncio.to_thread(context.operations.prepare), task_name="worker-install-prepare"
+        )
+    elif request.action == "refresh":
+        if request.lease.kind is SessionKind.HUMAN:
             await await_cancellation_complete(
-                asyncio.to_thread(context.operations.prepare), task_name="worker-install-prepare"
+                asyncio.to_thread(context.human.refresh, request.lease), task_name="worker-human-refresh"
             )
-        elif request.action == "refresh":
-            if request.lease.kind is SessionKind.HUMAN:
-                await await_cancellation_complete(
-                    asyncio.to_thread(context.human.refresh, request.lease), task_name="worker-human-refresh"
-                )
-            else:
-                await await_cancellation_complete(
-                    asyncio.to_thread(context.custody.refresh, request.lease), task_name="worker-lease-refresh"
-                )
         else:
             await await_cancellation_complete(
-                asyncio.to_thread(context.custody.share, request.lease), task_name="worker-lease-share"
+                asyncio.to_thread(context.custody.refresh, request.lease), task_name="worker-lease-refresh"
             )
+    else:
+        await await_cancellation_complete(
+            asyncio.to_thread(context.custody.share, request.lease), task_name="worker-lease-share"
+        )
+
+
+async def _handle_custody_control(context: _WorkerControl, request: object) -> _ControlDisposition | None:
+    if isinstance(request, ProfileWorkerLeaseRequest):
+        await _handle_lease_control(context, request)
         return "status"
     if isinstance(request, ProfileWorkerRetireRequest):
         # Expiry can already be inspecting custody on another thread. Never
@@ -247,7 +250,6 @@ async def _handle_custody_control(context: _WorkerControl, request: object) -> _
             asyncio.to_thread(context.custody.retire, request.session_id), task_name="worker-lease-retire"
         )
         live_sessions = await asyncio.to_thread(context.custody.live_sessions)
-        context.operations.retire_review_claims(live_sessions)
         context.uploads.expire(live_sessions=live_sessions)
         if not live_sessions:
             # Locking or signing out ends the last session but not this worker.
@@ -438,26 +440,31 @@ async def _dispatch_control_request(context: _WorkerControl, request: object) ->
     return disposition if disposition is not None else "status"
 
 
-def _control_dispatch_metadata(request: object) -> dict[str, str | None]:
-    """Project only closed worker request, handler and action labels for diagnostics."""
-    request_type = type(request).__name__ if type(request) in _CONTROL_REQUEST_TYPES else "UnknownWorkerRequest"
+def _control_handler_name(request: object) -> str:
+    """Select only a closed diagnostic handler label."""
     if type(request) in {
         ProfileWorkerLeaseRequest,
         ProfileWorkerRetireRequest,
         ProfileWorkerHumanBindingRequest,
         ProfileWorkerHumanReceiptRequest,
     }:
-        handler_name = "custody_control"
+        return "custody_control"
     elif type(request) is ProfileWorkerSettlementRequest:
-        handler_name = "metadata_control"
+        return "metadata_control"
     elif type(request) is ProfileWorkerExtensionRecordRequest:
-        handler_name = "extension_record"
+        return "extension_record"
     elif isinstance(request, ProfileWorkerControlRequest) and request.action in {"password", "receipt"}:
-        handler_name = "human_control"
+        return "human_control"
     elif type(request) is ProfileWorkerControlRequest:
-        handler_name = "action_control"
+        return "action_control"
     else:
-        handler_name = "control_dispatch"
+        return "control_dispatch"
+
+
+def _control_dispatch_metadata(request: object) -> dict[str, str | None]:
+    """Project only closed worker request, handler and action labels for diagnostics."""
+    request_type = type(request).__name__ if type(request) in _CONTROL_REQUEST_TYPES else "UnknownWorkerRequest"
+    handler_name = _control_handler_name(request)
     candidate_action = getattr(request, "action", None) if type(request) in _CONTROL_REQUEST_TYPES else None
     action = candidate_action if isinstance(candidate_action, str) and candidate_action in _CONTROL_ACTIONS else None
     return {"handler_name": handler_name, "request_type": request_type, "request_action": action}
@@ -508,6 +515,46 @@ def _record_control_dispatch_elapsed(
         return
 
 
+async def _timed_control_dispatch(context: _WorkerControl, request: object) -> _ControlDisposition:
+    """Record bounded dispatch timing without changing raised errors."""
+    _record_control_dispatch_started(request)
+    dispatch_started = time.monotonic()
+    try:
+        disposition = await _dispatch_control_request(context, request)
+    except BaseException as error:
+        _record_control_dispatch_elapsed(
+            request,
+            handler_started=dispatch_started,
+            outcome="raised",
+            primary_error=error,
+        )
+        raise
+    _record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed")
+    return disposition
+
+
+def _control_refusal_reason(
+    refusal: AutomationCustodyError
+    | ProfileAccessRefusedError
+    | ValidationError
+    | OrchestrationTimeoutError
+    | ProfileProofCancelledError,
+) -> AutomationCustodyCode | AccessDenialCode | Literal[RefusalCode.TIMEOUT]:
+    """Map control failures to their existing bounded wire refusal."""
+    if isinstance(refusal, OrchestrationTimeoutError):
+        return RefusalCode.TIMEOUT
+    if isinstance(refusal, ProfileProofCancelledError):
+        return AutomationCustodyCode.REQUESTER_DISCONNECTED
+    if isinstance(refusal, ValidationError):
+        return AutomationCustodyCode.INVALID
+    return refusal.reason
+
+
+def _is_observational_control(request: object) -> bool:
+    """Read-only controls do not change the existing expiry deadline."""
+    return isinstance(request, ProfileWorkerControlRequest) and request.action in _READS
+
+
 async def _serve_control_requests(
     context: _WorkerControl, input_executor: ThreadPoolExecutor, ready: asyncio.Event | None = None
 ) -> None:
@@ -519,19 +566,7 @@ async def _serve_control_requests(
             raise RefusalError(RefusalCode.UNAVAILABLE)
         observed = False
         try:
-            _record_control_dispatch_started(request)
-            dispatch_started = time.monotonic()
-            try:
-                disposition = await _dispatch_control_request(context, request)
-            except BaseException as error:
-                _record_control_dispatch_elapsed(
-                    request,
-                    handler_started=dispatch_started,
-                    outcome="raised",
-                    primary_error=error,
-                )
-                raise
-            _record_control_dispatch_elapsed(request, handler_started=dispatch_started, outcome="completed")
+            disposition = await _timed_control_dispatch(context, request)
             if disposition == "stop":
                 return
             if disposition == "status":
@@ -544,7 +579,7 @@ async def _serve_control_requests(
                 write_document(context.channel, result, deadline=time.monotonic() + 5)
             # A read adds and moves no deadline, so expiry keeps sleeping until the one it
             # already waits for; the supervisor's heartbeat asks for activity every few seconds.
-            observed = isinstance(request, ProfileWorkerControlRequest) and request.action in _READS
+            observed = _is_observational_control(request)
         except (
             AutomationCustodyError,
             ProfileAccessRefusedError,
@@ -559,13 +594,7 @@ async def _serve_control_requests(
                 ProfileWorkerRefusal(
                     identity=context.custody.identity,
                     request_id=request.request_id,
-                    reason=RefusalCode.TIMEOUT
-                    if isinstance(refusal, OrchestrationTimeoutError)
-                    else (
-                        AutomationCustodyCode.REQUESTER_DISCONNECTED
-                        if isinstance(refusal, ProfileProofCancelledError)
-                        else (AutomationCustodyCode.INVALID if isinstance(refusal, ValidationError) else refusal.reason)
-                    ),
+                    reason=_control_refusal_reason(refusal),
                     sign_in=refusal.sign_in if isinstance(refusal, ProfileAccessRefusedError) else None,
                 ),
                 deadline=time.monotonic() + 5,

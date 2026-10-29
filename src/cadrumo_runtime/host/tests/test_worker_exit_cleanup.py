@@ -372,10 +372,6 @@ def test_rejected_handshake_retains_first_failed_close_and_does_not_close_channe
 class _Operations:
     def __init__(self, failures: int) -> None:
         self.owner = _Release(failures)
-        self.retirements: list[tuple[UUID, ...]] = []
-
-    def retire_review_claims(self, live_sessions: tuple[UUID, ...]) -> None:
-        self.retirements.append(live_sessions)
 
     @property
     def calls(self) -> int:
@@ -436,7 +432,6 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     discarded: list[UUID] = []
     expired: list[tuple[UUID, ...]] = []
     forgotten: list[bool] = []
-    claims_retired: list[tuple[UUID, ...]] = []
     output: list[bytes] = []
 
     class Custody(_ServeCustody):
@@ -448,9 +443,6 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
             discarded.append(selected)
 
     class Operations:
-        def retire_review_claims(self, live_sessions: tuple[UUID, ...]) -> None:
-            claims_retired.append(live_sessions)
-
         def forget_settled_ephemeral(self) -> None:
             forgotten.append(True)
 
@@ -499,7 +491,6 @@ def test_control_dispatch_timing_names_retirement_and_keeps_behavior_unchanged(
     assert caught.value.reason is RefusalCode.UNAVAILABLE
     assert retired == discarded == [session_id]
     assert expired == [()]
-    assert claims_retired == [()]
     assert forgotten == [True]
     assert output
     assert context.changed.is_set(), "a handled command must wake idle custody expiry"

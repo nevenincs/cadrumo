@@ -340,6 +340,18 @@ class AgentHostController:
         except Exception:
             return True
 
+    def _read_ready_line(self, process: AgentProcess, deadline: TimeoutDeadline) -> bytes:
+        try:
+            return process.read_output_line(limit=READY_LINE_MAX_BYTES, timeout=deadline.remaining_seconds())
+        except InterruptedError as error:
+            raise AgentHostError(AgentHostRefusal.CANCELLED) from error
+        except TimeoutError as error:
+            raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
+        except (EOFError, OSError) as error:
+            if self._cancelled.is_set():
+                raise AgentHostError(AgentHostRefusal.CANCELLED) from error
+            raise _ended_before_ready(process, AgentHostRefusal.NOT_READY, observe=EXIT_OBSERVATION_SECONDS) from error
+
     def _start(self, deadline: TimeoutDeadline) -> AgentReady:
         started = time.monotonic()
         if self._cancelled.is_set():
@@ -366,19 +378,7 @@ class AgentHostController:
         spawned = time.monotonic()
         resolved = self._credentials.resolve_for_agent(deadline=deadline)
         credentials_ready = time.monotonic()
-        try:
-            frame = build_credential_frame(
-                resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
-            )
-        except CredentialFrameError as error:
-            raise AgentHostError(AgentHostRefusal.CREDENTIALS_INVALID) from error
-        finally:
-            for credential in resolved.credentials.values():
-                wipe(credential.secret)
-            if resolved.gateway_bearer is not None:
-                wipe(resolved.gateway_bearer)
-            if resolved.host_token is not None:
-                wipe(resolved.host_token)
+        frame = _resolved_credential_frame(resolved)
         try:
             frame_built = time.monotonic()
             if self._cancelled.is_set():
@@ -392,16 +392,7 @@ class AgentHostController:
                 ) from error
         finally:
             wipe(frame)
-        try:
-            line = process.read_output_line(limit=READY_LINE_MAX_BYTES, timeout=deadline.remaining_seconds())
-        except InterruptedError as error:
-            raise AgentHostError(AgentHostRefusal.CANCELLED) from error
-        except TimeoutError as error:
-            raise AgentHostError(AgentHostRefusal.TIMEOUT) from error
-        except (EOFError, OSError) as error:
-            if self._cancelled.is_set():
-                raise AgentHostError(AgentHostRefusal.CANCELLED) from error
-            raise _ended_before_ready(process, AgentHostRefusal.NOT_READY, observe=EXIT_OBSERVATION_SECONDS) from error
+        line = self._read_ready_line(process, deadline)
         if self._cancelled.is_set():
             raise AgentHostError(AgentHostRefusal.CANCELLED)
         ready = _ready_from_line(line, resolved.generations)
@@ -524,3 +515,19 @@ def _ready_from_line(line: bytes, generations: AgentGenerations) -> AgentReady:
         agent_version=ready.agent_version,
         hosting_contract=ready.hosting_contract,
     )
+
+
+def _resolved_credential_frame(resolved: ResolvedAgentCredentials) -> bytearray:
+    try:
+        return build_credential_frame(
+            resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
+        )
+    except CredentialFrameError as error:
+        raise AgentHostError(AgentHostRefusal.CREDENTIALS_INVALID) from error
+    finally:
+        for credential in resolved.credentials.values():
+            wipe(credential.secret)
+        if resolved.gateway_bearer is not None:
+            wipe(resolved.gateway_bearer)
+        if resolved.host_token is not None:
+            wipe(resolved.host_token)

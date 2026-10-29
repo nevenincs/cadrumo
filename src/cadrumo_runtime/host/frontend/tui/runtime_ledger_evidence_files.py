@@ -36,7 +36,6 @@ from cadrumo.application.ledger.evidence_followup_contracts import (
     LedgerEvidenceAttachmentViewRequest,
     LedgerEvidenceConsentListProjection,
     LedgerEvidenceConsentListRequest,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
 )
@@ -64,6 +63,7 @@ from cadrumo.application.ledger.evidence_read_operation import (
     LedgerEvidenceViewRequest,
     LedgerEvidenceViewSuccess,
 )
+from cadrumo.application.ledger.evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.entrypoints.tui.ledger.evidence_files_doors import LedgerEvidenceFilesDoorsV1

@@ -77,18 +77,9 @@ class OperationProgressReporter:
     def _report_until_closed(self) -> None:
         backoff = 0.0
         while True:
-            with self._condition:
-                while not self._pending and not self._closed:
-                    self._condition.wait()
-                if not self._pending:
-                    return
-                # A commit's notify does not cut a backoff short; a close does.
-                retry_at = monotonic() + backoff
-                while not self._closed and (remaining := retry_at - monotonic()) > 0:
-                    self._condition.wait(remaining)
-                batch = tuple(self._pending)[:WORKER_OPERATIONS_ADVANCED_MAX]
-                for operation_id in batch:
-                    del self._pending[operation_id]
+            batch = self._take_pending(backoff)
+            if batch is None:
+                return
             try:
                 self._send(batch)
             except Exception as error:
@@ -106,3 +97,19 @@ class OperationProgressReporter:
                 backoff = min(max(backoff * 2, _RETRY_FIRST_SECONDS), _RETRY_LONGEST_SECONDS)
             else:
                 backoff = 0.0
+
+    def _take_pending(self, backoff: float) -> tuple[OperationId, ...] | None:
+        """Wait for work and preserve the retry bound unless closed."""
+        with self._condition:
+            while not self._pending and not self._closed:
+                self._condition.wait()
+            if not self._pending:
+                return
+            # A commit's notify does not cut a backoff short; a close does.
+            retry_at = monotonic() + backoff
+            while not self._closed and (remaining := retry_at - monotonic()) > 0:
+                self._condition.wait(remaining)
+            batch = tuple(self._pending)[:WORKER_OPERATIONS_ADVANCED_MAX]
+            for operation_id in batch:
+                del self._pending[operation_id]
+            return batch

@@ -49,7 +49,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
     WorkerAutomationInventoryTransfer,
-    WorkerHumanReviewScopeRequest,
     WorkerModelRun,
     WorkerModelRunResult,
     WorkerOperationsAdvanced,
@@ -226,23 +225,33 @@ class WorkerAuthorizationServer:
             else:
                 self._permit_exchange(channel, owner, request, replied)
         except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError) as error:
-            try:
-                write_document(
-                    channel,
-                    AccessRefusal(
-                        request_id=request.request_id,
-                        runtime_boot_id=self.identity.runtime_boot_id,
-                        connection_id=request.connection_id,
-                        code=error.reason,
-                    ),
-                    deadline=time.monotonic() + 1,
-                )
-                acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=time.monotonic() + 5)
-            except RefusalError:
-                return False
-            # Only a refusal given before any other reply ends the exchange where the worker expects it.
-            return not replied[0] and acknowledged.request_id == request.request_id
+            return self._refuse_exchange(channel, request, error, replied)
         return True
+
+    def _refuse_exchange(
+        self,
+        channel: WorkerChannel,
+        request: WorkerAuthorityRequest | WorkerAutomationInventoryRequest | WorkerApprovalRequest,
+        error: ProfileAccessRefusedError | AutomationCustodyError | RefusalError,
+        replied: list[bool],
+    ) -> bool:
+        """Acknowledge a refusal only when no earlier frame has been sent."""
+        try:
+            write_document(
+                channel,
+                AccessRefusal(
+                    request_id=request.request_id,
+                    runtime_boot_id=self.identity.runtime_boot_id,
+                    connection_id=request.connection_id,
+                    code=error.reason,
+                ),
+                deadline=time.monotonic() + 1,
+            )
+            acknowledged = read_document(channel, WorkerAuthorizationAcknowledgement, deadline=time.monotonic() + 5)
+        except RefusalError:
+            return False
+        # Only a refusal given before any other reply ends the exchange where the worker expects it.
+        return not replied[0] and acknowledged.request_id == request.request_id
 
     def _permit_exchange(
         self,
@@ -262,9 +271,7 @@ class WorkerAuthorizationServer:
         # profile's admission fence through its body: its effects are irreversible,
         # and an approval publishes on the fence's own thread. Every other stage runs
         # unfenced, so it never holds up the profile's other requests.
-        hold_fence = isinstance(request, WorkerHumanReviewScopeRequest) or (
-            isinstance(request, WorkerAuthorizationRequest) and request.request.action is AccessAction.COMMIT
-        )
+        hold_fence = isinstance(request, WorkerAuthorizationRequest) and request.request.action is AccessAction.COMMIT
         with ExitStack() as fence:
             allowed = fence.enter_context(guard)
             permit = self._held_permit(request, allowed, permit_id)
@@ -523,7 +530,7 @@ class WorkerAuthorizationServer:
             )
             if len(canonical_json_bytes(permit.model_dump(mode="json"))) > WORKER_AUTOMATION_INVENTORY_PERMIT_MAX_BYTES:
                 raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        elif isinstance(request, WorkerResponseScopeRequest | WorkerHumanReviewScopeRequest):
+        elif isinstance(request, WorkerResponseScopeRequest):
             permit = WorkerResponseScopePermit(
                 request_id=request.request_id,
                 runtime_boot_id=self.identity.runtime_boot_id,
@@ -620,7 +627,6 @@ def _require_allowed_request_family(
         if not isinstance(allowed, WorkerAutomationInventoryAllowed):
             raise RefusalError(RefusalCode.INVALID_FRAME)
     elif isinstance(allowed, WorkerAutomationInventoryAllowed) or (
-        isinstance(request, WorkerResponseScopeRequest | WorkerHumanReviewScopeRequest)
-        != isinstance(allowed, OperationResponseScopeAllowed)
+        isinstance(request, WorkerResponseScopeRequest) != isinstance(allowed, OperationResponseScopeAllowed)
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)

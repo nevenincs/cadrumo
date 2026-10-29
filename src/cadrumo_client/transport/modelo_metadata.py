@@ -11,7 +11,7 @@ from cadrumo.application.modelo.metadata_read_operation import (
     ModeloWorkMetadataProjection,
     ModeloWorkMetadataRequest,
 )
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID,
     MODELO_WORK_RENAME_OPERATION_DEFINITION_ID,
 )

@@ -178,11 +178,7 @@ def activate_profile(
         if root_selection is not None or credential_reference is not None:
             raise CliRefusedBoundaryError(translated_message="cli.config.custody.errors.profile_secrets_missing_target")
         raise CliRefusedBoundaryError(translated_message="cli.config.profile.no_active_profile")
-    profile_label = target_profile_label
-    if profile_label is None and credential_reference is None:
-        target = profile_selection.runtime_login_target(bucket_id)
-        if target is not None:
-            profile_label = target.label
+    profile_label = _target_profile_label(bucket_id, target_profile_label, credential_reference)
     if credential_reference is not None:
         client = _open_profile_credential_client(bucket_id, credential_reference, root_selection, method, ctx)
     else:
@@ -203,6 +199,18 @@ def activate_profile(
     except BaseException:
         client.close()
         raise
+
+
+def _target_profile_label(
+    bucket_id: str, target_profile_label: str | None, credential_reference: UUID | None
+) -> str | None:
+    """Resolve only an absent human-login label; a credential reference supplies no human identity."""
+    profile_label = target_profile_label
+    if profile_label is None and credential_reference is None:
+        target = profile_selection.runtime_login_target(bucket_id)
+        if target is not None:
+            profile_label = target.label
+    return profile_label
 
 
 def _open_profile_credential_client(

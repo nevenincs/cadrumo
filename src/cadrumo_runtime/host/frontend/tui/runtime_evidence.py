@@ -190,22 +190,19 @@ class RuntimeEvidenceTuiDoorV1:
         return self._record_row(projection.record)
 
     def reader_readiness(self) -> LedgerReaderReadinessV1:
-        """Measure the local reader without provisioning or starting it."""
+        """Measure the local reader without starting it."""
         projection = self._call_sync(
             LedgerEvidenceReaderReadinessRequest(profile_id=self._profile_id),
             definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
             result_type=LedgerEvidenceReaderReadinessProjection,
             success_effect=OperationEffect.NONE,
         )
-        failed_condition = projection.host.failed_condition_id
-        if failed_condition is None:
-            failed_condition = next(
-                (role.failed_condition_id for role in projection.roles if not role.ready),
-                None,
-            )
         return LedgerReaderReadinessV1(
             extraction_ready=projection.extraction_ready,
-            failed_condition_id=failed_condition,
+            failed_condition_id=next(
+                (role.failed_condition_id for role in projection.roles if not role.ready),
+                None,
+            ),
         )
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:

@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
+from _thread import RLock as RLockType
 from dataclasses import dataclass, field
-from threading import Event, Thread
+from threading import BoundedSemaphore, Event, Thread
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -35,7 +36,8 @@ from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import read_secret, write_document
 
 from ..application.session_authority_contracts import HumanAdmissionControl
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections
@@ -70,20 +72,88 @@ class PendingProfileLogin:
         return None
 
 
+def claim_login_slot(
+    guard: RLockType, pending_logins: dict[UUID, PendingProfileLogin], slots: BoundedSemaphore, connection_id: UUID
+) -> bool:
+    """Claim bounded proof capacity while retaining existing cleanup owners."""
+    with guard:
+        prior = pending_logins.get(connection_id)
+        if prior is not None and (not prior.finished.is_set() or prior.retained_cleanup() is not None):
+            return False
+        if prior is None and len(pending_logins) >= 32:
+            return False
+        return slots.acquire(blocking=False)
+
+
+def settle_login_attempt(
+    attempt: PendingProfileLogin, *, deadline: float, guard: RLockType, pending_logins: dict[UUID, PendingProfileLogin]
+) -> bool:
+    """Cancel and join the original proof owner, retaining unfinished cleanup."""
+    acquired = attempt.host.guard.acquire(timeout=max(0.0, deadline - time.monotonic()))
+    if acquired:
+        try:
+            attempt.control.cancel()
+        finally:
+            attempt.host.guard.release()
+    if attempt.thread is not None and attempt.thread.ident is not None:
+        attempt.thread.join(timeout=max(0.0, deadline - time.monotonic()))
+    if not attempt.finished.is_set() or (attempt.thread is not None and attempt.thread.is_alive()):
+        return False
+    cleanup = attempt.retained_cleanup()
+    if isinstance(cleanup, AsyncResourceCleanupError):
+        try:
+            asyncio.run(cleanup.retry_cleanup())
+        except BaseException:
+            return False
+        attempt.failure = None
+    with guard:
+        if pending_logins.get(attempt.context.connection_id) is attempt:
+            pending_logins.pop(attempt.context.connection_id)
+    return acquired
+
+
+def discard_failed_login(
+    pending: PendingProfileLogin | None,
+    guard: RLockType,
+    pending_logins: dict[UUID, PendingProfileLogin],
+    connection_id: UUID,
+) -> None:
+    """Wipe an interrupted proof and discard only its own retained attempt."""
+    if pending is None:
+        return
+    pending.secret[:] = bytes(len(pending.secret))
+    with guard:
+        if pending_logins.get(connection_id) is pending:
+            pending_logins.pop(connection_id)
+
+
+def release_unstarted_login(pending: PendingProfileLogin | None, slots: BoundedSemaphore) -> None:
+    """Return capacity only when no proof thread took ownership."""
+    if pending is None or pending.thread is None or pending.thread.ident is None:
+        if pending is not None:
+            pending.secret[:] = bytes(len(pending.secret))
+        slots.release()
+
+
+def login_claim_matches(
+    pending: PendingProfileLogin, context: ConnectionContext, request: ProfileLoginStatusQuery
+) -> bool:
+    """Match the exact connection and original login request."""
+    return (
+        pending.context == context
+        and pending.request.profile_id == request.profile_id
+        and pending.request.request_id == request.login_request_id
+    )
+
+
 class ProfileConnectionLoginMixin:
     """Keep the sole connection reader available during an owned login proof."""
 
     def _login(
         self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ProfileLogin
     ) -> ProfileLoginPending | ProfileStatus | AccessDenied:
-        with self._guard:
-            prior = self._pending_logins.get(context.connection_id)
-            if prior is not None and (not prior.finished.is_set() or prior.retained_cleanup() is not None):
-                return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
-            if prior is None and len(self._pending_logins) >= 32:
-                return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
-            if not self._login_slots.acquire(blocking=False):
-                return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
+        if not claim_login_slot(self._guard, self._pending_logins, self._login_slots, context.connection_id):
+            return AccessDenied(code=AccessDenialCode.SUBJECT_BUSY)
         pending: PendingProfileLogin | None = None
         timeout = DEFAULT_TIMEOUT_POLICY.deadline()
         try:
@@ -115,17 +185,10 @@ class ProfileConnectionLoginMixin:
             pending.thread.start()
             return self._login_pending(pending, request.request_id)
         except BaseException:
-            if pending is not None:
-                pending.secret[:] = bytes(len(pending.secret))
-                with self._guard:
-                    if self._pending_logins.get(context.connection_id) is pending:
-                        self._pending_logins.pop(context.connection_id)
+            discard_failed_login(pending, self._guard, self._pending_logins, context.connection_id)
             raise
         finally:
-            if pending is None or pending.thread is None or pending.thread.ident is None:
-                if pending is not None:
-                    pending.secret[:] = bytes(len(pending.secret))
-                self._login_slots.release()
+            release_unstarted_login(pending, self._login_slots)
 
     def _run_login(self: RuntimeProfileConnections, pending: PendingProfileLogin) -> None:
         request, context = pending.request, pending.context
@@ -200,12 +263,7 @@ class ProfileConnectionLoginMixin:
     ) -> ProfileLoginPending | ProfileStatus | AccessRefusal | AccessDenied:
         with self._guard:
             pending = self._pending_logins.get(context.connection_id)
-        if (
-            pending is None
-            or pending.context != context
-            or pending.request.profile_id != request.profile_id
-            or pending.request.request_id != request.login_request_id
-        ):
+        if pending is None or not login_claim_matches(pending, context, request):
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         with pending.host.guard:
             if request.action == "profile_login_cancel":
@@ -241,27 +299,8 @@ class ProfileConnectionLoginMixin:
             pending = tuple(self._pending_logins.values())
         unsettled: set[UUID] = set()
         for attempt in pending:
-            if attempt.host.guard.acquire(timeout=max(0.0, deadline - time.monotonic())):
-                try:
-                    attempt.control.cancel()
-                finally:
-                    attempt.host.guard.release()
-            else:
+            if not settle_login_attempt(
+                attempt, deadline=deadline, guard=self._guard, pending_logins=self._pending_logins
+            ):
                 unsettled.add(attempt.request.profile_id)
-            if attempt.thread is not None and attempt.thread.ident is not None:
-                attempt.thread.join(timeout=max(0.0, deadline - time.monotonic()))
-            if not attempt.finished.is_set() or (attempt.thread is not None and attempt.thread.is_alive()):
-                unsettled.add(attempt.request.profile_id)
-                continue
-            cleanup = attempt.retained_cleanup()
-            if isinstance(cleanup, AsyncResourceCleanupError):
-                try:
-                    asyncio.run(cleanup.retry_cleanup())
-                except BaseException:
-                    unsettled.add(attempt.request.profile_id)
-                    continue
-                attempt.failure = None
-            with self._guard:
-                if self._pending_logins.get(attempt.context.connection_id) is attempt:
-                    self._pending_logins.pop(attempt.context.connection_id)
         return tuple(sorted(unsettled))

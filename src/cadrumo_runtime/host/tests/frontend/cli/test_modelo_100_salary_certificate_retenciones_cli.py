@@ -17,7 +17,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.work_create_operation import MODELO_WORK_CREATE_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts

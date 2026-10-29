@@ -12,7 +12,7 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.filing_selection_operation import MODELO_WORK_FILING_RECORD_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_AMEND_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_selection_operation import MODELO_WORK_REVISION_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.revision_snapshot_operation import MODELO_WORK_REVISION_SNAPSHOT_OPERATION_DEFINITION_ID
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
@@ -20,7 +20,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests import modelo_operation_test_support
 from cadrumo.tests.cli_envelope import unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (

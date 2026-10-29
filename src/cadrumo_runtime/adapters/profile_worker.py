@@ -27,11 +27,8 @@ from cadrumo_client.contracts.deadline_budget import (
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
 from cadrumo_client.transport.native_wake import NativeWake
-from cadrumo_client.transport.windows_process import (
-    WindowsOwnedProcess,
-    WindowsProcessScope,
-    unreturned_windows_process_scope,
-)
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
 from cadrumo_runtime.adapters.connection_handshake import accept_connection_handshake
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerReady
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorizationOwner
@@ -51,6 +48,11 @@ def unreturned_profile_worker(error: BaseException) -> ProfileWorkerProcess | No
     """Find the native owner a failed constructor could not return to its caller."""
     candidate = error.__dict__.get("_profile_worker_candidate")
     return candidate if isinstance(candidate, ProfileWorkerProcess) else None
+
+
+def _resolve_worker_script(worker_script: Path | None) -> Path | None:
+    """Resolve a selected worker script before any native resources are opened."""
+    return None if worker_script is None else worker_script.resolve(strict=True)
 
 
 class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
@@ -85,8 +87,7 @@ class ProfileWorkerProcess(ProfileWorkerHumanAdmission):
         """
         if sys.platform not in {"win32", "linux", "darwin"}:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        if worker_script is not None:
-            worker_script = worker_script.resolve(strict=True)
+        worker_script = _resolve_worker_script(worker_script)
         self.identity = identity
         self._lock = RLock()
         self._operation_lock = RLock()

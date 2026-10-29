@@ -10,7 +10,7 @@ from cadrumo.tests.log_records import delivered_text
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...adapters.agent_programs import AgentProgramRefusalError
-from ...service import service_failure
+from ...service_support import service_failure
 from ..controller import AgentHostError, AgentHostRefusal
 from ..launcher_protocol import AgentLauncherRefusal
 

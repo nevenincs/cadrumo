@@ -161,13 +161,9 @@ class HostedBackgroundRuns(BackgroundRunGateway):
         endpoint = self._endpoint()
         if endpoint is None or not self._bearer or not self._host_token:
             return ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
-        files: list[tuple[str, str, bytes]] = []
-        for index, attachment in enumerate(body.attachments, start=1):
-            extension = _EXTENSIONS.get(attachment.media_type)
-            if extension is None:
-                return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
-            data = base64.b64decode(attachment.base64_data, validate=True)
-            files.append((f"input-{index}{extension}", hashlib.sha256(data).hexdigest(), data))
+        files = _run_files(body)
+        if isinstance(files, ModelRunRefusal):
+            return files
         run_id = self._run_ids()
         uploaded = False
         started = False
@@ -321,6 +317,18 @@ class HostedBackgroundRuns(BackgroundRunGateway):
             connection.close()
 
 
+def _run_files(body: ModelRunBody) -> list[tuple[str, str, bytes]] | ModelRunRefusal:
+    """Prepare supported attachment payloads before creating a run."""
+    files: list[tuple[str, str, bytes]] = []
+    for index, attachment in enumerate(body.attachments, start=1):
+        extension = _EXTENSIONS.get(attachment.media_type)
+        if extension is None:
+            return ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED)
+        data = base64.b64decode(attachment.base64_data, validate=True)
+        files.append((f"input-{index}{extension}", hashlib.sha256(data).hexdigest(), data))
+    return files
+
+
 def start_refusal(status: int, payload: bytes) -> ModelRunRefusalCode:
     """Return the closed refusal a run start the agent answered with ``status`` and ``payload`` reads as.
 
@@ -358,14 +366,19 @@ def settled_reply_outcome(payload: bytes, lane: ModelRunLane) -> ModelRunOutput 
     return _outcome(reply, lane) if reply.settled else None
 
 
+def _failed_outcome(reply: _Reply) -> ModelRunRefusal:
+    """Translate a settled failure using the provider condition precedence."""
+    condition = _PROVIDER_CONDITIONS.get(reply.provider_condition or "")
+    if condition is not None:
+        return ModelRunRefusal(code=condition)
+    if reply.failure_reason is not None and reply.failure_reason.startswith(_OUTPUT_LIMIT_EXCEEDED):
+        return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
+    return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+
+
 def _outcome(reply: _Reply, lane: ModelRunLane) -> ModelRunOutput | ModelRunRefusal:
     if reply.status != "completed":
-        condition = _PROVIDER_CONDITIONS.get(reply.provider_condition or "")
-        if condition is not None:
-            return ModelRunRefusal(code=condition)
-        if reply.failure_reason is not None and reply.failure_reason.startswith(_OUTPUT_LIMIT_EXCEEDED):
-            return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
-        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
+        return _failed_outcome(reply)
     if not reply.background_request or reply.reply is None:
         return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
     if len(reply.reply.encode("utf-8")) > MODEL_RUN_MAX_OUTPUT_BYTES:

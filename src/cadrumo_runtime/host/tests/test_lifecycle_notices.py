@@ -38,11 +38,11 @@ def test_legacy_hello_omits_capability_and_legacy_connection_gets_no_notice() ->
 
 
 class LegacyHello(BaseModel):
-    """Frozen pre-notice protocol-3 schema, exposing the one-way compatibility limit."""
+    """Frozen pre-notice protocol-4 schema, exposing the one-way compatibility limit."""
 
     model_config = ConfigDict(extra="forbid", strict=True)
     kind: Literal["client_hello"]
-    protocol_version: Literal[3]
+    protocol_version: Literal[4]
     product_version: str
     storage_identity: str
     authority_generation: str | None
@@ -50,7 +50,7 @@ class LegacyHello(BaseModel):
 
 def test_opt_in_refuses_on_prior_strict_server_without_silent_downgrade() -> None:
     legacy = ClientHello(product_version="1.0.0", storage_identity="a" * 64)
-    assert decode_document(document_frame(legacy)[5:], LegacyHello).protocol_version == 3
+    assert decode_document(document_frame(legacy)[5:], LegacyHello).protocol_version == 4
     opted_in = legacy.model_copy(update={"lifecycle_notices": "v1"})
     with pytest.raises(RefusalError):
         decode_document(document_frame(opted_in)[5:], LegacyHello)

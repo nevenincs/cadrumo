@@ -16,7 +16,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
 )

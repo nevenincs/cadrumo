@@ -36,7 +36,7 @@ from cadrumo.application.aggregation.tests.ledger_transaction_support import iva
 from cadrumo.application.aggregation.withholding_filing_cadence import load_bucket_withholding_filer_cadence
 from cadrumo.application.aggregation.withholding_producer import WithholdingProducer
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.calculation_report_verification_operation import (
@@ -48,7 +48,7 @@ from cadrumo.application.modelo.calculation_summary_pdf_ports import (
     STATEMENT_ATTACHMENT_NAME,
 )
 from cadrumo.application.modelo.metadata_read_operation import MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import (
+from cadrumo.application.modelo.operation_shared import (
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     resolve_active_workflow_profile,
 )
@@ -64,18 +64,19 @@ from cadrumo.core.optional_extras import PDF_EXTRA
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 from cadrumo.domain.transactions.enums import TransactionDirection
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import build_withholding_observation_service
+from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_verification_repository_bundle,
-    build_withholding_observation_service,
     build_work_lifecycle_ports,
 )
 from cadrumo.entrypoints.cli.tests.modelo_work_scenarios import m111_withholding_aggregate_arguments

@@ -49,7 +49,6 @@ from cadrumo.application.ledger.evidence_followup_contracts import (
     LedgerEvidenceConsentListProjection,
     LedgerEvidenceConsentListRequest,
     LedgerEvidenceFollowupOperationPorts,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewProjection,
     LedgerEvidenceReviewViewRequest,
 )
@@ -96,6 +95,7 @@ from cadrumo.application.ledger.evidence_read_operation import (
     build_ledger_evidence_view_definition,
     build_ledger_evidence_view_registration,
 )
+from cadrumo.application.ledger.evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from cadrumo.application.ledger.extraction_draft_repository import ExtractionDraftRepositoryFactory
 from cadrumo.application.ledger.invoice_evidence_operation_dtos import InvoiceDraftProjectionV1
 from cadrumo.application.ledger.transaction_projection import LedgerTransactionProjection

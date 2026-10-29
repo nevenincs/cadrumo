@@ -11,6 +11,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyRecordError
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
@@ -101,7 +102,7 @@ def _exercise(tmp_path: Path, mode: str) -> None:
         root, ((identity, _), _) = profiles
         with override_settings(cadrumo_local_storage_root=root):
             store = _Keyring(available=mode != "unavailable")
-            patcher.setattr(receipt, "_keyring", lambda: (store, _KeyringError, _KeyringError))
+            patcher.setattr(acceleration_keychain, "_keyring", lambda: (store, _KeyringError, _KeyringError))
             custody = ProfileWorkerCustody(identity, storage_root=root)
             human = ProfileWorkerHumanLogin(custody, decode=lambda: profile_authority_contexts()[1])
             path = receipt.profile_session_path(storage_root=root, profile_id=identity.binding.profile_id)

@@ -65,7 +65,7 @@ from cadrumo_client.contracts.sign_in import HumanSignedOut
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.frontend_client import FrontendClient
-from cadrumo_client.transport.windows_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest, WorkerAuthorizationRequest
 
 from ...adapters.profile_worker import ProfileWorkerProcess

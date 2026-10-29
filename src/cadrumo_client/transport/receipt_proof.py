@@ -14,9 +14,9 @@ from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID
 
+from cadrumo.adapters.persistence.storage.custody.acceleration_keychain import probe_profile_session_keychain
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     borrow_profile_session_key,
-    probe_profile_session_keychain,
 )
 from cadrumo.adapters.persistence.storage.custody.zeroise import zeroise
 from cadrumo.core.paths import effective_storage_root

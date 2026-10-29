@@ -7,8 +7,9 @@ from typing import cast
 import pytest
 
 from cadrumo.application.ledger.workspace import LedgerWorkspaceArea
-from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.tools import LedgerToolV1
+from cadrumo.entrypoints.tui.ledger.workspace_screen import LedgerWorkspaceScreen
 from cadrumo_client.transport.frontend_client import FrontendClient
 
 from ....frontend.tui.runtime_ledger_tools import compose_runtime_ledger_tools

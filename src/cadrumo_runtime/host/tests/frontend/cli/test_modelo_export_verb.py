@@ -19,7 +19,7 @@ from cadrumo.adapters.persistence.profile.tests.filing_report_support import see
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
-from cadrumo.application.modelo.operation_definitions import MODELO_EXPORT_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
 from cadrumo.application.operations.frontend_requests import (

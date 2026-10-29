@@ -11,7 +11,7 @@ from click.testing import Result
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.modelo.registry_discovery import registry_casillas_for_registry_scope
-from cadrumo.application.state_projection import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
+from cadrumo.application.state_projection_models import CLAVES_LOCALE_DISPONIBILIDAD_POR_ORIGEN_VINCULACION_LOCALE_KEYS
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr

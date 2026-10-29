@@ -13,7 +13,7 @@ from textual.screen import Screen
 
 from cadrumo.application.search.workbench import WorkbenchDestinationAdmission, WorkbenchDestinationAdmissionState
 from cadrumo.entrypoints.tui.account import AccountFactoriesV1, AccountRecomposeReasonV1, AccountRecomposeRequiredV1
-from cadrumo.entrypoints.tui.app import CadrumoTuiApp, RootBindingV1
+from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.home import HomeScreen
 from cadrumo.entrypoints.tui.navigation import (
     TuiFocusIdentityV1,
@@ -21,6 +21,7 @@ from cadrumo.entrypoints.tui.navigation import (
     build_destination_catalogue,
     declared_destination_ids,
 )
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 from cadrumo.entrypoints.tui.search import WorkbenchSearchDoorV1
 from cadrumo.entrypoints.tui.tests.home_fixtures import HomeFixtureScenario, build_home_projection_fixture
 from cadrumo.entrypoints.tui.tests.settling import SETTLE_TIMEOUT_SECONDS, settle, settle_until

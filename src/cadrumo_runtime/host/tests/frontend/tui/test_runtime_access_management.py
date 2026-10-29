@@ -39,7 +39,8 @@ from cadrumo_client.contracts.profile_access import ProfileStatus, SessionsLocke
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from ....frontend.tui.runtime_access_management import RecoveryClientOpener, RuntimeAccessManagementScreen
+from ....frontend.tui.runtime_access_management import RuntimeAccessManagementScreen
+from ....frontend.tui.runtime_recovery_client import RecoveryClientOpener
 from ....frontend.tui.secret.automation_requester import RuntimeAutomationRequesterScreen
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

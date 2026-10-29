@@ -15,6 +15,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo.core.output_rendering import OutputFormat, render_command_output
+from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
@@ -213,6 +214,27 @@ def _session_not_persisted_notice(outcome: ProfileLoginOutcome) -> Notice:
     )
 
 
+def _login_password_proof(
+    machine_secret: MachineSecretSelection | None, interactive: bool, profile_label: str
+) -> bytearray:
+    """Read the selected password channel or retain its exact missing-channel policy verdict."""
+    if machine_secret is not None:
+        payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
+        try:
+            return bytearray(payload.passphrase.get_secret_value(), "utf-8")
+        finally:
+            del payload
+    elif interactive:
+        return bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")), "utf-8")
+    else:
+        from cadrumo.application.profile_preconditions import profile_password_channel_failure_verdict
+
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent"),
+            verdict=profile_password_channel_failure_verdict(profile_name=profile_label),
+        )
+
+
 def _login_through_the_prompt(
     ctx: typer.Context,
     *,
@@ -249,21 +271,7 @@ def _login_through_the_prompt(
             with suppress(ProfileReceiptRefusedError):
                 admitted = client.resume_receipt(hand_over=True)
         if admitted is None:
-            if machine_secret is not None:
-                payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
-                try:
-                    proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
-                finally:
-                    del payload
-            elif interactive:
-                proof = bytearray(prompt_secret_no_echo(tr("cli.config.login.passphrase_prompt")), "utf-8")
-            else:
-                from cadrumo.application.profile_preconditions import profile_password_channel_failure_verdict
-
-                raise attach_cli_policy_verdict(
-                    CliRefusedBoundaryError(translated_message="cli.config.login.passphrase_channel_absent"),
-                    verdict=profile_password_channel_failure_verdict(profile_name=target.label),
-                )
+            proof = _login_password_proof(machine_secret, interactive, target.label)
             try:
                 admitted = client.login_password(proof, persist_receipt=True)
             finally:
@@ -340,6 +348,24 @@ def config_login(
     )
 
 
+def _prove_logout_person(client: FrontendClient, machine_secret: MachineSecretSelection) -> None:
+    """Resume the person or prove the supplied password, wiping it on every outcome."""
+    payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
+    try:
+        proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
+    finally:
+        del payload
+    try:
+        try:
+            # A stored sign-in that resumes proves the person; the password is the fallback
+            # whenever it does not, whatever the reason the runtime gives.
+            client.resume_receipt()
+        except (ProfileReceiptRefusedError, FrontendRefusedError):
+            client.login_password(proof, persist_receipt=False)
+    finally:
+        proof[:] = bytes(len(proof))
+
+
 def config_logout(
     ctx: typer.Context,
     secrets_stdin: bool = False,
@@ -367,20 +393,7 @@ def config_logout(
             if machine_secret is None:
                 outcome = client.human_sign_out()
             else:
-                payload = read_machine_secret_payload(LoginSecrets, selection=machine_secret)
-                try:
-                    proof = bytearray(payload.passphrase.get_secret_value(), "utf-8")
-                finally:
-                    del payload
-                try:
-                    try:
-                        # A stored sign-in that resumes proves the person; the password is the fallback
-                        # whenever it does not, whatever the reason the runtime gives.
-                        client.resume_receipt()
-                    except (ProfileReceiptRefusedError, FrontendRefusedError):
-                        client.login_password(proof, persist_receipt=False)
-                finally:
-                    proof[:] = bytes(len(proof))
+                _prove_logout_person(client, machine_secret)
                 outcome = client.human_sign_out()
         except FrontendRefusedError as error:
             _raise_frontend_refusal(error)
@@ -460,9 +473,34 @@ def _activate_subcommand_output_language(ctx: typer.Context, language: OutputLan
     clear_output_language_cache()
 
 
+def _session_refusal_key(reason: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None) -> str:
+    """Preserve binding failure precedence over the recorded session refusal reason."""
+    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
+        return "cli.config.errors.profile_session_login_mismatch"
+    elif binding is ReceiptBindingRefusal.GENERATION_CHANGED:
+        return "cli.config.errors.profile_session_signed_out"
+    elif binding is not None:
+        return "cli.config.errors.profile_session_unreadable"
+    elif reason is ProfileSessionRefusalReason.CUSTODY_CHANGED:
+        return "cli.config.errors.profile_session_custody_changed"
+    elif reason is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
+        return "cli.config.errors.profile_session_outdated"
+    elif reason in {ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED}:
+        return "cli.config.errors.profile_session_unreadable"
+    elif reason is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
+        return "errors.auth.auth_storage_keyring_unavailable"
+    elif reason in {
+        ProfileSessionRefusalReason.ABSENT,
+        ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING,
+    }:
+        return "cli.config.errors.profile_session_absent"
+    else:
+        return "cli.config.errors.profile_session_expired"
+
+
 def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     """Translate the runtime's typed session refusal at the command boundary."""
-    from cadrumo.core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+    from cadrumo.core.profile_session import ProfileSessionRefusalReason
     from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
     sign_in = error.sign_in
@@ -472,27 +510,7 @@ def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     elif sign_in is not None and sign_in.reason == "credential_rejected":
         key = "application.user_profile.errors.profile_authentication_refused"
     elif sign_in is not None and isinstance(sign_in.reason, ProfileSessionRefusalReason):
-        if sign_in.binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
-            key = "cli.config.errors.profile_session_login_mismatch"
-        elif sign_in.binding is ReceiptBindingRefusal.GENERATION_CHANGED:
-            key = "cli.config.errors.profile_session_signed_out"
-        elif sign_in.binding is not None:
-            key = "cli.config.errors.profile_session_unreadable"
-        elif sign_in.reason is ProfileSessionRefusalReason.CUSTODY_CHANGED:
-            key = "cli.config.errors.profile_session_custody_changed"
-        elif sign_in.reason is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
-            key = "cli.config.errors.profile_session_outdated"
-        elif sign_in.reason in {ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED}:
-            key = "cli.config.errors.profile_session_unreadable"
-        elif sign_in.reason is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-            key = "errors.auth.auth_storage_keyring_unavailable"
-        elif sign_in.reason in {
-            ProfileSessionRefusalReason.ABSENT,
-            ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING,
-        }:
-            key = "cli.config.errors.profile_session_absent"
-        else:
-            key = "cli.config.errors.profile_session_expired"
+        key = _session_refusal_key(sign_in.reason, sign_in.binding)
     elif error.reason == AccessDenialCode.PROFILE_LOCKED.value:
         key = "errors.refused.profile_locked"
     raise CliRefusedBoundaryError(error.reason, context=error.context, translated_message=key) from None

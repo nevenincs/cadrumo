@@ -116,7 +116,7 @@ class LocalModelListService:
             return current
         record, read = current
         added = () if record is None else record.models
-        if model in listed_models(entry, (held.model for held in added if held.lane == entry.id)):
+        if _model_is_listed(entry, model, added):
             return _list_status(read, self._local_lane_ids())
         kept = _kept(added, catalog)
         if len(kept) >= LOCAL_MODEL_LIST_MAX_MODELS:
@@ -220,6 +220,10 @@ class LocalModelListService:
         if not isinstance(read, StoredLocalModelList) or read.record.generation != record.generation:
             return _refused(ProviderSettingsRefusalCode.COMMITTED_READBACK_FAILED)
         return _list_status(read, self._local_lane_ids())
+
+
+def _model_is_listed(entry: ProviderCatalogEntry, model: str, added: tuple[ListedModel, ...]) -> bool:
+    return model in listed_models(entry, (held.model for held in added if held.lane == entry.id))
 
 
 def _kept(added: Iterable[ListedModel], catalog: ProviderCatalog) -> tuple[ListedModel, ...]:

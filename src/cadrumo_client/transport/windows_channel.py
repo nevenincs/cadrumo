@@ -232,9 +232,7 @@ class WindowsChannel:
         import win32event
         import win32file
 
-        if self._closing or self._handle is None:
-            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-        if self._pending:
+        if self._readable_immediately():
             return True
         overlapped = pywintypes.OVERLAPPED()
         overlapped.hEvent = win32event.CreateEvent(None, True, False, None)
@@ -276,6 +274,11 @@ class WindowsChannel:
         finally:
             win32api.CloseHandle(overlapped.hEvent)
 
+    def _readable_immediately(self) -> bool:
+        if self._closing or self._handle is None:
+            raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+        return bool(self._pending)
+
     def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
         """Send within the deadline without generic-write/create-instance rights."""
         import pywintypes
@@ -302,24 +305,12 @@ class WindowsChannel:
 
     def close(self) -> None:
         """Release this pipe and peer handle, independently of other sessions."""
-        import win32api
-
         with self._io_settled:
             self._closing = True
             if self._handle is not None and self._active_io:
                 cancel_windows_io(int(self._handle))
                 self._io_settled.wait_for(lambda: self._active_io == 0)
-            first_error: BaseException | None = None
-            if self._handle is not None:
-                try:
-                    if isinstance(self._handle, int):
-                        win32api.CloseHandle(self._handle)
-                    else:
-                        self._handle.Close()
-                except BaseException as error:
-                    first_error = error
-                else:
-                    self._handle = None
+            first_error = self._close_pipe_handle()
             if self._peer_process is not None:
                 try:
                     self._peer_process.Close()
@@ -332,3 +323,18 @@ class WindowsChannel:
                     self._peer_process = None
             if first_error is not None:
                 raise first_error
+
+    def _close_pipe_handle(self) -> BaseException | None:
+        import win32api
+
+        if self._handle is None:
+            return None
+        try:
+            if isinstance(self._handle, int):
+                win32api.CloseHandle(self._handle)
+            else:
+                self._handle.Close()
+        except BaseException as error:
+            return error
+        self._handle = None
+        return None

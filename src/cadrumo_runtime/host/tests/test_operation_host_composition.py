@@ -86,8 +86,8 @@ def test_concurrent_first_operations_share_one_composition_off_the_loop() -> Non
     host = _GatedHost()
 
     async def two_first_operations() -> tuple[OperationComposedServices, OperationComposedServices]:
-        first = asyncio.create_task(host._composed_off_loop())
-        second = asyncio.create_task(host._composed_off_loop())
+        first = asyncio.create_task(host.composed_off_loop())
+        second = asyncio.create_task(host.composed_off_loop())
         assert await asyncio.to_thread(host.started.wait, 30)
         # The loop still runs other work while both callers wait.
         await asyncio.sleep(0)
@@ -98,7 +98,7 @@ def test_concurrent_first_operations_share_one_composition_off_the_loop() -> Non
     first, second = asyncio.run(two_first_operations())
 
     assert host.compositions == 1
-    assert first is second is host._composed()
+    assert first is second is host.composed()
     assert host.in_flight_operation_count() == 0
 
 
@@ -113,7 +113,7 @@ def test_a_host_without_operations_never_composes() -> None:
 
 def test_shutdown_waits_for_a_composition_under_way_and_drains_it() -> None:
     host = _GatedHost()
-    composing = threading.Thread(target=host._composed)
+    composing = threading.Thread(target=host.composed)
     composing.start()
     assert host.started.wait(timeout=30)
 
@@ -128,10 +128,10 @@ def test_shutdown_waits_for_a_composition_under_way_and_drains_it() -> None:
     composing.join(timeout=30)
 
     assert not result.needs_containment
-    services = cast("_Services", host._services)
+    services = cast("_Services", host.services)
     assert services.drained == [timedelta(seconds=5)]
     with pytest.raises(AutomationCustodyError):
-        host._composed()
+        host.composed()
 
 
 def test_a_failed_composition_is_raised_and_the_next_caller_composes_again() -> None:
@@ -139,8 +139,8 @@ def test_a_failed_composition_is_raised_and_the_next_caller_composes_again() -> 
     host.unblock.set()
 
     with pytest.raises(RuntimeError, match="composition failed"):
-        host._composed()
-    assert host._composed() is host._services
+        host.composed()
+    assert host.composed() is host.services
     assert host.compositions == 2
 
 
@@ -167,7 +167,7 @@ def test_a_composition_waits_for_the_idle_imports_under_way(monkeypatch: pytest.
     warming = threading.Thread(target=host.warm_imports)
     warming.start()
     assert imports.started.wait(timeout=30)
-    composing = threading.Thread(target=host._composed)
+    composing = threading.Thread(target=host.composed)
     composing.start()
 
     composing.join(timeout=0.2)
@@ -209,7 +209,7 @@ def test_a_composed_host_warms_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(operation_host, "import_module", imports)
     host = _GatedHost()
     host.unblock.set()
-    host._composed()
+    host.composed()
 
     host.warm_imports()
 

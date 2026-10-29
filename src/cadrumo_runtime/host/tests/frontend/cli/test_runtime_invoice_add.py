@@ -26,7 +26,7 @@ from cadrumo.application.invoices.catalogue_add_contracts import (
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.tests.cli_envelope import require_error_document, unwrap_cli_result
 from cadrumo_client.contracts.access_vocabulary import (

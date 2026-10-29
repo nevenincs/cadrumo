@@ -17,8 +17,8 @@ from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -32,6 +32,7 @@ from ..macos_coalition import (
     read_macos_resource_coalition,
     terminate_macos_coalition,
 )
+from ..macos_job_print import MacosJobPrint, parse_macos_job_print
 from ..macos_process import (
     MacosProcessIncarnation,
     MacosSignalDelivery,
@@ -39,12 +40,8 @@ from ..macos_process import (
     read_macos_process,
     signal_macos_incarnation,
 )
-from ..macos_worker_process import (
-    MacosJobPrint,
-    _NativeMacosWorkerHost,
-    decode_macos_worker_marker,
-    parse_macos_job_print,
-)
+from ..macos_worker_host import NativeMacosWorkerHost
+from ..macos_worker_markers import decode_macos_worker_marker
 from .macos_test_process import MacosTestProcess
 
 pytestmark = [
@@ -200,7 +197,7 @@ class _ContainmentCleanup:
                 if time.monotonic() >= deadline:
                     raise RefusalError(RefusalCode.TIMEOUT)
                 time.sleep(0.05)
-        _NativeMacosWorkerHost().remove_marker(label)
+        NativeMacosWorkerHost().remove_marker(label)
 
     def _release(self) -> None:
         failures: list[BaseException] = []

@@ -24,8 +24,8 @@ from cadrumo.application.user_profile.capsule_archive import (
     inspect_profile_capsule_archive,
     read_restorable_profile_capsule,
 )
+from cadrumo.application.user_profile.custody_crypto_contracts import ProfileCustodyRecordIntegrityError
 from cadrumo.application.user_profile.custody_ports import (
-    ProfileCustodyRecordIntegrityError,
     load_profile_custody_password_material,
     unlock_profile_custody_password,
 )

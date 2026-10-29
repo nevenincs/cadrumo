@@ -9,7 +9,7 @@ import sys
 import pytest
 
 from ...adapters.service_verification import native_process_identity
-from ..profile_connection_services import _descends_from_this_runtime
+from ..desktop_holder_identity import descends_from_this_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -30,10 +30,10 @@ def _owner() -> str:
 
 def test_the_runtime_and_the_processes_it_starts_descend_from_it() -> None:
     owner = _owner()
-    assert _descends_from_this_runtime(native_process_identity(os.getpid(), owner), owner)
+    assert descends_from_this_runtime(native_process_identity(os.getpid(), owner), owner)
     child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
     try:
-        assert _descends_from_this_runtime(native_process_identity(child.pid, owner), owner)
+        assert descends_from_this_runtime(native_process_identity(child.pid, owner), owner)
     finally:
         child.kill()
         child.wait()
@@ -42,4 +42,4 @@ def test_the_runtime_and_the_processes_it_starts_descend_from_it() -> None:
 def test_the_process_that_started_the_runtime_does_not_descend_from_it() -> None:
     owner = _owner()
     parent = native_process_identity(native_process_identity(os.getpid(), owner).parent_pid, owner)
-    assert not _descends_from_this_runtime(parent, owner)
+    assert not descends_from_this_runtime(parent, owner)

@@ -27,7 +27,8 @@ from cadrumo_client.contracts.operation_access import (
 )
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 
 def prepare_operation_projection(

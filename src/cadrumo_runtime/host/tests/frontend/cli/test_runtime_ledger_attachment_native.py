@@ -19,8 +19,8 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
 from cadrumo.application.ledger.actions_common import blocking_modelo_references
-from cadrumo.application.ledger.actions_manual import ledger_transaction_result_payload
 from cadrumo.application.ledger.attachment_mutation_operation import LedgerAttachmentStaleRevisionProjection
+from cadrumo.application.ledger.manual_read import ledger_transaction_result_payload
 from cadrumo.application.ledger.models import ManualLedgerTransactionCommand, ManualLedgerTransactionResult
 from cadrumo.application.ledger.tests.manual_transaction_support import create_manual_transaction
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target

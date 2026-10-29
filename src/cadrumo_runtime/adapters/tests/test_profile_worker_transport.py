@@ -152,7 +152,7 @@ def test_starved_worker_control_reply_keeps_the_worker() -> None:
     assert not worker._stopping.is_set()
 
 
-def test_control_reply_beyond_timeout_timeout_contains_the_worker() -> None:
+def test_control_reply_beyond_timeout_contains_the_worker() -> None:
     worker = _worker(latency=transport._CONTROL_EXCHANGE_SECONDS + 1)
 
     with pytest.raises(RefusalError) as refused:
@@ -241,7 +241,7 @@ def test_expiry_while_acquiring_exchange_lock_releases_it_without_retiring_worke
         pool.shutdown(wait=True)
 
 
-def test_default_control_timeout_timeout_also_ends_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_default_control_timeout_also_ends_queued_callers(monkeypatch: pytest.MonkeyPatch) -> None:
     worker = _worker(latency=0)
     monkeypatch.setattr(transport, "_CONTROL_EXCHANGE_SECONDS", 0.03)
     with ThreadPoolExecutor(max_workers=1) as pool:

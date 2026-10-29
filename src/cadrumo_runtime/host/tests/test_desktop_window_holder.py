@@ -22,8 +22,8 @@ from cadrumo_client.contracts.service_access import InstalledParentImage, Instal
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_runtime.adapters import service_verification
 from cadrumo_runtime.adapters.service_verification import native_process_identity
-from cadrumo_runtime.host import profile_connection_services
-from cadrumo_runtime.host.profile_connection_services import desktop_window_peer
+from cadrumo_runtime.host import desktop_holder_identity
+from cadrumo_runtime.host.desktop_holder_identity import desktop_window_peer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -87,7 +87,7 @@ def _window_peer(context: ConnectionContext, channel: _Channel, descriptor: Inst
 @pytest.fixture
 def not_this_runtime(monkeypatch: pytest.MonkeyPatch) -> None:
     """The peer is this process, which in the product is never the runtime itself."""
-    monkeypatch.setattr(profile_connection_services, "_descends_from_this_runtime", lambda _identity, _owner: False)
+    monkeypatch.setattr(desktop_holder_identity, "descends_from_this_runtime", lambda _identity, _owner: False)
 
 
 @pytest.mark.usefixtures("not_this_runtime")

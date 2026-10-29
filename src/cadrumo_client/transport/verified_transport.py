@@ -153,14 +153,17 @@ class VerifiedTransport:
                 self._idle_wake = None
             # Explicit close and failed exchanges also end this reader. Notify
             # from its single exit, outside the exchange lock, on every path.
-            with self._exchange_lock:
-                receivers = tuple(self._disconnect_receivers)
-                self._disconnect_receivers.clear()
-            for disconnected in receivers:
-                try:
-                    disconnected()
-                except Exception as error:
-                    get_logger(__name__).warning("disconnect callback failed error_type=%s", type(error).__name__)
+            self._notify_disconnected()
+
+    def _notify_disconnected(self) -> None:
+        with self._exchange_lock:
+            receivers = tuple(self._disconnect_receivers)
+            self._disconnect_receivers.clear()
+        for disconnected in receivers:
+            try:
+                disconnected()
+            except Exception as error:
+                get_logger(__name__).warning("disconnect callback failed error_type=%s", type(error).__name__)
 
     def _close_after_failure(self, error: BaseException) -> None:
         retained = error.__dict__.get("_transport_cleanup")

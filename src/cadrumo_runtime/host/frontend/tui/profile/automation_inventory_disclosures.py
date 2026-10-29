@@ -44,6 +44,11 @@ class InventoryDisclosureReader:
         return page
 
 
+def disclosure_is_visible(live: bool, mounted: bool) -> bool:
+    """Publish disclosure updates only to the still-mounted live inventory."""
+    return live and mounted
+
+
 class AutomationInventoryDisclosureMixin:
     """Page the selected scope's disclosures beneath its details."""
 
@@ -71,16 +76,16 @@ class AutomationInventoryDisclosureMixin:
             page = await await_cancellation_complete(
                 asyncio.to_thread(pager.next_page, digest), task_name="tui-automation-disclosure-page"
             )
-            if self._live and self.is_mounted:
+            if disclosure_is_visible(self._live, self.is_mounted):
                 self.query_one("#automation-inventory-status", Static).update(disclosure_page_text(page))
         except Exception:
-            if self._live and self.is_mounted:
+            if disclosure_is_visible(self._live, self.is_mounted):
                 self.query_one("#automation-inventory-status", Static).update(
                     tr("tui.restricted.disclosure_page_stale")
                 )
         finally:
             self._busy = False
-            if self._live and self.is_mounted and not self._access_lost:
+            if disclosure_is_visible(self._live, self.is_mounted) and not self._access_lost:
                 self.query_one("#automation-inventory-disclosures", Button).disabled = False
 
 

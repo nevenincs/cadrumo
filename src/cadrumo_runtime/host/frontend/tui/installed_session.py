@@ -18,7 +18,7 @@ import time
 from collections.abc import Callable
 from importlib import import_module
 from logging import DEBUG, ERROR
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
@@ -346,6 +346,33 @@ def _attempt_runtime_session(
         return _runtime_session_refusal(error)
 
 
+def _inventory_disposition(
+    inventory: ProfileLoginInventoryV1, *, headless: bool, auto_pilot: AutopilotCallbackType | None
+) -> int | Literal["retry"] | None:
+    """Handle installation and first-registration choices before starting a session."""
+    if (
+        not headless
+        and inventory.state in _UNLISTED_STATES
+        and _run_installation_area(inventory.reason_code or inventory.state.value)
+    ):
+        return "retry"
+    unavailable = _unavailable_inventory(inventory)
+    if unavailable is not None:
+        return unavailable
+    if inventory.state is ProfileLoginInventoryState.EMPTY:
+        if not _registration_completed(headless):
+            return SESSION_COMPLETED
+        diagnostic_event(
+            _LOGGER,
+            "tui_registration_runtime_admission_pending",
+            fields={"profile_persisted": True, "stage": "runtime_admission"},
+        )
+        return "retry"
+    if headless and auto_pilot is None:
+        return SESSION_COMPLETED
+    return None
+
+
 def run_installed_workbench_session(
     *,
     headless: bool = False,
@@ -384,26 +411,11 @@ def run_installed_workbench_session(
                 fields={"inventory_state": inventory.state.value, "profile_count": len(inventory.choices)},
                 level=DEBUG,
             )
-            if (
-                not headless
-                and inventory.state in _UNLISTED_STATES
-                and _run_installation_area(inventory.reason_code or inventory.state.value)
-            ):
+            disposition = _inventory_disposition(inventory, headless=headless, auto_pilot=auto_pilot)
+            if disposition == "retry":
                 continue
-            unavailable = _unavailable_inventory(inventory)
-            if unavailable is not None:
-                return unavailable
-            if inventory.state is ProfileLoginInventoryState.EMPTY:
-                if not _registration_completed(headless):
-                    return SESSION_COMPLETED
-                diagnostic_event(
-                    _LOGGER,
-                    "tui_registration_runtime_admission_pending",
-                    fields={"profile_persisted": True, "stage": "runtime_admission"},
-                )
-                continue
-            if headless and auto_pilot is None:
-                return SESSION_COMPLETED
+            if disposition is not None:
+                return disposition
             started = time.monotonic()
             recompose = _attempt_runtime_session(
                 inventory,

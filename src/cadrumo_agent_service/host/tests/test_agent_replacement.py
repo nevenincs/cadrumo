@@ -25,9 +25,11 @@ from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from ...adapters.agent_process import WindowsAgentProcessLauncher
 from ...adapters.agent_programs import PACKAGE_AGENT_VARIABLE
+from ...gateway_credentials import GatewayCredentials
 from ...host.launcher_protocol import AgentLauncherRefusal
 from ...providers.application.contracts import ProviderSettingsRefusalCode
-from ...service import LIFECYCLE_ADMISSION_SECONDS, AgentService, _GatewayCredentials
+from ...service import AgentService
+from ...service_support import LIFECYCLE_ADMISSION_SECONDS
 from ..controller import (
     AgentGenerations,
     AgentHostController,
@@ -79,13 +81,16 @@ def _running_service(
 ) -> tuple[AgentService, list[dict[str, Any]], int]:
     events: list[dict[str, Any]] = []
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()))),
+        client=cast(
+            InstalledServiceClient,
+            SimpleNamespace(lease=SimpleNamespace(profile_id=uuid4()), connection=SimpleNamespace(close=lambda: None)),
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(b"synthetic-gateway-bearer"),
         emit=events.append,
         wake=wake,
     )
-    service._credentials = _GatewayCredentials(
+    service._credentials = GatewayCredentials(
         source, bytearray(b"synthetic-gateway-bearer"), bytearray(b"synthetic-host-token"), service._closing
     )
     record = tmp_path / "tree"

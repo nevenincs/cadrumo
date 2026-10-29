@@ -86,11 +86,7 @@ def submitted_operation_error(
         and refusal_code is None
         and code == OperationTerminalCondition.FAILED.value
     ):
-        unexpected = get_registered_error_code(CliUnexpectedBoundaryError)
-        fault: dict[str, object] = dict(facts)
-        if diagnostic_ref is not None:
-            fault["diagnostic_ref"] = diagnostic_ref
-        return CliRecordedOperationError(unexpected.code, context=fault, translated_message=unexpected.message_key)
+        return _unexpected_operation_error(facts, diagnostic_ref)
     context = {**facts, "reason": code}
     if refusal_code is not None:
         context["refusal_code"] = refusal_code
@@ -106,6 +102,15 @@ def submitted_operation_error(
 
         context["accepted_kinds"] = ", ".join(ACCEPTED_KINDS)
     return CliRecordedOperationError(registered.code, context=context)
+
+
+def _unexpected_operation_error(facts: Mapping[str, str], diagnostic_ref: str | None) -> CliRefusedBoundaryError:
+    """Keep observed effects and the optional diagnostic reference on an unregistered executor failure."""
+    unexpected = get_registered_error_code(CliUnexpectedBoundaryError)
+    fault: dict[str, object] = dict(facts)
+    if diagnostic_ref is not None:
+        fault["diagnostic_ref"] = diagnostic_ref
+    return CliRecordedOperationError(unexpected.code, context=fault, translated_message=unexpected.message_key)
 
 
 def invalid_completion_error[ResultT: BaseModel](

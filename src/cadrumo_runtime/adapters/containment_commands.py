@@ -71,14 +71,19 @@ def run_containment_command_sync(tool: ContainmentCommand, arguments: tuple[str,
         except subprocess.TimeoutExpired:
             raise RefusalError(RefusalCode.TIMEOUT) from None
         finally:
-            if process.returncode is None:
-                with contextlib.suppress(ProcessLookupError):
-                    process.kill()
-                with contextlib.suppress(subprocess.TimeoutExpired):
-                    process.wait(timeout=1)
-            if stdout is not None:
-                stdout.close()
+            _close_containment_command(process, stdout)
     raise RefusalError(RefusalCode.UNAVAILABLE)
+
+
+def _close_containment_command(process: subprocess.Popen[bytes], stdout: IO[bytes] | None) -> None:
+    """Kill and reap a still-live command before releasing its output pipe."""
+    if process.returncode is None:
+        with contextlib.suppress(ProcessLookupError):
+            process.kill()
+        with contextlib.suppress(subprocess.TimeoutExpired):
+            process.wait(timeout=1)
+    if stdout is not None:
+        stdout.close()
 
 
 def _read_containment_command_output(process: subprocess.Popen[bytes], stdout: IO[bytes]) -> ContainmentCommandResult:

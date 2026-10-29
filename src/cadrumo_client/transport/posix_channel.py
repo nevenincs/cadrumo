@@ -94,6 +94,26 @@ def _linux_peer_image_path(sock: socket.socket, pid: int) -> str | None:
     return path or None
 
 
+def _darwin_peer_credentials(sock: socket.socket) -> tuple[int, int]:
+    payload = sock.getsockopt(0, 6, 32)
+    if len(payload) != 32:
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    audit_uid, uid, _effective_gid, real_uid, _real_gid, pid, session_id, version = struct.unpack("=8I", payload)
+    reported_pid = struct.unpack("=i", sock.getsockopt(0, 2, 4))[0]
+    if (
+        uid != posix_owner_uid()
+        or real_uid != uid
+        or audit_uid != uid
+        or not 0 < pid <= 2_147_483_647
+        or pid != reported_pid
+        or not 0 < session_id < 0xFFFFFFFE
+        or version <= 0
+        or sock.getsockopt(0, 6, 32) != payload
+    ):
+        raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    return pid, uid
+
+
 def _peer(sock: socket.socket) -> Peer:
     if sys.platform == "win32":
         raise RefusalError(RefusalCode.UNAVAILABLE)
@@ -102,24 +122,7 @@ def _peer(sock: socket.socket) -> Peer:
             pid, uid, _gid = _linux_peer_credentials(sock)
             image_path = _linux_peer_image_path(sock, pid) if pid > 0 else None
         elif sys.platform == "darwin":
-            payload = sock.getsockopt(0, 6, 32)
-            if len(payload) != 32:
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-            audit_uid, uid, _effective_gid, real_uid, _real_gid, pid, session_id, version = struct.unpack(
-                "=8I", payload
-            )
-            reported_pid = struct.unpack("=i", sock.getsockopt(0, 2, 4))[0]
-            if (
-                uid != posix_owner_uid()
-                or real_uid != uid
-                or audit_uid != uid
-                or not 0 < pid <= 2_147_483_647
-                or pid != reported_pid
-                or not 0 < session_id < 0xFFFFFFFE
-                or version <= 0
-                or sock.getsockopt(0, 6, 32) != payload
-            ):
-                raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+            pid, uid = _darwin_peer_credentials(sock)
             image_path = None
         else:
             raise RefusalError(RefusalCode.UNAVAILABLE)

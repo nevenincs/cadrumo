@@ -14,6 +14,7 @@ from threading import Lock
 from typing import Final
 
 from cadrumo.core.hashing import reject_duplicate_json_members, reject_json_constant
+from cadrumo.core.type_guards import is_str_keyed_dict
 
 _LINE_BYTES: Final = 64 * 1024
 _CLI_DETAIL: Final = re.compile(
@@ -82,85 +83,27 @@ class AgentDiagnosticSink:
                     }
                 )
             else:
-                entry = json.loads(
-                    text, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
-                )
-                if not isinstance(entry, dict):
+                parsed = _schema_diagnostic(text)
+                if parsed is None:
                     return
-                if entry.get("schema") != "cadrumo-agent.log/1":
-                    if str(entry.get("schema", "")).startswith("cadrumo-agent.log/"):
-                        raise ValueError
+                record, identity = parsed
+                if not self._remember(identity):
                     return
-                level = entry["level"]
-                name, message = entry["name"], entry["message"]
-                producer, sequence = entry["pid"], entry["seq"]
-                timestamp = entry["timestamp"]
-                if (
-                    level not in _LEVELS
-                    or not isinstance(name, str)
-                    or not name
-                    or len(name) > 512
-                    or not isinstance(message, str)
-                    or type(producer) is not int
-                    or producer <= 0
-                    or type(sequence) is not int
-                    or sequence <= 0
-                    or not isinstance(timestamp, str)
-                ):
-                    raise ValueError
-                instant = datetime.fromisoformat(timestamp)
-                if instant.tzinfo is None:
-                    raise ValueError
-                service = entry.get("service")
-                role = "extension_service"
-                exception = entry.get("exception")
-                # Worker supervision probes are useful only when they fail or
-                # change lifecycle state. Keep failures and exception detail;
-                # a successful transport access line adds no operational fact.
-                if name == "httpx" and level == "INFO" and not exception and _HEALTH_SUCCESS.fullmatch(message):
-                    return
-                if isinstance(exception, str) and exception:
-                    message += "\n" + exception
-                values = {
-                    key: value
-                    for key, value in entry.items()
-                    if key in _FIELDS
-                    and (type(value) in (str, int, bool) or (isinstance(value, float) and math.isfinite(value)))
-                }
-                record = logging.makeLogRecord(
-                    {
-                        **values,
-                        "name": name,
-                        "levelno": _LEVELS[level],
-                        "levelname": level,
-                        "msg": message,
-                        "args": (),
-                        "created": instant.timestamp(),
-                        "process": producer,
-                        "_cadrumo_process_role": role,
-                        "agent_sequence": sequence,
-                    }
-                )
-                identity = (
-                    producer,
-                    service,
-                    sequence,
-                    timestamp,
-                    name,
-                    hashlib.sha256(entry["message"].encode()).digest(),
-                )
-                with self._lock:
-                    if identity in self._seen:
-                        return
-                    self._seen[identity] = None
-                    if len(self._seen) > 8192:
-                        self._seen.popitem(last=False)
             # Logger.handle preserves the child's timestamp/PID and applies the
             # real application handlers, including credential/payload scrubbing.
             with contextlib.suppress(Exception):
                 logging.getLogger(record.name).handle(record)
         except (ValueError, TypeError, KeyError, OverflowError, RecursionError):
             self.problem("agent_diagnostic_record_rejected")
+
+    def _remember(self, identity: tuple[object, ...]) -> bool:
+        with self._lock:
+            if identity in self._seen:
+                return False
+            self._seen[identity] = None
+            if len(self._seen) > 8192:
+                self._seen.popitem(last=False)
+        return True
 
     def problem(self, message: str) -> None:
         """Report loss without reproducing untrusted bytes or credential paths."""
@@ -172,6 +115,95 @@ class AgentDiagnosticSink:
         if count & (count - 1) == 0:
             with contextlib.suppress(Exception):
                 logging.getLogger(__name__).warning(message, extra={"diagnostic_rejected_count": count})
+
+
+def _schema_diagnostic(text: str) -> tuple[logging.LogRecord, tuple[object, ...]] | None:
+    entry: object = json.loads(
+        text, object_pairs_hook=reject_duplicate_json_members, parse_constant=reject_json_constant
+    )
+    if not is_str_keyed_dict(entry):
+        return
+    if entry.get("schema") != "cadrumo-agent.log/1":
+        if str(entry.get("schema", "")).startswith("cadrumo-agent.log/"):
+            raise ValueError
+        return
+    level = entry["level"]
+    name, message = entry["name"], entry["message"]
+    producer, sequence = entry["pid"], entry["seq"]
+    timestamp = entry["timestamp"]
+    level, name, message, timestamp = _diagnostic_text(level, name, message, timestamp)
+    producer, sequence = _diagnostic_sequence(producer, sequence)
+    instant = datetime.fromisoformat(timestamp)
+    if instant.tzinfo is None:
+        raise ValueError
+    original_message = message
+    service = entry.get("service")
+    role = "extension_service"
+    exception = entry.get("exception")
+    # Worker supervision probes are useful only when they fail or
+    # change lifecycle state. Keep failures and exception detail;
+    # a successful transport access line adds no operational fact.
+    if _healthy_poll(name, level, exception, message):
+        return
+    if isinstance(exception, str) and exception:
+        message += "\n" + exception
+    values = _diagnostic_context(entry)
+    record = logging.makeLogRecord(
+        {
+            **values,
+            "name": name,
+            "levelno": _LEVELS[level],
+            "levelname": level,
+            "msg": message,
+            "args": (),
+            "created": instant.timestamp(),
+            "process": producer,
+            "_cadrumo_process_role": role,
+            "agent_sequence": sequence,
+        }
+    )
+    identity = (
+        producer,
+        service,
+        sequence,
+        timestamp,
+        name,
+        hashlib.sha256(original_message.encode()).digest(),
+    )
+    return record, identity
+
+
+def _diagnostic_text(
+    level: object,
+    name: object,
+    message: object,
+    timestamp: object,
+) -> tuple[str, str, str, str]:
+    if not isinstance(level, str) or level not in _LEVELS:
+        raise ValueError
+    if not isinstance(name, str) or not name or len(name) > 512:
+        raise ValueError
+    if not isinstance(message, str) or not isinstance(timestamp, str):
+        raise ValueError
+    return level, name, message, timestamp
+
+
+def _diagnostic_sequence(producer: object, sequence: object) -> tuple[int, int]:
+    if type(producer) is not int or producer <= 0 or type(sequence) is not int or sequence <= 0:
+        raise ValueError
+    return producer, sequence
+
+
+def _healthy_poll(name: str, level: str, exception: object, message: str) -> bool:
+    return name == "httpx" and level == "INFO" and not exception and _HEALTH_SUCCESS.fullmatch(message) is not None
+
+
+def _diagnostic_context(entry: dict[str, object]) -> dict[str, object]:
+    return {
+        key: value
+        for key, value in entry.items()
+        if key in _FIELDS and (type(value) in (str, int, bool) or (isinstance(value, float) and math.isfinite(value)))
+    }
 
 
 class AgentDiagnosticLines:

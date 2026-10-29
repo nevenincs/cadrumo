@@ -5,8 +5,6 @@ from __future__ import annotations
 import math
 import time
 from dataclasses import dataclass
-from enum import Enum
-from typing import overload
 
 from cadrumo.core.config import load_settings
 from cadrumo_client.contracts.deadline_budget import bounded_deadline_after
@@ -19,29 +17,21 @@ MAX_OPERATION_SETTLEMENT_SECONDS = 3600.0
 MIN_SETTLED_OPERATION_READ_SECONDS = 0.25
 
 
-class RegisteredOperationSettlement(Enum):
-    """Explicit settlement lifetime choices beyond a finite caller budget."""
-
-    UNBOUNDED = "unbounded"
-
-
 @dataclass(frozen=True, slots=True)
 class RegisteredOperationDeadline:
     """One settlement deadline with independent bounded exchanges and settled-result reads."""
 
-    deadline: float | None
+    deadline: float
     timeout: float
-    settlement_timeout: float | RegisteredOperationSettlement | None
+    settlement_timeout: float | None
 
     def call_deadline(self) -> float:
         """Bound an exchange by both the settlement and per-call timeout."""
         per_call = time.monotonic() + self.timeout
-        return per_call if self.deadline is None else min(self.deadline, per_call)
+        return min(self.deadline, per_call)
 
     def settled_read_deadline(self) -> float:
         """Read an already settled outcome within its original minimum result-read budget."""
-        if self.deadline is None:
-            return self.call_deadline()
         if self.settlement_timeout is not None:
             return max(self.deadline, time.monotonic() + self.timeout)
         bounded = self.call_deadline()
@@ -64,20 +54,8 @@ def provider_login_settlement_seconds(*, after_login: float = 0.0) -> float:
     return login + after_login
 
 
-@overload
-def operation_settlement_deadline(timeout: float, settlement_timeout: float | None) -> float: ...
-
-
-@overload
-def operation_settlement_deadline(timeout: float, settlement_timeout: RegisteredOperationSettlement) -> None: ...
-
-
-def operation_settlement_deadline(
-    timeout: float, settlement_timeout: float | RegisteredOperationSettlement | None
-) -> float | None:
-    """Validate a finite settlement wait, or explicitly omit only its total deadline."""
-    if settlement_timeout is RegisteredOperationSettlement.UNBOUNDED:
-        return None
+def operation_settlement_deadline(timeout: float, settlement_timeout: float | None) -> float:
+    """Validate a finite settlement wait and return the deadline it sets."""
     if settlement_timeout is None:
         return bounded_deadline_after(timeout, subject="modelo operation")
     if not math.isfinite(settlement_timeout) or not timeout <= settlement_timeout <= MAX_OPERATION_SETTLEMENT_SECONDS:

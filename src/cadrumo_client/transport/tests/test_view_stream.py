@@ -13,6 +13,12 @@ from typing import Any
 import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes
+from cadrumo_client.transport.view_stream_readers import (
+    ViewDownstreamReader,
+    ViewImageOutbox,
+    ViewUpstreamReader,
+    read_view_upstream,
+)
 
 from ...contracts.contracts import RefusalCode, RefusalError
 from ...contracts.submission_payload import SubmissionPayloadDescriptor
@@ -47,15 +53,11 @@ from ..view_stream import (
     VIEW_CHUNK_HEADER_BYTES,
     AssembledViewImage,
     ViewChunkHeader,
-    ViewDownstreamReader,
-    ViewImageOutbox,
     ViewTransferChunk,
     ViewTransferChunkHeader,
     ViewTransferReceiver,
     ViewTransferSender,
-    ViewUpstreamReader,
     is_view_transfer_chunk,
-    read_view_upstream,
     view_image_frames,
     write_view_document,
     write_view_image,

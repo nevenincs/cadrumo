@@ -13,7 +13,6 @@ from uuid import UUID
 import pytest
 from pydantic import BaseModel
 
-from cadrumo.adapters.outbound.components.tests.recorded_rows import recorded_absent_row
 from cadrumo.application.ledger.actions_import import LedgerProviderID
 from cadrumo.application.ledger.import_operation import (
     LEDGER_IMPORT_OPERATION_DEFINITION_ID,
@@ -26,7 +25,6 @@ from cadrumo.application.ledger.import_operation import (
     build_ledger_import_definition,
     build_ledger_import_registration,
 )
-from cadrumo.application.local_reader import probe_local_ai_program
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -40,11 +38,7 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
-from cadrumo.application.provisioning_contracts import (
-    LOCAL_AI_PROVISION_ACTION_ID,
-    ProvisioningPreconditionCondition,
-    provisioning_no_recovery_verdict,
-)
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
@@ -266,21 +260,20 @@ def test_preview_runs_a_dry_run_of_the_planned_files_and_keeps_each_parsed_diges
 
 
 def _reader_verdict(*, no_selection: bool) -> PreconditionVerdict:
-    """The column mapper has no local AI answering or no model selected for its role."""
+    """The column mapper has no model selected for its role, or the local AI holds none for it."""
     if no_selection:
-        return provisioning_no_recovery_verdict(
-            ProvisioningPreconditionCondition.SELECTED_MODEL_AVAILABLE,
+        return probe_no_recovery_verdict(
+            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
             facts={
                 "role": ModelRole.COLUMN_ROLE_MAPPING.value,
                 "model_run_refusal": "no_selection",
                 "role_selection_required": True,
             },
         )
-    status = probe_local_ai_program(recorded_absent_row("local_ai"))
-    verdict = status.precondition_verdict
-    assert verdict is not None
-    assert verdict.action is not None
-    return verdict
+    return probe_no_recovery_verdict(
+        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
+        facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "model": "reader", "role_model_installed": False},
+    )
 
 
 def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFileRefusal:
@@ -291,7 +284,7 @@ def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFile
     )
 
 
-def test_a_file_needing_local_ai_keeps_its_setup_action_and_one_without_a_model_selection_names_none(
+def test_a_file_the_local_ai_cannot_read_is_worded_apart_from_one_without_a_model_selection(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     client = _Client()
@@ -312,31 +305,8 @@ def test_a_file_needing_local_ai_keeps_its_setup_action_and_one_without_a_model_
 
     not_ready, no_selection = outcome.refused_files
     assert not_ready.reason == tr("tui.ledger.import.refusal.reader_unavailable")
-    assert not_ready.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
     assert no_selection.reason == tr("tui.ledger.import.refusal.reader_unavailable_here")
     assert no_selection.reason != not_ready.reason
-    assert no_selection.recovery_action_id is None
-    assert outcome.recovery_action_id == LOCAL_AI_PROVISION_ACTION_ID
-
-
-def test_a_folder_whose_reader_has_no_model_selection_offers_no_setup(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
-) -> None:
-    client = _Client()
-    folder, _first, _second = _folder(tmp_path)
-    preview = _result(
-        dry_run=True,
-        imported=2,
-        valid_files=1,
-        digests=(LedgerImportSourceDigest(file_index=0, sha256="b" * 64),),
-        refused=(_reader_refused("may.csv", _reader_verdict(no_selection=True)),),
-    )
-    _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
-    request = LedgerImportRequestV1(path=folder, source_kind=LedgerImportSourceKind.BANK_STATEMENT)
-
-    outcome = asyncio.run(_door(client).preview(request))
-
-    assert outcome.recovery_action_id is None
 
 
 def test_apply_submits_exactly_the_previewed_files_with_their_digests(

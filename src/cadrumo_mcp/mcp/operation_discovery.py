@@ -125,6 +125,13 @@ def _named_page(
     return page
 
 
+def _listing_candidates(scope: list[str], cursor: str | None) -> list[str]:
+    """Admit a lexical listing cursor and retain only identifiers beyond it."""
+    if cursor is not None and cursor.isdecimal():
+        raise ValueError("cursor does not belong to an unranked listing")
+    return [definition_id for definition_id in scope if cursor is None or definition_id > cursor]
+
+
 def _listed_page(
     client: FrontendClient,
     contracts: OperationContractCache,
@@ -133,9 +140,7 @@ def _listed_page(
     limit: int,
     deadline: float,
 ) -> dict[str, Any]:
-    if cursor is not None and cursor.isdecimal():
-        raise ValueError("cursor does not belong to an unranked listing")
-    pending = [definition_id for definition_id in scope if cursor is None or definition_id > cursor]
+    pending = _listing_candidates(scope, cursor)
     rows: list[OperationPublicDefinitionDescriptionV1] = []
     unavailable: list[dict[str, str]] = []
     examined = 0

@@ -23,7 +23,7 @@ from uuid import UUID, uuid4
 import pytest
 from keyring.errors import KeyringError, PasswordDeleteError
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -40,8 +40,9 @@ from cadrumo_client.transport.installation import read_runtime_installation
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id
 from ...application.session_authority_contracts import HumanAdmissionControl
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_host import RuntimeProfileHost
 from ..sign_in_sweep import revoke_other_saved_sign_ins
 from .stored_sign_in_runtime import stored_sign_in_runtime
 from .test_runtime_password_rotation import _fresh_client, _native_runtime
@@ -118,7 +119,7 @@ def test_a_delayed_resume_cannot_sign_out_a_newly_selected_profile(
 ) -> None:
     """Finish A's receipt proof after B's handover, without letting A revoke B."""
     store = InMemoryKeyring()
-    monkeypatch.setattr(acceleration_receipt, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
     entered, release = Event(), Event()
     owners: list[RuntimeProfileConnections] = []
     original = RuntimeProfileConnections._finish_login

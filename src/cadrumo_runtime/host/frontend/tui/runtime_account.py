@@ -26,7 +26,8 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.profile_mutations import ProfileMutationRunError
 from cadrumo_client.transport.profile_password_rotation import run_profile_password_rotation
 
-from .runtime_access_management import RecoveryClientOpener, RuntimeAccessManagementScreen
+from .runtime_access_management import RuntimeAccessManagementScreen
+from .runtime_recovery_client import RecoveryClientOpener
 
 if TYPE_CHECKING:
     from cadrumo_client.transport.frontend_client import FrontendClient

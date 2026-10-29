@@ -36,7 +36,6 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAutomationInventoryPermit,
     WorkerAutomationInventoryRequest,
     WorkerAutomationInventoryTransfer,
-    WorkerHumanReviewScopeRequest,
     WorkerModelRun,
     WorkerModelRunResult,
     WorkerResponseScopePermit,
@@ -56,6 +55,22 @@ from .worker_authorization_refusals import raise_worker_access_refusal
 from .worker_transport import WorkerChannel
 
 _LOGGER = get_logger(__name__)
+
+
+def _model_run_reply_matches(
+    reply: WorkerModelRunResult,
+    request: WorkerAuthorizationRequest,
+    permit: WorkerAuthorizationPermit,
+    command: WorkerModelRun,
+    boot: UUID,
+) -> bool:
+    """Require the reply to match the exact request, permit, command and runtime."""
+    return (
+        reply.request_id == request.request_id
+        and reply.permit_id == permit.permit_id
+        and reply.command_id == command.command_id
+        and reply.runtime_boot_id == boot
+    )
 
 
 class WorkerAuthorizationLease:
@@ -209,12 +224,7 @@ class WorkerAuthorizationLease:
             raise
         write_secret_chunks(channel, body, deadline=exchange_deadline())
         reply = read_document(channel, WorkerModelRunResult, deadline=time.monotonic() + answer_seconds)
-        if (
-            reply.request_id != request.request_id
-            or reply.permit_id != permit.permit_id
-            or reply.command_id != command.command_id
-            or reply.runtime_boot_id != self.identity.runtime_boot_id
-        ):
+        if not _model_run_reply_matches(reply, request, permit, command, self.identity.runtime_boot_id):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         text = read_secret_chunks(channel, reply.outcome.text_byte_count, deadline=exchange_deadline())
         self._settled = True
@@ -368,8 +378,7 @@ def _validated_authority_permit(
     ):
         raise RefusalError(RefusalCode.INVALID_FRAME)
     if (
-        isinstance(request, WorkerResponseScopeRequest | WorkerHumanReviewScopeRequest)
-        != isinstance(reply, WorkerResponseScopePermit)
+        isinstance(request, WorkerResponseScopeRequest) != isinstance(reply, WorkerResponseScopePermit)
         or isinstance(request, WorkerAutomationInventoryRequest) != isinstance(reply, WorkerAutomationInventoryPermit)
         or isinstance(request, WorkerAuthorizationRequest) != isinstance(reply, WorkerAuthorizationPermit)
     ):

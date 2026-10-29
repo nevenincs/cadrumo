@@ -58,6 +58,33 @@ class CustodyRecoveryPolicy:
     monotonic: Callable[[], float] = time.monotonic
 
 
+def _retirement_kind(kind: SessionRetirementKind, reason: AccessDenialCode) -> SessionRetirementKind:
+    """Name the explicit lock or custody retirement when a revoke carries that reason."""
+    if kind is SessionRetirementKind.REVOKED:
+        if reason is AccessDenialCode.PROFILE_LOCKED:
+            return SessionRetirementKind.PROFILE_LOCKED
+        if reason is AccessDenialCode.CUSTODY_CHANGED:
+            return SessionRetirementKind.CUSTODY_CHANGED
+    return kind
+
+
+def _observable_login_ids(facts: SessionAuthorityFacts, os_owner_id: str) -> set[str]:
+    """Keep live and uncertain owner logins distinct from positively absent ones."""
+    live_logins = {
+        login.login_id
+        for login in facts.context.login_contexts
+        if login.active and login.unlocked and login.os_owner_id == os_owner_id
+    }
+    uncertain_logins = {
+        login.login_id
+        for login in facts.context.login_contexts
+        if login.os_owner_id == os_owner_id
+        and login.lock_state is OsLockState.UNKNOWN
+        and login.unattended is LoginEligibility.UNKNOWN
+    }
+    return live_logins | uncertain_logins
+
+
 class SessionAuthorityCore:
     """One profile's ephemeral leases for one runtime boot, serialized by its owner."""
 
@@ -187,21 +214,25 @@ class SessionAuthorityCore:
             self._retire(set(self._suspended), reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
             return
         for connection_id in {lease.connection_id for lease in self._suspended.values()}:
-            waiting = {lease.session_id for lease in self._suspended.values() if lease.connection_id == connection_id}
-            try:
-                facts = self._facts(connection_id)
-            except AutomationCustodyError as error:
-                if error.reason is AutomationCustodyCode.UNAVAILABLE and not self.owner.lost:
-                    continue
-                self._retire(waiting & self._suspended.keys(), reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
-                continue
-            if isinstance(facts, AccessDenied):
-                self._retire(waiting & self._suspended.keys(), reason=facts.code)
-                continue
-            for session_id in waiting & self._suspended.keys():
-                lapsed = session_refusal(self._suspended[session_id], facts.profile, facts.context)
-                if lapsed is not None:
-                    self._retire({session_id}, reason=lapsed)
+            self._expire_suspended_connection(connection_id)
+
+    def _expire_suspended_connection(self, connection_id: UUID) -> None:
+        """Revalidate each suspended lease for one observed connection."""
+        waiting = {lease.session_id for lease in self._suspended.values() if lease.connection_id == connection_id}
+        try:
+            facts = self._facts(connection_id)
+        except AutomationCustodyError as error:
+            if error.reason is AutomationCustodyCode.UNAVAILABLE and not self.owner.lost:
+                return
+            self._retire(waiting & self._suspended.keys(), reason=AccessDenialCode.CUSTODY_UNAVAILABLE)
+            return
+        if isinstance(facts, AccessDenied):
+            self._retire(waiting & self._suspended.keys(), reason=facts.code)
+            return
+        for session_id in waiting & self._suspended.keys():
+            lapsed = session_refusal(self._suspended[session_id], facts.profile, facts.context)
+            if lapsed is not None:
+                self._retire({session_id}, reason=lapsed)
 
     def _facts_binding_denial(self, facts: SessionAuthorityFacts, connection_id: UUID) -> AccessDenied | None:
         if facts.context.connection_id != connection_id:
@@ -221,24 +252,12 @@ class SessionAuthorityCore:
         )
 
     def _retire_sessions_without_live_login(self, facts: SessionAuthorityFacts) -> None:
-        live_logins = {
-            login.login_id
-            for login in facts.context.login_contexts
-            if login.active and login.unlocked and login.os_owner_id == self.binding.os_owner_id
-        }
-        uncertain_logins = {
-            login.login_id
-            for login in facts.context.login_contexts
-            if login.os_owner_id == self.binding.os_owner_id
-            and login.lock_state is OsLockState.UNKNOWN
-            and login.unattended is LoginEligibility.UNKNOWN
-        }
+        retained_logins = _observable_login_ids(facts, self.binding.os_owner_id)
         self._retire(
             {
                 session.session_id
                 for session in self._leases()
-                if session.originating_login_id is not None
-                and session.originating_login_id not in live_logins | uncertain_logins
+                if session.originating_login_id is not None and session.originating_login_id not in retained_logins
             },
             reason=AccessDenialCode.OS_SESSION_UNAVAILABLE,
         )
@@ -334,6 +353,47 @@ class SessionAuthorityCore:
             return None
         return None if isinstance(snapshot, AccessDenied) else snapshot
 
+    def _expand_retirement(self, retired: set[UUID]) -> None:
+        """Include every descendant before releasing any published lease."""
+        while True:
+            dependents = {s.session_id for s in self._leases() if s.parent_session_id in retired}
+            if dependents <= retired:
+                break
+            retired |= dependents
+
+    def _publish_retirements(
+        self,
+        published: tuple[AccessSession, ...],
+        reason: AccessDenialCode,
+        kind: SessionRetirementKind,
+        failures: list[Exception],
+    ) -> None:
+        """Notify each published lease once and retain notification failures."""
+        if self._retired is not None:
+            for session in published:
+                try:
+                    self._retired(
+                        SessionRetirement(
+                            profile_id=self.binding.profile_id,
+                            connection_id=session.connection_id,
+                            session_id=session.session_id,
+                            reason=reason,
+                            kind=kind,
+                        )
+                    )
+                except Exception as error:
+                    failures.append(error)
+
+    def _retire_physical(self, retired: set[UUID], failures: list[Exception]) -> None:
+        """Retain each failed physical retirement for a later retry."""
+        for session_id in retired:
+            try:
+                self.owner.retire(session_id)
+            except Exception as error:
+                failures.append(error)
+            else:
+                self._pending_retirements.discard(session_id)
+
     def _retire(
         self: SessionAuthorityCore,
         retired: set[UUID],
@@ -341,11 +401,7 @@ class SessionAuthorityCore:
         reason: AccessDenialCode = AccessDenialCode.SESSION_INACTIVE,
         kind: SessionRetirementKind = SessionRetirementKind.REVOKED,
     ) -> None:
-        while True:
-            dependents = {s.session_id for s in self._leases() if s.parent_session_id in retired}
-            if dependents <= retired:
-                break
-            retired |= dependents
+        self._expand_retirement(retired)
         # Remove authority for the entire cascade before fallible physical cleanup.
         # A suspended lease was published to its frontend, so its end is announced too.
         published = tuple(
@@ -357,11 +413,7 @@ class SessionAuthorityCore:
             self._recovery_deadline = None
         self._pending_retirements.update(retired)
         failures: list[Exception] = []
-        if kind is SessionRetirementKind.REVOKED:
-            if reason is AccessDenialCode.PROFILE_LOCKED:
-                kind = SessionRetirementKind.PROFILE_LOCKED
-            elif reason is AccessDenialCode.CUSTODY_CHANGED:
-                kind = SessionRetirementKind.CUSTODY_CHANGED
+        kind = _retirement_kind(kind, reason)
         if published:
             # A frontend hears only that its session ended; the runtime log keeps why.
             # A connection's own end is routine, every other retirement ends a person's access.
@@ -377,27 +429,8 @@ class SessionAuthorityCore:
             )
         # Delivery is a nonblocking owner queue. Only actually published leases
         # emit; retries of failed physical cleanup never emit a second event.
-        if self._retired is not None:
-            for session in published:
-                try:
-                    self._retired(
-                        SessionRetirement(
-                            profile_id=self.binding.profile_id,
-                            connection_id=session.connection_id,
-                            session_id=session.session_id,
-                            reason=reason,
-                            kind=kind,
-                        )
-                    )
-                except Exception as error:
-                    failures.append(error)
-        for session_id in retired:
-            try:
-                self.owner.retire(session_id)
-            except Exception as error:
-                failures.append(error)
-            else:
-                self._pending_retirements.discard(session_id)
+        self._publish_retirements(published, reason, kind, failures)
+        self._retire_physical(retired, failures)
         if failures:
             raise ExceptionGroup("session custody retirement failed", failures)
 

@@ -9,6 +9,7 @@ from uuid import uuid4
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
@@ -70,7 +71,7 @@ class _HumanKeyring:
 def human_keyring(monkeypatch: pytest.MonkeyPatch) -> _HumanKeyring:
     """Compose the real receipt crypto/filesystem with a controlled store."""
     keyring = _HumanKeyring()
-    monkeypatch.setattr(receipt, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
     return keyring
 
 

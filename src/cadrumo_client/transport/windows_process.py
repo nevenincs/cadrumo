@@ -5,8 +5,6 @@ from __future__ import annotations
 import asyncio
 import ctypes
 import math
-import os
-import subprocess
 import sys
 import time
 from collections.abc import Callable, Mapping, Sequence
@@ -14,7 +12,7 @@ from contextlib import suppress
 from dataclasses import dataclass
 from logging import DEBUG, WARNING
 from pathlib import Path
-from threading import Lock, Thread
+from threading import Lock
 from typing import BinaryIO, Final, cast
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, await_cancellation_complete
@@ -22,250 +20,19 @@ from cadrumo.core.diagnostic_log import DiagnosticValue, diagnostic_error_fields
 from cadrumo.core.logging import get_logger
 
 from ..contracts.contracts import RefusalCode, RefusalError
+from .windows_job_launch import launch_in_windows_job
 from .windows_native_io import NativeWindowsHandle, native_windows_call, owned_windows_handle
+from .windows_owned_process import WindowsOwnedProcess
+from .windows_process_observation import watch_windows_late_exit
+from .windows_process_pipes import windows_parent_streams, windows_standard_pipes
 
 _LOGGER = get_logger(__name__)
 
-_STILL_ACTIVE: Final = 259
-"""The status ``GetExitCodeProcess`` reports for a process that has not exited."""
 _LATE_EXIT_OBSERVATION_SECONDS: Final = 60.0
 """How long, after a termination missed its bound, a child that had not yet exited is still watched."""
 
 if sys.platform == "win32":
     from ctypes import wintypes
-
-    class _StartupInfo(ctypes.Structure):
-        _fields_ = [
-            ("cb", wintypes.DWORD),
-            ("lpReserved", wintypes.LPWSTR),
-            ("lpDesktop", wintypes.LPWSTR),
-            ("lpTitle", wintypes.LPWSTR),
-            ("dwX", wintypes.DWORD),
-            ("dwY", wintypes.DWORD),
-            ("dwXSize", wintypes.DWORD),
-            ("dwYSize", wintypes.DWORD),
-            ("dwXCountChars", wintypes.DWORD),
-            ("dwYCountChars", wintypes.DWORD),
-            ("dwFillAttribute", wintypes.DWORD),
-            ("dwFlags", wintypes.DWORD),
-            ("wShowWindow", wintypes.WORD),
-            ("cbReserved2", wintypes.WORD),
-            ("lpReserved2", ctypes.c_void_p),
-            ("hStdInput", wintypes.HANDLE),
-            ("hStdOutput", wintypes.HANDLE),
-            ("hStdError", wintypes.HANDLE),
-        ]
-
-    class _StartupInfoEx(ctypes.Structure):
-        _fields_ = [("startup", _StartupInfo), ("attributes", ctypes.c_void_p)]
-
-    class _ProcessInformation(ctypes.Structure):
-        _fields_ = [
-            ("process", wintypes.HANDLE),
-            ("thread", wintypes.HANDLE),
-            ("pid", wintypes.DWORD),
-            ("tid", wintypes.DWORD),
-        ]
-
-
-def _win32_check(step: str) -> str:
-    # The Win32 error number is the only cause a failed containment call reports; it names no payload.
-    if sys.platform == "win32":
-        return f"{step}_winerror_{ctypes.get_last_error()}"
-    return step
-
-
-def _launch_in_job(
-    job: int,
-    *,
-    executable: Path,
-    arguments: Sequence[str],
-    directory: Path,
-    environment: Mapping[str, str],
-    standard_handles: tuple[int, int, int] | None = None,
-) -> tuple[int, int, int]:
-    if sys.platform != "win32":
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    kernel = ctypes.WinDLL("kernel32", use_last_error=True)
-    initialize = kernel.InitializeProcThreadAttributeList
-    initialize.argtypes = (ctypes.c_void_p, wintypes.DWORD, wintypes.DWORD, ctypes.POINTER(ctypes.c_size_t))
-    initialize.restype = wintypes.BOOL
-    update = kernel.UpdateProcThreadAttribute
-    update.argtypes = (
-        ctypes.c_void_p,
-        wintypes.DWORD,
-        ctypes.c_size_t,
-        ctypes.c_void_p,
-        ctypes.c_size_t,
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-    )
-    update.restype = wintypes.BOOL
-    destroy = kernel.DeleteProcThreadAttributeList
-    destroy.argtypes = (ctypes.c_void_p,)
-    destroy.restype = None
-    create = kernel.CreateProcessW
-    create.argtypes = (
-        wintypes.LPCWSTR,
-        wintypes.LPWSTR,
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-        wintypes.BOOL,
-        wintypes.DWORD,
-        ctypes.c_void_p,
-        wintypes.LPCWSTR,
-        ctypes.POINTER(_StartupInfoEx),
-        ctypes.POINTER(_ProcessInformation),
-    )
-    create.restype = wintypes.BOOL
-    get_error_mode = kernel.GetThreadErrorMode
-    get_error_mode.argtypes = ()
-    get_error_mode.restype = wintypes.DWORD
-    set_error_mode = kernel.SetThreadErrorMode
-    set_error_mode.argtypes = (wintypes.DWORD, ctypes.POINTER(wintypes.DWORD))
-    set_error_mode.restype = wintypes.BOOL
-    count = 1 if standard_handles is None else 2
-    size = ctypes.c_size_t()
-    initialize(None, count, 0, ctypes.byref(size))
-    if size.value == 0:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("attribute_list_size"))
-    attributes = ctypes.create_string_buffer(size.value)
-    if not initialize(attributes, count, 0, ctypes.byref(size)):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("attribute_list_initialize"))
-    try:
-        jobs = (wintypes.HANDLE * 1)(job)
-        # PROC_THREAD_ATTRIBUTE_JOB_LIST: the kernel assigns before any child
-        # code runs. No create-then-assign or suspended unowned orphan window.
-        if not update(attributes, 0, 0x0002000D, jobs, ctypes.sizeof(jobs), None, None):
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("job_list_attribute"))
-        startup = _StartupInfoEx()
-        startup.startup.cb = ctypes.sizeof(startup)
-        startup.attributes = ctypes.addressof(attributes)
-        inherited = None
-        if standard_handles is not None:
-            # PROC_THREAD_ATTRIBUTE_HANDLE_LIST: exactly these three pipe ends
-            # are inherited, so no other inheritable handle of this process leaks.
-            inherited = (wintypes.HANDLE * 3)(*standard_handles)
-            if not update(attributes, 0, 0x00020002, inherited, ctypes.sizeof(inherited), None, None):
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("handle_list_attribute"))
-            startup.startup.dwFlags = 0x00000100  # STARTF_USESTDHANDLES
-            startup.startup.hStdInput, startup.startup.hStdOutput, startup.startup.hStdError = standard_handles
-        information = _ProcessInformation()
-        command = ctypes.create_unicode_buffer(subprocess.list2cmdline((str(executable), *arguments)))
-        block = ctypes.create_unicode_buffer(
-            "\0".join(f"{key}={value}" for key, value in sorted(environment.items(), key=lambda item: item[0].upper()))
-            + "\0\0"
-        )
-        # EXTENDED_STARTUPINFO_PRESENT | CREATE_UNICODE_ENVIRONMENT |
-        # CREATE_NO_WINDOW. Inherit no handles, including this job handle,
-        # beyond the standard handles the handle list names.
-        # CREATE_NO_WINDOW does not suppress the loader's invalid-image dialog.
-        # SEM_FAILCRITICALERRORS returns that error to this launching thread;
-        # preserve every other thread's policy and restore ours after the call.
-        previous_error_mode = get_error_mode()
-        if not set_error_mode(previous_error_mode | 0x0001, None):
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("launch_error_mode"))
-        try:
-            if not create(
-                str(executable),
-                command,
-                None,
-                None,
-                inherited is not None,
-                0x08080400,
-                block,
-                str(directory),
-                ctypes.byref(startup),
-                ctypes.byref(information),
-            ):
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE, check=_win32_check("create_process"))
-        finally:
-            set_error_mode(previous_error_mode, None)
-        return int(information.process), int(information.thread), int(information.pid)
-    finally:
-        destroy(attributes)
-
-
-class WindowsOwnedProcess:
-    """Retained child handles; closing them does not dispose of the owning job."""
-
-    def __init__(self, *, handle: int, pid: int, thread_handle: int | None = None) -> None:
-        """Take ownership of the process and initial thread handles at launch."""
-        self._handle: int | None = handle
-        self._thread_handle = thread_handle
-        self.pid = pid
-
-    def retain_waiter(self) -> WindowsOwnedProcess:
-        """Duplicate only wait/query rights before transferring a wait to another thread.
-
-        The duplicate remains valid when the scope closes its original handles;
-        its owner must close it after observing exit.
-        """
-        import win32api
-
-        if self._handle is None:
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        current = win32api.GetCurrentProcess()
-        duplicate = owned_windows_handle(win32api.DuplicateHandle(current, self._handle, current, 0x00101000, False, 0))
-        detached = native_windows_call(duplicate, "Detach")
-        if type(detached) is not int or detached <= 0:
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        return WindowsOwnedProcess(handle=detached, pid=self.pid)
-
-    def wait(self, *, timeout: float | None) -> int:
-        """Wait for this exact child; ``None`` waits for exit without polling."""
-        import win32event
-
-        if self._handle is None or (timeout is not None and (not math.isfinite(timeout) or timeout < 0)):
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        milliseconds = win32event.INFINITE if timeout is None else min(0xFFFFFFFE, math.ceil(timeout * 1000))
-        result = win32event.WaitForSingleObject(self._handle, milliseconds)
-        if result == win32event.WAIT_TIMEOUT:
-            raise RefusalError(RefusalCode.TIMEOUT)
-        if result != win32event.WAIT_OBJECT_0:
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        return _native_exit_status(self._handle)
-
-    def exit_code(self) -> int | None:
-        """This child's exit status read without waiting; ``None`` while it runs or once its handle is released.
-
-        A process that exits with status 259 reads as still running: that is
-        the value Windows itself reports for a live process.
-        """
-        if self._handle is None:
-            return None
-        status = _native_exit_status(self._handle)
-        return None if status == _STILL_ACTIVE else status
-
-    def close(self) -> None:
-        """Attempt both handles, retaining each until its native release succeeds."""
-        import win32api
-
-        failures: list[BaseException] = []
-        if self._thread_handle is not None:
-            try:
-                win32api.CloseHandle(self._thread_handle)
-            except BaseException as error:
-                failures.append(error)
-            else:
-                self._thread_handle = None
-        if self._handle is not None:
-            try:
-                win32api.CloseHandle(self._handle)
-            except BaseException as error:
-                failures.append(error)
-            else:
-                self._handle = None
-        if failures:
-            raise failures[0]
-
-
-def _native_exit_status(handle: int) -> int:
-    import win32process
-
-    # pywin32 reports the DWORD as a signed C long, so NTSTATUS-style
-    # crash codes such as 0xC0000005 would otherwise read as negative.
-    return win32process.GetExitCodeProcess(handle) & 0xFFFFFFFF
 
 
 def unreturned_windows_process_scope(error: BaseException) -> WindowsProcessScope | None:
@@ -341,18 +108,11 @@ class WindowsProcessScope:
         Credentials must travel through separately authenticated IPC, never
         these arguments or environment values. No parent environment is merged.
         """
-        if not executable.is_absolute() or not directory.is_absolute():
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        _require_launch_environment(arguments, environment)
-        try:
-            executable = executable.resolve(strict=True)
-            directory = directory.resolve(strict=True)
-        except (OSError, ValueError):
-            raise RefusalError(RefusalCode.UNAVAILABLE) from None
+        executable, directory = _resolve_launch_paths(executable, directory, arguments, environment)
         with self._lock:
             if self._launch_fenced or self._job is None:
                 raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            handle, thread_handle, pid = _launch_in_job(
+            handle, thread_handle, pid = launch_in_windows_job(
                 self._job,
                 executable=executable,
                 arguments=arguments,
@@ -376,20 +136,13 @@ class WindowsProcessScope:
         """
         if sys.platform != "win32":
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        if not executable.is_absolute() or not directory.is_absolute():
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        _require_launch_environment(arguments, environment)
-        try:
-            executable = executable.resolve(strict=True)
-            directory = directory.resolve(strict=True)
-        except (OSError, ValueError):
-            raise RefusalError(RefusalCode.UNAVAILABLE) from None
-        child_ends, parent_ends = _standard_pipes()
+        executable, directory = _resolve_launch_paths(executable, directory, arguments, environment)
+        child_ends, parent_ends = windows_standard_pipes()
         try:
             with self._lock:
                 if self._launch_fenced or self._job is None:
                     raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-                handle, thread_handle, pid = _launch_in_job(
+                handle, thread_handle, pid = launch_in_windows_job(
                     self._job,
                     executable=executable,
                     arguments=arguments,
@@ -406,7 +159,7 @@ class WindowsProcessScope:
         finally:
             for end in child_ends:
                 end.Close()
-        return process, *_parent_streams(parent_ends)
+        return process, *windows_parent_streams(parent_ends)
 
     def terminate(self, *, timeout: float = 2.0) -> None:
         """Fence launch, terminate this job and verify no active members to a bound."""
@@ -465,6 +218,11 @@ class WindowsProcessScope:
             level=DEBUG if failure is None else WARNING,
             primary_error=failure,
         )
+        self._report_child_terminations(failure)
+        if expired:
+            watch_windows_late_exit(self._children, started=observed.started, seconds=_LATE_EXIT_OBSERVATION_SECONDS)
+
+    def _report_child_terminations(self, failure: BaseException | None) -> None:
         for child in self._children:
             with suppress(Exception):
                 code = child.exit_code()
@@ -479,8 +237,6 @@ class WindowsProcessScope:
                     level=DEBUG if code is not None else WARNING,
                     primary_error=failure,
                 )
-        if expired:
-            _watch_late_exit(self._children, started=observed.started, seconds=_LATE_EXIT_OBSERVATION_SECONDS)
 
     def _record_termination_failure(self, error: BaseException) -> tuple[BaseException, BaseException | None]:
         """Retain the exact native termination refusal for later health and retry."""
@@ -625,92 +381,16 @@ class WindowsProcessScope:
             raise failures[0]
 
 
-def _pipe_ends(attributes: object) -> tuple[NativeWindowsHandle, NativeWindowsHandle]:
-    """Retain both native pipe handles and release the first if the second is refused."""
-    import win32pipe
-
-    values = native_windows_call(win32pipe, "CreatePipe", attributes, 0)
-    if not isinstance(values, tuple) or len(values) != 2:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    read = owned_windows_handle(values[0])
+def _resolve_launch_paths(
+    executable: Path, directory: Path, arguments: Sequence[str], environment: Mapping[str, str]
+) -> tuple[Path, Path]:
+    if not executable.is_absolute() or not directory.is_absolute():
+        raise RefusalError(RefusalCode.UNAVAILABLE)
+    _require_launch_environment(arguments, environment)
     try:
-        write = owned_windows_handle(values[1])
-    except BaseException:
-        read.Close()
-        raise
-    return read, write
-
-
-def _standard_pipes() -> tuple[tuple[NativeWindowsHandle, ...], tuple[NativeWindowsHandle, ...]]:
-    """Create inheritable child ends and private parent ends for a launch.
-
-    Return the child's standard input, output and error ends, then the
-    parent's write end of standard input and read ends of standard output and
-    standard error.
-    """
-    if sys.platform != "win32":
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    import pywintypes
-    import win32api
-
-    attributes = pywintypes.SECURITY_ATTRIBUTES()
-    attributes.bInheritHandle = True
-    created: list[NativeWindowsHandle] = []
-    try:
-        input_read, input_write = _pipe_ends(attributes)
-        created.extend((input_read, input_write))
-        output_read, output_write = _pipe_ends(attributes)
-        created.extend((output_read, output_write))
-        error_read, error_write = _pipe_ends(attributes)
-        created.extend((error_read, error_write))
-        for parent_end in (input_write, output_read, error_read):
-            # HANDLE_FLAG_INHERIT cleared: the parent ends never reach any child.
-            win32api.SetHandleInformation(int(parent_end), 1, 0)
-    except BaseException:
-        for handle in created:
-            handle.Close()
-        raise
-    return (input_read, output_write, error_write), (input_write, output_read, error_read)
-
-
-def _parent_streams(parent_ends: tuple[NativeWindowsHandle, ...]) -> tuple[BinaryIO, BinaryIO, BinaryIO]:
-    """Turn the parent's standard-input, output and error ends into streams, releasing every end on failure."""
-    streams: list[BinaryIO] = []
-    try:
-        for end, mode in zip(parent_ends, ("wb", "rb", "rb"), strict=True):
-            streams.append(_python_stream(end, mode))
-    except BaseException:
-        for stream in streams:
-            stream.close()
-        for end in parent_ends[len(streams) :]:
-            end.Close()
-        raise
-    standard_input, standard_output, standard_error = streams
-    return standard_input, standard_output, standard_error
-
-
-def _python_stream(handle: NativeWindowsHandle, mode: str) -> BinaryIO:
-    """Transfer one native pipe end into an unbuffered Python binary stream."""
-    if sys.platform != "win32":
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    import msvcrt
-
-    import win32api
-
-    flags = os.O_WRONLY if "w" in mode else os.O_RDONLY
-    detached = native_windows_call(handle, "Detach")
-    if type(detached) is not int or detached <= 0:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    try:
-        descriptor = msvcrt.open_osfhandle(detached, flags | os.O_BINARY)
-    except BaseException:
-        win32api.CloseHandle(detached)
-        raise
-    try:
-        return cast("BinaryIO", os.fdopen(descriptor, mode, buffering=0))
-    except BaseException:
-        os.close(descriptor)
-        raise
+        return executable.resolve(strict=True), directory.resolve(strict=True)
+    except (OSError, ValueError):
+        raise RefusalError(RefusalCode.UNAVAILABLE) from None
 
 
 def _require_launch_environment(arguments: Sequence[str], environment: Mapping[str, str]) -> None:
@@ -768,63 +448,6 @@ def _terminate_windows_job(job: int, deadline: float, observed: _JobTermination)
         observed.members_signalled = round(time.monotonic() - requested, 3)
     finally:
         _release_job_members(members)
-
-
-def _watch_late_exit(children: Sequence[WindowsOwnedProcess], *, started: float, seconds: float) -> Thread | None:
-    """Report from a daemon thread when each child that outlived its termination bound exits.
-
-    The thread waits on duplicated handles, so it neither depends on the scope
-    releasing its own nor keeps the process alive. It starts nothing when no
-    child can be duplicated, and a failure here is never the caller's.
-    """
-    waiters: list[WindowsOwnedProcess] = []
-    for child in children:
-        with suppress(Exception):
-            waiters.append(child.retain_waiter())
-    if not waiters:
-        return None
-    watcher = Thread(
-        target=_report_late_exit, args=(tuple(waiters), started, seconds), name="windows-job-late-exit", daemon=True
-    )
-    try:
-        watcher.start()
-    except BaseException:
-        for waiter in waiters:
-            with suppress(Exception):
-                waiter.close()
-        return None
-    return watcher
-
-
-def _report_late_exit(waiters: tuple[WindowsOwnedProcess, ...], started: float, seconds: float) -> None:
-    """Wait up to ``seconds`` after ``started`` for each child's exit and log its status and the total time."""
-    deadline = started + seconds
-    try:
-        for waiter in waiters:
-            code: int | None = None
-            outcome = "exited"
-            try:
-                code = waiter.wait(timeout=max(0.0, deadline - time.monotonic()))
-            except RefusalError as error:
-                outcome = "observation_expired" if error.reason is RefusalCode.TIMEOUT else "unavailable"
-            except Exception:
-                outcome = "unavailable"
-            diagnostic_event(
-                _LOGGER,
-                "windows_job_child_exit_observed_late",
-                fields={
-                    "child_process_id": waiter.pid,
-                    "exit_code": code,
-                    "elapsed_seconds": round(max(0.0, time.monotonic() - started), 3),
-                    "timeout_seconds": seconds,
-                    "outcome": outcome,
-                },
-                level=DEBUG if code is not None else WARNING,
-            )
-    finally:
-        for waiter in waiters:
-            with suppress(Exception):
-                waiter.close()
 
 
 def _await_job_members(members: tuple[NativeWindowsHandle, ...], deadline: float) -> None:

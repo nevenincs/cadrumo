@@ -12,12 +12,22 @@ import asyncio
 from datetime import datetime
 from uuid import UUID
 
-from cadrumo.application.user_profile.access_contracts import SessionKind
+from cadrumo.application.user_profile.access_contracts import AccessSession, SessionKind
 from cadrumo.application.user_profile.automation_lifecycle import AutomationDenial, AutomationDenialKind
 from cadrumo.application.user_profile.session_retirement import SessionRetirementKind
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from .session_authority_core import SessionAuthorityCore
+
+
+def _denial_matches_session(change: AutomationDenial, session: AccessSession) -> bool:
+    """Select the sessions named by this trusted lifecycle denial."""
+    return (
+        change.kind is AutomationDenialKind.PROFILE_LOCK
+        or (change.kind is AutomationDenialKind.ALL and session.kind is not SessionKind.HUMAN)
+        or (change.kind is AutomationDenialKind.KEY and session.key_id == change.target_id)
+        or (change.kind is AutomationDenialKind.GRANT and session.grant_id == change.target_id)
+    )
 
 
 class SessionAuthorityLifecycle(SessionAuthorityCore):
@@ -95,14 +105,7 @@ class SessionAuthorityLifecycle(SessionAuthorityCore):
         with self.owner.admission_guard():
             if change.binding != self.binding:
                 raise ValueError("denial does not name this session authority")
-            retired = {
-                session.session_id
-                for session in self._leases()
-                if change.kind is AutomationDenialKind.PROFILE_LOCK
-                or (change.kind is AutomationDenialKind.ALL and session.kind is not SessionKind.HUMAN)
-                or (change.kind is AutomationDenialKind.KEY and session.key_id == change.target_id)
-                or (change.kind is AutomationDenialKind.GRANT and session.grant_id == change.target_id)
-            }
+            retired = {session.session_id for session in self._leases() if _denial_matches_session(change, session)}
             self._retire(
                 retired,
                 reason=(

@@ -23,8 +23,9 @@ from cadrumo_client.contracts.profile_access import Request
 from cadrumo_client.contracts.session_events import PresentationRequested
 from cadrumo_client.contracts.transport import ConnectionContext
 
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_host import RuntimeProfileHost
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

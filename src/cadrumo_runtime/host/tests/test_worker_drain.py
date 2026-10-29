@@ -21,7 +21,7 @@ from cadrumo.core.operations import OperationEffect, OperationLifecycle
 from cadrumo.domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.transport.windows_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
 
 from ...adapters.profile_worker import ProfileWorkerProcess
 from ...adapters.tests.profile_worker_support import lease, worker_profiles

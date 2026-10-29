@@ -87,6 +87,16 @@ def _current_os_uid() -> int | None:
     return value if isinstance(value, int) else None
 
 
+def _same_safe_opened_marker(before: os.stat_result, opened: os.stat_result) -> bool:
+    """Match the opened regular file to the separately checked directory entry."""
+    return (
+        stat.S_ISREG(opened.st_mode)
+        and not getattr(opened, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
+        and opened.st_nlink == 1
+        and (opened.st_dev, opened.st_ino) == (before.st_dev, before.st_ino)
+    )
+
+
 def _read_marker(path: Path) -> dict[str, object] | None:
     descriptor = -1
     try:
@@ -94,12 +104,7 @@ def _read_marker(path: Path) -> dict[str, object] | None:
         flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_CLOEXEC", 0)
         descriptor = os.open(path, flags)
         opened = os.fstat(descriptor)
-        if (
-            not stat.S_ISREG(opened.st_mode)
-            or getattr(opened, "st_file_attributes", 0) & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400)
-            or opened.st_nlink != 1
-            or (opened.st_dev, opened.st_ino) != (before.st_dev, before.st_ino)
-        ):
+        if not _same_safe_opened_marker(before, opened):
             return None
         chunks: list[bytes] = []
         remaining = _MAXIMUM_MARKER_BYTES + 1
@@ -129,6 +134,38 @@ def _is_json_object(value: object) -> TypeGuard[dict[str, object]]:
     return isinstance(value, dict)
 
 
+def _require_new_marker(marker: Path) -> None:
+    """Refuse to replace any existing nonmatching marker."""
+    try:
+        marker.lstat()
+    except FileNotFoundError:
+        pass
+    else:
+        raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
+
+
+def _sync_marker_directory(root: Path) -> None:
+    """Durably publish the marker link on POSIX filesystems."""
+    if sys.platform != "win32":
+        directory_fd = os.open(root, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+
+
+def _cleanup_marker_temporary(descriptor: int, temporary: Path) -> None:
+    """Close the owned descriptor and remove the temporary link if present."""
+    if descriptor >= 0:
+        os.close(descriptor)
+    try:
+        temporary.unlink()
+    except FileNotFoundError:
+        pass
+    except OSError:
+        pass
+
+
 def mark_development_root(storage_root: Path) -> Path:
     """Create one bounded marker bound to an existing non-installed root."""
     root = _canonical_root(storage_root)
@@ -137,12 +174,7 @@ def mark_development_root(storage_root: Path) -> Path:
     current = _read_marker(marker)
     if current is not None and _matches(current, root, identity):
         return marker
-    try:
-        marker.lstat()
-    except FileNotFoundError:
-        pass
-    else:
-        raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
+    _require_new_marker(marker)
 
     payload = _marker_document(root, identity)
     if len(payload) > _MAXIMUM_MARKER_BYTES:
@@ -161,12 +193,7 @@ def mark_development_root(storage_root: Path) -> Path:
             os.fsync(stream.fileno())
         os.link(temporary, marker)
         temporary.unlink()
-        if sys.platform != "win32":
-            directory_fd = os.open(root, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
-            try:
-                os.fsync(directory_fd)
-            finally:
-                os.close(directory_fd)
+        _sync_marker_directory(root)
     except FileExistsError:
         if verify_development_root(root, identity):
             return marker
@@ -174,14 +201,7 @@ def mark_development_root(storage_root: Path) -> Path:
     except OSError:
         raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED) from None
     finally:
-        if descriptor >= 0:
-            os.close(descriptor)
-        try:
-            temporary.unlink()
-        except FileNotFoundError:
-            pass
-        except OSError:
-            pass
+        _cleanup_marker_temporary(descriptor, temporary)
     if not verify_development_root(root, identity):
         raise RefusalError(RefusalCode.ENDPOINT_UNTRUSTED)
     return marker

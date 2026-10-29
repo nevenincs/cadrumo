@@ -85,26 +85,28 @@ class ProfileWorkerHumanAdmission(ProfileWorkerProofControl):
                 self._human_deadline = None
                 self._human_transaction_deadline = None
                 secret[:] = bytes(len(secret))
-                if self._channel is not None and not self._stopping.is_set():
-                    try:
-                        self._exchange(
-                            ProfileWorkerRequest(
-                                ProfileWorkerControlRequest(action="cancel_human", request_id=uuid4())
-                            ),
-                            ProfileWorkerStatus,
-                            deadline=transaction_deadline,
-                        )
-                    except BaseException as failure:
-                        # Protocol failures already retain their original native
-                        # close owner. A typed refusal also fences this worker;
-                        # never retry a bare cancel against a later candidate.
-                        if not self._stopping.is_set():
-                            release_worker_resources(WorkerResourceCleanup(self.close), primary_error=failure)
-                        if primary is None:
-                            raise
-                        _attach_human_cleanup_failure(primary, failure)
+                self._cancel_human_candidate(primary, transaction_deadline)
             if time.monotonic() >= transaction_deadline:
                 raise RefusalError(RefusalCode.TIMEOUT)
+
+    def _cancel_human_candidate(self, primary: BaseException | None, deadline: float) -> None:
+        """Retire only this candidate and retain any cleanup failure."""
+        if self._channel is not None and not self._stopping.is_set():
+            try:
+                self._exchange(
+                    ProfileWorkerRequest(ProfileWorkerControlRequest(action="cancel_human", request_id=uuid4())),
+                    ProfileWorkerStatus,
+                    deadline=deadline,
+                )
+            except BaseException as failure:
+                # Protocol failures already retain their original native
+                # close owner. A typed refusal also fences this worker;
+                # never retry a bare cancel against a later candidate.
+                if not self._stopping.is_set():
+                    release_worker_resources(WorkerResourceCleanup(self.close), primary_error=failure)
+                if primary is None:
+                    raise
+                _attach_human_cleanup_failure(primary, failure)
 
     @contextmanager
     def _proof_attempt(

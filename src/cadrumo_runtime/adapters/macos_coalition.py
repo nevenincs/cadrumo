@@ -177,6 +177,21 @@ def macos_coalition_members(coalition: int, *, port: MacosCoalitionPort) -> tupl
     return tuple(members)
 
 
+def _coalition_termination_pass(
+    coalition: int,
+    native: MacosCoalitionPort,
+    signalled: set[MacosProcessIncarnation],
+    exclude: MacosProcessIncarnation | None,
+) -> tuple[set[MacosProcessIncarnation], bool]:
+    """Recheck prior signals, then kill this pass's nonexcluded members."""
+    signalled = {incarnation for incarnation in signalled if native.incarnation(incarnation.pid) == incarnation}
+    members = tuple(member for member in macos_coalition_members(coalition, port=native) if member != exclude)
+    for member in members:
+        if native.signal(member, _SIGKILL) is MacosSignalDelivery.DELIVERED:
+            signalled.add(member)
+    return signalled, not members and not signalled
+
+
 def terminate_macos_coalition(
     coalition: int,
     *,
@@ -204,12 +219,8 @@ def terminate_macos_coalition(
     signalled: set[MacosProcessIncarnation] = set()
     quiet = 0
     while True:
-        signalled = {incarnation for incarnation in signalled if native.incarnation(incarnation.pid) == incarnation}
-        members = tuple(member for member in macos_coalition_members(coalition, port=native) if member != exclude)
-        for member in members:
-            if native.signal(member, _SIGKILL) is MacosSignalDelivery.DELIVERED:
-                signalled.add(member)
-        quiet = quiet + 1 if not members and not signalled else 0
+        signalled, pass_quiet = _coalition_termination_pass(coalition, native, signalled, exclude)
+        quiet = quiet + 1 if pass_quiet else 0
         if quiet >= _QUIET_PASSES:
             return
         remaining = deadline - time.monotonic()

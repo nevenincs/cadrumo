@@ -15,13 +15,10 @@ from pydantic import JsonValue
 
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.windows_process import (
-    WindowsOwnedProcess,
-    WindowsProcessScope,
-    unreturned_windows_process_scope,
-)
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope, unreturned_windows_process_scope
 
-from .auth_protocol import MAX_AUTH_LINE, TERMINAL_EVENTS, AuthProtocol, snapshot
+from .auth_protocol import MAX_AUTH_LINE, TERMINAL_EVENTS, AuthEvent, AuthProtocol, snapshot
 from .credential_frame import wipe
 
 _LOGGER = get_logger(__name__)
@@ -101,33 +98,16 @@ class AuthAttempt:
         # JSON escaping can make a printable code exceed the helper's line limit.
         line = bytearray(b'{"version":1,"action":"auth_code","code":"')
         try:
-            for byte in code:
-                if byte in (34, 92):
-                    line.append(92)
-                line.append(byte)
-            line.extend(b'"}\n')
-            if len(line) > 4096:
-                raise ValueError("invalid_request")
+            _append_auth_code(line, code)
             with self._lock:
-                valid = self._valid()
-                now = time.monotonic()
-                if (
-                    self._cancel.is_set()
-                    or not valid
-                    or self._deadline is None
-                    or now >= self._deadline
-                    or now - self._observed > 15
-                    or self._snapshot.get("event") != "authorization_code_required"
-                    or self._input is None
-                ):
-                    raise ValueError("invalid_request")
+                input_stream = self._code_input()
                 # Consume the opportunity before writing: a partial write cannot be replayed.
                 self._snapshot = snapshot(self.id, self._lane, "started")
                 self._protocol.code_submitted = True
                 try:
-                    if self._input.write(line) != len(line):
+                    if input_stream.write(line) != len(line):
                         raise OSError("short_auth_write")
-                    self._input.flush()
+                    input_stream.flush()
                 except (OSError, ValueError):
                     self._cancel.set()
                     raise ValueError("invalid_request") from None
@@ -135,6 +115,21 @@ class AuthAttempt:
                 return dict(self._snapshot)
         finally:
             wipe(line)
+
+    def _code_input(self) -> BinaryIO:
+        valid = self._valid()
+        now = time.monotonic()
+        if (
+            self._cancel.is_set()
+            or not valid
+            or self._deadline is None
+            or now >= self._deadline
+            or now - self._observed > 15
+            or self._snapshot.get("event") != "authorization_code_required"
+            or self._input is None
+        ):
+            raise ValueError("invalid_request")
+        return self._input
 
     def close(self) -> None:
         """Confirm cleanup before the caller releases the profile reservation."""
@@ -211,15 +206,9 @@ class AuthAttempt:
             now = time.monotonic()
             with self._lock:
                 observed = self._observed
-            if now >= checked:
-                if not self._valid():
-                    self.cancel()
-                checked = now + 1
+            checked = self._recheck_scope(now, checked)
             if self._cancel.is_set() or now - observed > 15:
-                with self._lock, contextlib.suppress(OSError, ValueError):
-                    input_stream.write(b'{"version":1,"action":"cancel"}\n')
-                    input_stream.flush()
-                return "cancelled", "host_disconnected" if not self._cancel.is_set() else None
+                return self._cancel_exchange(input_stream)
             if now >= deadline:
                 self._publish(snapshot(self.id, self._lane, "started"))
                 return "failed", "timeout"
@@ -227,38 +216,60 @@ class AuthAttempt:
                 raw = queue.get(timeout=0.25)
             except Empty:
                 continue
-            with self._lock:
-                try:
-                    # EOF follows the same invalidation path as malformed output.
-                    event = self._protocol.read(raw if raw is not None else b"")
-                except BaseException:
-                    self._cancel.set()
-                    self._snapshot = snapshot(self.id, self._lane, "started")
-                    raise
-                if event.event in TERMINAL_EVENTS:
-                    # A submitter must not see code-entry state after terminal input.
-                    self._snapshot = snapshot(self.id, self._lane, "started")
+            event = self._read_event(raw)
             if event.event == "ready":
                 input_stream.write(b'{"version":1,"action":"start"}\n')
                 input_stream.flush()
             elif event.event in TERMINAL_EVENTS:
                 return event.event, event.reason
             else:
-                value = snapshot(self.id, self._lane, event.event)
-                if event.url is not None:
-                    value["url"] = event.url
-                if event.user_code is not None:
-                    value["user_code"] = event.user_code
-                if event.event == "authorization_code_required":
-                    with self._lock:
-                        url = self._snapshot.get("url")
-                    if url is not None:
-                        value["url"] = url
-                # Never disclose a stale profile action, including a queued one.
-                if not self._valid():
-                    self.cancel()
+                if not self._publish_action(event):
                     return "cancelled", None
-                self._publish(value)
+
+    def _recheck_scope(self, now: float, checked: float) -> float:
+        if now >= checked:
+            if not self._valid():
+                self.cancel()
+            return now + 1
+        return checked
+
+    def _cancel_exchange(self, input_stream: BinaryIO) -> tuple[str, str | None]:
+        with self._lock, contextlib.suppress(OSError, ValueError):
+            input_stream.write(b'{"version":1,"action":"cancel"}\n')
+            input_stream.flush()
+        return "cancelled", "host_disconnected" if not self._cancel.is_set() else None
+
+    def _read_event(self, raw: bytes | None) -> AuthEvent:
+        with self._lock:
+            try:
+                # EOF follows the same invalidation path as malformed output.
+                event = self._protocol.read(raw if raw is not None else b"")
+            except BaseException:
+                self._cancel.set()
+                self._snapshot = snapshot(self.id, self._lane, "started")
+                raise
+            if event.event in TERMINAL_EVENTS:
+                # A submitter must not see code-entry state after terminal input.
+                self._snapshot = snapshot(self.id, self._lane, "started")
+        return event
+
+    def _publish_action(self, event: AuthEvent) -> bool:
+        value = snapshot(self.id, self._lane, event.event)
+        if event.url is not None:
+            value["url"] = event.url
+        if event.user_code is not None:
+            value["user_code"] = event.user_code
+        if event.event == "authorization_code_required":
+            with self._lock:
+                url = self._snapshot.get("url")
+            if url is not None:
+                value["url"] = url
+        # Never disclose a stale profile action, including a queued one.
+        if not self._valid():
+            self.cancel()
+            return False
+        self._publish(value)
+        return True
 
     def _run(self) -> None:
         process: WindowsOwnedProcess | None = None
@@ -302,36 +313,66 @@ class AuthAttempt:
             # The exception may contain pipe or provider contents; never retain it.
             outcome, reason = "failed", "provider_error"
         finally:
-            try:
-                try:
-                    if input_stream is not None:
-                        with self._lock:
-                            self._input = None
-                        with contextlib.suppress(OSError, ValueError):
-                            input_stream.close()
-                    if process is not None:
-                        status = self._wait(process, 3)
-                        if outcome == "succeeded" and status != 0:
-                            outcome, reason = "failed", "provider_error"
-                except Exception:
+            self._finish_run(process, input_stream, outcome, reason)
+
+    def _close_and_wait(
+        self,
+        process: WindowsOwnedProcess | None,
+        input_stream: BinaryIO | None,
+        outcome: str,
+        reason: str | None,
+    ) -> tuple[str, str | None]:
+        try:
+            if input_stream is not None:
+                with self._lock:
+                    self._input = None
+                with contextlib.suppress(OSError, ValueError):
+                    input_stream.close()
+            if process is not None:
+                status = self._wait(process, 3)
+                if outcome == "succeeded" and status != 0:
                     outcome, reason = "failed", "provider_error"
-                finally:
-                    # Even a failed wait or pipe close must retire the whole job.
-                    self._retire_scope()
-                self._settle_readers()
-                self._clean = True
-                if outcome == "succeeded" and (self._cancel.is_set() or not self._valid()):
-                    outcome, reason = "cancelled", None
-            except Exception:
-                outcome, reason = "failed", "cleanup_failed"
-            self._publish(snapshot(self.id, self._lane, outcome, reason=reason))
-            self._done.set()
-            _LOGGER.info(
-                "provider sign-in settled provider=%s event=%s reason=%s cleanup_confirmed=%s",
-                self._lane,
-                outcome,
-                reason or "none",
-                self._clean,
-            )
-            if self._settled is not None:
-                self._settled()
+        except Exception:
+            outcome, reason = "failed", "provider_error"
+        return outcome, reason
+
+    def _finish_run(
+        self,
+        process: WindowsOwnedProcess | None,
+        input_stream: BinaryIO | None,
+        outcome: str,
+        reason: str | None,
+    ) -> None:
+        try:
+            try:
+                outcome, reason = self._close_and_wait(process, input_stream, outcome, reason)
+            finally:
+                # Even a failed wait or pipe close must retire the whole job.
+                self._retire_scope()
+            self._settle_readers()
+            self._clean = True
+            if outcome == "succeeded" and (self._cancel.is_set() or not self._valid()):
+                outcome, reason = "cancelled", None
+        except Exception:
+            outcome, reason = "failed", "cleanup_failed"
+        self._publish(snapshot(self.id, self._lane, outcome, reason=reason))
+        self._done.set()
+        _LOGGER.info(
+            "provider sign-in settled provider=%s event=%s reason=%s cleanup_confirmed=%s",
+            self._lane,
+            outcome,
+            reason or "none",
+            self._clean,
+        )
+        if self._settled is not None:
+            self._settled()
+
+
+def _append_auth_code(line: bytearray, code: bytearray) -> None:
+    for byte in code:
+        if byte in (34, 92):
+            line.append(92)
+        line.append(byte)
+    line.extend(b'"}\n')
+    if len(line) > 4096:
+        raise ValueError("invalid_request")

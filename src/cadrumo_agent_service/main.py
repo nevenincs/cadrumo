@@ -17,13 +17,16 @@ from cadrumo.core.diagnostic_log import diagnostic_process
 from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
 from cadrumo.core.paths import effective_storage_root
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.service_access import ServiceLease
+from cadrumo_client.transport.service_client import InstalledServiceClient
 
 from .admin import AdminServer
 from .contracts import ServiceStartupFrame
 from .host.credential_frame import wipe
 from .host.model_run_relay import ModelRunRelay
 from .installed_client import SERVICE_ID, open_service_client
-from .service import AgentService, service_failure
+from .service import AgentService
+from .service_support import service_failure
 
 _LOGGER = get_logger(__name__)
 _OUTPUT_GUARD = Lock()
@@ -172,74 +175,105 @@ def _serve() -> None:
                 "service_id": SERVICE_ID,
             }
         )
-        admitted = False
-        started = False
-        while not stop.is_set():
-            # Clear before claiming, so a push that lands during the claim wakes the next turn.
-            wake.clear()
-            if _wait_out_recovery(service, wake):
-                continue
-            try:
-                lease = client.claim()
-            except RefusalError as error:
-                # A claim that ran out of time while the connection stayed open
-                # was queued behind another exchange: the admission stands and
-                # the tree keeps running. One that closed the connection ended
-                # the admission with it.
-                if error.reason is not RefusalCode.TIMEOUT or client.connection.closed:
-                    raise
-                _LOGGER.warning("agent service lease claim overran; claiming again")
-                wake.wait(_CLAIM_RETRY_SECONDS)
-                continue
-            if lease is None:
-                if admitted:
-                    break
-            else:
-                admitted = True
-                if not started:
-                    try:
-                        result = service.start()
-                        if result["event"] != "agent_ready":
-                            _publish(result)
-                    except Exception as error:
-                        _publish(service_failure(error))
-                    started = True
-                elif not service.observe():
-                    service.stop()
-            wake.wait()
+        _run_service_loop(client, service, stop, wake)
     except Exception as error:
         _publish(service_failure(error))
     finally:
-        cleanup_failed = False
-        if relay is not None:
-            relay.close()
-        if service is not None:
-            try:
-                service.request_close()
-            except Exception:
-                cleanup_failed = True
-        if server is not None:
-            try:
-                server.close()
-            except Exception:
-                cleanup_failed = True
-        if service is not None:
-            try:
-                service.close()
-            except Exception:
-                cleanup_failed = True
+        _close_service(service, server, client, relay, bearer, gateway_bearer)
+
+
+def _run_service_loop(client: InstalledServiceClient, service: AgentService, stop: Event, wake: Event) -> None:
+    admitted = False
+    started = False
+    while not stop.is_set():
+        # Clear before claiming, so a push that lands during the claim wakes the next turn.
+        wake.clear()
+        if _wait_out_recovery(service, wake):
+            continue
+        claimed, lease = _claim_or_retry(client, wake)
+        if not claimed:
+            continue
+        if lease is None:
+            if admitted:
+                break
+        else:
+            admitted = True
+            if not started:
+                _start_admitted_service(service)
+                started = True
+            elif not service.observe():
+                service.stop()
+        wake.wait()
+
+
+def _claim_or_retry(client: InstalledServiceClient, wake: Event) -> tuple[bool, ServiceLease | None]:
+    try:
+        lease = client.claim()
+    except RefusalError as error:
+        # A claim that ran out of time while the connection stayed open
+        # was queued behind another exchange: the admission stands and
+        # the tree keeps running. One that closed the connection ended
+        # the admission with it.
+        if error.reason is not RefusalCode.TIMEOUT or client.connection.closed:
+            raise
+        _LOGGER.warning("agent service lease claim overran; claiming again")
+        wake.wait(_CLAIM_RETRY_SECONDS)
+        return False, None
+    return True, lease
+
+
+def _start_admitted_service(service: AgentService) -> None:
+    try:
+        result = service.start()
+        if result["event"] != "agent_ready":
+            _publish(result)
+    except Exception as error:
+        _publish(service_failure(error))
+
+
+def _request_close_failed(service: AgentService | None) -> bool:
+    if service is not None:
         try:
-            if client is not None:
-                asyncio.run(client.close())
+            service.request_close()
+        except Exception:
+            return True
+    return False
+
+
+def _close_service(
+    service: AgentService | None,
+    server: AdminServer | None,
+    client: InstalledServiceClient | None,
+    relay: ModelRunRelay | None,
+    bearer: bytearray,
+    gateway_bearer: bytearray,
+) -> None:
+    cleanup_failed = False
+    if relay is not None:
+        relay.close()
+    cleanup_failed = _request_close_failed(service)
+    if server is not None:
+        try:
+            server.close()
         except Exception:
             cleanup_failed = True
-        finally:
-            wipe(bearer)
-            wipe(gateway_bearer)
-        if cleanup_failed:
-            _publish({"event": "refused", "code": "cleanup_unconfirmed"})
-            raise SystemExit(1)
-        _publish({"event": "stopped"})
+    if service is not None:
+        try:
+            service.close()
+        except Exception:
+            cleanup_failed = True
+    try:
+        if client is not None:
+            asyncio.run(client.close())
+    except Exception:
+        cleanup_failed = True
+    finally:
+        wipe(bearer)
+        wipe(gateway_bearer)
+    if cleanup_failed:
+        _publish({"event": "refused", "code": "cleanup_unconfirmed"})
+        raise SystemExit(1)
+    _publish({"event": "stopped"})
 
 
 if __name__ == "__main__":

@@ -13,7 +13,7 @@ from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
-from ... import service as service_module
+from ... import service_administration as service_module
 from ...adapters.provider_catalog_metadata import declared_catalog_envelope
 from ...providers.application.contracts import ProviderSettingsActionAccepted
 from ...providers.application.ports import (

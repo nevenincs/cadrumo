@@ -47,7 +47,6 @@ from .bootstrap_delete import (
     ProfileDeleteRefused,
 )
 from .contracts import RefusalCode
-from .deadline_budget import DEFAULT_TIMEOUT_POLICY
 from .enrollment_access import EnrollmentReply, EnrollmentRequest
 from .extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from .installation_requests import InstallationActRequest, InstallationReply, InstallationReplyTransfer
@@ -68,11 +67,6 @@ from .view_stream import ViewAttachRequest, ViewConnect
 
 type HumanProofMethod = Literal["password", "receipt"]
 
-# One cold profile admission can launch and prepare an isolated worker, then
-# run its supervised password KDF, before its first reply; on a loaded host each
-# takes many seconds. The same budget covers human proof and protected
-# references, and uses the whole of the runtime's single-exchange maximum.
-PROFILE_ADMISSION_TIMEOUT_SECONDS = DEFAULT_TIMEOUT_POLICY.timeout_seconds
 
 _SIGN_IN_FRONTENDS = frozenset(
     {OperationFrontendProjection.CLI, OperationFrontendProjection.TUI, OperationFrontendProjection.DESKTOP}
@@ -337,13 +331,17 @@ class AccessRefusal(BaseModel):
             raise ValueError("only a busy subject names the operation that holds it")
         if self.recovery_remaining_seconds is not None and self.code is not AccessDenialCode.CUSTODY_RECOVERING:
             raise ValueError("only a session suspended for custody recovery carries a recovery window")
+        self._validate_unknown_effect()
+        return self
+
+    def _validate_unknown_effect(self) -> None:
+        """Allow unknown change effects only for custody recovery and correlate their operation."""
         if self.effect is not None and (
             self.effect is not OperationEffect.UNKNOWN or self.code is not AccessDenialCode.CUSTODY_RECOVERING
         ):
             raise ValueError("only a change the lost worker was serving has an effect, and it is unknown")
         if self.operation_id is not None and self.effect is None:
             raise ValueError("only a change of unknown effect names its operation")
-        return self
 
 
 class Reply(

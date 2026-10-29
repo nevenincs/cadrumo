@@ -11,7 +11,6 @@ from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
-from cadrumo.entrypoints.tui.app import RootBindingV1, RootPresentationV1
 from cadrumo.entrypoints.tui.navigation import (
     TuiFocusIdentityV1,
     TuiNavigationTargetV1,
@@ -20,6 +19,7 @@ from cadrumo.entrypoints.tui.navigation import (
     declared_destination_ids,
 )
 from cadrumo.entrypoints.tui.presentation import opens_aeat_auth
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1, RootPresentationV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
@@ -34,11 +34,12 @@ from .runtime_profile_language import RuntimeProfileLanguage
 if TYPE_CHECKING:
     from cadrumo.application.operations.registry import OperationRegistry
     from cadrumo.application.overview.home import HomeAccountSession
+    from cadrumo.application.user_profile.overview import ProfileOverview
     from cadrumo.core.external_constants import OutputLanguage
     from cadrumo.entrypoints.tui.profile.overview import ProfileManagerScreen
     from cadrumo_client.transport.frontend_client import FrontendClient
 
-    from .runtime_access_management import RecoveryClientOpener
+    from .runtime_recovery_client import RecoveryClientOpener
     from .runtime_workbench import RuntimeWorkbenchRoot
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
@@ -116,12 +117,8 @@ class RuntimeInitialRoot(RuntimeProfileLanguage):
             self._workbench_binding = workbench.load()
             return self._workbench_binding
 
-    def load(self) -> RootBindingV1:
-        """Select the initial destination from the profile's authenticated status.
-
-        Only incomplete setup opens on the profile pane, so only it reads the
-        full overview before its first screen.
-        """
+    def _initial_profile(self) -> tuple[ProfileOverview | None, HomeAccountSession]:
+        """Read and fence the initial status against the current output language."""
         with startup_phase(_LOGGER, "tui_initial_profile"):
             with self._language_guard:
                 language, epoch = self._language, self._language_epoch
@@ -145,6 +142,15 @@ class RuntimeInitialRoot(RuntimeProfileLanguage):
                     raise RefusalError(RefusalCode.UNAVAILABLE)
                 if overview is not None:
                     self._latest_profile = overview
+        return overview, session
+
+    def load(self) -> RootBindingV1:
+        """Select the initial destination from the profile's authenticated status.
+
+        Only incomplete setup opens on the profile pane, so only it reads the
+        full overview before its first screen.
+        """
+        overview, session = self._initial_profile()
         if overview is None:
             return self._workbench()
 

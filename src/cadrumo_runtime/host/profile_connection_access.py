@@ -29,7 +29,8 @@ from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.transport.frame_io import write_document
 
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 if TYPE_CHECKING:
     from .profile_connections import RuntimeProfileConnections

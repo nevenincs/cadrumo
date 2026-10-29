@@ -170,12 +170,7 @@ def status_entry(
     stored = read.record if isinstance(read, StoredProviderRecord) else None
     credential = stored.credential if stored is not None and entry.auth_kind.accepts_direct_credential else None
     available, source, readiness, reason = _availability(entry, read, mode)
-    if (
-        entry.auth_kind is not ProviderAuthKind.NONE
-        and mode is not ProviderSettingsMode.DISABLED
-        and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
-        and not isinstance(read, UnreadableProviderRecord)
-    ):
+    if _uses_provider_sign_in(entry, read, mode):
         available = cli_state is CliState.INSTALLED_SIGNED_IN
         readiness = ProviderReadiness.NOT_VERIFIED if available else ProviderReadiness.SIGN_IN_REQUIRED
         reason = None if available else ProviderStatusReason.SIGN_IN_WITH_PROVIDER_TOOL
@@ -196,6 +191,19 @@ def status_entry(
         default_base_url=entry.default_base_url,
         cli_state=cli_state,
         revision=read_revision(read),
+    )
+
+
+def _uses_provider_sign_in(
+    entry: ProviderCatalogEntry,
+    read: ProviderRecordRead,
+    mode: ProviderSettingsMode,
+) -> bool:
+    return (
+        entry.auth_kind is not ProviderAuthKind.NONE
+        and mode is not ProviderSettingsMode.DISABLED
+        and (mode is ProviderSettingsMode.PROVIDER_SIGN_IN or entry.auth_kind is ProviderAuthKind.PROVIDER_SIGN_IN_ONLY)
+        and not isinstance(read, UnreadableProviderRecord)
     )
 
 
@@ -268,10 +276,7 @@ class ProviderCredentialResolver:
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.RECORD_UNREADABLE)
         record = read.record if isinstance(read, StoredProviderRecord) else None
         if entry.auth_kind is ProviderAuthKind.NONE:
-            if _keyless_turned_off(read):
-                return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
-            generation = record.generation if record is not None else _PROCESS_GENERATION
-            return ResolvedKeyless(provider=entry.id, consumer=consumer, generation=generation)
+            return _resolve_keyless(entry, consumer, read, record)
         if record is not None and record.credential_state is CredentialState.DISABLED:
             if record.assistant_auth is AssistantAuth.PROVIDER_SIGN_IN:
                 return ResolvedProviderSignIn(provider=entry.id, consumer=consumer, generation=record.generation)
@@ -281,17 +286,7 @@ class ProviderCredentialResolver:
             return sign_in
         if record is not None and record.assistant_auth is AssistantAuth.DISABLED:
             return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
-        if record is not None and record.credential is not None:
-            return ResolvedDirectCredential(
-                provider=entry.id,
-                consumer=consumer,
-                kind=record.credential.kind,
-                secret=record.credential.secret,
-                base_url=record.credential.base_url or entry.default_base_url,
-                source=ProviderCredentialSource.PROFILE,
-                generation=record.generation,
-            )
-        return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
+        return _resolve_direct(entry, consumer, record)
 
     @staticmethod
     def _assistant_sign_in(
@@ -308,6 +303,36 @@ class ProviderCredentialResolver:
             generation = record.generation if record is not None else _PROCESS_GENERATION
             return ResolvedProviderSignIn(provider=entry.id, consumer=ProviderConsumer.ASSISTANT, generation=generation)
         return None
+
+
+def _resolve_direct(
+    entry: ProviderCatalogEntry,
+    consumer: ProviderConsumer,
+    record: ProviderSettingsRecord | None,
+) -> ProviderCredentialResolution:
+    if record is not None and record.credential is not None:
+        return ResolvedDirectCredential(
+            provider=entry.id,
+            consumer=consumer,
+            kind=record.credential.kind,
+            secret=record.credential.secret,
+            base_url=record.credential.base_url or entry.default_base_url,
+            source=ProviderCredentialSource.PROFILE,
+            generation=record.generation,
+        )
+    return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.CREDENTIAL_MISSING)
+
+
+def _resolve_keyless(
+    entry: ProviderCatalogEntry,
+    consumer: ProviderConsumer,
+    read: ProviderRecordRead,
+    record: ProviderSettingsRecord | None,
+) -> ProviderCredentialResolution:
+    if _keyless_turned_off(read):
+        return _unavailable(entry.id, consumer, ProviderCredentialUnavailableReason.PROVIDER_DISABLED)
+    generation = record.generation if record is not None else _PROCESS_GENERATION
+    return ResolvedKeyless(provider=entry.id, consumer=consumer, generation=generation)
 
 
 def _keyless_turned_off(read: ProviderRecordRead) -> bool:

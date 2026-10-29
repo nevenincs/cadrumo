@@ -63,8 +63,6 @@ from ..contracts.operation_access import (
     OperationReply,
     OperationRequest,
     OperationReview,
-    OperationReviewClaim,
-    OperationReviewClaimed,
     OperationSubmit,
     OperationSubmitted,
 )
@@ -573,30 +571,6 @@ class OperationController:
         # JSON fields in its transport RootModel rather than discard them.
         return cast("OperationReviewProjectionResultV1[ReviewT]", resolved), content_hash_hex(reply.document)
 
-    async def claim_review(
-        self, reference: OperationReviewProjectionReferenceV1, reviewed_document_digest: str
-    ) -> OperationReviewClaimed:
-        """Explicitly claim the exact displayed document; retain no inferred authority."""
-        if reference.operation_id != self.operation_id:
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        reply = await self._exchange(
-            OperationReviewClaim(
-                request_id=uuid4(),
-                profile_id=self.client.profile_id,
-                session_id=self.session_id,
-                reference=reference,
-                reviewed_document_digest=reviewed_document_digest,
-            )
-        )
-        if (
-            not isinstance(reply, OperationReviewClaimed)
-            or reply.reviewed_document_digest != reviewed_document_digest
-            or reply.reference.model_copy(update={"revision": reference.revision}) != reference
-            or reply.reference.revision not in (reference.revision, reference.revision + 1)
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return reply
-
     async def manage(self, request: OperationManagementRequest) -> dict[str, JsonValue]:
         """Use canonical controls under this operation's original session binding."""
         if request.operation_id != self.operation_id:
@@ -682,13 +656,7 @@ async def _await_terminal(
         if not isinstance(observed, OperationObservationSuccessV1):
             raise RefusalError(RefusalCode.INVALID_FRAME)
         state = observed.projection
-        if (
-            state.operation_id != controller.operation_id
-            or state.definition_id != definition_id
-            or state.subject_ref != subject_ref
-            or state.definition_contract.request_schema != request_schema
-        ):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
+        _require_terminal_identity(state, controller.operation_id, definition_id, subject_ref, request_schema)
         if state.lifecycle is OperationLifecycle.TERMINAL:
             return state
         if not changes.armed:
@@ -696,6 +664,22 @@ async def _await_terminal(
             changes.arm()
             continue
         await changes.wait(remaining_budget(deadline))
+
+
+def _require_terminal_identity(
+    state: OperationPublicProjectionV1,
+    operation_id: str,
+    definition_id: str,
+    subject_ref: str,
+    request_schema: OperationSchemaIdentityV1,
+) -> None:
+    if (
+        state.operation_id != operation_id
+        or state.definition_id != definition_id
+        or state.subject_ref != subject_ref
+        or state.definition_contract.request_schema != request_schema
+    ):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
 def _decode[T](adapter: TypeAdapter[T], document: dict[str, JsonValue]) -> T:

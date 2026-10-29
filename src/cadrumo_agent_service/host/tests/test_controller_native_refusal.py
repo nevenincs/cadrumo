@@ -29,8 +29,9 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.service_client import InstalledServiceClient
 from cadrumo_client.transport.tests.memory_channel import MemoryChannel
 
-from ... import service as service_module
-from ...service import AgentService, _GatewayCredentials
+from ... import service_startup as service_module
+from ...gateway_credentials import GatewayCredentials
+from ...service import AgentService
 from ..controller import (
     EXIT_OBSERVATION_SECONDS,
     AgentGenerations,
@@ -402,7 +403,7 @@ def test_service_replacement_retirement_consumes_the_existing_startup_deadline(
         emit=lambda event: None,
     )
     service._controller = controller
-    service._credentials = cast(_GatewayCredentials, Credentials())
+    service._credentials = cast(GatewayCredentials, Credentials())
     service._owned = True
     monkeypatch.setattr(service_module, "profile_agent_workspace", lambda root: root)
     monkeypatch.setattr(service_module, "agent_image", prepared)
@@ -450,7 +451,7 @@ def test_startup_cancellation_closes_the_exact_credential_connection_and_never_p
             pass
 
     process = Process(status=0)
-    credentials = _GatewayCredentials(
+    credentials = GatewayCredentials(
         Credentials(),
         bytearray(b"synthetic-bearer"),
         bytearray(b"synthetic-host"),

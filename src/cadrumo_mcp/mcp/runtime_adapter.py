@@ -22,7 +22,8 @@ from cadrumo.core.async_cleanup import (
 from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS, ProfileStatus
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
+from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.credentials import open_installed_credential_client
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
@@ -174,7 +175,7 @@ class RuntimeMcpAdapter:
                 profile_id=profile_id,
                 credential_reference=reference,
                 frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-                timeout=PROFILE_ADMISSION_TIMEOUT_SECONDS,
+                timeout=DEFAULT_TIMEOUT_POLICY.timeout_seconds,
                 scope=surface_scope(self.surface),
             )
         except BaseException as error:
@@ -407,26 +408,30 @@ class RuntimeMcpAdapter:
         denial = reply.get("denial") or (status.get("denial") if isinstance(status, dict) else None)
         code = reply.get("code") if reply.get("outcome") == "refused" else denial
         if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
-            reply["remedy"] = PERSON_ACT_REMEDY
-            if (
-                self.profile_id is not None
-                and name == "execute"
-                and args.get("definition_id") in {"auth.provider.configure", "auth.credential.save"}
-            ):
-                reply["next_call"] = {
-                    "tool": "execute",
-                    "arguments": {
-                        "definition_id": "auth.local-read",
-                        "payload": {"profile_id": str(self.profile_id), "kind": "setup"},
-                        "wait_seconds": 2,
-                    },
-                }
+            self._person_act_remedy(name, args, reply)
         if code or has_refusal(reply):
             # These replies are protocol successes, so transport exception
             # logging cannot see them. Never log arguments or tool results.
             _LOGGER.warning("MCP tool refused: tool=%s reason=%s", name, code or "operation_refused")
         self._notices.annotate(name, reply)
         return reply
+
+    def _person_act_remedy(self, name: str, args: dict[str, Any], reply: dict[str, Any]) -> None:
+        """Retain the person-owned remedy and its existing local authentication read."""
+        reply["remedy"] = PERSON_ACT_REMEDY
+        if (
+            self.profile_id is not None
+            and name == "execute"
+            and args.get("definition_id") in {"auth.provider.configure", "auth.credential.save"}
+        ):
+            reply["next_call"] = {
+                "tool": "execute",
+                "arguments": {
+                    "definition_id": "auth.local-read",
+                    "payload": {"profile_id": str(self.profile_id), "kind": "setup"},
+                    "wait_seconds": 2,
+                },
+            }
 
     async def _answer(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         """Serve one tool call, turning every failure into its stable refusal.
@@ -475,6 +480,11 @@ class RuntimeMcpAdapter:
                 # The runtime has ended the held session, whether or not its notice has arrived yet: let it
                 # go, so this answer sends the agent to the person and the next call asks the runtime again.
                 await self._release_lease(task_name="mcp-ended-session-close")
+        self._add_refusal_remedy(code, reply)
+        return reply
+
+    def _add_refusal_remedy(self, code: str, reply: dict[str, Any]) -> None:
+        """Choose the refusal remedy after any ended lease has been released."""
         if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
             # The runtime refused the person's own act; the agent is told to ask the person.
             reply["remedy"] = PERSON_ACT_REMEDY
@@ -483,7 +493,6 @@ class RuntimeMcpAdapter:
         elif self.client is None and (told := sign_in_remedy(code, reply)) is not None:
             # Nothing admits this server: no live sign-in and no configured key.
             reply["remedy"] = told
-        return reply
 
     async def _hold_or_restore_session(self) -> None:
         if self._requests_attendance:

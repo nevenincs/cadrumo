@@ -44,7 +44,7 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import RegimeLegend, resolve_regime_legends
 from cadrumo.domain.iva.schema import InvoiceKind
-from cadrumo.entrypoints.adapter_composition import build_ledger_evidence_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
 from cadrumo.entrypoints.ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
 

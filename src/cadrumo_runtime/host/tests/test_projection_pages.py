@@ -53,8 +53,9 @@ from cadrumo_runtime.contracts.worker_authorization import WORKER_AUTOMATION_INV
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from .. import profile_connection_operations
+from ..profile_connection import ProfileConnection
 from ..profile_connections import RuntimeProfileConnections
-from ..profile_host import ProfileConnection, RuntimeProfileHost
+from ..profile_host import RuntimeProfileHost
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
 from .test_automation_enrollment import _connect, _LoginObservation, _submit_operation
 

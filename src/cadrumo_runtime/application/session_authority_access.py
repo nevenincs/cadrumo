@@ -49,6 +49,17 @@ from .session_authority_contracts import SessionAuthorityFacts
 from .session_authority_core import SessionAuthorityCore
 
 
+def _status_session_mismatch(
+    session: AccessSession | None, facts: SessionAuthorityFacts, connection_id: UUID
+) -> AccessDenied | None:
+    """Refuse status reads from a different connection or authenticated client."""
+    if session is not None and session.connection_id != connection_id:
+        return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
+    if session is not None and session.client_id != facts.context.authenticated_client_id:
+        return AccessDenied(code=AccessDenialCode.CLIENT_MISMATCH)
+    return None
+
+
 class SessionAuthorityAccess(SessionAuthorityCore):
     """Resolve caller-bound access and publish safe authority projections."""
 
@@ -228,6 +239,15 @@ class SessionAuthorityAccess(SessionAuthorityCore):
                 raise ProfileAccessRefusedError(allowed.code)
             yield allowed
 
+    def _lock_suspended_session(
+        self, own: AccessSession, connection_id: UUID, session_id: UUID, target_session_id: UUID
+    ) -> tuple[UUID, ...] | AccessDenied:
+        """Allow a suspended session's holder to end that same session."""
+        if target_session_id != session_id or own.connection_id != connection_id:
+            return self._absent_session(session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
+        self._retire({session_id})
+        return (session_id,)
+
     def lock_session(
         self: SessionAuthorityAccess, *, connection_id: UUID, session_id: UUID, target_session_id: UUID
     ) -> tuple[UUID, ...] | AccessDenied:
@@ -239,11 +259,7 @@ class SessionAuthorityAccess(SessionAuthorityCore):
             session = self._sessions.get(session_id)
             own = self._suspended.get(session_id)
             if session is None and own is not None:
-                # A suspended session grants nothing, but its holder may still end it.
-                if target_session_id != session_id or own.connection_id != connection_id:
-                    return self._absent_session(session_id, AccessDenialCode.AUTHENTICATION_REQUIRED)
-                self._retire({session_id})
-                return (session_id,)
+                return self._lock_suspended_session(own, connection_id, session_id, target_session_id)
             grant, key = None, None
             if session is not None and session_requires_grant(session):
                 snapshot = self._snapshot(facts)
@@ -350,10 +366,9 @@ class SessionAuthorityAccess(SessionAuthorityCore):
         if suspended is not None and suspended.connection_id != connection_id:
             return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
         session = self._sessions.get(session_id)
-        if session is not None and session.connection_id != connection_id:
-            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-        if session is not None and session.client_id != facts.context.authenticated_client_id:
-            return AccessDenied(code=AccessDenialCode.CLIENT_MISMATCH)
+        denial = _status_session_mismatch(session, facts, connection_id)
+        if denial is not None:
+            return denial
         grant, key = None, None
         if session is not None and session_requires_grant(session):
             snapshot = self._snapshot(facts)

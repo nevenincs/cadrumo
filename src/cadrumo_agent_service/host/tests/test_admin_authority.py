@@ -15,7 +15,7 @@ from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 
 from ...admin import AdminRequest, AdminServer
 from ...contracts import ServiceStartupFrame
-from ...service import _GatewayCredentials
+from ...gateway_credentials import GatewayCredentials
 from ..controller import AgentGenerations, ResolvedAgentCredentials
 from ..credential_frame import build_credential_frame, wipe
 
@@ -92,7 +92,7 @@ def test_gateway_frame_secret_is_refused_and_parent_admin_secret_dispatches(acti
     parent = bytearray(startup.bearer, "ascii")
     gateway = bytearray(startup.gateway_bearer, "ascii")
     host_token = bytearray(b"c" * 43)
-    resolved = _GatewayCredentials(_CredentialSource(), gateway, host_token, Event()).resolve_for_agent()
+    resolved = GatewayCredentials(_CredentialSource(), gateway, host_token, Event()).resolve_for_agent()
     agent_frame = build_credential_frame(
         resolved.credentials, gateway_bearer=resolved.gateway_bearer, host_token=resolved.host_token
     )

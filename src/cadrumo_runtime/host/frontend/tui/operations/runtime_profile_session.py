@@ -29,6 +29,22 @@ _OPERATION_TIMEOUT_SECONDS = 120
 _RECORDS_UNCHANGED: Final = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
+def _unknown_submission_outcome(
+    error: Exception,
+    operation_id: str,
+    contract: OperationPublicDefinitionContractV1 | None,
+    terminal: OperationPublicProjectionV1 | None,
+) -> OperationOutcomeUnknownError | None:
+    """Retain uncertainty when a submitted change may have taken effect."""
+    if (terminal is None or terminal.effect is not OperationEffect.NONE) and _may_change_records(contract):
+        return OperationOutcomeUnknownError(
+            operation_id=operation_id,
+            effect=None if terminal is None else terminal.effect,
+            reason=error if isinstance(error, CadrumoError) else None,
+        )
+    return None
+
+
 class RuntimeProfileSession:
     """Submit registered operations only while the admitted profile session is still live."""
 
@@ -189,13 +205,7 @@ class RuntimeProfileSession:
         expired or unavailable as observed, carrying the receipt and any
         unknown outcome so that neither is hidden behind the sign-in.
         """
-        unknown: OperationOutcomeUnknownError | None = None
-        if (terminal is None or terminal.effect is not OperationEffect.NONE) and _may_change_records(contract):
-            unknown = OperationOutcomeUnknownError(
-                operation_id=operation_id,
-                effect=None if terminal is None else terminal.effect,
-                reason=error if isinstance(error, CadrumoError) else None,
-            )
+        unknown = _unknown_submission_outcome(error, operation_id, contract, terminal)
         lost = error if isinstance(error, AccountSessionExpiredError) else None
         if lost is None:
             try:

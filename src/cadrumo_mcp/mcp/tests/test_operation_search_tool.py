@@ -29,7 +29,7 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_mcp.mcp.access_scope import surface_scope
@@ -541,7 +541,7 @@ async def test_reauthentication_starts_a_fresh_description_cache(monkeypatch: py
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         return cast(FrontendClient, replacement)
 

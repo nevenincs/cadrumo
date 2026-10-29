@@ -20,7 +20,8 @@ from cadrumo_client.transport.frame_io import read_secret, write_document
 from cadrumo_runtime.contracts.worker_authorization import WorkerAuthorityRequest
 
 from .operation_projection import validate_operation_release
-from .profile_host import ProfileConnection, RuntimeProfileHost
+from .profile_connection import ProfileConnection
+from .profile_host import RuntimeProfileHost
 
 
 def stream_operation_submission(

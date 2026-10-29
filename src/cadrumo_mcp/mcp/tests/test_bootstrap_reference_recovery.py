@@ -14,7 +14,7 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_mcp.mcp.access_scope import surface_scope
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
@@ -97,7 +97,7 @@ async def test_a_refused_configured_key_fences_every_private_route_and_offers_no
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         calls.append((profile_id, credential_reference, frontend))
         raise AutomationCustodyError(failure)
@@ -161,7 +161,7 @@ async def test_a_configured_key_the_runtime_refused_admits_the_server_once_the_r
         timeout: float,
         scope: AccessScope,
     ) -> FrontendClient:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         assert profile_id == candidate.profile_id
         assert frontend is OperationFrontendProjection.EXTERNAL_CLIENT

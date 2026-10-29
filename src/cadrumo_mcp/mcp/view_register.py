@@ -138,20 +138,30 @@ def view_register_query(args: dict[str, Any], language: str) -> dict[str, Any]:
             return {"outcome": "not_found", "id": view_id, "language": language}
         return {"outcome": "found", "language": language, "views": [_row(register, element, language)]}
     if (text := args.get("link")) is not None:
-        parsed = parse_view_link(text, register=register)
-        if isinstance(parsed, ViewLinkRefused):
-            return {"outcome": "invalid", "reason": parsed.reason.value}
-        # The parser admits only a registered element, so its lineage starts with it.
-        element = register.lineage(parsed.view_id)[0]
-        return {
-            "outcome": "valid",
-            "language": language,
-            "link": view_link(parsed.view_id, dict(parsed.params), parsed.prefer, register=register),
-            "view": _row(register, element, language),
-            "params": dict(parsed.params),
-            PREFER_KEY: None if parsed.prefer is None else parsed.prefer.value,
-            "opens": _opens(register, parsed),
-        }
+        return _view_link_query(register, text, language)
+    return _search_views(register, args, language)
+
+
+def _view_link_query(register: NavigationRegister, text: str, language: str) -> dict[str, Any]:
+    """Validate a view link and report its declared navigation destination."""
+    parsed = parse_view_link(text, register=register)
+    if isinstance(parsed, ViewLinkRefused):
+        return {"outcome": "invalid", "reason": parsed.reason.value}
+    # The parser admits only a registered element, so its lineage starts with it.
+    element = register.lineage(parsed.view_id)[0]
+    return {
+        "outcome": "valid",
+        "language": language,
+        "link": view_link(parsed.view_id, dict(parsed.params), parsed.prefer, register=register),
+        "view": _row(register, element, language),
+        "params": dict(parsed.params),
+        PREFER_KEY: None if parsed.prefer is None else parsed.prefer.value,
+        "opens": _opens(register, parsed),
+    }
+
+
+def _search_views(register: NavigationRegister, args: dict[str, Any], language: str) -> dict[str, Any]:
+    """Page the complete view register or its stable lexical relevance ranking."""
     limit = args.get("limit", VIEW_PAGE_DEFAULT)
     query = _words(args.get("query") or "")
     if not query:

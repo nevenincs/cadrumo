@@ -314,7 +314,7 @@ def test_a_revocation_between_two_exchanges_on_one_connection_refuses_the_second
     ("mode", "refusal"),
     [
         ("frame", "refusal:runtime_connection_closed"),
-        ("timeout", "refusal:runtime_deadline_exceeded"),
+        ("timeout", "refusal:runtime_timeout"),
         ("secret", "refusal:runtime_invalid_frame"),
     ],
 )

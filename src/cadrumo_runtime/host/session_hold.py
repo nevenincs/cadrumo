@@ -10,9 +10,10 @@ import struct
 import sys
 import time
 from collections.abc import Mapping
+from dataclasses import dataclass
 from queue import Queue
 from threading import Event, Semaphore, Thread
-from typing import Literal
+from typing import Literal, cast
 from uuid import UUID, uuid4
 
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
@@ -22,7 +23,9 @@ from cadrumo.core.hashing import reject_duplicate_json_members
 from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.presentation import presentation_refusal
+from cadrumo_client.contracts.profile_access import ProfileStatus
 from cadrumo_client.transport.frame_io import MAXIMUM_FRAME_BYTES
+from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_client.transport.profile_language import ProfileLanguage, read_profile_language, set_profile_language
@@ -109,11 +112,15 @@ def _report_failure(error: BaseException) -> dict[str, object] | None:
         )
         sys.stderr.write(rendered)
         sys.stderr.flush()
-        document = json.loads(rendered)
-        if not isinstance(document, dict) or not isinstance(error_document := document.get("error"), dict):
+        decoded: object = json.loads(rendered)
+        if not isinstance(decoded, dict):
+            return None
+        document = cast("dict[str, object]", decoded)
+        error_document = document.get("error")
+        if not isinstance(error_document, dict):
             return None
         # The protocol copy names the cause; a message may interpolate context, so it stays off the line.
-        error_document.pop("message", None)
+        cast("dict[str, object]", error_document).pop("message", None)
         return {str(key): value for key, value in document.items()}
     except Exception:
         return None
@@ -139,6 +146,395 @@ def _emit_refusal(code: str, request_id: UUID | None = None, report: Mapping[str
     _emit(document)
 
 
+def hold_sign_in(
+    client: FrontendClient, stdin_fd: int, *, password_stdin: bool, persist_receipt: bool
+) -> tuple[ProfileStatus, bool] | None:
+    """Read a bounded proof, wiping its bytes after the sign-in attempt."""
+    resumed = not password_stdin
+    if password_stdin:
+        header = _read_stdin_bytes(stdin_fd, 4)
+        if len(header) != 4:
+            return None
+        length = struct.unpack("!I", header)[0]
+        if length > _MAXIMUM_PASSWORD_BYTES:
+            return None
+        if length == 0:
+            # The window signed in on its own connection and stored the sign-in; this
+            # hold, started while the form showed, resumes it instead of asking again.
+            resumed = True
+            try:
+                status = client.resume_receipt()
+            except FrontendRefusedError as refused:
+                _emit(_sign_in_refusal(refused))
+                return None
+        else:
+            secret = _read_stdin_bytes(stdin_fd, length)
+            try:
+                if len(secret) != length:
+                    return None
+                status = client.login_password(secret, persist_receipt=persist_receipt)
+            except FrontendRefusedError as refused:
+                # A refused password is the person's to try again; this hold ends with the reason.
+                _emit(_sign_in_refusal(refused))
+                return None
+            finally:
+                secret[:] = bytes(len(secret))
+    else:
+        status = client.resume_receipt()
+    return status, resumed
+
+
+def parse_hold_request(line: bytes) -> tuple[UUID, str, dict[str, object]] | None:
+    """Validate the complete line, correlation ID and action-specific keys."""
+    if len(line) > _MAXIMUM_REQUEST_LINE_BYTES or not line.endswith(b"\n"):
+        _emit_refusal("invalid", uuid4())
+        return None
+    try:
+        decoded: object = json.loads(line, object_pairs_hook=reject_duplicate_json_members)
+    except Exception:
+        _emit_refusal("invalid", uuid4())
+        return None
+    if not isinstance(decoded, dict):
+        _emit_refusal("invalid")
+        return None
+    request = cast("dict[str, object]", decoded)
+    try:
+        request_id = UUID(cast("str", request.get("request_id")))
+    except (AttributeError, TypeError, ValueError):
+        _emit_refusal("invalid")
+        return None
+    action = request.get("action")
+    if not isinstance(action, str):
+        _emit_refusal("invalid", request_id)
+        return None
+    action_keys = {
+        "service_admission": {"recipient_connection_id", "service_id"},
+        "attendance_decision": {"attendance_id", "approve"},
+        "language_set": {"language"},
+        "present_destination": {"destination"},
+        **RELAY_ACTION_KEYS,
+    }
+    optional: set[str] = {"params"} if action == "present_destination" else set[str]()
+    if set(request) - optional != {"request_id", "action"} | action_keys.get(action, set()):
+        _emit_refusal("invalid", request_id)
+        return None
+    return request_id, action, request
+
+
+@dataclass(slots=True)
+class HoldActionState:
+    """Per-hold presentation and language observation state."""
+
+    client: FrontendClient
+    status: ProfileStatus
+    profile_id: UUID
+    relay: OperationRelay
+    language_dirty: Event
+    language_cache: ProfileLanguage | None = None
+    observing: bool = False
+
+
+def process_hold_request(
+    state: HoldActionState, request_id: UUID, action: str, request: dict[str, object]
+) -> int | None:
+    """Execute one correlated request and retain event observation state."""
+    status = state.status
+    started = time.monotonic()
+    try:
+        if action == "close":
+            _emit({"kind": "session_closed", "request_id": str(request_id)})
+            return 0
+        if action == "observe_events":
+            # From here on, each push is also a line of its own: a parent that asks
+            # has learned to tell a pushed line from the reply to its request.
+            state.observing = True
+            _emit(
+                {
+                    "kind": "events_observed",
+                    "request_id": str(request_id),
+                    "runtime_boot_id": str(status.runtime_boot_id),
+                    "connection_id": str(status.connection_id),
+                }
+            )
+            return None
+        if action in {"service_admission", "attendance_inventory", "attendance_decision", "status", "activity"}:
+            return handle_hold_access(state, request_id, action, request)
+        if action == "present_destination":
+            return handle_hold_destination(state, request_id, action, request)
+        if action in RELAY_ACTION_KEYS:
+            return handle_hold_relay(state, request_id, action, request)
+        if action in {"language_read", "language_set", "language_observe"}:
+            return handle_hold_language(state, request_id, action, request)
+        _emit_refusal("invalid", request_id)
+        return 1
+    except (KeyError, TypeError, ValueError):
+        _emit_refusal("invalid", request_id)
+        return 1
+    except Exception as error:
+        # A valid command keeps its correlation key even when transport,
+        # validation, or runtime work fails. The protocol never carries
+        # the exception, only its registered, message-free report.
+        _emit_refusal("unavailable", request_id, _report_failure(error))
+        return 1
+    finally:
+        log_slow_hold_request(action, request_id, started)
+    return None
+
+
+def log_slow_hold_request(action: str, request_id: UUID, started: float) -> None:
+    """Log slow requests without logging their private contents."""
+    elapsed = time.monotonic() - started
+    if elapsed >= 1.0:
+        _LOGGER.warning(
+            "session_hold_request_slow action=%s request_id=%s elapsed_seconds=%.3f",
+            action
+            if action
+            in {
+                "close",
+                "observe_events",
+                "service_admission",
+                "attendance_inventory",
+                "attendance_decision",
+                "status",
+                "activity",
+                "language_read",
+                "language_set",
+                "language_observe",
+                "present_destination",
+                *RELAY_ACTION_KEYS,
+            }
+            else "invalid",
+            request_id,
+            elapsed,
+        )
+
+
+def hold_service_admission(state: HoldActionState, request_id: UUID, request: dict[str, object]) -> int | None:
+    """Admit a service only while this held session remains authoritative."""
+    client = state.client
+    current = client.status()
+    if current.status.denial is AccessDenialCode.OS_SESSION_UNAVAILABLE:
+        # An uncertain OS observation refuses this admission but keeps the held sign-in.
+        _emit_refusal("unavailable", request_id)
+        return None
+    if current.status.session_id is None or current.status.denial is not None:
+        _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
+        return 1
+    reply = client.service_admission(
+        UUID(cast("str", request["recipient_connection_id"])), cast("str", request["service_id"]), request_id=request_id
+    )
+    _emit(reply.model_dump(mode="json"))
+    return None
+
+
+def handle_hold_access(state: HoldActionState, request_id: UUID, action: str, request: dict[str, object]) -> int | None:
+    """Handle a correlated access request."""
+    client = state.client
+    if action == "service_admission":
+        return hold_service_admission(state, request_id, request)
+    elif action == "attendance_inventory":
+        reply = client.attendance_inventory()
+        _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+    elif action == "attendance_decision":
+        if type(request.get("approve")) is not bool:
+            _emit({"kind": "session_refused", "request_id": str(request_id), "code": "invalid"})
+            return 1
+        reply = client.decide_attendance(
+            UUID(cast("str", request["attendance_id"])), approve=cast("bool", request["approve"])
+        )
+        _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+    elif action == "status":
+        reply = client.status()
+        _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+    elif action == "activity":
+        try:
+            reply = client.note_activity()
+        except FrontendRefusedError as error:
+            if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
+                _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
+                return 1
+            # As for an admission: typing during an uncertain OS observation keeps the held sign-in.
+            _emit_refusal("unavailable", request_id)
+            return None
+        _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
+    return None
+
+
+def hold_string_params(params: dict[str, object]) -> dict[str, str] | None:
+    """Accept destination parameters only when every value is a string."""
+    if not all(isinstance(value, str) for value in params.values()):
+        return None
+    return {key: value for key, value in params.items() if isinstance(value, str)}
+
+
+def handle_hold_destination(
+    state: HoldActionState, request_id: UUID, action: str, request: dict[str, object]
+) -> int | None:
+    """Handle a correlated presentation request."""
+    client, status, profile_id = state.client, state.status, state.profile_id
+    if action == "present_destination":
+        destination, raw_params = request["destination"], request.get("params", {})
+        if not isinstance(destination, str) or not isinstance(raw_params, dict):
+            _emit_refusal("invalid", request_id)
+            return 1
+        params = cast("dict[str, object]", raw_params)
+        string_params = hold_string_params(params)
+        if string_params is None:
+            _emit_refusal("invalid", request_id)
+            return 1
+        if presentation_refusal(destination, string_params) is not None:
+            _emit_refusal("invalid", request_id)
+            return 1
+        try:
+            presented = client.present_destination(destination, string_params)
+        except FrontendRefusedError as error:
+            if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
+                _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
+                return 1
+            # As for activity: an uncertain OS observation refuses the page but keeps the held sign-in.
+            _emit_refusal("unavailable", request_id)
+            return None
+        _emit(
+            {
+                "kind": "destination_presented",
+                "request_id": str(request_id),
+                "profile_id": str(profile_id),
+                "session_id": str(client.session_id),
+                "runtime_boot_id": str(status.runtime_boot_id),
+                "connection_id": str(status.connection_id),
+                "destination": presented.destination,
+                "params": dict(presented.params),
+                "delivered": presented.delivered,
+            }
+        )
+    return None
+
+
+def handle_hold_relay(state: HoldActionState, request_id: UUID, action: str, request: dict[str, object]) -> int | None:
+    """Handle a correlated operation request."""
+    client, status, profile_id, relay = state.client, state.status, state.profile_id, state.relay
+    if action in RELAY_ACTION_KEYS:
+        try:
+            fields, refusal = relay.handle(action, request), None
+        except RelayRefusedError as refused:
+            fields, refusal = None, refused
+        _emit(
+            relay_reply(
+                request_id=request_id,
+                profile_id=profile_id,
+                session_id=client.session_id,
+                runtime_boot_id=status.runtime_boot_id,
+                connection_id=status.connection_id,
+                fields=fields,
+                refusal=refusal,
+            )
+        )
+    return None
+
+
+def handle_hold_language(
+    state: HoldActionState, request_id: UUID, action: str, request: dict[str, object]
+) -> int | None:
+    """Handle a correlated language request."""
+    client, status, profile_id = state.client, state.status, state.profile_id
+    if action in {"language_read", "language_set", "language_observe"}:
+        if action != "language_observe" or state.language_cache is None or state.language_dirty.is_set():
+            # Clear before reading so a concurrent notification remains dirty.
+            state.language_dirty.clear()
+            state.language_cache = (
+                set_profile_language(client, OutputLanguage(request["language"]))
+                if action == "language_set"
+                else read_profile_language(client)
+            )
+        language = state.language_cache
+        _emit(
+            {
+                "kind": "profile_language",
+                "request_id": str(request_id),
+                "profile_id": str(profile_id),
+                "session_id": str(client.session_id),
+                "runtime_boot_id": str(status.runtime_boot_id),
+                "connection_id": str(status.connection_id),
+                "language": None if language.language is None else language.language.value,
+                "record_revision": language.record_revision,
+            }
+        )
+    return None
+
+
+def serve_held_session(client: FrontendClient, status: ProfileStatus, profile_id: UUID, stdin_fd: int) -> int:
+    """Relay parent requests and runtime cues until the held session ends."""
+    # One inbox for the parent's requests and the runtime's pushes: the hold
+    # sleeps until either arrives. Retirement, including a lost connection, is
+    # pushed, so the hold never asks the runtime whether its session lives.
+    inbox: Queue[tuple[_Arrival, bytes]] = Queue()
+    retired = Event()
+    # The parent writes one request and reads its reply, so one unread line is all the input kept.
+    line_slot = Semaphore(1)
+    language_dirty = Event()
+    language_dirty.set()
+
+    def retire() -> None:
+        retired.set()
+        inbox.put(("retired", b""))
+
+    def language_changed(_event: object) -> None:
+        language_dirty.set()
+        inbox.put(("profile_language_changed", b""))
+
+    client.subscribe_session_retirement(retire)
+    client.subscribe_profile_language_changes(language_changed)
+    client.subscribe_profile_record_changes(lambda: inbox.put(("profile_records_changed", b"")))
+    client.subscribe_attendance_changes(lambda: inbox.put(("attendance_changed", b"")))
+
+    relay = OperationRelay(client)
+    action_state = HoldActionState(client, status, profile_id, relay, language_dirty)
+    # The cue names no operation; it matters here only while an operation this session relayed is unsettled.
+    client.subscribe_operation_changes(lambda: inbox.put(("operation_changed", b"")))
+
+    def read_lines() -> None:
+        while not retired.is_set():
+            line_slot.acquire()
+            line = _read_stdin_line(stdin_fd, _MAXIMUM_REQUEST_LINE_BYTES)
+            if retired.is_set():
+                return
+            inbox.put(("line", line))
+            if not line or len(line) > _MAXIMUM_REQUEST_LINE_BYTES:
+                return
+
+    Thread(target=read_lines, name="human-session-input", daemon=True).start()
+    return run_hold_inbox(inbox, retired, line_slot, action_state)
+
+
+def run_hold_inbox(
+    inbox: Queue[tuple[_Arrival, bytes]], retired: Event, line_slot: Semaphore, state: HoldActionState
+) -> int:
+    """Serve one parent line or runtime cue at a time."""
+    profile_id = state.profile_id
+    while True:
+        arrival, line = inbox.get()
+        if retired.is_set():
+            _emit({"kind": "session_retired", "profile_id": str(profile_id)})
+            return 0
+        if arrival != "line":
+            if arrival == "operation_changed" and not state.relay.watching():
+                continue
+            if state.observing:
+                # Only a reason to read again through a request; the line carries no state.
+                _emit({"kind": "runtime_event", "event": arrival})
+            continue
+        line_slot.release()
+        if not line:
+            return 0
+        parsed = parse_hold_request(line)
+        if parsed is None:
+            return 1
+        request_id, action, request = parsed
+        outcome = process_hold_request(state, request_id, action, request)
+        if outcome is not None:
+            return outcome
+
+
 async def _hold(
     profile_id: UUID,
     *,
@@ -149,37 +545,10 @@ async def _hold(
     client = await open_installed_client(profile_id=profile_id, frontend=frontend)
     try:
         stdin_fd = sys.stdin.fileno()
-        resumed = not password_stdin
-        if password_stdin:
-            header = _read_stdin_bytes(stdin_fd, 4)
-            if len(header) != 4:
-                return 1
-            length = struct.unpack("!I", header)[0]
-            if length > _MAXIMUM_PASSWORD_BYTES:
-                return 1
-            if length == 0:
-                # The window signed in on its own connection and stored the sign-in; this
-                # hold, started while the form showed, resumes it instead of asking again.
-                resumed = True
-                try:
-                    status = client.resume_receipt()
-                except FrontendRefusedError as refused:
-                    _emit(_sign_in_refusal(refused))
-                    return 1
-            else:
-                secret = _read_stdin_bytes(stdin_fd, length)
-                try:
-                    if len(secret) != length:
-                        return 1
-                    status = client.login_password(secret, persist_receipt=persist_receipt)
-                except FrontendRefusedError as refused:
-                    # A refused password is the person's to try again; this hold ends with the reason.
-                    _emit(_sign_in_refusal(refused))
-                    return 1
-                finally:
-                    secret[:] = bytes(len(secret))
-        else:
-            status = client.resume_receipt()
+        signed_in = hold_sign_in(client, stdin_fd, password_stdin=password_stdin, persist_receipt=persist_receipt)
+        if signed_in is None:
+            return 1
+        status, resumed = signed_in
         held: dict[str, object] = {
             "kind": "session_held",
             "profile_id": str(profile_id),
@@ -193,256 +562,7 @@ async def _hold(
                 status.human_login is not None and status.human_login.session_persisted
             )
         _emit(held)
-        # One inbox for the parent's requests and the runtime's pushes: the hold
-        # sleeps until either arrives. Retirement, including a lost connection, is
-        # pushed, so the hold never asks the runtime whether its session lives.
-        inbox: Queue[tuple[_Arrival, bytes]] = Queue()
-        retired = Event()
-        # The parent writes one request and reads its reply, so one unread line is all the input kept.
-        line_slot = Semaphore(1)
-        language_dirty = Event()
-        language_dirty.set()
-        language_cache: ProfileLanguage | None = None
-        observing = False
-
-        def retire() -> None:
-            retired.set()
-            inbox.put(("retired", b""))
-
-        def language_changed(_event: object) -> None:
-            language_dirty.set()
-            inbox.put(("profile_language_changed", b""))
-
-        client.subscribe_session_retirement(retire)
-        client.subscribe_profile_language_changes(language_changed)
-        client.subscribe_profile_record_changes(lambda: inbox.put(("profile_records_changed", b"")))
-        client.subscribe_attendance_changes(lambda: inbox.put(("attendance_changed", b"")))
-
-        relay = OperationRelay(client)
-        # The cue names no operation; it matters here only while an operation this session relayed is unsettled.
-        client.subscribe_operation_changes(lambda: inbox.put(("operation_changed", b"")))
-
-        def read_lines() -> None:
-            while not retired.is_set():
-                line_slot.acquire()
-                line = _read_stdin_line(stdin_fd, _MAXIMUM_REQUEST_LINE_BYTES)
-                if retired.is_set():
-                    return
-                inbox.put(("line", line))
-                if not line or len(line) > _MAXIMUM_REQUEST_LINE_BYTES:
-                    return
-
-        Thread(target=read_lines, name="human-session-input", daemon=True).start()
-        while True:
-            arrival, line = inbox.get()
-            if retired.is_set():
-                _emit({"kind": "session_retired", "profile_id": str(profile_id)})
-                return 0
-            if arrival != "line":
-                if arrival == "operation_changed" and not relay.watching():
-                    continue
-                if observing:
-                    # Only a reason to read again through a request; the line carries no state.
-                    _emit({"kind": "runtime_event", "event": arrival})
-                continue
-            line_slot.release()
-            if not line:
-                return 0
-            if len(line) > _MAXIMUM_REQUEST_LINE_BYTES or not line.endswith(b"\n"):
-                _emit_refusal("invalid", uuid4())
-                return 1
-            try:
-                request = json.loads(line, object_pairs_hook=reject_duplicate_json_members)
-            except Exception:
-                # No usable request object exists yet, so this response starts
-                # its own correlation ID instead of echoing unparsed input.
-                _emit_refusal("invalid", uuid4())
-                return 1
-            if not isinstance(request, dict):
-                _emit_refusal("invalid")
-                return 1
-            try:
-                request_id = UUID(request.get("request_id"))
-            except (AttributeError, TypeError, ValueError):
-                _emit_refusal("invalid")
-                return 1
-            action = request.get("action")
-            if not isinstance(action, str):
-                _emit_refusal("invalid", request_id)
-                return 1
-            action_keys = {
-                "service_admission": {"recipient_connection_id", "service_id"},
-                "attendance_decision": {"attendance_id", "approve"},
-                "language_set": {"language"},
-                "present_destination": {"destination"},
-                **RELAY_ACTION_KEYS,
-            }
-            # A view request may omit its parameters; it names no other optional key.
-            optional = {"params"} if action == "present_destination" else set()
-            if set(request) - optional != {"request_id", "action"} | action_keys.get(action, set()):
-                _emit_refusal("invalid", request_id)
-                return 1
-            started = time.monotonic()
-            try:
-                if action == "close":
-                    _emit({"kind": "session_closed", "request_id": str(request_id)})
-                    return 0
-                if action == "observe_events":
-                    # From here on, each push is also a line of its own: a parent that asks
-                    # has learned to tell a pushed line from the reply to its request.
-                    observing = True
-                    _emit(
-                        {
-                            "kind": "events_observed",
-                            "request_id": str(request_id),
-                            "runtime_boot_id": str(status.runtime_boot_id),
-                            "connection_id": str(status.connection_id),
-                        }
-                    )
-                    continue
-                if action == "service_admission":
-                    current = client.status()
-                    if current.status.denial is AccessDenialCode.OS_SESSION_UNAVAILABLE:
-                        # An uncertain OS observation refuses this admission but keeps the held sign-in.
-                        _emit_refusal("unavailable", request_id)
-                        continue
-                    if current.status.session_id is None or current.status.denial is not None:
-                        _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
-                        return 1
-                    reply = client.service_admission(
-                        UUID(request["recipient_connection_id"]), request["service_id"], request_id=request_id
-                    )
-                    _emit(reply.model_dump(mode="json"))
-                elif action == "attendance_inventory":
-                    reply = client.attendance_inventory()
-                    _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
-                elif action == "attendance_decision":
-                    if type(request.get("approve")) is not bool:
-                        _emit({"kind": "session_refused", "request_id": str(request_id), "code": "invalid"})
-                        return 1
-                    reply = client.decide_attendance(UUID(request["attendance_id"]), approve=request["approve"])
-                    _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
-                elif action == "status":
-                    reply = client.status()
-                    _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
-                elif action == "activity":
-                    try:
-                        reply = client.note_activity()
-                    except FrontendRefusedError as error:
-                        if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
-                            _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
-                            return 1
-                        # As for an admission: typing during an uncertain OS observation keeps the held sign-in.
-                        _emit_refusal("unavailable", request_id)
-                        continue
-                    _emit({**reply.model_dump(mode="json"), "request_id": str(request_id)})
-                elif action == "present_destination":
-                    destination, params = request["destination"], request.get("params", {})
-                    if (
-                        not isinstance(destination, str)
-                        or not isinstance(params, dict)
-                        or not all(isinstance(value, str) for value in params.values())
-                        or presentation_refusal(destination, params) is not None
-                    ):
-                        _emit_refusal("invalid", request_id)
-                        return 1
-                    try:
-                        presented = client.present_destination(destination, params)
-                    except FrontendRefusedError as error:
-                        if error.reason != AccessDenialCode.OS_SESSION_UNAVAILABLE.value:
-                            _emit({"kind": "session_refused", "request_id": str(request_id), "code": "inactive"})
-                            return 1
-                        # As for activity: an uncertain OS observation refuses the page but keeps the held sign-in.
-                        _emit_refusal("unavailable", request_id)
-                        continue
-                    _emit(
-                        {
-                            "kind": "destination_presented",
-                            "request_id": str(request_id),
-                            "profile_id": str(profile_id),
-                            "session_id": str(client.session_id),
-                            "runtime_boot_id": str(status.runtime_boot_id),
-                            "connection_id": str(status.connection_id),
-                            "destination": presented.destination,
-                            "params": dict(presented.params),
-                            "delivered": presented.delivered,
-                        }
-                    )
-                elif action in RELAY_ACTION_KEYS:
-                    try:
-                        fields, refusal = relay.handle(action, request), None
-                    except RelayRefusedError as refused:
-                        fields, refusal = None, refused
-                    _emit(
-                        relay_reply(
-                            request_id=request_id,
-                            profile_id=profile_id,
-                            session_id=client.session_id,
-                            runtime_boot_id=status.runtime_boot_id,
-                            connection_id=status.connection_id,
-                            fields=fields,
-                            refusal=refusal,
-                        )
-                    )
-                elif action in {"language_read", "language_set", "language_observe"}:
-                    if action != "language_observe" or language_cache is None or language_dirty.is_set():
-                        # Clear before reading so a concurrent notification remains dirty.
-                        language_dirty.clear()
-                        language_cache = (
-                            set_profile_language(client, OutputLanguage(request["language"]))
-                            if action == "language_set"
-                            else read_profile_language(client)
-                        )
-                    language = language_cache
-                    _emit(
-                        {
-                            "kind": "profile_language",
-                            "request_id": str(request_id),
-                            "profile_id": str(profile_id),
-                            "session_id": str(client.session_id),
-                            "runtime_boot_id": str(status.runtime_boot_id),
-                            "connection_id": str(status.connection_id),
-                            "language": None if language.language is None else language.language.value,
-                            "record_revision": language.record_revision,
-                        }
-                    )
-                else:
-                    _emit_refusal("invalid", request_id)
-                    return 1
-            except (KeyError, TypeError, ValueError):
-                _emit_refusal("invalid", request_id)
-                return 1
-            except Exception as error:
-                # A valid command keeps its correlation key even when transport,
-                # validation, or runtime work fails. The protocol never carries
-                # the exception, only its registered, message-free report.
-                _emit_refusal("unavailable", request_id, _report_failure(error))
-                return 1
-            finally:
-                elapsed = time.monotonic() - started
-                if elapsed >= 1.0:
-                    _LOGGER.warning(
-                        "session_hold_request_slow action=%s request_id=%s elapsed_seconds=%.3f",
-                        action
-                        if action
-                        in {
-                            "close",
-                            "observe_events",
-                            "service_admission",
-                            "attendance_inventory",
-                            "attendance_decision",
-                            "status",
-                            "activity",
-                            "language_read",
-                            "language_set",
-                            "language_observe",
-                            "present_destination",
-                            *RELAY_ACTION_KEYS,
-                        }
-                        else "invalid",
-                        request_id,
-                        elapsed,
-                    )
+        return serve_held_session(client, status, profile_id, stdin_fd)
     finally:
         client.close()
 

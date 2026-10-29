@@ -11,51 +11,40 @@ runtime and guardian were both lost abruptly.
 
 from __future__ import annotations
 
-import contextlib
-import json
 import math
 import os
 import plistlib
-import re
-import stat
 import sys
 import time
-from collections.abc import Callable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from threading import Event, Lock, Thread
-from typing import Protocol, cast
 from uuid import UUID
 
-from cadrumo.core.descriptor_write import write_all
 from cadrumo.core.hashing import sha256_hex
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
-from cadrumo_client.transport.posix import open_private_namespace, posix_owner_uid
 from cadrumo_client.transport.posix_channel import PosixChannel
 
-from .containment_commands import ContainmentCommand, ContainmentCommandResult, run_containment_command_sync
-from .macos_coalition import read_macos_resource_coalition, terminate_macos_coalition
+from .macos_job_print import parse_macos_job_print
 from .macos_process import (
     MacosProcessIncarnation,
     MacosProcessObservation,
-    MacosProcessWatch,
-    read_macos_incarnation,
-    read_macos_process,
+)
+from .macos_worker_host import MacosExitWatch, MacosWorkerHost, NativeMacosWorkerHost
+from .macos_worker_markers import (
+    MACOS_SCOPE_KEY_PATTERN,
+    MACOS_WORKER_LABEL_PATTERN,
+    MACOS_WORKER_LABEL_PREFIX,
+    MacosWorkerMarker,
+    encode_macos_worker_marker,
+    stale_macos_worker_markers,
 )
 from .worker_arguments import validated_worker_arguments
 from .worker_environment import worker_path_environment_names
 
 _CLEAN_ENVIRONMENT = {"PATH": "/usr/bin:/bin", "LANG": "C", "LC_ALL": "C", "PYDANTIC_DISABLE_PLUGINS": "__all__"}
 _GUARDIAN_MODULE = "cadrumo_runtime.host.macos_worker_guardian"
-_LABEL_PREFIX = "com.cadrumo.worker."
-_LABEL_PATTERN = re.compile(r"com\.cadrumo\.worker\.[0-9a-f]{16}\.[0-9a-f]{32}")
-_SCOPE_KEY_PATTERN = re.compile(r"[0-9a-f]{16}")
-_MARKER_SUFFIX = ".json"
-_PENDING_SUFFIX = ".pending"
-_DEFINITION_SUFFIX = ".plist"
-_MARKER_LIMIT = 4096
-_PRINT_LIMIT = 64 * 1024
-_MAXIMUM_PID = 2_147_483_647
 # launchctl print exits with 113 when the domain has no service of that label.
 _SERVICE_ABSENT = 113
 _LAUNCHD_PID = 1
@@ -64,7 +53,6 @@ _REAP_SECONDS = 10.0
 _GUARDIAN_LOSS_SECONDS = 5.0
 _WATCH_INTERVAL_SECONDS = 0.25
 _MAXIMUM_WATCH_SECONDS = 60.0
-_COALITION_FIELDS: frozenset[str] = frozenset(("ID", "type", "state", "active count", "name"))
 
 # Serializes stale-job reaping between scopes of this process. A live runtime's
 # own markers are never stale, so publication and removal need no lock.
@@ -91,9 +79,9 @@ def macos_worker_label(*, scope_key: str, worker_id: UUID) -> str:
         scope_key: Storage-scope key from macos_worker_scope_key.
         worker_id: Random worker identity.
     """
-    if not _SCOPE_KEY_PATTERN.fullmatch(scope_key):
+    if not MACOS_SCOPE_KEY_PATTERN.fullmatch(scope_key):
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    return f"{_LABEL_PREFIX}{scope_key}.{worker_id.hex}"
+    return f"{MACOS_WORKER_LABEL_PREFIX}{scope_key}.{worker_id.hex}"
 
 
 def macos_worker_job_definition(
@@ -121,7 +109,7 @@ def macos_worker_job_definition(
         worker_script: Host-selected worker script, when not the installed module.
         environment: Explicit authority, storage and scratch paths under the clean baseline.
     """
-    if not _LABEL_PATTERN.fullmatch(label) or not executable.is_absolute() or not directory.is_absolute():
+    if not MACOS_WORKER_LABEL_PATTERN.fullmatch(label) or not executable.is_absolute() or not directory.is_absolute():
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     environment = _validated_environment(_CLEAN_ENVIRONMENT if environment is None else environment)
     script_selection = ("--worker-script", str(worker_script)) if worker_script is not None else ()
@@ -174,449 +162,6 @@ def _validated_environment(environment: Mapping[str, str]) -> dict[str, str]:
     ):
         raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
     return dict(environment)
-
-
-@dataclass(frozen=True, slots=True)
-class MacosJobCoalition:
-    """The resource coalition launchd reports for one job."""
-
-    coalition_id: int
-    state: str
-    active_count: int
-
-
-@dataclass(frozen=True, slots=True)
-class MacosJobPrint:
-    """Closed facts from launchd's effective view of one job."""
-
-    state: str
-    pid: int | None
-    coalition: MacosJobCoalition | None
-
-
-def _decimal(value: str, *, minimum: int) -> int:
-    if not value.isascii() or not value.isdecimal() or len(value) > 20 or int(value) < minimum:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    return int(value)
-
-
-def parse_macos_job_print(text: str, *, target: str, label: str) -> MacosJobPrint:
-    """Parse launchd's bounded print view of one job; any unknown shape refuses.
-
-    Blocks other than the resource coalition are kept opaque. The coalition
-    block must carry exactly its five known fields and name the job's label.
-
-    Args:
-        text: Complete ``launchctl print`` output for the job.
-        target: Exact ``gui/<uid>/<label>`` service target that was printed.
-        label: Exact job label the coalition must be named after.
-    """
-    if len(text.encode("utf-8")) > _PRINT_LIMIT or any(ord(char) < 32 and char not in "\n\t" for char in text):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    lines = text.splitlines()
-    if len(lines) < 2 or lines[0] != target + " = {" or lines[-1] != "}":
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    scalars: dict[str, str] = {}
-    blocks: dict[str, tuple[str, ...]] = {}
-    end = len(lines) - 1
-    index = 1
-    while index < end:
-        line = lines[index]
-        index += 1
-        if not line:
-            continue
-        if not line.startswith("\t") or line.startswith("\t\t"):
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        key, separator, value = line[1:].partition(" = ")
-        if not separator or not key or key in scalars or key in blocks:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        if value != "{":
-            scalars[key] = value
-            continue
-        members: list[str] = []
-        while True:
-            if index >= end:
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            member = lines[index]
-            index += 1
-            if member == "\t}":
-                break
-            if not member.startswith("\t\t"):
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            members.append(member[2:])
-        blocks[key] = tuple(members)
-    state = scalars.get("state")
-    if not (state is not None and state):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    printed_pid = scalars.get("pid")
-    pid = None if printed_pid is None else _decimal(printed_pid, minimum=1)
-    if pid is not None and pid > _MAXIMUM_PID:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    coalition = None
-    coalition_block = blocks.get("resource coalition")
-    if coalition_block is not None:
-        fields: dict[str, str] = {}
-        for member in coalition_block:
-            key, separator, value = member.partition(" = ")
-            if not separator or key not in _COALITION_FIELDS or key in fields:
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-            fields[key] = value
-        if frozenset(fields) != _COALITION_FIELDS or fields["type"] != "resource" or fields["name"] != label:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        if not fields["state"]:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        coalition = MacosJobCoalition(
-            coalition_id=_decimal(fields["ID"], minimum=1),
-            state=fields["state"],
-            active_count=_decimal(fields["active count"], minimum=0),
-        )
-    return MacosJobPrint(state=state, pid=pid, coalition=coalition)
-
-
-@dataclass(frozen=True, slots=True)
-class MacosWorkerMarker:
-    """Crash-durable ownership record naming one job and its runtime incarnation."""
-
-    label: str
-    runtime: MacosProcessIncarnation
-    coalition: int | None
-
-
-def encode_macos_worker_marker(marker: MacosWorkerMarker) -> bytes:
-    """Render the one canonical marker encoding.
-
-    Args:
-        marker: Ownership record to persist.
-    """
-    if not _LABEL_PATTERN.fullmatch(marker.label) or (marker.coalition is not None and marker.coalition <= 0):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    return json.dumps(
-        {
-            "coalition": marker.coalition,
-            "label": marker.label,
-            "runtime_pid": marker.runtime.pid,
-            "runtime_unique_id": marker.runtime.unique_id,
-            "runtime_version": marker.runtime.version,
-        },
-        sort_keys=True,
-        separators=(",", ":"),
-    ).encode("ascii")
-
-
-def decode_macos_worker_marker(payload: bytes, *, name: str) -> MacosWorkerMarker:
-    """Accept only a canonical marker whose label matches its file name.
-
-    Args:
-        payload: Complete marker file contents.
-        name: Marker file name within the private marker directory.
-    """
-    if len(payload) > _MARKER_LIMIT:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    try:
-        document: object = json.loads(payload.decode("ascii"))
-    except (UnicodeError, ValueError):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
-    if not isinstance(document, dict):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    fields = cast(dict[object, object], document)
-    label = fields.get("label")
-    pid = fields.get("runtime_pid")
-    version = fields.get("runtime_version")
-    unique_id = fields.get("runtime_unique_id")
-    coalition = fields.get("coalition")
-    if (
-        not isinstance(label, str)
-        or name != label + _MARKER_SUFFIX
-        or type(pid) is not int
-        or type(version) is not int
-        or type(unique_id) is not int
-        or not (coalition is None or type(coalition) is int)
-        or not 0 < pid <= _MAXIMUM_PID
-        or not 0 < version <= _MAXIMUM_PID
-        or unique_id <= 0
-    ):
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    marker = MacosWorkerMarker(
-        label=label,
-        runtime=MacosProcessIncarnation(pid=pid, version=version, unique_id=unique_id),
-        coalition=coalition,
-    )
-    if encode_macos_worker_marker(marker) != payload:
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-    return marker
-
-
-def stale_macos_worker_markers(
-    entries: Mapping[str, bytes], *, scope_key: str, live: Callable[[MacosProcessIncarnation], bool]
-) -> tuple[MacosWorkerMarker, ...]:
-    """Select this storage scope's markers whose runtime incarnation has died.
-
-    Other scopes' entries are never decoded or returned. A corrupt marker of
-    this scope refuses rather than being silently skipped.
-
-    Args:
-        entries: Marker file names and contents from the private directory.
-        scope_key: Storage-scope key whose markers may be reaped.
-        live: Whether an exact runtime incarnation is still alive.
-    """
-    prefix = f"{_LABEL_PREFIX}{scope_key}."
-    stale: list[MacosWorkerMarker] = []
-    for name in sorted(entries):
-        if not name.startswith(prefix) or not name.endswith(_MARKER_SUFFIX):
-            continue
-        marker = decode_macos_worker_marker(entries[name], name=name)
-        if not live(marker.runtime):
-            stale.append(marker)
-    return tuple(stale)
-
-
-class MacosExitWatch(Protocol):
-    """Latched exit observation for one exact process."""
-
-    @property
-    def exited(self) -> bool:
-        """Whether the watched process has exited."""
-        ...
-
-    def wait(self, *, timeout: float) -> bool:
-        """Wait a finite budget for exit.
-
-        Args:
-            timeout: Finite wait budget in seconds, at most sixty.
-        """
-        ...
-
-    def close(self) -> None:
-        """Release the native observation."""
-        ...
-
-
-class MacosWorkerHost(Protocol):
-    """Native launchd, process and marker facts consumed by the worker scope."""
-
-    def owner_uid(self) -> int:
-        """Return the native owner UID."""
-        ...
-
-    def launchctl(self, arguments: tuple[str, ...]) -> ContainmentCommandResult:
-        """Run one bounded launchctl request.
-
-        Args:
-            arguments: Exact launchctl action and target.
-        """
-        ...
-
-    def bootstrap(self, label: str, definition: bytes) -> ContainmentCommandResult:
-        """Bootstrap a private definition into the GUI domain, deleting it on every path.
-
-        Args:
-            label: Exact job label.
-            definition: Complete job property list.
-        """
-        ...
-
-    def incarnation(self, pid: int) -> MacosProcessIncarnation | None:
-        """Read a live PID's exact incarnation; None when no live process holds it.
-
-        Args:
-            pid: Kernel PID.
-        """
-        ...
-
-    def coalition(self, pid: int) -> int | None:
-        """Read a live PID's resource coalition; None when no live process holds it.
-
-        Args:
-            pid: Kernel PID.
-        """
-        ...
-
-    def observe(self, pid: int) -> MacosProcessObservation:
-        """Read the owner's live process identity.
-
-        Args:
-            pid: Kernel PID.
-        """
-        ...
-
-    def watch(self, observation: MacosProcessObservation) -> MacosExitWatch:
-        """Retain an exit watch for one verified identity.
-
-        Args:
-            observation: Exact identity to watch.
-        """
-        ...
-
-    def terminate_coalition(self, coalition: int, *, deadline: float) -> None:
-        """Kill every coalition member until it is proven empty.
-
-        Args:
-            coalition: Resource coalition ID.
-            deadline: Monotonic deadline.
-        """
-        ...
-
-    def markers(self, prefix: str) -> dict[str, bytes]:
-        """Read marker files whose names start with a storage-scope prefix.
-
-        Args:
-            prefix: Storage-scoped label prefix.
-        """
-        ...
-
-    def publish_marker(self, label: str, payload: bytes) -> None:
-        """Durably replace one job's marker.
-
-        Args:
-            label: Exact job label.
-            payload: Canonical marker encoding.
-        """
-        ...
-
-    def remove_marker(self, label: str) -> None:
-        """Durably remove one job's marker, after any definition its abrupt loss left behind.
-
-        An absent marker or definition is already removed.
-
-        Args:
-            label: Exact job label.
-        """
-        ...
-
-
-def _private_open_flags(*, nonblocking: bool = False) -> int:
-    """Darwin open flags refusing symlinks and keeping descriptors out of children."""
-    if sys.platform == "darwin":
-        return os.O_NOFOLLOW | os.O_CLOEXEC | (os.O_NONBLOCK if nonblocking else 0)
-    raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-
-
-class _NativeMacosWorkerHost:
-    """Darwin launchd, libproc and owner-only marker directory."""
-
-    def _directory(self, *, create: bool) -> tuple[Path, int]:
-        if sys.platform == "darwin":
-            try:
-                return open_private_namespace(
-                    Path("/").joinpath("tmp", f"cdr-{posix_owner_uid()}-launchd-workers"), create=create
-                )
-            except RefusalError:
-                raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-
-    def owner_uid(self) -> int:
-        return posix_owner_uid()
-
-    def launchctl(self, arguments: tuple[str, ...]) -> ContainmentCommandResult:
-        return run_containment_command_sync(ContainmentCommand.LAUNCHCTL, arguments)
-
-    def bootstrap(self, label: str, definition: bytes) -> ContainmentCommandResult:
-        directory, descriptor = self._directory(create=True)
-        name = label + _DEFINITION_SUFFIX
-        try:
-            file = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | _private_open_flags(), 0o600, dir_fd=descriptor)
-            try:
-                try:
-                    write_all(file, definition)
-                finally:
-                    os.close(file)
-                # launchd keeps the loaded job after its definition file is gone.
-                return run_containment_command_sync(
-                    ContainmentCommand.LAUNCHCTL, ("bootstrap", f"gui/{posix_owner_uid()}", str(directory / name))
-                )
-            finally:
-                os.unlink(name, dir_fd=descriptor)
-        except OSError:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        finally:
-            os.close(descriptor)
-
-    def incarnation(self, pid: int) -> MacosProcessIncarnation | None:
-        return read_macos_incarnation(pid)
-
-    def coalition(self, pid: int) -> int | None:
-        return read_macos_resource_coalition(pid)
-
-    def observe(self, pid: int) -> MacosProcessObservation:
-        return read_macos_process(pid, expected_owner=str(posix_owner_uid()))
-
-    def watch(self, observation: MacosProcessObservation) -> MacosExitWatch:
-        return MacosProcessWatch(observation)
-
-    def terminate_coalition(self, coalition: int, *, deadline: float) -> None:
-        terminate_macos_coalition(coalition, deadline=deadline)
-
-    def markers(self, prefix: str) -> dict[str, bytes]:
-        _directory, descriptor = self._directory(create=False)
-        if descriptor < 0:
-            return {}
-        try:
-            entries: dict[str, bytes] = {}
-            for name in os.listdir(descriptor):
-                if not name.startswith(prefix) or not name.endswith(_MARKER_SUFFIX):
-                    continue
-                file = os.open(name, os.O_RDONLY | _private_open_flags(nonblocking=True), dir_fd=descriptor)
-                try:
-                    metadata = os.fstat(file)
-                    if (
-                        not stat.S_ISREG(metadata.st_mode)
-                        or metadata.st_uid != posix_owner_uid()
-                        or metadata.st_mode & 0o077
-                        or metadata.st_nlink != 1
-                        or metadata.st_size > _MARKER_LIMIT
-                    ):
-                        raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-                    entries[name] = os.read(file, _MARKER_LIMIT + 1)
-                finally:
-                    os.close(file)
-            return entries
-        except OSError:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        finally:
-            os.close(descriptor)
-
-    def publish_marker(self, label: str, payload: bytes) -> None:
-        _directory, descriptor = self._directory(create=True)
-        pending = label + _PENDING_SUFFIX
-        try:
-            file = os.open(
-                pending, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | _private_open_flags(), 0o600, dir_fd=descriptor
-            )
-            try:
-                metadata = os.fstat(file)
-                if (
-                    not stat.S_ISREG(metadata.st_mode)
-                    or metadata.st_uid != posix_owner_uid()
-                    or metadata.st_mode & 0o077
-                    or metadata.st_nlink != 1
-                ):
-                    raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-                write_all(file, payload)
-                os.fsync(file)
-            finally:
-                os.close(file)
-            os.replace(pending, label + _MARKER_SUFFIX, src_dir_fd=descriptor, dst_dir_fd=descriptor)
-            os.fsync(descriptor)
-        except OSError:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        finally:
-            os.close(descriptor)
-
-    def remove_marker(self, label: str) -> None:
-        _directory, descriptor = self._directory(create=False)
-        if descriptor < 0:
-            return
-        try:
-            # A runtime lost inside launchctl bootstrap never deletes its
-            # definition. The marker goes last: it is the reaping obligation.
-            for name in (label + _DEFINITION_SUFFIX, label + _PENDING_SUFFIX, label + _MARKER_SUFFIX):
-                with contextlib.suppress(FileNotFoundError):
-                    os.unlink(name, dir_fd=descriptor)
-            os.fsync(descriptor)
-        except OSError:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
-        finally:
-            os.close(descriptor)
 
 
 class MacosOwnedProcess:
@@ -711,7 +256,7 @@ class MacosProcessScope:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         selected = validated_worker_arguments(worker_script=worker_script)
         self._worker_script = Path(selected[-1]) if worker_script is not None else None
-        self._host = host if host is not None else _NativeMacosWorkerHost()
+        self._host = host if host is not None else NativeMacosWorkerHost()
         self._scope_key = macos_worker_scope_key(storage_root)
         self._label = macos_worker_label(scope_key=self._scope_key, worker_id=worker_id)
         self._target = f"gui/{self._host.owner_uid()}/{self._label}"
@@ -726,17 +271,9 @@ class MacosProcessScope:
         self._watcher_stop = Event()
         self._watcher_failure = None
 
-    def launch(
-        self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
-    ) -> MacosOwnedProcess:
-        """Register launchd containment before its first child executes code.
-
-        Args:
-            executable: Absolute interpreter for the guardian and worker.
-            arguments: Worker argv after the interpreter.
-            directory: Absolute working directory.
-            environment: Exact clean worker environment.
-        """
+    def _launch_inputs(
+        self, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> tuple[tuple[str, ...], dict[str, str], Path]:
         if self._started or not executable.is_absolute() or not directory.is_absolute():
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
         arguments = validated_worker_arguments(arguments, worker_script=self._worker_script)
@@ -749,6 +286,20 @@ class MacosProcessScope:
             directory = directory.resolve(strict=True)
         except OSError:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE) from None
+        return arguments, environment, directory
+
+    def launch(
+        self, *, executable: Path, arguments: Sequence[str], directory: Path, environment: Mapping[str, str]
+    ) -> MacosOwnedProcess:
+        """Register launchd containment before its first child executes code.
+
+        Args:
+            executable: Absolute interpreter for the guardian and worker.
+            arguments: Worker argv after the interpreter.
+            directory: Absolute working directory.
+            environment: Exact clean worker environment.
+        """
+        arguments, environment, directory = self._launch_inputs(executable, arguments, directory, environment)
         runtime = self._host.incarnation(os.getpid())
         runtime_coalition = self._host.coalition(os.getpid())
         if runtime is None or runtime_coalition is None:
@@ -784,19 +335,7 @@ class MacosProcessScope:
                 raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
             time.sleep(0.05)
 
-    def _admit_guardian(self, runtime_coalition: int) -> MacosOwnedProcess | None:
-        printed = self._host.launchctl(("print", self._target))
-        if printed.returncode != 0:
-            return None
-        job = parse_macos_job_print(printed.output, target=self._target, label=self._label)
-        coalition = job.coalition
-        if job.state != "running" or job.pid is None or coalition is None or coalition.state != "active":
-            return None
-        pid = job.pid
-        # launchd must have given the job its own coalition, distinct from the
-        # runtime's, and the printed main process must actually belong to it.
-        if coalition.coalition_id == runtime_coalition or self._host.coalition(pid) != coalition.coalition_id:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+    def _guardian_observation(self, pid: int) -> MacosProcessObservation | None:
         try:
             observation = self._host.observe(pid)
         except RefusalError as error:
@@ -806,20 +345,23 @@ class MacosProcessScope:
             raise
         if observation.parent_pid != _LAUNCHD_PID:
             raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        # From here any failure must retire this exact coalition.
-        self._coalition = coalition.coalition_id
+        return observation
+
+    def _watch_admitted_guardian(
+        self, pid: int, observation: MacosProcessObservation, coalition_id: int
+    ) -> MacosOwnedProcess:
         watches: list[MacosExitWatch] = []
         try:
             watches.append(self._host.watch(observation))
             watches.append(self._host.watch(observation))
-            if watches[0].exited or self._host.coalition(pid) != coalition.coalition_id:
+            if watches[0].exited or self._host.coalition(pid) != coalition_id:
                 raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
             runtime = self._runtime
             if runtime is None:
                 raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
             self._host.publish_marker(
                 self._label,
-                encode_macos_worker_marker(MacosWorkerMarker(self._label, runtime, coalition.coalition_id)),
+                encode_macos_worker_marker(MacosWorkerMarker(self._label, runtime, coalition_id)),
             )
             watcher = Thread(
                 target=self._watch_guardian, args=(watches[1],), name="macos-worker-guardian-watch", daemon=True
@@ -835,6 +377,26 @@ class MacosProcessScope:
         self._watcher = watcher
         self._guardian = MacosOwnedProcess(pid=pid, watch=watches[0])
         return self._guardian
+
+    def _admit_guardian(self, runtime_coalition: int) -> MacosOwnedProcess | None:
+        printed = self._host.launchctl(("print", self._target))
+        if printed.returncode != 0:
+            return None
+        job = parse_macos_job_print(printed.output, target=self._target, label=self._label)
+        coalition = job.coalition
+        if job.state != "running" or job.pid is None or coalition is None or coalition.state != "active":
+            return None
+        pid = job.pid
+        # launchd must have given the job its own coalition, distinct from the
+        # runtime's, and the printed main process must actually belong to it.
+        if coalition.coalition_id == runtime_coalition or self._host.coalition(pid) != coalition.coalition_id:
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        observation = self._guardian_observation(pid)
+        if observation is None:
+            return None
+        # From here any failure must retire this exact coalition.
+        self._coalition = coalition.coalition_id
+        return self._watch_admitted_guardian(pid, observation, coalition.coalition_id)
 
     def _watch_guardian(self, sentinel: MacosExitWatch) -> None:
         """Contain the coalition at once if the guardian dies while the runtime lives."""
@@ -863,20 +425,9 @@ class MacosProcessScope:
                     self._fenced = True
                     self._watcher_failure = failure
 
-    def verify_worker(self, channel: PosixChannel, *, owner_id: str) -> int:
-        """Pin the socket peer's exact incarnation and coalition before worker identity or key release.
-
-        Args:
-            channel: Accepted worker connection with kernel-verified peer facts.
-            owner_id: Native owner the worker must run as.
-        """
-        pid = channel.peer.process_id
-        with self._lock:
-            guardian, coalition, fenced = self._guardian, self._coalition, self._fenced
-        if guardian is None or coalition is None or fenced or not guardian.alive:
-            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
-        if pid is None or channel.peer.os_owner_id != owner_id or owner_id != str(self._host.owner_uid()):
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+    def _verify_worker_identity(
+        self, channel: PosixChannel, pid: int, guardian: MacosOwnedProcess, coalition: int
+    ) -> tuple[MacosProcessObservation, MacosProcessIncarnation]:
         from .macos_login import macos_peer_audit_token
 
         with channel.pinned_peer_socket() as sock:
@@ -892,12 +443,17 @@ class MacosProcessScope:
             or self._host.coalition(pid) != coalition
         ):
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        return observation, incarnation
+
+    def _retain_worker(
+        self, pid: int, observation: MacosProcessObservation, incarnation: MacosProcessIncarnation
+    ) -> None:
         with self._lock:
             current = self._worker
         if current is not None:
             if current.incarnation != incarnation or current.watch.exited:
                 raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-            return pid
+            return
         watch = self._host.watch(observation)
         try:
             if watch.exited or self._host.incarnation(pid) != incarnation:
@@ -909,6 +465,23 @@ class MacosProcessScope:
         except BaseException:
             watch.close()
             raise
+
+    def verify_worker(self, channel: PosixChannel, *, owner_id: str) -> int:
+        """Pin the socket peer's exact incarnation and coalition before worker identity or key release.
+
+        Args:
+            channel: Accepted worker connection with kernel-verified peer facts.
+            owner_id: Native owner the worker must run as.
+        """
+        pid = channel.peer.process_id
+        with self._lock:
+            guardian, coalition, fenced = self._guardian, self._coalition, self._fenced
+        if guardian is None or coalition is None or fenced or not guardian.alive:
+            raise RefusalError(RefusalCode.CONTAINMENT_UNAVAILABLE)
+        if pid is None or channel.peer.os_owner_id != owner_id or owner_id != str(self._host.owner_uid()):
+            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
+        observation, incarnation = self._verify_worker_identity(channel, pid, guardian, coalition)
+        self._retain_worker(pid, observation, incarnation)
         return pid
 
     def owns_process(self, pid: int) -> bool:
@@ -939,40 +512,24 @@ class MacosProcessScope:
         pid = self.worker_pid
         return (pid,) if self.owns_process(pid) else ()
 
-    def terminate(self, *, timeout: float = 2.0) -> None:
-        """Kill the whole coalition, retire the job and observe both exits, retaining failure.
+    def _terminate_job(self, deadline: float) -> None:
+        coalition = self._coalition if self._coalition is not None else self._loaded_coalition(self._target)
+        if coalition is not None:
+            self._host.terminate_coalition(self._foreign_coalition(coalition), deadline=deadline)
+        self._retire_job(self._target, deadline=deadline)
+        for watch in (
+            self._guardian,
+            self._worker.watch if self._worker is not None else None,
+        ):
+            if watch is not None and not self._exited(watch, deadline=deadline):
+                raise RefusalError(RefusalCode.TIMEOUT)
+        if self._watcher is not None:
+            self._watcher.join(timeout=max(0.0, deadline - time.monotonic()))
+            if self._watcher.is_alive():
+                raise RefusalError(RefusalCode.TIMEOUT)
+            self._watcher = None
 
-        Args:
-            timeout: Finite budget in seconds; a failed attempt can be retried.
-        """
-        if not math.isfinite(timeout) or timeout < 0:
-            raise RefusalError(RefusalCode.UNAVAILABLE)
-        if not self._started:
-            return
-        deadline = time.monotonic() + timeout
-        with self._lock:
-            self._fenced = True
-        self._watcher_stop.set()
-        try:
-            coalition = self._coalition if self._coalition is not None else self._loaded_coalition(self._target)
-            if coalition is not None:
-                self._host.terminate_coalition(self._foreign_coalition(coalition), deadline=deadline)
-            self._retire_job(self._target, deadline=deadline)
-            for watch in (
-                self._guardian,
-                self._worker.watch if self._worker is not None else None,
-            ):
-                if watch is not None and not self._exited(watch, deadline=deadline):
-                    raise RefusalError(RefusalCode.TIMEOUT)
-            if self._watcher is not None:
-                self._watcher.join(timeout=max(0.0, deadline - time.monotonic()))
-                if self._watcher.is_alive():
-                    raise RefusalError(RefusalCode.TIMEOUT)
-                self._watcher = None
-        except BaseException as error:
-            if self._watcher_failure is not None:
-                error.add_note("Guardian-loss containment also failed earlier: " + type(self._watcher_failure).__name__)
-            raise
+    def _release_watches(self) -> None:
         guardian, self._guardian = self._guardian, None
         worker, self._worker = self._worker, None
         failures: list[BaseException] = []
@@ -988,6 +545,28 @@ class MacosProcessScope:
         self._started = False
         if failures:
             raise failures[0]
+
+    def terminate(self, *, timeout: float = 2.0) -> None:
+        """Kill the whole coalition, retire the job and observe both exits, retaining failure.
+
+        Args:
+            timeout: Finite budget in seconds; a failed attempt can be retried.
+        """
+        if not math.isfinite(timeout) or timeout < 0:
+            raise RefusalError(RefusalCode.UNAVAILABLE)
+        if not self._started:
+            return
+        deadline = time.monotonic() + timeout
+        with self._lock:
+            self._fenced = True
+        self._watcher_stop.set()
+        try:
+            self._terminate_job(deadline)
+        except BaseException as error:
+            if self._watcher_failure is not None:
+                error.add_note("Guardian-loss containment also failed earlier: " + type(self._watcher_failure).__name__)
+            raise
+        self._release_watches()
 
     @staticmethod
     def _exited(watch: MacosOwnedProcess | MacosExitWatch, *, deadline: float) -> bool:
@@ -1040,7 +619,7 @@ class MacosProcessScope:
         """Retire this storage scope's jobs whose runtime incarnation died abruptly."""
         uid = self._host.owner_uid()
         stale = stale_macos_worker_markers(
-            self._host.markers(f"{_LABEL_PREFIX}{self._scope_key}."),
+            self._host.markers(f"{MACOS_WORKER_LABEL_PREFIX}{self._scope_key}."),
             scope_key=self._scope_key,
             live=lambda runtime: self._host.incarnation(runtime.pid) == runtime,
         )
@@ -1061,18 +640,9 @@ class MacosProcessScope:
 
 
 __all__ = [
-    "MacosExitWatch",
-    "MacosJobCoalition",
-    "MacosJobPrint",
     "MacosOwnedProcess",
     "MacosProcessScope",
-    "MacosWorkerHost",
-    "MacosWorkerMarker",
-    "decode_macos_worker_marker",
-    "encode_macos_worker_marker",
     "macos_worker_job_definition",
     "macos_worker_label",
     "macos_worker_scope_key",
-    "parse_macos_job_print",
-    "stale_macos_worker_markers",
 ]

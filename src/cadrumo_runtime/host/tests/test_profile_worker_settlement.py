@@ -67,14 +67,14 @@ def _host(identity: OperationIdentity, supervisor: _Supervisor) -> ProfileWorker
     host = ProfileWorkerOperationHost(
         cast(ProfileWorkerCustody, object()), authorization=cast(WorkerAuthorizationClient, object())
     )
-    host._submissions[identity.operation_id] = (
+    host.submissions[identity.operation_id] = (
         uuid4(),
         OperationSubmission(
             receipt=OperationSubmissionReceiptV1(operation_id=identity.operation_id, secret_requirement=None),
             response_capability=None,
         ),
     )
-    host._services = cast(
+    host.services = cast(
         OperationComposedServices, cast(object, SimpleNamespace(submission=SimpleNamespace(supervisor=supervisor)))
     )
     return host

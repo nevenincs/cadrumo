@@ -21,6 +21,18 @@ if TYPE_CHECKING:
     from .runtime_login import RuntimeLoginScreen
 
 
+def login_control_disabled(selector: str, method: object, *, busy: bool) -> bool:
+    """Disable inputs that cannot participate in the selected proof method."""
+    return busy or (
+        (
+            selector == "#runtime-login-credential"
+            and method in {RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_REFERENCE}
+        )
+        or (selector == "#runtime-login-reference" and method is not RuntimeLoginMethod.API_REFERENCE)
+        or (selector == "#runtime-login-persist" and method is not RuntimeLoginMethod.PASSWORD)
+    )
+
+
 class RuntimeLoginFormMixin:
     """Own login form composition, proof-mode presentation, and input capture."""
 
@@ -153,14 +165,7 @@ class RuntimeLoginFormMixin:
             *((("#runtime-login-request-access", Button),) if self._requester_factory is not None else ()),
             *((("#runtime-login-installation", Button),) if self._installation_factory is not None else ()),
         ):
-            self.query_one(selector, kind).disabled = self._busy or (
-                (
-                    selector == "#runtime-login-credential"
-                    and method in {RuntimeLoginMethod.RECEIPT, RuntimeLoginMethod.API_REFERENCE}
-                )
-                or (selector == "#runtime-login-reference" and method is not RuntimeLoginMethod.API_REFERENCE)
-                or (selector == "#runtime-login-persist" and method is not RuntimeLoginMethod.PASSWORD)
-            )
+            self.query_one(selector, kind).disabled = login_control_disabled(selector, method, busy=self._busy)
         selected = cast("Select[str]", self.query_one("#runtime-login-profile", Select)).value
         profile_id = self._profile_ids.get(selected) if isinstance(selected, str) else None
         self.query_one("#runtime-login-resume", Button).disabled = (

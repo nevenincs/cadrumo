@@ -15,7 +15,7 @@ from cadrumo.adapters.persistence.profile.tests.remove_draft_revision_support im
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from cadrumo.application.ledger.actions_common import blocking_modelo_references, build_manual_ledger_result
-from cadrumo.application.ledger.actions_manual import ledger_transaction_result_payload
+from cadrumo.application.ledger.manual_read import ledger_transaction_result_payload
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.config import override_settings
 from cadrumo.domain.buckets.event import (

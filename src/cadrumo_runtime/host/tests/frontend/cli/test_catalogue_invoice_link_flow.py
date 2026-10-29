@@ -42,7 +42,8 @@ from cadrumo.application.invoices.catalogue_creation import build_catalogue_invo
 from cadrumo.application.ledger.link_operation import LEDGER_LINK_OPERATION_DEFINITION_ID
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
+from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.tests.cli_text_output_support import line_value

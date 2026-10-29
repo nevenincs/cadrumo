@@ -96,7 +96,7 @@ def _launch_owner_loss(record: Path) -> None:
     from ..windows_process import WindowsProcessScope
 
     scope = WindowsProcessScope()
-    original = windows_process._launch_in_job
+    original = windows_process.launch_in_windows_job
     primary: BaseException | None = None
 
     def paused_launch(
@@ -139,7 +139,7 @@ def _launch_owner_loss(record: Path) -> None:
 
     try:
         with pytest.MonkeyPatch.context() as interception:
-            interception.setattr(windows_process, "_launch_in_job", paused_launch)
+            interception.setattr(windows_process, "launch_in_windows_job", paused_launch)
             scope.launch(
                 executable=native_python(),
                 arguments=("-c", "import time; time.sleep(60)"),

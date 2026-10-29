@@ -44,6 +44,7 @@ from cadrumo.application.ledger.lifecycle_contracts import (
     LEDGER_LIFECYCLE_VALIDATION_REFUSAL_CODE,
     LEDGER_RESTORE_OPERATION_DEFINITION_ID,
     LEDGER_STASH_OPERATION_DEFINITION_ID,
+    LedgerLifecycleMutationProjection,
     LedgerLifecycleMutationRequest,
     LedgerLifecycleOperationId,
     LedgerLifecycleOperationResult,
@@ -280,6 +281,27 @@ def _remove_matches(
     )
 
 
+def _lifecycle_projection_matches(
+    projection: LedgerLifecycleMutationProjection,
+    request: LedgerLifecycleMutationRequest,
+    operation_id: LedgerLifecycleOperationId,
+) -> bool:
+    """Match the exact lifecycle mutation and transaction result."""
+    transaction = projection.transaction
+    excluded = (
+        transaction.business_classification == "REVIEWED_EXCLUDED"
+        and projection.review_status is LedgerReviewStatus.EXCLUDED
+    )
+    return (
+        projection.profile_id == request.profile_id
+        and projection.operation_id == operation_id
+        and _names_transaction(transaction.transaction_id, request.transaction_id)
+        and transaction.lifecycle_state == _LIFECYCLE_SUCCESS_STATES[operation_id]
+        and len(projection.bucket_event_ids) == 1
+        and (operation_id != LEDGER_EXCLUDE_OPERATION_DEFINITION_ID or excluded)
+    )
+
+
 def _lifecycle_matches(
     operation_id: LedgerLifecycleOperationId,
 ) -> _Correlation[LedgerLifecycleMutationRequest, LedgerLifecycleOperationResult]:
@@ -296,19 +318,7 @@ def _lifecycle_matches(
         projection = result.result
         if projection is None or not _settled(condition, terminal, OperationEffect.UPDATED):
             return False
-        transaction = projection.transaction
-        excluded = (
-            transaction.business_classification == "REVIEWED_EXCLUDED"
-            and projection.review_status is LedgerReviewStatus.EXCLUDED
-        )
-        return (
-            projection.profile_id == request.profile_id
-            and projection.operation_id == operation_id
-            and _names_transaction(transaction.transaction_id, request.transaction_id)
-            and transaction.lifecycle_state == _LIFECYCLE_SUCCESS_STATES[operation_id]
-            and len(projection.bucket_event_ids) == 1
-            and (operation_id != LEDGER_EXCLUDE_OPERATION_DEFINITION_ID or excluded)
-        )
+        return _lifecycle_projection_matches(projection, request, operation_id)
 
     return matches
 

@@ -76,42 +76,10 @@ def build_credential_frame(
     frame = bytearray(b'{"version":%d,"credentials":{' % CREDENTIAL_FRAME_VERSION)
     try:
         for index, provider in enumerate(sorted(credentials)):
-            credential = credentials[provider]
-            if not _PROVIDER_ID.fullmatch(provider):
-                raise CredentialFrameError(CredentialFrameRefusal.PROVIDER_ID_INVALID)
-            if not credential.secret or any(byte not in _PLAIN_BYTES for byte in credential.secret):
-                raise CredentialFrameError(CredentialFrameRefusal.VALUE_INVALID)
-            if index:
-                frame += b","
-            frame += b'"' + provider.encode("ascii") + b'":{"secret":"'
-            frame += credential.secret
-            frame += b'"'
-            if credential.base_url is not None:
-                encoded_url = _plain_ascii(credential.base_url)
-                if encoded_url is None or not credential.base_url.startswith("https://"):
-                    raise CredentialFrameError(CredentialFrameRefusal.BASE_URL_INVALID)
-                frame += b',"base_url":"' + encoded_url + b'"'
-            frame += b"}"
-            if len(frame) > CREDENTIAL_FRAME_MAX_BYTES:
-                raise CredentialFrameError(CredentialFrameRefusal.TOO_LARGE)
+            _append_provider(frame, provider, credentials[provider], index)
         frame += b"}"
-        if gateway_bearer is not None:
-            if not gateway_bearer or any(byte not in _PLAIN_BYTES for byte in gateway_bearer):
-                raise CredentialFrameError(CredentialFrameRefusal.BEARER_INVALID)
-            frame += b',"gateway_bearer":"'
-            frame += gateway_bearer
-            frame += b'"'
-        if host_token is not None:
-            if (
-                gateway_bearer is None
-                or not host_token
-                or any(byte not in _PLAIN_BYTES for byte in host_token)
-                or hmac.compare_digest(host_token, gateway_bearer)
-            ):
-                raise CredentialFrameError(CredentialFrameRefusal.HOST_CREDENTIAL_INVALID)
-            frame += b',"host_token":"'
-            frame += host_token
-            frame += b'"'
+        _append_gateway_bearer(frame, gateway_bearer)
+        _append_host_token(frame, host_token, gateway_bearer)
         frame += b"}\n"
         if len(frame) > CREDENTIAL_FRAME_MAX_BYTES:
             raise CredentialFrameError(CredentialFrameRefusal.TOO_LARGE)
@@ -119,6 +87,49 @@ def build_credential_frame(
         wipe(frame)
         raise
     return frame
+
+
+def _append_provider(frame: bytearray, provider: str, credential: AgentCredential, index: int) -> None:
+    if not _PROVIDER_ID.fullmatch(provider):
+        raise CredentialFrameError(CredentialFrameRefusal.PROVIDER_ID_INVALID)
+    if not credential.secret or any(byte not in _PLAIN_BYTES for byte in credential.secret):
+        raise CredentialFrameError(CredentialFrameRefusal.VALUE_INVALID)
+    if index:
+        frame += b","
+    frame += b'"' + provider.encode("ascii") + b'":{"secret":"'
+    frame += credential.secret
+    frame += b'"'
+    if credential.base_url is not None:
+        encoded_url = _plain_ascii(credential.base_url)
+        if encoded_url is None or not credential.base_url.startswith("https://"):
+            raise CredentialFrameError(CredentialFrameRefusal.BASE_URL_INVALID)
+        frame += b',"base_url":"' + encoded_url + b'"'
+    frame += b"}"
+    if len(frame) > CREDENTIAL_FRAME_MAX_BYTES:
+        raise CredentialFrameError(CredentialFrameRefusal.TOO_LARGE)
+
+
+def _append_gateway_bearer(frame: bytearray, gateway_bearer: bytearray | None) -> None:
+    if gateway_bearer is not None:
+        if not gateway_bearer or any(byte not in _PLAIN_BYTES for byte in gateway_bearer):
+            raise CredentialFrameError(CredentialFrameRefusal.BEARER_INVALID)
+        frame += b',"gateway_bearer":"'
+        frame += gateway_bearer
+        frame += b'"'
+
+
+def _append_host_token(frame: bytearray, host_token: bytearray | None, gateway_bearer: bytearray | None) -> None:
+    if host_token is not None:
+        if (
+            gateway_bearer is None
+            or not host_token
+            or any(byte not in _PLAIN_BYTES for byte in host_token)
+            or hmac.compare_digest(host_token, gateway_bearer)
+        ):
+            raise CredentialFrameError(CredentialFrameRefusal.HOST_CREDENTIAL_INVALID)
+        frame += b',"host_token":"'
+        frame += host_token
+        frame += b'"'
 
 
 def wipe(buffer: bytearray) -> None:

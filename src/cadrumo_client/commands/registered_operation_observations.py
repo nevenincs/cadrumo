@@ -54,7 +54,7 @@ def observe_registered_operation(
     definition_id: str,
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
-    deadline: float | None,
+    deadline: float,
     pending_check_command: str | None,
     progress: RegisteredOperationProgress,
     exchange: Callable[[OperationRequest], OperationReply],
@@ -64,7 +64,7 @@ def observe_registered_operation(
 
     A timeout still reads as still-running, never as a refusal.
     """
-    if deadline is not None and time.monotonic() >= deadline:
+    if time.monotonic() >= deadline:
         raise registered_operation_still_running(operation_id, progress.effect, pending_check_command)
     if client.session_id != session_id:
         raise RefusalError(RefusalCode.CONNECTION_CLOSED)
@@ -82,7 +82,7 @@ def observe_registered_operation(
             ),
         )
     except RefusalError as error:
-        if error.reason is RefusalCode.TIMEOUT and deadline is not None and time.monotonic() >= deadline:
+        if error.reason is RefusalCode.TIMEOUT and time.monotonic() >= deadline:
             raise registered_operation_still_running(operation_id, progress.effect, pending_check_command) from None
         raise
     return decode_registered_observation(observed, operation_id, definition_id, subject_ref, contract)
@@ -120,7 +120,7 @@ def wait_registered_settlement[ReviewT: BaseModel](
     definition_id: str,
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
-    deadline: float | None,
+    deadline: float,
     pending_check_command: str | None,
     progress: RegisteredOperationProgress,
     review: RegisteredOperationReviewHandler[ReviewT] | None,
@@ -151,6 +151,14 @@ def wait_registered_settlement[ReviewT: BaseModel](
         )
 
 
+def _wait_for_operation_change(changes: OperationChanges, deadline: float) -> None:
+    """Wait only within the remaining settlement bound, leaving deadline refusal to the next read."""
+    remaining = deadline - time.monotonic()
+    if remaining > 0:
+        # Callers wake at their settlement deadline, which the next read refuses.
+        changes.wait(remaining)
+
+
 def _observe_until_settled[ReviewT: BaseModel](
     client: FrontendClient,
     operation_id: OperationId,
@@ -159,7 +167,7 @@ def _observe_until_settled[ReviewT: BaseModel](
     definition_id: str,
     subject_ref: str,
     contract: OperationPublicDefinitionContractV1,
-    deadline: float | None,
+    deadline: float,
     pending_check_command: str | None,
     progress: RegisteredOperationProgress,
     review: RegisteredOperationReviewHandler[ReviewT] | None,
@@ -206,9 +214,5 @@ def _observe_until_settled[ReviewT: BaseModel](
             # Subscribed only now; observe once more so nothing between the two reads is missed.
             changes.arm()
             continue
-        remaining = float("inf") if deadline is None else deadline - time.monotonic()
-        if remaining > 0:
-            # OperationChanges normalizes infinity to a signal-only wait. Finite
-            # callers wake at their settlement deadline, which the next read refuses.
-            changes.wait(remaining)
+        _wait_for_operation_change(changes, deadline)
     return state, None

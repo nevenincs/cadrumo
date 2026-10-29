@@ -19,6 +19,7 @@ from cadrumo.application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
+from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -36,6 +37,16 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from .operations.runtime_profile_session import RuntimeProfileSession
 
 
+def _import_sources_match(result: LedgerImportResultProjection, request: LedgerImportRequest) -> bool:
+    """Match the complete submitted file set and its unique source indexes."""
+    indexes = [item.file_index for item in result.source_digests]
+    return (
+        len(result.validations) + len(result.refused_files) == len(request.files)
+        and len(indexes) == len(set(indexes))
+        and all(index < len(request.files) for index in indexes)
+    )
+
+
 def _result_matches(
     result: LedgerImportResultProjection,
     request: LedgerImportRequest,
@@ -44,16 +55,13 @@ def _result_matches(
 ) -> bool:
     """Whether the result answers exactly the submitted files under its settled receipt."""
     expected_effect = OperationEffect.UPDATED if not request.dry_run and result.imported > 0 else OperationEffect.NONE
-    indexes = [item.file_index for item in result.source_digests]
     return (
         condition is OperationTerminalCondition.SUCCEEDED
         and terminal.refusal_ref is None
         and terminal.effect is expected_effect
         and result.profile_id == request.profile_id
         and result.dry_run is request.dry_run
-        and len(result.validations) + len(result.refused_files) == len(request.files)
-        and len(indexes) == len(set(indexes))
-        and all(index < len(request.files) for index in indexes)
+        and _import_sources_match(result, request)
     )
 
 
@@ -76,23 +84,32 @@ def _outcome(result: LedgerImportResultProjection, files: tuple[Path, ...]) -> L
     )
 
 
-def _refused_file(item: LedgerImportFileRefusal) -> LedgerImportFileRefusalV1:
-    """Word one refused file, keeping the setup action its reader verdict named.
+_SELECTED_MODEL_CONDITIONS = frozenset(
+    {
+        ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE.value,
+        ProbePreconditionCondition.SELECTED_MODEL_READS_IMAGES.value,
+    }
+)
 
-    A file only the local AI reads is told to wait for setup only when the
-    verdict names that setup; a reader this computer cannot run is told so,
-    with nothing to set up.
+
+def _refused_file(item: LedgerImportFileRefusal) -> LedgerImportFileRefusalV1:
+    """Word one refused file by its reader verdict.
+
+    A file only the local AI reads is told the local AI is not ready when the
+    verdict says its program or model is missing; a reader whose model the
+    person selected, or failed to select, is told that model is unavailable.
     """
     verdict = item.precondition_verdict
-    action_id = None if verdict is None else verdict.action_id
-    if item.reason_code == "reader_unavailable" and action_id is None:
+    if (
+        item.reason_code == "reader_unavailable"
+        and verdict is not None
+        and verdict.failed_condition_id in _SELECTED_MODEL_CONDITIONS
+    ):
         return LedgerImportFileRefusalV1(
             file_name=item.file_name, reason=tr("tui.ledger.import.refusal.reader_unavailable_here")
         )
     return LedgerImportFileRefusalV1(
-        file_name=item.file_name,
-        reason=tr(f"tui.ledger.import.refusal.{item.reason_code}"),
-        recovery_action_id=action_id,
+        file_name=item.file_name, reason=tr(f"tui.ledger.import.refusal.{item.reason_code}")
     )
 
 

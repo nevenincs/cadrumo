@@ -37,8 +37,6 @@ from cadrumo_client.transport.frame_io import read_document, read_secret, write_
 from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.transport_cleanup import close_transport_after_failure
 from cadrumo_runtime.contracts.profile_worker import (
-    ProfileWorkerClaimableReviews,
-    ProfileWorkerClaimableReviewsRequest,
     ProfileWorkerContractRequest,
     ProfileWorkerLeaseTransferRequest,
     ProfileWorkerManageRequest,
@@ -54,8 +52,6 @@ from cadrumo_runtime.contracts.profile_worker import (
     ProfileWorkerRefusal,
     ProfileWorkerRequest,
     ProfileWorkerResumeRequest,
-    ProfileWorkerReviewClaimed,
-    ProfileWorkerReviewClaimRequest,
     ProfileWorkerSecretRequest,
     ProfileWorkerSubmission,
     ProfileWorkerSubmissionAbortRequest,
@@ -160,6 +156,28 @@ async def _input_ready(channel: WorkerChannel, failed: asyncio.Event, input_exec
     return await outcome
 
 
+def _write_operation_refusal(
+    channel: WorkerChannel,
+    operations: ProfileWorkerOperationHost,
+    request_id: UUID,
+    refusal: AutomationCustodyError | ProfileAccessRefusedError | ValidationError,
+) -> None:
+    """Write only the established correlated refusal and registered fault fields."""
+    if isinstance(refusal, ProfileAccessRefusedError):
+        _LOGGER.warning("worker operation access refused code=%s", refusal.reason, exc_info=refusal)
+    write_document(
+        channel,
+        ProfileWorkerRefusal(
+            identity=operations.custody.identity,
+            request_id=request_id,
+            reason=AutomationCustodyCode.INVALID if isinstance(refusal, ValidationError) else refusal.reason,
+            request_faults=refusal.request_faults if isinstance(refusal, AutomationCustodyError) else (),
+            holder_operation_id=refusal.holder_operation_id if isinstance(refusal, ProfileAccessRefusedError) else None,
+        ),
+        deadline=time.monotonic() + 5,
+    )
+
+
 async def operate(
     channel: WorkerChannel,
     operations: ProfileWorkerOperationHost,
@@ -196,23 +214,7 @@ async def operate(
                 outcome = "refused"
                 if failed.is_set():
                     raise
-                if isinstance(refusal, ProfileAccessRefusedError):
-                    _LOGGER.warning("worker operation access refused code=%s", refusal.reason, exc_info=refusal)
-                write_document(
-                    channel,
-                    ProfileWorkerRefusal(
-                        identity=operations.custody.identity,
-                        request_id=request.request_id,
-                        reason=AutomationCustodyCode.INVALID
-                        if isinstance(refusal, ValidationError)
-                        else refusal.reason,
-                        request_faults=refusal.request_faults if isinstance(refusal, AutomationCustodyError) else (),
-                        holder_operation_id=refusal.holder_operation_id
-                        if isinstance(refusal, ProfileAccessRefusedError)
-                        else None,
-                    ),
-                    deadline=time.monotonic() + 5,
-                )
+                _write_operation_refusal(channel, operations, request.request_id, refusal)
             finally:
                 if expiry_needed:
                     changed.set()
@@ -229,34 +231,6 @@ async def _dispatch_request(
     request: object,
     uploads: WorkerSubmissionStaging,
 ) -> None:
-    if isinstance(request, ProfileWorkerClaimableReviewsRequest):
-        write_document(
-            channel,
-            ProfileWorkerClaimableReviews(
-                identity=operations.custody.identity,
-                request_id=request.request_id,
-                operation_ids=await operations.claimable_reviews(request.attestation),
-            ),
-            deadline=time.monotonic() + 5,
-        )
-        return
-    if isinstance(request, ProfileWorkerReviewClaimRequest):
-        async with operations.claim_review(
-            request.attestation, request.reference, request.reviewed_document_digest
-        ) as (reference, digest, intents, release):
-            write_document(
-                channel,
-                ProfileWorkerReviewClaimed(
-                    identity=operations.custody.identity,
-                    request_id=request.request_id,
-                    reference=reference,
-                    reviewed_document_digest=digest,
-                    allowed_intents=intents,
-                    release=release,
-                ),
-                deadline=time.monotonic() + 5,
-            )
-        return
     if isinstance(
         request,
         ProfileWorkerSubmitRequest

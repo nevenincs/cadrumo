@@ -37,7 +37,9 @@ def _read_frame(stream: socket.socket) -> bytes:
 @pytest.mark.parametrize("closing", [False, True])
 def test_settings_read_reports_lost_authority_while_the_gateway_is_stopping(tmp_path: Path, closing: bool) -> None:
     service = AgentService(
-        client=cast(InstalledServiceClient, SimpleNamespace(lease=None)),
+        client=cast(
+            InstalledServiceClient, SimpleNamespace(lease=None, connection=SimpleNamespace(close=lambda: None))
+        ),
         storage_root=tmp_path,
         gateway_bearer=bytearray(),
         emit=lambda _event: None,
@@ -66,7 +68,7 @@ def test_settings_read_reports_lost_authority_while_the_gateway_is_stopping(tmp_
 def test_existing_attempt_is_observed_without_the_gateway_lifecycle_lock(
     tmp_path: Path, action: str, authority: str
 ) -> None:
-    client = SimpleNamespace(lease=object())
+    client = SimpleNamespace(lease=object(), connection=SimpleNamespace(close=lambda: None))
     service = AgentService(
         client=cast(InstalledServiceClient, client),
         storage_root=tmp_path,

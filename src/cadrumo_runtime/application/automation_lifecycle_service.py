@@ -16,6 +16,7 @@ from cadrumo.application.user_profile.access_administration import (
     evaluate_access_administration,
 )
 from cadrumo.application.user_profile.access_contracts import ACCESS_LEASE_MAXIMUM, ApiKeyRecord, ProfileAccessBinding
+from cadrumo.application.user_profile.automation_custody_port import AutomationKeyVerifier
 from cadrumo.application.user_profile.automation_enrollment import (
     AdministrationFacts,
     EnrollmentControlState,
@@ -183,6 +184,13 @@ def _resume_suspended_key(key: ApiKeyRecord, *, now: datetime) -> ApiKeyRecord:
     return key
 
 
+def _has_active_enrollment_key(keys: tuple[AutomationKeyVerifier, ...], now: datetime) -> bool:
+    """Require an active, currently valid key for unattended authority."""
+    return any(
+        item.key.state is AuthorityState.ACTIVE and item.key.valid_from <= now < item.key.expires_at for item in keys
+    )
+
+
 def _reactivated_enrollment_grant(
     entry: EnrollmentGrant,
     *,
@@ -205,9 +213,7 @@ def _reactivated_enrollment_grant(
         if grant.state is AuthorityState.ACTIVE
         else tuple(_changed(item, key=_resume_suspended_key(item.key, now=now)) for item in entry.keys)
     )
-    if grant.unattended and not any(
-        item.key.state is AuthorityState.ACTIVE and item.key.valid_from <= now < item.key.expires_at for item in keys
-    ):
+    if grant.unattended and not _has_active_enrollment_key(keys, now):
         raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
     if grant.state is AuthorityState.ACTIVE:
         return entry

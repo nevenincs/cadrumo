@@ -15,6 +15,7 @@ import typer
 from typer.core import TyperCommand
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_store
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import RECEIPT_LOGIN_ID, committed_sign_in
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
@@ -319,7 +320,7 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
     _select(first_id)
     original = observe_active_profile_pointer()
     keyring = _Keyring()
-    monkeypatch.setattr(receipt_store, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
     synthetic_receipt = receipt_store.mint_profile_session(
         storage_root=_isolated_cli_backend,
         profile_id=first_id,
@@ -336,7 +337,7 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
     receipt_path = receipt_store.profile_session_path(storage_root=_isolated_cli_backend, profile_id=first_id)
     original_receipt = receipt_path.read_bytes()
     original_key = keyring.entries[
-        (receipt_store.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{first_id}:{synthetic_receipt.session_id}")
+        (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{first_id}:{synthetic_receipt.session_id}")
     ]
     existing_client = _RuntimeClient(first_id, receipt=_receipt(resumed=True))
     candidate = _RuntimeClient(second_id)
@@ -361,7 +362,9 @@ def test_failed_candidate_keeps_prior_profile_receipt_and_other_client(
     assert existing_client.closed == 0 and existing_client.calls == []
     assert receipt_path.read_bytes() == original_receipt
     assert (
-        keyring.entries[(receipt_store.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{first_id}:{synthetic_receipt.session_id}")]
+        keyring.entries[
+            (acceleration_keychain.PROFILE_SESSION_KEYCHAIN_SERVICE, f"{first_id}:{synthetic_receipt.session_id}")
+        ]
         == original_key
     )
 

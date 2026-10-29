@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import re
 import time
+from collections.abc import Mapping
+from typing import Literal
 
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -12,20 +14,139 @@ from cadrumo.adapters.persistence.storage.errors import SecureObjectRevisionConf
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from cadrumo.adapters.persistence.storage.sql.secure_object_records import SecureObjectDeletion
+from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.core.config import load_settings
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.extension_records import (
+    ExtensionRecordCapability,
     ExtensionRecordRefusal,
     ExtensionRecordReply,
+    ExtensionRecordRequest,
     ProfileWorkerExtensionRecordRequest,
 )
 from cadrumo_client.transport.frame_io import read_secret, write_document, write_secret
 from cadrumo_runtime.contracts.profile_worker import ProfileWorkerExtensionRecordReply
 
 from ..adapters.worker_transport import WorkerChannel
+
+
+def read_extension_record(
+    repository: SecureObjectRepository,
+    policy: ExtensionRecordCapability,
+    key: str,
+    revisions: Mapping[str, str | None],
+    material: bytearray,
+) -> tuple[Literal["absent", "unreadable", "present"], str | None]:
+    """Read one bounded opaque record and keep its revision coupled to the bytes."""
+    revision = revisions.get(key)
+    if key not in revisions:
+        return "absent", revision
+    try:
+        row = repository.load(
+            policy.namespace, key, expected_class=policy.classification, max_supported_version=policy.schema_version
+        )
+    except (CadrumoError, SQLAlchemyError, ValueError):
+        return "unreadable", revision
+    if row is None:
+        return "absent", revision
+    if len(row.payload) > policy.maximum_bytes:
+        return "unreadable", revision
+    material.extend(row.payload)
+    return "present", row.revision_id
+
+
+def write_extension_record(
+    channel: WorkerChannel,
+    custody: ProfileWorkerCustody,
+    repository: SecureObjectRepository,
+    request: ExtensionRecordRequest,
+    policy: ExtensionRecordCapability,
+    key: str,
+    revision: str | None,
+) -> tuple[Literal["refused", "written"], str | None, ExtensionRecordRefusal | None]:
+    """Read one bounded secret and commit it only under current custody."""
+    with read_secret(channel, deadline=time.monotonic() + 5) as incoming:
+        if len(incoming) != request.byte_count or len(incoming) > policy.maximum_bytes:
+            return "refused", revision, ExtensionRecordRefusal.INVALID
+        custody.require(request.session_id)
+        repository.save(
+            namespace=policy.namespace,
+            object_key=key,
+            classification=policy.classification,
+            schema_version=policy.schema_version,
+            written_at=now(),
+            payload=bytes(incoming),
+            write_provenance="extension-record",
+            expected_revision_id=request.expected_revision,
+        )
+        return "written", repository.peek_many_revision_ids(policy.namespace, (key,)).get(key), None
+
+
+def delete_extension_record(
+    repository: SecureObjectRepository,
+    request: ExtensionRecordRequest,
+    policy: ExtensionRecordCapability,
+    key: str,
+    revisions: Mapping[str, str | None],
+    revision: str | None,
+) -> tuple[Literal["refused", "deleted"], str | None, ExtensionRecordRefusal | None]:
+    """Apply the exact expected revision to one deletion."""
+    if request.expected_revision == ABSENT_SECURE_OBJECT_REVISION_ID:
+        if key in revisions:
+            return "refused", revision, ExtensionRecordRefusal.REVISION_CONFLICT
+        return "deleted", revision, None
+    repository.apply_batch(
+        writes=(),
+        deletions=(
+            SecureObjectDeletion(
+                namespace=policy.namespace,
+                hashed_object_key=secure_object_key_digest(key),
+                expected_revision_id=request.expected_revision,
+            ),
+        ),
+    )
+    return "deleted", None, None
+
+
+def perform_extension_action(
+    channel: WorkerChannel,
+    custody: ProfileWorkerCustody,
+    repository: SecureObjectRepository,
+    request: ExtensionRecordRequest,
+    policy: ExtensionRecordCapability,
+    action: str,
+    material: bytearray,
+) -> tuple[
+    Literal["refused", "present", "absent", "unreadable", "written", "deleted", "generation"],
+    str | None,
+    ExtensionRecordRefusal | None,
+    str | None,
+]:
+    """Perform the requested repository action under the held custody section."""
+    state: Literal["refused", "present", "absent", "unreadable", "written", "deleted", "generation"] = "refused"
+    revision: str | None = None
+    refusal: ExtensionRecordRefusal | None = None
+    generation: str | None = None
+    key = request.object_key
+    if action == "generation":
+        revisions = repository.observe_revision_ids(policy.namespace)
+        generation = sha256_hex("\x1f".join(item or "" for item in revisions).encode())
+        state = "generation"
+    elif key is not None:
+        revisions = repository.peek_many_revision_ids(policy.namespace, (key,))
+        revision = revisions.get(key)
+        if action == "read":
+            state, revision = read_extension_record(repository, policy, key, revisions, material)
+        elif action == "write":
+            state, revision, refusal = write_extension_record(
+                channel, custody, repository, request, policy, key, revision
+            )
+        else:
+            state, revision, refusal = delete_extension_record(repository, request, policy, key, revisions, revision)
+    return state, revision, refusal, generation
 
 
 def serve_extension_record(
@@ -51,71 +172,9 @@ def serve_extension_record(
                 repository = secure_object_repository_for_bucket(
                     str(custody.identity.binding.profile_id), load_settings()
                 )
-                key = request.object_key
-                if action == "generation":
-                    revisions = repository.observe_revision_ids(policy.namespace)
-                    generation = sha256_hex("\x1f".join(item or "" for item in revisions).encode())
-                    state = "generation"
-                elif key is not None:
-                    revisions = repository.peek_many_revision_ids(policy.namespace, (key,))
-                    revision = revisions.get(key)
-                    if action == "read":
-                        if key not in revisions:
-                            state = "absent"
-                        else:
-                            try:
-                                row = repository.load(
-                                    policy.namespace,
-                                    key,
-                                    expected_class=policy.classification,
-                                    max_supported_version=policy.schema_version,
-                                )
-                            except (CadrumoError, SQLAlchemyError, ValueError):
-                                state = "unreadable"
-                            else:
-                                if row is None:
-                                    state = "absent"
-                                elif len(row.payload) > policy.maximum_bytes:
-                                    state = "unreadable"
-                                else:
-                                    material.extend(row.payload)
-                                    revision, state = row.revision_id, "present"
-                    elif action == "write":
-                        with read_secret(channel, deadline=time.monotonic() + 5) as incoming:
-                            if len(incoming) != request.byte_count or len(incoming) > policy.maximum_bytes:
-                                refusal = ExtensionRecordRefusal.INVALID
-                            else:
-                                custody.require(request.session_id)
-                                repository.save(
-                                    namespace=policy.namespace,
-                                    object_key=key,
-                                    classification=policy.classification,
-                                    schema_version=policy.schema_version,
-                                    written_at=now(),
-                                    payload=bytes(incoming),
-                                    write_provenance="extension-record",
-                                    expected_revision_id=request.expected_revision,
-                                )
-                                revision = repository.peek_many_revision_ids(policy.namespace, (key,)).get(key)
-                                state = "written"
-                    else:
-                        if request.expected_revision == ABSENT_SECURE_OBJECT_REVISION_ID:
-                            if key in revisions:
-                                refusal = ExtensionRecordRefusal.REVISION_CONFLICT
-                            else:
-                                state = "deleted"
-                        else:
-                            repository.apply_batch(
-                                writes=(),
-                                deletions=(
-                                    SecureObjectDeletion(
-                                        namespace=policy.namespace,
-                                        hashed_object_key=secure_object_key_digest(key),
-                                        expected_revision_id=request.expected_revision,
-                                    ),
-                                ),
-                            )
-                            state, revision = "deleted", None
+                state, revision, refusal, generation = perform_extension_action(
+                    channel, custody, repository, request, policy, action, material
+                )
                 custody.require(request.session_id)
                 reply = ExtensionRecordReply(
                     request_id=request.request_id,

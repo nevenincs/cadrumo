@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from ...application import session_authority_admission
+from ...application import session_authority_delegation
 from .test_service_records import RECORD_CAPABILITY, service_record_runtime
 
 pytestmark = [
@@ -26,7 +26,7 @@ def test_service_lease_renews_after_expiry_without_losing_human_custody(
 ) -> None:
     with service_record_runtime(tmp_path) as runtime:
         # Shorten only this fixture's child lease, after cold human admission.
-        monkeypatch.setattr(session_authority_admission, "ACCESS_LEASE_MAXIMUM", timedelta(seconds=4))
+        monkeypatch.setattr(session_authority_delegation, "ACCESS_LEASE_MAXIMUM", timedelta(seconds=4))
         service = runtime.connect_service()
         runtime.admit(service)
         original = service.claim()
