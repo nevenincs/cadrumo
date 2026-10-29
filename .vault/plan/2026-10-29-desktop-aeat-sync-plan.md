@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:52267106f6c17b5d495138bb064e2e714f74086e25ffa5c2a3d31eccb876eeaa'
+body_hash: 'sha256:96dd15a1916f82253c436ce1e24ea702e67b495b749d89a44c24adae2d447bef'
 ---
 
 # `desktop-aeat-sync` plan
@@ -55,6 +55,7 @@ Serve per-area AEAT sync state from the backend and remove paths, tax numbers an
 - [x] `P02.S06` - make nif optional on live.verify.nif-iva and live.verify.tgvi defaulting to the profile taxpayer number, and add a distinct typed refusal detail for an ended AEAT session in live captures; `src/cadrumo/application/live/verify_capture_operation.py, src/cadrumo/application/live/errors.py`.
 - [x] `P02.S26` - test the per-area staleness defaults (notifications 7 days, IVA wallet 30 days, census, filed declarations and identity checks 90 days) at and across each boundary through the real reader; `src/cadrumo/application/aeat_sync/tests/`.
 - [x] `P02.S07` - regenerate the contract manifest and run focused tests plus import, style, format and type gates; `src/cadrumo/_data/operations/contract_manifest.json`.
+- [ ] `P02.S27` - extend live.sync.status with per-declaration filed rows (modelo, period and year, the local record as none, draft or marked filed with its date, the AEAT observation with its date, the confirmed receipt, and the match group with what differs), joined through the shared calendar evidence join and the filing and work-unit records, contacting no AEAT service, per the owner ruling of 2026-10-29; `src/cadrumo/application/aeat_sync/workspace.py, src/cadrumo/application/aeat_sync/workspace_reader.py, src/cadrumo/application/aeat_sync/status_operation.py, src/cadrumo/entrypoints/aeat_sync_status_composition.py, src/cadrumo/_data/operations/contract_manifest.json`.
 
 ### Phase `P03` - Host commands and run model
 
@@ -64,6 +65,7 @@ Give the host named aeat_sync commands and a profile-held area queue with stop, 
 - [x] `P03.S09` - implement the profile-held run: area order, per-year filed items, census session reuse, stop between items, reattach, discard on sign-out and profile change, settle waits that never become unknown; `native/desktop/src-tauri/src/shell/aeat_sync/run.rs (new), native/desktop/src-tauri/src/shell/user_profile.rs`.
 - [x] `P03.S10` - implement the closed outcome table, session-ended pause and resume from the first item not brought, person-initiated retry, preflight from setup rows, sign-in through auth.session.acquire, and observation-event progress; `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs (new), native/desktop/src-tauri/src/shell/relay.rs`.
 - [x] `P03.S11` - cover the run model and outcome table in desktop-host-unit-test, including unknown never retried and no id, code or path in any reply to the window; `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs (new)`.
+- [ ] `P03.S28` - serve the filed rows from live.sync.status in aeat_sync_results, and admit the local AEAT access readiness read auth.local-read so aeat_sync_prepare reports AEAT access not set up before starting, per the owner rulings of 2026-10-29, checked by test against the manifest; `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs, native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs, native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`.
 
 ### Phase `P04` - Frontend page
 
@@ -76,6 +78,7 @@ Build the aeat-sync window view: overview, preflight, sign-in, selection, progre
 - [x] `P04.S16` - build results: the shared census review band, filed declaration matches, notifications with read state, legal-receipt warning and open-in-Sede action, and Borrador import; `native/desktop/frontend/src/components/aeatSync/ (new), native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
 - [x] `P04.S22` - add a global command palette action, available on every page, that opens the one existing census flow (useCensoSync and ProfileSync over the profile_censo_* commands) without duplicating it; `native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/shell/profileCenso.ts, native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
 - [x] `P04.S23` - add a census entry on the Modelo page that opens the same census flow, and route the AEAT sync page's census area to it; `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx, native/desktop/frontend/src/components/aeatSync/`.
+- [ ] `P04.S29` - align the filed results types, contract and scenario fixtures to the served filed rows so FiledResults shows each declaration by match group with its local record, AEAT observation, receipt and differences, per the owner ruling of 2026-10-29; `native/desktop/frontend/src/shell/aeatSyncResults.ts, native/desktop/frontend/src/ipc/contract.ts, native/desktop/frontend/src/dev/ (fixtures), native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`.
 
 ### Phase `P05` - Locales
 
@@ -89,8 +92,8 @@ Cover every page state with scenario-host data.
 
 - [ ] `P06.S18` - add scenarios for browser missing then installed, signed out then signed in, and session expires mid-sync; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts (new), native/desktop/frontend/src/dev/aeatSyncFixture.ts (new)`.
 - [ ] `P06.S19` - add scenarios for partial failure, unknown outcome, nothing found, dry run and stop; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
-- [ ] `P06.S24` - add scenarios proving the palette action, the profile page, the Modelo page and the AEAT sync census area all open the one census flow and reattach to a running census session; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts, native/desktop/frontend/tests/scenarios/user-profile.spec.ts`.
-- [ ] `P06.S25` - add scenarios for each area showing possibly out of date at its served horizon (notifications 7 days, IVA wallet 30 days, others 90 days) from scenario-host data; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts, native/desktop/frontend/src/dev/aeatSyncFixture.ts`.
+- [x] `P06.S24` - add scenarios proving the palette action, the profile page, the Modelo page and the AEAT sync census area all open the one census flow and reattach to a running census session; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts, native/desktop/frontend/tests/scenarios/user-profile.spec.ts`.
+- [x] `P06.S25` - add scenarios for each area showing possibly out of date at its served horizon (notifications 7 days, IVA wallet 30 days, others 90 days) from scenario-host data; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts, native/desktop/frontend/src/dev/aeatSyncFixture.ts`.
 
 ### Phase `P07` - Review and live check
 
