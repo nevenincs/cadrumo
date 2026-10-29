@@ -38,7 +38,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _PINNED_ROOTS: frozenset[str] = frozenset({"config", "app"})
 _PINNED_FAMILIES = {
     "app": frozenset({"diagnostics", "ledger", "live", "modelo", "overview", "quickfile", "review"}),
-    "config": frozenset({"check", "collab", "google", "login", "logout", "profile", "repair", "reset", "storage"}),
+    "config": frozenset({"collab", "google", "login", "logout", "profile", "repair", "reset", "storage"}),
 }
 
 
@@ -150,6 +150,8 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     # to the exact live/declared comparison below.
     live_sub_verb_total = sum(len(sub) for families in live.values() for sub in families.values())
     assert set(live) == _PINNED_ROOTS, f"live surface did not resolve both pinned roots: {sorted(live)}"
+    retired_config_families = {"check", "provision"}.intersection(live["config"])
+    assert not retired_config_families, f"retired config families were mounted: {sorted(retired_config_families)}"
     for root, required in _PINNED_FAMILIES.items():
         missing = required.difference(live[root])
         assert not missing, f"live {root} tree omitted known families: {sorted(missing)}"

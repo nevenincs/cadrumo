@@ -16,7 +16,7 @@ related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:745e78006615f5cab4386b4ca8d7e5fb57f745dfe153e2fff1a70529b7fdb8ea'
+body_hash: 'sha256:76bb92cf2f149e41780ff11d9038a47f502c5f57d3e67dab6bb3b202cfb6dfb5'
 ---
 
 # `duplication-cluster-cleanup` plan
@@ -45,7 +45,7 @@ The accepted canonical-module decision governs all extraction and atomic consume
 - [x] `S08` - Align the ledger reader-refusal presentation assertion with the categorized localized CLI contract; `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py refusal text assertion only and owning verification`.
 - [x] `S09` - Propagate the portable runtime test clock through the existing public wall-clock port; `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py captured test context and wall_clock wiring only`.
 - [x] `S10` - Seed a coherent eligible competing depreciation row in the acquisition refusal test; `src/cadrumo_runtime/host/tests/frontend/cli/test_register_owned_acquisition_cli.py two amount-aware fixture helpers and the second unregistered negative-case row only`.
-- [ ] `S11` - Pin the retired config check and provision families as absent from the tax CLI; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py independent config-family pins and explicit retirement assertion only`.
+- [x] `S11` - Pin the retired config check and provision families as absent from the tax CLI; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py independent config-family pins and explicit retirement assertion only`.
 
 ## Parallelization
 

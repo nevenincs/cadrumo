@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:7dc1551df9726d2e0ee21393099d0a80da03df0f0c4c4e641a13e706479942c3'
+body_hash: 'sha256:3f466c7ec3e9db689b45375af0d36dc5640b5e38408fa88dc0891be4ca8fa112'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -83,6 +83,10 @@ related:
 - `S10` `verify:` `owned acquisition runtime module positive and negative 2 cases` -> `pass`
 - `S10` `verify:` `scoped Ruff format and Windows ty` -> `pass`
 - `S10` `by:` `Terra 6.1 xhigh`
+- `S11` `M` `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py`
+- `S11` `verify:` `operator surface contract full owning integration module 1 case` -> `pass`
+- `S11` `verify:` `scoped Ruff format and Windows ty` -> `pass`
+- `S11` `by:` `Terra 6.1 xhigh`
 
 ## Notes
 
@@ -98,3 +102,4 @@ related:
 - `S08` Original failure was only the stale first-line text prefix. Expected full categorized line is independently grounded in English locale and registered REFUSED rendering; preceding ordinary notices remain allowed. PDB was diagnostic only, not passing evidence. All typed verdict, no-model-run, settlement, exit and no-desktop assertions preserved.
 - `S09` Original five export failures stopped at CLI `session_expired` before intended assertions: login thread read real time while test proof used frozen time. Existing public `wall_clock` port now reads captured context through a fresh copy per call. Production authentication thresholds and expiry logic unchanged; explicit `SESSION_EXPIRED` negative control passed. A separate acquisition fixture failure in the four-node probe remains separately triaged.
 - `S10` Original second unregistered row was excluded before the intended conflict guard. Its PDF evidence and ledger fields now use the already established eligible furniture fixture amounts coherently; original acquisition defaults and all refusal/persistence assertions remain. No production calculation or policy change.
+- `S11` Accepted desktop/native provisioning decisions and explicit retirement commits govern removal of the stale positive check pin. Independent literal retirement assertion added for check/provision; other pins, roots, floor and symmetric differences preserved. No production restoration or foreign migration change.
