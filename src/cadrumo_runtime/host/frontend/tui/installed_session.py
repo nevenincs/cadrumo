@@ -158,9 +158,7 @@ def _run_registration_screen() -> bool:
 
 
 async def _open_client(profile_id: UUID, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> FrontendClient:
-    return await open_installed_client(
-        profile_id=profile_id, frontend=OperationFrontendProjection.TUI, presents_pages=True, timeout=timeout
-    )
+    return await open_installed_client(profile_id=profile_id, frontend=OperationFrontendProjection.TUI, timeout=timeout)
 
 
 async def _open_credential_client(

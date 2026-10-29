@@ -27,7 +27,6 @@ from cadrumo_client.contracts.extension_records import ExtensionRecordRequest
 from cadrumo_client.contracts.installation_requests import InstallationActRequest
 from cadrumo_client.contracts.model_runs import ModelRunCompleteRequest, ModelRunFetchRequest
 from cadrumo_client.contracts.operation_access import OperationRequest
-from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -100,7 +99,6 @@ class ProfileHandler(Protocol):
         | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
-        | PresentationRequest
         | SignInStatusRequest
         | ActiveProfileRequest
         | LoginTargetRequest
@@ -110,7 +108,6 @@ class ProfileHandler(Protocol):
         ProfileStatus
         | ProfileLoginPending
         | ProfileDisclosurePage
-        | PresentationDelivered
         | SessionsLocked
         | SignInStatusReply
         | ActiveProfileReply

@@ -52,7 +52,6 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitPayload,
 )
-from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -95,7 +94,6 @@ type _ProfileConnectionRequest = (
     | LoginTargetRequest
     | SessionRequest
     | ProfileDisclosurePageRequest
-    | PresentationRequest
     | AttendanceAsk
     | AttendanceDecide
     | OperationRequest
@@ -176,7 +174,6 @@ class RuntimeConnectionHandling:
                 context.runtime_boot_id,
                 context.peer,
                 lifecycle_notices=hello.lifecycle_notices == "v1",
-                presentation=hello.presentation == "v1",
             )
             queued = NativeWake()
             if self.profiles is not None:
@@ -277,7 +274,6 @@ class RuntimeConnectionHandling:
         ProfileStatus
         | ProfileLoginPending
         | ProfileDisclosurePage
-        | PresentationDelivered
         | SessionsLocked
         | SignInStatusReply
         | ActiveProfileReply
@@ -310,7 +306,6 @@ class RuntimeConnectionHandling:
             | ProfileLoginStatusQuery
             | SessionRequest
             | ProfileDisclosurePageRequest
-            | PresentationRequest
             | SignInStatusRequest
             | ActiveProfileRequest
             | LoginTargetRequest

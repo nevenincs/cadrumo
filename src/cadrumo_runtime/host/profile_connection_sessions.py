@@ -38,7 +38,6 @@ from cadrumo_client.contracts.attendance import (
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError
 from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
-from cadrumo_client.contracts.presentation import PresentationDelivered, PresentationRequest
 from cadrumo_client.contracts.profile_access import (
     AccessRefusal,
     ProfileDisclosurePage,
@@ -56,14 +55,13 @@ from cadrumo_client.contracts.profile_selection import (
     LoginTargetReply,
     LoginTargetRequest,
 )
-from cadrumo_client.contracts.session_events import PresentationRequested
 from cadrumo_client.contracts.sign_in import HumanSignedOut, SignInPresence, SignInStatusReply, SignInStatusRequest
 from cadrumo_client.contracts.transport import ConnectionContext
 
 from ..application.session_authority_contracts import HumanAdmissionControl
 from .profile_connection import ProfileConnection
 from .profile_host import RuntimeProfileHost
-from .profile_session_reading import issued_key_can_admit, login_completed, presentation_events
+from .profile_session_reading import issued_key_can_admit, login_completed
 from .sign_in_status import observe_active_profile, observe_sign_in, resolve_login_target
 from .sign_in_sweep import revoke_other_saved_sign_ins
 
@@ -384,57 +382,6 @@ class ProfileConnectionSessionMixin:
             page=page,
         )
 
-    def _presentation_recipients(
-        self: RuntimeProfileConnections, connection: ProfileConnection, request: PresentationRequest
-    ) -> tuple[PresentationRequested, ...]:
-        with self._guard:
-            recipients = presentation_events(self.boot, connection, request, self._connections.values())
-        return recipients
-
-    def _present(
-        self: RuntimeProfileConnections, context: ConnectionContext, request: PresentationRequest
-    ) -> PresentationDelivered | AccessDenied:
-        """Pass a page the person chose to their own signed-in page surfaces on the same profile.
-
-        A person's frontend asks; a delegated client never selects a page. The
-        asking session is checked as a status read is. The request reaches each
-        connection of the profile that declared it shows pages and holds a
-        session under the same native login, and names a page and nothing
-        else; the receiving surface admits it. The request itself is a TUI view
-        of the register with only that element's parameters, or it never
-        decodes, so a relayed view is always one some TUI implements.
-        """
-        connection = self._connected(context.connection_id)
-        if connection.context != context or connection.profile_id != request.profile_id:
-            return AccessDenied(code=AccessDenialCode.PROFILE_MISMATCH)
-        if connection.session_id != request.session_id:
-            return AccessDenied(code=AccessDenialCode.CONNECTION_MISMATCH)
-        try:
-            self._require_persons_frontend(connection.frontend)
-        except ProfileAccessRefusedError as refusal:
-            return AccessDenied(code=refusal.reason)
-        with self._guard:
-            host = self._profiles[connection.profile_id]
-        with host.guard:
-            if not self._admitting():
-                raise RefusalError(RefusalCode.DRAINING)
-            status = self._status(connection, host, request.request_id, request.session_id)
-        if isinstance(status, AccessDenied):
-            return status
-        if status.status.denial is not None:
-            return AccessDenied(code=status.status.denial)
-        recipients = self._presentation_recipients(connection, request)
-        for event in recipients:
-            self._events.publish(event)
-        return PresentationDelivered(
-            request_id=request.request_id,
-            runtime_boot_id=self.boot,
-            connection_id=context.connection_id,
-            destination=request.destination,
-            params=request.params,
-            delivered=len(recipients),
-        )
-
     def _human_sign_out(
         self: RuntimeProfileConnections,
         host: RuntimeProfileHost,
@@ -581,7 +528,6 @@ class ProfileConnectionSessionMixin:
         | ProfileLoginStatusQuery
         | ProfileLogin
         | ProfileDisclosurePageRequest
-        | PresentationRequest
         | SessionRequest,
     ) -> (
         AttendancePending
@@ -590,7 +536,6 @@ class ProfileConnectionSessionMixin:
         | ProfileStatus
         | ProfileLoginPending
         | ProfileDisclosurePage
-        | PresentationDelivered
         | SessionsLocked
         | HumanSignedOut
         | AccessDenied
@@ -609,8 +554,6 @@ class ProfileConnectionSessionMixin:
                 self._sign_in_changed()
         elif isinstance(request, ProfileDisclosurePageRequest):
             result = self._disclosure_page(context, request)
-        elif isinstance(request, PresentationRequest):
-            result = self._present(context, request)
         else:
             result = self._session(context, request)
         return result
@@ -622,10 +565,9 @@ class ProfileConnectionSessionMixin:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="session_context_rebound")
         if not self._admitting():
             raise RefusalError(RefusalCode.DRAINING)
-        if (
-            (isinstance(request, SessionRequest) and request.action == "session_activity")
-            or isinstance(request, PresentationRequest)
-        ) and self._nonhuman_peer(context, channel):
+        if (isinstance(request, SessionRequest) and request.action == "session_activity") and self._nonhuman_peer(
+            context, channel
+        ):
             raise ProfileAccessRefusedError(AccessDenialCode.PERSON_ACT_REQUIRED)
 
     def handle(
@@ -636,7 +578,6 @@ class ProfileConnectionSessionMixin:
         | ProfileLoginStatusQuery
         | SessionRequest
         | ProfileDisclosurePageRequest
-        | PresentationRequest
         | SignInStatusRequest
         | ActiveProfileRequest
         | LoginTargetRequest
@@ -646,7 +587,6 @@ class ProfileConnectionSessionMixin:
         ProfileStatus
         | ProfileLoginPending
         | ProfileDisclosurePage
-        | PresentationDelivered
         | SessionsLocked
         | SignInStatusReply
         | ActiveProfileReply
