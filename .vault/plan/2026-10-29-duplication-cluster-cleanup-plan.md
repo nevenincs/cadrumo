@@ -16,9 +16,8 @@ related:
   - '[[2026-10-24-rust-component-provisioning-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:76bb92cf2f149e41780ff11d9038a47f502c5f57d3e67dab6bb3b202cfb6dfb5'
+body_hash: 'sha256:006f7e69e3c4077549fa42257cdcf107f997897890b5077c6568d6ce41997723'
 ---
-
 # `duplication-cluster-cleanup` plan
 
 ## Description
@@ -32,6 +31,8 @@ The current owning scan observes 55 raw clusters, 16 executable or unclassified 
 This is a bounded derivative of the historical duplication-remediation programme, not its reactivation or closure. It authorizes no operation platform, editor, receipt migration, tax-correctness change, source publication, persisted schema change or release of another writer's reserved files. The historical plan remains supporting context, not an instruction to execute its 29 Steps. The proposed duplication-burndown ADR is not accepted authority.
 
 The accepted canonical-module decision governs all extraction and atomic consumer migration. The Workspace API decision governs S02 baseline identity and owner epochs; the hashing-proof and numeric-oracle decisions preserve exact serializers and independent expected proofs. S01 shares same-class presentation mechanics only; S02 preserves exact existing baseline bytes and contributor order; S03 shares same-owner output field projection only. S04 shares only the exact admission prefix, retaining view-specific desktop and guarded-status checks. S05 shares the existing ordered capture leaf, retaining caller-specific consistency brackets and diagnostics. S06 shares explicit-kind cleanup matching, intent preparation and the ambient storage/mutation scope, retaining explicit-settings recursion and separate logout/reset effects, finalization and result schemas. Its one-line adapter test repair signals writer readiness after custody setup so the test does not race the fixture close/reopen window; all original assertions remain. These behavior-preserving mechanisms require no new costly decision. Escalate a newly uncovered commitment with concrete evidence rather than selecting the most common copy.
+
+S07–S11 are bounded verification follow-ups from the requested gate triage: condition/presentation oracle corrections, portable fixture clock propagation, a coherent admitted negative fixture and retired taxonomy pins. Their expected behavior is covered by the accepted asset-lifecycle and desktop provisioning decisions linked above; production authentication, calculation and provisioning policies remain intact.
 
 ## Steps
 
@@ -53,8 +54,11 @@ S01 belongs to duplication_contracts (Terra 6.1 xhigh): AEAT Sync screens.py plu
 
 The CLI file and bulk test contain foreign output-root edits. Preserve those exact argument/default-root changes and any new unrelated work; write only the assigned mapping and test assertions. The workbench reader also contains foreign calendar evidence projection/import edits; preserve those and change only the agreed capture leaf/call sites. Workers capture and re-read preimages before every patch, stop overlapping mutations, and send authored-only patches when files are shared. The parent serializes plan, ledger, audit, metadata and commits. The inventory agent alone runs final duplication remeasurement after source writers stabilize; the parent owns module inventory regeneration and integrated import/type checks. No per-Step duplicate whole-tree scans.
 
+S07 and S08 reuse the Terra owner for sequential oracle corrections. S09 belongs to Sol for the portable runtime clock fixture. S10 and S11 return to Terra for the Sol-grounded acquisition and taxonomy fixtures after preceding source packages freeze. These later source packages execute sequentially; the parent retains serialized governance and commits, and Sol retains independent integrated review.
+
 ## Verification
 
 Preserve localized labels, table identities, focus, refusal status and consumed one-shot actions through mount and in-place language repaint. Preserve every filed-capture result field, list order, notices, command envelope and command-specific error-protection boundary using independent expected serialized payloads. Preserve static and graded Workspace baseline JSON bytes, contributor order and digest values with independent fixed vectors and current producer/model/profile tests.
 
 Prove runtime admission order through real public request doors, including native peer, draining, profile/session mismatch and desktop-specific refusal. Prove workbench capture order, diagnostic phase names, stale/census/ledger refusal and cache behavior with existing owning tests. Prove cleanup kind/request matching, durable intent and interrupted effect/finalization behavior while leaving separate result schemas explicit. Run scoped formatting, lint, typing and meaningful owning tests for each change. Regenerate the canonical import load targets once after adding the baseline module, then run the authoritative import gate with currentness/drift reporting. Reuse still-applicable gate evidence and keep one owner for shared expensive checks. Remeasure with the unchanged duplication scanner and report exact before/after counts plus every remaining cluster's supported disposition. Do not alter thresholds, ignores, declarations or independent proofs merely to reduce the integer. Finish integrated independent review before claiming the bounded cleanup complete; broader historical and foreign work remains distinct.
+For gate follow-ups, retain typed refusal/evidence, settlement and no-run guards while asserting the complete categorized localized line. Reach export byte comparisons with a shared test clock and keep an explicit expired-admission refusal control. Seed evidence/ledger amounts coherently so the negative acquisition case reaches its intended existing conflict guard; preserve positive defaults and all original results/assertions. Pin retired top-level readiness families absent independently of the curated/live declarations. Report original global gate results separately from later targeted current-state passes.
