@@ -660,6 +660,21 @@ test("signed out, the sign-in owns the window first and the panel follows it, on
   await expect(panel(target)).toBeVisible();
 });
 
+test("signed out, the panel follows the sign-in when the status is read after the window opens", async ({
+  page: target,
+}) => {
+  scenarioOnly("the scenario host holds the first status read");
+  // The host serves a snapshot before its first status read settles; that
+  // snapshot does not decide whether the launch opens the panel.
+  await open(target, "unread", "signed-out");
+  await expect(signInDialog(target)).toBeVisible();
+  await act(target, "readRows");
+  await expect(panel(target)).toBeHidden();
+  await putSignInAway(target);
+  await expect(panel(target)).toBeVisible();
+  await expect(target.getByRole("dialog")).toHaveCount(1);
+});
+
 test("signed out, a fresh install opens the panel and sets the browser up", async ({
   page: target,
 }) => {

@@ -266,7 +266,8 @@ export function useProvisioningStore(
   const incomplete = offered && snapshot?.complete === false;
   const decided = useRef(false);
   useEffect(() => {
-    if (!offered || snapshot === null) return;
+    // A snapshot served before that read settles says nothing yet.
+    if (!offered || snapshot === null || snapshot.complete === null) return;
     if (!decided.current) {
       decided.current = true;
       // A refusal waiting on this same read opens the panel on its own row.
