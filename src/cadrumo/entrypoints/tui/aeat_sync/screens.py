@@ -130,13 +130,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
 
     def on_mount(self) -> None:
         """Render all six independent source states and this screen's safe rows."""
-        navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
-        navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
-        navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
-        navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
-        render_navigation(navigation, self.controller)
-        rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
-        self.populate_rows(rows)
+        navigation, rows = self._populate_projection_tables()
         self._render_operation_refusal()
         self._render_zone_status(rows)
         self._restore_focus(
@@ -145,6 +139,17 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         )
         if self.controller.aeat_auth_setup is not None:
             self.run_worker(self._refresh_auth(), group="aeat-sync-auth-readiness", exclusive=True)
+
+    def _populate_projection_tables(self) -> tuple[DataTable[str], DataTable[str]]:
+        """Populate navigation and zone rows in the current language."""
+        navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
+        navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
+        navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
+        navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
+        render_navigation(navigation, self.controller)
+        rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
+        self.populate_rows(rows)
+        return navigation, rows
 
     async def _refresh_auth(self) -> bool:
         door = self.controller.aeat_auth_setup
@@ -199,13 +204,7 @@ class AeatSyncWorkspaceScreen(AccountChromeScreen):
         await super().refresh_language()
 
         def paint() -> None:
-            navigation = cast("DataTable[str]", self.query_one("#aeat-sync-navigation", DataTable))
-            navigation.add_column(tr("tui.aeat_sync.column.area"), width=16)
-            navigation.add_column(tr("tui.aeat_sync.column.availability"), width=12)
-            navigation.add_column(tr("tui.aeat_sync.column.sources"), width=38)
-            render_navigation(navigation, self.controller)
-            rows = cast("DataTable[str]", self.query_one("#aeat-sync-rows", DataTable))
-            self.populate_rows(rows)
+            _, rows = self._populate_projection_tables()
             self._render_zone_status(rows)
             self.reword_evidence()
 

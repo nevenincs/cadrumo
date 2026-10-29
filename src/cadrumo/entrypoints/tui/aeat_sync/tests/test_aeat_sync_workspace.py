@@ -742,6 +742,62 @@ async def test_explicit_overview_operation_invokes_host_once_and_missing_host_re
 
 
 @pytest.mark.asyncio
+async def test_language_repaint_preserves_tables_focus_and_consumed_operation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[AeatSyncOperationRequestV1] = []
+
+    async def handoff(request: AeatSyncOperationRequestV1) -> OperationControllerPort:
+        calls.append(request)
+        return _started_operation_controller()
+
+    with override_settings(cadrumo_output_language="en"):
+        screen = AeatSyncOverviewScreen(_controller(operation_handoff=handoff))
+        monkeypatch.setattr(screen, "_show_operation_modal", lambda _controller: None)
+        async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+            await settle(pilot)
+            navigation = screen.query_one("#aeat-sync-navigation", DataTable)
+            rows = screen.query_one("#aeat-sync-rows", DataTable)
+            navigation_keys = tuple(item.key.value for item in navigation.ordered_rows)
+            row_keys = tuple(item.key.value for item in rows.ordered_rows)
+            assert tr("tui.aeat_sync.column.area", locale="en") in _table_text(navigation)
+            button = screen.query_one("#aeat-sync-operation-0", Button)
+            assert await pilot.click(button)
+            await settle(pilot)
+            assert button.disabled and len(calls) == 1
+            rows.focus()
+            await settle(pilot)
+            assert screen.app.focused is rows
+            with override_settings(cadrumo_output_language="es"):
+                await screen.refresh_language()
+                await settle(pilot)
+                assert screen.query_one("#aeat-sync-navigation", DataTable) is navigation
+                assert screen.query_one("#aeat-sync-rows", DataTable) is rows
+                assert tuple(item.key.value for item in navigation.ordered_rows) == navigation_keys
+                assert tuple(item.key.value for item in rows.ordered_rows) == row_keys
+                assert tr("tui.aeat_sync.column.area", locale="es") in _table_text(navigation)
+                assert tr("tui.aeat_sync.availability.available", locale="es") in _table_text(navigation)
+                assert screen.app.focused is rows
+                assert screen.query_one("#aeat-sync-operation-0", Button) is button
+                assert button.disabled and len(calls) == 1
+
+
+@pytest.mark.asyncio
+async def test_language_repaint_restates_missing_operation_handoff_refusal() -> None:
+    with override_settings(cadrumo_output_language="en"):
+        screen = AeatSyncOverviewScreen(_controller())
+        async with ScreenHostApp[None](screen).run_test(size=(100, 30)) as pilot:
+            await settle(pilot)
+            status = screen.query_one("#aeat-sync-status", Static)
+            assert tr("tui.aeat_sync.refusal.operation_handoff", locale="en") in str(status.render())
+            with override_settings(cadrumo_output_language="es"):
+                await screen.refresh_language()
+                await settle(pilot)
+                assert tr("tui.aeat_sync.refusal.operation_handoff", locale="es") in str(status.render())
+                assert not screen.query(".aeat-sync-operation")
+
+
+@pytest.mark.asyncio
 async def test_started_filed_pull_handoff_pushes_the_canonical_operation_modal(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
