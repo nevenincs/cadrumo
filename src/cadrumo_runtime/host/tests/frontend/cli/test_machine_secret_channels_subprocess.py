@@ -904,17 +904,17 @@ _COLD_LEAVES: tuple[tuple[str, tuple[str, ...], str | None], ...] = (
 #: The leaves that refuse by contract rather than succeed, per setup state:
 #: an unfinished record cannot pass ``validate`` or be promoted, the profile
 #: has no descendant at index 0 and no average workforce declared for 2099,
-#: the selected profile cannot be deleted, and logout has no saved proof.
+#: and logout has no saved proof. Deleting the selected profile is a preflight
+#: that succeeds: only the runtime's teardown, under ``--yes``, removes it.
 _COLD_REFUSALS = {
     "incomplete": {
         "validate",
         "complete-setup",
         "descendiente-remove",
         "plantilla-media-remove",
-        "delete-preflight",
         "logout",
     },
-    "complete": {"descendiente-remove", "plantilla-media-remove", "delete-preflight", "logout"},
+    "complete": {"descendiente-remove", "plantilla-media-remove", "logout"},
 }
 
 
