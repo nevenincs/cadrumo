@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:e1b4778d2232c9e206c9fb41a74d6af411250bd4258e853f0f171b83fc0ca8a6'
+body_hash: 'sha256:fafa1da64e0b5b721c5a8bba2ba35d93b363e19726dd661fc8827d331d43cebb'
 ---
 
 # `desktop-aeat-sync` plan
@@ -49,18 +49,18 @@ Accept the governing ADR and apply its three amendments to the accepted records.
 
 Serve per-area AEAT sync state from the backend and remove paths, tax numbers and message parsing from the window's inputs.
 
-- [ ] `P02.S03` - extend the AEAT sync reader with IVA wallet, Borrador 100 and identity-check sources and backend-owned per-area staleness, keeping workbench.generation on the same reader; `src/cadrumo/application/aeat_sync/workspace_reader.py, src/cadrumo/application/aeat_sync/workspace.py`.
-- [ ] `P02.S04` - register the live.sync.status read operation with its request, result and refusal contracts, composing only the stores it needs and resolving the profile tax number in the worker; `src/cadrumo/application/aeat_sync/status_operation.py (new), src/cadrumo/application/live/live_operation_registration.py`.
-- [ ] `P02.S05` - make output_root optional on live.filed-capture.bulk, live.filed-history.pull and live.iva-wallet.history-capture with the worker defaulting to the settings directory, and remove the CLI client-side default; `src/cadrumo/application/live/ (three operation modules), src/cadrumo/entrypoints/cli/app_live_commands.py, src/cadrumo/entrypoints/cli/app_live_iva_commands.py`.
-- [ ] `P02.S06` - make nif optional on live.verify.nif-iva and live.verify.tgvi defaulting to the profile taxpayer number, and add a distinct typed refusal detail for an ended AEAT session in live captures; `src/cadrumo/application/live/verify_capture_operation.py, src/cadrumo/application/live/errors.py`.
-- [ ] `P02.S26` - test the per-area staleness defaults (notifications 7 days, IVA wallet 30 days, census, filed declarations and identity checks 90 days) at and across each boundary through the real reader; `src/cadrumo/application/aeat_sync/tests/`.
-- [ ] `P02.S07` - regenerate the contract manifest and run focused tests plus import, style, format and type gates; `src/cadrumo/_data/operations/contract_manifest.json`.
+- [x] `P02.S03` - extend the AEAT sync reader with IVA wallet, Borrador 100 and identity-check sources and backend-owned per-area staleness, keeping workbench.generation on the same reader; `src/cadrumo/application/aeat_sync/workspace_reader.py, src/cadrumo/application/aeat_sync/workspace.py`.
+- [x] `P02.S04` - register the live.sync.status read operation with its request, result and refusal contracts, composing only the stores it needs and resolving the profile tax number in the worker; `src/cadrumo/application/aeat_sync/status_operation.py (new), src/cadrumo/application/live/live_operation_registration.py`.
+- [x] `P02.S05` - make output_root optional on live.filed-capture.bulk, live.filed-history.pull and live.iva-wallet.history-capture with the worker defaulting to the settings directory, and remove the CLI client-side default; `src/cadrumo/application/live/ (three operation modules), src/cadrumo/entrypoints/cli/app_live_commands.py, src/cadrumo/entrypoints/cli/app_live_iva_commands.py`.
+- [x] `P02.S06` - make nif optional on live.verify.nif-iva and live.verify.tgvi defaulting to the profile taxpayer number, and add a distinct typed refusal detail for an ended AEAT session in live captures; `src/cadrumo/application/live/verify_capture_operation.py, src/cadrumo/application/live/errors.py`.
+- [x] `P02.S26` - test the per-area staleness defaults (notifications 7 days, IVA wallet 30 days, census, filed declarations and identity checks 90 days) at and across each boundary through the real reader; `src/cadrumo/application/aeat_sync/tests/`.
+- [x] `P02.S07` - regenerate the contract manifest and run focused tests plus import, style, format and type gates; `src/cadrumo/_data/operations/contract_manifest.json`.
 
 ### Phase `P03` - Host commands and run model
 
 Give the host named aeat_sync commands and a profile-held area queue with stop, resume and a closed outcome table.
 
-- [ ] `P03.S08` - add the aeat_sync host module with the closed admitted definition list, the named commands and their registration, checked by test against the manifest; `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs (new), native/desktop/src-tauri/src/app.rs`.
+- [x] `P03.S08` - add the aeat_sync host module with the closed admitted definition list, the named commands and their registration, checked by test against the manifest; `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs (new), native/desktop/src-tauri/src/app.rs`.
 - [ ] `P03.S09` - implement the profile-held run: area order, per-year filed items, census session reuse, stop between items, reattach, discard on sign-out and profile change, settle waits that never become unknown; `native/desktop/src-tauri/src/shell/aeat_sync/run.rs (new), native/desktop/src-tauri/src/shell/user_profile.rs`.
 - [ ] `P03.S10` - implement the closed outcome table, session-ended pause and resume from the first item not brought, person-initiated retry, preflight from setup rows, sign-in through auth.session.acquire, and observation-event progress; `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs (new), native/desktop/src-tauri/src/shell/relay.rs`.
 - [ ] `P03.S11` - cover the run model and outcome table in desktop-host-unit-test, including unknown never retried and no id, code or path in any reply to the window; `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs (new)`.
@@ -69,12 +69,12 @@ Give the host named aeat_sync commands and a profile-held area queue with stop, 
 
 Build the aeat-sync window view: overview, preflight, sign-in, selection, progress and results.
 
-- [ ] `P04.S12` - add the aeat-sync window view, host port and scenario host data, and route live operations to it; `native/desktop/frontend/src/shell/navigation/windowViews.ts, native/desktop/frontend/src/shell/aeatSync.ts (new), native/desktop/frontend/src/shell/tauriHost.ts, native/desktop/frontend/src/dev/scenarios.ts`.
-- [ ] `P04.S13` - build the six-area overview showing served states, dates and counts only; `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx (new)`.
+- [x] `P04.S12` - add the aeat-sync window view, host port and scenario host data, and route live operations to it; `native/desktop/frontend/src/shell/navigation/windowViews.ts, native/desktop/frontend/src/shell/aeatSync.ts (new), native/desktop/frontend/src/shell/tauriHost.ts, native/desktop/frontend/src/dev/scenarios.ts`.
+- [x] `P04.S13` - build the six-area overview showing served states, dates and counts only; `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx (new)`.
 - [ ] `P04.S14` - build the flow: browser preflight with inline setup and automatic resume, sign-in choices including the Sede view, and area selection with years, forms and dry run; `native/desktop/frontend/src/components/aeatSync/ (new)`.
 - [ ] `P04.S15` - build live per-area progress with stop and the four outcomes, with explicit retry for failed and warned retry for unknown; `native/desktop/frontend/src/components/aeatSync/ (new)`.
 - [ ] `P04.S16` - build results: the shared census review band, filed declaration matches, notifications with read state, legal-receipt warning and open-in-Sede action, and Borrador import; `native/desktop/frontend/src/components/aeatSync/ (new), native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
-- [ ] `P04.S22` - add a global command palette action, available on every page, that opens the one existing census flow (useCensoSync and ProfileSync over the profile_censo_* commands) without duplicating it; `native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/shell/profileCenso.ts, native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
+- [x] `P04.S22` - add a global command palette action, available on every page, that opens the one existing census flow (useCensoSync and ProfileSync over the profile_censo_* commands) without duplicating it; `native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/shell/profileCenso.ts, native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
 - [ ] `P04.S23` - add a census entry on the Modelo page that opens the same census flow, and route the AEAT sync page's census area to it; `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx, native/desktop/frontend/src/components/aeatSync/`.
 
 ### Phase `P05` - Locales
