@@ -902,8 +902,13 @@ export function App({ host }: { host: Host }) {
   // The one provisioning store every surface reads, and the one panel it
   // opens: once per launch while setup is not complete, and on every
   // recovery, on the element the recovery names.
-  const provisioning = useProvisioningStore(setup, reader, () =>
-    setSettingsOpen(false),
+  // The launch's own opening waits while the sign-in dialog, or the profiles
+  // it leads to, owns the window; it opens as that closes.
+  const provisioning = useProvisioningStore(
+    setup,
+    reader,
+    () => setSettingsOpen(false),
+    (signInAsked && !signInDismissed) || managingProfiles,
   );
   const setupIncomplete = provisioning.incomplete;
   const openSetup = provisioning.open;

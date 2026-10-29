@@ -142,6 +142,15 @@ async function palette(target: Page, name: string) {
 const paletteItem = (name: string) =>
   label("desktop.setup.palette_item", { name });
 
+/** The sign-in dialog a signed-out window shows, and its "not now". */
+const signInDialog = (target: Page) => target.locator(".sign-in");
+async function putSignInAway(target: Page) {
+  await signInDialog(target)
+    .getByRole("button", { name: label("desktop.signin.dismiss") })
+    .click();
+  await expect(signInDialog(target)).toBeHidden();
+}
+
 async function closePanel(target: Page) {
   await panel(target)
     .getByRole("button", { name: label("desktop.setup.not_now") })
@@ -626,10 +635,36 @@ test("the palette has a way to each element, which opens the panel on it", async
   await expect(retry).toHaveCount(1);
 });
 
+test("signed out, the sign-in owns the window first and the panel follows it, once", async ({
+  page: target,
+}) => {
+  await open(target, "fresh", "signed-out");
+  await expect(signInDialog(target)).toBeVisible();
+  // One modal at a time: the panel waits for the sign-in to close.
+  await expect(panel(target)).toBeHidden();
+  await expect(target.getByRole("dialog")).toHaveCount(1);
+  await putSignInAway(target);
+  await expect(panel(target)).toBeVisible();
+  await expect(target.getByRole("dialog")).toHaveCount(1);
+  await closePanel(target);
+  // Once per launch: closed, it does not come back by itself, and asking
+  // for the sign-in again does not reopen it.
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(signInDialog(target)).toBeVisible();
+  await putSignInAway(target);
+  await expect(target.getByRole("dialog")).toHaveCount(0);
+  // A person's explicit ask still opens it at once.
+  await (await palette(target, label("desktop.setup.palette_open"))).click();
+  await expect(panel(target)).toBeVisible();
+});
+
 test("signed out, a fresh install opens the panel and sets the browser up", async ({
   page: target,
 }) => {
   await open(target, "fresh", "signed-out");
+  await putSignInAway(target);
   await expect(panel(target)).toBeVisible();
   await expect(browserRow(target)).toContainText(BROWSER);
   await once(browserRow(target), NOT_SET_UP);
@@ -658,12 +693,12 @@ test("signed out, Settings keeps its setup section and shows no Google account",
   page: target,
 }) => {
   await open(target, "fresh", "signed-out");
-  await closePanel(target);
-  // The sign-in waits beneath the panel; put away, Settings is reachable.
-  const signIn = target.locator(".sign-in");
+  // The sign-in owns the window first; put away, the panel follows it.
+  const signIn = signInDialog(target);
   await expect(signIn).toBeVisible();
   await target.keyboard.press("Escape");
   await expect(signIn).toBeHidden();
+  await closePanel(target);
   const rail = target.locator("[data-rail=settings]");
   await expect(rail.locator("[data-pin=attention]")).toHaveCount(1);
   await rail.click();
@@ -683,10 +718,14 @@ test("a sign-in keeps a setup started signed out running", async ({
   page: target,
 }) => {
   await open(target, "fresh", "signed-out");
+  await putSignInAway(target);
   await startBrowser(target);
   await steps(target, 2, "browser");
   await closePanel(target);
-  const dialog = target.locator(".sign-in");
+  const dialog = signInDialog(target);
+  await target
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
   await expect(dialog).toBeVisible();
   await target.locator("#profile-password").fill("anything");
   await dialog

@@ -164,20 +164,26 @@ function localAiOf(rows: readonly SetupRow[]): SetupRow | null {
  * The store over `control`, for `owner`'s profile. The panel opens once per
  * launch while the snapshot says setup is not complete, and on every
  * recovery; `onOpen` is told each time it opens, so a surface it would
- * cover can make way.
+ * cover can make way. While `held` -- another modal dialog owns the window --
+ * the launch's own opening waits for it to close; a recovery opens at once.
  */
 export function useProvisioningStore(
   control: SetupControl,
   owner: string | null,
   onOpen?: () => void,
+  held = false,
 ): ProvisioningStore {
   const { offered, snapshot } = control;
   const rows = useMemo(() => snapshot?.rows ?? [], [snapshot]);
   const [panel, setPanel] = useState<PanelState>(CLOSED);
   const opened = useRef(onOpen);
   opened.current = onOpen;
+  // The launch's opening, decided by the first status read and still owed
+  // while another dialog holds the window; any opening settles it.
+  const owed = useRef(false);
   const open = useCallback(
     (item: SetupItemId | null = null, options?: { takeFocus?: boolean }) => {
+      owed.current = false;
       opened.current?.();
       setPanel((held) => ({
         open: true,
@@ -248,13 +254,14 @@ export function useProvisioningStore(
   const incomplete = offered && snapshot?.complete === false;
   const decided = useRef(false);
   useEffect(() => {
-    if (!offered || snapshot === null || decided.current) return;
-    decided.current = true;
-    if (snapshot.complete !== false) return;
-    // A refusal waiting on this same read opens the panel on its own row.
-    if (deferred.current !== null) return;
-    open(null);
-  }, [offered, snapshot, open]);
+    if (!offered || snapshot === null) return;
+    if (!decided.current) {
+      decided.current = true;
+      // A refusal waiting on this same read opens the panel on its own row.
+      owed.current = snapshot.complete === false && deferred.current === null;
+    }
+    if (owed.current && !held) open(null);
+  }, [offered, snapshot, held, open]);
 
   const localAiRow = useMemo(() => localAiOf(rows), [rows]);
   const live = anyLive(snapshot);
