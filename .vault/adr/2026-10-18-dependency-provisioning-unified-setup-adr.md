@@ -28,7 +28,7 @@ The browser that the tax agency reads need and the local AI that the document re
 
 ## Considerations
 
-- The doctor contract is accepted: probes are read-only, return a typed status, and a missing dependency is a typed refusal with remediation (`2026-06-15-dependency-provisioning-adr`).
+- Component state is read only by the native engine's probes, which are read-only and return a typed status. Python holds no probe, no readiness report and no hardware measurement. A Python consumer that reaches a missing component refuses at the point of use and names the component alone (`2026-06-15-dependency-provisioning-adr`).
 - Component setup is a desktop capability driven by the native engine of `native/application` (`2026-10-24-rust-component-provisioning-adr`). The desktop host links the engine in process, so setup needs no runtime connection and no signed-in profile (`2026-10-04-desktop-shell-adr`).
 - Browsers, models and the model runtime are not package data. The model runtime is an external program with its own process tree (`2026-10-13-application-distribution-native-bundle-llm-extra-adr`, `2026-10-17-single-binary-process-tree-adr` constraint 7). Playwright's Python package and driver ship in the native bundle and launch the browser at use time.
 - Ollama verifies layer digests and resumes partial pulls itself. Playwright installs per build and publishes no content hashes, and the Chrome for Testing builds carry no code signature. Cadrumo therefore pins the size and SHA-256 of every browser archive itself.
@@ -39,7 +39,7 @@ The browser that the tax agency reads need and the local AI that the document re
 - **One dependency registry, enumerated by the native engine, with setup run per element in the desktop and one panel rendering the engine's rows.** Chosen.
 - **Polish each dependency's setup separately.** Rejected. It keeps separate state vocabularies and progress shapes, which is what makes the app unpredictable.
 - **Bundle Chromium and model weights in the installer.** Rejected. The accepted packaging boundary keeps them out, and a GB-scale installer cannot track model licence changes.
-- **Download automatically at startup, without asking.** Rejected. Multi-gigabyte network use without the person's act contradicts the doctor contract, and the owner asked for approvals.
+- **Download automatically at startup, without asking.** Rejected. Multi-gigabyte network use without the person's act contradicts the plan-bound approval of D4, and the owner asked for approvals.
 - **Let Cadrumo build its own model runtime binary.** Rejected. Cadrumo manages a pinned upstream Ollama archive and builds none; the program stays external under the single-binary ruling.
 
 ## Constraints
@@ -105,8 +105,8 @@ Accepted 2026-10-18 on the owner's advance authorization: "Good, I forgo approva
 
 ### D8. Recovery for a consumer whose component is not ready
 
-- Every consumer checks its component before its first effect. A missing, stale, failed or blocked component refuses with a typed verdict that names the component. The desktop shows the component's sentence and opens the panel on that element (D10). The Sede browser panel does so in place of a generic refusal and logs the refusal locally as a warning with its category.
-- The browser launch reads the component record the engine wrote, not a probe of its own.
+- The desktop reads the engine's rows before it starts a feature that needs a component. A missing, stale, failed or blocked component shows the component's sentence and opens the panel on that element (D10). The Sede browser panel does so in place of a generic refusal and logs the refusal locally as a warning with its category.
+- Python probes no component and reads no component record. A Python consumer that reaches a component that is not there refuses at that point with a typed verdict naming the component, such as browser not available, and names no command, no application and no setup step.
 
 ### D9. Error reporting
 
@@ -155,7 +155,7 @@ Accepted 2026-10-18 on the owner's advance authorization: "Good, I forgo approva
 
 ### D13. Browser archives are pinned and fetched by Cadrumo
 
-- The repository pins every archive the bundled Playwright driver installs for Chromium on each supported platform (`win-x64`, `linux-x64`, `linux-arm64`, `mac-x64`, `mac-arm64`): its build directory, its path under the download host, the vendor's sources in order, its size and its SHA-256, with the driver version, in `src/cadrumo/_data/dependencies/browser_archives.toml`. `just pin-browser-archives` regenerates the table from the driver's own dry-run listing and one download of each archive. A gate test refuses a table that differs from the locked driver's listing or names a source outside the declared browser hosts, so a Playwright upgrade needs new pins. Native package assembly refuses a package whose pins do not cover the staged driver's Chromium builds on its target platform.
+- The repository pins every archive the bundled Playwright driver installs for Chromium on each supported platform (`win-x64`, `linux-x64`, `linux-arm64`, `mac-x64`, `mac-arm64`): its build directory, its path under the download host, the vendor's sources in order, its size and its SHA-256, with the driver version, in `native/component-pins/browser_archives.toml`. `just pin-browser-archives` regenerates the table from the driver's own dry-run listing and one download of each archive. A gate test refuses a table that differs from the locked driver's listing or names a source outside the declared browser hosts, so a Playwright upgrade needs new pins. Native package assembly refuses a package whose pins do not cover the staged driver's Chromium builds on its target platform.
 - The plan's size comes from the pins of the archives still missing and names exactly the declared browser hosts. Nothing is measured over the network, and no host a source answers with widens the plan.
 - The engine downloads each pending archive itself, one build at a time, so an interruption keeps every finished build. Every hop must be HTTPS, on the default port and without credentials, to a host that is both declared and in the approved plan, and a chain may take at most five redirects. The body must have the pinned size and SHA-256. A mismatch is `damaged_download` and an unapproved hop is `blocked_by_network`; neither is retried, and no other source is tried after them. A network failure on one source gives way to the vendor's next source.
 - Nothing downloaded is extracted or launched before its bytes have matched a pin. The engine extracts each archive into the build directory the driver's `browsers.json` names and writes the driver's completion marker. The vendor installer does not run. The full check's launch is therefore never the first check of what was downloaded.
