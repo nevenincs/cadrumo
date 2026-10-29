@@ -20,7 +20,6 @@ from ..checks import discover_sequences
 from ..compare import compare_transcript_to_golden, evaluate_expectations
 from ..golden_store import (
     build_golden,
-    mask_host_conditional_details,
     normalise_document_paths,
     normalise_frame_envelope,
 )
@@ -106,12 +105,8 @@ def test_two_real_exports_differ_only_in_destination_bound_event_id(
     for transcript in export_runs:
         frame = transcript.frames[1]
         assert frame.envelope is not None
-        normalised = mask_host_conditional_details(
-            mask_document(
-                normalise_document_paths(
-                    frame.envelope, storage_root=transcript.storage_root, workdir=transcript.workdir
-                )
-            )
+        normalised = mask_document(
+            normalise_document_paths(frame.envelope, storage_root=transcript.storage_root, workdir=transcript.workdir)
         )
         assert isinstance(normalised, dict)
         documents.append(normalised)

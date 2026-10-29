@@ -159,14 +159,6 @@ def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() ->
     assert "git push" not in rendered
 
 
-def test_doctor_invokes_the_aeat_human_cli() -> None:
-    """The rendered workstation doctor uses the sole human CLI executable."""
-    rendered = _render_recipe("doctor-product")
-
-    assert "aeat config check" in rendered
-    assert "cadrumo config check" not in rendered
-
-
 def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
     """A fresh aggregate cannot reach a smoke lane before cohort construction.
 

@@ -506,7 +506,7 @@ def test_root_heading_identity_contract_refuses_a_product_rename() -> None:
         "Cadrumo - local-first workflow with AEAT",
         "cadrumo - local-first workflow with AEAT",
         "CADRUMO - local-first workflow with CADRUMO",
-        "CADRUMO - local-first workflow with the AEAT, run aeat config check",
+        "CADRUMO - local-first workflow with the AEAT, run aeat config profile list",
     ):
         corrupted_catalogue: dict[str, LocaleNode] = {
             "cli": {"operator_surface": {"help": {"root": {"heading": corrupted}}}}

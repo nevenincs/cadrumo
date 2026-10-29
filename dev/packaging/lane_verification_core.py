@@ -518,10 +518,25 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     )
     assert_cadrumo_version_output(version, context="in core venv")
 
-    default_root = work_dir / "default-check-state"
+    default_root = work_dir / "default-refusal-state"
     default_env = installed_product_env(default_root, venv_path)
     default_check = run_checked(
-        [cadrumo, "--format", "json", "config", "check"],
+        [
+            cadrumo,
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "bindings",
+            "list",
+            "--modelo",
+            "303",
+            "--year",
+            "2026",
+            "--period",
+            "1T",
+            "--missing",
+        ],
         cwd=work_dir,
         env=default_env,
         expected={2},
@@ -532,7 +547,9 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
         or default_payload.get("error", {}).get("code") != "REFUSED_CLI_BOUNDARY"
         or default_payload["error"]["action"]["action"]["action_id"] != "operator.profile.create"
     ):
-        raise SystemExit(f"default config check did not report the typed profile creation remedy: {default_payload!r}")
+        raise SystemExit(
+            f"a profile-less command did not report the typed profile creation remedy: {default_payload!r}"
+        )
 
     storage_root = work_dir / "profile-root"
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -585,9 +602,9 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     if create_payload.get("result", {}).get("profile_name") != "packaging-smoke":
         raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-    with installed_cli_runtime(Path(cadrumo), env, work_dir / "config-check-runtime.log"):
+    with installed_cli_runtime(Path(cadrumo), env, work_dir / "profile-status-runtime.log"):
         ready = run_checked(
-            [cadrumo, "--format", "json", "--profile-secrets-stdin", "config", "check"],
+            [cadrumo, "--format", "json", "--profile-secrets-stdin", "config", "profile", "status"],
             cwd=work_dir,
             env=env,
             input_text=profile_authentication_secrets(passphrase),
@@ -595,13 +612,13 @@ def assert_cli_smoke(work_dir: Path, venv_path: Path) -> None:
     ready_payload = _json_payload(ready.stdout)
     assert_no_diagnostic_notices(
         ready_payload,
-        command="config.check",
+        command="config.profile.status",
         error=InstalledTaxOracleError,
         excused_codes=ISOLATION_NOTICE_CODES,
     )
     result = ready_payload.get("result", {})
-    if result.get("ok") is not True or result.get("issues") != []:
-        raise SystemExit(f"opted-out config check did not pass cleanly: {ready_payload!r}")
+    if ready_payload.get("status") == "error" or result.get("active_profile") != "packaging-smoke":
+        raise SystemExit(f"the created profile did not report its status through the runtime: {ready_payload!r}")
     record_proof("installed CLI config/profile smoke")
 
 

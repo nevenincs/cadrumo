@@ -158,8 +158,7 @@ workbook-windows = [
 # Each extra maps to an operator-facing capability/feature. All are lazily
 # imported, so `pip install cadrumo` (no extras) builds and runs the core CLI; the
 # feature refuses with an install hint when its extra is absent (graceful
-# degradation). `cadrumo config check` reports
-# which extras are importable.
+# degradation).
 #
 # Google Drive + Sheets export (the `google_export` capability). OAuth Desktop
 # flow: loopback IP + PKCE via

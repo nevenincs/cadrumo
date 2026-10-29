@@ -692,7 +692,7 @@ def test_aeat_human_cli_and_authority_forms_are_allowed(surface: str) -> None:
         ("import aeat", "python-import"),
         ("import aeat.core", "python-import"),
         ('python -c "import os, aeat as retired"', "python-import"),
-        ("python -m aeat config check", "python-module"),
+        ("python -m aeat config profile list", "python-module"),
         ("python -m aeat.cli check", "python-module"),
         ("uv pip install aeat", "distribution-install"),
         ('uv pip install "aeat"', "distribution-install"),

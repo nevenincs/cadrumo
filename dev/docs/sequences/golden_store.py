@@ -31,7 +31,7 @@ Storage policy per frame kind:
   central ``GOLDEN_MASK_FIELDS`` set in and that set can evolve centrally. Path
   normalisation is the one thing baked at write time (:func:`normalise_document_paths`):
   a per-run sandbox path or the machine's checkout path can surface inside an
-  envelope STRING VALUE (``config check``'s ``preflight[...].detail``), where the
+  envelope STRING VALUE (a diagnostic ``detail`` sentence), where the
   field-level mask never looks, and — like the text frames below — the writer
   run's paths are unknowable to a later reader, so they must already be tokenised
   in the stored artifact. Field masking (deferred) and path normalisation (baked)
@@ -65,7 +65,6 @@ from .schema import FrameKind, SequenceId
 
 __all__ = [
     "PACKAGE_VERSION_PLACEHOLDER",
-    "PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS",
     "REPO_ROOT_PLACEHOLDER",
     "SANDBOX_STORAGE_ROOT_PLACEHOLDER",
     "SANDBOX_WORKDIR_PLACEHOLDER",
@@ -74,12 +73,10 @@ __all__ = [
     "build_golden",
     "default_goldens_root",
     "golden_path",
-    "mask_host_conditional_details",
     "masked_envelope_values",
     "normalise_document_paths",
     "normalise_frame_envelope",
     "normalise_text_output",
-    "platform_conditional_details",
     "read_golden",
     "refresh_invocation",
     "write_golden",
@@ -150,13 +147,12 @@ def _path_replacements(*, storage_root: str, workdir: str) -> list[tuple[str, st
     behind.
 
     The JSON-escaped form is load-bearing on Windows, where a backslash path
-    serialised INTO a value doubles every separator. ``config check`` renders
-    its precondition evidence as a JSON blob inside a text table cell, so the
+    serialised INTO a value doubles every separator. A command that renders
+    precondition evidence as a JSON blob inside a text table cell makes the
     per-run sandbox path reaches the golden as ``C:\\\\Users\\\\...`` and the
     native single-separator needle never matches it. Without this form that one
     frame carries a run-specific directory name that reds the very next run on
-    the same machine — the same defect the host-conditional fact mask closes one
-    layer up. A POSIX path is unaffected (it has no backslash to double), so the
+    the same machine. A POSIX path is unaffected (it has no backslash to double), so the
     extra pair is inert off Windows rather than conditional on it.
     """
     replacements: list[tuple[str, str]] = []
@@ -330,115 +326,6 @@ def golden_path(page: str, sequence_id: str, *, goldens_root: Path | None = None
     return root / _validated_page(page) / f"{sequence_id}.json"
 
 
-PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS = frozenset(
-    {
-        "storage:windows-long-path",
-        "local-inference-hardware",
-    },
-)
-"""Health rows whose ``detail`` describes the HOST, not the product.
-
-Docs are rendered FROM these goldens, so a row here becomes a sentence in
-user-facing prose. Every member states a fact about the machine that happened
-to record the capture:
-
-- ``storage:windows-long-path`` reports ``"not applicable on this platform"``
-  off Windows and one of several ``LongPathsEnabled`` verdicts on it.
-- ``local-inference-hardware`` reports live free system memory, accelerator
-  kind, and free VRAM when an NVML reader is installed -- figures that drift
-  between two runs on the SAME machine as ordinary system load shifts, not only
-  between machines.
-
-Pinning any of these means the golden can only match the machine (and moment)
-that wrote it: a Windows capture reds the Linux docs runner, a Linux capture
-reds every Windows developer, a 64 GiB capture publishes that number to every
-reader, and a free-VRAM reading reds the very next run on the same box.
-Masking the detail keeps the row and its id under exact comparison and drops
-only the host-specific sentence.
-
-Keyed on the stable row id, never on the detail text: the long-path check alone
-has five detail variants and the memory one is unbounded, so enumerating strings
-would rot immediately. The id is matched against either ``check`` (preflight
-rows) or ``service`` (dependency rows) -- the two shapes ``config check`` emits.
-"""
-
-#: Row keys that carry a host-conditional row's stable identifier.
-_ROW_ID_KEYS: tuple[str, ...] = ("check", "service")
-
-#: Exact host-row fact coordinates whose values are volatile between runs.
-#:
-#: Masking the ``detail`` sentence alone leaves the numbers it was rendered from
-#: pinned under ``facts``, which reintroduces the very defect
-#: :data:`PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS` documents: the local hardware
-#: probe's free system memory and free VRAM are live readings that drift between
-#: two runs on the same box as ordinary processes allocate memory.
-#:
-#: This is deliberately a row-id/fact-name coordinate, not a suffix rule.
-#: Total RAM, total VRAM, thresholds, shortfalls, and byte-valued facts on every
-#: other row remain exact diagnostic evidence. Only free-capacity values mask; the
-#: key stays under comparison, so a probe that stops reporting free RAM reds.
-_VOLATILE_HOST_FACT_COORDINATES: frozenset[tuple[str, str]] = frozenset(
-    {
-        ("local-inference-hardware", "free_memory_bytes"),
-        ("local-inference-hardware", "free_vram_bytes"),
-    },
-)
-
-
-def _host_conditional_row_id(node: Mapping[str, object]) -> str | None:
-    """Return the row's id when it names a host-conditional row, else ``None``."""
-    for key in _ROW_ID_KEYS:
-        value = node.get(key)
-        if isinstance(value, str) and value in PLATFORM_CONDITIONAL_PREFLIGHT_CHECKS:
-            return value
-    return None
-
-
-def platform_conditional_details(document: object) -> frozenset[str]:
-    """Collect ``detail`` values belonging to host-conditional health rows.
-
-    Walks any envelope shape looking for mappings that carry both a
-    host-conditional row id (under ``check`` or ``service``) and a string
-    ``detail``. Matching on the pair is what keeps this narrow: a bare ``detail``
-    key elsewhere in the envelope is untouched.
-    """
-    values: set[str] = set()
-
-    def _walk(node: object) -> None:
-        if isinstance(node, Mapping):
-            detail = node.get("detail")
-            if _host_conditional_row_id(node) is not None and isinstance(detail, str) and detail:
-                values.add(detail)
-            for item in node.values():
-                _walk(item)
-            return
-        if isinstance(node, list | tuple):
-            for item in node:
-                _walk(item)
-
-    _walk(document)
-    return frozenset(values)
-
-
-def mask_host_conditional_details(document: object) -> object:
-    """Replace host-conditional row details with the mask sentinel.
-
-    The structural-tier counterpart to :func:`platform_conditional_details`,
-    which serves the text tier. Both route through the same row-id predicate so
-    the two tiers cannot drift into disagreeing about which rows are
-    host-conditional.
-
-    Rebuilds the document rather than mutating it, so the caller's envelope is
-    untouched and the diff paths reported on a genuine divergence still line up
-    with the stored artifact.
-    """
-    if isinstance(document, Mapping):
-        return _mask_host_conditional_mapping(document)
-    if isinstance(document, list | tuple):
-        return [mask_host_conditional_details(item) for item in document]
-    return document
-
-
 def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     """Collect the transcript's centrally-masked surrogate-key values.
 
@@ -449,11 +336,6 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
 
     Setup frames are walked too, although their own output is never stored: an
     id a setup frame minted can reappear inline in a later frame's text.
-
-    Platform-conditional preflight details ride the same channel. Each side
-    collects the values from ITS OWN run, exactly as the sandbox paths do, so
-    the writer's Windows sentence and the reader's Linux sentence both reduce to
-    the mask sentinel and compare equal without either being declared correct.
     """
     values: set[str] = set()
 
@@ -472,20 +354,7 @@ def masked_envelope_values(transcript: SequenceTranscript) -> frozenset[str]:
     for frame in transcript.frames:
         if frame.envelope is not None:
             _walk(frame.envelope)
-            values |= platform_conditional_details(frame.envelope)
     return frozenset(values)
-
-
-def _normalise_volatile_host_fact_lines(text: str) -> str:
-    """Mask exact config-check text coordinates for volatile free capacity."""
-    prefixes = tuple(f"{row_id}.facts.{fact_name}\t" for row_id, fact_name in _VOLATILE_HOST_FACT_COORDINATES)
-    lines: list[str] = []
-    for line in text.splitlines(keepends=True):
-        ending = "\n" if line.endswith("\n") else ""
-        content = line.removesuffix("\n").removesuffix("\r")
-        matched = next((prefix for prefix in prefixes if content.startswith(prefix)), None)
-        lines.append(f"{matched}{MASK_SENTINEL}{ending}" if matched is not None else line)
-    return "".join(lines)
 
 
 def _running_version() -> str:
@@ -528,7 +397,7 @@ def normalise_text_output(
         if value:
             replacements.append((value, MASK_SENTINEL))
 
-    normalised = _normalise_volatile_host_fact_lines(text)
+    normalised = text
     for needle, token in sorted(replacements, key=lambda pair: len(pair[0]), reverse=True):
         normalised = normalised.replace(needle, token)
     return _normalise_token_path_separators(normalised)
@@ -544,8 +413,8 @@ def normalise_document_paths(
 
     The value-anchored analogue of :func:`normalise_text_output` for JSON frames.
     A per-run sandbox path or the machine's checkout path can surface inside an
-    envelope STRING VALUE — e.g. ``config check``'s ``preflight[...].detail``
-    ("secure-storage root <path> is reachable"; corpus paths under the checkout) —
+    envelope STRING VALUE — e.g. a diagnostic ``detail`` sentence naming the
+    secure-storage root or a corpus path under the checkout —
     exactly where the field-level ``mask_document`` never looks, because that
     primitive masks whole FIELDS by key, not path substrings inside a text value.
     Applied to the golden at BUILD time (the writer's per-run paths are unknowable
@@ -704,18 +573,3 @@ def read_golden(
             f"hand-edited; regenerate it with: "
             f"{refresh_invocation(sequence_id=sequence_id)}\n{exc}",
         ) from exc
-
-
-def _mask_host_conditional_mapping(document: Mapping[str, object]) -> dict[str, object]:
-    masked: dict[str, object] = {str(key): mask_host_conditional_details(value) for key, value in document.items()}
-    row_id = _host_conditional_row_id(document)
-    if row_id is not None:
-        if isinstance(document.get("detail"), str):
-            masked["detail"] = MASK_SENTINEL
-        facts = document.get("facts")
-        if isinstance(facts, Mapping):
-            masked["facts"] = {
-                str(key): (MASK_SENTINEL if (row_id, str(key)) in _VOLATILE_HOST_FACT_COORDINATES else value)
-                for key, value in facts.items()
-            }
-    return masked

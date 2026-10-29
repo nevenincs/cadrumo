@@ -322,7 +322,7 @@ class TestTextFrameComparison:
 class TestEnvelopePathNormalisation:
     """Value-anchored sandbox/checkout-path tokenisation inside JSON envelopes.
 
-    ``config check``'s ``preflight[...].detail`` strings carry the per-run
+    A diagnostic envelope's ``preflight[...].detail`` strings carry the per-run
     storage root and the machine's absolute corpus paths; the field-level
     ``mask_document`` never looks inside a string value, so without this
     normalisation the golden diverges every run and on every other checkout.
@@ -345,8 +345,8 @@ class TestEnvelopePathNormalisation:
         }
         execution = FrameExecution(
             kind=FrameKind.RESULT,
-            command_line="aeat --format json config check",
-            argv=("aeat", "--format", "json", "config", "check"),
+            command_line="aeat --format json config profile list",
+            argv=("aeat", "--format", "json", "config", "profile", "list"),
             exit_code=0,
             output=json.dumps(envelope),
             envelope=envelope,

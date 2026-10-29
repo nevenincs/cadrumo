@@ -1,4 +1,4 @@
-"""No product Python downloads, installs, extracts, starts, asks or decides the state of a component.
+"""No product Python downloads, installs, extracts, starts, asks, measures or decides the state of a component.
 
 The desktop application owns the browser and the local AI: it downloads their
 pinned archives, installs and checks them, runs the local AI's program, writes
@@ -48,6 +48,16 @@ Where each row stops:
 - Write a receipt or record. A module that names the components storage (the
   ``components/receipts`` and ``components/activity`` folders) and also writes,
   renames or removes a file.
+- Measure the host. A module that imports a hardware reader (``pynvml``,
+  ``GPUtil``, ``nvidia_smi``), calls ``virtual_memory``, ``swap_memory`` or
+  ``nvmlInit``, or names the ``nvidia-smi`` program. Whether a machine can run
+  a component is the desktop's judgement; the tax engine does not measure
+  memory or accelerators to report readiness. Sizing a key-derivation cost
+  from the memory the process may use is not a readiness report and passes.
+- Read the browser manifest. A string that names the Playwright driver's
+  ``browsers.json``. Which builds the browser needs and whether they are
+  present is the desktop's judgement; Python refuses at the point of use when
+  the browser it launches is absent.
 - Model argument. A string that is exactly ``--model`` or begins with
   ``--model=``, in any module. The person's selection is the agent's and only
   the desktop hands it to the engine, so no product Python passes a model on a
@@ -101,6 +111,11 @@ _PROGRAM_FILES: Final = frozenset({"ollama.exe", "ollama.app"})
 _PROGRAM_NAMES: Final = frozenset({"ollama", *_PROGRAM_FILES})
 
 _MODEL_FLAG: Final = "--model"
+
+_HARDWARE_MODULES: Final = frozenset({"pynvml", "GPUtil", "nvidia_smi"})
+_HARDWARE_CALLS: Final = frozenset({"virtual_memory", "swap_memory", "nvmlInit"})
+_HARDWARE_PROGRAMS: Final = frozenset({"nvidia-smi", "nvidia-smi.exe"})
+_BROWSER_MANIFEST: Final = "browsers.json"
 
 #: Process starters, by the module they are reached through.
 _QUALIFIED_STARTERS: Final[Mapping[str, frozenset[str]]] = {
@@ -375,6 +390,33 @@ def model_argument_findings(source: Source) -> list[str]:
     ]
 
 
+def hardware_findings(source: Source) -> list[str]:
+    """Name a module that reads the machine's memory or accelerators."""
+    findings = [
+        f"{source.module}: imports the hardware reader {name!r}" for name in sorted(_HARDWARE_MODULES & source.imports)
+    ]
+    findings.extend(
+        f"{source.module}:{call.lineno}: measures the host through {name}()"
+        for name, call in source.calls()
+        if name in _HARDWARE_CALLS
+    )
+    findings.extend(
+        f"{source.module}: names the hardware program {text!r}"
+        for text in sorted(set(source.strings))
+        if text.strip().lower().replace("\\", "/").rsplit("/", 1)[-1] in _HARDWARE_PROGRAMS
+    )
+    return findings
+
+
+def manifest_findings(source: Source) -> list[str]:
+    """Name a module that reads the browser driver's build manifest."""
+    return [
+        f"{source.module}: names the browser manifest {text!r}"
+        for text in sorted(set(source.strings))
+        if text.strip().replace("\\", "/").rsplit("/", 1)[-1] == _BROWSER_MANIFEST
+    ]
+
+
 def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
     """Every row's findings for one module."""
     return [
@@ -386,6 +428,8 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
         *locate_findings(source),
         *record_findings(source),
         *model_argument_findings(source),
+        *hardware_findings(source),
+        *manifest_findings(source),
     ]
 
 
@@ -546,6 +590,27 @@ def test_a_module_that_passes_a_model_argument_is_refused() -> None:
     assert model_argument_findings(flag) == ["fixture.flag: passes the argument '--model'"]
     assert model_argument_findings(joined) == ["fixture.joined: passes the argument '--model=synthetic'"]
     assert model_argument_findings(other) == [], "a longer option name is another option"
+
+
+def test_a_module_that_measures_the_host_is_refused() -> None:
+    importing = parse_source("fixture.reader", "import pynvml\n\nhandle = pynvml.nvmlDeviceGetHandleByIndex(0)\n")
+    calling = parse_source("fixture.memory", "import psutil\n\nfree = psutil.virtual_memory().available\n")
+    program = parse_source("fixture.program", "COMMAND = ['nvidia-smi', '--query-gpu=memory.free']\n")
+    process = parse_source("fixture.process", "import psutil\n\nstarted = psutil.Process().create_time()\n")
+    assert hardware_findings(importing) == ["fixture.reader: imports the hardware reader 'pynvml'"]
+    assert hardware_findings(calling) == ["fixture.memory:3: measures the host through virtual_memory()"]
+    assert hardware_findings(program) == ["fixture.program: names the hardware program 'nvidia-smi'"]
+    assert hardware_findings(process) == [], "reading a process's own start time measures no capacity"
+
+
+def test_a_module_that_reads_the_browser_manifest_is_refused() -> None:
+    reading = parse_source(
+        "fixture.manifest",
+        "def builds(root):\n    return (root / 'package' / 'browsers.json').read_text()\n",
+    )
+    other = parse_source("fixture.other", "NAME = 'packages.json'\n")
+    assert manifest_findings(reading) == ["fixture.manifest: names the browser manifest 'browsers.json'"]
+    assert manifest_findings(other) == []
 
 
 # --------------------------------------------------------------------------

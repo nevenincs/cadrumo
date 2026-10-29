@@ -127,31 +127,9 @@ _ALLOWED_FUNCTIONS: Mapping[tuple[str, str], str] = {
         "ProfileWorkerOperationAuthority.sede_view_session",
     ): "rechecks that a running Sede view stays bound to the desktop person session whose window shows it",
     (
-        "src/cadrumo_runtime/host/worker_human_review.py",
-        "require_review_attestation",
-    ): (
-        "a separately signed-in person may claim an operation's review; the claimant's attested frontend "
-        "must be a person's, which grants response authority only"
-    ),
-    (
-        "src/cadrumo_runtime/host/operation_review_management.py",
-        "_validate_claimed_response",
-    ): "a response to a claimed review is the person's act, answered only under a person's claim",
-    (
-        "src/cadrumo_runtime/host/profile_connection_operations.py",
-        "ProfileConnectionOperationMixin._operation_reply",
-    ): (
-        "only the desktop lists claimable reviews, as its approval column surfaces them; claiming stays "
-        "open to every person frontend"
-    ),
-    (
         "src/cadrumo_runtime/host/profile_connection_operations.py",
         "ProfileConnectionOperationMixin._view_target",
     ): "only the desktop window attaches to a Sede view's stream, as no other frontend consumes it",
-    (
-        "src/cadrumo_runtime/host/profile_review_binding.py",
-        "_review_frontend_matches",
-    ): "reobserves that a review claimant is a live person on a person's frontend, not an automation",
 }
 """Functions that name a frontend without refusing or changing an operation for it."""
 

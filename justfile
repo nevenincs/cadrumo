@@ -66,8 +66,6 @@ dev: (_native-selection "Debug")
 # channels or installs missing resources. RAG then provisions its managed models,
 # Qdrant binary, and MCP integration. Authority publication runs so the
 # installed application consumes a generation compiled from the final tree.
-# The configuration report comes last so it describes what was provisioned; it
-# is advisory, never a reason to call provisioning failed.
 [doc('Fully initialize a new worktree: Python, browsers, Vaultspec, RAG, and runtime authority.')]
 [group('setup')]
 init:
@@ -75,13 +73,11 @@ init:
     just setup-browser
     uv run --no-sync vaultspec-rag install --upgrade --yes
     uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
-    -uv run --no-sync aeat config check
 
 # Minimal checkout setup, shared by init and CI. It creates
 # the pinned Python environment, installs repository tooling, and materializes
 # local environment configuration. Workstation tools and browser binaries are
 # optional to the minimal setup; full init provisions browsers as well.
-# `just doctor-product` reports the resulting configuration.
 [doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
 [group('setup')]
 setup:
@@ -123,11 +119,6 @@ setup-workstation-tools:
 [group('setup')]
 setup-env:
     uv run --no-sync python -m dev.env setup
-
-[doc('Verify the product capability configuration without changing it.')]
-[group('doctor')]
-doctor-product:
-    uv run --no-sync aeat config check
 
 [doc('Verify Python package consistency without modifying the environment.')]
 [windows]
