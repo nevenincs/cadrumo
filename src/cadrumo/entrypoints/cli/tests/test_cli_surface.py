@@ -227,14 +227,26 @@ def _ledger_classify_transaction(transaction_id: str) -> dict[str, object]:
     return require_json_object(classified)
 
 
-def _seed_usage_ratio_for_telefonia(bucket_id: str) -> None:
-    """Persist a usage-ratio profile so the next allocate verb can resolve TELEFONIA_MOVIL."""
+def _seed_usage_ratio_for_home_rent(bucket_id: str) -> None:
+    """Persist a usage-ratio profile so the next allocate verb can resolve ARRENDAMIENTO_VIVIENDA_AFECTO.
+
+    The category is a home-office share, so readiness checks the ratio against
+    the declared home-office area: 60 of 100 m² matches the saved 0.60.
+    """
     from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
+    from ....adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
     from ....domain.categories.spending_category import SpendingCategory
     from ....domain.usage_ratios.model import UsageRatioProfile
+    from ....domain.user_profile.values import UserProfileFact
 
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="vivienda_office.total_m2", value=Decimal("100")),
+            UserProfileFact(path="vivienda_office.office_m2", value=Decimal("60")),
+        )
+    )
     save_usage_ratios(
-        UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_movil"): Decimal("0.60")}),
+        UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.60")}),
         bucket_id=bucket_id,
     )
 
@@ -250,15 +262,15 @@ def _ledger_allocate_transaction(transaction_id: str) -> dict[str, object]:
             "--business-pct",
             "0.60",
             "--category-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
             "--usage-ratio-id",
-            "telefonia_movil",
+            "arrendamiento_vivienda_afecto",
         ],
     )
     transaction = cast(dict[str, object], allocated["transaction"])
     assert transaction["business_classification"] == "MIXED"
     assert Decimal(cast(str, transaction["business_pct"])) == Decimal("0.60")
-    assert transaction["usage_ratio_id"] == "telefonia_movil"
+    assert transaction["usage_ratio_id"] == "arrendamiento_vivienda_afecto"
     return require_json_object(allocated)
 
 
@@ -336,7 +348,7 @@ def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> Non
     transaction_id = cast(str, edited["transaction_id"])
     classified = _ledger_classify_transaction(transaction_id)
     transaction_id = cast(str, classified["transaction_id"])
-    _seed_usage_ratio_for_telefonia(bucket_id=bucket_id)
+    _seed_usage_ratio_for_home_rent(bucket_id=bucket_id)
     allocated = _ledger_allocate_transaction(transaction_id)
     transaction_id = cast(str, allocated["transaction_id"])
     _assert_ledger_status_one_ready_row(bucket_id)

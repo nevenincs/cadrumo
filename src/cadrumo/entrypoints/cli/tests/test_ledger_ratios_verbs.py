@@ -75,14 +75,16 @@ def test_ledger_ratios_eligible_lists_the_registry_wording_in_the_chosen_languag
     assert english.exit_code == 0, english.output
     assert spanish.exit_code == 0, spanish.output
     assert (
-        "vehiculo_combustible\tVehicle fuel\tusage_ratio_personal\toverride=.\t"
-        "Deductible on proof of exclusive business use "
-        "(Reglamento IRPF art. 22, exclusive affectation of the vehicle)."
+        "amortizacion_vivienda_afecto\tDepreciation of home used for business\tusage_ratio_home_area\toverride=.\t"
+        "Deductible in proportion to the home's floor area used for the business and to your ownership "
+        "share in it; the 30% supplies factor does not apply (Ley 35/2006 art. 29.2, Reglamento IRPF "
+        "art. 22.3, depreciation of the home used for business)."
     ) in english.output.splitlines()
     assert (
-        "vehiculo_combustible\tCombustible del vehículo\tusage_ratio_personal\toverride=.\t"
-        "Deducible con prueba de afectación exclusiva a la actividad "
-        "(Reglamento IRPF art. 22, afectación exclusiva del vehículo)."
+        "amortizacion_vivienda_afecto\tAmortización de la vivienda afecta\tusage_ratio_home_area\toverride=.\t"
+        "Deducible en proporción a la superficie de la vivienda afecta a la actividad y a tu porcentaje "
+        "de titularidad en ella; no se aplica el 30 % de los suministros (Ley 35/2006 art. 29.2, "
+        "Reglamento IRPF art. 22.3, amortización de la vivienda afecta)."
     ) in spanish.output.splitlines()
 
 

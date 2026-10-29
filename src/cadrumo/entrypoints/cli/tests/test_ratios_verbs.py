@@ -28,29 +28,30 @@ def test_ratios_list_starts_empty() -> None:
 
 
 def test_ratios_set_persists_and_list_reflects() -> None:
-    set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    _capture_censo_with_vivienda_office(office_m2="50", total_m2="100")
+    set_result = _invoke_ratios(["set", "arrendamiento_vivienda_afecto", "0.5"])
     assert set_result.exit_code == 0, set_result.output
-    assert "vehiculo_combustible\t0.5" in set_result.output
+    assert "arrendamiento_vivienda_afecto\t0.5" in set_result.output
 
     list_result = _invoke_ratios(["list"])
     assert list_result.exit_code == 0, list_result.output
     assert "count\t1" in list_result.output
-    assert "vehiculo_combustible\t0.5" in list_result.output
+    assert "arrendamiento_vivienda_afecto\t0.5" in list_result.output
 
 
 def test_ratios_unset_clears() -> None:
-    set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    set_result = _invoke_ratios(["set", "arrendamiento_vivienda_afecto", "0.5"])
     assert set_result.exit_code == 0, set_result.output
-    result = _invoke_ratios(["unset", "vehiculo_combustible"])
+    result = _invoke_ratios(["unset", "arrendamiento_vivienda_afecto"])
     assert result.exit_code == 0, result.output
-    assert "vehiculo_combustible\t<unset>" in result.output
+    assert "arrendamiento_vivienda_afecto\t<unset>" in result.output
 
     list_result = _invoke_ratios(["list"])
     assert "count\t0" in list_result.output
 
 
 def test_ratios_unset_refuses_unknown_override() -> None:
-    result = _invoke_ratios(["unset", "vehiculo_combustible"])
+    result = _invoke_ratios(["unset", "arrendamiento_vivienda_afecto"])
     assert result.exit_code != 0
 
 
@@ -60,12 +61,12 @@ def test_ratios_set_refuses_unknown_category() -> None:
 
 
 def test_ratios_set_refuses_out_of_bounds() -> None:
-    result = _invoke_ratios(["set", "vehiculo_combustible", "1.5"])
+    result = _invoke_ratios(["set", "arrendamiento_vivienda_afecto", "1.5"])
     assert result.exit_code != 0
 
 
 def test_ratios_set_refuses_non_decimal_with_localized_message() -> None:
-    result = _invoke_ratios(["set", "vehiculo_combustible", "not-decimal"])
+    result = _invoke_ratios(["set", "arrendamiento_vivienda_afecto", "not-decimal"])
 
     assert result.exit_code != 0
     # Click renders the refusal inside a wrapped error box, so the long message
@@ -99,14 +100,14 @@ def test_ratios_set_emits_ledger_ratios_set_event() -> None:
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....domain.buckets.event import BucketEventType
 
-    set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
+    set_result = _invoke_ratios(["set", "arrendamiento_vivienda_afecto", "0.5"])
     assert set_result.exit_code == 0, set_result.output
 
     catalogue = BucketEventHistoryRepository().load()
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_SET and event.object_id == "vehiculo_combustible"
+        if event.event_type is BucketEventType.LEDGER_RATIOS_SET and event.object_id == "arrendamiento_vivienda_afecto"
     ]
     assert matching, [event.event_type for event in catalogue.events.values()]
     assert matching[-1].payload["new"] == "0.5"
@@ -121,15 +122,16 @@ def test_ratios_unset_emits_ledger_ratios_unset_event() -> None:
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....domain.buckets.event import BucketEventType
 
-    _invoke_ratios(["set", "vehiculo_combustible", "0.5"])
-    unset_result = _invoke_ratios(["unset", "vehiculo_combustible"])
+    _invoke_ratios(["set", "arrendamiento_vivienda_afecto", "0.5"])
+    unset_result = _invoke_ratios(["unset", "arrendamiento_vivienda_afecto"])
     assert unset_result.exit_code == 0, unset_result.output
 
     catalogue = BucketEventHistoryRepository().load()
     matching = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_UNSET and event.object_id == "vehiculo_combustible"
+        if event.event_type is BucketEventType.LEDGER_RATIOS_UNSET
+        and event.object_id == "arrendamiento_vivienda_afecto"
     ]
     assert matching
     assert matching[-1].payload["prior"] == "0.5"
@@ -225,9 +227,10 @@ def test_ratios_list_refuses_a_censo_mismatch_with_typed_no_recovery() -> None:
     assert "suministros_home_office_luz\t0.5" not in list_result.output
 
 
-def test_ratios_set_silent_for_non_home_office_category() -> None:
-    """The override-warning event is HOME_OFFICE-scoped:
-    other categories don't carry the censo-binding contract."""
+def test_ratios_set_refuses_an_exclusive_use_category() -> None:
+    """A category the registry deducts only on exclusive business use takes no
+    usage ratio: the set is refused, and neither an override nor a censo
+    warning is recorded."""
 
     from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ....domain.buckets.event import BucketEventType
@@ -235,12 +238,12 @@ def test_ratios_set_silent_for_non_home_office_category() -> None:
     _capture_censo_with_vivienda_office(office_m2="20", total_m2="100")
 
     set_result = _invoke_ratios(["set", "vehiculo_combustible", "0.9"])
-    assert set_result.exit_code == 0, set_result.output
+    assert set_result.exit_code != 0, set_result.output
 
     catalogue = BucketEventHistoryRepository().load()
-    warnings = [
+    recorded = [
         event
         for event in catalogue.events.values()
-        if event.event_type is BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING
+        if event.event_type in {BucketEventType.LEDGER_RATIOS_SET, BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING}
     ]
-    assert not warnings
+    assert not recorded
