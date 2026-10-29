@@ -23,7 +23,6 @@ from ..contracts.deadline_budget import (
     deadline_after,
 )
 from ..contracts.operation_access import OperationAcknowledged, OperationSecret
-from ..contracts.presentation import PresentationDelivered, PresentationRequest
 from ..contracts.profile_access import (
     ProfileDisclosurePage,
     ProfileDisclosurePageRequest,
@@ -138,31 +137,6 @@ class FrontendSessionClient(FrontendCustodyClient):
             ),
             ActiveProfileReply,
         )
-
-    def present_destination(
-        self,
-        destination: str,
-        params: Mapping[str, str] | None = None,
-        *,
-        timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS,
-    ) -> PresentationDelivered:
-        """Ask the person's own signed-in TUI on this profile to show register view `destination`."""
-        reply = self._reply(
-            self._connection.present(
-                PresentationRequest(
-                    request_id=uuid4(),
-                    profile_id=self.profile_id,
-                    session_id=self._session(),
-                    destination=destination,
-                    params=dict(params or {}),
-                ),
-                deadline=deadline_after(timeout),
-            ),
-            PresentationDelivered,
-        )
-        if reply.destination != destination or reply.params != dict(params or {}):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
-        return reply
 
     def refresh_api_key(self, *, timeout: float = MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS) -> ProfileStatus:
         """Explicitly renew this connection's API-key lease under current authority."""

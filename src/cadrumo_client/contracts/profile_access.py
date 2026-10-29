@@ -52,7 +52,6 @@ from .extension_records import ExtensionRecordReply, ExtensionRecordRequest
 from .installation_requests import InstallationActRequest, InstallationReply, InstallationReplyTransfer
 from .model_runs import ModelRunCompleted, ModelRunCompleteRequest, ModelRunFetched, ModelRunFetchRequest
 from .operation_access import OperationReply, OperationRequest
-from .presentation import PresentationDelivered, PresentationRequest
 from .profile_selection import ActiveProfileReply, ActiveProfileRequest, LoginTargetReply, LoginTargetRequest
 from .service_access import (
     ServiceAdmission,
@@ -172,7 +171,6 @@ class Request(
             | LoginTargetRequest
             | SessionRequest
             | ProfileDisclosurePageRequest
-            | PresentationRequest
             | AttendanceAsk
             | AttendanceDecide
             | OperationRequest
@@ -362,7 +360,6 @@ class Reply(
             | ProfileStatus
             | ProfileStatusTransfer
             | ProfileDisclosurePage
-            | PresentationDelivered
             | SessionInventoryTransfer
             | SessionsLocked
             | AttendancePending

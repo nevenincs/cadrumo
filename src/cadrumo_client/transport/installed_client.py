@@ -68,16 +68,13 @@ async def open_installed_client(
     timeout: float | None = None,
     timeout_deadline: TimeoutDeadline | None = None,
     scope: AccessScope | None = None,
-    presents_pages: bool = False,
 ) -> FrontendClient:
     """Connect to the exact running owner through the installed transport.
 
     This opens no profile and reads no credential. The caller must explicitly
     authenticate the returned connection and own it for its frontend lifetime.
     An absent or untrusted endpoint returns a typed refusal. An optional scope
-    narrows a later API-key login on this connection. A caller that shows
-    pages declares ``presents_pages`` so a page the person chooses elsewhere
-    is delivered to this connection.
+    narrows a later API-key login on this connection.
     """
     timeout_deadline = timeout_deadline or (
         DEFAULT_TIMEOUT_POLICY.deadline() if timeout is None else TimeoutDeadline(deadline_after(timeout))
@@ -101,7 +98,6 @@ async def open_installed_client(
             endpoint,
             expected=ClientHello(
                 lifecycle_notices="v1",
-                presentation="v1" if presents_pages else None,
                 product_version=product_version,
                 storage_identity=endpoint.storage_identity,
                 authority_generation=authority_generation,

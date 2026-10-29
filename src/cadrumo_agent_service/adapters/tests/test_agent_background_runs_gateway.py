@@ -83,11 +83,6 @@ _TOOL_LESS_LANE: Final = ModelRunLane(
     transport="cli",
     model="haiku",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
@@ -137,11 +132,6 @@ class _Gateway:
                 transport=record["transport"],
                 model=models[0]["model"],
                 reads_off_host=(record["provider_id"], record["transport"]) != ("ollama", "api"),
-                licence=None,
-                size_bytes=None,
-                vision=None,
-                context_length=None,
-                installed=None,
             )
         pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
 
@@ -174,11 +164,6 @@ class _Gateway:
                     transport="api",
                     model=models[0]["model"],
                     reads_off_host=False,
-                    licence=None,
-                    size_bytes=None,
-                    vision=None,
-                    context_length=None,
-                    installed=None,
                 )
         pytest.fail("the agent catalog serves no local lane")
 

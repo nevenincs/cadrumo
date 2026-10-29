@@ -84,11 +84,6 @@ _LANE = ModelRunLane(
     transport="cli",
     model="example-model-1",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 _ACTIONS = frozenset({AccessAction.SUBMIT, AccessAction.START, AccessAction.COMMIT})
 

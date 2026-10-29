@@ -12,7 +12,6 @@ from cadrumo.core.storage_environment import StorageMode
 from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunLane,
-    ModelRunLicence,
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
@@ -253,10 +252,5 @@ def test_a_keyless_lane_reads_nothing_until_the_person_selects_a_model_and_needs
         transport="api",
         model=KEYLESS_TEXT_MODEL,
         reads_off_host=False,
-        licence=ModelRunLicence(spdx="MIT", name="Synthetic licence", digest="sha256:" + "0" * 64),
-        size_bytes=1_000_000,
-        vision=False,
-        context_length=4096,
-        installed=None,
     )
     assert store.records == {}

@@ -311,7 +311,7 @@ def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_r
             ("local", "api"): (
                 live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),
                 live_model(KEYLESS_VISION_MODEL, vision=True, installed=False),
-                live_model(_ADDED, vision=False, installed=True, size_bytes=7),
+                live_model(_ADDED, vision=False, installed=True),
             )
         }
     )
@@ -334,9 +334,4 @@ def test_a_model_added_and_selected_through_the_service_is_the_one_a_model_run_r
         transport="api",
         model=_ADDED,
         reads_off_host=False,
-        licence=None,
-        size_bytes=7,
-        vision=False,
-        context_length=None,
-        installed=True,
     )

@@ -6,28 +6,24 @@ which the desktop stores in the person's model record: on any lane, local or
 not. A role needs a capability: the vision role reads images, so it needs a
 lane whose background runs take images and a model the lane's current entries
 mark vision; every other role reads text, which every model does. Current
-entries are the lane's declared ones and, while the agent runs, its live ones,
-which state what a local server holds.
+entries are the lane's declared ones and, while the agent runs, its live ones.
 
 No other lane, no other model and no default stands in. No selected model
 refuses ``no_selection``, and so does a local model the person has since taken
 off its lane's list. A selected model the role cannot use because it is not
 stated to read images refuses ``model_cannot_read_images``; one a local server
-does not hold refuses ``model_not_installed``; a lane that is not reported,
-turned on, signed in or runnable refuses with its answer or
-``lane_unavailable``. An unreadable record says nothing about any model, so
-every role refuses ``lane_unavailable``. Whether a lane takes an attachment,
+does not hold is refused by the agent when the run starts, and that refusal
+passes through unchanged; a lane that is not reported, turned on, signed in
+or runnable refuses with its answer or ``lane_unavailable``. An unreadable
+record says nothing about any model, so every role refuses
+``lane_unavailable``. Whether a lane takes an attachment,
 and which reply options it honours, is what the ready agent's live catalog
 reports for background requests, never inferred from its transport. One
 lookup, and one run, reads the live catalog once: its entries, media and
 options come from that one snapshot, which no later lookup or run reuses.
 Whether a lane reads off-host is the catalogue entry's typed declaration,
 carried with the lane: a run on such a lane needs the consent the tax side
-bound to it. The model's licence, size, vision and context window travel with
-the lane as the entry it was found in states them, each ``None`` when it
-states nothing or no entry lists the model. Whether a local server holds the
-model travels the same way: the live entry states it, and a declared entry
-leaves it unknown.
+bound to it.
 
 The run goes to cadrumo-agent as a background request through
 :class:`BackgroundRunGateway`. No secret leaves this service with the answer.
@@ -44,7 +40,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunBody,
     ModelRunHeader,
     ModelRunLane,
-    ModelRunLicence,
     ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
@@ -56,7 +51,6 @@ from ..domain.catalog import (
     BackgroundInput,
     BackgroundOption,
     CatalogModelFacts,
-    LiveCatalogModel,
     ModelCapability,
     ProviderAuthKind,
     ProviderCatalog,
@@ -293,36 +287,11 @@ def _selected_model_lane(
         BackgroundInput.IMAGE not in background.inputs or facts is None or facts.vision is not True
     ):
         return ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
-    if isinstance(facts, LiveCatalogModel) and facts.installed is False:
-        return ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
-    return _model_lane(entry, accepted, reading.model, facts)
-
-
-def _model_lane(
-    entry: ProviderCatalogEntry,
-    accepted: tuple[ModelRunMediaKind, ...] | None,
-    model: str,
-    facts: CatalogModelFacts | None,
-) -> ModelRunLane:
-    """Return ``entry``'s lane carrying ``model`` and the facts its entry states, each ``None`` where it states none.
-
-    A model no current entry lists, such as one written for a lane that lists
-    no models, carries no facts. Only a live entry states whether the lane's
-    server holds the model; a declared one leaves it unknown.
-    """
-    licence = None if facts is None else facts.licence
     return ModelRunLane(
         provider_id=entry.provider,
         transport=entry.transport.value,
-        model=model,
+        model=reading.model,
         reads_off_host=entry.reads_off_host,
-        licence=None
-        if licence is None
-        else ModelRunLicence(spdx=licence.spdx, name=licence.name, digest=licence.digest),
-        size_bytes=None if facts is None else facts.size_bytes,
-        vision=None if facts is None else facts.vision,
-        context_length=None if facts is None else facts.context_length,
-        installed=facts.installed if isinstance(facts, LiveCatalogModel) else None,
         accepted_media=accepted,
     )
 

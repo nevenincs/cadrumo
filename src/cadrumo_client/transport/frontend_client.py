@@ -50,7 +50,6 @@ from ..contracts.session_events import (
     ConnectionEvent,
     LifecycleNotice,
     OperationChanged,
-    PresentationRequested,
     ProfileLanguageChanged,
     ProfileLoginChanged,
     ProfileRecordsChanged,
@@ -176,8 +175,6 @@ class FrontendClient(FrontendSessionClient):
         return False
 
     def _handle_presentation_event(self, event: ConnectionEvent) -> bool:
-        if isinstance(event, PresentationRequested):
-            return True
         if isinstance(event, ProfileLanguageChanged):
             with self._event_guard:
                 receivers_language = tuple(self._language_receivers) if event.session_id == self._session_id else ()
@@ -198,7 +195,6 @@ class FrontendClient(FrontendSessionClient):
             | AttendanceChanged
             | AttendanceAnswered
             | OperationChanged
-            | PresentationRequested
             | ModelRunRequested,
             event,
         )

@@ -16,5 +16,3 @@ class ConnectionContext:
     runtime_boot_id: UUID
     peer: Peer
     lifecycle_notices: bool = False
-    presentation: bool = False
-    """Whether the connection declared that it shows pages a person chooses elsewhere."""

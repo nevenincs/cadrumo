@@ -37,11 +37,6 @@ _LANE = ModelRunLane(
     transport="api",
     model="example-model-1",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 
 

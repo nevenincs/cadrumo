@@ -18,7 +18,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunConsentBinding,
     ModelRunHeader,
     ModelRunLane,
-    ModelRunLicence,
     ModelRunMediaKind,
     ModelRunOutput,
     ModelRunRefusal,
@@ -165,41 +164,19 @@ def _consent(provider_id: str, model: str = KEYLESS_TEXT_MODEL, *, transport: st
 
 _BODY = ModelRunBody(prompt="Read this invoice.", max_output_tokens=64)
 
-_LICENCE = ModelRunLicence(spdx="MIT", name="Synthetic licence", digest="sha256:" + "0" * 64)
-
 
 def _background(media: tuple[ModelRunMediaKind, ...] | None, *options: BackgroundOption) -> LiveLaneBackground:
     return LiveLaneBackground(accepted_media=media, options=options)
 
 
-def _hosted(model: str, *, vision: bool | None) -> ModelRunLane:
-    """The lane a declared synthetic hosted model resolves to: off-host, only its vision stated."""
-    return ModelRunLane(
-        provider_id="example",
-        transport="api",
-        model=model,
-        reads_off_host=True,
-        licence=None,
-        size_bytes=None,
-        vision=vision,
-        context_length=None,
-        installed=None,
-    )
+def _hosted(model: str) -> ModelRunLane:
+    """The lane a declared synthetic hosted model resolves to: off-host."""
+    return ModelRunLane(provider_id="example", transport="api", model=model, reads_off_host=True)
 
 
-def _declared(model: str, *, vision: bool, provider_id: str = "local") -> ModelRunLane:
-    """The lane a declared synthetic local model resolves to: its stated facts, installed state unknown."""
-    return ModelRunLane(
-        provider_id=provider_id,
-        transport="api",
-        model=model,
-        reads_off_host=False,
-        licence=_LICENCE,
-        size_bytes=1_000_000,
-        vision=vision,
-        context_length=4096,
-        installed=None,
-    )
+def _declared(model: str, *, provider_id: str = "local") -> ModelRunLane:
+    """The lane a declared synthetic local model resolves to: on this computer."""
+    return ModelRunLane(provider_id=provider_id, transport="api", model=model, reads_off_host=False)
 
 
 def _installed(*models: tuple[str, bool | None, bool | None]) -> StaticLiveModels:
@@ -215,7 +192,6 @@ def _installed(*models: tuple[str, bool | None, bool | None]) -> StaticLiveModel
 
 _NO_SELECTION = ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
 _LANE_UNAVAILABLE = ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
-_NOT_INSTALLED = ModelRunRefusal(code=ModelRunRefusalCode.MODEL_NOT_INSTALLED)
 _NO_IMAGES = ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
 
 
@@ -249,7 +225,7 @@ def test_a_selected_local_vision_model_serves_every_role() -> None:
     runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL))
 
     for role in ModelRole:
-        assert runs.lookup(role.value) == _declared(KEYLESS_VISION_MODEL, vision=True)
+        assert runs.lookup(role.value) == _declared(KEYLESS_VISION_MODEL)
 
 
 def test_a_selected_text_model_reads_text_and_refuses_images_in_plain_terms() -> None:
@@ -258,7 +234,7 @@ def test_a_selected_text_model_reads_text_and_refuses_images_in_plain_terms() ->
 
     assert runs.lookup("vision_transcription") == _NO_IMAGES
     for role in ("text_extraction", "column_role_mapping", "supply_nature_proposal"):
-        assert runs.lookup(role) == _declared(KEYLESS_TEXT_MODEL, vision=False)
+        assert runs.lookup(role) == _declared(KEYLESS_TEXT_MODEL)
     assert runs.run(_header(role="vision_transcription"), _BODY) == _NO_IMAGES
     assert gateway.runs == []
 
@@ -267,8 +243,8 @@ def test_a_selected_hosted_model_serves_with_a_stored_key_and_reads_off_host() -
     runs, settings, _ = _harness(MemoryProviderSettingsStore(), _selected(KEY_LANE, _HOSTED_VISION))
     _store_key(settings, KEY_LANE)
 
-    assert runs.lookup("vision_transcription") == _hosted(_HOSTED_VISION, vision=True)
-    assert runs.lookup("text_extraction") == _hosted(_HOSTED_VISION, vision=True)
+    assert runs.lookup("vision_transcription") == _hosted(_HOSTED_VISION)
+    assert runs.lookup("text_extraction") == _hosted(_HOSTED_VISION)
 
 
 def test_a_selected_hosted_model_whose_vision_is_unstated_refuses_images_only() -> None:
@@ -276,7 +252,7 @@ def test_a_selected_hosted_model_whose_vision_is_unstated_refuses_images_only() 
     _store_key(settings, KEY_LANE)
 
     assert runs.lookup("vision_transcription") == _NO_IMAGES
-    assert runs.lookup("text_extraction") == _hosted(_HOSTED_TEXT, vision=None)
+    assert runs.lookup("text_extraction") == _hosted(_HOSTED_TEXT)
 
 
 def test_a_selected_hosted_model_without_its_key_is_unavailable_and_no_other_lane_stands_in() -> None:
@@ -293,15 +269,15 @@ def test_a_written_model_no_entry_lists_reads_text_with_no_facts_and_never_image
     runs, settings, _ = _harness(MemoryProviderSettingsStore(), _selected(KEY_LANE, "written-model"))
     _store_key(settings, KEY_LANE)
 
-    assert runs.lookup("text_extraction") == _hosted("written-model", vision=None)
+    assert runs.lookup("text_extraction") == _hosted("written-model")
     assert runs.lookup("vision_transcription") == _NO_IMAGES
 
 
-def test_a_selected_local_model_the_server_lacks_refuses_as_not_installed() -> None:
+def test_a_selected_local_model_the_server_lacks_still_resolves_for_the_agent_to_refuse_at_run_start() -> None:
     live = _installed((KEYLESS_TEXT_MODEL, False, True), (KEYLESS_VISION_MODEL, True, False))
     runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL), live)
 
-    assert runs.lookup("vision_transcription") == _NOT_INSTALLED
+    assert runs.lookup("vision_transcription") == _declared(KEYLESS_VISION_MODEL)
 
 
 def test_a_selected_added_model_the_server_holds_reads_text_and_its_unstated_vision_refuses_images() -> None:
@@ -312,7 +288,7 @@ def test_a_selected_added_model_the_server_holds_reads_text_and_its_unstated_vis
     text = runs.lookup("supply_nature_proposal")
 
     assert isinstance(text, ModelRunLane)
-    assert (text.model, text.vision, text.installed) == (_ADDED, None, True)
+    assert text.model == _ADDED
     assert runs.lookup("vision_transcription") == _NO_IMAGES
 
 
@@ -371,7 +347,7 @@ def test_a_selected_local_lane_turned_off_is_unavailable_and_another_local_lane_
         MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_TEXT_MODEL), source=source
     )
 
-    assert runs.lookup("text_extraction") == _declared(KEYLESS_TEXT_MODEL, vision=False)
+    assert runs.lookup("text_extraction") == _declared(KEYLESS_TEXT_MODEL)
     _turn_off(settings, KEYLESS_LANE)
     assert runs.lookup("text_extraction") == _LANE_UNAVAILABLE
 

@@ -30,11 +30,6 @@ _LANE = ModelRunLane(
     transport="cli",
     model="example-model-1",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
 
@@ -138,10 +133,10 @@ _AGENT_MODEL_ID_LENGTH = 512
 """cadrumo-agent's longest model id in its catalogues."""
 
 
-def test_a_lane_carries_the_agent_s_zero_size_and_refuses_a_negative_one() -> None:
-    assert ModelRunLane.model_validate({**_LANE.model_dump(), "size_bytes": 0}).size_bytes == 0
+@pytest.mark.parametrize("fact", ["licence", "size_bytes", "vision", "context_length", "installed"])
+def test_a_lane_states_no_model_fact_beyond_its_identity(fact: str) -> None:
     with pytest.raises(ValidationError):
-        ModelRunLane.model_validate({**_LANE.model_dump(), "size_bytes": -1})
+        ModelRunLane.model_validate({**_LANE.model_dump(), fact: None})
 
 
 def test_a_lane_carries_a_model_id_as_long_as_the_agent_allows_and_refuses_one_longer() -> None:

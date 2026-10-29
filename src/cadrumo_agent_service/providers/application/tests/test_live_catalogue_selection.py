@@ -15,7 +15,7 @@ from typing import Final
 import pytest
 
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
-from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunLicence, ModelRunRefusal, ModelRunRefusalCode
+from cadrumo_client.contracts.model_runs import ModelRunLane, ModelRunRefusal, ModelRunRefusalCode
 
 from ...domain.catalog import LiveCatalogModel
 from ...domain.record import ListedModel, LocalModelListRecord, new_settings_generation
@@ -39,8 +39,6 @@ _LOCAL: Final = ("local", "api")
 """The provider and transport of the synthetic keyless lane."""
 _INSTALLED_TEXT: Final = "synthetic-installed:1"
 _INSTALLED_VISION: Final = "synthetic-installed-vision:1"
-_INSTALLED_UNSTATED: Final = "synthetic-installed-unstated:1"
-_SUPPLIED_DIGEST: Final = "sha256:" + "1" * 64
 
 
 def _held(*extra: LiveCatalogModel) -> tuple[LiveCatalogModel, ...]:
@@ -53,14 +51,7 @@ def _held(*extra: LiveCatalogModel) -> tuple[LiveCatalogModel, ...]:
 
 
 def _installed_text() -> LiveCatalogModel:
-    return live_model(
-        _INSTALLED_TEXT,
-        vision=False,
-        size_bytes=2_000,
-        context_length=8192,
-        licence={"spdx": None, "name": "Licence supplied with the model", "digest": _SUPPLIED_DIGEST},
-        installed=True,
-    )
+    return live_model(_INSTALLED_TEXT, vision=False, installed=True)
 
 
 class _NoMediaGateway:
@@ -90,7 +81,7 @@ def _runs(live: StaticLiveModels, reading: str, *added: str) -> ModelRunService:
     )
 
 
-def test_an_added_model_only_the_running_agent_lists_resolves_with_its_live_facts() -> None:
+def test_an_added_model_only_the_running_agent_lists_resolves_on_its_lane() -> None:
     runs = _runs(StaticLiveModels({_LOCAL: _held(_installed_text())}), _INSTALLED_TEXT, _INSTALLED_TEXT)
 
     assert runs.lookup("text_extraction") == ModelRunLane(
@@ -98,30 +89,25 @@ def test_an_added_model_only_the_running_agent_lists_resolves_with_its_live_fact
         transport="api",
         model=_INSTALLED_TEXT,
         reads_off_host=False,
-        licence=ModelRunLicence(spdx=None, name="Licence supplied with the model", digest=_SUPPLIED_DIGEST),
-        size_bytes=2_000,
-        vision=False,
-        context_length=8192,
-        installed=True,
     )
 
 
-def test_a_declared_model_the_running_agent_does_not_list_resolves_with_its_installed_state_unknown() -> None:
+def test_a_declared_model_the_running_agent_does_not_list_resolves_on_its_lane() -> None:
     runs = _runs(StaticLiveModels({_LOCAL: ()}), KEYLESS_TEXT_MODEL)
 
     lane = runs.lookup("text_extraction")
 
     assert isinstance(lane, ModelRunLane)
-    assert (lane.model, lane.installed) == (KEYLESS_TEXT_MODEL, None)
+    assert lane.model == KEYLESS_TEXT_MODEL
 
 
-def test_without_a_running_agent_an_added_model_nothing_declares_reads_text_with_no_facts_and_never_images() -> None:
+def test_without_a_running_agent_an_added_model_nothing_declares_reads_text_and_never_images() -> None:
     runs = _runs(StaticLiveModels(None), _INSTALLED_TEXT, _INSTALLED_TEXT)
 
     lane = runs.lookup("text_extraction")
 
     assert isinstance(lane, ModelRunLane)
-    assert (lane.model, lane.vision, lane.size_bytes, lane.installed) == (_INSTALLED_TEXT, None, None, None)
+    assert lane.model == _INSTALLED_TEXT
     assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
 
 
@@ -147,13 +133,13 @@ def test_the_vision_role_reads_with_a_live_entry_only_when_it_is_marked_vision(
         assert answer == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
 
 
-def test_a_live_entry_for_a_declared_model_supplies_the_facts_and_the_vision_decision() -> None:
+def test_a_live_entry_for_a_declared_model_supplies_the_vision_decision() -> None:
     """The running agent's entry describes what this computer holds, so it wins over the declared one."""
     live = StaticLiveModels(
         {
             _LOCAL: (
                 live_model(KEYLESS_TEXT_MODEL, vision=False, installed=False),
-                live_model(KEYLESS_VISION_MODEL, vision=None, size_bytes=5_000, installed=True),
+                live_model(KEYLESS_VISION_MODEL, vision=None, installed=True),
             )
         }
     )
@@ -162,23 +148,7 @@ def test_a_live_entry_for_a_declared_model_supplies_the_facts_and_the_vision_dec
     assert runs.lookup("vision_transcription") == ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
     answered = runs.lookup("text_extraction")
     assert isinstance(answered, ModelRunLane)
-    assert (answered.model, answered.size_bytes, answered.vision, answered.context_length, answered.licence) == (
-        KEYLESS_VISION_MODEL,
-        5_000,
-        None,
-        None,
-        None,
-    )
-
-
-def test_an_entry_whose_installed_state_is_unstated_is_used_as_unknown_never_as_absent() -> None:
-    held = live_model(_INSTALLED_UNSTATED, vision=False)
-    runs = _runs(StaticLiveModels({_LOCAL: _held(held)}), _INSTALLED_UNSTATED, _INSTALLED_UNSTATED)
-
-    lane = runs.lookup("column_role_mapping")
-
-    assert isinstance(lane, ModelRunLane)
-    assert (lane.model, lane.installed) == (_INSTALLED_UNSTATED, None)
+    assert answered.model == KEYLESS_VISION_MODEL
 
 
 def test_live_entries_come_first_and_win_over_declared_ones_of_the_same_model() -> None:

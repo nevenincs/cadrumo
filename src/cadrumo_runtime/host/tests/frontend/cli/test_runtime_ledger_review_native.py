@@ -64,11 +64,6 @@ _TEXT_LANE = ModelRunLane(
     model="synthetic-text-reader-1",
     reads_off_host=False,
     accepted_media=(),
-    licence=None,
-    size_bytes=None,
-    vision=False,
-    context_length=None,
-    installed=None,
 )
 _VISION_LANE = ModelRunLane(
     provider_id="nearby",
@@ -76,11 +71,6 @@ _VISION_LANE = ModelRunLane(
     model="synthetic-vision-reader-1",
     reads_off_host=False,
     accepted_media=(ModelRunMediaKind.IMAGE,),
-    licence=None,
-    size_bytes=None,
-    vision=True,
-    context_length=None,
-    installed=None,
 )
 
 

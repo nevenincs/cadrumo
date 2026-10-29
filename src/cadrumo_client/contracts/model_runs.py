@@ -14,7 +14,7 @@ from enum import StrEnum
 from typing import Annotated, Final, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, JsonValue, NonNegativeInt, PositiveInt, field_validator, model_validator
+from pydantic import BaseModel, Field, JsonValue, NonNegativeInt, field_validator, model_validator
 
 from cadrumo.core.hex import Hex64Str
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -119,31 +119,12 @@ def model_run_media_kind(media_type: str) -> ModelRunMediaKind | None:
     return None
 
 
-class ModelRunLicence(BaseModel):
-    """The licence the agent's catalogue states for a model; shown to the person, never judged."""
-
-    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-
-    spdx: Annotated[str, Field(min_length=1, max_length=256)] | None
-    name: Annotated[str, Field(min_length=1, max_length=256)]
-    digest: Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{64}$")]
-
-
 class ModelRunLane(BaseModel):
     """The lane and model a role runs with: the person's selected model; nothing here is secret.
 
     ``reads_off_host`` is the lane's catalogue declaration of whether a run on
     it sends material off this computer. It has no default: a lane whose
     catalogue entry says nothing is not a lane, so it cannot read as on-host.
-
-    ``licence``, ``size_bytes``, ``vision`` and ``context_length`` are the
-    facts the agent's catalogue states for the model. Each is ``None`` when the
-    catalogue states nothing for it, and none has a default, so an answer that
-    omits one is refused rather than read as unstated.
-
-    ``installed`` is whether the lane's local server holds the model, as the
-    running agent's live catalogue states it. It is ``None`` when no live
-    catalogue states it, which is unknown and never "not installed".
 
     ``accepted_media`` is what the provider catalog reports the lane accepts in
     a background run. ``None`` means the catalog says nothing, and the agent
@@ -156,12 +137,6 @@ class ModelRunLane(BaseModel):
     transport: Annotated[str, Field(pattern=_TRANSPORT)]
     model: Annotated[str, Field(pattern=_MODEL)]
     reads_off_host: bool
-    licence: ModelRunLicence | None
-    size_bytes: NonNegativeInt | None
-    """The model's download size in bytes; the agent states ``0`` for an empty or unknown size."""
-    vision: bool | None
-    context_length: PositiveInt | None
-    installed: bool | None
     accepted_media: tuple[ModelRunMediaKind, ...] | None = None
 
 
@@ -420,7 +395,6 @@ __all__ = [
     "ModelRunFetched",
     "ModelRunHeader",
     "ModelRunLane",
-    "ModelRunLicence",
     "ModelRunMediaKind",
     "ModelRunOutcome",
     "ModelRunOutput",
