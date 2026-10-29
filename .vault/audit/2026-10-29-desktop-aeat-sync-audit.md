@@ -99,3 +99,15 @@ Closed admitted list including `auth.local-read`, checked against the manifest w
 - Reopen P03.S10 and P03.S11 for `session-ended-overrides-unknown` before P07.S21.
 - Fix `identity-unknown-verdict-counts-as-brought`, `results-unknown-retry-dead-end`, `host-serial-and-reuse-gaps`, `concurrent-start-can-orphan-a-driver` and `window-rederives-area-outcome` within the approved P02/P03/P04 Steps.
 - Amend `2026-10-29-desktop-aeat-sync-adr` and `2026-08-08-sync-control-surface-adr` to the owner rulings (no sign-in or selection screen, no dry run) and decide whether event-cursor progress stays in scope.
+
+## Resolutions
+
+- `session-ended-overrides-unknown`: resolved in fb5296ee4f. `outcome.rs` checks the effect first, so a session-ended refusal pauses only with effect `none`; `updated`, `partial` and `unknown` settle the item `unknown`, which resume never re-runs. The table test covers each effect and a run test proves the partly kept item is not re-read. P03.S10 and P03.S11 re-closed.
+- `concurrent-start-can-orphan-a-driver`: resolved in fb5296ee4f. `SyncHost::begin` checks and replaces the held run under one lock, keeps a run that still moves or whose driver still follows it, and ends any run it replaces; tested.
+- `identity-unknown-verdict-counts-as-brought`: host side resolved in fb5296ee4f (an unknown verdict settles failed, unavailable); the backend side is in feb59b85b1.
+- `host-serial-and-reuse-gaps`: resolved in fb5296ee4f. The Borrador import takes the serial lock; the notification rows come from `ProfileHost::notifications_read`, shared with the profile view; the profile, census and AEAT sync cues share one `Cue` holder.
+- `dry-run-and-selection-residue`: resolved in fb5296ee4f (host, contract, ports, fixtures) and 6540349d1e (desktop AEAT sync ADR and the sync control surface amendment restated to the owner rulings).
+- `window-rederives-area-outcome`: resolved in fb5296ee4f. The host serves each area's outcome in the progress snapshot and the Borrador years (the served supported filing years, else the six years ending last calendar year) in status and results; the window renders them.
+- `results-unknown-retry-dead-end`: resolved in fb5296ee4f. The results view warns through the shared warning and sends the acknowledgement; a scenario covers it.
+- `progress-event-refinement-missing`: not implemented; the ADR now states progress is item-level and events are not read (6540349d1e).
+- `frontend-duplication`: resolved in fb5296ee4f (one icons module, served area order, shared day formatter, `FailedPart.form` removed, polled zero-call assertions, Borrador year expectation from served data, explicit area-order test). The unused locale keys are removed in the working tree but not committed: the shared catalogue and key files carry other sessions' hunks.

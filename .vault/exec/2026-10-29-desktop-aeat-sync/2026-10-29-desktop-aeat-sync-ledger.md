@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:c7492c1043ad87d0dd3057e36b9634de766cd4b24ba4a063e541e33abbaf5d32'
+body_hash: 'sha256:5a3d93b05b7766c1a4a67f66753f52ddbe8b443cfe41c53fd30d71fcdd365b3c'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -275,6 +275,30 @@ related:
 - `S19` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
 - `S19` `verify:` `npm run check` -> `pass`
 - `S19` `verify:` `playwright aeat-sync 26` -> `pass`
+- `S27` `verify:` `pytest aeat_sync+operations+contract-manifest+conformance, import-boundaries contracts, style, format, types` -> `pass`
+- `S27` `M` `src/cadrumo/application/operations/capabilities.py`
+- `S27` `M` `src/cadrumo/application/operations/tests/test_capabilities.py`
+- `S27` `M` `src/cadrumo/application/user_profile/operations.py`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/outcome.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/run.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/user_profile/censo.rs`
+- `S10` `M` `native/desktop/src-tauri/src/shell/user_profile/views.rs`
+- `S10` `verify:` `desktop-host-unit-test shell::aeat_sync 34` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test shell::user_profile 30` -> `pass`
+- `S10` `verify:` `just check-rust 24/24` -> `pass`
+- `S11` `verify:` `desktop-host-unit-test shell::aeat_sync 34` -> `pass`
+- `S12` `M` `native/desktop/frontend/src/shell/aeatSync.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/aeatSyncRun.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/aeatSyncFixture.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S12` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S12` `verify:` `npm run check` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/outcomeIcons.ts`
+- `S16` `A` `native/desktop/frontend/src/components/aeatSync/UnknownWarning.tsx`
+- `S16` `verify:` `npm run check` -> `pass`
+- `S19` `verify:` `playwright aeat-sync 27` -> `pass`
 
 ## Notes
 
@@ -298,3 +322,4 @@ related:
 - `S17` owner wording rulings applied (plain browser naming, short labels) in 6bf8e4cdb5 and ba5a53ba05; en/adapters browser line left uncommitted (foreign hunks)
 - `S18` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
 - `S19` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
+- `S01` review fixes: ADR bodies restated to owner rulings (no sign-in step, selection or dry run; item-level progress)
