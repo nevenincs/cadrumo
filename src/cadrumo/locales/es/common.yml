@@ -6367,7 +6367,9 @@ tui:
         file_limit: la importación incluye más ficheros de los que admite una sola
           importación, así que no se leyó ninguno; importa menos a la vez
         own_account_mismatch: el extracto indica otra cuenta distinta de la que elegiste
-        reader_unavailable: el modelo que elegiste no está disponible ahora mismo,
+        reader_unavailable: la IA local, que lee este fichero, no está lista, así
+          que no se leyó el fichero
+        reader_unavailable_here: el modelo que elegiste no está disponible ahora mismo,
           así que no se leyó el fichero; vuelve a intentarlo cuando esté disponible
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó

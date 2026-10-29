@@ -6322,7 +6322,9 @@ tui:
         file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
           elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
-        reader_unavailable: a kiválasztott modell jelenleg nem érhető el, ezért
+        reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
+          ezért a fájl nem lett beolvasva
+        reader_unavailable_here: a kiválasztott modell jelenleg nem érhető el, ezért
           a fájl nem lett beolvasva; próbáld újra, amint elérhető
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került

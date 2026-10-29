@@ -6351,7 +6351,9 @@ tui:
         file_limit: la importació inclou més fitxers dels que admet una sola importació,
           així que no se n'ha llegit cap; importa'n menys alhora
         own_account_mismatch: l'extracte indica un compte diferent del que has triat
-        reader_unavailable: el model que has triat no està disponible ara mateix,
+        reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
+          així que no s'ha llegit el fitxer
+        reader_unavailable_here: el model que has triat no està disponible ara mateix,
           així que no s'ha llegit el fitxer; torna-ho a provar quan estigui disponible
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
