@@ -12,7 +12,7 @@ supersedes:
   - '2026-10-10-mcp-parity-admission-rulings-adr'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:b9977eb41c8149bb4c0ada73ff61a805511ed652f18147400691d78ffe1b6d99'
+body_hash: 'sha256:7bcccbc2922345e43a728b9c1b4e4fa595328a4b57f13dc170c2462dd8b1822e'
 ---
 # `mcp-parity` adr: `The command line, the terminal interface and MCP are at parity, and no frontend is refused what another can do` | (**status:** `accepted`)
 
@@ -70,6 +70,7 @@ Hypotheses, free to change within the constraints: whether the definition keeps 
 As built by 2026-10-12, recorded here as implementation and not as commitments of this record. A change to any of them that keeps the constraints needs no new decision; one that others must build on is a decision for a record of its own.
 
 - Work that needs no profile is served to the terminal interface by a sessionless family of runtime requests, the installation acts, admitted on the verified connection the way profile deletion is. The command line sends that work as installation acts to the runtime and never performs it in its own process; with no runtime it refuses as unavailable (updated 2026-10-18 under the user's ruling that frontends use the runtime and never act in its place; this line formerly read "The command line keeps doing that work in its own process and uses the acts only where the runtime must act first, as for the reset of all profiles while the runtime hosts one"). MCP does not serve them (`2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`; before 2026-10-12 it did).
+- A contained profile worker asks the runtime to start the model reader's server, under the commit fence of the provisioning operation and for that operation only. The instruction names no program and no environment.
 - Withdrawn 2026-10-12 under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr`: MCP takes no secret, as text or by reference. Before that a secret could be named by reference to a record in this machine's protected credential store, one a person entered at a terminal or a recovery code held for the person to read, beside a typed secret argument. A credential is configured by the person, by reference, in the MCP server's launch configuration only.
 - Operations were discoverable on MCP with no session and no runtime from a generated copy of the public contract set shipped with the tool server and held to the registry by a test. Under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` (2026-10-12), with no live sign-in and no valid key the server answers only the handshake, the tool list and `status`. The generated copy may still serve those answers.
 - The definition keeps no per-operation list of frontends. The session and installation tools that were built are removed under `2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr` (2026-10-12).

@@ -5,7 +5,7 @@ tags:
 date: '2026-10-18'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee1402612180584715a54f222fc9bfe21a9dc49700a67efc69a8d35b139e4d64'
+body_hash: 'sha256:d191e44f408ede73074773bb74356cc90d8dfcc97877ad664a0afd19bc9ea27b'
 related:
   - "[[2026-10-18-runtime-authority-boundary-reference]]"
   - "[[2026-07-01-import-centralization-adr]]"
@@ -42,7 +42,7 @@ This record decides where that authority lives, the contract through which front
 - The runtime composes the tax application through its public defining modules (rule 00). The runtime may therefore keep importing tax-owned profile records, discovery, storage taxonomy and operation definitions.
 - `2026-07-01-import-centralization-adr` requires atomic moves (definition, tests, consumers and metadata together) with no aliases. Its 2026-10-15 correction keeps frontends in `cadrumo.entrypoints`.
 - Persisted custody formats, keychain names and lifetimes are settled by `2026-08-13-profile-password-custody-rollup-adr` and `2026-10-04-application-sign-in-adr`. Moving code must not change a byte of them.
-- A parallel boundary-fix workstream owns files this work would otherwise touch.
+- The in-flight `2026-10-18-dependency-provisioning-plan` and a parallel boundary-fix workstream own files this work would otherwise touch.
 
 ## Considered options
 
@@ -163,7 +163,8 @@ This record decides where that authority lives, the contract through which front
   6. relocation of the adapters;
   7. enforcement.
 - Each move is atomic under `2026-07-01-import-centralization-adr`.
-- Some files are owned by the parallel boundary-fix workstream: `reset_cli`, `operation_installation`, `storage_materialization`, the MCP service's `runtime_admission`, and `.importlinter`.
+- Some files are owned by `2026-10-18-dependency-provisioning-plan`: `_PROFILE_CONNECTION_KEYS`, the TUI navigation registration and `src/cadrumo_mcp/mcp/`. Work touching them waits for the owning lane, or coordinates through its orchestrator.
+- The same applies to the parallel boundary-fix workstream's files: `reset_cli`, `operation_installation`, `storage_materialization`, the MCP service's `runtime_admission`, and `.importlinter`.
 
 ### Open decisions, outside the accepted scope
 

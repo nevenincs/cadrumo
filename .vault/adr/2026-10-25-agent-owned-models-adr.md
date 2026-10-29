@@ -5,7 +5,7 @@ tags:
 date: '2026-10-25'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:315501ae418e79a7c34fdf32c37f6fdef306e0e598a0dd64c9a0445c6be93f59'
+body_hash: 'sha256:f948c062aba31c3dd84149339165c4888f9e93d715d9382dfcdb1736483f0cb3'
 related:
   - "[[2026-10-24-rust-component-provisioning-reference]]"
   - "[[2026-10-24-rust-component-provisioning-adr]]"
@@ -24,7 +24,7 @@ related:
 Cadrumo defines AI models in four places, and cadrumo-agent already owns the same question.
 
 - Pins: `src/cadrumo/_data/dependencies/local_ai_models.toml`, read by `src/cadrumo/core/local_ai_pins.py`, name each local model with a manifest digest, size and licence.
-- A second table: `src/cadrumo/core/model_catalogue.py:80-588` lists candidate models per role with rankings, licences, memory figures and a hardcoded hosted Claude id. `src/cadrumo/application/local_reader.py:344-410` resolves a role to one.
+- A second table: `src/cadrumo/core/model_catalogue.py:80-588` lists candidate models per role with rankings, licences, memory figures and a hardcoded hosted Claude id. `src/cadrumo/application/provisioning.py:748-879` ranks them and `src/cadrumo/application/local_reader.py:344-410` resolves a role to one.
 - Settings: four model-name fields with defaults (`src/cadrumo/core/config_runtime_fields.py:54-183`), and hosted ids with no production reader (`src/cadrumo/domain/transactions/model_tier.py:108-159`).
 - Rust: `native/application/src/provisioning/pins.rs:292-392`, `items.rs:50-126` and `local_ai/models.rs:86-216` carry the same pins, and the desktop fixtures repeat them (`native/desktop/frontend/src/dev/setupFixture.ts:116-122`). The dev lanes `dev/runtime_lifecycle/mcp_proof_support.py:34-35` and `dev/env/local_ai_model_pins.py`, with the `pin-local-ai` recipe in `justfile`, maintain them.
 
@@ -66,7 +66,7 @@ Accepted 2026-10-25 on the owner's first-hand rulings in conversation, recorded 
 7. **Catalogue contract.** Cadrumo consumes cadrumo-agent's new catalogue schema version and its typed fields: vision, installed, size_bytes, context_length, licence and reads_off_host. It also consumes the keyless loopback auth kind, a cadrumo-agent-owned recommended set, and the run options temperature, maximum output tokens, num_ctx and response format. Cadrumo does not default or rank any of them. Work that needs the new shape waits for cadrumo-agent to deliver it.
 8. **cadrumo-agent admits the load.** Cadrumo performs no hardware or contention admission. cadrumo-agent admits each model load and refuses one that does not fit with `model_does_not_fit`, at run start or mid-turn. Cadrumo reads either as the typed `MODEL_DOES_NOT_FIT` refusal and does not retry it.
 9. **Engine input is one admitted download, not a lookup.** The Rust engine does not read the agent service. Only the desktop host hands its in-process engine a model, and only for a download the person started from a turned-on keyless lane's list. The host admits it when the catalogue recommends the model for that lane or the person's list holds it, and passes the catalogue's positive `size_bytes` when the catalogue states one. A model whose size the catalogue does not state, such as one added by name, is planned with an unknown download size: the plan says so, the hardware check applies only to a known size, and pull progress follows the totals the server streams. The plan digest binds the model and its size, known or unknown. A general setup, check, verification or removal admits the program alone and consults no service.
-10. **No fallback, no silent substitute.** With no picked model, or a picked local model since taken off its lane's list, the lookup refuses `NO_SELECTION`. A picked model the lane's current entries do not mark vision-capable refuses the vision role `MODEL_CANNOT_READ_IMAGES`, whose words tell the person to pick a model that can read images. A picked model the local server is known to lack refuses `MODEL_NOT_INSTALLED`. A lane that is not reported, turned on, signed in or runnable refuses with its answer or `LANE_UNAVAILABLE`. An unreadable record refuses every role `LANE_UNAVAILABLE`. Each verdict names the agent's model picker. No other lane, no other model and no default stands in.
+10. **No fallback, no silent substitute.** With no picked model, or a picked local model since taken off its lane's list, the lookup refuses `NO_SELECTION`. A picked model the lane's current entries do not mark vision-capable refuses the vision role `MODEL_CANNOT_READ_IMAGES`, whose words tell the person to pick a model that can read images. A picked model the local server is known to lack refuses `MODEL_NOT_INSTALLED`. A lane that is not reported, turned on, signed in or runnable refuses with its answer or `LANE_UNAVAILABLE`. An unreadable record refuses every role `LANE_UNAVAILABLE`. Each verdict names the agent's model picker or setup. No other lane, no other model and no default stands in.
 
 ## Implementation
 
@@ -78,7 +78,7 @@ Outline:
 - `src/cadrumo_agent_service/providers/domain/catalog.py` reads the catalogue's typed fields and admits the keyless loopback auth kind.
 - `ModelRole` is internal vocabulary in a module that holds only roles (`src/cadrumo/core/model_roles.py`).
 - The Rust engine has no model pins. The desktop hands its in-process engine one admitted download; the engine pulls it through the server the manager supervises and reports a row from Ollama's installed list. Program pins, supervision and the managed loopback address are unchanged.
-- The model list lives in the keyless lane's entry of the desktop provider settings. Each entry shows its licence and, where the catalogue states them, its download size and installed state, and offers Download and Remove; a field adds a model by name. No surface names a role or a capability. The agent column's model picker offers a local lane's models from its list, and the desktop stores the person's pick as the reading model. The ledger's readers name no reading task; they show only what keeps documents from being read, and lead to the picker. Documentation and the four-language locale catalogues follow.
+- The model list lives in the keyless lane's entry of the desktop provider settings. Each entry shows its licence and, where the catalogue states them, its download size and installed state, and offers Download and Remove; a field adds a model by name. No surface names a role or a capability. The agent column's model picker offers a local lane's models from its list, and the desktop stores the person's pick as the reading model. The ledger's readers name no reading task; they show only what keeps documents from being read, and lead to the picker. The CLI, TUI and MCP change no list and pick no model; a refusal there names the agent's model picker. Documentation and the four-language locale catalogues follow.
 
 ## Rationale
 

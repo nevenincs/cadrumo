@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:bf4dc7f64a938e42eef08ea70f52f3f2f418449a1e10eb1462650a49457be60a'
+body_hash: 'sha256:f2bc5f2ee674a56df3035ae64c9d7d2ddfb06d151aebe37520c97a7db261f608'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - '[[2026-08-06-llm-package-split-research]]'
@@ -16,11 +16,11 @@ related:
 
 ## Problem Statement
 
-The native application package installs only the locked base closure of the `cadrumo` distribution. Every model-bearing surface sits behind `require_optional_extra(LLM_EXTRA)` (D1 of `2026-08-07-unstructured-document-ingestion-provisioning-adr`), so in the packaged app each of them refuses with `ERROR_OPTIONAL_EXTRA_MISSING` before it reaches a model. The packaged `ledger.classify.review` operation therefore cannot run, and with it the only review-gated operation that needs no remote service. A person who installs the desktop app has no supported way to add a Python extra to its private interpreter, so the refusal's `pip install cadrumo[llm]` guidance cannot be followed there.
+The native application package installs only the locked base closure of the `cadrumo` distribution. Every model-bearing surface sits behind `require_optional_extra(LLM_EXTRA)` (D8 of `2026-08-07-unstructured-document-ingestion-provisioning-adr`), so in the packaged app each of them refuses with `ERROR_OPTIONAL_EXTRA_MISSING` before it reaches a model. The packaged `ledger.classify.review` operation therefore cannot run, and with it the only review-gated operation that needs no remote service. A person who installs the desktop app has no supported way to add a Python extra to its private interpreter, so the refusal's `pip install cadrumo[llm]` guidance cannot be followed there.
 
 ## Considerations
 
-- The `[llm]` boundary and its absent-extra behaviour are accepted at the wheel level (D1, D2 of `2026-08-07-unstructured-document-ingestion-provisioning-adr`); the `smoke_absent_llm` lane proves it on a core wheel install.
+- The `[llm]` boundary and its absent-extra behaviour are accepted at the wheel level (D8, D9 of `2026-08-07-unstructured-document-ingestion-provisioning-adr`); the `smoke_absent_llm` lane proves it on a core wheel install.
 - The native package owns its locked Python closure privately (`2026-10-04-application-distribution-adr`); assembly refuses any installed distribution outside the selected closure (`dev/packaging/native/assemble.py:171`).
 - Selection reads the locked closure through `active_requirements` (`dev/packaging/runtime_wheel_selection.py:168`) and `export_runtime_constraints` (`dev/packaging/uv_constraints.py`), which exports no extra today.
 - The `[llm]` extra adds no model bytes; models are never package data.

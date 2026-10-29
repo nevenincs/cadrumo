@@ -4,7 +4,7 @@ tags:
   - '#product-packaging'
 date: '2026-06-28'
 modified: '2026-10-29'
-body_hash: 'sha256:a32b8bc13ef175adbe5c521fcece83cc7af8653048942fcb575683c642f5af80'
+body_hash: 'sha256:f7b9ccb8e9e37902403d494a9ec3bc93d6bd456ce91d705819c01522ed492261'
 related:
   - '[[2026-06-28-product-packaging-research]]'
   - '[[2026-06-28-product-packaging-reference]]'
@@ -48,8 +48,7 @@ Adopt one exact-version Python cohort:
 
 Reviewed data is never downloaded or regenerated after installation. External
 browser binaries, provider CLIs, models, credentials, and caches remain
-external capabilities rather than package data; the desktop application
-provisions the browser and the local AI.
+operator-provisioned capabilities rather than package data.
 
 ## Constraints
 

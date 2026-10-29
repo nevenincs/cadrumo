@@ -4,7 +4,7 @@ tags:
   - '#dependency-provisioning'
 date: '2026-06-15'
 modified: '2026-10-29'
-body_hash: 'sha256:19a92d5f50bb356ea37f0e1a3f813399b3abea98b25dde1ab22dffb2715db345'
+body_hash: 'sha256:965d6f768ef8e2e2a908d29bebf89b1de7e9f98ebb57134a5548ef62d80e53d8'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"
@@ -114,11 +114,12 @@ dependency's availability and the active profile's capability posture.**
    missing. This is the product-side "is my workstation set up for what I asked
    for" the retired `aeat doctor` used to be.
 
-6. **`just doctor` + fixes.** A `just doctor` aggregate that runs
-   `aeat config check` and the dev-toolchain checks; fix the broken `env-playwright`
-   (point it at the real browser-health path), make `bootstrap` end by running
-   `just doctor`, and reconcile the README/justfile so there is one documented
-   entry point.
+6. **`just doctor` + provisioning recipes + fixes.** A `just doctor` aggregate that
+   runs `aeat config check` and the dev-toolchain checks; fix the broken
+   `env-playwright` (point it at the real browser-health path or `playwright
+   install`), add `env-vision` (ollama model pull guidance) and a `provision`
+   recipe, make `bootstrap` end by running `just doctor`, and reconcile the
+   README/justfile so there is one documented entry point.
 
 ## Rationale
 
