@@ -48,8 +48,7 @@ errors:
     auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
       disponible. O no hi ha cap magatzem de credencials registrat, o aquesta sessió
       d'inici no pot desar credencials, cosa habitual en sessions de xarxa o de servei.
-      Inicia la sessió de manera interactiva o comprova que hi hagi un magatzem de
-      credencials instal·lat i actiu.
+      Inicia la sessió de manera interactiva.
     auth_view_capture_identity_mismatch: La sessió de l'AEAT pertany a un contribuent
       diferent del del perfil actiu.
     clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
@@ -308,9 +307,7 @@ errors:
       forma.
     error_observation_key: Un component de la clau d'observació no compleix el contracte
       del repositori.
-    error_optional_extra_missing: Aquesta instal·lació no té el complement opcional
-      «{extra}», necessari per a {feature}. Instal·la'l amb pip install cadrumo[{extra}]
-      i torna a executar la comanda.
+    error_optional_extra_missing: El component opcional d'aquesta funció no està instal·lat.
     error_outbound_storage_not_found: No existeix l'objecte o l'espai d'emmagatzematge
       sol·licitat.
     error_outbound_storage_path_too_long: El camí d'emmagatzematge resolt supera el
@@ -1181,7 +1178,7 @@ errors:
       valoració del bé.
     refused_google_client_metadata_unavailable: Aquesta instal·lació no inclou el
       client de Google que necessita per iniciar la sessió. Les funcions de Google
-      no estaran disponibles fins que instal·lis una versió que l'inclogui.
+      no estan disponibles.
     refused_google_non_interactive: L'inici de sessió de Google necessita un terminal
       interactiu amb navegador; executa'l des d'una shell interactiva.
     refused_google_profile_unbound: No hi ha cap perfil actiu vinculat. Selecciona
@@ -1253,7 +1250,7 @@ errors:
     refused_llm_consent: S'ha rebutjat la lectura del document fora de l'equip perquè
       no s'ha atorgat el consentiment per a la transmissió externa.
     refused_llm_contention: El model amb què llegeix Cadrumo no hi cap ara mateix
-      a la memòria lliure d'aquest equip. Tanca altres programes i torna-ho a provar.
+      a la memòria lliure d'aquest equip.
     refused_llm_model_cannot_read_images: El model que has triat no pot llegir imatges.
       Tria un model que pugui llegir imatges i torna-ho a provar.
     refused_llm_no_model_selected: No has triat cap model per llegir. Tria'n un i

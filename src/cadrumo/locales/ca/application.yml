@@ -664,8 +664,8 @@ application:
           la factura emmagatzemada en lloc de confirmar dues vegades el mateix document.'
       label_reading:
         reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
-          %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Revisa
-          el model que has triat i torna a extreure, o emplena''ls tu.'
+          %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Emplena''ls
+          tu.'
   live:
     borrador:
       errors:
@@ -1291,8 +1291,7 @@ application:
         resum del càlcul en l'idioma {report_language}; el resum es rebutja en lloc
         de produir-se sense aquest text.
       calculation_summary_pdf_unavailable: El resum del càlcul en PDF necessita el
-        complement opcional «{extra}», que aquesta instal·lació no té. Instal·la'l
-        amb pip install cadrumo[{extra}] i torna-ho a provar; comprovar un resum no
+        component opcional «{extra}», que no està instal·lat; comprovar un resum no
         el necessita.
       calculation_summary_pdf_unreadable: El fitxer no és un PDF llegible ({error_type}).
       caller_casilla_source_binding_conflict: 'Els valors que introdueixes a les caselles

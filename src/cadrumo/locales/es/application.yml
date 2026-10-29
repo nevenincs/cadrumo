@@ -667,7 +667,7 @@ application:
       label_reading:
         reader_unavailable: 'El lector automático no ha podido funcionar, así que
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
-          Revisa el modelo que elegiste y vuelve a extraer, o rellénalos tú.'
+          Rellénalos tú.'
   live:
     borrador:
       errors:
@@ -1292,9 +1292,8 @@ application:
         resumen del cálculo en el idioma {report_language}; el resumen se rechaza
         en lugar de producirse sin él.
       calculation_summary_pdf_unavailable: El resumen del cálculo en PDF necesita
-        el complemento opcional «{extra}», que no está instalado. Instálalo con pip
-        install cadrumo[{extra}] y vuelve a intentarlo; comprobar un resumen no lo
-        necesita.
+        el componente opcional «{extra}», que no está instalado; comprobar un resumen
+        no lo necesita.
       calculation_summary_pdf_unreadable: El fichero no es un PDF legible ({error_type}).
       caller_casilla_source_binding_conflict: 'Los valores que introduces en las casillas
         no pueden sobrescribir casillas cuyo valor procede de tus registros: %{casillas}.'

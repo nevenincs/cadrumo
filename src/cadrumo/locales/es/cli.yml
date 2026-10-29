@@ -265,8 +265,7 @@ cli:
         label_reading_headroom_refused: 'El lector automático no se ejecutó porque
           este equipo no tiene memoria libre suficiente para él. Los {count} campo(s)
           que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
-          El documento se leyó solo a partir de sus etiquetas; libera memoria y vuelve
-          a extraer, o rellena tú esos campos.'
+          El documento se leyó solo a partir de sus etiquetas; rellena tú esos campos.'
         list_help: Lista los justificantes de facturas de compra registrados
         notes_help: Notas internas sobre el justificante
         page_help: Dibuja una página de un documento guardado como imagen PNG y la

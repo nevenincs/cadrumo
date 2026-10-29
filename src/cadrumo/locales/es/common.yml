@@ -5998,11 +5998,9 @@ tui:
         label_reading:
           headroom_refused: 'El lector automático no se ejecutó porque este equipo
             no tiene memoria libre suficiente para él. {count} campo(s) que las etiquetas
-            no cubrían aún no se han leído y siguen vacíos: {fields}. Libera memoria
-            y vuelve a leer el documento.'
+            no cubrían aún no se han leído y siguen vacíos: {fields}.'
           reader_unavailable: 'El lector automático no pudo iniciarse. {count} campo(s)
-            que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
-            Revisa el modelo que elegiste y vuelve a leer el documento.'
+            que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.'
         line: '{index}. {description} · cantidad: {quantity} · precio unitario: {unit_price}
           · base: {base} · tipo: {rate} · IVA: {iva} · tipo de recargo: {recargo_rate}
           · recargo: {recargo}'
@@ -6037,8 +6035,6 @@ tui:
       queue_heading: Adjuntos pendientes de revisión
       read_done: Leído. Revisa los valores y confirma la factura.
       read_failed: No se ha podido leer el documento.
-      reader_not_ready: El lector de documentos no está listo ({condition}).
-      reader_ready: El lector de documentos está listo en este equipo.
       reading: Leyendo el documento en este equipo…
       record_detail: '{kind} · proveedor {supplier} · añadido el {added} · {status}'
       record_status:
@@ -7291,7 +7287,6 @@ tui:
       profile: Perfil
       sign_out: Cerrar sesión
     navigation:
-      busy: Cierra primero el formulario abierto y vuelve a abrir el enlace.
       unavailable: No se puede abrir el área solicitada en esta sesión.
     no_areas: Ninguna área está disponible todavía en esta sesión.
     opening: Abriendo Cadrumo…

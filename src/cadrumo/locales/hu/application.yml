@@ -644,8 +644,8 @@ application:
           kétszer erősítenéd meg.'
       label_reading:
         reader_unavailable: 'Az automatikus olvasó nem tudott elindulni, ezért a címkék
-          által nem lefedett %{count} mező üres marad: %{fields}. Ellenőrizd a kiválasztott
-          modellt, majd futtasd újra a kinyerést, vagy töltsd ki ezeket a mezőket.'
+          által nem lefedett %{count} mező üres marad: %{fields}. Töltsd ki ezeket
+          a mezőket.'
   live:
     borrador:
       errors:
@@ -1248,9 +1248,8 @@ application:
         szövege hiányzik a(z) {report_language} nyelven; az összesítő elkészítése
         ezért elutasítva.
       calculation_summary_pdf_unavailable: A számítási összesítő PDF-hez a nem kötelező
-        „{extra}” kiegészítő szükséges, amely ebben a telepítésben nincs meg. Telepítsd
-        a pip install cadrumo[{extra}] paranccsal, majd próbáld újra; az összesítő
-        ellenőrzéséhez nincs rá szükség.
+        „{extra}” összetevő szükséges, amely nincs telepítve; az összesítő ellenőrzéséhez
+        nincs rá szükség.
       calculation_summary_pdf_unreadable: A fájl nem olvasható PDF ({error_type}).
       caller_casilla_source_binding_conflict: 'Az általad megadott rovatértékek nem
         írhatják felül azokat a rovatokat, amelyek értéke a nyilvántartásaidból származik:

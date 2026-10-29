@@ -5955,11 +5955,9 @@ tui:
         label_reading:
           headroom_refused: 'Az automatikus olvasó nem futott le, mert ezen a gépen
             nincs elég szabad memória hozzá. A címkék által nem lefedett {count} mező
-            még nem lett beolvasva, ezért üres marad: {fields}. Szabadíts fel memóriát,
-            és olvasd be újra a dokumentumot.'
+            még nem lett beolvasva, ezért üres marad: {fields}.'
           reader_unavailable: 'Az automatikus olvasó nem indult el. A címkék által
-            nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.
-            Ellenőrizd a kiválasztott modellt, majd olvasd be újra a dokumentumot.'
+            nem lefedett {count} mező még nem lett beolvasva, ezért üres marad: {fields}.'
         line: '{index}. {description} · mennyiség: {quantity} · egységár: {unit_price}
           · adóalap: {base} · adókulcs: {rate} · áfa: {iva} · áfapótlék kulcsa: {recargo_rate}
           · áfapótlék: {recargo}'
@@ -5992,8 +5990,6 @@ tui:
       queue_heading: Ellenőrzésre váró mellékletek
       read_done: Beolvasva. Ellenőrizd az értékeket, majd erősítsd meg a számlát.
       read_failed: A dokumentumot nem sikerült beolvasni.
-      reader_not_ready: A dokumentumolvasó nem áll készen ({condition}).
-      reader_ready: A dokumentumolvasó készen áll ezen a gépen.
       reading: A dokumentum beolvasása ezen a gépen…
       record_detail: '{kind} · szállító: {supplier} · hozzáadva: {added} · {status}'
       record_status:
@@ -6317,8 +6313,8 @@ tui:
         file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
           elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
-        reader_unavailable: a kiválasztott modell jelenleg nem érhető el, ezért
-          a fájl nem lett beolvasva; próbáld újra, amint elérhető
+        reader_unavailable: a kiválasztott modell jelenleg nem érhető el, ezért a
+          fájl nem lett beolvasva; próbáld újra, amint elérhető
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került
           importálásra belőle; nézd meg újra az előnézetet
@@ -7238,7 +7234,6 @@ tui:
       profile: Profil
       sign_out: Kijelentkezés
     navigation:
-      busy: Előbb zárd be a nyitott űrlapot, aztán nyisd meg újra a hivatkozást.
       unavailable: A kért terület ebben a munkamenetben nem nyitható meg.
     no_areas: Ebben a munkamenetben még egyetlen terület sem érhető el.
     opening: A Cadrumo megnyitása…

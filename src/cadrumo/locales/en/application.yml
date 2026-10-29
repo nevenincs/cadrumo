@@ -618,8 +618,7 @@ application:
           the stored invoice instead of confirming the same document twice.'
       label_reading:
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
-          the labels did not cover stay empty: %{fields}. Check the model you picked
-          and extract again, or fill them in yourself.'
+          the labels did not cover stay empty: %{fields}. Fill them in yourself.'
   live:
     borrador:
       errors:
@@ -1211,8 +1210,8 @@ application:
         is missing for language {report_language}; the summary is refused rather than
         produced without it.
       calculation_summary_pdf_unavailable: The calculation summary PDF needs the optional
-        “{extra}” extra, which this installation does not have. Install it with pip
-        install cadrumo[{extra}] and try again; checking a summary does not need it.
+        “{extra}” component, which is not installed; checking a summary does not need
+        it.
       calculation_summary_pdf_unreadable: The file is not a readable PDF ({error_type}).
       caller_casilla_source_binding_conflict: 'Values you enter for boxes cannot override
         boxes whose values come from your records: %{casillas}.'

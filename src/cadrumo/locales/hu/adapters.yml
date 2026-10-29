@@ -62,7 +62,6 @@ adapters:
     installation_client:
       errors:
         client_metadata_invalid: A telepítéshez mellékelt Google-kliens érvénytelen.
-          Telepítsd újra az alkalmazást a helyreállításához.
     oauth_flow:
       errors:
         browser_launcher_refused: Az operációs rendszer böngészőindítója megtagadta

@@ -62,7 +62,7 @@ adapters:
     installation_client:
       errors:
         client_metadata_invalid: El cliente de Google incluido en esta instalación
-          no es válido. Reinstala la aplicación para restaurarlo.
+          no es válido.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operativo rechazó abrir la URL de consentimiento

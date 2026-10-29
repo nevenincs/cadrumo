@@ -5986,11 +5986,10 @@ tui:
         label_reading:
           headroom_refused: 'El lector automàtic no s''ha executat perquè aquest equip
             no té prou memòria lliure. {count} camps que les etiquetes no cobrien
-            encara no s''han llegit i queden buits: {fields}. Allibera memòria i torna
-            a llegir el document.'
+            encara no s''han llegit i queden buits: {fields}.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
-            {fields}. Revisa el model que has triat i torna a llegir el document.'
+            {fields}.'
         line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
           · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
           · recàrrec: {recargo}'
@@ -6024,8 +6023,6 @@ tui:
       queue_heading: Adjunts pendents de revisió
       read_done: Llegit. Revisa els valors i confirma la factura.
       read_failed: No s'ha pogut llegir el document.
-      reader_not_ready: El lector de documents no està a punt ({condition}).
-      reader_ready: El lector de documents està a punt en aquest equip.
       reading: S'està llegint el document en aquest equip…
       record_detail: '{kind} · proveïdor {supplier} · afegit el {added} · {status}'
       record_status:
@@ -7272,7 +7269,6 @@ tui:
       profile: Perfil
       sign_out: Tanca sessió
     navigation:
-      busy: Tanca primer el formulari obert i torna a obrir l'enllaç.
       unavailable: No es pot obrir l'àrea sol·licitada en aquesta sessió.
     no_areas: Cap àrea no està disponible encara en aquesta sessió.
     opening: S'està obrint Cadrumo…

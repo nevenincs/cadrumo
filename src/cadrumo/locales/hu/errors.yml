@@ -48,8 +48,7 @@ errors:
     auth_storage_keyring_unavailable: Az operációs rendszer kulcstára nem elérhető.
       Vagy nincs regisztrálva hitelesítő tároló, vagy ez a bejelentkezési munkamenet
       nem tud hitelesítő adatokat tárolni, ami hálózati vagy szolgáltatásfiókos bejelentkezésnél
-      gyakori. Jelentkezz be interaktívan, vagy ellenőrizd, hogy telepítve és aktív-e
-      egy hitelesítő tároló.
+      gyakori. Jelentkezz be interaktívan.
     auth_view_capture_identity_mismatch: Az AEAT-munkamenet nem az aktív profil adózójához
       tartozik.
     clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
@@ -292,9 +291,8 @@ errors:
     error_modelos_validation: Egy nyomtatványkód sérti az alaki invariánsait.
     error_observation_key: Egy megfigyelési kulcs komponense nem felel meg a tárrepozitórium
       szerződésének.
-    error_optional_extra_missing: 'Ebben a telepítésben nincs meg a nem kötelező „{extra}”
-      kiegészítő, amelyre a következőhöz van szükség: {feature}. Telepítsd a pip install
-      cadrumo[{extra}] paranccsal, majd futtasd újra a parancsot.'
+    error_optional_extra_missing: Ennek a funkciónak a választható összetevője nincs
+      telepítve.
     error_outbound_storage_not_found: A kért tárolási objektum vagy névtér nem létezik.
     error_outbound_storage_path_too_long: A feloldott tárhelyi elérési út meghaladja
       a Windows MAX_PATH korlátját.
@@ -1101,8 +1099,7 @@ errors:
       euróra átváltani a jogszabályi árfolyamnapon. Ellenőrizd a vagyonelem pénznemét
       és értékelési dátumát.
     refused_google_client_metadata_unavailable: Ez a telepítés nem tartalmazza a bejelentkezéshez
-      szükséges Google-klienst. A Google-funkciók addig nem érhetők el, amíg nem telepítesz
-      olyan kiadást, amely tartalmazza.
+      szükséges Google-klienst. A Google-funkciók nem érhetők el.
     refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
       és böngésző szükséges; futtasd interaktív shellből.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válassz profilt, vagy
@@ -1170,7 +1167,7 @@ errors:
     refused_llm_consent: A dokumentum gépen kívüli olvasása elutasítva, mert a külső
       továbbításhoz nem történt hozzájárulás.
     refused_llm_contention: A modell, amellyel a Cadrumo olvas, jelenleg nem fér el
-      a gép szabad memóriájában. Zárj be más programokat, majd próbáld újra.
+      a gép szabad memóriájában.
     refused_llm_model_cannot_read_images: A kiválasztott modell nem tud képeket olvasni.
       Válassz olyan modellt, amely tud képeket olvasni, majd próbáld újra.
     refused_llm_no_model_selected: Nincs kiválasztott modell az olvasáshoz. Válassz

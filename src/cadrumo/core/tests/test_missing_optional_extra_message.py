@@ -1,4 +1,4 @@
-"""A missing optional extra tells the operator which extra and how to get it.
+"""A missing optional extra is refused plainly, without a remedy command.
 
 The refusal used to render the generic internal-error text, which named
 neither the extra nor the feature: an operator who reached a gated boundary
@@ -21,18 +21,16 @@ _LOCALES = ("en", "es", "ca", "hu")
 
 @pytest.mark.parametrize("extra", OPTIONAL_EXTRAS, ids=lambda item: item.extra)
 @pytest.mark.parametrize("locale", _LOCALES)
-def test_the_refusal_names_the_extra_its_feature_and_the_install_command(
+def test_the_refusal_states_the_missing_component_and_names_no_command(
     extra: OptionalExtra,
     locale: str,
 ) -> None:
-    """Every extra renders its own identity, feature label and install command."""
+    """Every extra renders a plain refusal that names no install command."""
     rendered = resolve_error_message(MissingOptionalExtraError(extra), locale=locale)
 
-    assert extra.extra in rendered, f"the refusal must name the extra: {rendered}"
-    assert extra.feature in rendered, f"the refusal must name the feature: {rendered}"
-    assert f"pip install cadrumo[{extra.extra}]" in rendered, (
-        f"the refusal must name the install command for the extra: {rendered}"
-    )
+    assert rendered.strip(), "the refusal must render a message"
+    assert "pip" not in rendered.lower(), f"the refusal must name no command: {rendered}"
+    assert "cadrumo[" not in rendered, f"the refusal must name no command: {rendered}"
 
 
 def test_the_refusal_is_not_the_generic_internal_error_text() -> None:

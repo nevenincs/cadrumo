@@ -62,7 +62,7 @@ adapters:
     installation_client:
       errors:
         client_metadata_invalid: El client de Google inclòs en aquesta instal·lació
-          no és vàlid. Reinstal·la l'aplicació per restaurar-lo.
+          no és vàlid.
     oauth_flow:
       errors:
         browser_launcher_refused: El sistema operatiu ha rebutjat obrir l'URL de consentiment

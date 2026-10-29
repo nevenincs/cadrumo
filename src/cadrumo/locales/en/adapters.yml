@@ -59,7 +59,7 @@ adapters:
     installation_client:
       errors:
         client_metadata_invalid: The Google client included with this installation
-          is not valid. Reinstall the application to restore it.
+          is not valid.
     oauth_flow:
       errors:
         browser_launcher_refused: The operating system browser launcher refused to

@@ -263,8 +263,7 @@ cli:
         label_reading_headroom_refused: 'El lector automàtic no s''ha executat perquè
           aquest equip no té prou memòria lliure. Els {count} camps que les etiquetes
           no cobrien encara no s''han llegit i queden buits: {fields}. El document
-          s''ha llegit només a partir de les etiquetes; allibera memòria i torna a
-          extreure, o emplena tu aquests camps.'
+          s''ha llegit només a partir de les etiquetes; emplena tu aquests camps.'
         list_help: Llista els justificants de factures de compra registrats
         notes_help: Notes internes sobre el justificant
         page_help: Dibuixa una pàgina d'un document desat com a imatge PNG i l'escriu

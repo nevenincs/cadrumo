@@ -5887,11 +5887,9 @@ tui:
         label_reading:
           headroom_refused: 'The automatic reader did not run because this machine
             does not have enough free memory for it. {count} field(s) the labels did
-            not cover have not been read yet and stay empty: {fields}. Free some memory
-            and read the document again.'
+            not cover have not been read yet and stay empty: {fields}.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
-            the labels did not cover have not been read yet and stay empty: {fields}.
-            Check the model you picked, then read the document again.'
+            the labels did not cover have not been read yet and stay empty: {fields}.'
         line: '{index}. {description} · quantity: {quantity} · unit price: {unit_price}
           · base: {base} · rate: {rate} · IVA: {iva} · surcharge rate: {recargo_rate}
           · surcharge: {recargo}'
@@ -5924,8 +5922,6 @@ tui:
       queue_heading: Attachments awaiting review
       read_done: Read. Check the values, then confirm the invoice.
       read_failed: The document could not be read.
-      reader_not_ready: The document reader is not ready ({condition}).
-      reader_ready: The document reader is ready on this machine.
       reading: Reading the document on this machine…
       record_detail: '{kind} · supplier {supplier} · added {added} · {status}'
       record_status:
@@ -6238,8 +6234,8 @@ tui:
           read; import fewer at a time
         own_account_mismatch: the statement names a different account than the one
           you chose
-        reader_unavailable: the model you picked is not available right now,
-          so the file was not read; try again once it is available
+        reader_unavailable: the model you picked is not available right now, so the
+          file was not read; try again once it is available
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again
@@ -7152,7 +7148,6 @@ tui:
       profile: Profile
       sign_out: Sign out
     navigation:
-      busy: Close the open form first, then open the link again.
       unavailable: The requested area cannot be opened in this session.
     no_areas: No area is available in this session yet.
     opening: Opening Cadrumo…

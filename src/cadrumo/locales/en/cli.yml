@@ -246,8 +246,7 @@ cli:
         label_reading_headroom_refused: 'The automatic reader did not run because
           this machine does not have enough free memory for it. The {count} field(s)
           the labels did not cover have not been read yet and stay empty: {fields}.
-          The document was read from its labels only; free some memory and extract
-          again, or fill in those fields yourself.'
+          The document was read from its labels only; fill in those fields yourself.'
         list_help: List registered purchase invoice evidence
         notes_help: Internal notes about the evidence
         page_help: Draw one page of a stored document as a PNG image and write it

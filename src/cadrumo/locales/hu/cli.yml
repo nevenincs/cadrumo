@@ -259,8 +259,7 @@ cli:
         label_reading_headroom_refused: 'Az automatikus olvasó nem futott le, mert
           ezen a gépen nincs elég szabad memória hozzá. A címkék által nem lefedett
           {count} mező még nem lett beolvasva, ezért üres marad: {fields}. A dokumentumot
-          csak a címkék alapján olvastuk be; szabadíts fel memóriát, és futtasd újra
-          a kinyerést, vagy töltsd ki ezeket a mezőket te magad.'
+          csak a címkék alapján olvastuk be; töltsd ki ezeket a mezőket te magad.'
         list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
         page_help: Egy tárolt dokumentum egy oldalát PNG-képként rajzolja meg, és
