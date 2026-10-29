@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#provisioning-panel'
 date: '2026-10-28'
-modified: '2026-10-28'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:081bd29fc0a5f8a67a172135bf1152868c5f8e6e144b11080397456f743c065b'
+body_hash: 'sha256:d9d5b099358f6ff860ddfda286fbd218093160b92a9c032f8bc5bd8a1360483e'
 related:
   - "[[2026-10-28-provisioning-panel-plan]]"
 ---
@@ -169,6 +169,22 @@ related:
 - `S05` `verify:` `node --test packaged/setup.test.mjs` -> `pass`
 - `S05` `verify:` `node desktop_cargo.mjs check --all-targets` -> `fail`
 - `S05` `by:` `implementation-engineer`
+- `S05` `M` `native/desktop/frontend/src/dev/sedeViewFixture.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
+- `S05` `verify:` `npx tsc --noEmit` -> `pass`
+- `S05` `verify:` `eslint + prettier --check on both files` -> `pass`
+- `S05` `verify:` `playwright scenarios sede-browser.spec.ts --repeat-each=5: 120 of 130 passed, 10 failed only in the context-teardown hang, no assertion failure` -> `fail`
+- `S05` `M` `native/desktop/frontend/src/dev/fixtures/agentCatalog.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S05` `M` `native/desktop/frontend/src/dev/ProvisioningStage.tsx`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ProvisioningPanel.stories.tsx`
+- `S05` `M` `native/desktop/frontend/src/dev/setupFixture.ts`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/local-models.spec.ts`
+- `S05` `verify:` `tsc --noEmit` -> `pass`
+- `S05` `verify:` `eslint touched files` -> `pass`
+- `S05` `verify:` `prettier --check touched files` -> `pass`
+- `S05` `verify:` `playwright local-models+setup repeat-each=3 (new test 6/6; other failures are Close-context teardown timeouts or concurrent build removing chrome-strings.json)` -> `pass`
 
 ## Notes
 
@@ -180,3 +196,4 @@ related:
 - `S03` `desktop_chrome.py` key edits were committed in f041516ab2 by another session
 - `S04` dev/locales `test_desktop_chrome:` 2 failures from another session's `service_timeout/payment_cutoff` keys; none from this Step. `desktop_chrome.py` committed as HEAD minus the `browser_open` line; working-tree copy holds another session's refactor, its `desktop_interface_keys.py` line removed there too.
 - `S05` Rebuild blocked by other sessions' uncommitted work: src/agent/person/native.rs:1549 E0599 unwrap on `Vec<Sender<Pushed>>;` `src/shell/sign_in/process.rs:493-494` E0373 closure borrows wake. Rebuilt-app check not run; S05 left open.
+- `S05` fixture holdPublication/publish committed in 0b064efd2f; spec poll fixes in a007e37053 (auto-commits)
