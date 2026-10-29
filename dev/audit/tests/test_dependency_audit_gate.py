@@ -68,6 +68,23 @@ def test_a_suppression_matches_an_alias() -> None:
     assert _report([live]).exit_code == da.EXIT_OK
 
 
+def test_scoped_suppression_requires_every_affected_coordinate_to_match() -> None:
+    live = da.Suppression("GHSA-q2x7-8rv6-6q7h", "specific version", dt.date(2099, 1, 1), "PyPI", "jinja2", "3.1.4")
+    assert _report([live]).exit_code == da.EXIT_OK
+    newer = da.Coordinate("PyPI", "jinja2", "3.1.5", "uv.lock")
+    assert _report([live], {"GHSA-q2x7-8rv6-6q7h": {COORD, newer}}).exit_code == da.EXIT_FINDINGS
+
+
+def test_partial_suppression_scope_is_rejected(tmp_path: Path) -> None:
+    path = tmp_path / "allowlist.toml"
+    path.write_text(
+        '[[suppression]]\nid = "X"\nreason = "y"\nexpires = 2099-01-01\npackage = "example"\n',
+        encoding="utf-8",
+    )
+    with pytest.raises(da.AuditError, match="ecosystem, package and version together"):
+        da.load_suppressions(path)
+
+
 def test_an_expired_suppression_fails_even_with_no_finding() -> None:
     """An acceptance that lapsed is a decision nobody has retaken."""
     stale = da.Suppression("GHSA-q2x7-8rv6-6q7h", "was accepted", dt.date(2026, 1, 1))

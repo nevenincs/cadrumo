@@ -273,6 +273,9 @@ class Suppression:
     id: str
     reason: str
     expires: _dt.date
+    ecosystem: str | None = None
+    package: str | None = None
+    version: str | None = None
 
     def expired(self, today: _dt.date) -> bool:
         """Return whether this suppression has passed its expiry date."""
@@ -293,27 +296,43 @@ def load_suppressions(path: Path = ALLOWLIST_PATH) -> list[Suppression]:
     except TomlDecodeError as error:
         raise AuditError(f"{path.name} is not valid TOML: {error}") from error
 
-    out: list[Suppression] = []
-    for index, entry in enumerate(data.get("suppression", ()), start=1):
-        missing = [k for k in ("id", "reason", "expires") if not entry.get(k)]
-        if missing:
-            raise AuditError(
-                f"{path.name}: suppression #{index} is missing "
-                f"{', '.join(missing)}. Every suppression needs an advisory id, "
-                "a reason, and an expiry date."
-            )
-        expires = entry["expires"]
-        if isinstance(expires, _dt.datetime):
-            expires = expires.date()
-        if not isinstance(expires, _dt.date):
-            raise AuditError(
-                f"{path.name}: suppression {entry['id']} has expires="
-                f"{expires!r}; write it as a bare TOML date, e.g. 2026-12-31."
-            )
-        if not str(entry["reason"]).strip():
-            raise AuditError(f"{path.name}: suppression {entry['id']} has an empty reason.")
-        out.append(Suppression(str(entry["id"]), str(entry["reason"]), expires))
-    return out
+    return [_parse_suppression(path, index, entry) for index, entry in enumerate(data.get("suppression", ()), start=1)]
+
+
+def _parse_suppression(path: Path, index: int, entry: dict[str, Any]) -> Suppression:
+    missing = [k for k in ("id", "reason", "expires") if not entry.get(k)]
+    if missing:
+        raise AuditError(
+            f"{path.name}: suppression #{index} is missing "
+            f"{', '.join(missing)}. Every suppression needs an advisory id, "
+            "a reason, and an expiry date."
+        )
+    expires = _suppression_expiry(path, entry)
+    if not str(entry["reason"]).strip():
+        raise AuditError(f"{path.name}: suppression {entry['id']} has an empty reason.")
+    scope = _suppression_scope(path, entry)
+    return Suppression(str(entry["id"]), str(entry["reason"]), expires, *scope)
+
+
+def _suppression_expiry(path: Path, entry: dict[str, Any]) -> _dt.date:
+    expires = entry["expires"]
+    if isinstance(expires, _dt.datetime):
+        expires = expires.date()
+    if not isinstance(expires, _dt.date):
+        raise AuditError(
+            f"{path.name}: suppression {entry['id']} has expires="
+            f"{expires!r}; write it as a bare TOML date, e.g. 2026-12-31."
+        )
+    return expires
+
+
+def _suppression_scope(path: Path, entry: dict[str, Any]) -> tuple[Any, ...]:
+    scope = tuple(entry.get(key) for key in ("ecosystem", "package", "version"))
+    if any(value is not None for value in scope) and not all(
+        isinstance(value, str) and value.strip() for value in scope
+    ):
+        raise AuditError(f"{path.name}: suppression {entry['id']} requires ecosystem, package and version together.")
+    return scope
 
 
 # --------------------------------------------------------------------------
@@ -656,12 +675,11 @@ def _append_advisory_finding(
     aliases = list(detail.get("aliases") or [])
     seen_ids.add(identifier)
     seen_ids.update(aliases)
-    covering = None
-    covering = _covering_suppression(identifier, aliases, live, used)
     merged: set[Coordinate] = set()
     for key in (identifier, *aliases):
         merged |= hits.get(key, set())
     affected = sorted(merged)
+    covering = _covering_suppression(identifier, aliases, live, used, affected)
     report.findings.append(
         Finding(
             id=identifier,
@@ -676,13 +694,23 @@ def _append_advisory_finding(
 
 
 def _covering_suppression(
-    identifier: str, aliases: list[str], live: dict[str, Suppression], used: set[str]
+    identifier: str, aliases: list[str], live: dict[str, Suppression], used: set[str], affected: list[Coordinate]
 ) -> Suppression | None:
     """Select and mark the first live suppression across the advisory and its aliases."""
     for key in (identifier, *aliases):
         if key in live:
+            suppression = live[key]
+            if suppression.ecosystem is not None and (
+                not affected
+                or any(
+                    (coordinate.ecosystem, coordinate.name, coordinate.version)
+                    != (suppression.ecosystem, suppression.package, suppression.version)
+                    for coordinate in affected
+                )
+            ):
+                continue
             used.add(key)
-            return live[key]
+            return suppression
     return None
 
 
