@@ -250,11 +250,13 @@ def test_filed_declarations_keep_never_captured_unreadable_and_captured_apart(
     )
 
     assert row.state is state
-    assert (row.last_brought_at, row.refusal) == (
-        (captured_at, None) if state is AeatSyncAreaState.CURRENT else (None, row.refusal)
-    )
+    if state is AeatSyncAreaState.CURRENT:
+        assert (row.last_brought_at, row.refusal) == (captured_at, None)
+    elif state is AeatSyncAreaState.UNAVAILABLE:
+        assert (row.last_brought_at, row.refusal) == (None, _UNREADABLE)
+    else:
+        assert (row.last_brought_at, row.refusal) == (None, None)
     assert (row.filed_periods is not None) is (state is AeatSyncAreaState.CURRENT)
-    assert (row.refusal is not None) is (state is AeatSyncAreaState.UNAVAILABLE)
 
 
 def test_filed_periods_partition_matched_aeat_only_local_only_and_differing() -> None:
@@ -507,6 +509,49 @@ def test_a_verified_justificante_confirms_the_receipt_and_nothing_else() -> None
         captured_at,
         True,
     )
+
+
+def test_a_differing_row_never_carries_a_confirmed_receipt_even_when_its_evidence_says_verified() -> None:
+    captured_at = _NOW - timedelta(days=1)
+    joined = _filed_evidence(captured_at)
+    period = Period.from_year_and_code(2025, "3T")
+    contested = OverviewCalendarFilingEvidence(
+        modelo="303",
+        filing_year=2025,
+        period=period,
+        aeat_submission_state=OverviewAeatSubmissionState.JUSTIFICANTE_VERIFIED,
+        aeat_evidence_concerns=(OverviewAeatEvidenceConcern.INACTIVE_REGISTER,),
+        verified_justificante_csv="ABCDEF1234567890",
+        justificante_verified=True,
+    )
+
+    area = _area(
+        _status(AeatSyncStatusSources(filed_evidence=replace(joined, evidence=(contested,)))),
+        AeatSyncStatusArea.FILED_DECLARATIONS,
+    )
+
+    assert area.filed_rows is not None
+    (row,) = area.filed_rows
+    assert (row.match, row.aeat_shown_at, row.differences, row.receipt_confirmed) == (
+        AeatSyncFiledMatch.DIFFERING,
+        captured_at,
+        (AeatSyncFiledDifference.STATUS,),
+        False,
+    )
+
+
+def test_a_filed_row_refuses_a_confirmed_receipt_on_a_differing_declaration() -> None:
+    with pytest.raises(ValidationError, match="differing declaration cannot carry a confirmed receipt"):
+        AeatSyncFiledRowV1(
+            modelo="303",
+            filing_year=2025,
+            period="3T",
+            match=AeatSyncFiledMatch.DIFFERING,
+            local_record=AeatSyncFiledLocalRecord.NONE,
+            aeat_shown_at=_NOW,
+            receipt_confirmed=True,
+            differences=(AeatSyncFiledDifference.STATUS,),
+        )
 
 
 def test_no_filed_row_is_served_before_the_register_was_ever_read() -> None:

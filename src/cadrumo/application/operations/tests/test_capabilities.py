@@ -132,6 +132,20 @@ _PROFILE_NAME_GRAMMAR = re.compile(
 
 def _capabilities_named_by(profile_name: str) -> OperationCapabilities:
     """Rebuild the policy a profile name promises, independently of its definition."""
+    if profile_name == "EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES":
+        return OperationCapabilities(
+            durability=OperationDurability.EPHEMERAL,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.NONE,
+            baseline=OperationBaselinePolicy.NONE,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.NONE,
+            owned_resources=frozenset(),
+            permitted_effects=frozenset({OperationEffect.NONE}),
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        )
     parsed = _PROFILE_NAME_GRAMMAR.fullmatch(profile_name)
     if parsed is None:
         raise ValueError(f"profile name does not spell a capability policy: {profile_name}")

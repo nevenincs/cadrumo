@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+import tomllib
 from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ....core.errors.hierarchy import CadrumoError
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect
 from ....core.period import Period
@@ -69,13 +72,18 @@ def _snapshot(
     )
 
 
-def _verification(*, checked_at: datetime, bucket_id: str = _BUCKET) -> VerifyObservation:
+def _verification(
+    *,
+    checked_at: datetime,
+    bucket_id: str = _BUCKET,
+    verdict: IdentityCheckVerdict = IdentityCheckVerdict.VALID,
+) -> VerifyObservation:
     return VerifyObservation(
         observation_id=f"{int(checked_at.timestamp()):064x}",
         bucket_id=bucket_id,
         surface=VerifySurface.NIF_IVA,
         nif=_NIF,
-        verdict=IdentityCheckVerdict.VALID,
+        verdict=verdict,
         expected=None,
         matched_expectation=None,
         checked_at=checked_at,
@@ -279,6 +287,53 @@ def test_one_unreadable_store_makes_only_its_own_area_unavailable(
     assert (wallet.state, wallet.last_brought_at) == (AeatSyncAreaState.CURRENT, brought_at)
 
 
+def test_an_identity_check_that_got_no_answer_does_not_date_the_area(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    answered, outage = _NOW - timedelta(days=60), _NOW - timedelta(days=1)
+    checks = (
+        _verification(checked_at=answered),
+        _verification(checked_at=outage, verdict=IdentityCheckVerdict.UNKNOWN),
+    )
+
+    row = _area(
+        _load(_ports(verify_observations=lambda _nif: checks), authority_operation), AeatSyncStatusArea.IDENTITY_CHECKS
+    )
+
+    assert (row.state, row.last_brought_at) == (AeatSyncAreaState.CURRENT, answered)
+
+
+def test_identity_checks_that_only_got_no_answer_leave_the_area_never_brought(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    checks = (_verification(checked_at=_NOW - timedelta(days=1), verdict=IdentityCheckVerdict.UNKNOWN),)
+
+    row = _area(
+        _load(_ports(verify_observations=lambda _nif: checks), authority_operation), AeatSyncStatusArea.IDENTITY_CHECKS
+    )
+
+    assert (row.state, row.last_brought_at) == (AeatSyncAreaState.NEVER_BROUGHT, None)
+
+
+def test_a_registered_error_from_one_store_makes_only_its_area_unavailable(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    def refused() -> PersistedNotificationsSnapshot | None:
+        raise CadrumoError("synthetic store refusal")
+
+    brought_at = _NOW - timedelta(days=3)
+
+    result = _load(_ports(latest_notifications=refused, iva_wallet_captured_at=lambda: brought_at), authority_operation)
+
+    notifications = _area(result, AeatSyncStatusArea.NOTIFICATIONS)
+    assert (notifications.state, notifications.refusal) == (
+        AeatSyncAreaState.UNAVAILABLE,
+        "aeat_sync.status.store_unreadable",
+    )
+    wallet = _area(result, AeatSyncStatusArea.IVA_WALLET)
+    assert (wallet.state, wallet.last_brought_at) == (AeatSyncAreaState.CURRENT, brought_at)
+
+
 def test_a_failed_filed_sweep_is_carried_as_the_last_attempt(authority_operation: PinnedAuthorityOperation) -> None:
     attempt = AeatSyncAreaAttempt(attempted_at=_NOW - timedelta(hours=1), succeeded=False)
 
@@ -293,16 +348,22 @@ def test_a_failed_filed_sweep_is_carried_as_the_last_attempt(authority_operation
     )
 
 
-def test_year_choices_come_from_the_pinned_supported_filing_years(
+def test_year_choices_span_the_registry_declared_support_floor_to_horizon(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    expected = tuple(sorted(authority_operation.supported_filing_years().years))
+    declared = tomllib.loads(
+        (Path(__file__).parents[3] / "_data/registry/aeat/legal/supported-filing-years.toml").read_text("utf-8")
+    )["supported_filing_years"]
+    assert "hard_ceiling" not in declared
 
     status = _load(_ports(), authority_operation).status
 
-    assert status.filed_declaration_years == expected
-    assert status.iva_wallet_years == expected
-    assert expected
+    assert status.filed_declaration_years == status.iva_wallet_years
+    assert status.filed_declaration_years[0] == declared["floor"]
+    assert status.filed_declaration_years[-1] >= declared["horizon"]
+    assert list(status.filed_declaration_years) == list(
+        range(status.filed_declaration_years[0], status.filed_declaration_years[-1] + 1)
+    )
 
 
 def test_a_capture_that_belongs_to_another_profile_is_refused_not_reported(
@@ -324,7 +385,7 @@ def test_the_registered_contract_is_a_local_read_with_no_effect_and_no_network()
     contract = build_aeat_sync_status_registration(definition).contract
 
     assert contract.definition_id == LIVE_SYNC_STATUS_DEFINITION_ID == "live.sync.status"
-    assert contract.permitted_effects <= {OperationEffect.NONE, OperationEffect.UNKNOWN}
+    assert contract.permitted_effects == {OperationEffect.NONE}
     assert contract.request_schema.schema_id == "live.sync.status.request"
     assert contract.result_schema is not None
     assert contract.result_schema.schema_id == "live.sync.status.result"

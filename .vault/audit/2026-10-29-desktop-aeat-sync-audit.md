@@ -50,6 +50,8 @@ Verdict: REVISION REQUIRED (one high finding).
 
 `outcome.rs:105` treats verdict `unknown` as `Brought`, and the backend dates the identity area from every verify observation regardless of verdict (`src/cadrumo/application/aeat_sync/status_operation.py:193`). `IdentityCheckVerdict.UNKNOWN` means no answer was obtained (`src/cadrumo/core/identity_check_verdict.py:28`), so an outage refreshes "up to date" for 90 days. Fix: exclude unknown-verdict observations from `identity_checked_at` and settle the host item as failed (unavailable) on an unknown verdict.
 
+Resolution (backend, 2026-10-29): `load_aeat_sync_status` no longer dates the identity area from a verify observation whose verdict is `unknown`; an area holding only such checks reads never brought. Covered through the real reader by `test_an_identity_check_that_got_no_answer_does_not_date_the_area` and its only-unknown companion. The host half (settling the item as failed on an unknown verdict) remains with the host worker.
+
 ### results-unknown-retry-dead-end | medium | the results view offers a retry for an unknown area that the host always refuses
 
 `native/desktop/frontend/src/components/aeatSync/Results.tsx:292-303` calls `retry(result.area)` with no warning, and the results port sends no `acknowledged_unknown` (`src/shell/tauriHost.ts:169-171`). The host correctly refuses (`run.rs:469-475`), so nothing unsafe happens, but the button can never succeed from this view. Fix: route it through the same warn-then-acknowledge path the progress view uses (`AeatSyncProgress.tsx:90-131`).
@@ -81,6 +83,8 @@ The ADR's run model promises refinement within a year by the observation event c
 ### status-result-and-test-gaps | low | smaller backend observations
 
 `live.sync.status` declares `permitted_effects ["none","unknown"]` while its executor is a pure read; `CadrumoError` is outside `_STORE_READ_FAILURES` (`status_operation.py:75`) so one failing store fails the whole read instead of one area; a contested (differing) row can carry `receipt_confirmed` (`workspace_reader.py:925,943`); `test_status_operation.py:299-304` recomputes the expected year list with the implementation's expression; `test_status.py:254-255` compares a value with itself; only `OSError` store failures are tested.
+
+Resolution (backend, 2026-10-29): `live.sync.status` is now an ephemeral no-effect read (shared `EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES`, `permitted_effects ["none"]`, manifest regenerated), a `CadrumoError` from one store marks only that area unavailable, and a differing filed row can no longer carry a confirmed receipt (reader and `AeatSyncFiledRowV1` validator). The year-list test now reads the registry declaration instead of recomputing the implementation expression, the self-comparison in `test_status.py` asserts the exact refusal per state, and failures other than `OSError` are tested.
 
 ### frontend-duplication | low | small duplicated helpers in the window
 

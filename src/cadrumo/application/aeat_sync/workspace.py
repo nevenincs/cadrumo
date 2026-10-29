@@ -697,6 +697,8 @@ class AeatSyncFiledRowV1(BaseModel):
             raise ValueError("only a differing declaration names what differs")
         if self.receipt_confirmed and not shown:
             raise ValueError("a confirmed receipt requires an AEAT observation")
+        if self.receipt_confirmed and self.match is AeatSyncFiledMatch.DIFFERING:
+            raise ValueError("a differing declaration cannot carry a confirmed receipt")
         return self
 
 

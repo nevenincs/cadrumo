@@ -170,6 +170,21 @@ RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES = OperationCapabilities(
     permitted_effects=_READ_EFFECTS,
     close_policy=OperationClosePolicy.DETACH_ALLOWED,
 )
+EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES = OperationCapabilities(
+    # A read with no effect that lost observation could conceal lives only as
+    # long as the worker that reads it and is never journaled to disk.
+    durability=OperationDurability.EPHEMERAL,
+    cancellation=OperationCancellation.UNSUPPORTED,
+    deadline=OperationDeadline.ABSENT,
+    replay=OperationReplayPolicy.NONE,
+    baseline=OperationBaselinePolicy.NONE,
+    request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+    sensitive_input=OperationSensitiveInputPolicy.NONE,
+    conflict_scope=OperationConflictScope.NONE,
+    owned_resources=frozenset(),
+    permitted_effects=frozenset({OperationEffect.NONE}),
+    close_policy=OperationClosePolicy.DETACH_ALLOWED,
+)
 RECORDED_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES = OperationCapabilities(
     durability=OperationDurability.RECORDED,
     cancellation=OperationCancellation.UNSUPPORTED,
@@ -355,6 +370,7 @@ RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES = OperationCapabili
 
 
 __all__ = [
+    "EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES",
     "RECORDED_COOPERATIVE_IDEMPOTENT_REQUEST_BOUND_SECURE_INPUT_UPDATE_CAPABILITIES",
     "RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES",
     "RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES",

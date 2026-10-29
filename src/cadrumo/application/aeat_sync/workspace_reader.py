@@ -940,7 +940,10 @@ def _filed_rows(
                 local_record=local_record,
                 local_record_at=local_at,
                 aeat_shown_at=None if evidence is None else aeat_shown_at,
-                receipt_confirmed=evidence is not None and evidence.justificante_verified,
+                # A register that conflicts or raises a concern cannot stand behind a receipt.
+                receipt_confirmed=match is not AeatSyncFiledMatch.DIFFERING
+                and evidence is not None
+                and evidence.justificante_verified,
                 differences=(AeatSyncFiledDifference.STATUS,) if match is AeatSyncFiledMatch.DIFFERING else (),
             )
         )

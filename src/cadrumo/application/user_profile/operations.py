@@ -18,6 +18,7 @@ from ...core.operations import (
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
+    EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES,
     OperationBaselinePolicy,
     OperationCapabilities,
     OperationConflictScope,
@@ -153,22 +154,6 @@ def _definition(
     )
 
 
-_PROFILE_VIEW_CAPABILITIES = OperationCapabilities(
-    # A page read has no effect that lost observation could conceal, so it lives
-    # only as long as the worker that reads it and is never journaled to disk.
-    durability=OperationDurability.EPHEMERAL,
-    cancellation=OperationCancellation.UNSUPPORTED,
-    deadline=OperationDeadline.ABSENT,
-    replay=OperationReplayPolicy.NONE,
-    baseline=OperationBaselinePolicy.NONE,
-    request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-    sensitive_input=OperationSensitiveInputPolicy.NONE,
-    conflict_scope=OperationConflictScope.NONE,
-    owned_resources=frozenset(),
-    permitted_effects=frozenset({OperationEffect.NONE}),
-    close_policy=OperationClosePolicy.DETACH_ALLOWED,
-)
-
 USER_PROFILE_OPERATION_DEFINITIONS = (
     _definition(
         definition_id=PROFILE_VIEW_OPERATION_DEFINITION_ID,
@@ -176,7 +161,7 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         result_type=ProfileViewOperationResult,
         executor_type=ProfileViewOperationExecutor,
         phase_codes=PROFILE_VIEW_PHASES,
-        capabilities=_PROFILE_VIEW_CAPABILITIES,
+        capabilities=EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES,
     ),
     _definition(
         definition_id=PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,

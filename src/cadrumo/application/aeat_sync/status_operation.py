@@ -23,7 +23,9 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
+from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
@@ -37,7 +39,7 @@ from ..live.live_operation_registration import (
     resolve_whole_profile_read_access,
 )
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
-from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
+from ..operations.capabilities import EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
@@ -72,8 +74,8 @@ _STORE_UNREADABLE: Final[NamespacedId] = "aeat_sync.status.store_unreadable"
 _TAX_ID_MISSING: Final[NamespacedId] = "aeat_sync.status.profile_tax_id_missing"
 """The profile declares no tax number, so evidence cannot be scoped to it."""
 
-_STORE_READ_FAILURES: Final = (LookupError, OSError, ValueError)
-"""Failures that mean one store could not be read, as opposed to an access refusal."""
+_STORE_READ_FAILURES: Final = (CadrumoError, LookupError, OSError, ValueError)
+"""Failures that mean one store could not be read; an access refusal is re-raised before this applies."""
 
 
 class AeatSyncStatusRequest(CredentialFreeOperationRequest):
@@ -190,7 +192,15 @@ def load_aeat_sync_status(
         notifications=_notification_capture(notifications),
         iva_wallet_captured_at=guarded((AeatSyncStatusArea.IVA_WALLET,), ports.iva_wallet_captured_at, None),
         borrador_imported_at=max((snapshot.captured_at for snapshot in borrador), default=None),
-        identity_checked_at=max((observation.checked_at for observation in identity), default=None),
+        identity_checked_at=max(
+            (
+                observation.checked_at
+                for observation in identity
+                # An unknown verdict is a check that got no answer, not a capture.
+                if observation.verdict is not IdentityCheckVerdict.UNKNOWN
+            ),
+            default=None,
+        ),
         unreadable=unreadable,
     )
     years: tuple[FilingYear, ...] = tuple(sorted(operation.supported_filing_years().years))
@@ -248,7 +258,7 @@ def build_aeat_sync_status_definition(ports_factory: AeatSyncStatusPortsFactory)
         executor_type=AeatSyncStatusExecutor,
         build=lambda: AeatSyncStatusExecutor(ports_factory),
         phase_codes=_PHASES,
-        capabilities=RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
+        capabilities=EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES,
     )
 
 
