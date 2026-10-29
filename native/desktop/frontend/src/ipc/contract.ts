@@ -1082,7 +1082,9 @@ export type SetupRefusalCode =
    * can pull. */
   | "model_selection_unusable"
   /** The engine did not remove the model. */
-  | "model_not_removed";
+  | "model_not_removed"
+  /** The engine did not remove the browser. */
+  | "browser_not_removed";
 
 export type SetupRefusal = { code: SetupRefusalCode };
 
@@ -1742,6 +1744,8 @@ export interface HostCommands {
     args: Authorized<{ model: string }>;
     result: DesktopSetup;
   };
+  /** Removes the browser for the tax agency website from this computer. */
+  desktop_setup_remove_browser: { args: Authorized; result: DesktopSetup };
   /** Opens Google's own sign-in page for the signed-in profile; `google`
    * follows the attempt. */
   desktop_google_sign_in: { args: Authorized; result: DesktopSetup };

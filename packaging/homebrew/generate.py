@@ -8,6 +8,7 @@ import sys
 import tarfile
 import tomllib
 from dataclasses import dataclass
+from email.message import Message
 from email.parser import Parser
 from pathlib import Path
 from typing import Any
@@ -142,6 +143,18 @@ def _one(cohort_dir: Path, pattern: str) -> Path:
     return matches[0].resolve(strict=True)
 
 
+def _read_sdist_metadata(path: Path) -> Message:
+    with tarfile.open(path, mode="r:gz") as archive:
+        metadata_members = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
+        if len(metadata_members) != 1:
+            raise SystemExit(f"expected one PKG-INFO member in {path.name}")
+        handle = archive.extractfile(metadata_members[0])
+        if handle is None:
+            raise SystemExit(f"could not read PKG-INFO from {path.name}")
+        metadata = Parser().parsestr(handle.read().decode("utf-8"))
+    return metadata
+
+
 def _sdist_artifact(
     cohort_dir: Path,
     pattern: str,
@@ -151,14 +164,7 @@ def _sdist_artifact(
 ) -> SdistArtifact:
     path = _one(cohort_dir, pattern)
     try:
-        with tarfile.open(path, mode="r:gz") as archive:
-            metadata_members = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
-            if len(metadata_members) != 1:
-                raise SystemExit(f"expected one PKG-INFO member in {path.name}")
-            handle = archive.extractfile(metadata_members[0])
-            if handle is None:
-                raise SystemExit(f"could not read PKG-INFO from {path.name}")
-            metadata = Parser().parsestr(handle.read().decode("utf-8"))
+        metadata = _read_sdist_metadata(path)
     except (tarfile.TarError, UnicodeDecodeError) as exc:
         raise SystemExit(f"invalid source distribution {path.name}: {exc}") from exc
     name = metadata.get("Name")
@@ -373,7 +379,7 @@ def _platform_resource_body(
     return "".join(blocks)
 
 
-def _resource_blocks(resources: tuple[Resource, ...]) -> str:
+def _validate_resource_placements(resources: tuple[Resource, ...]) -> None:
     placements: dict[tuple[str, str], tuple[str, str]] = {}
     for resource in resources:
         material = (resource.url, resource.sha256)
@@ -383,6 +389,10 @@ def _resource_blocks(resources: tuple[Resource, ...]) -> str:
             if previous is not None and previous != material:
                 raise SystemExit(f"platform lock material overlaps for Homebrew resource: {resource.name} on {target}")
             placements[placement] = material
+
+
+def _resource_blocks(resources: tuple[Resource, ...]) -> str:
+    _validate_resource_placements(resources)
     all_targets = frozenset(_TARGETS)
     common = tuple(resource for resource in resources if resource.platforms == all_targets)
     conditional = tuple(resource for resource in resources if resource.platforms != all_targets)

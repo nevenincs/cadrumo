@@ -67,6 +67,7 @@ import {
   MISSING,
   UNREADABLE,
 } from "./fixtures/logs";
+import { fixtureModelPresence } from "./fixtures/agentCatalog";
 import { openFixtureTerminal } from "./fixtures/terminal";
 import { setupFixture, type SetupShape } from "./setupFixture";
 import { SCENARIO_HOST_MARKER } from "./marker";
@@ -504,6 +505,9 @@ export function scenarioHost(
     shape: options.modelo ?? "fixture",
   });
 
+  // The models this made-up computer holds: setup downloads and removes
+  // them, and the agent's catalog reports them.
+  const modelPresence = fixtureModelPresence();
   const providerFixture = providerSettingsFixture({
     say,
     wait: () => wait(options.latencyMs),
@@ -521,6 +525,7 @@ export function scenarioHost(
   } = fixtureAgent({
     say,
     wait: () => wait(options.latencyMs),
+    models: modelPresence,
     signedIn,
     readable,
     empty: scenario.views === "empty",
@@ -560,6 +565,7 @@ export function scenarioHost(
         latencyMs: options.latencyMs,
         say,
         readable: () => presence === "present",
+        models: modelPresence,
       })
     : undefined;
 

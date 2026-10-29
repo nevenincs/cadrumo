@@ -33,6 +33,7 @@ import type { AgentLocalModels } from "../ipc/contract";
 import {
   FIXTURE_CATALOG,
   FIXTURE_DECLARED_CATALOG,
+  type FixtureModelPresence,
 } from "./fixtures/agentCatalog";
 import {
   FIXTURE_SKILLS,
@@ -475,6 +476,7 @@ export function fixtureAgent({
   documents = "stored",
   skills = "bundled",
   catalog = "served",
+  models,
 }: {
   say: (call: string) => void;
   wait: () => Promise<void>;
@@ -494,6 +496,8 @@ export function fixtureAgent({
   /** How the agent serves its skills to `/`. */
   skills?: FixtureSkills;
   catalog?: FixtureCatalog;
+  /** Which models this computer holds, as the served catalog reports them. */
+  models?: FixtureModelPresence;
 }): {
   agent: AgentViews;
   session: AgentSession;
@@ -1137,12 +1141,13 @@ export function fixtureAgent({
             ).filter((lane) => !off.has(lane.id)),
           },
         };
-      return {
+      const served = {
         ...FIXTURE_CATALOG,
         providers: (FIXTURE_CATALOG.providers ?? []).filter(
           (lane) => !off.has(`${lane.provider_id}_${lane.transport}`),
         ),
       };
+      return models ? models.report(served) : served;
     },
     async localModels() {
       say("agentLocalModels");

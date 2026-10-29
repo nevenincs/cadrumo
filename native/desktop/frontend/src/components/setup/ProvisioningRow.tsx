@@ -256,7 +256,9 @@ export function ProvisioningRow({
         >
           {name}
         </h4>
-        {!live && row.state !== "ready" && (
+        {/* A ready row needs nothing, and an unknown one is checked again,
+            not set up: neither states a download. */}
+        {!live && row.state !== "ready" && row.state !== "unknown" && (
           <span data-setup-size className="text-sm text-muted-foreground">
             {rowSizeWords(t, row.size_bytes, (bytes) =>
               formatSize(locale, bytes),

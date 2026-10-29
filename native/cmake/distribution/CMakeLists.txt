@@ -60,7 +60,7 @@ include(../CachedCommand.cmake)
 set(installation_inputs "${CADRUMO_PAYLOAD}" "${CADRUMO_PATH_GENERATED}/identity.json"
   "${CMAKE_BINARY_DIR}/build-paths.json" "${CADRUMO_SOURCE_ROOT}/LICENSE" "${CADRUMO_SOURCE_ROOT}/NOTICE"
   "${CADRUMO_SOURCE_ROOT}/docs/_static/cadrumo-icon.svg")
-foreach(helper installation installation_plan installation_currency installation_filesystem installation_reuse distribution_prepare build_paths hashing layout package_inventory docs_stage macos_launchagent linux_desktop_runtime)
+foreach(helper installation installation_plan installation_currency installation_filesystem installation_reuse distribution_prepare build_paths hashing layout package_inventory docs_stage docs_scan docs_errors macos_launchagent linux_desktop_runtime)
   list(APPEND installation_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
 endforeach()
 if(CADRUMO_TARGET MATCHES "^linux-")
@@ -272,7 +272,7 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
         CONTENT "${CADRUMO_WIX_EXECUTABLE}\n${msi_compiler_status}\n${msi_compiler_version}\n")
       list(APPEND msi_inputs "${msi_compiler_identity}")
     endif()
-    foreach(helper windows_msi windows_msi_build windows_msi_database windows_msi_identity windows_msi_single windows_msi_paths
+    foreach(helper windows_msi windows_msi_source windows_msi_components windows_msi_contract windows_msi_build windows_msi_verify windows_msi_permissions windows_msi_database windows_msi_identity windows_msi_single windows_msi_paths
         installation installation_filesystem identity layout package_inventory build_paths hashing)
       list(APPEND msi_inputs "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/${helper}.py")
     endforeach()

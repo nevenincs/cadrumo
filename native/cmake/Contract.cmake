@@ -11,6 +11,16 @@ set(platform_contract_inputs "${CADRUMO_SOURCE_ROOT}/native/platforms/${platform
 set(contract_inputs "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
   "${CADRUMO_SOURCE_ROOT}/native/application-environment.toml" ${platform_contract_inputs}
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/application_environment.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_compile.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_declaration_primitives.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_root.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_models.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_declaration_constants.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_profiles.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_components.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_launch_vectors.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_path.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_reference.py"
   "${CADRUMO_SOURCE_ROOT}/dev/packaging/google_oauth.py"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config_google.py"
   "${CADRUMO_SOURCE_ROOT}/src/cadrumo/core/config_google_client.py"
@@ -48,6 +58,7 @@ cadrumo_cached_command(contract_command native_contract SHARED
     "${CADRUMO_SOURCE_ROOT}/uv.lock" "${CADRUMO_DEV_PYTHON}"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/release-python-version" "${CADRUMO_SOURCE_ROOT}/.python-version"
     "${CADRUMO_BUILD_HELPER}"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cargo_command.py"
   OUTPUTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json")
 cadrumo_build_step(contract_comment native_contract GROUP contract
   SUMMARY "generate the native package contract for Rust, C and the assembler"

@@ -793,6 +793,37 @@ impl Components {
         })
     }
 
+    /// Removes the browser and takes the rows the removal reads after it. Refused while
+    /// the browser sets up, since that setup holds its writer lock.
+    pub async fn remove_browser(&self) -> Result<(), Stop> {
+        let running = self.shared.update(|window| {
+            window.closed
+                || window
+                    .setups
+                    .get(&ItemId::Browser)
+                    .is_some_and(SetupTrack::live)
+        });
+        if running {
+            return Err(Refusal::Busy.into());
+        }
+        let engines = self.engines.clone();
+        let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
+            let Installation { mut engine } =
+                engines().map_err(|error| Stop::Unavailable(engine_unavailable(error)))?;
+            Ok(engine.remove(&[ItemId::Browser], &mut |_| {}))
+        })
+        .await
+        .map_err(|error| Stop::unavailable("setup_worker_join").because(error))??;
+        self.shared.update(|window| match removed.outcome {
+            Ended::Removed => {
+                window.rows = Some((removed.mode, removed.rows));
+                Ok(())
+            }
+            Ended::Busy => Err(Refusal::Busy.into()),
+            _ => Err(Refusal::BrowserNotRemoved.into()),
+        })
+    }
+
     /// Stops everything this window started and waits for its workers.
     pub async fn close(&self) {
         let workers = self.shared.update(|window| {

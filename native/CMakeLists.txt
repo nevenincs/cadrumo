@@ -11,7 +11,9 @@ set(CADRUMO_HELPER "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.cmake_buil
 file(GLOB_RECURSE native_helper_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/dev/packaging/native/*.py")
 include("${PROJECT_SOURCE_DIR}/native/cmake/Contract.cmake")
 set(shared_inputs "${PROJECT_BINARY_DIR}/build-paths.json"
-  "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_paths.py" "${CADRUMO_BUILD_HELPER}" "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py")
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/build_paths.py" "${CADRUMO_BUILD_HELPER}"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_cache.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/action_selection.py")
 include("${PROJECT_SOURCE_DIR}/native/cmake/PackageInputs.cmake")
 cadrumo_provision_helpers(provision_helper_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
 set(sdk_inputs ${shared_inputs} ${contract_inputs} ${provision_helper_inputs}

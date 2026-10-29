@@ -49,6 +49,9 @@ pub enum Refusal {
     /// The engine did not remove the model; what is stored is unchanged or reads
     /// again on the next check.
     ModelNotRemoved,
+    /// The engine did not remove the browser; what is stored is unchanged or reads
+    /// again on the next check.
+    BrowserNotRemoved,
 }
 
 /// What a command refuses with. Only the code crosses to the window.
@@ -728,6 +731,8 @@ pub enum Action {
     RemoveModel {
         model: String,
     },
+    /// Removing the browser for the tax agency website from this computer.
+    RemoveBrowser,
     GoogleSignIn,
     GoogleSignOut,
 }
@@ -801,6 +806,11 @@ pub fn remove_model_request(model: &str) -> Result<Action, ApplicationError> {
     Ok(Action::RemoveModel {
         model: model.to_owned(),
     })
+}
+
+/// Removing the browser for the tax agency website.
+pub fn remove_browser_request() -> Action {
+    Action::RemoveBrowser
 }
 
 /// Cancelling the setup this window started.
@@ -1059,6 +1069,7 @@ mod tests {
         );
         assert!(remove_model_request("").is_err());
         assert!(remove_model_request("not a model").is_err());
+        assert_eq!(remove_browser_request(), Action::RemoveBrowser);
     }
 
     fn with_parts() -> Value {
@@ -1196,6 +1207,7 @@ mod tests {
             (Refusal::NotCancellable, "not_cancellable"),
             (Refusal::ModelSelectionUnusable, "model_selection_unusable"),
             (Refusal::ModelNotRemoved, "model_not_removed"),
+            (Refusal::BrowserNotRemoved, "browser_not_removed"),
         ] {
             assert_eq!(
                 serde_json::to_value(CommandFailure::from(refusal)).unwrap(),

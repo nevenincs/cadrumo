@@ -106,6 +106,7 @@ const NO_CONTROL: SetupControl = {
   answer: () => undefined,
   cancel: () => undefined,
   removeModel: () => Promise.resolve("unavailable"),
+  removeBrowser: () => Promise.resolve("unavailable"),
   signInGoogle: () => undefined,
   signOutGoogle: () => undefined,
   clearRefusal: () => undefined,

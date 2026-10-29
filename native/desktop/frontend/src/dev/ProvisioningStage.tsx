@@ -8,6 +8,7 @@ import {
 } from "../shell/provisioning";
 import { useSetup } from "../shell/setup";
 import { fixtureAgent } from "./agentFixtureHost";
+import type { FixtureModelPresence } from "./fixtures/agentCatalog";
 import { providerSettingsFixture } from "./providerSettingsFixture";
 import { setupFixture, type SetupShape } from "./setupFixture";
 
@@ -31,6 +32,7 @@ export function ProvisioningStage({
   latencyMs,
   starts = [],
   openPanel = false,
+  models,
   children,
 }: {
   shape: SetupShape;
@@ -38,6 +40,9 @@ export function ProvisioningStage({
   starts?: readonly StagedStart[];
   /** Opens the provisioning panel at once. */
   openPanel?: boolean;
+  /** Where a model the setup downloads is marked held, for the agent of
+   * `stageLocalAi` to report. */
+  models?: FixtureModelPresence;
   children: ReactNode;
 }) {
   const host = useMemo(
@@ -47,8 +52,9 @@ export function ProvisioningStage({
         latencyMs,
         say: () => undefined,
         readable: () => true,
+        ...(models ? { models } : {}),
       }),
-    [shape, latencyMs],
+    [shape, latencyMs, models],
   );
   const control = useSetup(host, "Demo profile", true);
   const store = useProvisioningStore(control, "Demo profile");
@@ -120,8 +126,8 @@ export function stageListHost(lane: string, added?: string): LocalModelHost {
 }
 
 /** The made-up profile's provider settings and agent, where the panel reads
- * the local AI's model lists from. */
-export function stageLocalAi(): LocalAiSource {
+ * the local AI's model lists from; its catalog reports `models` as held. */
+export function stageLocalAi(models?: FixtureModelPresence): LocalAiSource {
   const { settings } = providerSettingsFixture({
     say: () => undefined,
     wait: () => Promise.resolve(),
@@ -136,6 +142,7 @@ export function stageLocalAi(): LocalAiSource {
     stream: "steady",
     asks: null,
     refused: () => new Error("refused"),
+    ...(models ? { models } : {}),
   });
   return { session, providerSettings: settings, reader: "Demo profile" };
 }

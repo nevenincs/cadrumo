@@ -47,6 +47,9 @@ export type SetupControl = {
   /** Removes one local model no role selects; resolves with the refusal's
    * code, or null once it is removed. */
   removeModel(model: string): Promise<string | null>;
+  /** Removes the browser for the tax agency website; resolves with the
+   * refusal's code, or null once it is removed. */
+  removeBrowser(): Promise<string | null>;
   /** The profile's Google account, which rides the same session but is not
    * setup: sign in through Google's own page, or remove the sign-in. */
   signInGoogle(): void;
@@ -256,6 +259,22 @@ export function useSetup(
     [setup, accept, owner],
   );
 
+  // A removal answers its own refusal to the control that asked, not the
+  // panel's shared one.
+  const removal = useCallback(
+    (removed: Promise<DesktopSetup> | undefined): Promise<string | null> =>
+      removed
+        ? removed.then(
+            (state) => {
+              accept(checked(state));
+              return null;
+            },
+            (error: unknown) => failureCode(error),
+          )
+        : Promise.resolve("unavailable"),
+    [accept],
+  );
+
   const pending = commands.owner === owner && commands.pending > 0;
   const refusal = commands.owner === owner ? commands.refusal : null;
   return useMemo(
@@ -280,16 +299,8 @@ export function useSetup(
         if (!run) return;
         send((served) => served.cancel(run.operation_id));
       },
-      removeModel: (model) =>
-        setup
-          ? setup.removeModel(model).then(
-              (state) => {
-                accept(checked(state));
-                return null;
-              },
-              (error: unknown) => failureCode(error),
-            )
-          : Promise.resolve("unavailable"),
+      removeModel: (model) => removal(setup?.removeModel(model)),
+      removeBrowser: () => removal(setup?.removeBrowser()),
       signInGoogle: () => send((served) => served.signInGoogle()),
       signOutGoogle: () => send((served) => served.signOutGoogle()),
       clearRefusal: () =>
@@ -297,6 +308,6 @@ export function useSetup(
           held.refusal === null ? held : { ...held, refusal: null },
         ),
     }),
-    [offered, read, snapshot, pending, refusal, send, setup, accept],
+    [offered, read, snapshot, pending, refusal, send, setup, removal],
   );
 }

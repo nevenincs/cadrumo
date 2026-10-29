@@ -3,9 +3,7 @@
 //! Every Cadrumo-managed process is the `cadrumo` image, so Windows shows the whole tree
 //! under one application. No argument is the desktop; `--role NAME` selects another role
 //! before any window or webview exists. A role name grants nothing by itself: admission
-//! still proves how a peer was started. Every role but `components` runs inside the linked
-//! interpreter host; `components` runs the native component engine and hosts no
-//! interpreter.
+//! still proves how a peer was started. Every role runs inside the linked interpreter host.
 
 use std::ffi::OsStr;
 
@@ -22,9 +20,6 @@ pub enum Role {
     Cli,
     /// The package interpreter itself, which the runtime's workers and its KDF child run.
     Python,
-    /// The component engine, which sets up, checks and removes the browser and the local
-    /// AI for the command line, the TUI and the MCP service. It hosts no interpreter.
-    Components,
 }
 
 /// What a role runs inside the linked interpreter host.
@@ -46,14 +41,13 @@ pub enum RoleRefusal {
 }
 
 impl Role {
-    pub const ALL: [Role; 4] = [Role::Runtime, Role::Cli, Role::Python, Role::Components];
+    pub const ALL: [Role; 3] = [Role::Runtime, Role::Cli, Role::Python];
 
     pub const fn name(self) -> &'static str {
         match self {
             Role::Runtime => "runtime",
             Role::Cli => "cli",
             Role::Python => "python",
-            Role::Components => "components",
         }
     }
 
@@ -63,36 +57,32 @@ impl Role {
             Role::Runtime => &[ROLE_ARGUMENT, "runtime"],
             Role::Cli => &[ROLE_ARGUMENT, "cli"],
             Role::Python => &[ROLE_ARGUMENT, "python"],
-            Role::Components => &[ROLE_ARGUMENT, "components"],
         }
     }
 
-    /// What the role runs inside the linked interpreter host, or `None` for a role that
-    /// hosts no interpreter.
-    pub fn hosted(self) -> Option<HostedImage> {
+    /// What the role runs inside the linked interpreter host.
+    pub fn hosted(self) -> HostedImage {
         match self {
-            Role::Runtime => Some(HostedImage {
+            Role::Runtime => HostedImage {
                 image: "cadrumo-runtime",
                 entrypoint: Some("cadrumo-runtime"),
-            }),
-            Role::Cli => Some(HostedImage {
+            },
+            Role::Cli => HostedImage {
                 image: "aeat",
                 entrypoint: Some("aeat"),
-            }),
-            Role::Python => Some(HostedImage {
+            },
+            Role::Python => HostedImage {
                 image: "python",
                 entrypoint: None,
-            }),
-            Role::Components => None,
+            },
         }
     }
 
     /// The role that runs the console script `entrypoint`, if one does.
     pub fn hosting(entrypoint: &str) -> Option<Role> {
-        Role::ALL.into_iter().find(|role| {
-            role.hosted()
-                .is_some_and(|hosted| hosted.entrypoint == Some(entrypoint))
-        })
+        Role::ALL
+            .into_iter()
+            .find(|role| role.hosted().entrypoint == Some(entrypoint))
     }
 
     fn named(name: &OsStr) -> Option<Role> {
@@ -134,10 +124,6 @@ mod tests {
         assert_eq!(forwarded, &given[2..]);
         assert_eq!(Role::Runtime.arguments(), &["--role", "runtime"]);
         assert_eq!(Role::Cli.arguments(), &["--role", "cli"]);
-        let given = arguments(&["--role", "components", "status", "--full"]);
-        let (role, forwarded) = select(&given).unwrap().unwrap();
-        assert_eq!(role, Role::Components);
-        assert_eq!(forwarded, &given[2..]);
     }
 
     #[test]
@@ -163,6 +149,7 @@ mod tests {
             "Runtime",
             "desktop",
             "Python",
+            "components",
             "Components",
             "component",
             "interpreter",
@@ -177,22 +164,18 @@ mod tests {
     }
 
     #[test]
-    fn every_interpreter_role_hosts_a_declared_launch_image_and_components_hosts_none() {
+    fn every_role_hosts_a_declared_launch_image() {
         for role in Role::ALL {
             assert_eq!(role.arguments()[1], role.name());
             assert_eq!(select(role.arguments()).unwrap().unwrap().0, role);
-            let Some(hosted) = role.hosted() else {
-                assert_eq!(role, Role::Components);
-                continue;
-            };
+            let hosted = role.hosted();
             assert!(!hosted.image.is_empty());
             if let Some(entrypoint) = hosted.entrypoint {
                 assert!(!entrypoint.is_empty());
                 assert_eq!(Role::hosting(entrypoint), Some(role));
             }
         }
-        assert_eq!(Role::Python.hosted().unwrap().entrypoint, None);
-        assert_eq!(Role::Components.hosted(), None);
+        assert_eq!(Role::Python.hosted().entrypoint, None);
         for entrypoint in [
             "cadrumo-agent-service",
             "cadrumo-mcp",

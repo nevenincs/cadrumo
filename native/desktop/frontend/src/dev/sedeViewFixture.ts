@@ -54,6 +54,11 @@ export type SedeViewFixtureControls = {
   phase(phase: SedeViewPhase): void;
   /** Ends the view as the host would, without the window asking. */
   end(reason: SedeViewEndReason, publication?: SedeViewPublication): void;
+  /** Holds the session's publication when the window closes the view, so a
+   * scenario sees the view closing until it calls `publish`. */
+  holdPublication(): void;
+  /** Publishes the session of a view held while closing, which ends it. */
+  publish(): void;
   /** How many input events of each kind the made-up page has received. */
   received(): Readonly<Record<string, number>>;
   /** The newest input events the made-up page received, oldest first. */
@@ -96,6 +101,8 @@ type Open = {
   answers: SedeViewAnswer[];
   last: string;
   transfers: number;
+  /** A scenario publishes the closing view's session itself. */
+  held: boolean;
 };
 
 async function draw(open: Open): Promise<ArrayBuffer> {
@@ -270,6 +277,12 @@ export function sedeViewFixture({
       void frame(open);
     },
     end: (reason, publication) => finish(open, reason, publication ?? null),
+    holdPublication() {
+      open.held = true;
+    },
+    publish() {
+      if (open.phase === "closing") finish(open, "closed", "published");
+    },
     received: () => ({ ...open.received }),
     inputs: () => [...open.inputs],
     images: () => open.sequence,
@@ -392,7 +405,11 @@ export function sedeViewFixture({
         say("sedeViewClose");
         open.phase = "closing";
         open.listener({ kind: "closing", view: open.id });
-        window.setTimeout(() => finish(open, "closed", "published"), publishMs);
+        if (!open.held)
+          window.setTimeout(
+            () => finish(open, "closed", "published"),
+            publishMs,
+          );
         return undefined;
       },
     };
@@ -420,6 +437,7 @@ export function sedeViewFixture({
         answers: [],
         last: "nothing yet",
         transfers: 0,
+        held: false,
       };
       current = open;
       if (needs !== undefined) {

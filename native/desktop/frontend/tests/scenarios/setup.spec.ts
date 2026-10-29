@@ -449,6 +449,26 @@ test("offline, the elements that need the network say so and offer a check", asy
   await noInternalWords(target);
 });
 
+test("builds no current receipt records are checked again, with no download, and the check reads them ready", async ({
+  page: target,
+}) => {
+  await open(target, "unrecorded");
+  const row = browserRow(target);
+  await once(row, label("desktop.setup.state.unknown"));
+  await expect(row).not.toContainText(NOT_SET_UP);
+  // Checked again, not set up: no size, not even a zero one.
+  await expect(row.locator("[data-setup-size]")).toHaveCount(0);
+  await expect(setUpButton(row)).toHaveCount(0);
+  await row
+    .getByRole("button", { name: label("desktop.setup.action.check_again") })
+    .click();
+  await expect(row).toContainText(label("desktop.setup.state.ready"));
+  const calls = await hostCalls(target);
+  expect(calls).toContain("setup.verify browser");
+  expect(calls.filter((call) => call.startsWith("setup.start"))).toEqual([]);
+  await noInternalWords(target);
+});
+
 test("an interrupted setup resumes without a second approval while its plan is unchanged", async ({
   page: target,
 }) => {
@@ -793,10 +813,58 @@ test("a ready element says so and offers nothing to do", async ({
   await expect(browserRow(target)).toContainText(
     label("desktop.setup.state.ready"),
   );
-  await expect(browserRow(target).getByRole("button")).toHaveCount(0);
+  // Only its removal: nothing to set up or check.
+  await expect(browserRow(target).getByRole("button")).toHaveCount(1);
+  await expect(
+    browserRow(target).getByRole("button", {
+      name: label("desktop.setup.remove"),
+    }),
+  ).toBeVisible();
   expect(
     (await hostCalls(target)).filter((call) => call.startsWith("setup.start")),
   ).toEqual([]);
+});
+
+test("a ready browser is removed only after a second confirmation, and then offers its setup again", async ({
+  page: target,
+}) => {
+  await open(target, "ready");
+  await (await palette(target, paletteItem(BROWSER))).click();
+  const row = browserRow(target);
+  const remove = row.getByRole("button", {
+    name: label("desktop.setup.remove"),
+    exact: true,
+  });
+  await remove.click();
+  await expect(row).toContainText(label("desktop.setup.remove_confirm"));
+  // Keeping it asks nothing of the host.
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_keep") })
+    .click();
+  await expect(remove).toBeVisible();
+  expect(await hostCalls(target)).not.toContain("setup.removeBrowser");
+  await remove.click();
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_confirm_yes") })
+    .click();
+  await expect(row).toContainText(NOT_SET_UP);
+  expect(await hostCalls(target)).toContain("setup.removeBrowser");
+  await expect(setUpButton(row)).toBeVisible();
+  // Nothing is left to remove.
+  await expect(remove).toHaveCount(0);
+  await noInternalWords(target);
+});
+
+test("a browser that is not on this computer offers no removal", async ({
+  page: target,
+}) => {
+  await open(target, "fresh");
+  await expect(panel(target)).toBeVisible();
+  await expect(
+    browserRow(target).getByRole("button", {
+      name: label("desktop.setup.remove"),
+    }),
+  ).toHaveCount(0);
 });
 
 test("a tool refused for something setup does not recover opens nothing", async ({

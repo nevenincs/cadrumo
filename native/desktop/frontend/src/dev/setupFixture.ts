@@ -14,7 +14,10 @@ import type {
 } from "../ipc/contract";
 import type { Setup } from "../shell/host";
 import { catalogLanes } from "../shell/localModelLanes";
-import { FIXTURE_CATALOG } from "./fixtures/agentCatalog";
+import {
+  FIXTURE_CATALOG,
+  type FixtureModelPresence,
+} from "./fixtures/agentCatalog";
 
 // The scenario host's component setup: a made-up computer with the browser
 // and the local AI (its program and its models, one item), each in the state
@@ -41,6 +44,10 @@ export const SETUP_SHAPES = [
   "busy",
   "unavailable",
   "google_signed_out",
+  /** The browser's builds are in place but no current receipt records them,
+   * as an earlier installer left them: it reads unknown with Check again,
+   * and the full check records it ready. */
+  "unrecorded",
   /** Nothing set up, and no status read settled until `readRows`. */
   "unread",
 ] as const;
@@ -200,6 +207,14 @@ function shaped(shape: SetupShape): Seed[] {
       set("browser", readied);
       set("local_ai", (held) => failed(held, "interrupted"));
       break;
+    case "unrecorded":
+      set("browser", (held) => ({
+        ...held,
+        state: "unknown",
+        recovery: "check_again",
+        size_bytes: null,
+      }));
+      break;
     case "offline":
       set("browser", (held) => failed(held, "offline"));
       set("local_ai", (held) => failed(held, "offline"));
@@ -228,11 +243,15 @@ export function setupFixture({
   latencyMs,
   say,
   readable,
+  models,
 }: {
   shape: SetupShape;
   latencyMs: number;
   say: (call: string) => void;
   readable: () => boolean;
+  /** Where a model this setup downloads or removes is marked on or off this
+   * computer, for the catalog to report. */
+  models?: FixtureModelPresence;
 }): Setup {
   const items = shaped(shape);
   let revision = 1;
@@ -543,6 +562,8 @@ export function setupFixture({
         ),
       };
       if (moved.result && !part.model) programReady = true;
+      if (moved.result?.failure === null && part.model)
+        models?.mark(part.model, true);
       const parts = entry.parts.map((held) => (held === part ? moved : held));
       const finished = parts.every((held) => held.result !== null);
       next = {
@@ -780,6 +801,15 @@ export function setupFixture({
       if (refused) return refused;
       operations += 1;
       mode = "full";
+      // The full check launches builds no receipt recorded, and records them.
+      if (shape === "unrecorded")
+        items
+          .filter(
+            (seed) =>
+              seed.row.state === "unknown" &&
+              (wanted ?? [seed.row.item]).includes(seed.row.item),
+          )
+          .forEach((seed) => (seed.row = readied(seed.row)));
       check = {
         operation_id: `verify-${operations}`,
         kind: "verify",
@@ -893,6 +923,17 @@ export function setupFixture({
       // Only the local AI's own setup holds its models.
       const localAi = runFor("local_ai");
       if (localAi && localAi.stage !== "settled") return refuse("busy");
+      models?.mark(model, false);
+      return Promise.resolve(publish());
+    },
+    removeBrowser() {
+      say("setup.removeBrowser");
+      const refused = ready();
+      if (refused) return refused;
+      const browser = runFor("browser");
+      if (browser && browser.stage !== "settled") return refuse("busy");
+      const seed = items.find((entry) => entry.row.item === "browser");
+      if (seed) seed.row = row("browser", "browser", 180 * MB);
       return Promise.resolve(publish());
     },
     signInGoogle() {

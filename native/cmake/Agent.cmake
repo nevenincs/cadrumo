@@ -22,6 +22,9 @@ list(FILTER agent_source_inputs EXCLUDE REGEX "/(tests|testing|service_tests|cap
 set(agent_inputs ${agent_source_inputs}
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime_archive.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime_inventory.py"
+  "${PROJECT_SOURCE_DIR}/dev/packaging/native/agent_runtime_validation.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/native/archive.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/runtime_wheel_selection.py"
   "${PROJECT_SOURCE_DIR}/dev/packaging/uv_constraints.py"

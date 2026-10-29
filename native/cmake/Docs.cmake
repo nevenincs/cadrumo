@@ -39,10 +39,11 @@ list(FILTER user_docs_inputs EXCLUDE REGEX "/\\.aeat-generated-export-transactio
 foreach(name pyproject.toml uv.lock native/package-layout.json dev/__init__.py dev/_paths.py dev/cache_root.py
     dev/packaging/__init__.py dev/packaging/command_execution.py dev/packaging/authority_staging.py
     dev/packaging/native/__init__.py dev/packaging/native/docs_build.py dev/packaging/native/docs_stage.py
+    dev/packaging/native/docs_scan.py dev/packaging/native/docs_errors.py
     dev/packaging/native/docs_input_identity.py dev/packaging/native/build_directory.py
     dev/packaging/native/package_inventory.py dev/packaging/native/build_paths.py dev/packaging/native/hashing.py
     dev/packaging/native/layout.py dev/packaging/native/identity.py dev/packaging/native/action_cache.py
-    dev/packaging/native/cmake_build.py dev/packaging/runtime_wheelhouse_contract.py)
+    dev/packaging/native/cmake_build.py dev/packaging/native/cargo_command.py dev/packaging/runtime_wheelhouse_contract.py)
   list(APPEND user_docs_inputs "${CADRUMO_SOURCE_ROOT}/${name}")
 endforeach()
 # The cli-sequence gate executes against the published authority the build selects.
@@ -135,7 +136,10 @@ cadrumo_cached_command(docs_stage_command user_docs_stage SHARED
     "${CADRUMO_SOURCE_ROOT}/dev/docs/language_roots.py" "${CADRUMO_SOURCE_ROOT}/dev/docs/build_paths.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/hashing.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cmake_build.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cargo_command.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_scan.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_errors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"
@@ -149,6 +153,8 @@ add_custom_target(user_docs_stage
     ${docs_target_args}
   DEPENDS user_docs_build "${CADRUMO_SOURCE_ROOT}/native/package-layout.json"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_stage.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_scan.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/docs_errors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/package_inventory.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_paths.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/build_directory.py"

@@ -1218,6 +1218,36 @@ async fn removing_a_model_deletes_it_alone_and_reads_the_rows_after() {
 }
 
 #[tokio::test]
+async fn removing_the_browser_deletes_its_staging_alone_and_reads_the_rows_after() {
+    let fixture = Fixture::new(Serving::Whole);
+    let root = fixture.root().join("components").join("playwright");
+    let staging = root.join(".cadrumo-staging");
+    let unrelated = root.join("notes");
+    std::fs::create_dir_all(&staging).unwrap();
+    std::fs::write(staging.join("partial"), b"x").unwrap();
+    std::fs::create_dir_all(&unrelated).unwrap();
+    let (components, replies) = serving(&fixture, Replies::default());
+    assert_eq!(refusal(components.remove_browser().await), Ok(()));
+    assert!(!staging.exists());
+    assert!(unrelated.exists(), "only the browser's own folders go");
+    assert!(!components.view().rows.is_empty());
+    assert!(replies.asked().is_empty(), "a removal consults no service");
+}
+
+#[tokio::test]
+async fn the_browser_is_not_removed_while_its_setup_holds_its_lock() {
+    let gate = Arc::new(Released::default());
+    let fixture = Fixture::new(Serving::Gated(gate.clone()));
+    let components = running(&fixture).await;
+    assert_eq!(
+        refusal(components.remove_browser().await),
+        Err(Refusal::Busy)
+    );
+    gate.release();
+    components.close().await;
+}
+
+#[tokio::test]
 async fn a_name_the_engine_cannot_pull_is_refused_before_any_engine_runs() {
     let fixture = Fixture::new(Serving::Whole);
     let (components, replies) = serving(&fixture, Replies::default());

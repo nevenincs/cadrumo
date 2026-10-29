@@ -15,6 +15,7 @@ test("each code the setup host refuses a command with has a sentence of its own"
     "not_cancellable",
     "unavailable",
     "model_selection_unusable",
+    "browser_not_removed",
   ];
 
   const keys = codes.map((code) => refusalWords(KEYS, code));

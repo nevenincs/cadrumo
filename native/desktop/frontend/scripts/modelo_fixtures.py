@@ -430,7 +430,7 @@ def _other_declaration(work: Any, modelo: str, period_code: str) -> Any:
     from cadrumo.application.modelo.work_lifecycle import create_work_unit
     from cadrumo.core.period import Period
     from cadrumo.domain.modelos.work_unit import WorkUnit
-    from cadrumo.entrypoints.adapter_composition import build_work_lifecycle_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
     from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork
 
     unit = work.work_unit
@@ -457,7 +457,7 @@ def _other_declaration(work: Any, modelo: str, period_code: str) -> Any:
 def _read_ports(bucket_id: str, operation: Any) -> Any:
     from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
     from cadrumo.application.modelo.workbench_read import ModeloWorkbenchReadPorts
-    from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 
     ports = build_calculation_action_ports(bucket_id=bucket_id, operation=operation)
     return ModeloWorkbenchReadPorts(
@@ -578,13 +578,13 @@ def _verify(work: Any) -> Any:
     """Check the declaration's current calculation through the modelo.work.verify executor."""
     from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-    from cadrumo.application.modelo.operation_definitions import (
+    from cadrumo.application.modelo.operation_definitions import ModeloWorkVerifyExecutor
+    from cadrumo.application.modelo.operation_shared import (
         MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
-        ModeloWorkVerifyExecutor,
         resolve_active_workflow_profile,
     )
     from cadrumo.application.modelo.work_verification_contracts import ModeloWorkVerifyRequest
-    from cadrumo.entrypoints.adapter_composition import build_verification_repository_bundle
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_verification_repository_bundle
 
     executor = ModeloWorkVerifyExecutor(
         certificate_secret_backend_factory=build_certificate_secret_backend,
@@ -609,7 +609,7 @@ def _check_clean(work: Any) -> Any:
         ModeloEditBindingAddressV1,
         ModeloEditBindingIntentKind,
     )
-    from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 
     applied = work.apply(
         binding=tuple(
@@ -653,13 +653,13 @@ def _record_filed(work: Any) -> BaseModel:
     """
     from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
-    from cadrumo.application.modelo.operation_definitions import (
+    from cadrumo.application.modelo.operation_definitions import ModeloWorkFileExecutor
+    from cadrumo.application.modelo.operation_shared import (
         MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
-        ModeloWorkFileExecutor,
         resolve_active_workflow_profile,
     )
     from cadrumo.application.modelo.work_filing_contracts import ModeloWorkFileApproval, ModeloWorkFileRequest
-    from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 
     checked = _check_clean(work)
     executor = ModeloWorkFileExecutor(
@@ -690,7 +690,7 @@ def _import_receipt(work: Any) -> None:
     from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
     from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
     from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
-    from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
+    from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
 
     modelo, period_code, _ = DECLARATIONS[0]
     unit = work.work_unit
@@ -727,13 +727,13 @@ def _export_file(work: Any, destination: Path) -> BaseModel:
     from cadrumo.adapters.persistence.profile.review_package_signing import (
         build_review_package_signing_keypair_capability,
     )
-    from cadrumo.application.modelo.operation_definitions import (
+    from cadrumo.application.modelo.export_operation import ModeloExportExecutor
+    from cadrumo.application.modelo.operation_shared import (
         MODELO_EXPORT_OPERATION_DEFINITION_ID,
-        ModeloExportExecutor,
         resolve_active_workflow_profile,
     )
     from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
-    from cadrumo.entrypoints.adapter_composition import build_modelo_export_ports
+    from cadrumo.entrypoints.adapter_composition_ports import build_modelo_export_ports
 
     executor = ModeloExportExecutor(
         profile_resolver=resolve_active_workflow_profile,
@@ -1101,7 +1101,7 @@ def _write_renewal(directory: Path, work: Any, form: str) -> BaseModel:
 
 def _write_apply(directory: Path, work: Any, form: str, intents: tuple[tuple[str, str], ...]) -> Any:
     """Apply the staged changes on the baseline of ``form``; its public result, or the refusal it raised."""
-    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+    from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 
     return _edit(
         work,
@@ -1218,7 +1218,7 @@ def _write_rebase(directory: Path, work: Any) -> None:
     baseline, and the check on it reports one dropped, one changed and one
     kept.
     """
-    from cadrumo.application.modelo.operation_definitions import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
+    from cadrumo.application.modelo.operation_shared import MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID
 
     staged_on, moved = "130-1T-rebase", "130-1T-rebased"
     _write_form(directory, work, f"modelo-{staged_on}")

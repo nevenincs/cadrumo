@@ -193,6 +193,51 @@ test("Download plans that model's setup in the lane, sized by the catalog where 
   await expect(target.getByRole("dialog")).toHaveCount(0);
 });
 
+test("a model whose download succeeds is on this computer, as the catalog then reports it", async ({
+  page: target,
+}) => {
+  await open(target);
+  const lane = await openLane(target);
+  const vision = lane.locator('li[data-model="synthetic-vision:1"]');
+  await expect(vision).toContainText(
+    label("desktop.providers.local_model_absent"),
+  );
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    })
+    .click();
+  await laneReview(lane)
+    .getByRole("button", {
+      name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
+    })
+    .click();
+  // The made-up setup moves only when the scenario steps it.
+  const settled = async () =>
+    (await vision.getAttribute("data-installed")) === "true";
+  for (let index = 0; index < 40 && !(await settled()); index += 1)
+    await target.evaluate(() => window.__scenarioSetup?.step("local_ai"));
+  await expect(vision).toHaveAttribute("data-installed", "true");
+  await expect(vision).toContainText(
+    label("desktop.providers.local_model_installed"),
+  );
+  await expect(vision).not.toContainText(
+    label("desktop.providers.local_model_absent"),
+  );
+  await expect(
+    vision.getByRole("button", {
+      name: label("desktop.providers.local_model_download"),
+    }),
+  ).toHaveCount(0);
+  // Removed again, the catalog reports it gone.
+  await vision
+    .getByRole("button", {
+      name: label("desktop.providers.local_model_remove"),
+    })
+    .click();
+  await expect(vision).toHaveAttribute("data-installed", "false");
+});
+
 test("an added model downloads with its size unknown", async ({
   page: target,
 }) => {

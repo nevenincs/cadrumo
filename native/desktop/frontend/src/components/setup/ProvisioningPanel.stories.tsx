@@ -5,7 +5,10 @@ import {
   stageLocalAi,
   type StagedStart,
 } from "../../dev/ProvisioningStage";
-import { FIXTURE_CATALOG } from "../../dev/fixtures/agentCatalog";
+import {
+  FIXTURE_CATALOG,
+  fixtureModelPresence,
+} from "../../dev/fixtures/agentCatalog";
 import type { SetupShape } from "../../dev/setupFixture";
 import { catalogLanes } from "../../shell/localModelLanes";
 import { ProvisioningPanel } from "./ProvisioningPanel";
@@ -31,12 +34,16 @@ type Args = {
 };
 
 function Screen({ shape, latencyMs, starts }: Args) {
-  const localAi = useMemo(() => stageLocalAi(), []);
+  // One made-up computer: a model the setup downloads is one the agent's
+  // catalog then reports held.
+  const models = useMemo(() => fixtureModelPresence(), []);
+  const localAi = useMemo(() => stageLocalAi(models), [models]);
   return (
     <ProvisioningStage
       shape={shape}
       latencyMs={latencyMs}
       starts={starts}
+      models={models}
       openPanel
     >
       <ProvisioningPanel

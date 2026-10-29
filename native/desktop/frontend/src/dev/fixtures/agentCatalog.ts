@@ -343,6 +343,43 @@ export const FIXTURE_CATALOG: AgentProviderCatalog = {
   providers: DECLARED_LANES.map(lane),
 };
 
+/** Which models of the made-up catalog the made-up computer holds: the
+ * setup fixture marks a model it downloaded or removed, and the made-up
+ * agent's served catalog reports it so, as cadrumo-agent's catalog reports
+ * what the local AI's program holds. A model never marked stays as written. */
+export type FixtureModelPresence = {
+  /** `model` is now on this computer, or no longer. */
+  mark(model: string, installed: boolean): void;
+  /** `catalog` with each marked model's `installed` as marked. */
+  report(catalog: AgentProviderCatalog): AgentProviderCatalog;
+};
+
+export function fixtureModelPresence(): FixtureModelPresence {
+  const marked = new Map<string, boolean>();
+  return {
+    mark(model, installed) {
+      marked.set(model, installed);
+    },
+    report: (catalog) => ({
+      ...catalog,
+      providers: (catalog.providers ?? []).map((served) => {
+        const models = served.catalog.models;
+        if (!models) return served;
+        return {
+          ...served,
+          catalog: {
+            ...served.catalog,
+            models: models.map((entry) => {
+              const installed = marked.get(entry.model);
+              return installed === undefined ? entry : { ...entry, installed };
+            }),
+          },
+        };
+      }),
+    }),
+  };
+}
+
 /** The same made-up lanes as cadrumo-agent's declared catalog states them,
  * in the envelope the service answers with while no agent is ready. */
 export const FIXTURE_DECLARED_CATALOG: AgentDeclaredCatalog = {

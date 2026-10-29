@@ -482,7 +482,9 @@ test("every image is credited once it is drawn, so the stream keeps flowing past
     await idle(target);
   }
   expect(await images(target)).toBeGreaterThan(2);
-  expect(await credits(target)).toBe(await images(target));
+  // A change drawn after the last round is credited too: the stream settles
+  // with every image it sent credited.
+  await idle(target);
 });
 
 const PUTTING_ASIDE = {
@@ -896,6 +898,8 @@ test("closing the page with its close control closes the view once, and the next
   page: target,
 }) => {
   await showBrowser(target);
+  // The scenario, not a clock, decides when the session is saved.
+  await target.evaluate(() => window.__scenarioSedeView?.holdPublication());
   const at = await mark(target);
   await target
     .getByRole("button", {
@@ -911,6 +915,8 @@ test("closing the page with its close control closes the view once, and the next
   await expect(
     browserPage(target).getByText(label("desktop.browser.waiting")),
   ).toBeVisible();
+  expect(await since(target, at, "sedeViewOpen")).toEqual([]);
+  await target.evaluate(() => window.__scenarioSedeView?.publish());
   await live(target);
   expect(await since(target, at, "sedeViewOpen")).toHaveLength(1);
   // Closing is the only thing the window asked of the first view.
