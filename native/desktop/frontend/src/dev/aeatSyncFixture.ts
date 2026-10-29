@@ -11,6 +11,10 @@ export type AeatSyncMode =
   | "never"
   /** Every state the page words, with counts. */
   | "mixed"
+  /** Each area was last brought one day inside its horizon. */
+  | "inside_horizon"
+  /** Each area was last brought one day past its horizon. */
+  | "past_horizon"
   /** The status read fails. */
   | "unavailable";
 
@@ -75,6 +79,47 @@ function mixed(now: number): AeatSyncArea[] {
   ];
 }
 
+/** The days after which the backend serves each area as possibly out of
+ * date. The page is told the state, never the number. */
+const HORIZON_DAYS = {
+  notifications: 7,
+  vat: 30,
+  census: 90,
+  filed: 90,
+  identity: 90,
+} as const;
+
+/** What the backend serves for areas last brought a day either side of
+ * their horizon. */
+function horizon(now: number, beyond: boolean): AeatSyncArea[] {
+  const areas = (
+    ["census", "filed", "notifications", "vat", "identity"] as const
+  ).map((area): AeatSyncArea => {
+    const at = new Date(
+      now - (HORIZON_DAYS[area] + (beyond ? 1 : -1)) * DAY,
+    ).toISOString();
+    return {
+      area,
+      state: beyond ? "possibly_stale" : "current",
+      captured_at: at,
+      last_attempt: { at, outcome: "brought" },
+      counts: [],
+      update: "bring",
+    };
+  });
+  return [
+    ...areas,
+    {
+      area: "borrador",
+      state: "never_brought",
+      captured_at: null,
+      last_attempt: null,
+      counts: [],
+      update: "import",
+    },
+  ];
+}
+
 function never(): AeatSyncArea[] {
   return (
     ["census", "filed", "notifications", "vat", "borrador", "identity"] as const
@@ -102,7 +147,12 @@ export function aeatSyncFixture(
         return Promise.reject({ code: "unavailable" });
       const status: AeatSyncStatus = {
         profile_id: "demo",
-        areas: mode === "never" ? never() : mixed(Date.now()),
+        areas:
+          mode === "never"
+            ? never()
+            : mode === "inside_horizon" || mode === "past_horizon"
+              ? horizon(Date.now(), mode === "past_horizon")
+              : mixed(Date.now()),
       };
       return Promise.resolve(status);
     },

@@ -44,7 +44,7 @@ export function ProfileSync({
     <Button
       size="xs"
       variant="outline"
-      disabled={busy || uncertain}
+      disabled={busy || uncertain || sync.recovering}
       onClick={() => void sync.start()}
     >
       {busy ? <Spinner /> : <Icon name="sync" size="xs" />}

@@ -36,7 +36,7 @@ test("the Modelo page's census entry starts the one Censo flow on the profile pa
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
 });
 
-test("leaving the profile page keeps the review until the person answers, and the entry then pulls once more", async ({
+test("leaving the profile page keeps the review until the person answers, and the entry reattaches to it", async ({
   page,
 }) => {
   await openDeclarations(page);
@@ -50,14 +50,24 @@ test("leaving the profile page keeps the review until the person answers, and th
     .click();
   await expect(review(page)).toBeVisible();
   expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
-  // Answering ends that pull; the entry then asks for a new one.
+  // Leaving without answering does not end the pull: the host still holds it,
+  // and the entry brings the page back to it instead of pulling again.
   await page.locator("[data-rail=declarations]").click();
   await page
     .getByRole("button", { name: label("desktop.navigation.leave.discard") })
     .click();
   await page.locator(".declarations-census").click();
   await expect(review(page)).toBeVisible();
-  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(2);
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
+  expect(await page.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);
+  // Answering ends that pull; the entry then asks for a new one.
+  await band(page)
+    .getByRole("button", { name: label("desktop.profile.censo.reject") })
+    .click();
+  await page.locator("[data-rail=declarations]").click();
+  await page.locator(".declarations-census").click();
+  await expect(review(page)).toBeVisible();
+  expect(await page.evaluate(() => window.__scenarioCenso!.pulls())).toBe(2);
 });
 
 test("a pull the check refuses is explained by the band and not started", async ({

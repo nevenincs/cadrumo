@@ -70,6 +70,25 @@ export const censoRequirementKeys = {
   ok: "auth.sync.requirement.ok",
 } as const;
 
+// The operation of each port's unfinished pull, per profile. The host holds
+// that pull's session across page changes; this is only the handle to read
+// it again, kept above any one mounting of the page.
+const unfinished = new WeakMap<CensoPort, Map<string, string>>();
+function recall(port: CensoPort, profile: string) {
+  return unfinished.get(port)?.get(profile);
+}
+function keep(port: CensoPort, profile: string, value: CensoSnapshot) {
+  let pulls = unfinished.get(port);
+  if (!pulls) unfinished.set(port, (pulls = new Map()));
+  if (
+    value.state === "done" ||
+    value.state === "stopped" ||
+    value.state === "failed"
+  )
+    pulls.delete(profile);
+  else pulls.set(profile, value.operation);
+}
+
 /** Codes after which a Censo act is known not to have happened. */
 const SETTLED_FAILURES = ["refused", "conflict", "not_signed_in"];
 type CensoError =
@@ -103,6 +122,8 @@ export function useCensoSync(
   const [readinessError, setReadinessError] = useState(false);
   const [uncertain, setUncertain] = useState(false);
   const [reload, setReload] = useState(0);
+  // The profile whose unfinished pull, if any, has been read again.
+  const [recovered, setRecovered] = useState<string | null>(null);
   const settled = useRef(onSettled);
   settled.current = onSettled;
   const id = profile?.profile_id ?? null;
@@ -111,6 +132,42 @@ export function useCensoSync(
   const state = snapshot?.state;
   const finished =
     state === "done" || state === "stopped" || state === "failed";
+  // A pull this window began and the host still holds is read again before
+  // anything is started: starting is not asked of a host whose answer to
+  // "is one running" is still on its way.
+  const recovering =
+    !!port &&
+    id !== null &&
+    !snapshot &&
+    recovered !== id &&
+    !!recall(port, id);
+
+  useEffect(() => {
+    if (!active || !port || id === null || snapshot || recovered === id) return;
+    const known = recall(port, id);
+    if (!known) {
+      setRecovered(id);
+      return;
+    }
+    let live = true;
+    void port
+      .status(id, known)
+      .then((value) => {
+        keep(port, id, value);
+        if (!live) return;
+        if (recall(port, id)) setSnapshot(value);
+        setRecovered(id);
+      })
+      .catch(() => {
+        // The host no longer holds it: the next pull is a new one.
+        if (!live) return;
+        unfinished.get(port)?.delete(id);
+        setRecovered(id);
+      });
+    return () => {
+      live = false;
+    };
+  }, [active, port, id, snapshot, recovered]);
 
   useEffect(() => {
     if (!active || !port || id === null || operation) return;
@@ -149,6 +206,7 @@ export function useCensoSync(
       clearTimeout(timer);
       try {
         const value = await port.status(id, operation);
+        keep(port, id, value);
         if (live) {
           setSnapshot(value);
           setActionError(null);
@@ -199,7 +257,8 @@ export function useCensoSync(
   }, [finished, operation]);
 
   const run = async (decision?: CensoDecision) => {
-    if (!port || id === null || busy || (uncertain && !snapshot)) return;
+    if (!port || id === null || busy || recovering || (uncertain && !snapshot))
+      return;
     setBusy(true);
     setActionError(null);
     try {
@@ -212,6 +271,7 @@ export function useCensoSync(
               decision,
             )
           : await port.start(id);
+      keep(port, id, value);
       setSnapshot(value);
     } catch (failure) {
       const code =
@@ -253,6 +313,8 @@ export function useCensoSync(
     readiness,
     snapshot,
     busy,
+    /** An unfinished pull is being read again: nothing is started yet. */
+    recovering,
     error: actionError ?? (readinessError ? "unavailable" : null),
     uncertain,
     start: () => run(),

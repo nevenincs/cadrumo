@@ -6,6 +6,9 @@ declare global {
     __scenarioCenso?: {
       fail(): void;
       starts(): number;
+      /** The pulls the host actually began: a start while one is unfinished
+       * answers that one. */
+      pulls(): number;
       answers(): number;
       statuses(): number;
       readinessChecks(): number;
@@ -15,7 +18,13 @@ declare global {
       release(): void;
       holdReadiness(): void;
       releaseReadiness(): void;
+      holdStatus(): void;
       releaseStatus(): void;
+      /** The pull begins at the host without this window asking, as the AEAT
+       * data run's census item does. */
+      begin(): void;
+      /** A running pull reaches its review. */
+      reachReview(): void;
     };
   }
 }
@@ -26,7 +35,9 @@ export type CensoMode =
   | "uncertain"
   | "refused"
   | "initial_unknown"
-  | "browser_missing";
+  | "browser_missing"
+  /** The pull keeps reading until the scenario lets it reach its review. */
+  | "running";
 
 /** Browser-only Censo outcomes. Never contacts AEAT. */
 export function censoFixture(
@@ -35,15 +46,20 @@ export function censoFixture(
 ): CensoPort {
   let failure = mode === "uncertain",
     starts = 0,
+    pulls = 0,
     answers = 0;
   let snapshot: CensoSnapshot | null = null;
   let releaseStatus = () => {};
-  const statusHeld =
-    mode === "initial_unknown"
-      ? new Promise<void>((resolve) => {
-          releaseStatus = resolve;
-        })
-      : null;
+  let statusHeld: Promise<void> | null = null;
+  const holdStatus = () => {
+    statusHeld ??= new Promise<void>((resolve) => {
+      releaseStatus = () => {
+        statusHeld = null;
+        resolve();
+      };
+    });
+  };
+  if (mode === "initial_unknown") holdStatus();
   let statuses = 0;
   let readinessChecks = 0;
   const listeners = new Set<() => void>();
@@ -57,6 +73,7 @@ export function censoFixture(
       failure = true;
     },
     starts: () => starts,
+    pulls: () => pulls,
     answers: () => answers,
     statuses: () => statuses,
     readinessChecks: () => readinessChecks,
@@ -81,8 +98,58 @@ export function censoFixture(
       });
     },
     releaseReadiness: () => releaseReadiness(),
+    holdStatus,
     releaseStatus: () => releaseStatus(),
+    begin() {
+      snapshot ??= began();
+      listeners.forEach((listener) => listener());
+    },
+    reachReview() {
+      if (snapshot?.state !== "reading") return;
+      snapshot = { ...snapshot, ...reviewing() };
+      listeners.forEach((listener) => listener());
+    },
   };
+  // A pull begins at the host: here from a start, or from the run that
+  // starts the same session without this window asking.
+  const began = (): CensoSnapshot => {
+    pulls++;
+    return mode === "running"
+      ? {
+          operation: "d".repeat(64),
+          state: "reading",
+          can_cancel: false,
+          review_digest: null,
+          fields: [],
+        }
+      : { operation: "a".repeat(64), ...reviewing() };
+  };
+  const reviewing = (): Omit<CensoSnapshot, "operation"> => ({
+    state: "review",
+    can_cancel: true,
+    review_digest: "b".repeat(64),
+    fields: [
+      {
+        path: "contact.fiscal_address",
+        current: "Calle Larios 12, 2 A, Málaga",
+        incoming: "Calle Nueva 1, Málaga",
+        preserve: true,
+      },
+      {
+        path: "contact.postcode",
+        current: "29005",
+        incoming: "29001",
+        preserve: true,
+      },
+      {
+        path: "contact.fiscal_address_cadastral_reference",
+        current: null,
+        incoming: "1234567UF7613S0001AB",
+        preserve: false,
+      },
+    ],
+  });
+  window.__scenarioCenso = controls;
   return {
     async observe(changed) {
       listeners.add(changed);
@@ -91,7 +158,6 @@ export function censoFixture(
       };
     },
     async readiness(id) {
-      window.__scenarioCenso = controls;
       await readinessHeld;
       readinessChecks++;
       // What the profile saved satisfies: the setup the scenario seeded, and
@@ -101,11 +167,20 @@ export function censoFixture(
     async start() {
       starts++;
       if (failure) throw { code: "unknown" };
+      // The host answers the pull still going rather than begin another.
+      if (
+        snapshot &&
+        snapshot.state !== "done" &&
+        snapshot.state !== "stopped" &&
+        snapshot.state !== "failed"
+      )
+        return structuredClone(snapshot);
       if (mode === "refused")
         throw { code: "refused", reason: "profile_mismatch" };
       // Each pull stops at once for want of the browser, as its recorded
       // verdict says.
       if (mode === "browser_missing") {
+        pulls++;
         snapshot = {
           operation: String(starts).padStart(64, "c"),
           state: "failed",
@@ -116,32 +191,7 @@ export function censoFixture(
         };
         return structuredClone(snapshot);
       }
-      snapshot = {
-        operation: "a".repeat(64),
-        state: "review",
-        can_cancel: true,
-        review_digest: "b".repeat(64),
-        fields: [
-          {
-            path: "contact.fiscal_address",
-            current: "Calle Larios 12, 2 A, Málaga",
-            incoming: "Calle Nueva 1, Málaga",
-            preserve: true,
-          },
-          {
-            path: "contact.postcode",
-            current: "29005",
-            incoming: "29001",
-            preserve: true,
-          },
-          {
-            path: "contact.fiscal_address_cadastral_reference",
-            current: null,
-            incoming: "1234567UF7613S0001AB",
-            preserve: false,
-          },
-        ],
-      };
+      snapshot = began();
       if (mode === "initial_unknown")
         return {
           ...snapshot,

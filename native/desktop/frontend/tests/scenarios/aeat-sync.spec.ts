@@ -347,6 +347,36 @@ test("the results lead on to the census review", async ({ page: target }) => {
   await expect(target.locator(".user-profile-page")).toBeVisible();
 });
 
+test("the census review takes over the pull that is going on and starts no second", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-census-running");
+  // The run's census item began the pull at the host; this window did not.
+  await target.evaluate(() => window.__scenarioCenso!.begin());
+  await update(page).click();
+  await expect(results(page)).toBeVisible();
+  await button(
+    area(page, "census"),
+    "desktop.aeat_sync.results.census_review",
+  ).click();
+  const band = target.getByRole("region", {
+    name: label("desktop.profile.censo.band"),
+    exact: true,
+  });
+  await expect(target.locator(".user-profile-page")).toBeVisible();
+  await expect(
+    band.getByText(label("desktop.profile.censo.reading")),
+  ).toBeVisible();
+  expect(await target.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);
+  await target.evaluate(() => window.__scenarioCenso!.reachReview());
+  await expect(
+    band.getByRole("button", {
+      name: label("desktop.profile.censo.review_count", { count: 3 }),
+    }),
+  ).toBeVisible();
+  expect(await target.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);
+});
+
 test("the results lead on to the AEAT browser", async ({ page: target }) => {
   const page = await open(target, "aeat-sync");
   await update(page).click();
@@ -411,3 +441,54 @@ test("the Borrador import is for the year the person chooses", async ({
     .poll(() => calls(target, "aeatSyncResults.importBorrador"))
     .toEqual([`aeatSyncResults.importBorrador ${previous - 1}`]);
 });
+
+// Each area is served as up to date or possibly out of date by the backend,
+// by its own horizon; the page words and marks what it is served.
+const HORIZONS = [
+  ["notifications", 7],
+  ["vat", 30],
+  ["census", 90],
+  ["filed", 90],
+  ["identity", 90],
+] as const;
+const DAY = 24 * 60 * 60 * 1000;
+const NOON = new Date("2026-10-29T12:00:00Z");
+
+const dayOf = (days: number) =>
+  new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
+    new Date(NOON.getTime() - days * DAY),
+  );
+
+for (const [scenario, days, state, key, icon] of [
+  [
+    "aeat-sync-inside-horizon",
+    -1,
+    "current",
+    "desktop.aeat_sync.state.current",
+    "check",
+  ],
+  [
+    "aeat-sync-past-horizon",
+    1,
+    "possibly_stale",
+    "desktop.aeat_sync.state.possibly_stale",
+    "alert",
+  ],
+] as const)
+  test(`${scenario}: each area is ${state === "current" ? "up to date" : "possibly out of date"} a day ${days < 0 ? "inside" : "past"} its horizon`, async ({
+    page: target,
+  }) => {
+    await target.clock.setFixedTime(NOON);
+    const page = await open(target, scenario);
+    for (const [id, horizon] of HORIZONS) {
+      const card = area(page, id);
+      await expect(card, id).toHaveAttribute("data-state", state);
+      await expect(card, id).toContainText(
+        label(key, { date: dayOf(horizon + days) }),
+      );
+      await expect(card.locator("[data-icon]").first(), id).toHaveAttribute(
+        "data-icon",
+        icon,
+      );
+    }
+  });

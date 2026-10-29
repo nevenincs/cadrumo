@@ -442,6 +442,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   const syncReady =
     !!sync.readiness?.ready &&
     !sync.busy &&
+    !sync.recovering &&
     !sync.uncertain &&
     (!sync.snapshot ||
       sync.snapshot.state === "done" ||
@@ -463,7 +464,7 @@ export const UserProfilePage = memo(function UserProfilePage({
   useEffect(() => {
     if (!censoAsked) return;
     if (!host.censo) return onCensoHandled();
-    if (!data || !shown) return;
+    if (!data || !shown || sync.recovering) return;
     if (censoWaiting || sync.busy || sync.uncertain) return onCensoHandled();
     if (sync.snapshot && !sync.readiness) return sync.dismiss();
     if (!sync.readiness && !sync.error) return;

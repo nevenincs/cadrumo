@@ -856,6 +856,43 @@ test("saved Cl@ve setup asks specifically for the NIE support number", async ({
   ).toBeEnabled();
 });
 
+test("the profile page reads a pull it was left from before it offers another", async ({
+  page,
+}) => {
+  await open(page, "censo-ready");
+  const region = band(page);
+  const pull = region.getByRole("button", {
+    name: label("desktop.profile.censo.pull"),
+    exact: true,
+  });
+  const review = region.getByRole("button", {
+    name: label("desktop.profile.censo.review_count", { count: 3 }),
+  });
+  await pull.click();
+  await expect(review).toBeVisible();
+  const rail = page.locator(".rail");
+  await rail
+    .getByRole("button", { name: label("desktop.calendar.title"), exact: true })
+    .click();
+  await page
+    .getByRole("button", { name: label("desktop.navigation.leave.discard") })
+    .click();
+  await expect(page.locator(".user-profile-page")).not.toBeVisible();
+  // Back on the page while the host's answer is on its way: nothing can be
+  // started until it comes.
+  await page.evaluate(() => window.__scenarioCenso!.holdStatus());
+  await rail
+    .getByRole("button", { name: label("desktop.profile.title"), exact: true })
+    .click();
+  await expect(pull).toBeDisabled();
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
+  await page.evaluate(() => window.__scenarioCenso!.releaseStatus());
+  await expect(review).toBeVisible();
+  await expect(pull).toHaveCount(0);
+  expect(await page.evaluate(() => window.__scenarioCenso!.starts())).toBe(1);
+  expect(await page.evaluate(() => window.__scenarioCenso!.pulls())).toBe(1);
+});
+
 test("discarding Censo changes does not write profile data", async ({
   page,
 }) => {

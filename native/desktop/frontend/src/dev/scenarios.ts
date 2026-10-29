@@ -188,6 +188,19 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "censo-running",
+    title: "Censo: A pull that keeps going",
+    summary:
+      "Start a Censo pull from any entry: it keeps reading across page changes until the scenario lets it reach its review. This is a simulation; no AEAT request is sent.",
+    censo: "running",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
     id: "censo-initial-unknown",
     title: "Censo: Initial status unavailable",
     summary: "Simulates recovery of a known operation without contacting AEAT.",
@@ -305,9 +318,9 @@ export const SCENARIOS: readonly Scenario[] = [
   {
     ...base,
     id: "aeat-sync-browser",
-    title: "AEAT data: the secure browser is not installed",
+    title: "AEAT data: the browser is not installed",
     summary:
-      "Update from AEAT stops for the missing secure browser, installs it, and goes on by itself.",
+      "Update from AEAT stops for the missing browser, installs it, and goes on by itself.",
     aeatUpdate: { before: "browser_missing" },
     setup: "fresh",
     signIn: {
@@ -386,6 +399,45 @@ export const SCENARIOS: readonly Scenario[] = [
     title: "AEAT data: nothing new",
     summary: "An update ends and AEAT had nothing new.",
     aeatUpdate: { run: "nothing_found", results: "quiet" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-inside-horizon",
+    title: "AEAT data: brought a day inside each horizon",
+    summary:
+      "Each area was last brought one day before it would count as possibly out of date, so each says it is up to date.",
+    aeatSync: "inside_horizon",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-past-horizon",
+    title: "AEAT data: brought a day past each horizon",
+    summary:
+      "Each area was last brought one day after it counts as possibly out of date, so each says it may be out of date.",
+    aeatSync: "past_horizon",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-census-running",
+    title: "AEAT data: a census pull is going on",
+    summary:
+      "The census pull keeps reading. Review it from the results: the profile page takes over the same pull.",
+    censo: "running",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "Ana Soler",
