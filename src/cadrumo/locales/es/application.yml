@@ -777,6 +777,10 @@ application:
           con el identificador solicitado.
         snapshot_prefix_ambiguous: El prefijo de instantánea de notificaciones coincide
           con varias instantáneas.
+    profile_taxpayer_number:
+      errors:
+        unresolved: No se pudo leer el número de contribuyente del perfil, así que
+          no hay nada que comprobar. Comprueba que el perfil tenga uno registrado.
     snapshot_base:
       errors:
         repository_bucket_mismatch: El repositorio de snapshots informó un bucket

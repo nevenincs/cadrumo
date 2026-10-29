@@ -23,7 +23,12 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation,
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_errors import ProfileAccessRefusedError
-from ..errors import LiveApplicationError, LiveIvaSurfaceTimeoutError
+from ..errors import (
+    LiveAeatSessionEndedError,
+    LiveApplicationError,
+    LiveIvaAcquisitionFailureMode,
+    LiveIvaSurfaceTimeoutError,
+)
 from ..filed_capture_accumulator import FiledCaptureAccumulator
 from ..filed_capture_queries import (
     await_filed_register_walk,
@@ -357,6 +362,26 @@ def test_register_authority_loss_stops_pair_walk_without_a_failure_row(refusal: 
                 failures=failures,
             )
         )
+    assert failures == []
+
+
+class _AdapterSessionEndedError(Exception):
+    """An adapter failure that reports itself to live captures through the application protocol."""
+
+    @property
+    def live_iva_failure_mode(self) -> LiveIvaAcquisitionFailureMode:
+        return LiveIvaAcquisitionFailureMode.SESSION_ENDED
+
+
+def test_ended_aeat_session_stops_pair_walk_without_a_failure_row() -> None:
+    """An ended session aborts the sweep as its own refusal instead of failing every remaining pair."""
+
+    async def login_wall() -> tuple[FiledRegisterDeclarationProtocol, ...]:
+        raise _AdapterSessionEndedError
+
+    failures: list[FiledDataCaptureFailureRow] = []
+    with pytest.raises(LiveAeatSessionEndedError):
+        asyncio.run(walk_or_failure_row(login_wall(), modelo="303", year=2025, timeout_ms=1000, failures=failures))
     assert failures == []
 
 

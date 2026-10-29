@@ -1081,6 +1081,8 @@ errors:
       el apoderado antes de consultar su estado.
     refused_apoderado_unknown_scope: El ámbito de apoderamiento indicado no está en
       el catálogo disponible.
+    refused_application_live_aeat_session_ended: La AEAT cerró la sesión iniciada,
+      así que no se leyó nada más. Inicia sesión de nuevo y repite la captura.
     refused_application_live_input: La solicitud de lectura en vivo a la AEAT no se
       puede ejecutar con los datos indicados.
     refused_application_live_nif_iva_certificate_required: 'La AEAT solo responde
@@ -1283,7 +1285,7 @@ errors:
     refused_modelo_applicability_filter: Se encontró un nombre de filtro de aplicabilidad
       desconocido en el registro. Se trata de un error de autoría del registro; actualiza
       la tabla de despacho de filtros.
-    refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
+    refused_modelo_charge_account_missing: Se ha elegido una domiciliación pero no
       hay una cuenta de cargo registrada.
     refused_modelo_domiciliation_past_cutoff: La domiciliación de esta declaración
       se cerró el {payment_cutoff_on}; el {export_on} solo puedes pagar el resultado
@@ -1329,7 +1331,7 @@ errors:
       de evaluarse. Se trata de un error de autoría del registro; corrige el predicado
       en el registro.
     refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificación
-      de la domiciliacion previa porque falta o no es valida la rectificativa del
+      de la domiciliación previa porque falta o no es válida la rectificativa del
       modelo 303 o la prueba oficial de la presentación base U.
     refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
       un perfil y vuelve a intentarlo.

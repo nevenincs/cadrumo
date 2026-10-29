@@ -775,6 +775,10 @@ application:
           sol·licitat.
         snapshot_prefix_ambiguous: El prefix de la instantània de notificacions coincideix
           amb diverses instantànies.
+    profile_taxpayer_number:
+      errors:
+        unresolved: No s'ha pogut llegir el número de contribuent del perfil, així
+          que no hi ha res a comprovar. Comprova que el perfil en tingui un de registrat.
     snapshot_base:
       errors:
         repository_bucket_mismatch: El repositori de snapshots ha informat d'un bucket

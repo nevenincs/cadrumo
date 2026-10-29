@@ -53,7 +53,11 @@ class SedeError(CadrumoError):
             required_provider = str(context.get("required_auth_provider") or "").casefold()
             if required_provider in {"certificate", "certificado"}:
                 return LiveIvaAcquisitionFailureMode.CERTIFICATE_REQUIRED
+            if context.get("refusal") == "session_not_accepted":
+                return LiveIvaAcquisitionFailureMode.SESSION_ENDED
             return LiveIvaAcquisitionFailureMode.AEAT_403
+        if self.failure_mode == SedeFailureMode.SESSION_ENDED.value:
+            return LiveIvaAcquisitionFailureMode.SESSION_ENDED
         if self.failure_mode == SedeFailureMode.EXTERNAL_SHAPE_CHANGED.value:
             return LiveIvaAcquisitionFailureMode.DOM_DRIFT
         if self.failure_mode == SedeFailureMode.LIVE_NAVIGATION_FAILED.value:
@@ -72,6 +76,9 @@ class SedeFailureMode(StrEnum):
     # which the live driver does not hold. The form navigation succeeds
     # at HTTP 200 but redirects to AEAT's standard 4033 / 403 error page.
     AUTH_GATE_DETECTED = "auth_gate_detected"
+    # AEAT answered with its login wall instead of the surface, so the
+    # authenticated session is no longer accepted.
+    SESSION_ENDED = "session_ended"
 
 
 class SedeNavigationError(SedeError):

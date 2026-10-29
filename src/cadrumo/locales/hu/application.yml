@@ -740,6 +740,10 @@ application:
         snapshot_not_found: Nem található notifications pillanatkép a kért azonosítóhoz.
         snapshot_prefix_ambiguous: A notifications pillanatkép előtag több pillanatképre
           illeszkedik.
+    profile_taxpayer_number:
+      errors:
+        unresolved: A profil adószámát nem sikerült beolvasni, ezért nincs mit ellenőrizni.
+          Győződj meg róla, hogy a profil tartalmaz egyet.
     snapshot_base:
       errors:
         repository_bucket_mismatch: A pillanatkép-tároló a kérttől eltérő bucketet

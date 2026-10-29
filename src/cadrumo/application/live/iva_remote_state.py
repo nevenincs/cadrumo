@@ -26,7 +26,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError, raise_if_aeat_session_ended
 from .filed_data_ports import FiledEffectGuard, LocalEffectTracker
 from .iva_remote_state_ports import IvaRemoteStatePort
 from .remote_state_models import (
@@ -296,6 +296,7 @@ async def _capture_filed_history_surface(
         raise
     except (TimeoutError, _CadrumoError, OSError) as error:
         _raise_unsettled_surface_cleanup(error, tracker)
+        raise_if_aeat_session_ended(error)
         return None, error
     return report, None
 
@@ -351,6 +352,7 @@ async def _capture_wallet_surface(
         raise
     except (TimeoutError, _CadrumoError, OSError) as error:
         _raise_unsettled_surface_cleanup(error, tracker)
+        raise_if_aeat_session_ended(error)
         return None, error
     return report, None
 

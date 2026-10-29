@@ -56,7 +56,7 @@ from ..storage.sync_runs.records import (
     sync_run_record_key,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .errors import LiveApplicationInputError
+from .errors import LiveApplicationInputError, raise_if_aeat_session_ended
 from .filed_capture_accumulator import FiledCaptureAccumulator
 from .filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from .filed_capture_queries import (
@@ -296,6 +296,7 @@ async def _capture_filed_declaration(
     except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
         raise
     except Exception as exc:
+        raise_if_aeat_session_ended(exc)
         await _record_filed_declaration_capture_failure(
             exc,
             declaration,

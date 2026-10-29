@@ -40,6 +40,7 @@ class LiveIvaAcquisitionFailureMode(StrEnum):
     DOM_DRIFT = "dom_drift"
     PENDING_CLAVE_REQUEST = "pending_clave_request"
     LIVE_NAVIGATION_FAILED = "live_navigation_failed"
+    SESSION_ENDED = "session_ended"
     UNKNOWN = "unknown"
 
 
@@ -164,6 +165,24 @@ class LiveNifIvaCertificateRequiredError(LiveApplicationError):
         )
 
 
+class LiveAeatSessionEndedError(LiveApplicationError):
+    """Refuse a live capture because AEAT ended the authenticated session.
+
+    The registered refusal code is the signal a caller keys on: it is neither a
+    navigation failure nor a drifted page, and it is unrelated to the
+    unread-notification guard. Nothing the capture read before the session ended
+    is discarded, and the same capture is safe to repeat once the person signs in
+    again.
+    """
+
+    def __init__(self) -> None:
+        """Bind the fixed refusal message."""
+        super().__init__(
+            "the authenticated AEAT session has ended",
+            translated_message="errors.refused.refused_application_live_aeat_session_ended",
+        )
+
+
 class LiveIvaSurfaceTimeoutError(LiveApplicationError):
     """Raised when one live IVA read surface exceeds its orchestration timeout."""
 
@@ -218,7 +237,22 @@ def classify_live_iva_acquisition_failure(exc: BaseException) -> LiveIvaAcquisit
     return LiveIvaAcquisitionFailureMode.UNKNOWN
 
 
+def raise_if_aeat_session_ended(exc: BaseException) -> None:
+    """Re-raise an adapter failure that means AEAT ended the session as its own refusal.
+
+    A capture that records a failed item and continues calls this first, so an
+    ended session stops the capture instead of turning every later item into the
+    same recorded failure.
+
+    Raises:
+        LiveAeatSessionEndedError: When the adapter failure classifies as an ended session.
+    """
+    if classify_live_iva_acquisition_failure(exc) is LiveIvaAcquisitionFailureMode.SESSION_ENDED:
+        raise LiveAeatSessionEndedError() from exc
+
+
 __all__ = [
+    "LiveAeatSessionEndedError",
     "LiveApplicationError",
     "LiveApplicationInputError",
     "LiveIvaAcquisitionFailureMode",
@@ -228,4 +262,5 @@ __all__ = [
     "LiveReadPrecondition",
     "classify_live_iva_acquisition_failure",
     "live_read_no_recovery_verdict",
+    "raise_if_aeat_session_ended",
 ]

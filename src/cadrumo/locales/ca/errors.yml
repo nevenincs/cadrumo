@@ -1092,6 +1092,8 @@ errors:
       l'apoderat abans de consultar-ne l'estat.
     refused_apoderado_unknown_scope: L'àmbit d'apoderament indicat no és al catàleg
       disponible.
+    refused_application_live_aeat_session_ended: L'AEAT ha tancat la sessió iniciada,
+      així que no s'ha llegit res més. Inicia la sessió de nou i repeteix la captura.
     refused_application_live_input: La sol·licitud de lectura en viu a l'AEAT no es
       pot executar amb les dades indicades.
     refused_application_live_nif_iva_certificate_required: 'L''AEAT només respon la

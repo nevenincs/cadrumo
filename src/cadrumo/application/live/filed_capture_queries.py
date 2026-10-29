@@ -20,7 +20,7 @@ from ...domain.calculations.registry.schema import (
     ModeloRevision,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from .errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError, raise_if_aeat_session_ended
 from .filed_data import (
     BulkFiledDataListingReport,
     FiledDataListingReport,
@@ -242,6 +242,7 @@ async def walk_or_failure_row(
     except Exception as exc:
         if has_async_cleanup_failure(exc):
             raise
+        raise_if_aeat_session_ended(exc)
         failures.append(filed_data_capture_failure_row(modelo=modelo, year=year, error=exc))
         return None
 

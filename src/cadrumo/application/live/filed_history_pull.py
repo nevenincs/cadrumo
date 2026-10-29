@@ -25,6 +25,7 @@ from ..storage.sync_runs.records import (
     SyncRunRecordRepositoryProtocol,
 )
 from ..user_profile.access_errors import ProfileAccessRefusedError
+from .errors import raise_if_aeat_session_ended
 from .filed_data_capture import capture_filed_data_bulk
 from .filed_data_ports import (
     FiledDataCapturePort,
@@ -199,6 +200,7 @@ async def _capture_filed_history_iva_wallet(
     except Exception as exc:
         if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
             raise
+        raise_if_aeat_session_ended(exc)
         await emit_filed_history_refusal(events, FILED_HISTORY_IVA_WALLET_REFUSAL_CODE)
         return _FiledHistoryIvaWalletStage(
             status="failed",
@@ -249,6 +251,7 @@ async def _capture_filed_history_notifications(
     except Exception as exc:
         if has_async_cleanup_failure(exc) or (tracker is not None and (tracker.started or tracker.failed)):
             raise
+        raise_if_aeat_session_ended(exc)
         await emit_filed_history_refusal(events, FILED_HISTORY_NOTIFICATIONS_REFUSAL_CODE)
         return _FiledHistoryNotificationsStage(
             status="failed",

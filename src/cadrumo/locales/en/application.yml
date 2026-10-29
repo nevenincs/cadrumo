@@ -711,6 +711,10 @@ application:
         snapshot_not_found: No notifications snapshot matches the requested id.
         snapshot_prefix_ambiguous: The notifications snapshot prefix matches multiple
           snapshots.
+    profile_taxpayer_number:
+      errors:
+        unresolved: The profile's taxpayer number could not be read, so there is nothing
+          to check. Make sure the profile records one.
     snapshot_base:
       errors:
         repository_bucket_mismatch: The snapshot repository reported a different bucket
@@ -1628,11 +1632,11 @@ application:
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
         has no supporting document. Attach it to the entry in your records.
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
-        declares no payments (percepciones) to anyone, but your records show payments
-        subject to withholding (retención) made that year: %{contradicting_invoice_count}
-        received invoice(s) with a retención you must pay in as the payer (retenedor),
-        and %{contradicting_ledger_row_count} outgoing payment(s) in an IRPF withholding
-        category. The withholdings detail for modelo %{source_modelo} is empty, so
+        declares no payments to anyone, but your records show payments subject to
+        withholding made that year: %{contradicting_invoice_count} received invoice(s)
+        with withholding you must pay in as the payer, and %{contradicting_ledger_row_count}
+        outgoing payment(s) in an IRPF withholding category. The withholding detail
+        for modelo %{source_modelo} is empty, so
         nothing declares them. Enter them in this modelo''s per-payee detail before
         you check it.'
       withholding_detail_absent_attested: 'Modelo %{modelo} %{filing_year} declares
@@ -2088,10 +2092,10 @@ application:
             to a spreadsheet formula.
   user_profile:
     errors:
-      censal_read_identity_absent: The censal read carried no tax identity, so it
-        cannot be confirmed to belong to this profile.
-      censal_read_identity_cleared: This profile's fiscal ID was cleared, so a censal
-        read cannot be confirmed to belong to it. Restore the fiscal ID and pull again.
+      censal_read_identity_absent: The tax registration read contained no tax identity,
+        so it cannot be confirmed to belong to this profile.
+      censal_read_identity_cleared: This profile's tax ID was cleared, so a tax registration
+        read cannot be confirmed to belong to it. Restore the tax ID and pull again.
       censal_read_identity_mismatch: The censal read belongs to a different taxpayer
         than this profile; it was not applied.
       censal_read_identity_profile_malformed: This profile's fiscal ID is not a valid

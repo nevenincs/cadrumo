@@ -790,7 +790,7 @@ async def _open_register_form(
             f"declaraciones register did not load (final URL: {final_url!r}); "
             "session likely expired — run `cadrumo-runtime config auth test` and retry",
             translated_message=tr("adapters.sede.errors.session_expired_nav_failed"),
-            failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+            failure_mode=SedeFailureMode.SESSION_ENDED,
             context=await _declarations_page_shape_context_from_page(
                 page,
                 stage="listing_final_url",

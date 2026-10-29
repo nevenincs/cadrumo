@@ -68,6 +68,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.live.errors.LiveAeatSessionEndedError",
+        ErrorCode(
+            code="REFUSED_APPLICATION_LIVE_AEAT_SESSION_ENDED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_application_live_aeat_session_ended",
+            retryable=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.live.errors.LiveIvaSurfaceTimeoutError",
         ErrorCode(
             code="ERROR_APPLICATION_LIVE_IVA_SURFACE_TIMEOUT",

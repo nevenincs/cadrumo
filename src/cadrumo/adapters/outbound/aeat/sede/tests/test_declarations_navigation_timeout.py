@@ -18,7 +18,7 @@ from playwright.async_api import Route, async_playwright
 
 from ......core.config import override_settings
 from ..._playwright import PlaywrightTimeoutError
-from ..declarations import _drive_search
+from ..declarations import _LISTING_URL, _drive_search
 from ..errors import SedeFailureMode, SedeNavigationError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -53,3 +53,32 @@ async def test_navigation_timeout_raises_typed_navigation_error() -> None:
     assert exc_info.value.context["ejercicio"] == 2022
     # The raw Playwright exception is chained, never swallowed silently.
     assert isinstance(exc_info.value.__cause__, PlaywrightTimeoutError)
+
+
+_LOGIN_WALL_URL = "https://sede.agenciatributaria.gob.es/Sede/identificacion.html"
+
+
+async def _redirect_listing_to_login_wall(route: Route) -> None:
+    """Serve the register listing as AEAT does once the session is gone: a redirect to its login wall."""
+    if route.request.url == _LISTING_URL:
+        await route.fulfill(status=302, headers={"Location": _LOGIN_WALL_URL})
+        return
+    await route.fulfill(status=200, content_type="text/html", body="<html><body>Identificate</body></html>")
+
+
+@pytest.mark.asyncio
+async def test_login_wall_redirect_is_reported_as_an_ended_session() -> None:
+    """A register that lands on the login wall is a session failure, not a navigation failure."""
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(headless=True)
+        try:
+            page = await browser.new_page()
+            await page.route("**/*", _redirect_listing_to_login_wall)
+            with pytest.raises(SedeNavigationError) as exc_info:
+                await _drive_search(page, modelo="100", ejercicio=2022)
+        finally:
+            await browser.close()
+
+    assert exc_info.value.failure_mode == SedeFailureMode.SESSION_ENDED
+    assert exc_info.value.context is not None
+    assert exc_info.value.context["stage"] == "listing_final_url"

@@ -15,9 +15,12 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
+from ...adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
+from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
+from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import verify as verify_module
 from ...application.live import verify_capture_operation as capture_module
@@ -330,6 +333,138 @@ def test_real_supervisor_captures_exact_profile_under_commit_guard_and_reports_e
     assert wrong_scope_terminal.terminal_receipt.refusal_ref is not None
     assert events.count("remote-acquire") == 2
     assert events.count("observation-save") == 1
+
+
+def _settle_tgvi(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    payload_nif: str | None,
+    recorded_tax_id: str | None,
+    acquire_failure: BaseException | None = None,
+) -> tuple[OperationPersistedSnapshot, list[str]]:
+    """Run one TGVI check through the real supervisor against a profile with a chosen recorded number."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
+        events: list[str] = []
+        acquired_nifs: list[str] = []
+        execution_authority = _ExecutionAuthority(events)
+        persistence = _VerifyPersistence(bucket_id=profile.bucket_id, events=events, authority=execution_authority)
+        if recorded_tax_id is not None:
+            register_minimal_profile(profile_id=profile.bucket_id, overrides={"identity.tax_id": recorded_tax_id})
+        monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
+        monkeypatch.setattr(capture_module, "now", lambda: _NOW)
+        monkeypatch.setattr(verify_module, "now", lambda: _NOW)
+
+        async def acquire(
+            _surface: VerifySurface,
+            nif: str,
+            _expected: object | None,
+            _authority: PinnedAuthorityOperation,
+        ) -> VerifyLiveObservation:
+            acquired_nifs.append(nif)
+            if acquire_failure is not None:
+                raise acquire_failure
+            return VerifyLiveObservation(nif=nif, verdict=IdentityCheckVerdict.VALID)
+
+        definition = build_verify_capture_definition(
+            VerifySurface.TGVI,
+            persistence_factory=lambda _bucket_id: persistence,
+            acquire=acquire,
+            browser_resources_factory=lambda: _Resources(events),
+            provider_preflight=lambda _profile_id, _authority: None,
+        )
+        registry = OperationRegistry(
+            definitions=(definition,), public_registrations=(build_verify_capture_registration(definition),)
+        )
+        supervisor, _journal, _operands = _supervisor(
+            tmp_path=tmp_path,
+            registry=registry,
+            profile_repository=profile.repository,
+            authority=authority,
+            execution_authority=execution_authority,
+        )
+        request = OperationRequest(
+            definition_id=VERIFY_TGVI_CAPTURE_DEFINITION_ID,
+            subject_ref=profile_operation_subject(profile.bucket_id),
+            payload=VerifyCaptureRequest(profile_id=UUID(profile.bucket_id), nif=payload_nif),
+        )
+
+        async def run() -> OperationPersistedSnapshot:
+            return await _run_to_terminal(supervisor, await supervisor.submit(request, operation_id="7" * 64))
+
+        terminal = asyncio.run(run())
+    return terminal, [f"acquired:{nif}" for nif in acquired_nifs]
+
+
+def test_omitted_nif_checks_the_profiles_own_recorded_taxpayer_number(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """With no NIF in the request the worker reads the number from the exact profile record."""
+    terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=None, recorded_tax_id=_NIF)
+
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert acquired == [f"acquired:{_NIF}"]
+
+
+def test_a_supplied_nif_wins_over_the_profile_number(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """An explicit NIF is checked as given, even when the profile records another."""
+    other = "A58818501"
+    terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=other, recorded_tax_id=_NIF)
+
+    assert terminal.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert acquired == [f"acquired:{other}"]
+
+
+def test_omitted_nif_without_a_recorded_number_refuses_before_any_remote_read(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A profile with no readable number has no subject to check, so nothing is acquired."""
+    terminal, acquired = _settle_tgvi(tmp_path, monkeypatch, payload_nif=None, recorded_tax_id=None)
+
+    assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.refusal_ref == "REFUSED_APPLICATION_LIVE_INPUT"
+    assert acquired == []
+
+
+def test_an_ended_aeat_session_settles_as_its_own_refusal(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Both adapter shapes of an ended session surface the same registered refusal and nothing is saved."""
+    login_wall = SedeNavigationError(
+        "register did not load",
+        failure_mode=SedeFailureMode.SESSION_ENDED,
+        translated_message="adapters.sede.errors.session_expired_nav_failed",
+    )
+    idle_expiry = AeatSessionExpiredError("session is stale")
+    refusals: list[str | None] = []
+    for failure in (login_wall, idle_expiry):
+        terminal, acquired = _settle_tgvi(
+            tmp_path / type(failure).__name__,
+            monkeypatch,
+            payload_nif=_NIF,
+            recorded_tax_id=None,
+            acquire_failure=failure,
+        )
+        assert terminal.terminal_condition is OperationTerminalCondition.REFUSED
+        assert terminal.effect is OperationEffect.NONE
+        assert acquired == [f"acquired:{_NIF}"]
+        assert terminal.terminal_receipt is not None
+        refusals.append(terminal.terminal_receipt.refusal_ref)
+
+    assert refusals == ["REFUSED_APPLICATION_LIVE_AEAT_SESSION_ENDED"] * 2
+
+
+def test_a_navigation_failure_is_not_reported_as_an_ended_session(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A navigation failure keeps its own code and is never promoted to the session refusal."""
+    navigation = SedeNavigationError("goto failed", failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED)
+    terminal, _acquired = _settle_tgvi(
+        tmp_path, monkeypatch, payload_nif=_NIF, recorded_tax_id=None, acquire_failure=navigation
+    )
+
+    assert terminal.terminal_condition is OperationTerminalCondition.FAILED
+    assert terminal.terminal_receipt is not None
+    assert terminal.terminal_receipt.refusal_ref is None
 
 
 def test_nif_iva_check_refuses_before_any_browser_or_provider_work(

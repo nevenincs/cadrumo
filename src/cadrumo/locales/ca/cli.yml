@@ -642,6 +642,7 @@ cli:
             operator_timeout: temps d'aprovació esgotat
             pending_clave_request: petició Cl@ve pendent
             qr_required: aprovació QR requerida
+            session_ended: sessió d'AEAT tancada
             unknown: desconegut
             wrong_identity: identitat incorrecta
         app_help: Descàrrega de la cartera de compensació d'IVA de l'AEAT (només lectura;
@@ -1678,7 +1679,7 @@ cli:
           executa `aeat app modelo bindings list --missing` per veure els valors que
           necessita el càlcul.
         payment_election_help: 'Tria com es paga un resultat positiu del Model 303:
-          ingras ordinari o domiciliació.'
+          ingrés ordinari o domiciliació.'
         period_help: 'Codi de període de la declaració: 0A anual, 1T-4T trimestres,
           01-12 mesos; per a models censals (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no és un token de període vàlid

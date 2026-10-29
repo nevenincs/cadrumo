@@ -643,6 +643,7 @@ cli:
             operator_timeout: tiempo de aprobación agotado
             pending_clave_request: petición Cl@ve pendiente
             qr_required: aprobación QR requerida
+            session_ended: sesión de AEAT cerrada
             unknown: desconocido
             wrong_identity: identidad incorrecta
         app_help: Descarga de la cartera de compensación de IVA de la AEAT (solo lectura;

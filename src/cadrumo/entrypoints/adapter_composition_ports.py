@@ -81,7 +81,7 @@ def build_censal_fetch_port() -> CensalFetchPort:
     """Bind the concrete Sede censo reader to the application fetch port."""
     from ..adapters.outbound.aeat.sede.censal_datos import fetch_censal_datos
     from ..adapters.outbound.aeat.sede.errors import SedeError, SedeNavigationError, SedeParseError
-    from ..application.live.errors import LiveApplicationError
+    from ..application.live.errors import LiveApplicationError, raise_if_aeat_session_ended
     from ..application.user_profile.censal_observation import CensalObservation
 
     async def fetch(session: AeatSession, *, taxpayer_nif: str, settings: Settings) -> CensalObservation:
@@ -93,6 +93,7 @@ def build_censal_fetch_port() -> CensalFetchPort:
                 settings=settings,
             )
         except SedeError as exc:
+            raise_if_aeat_session_ended(exc)
             if isinstance(exc, SedeParseError):
                 failure_kind = "parse"
             elif isinstance(exc, SedeNavigationError):

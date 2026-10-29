@@ -631,6 +631,7 @@ cli:
             operator_timeout: jóváhagyási időtúllépés
             pending_clave_request: függő Cl@ve kérés
             qr_required: QR-jóváhagyás szükséges
+            session_ended: az AEAT-munkamenet lezárult
             unknown: ismeretlen
             wrong_identity: hibás személyazonosság
         app_help: AEAT IVA-kompenzációs pénztárca letöltése (csak olvasható; kizárólag

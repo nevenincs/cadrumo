@@ -1003,6 +1003,8 @@ errors:
       representative before checking its status.
     refused_apoderado_unknown_scope: The representation scope provided is not in the
       available catalogue.
+    refused_application_live_aeat_session_ended: AEAT ended the signed-in session,
+      so nothing more was read. Sign in again and repeat the capture.
     refused_application_live_input: The live AEAT read request cannot be executed
       with the input provided.
     refused_application_live_nif_iva_certificate_required: 'AEAT only answers NIF-IVA
