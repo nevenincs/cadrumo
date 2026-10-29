@@ -83,6 +83,7 @@ import { accountLabel } from "./components/accountWords";
 import { SignedOut, SignInDialog } from "./components/SignIn";
 import { AboutDialog } from "./components/AboutDialog";
 import { UserProfilePage } from "./components/profile/UserProfilePage";
+import { AeatSyncPage } from "./components/aeatSync/AeatSyncPage";
 import { LedgerPage, type LedgerMemory } from "./components/ledger/LedgerPage";
 import type { LeaveGuard } from "./components/ledger/editing/LedgerEditing";
 import { DeclarationsPane } from "./components/modelo/declarations/DeclarationsPane";
@@ -385,7 +386,33 @@ export function App({ host }: { host: Host }) {
     },
     [guardNavigation, showPage],
   );
+  // The census pull was asked for from any page: the profile page takes the
+  // one census flow over once it has the profile, and starts it only when
+  // none is running. Leaving the page withdraws the ask.
+  const [censoAsked, setCensoAsked] = useState(false);
+  const censoHandled = useCallback(() => setCensoAsked(false), []);
+  const askCenso = useCallback(() => {
+    const shown = layoutNow.current;
+    const proceed = () => {
+      setCensoAsked(true);
+      setLayout((current) => ({
+        ...current,
+        page: "profile",
+        maximized: null,
+      }));
+    };
+    if (shown.page === "profile") proceed();
+    else
+      guardNavigation(
+        {
+          kind: "navigate",
+          unmounted: mountedNow(shown.page, shown.ledgerView.section),
+        },
+        proceed,
+      );
+  }, [guardNavigation]);
   const calendarPage = useRef<HTMLElement>(null);
+  const aeatSyncPage = useRef<HTMLElement>(null);
   const profilePage = useRef<HTMLElement>(null);
   const ledgerPage = useRef<HTMLElement>(null);
   // The ledger was asked for: it takes focus once it is laid out.
@@ -409,6 +436,7 @@ export function App({ host }: { host: Host }) {
     const targets: [string, { current: HTMLElement | null }][] = [
       ["profile", profilePage],
       ["calendar", calendarPage],
+      ["aeat-sync", aeatSyncPage],
       ["ledger", ledgerPage],
       ["declarations", declarationsPage],
       ["agent", agentBody],
@@ -597,9 +625,15 @@ export function App({ host }: { host: Host }) {
   const ledgerOn = host.ledger !== undefined && page === "ledger";
   const declarationsOn = host.modelo !== undefined && page === "declarations";
   const browserOn = host.sedeView !== undefined && page === "browser";
+  const aeatSyncOn = host.aeatSync !== undefined && page === "aeat-sync";
   // A page of the window holds the first pane, in place of the documentation.
   const pageOn =
-    calendarOn || profileOn || ledgerOn || declarationsOn || browserOn;
+    calendarOn ||
+    profileOn ||
+    ledgerOn ||
+    declarationsOn ||
+    browserOn ||
+    aeatSyncOn;
   const firstPaneShown =
     (layout.docsShown || pageOn || maximized === "docs") && unhidden("docs");
   const docsVisible = firstPaneShown && !pageOn;
@@ -1213,6 +1247,7 @@ export function App({ host }: { host: Host }) {
             ledgerPage.current !== null ||
             declarationsPage.current !== null ||
             calendarPage.current !== null ||
+            aeatSyncPage.current !== null ||
             !!docs.current),
         () =>
           (
@@ -1220,6 +1255,7 @@ export function App({ host }: { host: Host }) {
             ledgerPage.current ??
             declarationsPage.current ??
             calendarPage.current ??
+            aeatSyncPage.current ??
             docs.current
           )?.focus(),
       ];
@@ -1993,6 +2029,16 @@ export function App({ host }: { host: Host }) {
         run: switchProfile,
       },
       {
+        // The one census flow, from any page: the profile page runs it.
+        id: "census.sync",
+        label: t("desktop.profile.censo.title"),
+        group: "profile",
+        icon: "sync",
+        keywords: "census censo aeat pull import tax agency",
+        enabled: () => signedIn && !!host.censo && !!host.userProfile,
+        run: askCenso,
+      },
+      {
         id: "focus.next",
         label: t("desktop.action.focus_next"),
         group: "general",
@@ -2075,6 +2121,7 @@ export function App({ host }: { host: Host }) {
       signedIn,
       signOut,
       switchProfile,
+      askCenso,
       cycleFocus,
       openLink,
       driveUrl,
@@ -2135,7 +2182,10 @@ export function App({ host }: { host: Host }) {
   const [aeatAsked, setAeatAsked] = useState(false);
   const aeatHandled = useCallback(() => setAeatAsked(false), []);
   useEffect(() => {
-    if (layout.page !== "profile") setAeatAsked(false);
+    if (layout.page !== "profile") {
+      setAeatAsked(false);
+      setCensoAsked(false);
+    }
   }, [layout.page]);
   // A register element the navigator let through, applied to the layout
   // store. A page and the agent take the keyboard through the focus
@@ -2457,6 +2507,7 @@ export function App({ host }: { host: Host }) {
         ledgerPage.current ??
         declarationsPage.current ??
         calendarPage.current ??
+        aeatSyncPage.current ??
         docs.current)
     )
       (
@@ -2464,6 +2515,7 @@ export function App({ host }: { host: Host }) {
         ledgerPage.current ??
         declarationsPage.current ??
         calendarPage.current ??
+        aeatSyncPage.current ??
         docs.current
       )?.focus();
     else if (agentVisible) agentBody.current?.focus();
@@ -2896,7 +2948,9 @@ export function App({ host }: { host: Host }) {
               ? "desktop.profile.title"
               : calendarOn
                 ? "desktop.calendar.title"
-                : "desktop.pane.docs",
+                : aeatSyncOn
+                  ? "desktop.aeat_sync.title"
+                  : "desktop.pane.docs",
           )}
           onToggleMaximize={() => toggleMaximize("docs")}
           controls={[
@@ -2906,21 +2960,25 @@ export function App({ host }: { host: Host }) {
                 ? "desktop.profile.maximize"
                 : calendarOn
                   ? "desktop.calendar.maximize"
-                  : "desktop.pane.maximize_docs",
+                  : aeatSyncOn
+                    ? "desktop.aeat_sync.maximize"
+                    : "desktop.pane.maximize_docs",
             ),
             // The split's controls are on the TUI's header too: narrow, this
             // header gives them up before it cuts its title.
             ...splitControls.map((control) => ({ ...control, yields: true })),
             // Every column is put away by its own close. The calendar's puts
             // the calendar away, back to the documentation where that is shown.
-            calendarOn || profileOn
+            calendarOn || profileOn || aeatSyncOn
               ? {
                   id: "close",
                   icon: "close",
                   label: t(
                     profileOn
                       ? "desktop.profile.close"
-                      : "desktop.calendar.close",
+                      : aeatSyncOn
+                        ? "desktop.aeat_sync.close"
+                        : "desktop.calendar.close",
                   ),
                   run: closePage,
                 }
@@ -3000,11 +3058,32 @@ export function App({ host }: { host: Host }) {
             shown={firstPaneShown}
             aeatAsked={aeatAsked}
             onAeatHandled={aeatHandled}
+            censoAsked={censoAsked}
+            onCensoHandled={censoHandled}
           />
         ) : (
           <SignedOut
             account={account}
             lead={t("desktop.profile.signed_out")}
+            quiet
+            onSignIn={askSignIn}
+          />
+        ))}
+      {aeatSyncOn &&
+        host.aeatSync &&
+        (reader !== null ? (
+          <AeatSyncPage
+            key={reader}
+            port={host.aeatSync}
+            reader={reader}
+            language={locale}
+            shown={firstPaneShown}
+            page={aeatSyncPage}
+          />
+        ) : (
+          <SignedOut
+            account={account}
+            lead={t("desktop.aeat_sync.signed_out")}
             quiet
             onSignIn={askSignIn}
           />

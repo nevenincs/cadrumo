@@ -98,6 +98,8 @@ export const UserProfilePage = memo(function UserProfilePage({
   onViewChange,
   aeatAsked,
   onAeatHandled,
+  censoAsked,
+  onCensoHandled,
   contribute,
   openMenu,
   accountActions,
@@ -120,6 +122,8 @@ export const UserProfilePage = memo(function UserProfilePage({
    * page opens it once it has the profile, then says it did. */
   aeatAsked: boolean;
   onAeatHandled(): void;
+  censoAsked: boolean;
+  onCensoHandled(): void;
   /** Hands the window's palette what the page offers, read when it opens. */
   contribute(actions: (() => Action[]) | null): void;
   openMenu: OpenMenu;
@@ -443,6 +447,38 @@ export const UserProfilePage = memo(function UserProfilePage({
       sync.snapshot.state === "done" ||
       sync.snapshot.state === "stopped" ||
       sync.snapshot.state === "failed");
+  const pullCenso = () => {
+    if (sync.snapshot?.state === "done") sync.dismiss();
+    void sync.start();
+  };
+  // Asked for from outside the page (the global palette action): a pull
+  // already running or awaiting review is left to its band, and otherwise the
+  // check of what a pull needs is awaited and the pull starts if it passes.
+  // A refused check is shown by the band.
+  const censoWaiting =
+    !!sync.snapshot &&
+    sync.snapshot.state !== "done" &&
+    sync.snapshot.state !== "stopped" &&
+    sync.snapshot.state !== "failed";
+  useEffect(() => {
+    if (!censoAsked) return;
+    if (!host.censo) return onCensoHandled();
+    if (!data || !shown) return;
+    if (censoWaiting || sync.busy || sync.uncertain) return onCensoHandled();
+    if (sync.snapshot && !sync.readiness) return sync.dismiss();
+    if (!sync.readiness && !sync.error) return;
+    if (syncReady) void sync.start();
+    onCensoHandled();
+  }, [
+    censoAsked,
+    data,
+    shown,
+    host.censo,
+    censoWaiting,
+    onCensoHandled,
+    sync,
+    syncReady,
+  ]);
   const changePassword = host.profiles?.changePassword;
   const profileActions: PageAction[] = [
     ...(host.censo
@@ -451,11 +487,9 @@ export const UserProfilePage = memo(function UserProfilePage({
             "sync",
             t("desktop.profile.censo.title"),
             "sync",
-            () => {
-              if (sync.snapshot?.state === "done") sync.dismiss();
-              void sync.start();
-            },
-            { enabled: () => syncReady },
+            pullCenso,
+            // The global palette entry runs the same flow from any page.
+            { enabled: () => syncReady, hidden: true },
           ),
         ]
       : []),
