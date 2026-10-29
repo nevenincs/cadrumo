@@ -336,6 +336,9 @@ def _payload(
             secret = _CREDENTIAL_INPUT.encode()
         case "user-profile.logout":
             values = {"profile_id": profile_id}
+        case "live.sede.view":
+            subject_ref = profile_operation_subject(str(profile_id))
+            values = {"profile_id": profile_id, "css_width": 1280, "css_height": 800, "scale": 1.0}
         case "live.expedientes.capture.single":
             subject_ref = profile_operation_subject(str(profile_id))
             values = {"profile_id": profile_id, "modelo": "303", "year": 2025}

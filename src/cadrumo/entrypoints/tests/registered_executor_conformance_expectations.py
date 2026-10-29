@@ -243,6 +243,15 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "user-profile.bundle-export", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
+            # The isolated profile has no provider; the desktop view must settle
+            # through the same supervisor before acquiring a browser or stream.
+            "live.sede.view",
+            OperationTerminalCondition.REFUSED,
+            OperationEffect.NONE,
+            (),
+            expected_refusal_ref="REFUSED_AUTH_LOGIN_PRECONDITION",
+        ),
+        RegisteredExecutorConformanceCase(
             # The composed provider preflight refuses before discovery: the
             # isolated root holds no usable provider, so no remote read starts.
             "live.filed-history.pull",
