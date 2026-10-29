@@ -20,7 +20,7 @@ Local AI rows:
   stand-in for the agent service that refuses the role's lookup and records
   every run it is sent, once per gated refusal code. The outcome must carry the
   verdict the real model-run verdict builder makes for that code and role: for
-  ``model_not_installed`` it is the model-installed condition, and for
+  ``model_not_installed`` it states ``role_model_installed=False``, and for
   ``no_selection`` it states ``role_selection_required``.
   Its ``role`` fact must be the driven role, and the service must have been
   sent no run.
@@ -980,7 +980,9 @@ def test_a_consumer_that_skips_the_check_or_answers_for_another_code_is_reported
     assert any(problem.startswith("sent 1 run(s) to the agent") for problem in skipped), skipped
     assert any("carrying no verdict" in problem for problem in skipped), skipped
     assert any(p == "verdict speaks for role ['text_extraction'], not vision_transcription" for p in wrong_role)
-    assert any(" is not " in problem for problem in wrong_code), wrong_code
+    assert wrong_code == [
+        "verdict does not state ['model_run_refusal', 'role_selection_required'] as the no_selection refusal does"
+    ]
     assert correct == [], "the real client's refusal is what a gated consumer returns"
 
 

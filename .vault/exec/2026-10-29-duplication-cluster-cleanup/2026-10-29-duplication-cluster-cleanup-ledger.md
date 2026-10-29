@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:30713dd550492084ed2e01140639be702990daf5ebf4d4b8ecd59716f6e1285b'
+body_hash: 'sha256:2011ff2e24d73c533eddf2c2f605740a6e77fdec4dc3ced89b1bf547d72e9e01'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -86,6 +86,11 @@ related:
 - `S06` `verify:` `four-file Ruff check and format and Windows ty` -> `pass`
 - `S06` `verify:` `unchanged duplication scanner post-refinement no auth pair` -> `pass`
 - `S06` `by:` `Sol 6.1 high`
+- `S07` `M` `src/cadrumo/entrypoints/tests/test_reader_consumer_gating.py`
+- `S07` `verify:` `reader gating focused regression pytest 1 case` -> `pass`
+- `S07` `verify:` `reader consumer gating owning integration pytest 41 cases` -> `pass`
+- `S07` `verify:` `scoped Ruff and format and Windows ty` -> `pass`
+- `S07` `by:` `Terra 6.1 xhigh`
 
 ## Notes
 
@@ -95,3 +100,4 @@ related:
 - `S05` Reader source adopted by concurrent commit b9003df9be with foreign calendar/staleness changes preserved; authored patch and receipt retain attribution.
 - `S05` S05 source already present in b9003df9be; separate remaining test checkpoint follows after concurrent Git lock delayed S04 staging.
 - `S06` Intermediate 21/22 and 57/58 durable failures were investigated with preimage controls. One-line test readiness signal moved after custody fixture entry; assertions and production session policy unchanged. Final combined 58 passed.
+- `S07` Broad gate reproduced stale condition-ID assertion. Both refusal codes intentionally share the completion condition; exact expected refusal-evidence diagnostic replaces obsolete substring oracle. No production change.
