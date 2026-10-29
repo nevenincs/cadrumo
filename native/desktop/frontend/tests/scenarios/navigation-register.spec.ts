@@ -110,6 +110,14 @@ test("every parse vector parses, or is refused for the same first reason", () =>
   }
 });
 
+test("the window is the register's only surface, so a TUI preference is a query refusal", () => {
+  expect(register.surfaces).toEqual(["gui"]);
+  expect(parseViewLink("cadrumo://view/ledger?prefer=tui", register)).toEqual({
+    kind: "refused",
+    reason: "query",
+  });
+});
+
 test("every resolve vector opens where the register's resolution does", () => {
   expect(vectors.resolve.length).toBeGreaterThan(0);
   for (const vector of vectors.resolve) {
