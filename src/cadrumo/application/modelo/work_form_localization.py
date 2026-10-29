@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .work_form_context import WorkFormContext
@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, tr
+from ...core.type_guards import is_object_tuple
 from ...domain.calculations.registry.modelo_localization import modelo_localization_source, resolve_modelo_localization
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from .printed_boxes import printed_box_number
@@ -180,11 +181,9 @@ def _form_facts(value: object) -> object:
         return (
             type(value),
             tuple(
-                (name, _form_facts(cast(object, getattr(value, name))))
-                for name in type(value).model_fields
-                if name not in omitted
+                (name, _form_facts(getattr(value, name))) for name in type(value).model_fields if name not in omitted
             ),
         )
-    if isinstance(value, tuple):
-        return tuple(_form_facts(item) for item in cast(tuple[object, ...], value))
+    if is_object_tuple(value):
+        return tuple(_form_facts(item) for item in value)
     return value

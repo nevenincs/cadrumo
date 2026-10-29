@@ -10,7 +10,18 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Any, Final, NotRequired, Self, TypedDict, Unpack, override
+from typing import (
+    Annotated,
+    Final,
+    Generic,
+    NotRequired,
+    Self,
+    TypeAliasType,
+    TypedDict,
+    TypeVar,
+    Unpack,
+    override,
+)
 
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
 
@@ -40,14 +51,18 @@ _NOTIFICATION_SELECTION_PATTERN: Final[str] = (
     rf"^{re.escape(_NOTIFICATION_SELECTION_PREFIX)}{HEX_PATTERN_64.removeprefix('^').removesuffix('$')}$"
 )
 
-type AeatSyncNotificationSelectionKey = Annotated[
-    str,
-    StringConstraints(
-        min_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
-        max_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
-        pattern=_NOTIFICATION_SELECTION_PATTERN,
-    ),
-]
+# Keep a named runtime alias while Semgrep cannot parse this PEP 695 declaration.
+AeatSyncNotificationSelectionKey = TypeAliasType(  # noqa: UP040
+    "AeatSyncNotificationSelectionKey",
+    Annotated[
+        str,
+        StringConstraints(
+            min_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
+            max_length=len(_NOTIFICATION_SELECTION_PREFIX) + _NOTIFICATION_SELECTION_DIGEST_LENGTH,
+            pattern=_NOTIFICATION_SELECTION_PATTERN,
+        ),
+    ],
+)
 """Opaque, bounded identity for one projected notification row.
 
 The admission coordinate remains on :class:`AeatSyncWorkspaceFactV1` only.
@@ -479,15 +494,18 @@ class AeatSyncWorkspaceReconciliationRowV1(_DualRow):
         return self
 
     @override
-    def model_copy(self, *, update: Mapping[str, Any] | None = None, deep: bool = False) -> Self:
+    def model_copy(self, *, update: Mapping[str, object] | None = None, deep: bool = False) -> Self:
         """Keep state/action closure intact across mutation-test copies."""
         if update is None:
             return super().model_copy(deep=deep)
         return type(self).model_validate({**self.model_dump(), **update})
 
 
+RowT = TypeVar("RowT", bound=BaseModel)
+
+
 @dataclass(frozen=True, slots=True)
-class AeatSyncWorkspaceFactV1[RowT: BaseModel]:
+class AeatSyncWorkspaceFactV1(Generic[RowT]):  # noqa: UP046 -- Semgrep cannot parse the PEP 695 form.
     """Admission-only scope/private identity projected away from ``row``."""
 
     bucket_id: BucketId

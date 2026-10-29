@@ -6,18 +6,14 @@ from collections.abc import Mapping
 from dataclasses import Field, fields, is_dataclass
 from functools import cache
 from types import MappingProxyType
-from typing import Any, ClassVar, Protocol, cast, get_type_hints
-
-
-class _DataclassInstance(Protocol):
-    __dataclass_fields__: ClassVar[dict[str, Field[Any]]]
+from typing import Any, get_type_hints
 
 
 def dataclass_instance_fields(value: object) -> tuple[Field[Any], ...]:
     """Return fields after confirming a dynamic value is a dataclass instance."""
     if not is_dataclass(value) or isinstance(value, type):
         raise TypeError("expected a dataclass instance")
-    return fields(cast(_DataclassInstance, value))
+    return fields(type(value))
 
 
 def dataclass_type_fields(value: type[object]) -> tuple[Field[Any], ...]:

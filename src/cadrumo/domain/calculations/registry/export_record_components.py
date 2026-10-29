@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from itertools import pairwise
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING
 
 from ..export_field_kind import CasillaFieldKind
 from .errors import RegistryValidationError
@@ -80,7 +80,10 @@ def _require_component_group(
         _component_shape_differs(group, policies, lengths, first)
         or any((field.kind, field.casilla_id, field.binding) != endpoint for field in group)
         or _component_positions_incomplete(group)
-        or any(right.offset != cast(int, left.offset) + cast(int, left.length) for left, right in pairwise(group))
+        or any(
+            left.offset is None or left.length is None or right.offset != left.offset + left.length
+            for left, right in pairwise(group)
+        )
     ):
         raise RegistryValidationError(
             f"export field {first.id!r} requires complete adjacent components of one semantic value"

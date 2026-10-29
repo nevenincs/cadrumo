@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -87,18 +86,27 @@ from .operation_dtos import (
     ScheduledAmortizationChargeSnapshot,
 )
 
+type _ActivityAssetRequest = (
+    ActivityAssetCreateRequest
+    | ActivityAssetInspectRequest
+    | ActivityAssetCorrectRequest
+    | ActivityAssetForecastRequest
+    | ActivityAssetClaimRequest
+    | ActivityAssetFilingHandoffRequest
+)
+
 
 def _require_access(
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     *,
     definition_id: str,
-    request_type: type[BaseModel],
+    request_type: type[_ActivityAssetRequest],
     mutation: bool,
 ) -> ResolvedOperationAccess:
     if request.definition_id != definition_id or not isinstance(request.payload, request_type):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = cast(Any, request.payload)
+    payload = request.payload
     resolved = resolve_ledger_read_access(
         request,
         context,
@@ -116,7 +124,7 @@ def resolve_activity_asset_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind every asset operation to the exact complete profile history."""
-    targets: dict[str, tuple[type[BaseModel], bool]] = {
+    targets: dict[str, tuple[type[_ActivityAssetRequest], bool]] = {
         ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID: (ActivityAssetCreateRequest, True),
         ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID: (ActivityAssetInspectRequest, False),
         ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID: (ActivityAssetCorrectRequest, True),
@@ -218,7 +226,7 @@ def _receipt_matches(
         raise ValueError("activity-asset projection differs from its terminal receipt")
 
 
-def _private_result(result: BaseModel, result_type: type[ActivityAssetOperationResult]) -> ActivityAssetOperationResult:
+def _private_result[T: ActivityAssetOperationResult](result: BaseModel, result_type: type[T]) -> T:
     if type(result) is not result_type:
         raise ValueError("invalid activity-asset operation result")
     return result_type.model_validate(result.model_dump(mode="python"), strict=True)
@@ -249,7 +257,9 @@ def _verify_private_receipt(
     refusal_code = private.refusal.code if private.refusal is not None else None
     effect = OperationEffect.NONE if refused else success_effect
     if definition_id == ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID and not refused:
-        claim_result = cast(ActivityAssetClaimResult, private).claim_result
+        if not isinstance(private, ActivityAssetClaimResult):
+            raise ValueError("activity-asset claim has an invalid result type")
+        claim_result = private.claim_result
         if claim_result is None:
             raise ValueError("successful activity-asset claim lacks its claim result")
         effect = OperationEffect.NONE if claim_result.reused_existing_claim else OperationEffect.UPDATED
@@ -264,7 +274,7 @@ def _verify_private_receipt(
 
 
 def _project_create(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetCreateProjection:
-    private = cast(ActivityAssetCreateResult, _private_result(result, ActivityAssetCreateResult))
+    private = _private_result(result, ActivityAssetCreateResult)
     _verify_private_receipt(
         private,
         receipt,
@@ -281,7 +291,7 @@ def _project_create(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
 
 
 def _project_inspect(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetInspectProjection:
-    private = cast(ActivityAssetInspectResult, _private_result(result, ActivityAssetInspectResult))
+    private = _private_result(result, ActivityAssetInspectResult)
     _verify_private_receipt(
         private,
         receipt,
@@ -299,7 +309,7 @@ def _project_inspect(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
 
 
 def _project_correct(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetCorrectProjection:
-    private = cast(ActivityAssetCorrectResult, _private_result(result, ActivityAssetCorrectResult))
+    private = _private_result(result, ActivityAssetCorrectResult)
     _verify_private_receipt(
         private,
         receipt,
@@ -316,7 +326,7 @@ def _project_correct(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
 
 
 def _project_forecast(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetForecastProjection:
-    private = cast(ActivityAssetForecastResult, _private_result(result, ActivityAssetForecastResult))
+    private = _private_result(result, ActivityAssetForecastResult)
     _verify_private_receipt(
         private,
         receipt,
@@ -335,7 +345,7 @@ def _project_forecast(result: BaseModel, receipt: OperationTerminalReceipt, /) -
 
 
 def _project_claim(result: BaseModel, receipt: OperationTerminalReceipt, /) -> ActivityAssetClaimProjection:
-    private = cast(ActivityAssetClaimResult, _private_result(result, ActivityAssetClaimResult))
+    private = _private_result(result, ActivityAssetClaimResult)
     _verify_private_receipt(
         private,
         receipt,
@@ -361,7 +371,7 @@ def _project_filing_handoff(
     receipt: OperationTerminalReceipt,
     /,
 ) -> ActivityAssetFilingHandoffProjection:
-    private = cast(ActivityAssetFilingHandoffResult, _private_result(result, ActivityAssetFilingHandoffResult))
+    private = _private_result(result, ActivityAssetFilingHandoffResult)
     _verify_private_receipt(
         private,
         receipt,

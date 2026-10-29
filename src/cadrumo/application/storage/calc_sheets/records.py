@@ -33,7 +33,7 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal
+from typing import Generic, Literal, TypeVar
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_serializer, model_validator
@@ -1053,9 +1053,13 @@ class SheetTemplatePreviewMetadata(BaseModel):
         return self
 
 
-class SheetExportPlan[
-    MetadataT: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePreviewMetadata) = SheetExportMetadata
-](BaseModel):
+# Preserve the constrained default while Semgrep cannot parse a PEP 696 default here.
+MetadataT = TypeVar(
+    "MetadataT", SheetExportMetadata, SheetReviewMetadata, SheetTemplatePreviewMetadata, default=SheetExportMetadata
+)
+
+
+class SheetExportPlan(BaseModel, Generic[MetadataT]):
     """Complete description of the workbook every renderer will write.
 
     The plan is the shared contract between the registry-backed engine, Google

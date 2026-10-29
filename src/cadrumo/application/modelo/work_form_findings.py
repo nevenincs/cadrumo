@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Any, Final
+from typing import Final
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -83,7 +83,7 @@ def finding_attention(finding: ModeloVerificationFinding) -> ModeloFormAttention
     return ModeloFormAttention.CHECK
 
 
-def _issue_attention(data: dict[str, Any]) -> ModeloFormAttention:
+def _issue_attention(data: dict[str, object]) -> ModeloFormAttention:
     finding = data.get("finding")
     if not isinstance(finding, ModeloVerificationFinding):
         raise ValueError("an issue's attention is derived from its finding")
@@ -256,7 +256,7 @@ def finding_action_locale_key(finding: ModeloVerificationFinding) -> str:
     return action
 
 
-def _issue_action(data: dict[str, Any]) -> str:
+def _issue_action(data: dict[str, object]) -> str:
     finding = data.get("finding")
     if not isinstance(finding, ModeloVerificationFinding):
         raise ValueError("an issue's action is derived from its finding")

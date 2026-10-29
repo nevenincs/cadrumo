@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-from typing import cast
 
 from pydantic import BaseModel
 
@@ -24,11 +23,15 @@ from .edit_receipt_ports import ModeloEditReceiptRepositoryFactory
 
 
 def _baseline(operand: BaseModel) -> BaseModel:
-    return cast(ModeloEditSubmissionV1, operand).baseline
+    if not isinstance(operand, ModeloEditSubmissionV1):
+        raise TypeError("modelo edit operand must be a complete submission")
+    return operand.baseline
 
 
 def _reference(baseline: BaseModel) -> str:
-    return cast(ModeloEditBaselineV1, baseline).baseline_id
+    if not isinstance(baseline, ModeloEditBaselineV1):
+        raise TypeError("modelo edit baseline has an incompatible type")
+    return baseline.baseline_id
 
 
 def modelo_edit_financial_operand(

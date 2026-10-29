@@ -6,10 +6,9 @@ existing typed models. Projection and restoration validate the original models.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import fields, is_dataclass
 from datetime import datetime
-from typing import Self, cast
+from typing import Self
 from uuid import UUID
 
 from pydantic import BaseModel, model_validator
@@ -42,6 +41,7 @@ from cadrumo.application.search.workbench import WorkbenchDestinationAdmission
 from ..core.errors.hierarchy import pydantic_validation_boundary
 from ..core.models import STRICT_FROZEN_CONFIG
 from ..core.time.utc import validate_utc_aware
+from ..core.type_guards import is_object_mapping, is_object_tuple
 from .operations.public_mirror import (
     excluded_canonical_fields,
     project_public_mirror,
@@ -85,8 +85,8 @@ class WorkbenchGenerationOperationProjection(BaseModel):
             elif isinstance(value, BaseModel):
                 for field_name in type(value).model_fields:
                     inspect(getattr(value, field_name))
-            elif isinstance(value, tuple):
-                for item in cast(tuple[object, ...], value):
+            elif is_object_tuple(value):
+                for item in value:
                     inspect(item)
 
         inspect(self.generation)
@@ -141,7 +141,7 @@ def _inspect_profile_binding_model(value: BaseModel, expected: str) -> None:
     if "bucket_id" in model.model_fields:
         if model not in _PROFILE_BOUND_PUBLIC_MODELS:
             raise ValueError("workbench bucket-bearing model needs review")
-        bucket_id = cast(str | None, value.__dict__["bucket_id"])
+        bucket_id = value.__dict__["bucket_id"]
         if bucket_id is not None and bucket_id != expected:
             raise ValueError("workbench projection profile mismatch")
     for field_name in model.model_fields:
@@ -152,12 +152,12 @@ def _inspect_profile_binding_value(value: object, expected: str) -> None:
     if isinstance(value, BaseModel):
         _inspect_profile_binding_model(value, expected)
         return
-    if isinstance(value, Mapping):
-        for item in cast(Mapping[object, object], value).values():
+    if is_object_mapping(value):
+        for item in value.values():
             _inspect_profile_binding_value(item, expected)
         return
-    if isinstance(value, tuple):
-        for item in cast(tuple[object, ...], value):
+    if is_object_tuple(value):
+        for item in value:
             _inspect_profile_binding_value(item, expected)
         return
     if is_dataclass(value):
@@ -175,26 +175,38 @@ _OMITTED: dict[type[BaseModel], frozenset[str]] = {PublicSearchGenerationStateV1
 _WITHHELD: frozenset[tuple[type[object], str]] = frozenset({(WorkbenchGenerationV1, "search")})
 
 
+def _require_restored_type[T](value: object, expected: type[T]) -> T:
+    if not isinstance(value, expected):
+        raise TypeError("workbench restored field changed type")
+    return value
+
+
 def _rebuild_search(canonical: type[object], restored: dict[str, object], public: BaseModel) -> None:
     """Rebuild search identity from the restored sibling projections, then check its public state."""
     if canonical is not WorkbenchGenerationV1:
         return
+    if not isinstance(public, PublicWorkbenchGenerationV1):
+        raise TypeError("workbench public generation changed")
     search = assemble_workbench_generation_search(
-        ledger=cast(WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1], restored["ledger"]),
-        declarations=cast(
-            WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1],
-            restored["declarations"],
+        ledger=_require_restored_type(
+            restored["ledger"], WorkbenchGenerationProjectionResultV1[LedgerWorkspaceProjectionV1]
         ),
-        aeat_sync=cast(WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1], restored["aeat_sync"]),
-        modelo=cast(
-            WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]],
-            restored["modelo"],
+        declarations=_require_restored_type(
+            restored["declarations"], WorkbenchGenerationProjectionResultV1[DeclarationsWorkspaceProjectionV1]
         ),
-        ledger_admission=cast(WorkbenchDestinationAdmission, restored["ledger_admission"]),
-        declarations_admission=cast(WorkbenchDestinationAdmission, restored["declarations_admission"]),
-        aeat_sync_admission=cast(WorkbenchDestinationAdmission, restored["aeat_sync_admission"]),
+        aeat_sync=_require_restored_type(
+            restored["aeat_sync"], WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1]
+        ),
+        modelo=_require_restored_type(
+            restored["modelo"], WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
+        ),
+        ledger_admission=_require_restored_type(restored["ledger_admission"], WorkbenchDestinationAdmission),
+        declarations_admission=_require_restored_type(
+            restored["declarations_admission"], WorkbenchDestinationAdmission
+        ),
+        aeat_sync_admission=_require_restored_type(restored["aeat_sync_admission"], WorkbenchDestinationAdmission),
     )
-    safe_search = cast(PublicWorkbenchGenerationV1, public).search
+    safe_search = public.search
     if (
         search.availability != safe_search.availability
         or search.observed_at != safe_search.observed_at

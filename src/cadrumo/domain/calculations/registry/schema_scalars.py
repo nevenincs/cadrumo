@@ -6,7 +6,7 @@ import inspect
 import re
 from collections.abc import Callable
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Literal, TypeAliasType
 
 from pydantic import BeforeValidator, Field, ValidationInfo
 
@@ -423,7 +423,10 @@ BicString = Annotated[str, BeforeValidator(_validate_bic_string)]
 """SWIFT BIC for the registry boundary."""
 
 
-type RegistryScalarValueType = Literal["decimal", "int", "str", "bool", "date"]
+# Keep a named runtime alias while Semgrep cannot parse this PEP 695 declaration.
+RegistryScalarValueType = TypeAliasType(  # noqa: UP040
+    "RegistryScalarValueType", Literal["decimal", "int", "str", "bool", "date"]
+)
 """Runtime family for a registry casilla ``data_type`` declaration."""
 
 

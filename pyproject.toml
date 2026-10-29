@@ -649,7 +649,7 @@ dev = [
   "types-pywin32>=312.0.0.20261006",
   "google-api-python-client-stubs>=1.36",
   "pyrefly>=1.3.1",
-  # Semgrep is invoked through `uvx --from semgrep==1.168.0 semgrep` instead of the
+  # Semgrep is invoked through `uvx --from semgrep==1.182.1 semgrep` instead of the
   # persistent dev group: the Windows Python package install does not expose a
   # working console command, while uvx resolves the supported standalone tool.
   "radon>=6.0.1",

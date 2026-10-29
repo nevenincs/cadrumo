@@ -7,11 +7,11 @@ from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from types import UnionType
-from typing import Union, cast, get_args, get_origin
+from typing import Union, get_args, get_origin
 
 from pydantic import BaseModel
-from pydantic.fields import FieldInfo
 
+from ...core.type_guards import is_object_tuple
 from . import public_mirror as _mirror
 from ._dataclass_fields import dataclass_type_fields, dataclass_type_hints
 
@@ -49,14 +49,27 @@ def _canonical_model_type(value: BaseModel, canonical: object) -> type[object]:
     return matches[0]
 
 
+def _restore_fact_mapping(value: tuple[object, ...]) -> dict[str, object]:
+    if not all(isinstance(entry, _mirror.PublicFactEntryV1) for entry in value):
+        raise TypeError("public-mirror fact entry changed")
+    return {
+        entry.key: _unscalar(_mirror.PublicScalarValueV1(kind=entry.kind, text=entry.text))
+        for entry in value
+        if isinstance(entry, _mirror.PublicFactEntryV1)
+    }
+
+
+def _restore_text_mapping(value: tuple[object, ...]) -> dict[str, str]:
+    if not all(isinstance(entry, _mirror.PublicTextEntryV1) for entry in value):
+        raise TypeError("public-mirror text entry changed")
+    return {entry.key: entry.value for entry in value if isinstance(entry, _mirror.PublicTextEntryV1)}
+
+
 def _restore_ordered_mapping(value: tuple[object, ...], public_item: object) -> object | None:
     if public_item is _mirror.PublicFactEntryV1:
-        return {
-            entry.key: _unscalar(_mirror.PublicScalarValueV1(kind=entry.kind, text=entry.text))
-            for entry in cast(tuple[_mirror.PublicFactEntryV1, ...], value)
-        }
+        return _restore_fact_mapping(value)
     if public_item is _mirror.PublicTextEntryV1:
-        return {entry.key: entry.value for entry in cast(tuple[_mirror.PublicTextEntryV1, ...], value)}
+        return _restore_text_mapping(value)
     return None
 
 
@@ -88,7 +101,7 @@ def _canonical_field_annotations(
     canonical_type: type[object],
 ) -> tuple[Mapping[str, object], Mapping[str, object]]:
     if issubclass(canonical_type, BaseModel):
-        model_fields = cast(Mapping[str, FieldInfo], canonical_type.model_fields)
+        model_fields = canonical_type.model_fields
         target_fields: dict[str, object] = {name: None for name in model_fields}
         target_annotations = {name: field.annotation for name, field in model_fields.items()}
         return target_fields, target_annotations
@@ -147,7 +160,7 @@ def _restore_model(
         complete(canonical_type, restored, value)
     if issubclass(canonical_type, BaseModel):
         return canonical_type.model_validate(restored)
-    return cast(Callable[..., object], canonical_type)(**restored)
+    return canonical_type(**restored)
 
 
 def restore_public_value(
@@ -162,8 +175,8 @@ def restore_public_value(
     canonical, public = _mirror.bare_annotation(canonical), _mirror.bare_annotation(public)
     if isinstance(value, _mirror.PublicScalarValueV1):
         return _unscalar(value)
-    if isinstance(value, tuple):
-        return _restore_sequence(cast(tuple[object, ...], value), canonical, public, withheld, complete)
+    if is_object_tuple(value):
+        return _restore_sequence(value, canonical, public, withheld, complete)
     if isinstance(value, BaseModel):
         return _restore_model(value, canonical, withheld, complete)
     if canonical is Decimal and isinstance(value, str):

@@ -4,8 +4,8 @@
 """
 
 import re
-from typing import cast
 
+from ....core.type_guards import is_object_dict, is_object_list_or_tuple
 from ....domain.calculations.registry.schema import ModeloRevision
 from .errors import CalcSheetsEngineError
 from .records import SheetCellAddress, SheetFormulaCell
@@ -35,10 +35,10 @@ def _references_excluded(value: object, excluded: frozenset[str]) -> bool:
     # expression/binding arms. A coincident identifier refuses omission.
     if isinstance(value, str):
         return value in excluded
-    if isinstance(value, dict):
-        return any(_references_excluded(v, excluded) for v in cast(dict[object, object], value).values())
-    if isinstance(value, (list, tuple)):
-        return any(_references_excluded(v, excluded) for v in cast(list[object] | tuple[object, ...], value))
+    if is_object_dict(value):
+        return any(_references_excluded(v, excluded) for v in value.values())
+    if is_object_list_or_tuple(value):
+        return any(_references_excluded(v, excluded) for v in value)
     return False
 
 

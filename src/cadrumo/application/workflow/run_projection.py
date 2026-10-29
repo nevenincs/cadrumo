@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from datetime import date, datetime
 from enum import Enum
 from types import MappingProxyType, UnionType
-from typing import Final, Literal, Self, Union, cast, get_args, get_origin
+from typing import Final, Literal, Self, Union, get_args, get_origin
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
@@ -14,6 +14,7 @@ from ...core.errors.hierarchy import SiteHealthState
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
+from ...core.type_guards import is_object_tuple
 from ..operations.public_period import PublicPeriod
 from ..operations.public_scalar import (
     PublicNamedScalar,
@@ -154,6 +155,18 @@ class WorkflowNamedStrings(BaseModel):
     values: tuple[str, ...]
 
 
+def _detail_string(value: object) -> str:
+    if not isinstance(value, str):
+        raise TypeError("workflow detail string sequence contains an incompatible value")
+    return value
+
+
+def _detail_period(value: object) -> PublicPeriod:
+    if not isinstance(value, Period):
+        raise TypeError("workflow detail period has an incompatible type")
+    return PublicPeriod.from_period(value)
+
+
 class WorkflowDetailSnapshot(BaseModel):
     """One canonical terminal detail encoded as typed, schema-visible fields."""
 
@@ -178,13 +191,13 @@ class WorkflowDetailSnapshot(BaseModel):
             if key == "kind" or key not in released or value is None:
                 continue
             if key == "period":
-                period = PublicPeriod.from_period(cast(Period, value))
+                period = _detail_period(value)
             elif key == "auth_check":
                 auth_check = cls.from_detail(value)
             elif isinstance(value, date):
                 dates.append(WorkflowNamedDate(key=key, value=value))
-            elif isinstance(value, tuple):
-                strings.append(WorkflowNamedStrings(key=key, values=cast("tuple[str, ...]", value)))
+            elif is_object_tuple(value):
+                strings.append(WorkflowNamedStrings(key=key, values=tuple(_detail_string(item) for item in value)))
             else:
                 scalars.append(PublicNamedScalar(key=key, value=project_scalar(value)))
         return cls(

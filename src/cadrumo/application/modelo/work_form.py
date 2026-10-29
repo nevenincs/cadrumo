@@ -55,7 +55,6 @@ See Also:
 from __future__ import annotations
 
 from datetime import datetime
-from typing import cast
 
 from ...core.casilla_id import CasillaId
 from ...core.external_constants import OutputLanguage
@@ -173,7 +172,9 @@ def build_modelo_work_form(
     )
     if inspection is not None:
         return _worded(inspection)
-    usable_layout = cast(FormLayoutDefinition, layout)
+    if layout is None:
+        raise ValueError("usable form layout is absent")
+    usable_layout = layout
     pages, working, unplaced = _project_layout(usable_layout, context)
     form_fields = [field for page in pages for section in page.sections for field in section_fields(section)]
     every_field = [*form_fields, *working, *(item.field for item in unplaced)]

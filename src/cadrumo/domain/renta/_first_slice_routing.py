@@ -91,11 +91,8 @@ def _routing_members_by_name[CategoryT](
     category_tokens: Callable[[GovernedFactSource, date], Collection[CategoryT]] | None,
 ) -> dict[str, CategoryT]:
     if issubclass(category_type, Enum):
-        enum_members = _enum_members_by_name(cast(type[Enum], category_type))
-        return {
-            name: cast(CategoryT, _require_category_type(member, category_type))
-            for name, member in enum_members.items()
-        }
+        enum_members = _enum_members_by_name(category_type)
+        return {name: _require_category_type(member, category_type) for name, member in enum_members.items()}
     if category_tokens is None:
         raise TypeError("non-Enum first-slice routing requires a registry category projection")
     projected = tuple(category_tokens(authority, effective_date))
@@ -122,7 +119,8 @@ def _selected_model_revision(
         raise RegistryValidationError(
             "first-slice routing requires a generation-pinned authority operation for model selection",
         )
-    return cast(
+    # Cast rationale: optional authority model-selection capability returns a revision with id.
+    return cast(  # nosemgrep: no-cast-in-domain-application
         _SelectedRevision,
         revision_for_context(
             model_code,

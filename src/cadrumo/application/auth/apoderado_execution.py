@@ -86,7 +86,9 @@ def _require_apoderado_request(
         or type(payload) is not request_types[operation_id]
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return cast(ApoderadoOperationId, operation_id), payload
+    # The exact request class and operation-id membership were checked together above.
+    # Cast rationale: dictionary membership cannot narrow a string to the operation-id Literal union.
+    return cast(ApoderadoOperationId, operation_id), payload  # nosemgrep: no-cast-in-domain-application
 
 
 def _make_apoderado_service(

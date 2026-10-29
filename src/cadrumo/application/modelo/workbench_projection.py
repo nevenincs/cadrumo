@@ -16,7 +16,7 @@ inventory; a new excluded field fails the projection until it is reviewed.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Self, cast
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -494,10 +494,10 @@ def _restore_tax_id_format(public: PublicSpanishTaxIdFormat) -> SpanishTaxIdForm
 def _restore(projection: ModeloWorkbenchFormProjectionV1) -> ModeloWorkbenchFormReadV1:
     baseline = projection.admitted_baseline
     admission = (
-        ModeloEditAdmittedV1(baseline=baseline.to_baseline())
-        if baseline is not None
-        else cast(ModeloEditRefusedV1, projection.admission_refusal)
+        ModeloEditAdmittedV1(baseline=baseline.to_baseline()) if baseline is not None else projection.admission_refusal
     )
+    if admission is None:
+        raise ValueError("workbench projection has no edit admission outcome")
     return ModeloWorkbenchFormReadV1(
         load=_restore_form(projection.form),
         admission=admission,

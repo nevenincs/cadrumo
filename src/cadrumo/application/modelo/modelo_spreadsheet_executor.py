@@ -8,7 +8,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, cast
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -56,7 +56,7 @@ class _SpreadsheetExecution:
     ports: ModeloSpreadsheetOperationPorts
     period: Period
     snapshot: RegistrySnapshot
-    coordinate: dict[str, Any]
+    coordinate: ModeloSpreadsheetProjection
     local_publication_started: bool = False
 
 
@@ -102,7 +102,7 @@ async def _refuse(scope: _SpreadsheetExecution, detail: SpreadsheetRefusal) -> O
     outcome_type = MODELO_SPREADSHEET_OPERATION_CONTRACTS[scope.request.definition_id][2]
     outcome = outcome_type.model_validate(
         {
-            **scope.coordinate,
+            **scope.coordinate.model_dump(mode="python"),
             "outcome": "refused",
             "refusal": detail.model_dump(mode="python"),
         },
@@ -119,7 +119,9 @@ async def _refuse(scope: _SpreadsheetExecution, detail: SpreadsheetRefusal) -> O
 
 
 async def _export_workbook(scope: _SpreadsheetExecution) -> ModeloSpreadsheetExportProjection:
-    payload = cast(ModeloSpreadsheetExportRequest, scope.payload)
+    payload = scope.payload
+    if not isinstance(payload, ModeloSpreadsheetExportRequest):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     sink = LocalFileExportSink(path=Path(payload.output_path), replace_existing=payload.replace_existing)
     sink.require_writable()
 
@@ -146,7 +148,7 @@ async def _export_workbook(scope: _SpreadsheetExecution) -> ModeloSpreadsheetExp
             raise ValueError("spreadsheet publication receipt contradicts its workbook")
         await scope.context.events.effect(OperationEffect.UPDATED)
     return ModeloSpreadsheetExportProjection(
-        **scope.coordinate,
+        **scope.coordinate.model_dump(mode="python"),
         output_path=str(receipt.path),
         byte_size=receipt.byte_size,
         sha256=receipt.sha256,
@@ -169,7 +171,12 @@ async def _retain_success(scope: _SpreadsheetExecution, projection: ModeloSpread
     effect = "updated"
     outcome_type = MODELO_SPREADSHEET_OPERATION_CONTRACTS[scope.request.definition_id][2]
     outcome = outcome_type.model_validate(
-        {**scope.coordinate, "outcome": "succeeded", "result": projection.model_dump(mode="python")}, strict=True
+        {
+            **scope.coordinate.model_dump(mode="python"),
+            "outcome": "succeeded",
+            "result": projection.model_dump(mode="python"),
+        },
+        strict=True,
     )
     retained = ModeloSpreadsheetExecutionResult.model_validate(
         {"projection": outcome.model_dump(mode="python"), "effect": effect}, strict=True
@@ -222,7 +229,7 @@ class ModeloSpreadsheetExecutor:
             modelo=snapshot.modelo.id,
             revision=snapshot.revision.id,
             period=payload.period,
-        ).model_dump(mode="python")
+        )
         scope = _SpreadsheetExecution(
             request=request,
             context=context,

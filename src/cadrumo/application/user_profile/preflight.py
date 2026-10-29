@@ -9,7 +9,7 @@ record does not yet carry.
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator, Mapping
-from typing import TYPE_CHECKING, cast, overload, override
+from typing import TYPE_CHECKING, overload, override
 
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -64,7 +64,9 @@ class _DeferredProfileGrounding(Mapping[str, ProfileKeyGrounding]):
         # grounding into an apparently absent key. Only the loaded index owns
         # missing-key semantics; errors while obtaining it must propagate.
         # Lookup accepts arbitrary keys without widening the stored key type.
-        index = cast(Mapping[object, ProfileKeyGrounding], cast(object, self._loaded()))
+        index = self._loaded()
+        if not isinstance(key, str):
+            return default
         return index.get(key, default)
 
     @override

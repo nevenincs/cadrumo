@@ -29,7 +29,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Protocol, cast
+from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from pydantic import BaseModel, Field
 
@@ -37,6 +37,7 @@ from ...core.calendar_shift import shift_by_calendar_years
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now, today_madrid
+from ...core.type_guards import is_object_set_or_frozenset
 from ...domain.calculations.registry.applicability import derive_modelo_applicability, iter_modelo_applicability_rules
 from ...domain.calculations.registry.applicability_models import (
     ApplicabilityVerdict,
@@ -227,6 +228,7 @@ def applicability_profile_fact_keys(rule: ModeloApplicabilityRule) -> tuple[str,
     return tuple(keys)
 
 
+@runtime_checkable
 class _HasValueAttribute(Protocol):
     @property
     def value(self) -> object: ...
@@ -236,15 +238,15 @@ def _profile_fact_value(value: object) -> _ProfileFactValue:
     """Render one profile value as the explain payload's scalar."""
     if value is None:
         return ""
-    if isinstance(value, frozenset):
-        items = cast(frozenset[object], value)
+    if is_object_set_or_frozenset(value) and isinstance(value, frozenset):
+        items = value
         rendered_items: list[str] = []
         for item in items:
             item_value: object = getattr(item, "value", item)
             rendered_items.append(str(item_value))
         return ",".join(sorted(rendered_items))
-    if hasattr(value, "value"):
-        value = cast(_HasValueAttribute, value).value
+    if isinstance(value, _HasValueAttribute):
+        value = value.value
     if isinstance(value, str | bool | int):
         return value
     return str(value)

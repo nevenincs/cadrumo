@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import Any, Final, Self
+from typing import Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -63,20 +63,24 @@ _CHARGE_DECIMAL_FIELDS: Final = ("amount", "free_depreciation_unit_acquisition_v
 """Decimal facts a scheduled charge and a recorded claim both carry."""
 
 
-def _public_charge_fields(value: BaseModel) -> dict[str, Any]:
+def _public_charge_fields(value: BaseModel) -> dict[str, object]:
     """Copy a domain charge field by field, carrying its decimals as public decimals."""
-    data = value.model_dump(mode="python")
+    data: dict[str, object] = {}
+    data.update(value.model_dump(mode="python"))
     for name in _CHARGE_DECIMAL_FIELDS:
         amount = data[name]
         data[name] = PublicDecimal(decimal=str(amount)) if amount is not None else None
     return data
 
 
-def _domain_charge_fields(snapshot: BaseModel) -> dict[str, Any]:
+def _domain_charge_fields(snapshot: BaseModel) -> dict[str, object]:
     """Copy a charge snapshot field by field, restoring its public decimals."""
-    data: dict[str, Any] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
+    data: dict[str, object] = {name: getattr(snapshot, name) for name in type(snapshot).model_fields}
     for name in _CHARGE_DECIMAL_FIELDS:
-        data[name] = _decimal(data[name])
+        amount = data[name]
+        if amount is not None and not isinstance(amount, PublicDecimal):
+            raise TypeError("charge decimal must be a public decimal")
+        data[name] = _decimal(amount)
     return data
 
 
@@ -449,11 +453,11 @@ class AmortizationClaimSnapshot(BaseModel):
     @classmethod
     def from_domain(cls, value: AmortizationClaim) -> Self:
         """Project a canonical history claim to its public wire representation."""
-        return cls(**_public_charge_fields(value))
+        return cls.model_validate(_public_charge_fields(value))
 
     def to_domain(self) -> AmortizationClaim:
         """Restore and revalidate the canonical history claim."""
-        return AmortizationClaim(**_domain_charge_fields(self))
+        return AmortizationClaim.model_validate(_domain_charge_fields(self))
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -517,11 +521,11 @@ class ScheduledAmortizationChargeSnapshot(BaseModel):
     @classmethod
     def from_domain(cls, value: ScheduledAmortizationCharge) -> Self:
         """Project one pinned-authority forecast into the public wire form."""
-        return cls(**_public_charge_fields(value))
+        return cls.model_validate(_public_charge_fields(value))
 
     def to_domain(self) -> ScheduledAmortizationCharge:
         """Restore and revalidate the schedule used for claim creation."""
-        return ScheduledAmortizationCharge(**_domain_charge_fields(self))
+        return ScheduledAmortizationCharge.model_validate(_domain_charge_fields(self))
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

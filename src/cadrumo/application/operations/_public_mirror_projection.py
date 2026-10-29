@@ -7,10 +7,11 @@ from dataclasses import is_dataclass
 from datetime import date
 from decimal import Decimal
 from types import UnionType
-from typing import Union, cast, get_args, get_origin
+from typing import Union, get_args, get_origin
 
 from pydantic import BaseModel
 
+from ...core.type_guards import is_object_mapping, is_object_tuple
 from . import public_mirror as _mirror
 from ._dataclass_fields import dataclass_instance_fields, dataclass_type_hints
 
@@ -147,10 +148,10 @@ def project_public_value(
         return _scalar(value)
     if value is None:
         return None
-    if isinstance(value, Mapping):
-        return _project_mapping(cast(Mapping[object, object], value), public)
-    if isinstance(value, tuple):
-        return _project_tuple(cast(tuple[object, ...], value), canonical, public, omissions)
+    if is_object_mapping(value):
+        return _project_mapping(value, public)
+    if is_object_tuple(value):
+        return _project_tuple(value, canonical, public, omissions)
     if isinstance(value, BaseModel) or is_dataclass(value):
         return _project_model(value, public, omissions)
     if isinstance(value, Decimal):

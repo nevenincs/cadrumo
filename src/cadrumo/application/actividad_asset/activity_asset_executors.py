@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 from datetime import date
 from decimal import Decimal
-from typing import Any, cast
 from uuid import UUID
+
+from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
@@ -131,8 +132,8 @@ def _activity_asset_operations(
     )
 
 
-def _worker_bucket(
-    request: OperationRequest[Any],
+def _worker_bucket[T: BaseModel](
+    request: OperationRequest[T],
     context: OperationExecutorContext,
     *,
     definition_id: str,
@@ -230,7 +231,7 @@ class ActivityAssetCreateExecutor:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
         bucket_id = _worker_bucket(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=ACTIVITY_ASSET_CREATE_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -289,7 +290,7 @@ class ActivityAssetInspectExecutor:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
         bucket_id = _worker_bucket(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=ACTIVITY_ASSET_INSPECT_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -354,7 +355,7 @@ class ActivityAssetCorrectExecutor:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
         bucket_id = _worker_bucket(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=ACTIVITY_ASSET_CORRECT_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -413,7 +414,7 @@ class ActivityAssetForecastExecutor:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
         bucket_id = _worker_bucket(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=ACTIVITY_ASSET_FORECAST_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -481,7 +482,7 @@ class ActivityAssetClaimExecutor:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
         bucket_id = _worker_bucket(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=ACTIVITY_ASSET_CLAIM_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -548,7 +549,7 @@ class ActivityAssetFilingHandoffExecutor:
         """Run the typed operation and return its terminal reference or refusal."""
         payload = request.payload
         bucket_id = _worker_bucket(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=ACTIVITY_ASSET_FILING_HANDOFF_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,

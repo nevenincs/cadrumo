@@ -6,7 +6,6 @@ import asyncio
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
-from typing import Any, Protocol, cast
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -85,12 +84,17 @@ _PERSON_ACTOR = "operator"
 """The label the ratio audit events carry for a person's session."""
 
 
-class _ProfileScopedRequest(Protocol):
-    profile_id: UUID
+type _ProfileScopedRequest = (
+    LedgerRatiosListRequest
+    | LedgerRatiosSetRequest
+    | LedgerRatiosUnsetRequest
+    | LedgerRatiosEligibleRequest
+    | LedgerRatiosValidateRequest
+)
 
 
-def _require_worker_profile(
-    request: OperationRequest[Any],
+def _require_worker_profile[T: BaseModel](
+    request: OperationRequest[T],
     context: OperationExecutorContext,
     *,
     definition_id: str,
@@ -118,7 +122,7 @@ class LedgerRatiosListExecutor:
     ) -> str | OperationRefusalEvidence:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_LIST_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -187,7 +191,7 @@ class LedgerRatiosSetExecutor:
     ) -> str:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -265,7 +269,7 @@ class LedgerRatiosUnsetExecutor:
     ) -> str | OperationRefusalEvidence:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -330,7 +334,7 @@ class LedgerRatiosEligibleExecutor:
     ) -> str:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -374,7 +378,7 @@ class LedgerRatiosValidateExecutor:
     ) -> str:
         payload = request.payload
         bucket_id = _require_worker_profile(
-            cast(OperationRequest[Any], request),
+            request,
             context,
             definition_id=LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,
             profile_id=payload.profile_id,
@@ -472,11 +476,11 @@ def _whole_profile_access(
     context: OperationAccessContext,
     *,
     definition_id: str,
-    request_type: type[BaseModel],
+    request_type: type[_ProfileScopedRequest],
 ) -> ResolvedOperationAccess:
     if request.definition_id != definition_id or not isinstance(request.payload, request_type):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = cast(_ProfileScopedRequest, request.payload)
+    payload = request.payload
     committing = definition_id in {
         LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
         LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
@@ -507,14 +511,14 @@ def _receipt_matches(
         raise ValueError("ratio projection differs from its terminal receipt")
 
 
-def _copy_result(result: BaseModel, expected_type: type[BaseModel]) -> BaseModel:
+def _copy_result[T: BaseModel](result: BaseModel, expected_type: type[T]) -> T:
     if type(result) is not expected_type:
         raise ValueError("invalid ratio operation result")
     return expected_type.model_validate(result.model_dump(mode="python"), strict=True)
 
 
 def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosListProjection:
-    private = cast(LedgerRatiosListResult, _copy_result(result, LedgerRatiosListResult))
+    private = _copy_result(result, LedgerRatiosListResult)
     refused = private.outcome == "censo_mismatch"
     _receipt_matches(
         receipt,
@@ -528,7 +532,7 @@ def _project_list_result(result: BaseModel, receipt: OperationTerminalReceipt, /
 
 
 def _project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosSetProjection:
-    private = cast(LedgerRatiosSetResult, _copy_result(result, LedgerRatiosSetResult))
+    private = _copy_result(result, LedgerRatiosSetResult)
     _receipt_matches(
         receipt,
         definition_id=LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
@@ -539,7 +543,7 @@ def _project_set_result(result: BaseModel, receipt: OperationTerminalReceipt, /)
 
 
 def _project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosUnsetProjection:
-    private = cast(LedgerRatiosUnsetResult, _copy_result(result, LedgerRatiosUnsetResult))
+    private = _copy_result(result, LedgerRatiosUnsetResult)
     refused = private.outcome == "no_override"
     expected = OperationEffect.NONE if refused else OperationEffect.UPDATED
     _receipt_matches(
@@ -554,7 +558,7 @@ def _project_unset_result(result: BaseModel, receipt: OperationTerminalReceipt, 
 
 
 def _project_eligible_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosEligibleProjection:
-    private = cast(LedgerRatiosEligibleResult, _copy_result(result, LedgerRatiosEligibleResult))
+    private = _copy_result(result, LedgerRatiosEligibleResult)
     _receipt_matches(
         receipt,
         definition_id=LEDGER_RATIOS_ELIGIBLE_OPERATION_DEFINITION_ID,
@@ -565,7 +569,7 @@ def _project_eligible_result(result: BaseModel, receipt: OperationTerminalReceip
 
 
 def _project_validate_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> LedgerRatiosValidateProjection:
-    private = cast(LedgerRatiosValidateResult, _copy_result(result, LedgerRatiosValidateResult))
+    private = _copy_result(result, LedgerRatiosValidateResult)
     _receipt_matches(
         receipt,
         definition_id=LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID,

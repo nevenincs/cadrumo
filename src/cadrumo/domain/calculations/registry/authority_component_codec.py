@@ -14,7 +14,7 @@ from decimal import Decimal
 from enum import Enum
 from functools import cache
 from pathlib import PurePath
-from typing import TYPE_CHECKING, Final, cast, get_args
+from typing import TYPE_CHECKING, Final, get_args
 
 from pydantic import BaseModel, TypeAdapter, ValidationError
 
@@ -211,7 +211,9 @@ def _decode_runtime_catalogue(
 ) -> object:
     from .runtime_catalogues import RuntimeRegistryCatalogues
 
-    runtime_query = cast(RuntimeCatalogueComponentQuery, query)
+    if not isinstance(query, RuntimeCatalogueComponentQuery):
+        raise AuthorityComponentCodecError("component query has an incompatible type")
+    runtime_query = query
     field = RuntimeRegistryCatalogues.model_fields.get(runtime_query.family)
     if field is None or field.annotation is None:
         raise AuthorityComponentCodecError(f"unknown runtime catalogue family {runtime_query.family!r}")
@@ -247,7 +249,9 @@ def _decode_reference(
 ) -> object:
     from .schema_references import LegalReference, SourceReference
 
-    reference_query = cast(ReferenceComponentQuery, query)
+    if not isinstance(query, ReferenceComponentQuery):
+        raise AuthorityComponentCodecError("component query has an incompatible type")
+    reference_query = query
     model = LegalReference if reference_query.kind is AuthorityComponentKind.LEGAL_REFERENCE else SourceReference
     return model.model_validate(document, strict=False)
 
@@ -258,7 +262,9 @@ def _decode_evidence(
     _dependencies: tuple[object, ...],
     _observer: _FactQueryObserver,
 ) -> object:
-    evidence_query = cast(EvidenceComponentQuery, query)
+    if not isinstance(query, EvidenceComponentQuery):
+        raise AuthorityComponentCodecError("component query has an incompatible type")
+    evidence_query = query
     row = _mapping_item(document, "payload")
     if evidence_query.kind is AuthorityComponentKind.LEGAL_EVIDENCE:
         return _decode_legal_evidence(row)

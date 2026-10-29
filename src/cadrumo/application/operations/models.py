@@ -8,7 +8,7 @@ from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from enum import Enum, StrEnum
 from pathlib import PurePath
-from typing import TYPE_CHECKING, Annotated, cast
+from typing import TYPE_CHECKING, Annotated
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -19,6 +19,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from ...core.time.utc import validate_utc_aware
+from ...core.type_guards import is_object_collection
 from ._model_contract import require_strict_frozen_operation_model_graph
 
 if TYPE_CHECKING:
@@ -432,15 +433,11 @@ def _require_deeply_immutable_payload(value: object, *, path: str, visiting: set
         finally:
             visiting.remove(identity)
         return
-    if isinstance(value, tuple):
-        items = cast(tuple[object, ...], value)
-    elif isinstance(value, frozenset):
-        items = cast(frozenset[object], value)
-    else:
+    if not is_object_collection(value) or not isinstance(value, (tuple, frozenset)):
         raise ValueError(f"operation request {path} contains mutable or unsupported {type(value).__name__}")
     visiting.add(identity)
     try:
-        for index, item in enumerate(items):
+        for index, item in enumerate(value):
             _require_deeply_immutable_payload(item, path=f"{path}[{index}]", visiting=visiting)
     finally:
         visiting.remove(identity)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal, Self, cast
+from typing import Annotated, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
@@ -147,9 +147,9 @@ class ProfileViewPreconditionVerdict(BaseModel):
         """Copy only supported actual facts, refusing an unrepresentable value."""
 
         def supported(value: object) -> str | int | bool:
-            if type(value) not in {str, int, bool}:
+            if not isinstance(value, str | int | bool) or type(value) not in {str, int, bool}:
                 raise ValueError("health verdict carries an unsupported public value")
-            return cast(str | int | bool, value)
+            return value
 
         return cls(
             failed_condition_id=verdict.failed_condition_id,

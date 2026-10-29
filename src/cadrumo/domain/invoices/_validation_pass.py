@@ -83,7 +83,8 @@ def answer_once[**P, R](projection: Callable[P, R], /, *args: P.args, **kwargs: 
         tuple(sorted(kwargs.items())),
     )
     if key in active.answers:
-        return cast("R", active.answers[key])
+        # Cast rationale: memo key includes the exact projection and arguments, preserving its result type.
+        return cast("R", active.answers[key])  # nosemgrep: no-cast-in-domain-application
     answer = projection(*args, **kwargs)
     active.answers[key] = answer
     return answer

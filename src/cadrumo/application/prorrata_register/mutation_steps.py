@@ -349,7 +349,10 @@ def _perform_whole_seed(
         raise InternalInvariantError("whole-entity prorrata seed has no source-snapshot capability")
     commit = service.seed_whole_carried(
         payload.ejercicio,
-        observation_repository=cast(ProrrataPriorSettlementSnapshotRepositoryProtocol, observation_repository),
+        # Cast rationale: optional prior-settlement capability was checked callable above.
+        observation_repository=cast(  # nosemgrep: no-cast-in-domain-application
+            ProrrataPriorSettlementSnapshotRepositoryProtocol, observation_repository
+        ),
     )
     return CommittedProrrataMutation(
         register=commit.register,

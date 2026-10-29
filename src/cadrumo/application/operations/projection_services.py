@@ -571,7 +571,9 @@ class OperationResultProjectionService:
         if retained_model is not None:
             # CAST-RATIONALE-PAGED-RESULT: the exact requested model class is
             # part of the key; only validated success envelopes are retained.
-            return cast("OperationResultProjectionResultV1[ResultProjectionT]", retained_model)
+            return cast(  # nosemgrep: no-cast-in-domain-application reason: cache key binds the result type.
+                "OperationResultProjectionResultV1[ResultProjectionT]", retained_model
+            )
         if key is not None:
             self._snapshot.clear()
         result = await _resolve_result_projection(
@@ -600,7 +602,9 @@ class OperationResultProjectionService:
         # CAST-RATIONALE-OPERATION-ERROR-DETAIL: the branch above admits only a
         # requested type the stored detail model is a subclass of, so the
         # detail envelope is exactly the caller's requested result shape.
-        return cast("OperationResultProjectionResultV1[ResultProjectionT]", detail)
+        return cast(  # nosemgrep: no-cast-in-domain-application reason: requested type admits error detail.
+            "OperationResultProjectionResultV1[ResultProjectionT]", detail
+        )
 
 
 @dataclass(frozen=True, slots=True)

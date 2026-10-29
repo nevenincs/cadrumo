@@ -39,7 +39,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import Annotated, Any, Final, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -51,6 +51,7 @@ from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.result_disposition import ResultDisposition
+from ...core.type_guards import is_object_list_or_tuple
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
     FormCellKind,
@@ -225,11 +226,11 @@ def fitting_standings(
     )
 
 
-def _default_standing(data: dict[str, Any]) -> ModeloFormStanding:
+def _default_standing(data: dict[str, object]) -> ModeloFormStanding:
     origin = data.get("origin")
     if not isinstance(origin, ModeloFormOrigin):
         raise ValueError("a field's standing is derived from its origin")
-    return field_standing(origin, data.get("blockers", ()))
+    return field_standing(origin, _factory_blockers(data))
 
 
 class ModeloFormEditability(StrEnum):
@@ -387,10 +388,52 @@ def _typed_by_the_filer_of(bindings: tuple[ModeloFormBinding, ...] | list[Modelo
     return all(binding.policy.override_policy is SourceOverridePolicy.ENTER for binding in bindings)
 
 
-def _confirmable_of(data: dict[str, Any]) -> bool:
-    address = data["address"]
-    editability = data["editability"]
+def _factory_blockers(data: dict[str, object]) -> tuple[ModeloFormBlocker, ...] | list[ModeloFormBlocker]:
+    blockers = data.get("blockers", ())
+    if not is_object_list_or_tuple(blockers) or not all(isinstance(item, ModeloFormBlocker) for item in blockers):
+        raise ValueError("a field's blockers must be validated")
+    return tuple(item for item in blockers if isinstance(item, ModeloFormBlocker))
+
+
+def _factory_bindings(data: dict[str, object]) -> tuple[ModeloFormBinding, ...] | list[ModeloFormBinding]:
     bindings = data.get("bindings", ())
+    if not is_object_list_or_tuple(bindings) or not all(isinstance(item, ModeloFormBinding) for item in bindings):
+        raise ValueError("a field's bindings must be validated")
+    return tuple(item for item in bindings if isinstance(item, ModeloFormBinding))
+
+
+def _factory_address(data: dict[str, object]) -> ModeloFormAddressV1:
+    address = data["address"]
+    if not isinstance(address, ModeloFormCasillaAddressV1 | ModeloFormBindingAddressV1):
+        raise ValueError("a field's address must be validated")
+    return address
+
+
+def _factory_editability(data: dict[str, object]) -> ModeloFormEditability:
+    editability = data["editability"]
+    if not isinstance(editability, ModeloFormEditability):
+        raise ValueError("a field's editability must be validated")
+    return editability
+
+
+def _factory_origin(data: dict[str, object]) -> ModeloFormOrigin:
+    origin = data["origin"]
+    if not isinstance(origin, ModeloFormOrigin):
+        raise ValueError("a field's origin must be validated")
+    return origin
+
+
+def _factory_value(data: dict[str, object]) -> ModeloFormScalar:
+    value = data.get("value")
+    if value is not None and not isinstance(value, Decimal | int | str | bool | date):
+        raise ValueError("a field's value must be validated")
+    return value
+
+
+def _confirmable_of(data: dict[str, object]) -> bool:
+    address = _factory_address(data)
+    editability = _factory_editability(data)
+    bindings = _factory_bindings(data)
     return (
         data["origin"] is ModeloFormOrigin.DEFAULT_TO_CONFIRM
         and data["value"] is not None
@@ -405,12 +448,12 @@ def holds_zero(value: ModeloFormScalar) -> bool:
     return isinstance(value, Decimal | int) and not isinstance(value, bool) and value == 0
 
 
-def _default_edit_address(data: dict[str, Any]) -> ModeloFormAddressV1:
-    return _edit_address_of(data["address"], data["editability"], data.get("bindings", ()))
+def _default_edit_address(data: dict[str, object]) -> ModeloFormAddressV1:
+    return _edit_address_of(_factory_address(data), _factory_editability(data), _factory_bindings(data))
 
 
-def _default_held_zero(data: dict[str, Any]) -> bool:
-    return holds_zero(data.get("value"))
+def _default_held_zero(data: dict[str, object]) -> bool:
+    return holds_zero(_factory_value(data))
 
 
 _FILERS_OWN_ORIGINS = frozenset({ModeloFormOrigin.OVERRIDES_SOURCE, ModeloFormOrigin.ENTERED})
@@ -436,39 +479,39 @@ def comparable_entry(value: ModeloFormScalar) -> ModeloEditWireScalar:
     return None if value is None else wire_scalar_value(value)
 
 
-def _takes_typed_value_of(data: dict[str, Any]) -> bool:
+def _takes_typed_value_of(data: dict[str, object]) -> bool:
     return data["editability"] in TYPED_EDITABILITIES
 
 
-def _clearable_of(data: dict[str, Any]) -> bool:
+def _clearable_of(data: dict[str, object]) -> bool:
     return data["editability"] is ModeloFormEditability.EDITABLE_VALUE and data["origin"] is ModeloFormOrigin.ENTERED
 
 
-def _own_value_of(data: dict[str, Any]) -> ModeloEditWireScalar:
-    return comparable_entry(data["value"]) if data["origin"] in _FILERS_OWN_ORIGINS else None
+def _own_value_of(data: dict[str, object]) -> ModeloEditWireScalar:
+    return comparable_entry(_factory_value(data)) if data["origin"] in _FILERS_OWN_ORIGINS else None
 
 
-def _confirm_comparable_of(data: dict[str, Any]) -> ModeloEditWireScalar:
-    value = data["value"]
+def _confirm_comparable_of(data: dict[str, object]) -> ModeloEditWireScalar:
+    value = _factory_value(data)
     return comparable_entry(value) if value is not None and _confirmable_of(data) else None
 
 
-def _state_digest_of(data: dict[str, Any]) -> str:
-    value = comparable_entry(data["value"])
-    seen = json.dumps([data["origin"].value, type(value).__name__, None if value is None else str(value)])
+def _state_digest_of(data: dict[str, object]) -> str:
+    value = comparable_entry(_factory_value(data))
+    seen = json.dumps([_factory_origin(data).value, type(value).__name__, None if value is None else str(value)])
     return sha256_hex(seen.encode("utf-8"))
 
 
-def _filers_own_of(data: dict[str, Any]) -> bool:
+def _filers_own_of(data: dict[str, object]) -> bool:
     return data["origin"] in _FILERS_OWN_ORIGINS
 
 
-def _restorable_of(data: dict[str, Any]) -> bool:
+def _restorable_of(data: dict[str, object]) -> bool:
     return data["editability"] in _OVERRIDE_EDITABILITIES and _filers_own_of(data)
 
 
-def _confirm_value_of(data: dict[str, Any]) -> ModeloEditWireScalar:
-    value = data["value"]
+def _confirm_value_of(data: dict[str, object]) -> ModeloEditWireScalar:
+    value = _factory_value(data)
     return wire_scalar_value(value) if value is not None and _confirmable_of(data) else None
 
 
@@ -610,7 +653,7 @@ _SELF_DERIVED: Final[frozenset[str]] = frozenset(
 )
 
 
-def revised_field(field: ModeloFormField, **update: Any) -> ModeloFormField:
+def revised_field(field: ModeloFormField, **update: object) -> ModeloFormField:
     """A copy of ``field`` with ``update`` applied and every value it derives from itself derived again.
 
     A plain model copy skips validation, so a copy that changes a value, an
@@ -623,7 +666,7 @@ def revised_field(field: ModeloFormField, **update: Any) -> ModeloFormField:
     data = {name: getattr(field, name) for name in type(field).model_fields if name not in _SELF_DERIVED}
     data.update(update)
     if "standing" not in update and ("origin" in update or "blockers" in update):
-        data["standing"] = field_standing(data["origin"], data["blockers"])
+        data["standing"] = field_standing(_factory_origin(data), _factory_blockers(data))
     return type(field).model_validate(data)
 
 

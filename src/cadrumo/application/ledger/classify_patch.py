@@ -117,7 +117,8 @@ def _resolve_m210_classification(
     m210 = payload.m210
     gross_income_amount = decode_classification_decimal_option(m210.gross_income_amount, "gross_income_amount")
     applicable_rate = decode_classification_decimal_option(m210.applicable_rate, "applicable_rate")
-    snapshot = cast(
+    # Cast rationale: M210 resolution only reads load and bucket_id from the immutable held catalogue view.
+    snapshot = cast(  # nosemgrep: no-cast-in-domain-application
         TransactionCatalogueRepositoryProtocol,
         _LoadedCatalogueView(bucket_id=bucket_id, catalogue=catalogue),
     )

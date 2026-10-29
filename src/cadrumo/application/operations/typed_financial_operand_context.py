@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import cast
 
 from pydantic import BaseModel
 
@@ -41,7 +40,9 @@ class BoundTypedFinancialOperandAccess:
         if operand_type is not declaration.operand_type:
             raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
         async with broker.consume(requirement, declaration) as operand:
+            if not isinstance(operand, operand_type):
+                raise OperationFinancialOperandRefusedError(OperationFinancialOperandRefusalCode.WRONG_MODEL)
             try:
-                yield cast(OperandT, operand)
+                yield operand
             finally:
                 del operand

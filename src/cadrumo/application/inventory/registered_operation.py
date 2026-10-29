@@ -83,7 +83,9 @@ def resolve_inventory_operation_access(
     payload = request.payload
     if shape is None or type(payload) is not shape.request_type:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = cast(_InventoryProfileScopedRequest, payload).profile_id
+    # Cast rationale: exact registered request class was checked above; every inventory request carries
+    # profile_id.
+    profile_id = cast(_InventoryProfileScopedRequest, payload).profile_id  # nosemgrep: no-cast-in-domain-application
     resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
     if request.definition_id not in _MUTATING_IDS:
         return resolved

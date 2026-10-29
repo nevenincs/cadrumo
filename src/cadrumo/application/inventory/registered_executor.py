@@ -69,7 +69,7 @@ class _InventoryProfileScopedRequest(Protocol):
     profile_id: UUID
 
 
-_SERVICE_INPUT_REASONS: dict[str, str] = {
+_SERVICE_INPUT_REASONS: dict[str, InventoryRefusalReason] = {
     "application.inventory.service.errors.invalid_valuation_method": "invalid_valuation_method",
     "application.inventory.service.errors.duplicate_movement_id": "duplicate_movement_id",
     "application.inventory.service.errors.closing_authority_conflict": "closing_authority_conflict",
@@ -113,7 +113,11 @@ class InventoryOperationExecutor:
         if shape is None or type(request.payload) is not shape.request_type:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
         payload = request.payload
-        profile_id = cast(_InventoryProfileScopedRequest, payload).profile_id
+        # Cast rationale: exact registered request class was checked above; every inventory request carries
+        # profile_id.
+        profile_id = cast(  # nosemgrep: no-cast-in-domain-application
+            _InventoryProfileScopedRequest, payload
+        ).profile_id
         profile = str(profile_id)
         if request.definition_id != self._definition_id:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
@@ -402,7 +406,7 @@ def _service_input_refusal_identity(
     service_reason = _SERVICE_INPUT_REASONS.get(error.translated_message or "")
     if service_reason is None:
         return None
-    reason = cast(InventoryRefusalReason, service_reason)
+    reason = service_reason
     code = (
         INVENTORY_VALIDATION_REFUSAL_CODE
         if service_reason == "inventory_validation"

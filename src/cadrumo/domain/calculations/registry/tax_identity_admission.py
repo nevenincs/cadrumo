@@ -77,7 +77,9 @@ class RegistryTaxIdentityAdmission:
             with self._lock:
                 held = self._held.get(resolve)
             if held is not None and held[0] is authority and held[1] == effective_date:
-                return cast(T, held[2])
+                # Cast rationale: cache is indexed by the exact resolver callable and checked authority/date,
+                # preserving its return type.
+                return cast(T, held[2])  # nosemgrep: no-cast-in-domain-application
             value = resolve(authority, effective_date)
             with self._lock:
                 self._held[resolve] = (authority, effective_date, value)
