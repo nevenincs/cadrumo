@@ -6,7 +6,7 @@ import re
 from collections.abc import Mapping
 from typing import Any
 
-from .environment_declaration_constants import _BASE_NAME, _NAME, _SLOT
+from .environment_declaration_constants import _BASE_NAME, _SLOT
 from .environment_declaration_primitives import _fail, _integer, _keys, _relative, _strings, _table
 
 
@@ -75,7 +75,6 @@ _COMPONENT_VALUES = (
     "language_default",
     "profile_variable",
     "local_ai_address",
-    "development_role_image_variable",
 )
 #: The local AI server's address: IPv4 loopback, a port outside the privileged range and
 #: below every platform's ephemeral range, and never the publisher's default port.
@@ -101,7 +100,7 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
         raise _fail("components.language_default must be a two-letter lower-case language")
     if names.get(entry["profile_variable"]) != {"kind": "directory", "role": "slot"}:
         raise _fail("components.profile_variable must name a declared directory slot")
-    address, development_image = _component_runtime_values(entry, names)
+    address = _local_ai_address(entry)
     components.update(
         log_variable=entry["log_variable"],
         log_format=entry["log_format"],
@@ -111,12 +110,11 @@ def _components(raw: object, names: Mapping[str, Mapping[str, str]]) -> dict[str
         language_default=language,
         profile_variable=entry["profile_variable"],
         local_ai_address=address,
-        development_role_image_variable=development_image,
     )
     return components
 
 
-def _component_runtime_values(entry: dict[str, Any], names: Mapping[str, Mapping[str, str]]) -> tuple[str, str]:
+def _local_ai_address(entry: dict[str, Any]) -> str:
     address = entry["local_ai_address"]
     if not isinstance(address, str):
         raise _fail("components.local_ai_address must be 127.0.0.1 with a port from 1024 to 32767 other than 11434")
@@ -124,7 +122,4 @@ def _component_runtime_values(entry: dict[str, Any], names: Mapping[str, Mapping
     port = int(matched["port"]) if matched else None
     if port is None or port not in _LOCAL_AI_PORTS or port == _LOCAL_AI_UPSTREAM_PORT:
         raise _fail("components.local_ai_address must be 127.0.0.1 with a port from 1024 to 32767 other than 11434")
-    development_image = entry["development_role_image_variable"]
-    if not isinstance(development_image, str) or not _NAME.fullmatch(development_image) or development_image in names:
-        raise _fail("components.development_role_image_variable must be an environment name no profile admits")
-    return address, development_image
+    return address

@@ -348,11 +348,6 @@ profile_variable = "CADRUMO_PROFILE_ROOT"
 # installed outside Cadrumo keeps its own port. The command line's default chat address
 # states the same value; a package-side test keeps them equal.
 local_ai_address = "127.0.0.1:23743"
-# The built Cadrumo binary a source checkout runs its native roles with. Only a checkout
-# reads it: no installed launch profile admits it, so a packaged image never sees
-# it and finds its own binary through the package. Checkout operator workers relay
-# the name through core.storage_environment; a package-side test keeps them equal.
-development_role_image_variable = "CADRUMO_DEVELOPMENT_ROLE_IMAGE"
 
 # ---------------------------------------------------------------------------
 # The storage root: its variable, the per-platform installed default under the
