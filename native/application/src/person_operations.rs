@@ -4133,7 +4133,7 @@ mod tests {
             "detail_version": 1,
             "kind": "registered_error",
             "error_code": "REFUSED_BROWSER_NOT_READY",
-            "message_key": "adapters.browser.errors.not_provisioned",
+            "message_key": "adapters.browser.errors.not_available",
             "context": [],
             "context_entries_omitted": 0,
             "precondition_verdict_json": verdict,
