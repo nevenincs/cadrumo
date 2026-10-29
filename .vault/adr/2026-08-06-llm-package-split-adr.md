@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#llm-package-split'
 date: '2026-08-06'
-modified: '2026-10-05'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:9aa0888fea27724a41df299a1e3451db62896034934e5a63c9acbcb8450d617a'
+body_hash: 'sha256:5f5b3bdbfdaeade3c3e42be38840ca6ae66d1eb406e0475109308c2ca23b1bc2'
 related:
   - "[[2026-08-06-llm-package-split-research]]"
   - "[[2026-08-06-llm-package-split-enforcement-and-disposition-audit]]"
@@ -22,9 +22,8 @@ related:
 The document-ingestion-and-inference path is the only part of Cadrumo that is
 probabilistic, hardware-dependent and privacy-sensitive, and it currently sits
 undifferentiated inside a deterministic tax engine bound by `aeat-safety-legal-gates`.
-Five separate problems trace to that co-location: model licence questions become
-core-product blockers; the hardware floor is an undeclared precondition with no probe;
-the transport a document takes — and therefore whether it leaves the host — is decided by
+Four separate problems trace to that co-location: model licence questions become
+core-product blockers; the transport a document takes — and therefore whether it leaves the host — is decided by
 whether its PDF happens to carry a text layer; the extraction fork (regex for text,
 vision model for scans) has no principled home; and probabilistic output flows into a
 filing engine with no declared boundary at which it becomes reviewable data.
@@ -94,14 +93,12 @@ decided here is the boundary's shape, not whether inference is worth having.
   authorised by symbol name only, never by sweeping for the word `subprocess`.
 - **"Capability" already denotes four unrelated concepts here** — modelo-revision capability in
   registry conformance, terminal/frontend capability in the flow substrate, operator-selectable
-  service capability in core, and optional-extra capability in provisioning. D6's hardware axis
-  is therefore named for the floor it measures, not for the generic word, so it collides with
-  none of them.
+  service capability in core, and optional-extra capability in provisioning. D6 therefore
+  introduces no further capability concept.
 - The cloud path is nonetheless the only way to classify a text-layer PDF today.
-- No hardware-capability probe exists anywhere in the product. Established the same way: a
-  semantic sweep for "detect GPU VRAM or device capability before running a model" returned a
-  top score of **0.036** with every hit a different concept, and an anchored search found zero
-  production references to VRAM, NVIDIA, NVML, CUDA, GPU or device capability.
+- The product measures no hardware and holds no hardware-capability concept; an anchored
+  search finds zero production references to VRAM, NVIDIA, NVML, CUDA, GPU or device
+  capability.
 
 - **Structured XML parsing is measured, and it wins decisively on latency, cost and failure
   mode.** Recomputed from `harness/results/v5-structured-rescore.json`, whose embedded
@@ -252,8 +249,8 @@ decided here is the boundary's shape, not whether inference is worth having.
   makes them unreachable without re-scoping the instruments themselves. The advantage is
   real and it is the knockout, but it is an advantage in what can be enforced, not in what
   is enforced for free.
-- **C — leave the path where it is, add a hardware probe and fix the transports.** Solves
-  the hardware and privacy findings without a boundary. Rejected: it leaves probabilistic
+- **C — leave the path where it is and fix the transports.** Solves the privacy findings
+  without a boundary. Rejected: it leaves probabilistic
   inference undifferentiated inside the deterministic core, so the licence and
   quarantine problems remain, and nothing prevents the next model dependency from landing
   in the base closure.
@@ -282,12 +279,11 @@ decided here is the boundary's shape, not whether inference is worth having.
   (`2026-06-10-llm-evidence-classification-adr`, operator ruling, binding).
 - `llm-selects-system-derives-tax-numbers` is unaffected: the regulated figures remain
   registry-derived regardless of which package reads the document.
-- Extras absence must degrade to install guidance, never `ModuleNotFoundError`
+- Extras absence must degrade to a typed refusal naming the extra, never `ModuleNotFoundError`
   (`2026-06-28-product-packaging-adr`).
 - Retiring the cloud path removes a live capability; sequencing is a constraint, not a
   preference.
-- Frontier risk is low: no new library class is introduced. The one novel element is a
-  hardware-capability probe, for which no in-tree precedent exists.
+- Frontier risk is low: no new library class is introduced.
 
 ## Implementation
 
@@ -391,11 +387,11 @@ updated to say so.
 consumer-hardware constraint. That constraint governs the local **text** model D5's
 sequencing requires as well; the choice is made under it, not beside it.
 
-**D6 — the third capability axis.** The product distinguishes *installed*
-(`OptionalExtra`) from *permitted* (`ServiceCapability`); it has no notion of *capable*.
-The extension declares a hardware floor and a probe reporting it through the existing
-`DependencyStatus` shape into `aeat config check`, so an under-specified machine gets a
-typed refusal naming the shortfall instead of a model that fails to load or thrashes.
+**D6 — no capability axis beyond installed and permitted.** The product distinguishes
+*installed* (`OptionalExtra`) from *permitted* (`ServiceCapability`); it has no notion of
+*capable*. The extension declares no hardware floor, measures no hardware and reports no
+readiness. A model that does not fit the machine is refused by cadrumo-agent when it admits
+the load, and the product reads that answer as a typed refusal.
 
 **D7 - exact structured-document reading stays in the deterministic core, outside the
 extra.** Parsing an e-invoice that already carries a structured record is deterministic,
@@ -648,8 +644,7 @@ With them, the original claim holds and is now backed by controls that can fail.
 
 Option B delivers what the proposal actually needs. The dependency closure is isolated by
 the extra — that is precisely what keeps a future torch-bearing model off a default
-install. The licence question narrows to an opt-in component. The hardware floor becomes a
-declared property of an installed extra rather than a hidden precondition. The privacy
+install. The licence question narrows to an opt-in component. The privacy
 inversion disappears with D5. And the extraction fork resolves because the extension owns
 one reading path rather than two transports chosen by file format.
 

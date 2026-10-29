@@ -5,7 +5,7 @@ tags:
 date: '2026-08-07'
 modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:f6ec31253a77dcf0a4685519a12488b2def7b29f42c8b36db6815d0dbd9e1796'
+body_hash: 'sha256:baa1739aee297d8fe0cd6a91791fc37135851ae4934b485dabbcce974f653a8f'
 related:
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
   - '[[2026-08-06-llm-package-split-ingest-cascade-reference]]'
@@ -49,9 +49,9 @@ why they are one record and not amendments scattered across two.
 - **The transcription cache makes resume cheap.** Pipeline S1's encrypted
   cache means a re-run re-reads no bytes and re-transcribes nothing already
   transcribed; batch resumability is mostly already-designed substrate.
-- **Admission control is per-load, but a batch is many loads.** Provisioning
-  D3 refuses an unsafe load; a batch must respect that refusal without
-  dying, and must pace rather than fan out — the concurrency bound (default
+- **Admission control is per-load, but a batch is many loads.** cadrumo-agent
+  refuses a load that does not fit (provisioning D3); a batch must respect that
+  refusal without dying, and must pace rather than fan out — the concurrency bound (default
   one) is the pacing mechanism.
 - **Consent is per-invocation and non-sticky by D8a**, which shapes
   withdrawal: there is no standing grant whose revocation stops future
@@ -138,8 +138,8 @@ each load-bearing:
   completed-item record IS the store's idempotent state.
 - **Ordering is deterministic** (sorted by content address) so two re-runs
   report identically; nothing depends on filesystem enumeration order.
-- **Contention and rate limits are batch-wide.** Inference-bearing items
-  pass the provisioning admission check; a standing contention refusal
+- **Refusals and rate limits are batch-wide.** Inference-bearing items
+  meet cadrumo-agent's load admission; a standing `MODEL_DOES_NOT_FIT` refusal
   pauses the inference lane and completes every non-inference item rather
   than failing the batch. The cloud engine route, where consented, applies
   its provider rate limits across the run with the shared backoff policy,
@@ -186,7 +186,7 @@ recording and permitting are one code path, and a dispatch that cannot
 append refuses rather than transmitting unrecorded. **Eligibility** is a
 per-profile standing bar (default off, gestor-locked off): while off, the
 consent gate is never even offered, so "withdraw" for the future is one
-profile setting, verifiable in `aeat config check`. **Withdrawal** of the
+profile setting. **Withdrawal** of the
 past is handled honestly: a withdrawal verb lists every consent-ledger entry
 for the profile, states plainly that transmitted bytes cannot be recalled by
 this product, marks cloud-derived artefacts (drafts, classifications whose

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#license-posture'
 date: '2026-07-12'
-modified: '2026-10-21'
-body_hash: 'sha256:1656c1336f2f61cd2b9a14b04a33307ecced2e0cb59499dadbad4377d46aa6b7'
+modified: '2026-10-29'
+body_hash: 'sha256:e67fad95d97ff14040dd8f4298eb41bfcbd04988f087ed2e4e316277515c701a'
 related:
   - "[[2026-07-12-license-posture-research]]"
 ---
@@ -77,8 +77,8 @@ companions' READMEs; the operator contact `hello@neve.md` published in
 follow-up: `ofxtools` gated behind the `ofx` capability extra per the
 dependency-provisioning pattern (`OFX_EXTRA` in the core optional-extras
 registry, lazy guarded import in the OFX provider, OFX-looking sources refuse
-with the `pip install cadrumo[ofx]` hint while non-OFX detection candidates
-degrade to a probe miss; real-import-blocker degradation tests). The CORE
+with the typed missing-extra refusal while non-OFX detection candidates
+degrade to a miss; real-import-blocker degradation tests). The CORE
 dependency closure is now free of strong copyleft. Also landed: the Apache
 4(d) attribution chain now ships inside every published artifact — explicit
 PEP 639 `license-files = ["LICENSE", "NOTICE"]` on the root distribution and

@@ -4,7 +4,7 @@ tags:
   - '#product-packaging'
 date: '2026-06-28'
 modified: '2026-10-29'
-body_hash: 'sha256:f7b9ccb8e9e37902403d494a9ec3bc93d6bd456ce91d705819c01522ed492261'
+body_hash: 'sha256:99be4d2b8bf8695074dcdb11f6e5b7387b14daa5288d455f5bba8597aa165f7f'
 related:
   - '[[2026-06-28-product-packaging-research]]'
   - '[[2026-06-28-product-packaging-reference]]'
@@ -60,8 +60,8 @@ operator-provisioned capabilities rather than package data.
   not branch on checkout versus wheel paths.
 - The sole human command remains `aeat`, bound directly to
   `cadrumo.entrypoints.cli:main`; the MCP command is `cadrumo-mcp`.
-- Optional integrations remain capability extras. Their absence produces the
-  declared install guidance rather than `ModuleNotFoundError`.
+- Optional integrations remain capability extras. Their absence produces a
+  typed refusal naming the missing extra rather than `ModuleNotFoundError`.
 - Clean-install proof uses no taxpayer data, live AEAT mutation, cloud writes or
   secrets. Installed-product commands and probes use no checkout product imports
   or ambient product executables. A separately identified controller may use

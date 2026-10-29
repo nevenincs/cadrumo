@@ -5,7 +5,7 @@ tags:
 date: '2026-10-13'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:f2bc5f2ee674a56df3035ae64c9d7d2ddfb06d151aebe37520c97a7db261f608'
+body_hash: 'sha256:8c287a2231fa86e6cb8facf4ce843f49cff675c80f2d905b248b6199ed047b8c'
 related:
   - "[[2026-10-04-application-distribution-adr]]"
   - '[[2026-08-06-llm-package-split-research]]'
@@ -16,7 +16,7 @@ related:
 
 ## Problem Statement
 
-The native application package installs only the locked base closure of the `cadrumo` distribution. Every model-bearing surface sits behind `require_optional_extra(LLM_EXTRA)` (D8 of `2026-08-07-unstructured-document-ingestion-provisioning-adr`), so in the packaged app each of them refuses with `ERROR_OPTIONAL_EXTRA_MISSING` before it reaches a model. The packaged `ledger.classify.review` operation therefore cannot run, and with it the only review-gated operation that needs no remote service. A person who installs the desktop app has no supported way to add a Python extra to its private interpreter, so the refusal's `pip install cadrumo[llm]` guidance cannot be followed there.
+The native application package installs only the locked base closure of the `cadrumo` distribution. Every model-bearing surface sits behind `require_optional_extra(LLM_EXTRA)` (D8 of `2026-08-07-unstructured-document-ingestion-provisioning-adr`), so in the packaged app each of them refuses with `ERROR_OPTIONAL_EXTRA_MISSING` before it reaches a model. The packaged `ledger.classify.review` operation therefore cannot run, and with it the only review-gated operation that needs no remote service. A person who installs the desktop app has no supported way to add a Python extra to its private interpreter, so the refusal cannot be resolved there.
 
 ## Considerations
 
@@ -42,7 +42,7 @@ The native application package installs only the locked base closure of the `cad
 
 We will install the locked `[llm]` extra closure into the native application package's private site-packages. The selection that feeds wheel planning and assembly verification requests that extra for the native bundle, so the assembly closure check and the wheelhouse plan agree on one set. The bundled extras are declared once as `BUNDLED_EXTRAS` (`dev/packaging/native/product.py:31`) and passed only by native provisioning, assembly and the CMake build; the default constraint export still omits every extra.
 
-Verification: the staged package contains the `[llm]` distributions (including `nvidia-ml-py`), and `ledger.classify.review` runs past `ledger.llm.acquire` against a model the person picked, reached through the agent service, on disposable data.
+Verification: the staged package contains the `[llm]` distributions (including `pillow`), and `ledger.classify.review` runs past `ledger.llm.acquire` against a model the person picked, reached through the agent service, on disposable data.
 
 ## Rationale
 
@@ -50,7 +50,7 @@ The packaged app is the operator's only installation, so a surface gated on an e
 
 ## Consequences
 
-The bundle grows by the `[llm]` closure. Model surfaces in the packaged app now refuse for model or runtime reasons (no local runtime, model not pulled, hardware below floor) rather than for a missing extra. Reconsider if the extra gains a heavy native runtime or a licence the distribution cannot carry.
+The bundle grows by the `[llm]` closure. Model surfaces in the packaged app now refuse for model or runtime reasons (no local runtime, model not pulled, model does not fit) rather than for a missing extra. Reconsider if the extra gains a heavy native runtime or a licence the distribution cannot carry.
 
 Authorization: the owner's ruling of 2026-10-13, "yes, we'll bundle the llm package set", given after the packaged review proof failed with `ERROR_OPTIONAL_EXTRA_MISSING` at `src/cadrumo/adapters/outbound/llm/text_classifier.py:76`.
 

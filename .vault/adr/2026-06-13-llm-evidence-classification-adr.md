@@ -3,80 +3,61 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-13'
-modified: '2026-10-25'
-body_hash: 'sha256:9b5051f579886ac05cbb8db0049ebc9d48b700ff7c21cd68af50099a6c4b9fb8'
+modified: '2026-10-29'
+body_hash: 'sha256:433ad31faaa2550682cc4f51bcf186709a35f63c77c15408cf772c24b9b13465'
 related:
   - "[[2026-06-13-llm-evidence-classification-research]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
 ---
 
-# `llm-evidence-classification` adr: `Default local vision model bound to consumer-grade hardware` | (**status:** `accepted`)
+# `llm-evidence-classification` adr: `The on-host vision model is the person's selection, never a shipped default` | (**status:** `accepted`)
 
 ## Problem Statement
 
-The on-host vision evidence reader defaults to a local Ollama vision model named
-by `aeat_llm_ollama_vision_model`. The initial default `llama3.2-vision` (11B)
-needs roughly 8-16 GB of VRAM, so on a normal consumer-grade machine (a typical
-laptop or desktop with a modest or integrated GPU, or CPU-only) it either fails
-to load or runs unusably slowly. The on-host posture is the gestor-allowed,
-no-upload default, so the default model must actually run on the hardware a
-gestor or autónomo is likely to have, not just on a workstation GPU.
+The on-host vision evidence reader needs a vision-capable model, and the on-host
+posture is the gestor-allowed, no-upload default. A model name shipped as a
+settings default would be a hardcoded model definition in a tax product, with a
+licence, a size and a quality ranking that Cadrumo does not own and cannot keep
+current. A default that is wrong for the person's machine would also make the
+read fail or run unusably slowly.
 
 ## Considerations
 
-Reading invoices is structured-document OCR, where the Qwen2.5-VL family leads
-small models. The model only selects `category` / `iva_category` from the
-registry allow-list; it never emits a regulated number (those are
-registry-derived), so a strong-OCR small model suffices. Footprint, OCR quality,
-and Ollama availability were weighed across `qwen2.5vl:7b` (~6 GB),
-`qwen2.5vl:3b` (~3 GB), `moondream` (~1.7 GB), `minicpm-v` (8B), and the incumbent
-`llama3.2-vision` (11B). Weights are pulled by the operator into their own Ollama
-runtime; the application ships none.
+Reading invoices is structured-document OCR. The model only selects `category` /
+`iva_category` from the registry allow-list; it never emits a regulated number
+(those are registry-derived), so the choice of model carries no
+calculation-grounding risk. Model weights are pulled into the person's own Ollama
+runtime; the application ships none. cadrumo-agent already owns providers and
+models, local ones included (`2026-10-25-agent-owned-models-adr`).
 
 ## Constraints
 
-The vision read requires a running local Ollama with the named model pulled; when
-it is absent the read fails and the operator must `ollama pull` the model (an
-operator prerequisite, documented). The model name is a settings default, not a
-hard dependency: an operator selects a heavier or lighter model per their
-hardware by overriding `aeat_llm_ollama_vision_model`. The choice depends only on
-the stable `LocalVisionLLMClassifier` / `LocalAdapter` Ollama path already
-shipped; no frontier dependency.
+Cadrumo defines no AI model name, digest, size, licence, default, candidate list
+or ranking. The vision model is the one the person selects from cadrumo-agent's
+catalogue, and the catalogue must mark it vision-capable. With no selection, or
+with a selection that cannot read images, the read refuses with a typed verdict;
+no other model stands in. Every tax model call goes through the agent service.
 
 ## Implementation
 
-Change the central default `aeat_llm_ollama_vision_model` from `llama3.2-vision`
-to `qwen2.5vl:3b`. Document the tiering for operators: `qwen2.5vl:3b` is the
-consumer-hardware default (modest GPU or CPU, ~3 GB); `qwen2.5vl:7b` is the
-quality upgrade for an 8 GB+ GPU; `moondream` is the CPU-only / very-low-memory
-fallback. All are pulled on demand from Ollama; the application reads the name
-from settings at the boundary and passes it as the request `model_override`.
+No `aeat_llm_ollama_vision_model` setting and no default model name exist. The
+application reads the person's selected model through the agent service at the
+boundary and passes it as the request model. Scanned or image evidence is read
+locally with no upload whenever the selected lane's catalogue entry sets
+`reads_off_host` false.
 
 ## Rationale
 
-Grounded in the sibling research: Qwen2.5-VL is best-in-class small document/OCR,
-and its 3B variant is the recommended VLM for modest/edge devices while staying
-document-grade for invoices. It is the balance point between "reads invoices
-well" and "runs on normal consumer hardware". Heavier (`7b`, `minicpm-v`) and
-lighter (`moondream`) options remain one settings override away, so no operator
-is locked out by the default.
+The catalogue is the sole source of what models exist, what they cost on disk and
+what licence they carry, so a selection read from it is always current and a
+Cadrumo-side name can never go stale. The gestor-allowed, no-upload posture
+stands: a lane whose catalogue entry sets `reads_off_host` false reads on this
+host.
 
 ## Consequences
 
-A gestor or autónomo on ordinary hardware can now actually run the on-host vision
-read, fulfilling the ADR posture that scanned/image evidence is read locally with
-no upload. The default is smaller and faster than the incumbent and better at
-documents for its size. Honest limitations: the 3B model's OCR is slightly weaker
-than the 7B on dense multi-line invoices (operators with a GPU should override to
-`7b`); the operator must pull the model once (~3 GB); and a CPU-only run is slower
-than a GPU run though still usable with the 3B / moondream tier. The model name
-is a regulatory-neutral runtime knob (it never produces a persisted tax number),
-so changing the default carries no calculation-grounding risk.
+A gestor or autónomo reads scanned evidence on this host with the model they
+picked, and no default carries a licence that bars commercial use. The model name
+is a regulatory-neutral choice: it never produces a persisted tax number.
 
 ## Codification candidates
-
-## Amendment 2026-10-25: the vision model is the person's selection
-
-Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
-
-- **Constraints and Implementation.** The setting `aeat_llm_ollama_vision_model` and its default `qwen2.5vl:3b` are deleted. The tiering text (3b default, 7b upgrade, moondream fallback) no longer describes the product. The vision model is the one the person selects for the vision role from cadrumo-agent's catalogue, and it must be marked vision-capable there. The "operator must `ollama pull` the model" prerequisite becomes the local AI setup pull of the selected model. The gestor-allowed, no-upload posture stands: a lane whose catalogue entry sets `reads_off_host` false reads on this host.

@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#unstructured-document-ingestion'
 date: '2026-08-07'
-modified: '2026-10-14'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:88b7aed2a9a48d49550e3bb39a5a7f4da15bb422f2956ed8c6f6020d1c49b4ba'
+body_hash: 'sha256:2ef00407f92406fe83b3d6f4203ebe176b33cd2f238f026178bf477f2ecf95e0'
 related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-research]]'
   - '[[2026-08-06-llm-package-split-measurement-basis-reference]]'
@@ -142,9 +142,8 @@ This pipeline begins where exact reading is impossible.
 - **The engine substrate exists.** `cadrumo.llm` carries `LLMClient`, a
   provider enum with a LOCAL (Ollama) transport, multimodal image inputs keyed
   by content hash, and pricing/caching plumbing. The package-split ADR deletes
-  the cloud subprocess family and mandates a hardware-capability probe (its
-  D5, D6). The GPU being contended today is a deployment fact, not an
-  architectural constraint.
+  the cloud subprocess family (its D5). The GPU being contended today is a
+  deployment fact, not an architectural constraint.
 - **Regulated numbers are never model-derived.** The accepted
   `llm-selects-system-derives-tax-numbers` discipline holds: a reader recovers
   what is *printed*; persisted regulated figures are registry-derived; a
@@ -567,9 +566,9 @@ model, a mapping model — each defaulting sensibly, each overridable). The
 production binding is **on-host by default**: whether the local runtime
 serves the model on GPU or CPU is Ollama's deployment concern, invisible at
 this seam — today's GPU contention constrains *when measurement runs*, never
-the architecture. The hardware floor is declared and probed through the
-package-split ADR's D6 capability probe, refusing with a typed shortfall
-rather than thrashing.
+the architecture. A model that does not fit is refused by cadrumo-agent when
+it admits the load (package-split ADR D6), never by a measurement in this
+product.
 
 **Amended by operator ruling ("gated cloud is ok for measurement"):** a
 gated cloud engine is admissible behind the same abstraction, and the two

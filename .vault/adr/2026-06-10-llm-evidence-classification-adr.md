@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-10-14'
-body_hash: 'sha256:a515fe0e8d549efa4cdbf9f041732e5a6fac0d4e52a439173bd3ab488372e545'
+modified: '2026-10-29'
+body_hash: 'sha256:6d1c40155ebd9a2852466251cd45b54abab8c89917f002dfd02ccf6757583e09'
 related:
   - "[[2026-06-10-llm-evidence-classification-research]]"
   - "[[2026-06-04-llm-ledger-classification-adr]]"
@@ -64,7 +64,7 @@ evidence-driven splitting in Stage-3.
 
 - **The two production surfaces are asymmetric.** The application classify surface
   has its own `LLMProvider` StrEnum scoped to the subprocess CLIs
-  (`claude` / `antigravity` / `codex`, probed on `PATH`), and `resolve_classifier`
+  (`claude` / `antigravity` / `codex`), and `resolve_classifier`
   builds a `SubprocessLLMClassifier` for each. The HTTP-SDK adapter under
   `cadrumo.adapters.outbound.llm` carries its own separate `LLMProvider`
   (ANTHROPIC / OPENAI / GEMINI / LOCAL) but **is not wired into the classify
@@ -272,8 +272,8 @@ proposing a split are the same act of understanding.
   Decrypted sensitive evidence is never persisted outside secure storage and, by
   default, never leaves the host: the serious-usage reader is on-host (text-layer +
   local vision). The cost is real — on-host vision quality depends on the local
-  model and the machine, and a local vision model must be provisioned for
-  scanned/image evidence. The cloud `claude`/`codex`/`agy` CLI agents cannot read
+  model and the machine, and scanned/image evidence needs a local vision model the
+  person has selected. The cloud `claude`/`codex`/`agy` CLI agents cannot read
   sensitive evidence at all (they write a file and upload); only the consent-gated
   in-memory HTTP path can, and it is off by default and barred for gestor use.
 - **Honest limitation:** LLM reads can be wrong on poor scans, rotated pages, or
@@ -325,7 +325,7 @@ use** — with a narrow, explicitly-consented cloud exception:
 - **On-host is the default and the only posture acceptable for gestors / real
   serious usage.** Evidence reading uses the in-tree on-host text-layer extraction
   plus an on-host/local vision model (Ollama at localhost, in-memory base64 images).
-  An on-host vision model must be provisioned for scanned/image evidence. This is the
+  Scanned/image evidence needs an on-host vision model the person has selected. This is the
   primary build target.
 - **Cloud is a consent-gated exception only.** A cloud read requires an explicit
   per-invocation consent acknowledgement that sensitive data will leave the machine

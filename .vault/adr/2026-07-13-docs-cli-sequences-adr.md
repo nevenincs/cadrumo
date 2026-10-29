@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#docs-cli-sequences'
 date: '2026-07-13'
-modified: '2026-10-21'
-body_hash: 'sha256:80eee2c490b271ad634916bd6d95307351f519827d0a952e94aea07198245e91'
+modified: '2026-10-29'
+body_hash: 'sha256:6955f45cb987008beac60fc6bcd9faca9ae8d97225c2635dc317014b5249a789'
 related:
   - "[[2026-07-13-docs-cli-sequences-research]]"
   - '[[2026-06-01-docs-cli-buildtime-adr]]'
@@ -468,7 +468,7 @@ inline-span baselines are empty; the em-dash baseline retains only the
 non-user-facing contributor surfaces. Separately, the golden canonicalisation
 tokenises the per-run sandbox storage root, workdir, and the repository checkout
 root inside envelope string values (value-anchored on the known roots), so a
-command whose output echoes an absolute path (such as `config check`) is
+command whose output echoes an absolute path is
 golden-stable across runs and machine-portable for CI.
 
 *Rejected:* flag-day migration of all how-tos (35 pages of goldens landing

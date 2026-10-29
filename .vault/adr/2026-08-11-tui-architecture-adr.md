@@ -5,7 +5,7 @@ tags:
 date: '2026-08-11'
 modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:6074c85a675d3c1ab3e08a9a10a3b899620b7485d190a2b54cfe0141492a491b'
+body_hash: 'sha256:0c899d0f931b148a0823082a3d837556cdca074d32af42ec642057ba4c6162c7'
 related:
   - '[[2026-08-11-tui-architecture-research]]'
   - '[[2026-08-11-tui-interface-research]]'
@@ -1529,9 +1529,8 @@ action, outcome, or capability. The TUI likewise does not import or inspect the 
 root owns every journey after process start.
 
 CLI uses of `FullScreenDestination`, `FullScreenSessionRequest`, and
-`FullScreenSessionOutcome` are retired. Any destination protocol is TUI-internal unless a
-separately identified non-CLI peer needs it; delete the shared protocol if no such peer remains.
-The desktop is such a peer; its page requests follow the 2026-10-22 amendment below.
+`FullScreenSessionOutcome` are retired. Any destination protocol is TUI-internal; the TUI has
+no awareness of the desktop application, and no other peer shares it.
 The launch command contains only child-process construction and exit-status propagation; it must
 not recreate a route protocol or presentation-capability gate.
 
@@ -1559,27 +1558,3 @@ The private journal and affected public definition contracts use existing curren
 ### Amendment 2026-10-14: TUI belongs to the runtime host
 
 The production topology is amended: the installed Textual frontend now lives under `src/cadrumo_runtime/host/frontend/tui/` (`cadrumo_runtime.host.frontend.tui`) and the canonical launch is `cadrumo-runtime tui`. The runtime host owns and composes that frontend. The `cadrumo` tax application never imports `cadrumo_runtime`; host-side composition may consume inward Cadrumo services through their public APIs. References above to `cadrumo.entrypoints.tui`, its tests or launcher, and `aeat app tui` record the prior accepted placement and are superseded for current path, ownership, dependency direction, and launch only. Operation, profile, secret, flow, Modelo, and application contracts in this ADR remain in force.
-
-### Amendment 2026-10-22: the desktop asks the running TUI to show a page
-
-Accepted by the user on 2026-10-22 after review of the desktop page-presentation proposal. A `cadrumo://` link in the desktop did nothing: the window compared the link's profile UUID with the signed-in profile's label, dropped every other link silently, and the AEAT setup link opened a second TUI in a modal instead of the open workspace.
-
-The desktop asks the TUI it hosts for a page through the runtime, not through launch arguments, terminal input or a desktop-owned pipe. The held desktop person session sends `present_destination` with one token from a closed page vocabulary: `home`, `ledger`, `withholding`, `declarations`, `aeat_sync`, `operations`, `installation`, `setup`, `reference`, `profile`, `aeat_auth`. The vocabulary names pages only and carries no profile fact, query or credential. Only a desktop-frontend person connection may ask: a CLI or TUI frontend is refused with `frontend_denied`, a non-person peer with `person_act_required`, and the asking session is checked as a status read is. The runtime relays the token, without interpreting a route, as a `presentation_requested` cue to each TUI connection on the same profile that holds a session under the same native login, and reports how many it reached. Delivery grants nothing.
-
-The TUI admits a requested page exactly as it admits a palette choice, against its current destination catalogue; `aeat_auth` opens the profile page with its AEAT access editor. Over a credential or modal form the request stands down with a visible notice rather than discarding the form. The TUI's invocation grammar stays the bare and self-test forms; the separate AEAT setup process and its `--aeat-auth-profile` argument are retired. Adding a page extends the client contract, the TUI mapping and the desktop link grammar together.
-
-Rejected: a desktop-owned pipe or socket named to the TUI child (new native IPC on every platform and duplicated peer verification; `portable-pty` cannot pass an inherited handle), a private escape sequence in terminal input (Textual parses no input OSC, ConPTY may drop it, and typed or pasted input could imitate it), and relaunching with a page argument (it discards open work and reverses the 2026-09-08 amendment). A standalone TUI the same person runs on the same profile also receives the request; that is accepted because it is their own workspace and the request grants nothing.
-
-Evidence: `src/cadrumo_client/contracts/presentation.py`, `src/cadrumo_client/contracts/session_events.py`, `src/cadrumo_runtime/host/profile_connection_sessions.py` (`_present`), `src/cadrumo_runtime/host/session_hold.py`, `src/cadrumo/entrypoints/tui/presentation.py`, `src/cadrumo/entrypoints/tui/app.py`, and the tests `src/cadrumo_runtime/host/tests/test_presentation_routing.py` and `src/cadrumo/entrypoints/tui/tests/test_presentation_navigation.py`. Grounding: `2026-10-06-desktop-shell-capabilities-research`.
-
-### Amendment 2026-10-24: the relay carries a register view id
-
-Accepted by the user on 2026-10-24 ("all lgtm") together with the navigation-register amendment of the same day in `2026-10-04-desktop-shell-adr`, which defines the `cadrumo://view/{id}` grammar, the neutral register in `src/cadrumo_client/contracts/navigation.toml` and the resolution order. This replaces the closed eleven-page vocabulary of the 2026-10-22 amendment and its sentence "Adding a page extends the client contract, the TUI mapping and the desktop link grammar together".
-
-- `present_destination` carries one register id whose surfaces include `tui`, instead of a token from the closed `PresentationDestination` list. Admission is unchanged: a person act from a desktop-frontend connection, checked as a status read. The runtime checks membership through the client register's loader and still relays without interpreting a route. Delivery still grants nothing.
-- The TUI maps register ids to its destinations and focus keys in its own table (`entrypoints/tui/presentation.py`). A test fails unless that table covers exactly the register's `tui` ids. The former `aeat_auth` token becomes the element `profile/aeat-access`, which opens the profile page with its AEAT access editor. The stand-down over a credential or modal form is unchanged.
-- Link producers spell links through one client function that formats `cadrumo://view/{id}`. These are the operation-to-page table (`application/operations/operation_pages.py`, now mapping to register ids), the AEAT setup handoff and the MCP `page.url`. `destination_link` and its profile segment are removed.
-- The MCP service publishes the register as deterministic, searchable data: ids, parents, labels, keywords and surfaces. The agent can then find a view and check a link before it writes one. This is operation-adjacent orientation, not persona, rule or skill text. cadrumo-agent owns how its prompts use it.
-- Adding an element is one register entry plus the mapping of each surface that implements it. The coverage tests and the label-key check fail on anything less.
-
-Evidence: `src/cadrumo_client/contracts/presentation.py` (`presentation_refusal`, the echoed `params`), `src/cadrumo_client/contracts/navigation.py` (`view_link`, `parse_view_link`, `resolve_view`), `src/cadrumo_runtime/host/profile_connection_sessions.py` and `session_hold.py`, `src/cadrumo/entrypoints/tui/presentation.py` with its coverage test, the ledger selection and its dropped-selection notice in `src/cadrumo/entrypoints/tui/ledger/`, `src/cadrumo/application/operations/operation_pages.py`, `src/cadrumo/application/auth/setup_handoff.py`, and the MCP `views` tool and record links in `src/cadrumo_mcp/`, with their tests.

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-07-17'
-body_hash: 'sha256:fe275e213160fd5526d311af444c8672980d8862d5eede9d85d257094c8a2ab6'
+modified: '2026-10-29'
+body_hash: 'sha256:2bfe14d2be6a075359b8decb362c6814a6e1d39f6e52d4215506b6499513a3fe'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
 ---
@@ -29,10 +29,10 @@ is the user profile.
   persisted through a single-writer encrypted repository, with a wizard/edit CLI
   and snapshot machinery. Adding capabilities as a new schema section reuses all of
   it (validation, persistence, wizard, edit, snapshot) for free.
-- Capabilities are operator *intent*, distinct from (a) the global safety posture
-  (gestor mode, the secure-storage invariant) and (b) dependency availability
-  (is Ollama running?). A clean model keeps the three axes separate and ANDs them
-  at the gate.
+- Capabilities are operator *intent*, distinct from the global safety posture
+  (gestor mode, the secure-storage invariant). A clean model keeps the two axes
+  separate and ANDs them at the gate. Dependency availability is not an axis: a
+  permitted service whose dependency is absent refuses at the point of use.
 - The cloud-upload posture is regulated (`sensitive-financial-data-secure-storage-only`,
   `2026-06-13-llm-evidence-classification-adr`). A profile capability must never be
   able to *widen* the global safety floor — only narrow it. Gestor mode stays an
@@ -55,8 +55,8 @@ is the user profile.
 
 **Decision: model service capabilities as a first-class, schema-driven profile
 section, and gate every external service on `resolve_capability(profile, settings,
-capability)` — the AND of operator opt-in, the global safety floor, and (at the
-CLI) dependency availability. Capabilities narrow, never widen, the global posture.**
+capability)` — the AND of operator opt-in and the global safety floor.
+Capabilities narrow, never widen, the global posture.**
 
 1. **Capability taxonomy (core).** A closed `ServiceCapability` `StrEnum` in `core/`
    per `aeat-schema-central-config`: `cloud_evidence_upload`, `llm_vision`,
@@ -95,9 +95,8 @@ CLI) dependency availability. Capabilities narrow, never widen, the global postu
    at profile creation.
 
 6. **Surfacing.** `config profile capabilities show` and `config profile status`
-   report each capability's resolved posture; the dependency `doctor` (ADR B) adds
-   the availability axis so the operator sees opted-in-but-unavailable vs
-   opted-out vs ready.
+   report each capability's resolved posture, so the operator sees opted-in vs
+   opted-out vs barred by the global floor.
 
 ## Rationale
 
@@ -116,8 +115,7 @@ informed (`no-silent-under-declaration`).
 
 - A gestor can run a personal profile that uses cloud CLIs and a client profile
   that bars them, from one install — the headline operator need.
-- The three axes (intent / safety / availability) are cleanly separable and
-  ANDed at the gate, so reasoning about "why didn't this run" is a single resolved
+- The two axes (intent / safety) are cleanly separable and ANDed at the gate, so reasoning about "why didn't this run" is a single resolved
   decision with a typed reason.
 - Migration: existing profiles have no capability facts, so the resolver falls back
   to the global `Settings` defaults — zero behaviour change until an operator sets a

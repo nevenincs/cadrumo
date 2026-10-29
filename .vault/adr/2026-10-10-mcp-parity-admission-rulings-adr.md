@@ -14,9 +14,9 @@ related:
   - "[[2026-06-30-ledger-add-idempotency-adr]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"
 superseded_by: '2026-10-11-mcp-parity-full-parity-adr'
-modified: '2026-10-11'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:9a37bec84cb7b841507fa95bb8b872aed89b7f773789b5aa0a778514c65f67a9'
+body_hash: 'sha256:e696ee18dc9abfaa61c467ca5ef1a20b00e3d686ff09ac7e26a8af1f49644c4e'
 ---
 # `mcp-parity` adr: `Which MCP exclusions are omissions to correct and which are deliberate, family by family` | (**status:** `superseded`)
 
@@ -186,7 +186,7 @@ Rulings for operations closed today:
 | Destructive ledger lifecycle | `ledger.merge`, `ledger.remove`, `ledger.reset`, `ledger.evidence.remove` | Admit behind the person's approval |
 | Statement and invoice-book import | `ledger.import`, `ledger.invoice.import` | Admit, pending file exchange |
 | Evidence | `ledger.evidence.add`, `ledger.evidence.batch` | Admit, pending file exchange |
-| | `ledger.evidence.list`, `.view`, `.attachment_queue`, `.attachment_view`, `.reader-readiness`, `.consent.list`, `.review.list`, `.review.view` | Admit as reads, on the condition that no result carries evidence bytes |
+| | `ledger.evidence.list`, `.view`, `.attachment_queue`, `.attachment_view`, `.consent.list`, `.review.list`, `.review.view` | Admit as reads, on the condition that no result carries evidence bytes |
 | | `ledger.evidence.update`, `ledger.invoice.wizard`, `ledger.participation.rebuild` | Admit |
 | | `ledger.evidence.confirm` | Admit behind the person's approval. The agent prepares one resolution per blocking finding and the person approves each document's confirmation, which keeps the per-finding human review before an invoice is created |
 | | `ledger.evidence.extract` | Admit for the reader on the machine. A read off the machine is a consent: behind the person's approval each time, never a field the caller sets |
@@ -209,7 +209,7 @@ Rulings for operations closed today:
 | Publication and archive | `export.google-review`, `profile.archive.export`, `.push`, `.reconcile`, `config.google.folder.organize`, `config.google.logout` | Admit behind the person's approval: each sends or moves the person's data outside the machine, or ends access to it |
 | | `config.google.status`, `.probe`, `.folder.view` | Admit |
 | | `config.google.login` | Excluded: a consent the person gives in a browser |
-| Authentication, certificates, grants, workstation | all operations of those families | Excluded: access administration, typed secrets and machine administration |
+| Authentication, certificates, grants | all operations of those families | Excluded: access administration, typed secrets |
 
 Rulings for operations that admit MCP today with no approval in front of a sensitive act:
 
