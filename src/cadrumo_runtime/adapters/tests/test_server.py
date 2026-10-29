@@ -82,10 +82,16 @@ def test_connection_identity_and_disconnect_are_independent(server) -> None:
             "sign_in",
             "request_faults",
             "holder_operation_id",
+            "recovery_remaining_seconds",
+            "effect",
+            "operation_id",
         }
         assert again.sign_in is None
         assert again.request_faults == ()
         assert again.holder_operation_id is None
+        assert again.recovery_remaining_seconds is None
+        assert again.effect is None
+        assert again.operation_id is None
     finally:
         first.close()
         second.close()
