@@ -64,3 +64,14 @@ export function testRunDirectory(results) {
   mkdirSync(directory, { recursive: true });
   return directory;
 }
+
+/** Where this run builds the scenario bundle its server serves: inside the
+ * run's own directory, so another run's build cannot empty it under the
+ * server. Null outside a run, where the shared testing directory serves the
+ * benchmark and a developer's own build. */
+export function testRunScenariosBuild(results) {
+  const name = process.env[RUN];
+  if (!name) return null;
+  if (!NAME.test(name)) throw new Error(`Invalid ${RUN}: ${name}`);
+  return resolve(results, "runs", name, "scenarios");
+}

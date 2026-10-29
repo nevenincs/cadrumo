@@ -560,9 +560,10 @@ and that must not already be running:
   (`tests/bundle.spec.ts`).
 - `scenarios` drives `/scenarios.html` (`tests/scenarios/`) from
   `vite build --mode scenarios`, a minified build of the development entry with
-  the scenario host and the documentation fixture, written under the build
-  directory's `desktop/testing/scenarios` and served by
-  `vite preview --mode scenarios`. Nothing in it watches the source tree, so a
+  the scenario host and the documentation fixture, written inside the run's own
+  directory under `desktop/test-results/runs/` (outside a run, to
+  `desktop/testing/scenarios`) so a concurrent run's build cannot empty the
+  page this run serves, and served by `vite preview --mode scenarios`. Nothing in it watches the source tree, so a
   file saved while the tests run cannot reload a page in the middle of a test.
   The build also carries `/primitives.html`, and a build has no module
   addresses, so a spec that drives a product module directly gets it from
