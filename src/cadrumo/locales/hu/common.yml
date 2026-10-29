@@ -4324,18 +4324,9 @@ operation:
     action:
       apply: Alkalmaz
       cancel: Megszakít
-      claim: Áttekintés és válasz
       close: Bezár
       detach: Leválaszt
       reject: Elutasít
-    claim:
-      already_claimed: Ezt a telepítést valaki más tekinti át. Itt nem válaszolhatsz
-        rá.
-      authority_lost: Erre az áttekintésre már nem válaszolhatsz. Indíts új telepítést.
-      stale: A telepítés áttekintése megváltozott. Indíts új telepítést az aktuális
-        terv áttekintéséhez.
-      unavailable: Ez az áttekintés már nem érhető el. Jelentkezz be, és indíts új
-        telepítést.
     detail:
       action_refused: Elutasított művelet
       cleanup_deadline: Lezárási határidő
@@ -5020,7 +5011,6 @@ tui:
     operations: Műveletek
     profile: Profil
     reference: Kézikönyv
-    setup: Összetevők
     withholding: Levonások
   home:
     account_fallback: Fiók
@@ -6935,11 +6925,6 @@ tui:
     unavailable:
       selection_dropped: A hivatkozás által kijelölt tétel nem jelenik meg.
       title: A Nyilvántartás nem érhető el
-  local_reader:
-    card:
-      action: Dokumentumolvasó megnyitása
-      description: Nézd meg, beolvashatók-e a számladokumentumok ezen a gépen.
-      title: Dokumentumolvasó
   modelo:
     editor:
       confirm_hint: Nyomd meg a ⏎ billentyűt a(z) {value} megerősítéséhez, vagy írd
@@ -7349,7 +7334,6 @@ tui:
       operations: Műveletek megnyitása
       profile: Profil megnyitása
       reference: Kézikönyv megnyitása
-      setup: Összetevők megnyitása
       unknown: Terület megnyitása
       withholding: Levonások megnyitása
     destination_help:
@@ -7362,7 +7346,6 @@ tui:
         futtatható'
       profile: A profil adatai és az azokat kitöltő források
       reference: Modelók, rovatok, kategóriák, portálok és bejelentkezési módok
-      setup: A böngésző és a helyi MI
       withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
     refusal:
       not_composed: Még nem sikerült minden területet beolvasni.

@@ -1192,7 +1192,7 @@ fn the_component_is_the_setup_item_whose_action_the_recorded_verdict_names() {
             "projection":{"error_code":"REFUSED_BROWSER_NOT_READY","precondition_verdict_json":verdict}})
     };
     let named = |action: &str| {
-        json!({"failed_condition_id":"provisioning.playwright_browser.installed",
+        json!({"failed_condition_id":"probe.playwright_browser.installed",
             "action":{"action_id":action}})
         .to_string()
     };

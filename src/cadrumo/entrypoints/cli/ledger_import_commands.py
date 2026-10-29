@@ -82,9 +82,6 @@ def _refused_file_report(refusals: Sequence[LedgerImportFileRefusal]) -> _Import
     for refusal in refusals:
         lines.append(f"  refused\t{refusal.file_name}\t{refusal.reason_code}")
         context = {"file": refusal.file_name, "reason_code": refusal.reason_code}
-        verdict = _reader_verdict(refusal)
-        if verdict is not None and verdict.action is not None:
-            context["recovery_action_id"] = verdict.action.action_id
         notices.append(
             Notice(
                 severity=NoticeSeverity.WARNING,

@@ -32,7 +32,7 @@ const unreadProfile = {} as unknown as Parameters<typeof censoFixture>[0];
 
 /** A verdict as the product serializes it, recovered by `action`. */
 const verdict = (action: string | null) => ({
-  failed_condition_id: "provisioning.role_model.installed",
+  failed_condition_id: "probe.role_model.installed",
   evidence: [],
   action: action === null ? null : { action_id: action },
   argument_bindings: [],
@@ -64,7 +64,7 @@ test("the setup action is found in every shape a refusal carries it", () => {
   ).toBe("operator.provision.local_ai");
   expect(
     provisionActionOf({
-      failed_condition_id: "provisioning.runtime.installed",
+      failed_condition_id: "probe.runtime.reachable",
       action_id: "operator.provision.local_ai",
     }),
   ).toBe("operator.provision.local_ai");

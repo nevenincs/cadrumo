@@ -4352,19 +4352,9 @@ operation:
     action:
       apply: Aplicar
       cancel: Cancelar
-      claim: Revisar y responder
       close: Cerrar
       detach: Desvincular
       reject: Rechazar
-    claim:
-      already_claimed: Otra persona está revisando esta instalación. No puedes responder
-        aquí.
-      authority_lost: Ya no puedes responder a esta revisión. Inicia una instalación
-        nueva.
-      stale: La revisión de esta instalación ha cambiado. Inicia una instalación nueva
-        para revisar el plan actual.
-      unavailable: Esta revisión ya no está disponible. Inicia sesión y empieza una
-        instalación nueva.
     detail:
       action_refused: Acción rechazada
       cleanup_deadline: Plazo de cierre
@@ -5051,7 +5041,6 @@ tui:
     operations: Operaciones
     profile: Perfil
     reference: Referencia
-    setup: Componentes
     withholding: Retenciones
   home:
     account_fallback: Cuenta
@@ -6986,11 +6975,6 @@ tui:
     unavailable:
       selection_dropped: No se muestra el apunte que selecciona este enlace.
       title: Registros no disponibles
-  local_reader:
-    card:
-      action: Abrir lector de documentos
-      description: Comprueba si los documentos de factura se pueden leer en este equipo.
-      title: Lector de documentos
   modelo:
     editor:
       confirm_hint: Pulsa ⏎ para confirmar {value} o escribe el valor correcto.
@@ -7401,7 +7385,6 @@ tui:
       operations: Abrir Operaciones
       profile: Abrir Perfil
       reference: Abrir Referencia
-      setup: Abrir Componentes
       unknown: Abrir área
       withholding: Abrir Retenciones
     destination_help:
@@ -7416,7 +7399,6 @@ tui:
         rellenarlas y ejecutarlas
       profile: Los datos de este perfil y los orígenes que los completan
       reference: Modelos, casillas, categorías, portales y métodos de acceso
-      setup: El navegador y la IA local
       withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
       not_composed: Todavía no se han podido leer todas las áreas.

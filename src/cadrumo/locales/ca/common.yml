@@ -4348,19 +4348,9 @@ operation:
     action:
       apply: Aplica
       cancel: Cancelar
-      claim: Revisa i respon
       close: Tanca
       detach: Desvincula
       reject: Rebutja
-    claim:
-      already_claimed: Una altra persona està revisant aquesta instal·lació. No pots
-        respondre aquí.
-      authority_lost: Ja no pots respondre a aquesta revisió. Inicia una instal·lació
-        nova.
-      stale: La revisió d’aquesta instal·lació ha canviat. Inicia una instal·lació
-        nova per revisar el pla actual.
-      unavailable: Aquesta revisió ja no està disponible. Inicia la sessió i comença
-        una instal·lació nova.
     detail:
       action_refused: Acció rebutjada
       cleanup_deadline: Termini de tancament
@@ -5046,7 +5036,6 @@ tui:
     operations: Operacions
     profile: Perfil
     reference: Referència
-    setup: Components
     withholding: Retencions
   home:
     account_fallback: Compte
@@ -6969,12 +6958,6 @@ tui:
     unavailable:
       selection_dropped: No es mostra l'apunt que selecciona aquest enllaç.
       title: Registres no disponibles
-  local_reader:
-    card:
-      action: Obre el lector de documents
-      description: Comprova si els documents de factura es poden llegir en aquest
-        equip.
-      title: Lector de documents
   modelo:
     editor:
       confirm_hint: Prem ⏎ per confirmar {value} o escriu el valor correcte.
@@ -7383,7 +7366,6 @@ tui:
       operations: Obre Operacions
       profile: Obre Perfil
       reference: Obre Referència
-      setup: Obre Components
       unknown: Obre l'àrea
       withholding: Obre Retencions
     destination_help:
@@ -7398,7 +7380,6 @@ tui:
         i executar-les
       profile: Les dades d'aquest perfil i els orígens que les completen
       reference: Models, caselles, categories, portals i mètodes d'accés
-      setup: El navegador i la IA local
       withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
       not_composed: Encara no s'han pogut llegir totes les àrees.

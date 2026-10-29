@@ -49,10 +49,8 @@ adapters:
           igényel; először hívja meg az authenticate() metódust.
   browser:
     errors:
-      not_provisioned: Az adóhivatal webhelyéhez használt böngésző még nincs beállítva.
-        Állítsd be, majd próbáld újra.
-      not_usable: A Cadrumo ezen verziója nem tudja használni az adóhivatal webhelyéhez
-        használt böngészőt.
+      not_available: Az adóhivatal webhelyéhez használt böngésző nem érhető el, ezért
+        ez a művelet nem futtatható.
   google:
     calc_sheets:
       errors:

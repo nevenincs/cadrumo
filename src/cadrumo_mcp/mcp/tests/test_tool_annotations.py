@@ -24,7 +24,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.registry import OperationPublicDefinitionDescriptionV1
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from cadrumo_client.contracts.operation_access import OperationObserve, OperationReview
 from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -197,8 +196,7 @@ async def test_the_server_advertises_each_tools_hints_as_the_protocols_annotatio
 
 
 @pytest.mark.anyio
-async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv(DEVELOPMENT_ROLE_IMAGE_VARIABLE, raising=False)
+async def test_a_tool_marked_read_only_sends_the_runtime_nothing_but_reads() -> None:
     calls = _read_only_calls()
     # The bundled reference tools are served with no session at all, so they have nothing to send.
     assert set(calls) == _READ_ONLY - {"authority", "corpus_search"}

@@ -326,8 +326,6 @@ def test_a_batch_item_degraded_by_a_refused_load_is_stored_and_reported_with_its
         "unread_fields": ["supplier_name"],
         "reader_error_type": "LLMContentionError",
         "failed_condition_id": _LOAD_CAPACITY,
-        # A model that does not fit is not something setup supplies.
-        "recovery_action_id": None,
     }
     assert rows[_STRUCTURED]["label_reading_fallback"] is None
     (degraded,) = [notice for notice in first["notices"] if notice["code"] == _BATCH_LABEL_READING_DEGRADED]

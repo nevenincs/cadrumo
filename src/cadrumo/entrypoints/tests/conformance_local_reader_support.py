@@ -1,12 +1,13 @@
 """Registered-executor conformance scenarios for the machine's reader status and report.
 
-Neither asks a local AI server. The status reads the program's row from the
-components role, which a test build either lacks or finds the local AI absent
-in, so the program is never usable here.
+Neither asks a local AI server. The status judges each role's selected lane
+from the stored selections; a test profile selects no model, so no role is
+ready and the reader falls back to text layers alone.
 """
 
 from __future__ import annotations
 
+from ...application.local_reader import LocalReaderDocumentReadiness
 from ...application.local_reader_report import (
     LOCAL_READER_REPORT_OPERATION_DEFINITION_ID,
     LocalReaderReportPublicResultV1,
@@ -34,12 +35,12 @@ def _prepare_status() -> ConformancePreparation:
 
     def verify(outcome: ConformanceOutcome) -> None:
         status = outcome.resolve_result(LocalReaderStatusPublicResultV1)
-        assert status.program.available is False
-        assert status.program.version is None
-        assert status.program.verdict_condition_id is not None
-        assert status.roles, "every reader role is reported, usable program or not"
+        assert status.roles, "every reader role is reported, ready or not"
         assert all(not role.ready for role in status.roles)
+        assert all(role.failed_condition_id is not None for role in status.roles)
         assert status.extraction_ready is False
+        assert status.document_readiness is LocalReaderDocumentReadiness.TEXT_LAYER_ONLY
+        assert status.text_layer_model_fill_available is False
 
     return ConformancePreparation(subject_ref=request.subject_ref, request=request.payload, verify=verify)
 

@@ -4276,16 +4276,9 @@ operation:
     action:
       apply: Apply
       cancel: Cancel
-      claim: Review and answer
       close: Close
       detach: Detach
       reject: Reject
-    claim:
-      already_claimed: Someone else is reviewing this setup. You cannot answer it
-        here.
-      authority_lost: You can no longer answer this review. Start a new setup.
-      stale: This setup review changed. Start a new setup to review the current plan.
-      unavailable: This review is no longer available. Sign in and start a new setup.
     detail:
       action_refused: Action refused
       cleanup_deadline: Cleanup deadline
@@ -4958,7 +4951,6 @@ tui:
     operations: Operations
     profile: Profile
     reference: Reference
-    setup: Components
     withholding: Withholding
   home:
     account_fallback: Account
@@ -6852,11 +6844,6 @@ tui:
     unavailable:
       selection_dropped: The entry this link selects is not shown.
       title: Records unavailable
-  local_reader:
-    card:
-      action: Open document reader
-      description: See whether invoice documents can be read on this machine.
-      title: Document reader
   modelo:
     editor:
       confirm_hint: Press ⏎ to confirm {value}, or type the right value.
@@ -7259,7 +7246,6 @@ tui:
       operations: Open Operations
       profile: Open Profile
       reference: Open Reference
-      setup: Open Components
       unknown: Open area
       withholding: Open Withholding
     destination_help:
@@ -7271,7 +7257,6 @@ tui:
       operations: Every operation Cadrumo can run, to search, fill in and run
       profile: This profile's details and the sources that fill them in
       reference: Modelos, casillas, categories, portals and sign-in methods
-      setup: The browser and the local AI
       withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
       not_composed: Not every area could be read yet.
