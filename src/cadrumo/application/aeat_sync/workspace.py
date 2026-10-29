@@ -8,8 +8,9 @@ import re
 import secrets
 from collections.abc import Mapping
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta
 from enum import StrEnum
+from types import MappingProxyType
 from typing import (
     Annotated,
     Final,
@@ -23,7 +24,7 @@ from typing import (
     override,
 )
 
-from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, TypeAdapter, field_validator, model_validator
 
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.filing_year import FilingYear
@@ -32,7 +33,7 @@ from ...core.identifier_grammar import NamespacedId
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.time.utc import UtcInstant
+from ...core.time.utc import UtcInstant, validate_utc_aware
 from ...domain.modelos.codes import ModeloCode
 from ..modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from ..modelo.reconciliation_records import ModeloReconciliationDiff
@@ -546,6 +547,143 @@ class AeatSyncWorkspaceProjectionV1(BaseModel):
             raise ValueError("projected notifications require selection keys")
         if len(selection_keys) != len(set(selection_keys)):
             raise ValueError("projected notification selection keys must be unique")
+        return self
+
+
+AEAT_SYNC_STATUS_CONTRACT_VERSION: Final[int] = 1
+
+
+class AeatSyncStatusArea(StrEnum):
+    """The areas the AEAT sync page brings and judges, in the order a run brings them.
+
+    Borrador 100 comes last because it is brought by importing a downloaded PDF
+    and is never part of a run over everything.
+    """
+
+    CENSUS = "census"
+    IDENTITY_CHECKS = "identity_checks"
+    NOTIFICATIONS = "notifications"
+    IVA_WALLET = "iva_wallet"
+    FILED_DECLARATIONS = "filed_declarations"
+    BORRADOR_100 = "borrador_100"
+
+
+class AeatSyncAreaState(StrEnum):
+    """What a stored capture establishes about one area right now.
+
+    The four stay distinct: an area never brought has no capture, a current one
+    has a capture inside its horizon, a possibly stale one has a capture older
+    than its horizon, and an unavailable one could not be read at all.
+    """
+
+    NEVER_BROUGHT = "never_brought"
+    CURRENT = "current"
+    POSSIBLY_STALE = "possibly_stale"
+    UNAVAILABLE = "unavailable"
+
+
+AEAT_SYNC_STALENESS_HORIZONS: Final[Mapping[AeatSyncStatusArea, timedelta | None]] = MappingProxyType(
+    {
+        AeatSyncStatusArea.CENSUS: timedelta(days=90),
+        AeatSyncStatusArea.IDENTITY_CHECKS: timedelta(days=90),
+        AeatSyncStatusArea.NOTIFICATIONS: timedelta(days=7),
+        AeatSyncStatusArea.IVA_WALLET: timedelta(days=30),
+        AeatSyncStatusArea.FILED_DECLARATIONS: timedelta(days=90),
+        # An imported Borrador 100 PDF is a document the person chose to bring;
+        # no ruling gives it an age after which it may be out of date.
+        AeatSyncStatusArea.BORRADOR_100: None,
+    }
+)
+"""How old a successful capture may be before its area is possibly stale.
+
+An area is possibly stale once its last successful capture is STRICTLY older than
+its horizon; a capture exactly at the horizon is still current. ``None`` means
+no ruling gives the area an age limit, so it is never judged stale.
+"""
+
+
+class AeatSyncFiledPeriodCountsV1(BaseModel):
+    """How the filed periods this profile holds compare with the stored AEAT register.
+
+    The four counts partition every period either side knows: ``matched`` is
+    filed locally and shown by the AEAT register, ``aeat_only`` is shown by the
+    register with no local filing, ``local_only`` is filed locally and absent
+    from the register capture, and ``differing`` is shown by the register with
+    evidence that conflicts or raises a concern and so cannot be matched.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+    matched: NonNegativeInt
+    aeat_only: NonNegativeInt
+    local_only: NonNegativeInt
+    differing: NonNegativeInt
+
+
+class AeatSyncAreaStatusV1(BaseModel):
+    """One area's state, last successful capture and last attempt."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    area: AeatSyncStatusArea
+    state: AeatSyncAreaState
+    last_brought_at: datetime | None = None
+    """The UTC instant of the last successful capture, or nothing when none is known."""
+    stale_after_days: NonNegativeInt | None = None
+    """The horizon in whole days, or nothing when the area is never judged stale."""
+    last_attempt_at: datetime | None = None
+    last_attempt_succeeded: bool | None = None
+    """Only areas whose runs leave a sync-run record carry an attempt."""
+    refusal: NamespacedId | None = None
+    unread_notification_count: NonNegativeInt | None = None
+    filed_periods: AeatSyncFiledPeriodCountsV1 | None = None
+
+    @field_validator("last_brought_at", "last_attempt_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _instants_are_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _coherent(self) -> Self:
+        brought = self.state in {AeatSyncAreaState.CURRENT, AeatSyncAreaState.POSSIBLY_STALE}
+        if brought != (self.last_brought_at is not None):
+            raise ValueError("only a brought area carries its capture time")
+        if (self.state is AeatSyncAreaState.UNAVAILABLE) != (self.refusal is not None):
+            raise ValueError("only an unavailable area carries a refusal")
+        if (self.last_attempt_at is None) != (self.last_attempt_succeeded is None):
+            raise ValueError("an attempt carries both its time and its outcome")
+        if self.state is AeatSyncAreaState.POSSIBLY_STALE and self.stale_after_days is None:
+            raise ValueError("a possibly stale area requires its horizon")
+        if not brought and (self.unread_notification_count is not None or self.filed_periods is not None):
+            raise ValueError("counts require a brought area")
+        if self.unread_notification_count is not None and self.area is not AeatSyncStatusArea.NOTIFICATIONS:
+            raise ValueError("only notifications carry an unread count")
+        if self.filed_periods is not None and self.area is not AeatSyncStatusArea.FILED_DECLARATIONS:
+            raise ValueError("only filed declarations carry period counts")
+        return self
+
+
+class AeatSyncStatusV1(BaseModel):
+    """Per-area AEAT sync standing, read from stored captures only."""
+
+    model_config = STRICT_FROZEN_CONFIG
+    contract_version: int = AEAT_SYNC_STATUS_CONTRACT_VERSION
+    observed_at: datetime
+    areas: tuple[AeatSyncAreaStatusV1, ...]
+    filed_declaration_years: tuple[FilingYear, ...]
+    iva_wallet_years: tuple[FilingYear, ...]
+
+    @field_validator("observed_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _observed_at_is_utc(cls, value: datetime) -> datetime:
+        return validate_utc_aware(value)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _every_area_once(self) -> Self:
+        if tuple(item.area for item in self.areas) != tuple(AeatSyncStatusArea):
+            raise ValueError("areas must cover the closed catalogue in order")
         return self
 
 

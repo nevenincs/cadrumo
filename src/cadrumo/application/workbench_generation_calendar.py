@@ -357,6 +357,27 @@ def unbound_calendar_aeat_evidence() -> CalendarEvidenceReadOutcome[AeatCalendar
     )
 
 
+def project_calendar_aeat_filing_evidence(
+    aeat_evidence: CalendarEvidenceReadOutcome[AeatCalendarEvidenceSources],
+    *,
+    expected_tax_id: str | None,
+) -> CalendarEvidenceProjection:
+    """Join stored AEAT filing captures to one profile's tax identity through the shared evidence provider.
+
+    The local axis is available and empty here: the callers that project AEAT
+    evidence hold local filings separately, and this join only establishes what
+    the AEAT captures observed for ``expected_tax_id``.
+    """
+    return build_calendar_evidence_projection(
+        local=CalendarEvidenceReadOutcome(
+            state=HomeZoneState(availability=HomeAvailability.AVAILABLE),
+            value=LocalCalendarEvidenceSources(),
+        ),
+        aeat=aeat_evidence,
+        expected_tax_id=expected_tax_id,
+    )
+
+
 def _build_workbench_calendar_inputs(
     *,
     taxpayer: TaxpayerProfile,

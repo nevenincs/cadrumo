@@ -20,6 +20,8 @@ which is what makes the destination worth reaching in a fresh session.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass, field
+from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ...core.errors.hierarchy import InternalInvariantError
@@ -34,14 +36,20 @@ from ..user_profile.censal_observation import CensalObservation
 from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read
 from .reconciliation_reader import reconciliation_rows
 from .workspace import (
+    AEAT_SYNC_STALENESS_HORIZONS,
     AeatSyncAeatObservationState,
+    AeatSyncAreaState,
+    AeatSyncAreaStatusV1,
     AeatSyncCensusCategory,
     AeatSyncCensusStatus,
     AeatSyncDiscrepancyKind,
+    AeatSyncFiledPeriodCountsV1,
     AeatSyncJustificanteState,
     AeatSyncLocalFilingState,
     AeatSyncOverviewArea,
     AeatSyncSourceState,
+    AeatSyncStatusArea,
+    AeatSyncStatusV1,
     AeatSyncWorkspaceAvailability,
     AeatSyncWorkspaceCensusRowV1,
     AeatSyncWorkspaceFactV1,
@@ -58,6 +66,8 @@ from .workspace import (
 )
 
 if TYPE_CHECKING:
+    from ...core.filing_year import FilingYear
+    from ...core.identifier_grammar import NamespacedId
     from ...core.period import Period
     from ...core.time.utc import UtcInstant
     from ...domain.modelos.filing_record import ModeloRecord
@@ -105,6 +115,15 @@ _OPERATION_ACTION_IDS: Final[frozenset[str]] = frozenset(
     }
 )
 
+
+_READABLE_AVAILABILITIES: Final[frozenset[AeatSyncWorkspaceAvailability]] = frozenset(
+    {
+        AeatSyncWorkspaceAvailability.AVAILABLE,
+        AeatSyncWorkspaceAvailability.STALE,
+        AeatSyncWorkspaceAvailability.NEVER_CAPTURED,
+    }
+)
+"""The filed-capture availabilities that are not a failure to read the store."""
 
 _LOCAL_REFUSALS: Final[dict[AeatSyncWorkspaceSource, str]] = {
     AeatSyncWorkspaceSource.LOCAL_NOTIFICATION_CUSTODY: _READER_NOT_COMPOSED,
@@ -742,4 +761,204 @@ def read_local_aeat_sync_workspace_projection(
     )
 
 
-__all__ = ["read_local_aeat_sync_workspace_projection"]
+@dataclass(frozen=True, slots=True)
+class AeatSyncAreaAttempt:
+    """The last attempt a sync-run record holds for an area, successful or not."""
+
+    attempted_at: UtcInstant
+    succeeded: bool
+
+
+@dataclass(frozen=True, slots=True)
+class AeatSyncNotificationsCapture:
+    """The newest stored notification snapshot, reduced to what the status shows.
+
+    ``unread_count`` counts rows the AEAT marked unread. A row whose read state
+    the capture did not establish is not counted as unread.
+    """
+
+    captured_at: UtcInstant
+    unread_count: int
+
+
+@dataclass(frozen=True, slots=True)
+class AeatSyncStatusSources:
+    """Already-loaded stored captures the per-area status judges.
+
+    `None` for a capture means its store was read and holds none; an area whose
+    store could not be read at all is named in ``unreadable`` with its refusal,
+    which keeps it distinct from an area that was never brought.
+    """
+
+    census_observation: CensalObservation | None = None
+    filings: tuple[ModeloRecord, ...] = ()
+    filed_evidence: CalendarEvidenceProjection | None = None
+    filed_attempt: AeatSyncAreaAttempt | None = None
+    notifications: AeatSyncNotificationsCapture | None = None
+    iva_wallet_captured_at: UtcInstant | None = None
+    borrador_imported_at: UtcInstant | None = None
+    identity_checked_at: UtcInstant | None = None
+    unreadable: Mapping[AeatSyncStatusArea, NamespacedId] = field(default_factory=lambda: MappingProxyType({}))
+
+
+def _area_status(
+    area: AeatSyncStatusArea,
+    *,
+    observed_at: UtcInstant,
+    captured_at: UtcInstant | None,
+    refusal: NamespacedId | None = None,
+    attempt: AeatSyncAreaAttempt | None = None,
+    unread_notification_count: int | None = None,
+    filed_periods: AeatSyncFiledPeriodCountsV1 | None = None,
+) -> AeatSyncAreaStatusV1:
+    """Judge one area against its backend-owned horizon.
+
+    A capture is possibly stale only when it is strictly older than the horizon,
+    so one made exactly a horizon ago is still current. An unreadable store wins
+    over any capture time, because a time the store cannot confirm is not proof.
+    """
+    horizon = AEAT_SYNC_STALENESS_HORIZONS[area]
+    last_attempt_at = None if attempt is None else attempt.attempted_at
+    last_attempt_succeeded = None if attempt is None else attempt.succeeded
+    if refusal is not None:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.UNAVAILABLE,
+            refusal=refusal,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+        )
+    if captured_at is None:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.NEVER_BROUGHT,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+        )
+    stale = horizon is not None and observed_at - captured_at > horizon
+    return AeatSyncAreaStatusV1(
+        area=area,
+        state=AeatSyncAreaState.POSSIBLY_STALE if stale else AeatSyncAreaState.CURRENT,
+        last_brought_at=captured_at,
+        stale_after_days=None if horizon is None else horizon.days,
+        last_attempt_at=last_attempt_at,
+        last_attempt_succeeded=last_attempt_succeeded,
+        unread_notification_count=unread_notification_count,
+        filed_periods=filed_periods,
+    )
+
+
+def _filed_period_counts(
+    filings: tuple[ModeloRecord, ...],
+    filed_evidence: CalendarEvidenceProjection | None,
+) -> AeatSyncFiledPeriodCountsV1:
+    """Partition every period either side knows into matched, AEAT-only, local-only and differing."""
+    local = _latest_filings(filings).keys()
+    observed = _observed_filings(filed_evidence).keys()
+    differing = _contested_filings(filed_evidence)
+    return AeatSyncFiledPeriodCountsV1(
+        matched=len(local & observed),
+        aeat_only=len(observed - local),
+        local_only=len(local - observed - differing),
+        differing=len(differing),
+    )
+
+
+def _contested_filings(filed_evidence: CalendarEvidenceProjection | None) -> frozenset[_NaturalKey]:
+    """Index the filings the register shows with evidence that conflicts or raises a concern."""
+    if filed_evidence is None:
+        return frozenset[_NaturalKey]()
+    contested: set[_NaturalKey] = set()
+    for row in filed_evidence.evidence:
+        modelo = row.modelo
+        filing_year = row.filing_year
+        period = row.period
+        if (
+            modelo is not None
+            and filing_year is not None
+            and period is not None
+            and row.aeat_submission_state is not OverviewAeatSubmissionState.NOT_OBSERVED
+            and not row.aeat_filed
+        ):
+            contested.add((modelo, filing_year, period.registry_token))
+    return frozenset(contested)
+
+
+def _filed_area_status(sources: AeatSyncStatusSources, *, observed_at: UtcInstant) -> AeatSyncAreaStatusV1:
+    """Judge filed declarations from the stored register captures and their sync-run record."""
+    area = AeatSyncStatusArea.FILED_DECLARATIONS
+    source = _filed_source_observation(
+        sources.filed_evidence, observed_count=len(_observed_filings(sources.filed_evidence))
+    )
+    unreadable = sources.unreadable.get(area)
+    if unreadable is None and source.availability not in _READABLE_AVAILABILITIES:
+        unreadable = source.refusal
+    counts = None if source.observed_at is None else _filed_period_counts(sources.filings, sources.filed_evidence)
+    return _area_status(
+        area,
+        observed_at=observed_at,
+        captured_at=source.observed_at,
+        refusal=unreadable,
+        attempt=sources.filed_attempt,
+        filed_periods=counts,
+    )
+
+
+def read_aeat_sync_status(
+    *,
+    observed_at: UtcInstant,
+    sources: AeatSyncStatusSources,
+    filed_declaration_years: tuple[FilingYear, ...],
+    iva_wallet_years: tuple[FilingYear, ...],
+) -> AeatSyncStatusV1:
+    """Judge every sync area from already-loaded stored captures, contacting nothing.
+
+    The workbench projection above reads the same stored census and filed
+    captures; this is the cheap per-area view over them plus the notification,
+    IVA wallet, Borrador 100 and identity-check captures the workbench does not
+    carry. Staleness is judged here, once, so every frontend serves the same
+    answer: an area is possibly stale once its last successful capture is
+    strictly older than its horizon.
+    """
+
+    def judge(
+        area: AeatSyncStatusArea,
+        captured_at: UtcInstant | None,
+        unread_notification_count: int | None = None,
+    ) -> AeatSyncAreaStatusV1:
+        return _area_status(
+            area,
+            observed_at=observed_at,
+            captured_at=captured_at,
+            refusal=sources.unreadable.get(area),
+            unread_notification_count=unread_notification_count,
+        )
+
+    notifications = sources.notifications
+    census = sources.census_observation
+    return AeatSyncStatusV1(
+        observed_at=observed_at,
+        areas=(
+            judge(AeatSyncStatusArea.CENSUS, None if census is None else census.captured_at),
+            judge(AeatSyncStatusArea.IDENTITY_CHECKS, sources.identity_checked_at),
+            judge(
+                AeatSyncStatusArea.NOTIFICATIONS,
+                None if notifications is None else notifications.captured_at,
+                None if notifications is None else notifications.unread_count,
+            ),
+            judge(AeatSyncStatusArea.IVA_WALLET, sources.iva_wallet_captured_at),
+            _filed_area_status(sources, observed_at=observed_at),
+            judge(AeatSyncStatusArea.BORRADOR_100, sources.borrador_imported_at),
+        ),
+        filed_declaration_years=filed_declaration_years,
+        iva_wallet_years=iva_wallet_years,
+    )
+
+
+__all__ = [
+    "AeatSyncAreaAttempt",
+    "AeatSyncNotificationsCapture",
+    "AeatSyncStatusSources",
+    "read_aeat_sync_status",
+    "read_local_aeat_sync_workspace_projection",
+]

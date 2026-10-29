@@ -94,14 +94,8 @@ from .overview.evidence import (
     AeatCalendarEvidenceSources,
     CalendarEvidenceProjection,
     CalendarEvidenceReadOutcome,
-    LocalCalendarEvidenceSources,
-    build_calendar_evidence_projection,
 )
-from .overview.home import (
-    HomeAccountSession,
-    HomeAvailability,
-    HomeZoneState,
-)
+from .overview.home import HomeAccountSession
 from .user_profile.censal_observation import CensalObservation
 from .user_profile.projections import record_to_path_values
 from .workbench_capture_memory import WorkbenchCalendarMemoKey, WorkbenchCaptureMemory
@@ -111,6 +105,7 @@ from .workbench_generation_calendar import (
     WorkbenchCalendarInputs,
     declarations_observation,
     declared_tax_id,
+    project_calendar_aeat_filing_evidence,
     read_workbench_calendar_inputs,
     unbound_calendar_aeat_evidence,
 )
@@ -324,6 +319,19 @@ class _StoredCatalogues(NamedTuple):
     bucket_events: BucketEventHistoryCatalogue | None
 
 
+class _DeclarationSources(NamedTuple):
+    """Captured declaration inputs retained through a surface's own currentness checks."""
+
+    observed_at: UtcInstant
+    catalogues: _StoredCatalogues
+    declarations: DeclarationsWorkspaceProjectionV1 | None
+    raw_values: dict[str, str]
+    ledger_revision: tuple[str, str] | None
+    ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None
+    aeat_projection: CalendarEvidenceProjection
+    calendar_inputs: WorkbenchCalendarInputs
+
+
 @dataclass(frozen=True, slots=True)
 class SecureProfileWorkbenchGenerationReadDoorV1:
     """Read one generation from explicit secure profile repositories.
@@ -389,19 +397,115 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         if account_session_reader is None:
             raise InternalInvariantError("a workbench generation needs the live account session")
         _timed("account_session", account_session_reader)
+        capture = self._capture_declaration_sources()
+        custody_count = _timed("custody_count", self._load_custody_count)
+        census_observation = _timed("census_observation", self._load_census_observation)
+        ledger_ports = self.ledger_action_ports
+        ledger = (
+            None
+            if ledger_ports is None
+            else _timed(
+                "ledger_workspace",
+                lambda: self._read_ledger(
+                    capture.catalogues.revisions.revisions,
+                    capture.catalogues.work_units,
+                    sources=capture.ledger_sources,
+                    ports=ledger_ports,
+                ),
+            )
+        )
+        modelo = _timed(
+            "modelo_workspaces",
+            lambda: self._read_modelo(capture.catalogues.work_units),
+            count=lambda projections: None if projections is None else len(projections),
+        )
+        aeat_sync, aeat_sync_refusal = _timed(
+            "aeat_sync_workspace",
+            lambda: self._read_aeat_sync(
+                declared_tax_id(capture.raw_values),
+                observed_at=capture.observed_at,
+                filings=tuple(capture.catalogues.filings.records.values()),
+                custody_count=custody_count,
+                censo_values=capture.raw_values,
+                census_observation=census_observation,
+                filed_evidence=capture.aeat_projection,
+            ),
+        )
+        account_session = _timed("account_session", account_session_reader)
+        if not self._capture_is_unchanged(
+            record=capture.catalogues.record,
+            work_units_revision=capture.catalogues.work_units_revision,
+            calculations_revision=capture.catalogues.calculations_revision,
+            filings_revision=capture.catalogues.filings_revision,
+            ledger_revision=capture.ledger_revision,
+            ledger_sources=capture.ledger_sources,
+            verification=capture.catalogues.verification,
+            bucket_events=capture.catalogues.bucket_events,
+            custody_count=custody_count,
+            census_observation=census_observation,
+        ):
+            raise InternalInvariantError("secure workbench generation changed during capture")
+        return _timed(
+            "generation_assembly",
+            lambda: build_workbench_generation_inputs(
+                observed_at=capture.observed_at,
+                account_session=account_session,
+                calendar_inputs=capture.calendar_inputs,
+                ledger=ledger,
+                declarations=capture.declarations,
+                aeat_sync=aeat_sync,
+                aeat_sync_refusal=aeat_sync_refusal,
+                modelo=modelo,
+                work_units=capture.catalogues.work_units,
+                verification=capture.catalogues.verification,
+            ),
+        )
+
+    def read_declaration_list_inputs(self) -> DeclarationListInputs:
+        """Capture only what the declarations list joins: the local declarations and the legal calendar.
+
+        It reads the same repositories, through the same projections, as a
+        generation does, and is checked unchanged across the capture the same
+        way, without the account session only Home needs.
+        """
+        with diagnostic_scope(), _capture_phase("declaration_list_inputs"):
+            return self._capture_declaration_list_inputs()
+
+    def _capture_declaration_list_inputs(self) -> DeclarationListInputs:
+        capture = self._capture_declaration_sources()
+        if not self._capture_is_unchanged(
+            record=capture.catalogues.record,
+            work_units_revision=capture.catalogues.work_units_revision,
+            calculations_revision=capture.catalogues.calculations_revision,
+            filings_revision=capture.catalogues.filings_revision,
+            ledger_revision=capture.ledger_revision,
+            ledger_sources=capture.ledger_sources,
+            verification=capture.catalogues.verification,
+            bucket_events=capture.catalogues.bucket_events,
+            custody_count=_timed("custody_count", self._load_custody_count),
+            census_observation=_timed("census_observation", self._load_census_observation),
+        ):
+            raise InternalInvariantError("secure declarations list changed during capture")
+        return DeclarationListInputs(
+            workspace=capture.declarations, calendar=capture.calendar_inputs.declarations_calendar
+        )
+
+    def _capture_declaration_sources(self) -> _DeclarationSources:
+        """Read the ordered local declaration and calendar inputs once for either surface."""
         observed_at = self.clock()
         as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
+        catalogues = self._load_stored_catalogues()
         (
             record,
             work_units,
             work_units_revision,
             revisions,
-            calculations_revision,
+            _calculations_revision,
             filings,
             filings_revision,
             verification,
             bucket_events,
-        ) = self._load_stored_catalogues()
+        ) = catalogues
         declarations = self._read_declarations_projection(
             work_units=work_units,
             revisions=revisions,
@@ -433,131 +537,16 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
         )
-        custody_count = _timed("custody_count", self._load_custody_count)
-        census_observation = _timed("census_observation", self._load_census_observation)
-        ledger_ports = self.ledger_action_ports
-        ledger = (
-            None
-            if ledger_ports is None
-            else _timed(
-                "ledger_workspace",
-                lambda: self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports),
-            )
-        )
-        modelo = _timed(
-            "modelo_workspaces",
-            lambda: self._read_modelo(work_units),
-            count=lambda projections: None if projections is None else len(projections),
-        )
-        aeat_sync, aeat_sync_refusal = _timed(
-            "aeat_sync_workspace",
-            lambda: self._read_aeat_sync(
-                declared_tax_id(raw_values),
-                observed_at=observed_at,
-                filings=tuple(filings.records.values()),
-                custody_count=custody_count,
-                censo_values=raw_values,
-                census_observation=census_observation,
-                filed_evidence=aeat_projection,
-            ),
-        )
-        account_session = _timed("account_session", account_session_reader)
-        if not self._capture_is_unchanged(
-            record=record,
-            work_units_revision=work_units_revision,
-            calculations_revision=calculations_revision,
-            filings_revision=filings_revision,
-            ledger_revision=ledger_revision,
-            ledger_sources=ledger_sources,
-            verification=verification,
-            bucket_events=bucket_events,
-            custody_count=custody_count,
-            census_observation=census_observation,
-        ):
-            raise InternalInvariantError("secure workbench generation changed during capture")
-        return _timed(
-            "generation_assembly",
-            lambda: build_workbench_generation_inputs(
-                observed_at=observed_at,
-                account_session=account_session,
-                calendar_inputs=calendar_inputs,
-                ledger=ledger,
-                declarations=declarations,
-                aeat_sync=aeat_sync,
-                aeat_sync_refusal=aeat_sync_refusal,
-                modelo=modelo,
-                work_units=work_units,
-                verification=verification,
-            ),
-        )
-
-    def read_declaration_list_inputs(self) -> DeclarationListInputs:
-        """Capture only what the declarations list joins: the local declarations and the legal calendar.
-
-        It reads the same repositories, through the same projections, as a
-        generation does, and is checked unchanged across the capture the same
-        way, without the account session only Home needs.
-        """
-        with diagnostic_scope(), _capture_phase("declaration_list_inputs"):
-            return self._capture_declaration_list_inputs()
-
-    def _capture_declaration_list_inputs(self) -> DeclarationListInputs:
-        observed_at = self.clock()
-        as_of = observed_at.astimezone(ZoneInfo("Europe/Madrid")).date()
-        (
-            record,
-            work_units,
-            work_units_revision,
-            revisions,
-            calculations_revision,
-            filings,
-            filings_revision,
-            verification,
-            bucket_events,
-        ) = self._load_stored_catalogues()
-        declarations = self._read_declarations_projection(
-            work_units=work_units,
-            revisions=revisions,
-            verification=verification,
-            filings=filings,
-            bucket_events=bucket_events,
+        return _DeclarationSources(
             observed_at=observed_at,
-        )
-        raw_values = record_to_path_values(record)
-        ledger_revision = _timed("ledger_revision", self._ledger_revision)
-        ledger_sources = self._load_ledger_sources()
-        aeat_evidence, aeat_projection = _timed(
-            "calendar_aeat_evidence", lambda: self._read_calendar_aeat_evidence(raw_values)
-        )
-        calendar_inputs = self._read_calendar_inputs(
-            record=record,
+            catalogues=catalogues,
+            declarations=declarations,
             raw_values=raw_values,
-            aeat_evidence=aeat_evidence,
+            ledger_revision=ledger_revision,
+            ledger_sources=ledger_sources,
             aeat_projection=aeat_projection,
-            as_of=as_of,
-            work_units=work_units,
-            filings=filings,
-            observed_at=observed_at,
-            operation=self.operation,
-            work_units_revision=work_units_revision,
-            filings_revision=filings_revision,
-            ledger_revision=ledger_revision,
-            ledger_sources=ledger_sources,
+            calendar_inputs=calendar_inputs,
         )
-        if not self._capture_is_unchanged(
-            record=record,
-            work_units_revision=work_units_revision,
-            calculations_revision=calculations_revision,
-            filings_revision=filings_revision,
-            ledger_revision=ledger_revision,
-            ledger_sources=ledger_sources,
-            verification=verification,
-            bucket_events=bucket_events,
-            custody_count=_timed("custody_count", self._load_custody_count),
-            census_observation=_timed("census_observation", self._load_census_observation),
-        ):
-            raise InternalInvariantError("secure declarations list changed during capture")
-        return DeclarationListInputs(workspace=declarations, calendar=calendar_inputs.declarations_calendar)
 
     def _read_declarations_projection(
         self,
@@ -636,13 +625,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             if self.calendar_aeat_reader is None or declared_tax_id(raw_values) is None
             else self.calendar_aeat_reader()
         )
-        aeat_projection = build_calendar_evidence_projection(
-            local=CalendarEvidenceReadOutcome(
-                state=HomeZoneState(availability=HomeAvailability.AVAILABLE),
-                value=LocalCalendarEvidenceSources(),
-            ),
-            aeat=aeat_evidence,
-            expected_tax_id=declared_tax_id(raw_values),
+        aeat_projection = project_calendar_aeat_filing_evidence(
+            aeat_evidence, expected_tax_id=declared_tax_id(raw_values)
         )
         return aeat_evidence, aeat_projection
 
