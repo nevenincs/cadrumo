@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#rust-component-provisioning'
 date: '2026-10-27'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: 'body-v2'
 body_hash: 'sha256:48f5de50aad23bc3bb6e96abfed9d6ebff77ae8ea7f543572eaa0847d795b2b0'
-related:
-  - "[[2026-10-26-rust-component-provisioning-registered-operations-adr]]"
+related: []
 ---
 # `rust-component-provisioning` reference: `Existing operation review authority and human handoff boundary`
 

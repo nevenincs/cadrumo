@@ -6,8 +6,7 @@ date: '2026-10-27'
 tier: L1
 related:
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
-  - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: body-v2
 body_hash: 'sha256:2b4bdb6df35d21660c7d9cee6e70650240b92db4083cef61c54c2c2042cc42a2'
 ---

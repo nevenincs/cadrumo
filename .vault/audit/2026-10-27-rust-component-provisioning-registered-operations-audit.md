@@ -3,12 +3,11 @@ tags:
   - '#audit'
   - '#rust-component-provisioning'
 date: '2026-10-27'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: 'body-v2'
 body_hash: 'sha256:ac7d74bfdeb431c9f11e6d92839024f5d971a47eff8d0aeb8e10fed91494e375'
 related:
   - "[[2026-10-26-rust-component-provisioning-plan]]"
-  - "[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]"
 ---
 # `rust-component-provisioning` audit: `Registered component operations backend checkpoint review`
 

@@ -5,10 +5,8 @@ tags:
 date: '2026-10-26'
 tier: L1
 related:
-  - '[[2026-10-26-rust-component-provisioning-registered-operations-adr]]'
   - '[[2026-10-24-rust-component-provisioning-adr]]'
-  - '[[2026-10-27-rust-component-provisioning-human-review-authority-adr]]'
-modified: '2026-10-27'
+modified: '2026-10-29'
 body_schema: body-v2
 body_hash: 'sha256:622321ee7b4f597a4c550cf4cda115de22bc34f09f1a0285468e13fdff7d0672'
 ---
