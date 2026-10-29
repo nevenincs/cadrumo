@@ -315,9 +315,6 @@ pub enum Event {
     AttendanceChanged,
     AttendanceAnswered,
     OperationChanged,
-    PresentationRequested {
-        destination: String,
-    },
     ServiceLeaseChanged,
     ServiceAdmissionChanged,
     ProfileLoginChanged {
@@ -566,9 +563,6 @@ fn event(document: &Map<String, Value>) -> Event {
         Some("attendance_changed") => Event::AttendanceChanged,
         Some("attendance_answered") => Event::AttendanceAnswered,
         Some("operation_changed") => Event::OperationChanged,
-        Some("presentation_requested") => Event::PresentationRequested {
-            destination: text(document, "destination").unwrap_or_default().to_owned(),
-        },
         Some("service_lease_changed") => Event::ServiceLeaseChanged,
         Some("service_admission_changed") => Event::ServiceAdmissionChanged,
         Some("profile_login_changed") => Event::ProfileLoginChanged {
@@ -2740,12 +2734,6 @@ mod tests {
             Event::SessionRetired {
                 kind: "signed_out".into(),
                 reason: "authentication_required".into()
-            }
-        );
-        assert_eq!(
-            read(json!({"kind": "presentation_requested", "destination": "ledger_entries"})),
-            Event::PresentationRequested {
-                destination: "ledger_entries".into()
             }
         );
         assert_eq!(read(json!({"kind": "profile_status"})), Event::Disconnected);

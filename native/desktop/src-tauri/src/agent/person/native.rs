@@ -690,9 +690,7 @@ fn route(pushed: &mpsc::Receiver<Pushed>, routing: &Routing, events: &EventSlot)
                 break;
             }
             Event::SessionRetired { .. } if own => break,
-            Event::SessionRetired { .. }
-            | Event::AttendanceAnswered
-            | Event::PresentationRequested { .. } => continue,
+            Event::SessionRetired { .. } | Event::AttendanceAnswered => continue,
             Event::LanguageChanged if own => {
                 shared.language_dirty.store(true, Ordering::Release);
                 PersonEvent::LanguageChanged
