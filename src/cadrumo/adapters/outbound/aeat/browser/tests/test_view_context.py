@@ -31,6 +31,13 @@ from playwright.async_api import (
 )
 
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    VIEW_DOCUMENT_PATH_FIXTURE,
+    VIEW_HOME_PATH_FIXTURE,
+    VIEW_SUBMIT_PATH_CANARY,
+    VIEW_UPLOAD_PATH_FIXTURE,
+    VIEW_WORKER_PATH_FIXTURE,
+)
 from ..profile import Profile
 from ..session import BrowserSession
 
@@ -144,7 +151,7 @@ async def _titled(page: Page, title: str) -> None:
 @pytest.mark.asyncio
 async def test_view_reports_a_page_opened_by_code(tmp_path: Path) -> None:
     synthetic = _SyntheticPages()
-    start = synthetic.page(f"{_SEDE}/Sede/inicio.html", "<title>sede</title>")
+    start = synthetic.page(f"{_SEDE}{VIEW_HOME_PATH_FIXTURE}", "<title>sede</title>")
     async with _view_context(tmp_path, synthetic) as (context, observer):
         page = await _open_page(context, observer, start)
         assert await page.title() == "sede"
@@ -156,7 +163,7 @@ async def test_view_reports_a_page_opened_by_code(tmp_path: Path) -> None:
 async def test_view_reports_a_popup_and_leaves_it_open(tmp_path: Path) -> None:
     synthetic = _SyntheticPages()
     target = synthetic.page(f"{_OFF_HOST}/popup", "<title>popup</title>")
-    start = synthetic.page(f"{_SEDE}/Sede/inicio.html", f'<a id="go" target="_blank" href="{target}">go</a>')
+    start = synthetic.page(f"{_SEDE}{VIEW_HOME_PATH_FIXTURE}", f'<a id="go" target="_blank" href="{target}">go</a>')
     async with _view_context(tmp_path, synthetic) as (context, observer):
         page = await _open_page(context, observer, start)
         await page.click("#go")
@@ -173,8 +180,8 @@ async def test_view_reports_a_popup_and_leaves_it_open(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_view_reports_a_download(tmp_path: Path) -> None:
     synthetic = _SyntheticPages()
-    target = synthetic.page(f"{_SEDE}/wlpl/DOCU-MENT/justificante.pdf", "%PDF-1.4 synthetic", "application/pdf")
-    start = synthetic.page(f"{_SEDE}/Sede/inicio.html", f'<a id="go" download="j.pdf" href="{target}">go</a>')
+    target = synthetic.page(f"{_SEDE}{VIEW_DOCUMENT_PATH_FIXTURE}", "%PDF-1.4 synthetic", "application/pdf")
+    start = synthetic.page(f"{_SEDE}{VIEW_HOME_PATH_FIXTURE}", f'<a id="go" download="j.pdf" href="{target}">go</a>')
     async with _view_context(tmp_path, synthetic) as (context, observer):
         page = await _open_page(context, observer, start)
         await page.click("#go")
@@ -187,7 +194,7 @@ async def test_view_reports_a_download(tmp_path: Path) -> None:
 async def test_view_reports_a_file_chooser_the_observer_can_answer(tmp_path: Path) -> None:
     synthetic = _SyntheticPages()
     start = synthetic.page(
-        f"{_SEDE}/Sede/aportar.html",
+        f"{_SEDE}{VIEW_UPLOAD_PATH_FIXTURE}",
         """<input id="file" type="file" onchange="document.title = 'chosen:' + this.files[0].name">""",
     )
     async with _view_context(tmp_path, synthetic) as (context, observer):
@@ -204,7 +211,7 @@ async def test_view_reports_a_file_chooser_the_observer_can_answer(tmp_path: Pat
 async def test_view_reports_a_dialog_the_observer_can_answer(tmp_path: Path) -> None:
     synthetic = _SyntheticPages()
     start = synthetic.page(
-        f"{_SEDE}/Sede/inicio.html",
+        f"{_SEDE}{VIEW_HOME_PATH_FIXTURE}",
         """<button id="ask" onclick="document.title = confirm('seguir') ? 'accepted' : 'dismissed'">ask</button>""",
     )
     async with _view_context(tmp_path, synthetic) as (context, observer):
@@ -221,15 +228,17 @@ async def test_view_reports_a_dialog_the_observer_can_answer(tmp_path: Path) -> 
 async def test_view_blocks_no_request(tmp_path: Path) -> None:
     """POSTs, token-bearing URLs, off-host requests and service workers all reach the server."""
     synthetic = _SyntheticPages()
-    posted = synthetic.page(f"{_SEDE}/wlpl/PRES-MODE/PresentarDeclaracion", "<title>posted</title>")
+    posted = synthetic.page(f"{_SEDE}{VIEW_SUBMIT_PATH_CANARY}", "<title>posted</title>")
     image = synthetic.page(f"{_OFF_HOST}/pixel.png", "", "image/png")
-    worker = synthetic.page(f"{_SEDE}/Sede/sw.js", "self.addEventListener('fetch', () => {});", "text/javascript")
+    worker = synthetic.page(
+        f"{_SEDE}{VIEW_WORKER_PATH_FIXTURE}", "self.addEventListener('fetch', () => {});", "text/javascript"
+    )
     start = synthetic.page(
-        f"{_SEDE}/Sede/inicio.html",
+        f"{_SEDE}{VIEW_HOME_PATH_FIXTURE}",
         f"""<img src="{image}">
         <form id="f" method="post" action="{posted}"><input name="q" value="1"></form>
         <script>
-        navigator.serviceWorker.register('/Sede/sw.js')
+        navigator.serviceWorker.register('{VIEW_WORKER_PATH_FIXTURE}')
             .then(() => navigator.serviceWorker.getRegistrations())
             .then((registrations) => {{ document.title = 'registrations:' + registrations.length; }});
         </script>""",
@@ -249,7 +258,7 @@ async def test_view_leaves_websockets_open(tmp_path: Path) -> None:
     synthetic = _SyntheticPages()
     socket_url = f"wss://{urlsplit(_SEDE).netloc}/socket"
     start = synthetic.page(
-        f"{_SEDE}/Sede/inicio.html",
+        f"{_SEDE}{VIEW_HOME_PATH_FIXTURE}",
         f"""<script>
         const socket = new WebSocket('{socket_url}');
         socket.onmessage = (event) => {{ document.title = 'message:' + event.data; }};

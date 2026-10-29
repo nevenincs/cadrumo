@@ -1,12 +1,8 @@
-"""Installed-product action-envelope proof for optional-extra probes and overview.
+"""Installed optional-extra refusals and overview remain distinct in every locale.
 
-The proof runs from two real wheel installs: a core-only cohort where the LLM
-extra was never installed, and the same cohort with that declared extra.  It
-does not alter import resolution.  The configuration DTO/text projection is
-driven directly because the public console can legitimately refuse at an active
-profile/session boundary before configuration rows or overview work are reached.
-The public overview console is still invoked in every locale, and its preceding
-typed refusal (when present) is kept distinct from optional-extra outcomes.
+Two real wheel installs prove the point-of-use guard with and without the LLM
+extra. The public overview console can refuse at a profile/session boundary;
+that preceding refusal must remain distinct from an optional-extra failure.
 """
 
 from __future__ import annotations
@@ -15,16 +11,14 @@ import json
 import shutil
 import sys
 import textwrap
-from collections.abc import Iterable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-from cadrumo.core.operator_action_enums import NoRecoveryOutcome
 
 from ..command_execution import CommandResult, run_command
 from ..lane_verification_core import (
@@ -73,7 +67,7 @@ class _InstalledCohort:
 
 @pytest.fixture(scope="module")
 def installed_cohort(tmp_path_factory: pytest.TempPathFactory) -> _InstalledCohort:
-    """Build one committed cohort and install it both without and with ``llm``."""
+    """Build one source cohort and install it both without and with ``llm``."""
     uv = shutil.which("uv")
     assert uv is not None, "uv is required to build the installed action-envelope cohort"
 
@@ -112,7 +106,7 @@ def _isolated_environment(work_dir: Path, *, locale: str, state_name: str) -> di
 
 
 def _run_optional_extra_matrix(*, work_dir: Path, python: Path, state_name: str) -> dict[str, object]:
-    """Drive real producers plus the registered config-check JSON/text projection."""
+    """Drive the real optional-extra guard and registered refusal renderers."""
     locales = json.dumps(SUPPORTED_OUTPUT_LANGUAGES)
     driver = textwrap.dedent(
         f"""
@@ -120,28 +114,25 @@ def _run_optional_extra_matrix(*, work_dir: Path, python: Path, state_name: str)
         from pathlib import Path
 
         import cadrumo
-        from cadrumo.application.workstation_probes import probe_optional_extra
-        from cadrumo.core.optional_extras import LLM_EXTRA, optional_extra_available
+        from cadrumo.core.optional_extras import (
+            LLM_EXTRA, MissingOptionalExtraError, optional_extra_available, require_optional_extra,
+        )
         from cadrumo.core.config import override_settings
-        from cadrumo.core.json_contract import validate_registered_result
-        from cadrumo.entrypoints.cli.config.check_cli import dependency_payload, dependency_text_lines
-        from cadrumo.entrypoints.cli.config.check_payloads import ConfigCheckResult
-
-        def project(status):
-            payload = dependency_payload(status)
-            result = ConfigCheckResult(ok=status.available, dependencies=[payload])
-            registered = validate_registered_result("config.check", result)
-            return {{
-                "status": status.model_dump(mode="json"),
-                "payload": payload.model_dump(mode="json"),
-                "registered_result": registered.model_dump(mode="json"),
-                "text": list(dependency_text_lines(payload)),
-            }}
+        from cadrumo.core.errors.error_codes import render_error_json, render_error_text
 
         matrix = {{}}
         for locale in {locales}:
             with override_settings(cadrumo_output_language=locale):
-                matrix[locale] = [project(probe_optional_extra(LLM_EXTRA))]
+                try:
+                    require_optional_extra(LLM_EXTRA)
+                except MissingOptionalExtraError as error:
+                    matrix[locale] = {{
+                        "facts": error.context,
+                        "error": json.loads(render_error_json(error)),
+                        "text": render_error_text(error),
+                    }}
+                else:
+                    matrix[locale] = {{"error": None, "text": None}}
         print(
             {_MATRIX_MARKER!r}
             + json.dumps(
@@ -175,49 +166,6 @@ def _object(value: object, *, label: str) -> dict[str, object]:
     """Narrow one decoded product JSON object without reimplementing its schema."""
     assert isinstance(value, dict), f"{label} is not an object: {value!r}"
     return cast(dict[str, object], value)
-
-
-def _text_action_projection(lines: Iterable[object], *, service: str) -> dict[str, object]:
-    """Read only the action cells emitted by the production text renderer."""
-    prefix = f"{service}.precondition_action."
-    projection: dict[str, object] = {}
-    for item in lines:
-        assert isinstance(item, str), f"text row is not a string: {item!r}"
-        cell, encoded = item.split("\t", 1)
-        if cell.startswith(prefix):
-            projection[cell.removeprefix(prefix)] = json.loads(encoded)
-    return projection
-
-
-def _assert_projection_chain(row: Mapping[str, object], *, expected_condition: str | None) -> None:
-    """Assert one producer reaches the registered JSON and text forms unchanged."""
-    status = _object(row["status"], label="application status")
-    payload = _object(row["payload"], label="CLI payload")
-    registered_result = _object(row["registered_result"], label="registered result")
-    assert payload["service"] == status["service"]
-    assert payload["available"] == status["available"]
-    assert payload["facts"] == status["facts"]
-    assert registered_result["dependencies"] == [payload]
-
-    action = payload["precondition_action"]
-    if expected_condition is None:
-        assert status["precondition_verdict"] is None
-        assert action is None
-        assert _text_action_projection(cast(Iterable[object], row["text"]), service=cast(str, payload["service"])) == {}
-        return
-
-    verdict = _object(status["precondition_verdict"], label="application verdict")
-    resolved = _object(action, label="resolved action")
-    assert verdict["failed_condition_id"] == expected_condition
-    assert resolved["failed_condition_id"] == expected_condition
-    evidence = resolved["evidence"]
-    assert isinstance(evidence, list) and evidence
-    assert all(_object(item, label="condition evidence")["values"] == status["facts"] for item in evidence)
-    assert resolved["action"] is None
-    assert resolved["no_recovery_outcome"] == NoRecoveryOutcome.OPERATOR_DECISION.value
-    assert (
-        _text_action_projection(cast(Iterable[object], row["text"]), service=cast(str, payload["service"])) == resolved
-    )
 
 
 def _json_envelope(completed: CommandResult, *, command: str) -> dict[str, object]:
@@ -314,10 +262,10 @@ def _overview_precondition(document: Mapping[str, object]) -> str | None:
     return failed_condition if isinstance(failed_condition, str) else None
 
 
-def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_overview_mixup(
+def test_installed_optional_extra_guard_and_overview_refusals_remain_distinct(
     installed_cohort: _InstalledCohort,
 ) -> None:
-    """Core absence and extra presence preserve typed no-recovery projections in all locales."""
+    """Core absence refuses with a registered error; installing the extra admits the guard."""
     absent = _run_optional_extra_matrix(
         work_dir=installed_cohort.work_dir,
         python=installed_cohort.core_python,
@@ -339,30 +287,34 @@ def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_over
     assert set(absent_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
     assert set(present_matrix) == set(SUPPORTED_OUTPUT_LANGUAGES)
 
-    expected_absent_conditions = (ProbePreconditionCondition.OPTIONAL_EXTRA_IMPORTABLE.value,)
-    baseline: list[dict[str, object]] | None = None
+    baseline: dict[str, object] | None = None
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
-        rows = absent_matrix[locale]
-        assert isinstance(rows, list)
-        for row, condition in zip(rows, expected_absent_conditions, strict=True):
-            _assert_projection_chain(_object(row, label="absent optional-extra row"), expected_condition=condition)
-        structural = [
-            {key: value for key, value in _object(row, label="absent optional-extra row").items() if key != "text"}
-            for row in rows
-        ]
+        row = _object(absent_matrix[locale], label="absent optional-extra row")
+        document = _object(row["error"], label="optional-extra error envelope")
+        error = _object(document["error"], label="optional-extra refusal")
+        assert error["code"] == "ERROR_OPTIONAL_EXTRA_MISSING"
+        assert error["action"] is None
+        assert row["facts"] == {
+            "extra": "llm",
+            "feature": "local-inference document reading",
+            "import_name": "pynvml",
+            "importable": False,
+        }
+        assert isinstance(error["message"], str) and error["message"].strip()
+        assert isinstance(row["text"], str) and row["text"].strip()
+        assert error["message"] in row["text"]
+        context = _object(error["context"], label="rendered optional-extra context")
+        assert context["import_name"] == "pynvml"
+        assert context["importable"] == "false"
+        structural = {key: value for key, value in error.items() if key != "message"}
         if baseline is None:
             baseline = structural
         else:
             assert structural == baseline
-
-        available_rows = present_matrix[locale]
-        assert isinstance(available_rows, list)
-        for row, _condition in zip(available_rows, expected_absent_conditions, strict=True):
-            _assert_projection_chain(_object(row, label="present optional-extra row"), expected_condition=None)
+        assert present_matrix[locale] == {"error": None, "text": None}
 
     overview = _overview_console_matrix(installed_cohort)
     assert set(overview) == set(SUPPORTED_OUTPUT_LANGUAGES)
-    probe_conditions = set(expected_absent_conditions)
     overview_baseline: tuple[object, object] | None = None
     resolved_action_counts: set[int] = set()
     for locale in SUPPORTED_OUTPUT_LANGUAGES:
@@ -372,7 +324,9 @@ def test_real_optional_extra_outcomes_reach_config_json_and_text_without_an_over
         assert row["text_output_present"] is True
         assert row["json_exit_code"] == row["text_exit_code"]
         preceding_condition = _overview_precondition(document)
-        assert preceding_condition not in probe_conditions
+        overview_error = document.get("error")
+        if isinstance(overview_error, dict):
+            assert overview_error["code"] != "ERROR_OPTIONAL_EXTRA_MISSING"
         structural = (document["status"], preceding_condition)
         if overview_baseline is None:
             overview_baseline = structural

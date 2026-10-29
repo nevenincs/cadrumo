@@ -14,9 +14,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from cadrumo.application.browser_location import required_browser_builds
 from dev.env.browser_archive_pins import PINS_FILE, load_browser_archive_pins
-from dev.packaging.playwright_driver import installed_playwright_driver_version
+from dev.packaging.playwright_driver import installed_playwright_driver_version, required_browser_builds
 
 __all__ = ["BROWSER_PLATFORM_BY_TARGET", "BrowserArchiveCoverage", "verify_browser_archive_coverage"]
 

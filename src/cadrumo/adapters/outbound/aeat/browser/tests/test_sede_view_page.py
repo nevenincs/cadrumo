@@ -41,6 +41,12 @@ from cadrumo_client.contracts.view_transfer import (
 
 from ......application.live.sede_view_ports import SedeViewEnd, SedeViewOpening
 from ......core.config import Settings
+from ......tests.aeat_literal_fixtures import (
+    VIEW_CONSULTATION_PATH_FIXTURE,
+    VIEW_CONSULTATION_URL_FIXTURE,
+    VIEW_DOWNLOAD_PATH_FIXTURE,
+    VIEW_INSECURE_URL_CANARY,
+)
 from ..profile import Profile
 from ..sede_view import SedeViewPage
 from ..session import BrowserSession
@@ -153,7 +159,7 @@ async def test_sede_view_opens_the_sede_home_and_draws_its_state(tmp_path: Path)
 @pytest.mark.asyncio
 async def test_sede_view_streams_an_accepted_download_to_the_window_and_keeps_no_copy(tmp_path: Path) -> None:
     site = _Site()
-    target = site.file("/wlpl/justificante.pdf", _PAYLOAD)
+    target = site.file(VIEW_DOWNLOAD_PATH_FIXTURE, _PAYLOAD)
     _home(site, f'<a id="go" href="{target}">justificante</a>')
     async with _view(tmp_path, site) as running:
         await running.page.wait_for_selector("#go")
@@ -199,7 +205,7 @@ async def test_sede_view_states_a_page_off_https_without_the_address_it_left(tmp
 @pytest.mark.asyncio
 async def test_sede_view_close_deletes_a_download_still_streaming(tmp_path: Path) -> None:
     site = _Site()
-    target = site.file("/wlpl/justificante.pdf", _PAYLOAD)
+    target = site.file(VIEW_DOWNLOAD_PATH_FIXTURE, _PAYLOAD)
     _home(site, f'<a id="go" href="{target}">justificante</a>')
     async with _view(tmp_path, site) as running:
         running.sink.stall_downloads = True
@@ -334,7 +340,7 @@ def test_sede_view_state_keeps_origin_and_path_only() -> None:
 
 def test_sede_view_state_marks_a_page_it_cannot_state_and_names_no_address() -> None:
     for url, security in (
-        ("http://sede.example.es/Sede/inicio.html?nif=synthetic", ViewPageSecurity.INSECURE),
+        (VIEW_INSECURE_URL_CANARY, ViewPageSecurity.INSECURE),
         ("about:blank", ViewPageSecurity.UNKNOWN),
         ("data:text/html,<p>x</p>", ViewPageSecurity.UNKNOWN),
         ("chrome-error://chromewebdata/", ViewPageSecurity.UNKNOWN),
@@ -348,11 +354,11 @@ def test_sede_view_state_marks_a_page_it_cannot_state_and_names_no_address() -> 
 
 
 def test_sede_view_state_carries_the_whole_address_for_the_host() -> None:
-    url = "https://sede.example.es/wlpl/BUGC-JDIT/Consulta?ejercicio=2025&modelo=303#resumen"
+    url = VIEW_CONSULTATION_URL_FIXTURE
     state = view_state(url, "t", back=False, forward=False, loading=False, phase=ViewPhase.BROWSING)
     assert (state.origin, state.path, state.address) == (
         "https://sede.example.es",
-        "/wlpl/BUGC-JDIT/Consulta",
+        VIEW_CONSULTATION_PATH_FIXTURE,
         url,
     )
     long_query = "https://sede.example.es/x?q=" + "a" * VIEW_MAX_URL_LENGTH

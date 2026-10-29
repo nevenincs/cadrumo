@@ -16,6 +16,7 @@ from uuid import uuid4
 import pytest
 from pydantic import BaseModel
 
+from cadrumo.tests.aeat_literal_fixtures import VIEW_PRIVATE_URL_CANARY
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, AccessDenied
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 from cadrumo_client.contracts.view_stream import (
@@ -70,7 +71,7 @@ from .unopened_live_ports import unopened_browser_session_factory
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _BASELINE = ViewSessionBaseline(provider_kind=AuthProviderKind.CERTIFICATE, storage_state_sha256="a" * 64)
-_PRIVATE_URL = "https://www1.agenciatributaria.gob.es/private/page?nif=synthetic"
+_PRIVATE_URL = VIEW_PRIVATE_URL_CANARY
 _PRIVATE_TITLE = "Synthetic taxpayer page title"
 
 

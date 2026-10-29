@@ -2062,16 +2062,6 @@ cli:
       test_help: Comprobar la preparación de autenticación local
       unknown_provider: 'Proveedor de autenticación desconocido: %{provider}. Ejecuta
         ''cadrumo-runtime config auth --help'' para ver los identificadores válidos.'
-    check:
-      available: disponible
-      capability_label: Capacidad
-      dependency_label: Dependencia
-      help: Comprueba la disponibilidad de las dependencias externas y las capacidades
-        de servicio del perfil activo, con la solución para cada problema.
-      issue_label: problema
-      missing: ausente
-      preflight_label: Comprobación previa
-      profile_label: perfil
     collab:
       help: Gestiona los destinatarios de confianza para la colaboración con paquetes
         de revisión.

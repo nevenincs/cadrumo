@@ -19,6 +19,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.citation_grounding import CitationGrounding
+from ....tests.aeat_literal_fixtures import manual_practicos_url
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...calculations.registry.facts.variants import FactSelector
@@ -53,9 +54,7 @@ _DEGREE_OF_USE_CATEGORIES = (
     "telefonia_fija",
 )
 _BOE_URL = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740"
-_MANUAL_URL = (
-    "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IVA/Manual_IVA_2025.pdf"
-)
+_MANUAL_URL = manual_practicos_url("IVA/Manual_IVA_2025.pdf")
 
 
 def _liva_citation(source: CategoryCitationSource = CategoryCitationSource.LEY_IVA) -> CategoryCitation:

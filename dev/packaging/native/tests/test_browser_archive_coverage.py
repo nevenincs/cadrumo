@@ -80,6 +80,25 @@ def test_a_chromium_revision_the_pins_do_not_name_is_refused(tmp_path: Path) -> 
         verify_browser_archive_coverage(tmp_path, tmp_path / "pins", "macos-arm64")
 
 
+@pytest.mark.parametrize("defect", ["missing", "overrides", "duplicate"])
+def test_an_unrecognised_browser_manifest_is_refused(tmp_path: Path, defect: str) -> None:
+    driver = _stage(tmp_path)
+    manifest = driver / "browsers.json"
+    document = json.loads(manifest.read_text(encoding="utf-8"))
+    entries = document["browsers"]
+    chromium = next(entry for entry in entries if entry["name"] == "chromium")
+    if defect == "missing":
+        entries.remove(chromium)
+    elif defect == "overrides":
+        chromium["revisionOverrides"] = {"some-host": "1"}
+    else:
+        entries.append(chromium.copy())
+    manifest.write_text(json.dumps(document), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="unreadable"):
+        verify_browser_archive_coverage(tmp_path, tmp_path / "pins", "macos-arm64")
+
+
 def test_a_target_without_a_browser_platform_is_refused(tmp_path: Path) -> None:
     _stage(tmp_path)
 

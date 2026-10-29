@@ -928,38 +928,18 @@ class TestAmbientEnvNeutralisation:
             assert os.environ[_FAKE_SESSION_ENV_NAME] == "fake-session-marker-do-not-leak"
 
     def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
-        """A real browser probe cannot observe workstation installs.
-
-        This probed the subprocess LLM providers as well, and that whole
-        transport has since been deleted -- ``probe_subprocess_providers`` is a
-        named member of the retired set that
-        ``core/tests/test_cloud_transport_fully_deleted.py`` asserts stays
-        gone. The import outlived it, so this case could not be COLLECTED and
-        the pins below went unchecked on every run.
-
-        Only the deleted half is dropped. What the case exists to prove is that
-        the sandbox pins ``PATH`` and ``PLAYWRIGHT_BROWSERS_PATH`` beneath its
-        own workdir, and both pins are still asserted here against a probe that
-        really runs.
-        """
+        """A real browser launch cannot observe workstation installs."""
         import os
 
-        from cadrumo.application.browser_location import probe_playwright_browser
+        from playwright.sync_api import Error as PlaywrightError
+        from playwright.sync_api import sync_playwright
 
         from ..sandbox import sequence_sandbox
 
         original_path = os.environ.get("PATH")
         with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
-            browser = probe_playwright_browser()
-
-            assert browser.available is False
-            # ``remediation`` carried the fix as executable text and was
-            # deliberately removed: ``DependencyStatus`` now closes an
-            # unavailable outcome through the typed ``precondition_verdict``
-            # instead, "without embedding presentation or executable text".
-            # Asserting the verdict is present is asserting the contract the
-            # model actually enforces, rather than a string it stopped holding.
-            assert browser.precondition_verdict is not None
+            with sync_playwright() as playwright, pytest.raises(PlaywrightError, match="Executable doesn't exist"):
+                playwright.chromium.launch(headless=True)
             # Both pins live BENEATH the sandbox workdir so the golden path
             # normaliser rewrites their per-run root to ``<sandbox-workdir>``.
             assert os.environ["PATH"] == str(tmp_path / "scope" / "workdir" / ".external-tools")

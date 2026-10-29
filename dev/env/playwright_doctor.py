@@ -25,7 +25,8 @@ from pathlib import Path
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
-from cadrumo.application.browser_location import playwright_browsers_root, required_browser_builds
+from cadrumo.application.browser_location import playwright_browsers_root
+from dev.packaging.playwright_driver import required_browser_builds
 
 REMEDIATION = "run 'playwright install chromium' (or 'just setup-browser') to install the browser binary"
 

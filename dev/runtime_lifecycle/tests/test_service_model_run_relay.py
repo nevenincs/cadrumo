@@ -24,8 +24,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
-    ModelRunSelectedModel,
     decode_model_run_body,
     encode_model_run_body,
 )
@@ -47,19 +45,6 @@ _LANE = ModelRunLane(
     transport="cli",
     model="example-model-1",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
-)
-_STATES = (
-    ModelRunRoleSelection(
-        role="text_extraction",
-        selected=ModelRunSelectedModel(lane_id="example_cli", model=_LANE.model),
-        lane=_LANE,
-    ),
-    ModelRunRoleSelection(role="vision_transcription", refusal=ModelRunRefusalCode.NO_SELECTION),
 )
 
 
@@ -68,15 +53,16 @@ class _Runs:
 
     def __init__(self) -> None:
         self.bodies: list[ModelRunBody] = []
+        self.lookups: list[str] = []
         self.started = Event()
         self.release = Event()
         self.block = False
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
+        self.lookups.append(role)
+        if role == "vision_transcription":
+            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
         return _LANE
-
-    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        return _STATES
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         self.bodies.append(body)
@@ -101,8 +87,8 @@ def _admitted_service(runtime: ServiceRecordRuntime, runs: _Runs) -> tuple[Insta
     return service, relay
 
 
-def _lookup() -> WorkerModelRun:
-    return WorkerModelRun(request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role="text_extraction")
+def _lookup(role: str = "text_extraction") -> WorkerModelRun:
+    return WorkerModelRun(request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role=role)
 
 
 def _run(body: bytearray) -> WorkerModelRun:
@@ -127,20 +113,24 @@ def test_a_lookup_reaches_the_admitted_service_and_returns_its_lane(tmp_path: Pa
             relay.close()
 
     assert outcome.lane == _LANE
+    assert runs.lookups == ["text_extraction"]
     assert text == bytearray()
 
 
-def test_a_selections_read_reaches_the_admitted_service_and_returns_every_role_state(tmp_path: Path) -> None:
-    read = WorkerModelRun(request_id=uuid4(), permit_id=uuid4(), command_id=uuid4(), role=None)
+def test_a_lookup_returns_the_admitted_services_role_refusal(tmp_path: Path) -> None:
     with service_record_runtime(tmp_path, model_runs=True) as runtime:
         runs = _Runs()
         _, relay = _admitted_service(runtime, runs)
         try:
-            outcome, text = runtime.profiles._relay_model_run(runtime.profile_id, read, bytearray())
+            outcome, text = runtime.profiles._relay_model_run(
+                runtime.profile_id, _lookup("vision_transcription"), bytearray()
+            )
         finally:
             relay.close()
 
-    assert outcome.selections == _STATES
+    assert outcome.refusal is ModelRunRefusalCode.NO_SELECTION
+    assert outcome.lane is None
+    assert runs.lookups == ["vision_transcription"]
     assert text == bytearray()
 
 
@@ -171,6 +161,7 @@ def test_a_service_whose_descriptor_declares_no_model_runs_is_never_asked(tmp_pa
 
     assert outcome.refusal is ModelRunRefusalCode.SERVICE_UNAVAILABLE
     assert runs.bodies == []
+    assert runs.lookups == []
 
 
 def test_a_run_waiting_on_a_service_that_goes_away_is_answered_at_once(tmp_path: Path) -> None:

@@ -352,3 +352,18 @@ SEDE_TEST_URL_FIXTURE = "https://sede.agenciatributaria.gob.es/test"
 WWW6_LOGIN_URL_FIXTURE = "https://www6.agenciatributaria.gob.es/login"
 WWW6_PRIVATE_QUERY_DISCLOSURE_CANARY = "https://www6.agenciatributaria.gob.es/private?secret=do-not-publish"
 WWW6_UNLISTED_URL_CANARY = "https://www6.agenciatributaria.gob.es/unlisted"
+
+# Synthetic view and redaction inputs, including mutation-shaped routes.
+VIEW_HOME_PATH_FIXTURE = "/Sede/inicio.html"
+VIEW_UPLOAD_PATH_FIXTURE = "/Sede/aportar.html"
+VIEW_WORKER_PATH_FIXTURE = "/Sede/sw.js"
+VIEW_DOWNLOAD_PATH_FIXTURE = "/wlpl/justificante.pdf"
+VIEW_DOCUMENT_PATH_FIXTURE = "/wlpl/DOCU-MENT/justificante.pdf"
+VIEW_SUBMIT_PATH_CANARY = "/wlpl/PRES-MODE/PresentarDeclaracion"
+VIEW_CONSULTATION_PATH_FIXTURE = "/wlpl/BUGC-JDIT/Consulta"
+VIEW_INSECURE_URL_CANARY = f"http://sede.example.es{VIEW_HOME_PATH_FIXTURE}?nif=synthetic"
+VIEW_CONSULTATION_URL_FIXTURE = (
+    f"https://sede.example.es{VIEW_CONSULTATION_PATH_FIXTURE}?ejercicio=2025&modelo=303#resumen"
+)
+VIEW_PRIVATE_URL_CANARY = f"{_AEAT.domains.www1}/private/page?nif=synthetic"
+LOGGING_TOKEN_URL_CANARY = f"{_AEAT.domains.sede}/Sede/x?token=abc"

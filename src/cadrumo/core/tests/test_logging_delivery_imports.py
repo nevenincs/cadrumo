@@ -18,6 +18,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.tests.aeat_literal_fixtures import LOGGING_TOKEN_URL_CANARY
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS, PROCESS_HANG_GUARD_SECONDS
 
@@ -61,7 +62,7 @@ assert project.flush_logging(timeout=HANG), project.diagnostic_delivery_status()
 settled = len(imports)
 logger.warning(
     'identity %s account %s url %s header %s',
-    'B12345678', 'ES9121000418450200051332', 'https://sede.agenciatributaria.gob.es/Sede/x?token=abc', 'Bearer abc.def',
+    'B12345678', 'ES9121000418450200051332', URL_CANARY, 'Bearer abc.def',
     extra={'password': 'synthetic'},
 )
 logging.getLogger('synthetic.third_party').warning('foreign password=synthetic B12345678')
@@ -91,7 +92,12 @@ print(json.dumps({'settings_loaded': 'cadrumo.core.config' in sys.modules}))
 
 def _run(tmp_path: Path, script: str, *arguments: str) -> dict[str, object]:
     completed = run_audited_process(
-        [sys.executable, "-c", f"HANG = {HANG_GUARD_SECONDS!r}\n{script}", *arguments],
+        [
+            sys.executable,
+            "-c",
+            f"HANG = {HANG_GUARD_SECONDS!r}\nURL_CANARY = {LOGGING_TOKEN_URL_CANARY!r}\n{script}",
+            *arguments,
+        ],
         env={
             **os.environ,
             "CADRUMO_LOCAL_STORAGE_ROOT": str(tmp_path / "root"),

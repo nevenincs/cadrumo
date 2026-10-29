@@ -4,7 +4,13 @@ use cadrumo_application::{
     child::ChildConfiguration,
     component::Cancellation,
     package::Readiness,
-    python::{self, BrowserQuery, PythonExpectation},
+    provisioning::{
+        browser::{BrowserLayout, DRIVER_PACKAGE, DriverManifest},
+        pins::{ComponentPins, Platform},
+        receipts::ReceiptReading,
+        state::Observation,
+    },
+    python::{self, PythonExpectation},
     value::RelativePath,
 };
 use std::{path::PathBuf, time::Duration};
@@ -61,29 +67,42 @@ async fn manifest_cohort_matches_selected_packaged_interpreter() {
         std::env::vars_os(),
     )
     .unwrap();
-    let browser = BrowserQuery {
-        root: Some(directory.path().join("empty-browser-cache")),
-    };
     let report = python::probe(
         &configuration,
         &expected,
-        Some(&browser),
         Duration::from_secs(60),
         &Cancellation::default(),
     )
     .await
     .unwrap();
-    assert!(!browser.root.unwrap().exists());
-    assert_ne!(
-        report.browser.as_ref().unwrap().state,
-        python::BrowserState::Ready,
-        "browser reported ready against an absent cache"
+    let package_path = |key: &str| {
+        RelativePath::new(
+            layout["layout"]["paths"][key]
+                .as_str()
+                .expect("projected package path"),
+        )
+        .unwrap()
+        .under(&root)
+    };
+    let driver = DriverManifest::read(&package_path("packages").join(DRIVER_PACKAGE)).unwrap();
+    let pins = ComponentPins::load(&package_path("component_pins")).unwrap();
+    let browser_root = directory.path().join("empty-browser-cache");
+    let browser = BrowserLayout::new(
+        browser_root.clone(),
+        &driver,
+        pins.browser.as_ref(),
+        Platform::current().expect("supported package host"),
+    )
+    .unwrap();
+    assert!(
+        browser.pinned(),
+        "package browser pins must cover its driver"
     );
-    if let Ok(expected_state) = std::env::var("CADRUMO_TEST_BROWSER_STATE") {
-        let expected_state: python::BrowserState =
-            serde_json::from_value(serde_json::Value::String(expected_state)).unwrap();
-        assert_eq!(report.browser.as_ref().unwrap().state, expected_state);
-    }
+    assert_eq!(
+        browser.quick_check(&ReceiptReading::Absent).observation,
+        Observation::Absent
+    );
+    assert!(!browser_root.exists(), "browser inspection created data");
     assert_eq!(
         std::fs::read(manifest_path.under(&root)).unwrap(),
         manifest_bytes,
@@ -99,9 +118,8 @@ async fn manifest_cohort_matches_selected_packaged_interpreter() {
         "probe changed package inventory"
     );
     println!(
-        "Packaged CPython {}: {} exact distribution versions; browser {:?}",
+        "Packaged CPython {}: {} exact distribution versions; browser absent",
         report.version,
-        report.distributions.len(),
-        report.browser.unwrap().state
+        report.distributions.len()
     );
 }
