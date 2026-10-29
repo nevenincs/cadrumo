@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:eac31c29ac62a59ab13dacfd85136188f569f0dd4b567c0781cf8fab1fcacaac'
+body_hash: 'sha256:9965a884a652e579467b7800cdffe5381f449d6163225858951ececd578bddc3'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -76,6 +76,7 @@ related:
 - `S05` `verify:` `workbench capture order and phase controls 5 cases` -> `pass`
 - `S05` `verify:` `two-file Ruff check and format and Windows ty` -> `pass`
 - `S05` `by:` `Sol 6.1 high`
+- `S05` `verify:` `parent combined Ruff and formatting and Windows ty on 19 cleanup files` -> `pass`
 
 ## Notes
 
@@ -83,3 +84,4 @@ related:
 - `S03` Production mapping and bulk test adopted by concurrent commit b6e52594fb alongside foreign output-root feature; checkpoint retains remaining test delta.
 - `S04` Existing worker-loss writer thread warning `CONNECTION_CLOSED` retained in test evidence.
 - `S05` Reader source adopted by concurrent commit b9003df9be with foreign calendar/staleness changes preserved; authored patch and receipt retain attribution.
+- `S05` S05 source already present in b9003df9be; separate remaining test checkpoint follows after concurrent Git lock delayed S04 staging.

@@ -1369,6 +1369,100 @@ def test_the_declaration_list_capture_records_every_phase_with_its_seconds_and_c
     _assert_phase_records_are_timed_correlated_and_value_free(records)
 
 
+@pytest.mark.parametrize("surface", ("generation", "declarations"))
+def test_both_surfaces_capture_declaration_sources_in_the_same_order(
+    caplog: pytest.LogCaptureFixture, authority_operation: PinnedAuthorityOperation, surface: str
+) -> None:
+    """Sharing the read retains the timed I/O prefix and the generation's session bracket."""
+    from dataclasses import replace
+
+    session_reads: list[str] = []
+    clock_reads: list[str] = []
+
+    def account_session() -> HomeAccountSession:
+        session_reads.append("session")
+        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=_NOW)
+
+    def clock() -> datetime:
+        clock_reads.append("clock")
+        return _NOW
+
+    door = replace(_declaration_list_door(authority_operation), account_session_reader=account_session, clock=clock)
+    with caplog.at_level(logging.DEBUG):
+        if surface == "generation":
+            door.read_workbench_generation_inputs()
+        else:
+            door.read_declaration_list_inputs()
+
+    phases = _phase_names(_phase_records(caplog, "workbench_capture_phase"))
+    prefix = [
+        "profile_record",
+        "work_units",
+        "calculation_revisions",
+        "filings",
+        "verification_reports",
+        "bucket_events",
+        "lifecycle_facts",
+        "declarations_portfolio",
+        "declaration_summaries",
+        "ledger_revision",
+        "ledger_transactions",
+        "ledger_invoices",
+        "calendar_aeat_evidence",
+        "calendar_memo_key",
+        "calendar_inputs",
+    ]
+    if surface == "generation":
+        prefix.insert(0, "account_session")
+        assert session_reads == ["session", "session"]
+        assert phases.index("aeat_sync_workspace") < phases.index("account_session", 1) < phases.index("recheck")
+    else:
+        assert session_reads == []
+    assert phases[: len(prefix)] == prefix
+    assert clock_reads == ["clock"]
+
+
+@pytest.mark.parametrize("surface", ("generation", "declarations"))
+def test_a_failed_source_stops_both_captures_before_ledger_and_calendar_reads(
+    caplog: pytest.LogCaptureFixture, authority_operation: PinnedAuthorityOperation, surface: str
+) -> None:
+    """The original failure propagates before later readers or a final session observation."""
+    from dataclasses import replace
+
+    error = ValueError("synthetic catalogue read failure")
+    held_operations: list[PinnedAuthorityOperation] = []
+    session_reads: list[str] = []
+
+    class FailedCalculationRepository:
+        def load_revisioned(self, *, operation: PinnedAuthorityOperation) -> tuple[CalculationRevisionCatalogue, str]:
+            held_operations.append(operation)
+            raise error
+
+    def account_session() -> HomeAccountSession:
+        session_reads.append("session")
+        return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Perfil local", expires_at=_NOW)
+
+    door = replace(
+        _declaration_list_door(authority_operation),
+        account_session_reader=account_session,
+        calculation_repository=cast(Any, FailedCalculationRepository()),
+    )
+    with caplog.at_level(logging.DEBUG), pytest.raises(ValueError) as raised:
+        if surface == "generation":
+            door.read_workbench_generation_inputs()
+        else:
+            door.read_declaration_list_inputs()
+
+    assert raised.value is error
+    assert held_operations == [authority_operation]
+    assert session_reads == (["session"] if surface == "generation" else [])
+    phases = _phase_names(_phase_records(caplog, "workbench_capture_phase"))
+    expected = ["profile_record", "work_units", "calculation_revisions"]
+    if surface == "generation":
+        expected.insert(0, "account_session")
+    assert phases == [*expected, "generation_inputs" if surface == "generation" else "declaration_list_inputs"]
+
+
 def test_the_declarations_list_read_records_every_phase_from_binding_the_reader_to_storing_the_result(
     caplog: pytest.LogCaptureFixture, monkeypatch: pytest.MonkeyPatch, authority_operation: PinnedAuthorityOperation
 ) -> None:
