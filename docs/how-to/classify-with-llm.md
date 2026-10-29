@@ -18,8 +18,8 @@ You need:
 - Your passphrase. The command opens your encrypted records, so it prompts for the passphrase.
 - The `llm` extra, installed through your install channel, for example
   `pip install "cadrumo[llm]"`.
-- The local AI and a model chosen for each reader role, set up in the Cadrumo
-  desktop app as the next section describes.
+- The local AI and a model chosen for each reader role, as the next section
+  describes.
 
 The examples in this documentation are recorded in English. `aeat` prints its
 messages in Spanish unless you
@@ -37,29 +37,17 @@ size, context length, licence, whether it reads images, and whether it runs on
 this computer or sends what it reads off the machine. `aeat` stores no LLM
 credentials and needs no account for a model that runs on this computer.
 
-You set up the local reader in the Cadrumo desktop app:
+The local reader needs two things in place before `aeat` can use it:
 
-- Choose a model for each reader role. For the commands on this page, choose
-  models that run on this computer. The vision transcription role accepts only
-  a model the catalogue marks as reading images.
-- Let the desktop app set up the local AI. It downloads and installs the local
-  AI program (Ollama) at the version Cadrumo pins, then downloads the models you
-  chose for the local roles. It shows its plan, with the size of each
-  download, before it downloads anything.
+- A model chosen for each reader role in the Cadrumo agent. For the commands on
+  this page, choose models that run on this computer. The vision transcription
+  role accepts only a model the catalogue marks as reading images.
+- The local AI program (Ollama) running with the chosen models downloaded.
 
-The Cadrumo manager runs the local AI in the background once it is set up. A
-role with no chosen model is never filled in for you: reads for that role
-refuse until you choose one.
-
-The `aeat` command line cannot set up the local AI or choose its models, and
-neither can the terminal interface or an AI assistant connected through MCP.
-They report on it. `aeat config check` reports the profile's service
+A role with no chosen model is never filled in for you: reads for that role
+refuse until you choose one. `aeat` takes no model name and does not install or
+start the local AI. `aeat config check` reports the profile's service
 capabilities, whether each reader role is ready, and the fix for each problem.
-`aeat config provision status` reports whether the local AI is set up, and
-`aeat config provision verify --item local_ai` checks that its program answers
-and each chosen model replies. When the local AI needs setting up, they point
-you to the desktop app. See [Install Cadrumo](../workstation-setup.md) for the
-other components.
 
 The profile capability `llm_vision` is on by default. To stop `aeat` from reading scanned or image supporting documents, turn that capability off with `aeat config profile capabilities set`, naming `llm_vision` and `off`. Reads of scanned or image supporting documents then refuse.
 
@@ -70,8 +58,8 @@ Smoke-test the setup with a preview, which saves nothing:
 
 If no model is chosen for the role, the local AI is not running, or the
 chosen model is not downloaded yet, the command refuses and reads nothing. The
-refusal names what to fix, such as choosing a model for the role or setting up
-the local AI in the desktop app. If the model chosen for the role sends what it
+refusal names what to fix, such as choosing a model for the role or starting
+the local AI. If the model chosen for the role sends what it
 reads off this computer, the command refuses too: classification sends nothing
 off the machine. Fix the gap and retry.
 
@@ -197,7 +185,7 @@ you chose, preview first:
 ```
 
 Every read uses the model chosen for its role. To read with another model,
-change that role's model in the desktop app; the command takes no model name.
+change that role's model in the Cadrumo agent; the command takes no model name.
 
 A transaction with no attached supporting document sends nothing extra: the model receives only the transaction row, exactly as in the plain suggestion flow.
 
@@ -264,7 +252,7 @@ add` then `rule apply --dry-run` then `rule apply`); both are covered in
 ## Privacy boundary
 
 Classification uses only a model that runs on your own machine, in the local
-AI the desktop app set up. Every request goes through the agent service, and
+AI. Every request goes through the agent service, and
 the catalogue entry of the model chosen for the role says whether that model
 sends what it reads off the machine. When it does, classification and
 document reading refuse before anything is sent. No transaction description,

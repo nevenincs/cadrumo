@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#runtime-concurrency-review'
 date: '2026-10-26'
-modified: '2026-10-26'
+modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:61f8ca73cbcaca778c5f3c5f962ba00497dceb38fd9e495bb3c6d6d5bfc47c01'
+body_hash: 'sha256:66caaa888ccc7ccda914fa056e39afd68f137254d30d4ae4f0c97be2ef69a9cb'
 related:
   - "[[2026-10-26-runtime-concurrency-review-plan]]"
 ---
@@ -80,7 +80,6 @@ PENDING broad verification. Focused behavior review found no unresolved high iss
 `just check-code` completed with five of thirteen gates failed: formatting in a concurrently edited client test; import graph unavailable after Windows paging-file exhaustion and concurrent source changes; unrelated reachability, symbol and export findings in `cadrumo.core.loopback_endpoint`, `cadrumo.core.source_locator` and `cadrumo.adapters.outbound.llm.evidence_draft_text`. All 4945 configured modules loaded, all 30 import contracts were kept, and no hard import findings were reported, but the failed subordinate checker cannot prove import conformance. Style, types, dependency declarations, secure-store/persistence write paths, docstring references and operation-contract manifest passed. The import gate needs a quiet tree and sufficient host resources; unrelated findings stay with their owning workstreams.
 
 Final review: PASS for the bounded runtime fixes and their focused verification; full branch acceptance remains PENDING the recorded broad-gate failures. The plan's final Step remains open rather than claiming all required repository checks passed or taking ownership of another session's staged/shared changes.
-
 
 ### windows-close-io-lease | high | Fixed the shutdown race exposed by the temporary soak
 

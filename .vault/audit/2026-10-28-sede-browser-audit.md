@@ -5,7 +5,7 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:261e2526ac97dff59d9b2f623969d08822220e76c007591ee8e83738e4aa80fc'
+body_hash: 'sha256:5e305e70ab3862fb4790f762895151c14d0a25639109921b70c4baa67bd204aa'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
   - "[[2026-10-27-sede-browser-adr]]"

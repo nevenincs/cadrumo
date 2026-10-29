@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-26 18:31+0100\n"
+"POT-Creation-Date: 2026-10-29 07:40+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -1074,10 +1074,11 @@ msgstr ""
 "de gestor."
 
 #: ../../how-to/profile-setup.md:432
+#, fuzzy
 msgid ""
 "`llm_vision`: read scanned and image invoices with the vision model you "
-"chose in the Cadrumo desktop app. On by default. It does not decide where"
-" the read runs: a model that reads off this computer also needs "
+"chose in the Cadrumo agent. On by default. It does not decide where the "
+"read runs: a model that reads off this computer also needs "
 "`cloud_evidence_upload` and your consent for each read."
 msgstr ""
 "`llm_vision`: llegeix factures escanejades i en imatge amb el model de "
@@ -1248,3 +1249,4 @@ msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 #: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
+

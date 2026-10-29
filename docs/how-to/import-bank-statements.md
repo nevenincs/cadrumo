@@ -80,7 +80,7 @@ direction only the model decided when no printed balance confirms it. Run a dry
 run first: it lists every proposal that was not kept and says when the
 statement prints no balance to check against.
 Reading a PDF statement needs the `llm` extra and the local AI, with a model
-chosen for the text extraction role in the Cadrumo desktop app. A page without
+chosen for the text extraction role in the Cadrumo agent. A page without
 a text layer is transcribed by the model chosen for the vision transcription
 role. The statement never leaves your computer: if the model chosen for a role
 would send it off the machine, the import refuses before anything is sent. See

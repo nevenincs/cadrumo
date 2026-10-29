@@ -259,7 +259,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 #### `agent-auth`
 
 - **Program:** `cadrumo-agent`
-- **Started with:** `-m cadrumo_agent.cli.main auth status --json`; `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method browser --timeout 300`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method device --timeout 300`
+- **Started with:** `-m cadrumo_agent.cli.main auth status --json`; `-m cadrumo_agent.cli.main auth login --provider <provider:identifier>`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method browser --timeout 300`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method device --timeout 300`; `-m cadrumo_agent.cli.main auth connect --provider <provider:identifier> --method browser-code --timeout 300`
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
 - **Passes from its caller:** the names `CADRUMO_EXTERNAL_BIN_DIRS`
 - **Accepts from its parent:** `CADRUMO_AGENT_HOSTED_ROOT` (directory, required) and `CADRUMO_AGENT_AUTH_BROWSER_EXECUTABLE` (executable, optional)

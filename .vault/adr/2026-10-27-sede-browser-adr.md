@@ -5,7 +5,7 @@ tags:
 date: '2026-10-27'
 modified: '2026-10-28'
 body_schema: 'body-v2'
-body_hash: 'sha256:a1607b1b00abf08852427041d3e8d4a6814ef9b429767de9d028d9809cc0db06'
+body_hash: 'sha256:7ed47dc77fa5f4aa4e63eb576f8899f3e631ef0a2e87c2faee6ebe839c2784c6'
 related:
   - "[[2026-10-04-desktop-shell-adr]]"
   - "[[2026-10-04-application-sign-in-adr]]"
