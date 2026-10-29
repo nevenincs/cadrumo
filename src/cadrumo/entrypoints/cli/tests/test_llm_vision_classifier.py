@@ -44,11 +44,6 @@ _VISION_LANE = ModelRunLane(
     model="synthetic-vision:1",
     reads_off_host=False,
     accepted_media=(ModelRunMediaKind.IMAGE,),
-    licence=None,
-    size_bytes=None,
-    vision=True,
-    context_length=None,
-    installed=None,
 )
 
 
