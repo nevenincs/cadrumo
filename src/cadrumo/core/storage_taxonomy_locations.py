@@ -430,7 +430,7 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
         StorageCategory.IVA_COMPENSATION_HISTORY,
         "live/iva-compensation-history",
-        consumer_module="entrypoints/cli/app_live_iva_commands.py",
+        consumer_module="application/live/iva_wallet_history_capture_operation.py",
         settings_field="cadrumo_iva_compensation_history_dir",
         lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
         grouping=StorageGrouping.EXPORTS,

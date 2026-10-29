@@ -55,6 +55,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.period import Period
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -136,10 +138,18 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
-def test_supervisor_records_bulk_preview_for_exact_profile_without_register_access(tmp_path: Path) -> None:
-    """A no-supported-pair preview is supervised, safely projected, and effect-free."""
+@pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
+def test_supervisor_records_bulk_preview_for_exact_profile_without_register_access(
+    tmp_path: Path, names_root: bool
+) -> None:
+    """A no-supported-pair preview is supervised, safely projected, and effect-free.
+
+    A request that names no output root is captured under the configured filed-declarations directory.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
+        output_root = tmp_path / "filed-bulk-output" if names_root else storage_path(StorageCategory.FILED_DECLARATIONS)
+        composed_roots: list[Path] = []
         bundle = in_memory_filed_observation_test_bundle()
         filed_data_port = _NeverOpenFiledDataPort()
         composition = _Composition(ports=bundle.ports, filed_data_port=filed_data_port)
@@ -150,6 +160,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
             preflight_calls.append((profile_id_arg, pinned_authority))
 
         def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
+            composed_roots.append(output_root)
             return cast(FiledHistoryComposition, composition)
 
         def unused_sync_run_repository_factory() -> SyncRunRecordRepositoryProtocol:
@@ -168,7 +179,7 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledBulkCaptureRequest(
                 profile_id=profile_id,
-                output_root=tmp_path / "filed-bulk-output",
+                output_root=output_root if names_root else None,
                 year_from=2025,
                 year_to=2025,
                 modelos=("999",),
@@ -284,7 +295,8 @@ def test_supervisor_records_bulk_preview_for_exact_profile_without_register_acce
     assert isinstance(projected, OperationResultProjectionSuccessV1)
     assert isinstance(projected.projection, FiledBulkCapturePublicResultV1)
     result = projected.projection
-    assert result.output_root == str(tmp_path / "filed-bulk-output")
+    assert result.output_root == str(output_root)
+    assert composed_roots == [output_root]
     assert (result.modelos, result.year_from, result.year_to, result.dry_run) == (("999",), 2025, 2025, True)
     assert (result.captured_count, result.reached_count, result.failed_count) == (0, 0, 1)
     assert result.sync_run_ref is None

@@ -111,7 +111,7 @@ def _bulk_capture_effect(report: BulkFiledDataCaptureReport) -> OperationEffect:
 def read_filed_bulk_capture_for_cli(
     ctx: typer.Context,
     *,
-    output_root: Path,
+    output_root: Path | None,
     year_from: int,
     year_to: int,
     modelos: tuple[str, ...] | None,
@@ -152,7 +152,7 @@ __all__ = ["FiledBulkCaptureRead", "read_filed_bulk_capture_for_cli"]
 def _bulk_capture_request_differs(projection: FiledBulkCapturePublicResultV1, request: FiledBulkCaptureRequest) -> bool:
     """Require the exact bulk request scope and complete failure count."""
     return (
-        projection.output_root != str(request.output_root)
+        (request.output_root is not None and projection.output_root != str(request.output_root))
         or projection.year_from != request.year_from
         or projection.year_to != request.year_to
         or (projection.dry_run != request.dry_run)

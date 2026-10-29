@@ -163,6 +163,16 @@ def test_registered_pull_uses_exact_profile_and_preserves_public_report(monkeypa
     assert options["result_type"] is FiledHistoryPublicResultV1
 
 
+def test_registered_pull_without_a_named_root_leaves_the_default_to_the_worker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    submitted = _bind(monkeypatch, _projection(), effect=OperationEffect.UPDATED)
+
+    bridge.read_filed_history_for_cli(cast(typer.Context, cast(object, None)), output_root=None, limit=2, today=_TODAY)
+
+    assert submitted[0][0].output_root is None
+
+
 @pytest.mark.parametrize("mismatch", ["denominator", "effect", "dry_run", "terminal"])
 def test_mismatched_result_refuses_with_correlated_receipt(monkeypatch: pytest.MonkeyPatch, mismatch: str) -> None:
     projection = _projection()

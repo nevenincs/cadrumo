@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
+from ...core.storage_taxonomy import StorageCategory
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
@@ -25,7 +26,7 @@ from .filed_history_operation import (
     FiledHistoryCompositionFactory,
     FiledHistoryProviderPreflight,
     FiledHistorySyncRunRepositoryFactory,
-    require_capture_output_root,
+    resolve_capture_output_root,
 )
 from .filed_single_capture_operation import (
     FiledCaptureEvidenceTallyV1,
@@ -51,7 +52,7 @@ class FiledBulkCaptureRequest(BaseModel):
 
     model_config = _PUBLIC_CONFIG
     profile_id: UUID
-    output_root: Path
+    output_root: Path | None = None
     year_from: FilingYear
     year_to: FilingYear
     modelos: tuple[str, ...] | None = None
@@ -168,11 +169,11 @@ class FiledBulkCaptureExecutor:
         require_exact_profile_worker(
             payload.profile_id, request.subject_ref, active_bucket_id=require_active_bucket_id()
         )
-        require_capture_output_root(payload.output_root)
+        output_root = resolve_capture_output_root(payload.output_root, StorageCategory.FILED_DECLARATIONS)
         composition, resources, session_receipt = await prepare_provider_capture(
             context,
             payload.profile_id,
-            payload.output_root,
+            output_root,
             self._composition_factory,
             self._browser_resources_factory,
             self._provider_preflight,
@@ -188,7 +189,7 @@ class FiledBulkCaptureExecutor:
                 filed_data_port=composition.filed_data_port,
                 year_from=payload.year_from,
                 year_to=payload.year_to,
-                output_root=payload.output_root,
+                output_root=output_root,
                 ports=composition.ports,
                 modelos=payload.modelos,
                 limit=payload.limit,

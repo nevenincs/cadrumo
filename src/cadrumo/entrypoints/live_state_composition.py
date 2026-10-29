@@ -806,7 +806,7 @@ async def pull_filed_history_with_shared_composition(
         iva_remote_state_port=iva_remote_state_port,
         notifications_ports=notifications_ports,
         ports=ports,
-        output_root=payload.output_root,
+        output_root=payload.resolved_output_root(),
         profile=profile,
         today=payload.today,
         limit=payload.limit,

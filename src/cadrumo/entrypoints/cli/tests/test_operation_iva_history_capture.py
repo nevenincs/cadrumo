@@ -114,6 +114,19 @@ def test_registered_history_capture_uses_exact_profile_and_preserves_accounting(
     assert options["result_version"] == 1
 
 
+def test_history_capture_without_a_named_root_leaves_the_default_to_the_worker(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    submitted, _bound_profiles = _bind(monkeypatch, _projection(), effect=OperationEffect.UPDATED)
+
+    read = bridge.read_iva_wallet_history_capture_for_cli(
+        cast(typer.Context, cast(object, None)), year_from=2023, year_to=2025, output_root=None
+    )
+
+    assert submitted[0][0].output_root is None
+    assert read.projection.output_root == str(_OUTPUT_ROOT)
+
+
 @pytest.mark.parametrize("mismatch", ["output_root", "year_range", "effect", "terminal", "refusal"])
 def test_mismatched_scope_or_receipt_refuses_with_correlated_operation(
     monkeypatch: pytest.MonkeyPatch,

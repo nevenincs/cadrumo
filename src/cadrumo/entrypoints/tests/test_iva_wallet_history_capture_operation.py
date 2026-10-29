@@ -60,6 +60,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.core.period import Period
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
@@ -270,10 +272,14 @@ async def _run_to_terminal(supervisor: OperationSupervisor, operation_id: str) -
     return await supervisor.settled(operation_id)
 
 
+@pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
 def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iva_history_capture(
-    tmp_path: Path,
+    tmp_path: Path, names_root: bool
 ) -> None:
-    """Record a synthetic IVA history capture under exact-profile external client authority."""
+    """Record a synthetic IVA history capture under exact-profile external client authority.
+
+    A request that names no output root is captured under the configured IVA history directory.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, bundled_indexed_authority().operation() as authority:
         profile_id = UUID(profile.bucket_id)
         trace: list[str] = []
@@ -307,13 +313,15 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
         )
         registration = build_iva_wallet_history_capture_registration(definition)
         registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-        output_root = tmp_path / "iva-history-output"
+        output_root = (
+            tmp_path / "iva-history-output" if names_root else storage_path(StorageCategory.IVA_COMPENSATION_HISTORY)
+        )
         request = OperationRequest(
             definition_id=IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID,
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=IvaWalletHistoryCaptureRequest(
                 profile_id=profile_id,
-                output_root=output_root,
+                output_root=output_root if names_root else None,
                 year_from=2025,
                 year_to=2026,
             ),

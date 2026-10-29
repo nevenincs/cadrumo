@@ -145,16 +145,42 @@ def require_capture_output_root(output_root: Path) -> None:
         )
 
 
+def resolve_capture_output_root(output_root: Path | None, default_category: StorageCategory) -> Path:
+    """Return the root a capture reports under, refusing one it cannot take.
+
+    A request that names no root gets the configured directory of
+    ``default_category``, the same directory the command line has always
+    defaulted to. The result is checked exactly as a named root is.
+
+    Raises:
+        LiveApplicationInputError: With the reason only, never the path.
+    """
+    resolved = output_root if output_root is not None else storage_path(default_category)
+    require_capture_output_root(resolved)
+    return resolved
+
+
 class FiledHistoryOperationRequest(BaseModel):
     """Immutable scope submitted to one recorded filed-history pull."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
     profile_id: UUID
-    output_root: Path
+    output_root: Path | None = None
     today: date | None = None
     limit: int | None = Field(default=None, ge=1)
     dry_run: bool = False
+
+    def resolved_output_root(self) -> Path:
+        """Return the root the executor resolved into this request before the pull.
+
+        Raises:
+            ValueError: When the request still has no root, which only a pull
+                called without the executor can cause.
+        """
+        if self.output_root is None:
+            raise ValueError("a filed-history pull needs the output root its operation resolved")
+        return self.output_root
 
 
 class FiledHistoryComposition(Protocol):
@@ -362,7 +388,7 @@ async def _pull_recorded_filed_history(
         iva_remote_state_port=iva_remote_state_port,
         notifications_ports=notifications_ports,
         ports=ports,
-        output_root=payload.output_root,
+        output_root=payload.resolved_output_root(),
         profile=profile,
         today=payload.today,
         limit=payload.limit,
@@ -564,7 +590,8 @@ class FiledHistoryOperationExecutor:
         profile_id = canonical_profile_bucket_id(request.payload.profile_id)
         if require_active_bucket_id() != profile_id or request.subject_ref != profile_operation_subject(profile_id):
             raise ValueError("filed-history operation subject must identify the active profile")
-        require_capture_output_root(request.payload.output_root)
+        output_root = resolve_capture_output_root(request.payload.output_root, StorageCategory.FILED_DECLARATIONS)
+        payload = request.payload.model_copy(update={"output_root": output_root})
         await context.events.phase(FILED_HISTORY_PHASE_PREFLIGHT)
         self._provider_preflight(request.payload.profile_id, context.authority_operation)
         profile = self._profile_resolver(context.authority_operation)
@@ -574,7 +601,7 @@ class FiledHistoryOperationExecutor:
         # whether none or some of those writes committed.
         if not request.payload.dry_run:
             await context.events.effect(OperationEffect.UNKNOWN)
-        composition = self._composition_factory(request.payload.output_root, operation=context.authority_operation)
+        composition = self._composition_factory(output_root, operation=context.authority_operation)
         browser_resources = self._browser_resources_factory()
         context.cleanup.own(browser_resources, family=OperationOwnedResource.PROCESS)
         session_receipt = LiveSessionWriteReceipt(context.events.effect)
@@ -583,7 +610,7 @@ class FiledHistoryOperationExecutor:
             browser_resources.activate(),
         ):
             run = await self._pull(
-                request.payload,
+                payload,
                 profile,
                 self._sync_run_repository,
                 context.events,
@@ -713,5 +740,6 @@ __all__ = [
     "build_filed_history_operation_definition",
     "build_filed_history_operation_registration",
     "require_capture_output_root",
+    "resolve_capture_output_root",
     "resolve_filed_history_access",
 ]

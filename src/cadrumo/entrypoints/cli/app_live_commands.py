@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import typer
 
@@ -31,6 +31,7 @@ from ...application.live.filed_history_discovery import (
 )
 from ...application.live.remote_state_models import (
     BulkFiledDataCaptureReport,
+    FiledCaptureEvidenceTally,
     FiledCasillaSkipRow,
     FiledDataCaptureFailureRow,
     FiledDataCaptureReport,
@@ -42,6 +43,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ._app_live_auth_preflight import emit_live_auth_preflight, metric_line
 from ._app_live_rendering import _filed_capture_lines, _source_filed_capture_lines
 from ._filing_chain_payloads import (
+    FilingReconciliationPayload,
     filing_reconciliation_lines,
     filing_reconciliation_notices,
     filing_reconciliation_payload,
@@ -305,12 +307,10 @@ def filed_pull_all_cmd(
     denominator that may have nothing to do with this taxpayer; the prose
     denominator note says what was actually measured.
     """
-    from ...core.config import load_settings
     from ...core.time.clock import today_madrid
     from .operation_filed_history import read_filed_history_for_cli
 
-    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
-    read = read_filed_history_for_cli(ctx, output_root=resolved_root, limit=limit, today=today_madrid())
+    read = read_filed_history_for_cli(ctx, output_root=output_root, limit=limit, today=today_madrid())
     try:
         result, lines = _filed_pull_all_result_and_lines(read.report)
         notices = _filed_pull_all_notices(read.report, limit=limit)
@@ -482,6 +482,45 @@ def _filed_pull_all_notices(run: FiledHistoryOnboardingRun, *, limit: int | None
     return notices
 
 
+class _FiledCapturePayloadFields(TypedDict):
+    """Evidence fields shared by the three filed-capture CLI results."""
+
+    captured_count: int
+    reached_count: int
+    observation_paths: list[str]
+    artefact_refs: list[str]
+    justificante_metadata_count: int
+    justificante_csvs: list[str]
+    filing_evidence_stamped_count: int
+    filing_record_ids: list[str]
+    filing_evidence_conflict_count: int
+    filing_evidence_conflict_record_ids: list[str]
+    casilla_count: int
+    calculation_observation_count: int
+    calculation_observation_keys: list[str]
+    reconciliations: list[FilingReconciliationPayload]
+
+
+def _filed_capture_payload_fields(report: FiledCaptureEvidenceTally) -> _FiledCapturePayloadFields:
+    """Project capture evidence without mixing in command-specific fields or notices."""
+    return {
+        "captured_count": report.captured_count,
+        "reached_count": report.reached_count,
+        "observation_paths": list(report.observation_paths),
+        "artefact_refs": list(report.artefact_refs),
+        "justificante_metadata_count": report.justificante_metadata_count,
+        "justificante_csvs": list(report.justificante_csvs),
+        "filing_evidence_stamped_count": report.filing_evidence_stamped_count,
+        "filing_record_ids": list(report.filing_record_ids),
+        "filing_evidence_conflict_count": report.filing_evidence_conflict_count,
+        "filing_evidence_conflict_record_ids": list(report.filing_evidence_conflict_record_ids),
+        "casilla_count": report.casilla_count,
+        "calculation_observation_count": report.calculation_observation_count,
+        "calculation_observation_keys": list(report.calculation_observation_keys),
+        "reconciliations": [filing_reconciliation_payload(item) for item in report.reconciliation_results],
+    }
+
+
 def _filed_capture_notices(
     report: FiledDataCaptureReport | BulkFiledDataCaptureReport | SourceFiledDataCaptureReport,
     *,
@@ -531,20 +570,7 @@ def _emit_single_filed_pull(
             output_root=report.output_root,
             modelo=report.modelo,
             year=report.year,
-            captured_count=report.captured_count,
-            reached_count=report.reached_count,
-            observation_paths=list(report.observation_paths),
-            artefact_refs=list(report.artefact_refs),
-            justificante_metadata_count=report.justificante_metadata_count,
-            justificante_csvs=list(report.justificante_csvs),
-            filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-            filing_record_ids=list(report.filing_record_ids),
-            filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-            filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
-            casilla_count=report.casilla_count,
-            calculation_observation_count=report.calculation_observation_count,
-            calculation_observation_keys=list(report.calculation_observation_keys),
-            reconciliations=[filing_reconciliation_payload(item) for item in report.reconciliation_results],
+            **_filed_capture_payload_fields(report),
         )
         notices = (
             *_filed_capture_notices(report, limit=limit),
@@ -574,17 +600,15 @@ def _emit_bulk_filed_pull(
     dry_run: bool,
 ) -> None:
     """Capture and emit a bulk filed-declaration report."""
-    from ...core.config import load_settings
     from .app_live_filed_results import FiledCaptureFailurePayload, FiledCaptureResult
     from .operation_filed_bulk import read_filed_bulk_capture_for_cli
 
     resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
-    resolved_root = resolve_optional_root(output_root, lambda: load_settings().cadrumo_filed_declarations_dir)
     read = read_filed_bulk_capture_for_cli(
         ctx,
         year_from=resolved_from,
         year_to=resolved_to,
-        output_root=resolved_root,
+        output_root=output_root,
         modelos=selected_modelos or None,
         limit=limit,
         dry_run=dry_run,
@@ -606,22 +630,9 @@ def _emit_bulk_filed_pull(
         modelos=list(report.modelos),
         year_from=report.year_from,
         year_to=report.year_to,
-        captured_count=report.captured_count,
-        reached_count=report.reached_count,
         failed_count=report.failed_count,
         sync_run_ref=report.sync_run_ref,
-        observation_paths=list(report.observation_paths),
-        artefact_refs=list(report.artefact_refs),
-        justificante_metadata_count=report.justificante_metadata_count,
-        justificante_csvs=list(report.justificante_csvs),
-        filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-        filing_record_ids=list(report.filing_record_ids),
-        filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-        filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
-        casilla_count=report.casilla_count,
-        calculation_observation_count=report.calculation_observation_count,
-        calculation_observation_keys=list(report.calculation_observation_keys),
-        reconciliations=[filing_reconciliation_payload(item) for item in report.reconciliation_results],
+        **_filed_capture_payload_fields(report),
         failures=[
             FiledCaptureFailurePayload(
                 modelo=failure.modelo,
@@ -784,20 +795,7 @@ def filed_pull_sources_cmd(
             target_modelo=report.target_modelo,
             target_year=report.target_year,
             target_period=report.target_period,
-            captured_count=report.captured_count,
-            reached_count=report.reached_count,
-            observation_paths=list(report.observation_paths),
-            artefact_refs=list(report.artefact_refs),
-            justificante_metadata_count=report.justificante_metadata_count,
-            justificante_csvs=list(report.justificante_csvs),
-            filing_evidence_stamped_count=report.filing_evidence_stamped_count,
-            filing_record_ids=list(report.filing_record_ids),
-            filing_evidence_conflict_count=report.filing_evidence_conflict_count,
-            filing_evidence_conflict_record_ids=list(report.filing_evidence_conflict_record_ids),
-            casilla_count=report.casilla_count,
-            calculation_observation_count=report.calculation_observation_count,
-            calculation_observation_keys=list(report.calculation_observation_keys),
-            reconciliations=[filing_reconciliation_payload(item) for item in reconciliations],
+            **_filed_capture_payload_fields(report),
         )
         notices = (*_filed_capture_notices(report), *filing_reconciliation_notices(reconciliations))
         emit_envelope(

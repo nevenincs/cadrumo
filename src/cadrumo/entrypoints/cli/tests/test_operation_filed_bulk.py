@@ -88,8 +88,8 @@ def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
                 period="1T",
                 member_nif="X1234567A",
                 filing_record_id="record-1",
-                affected_filing_record_ids=("record-2",),
-                differing_casilla_ids=("casilla.a",),
+                affected_filing_record_ids=("record-2", "record-3"),
+                differing_casilla_ids=("casilla.a", "casilla.b"),
                 evidence_basis="casillas",
                 notices=(
                     FiledReconciliationNoticeV1(
@@ -120,15 +120,15 @@ def _projection(*, dry_run: bool = False) -> FiledBulkCapturePublicResultV1:
         sync_run_ref=_SYNC_RUN_REF if persisted else None,
         observation_paths=("encrypted-observation",) if persisted else (),
         artefact_refs=("sha256:1234",) if persisted else (),
-        justificante_metadata_count=1 if persisted else 0,
-        justificante_csvs=("csv-1",) if persisted else (),
-        filing_evidence_stamped_count=1 if persisted else 0,
-        filing_record_ids=("record-1",) if persisted else (),
-        filing_evidence_conflict_count=0,
-        filing_evidence_conflict_record_ids=(),
+        justificante_metadata_count=2 if persisted else 0,
+        justificante_csvs=("csv-1", "csv-2") if persisted else (),
+        filing_evidence_stamped_count=2 if persisted else 0,
+        filing_record_ids=("record-1", "record-2") if persisted else (),
+        filing_evidence_conflict_count=1 if persisted else 0,
+        filing_evidence_conflict_record_ids=("record-3",) if persisted else (),
         casilla_count=2 if persisted else 0,
-        calculation_observation_count=1 if persisted else 0,
-        calculation_observation_keys=("observation-1",) if persisted else (),
+        calculation_observation_count=2 if persisted else 0,
+        calculation_observation_keys=("observation-1", "observation-2") if persisted else (),
         evidence_notices=(_capture_notice("live.filed.evidence_test", message="Evidence advisory"),),
         reconciliations=reconciliation_rows,
         failures=(
@@ -243,6 +243,23 @@ def test_bulk_capture_submits_exact_profile_and_preserves_report_lanes(monkeypat
     assert options["definition_id"] == FILED_BULK_CAPTURE_DEFINITION_ID
     assert options["subject_ref"] == profile_operation_subject(str(_PROFILE))
     assert options["result_type"] is FiledBulkCapturePublicResultV1
+
+
+def test_bulk_capture_without_a_named_root_leaves_the_default_to_the_worker(monkeypatch: pytest.MonkeyPatch) -> None:
+    submissions, _profile_bindings = _bind(monkeypatch, _projection(), effect=OperationEffect.UPDATED)
+
+    read = bridge.read_filed_bulk_capture_for_cli(
+        cast(typer.Context, cast(object, None)),
+        output_root=None,
+        year_from=2023,
+        year_to=2025,
+        modelos=("303", "390"),
+        limit=7,
+        dry_run=False,
+    )
+
+    assert submissions[0][1].output_root is None
+    assert read.report.output_root == str(_OUTPUT_ROOT)
 
 
 def test_bulk_dry_run_keeps_preview_effect_and_recapture_advisory(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -367,12 +384,106 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
     assert envelope["command"] == "app.live.filed.pull"
     result = envelope["result"]
     assert isinstance(result, FiledCaptureResult)
+    payload = result.model_dump(mode="json")
+    assert {
+        key: payload[key]
+        for key in (
+            "mode",
+            "output_root",
+            "modelo",
+            "year",
+            "modelos",
+            "year_from",
+            "year_to",
+            "captured_count",
+            "reached_count",
+            "failed_count",
+            "dry_run",
+            "sync_run_ref",
+            "observation_paths",
+            "artefact_refs",
+            "justificante_metadata_count",
+            "justificante_csvs",
+            "filing_evidence_stamped_count",
+            "filing_record_ids",
+            "filing_evidence_conflict_count",
+            "filing_evidence_conflict_record_ids",
+            "casilla_count",
+            "calculation_observation_count",
+            "calculation_observation_keys",
+            "reconciliations",
+            "failures",
+        )
+    } == {
+        "mode": "bulk",
+        "output_root": "filed",
+        "modelo": None,
+        "year": None,
+        "modelos": ["303", "390"],
+        "year_from": 2023,
+        "year_to": 2025,
+        "captured_count": 1,
+        "reached_count": 3,
+        "failed_count": 1,
+        "dry_run": False,
+        "sync_run_ref": _SYNC_RUN_REF,
+        "observation_paths": ["encrypted-observation"],
+        "artefact_refs": ["sha256:1234"],
+        "justificante_metadata_count": 2,
+        "justificante_csvs": ["csv-1", "csv-2"],
+        "filing_evidence_stamped_count": 2,
+        "filing_record_ids": ["record-1", "record-2"],
+        "filing_evidence_conflict_count": 1,
+        "filing_evidence_conflict_record_ids": ["record-3"],
+        "casilla_count": 2,
+        "calculation_observation_count": 2,
+        "calculation_observation_keys": ["observation-1", "observation-2"],
+        "reconciliations": [
+            {
+                "outcome": "confirmed",
+                "bucket_id": "5aa00000-0000-4000-8000-0000000000aa",
+                "modelo": "303",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "1T"},
+                "member_nif": "X1234567A",
+                "filing_record_id": "record-1",
+                "affected_filing_record_ids": ["record-2", "record-3"],
+                "differing_casilla_ids": ["casilla.a", "casilla.b"],
+                "evidence_basis": "casillas",
+                "notices": [{"code": "receipt_totals_only", "context": {"reason": "receipt"}}],
+            }
+        ],
+        "failures": [
+            {
+                "modelo": "390",
+                "year": 2024,
+                "period": "4T",
+                "expediente_id": "20240000000000001X",
+                "error_type": "RegisterReadError",
+                "message": "Declaration could not be read",
+            }
+        ],
+    }
+    assert [(pair["modelo"], pair["year"]) for pair in payload["pair_outcomes"]] == [
+        ("303", 2025),
+        ("303", 2024),
+        ("303", 2023),
+        ("390", 2025),
+        ("390", 2024),
+        ("390", 2023),
+    ]
     assert result.reached_count == 3
     assert result.pair_outcomes == list(read.report.pair_outcomes)
     assert result.pair_outcomes[-1].walk_attempted is False
     assert result.pair_outcomes[-1].walk_completed is False
     assert result.sync_run_ref == _SYNC_RUN_REF
     notices = cast("list[Notice]", envelope["notices"])
+    assert [notice.code for notice in notices] == [
+        "live.filed.evidence_test",
+        "live.filed.recapture_test",
+        "modelo.filing_chain.receipt_totals_only",
+        "live.filed.pull.casillas_not_enrolled",
+    ]
     recapture = next(notice for notice in notices if notice.code == "live.filed.recapture_test")
     skipped = next(notice for notice in notices if notice.code == "live.filed.pull.casillas_not_enrolled")
     assert recapture.message == "Recapture changed values"
@@ -384,6 +495,73 @@ def test_bulk_cli_uses_runtime_bridge_and_emits_capture_accounting_and_notices(
     lines = cast("tuple[str, ...]", envelope["lines"])
     assert f"notice\tlive.filed.recapture_test\t{recapture.message}" in lines
     assert skipped.message in lines
+
+
+def test_bulk_preview_cli_emits_reached_without_persisted_evidence(monkeypatch: pytest.MonkeyPatch) -> None:
+    _bind(monkeypatch, _projection(dry_run=True), effect=OperationEffect.UPDATED)
+    read = _read(dry_run=True)
+    monkeypatch.setattr(bridge, "read_filed_bulk_capture_for_cli", lambda *_args, **_kwargs: read)
+    envelopes: list[dict[str, object]] = []
+    monkeypatch.setattr(handler, "emit_envelope", lambda *_args, **kwargs: envelopes.append(kwargs))
+
+    handler._emit_bulk_filed_pull(
+        cast(typer.Context, cast(object, None)),
+        selected_modelos=("303", "390"),
+        year=None,
+        year_from=2023,
+        year_to=2025,
+        output_root=_OUTPUT_ROOT,
+        limit=7,
+        dry_run=True,
+    )
+
+    assert len(envelopes) == 1
+    assert envelopes[0]["command"] == "app.live.filed.pull"
+    result = envelopes[0]["result"]
+    assert isinstance(result, FiledCaptureResult)
+    payload = result.model_dump(mode="json")
+    assert {
+        key: payload[key]
+        for key in (
+            "mode",
+            "dry_run",
+            "captured_count",
+            "reached_count",
+            "sync_run_ref",
+            "observation_paths",
+            "artefact_refs",
+            "justificante_metadata_count",
+            "justificante_csvs",
+            "filing_evidence_stamped_count",
+            "filing_record_ids",
+            "filing_evidence_conflict_count",
+            "filing_evidence_conflict_record_ids",
+            "casilla_count",
+            "calculation_observation_count",
+            "calculation_observation_keys",
+            "reconciliations",
+        )
+    } == {
+        "mode": "bulk",
+        "dry_run": True,
+        "captured_count": 0,
+        "reached_count": 3,
+        "sync_run_ref": None,
+        "observation_paths": [],
+        "artefact_refs": [],
+        "justificante_metadata_count": 0,
+        "justificante_csvs": [],
+        "filing_evidence_stamped_count": 0,
+        "filing_record_ids": [],
+        "filing_evidence_conflict_count": 0,
+        "filing_evidence_conflict_record_ids": [],
+        "casilla_count": 0,
+        "calculation_observation_count": 0,
+        "calculation_observation_keys": [],
+        "reconciliations": [],
+    }
+    notices = cast("list[Notice]", envelopes[0]["notices"])
+    assert [notice.code for notice in notices] == ["live.filed.evidence_test", "live.filed.recapture_test"]
 
 
 @pytest.mark.parametrize("mismatch", ["outside_scope", "duplicate", "incomplete_counts", "reached", "captured"])

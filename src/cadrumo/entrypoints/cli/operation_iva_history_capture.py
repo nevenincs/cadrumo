@@ -37,7 +37,7 @@ def read_iva_wallet_history_capture_for_cli(
     *,
     year_from: int,
     year_to: int,
-    output_root: Path,
+    output_root: Path | None,
 ) -> IvaWalletHistoryCaptureRead:
     """Submit one history sweep and accept only its exact-profile settled result."""
     profile_id = UUID(require_active_bucket_id())
@@ -67,7 +67,7 @@ def read_iva_wallet_history_capture_for_cli(
             projection.captured_count, projection.calculation_observation_count
         )
         if (
-            projection.output_root != str(request.output_root)
+            (request.output_root is not None and projection.output_root != str(request.output_root))
             or projection.year_from != request.year_from
             or projection.year_to != request.year_to
         ):

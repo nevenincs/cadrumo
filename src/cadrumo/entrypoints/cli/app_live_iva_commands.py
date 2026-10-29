@@ -382,19 +382,14 @@ def iva_wallet_pull_history_cmd(
     profile-local reload count. It does not query the wallet/cartera surface or
     submit AEAT form choices.
     """
-    from ...core.config import load_settings
     from .operation_iva_history_capture import read_iva_wallet_history_capture_for_cli
 
     emit_live_auth_preflight(ctx)
-    resolved_root = resolve_optional_root(
-        output_root,
-        lambda: load_settings().cadrumo_iva_compensation_history_dir,
-    )
     read = read_iva_wallet_history_capture_for_cli(
         ctx,
         year_from=year_from,
         year_to=year_to,
-        output_root=resolved_root,
+        output_root=output_root,
     )
     projection = read.projection
     try:

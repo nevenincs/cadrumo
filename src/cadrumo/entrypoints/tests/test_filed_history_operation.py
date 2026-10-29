@@ -21,6 +21,8 @@ from cadrumo.adapters.persistence.storage.certificate_secret_backend import buil
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.application.storage.sync_runs.records import SyncRunRecordRepositoryProtocol
 from cadrumo.core.config import load_settings
+from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.core.storage_taxonomy_locations import storage_path
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
@@ -235,7 +237,7 @@ def _local_pull(
             notifications_ports=notifications_ports,
             ports=ports,
             filed_data_port=filed_data_port,
-            output_root=payload.output_root,
+            output_root=payload.resolved_output_root(),
             profile=profile,
             today=payload.today,
             limit=payload.limit,
@@ -287,7 +289,7 @@ def _routed_pull(discover: FiledHistoryDiscoveryPort):
                 notifications_ports=notifications_ports,
                 ports=ports,
                 filed_data_port=RoutedFiledDataCapturePort(register),
-                output_root=payload.output_root,
+                output_root=payload.resolved_output_root(),
                 profile=profile,
                 today=payload.today,
                 limit=payload.limit,
@@ -606,14 +608,23 @@ def test_supervisor_records_ordered_safe_progress_and_truthful_zero_effect(tmp_p
     assert discovery.profile is taxpayer
 
 
-def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
+@pytest.mark.parametrize("names_root", [True, False], ids=["named_root", "configured_default_root"])
+def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path, names_root: bool) -> None:
+    """A request that names no output root is composed under the configured filed-declarations directory."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile, ExitStack() as stack:
         authority_operation = stack.enter_context(bundled_indexed_authority().operation())
         repository = SyncRunRecordRepository()
         sync_namespace_before = repository.secure_object_repository.namespace_payload_hashes(repository.namespace)
+        output_root = tmp_path / "filed" if names_root else storage_path(StorageCategory.FILED_DECLARATIONS)
+        composed_roots: list[Path] = []
+
+        def composition_factory(output_root: Path, *, operation: PinnedAuthorityOperation) -> FiledHistoryComposition:
+            composed_roots.append(output_root)
+            return _test_filed_history_composition(output_root, operation=operation)
+
         definition = build_filed_history_operation_definition(
             sync_run_repository_factory=lambda: repository,
-            composition_factory=_test_filed_history_composition,
+            composition_factory=composition_factory,
             browser_resources_factory=BrowserRuntimeResourceScope,
             pull=_routed_pull(_DeterministicFiledHistoryDiscovery(modelo="100", ejercicio=2025)),
             provider_preflight=lambda _profile_id, _operation: None,
@@ -638,7 +649,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
             subject_ref=profile_operation_subject(profile.bucket_id),
             payload=FiledHistoryOperationRequest(
                 profile_id=UUID(profile.bucket_id),
-                output_root=tmp_path / "filed",
+                output_root=output_root if names_root else None,
                 today=date(2026, 3, 15),
                 dry_run=True,
             ),
@@ -662,6 +673,7 @@ def test_supervisor_records_a_dry_run_with_no_effect(tmp_path: Path) -> None:
     assert snapshot.lifecycle is OperationLifecycle.TERMINAL
     assert snapshot.effect is OperationEffect.NONE
     assert result.dry_run is True
+    assert composed_roots == [output_root]
     assert result.sync_run_ref is None
     assert sync_namespace_after == sync_namespace_before == {}
     assert result.pairs[0].walk_attempted is True
