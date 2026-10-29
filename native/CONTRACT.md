@@ -48,8 +48,7 @@ under `tool_versions` in `generated/build-toolchain.json` and in the configure b
 facts. Windows uses the pinned
 official NuGet SDK. Linux x86-64/AArch64 and macOS ARM64 use the reviewed Astral
 Python Build Standalone 20251209 full shared-library SDKs for normal-GIL CPython
-3.13.11, with exact archive hashes and target/ABI provenance. The authorized
-selection is recorded in `scratch/provisioning-state-map/B2-native-decisions.md`.
+3.13.11, with exact archive hashes and target/ABI provenance in `native/toolchain.json`.
 Missing or mismatched pins refuse provisioning. Acquisition retains provider
 metadata and all embedded dependency notices; assembly stages those notices and
 the canonical CPython notice through the declared license inventory.
@@ -162,8 +161,9 @@ extension or a runtime file to install. It does not enter the package manifest.
 `verify` includes `application.rust` and `application.package` through CTest.
 The package test consumes the selected layout's manifest location, checks its
 complete file inventory, probes the delivered interpreter against every declared
-distribution version, and checks the original inventory again. It uses a disposable
-browser cache and calls the existing Python readiness owner. This checks the staged
+distribution version, and checks the original inventory again. The native browser
+quick check reads the packaged driver manifest and pins against a disposable empty
+browser cache and reports it absent without creating browser data. This checks the staged
 package. `verify-package` runs both the Python acceptance suite and the CMake-selected
 Rust compatibility probe against the same freshly extracted ZIP. Its result records
 the archive hash, manifest hash, extracted root and application-probe outcome; a failed
@@ -1561,11 +1561,9 @@ palettes owned by the desktop. Changing appearance recolors existing content
 and hidden panes without restarting a process or writing to its input. The
 console and Python panes follow appearance unless their explicit always-dark
 preference is selected. The TUI pane and its header follow desktop appearance.
-Only the dedicated TUI launch sets `TERM_PROGRAM=cadrumo`; standalone Textual
-surfaces retain their own RGB themes. The embedded TUI's appearance action
-emits `OSC 777;cadrumo;appearance;toggle ST`. Only the TUI pane recognizes that
-exact presentation request and toggles the frontend preference. Other OSC
-payloads and terminal kinds cannot invoke it; it carries no runtime state.
+The terminal sets no `TERM_PROGRAM` and recognizes no escape sequence of its
+own: a pane is a plain terminal, and nothing the TUI prints asks the desktop
+to change appearance or open a page.
 
 `src-tauri/src/terminal/` keeps at most one live PTY session per kind:
 
