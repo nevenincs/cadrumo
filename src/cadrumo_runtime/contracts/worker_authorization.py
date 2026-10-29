@@ -235,11 +235,10 @@ class WorkerAuthorizationReleased(BaseModel):
 
 
 class WorkerModelRun(BaseModel):
-    """Ask the runtime to have the profile's agent service answer one lookup, selections read or run.
+    """Ask the runtime to have the profile's agent service answer one lookup or run.
 
     Sent under a held START permit. A lookup names its role and carries no
-    header and no body; a selections read names no role and carries neither;
-    a run's body follows on secret frames. Nothing here, and nothing in the
+    header and no body; a run's body follows on secret frames. Nothing here, and nothing in the
     reply, is a credential.
     """
 
@@ -248,7 +247,7 @@ class WorkerModelRun(BaseModel):
     request_id: UUID
     permit_id: UUID
     command_id: UUID
-    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")] | None
+    role: Annotated[str, Field(pattern=r"^[a-z][a-z0-9_]{0,63}$")]
     header: ModelRunHeader | None = None
     body_byte_count: Annotated[NonNegativeInt, Field(le=MODEL_RUN_MAX_BODY_BYTES)] = 0
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
-from typing import Any, override
+from typing import Any
 
 import pytest
 from pydantic import SecretStr
@@ -12,7 +12,6 @@ from pydantic import SecretStr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.secure_object_write import ABSENT_SECURE_OBJECT_REVISION_ID
 from cadrumo.core.storage_environment import StorageMode
-from cadrumo_client.contracts.deadline_budget import TimeoutDeadline
 from cadrumo_client.contracts.model_runs import (
     ModelRunAttachment,
     ModelRunBody,
@@ -24,16 +23,14 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
-    ModelRunSelectedModel,
 )
 
 from ....adapters.agent_background_runs import HostedBackgroundRuns
-from ...domain.catalog import BackgroundOption, ProviderCatalog, parse_provider_catalog
+from ...domain.catalog import BackgroundOption, parse_provider_catalog
 from ...domain.record import ListedModel, LocalModelListRecord, new_settings_generation
 from ..contracts import ProviderSettingsActionAccepted, ProviderSettingsStatus
 from ..model_runs import ROLE_CAPABILITIES, ModelRunService
-from ..ports import LiveLaneBackground, LocalModelListRead, ProviderRecordRead, StoreRefusal, StoreRefusalCode
+from ..ports import LiveLaneBackground, StoreRefusal, StoreRefusalCode
 from ..resolution import ProviderCredentialResolver
 from ..service import ProviderSettingsService
 from .memory_store import MemoryLocalModelListStore, MemoryProviderSettingsStore
@@ -305,13 +302,6 @@ def test_a_selected_local_model_the_server_lacks_refuses_as_not_installed() -> N
     runs, _, _ = _harness(MemoryProviderSettingsStore(), _selected(KEYLESS_LANE, KEYLESS_VISION_MODEL), live)
 
     assert runs.lookup("vision_transcription") == _NOT_INSTALLED
-    states = runs.selections()
-    assert isinstance(states, tuple)
-    assert states[0] == ModelRunRoleSelection(
-        role="vision_transcription",
-        selected=ModelRunSelectedModel(lane_id=KEYLESS_LANE, model=KEYLESS_VISION_MODEL),
-        refusal=ModelRunRefusalCode.MODEL_NOT_INSTALLED,
-    )
 
 
 def test_a_selected_added_model_the_server_holds_reads_text_and_its_unstated_vision_refuses_images() -> None:
@@ -400,10 +390,6 @@ def test_an_unreadable_record_refuses_every_role_rather_than_reading_as_unselect
 
     for role in ModelRole:
         assert runs.lookup(role.value) == _LANE_UNAVAILABLE
-    states = runs.selections()
-    assert isinstance(states, tuple)
-    assert {state.refusal for state in states} == {ModelRunRefusalCode.LANE_UNAVAILABLE}
-    assert all(state.selected is None for state in states)
 
 
 def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
@@ -413,7 +399,6 @@ def test_a_profile_that_is_not_signed_in_refuses_as_such() -> None:
 
     assert runs.lookup("text_extraction") == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
-    assert runs.selections() == ModelRunRefusal(code=ModelRunRefusalCode.NOT_SIGNED_IN)
     assert gateway.runs == []
 
 
@@ -500,73 +485,6 @@ def test_without_a_ready_agent_every_run_refuses_as_service_unavailable() -> Non
     lane = runs.lookup("text_extraction")
     assert isinstance(lane, ModelRunLane) and lane.accepted_media is None
     assert runs.run(_header(), _BODY) == ModelRunRefusal(code=ModelRunRefusalCode.SERVICE_UNAVAILABLE)
-
-
-class _CountingList(MemoryLocalModelListStore):
-    def __init__(self) -> None:
-        super().__init__()
-        self.list_reads = 0
-
-    @override
-    def read(self) -> LocalModelListRead | StoreRefusal:
-        self.list_reads += 1
-        return super().read()
-
-
-class _CountingProviderRecords(MemoryProviderSettingsStore):
-    """Count the provider records read: each read is one decrypted credential record."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.lanes_read: list[str] = []
-
-    @override
-    def read(
-        self, provider_ids: tuple[str, ...], *, deadline: TimeoutDeadline | None = None
-    ) -> tuple[ProviderRecordRead, ...] | StoreRefusal:
-        self.lanes_read.extend(provider_ids)
-        return super().read(provider_ids)
-
-
-class _CountingCatalogSource(ProvidedProviderCatalogSource):
-    def __init__(self, source: ProvidedProviderCatalogSource) -> None:
-        super().__init__(source.catalog())
-        self.fetches = 0
-
-    @override
-    def catalog(self, *, deadline: TimeoutDeadline | None = None) -> ProviderCatalog:
-        self.fetches += 1
-        return super().catalog()
-
-
-def test_a_selections_read_reports_every_role_from_one_read_of_the_record_deciding_the_lane_once() -> None:
-    store = _CountingProviderRecords()
-    model_list = _CountingList()
-    _store(model_list, reading=(KEYLESS_LANE, KEYLESS_TEXT_MODEL))
-    source = _CountingCatalogSource(_catalog_source())
-    live = StaticLiveModels(backgrounds={("local", "api"): _background((ModelRunMediaKind.IMAGE,))})
-    runs, _, _ = _harness(store, model_list, live, source)
-    source.fetches = 0
-
-    states = runs.selections()
-
-    assert model_list.list_reads == 1
-    assert store.lanes_read == [KEYLESS_LANE]
-    assert live.snapshots == 1
-    # One fetch to find the lanes, and one inside the one credential resolution.
-    assert source.fetches == 2
-    text = _declared(KEYLESS_TEXT_MODEL, vision=False).model_copy(update={"accepted_media": (ModelRunMediaKind.IMAGE,)})
-    text_selected = ModelRunSelectedModel(lane_id=KEYLESS_LANE, model=KEYLESS_TEXT_MODEL)
-    assert states == (
-        ModelRunRoleSelection(
-            role="vision_transcription",
-            selected=text_selected,
-            refusal=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES,
-        ),
-        ModelRunRoleSelection(role="text_extraction", selected=text_selected, lane=text),
-        ModelRunRoleSelection(role="column_role_mapping", selected=text_selected, lane=text),
-        ModelRunRoleSelection(role="supply_nature_proposal", selected=text_selected, lane=text),
-    )
 
 
 def test_one_run_reads_its_media_and_its_options_from_one_live_catalogue_snapshot() -> None:

@@ -57,7 +57,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutcome,
     ModelRunOutput,
     ModelRunRefusal,
-    ModelRunRoleSelection,
 )
 from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 from cadrumo_runtime.contracts.worker_authorization import (
@@ -71,7 +70,7 @@ from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicatio
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..application.approval_binding import RuntimeApprovalBinding
-from .worker_model_run_results import model_run_lookup, model_run_result, model_run_selections
+from .worker_model_run_results import model_run_lookup, model_run_result
 from .worker_operation_binding import WorkerOperationBinding
 from .worker_password_retirement import password_retirement_payload, preserves_password_profile
 
@@ -547,12 +546,6 @@ class ProfileWorkerOperationAuthority:
         """Ask which admitted lane serves the requested role."""
         return await model_run_lookup(self._model_run, identity, role)
 
-    async def model_run_selections(
-        self, identity: OperationIdentity
-    ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        """Ask the admitted service for its role selections."""
-        return await model_run_selections(self._model_run, identity)
-
     async def model_run(
         self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
     ) -> ModelRunOutput | ModelRunRefusal:
@@ -562,7 +555,7 @@ class ProfileWorkerOperationAuthority:
     async def _model_run(
         self,
         identity: OperationIdentity,
-        role: str | None,
+        role: str,
         header: ModelRunHeader | None,
         body: bytearray,
         answer_seconds: float,

@@ -188,12 +188,11 @@ class WorkerAuthorizationLease:
         return EnrollmentTransition(receipt=reply.receipt, published=reply.published)
 
     def model_run(
-        self, role: str | None, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
     ) -> tuple[ModelRunOutcome, bytearray]:
         """Ask the runtime, over this exact held START channel, to have the agent service answer.
 
-        A lookup sends no header and an empty body; a selections read also names
-        no role. ``answer_seconds`` bounds the
+        A lookup sends no header and an empty body. ``answer_seconds`` bounds the
         wait for the service's answer; the body is wiped once sent, and the
         reply text belongs to the caller, who wipes it.
         """

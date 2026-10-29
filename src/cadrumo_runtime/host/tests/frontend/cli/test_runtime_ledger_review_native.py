@@ -44,8 +44,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
-    ModelRunSelectedModel,
 )
 
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
@@ -117,16 +115,6 @@ class _Agent:
         except ValueError:
             self.unexpected.put("lookup for an unknown role")
             return ModelRunRefusal(code=ModelRunRefusalCode.UNKNOWN_ROLE)
-
-    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        return tuple(
-            ModelRunRoleSelection(
-                role=role.value,
-                selected=ModelRunSelectedModel(lane_id="nearby_api", model=_lane(role).model),
-                lane=_lane(role),
-            )
-            for role in ModelRole
-        )
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         self.arriving.put(_Run(header, body))

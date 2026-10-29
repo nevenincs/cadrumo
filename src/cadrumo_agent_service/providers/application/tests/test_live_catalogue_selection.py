@@ -181,16 +181,6 @@ def test_an_entry_whose_installed_state_is_unstated_is_used_as_unknown_never_as_
     assert (lane.model, lane.installed) == (_INSTALLED_UNSTATED, None)
 
 
-def test_a_selections_read_reads_the_lanes_live_entries_once() -> None:
-    live = StaticLiveModels({_LOCAL: _held(_installed_text())})
-    runs = _runs(live, _INSTALLED_TEXT, _INSTALLED_TEXT)
-    before = live.reads
-
-    runs.selections()
-
-    assert live.reads - before == 1
-
-
 def test_live_entries_come_first_and_win_over_declared_ones_of_the_same_model() -> None:
     declared = (live_model("synthetic-a:1", size_bytes=1), live_model("synthetic-b:1", size_bytes=2))
     live = (live_model("synthetic-c:1", size_bytes=3), live_model("synthetic-a:1", size_bytes=4))

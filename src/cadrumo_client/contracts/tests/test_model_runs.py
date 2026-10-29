@@ -17,8 +17,6 @@ from ..model_runs import (
     ModelRunMediaKind,
     ModelRunOutcome,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
-    ModelRunSelectedModel,
     ModelRunServed,
     decode_model_run_body,
     encode_model_run_body,
@@ -39,8 +37,6 @@ _LANE = ModelRunLane(
     installed=None,
 )
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
-_SELECTED = ModelRunSelectedModel(lane_id="example_cli", model="example-model-1")
-_STATE = ModelRunRoleSelection(role="text_extraction", selected=_SELECTED, lane=_LANE)
 
 
 @pytest.mark.parametrize(
@@ -51,9 +47,6 @@ _STATE = ModelRunRoleSelection(role="text_extraction", selected=_SELECTED, lane=
         {"served": _SERVED},
         {"lane": _LANE, "text_byte_count": 3},
         {"refusal": ModelRunRefusalCode.RUN_FAILED, "text_byte_count": 1},
-        {"lane": _LANE, "selections": (_STATE,)},
-        {"selections": (_STATE, _STATE)},
-        {"selections": (_STATE,), "text_byte_count": 1},
     ],
 )
 def test_an_outcome_carries_exactly_one_answer_and_text_only_after_a_served_run(fields: dict[str, object]) -> None:
@@ -65,36 +58,9 @@ def test_the_three_well_formed_outcomes_are_accepted() -> None:
     assert ModelRunOutcome(lane=_LANE).lane == _LANE
     assert ModelRunOutcome(served=_SERVED, text_byte_count=4).text_byte_count == 4
     assert ModelRunOutcome(refusal=ModelRunRefusalCode.CONSENT_MISSING).refusal is ModelRunRefusalCode.CONSENT_MISSING
-    assert ModelRunOutcome(selections=(_STATE,)).selections == (_STATE,)
-    assert ModelRunOutcome(selections=()).selections == ()
 
 
-@pytest.mark.parametrize(
-    "fields",
-    [
-        {"role": "text_extraction"},
-        {"role": "text_extraction", "lane": _LANE, "refusal": ModelRunRefusalCode.LANE_UNAVAILABLE},
-        {"role": "text_extraction", "lane": _LANE},
-    ],
-    ids=["neither", "both", "lane-without-selection"],
-)
-def test_a_role_state_is_usable_or_refused_and_a_usable_lane_comes_from_a_selection(fields: dict[str, object]) -> None:
-    with pytest.raises(ValidationError):
-        ModelRunRoleSelection.model_validate(fields)
-
-
-def test_a_selected_role_may_still_refuse_and_an_unselected_one_refuses() -> None:
-    unavailable = ModelRunRoleSelection(
-        role="text_extraction", selected=_SELECTED, refusal=ModelRunRefusalCode.LANE_UNAVAILABLE
-    )
-    assert unavailable.selected == _SELECTED
-    unselected = ModelRunRoleSelection(role="vision_transcription", refusal=ModelRunRefusalCode.NO_SELECTION)
-    assert unselected.selected is None
-
-
-def _fetched(
-    header: ModelRunHeader | None, body_byte_count: int, *, role: str | None = "text_extraction"
-) -> ModelRunFetched:
+def _fetched(header: ModelRunHeader | None, body_byte_count: int, *, role: str = "text_extraction") -> ModelRunFetched:
     return ModelRunFetched(
         request_id=uuid4(),
         runtime_boot_id=uuid4(),
@@ -116,11 +82,8 @@ def test_a_lookup_carries_no_body_and_a_run_always_does() -> None:
         _fetched(None, 5)
 
 
-def test_a_selections_read_names_no_role_and_a_run_names_its_headers_role() -> None:
-    assert _fetched(None, 0, role=None).role is None
+def test_a_run_names_its_headers_role() -> None:
     header = ModelRunHeader(role="text_extraction", deadline_seconds=10)
-    with pytest.raises(ValidationError):
-        _fetched(header, 5, role=None)
     with pytest.raises(ValidationError):
         _fetched(header, 5, role="vision_transcription")
 
@@ -185,11 +148,8 @@ def test_a_lane_carries_a_model_id_as_long_as_the_agent_allows_and_refuses_one_l
     longest = "m" * _AGENT_MODEL_ID_LENGTH
 
     assert ModelRunLane.model_validate({**_LANE.model_dump(), "model": longest}).model == longest
-    assert ModelRunSelectedModel(lane_id="example_cli", model=longest).model == longest
     with pytest.raises(ValidationError):
         ModelRunLane.model_validate({**_LANE.model_dump(), "model": longest + "m"})
-    with pytest.raises(ValidationError):
-        ModelRunSelectedModel(lane_id="example_cli", model="synthetic\tmodel")
 
 
 _AGENT_PROVIDER_ID_LENGTH = 64
@@ -206,15 +166,6 @@ def test_a_lane_carries_a_provider_id_as_long_as_the_agent_allows_and_refuses_on
         assert model.model_validate({**fields, "provider_id": longest}).provider_id == longest
         with pytest.raises(ValidationError):
             model.model_validate({**fields, "provider_id": longest + "p"})
-
-
-def test_a_selection_names_a_lane_id_as_long_as_the_agent_allows_and_refuses_one_longer() -> None:
-    longest = "l" * _AGENT_PROVIDER_ID_LENGTH + "_api"
-
-    assert ModelRunSelectedModel(lane_id=longest, model="example-model-1").lane_id == longest
-    assert ModelRunSelectedModel(lane_id="o" * 36 + "_cli", model="example-model-1").lane_id == "o" * 36 + "_cli"
-    with pytest.raises(ValidationError):
-        ModelRunSelectedModel(lane_id="l" + longest, model="example-model-1")
 
 
 def test_media_kinds_are_read_from_the_media_type_alone() -> None:

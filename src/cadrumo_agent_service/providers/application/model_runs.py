@@ -49,8 +49,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
-    ModelRunSelectedModel,
     model_run_media_kind,
 )
 
@@ -148,27 +146,7 @@ class ModelRunService:
         read = self._read_list()
         if isinstance(read, ModelRunRefusal):
             return read
-        return self._resolve(model_role, read, lanes)[1]
-
-    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        """Return every role's selected model and the lane a run would use, or why it would refuse.
-
-        The record is read once and the lane decided once, so every role is
-        reported from the same state and the lane reads its credential and
-        asks for its media only once.
-        """
-        read = self._read_list()
-        if isinstance(read, ModelRunRefusal):
-            return read
-        lanes = self._lane_answers()
-        states: list[ModelRunRoleSelection] = []
-        for model_role in ModelRole:
-            selected, answer = self._resolve(model_role, read, lanes)
-            if isinstance(answer, ModelRunRefusal):
-                states.append(ModelRunRoleSelection(role=model_role.value, selected=selected, refusal=answer.code))
-            else:
-                states.append(ModelRunRoleSelection(role=model_role.value, selected=selected, lane=answer))
-        return tuple(states)
+        return self._resolve(model_role, read, lanes)
 
     def _read_list(self) -> LocalModelListRead | ModelRunRefusal:
         read = self._model_list.read()
@@ -186,13 +164,13 @@ class ModelRunService:
     @staticmethod
     def _resolve(
         model_role: ModelRole, read: LocalModelListRead, lanes: _LaneAnswers
-    ) -> tuple[ModelRunSelectedModel | None, ModelRunLane | ModelRunRefusal]:
-        """Return the selected model, if any, and the lane the role runs on or the refusal."""
+    ) -> ModelRunLane | ModelRunRefusal:
+        """Return the lane the role runs on or the refusal."""
         if isinstance(read, UnreadableLocalModelList):
             # An unreadable record says nothing about any model, so no role reads as served or unserved.
-            return None, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         if not isinstance(read, StoredLocalModelList) or read.record.reading is None:
-            return None, ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
         return lanes.resolve(ROLE_CAPABILITIES[model_role], read.record.reading, read.record.models)
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
@@ -252,25 +230,24 @@ class _LaneAnswers:
 
     def resolve(
         self, capability: ModelCapability, reading: ListedModel, added: tuple[ListedModel, ...]
-    ) -> tuple[ModelRunSelectedModel | None, ModelRunLane | ModelRunRefusal]:
-        """Return the selected model and its lane when it can serve ``capability``, or the refusal."""
-        selected = ModelRunSelectedModel(lane_id=reading.lane, model=reading.model)
+    ) -> ModelRunLane | ModelRunRefusal:
+        """Return the selected model's lane when it can serve ``capability``, or the refusal."""
         catalog = self._read_catalog()
         if isinstance(catalog, ModelRunRefusal):
-            return selected, catalog
+            return catalog
         entry = next((held for held in catalog.providers if held.id == reading.lane), None)
         if entry is None:
-            return selected, ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
+            return ModelRunRefusal(code=ModelRunRefusalCode.LANE_UNAVAILABLE)
         if entry.auth_kind is ProviderAuthKind.NONE and reading.model not in listed_models(
             entry, (held.model for held in added if held.lane == entry.id)
         ):
             # A local model the person took off its lane's list is no longer one they read with.
-            return selected, ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
+            return ModelRunRefusal(code=ModelRunRefusalCode.NO_SELECTION)
         decided = self._decided(entry)
         if isinstance(decided, ModelRunRefusal):
-            return selected, decided
+            return decided
         accepted, entries = decided
-        return selected, _selected_model_lane(entry, accepted, entries, reading, capability)
+        return _selected_model_lane(entry, accepted, entries, reading, capability)
 
     def _decided(self, entry: ProviderCatalogEntry) -> _DecidedLane | ModelRunRefusal:
         decided = self._lanes.get(entry.id)

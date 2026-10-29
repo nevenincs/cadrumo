@@ -33,7 +33,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRefusal,
     ModelRunRefusalCode,
     ModelRunRequested,
-    ModelRunRoleSelection,
     ModelRunServed,
     decode_model_run_body,
 )
@@ -64,14 +63,10 @@ _ANSWERING_THREADS = 4
 
 
 class ModelRunAnswers(Protocol):
-    """The agent-side answers to a profile's lane lookups, selection reads and runs."""
+    """The agent-side answers to a profile's lane lookups and runs."""
 
     def lookup(self, role: str) -> ModelRunLane | ModelRunRefusal:
         """Return the lane a run for ``role`` would use."""
-        ...
-
-    def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        """Return every role's selection state."""
         ...
 
     def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
@@ -101,15 +96,10 @@ def model_run_service_descriptor() -> InstalledServiceDescriptor:
 
 
 def _outcome(
-    answers: ModelRunAnswers, role: str | None, header: ModelRunHeader | None, body: bytearray
+    answers: ModelRunAnswers, role: str, header: ModelRunHeader | None, body: bytearray
 ) -> tuple[ModelRunOutcome, bytearray]:
     """Shape one answer as the agent service's relay returns it to the runtime."""
     if header is None:
-        if role is None:
-            states = answers.selections()
-            if isinstance(states, ModelRunRefusal):
-                return ModelRunOutcome(refusal=states.code), bytearray()
-            return ModelRunOutcome(selections=states), bytearray()
         lane = answers.lookup(role)
         if isinstance(lane, ModelRunRefusal):
             return ModelRunOutcome(refusal=lane.code), bytearray()

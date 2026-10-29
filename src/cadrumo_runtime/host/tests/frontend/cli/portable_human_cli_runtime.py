@@ -265,15 +265,10 @@ def serving_portable_agent(service: RecordingModelRuns) -> Generator[RecordingMo
 
 
 async def _agent_answer(
-    service: RecordingModelRuns, role: str | None, header: ModelRunHeader | None, body: ModelRunBody | None
+    service: RecordingModelRuns, role: str, header: ModelRunHeader | None, body: ModelRunBody | None
 ) -> tuple[ModelRunOutcome, bytearray]:
-    """Answer one lookup, selections read or run, in the outcome shape the service returns it."""
+    """Answer one lookup or run, in the outcome shape the service returns it."""
     if header is None:
-        if role is None:
-            selections = await service.selections()
-            if isinstance(selections, ModelRunRefusal):
-                return ModelRunOutcome(refusal=selections.code), bytearray()
-            return ModelRunOutcome(selections=selections), bytearray()
         try:
             known = ModelRole(role)
         except ValueError:
@@ -304,7 +299,7 @@ class _ModelRunLease(WorkerAuthorizationLease):
 
     @override
     def model_run(
-        self, role: str | None, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
+        self, role: str, header: ModelRunHeader | None, body: bytearray, *, answer_seconds: float
     ) -> tuple[ModelRunOutcome, bytearray]:
         del answer_seconds
         request = self.request
