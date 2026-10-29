@@ -7,7 +7,7 @@
 //! The window receives closed states and outcomes only, never an operation,
 //! snapshot or row identifier, a refusal code or a path.
 mod admitted;
-mod outcome;
+pub(crate) mod outcome;
 mod run;
 
 use super::picked_files::Purpose;
@@ -292,8 +292,8 @@ impl RelayDriver {
     /// comparison waits for the person or it settles.
     async fn census(&self) -> Settled {
         let mut events = self.host.sign_in().person_events();
-        let mut state = match censo::begin(&self.host, self.profile.clone()).await {
-            Ok(snapshot) => snapshot.state(),
+        let mut snapshot = match censo::begin(&self.host, self.profile.clone()).await {
+            Ok(snapshot) => snapshot,
             Err(failure) => {
                 return Settled::of(match failure.code {
                     "refused" => Outcome::Failed(Reason::NoAccess),
@@ -303,7 +303,7 @@ impl RelayDriver {
             }
         };
         loop {
-            match census_outcome(state) {
+            match census_outcome(snapshot.state(), snapshot.session_ended()) {
                 Some(settled) => return settled,
                 None => loop {
                     match events.recv().await {
@@ -317,8 +317,8 @@ impl RelayDriver {
                     }
                 },
             }
-            state = match censo::standing(&self.host, &self.profile).await {
-                Ok(state) => state,
+            snapshot = match censo::standing(&self.host, &self.profile).await {
+                Ok(snapshot) => snapshot,
                 Err(_) => return Settled::of(Outcome::Unknown),
             };
         }
@@ -397,9 +397,11 @@ fn borrador_years(status: &Value, now: std::time::SystemTime) -> Vec<u16> {
     years
 }
 
-/// How the census session's state settles its item; none while it reads.
-fn census_outcome(state: &str) -> Option<Settled> {
-    Some(match state {
+/// How the census session's state settles its item; none while it reads. A
+/// pull whose AEAT session ended pauses the run like any other capture: with
+/// nothing kept the item is read again on resume, otherwise it stays unknown.
+fn census_outcome(state: &str, session_ended: bool) -> Option<Settled> {
+    let settled = Some(match state {
         "review" => Settled {
             outcome: Outcome::Brought,
             review_pending: true,
@@ -410,6 +412,15 @@ fn census_outcome(state: &str) -> Option<Settled> {
         "failed" | "unsupported" => Settled::of(Outcome::Failed(Reason::Other)),
         "unknown" => Settled::of(Outcome::Unknown),
         _ => return None,
+    });
+    settled.map(|mut settled| {
+        if session_ended {
+            settled.session_ended = true;
+            if matches!(settled.outcome, Outcome::Failed(_)) {
+                settled.outcome = Outcome::Failed(Reason::SessionEnded);
+            }
+        }
+        settled
     })
 }
 

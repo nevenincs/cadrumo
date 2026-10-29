@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:b790862c138499094bd11601ae6f0908c001ce49ed01fb77513c57e59ef683ce'
+body_hash: 'sha256:03c2dcb706f57c59f79934395dfe1bdc2843c92090f9e7695aa41cc2600a5391'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -314,6 +314,15 @@ related:
 - `S04` `verify:` `pytest aeat_sync status 143` -> `pass`
 - `S04` `verify:` `just check-style check-format check-types` -> `pass`
 - `S04` `verify:` `lint-imports` -> `pass`
+- `S20` `M` `.vault/audit/2026-10-29-desktop-aeat-sync-audit.md`
+- `S20` `verify:` `third review pass` -> `pass`
+- `S10` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S10` `verify:` `desktop-host-unit-test aeat_sync 39` -> `pass`
+- `S10` `verify:` `desktop-host-unit-test user_profile 31` -> `pass`
+- `S10` `verify:` `just check-rust` -> `pass`
+- `S27` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S27` `verify:` `pytest aeat_sync status 149` -> `pass`
+- `S27` `verify:` `check-style check-format check-types` -> `pass`
 
 ## Notes
 
@@ -338,3 +347,4 @@ related:
 - `S18` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
 - `S19` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
 - `S01` review fixes: ADR bodies restated to owner rulings (no sign-in step, selection or dry run; item-level progress)
+- `S20` rounds 1-2 required revision (high findings fixed in fb5296ee4f, 9366afc6df); round 3 passed with 2 low findings and the blocked en locale line

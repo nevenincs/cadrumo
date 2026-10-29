@@ -183,3 +183,8 @@ The commit says every admitted capture pauses on an ended session, but the censu
 ### third-review-verdict | medium | PASS
 
 No critical or high findings. The four fixes under review hold, and their interactions (resume, retry, start replacement, status refusal propagation) are consistent. One medium (`en-locale-lines-still-uncommitted`, carried) and two lows remain recorded for the approved P02, P03 and P05 Steps. Verification coverage is the reused ledger evidence listed above. P07.S21 is still pending.
+
+### Third review resolutions
+
+- `status-storage-translation-too-broad`: resolved. `degrade_storage_failure` now translates only a repository failure, a missing blob and an unusable keychain into the persistence degradation. A sealed profile session and every integrity failure (containment, row identity, blob digest, decryption, envelope) propagate with their own meaning. Tests cover each propagating class, the missing blob, and a session sealed through the composed ports' real repository path.
+- `census-session-end-does-not-pause`: resolved. The census snapshot carries `session_ended`, read from the observed projection by `outcome::session_ended` (no second classification). `census_outcome` settles an effect-none ended session as `Failed(SessionEnded)` and pauses the run; an ended session whose effect may have kept something settles `unknown`, pauses, and is not re-run on resume. Host tests cover the snapshot flag, the settlement and the run-level pause and resume.

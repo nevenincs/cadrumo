@@ -12,7 +12,14 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
-from ...adapters.persistence.storage.errors import RepositoryError
+from ...adapters.persistence.storage.errors import (
+    BlobIntegrityError,
+    BlobNotFoundError,
+    PathContainmentError,
+    RepositoryError,
+    SecureObjectRowIdentityError,
+    SessionExpiredError,
+)
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.aeat_sync.status_operation import load_aeat_sync_status
 from ...application.aeat_sync.workspace import AeatSyncAreaState, AeatSyncStatusArea
@@ -21,6 +28,7 @@ from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import load_settings
 from ...core.hashing import sha256_hex
 from ...core.period import Period
+from ...core.time.clock import frozen_clock
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
 from ..aeat_sync_status_composition import compose_aeat_sync_status_ports, degrade_storage_failure
@@ -125,3 +133,40 @@ def test_a_reader_refusal_and_its_value_pass_through_the_storage_translation_unc
     assert raised.value is refusal
 
     assert degrade_storage_failure("aeat_sync_status_synthetic", lambda nif: (nif,))("B12345674") == ("B12345674",)
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [
+        SessionExpiredError("synthetic sealed session"),
+        PathContainmentError("synthetic path escape"),
+        SecureObjectRowIdentityError("synthetic.namespace", expected_identifier="synthetic-key"),
+        BlobIntegrityError("synthetic blob digest mismatch"),
+    ],
+    ids=lambda failure: type(failure).__name__,
+)
+def test_a_sealed_session_or_integrity_failure_keeps_its_own_meaning(failure: Exception) -> None:
+    def reader() -> tuple[str, ...]:
+        raise failure
+
+    with pytest.raises(type(failure)) as raised:
+        degrade_storage_failure("aeat_sync_status_synthetic", reader)()
+    assert raised.value is failure
+
+
+def test_a_missing_blob_is_a_data_unavailable_failure() -> None:
+    def reader() -> tuple[str, ...]:
+        raise BlobNotFoundError("synthetic missing blob")
+
+    with pytest.raises(PersistenceDegradationError):
+        degrade_storage_failure("aeat_sync_status_synthetic", reader)()
+
+
+def test_a_sealed_profile_session_refuses_the_composed_status_read(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        ports = compose_aeat_sync_status_ports(load_settings(), runtime.bucket_id, operation)
+        assert ports.filed_attempt() is None
+        with frozen_clock(datetime.now(UTC) + timedelta(days=30)), pytest.raises(SessionExpiredError):
+            ports.filed_attempt()

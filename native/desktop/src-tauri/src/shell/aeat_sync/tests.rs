@@ -499,6 +499,42 @@ async fn an_ended_session_pauses_whatever_the_capture_reported_and_resume_reads_
 }
 
 #[tokio::test]
+async fn an_ended_session_pauses_at_the_census_and_resume_reads_it_again_only_if_nothing_was_kept()
+{
+    // The census session's state at the end: failed where the pull kept
+    // nothing, unknown where its effect is not known.
+    for (state, kept_nothing) in [("failed", true), ("unknown", false)] {
+        let driver = Scripted::new(move |step, times| match step {
+            Step::Census if times == 1 => census_outcome(state, true).unwrap(),
+            _ => brought(step, times),
+        });
+        let (run, driver) = follow(&everything(), driver).await;
+        assert_eq!(queue::lock(&run).state, RunState::Paused, "{state}");
+        assert_eq!(
+            driver.ran(),
+            [Step::Census],
+            "{state}: nothing after it ran"
+        );
+        let paused = queue::lock(&run).snapshot();
+        let census = paused
+            .areas
+            .iter()
+            .find(|a| a.area == Area::Census)
+            .unwrap();
+        assert_eq!(
+            census.items[0].reason,
+            kept_nothing.then_some(Reason::SessionEnded),
+            "{state}"
+        );
+        assert_eq!(queue::lock(&run).resume(), Ok(true), "{state}");
+        again(&run, &driver).await;
+        assert_eq!(queue::lock(&run).state, RunState::Done, "{state}");
+        let times = driver.ran().iter().filter(|s| **s == Step::Census).count();
+        assert_eq!(times, if kept_nothing { 2 } else { 1 }, "{state}");
+    }
+}
+
+#[tokio::test]
 async fn an_unknown_item_is_read_again_only_once_the_person_was_told() {
     let driver = Scripted::new(|step, times| match step {
         Step::Notifications if times == 1 => Settled::of(Outcome::Unknown),
@@ -966,16 +1002,31 @@ fn a_sign_in_reads_as_signed_in_only_when_authenticated() {
 
 #[test]
 fn the_census_session_settles_its_item_once_it_waits_for_review() {
-    assert_eq!(census_outcome("reading"), None);
-    assert_eq!(census_outcome("device"), None);
-    let review = census_outcome("review").unwrap();
+    assert_eq!(census_outcome("reading", false), None);
+    assert_eq!(census_outcome("device", false), None);
+    let review = census_outcome("review", false).unwrap();
     assert_eq!(review.outcome, Outcome::Brought);
     assert!(review.review_pending);
-    assert_eq!(census_outcome("unknown").unwrap().outcome, Outcome::Unknown);
     assert_eq!(
-        census_outcome("failed").unwrap().outcome,
-        Outcome::Failed(Reason::Other)
+        census_outcome("unknown", false).unwrap().outcome,
+        Outcome::Unknown
     );
+    let failed = census_outcome("failed", false).unwrap();
+    assert_eq!(failed.outcome, Outcome::Failed(Reason::Other));
+    assert!(!failed.session_ended);
+}
+
+#[test]
+fn a_census_whose_session_ended_pauses_the_run_like_any_capture() {
+    assert_eq!(census_outcome("reading", true), None);
+    // Nothing kept: the census is read again on resume.
+    let none = census_outcome("failed", true).unwrap();
+    assert_eq!(none.outcome, Outcome::Failed(Reason::SessionEnded));
+    assert!(none.session_ended);
+    // An effect that may have kept something is never re-run.
+    let kept = census_outcome("unknown", true).unwrap();
+    assert_eq!(kept.outcome, Outcome::Unknown);
+    assert!(kept.session_ended);
 }
 
 // No identifier, code or path reaches the window.

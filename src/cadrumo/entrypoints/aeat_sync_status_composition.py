@@ -18,14 +18,19 @@ if TYPE_CHECKING:
 
 
 def degrade_storage_failure[**P, R](operation: str, read: Callable[P, R]) -> Callable[P, R]:
-    """Translate an adapter storage failure of one reader into the application's persistence degradation."""
-    from ..adapters.persistence.storage.errors import StorageError
+    """Translate a reader's genuine data-unavailable storage failure into the application's persistence degradation.
+
+    Only a repository failure, a missing blob or an unusable keychain leaves one area unavailable. A sealed
+    profile session and every integrity failure (containment, row identity, blob digest, decryption, envelope)
+    keep their own meaning and propagate, so a sealed session refuses the read and corruption never reads as an outage.
+    """
+    from ..adapters.persistence.storage.errors import BlobNotFoundError, KeyringUnavailableError, RepositoryError
 
     @wraps(read)
     def translated(*args: P.args, **kwargs: P.kwargs) -> R:
         try:
             return read(*args, **kwargs)
-        except StorageError as exc:
+        except (RepositoryError, BlobNotFoundError, KeyringUnavailableError) as exc:
             raise PersistenceDegradationError(operation) from exc
 
     return translated

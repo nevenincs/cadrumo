@@ -41,6 +41,10 @@ pub struct Snapshot {
     /// its recorded verdict names it; an identifier for routing, never shown.
     #[serde(skip_serializing_if = "Option::is_none")]
     recovery_action_id: Option<String>,
+    /// Whether the pull stopped because its AEAT session ended; read by the
+    /// AEAT sync run to pause, never sent to the window.
+    #[serde(skip)]
+    session_ended: bool,
 }
 pub(super) struct Session {
     person: HeldPerson,
@@ -113,6 +117,7 @@ impl Session {
                     review_digest: None,
                     fields: vec![],
                     recovery_action_id: None,
+                    session_ended: false,
                 };
                 self.snapshot = Some(snapshot.clone());
                 snapshot
@@ -145,8 +150,10 @@ impl Session {
             review_digest: None,
             fields: vec![],
             recovery_action_id: None,
+            session_ended: false,
         };
         if p["lifecycle"] == "terminal" {
+            snapshot.session_ended = crate::shell::aeat_sync::outcome::session_ended(&p);
             snapshot.state = if p["terminal_condition"] == "succeeded" {
                 let result = ProfileHost::call(
                     &self.person,
@@ -336,18 +343,21 @@ pub(crate) async fn begin(host: &ProfileHost, profile: String) -> Result<Snapsho
     Ok(result)
 }
 /// Where the census session for `profile` stands now.
-pub(crate) async fn standing(host: &ProfileHost, profile: &str) -> Result<&'static str> {
+pub(crate) async fn standing(host: &ProfileHost, profile: &str) -> Result<Snapshot> {
     let mut session = host.censo.lock().await;
     let current = session
         .as_mut()
         .filter(|s| s.profile == profile)
         .ok_or_else(protocol)?;
     current.check(host).await?;
-    Ok(current.status().await?.state)
+    current.status().await
 }
 impl Snapshot {
     pub(crate) fn state(&self) -> &'static str {
         self.state
+    }
+    pub(crate) fn session_ended(&self) -> bool {
+        self.session_ended
     }
 }
 #[tauri::command]
@@ -607,6 +617,65 @@ mod tests {
         };
         assert_eq!(session.status().await.unwrap().state, "failed");
         assert_eq!(session.status().await.unwrap().state, "stopped");
+    }
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn a_pull_that_ended_with_the_aeat_session_says_so_whatever_it_kept() {
+        use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
+        use crate::shell::aeat_sync::outcome::SESSION_ENDED;
+        let ended = |condition: &str, effect: &str, refusal: Value| {
+            step(
+                "operation_observe",
+                json!([]),
+                observed(
+                    DEFINITION,
+                    PROFILE,
+                    "terminal",
+                    json!({"terminal_condition":condition, "effect":effect, "refusal_ref":refusal}),
+                ),
+                false,
+            )
+        };
+        let held = holder(|_| {
+            vec![
+                ended("refused", "none", json!(SESSION_ENDED)),
+                // The refusal's recorded verdict is read for a setup action.
+                step(
+                    "operation_result",
+                    json!([["operation_id", OPERATION]]),
+                    resulted(
+                        DEFINITION,
+                        json!({"detail_version":1,"kind":"registered_error","error_code":SESSION_ENDED,
+                            "message_key":null,"context":[],"context_entries_omitted":0,
+                            "precondition_verdict_json":null}),
+                    ),
+                    false,
+                ),
+                ended("refused", "unknown", json!(SESSION_ENDED)),
+                ended("failed", "none", json!("REFUSED_BROWSER_NOT_READY")),
+                ended("failed", "none", Value::Null),
+            ]
+        });
+        let mut session = Session {
+            person: held.person,
+            profile: PROFILE.into(),
+            operation: OPERATION.into(),
+            effective: json!([]),
+            review: None,
+            snapshot: None,
+        };
+        let nothing_kept = session.status().await.unwrap();
+        assert_eq!(nothing_kept.state, "failed");
+        assert!(nothing_kept.session_ended());
+        let may_have_kept = session.status().await.unwrap();
+        assert_eq!(may_have_kept.state, "unknown");
+        assert!(may_have_kept.session_ended());
+        for other in 0..2 {
+            let snapshot = session.status().await.unwrap();
+            assert_eq!(snapshot.state, "failed", "{other}");
+            assert!(!snapshot.session_ended(), "{other}");
+        }
     }
 
     #[cfg(windows)]
