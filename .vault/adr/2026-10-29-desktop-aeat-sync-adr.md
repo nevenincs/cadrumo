@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:5d0ed919d5413e4cd03f1cc448d244707077508ec4c66b5545d86375f183443a'
+body_hash: 'sha256:0c96b47ed3610089342ffdc119ce4b59b48817483dd46c1cef4635441594ae34'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -81,7 +81,7 @@ We will add one backend read and a host-run area queue, and build the page on th
 
 **Owner rulings, 2026-10-29.** The four backend changes above are accepted in scope. Stop takes effect after the current step; no cooperative cancel is added. Staleness defaults, census entries, host-side outcome classification, the Sede start-page action and Borrador handling are as stated in this record.
 
-Hypotheses to verify during implementation: that the census session can await review while other areas run on the same AEAT session; that `live.filed-discover` yields the year and form pairs the bulk capture needs.
+**Verified hypotheses, 2026-10-29.** The census session can await review while other areas run. While it waits it holds no AEAT acquisition lock, browser or profile write lock: its conflict lease is keyed on its own definition and subject (`src/cadrumo/application/operations/persistence/leases.py:23`), its browser closes before the review is published (`src/cadrumo/application/user_profile/censal_operation.py:520`), the profile write lock is taken only at apply (`censal_operation.py:623`), and the host's `profile_censo_start` releases its serial lock once submitted (`native/desktop/src-tauri/src/shell/user_profile/censo.rs:264`). The AEAT acquisition lock is held only while a session is being acquired and refuses a concurrent acquirer at once (`src/cadrumo/application/auth/acquisition_lock.py:288`), so the run signs in before its first item and runs its items one at a time. `live.filed-discover` yields a flat list of (modelo, ejercicio) pairs that may differ by year (`src/cadrumo/application/live/filed_read_operation.py:144`). `live.filed-capture.bulk` takes a year range and an optional modelo list and captures their Cartesian product (`src/cadrumo/application/live/filed_bulk_capture_operation.py:49`, `src/cadrumo/application/live/filed_data_capture.py:909`), so each per-year item submits `year_from` and `year_to` equal to that year and `modelos` set to the forms discovered for that year, narrowed by the person's chosen forms; the discover result is never passed as one multi-year range.
 
 ## Rationale
 

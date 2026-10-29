@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:a7859712204914e64521e9352c383d7e3c99087f1d88eb18f9e74677c96ecd23'
+body_hash: 'sha256:e1b4778d2232c9e206c9fb41a74d6af411250bd4258e853f0f171b83fc0ca8a6'
 ---
 
 # `desktop-aeat-sync` plan
@@ -43,7 +43,7 @@ Owner rulings of 2026-10-29, recorded in the governing ADR: all four backend cha
 Accept the governing ADR and apply its three amendments to the accepted records.
 
 - [x] `P01.S01` - obtain the owner's acceptance of the governing ADR (open questions ruled 2026-10-29), then apply the three amendment proposals to their accepted records and retire the proposals; `.vault/adr/2026-10-29-desktop-aeat-sync-adr.md and the three amended accepted records`.
-- [ ] `P01.S02` - confirm by Haiku sweep the two implementation hypotheses (census review awaiting while other captures run; filed-discover yields bulk year and form pairs) and record any correction in the ADR; `src/cadrumo/application/user_profile/censal_operation.py, src/cadrumo/application/live/filed_history_discovery.py`.
+- [x] `P01.S02` - confirm by Haiku sweep the two implementation hypotheses (census review awaiting while other captures run; filed-discover yields bulk year and form pairs) and record any correction in the ADR; `src/cadrumo/application/user_profile/censal_operation.py, src/cadrumo/application/live/filed_history_discovery.py`.
 
 ### Phase `P02` - Backend status read and contract changes
 
