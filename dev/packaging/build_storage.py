@@ -1,4 +1,4 @@
-"""Bind Cadrumo build-time state and scratch to one admitted build directory."""
+"""Isolate Python build state beneath the owning checkout's temporary root."""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
+from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 from .build_scratch_reclaim import require_build_path
 from .command_execution import run_command
@@ -49,21 +50,33 @@ def _path_variables(work: Path) -> dict[str, Path]:
     return paths
 
 
-def _admit_work_and_paths(work: Path, repo_root: Path) -> tuple[Path, dict[str, Path]]:
-    """Admit the work root and every controlled directory before creating any of them."""
+def _admit_work(work: Path, repo_root: Path) -> Path:
+    """Admit the artifact work root before creating it or temporary state."""
     root = repo_root.resolve(strict=True)
     selected = require_build_path(work, repo_root=root)
     if selected == root / "build":
         raise ValueError("build work must be below the repository build directory")
-    paths = _path_variables(selected)
-    for path in paths.values():
-        require_build_path(path, repo_root=root)
-    return selected, paths
+    return selected
+
+
+@contextmanager
+def build_environment(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[dict[str, str]]:
+    """Yield independent build controls without changing the caller's environment."""
+    selected = _admit_work(work, repo_root)
+    temporary_base = prepare_temp_root()
+    with tempfile.TemporaryDirectory(prefix=f"cadrumo-build-{selected.name}-", dir=temporary_base) as temporary:
+        paths = _path_variables(Path(temporary))
+        for path in dict.fromkeys(paths.values()):
+            resolve_temporary_output(override=path)
+        selected.mkdir(parents=True, exist_ok=True)
+        for path in dict.fromkeys(paths.values()):
+            path.mkdir(parents=True, exist_ok=True)
+        yield {**{name: str(path) for name, path in paths.items()}, "PYTHONDONTWRITEBYTECODE": "1"}
 
 
 @contextmanager
 def build_storage(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[Path]:
-    """Pin Cadrumo build outputs and temporary files beneath an admitted ``work`` directory.
+    """Bind one process to isolated Python build state under the checkout's ``.tmp``.
 
     The context changes only Cadrumo-owned output controls and the standard
     temporary-directory variables. Machine-managed environments and caches,
@@ -75,38 +88,28 @@ def build_storage(work: Path, *, repo_root: Path = REPO_ROOT) -> Generator[Path]
     command-line wrapper intentionally offers no such override and always uses
     the physical repository root.
     """
-    selected, paths = _admit_work_and_paths(work, repo_root)
-    for path in dict.fromkeys(paths.values()):
-        path.mkdir(parents=True, exist_ok=True)
-
-    names = tuple(paths)
-    previous_environment = {name: os.environ.get(name) for name in names}
-    previous_no_bytecode = os.environ.get("PYTHONDONTWRITEBYTECODE")
-    previous_tempdir = tempfile.tempdir
-    previous_dont_write_bytecode = sys.dont_write_bytecode
-    os.environ.update({name: str(path) for name, path in paths.items()})
-    os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
-    tempfile.tempdir = str(paths["TEMP"])
-    sys.dont_write_bytecode = True
-    try:
-        yield selected
-    finally:
-        for name, value in previous_environment.items():
-            if value is None:
-                os.environ.pop(name, None)
-            else:
-                os.environ[name] = value
-        if previous_no_bytecode is None:
-            os.environ.pop("PYTHONDONTWRITEBYTECODE", None)
-        else:
-            os.environ["PYTHONDONTWRITEBYTECODE"] = previous_no_bytecode
-        tempfile.tempdir = previous_tempdir
-        sys.dont_write_bytecode = previous_dont_write_bytecode
+    with build_environment(work, repo_root=repo_root) as environment:
+        previous_environment = {name: os.environ.get(name) for name in environment}
+        previous_tempdir = tempfile.tempdir
+        previous_dont_write_bytecode = sys.dont_write_bytecode
+        os.environ.update(environment)
+        tempfile.tempdir = environment["TEMP"]
+        sys.dont_write_bytecode = True
+        try:
+            yield _admit_work(work, repo_root)
+        finally:
+            for name, value in previous_environment.items():
+                if value is None:
+                    os.environ.pop(name, None)
+                else:
+                    os.environ[name] = value
+            tempfile.tempdir = previous_tempdir
+            sys.dont_write_bytecode = previous_dont_write_bytecode
 
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run a command with Cadrumo build storage and temporary files under an admitted build directory.",
+        description="Run a Python build with isolated Cadrumo state under the checkout's .tmp directory.",
     )
     parser.add_argument("--work", type=Path, required=True, help="work directory below the repository's build/")
     parser.add_argument("command", nargs=argparse.REMAINDER, help="command argv after --")
@@ -137,4 +140,4 @@ if __name__ == "__main__":
     raise SystemExit(main())
 
 
-__all__ = ["build_storage", "main"]
+__all__ = ["build_environment", "build_storage", "main"]

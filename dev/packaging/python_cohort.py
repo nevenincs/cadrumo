@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 import shutil
+import sys
 import tarfile
 import zipfile
 from collections.abc import Collection, Sequence
@@ -25,14 +26,16 @@ from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import build_client_json, stage_build_client
 from dev.source_tree import member_content_digest, repository_files, snapshot
+from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from .authority_staging import stage_published_authority
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
+    remove_source_snapshot,
     require_build_path,
-    sweep_build_scratch,
+    sweep_var_scratch,
     var_scratch_name,
 )
 from .build_storage import build_storage
@@ -383,17 +386,18 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     output = output_dir if output_dir.is_absolute() else root / output_dir
     _safe_recreate(output, repo_root=root)
     output = output.absolute()
-    scratch_root = (root / "build").resolve()
-    scratch_root.mkdir(parents=True, exist_ok=True)
+    scratch_root = prepare_temp_root()
     with contextlib.suppress(OSError):
-        sweep_build_scratch(scratch_root)
-    build_root = scratch_root / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
+        sweep_var_scratch(scratch_root)
+    build_root = resolve_temporary_output(
+        override=scratch_root / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
+    )
     if build_root.exists():
-        shutil.rmtree(build_root)
+        remove_source_snapshot(resolve_temporary_output(override=build_root))
     try:
         snapshot(root, source_files, build_root)
         source_digest = member_content_digest(source_files, lambda relative: (build_root / relative).read_bytes())
-        with build_storage(build_root / "build-work", repo_root=root):
+        with build_storage(output.parent / "work", repo_root=root):
             return _build_python_cohort_from_snapshot(
                 build_root=build_root,
                 output=output,
@@ -403,9 +407,9 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
                 scratch_root=scratch_root,
                 remove_build_root=True,
             )
-    except BaseException:
+    except BaseException as error:
         if build_root.exists():
-            shutil.rmtree(build_root)
+            remove_source_snapshot(resolve_temporary_output(override=build_root), primary_error=error)
         raise
 
 
@@ -427,11 +431,8 @@ def build_python_cohort_from_clean_snapshot(
     output = output_dir if output_dir.is_absolute() else root / output_dir
     _safe_recreate(output, repo_root=root)
     output = output.absolute()
-    scratch_root = (root / "build").resolve()
-    scratch_root.mkdir(parents=True, exist_ok=True)
-    with contextlib.suppress(OSError):
-        sweep_build_scratch(scratch_root)
-    with build_storage(scratch_root / "cohort-work", repo_root=root):
+    scratch_root = prepare_temp_root()
+    with build_storage(root / "build" / "cohort-work", repo_root=root):
         return _build_python_cohort_from_snapshot(
             build_root=root,
             output=output,
@@ -619,7 +620,7 @@ def _build_python_cohort_from_snapshot(
         if archive.exists():
             archive.unlink()
         if remove_build_root and build_root.exists():
-            shutil.rmtree(build_root)
+            remove_source_snapshot(resolve_temporary_output(override=build_root), primary_error=sys.exception())
 
     manifest = output / _MANIFEST_NAME
     manifest.write_text(

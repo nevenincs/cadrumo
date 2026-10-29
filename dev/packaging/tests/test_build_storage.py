@@ -7,13 +7,15 @@ import os
 import sys
 import tempfile
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.packaging.build_scratch_reclaim import require_build_path
-from dev.packaging.build_storage import build_storage
+from dev.packaging.build_storage import build_environment, build_storage
 from dev.packaging.command_execution import run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -76,8 +78,8 @@ def test_build_storage_pins_application_paths_and_restores_process_state(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     work = build_owned_work_root / "context-work"
-    expected = _expected_paths(work)
-    for name in expected:
+    names = tuple(_expected_paths(work))
+    for name in names:
         monkeypatch.setenv(name, f"ambient:{name}")
     monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", "0")
     preserved = {name: f"operator:{name}" for name in _PRESERVED_TOOL_VARIABLES}
@@ -87,12 +89,16 @@ def test_build_storage_pins_application_paths_and_restores_process_state(
     previous_no_bytecode = sys.dont_write_bytecode
 
     with build_storage(work) as selected:
+        isolated = Path(os.environ["CADRUMO_TEMP_DIR"]).parent
+        expected = _expected_paths(isolated)
         assert selected == work
         assert {name: os.environ[name] for name in expected} == expected
-        assert all(Path(value).is_relative_to(work) for value in expected.values())
+        assert isolated.is_relative_to(TEMP_ROOT)
+        assert not isolated.is_relative_to(REPO_ROOT / "build")
+        assert all(Path(value).is_relative_to(isolated) for value in expected.values())
         assert all(Path(value).is_dir() for value in set(expected.values()))
         assert os.environ["PYTHONDONTWRITEBYTECODE"] == "1"
-        assert tempfile.gettempdir() == str(work / "temporary")
+        assert tempfile.gettempdir() == str(isolated / "temporary")
         assert sys.dont_write_bytecode is True
         assert {name: os.environ[name] for name in preserved} == preserved
 
@@ -101,6 +107,7 @@ def test_build_storage_pins_application_paths_and_restores_process_state(
     assert tempfile.tempdir == previous_tempdir
     assert sys.dont_write_bytecode is previous_no_bytecode
     assert {name: os.environ[name] for name in preserved} == preserved
+    assert not isolated.exists()
 
 
 def test_build_storage_restores_state_after_failure_and_refuses_unowned_paths(
@@ -111,14 +118,18 @@ def test_build_storage_restores_state_after_failure_and_refuses_unowned_paths(
     monkeypatch.delenv("CADRUMO_LOCAL_STORAGE_ROOT", raising=False)
     previous_tempdir = tempfile.tempdir
     previous_no_bytecode = sys.dont_write_bytecode
+    isolated: Path | None = None
 
     with pytest.raises(RuntimeError, match="build failed"), build_storage(work):
-        assert os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] == str(work / "storage")
+        isolated = Path(os.environ["CADRUMO_TEMP_DIR"]).parent
+        assert os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] == str(isolated / "storage")
         raise RuntimeError("build failed")
 
     assert "CADRUMO_LOCAL_STORAGE_ROOT" not in os.environ
     assert tempfile.tempdir == previous_tempdir
     assert sys.dont_write_bytecode is previous_no_bytecode
+    assert isolated is not None
+    assert not isolated.exists()
 
     with pytest.raises(ValueError, match="beneath"), build_storage(REPO_ROOT / "var" / "unowned-build-work"):
         pytest.fail("an unowned build directory was admitted")
@@ -126,13 +137,12 @@ def test_build_storage_restores_state_after_failure_and_refuses_unowned_paths(
         pytest.fail("the build root itself was admitted as work")
 
 
-def test_build_storage_refuses_a_linked_controlled_child_before_creating_siblings(build_owned_work_root: Path) -> None:
+def test_build_storage_refuses_a_linked_work_root_before_creating_state(build_owned_work_root: Path) -> None:
     work = build_owned_work_root / "linked-work"
-    work.mkdir()
     outside = build_owned_work_root / "linked-storage-target"
     outside.mkdir()
     try:
-        (work / "storage").symlink_to(outside, target_is_directory=True)
+        work.symlink_to(outside, target_is_directory=True)
     except OSError as error:
         pytest.skip(f"directory symlinks are unavailable: {error}")
 
@@ -140,15 +150,15 @@ def test_build_storage_refuses_a_linked_controlled_child_before_creating_sibling
         pytest.fail("a linked storage directory was admitted")
     assert not (work / "cache").exists()
     assert not (work / "temporary").exists()
+    assert not list(outside.iterdir())
 
 
 def test_build_storage_cli_binds_child_environment_and_propagates_exit(build_owned_work_root: Path) -> None:
     work = build_owned_work_root / "cli-work"
     marker = work / "child.json"
-    expected = _expected_paths(work)
     preserved = {name: f"operator:{name}" for name in _PRESERVED_TOOL_VARIABLES}
     environment = {**os.environ, **preserved}
-    names = tuple(expected)
+    names = tuple(_expected_paths(work))
     script = (
         "import json, os, sys, tempfile\n"
         f"names = {names!r}\n"
@@ -181,11 +191,61 @@ def test_build_storage_cli_binds_child_environment_and_propagates_exit(build_own
 
     assert result.returncode == 23
     payload = json.loads(marker.read_text(encoding="utf-8"))
+    isolated = Path(payload["environment"]["CADRUMO_TEMP_DIR"]).parent
+    expected = _expected_paths(isolated)
     assert payload["environment"] == expected
-    assert payload["tempdir"] == str(work / "temporary")
+    assert isolated.is_relative_to(TEMP_ROOT)
+    assert not isolated.exists()
+    assert payload["tempdir"] == str(isolated / "temporary")
     assert payload["no_bytecode"] is True
     assert payload["preserved"] == preserved
     assert marker.resolve().is_relative_to((REPO_ROOT / "build").resolve())
+
+
+def test_concurrent_build_environments_keep_child_state_independent(build_owned_work_root: Path) -> None:
+    """Overlapping real children receive separate state without changing their parent."""
+    names = ("CADRUMO_STORAGE_ROOT", "CADRUMO_TEMP_DIR", "PYTHONDONTWRITEBYTECODE")
+    ambient = {name: os.environ.get(name) for name in names}
+    rendezvous = Barrier(2)
+    script = (
+        "import json, os, pathlib\n"
+        "root = pathlib.Path(os.environ['CADRUMO_STORAGE_ROOT'])\n"
+        "marker = root / 'manifest.json'\n"
+        "marker.write_text(json.dumps({'storage': str(root), 'temporary': os.environ['CADRUMO_TEMP_DIR']}))\n"
+        "print(marker.read_text())\n"
+    )
+
+    def run_build(label: str) -> tuple[Path, dict[str, str]]:
+        with build_environment(build_owned_work_root / label) as controls:
+            isolated = Path(controls["CADRUMO_TEMP_DIR"]).parent
+            rendezvous.wait(timeout=30)
+            result = run_command(
+                (sys.executable, "-B", "-c", script),
+                cwd=REPO_ROOT,
+                environment={**os.environ, **controls},
+            )
+            assert result.returncode == 0, result.stderr
+            raw: object = json.loads(result.stdout)
+            assert isinstance(raw, dict)
+            storage: object = raw.get("storage")
+            temporary: object = raw.get("temporary")
+            assert isinstance(storage, str)
+            assert isinstance(temporary, str)
+            payload = {"storage": storage, "temporary": temporary}
+            assert storage == str(isolated / "storage")
+            assert temporary == str(isolated / "temporary")
+            assert isolated.is_relative_to(TEMP_ROOT)
+            assert {name: os.environ.get(name) for name in names} == ambient
+        assert not isolated.exists()
+        return isolated, payload
+
+    with ThreadPoolExecutor(max_workers=2) as workers:
+        builds = [workers.submit(run_build, label) for label in ("first", "second")]
+        first, second = [build.result() for build in builds]
+
+    assert first[0] != second[0]
+    assert first[1] != second[1]
+    assert {name: os.environ.get(name) for name in names} == ambient
 
 
 def test_build_storage_cli_rejects_paths_outside_build_before_running_command() -> None:

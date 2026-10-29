@@ -50,6 +50,7 @@ from __future__ import annotations
 import os
 import shutil
 import stat
+import sys
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -111,7 +112,8 @@ RELEASE_SOURCE_SNAPSHOT_FAMILY: Final[ScratchFamily] = ScratchFamily(
 )
 """Bracket the clean source snapshot a release parent hands to its child builder.
 
-The snapshot and its child staging output live under the admitted build root.
+The snapshot and its child staging output live under the owning checkout's
+temporary root until the completed artifacts are promoted into ``build/``.
 The parent PID alone cannot prove the child has stopped using this tree, so a
 sweep reports it as spared even when that PID is gone or its mtime is old.
 After reviewing the report, an operator removes abandoned snapshots manually.
@@ -124,7 +126,7 @@ COHORT_BUILD_TREE_FAMILY: Final[ScratchFamily] = ScratchFamily(
 )
 """Bracket the extracted source snapshot ``uv build`` packages the cohort from.
 
-Some thirty-nine thousand files, snapshotted beside the cohort output and
+Some thirty-nine thousand files, snapshotted under the checkout's temporary root and
 removed in a ``finally`` block -- which is the coverage this module exists
 because of.
 """
@@ -385,6 +387,19 @@ def remove_scratch(candidate: Path) -> bool:
     except OSError:
         return not candidate.exists()
     return True
+
+
+def remove_source_snapshot(directory: Path, *, primary_error: BaseException | None = None) -> None:
+    """Remove a source snapshot or disclose its retained path without hiding a build failure."""
+    if remove_tree(directory):
+        return
+    message = f"source snapshot remains after cleanup: {directory}"
+    if primary_error is not None:
+        primary_error.add_note(message)
+        if isinstance(primary_error, SystemExit):
+            print(message, file=sys.stderr)
+        return
+    raise OSError(message)
 
 
 def reclaimable_scratch(
@@ -667,6 +682,7 @@ __all__ = [
     "matching_family",
     "reclaimable_scratch",
     "remove_scratch",
+    "remove_source_snapshot",
     "remove_tree",
     "report_build_scratch",
     "report_var_scratch",

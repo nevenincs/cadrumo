@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:29d7a6261154ecae84cd3dc28db325d4324bb22ce986bd3cff61ed466d2bc7fa'
+body_hash: 'sha256:0213684f86053e6ec6ac098ce0bf085fae41d4ebd878cfb9055d20440cbfce11'
 related:
   - "[[2026-10-29-gate-findings-repair-plan]]"
 ---
@@ -107,8 +107,23 @@ related:
 - `S01` `verify:` `ruff format --check assigned locale and renderer paths` -> `pass`
 - `S01` `verify:` `ty check assigned locale and renderer paths` -> `pass`
 - `S01` `verify:` `just check-locales` -> `fail`
+- `S04` `M` `dev/packaging/build_storage.py`
+- `S04` `M` `dev/packaging/python_cohort.py`
+- `S04` `M` `dev/packaging/release_cohort.py`
+- `S04` `M` `dev/packaging/build_scratch_reclaim.py`
+- `S04` `M` `dev/packaging/tests/test_build_storage.py`
+- `S04` `M` `dev/packaging/tests/test_release_cohort.py`
+- `S04` `M` `dev/packaging/tests/test_release_cohort_integration.py`
+- `S04` `M` `dev/packaging/tests/test_build_scratch_reclaim.py`
+- `S04` `M` `.vaultspec/skills/cadrumo-start/references/build-python-packaging-and-release.md`
+- `S04` `verify:` `pytest dev/packaging/tests/test_build_storage.py dev/packaging/tests/test_release_cohort.py dev/packaging/tests/test_build_scratch_reclaim.py` -> `pass`
+- `S04` `verify:` `pytest dev/packaging/tests/test_release_cohort_integration.py::test_real_clean_source_build_is_complete_and_reproducible` -> `pass`
+- `S04` `verify:` `ruff check and format --check eight packaging paths` -> `pass`
+- `S04` `verify:` `ty check eight packaging paths` -> `pass`
+- `S04` `verify:` `just check-hooks` -> `pass`
 
 ## Notes
 
 - `S02` 82 focused tests passed. Import scan kept all30 contracts, loaded5239 modules, zero hard findings; gate operational verdict unavailable because external governed source bytes changed. Final S03 rechecks.
 - `S01` 88 owner tests plus numeric and real-dictionary controls passed; renderer B10. Canonical casilla generation passed58modelos/14154casillas. Final locale gate10109 affected cells, zero missing/tool/placeholder failures; remaining content and mixed-language inventory debt retained. External exact Google/Drive spellings excluded from authored repair.
+- `S04` 100 focused tests and real two-build artifact reproducibility passed. Both independent medium cleanup findings resolved; false removal preserves exact path, primary failure, and SystemExit status with visible stderr. Native validator unchanged.

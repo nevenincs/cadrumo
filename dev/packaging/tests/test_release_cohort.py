@@ -13,7 +13,7 @@ from typing import Final
 import pytest
 from pydantic import ValidationError
 
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files
 
@@ -51,6 +51,7 @@ def _assert_clean_builder_invocation(
         "clean release-cohort construction must invoke the package module"
     )
     assert cwd.name == "source"
+    assert cwd.is_relative_to(TEMP_ROOT)
     assert env is not None
     assert env["PYTHONPATH"] == os.pathsep.join((str(cwd / "src"), str(cwd)))
     assert argv[argv.index("--expected-source-digest") + 1] == expected_source_digest
@@ -59,7 +60,7 @@ def _assert_clean_builder_invocation(
     assert "--use-prepared-source" in argv
     assert "--defer-output-validation" in argv
     for name in ("CADRUMO_STORAGE_ROOT", "CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_TEMP_DIR"):
-        assert Path(env[name]).is_relative_to(cwd.parent)
+        assert Path(env[name]).is_relative_to(TEMP_ROOT)
 
 
 def test_clean_builder_subprocess_is_package_correct_and_detector_bites(

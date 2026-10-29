@@ -29,6 +29,7 @@ import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 
+from .. import build_scratch_reclaim
 from ..build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
@@ -41,6 +42,7 @@ from ..build_scratch_reclaim import (
     _owning_pid,
     matching_family,
     remove_scratch,
+    remove_source_snapshot,
     remove_tree,
     report_build_scratch,
     require_build_path,
@@ -519,9 +521,10 @@ def test_an_abandoned_release_staging_directory_is_reclaimed(tmp_path: Path) -> 
     assert not abandoned.exists()
 
 
-def test_release_source_snapshot_stays_spared_for_operator_review(tmp_path: Path) -> None:
+@pytest.mark.parametrize("root_name", ["build", ".tmp"])
+def test_release_source_snapshot_stays_spared_for_operator_review(tmp_path: Path, root_name: str) -> None:
     """A dead parent PID or old mtime cannot show the clean builder child exited."""
-    build = tmp_path / "build"
+    build = tmp_path / root_name
     abandoned_parent = _aged(
         _scratch_tree(
             build,
@@ -542,6 +545,57 @@ def test_release_source_snapshot_stays_spared_for_operator_review(tmp_path: Path
     assert "SPARE" in report.getvalue()
     assert "spared: 1" in report.getvalue()
     assert abandoned_parent.is_dir()
+
+
+def test_required_snapshot_cleanup_reports_the_exact_retained_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    snapshot = tmp_path / "retained-source"
+    snapshot.mkdir()
+    (snapshot / "source.txt").write_text("source", encoding="utf-8")
+    monkeypatch.setattr(build_scratch_reclaim, "remove_tree", lambda _directory: False)
+
+    with pytest.raises(OSError) as caught:
+        remove_source_snapshot(snapshot)
+
+    assert str(caught.value) == f"source snapshot remains after cleanup: {snapshot}"
+    assert snapshot.is_dir()
+
+
+def test_failed_snapshot_cleanup_keeps_the_primary_failure_and_adds_its_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    snapshot = tmp_path / "retained-source"
+    snapshot.mkdir()
+    monkeypatch.setattr(build_scratch_reclaim, "remove_tree", lambda _directory: False)
+    failure = RuntimeError("the build failed")
+
+    remove_source_snapshot(snapshot, primary_error=failure)
+
+    assert str(failure) == "the build failed"
+    assert failure.__notes__ == [f"source snapshot remains after cleanup: {snapshot}"]
+    assert snapshot.is_dir()
+
+
+def test_failed_build_exit_discloses_the_retained_snapshot_without_changing_its_status(tmp_path: Path) -> None:
+    snapshot = tmp_path / "retained-source"
+    snapshot.mkdir()
+    script = (
+        "import sys\n"
+        "from pathlib import Path\n"
+        "from dev.packaging import build_scratch_reclaim\n"
+        "build_scratch_reclaim.remove_tree = lambda _directory: False\n"
+        "try:\n"
+        "    raise SystemExit(23)\n"
+        "finally:\n"
+        "    build_scratch_reclaim.remove_source_snapshot(Path(sys.argv[1]), primary_error=sys.exception())\n"
+    )
+
+    result = run_command((sys.executable, "-B", "-c", script, str(snapshot)), cwd=REPO_ROOT)
+
+    assert result.returncode == 23
+    assert result.stderr.strip() == f"source snapshot remains after cleanup: {snapshot}"
+    assert snapshot.is_dir()
 
 
 def test_an_abandoned_cohort_build_tree_and_its_archive_are_reclaimed(tmp_path: Path) -> None:

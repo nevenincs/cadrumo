@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -10,12 +11,13 @@ import pytest
 
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
+from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 from ..authority_staging import stage_published_authority
 from ..build_scratch_reclaim import (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     matching_family,
-    remove_tree,
+    remove_source_snapshot,
     var_scratch_name,
 )
 from ..cohort_manifest import REQUIRED_ARTIFACT_KINDS
@@ -49,12 +51,13 @@ def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
 def test_real_clean_source_build_is_complete_and_reproducible() -> None:
     """Build the real 12-member cohort twice from the same content and compare every digest."""
     repo_root = REPO_ROOT
-    build = (repo_root / "build").resolve()
-    build.mkdir(parents=True, exist_ok=True)
+    temporary_root = prepare_temp_root()
     # Named through the scratch registry rather than spelled here, so the
     # collection-time reclaim and this mint site cannot disagree about the
     # family, and so the name carries this process as its owner.
-    snapshot_root = build / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
+    snapshot_root = resolve_temporary_output(
+        override=temporary_root / var_scratch_name(RELEASE_COHORT_INTEGRATION_FAMILY, uuid.uuid4().hex)
+    )
     try:
         source = _stable_source_snapshot(repo_root, snapshot_root)
         outputs = (
@@ -105,5 +108,9 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
         # reported success while leaving the copy on disk. The shared reclaim
         # clears the attribute and retries.
         resolved = snapshot_root.resolve()
-        if resolved.parent == build and matching_family(resolved.name) is not None and resolved.exists():
-            remove_tree(resolved)
+        if (
+            resolved.parent == temporary_root.resolve()
+            and matching_family(resolved.name) is not None
+            and resolved.exists()
+        ):
+            remove_source_snapshot(resolve_temporary_output(override=resolved), primary_error=sys.exception())

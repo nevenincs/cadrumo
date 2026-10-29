@@ -19,9 +19,11 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import UTF_8
-from dev.packaging.build_storage import build_storage
+from dev.packaging.build_scratch_reclaim import remove_source_snapshot, sweep_var_scratch
+from dev.packaging.build_storage import build_environment, build_storage
 from dev.packaging.command_execution import CommandResult, run_command
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV, build_client_json
+from dev.temporary_output import prepare_temp_root, resolve_temporary_output
 
 _HERE = Path(__file__).resolve().parent
 _REPO_ROOT = _HERE.parents[1]
@@ -42,7 +44,6 @@ _BUILD_SCRATCH = importlib.import_module("dev.packaging.build_scratch_reclaim")
 RELEASE_STAGING_FAMILY = _BUILD_SCRATCH.RELEASE_STAGING_FAMILY
 RELEASE_SOURCE_SNAPSHOT_FAMILY = _BUILD_SCRATCH.RELEASE_SOURCE_SNAPSHOT_FAMILY
 matching_family = _BUILD_SCRATCH.matching_family
-remove_tree = _BUILD_SCRATCH.remove_tree
 require_build_path = _BUILD_SCRATCH.require_build_path
 sweep_build_scratch = _BUILD_SCRATCH.sweep_build_scratch
 var_scratch_name = _BUILD_SCRATCH.var_scratch_name
@@ -557,9 +558,11 @@ def build_release_cohort(
     # only moment that survives a kill.
     with contextlib.suppress(OSError):
         sweep_build_scratch(build)
-    snapshot_work = require_build_path(
-        build / var_scratch_name(RELEASE_SOURCE_SNAPSHOT_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
-        repo_root=root,
+    temporary_root = prepare_temp_root()
+    with contextlib.suppress(OSError):
+        sweep_var_scratch(temporary_root)
+    snapshot_work = resolve_temporary_output(
+        override=temporary_root / var_scratch_name(RELEASE_SOURCE_SNAPSHOT_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
     )
     snapshot_work.mkdir(parents=True)
     staging = require_build_path(
@@ -567,7 +570,7 @@ def build_release_cohort(
         repo_root=root,
     )
     try:
-        with build_storage(snapshot_work, repo_root=root):
+        with build_environment(output.parent / "work", repo_root=root) as build_controls:
             clean_root = snapshot_work / "source"
             # An isolated copy of the enumerated tree, not the live one: the rest
             # of this build runs in a child process against `clean_root`, so a
@@ -591,7 +594,7 @@ def build_release_cohort(
                 child_build / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}"),
                 repo_root=clean_root,
             )
-            env = os.environ.copy()
+            env = {**os.environ, **build_controls}
             env[GOOGLE_OAUTH_ENV] = build_client_json(root).get_secret_value()
             env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
             argv = [
@@ -620,7 +623,7 @@ def build_release_cohort(
                 _remove_failed_staging(staging, build)
                 raise
     finally:
-        remove_tree(snapshot_work)
+        remove_source_snapshot(resolve_temporary_output(override=snapshot_work), primary_error=sys.exception())
     cohort = load_release_cohort(output)
     if cohort.manifest.source.source_digest != digest:
         raise SystemExit("completed release cohort lost its requested source digest")
