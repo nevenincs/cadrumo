@@ -107,6 +107,21 @@ _SPENDING_CATEGORIES: Final[tuple[str, ...]] = (
 #: spelled out in :data:`DESKTOP_CHROME_KEYS`.
 DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
     {
+        "desktop.aeat_sync.area.": (
+            "census.about",
+            "census.name",
+            "filed.about",
+            "filed.name",
+            "notifications.about",
+            "notifications.name",
+            "vat.about",
+            "vat.name",
+            "borrador.about",
+            "borrador.name",
+            "identity.about",
+            "identity.name",
+        ),
+        "desktop.aeat_sync.attempt.": ("failed", "nothing_found", "unknown"),
         "desktop.setup.item.": ("browser", "local_ai"),
         "desktop.setup.state.": (
             "absent",

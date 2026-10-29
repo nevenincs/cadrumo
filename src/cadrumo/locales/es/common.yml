@@ -715,6 +715,59 @@ desktop:
     zoom_in: Ampliar la documentación
     zoom_out: Reducir la documentación
     zoom_reset: Restablecer el zoom de la documentación
+  aeat_sync:
+    area:
+      borrador:
+        about: Tu Borrador de la Renta, a partir de un PDF que importas.
+        name: Borrador de la Renta
+      census:
+        about: Tus datos registrados en la AEAT.
+        name: Datos censales
+      filed:
+        about: Lo que la AEAT tiene registrado como presentado a tu nombre.
+        name: Declaraciones presentadas
+      identity:
+        about: Si la AEAT reconoce tu NIF y tu nombre.
+        name: Comprobaciones de identidad
+      notifications:
+        about: Mensajes que te ha enviado la AEAT.
+        name: Notificaciones
+      vat:
+        about: El crédito de IVA que arrastras a periodos posteriores.
+        name: Saldo de IVA a compensar
+    areas: Tus datos de la AEAT
+    attempt:
+      failed: La última actualización no funcionó ({date}).
+      nothing_found: La última actualización no encontró nada nuevo ({date}).
+      unknown: No hemos podido confirmar que la última actualización terminara ({date}).
+    bring_all: Actualizar desde la AEAT
+    close: Cerrar datos de la AEAT
+    count:
+      filed_aeat_only: '{count} solo en la AEAT'
+      filed_differing: '{count} difieren'
+      filed_local_only: '{count} solo en tus registros'
+      filed_matched: '{count} coinciden con tus registros'
+      unread_notifications: '{count} sin leer'
+    intro: Lo que Cadrumo tiene de la AEAT y cuándo se actualizó por última vez.
+    loading: Comprobando…
+    maximize: Maximizar datos de la AEAT
+    retry: Inténtalo de nuevo
+    signed_out: Inicia sesión para actualizar tus datos de la AEAT.
+    start_failed: No se ha iniciado. No ha cambiado nada — inténtalo de nuevo.
+    start_unknown: No hemos podido confirmar que se haya iniciado. Mira esta página
+      antes de volver a intentarlo.
+    state:
+      current: Al día (actualizado {date})
+      current_undated: Al día
+      never_brought: Aún sin actualizar
+      possibly_stale: Puede estar desactualizado (actualizado {date})
+      possibly_stale_undated: Puede estar desactualizado
+      unavailable: No se ha podido comprobar
+    title: Datos de la AEAT
+    unavailable: Ahora mismo no se pueden mostrar los datos de la AEAT. Inténtalo
+      de nuevo en un momento.
+    update: Actualizar
+    update_area: Actualizar {area}
   automation_access:
     cancel: Cancelar
     cleanup_pending: Eliminada. Cadrumo aún está borrando la clave guardada de este

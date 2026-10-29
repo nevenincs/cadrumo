@@ -693,6 +693,59 @@ desktop:
     zoom_in: Dokumentáció nagyítása
     zoom_out: Dokumentáció kicsinyítése
     zoom_reset: Dokumentáció nagyításának visszaállítása
+  aeat_sync:
+    area:
+      borrador:
+        about: A Renta-tervezeted, egy importált PDF-ből.
+        name: Személyi jövedelemadó-tervezet (Borrador)
+      census:
+        about: Az AEAT-nál nyilvántartott adataid.
+        name: Censo-adatok
+      filed:
+        about: Amit az AEAT benyújtottként tart nyilván nálad.
+        name: Benyújtott nyilatkozatok
+      identity:
+        about: Felismeri-e az AEAT az adóazonosítódat és a neved.
+        name: Személyazonosság-ellenőrzések
+      notifications:
+        about: Az AEAT által küldött üzenetek.
+        name: Értesítések
+      vat:
+        about: Az áfa-jóváírás, amelyet későbbi időszakokra viszel át.
+        name: Átvitt áfa-egyenleg
+    areas: Az AEAT-adataid
+    attempt:
+      failed: Az utolsó frissítés nem sikerült ({date}).
+      nothing_found: Az utolsó frissítés nem talált újat ({date}).
+      unknown: Nem tudtuk megerősíteni, hogy az utolsó frissítés befejeződött ({date}).
+    bring_all: Frissítés az AEAT-ból
+    close: AEAT-adatok bezárása
+    count:
+      filed_aeat_only: '{count} csak az AEAT-nál van'
+      filed_differing: '{count} eltér'
+      filed_local_only: '{count} csak a saját nyilvántartásodban van'
+      filed_matched: '{count} egyezik a nyilvántartásaiddal'
+      unread_notifications: '{count} olvasatlan'
+    intro: Amit a Cadrumo az AEAT-tól tud, és mikor frissült utoljára.
+    loading: Ellenőrzés…
+    maximize: AEAT-adatok maximalizálása
+    retry: Próbáld újra
+    signed_out: Jelentkezz be, hogy frissíthesd az adataidat az AEAT-ból.
+    start_failed: Nem indult el. Semmi sem változott — próbáld újra.
+    start_unknown: Nem tudtuk megerősíteni, hogy elindult. Nézd meg ezt az oldalt,
+      mielőtt újra próbálkozol.
+    state:
+      current: 'Naprakész (frissítve: {date})'
+      current_undated: Naprakész
+      never_brought: Még nincs frissítve
+      possibly_stale: 'Lehet, hogy elavult (frissítve: {date})'
+      possibly_stale_undated: Lehet, hogy elavult
+      unavailable: Nem sikerült ellenőrizni
+    title: AEAT-adatok
+    unavailable: Az AEAT-adatok most nem jeleníthetők meg. Próbáld újra egy pillanat
+      múlva.
+    update: Frissítés
+    update_area: '{area} frissítése'
   automation_access:
     cancel: Mégse
     cleanup_pending: Eltávolítva. A Cadrumo még törli a tárolt kulcsot erről a számítógépről.
@@ -1730,7 +1783,7 @@ desktop:
           not_found: Ez a dokumentum már nincs a profilban tárolva.
           out_of_range: A dokumentumnak nincs ilyen oldala.
           too_large: A dokumentum túl nagy ahhoz, hogy itt megjelenjen.
-          unreadable: A fájl nem nyitható meg azként a típusként, amellyel mentették.
+          unreadable: A fájl nem nyitható meg akként a típusként, amellyel mentették.
           unsupported_media: Itt csak PDF-, JPEG- és PNG-dokumentum jeleníthető meg.
         resize: Dokumentum átméretezése
         zoom: 'Nagyítás: {percent}%'

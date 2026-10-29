@@ -710,6 +710,59 @@ desktop:
     zoom_in: Amplia la documentació
     zoom_out: Redueix la documentació
     zoom_reset: Restableix el zoom de la documentació
+  aeat_sync:
+    area:
+      borrador:
+        about: El teu Borrador de la Renda, a partir d'un PDF que importes.
+        name: Borrador de la Renda
+      census:
+        about: Les teves dades registrades a l'AEAT.
+        name: Dades censals
+      filed:
+        about: El que l'AEAT té registrat com a presentat a nom teu.
+        name: Declaracions presentades
+      identity:
+        about: Si l'AEAT reconeix el teu NIF i el teu nom.
+        name: Comprovacions d'identitat
+      notifications:
+        about: Missatges que t'ha enviat l'AEAT.
+        name: Notificacions
+      vat:
+        about: El crèdit d'IVA que portes a períodes posteriors.
+        name: Saldo d'IVA a compensar
+    areas: Les teves dades de l'AEAT
+    attempt:
+      failed: L'última actualització no ha funcionat ({date}).
+      nothing_found: L'última actualització no ha trobat res de nou ({date}).
+      unknown: No hem pogut confirmar que l'última actualització hagi acabat ({date}).
+    bring_all: Actualitza des de l'AEAT
+    close: Tanca les dades de l'AEAT
+    count:
+      filed_aeat_only: '{count} només a l''AEAT'
+      filed_differing: '{count} difereixen'
+      filed_local_only: '{count} només als teus registres'
+      filed_matched: '{count} coincideixen amb els teus registres'
+      unread_notifications: '{count} sense llegir'
+    intro: El que Cadrumo té de l'AEAT i quan es va actualitzar per última vegada.
+    loading: Comprovant…
+    maximize: Maximitza les dades de l'AEAT
+    retry: Torna-ho a provar
+    signed_out: Inicia la sessió per actualitzar les teves dades de l'AEAT.
+    start_failed: No s'ha iniciat. No ha canviat res — torna-ho a provar.
+    start_unknown: No hem pogut confirmar que s'hagi iniciat. Mira aquesta pàgina
+      abans de tornar-ho a provar.
+    state:
+      current: Al dia (actualitzat {date})
+      current_undated: Al dia
+      never_brought: Encara sense actualitzar
+      possibly_stale: Potser està desactualitzat (actualitzat {date})
+      possibly_stale_undated: Potser està desactualitzat
+      unavailable: No s'ha pogut comprovar
+    title: Dades de l'AEAT
+    unavailable: Ara mateix no es poden mostrar les dades de l'AEAT. Torna-ho a provar
+      d'aquí un moment.
+    update: Actualitza
+    update_area: Actualitza {area}
   automation_access:
     cancel: Cancel·la
     cleanup_pending: Eliminada. Cadrumo encara està esborrant la clau desada d’aquest

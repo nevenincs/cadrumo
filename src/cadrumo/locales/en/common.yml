@@ -687,6 +687,58 @@ desktop:
     zoom_in: Zoom docs in
     zoom_out: Zoom docs out
     zoom_reset: Reset docs zoom
+  aeat_sync:
+    area:
+      borrador:
+        about: Your Renta draft, from a PDF you import.
+        name: Income tax draft (Borrador)
+      census:
+        about: Your registered details at AEAT.
+        name: Census data
+      filed:
+        about: What AEAT holds as filed for you.
+        name: Filed declarations
+      identity:
+        about: Whether AEAT recognises your tax number and name.
+        name: Identity checks
+      notifications:
+        about: Messages AEAT has sent you.
+        name: Notifications
+      vat:
+        about: VAT credit you carry into later periods.
+        name: VAT balance carried forward
+    areas: Your data from AEAT
+    attempt:
+      failed: Last update didn't work ({date}).
+      nothing_found: Last update found nothing new ({date}).
+      unknown: We couldn't confirm the last update finished ({date}).
+    bring_all: Update from AEAT
+    close: Close AEAT data
+    count:
+      filed_aeat_only: '{count} only at AEAT'
+      filed_differing: '{count} differ'
+      filed_local_only: '{count} only in your records'
+      filed_matched: '{count} match your records'
+      unread_notifications: '{count} unread'
+    intro: What Cadrumo has from AEAT, and when it was last updated.
+    loading: Checking…
+    maximize: Maximize AEAT data
+    retry: Try again
+    signed_out: Sign in to update your data from AEAT.
+    start_failed: That didn't start. Nothing changed — try again.
+    start_unknown: We couldn't confirm that started. Check this page before trying
+      again.
+    state:
+      current: Up to date (updated {date})
+      current_undated: Up to date
+      never_brought: Not updated yet
+      possibly_stale: May be out of date (updated {date})
+      possibly_stale_undated: May be out of date
+      unavailable: Couldn't check
+    title: AEAT data
+    unavailable: AEAT data can't be shown right now. Try again in a moment.
+    update: Update
+    update_area: Update {area}
   automation_access:
     cancel: Cancel
     cleanup_pending: Removed. Cadrumo is still deleting the stored key from this computer.
@@ -1149,17 +1201,17 @@ desktop:
       creating_hint: What the claim is recorded under, e.g. the declaration it is
         for
       creating_operation: Recorded as
-      forecast: Amortización {amount} · {days} days · {from} – {until}
+      forecast: Depreciation {amount} · {days} days · {from} – {until}
       forecast_note: A forecast records nothing until you claim it.
-      free: Free amortización requested
-      free_hint: Only for a free-amortización method
+      free: Free depreciation requested
+      free_hint: Only for a free-depreciation method
       from: From
       handoff: Where the claims go
       inspect: Inspect
       quarter: Modelo 130 quarter
       refusal:
         refused_actividad_asset_accelerated_da18_depreciation_not_computed: 'Refused:
-          accelerated amortización isn''t worked out here.'
+          accelerated depreciation isn''t calculated here.'
         refused_actividad_asset_claim_conflict: 'Refused: it conflicts with a claim
           already recorded.'
         refused_actividad_asset_incomplete: 'Refused: some facts are still missing.'
@@ -1565,11 +1617,11 @@ desktop:
         invoice_series: Series
         iva_amount: IVA amount
         iva_rate: IVA rate
-        recargo_amount: Recargo de equivalencia
-        retencion_amount: Retención
-        retencion_rate: Retención rate
-        retention_amount: Retención
-        retention_rate: Retención rate
+        recargo_amount: Equivalence surcharge
+        retencion_amount: Withholding tax
+        retencion_rate: Withholding tax rate
+        retention_amount: Withholding tax
+        retention_rate: Withholding tax rate
         series: Series
         supplier_name: Supplier
         supplier_tax_id: Supplier NIF
@@ -1908,7 +1960,7 @@ desktop:
       investment_asset_id: Investment asset
       m210_income_classification: Modelo 210 income
       own_account_id: Account
-      recargo_amount: Recargo
+      recargo_amount: Equivalence surcharge
       usage_ratio_id: Usage ratio
       value_date: Value date
     fill:
@@ -2625,8 +2677,8 @@ desktop:
         number: Number
         operation_date: Operation
         payment: Payment
-        recargo: Recargo
-        retention: Retención
+        recargo: Equivalence surcharge
+        retention: Withholding tax
         tax_id: Tax ID
         total: Total
       confirm_changes: 'Changes to save: {count}'
@@ -2659,11 +2711,11 @@ desktop:
         payment_id: Payment ID
         payment_status: Payment
         printed_total: Printed total
-        recargo: Recargo
+        recargo: Equivalence surcharge
         rectifies_invoice_number: Rectifies invoice
         referencia: Cadastral reference
-        retention_amount: Retención amount
-        retention_rate: Retención rate
+        retention_amount: Withholding tax amount
+        retention_rate: Withholding tax rate
         series: Series
         situacion: Property situation
       fixed: Part of the invoice's identity. Remove it and add it again to change
@@ -2796,8 +2848,8 @@ desktop:
       remove_note: It leaves the catalogue. Movements are not affected.
       remove_question: Remove this invoice?
       removed: Invoice {number} removed
-      retention: Retención, outside the total
-      retention_presets: Common retención rates
+      retention: Withholding tax, outside the total
+      retention_presets: Common withholding tax rates
       review: Review
       review_changes: Review changes ({count})
       save: Save
@@ -2813,7 +2865,7 @@ desktop:
       this_is: This is
       title: Invoice {number}
       to_pay: To be paid {amount}
-      to_pay_withheld: To be paid {amount} (− {retention} retención)
+      to_pay_withheld: To be paid {amount} (− {retention} withholding tax)
       toolbar: Invoice catalogue
       total: Total
       totals: Totals
@@ -2852,7 +2904,7 @@ desktop:
       intra_community_triangulation: Triangular operation
       operacion_no_sujeta: Operation not subject
       reagp_compensation: REAGP compensation
-      recargo_equivalencia: Recargo de equivalencia
+      recargo_equivalencia: Equivalence surcharge
       regimen_simplificado: Régimen simplificado
       unknown: Unknown
     leave:
@@ -2908,7 +2960,7 @@ desktop:
       repair: Repair · permanent
       repair_staged: Repair staged · not saved
       settles: Settles {amount}
-      settles_withheld: Settles {amount} ({total} − {withheld} retención)
+      settles_withheld: Settles {amount} ({total} − {withheld} withholding tax)
       show_other: Show {description}
       staged: 'Links staged, not saved: {count}'
       staged_toast: Link staged · permanent once saved
@@ -3098,7 +3150,7 @@ desktop:
     reading: Reading {loaded} of {total}
     reason:
       anomaly_non_declarable_iva_category: IVA category
-      anomaly_non_declarable_recargo_equivalencia: Recargo
+      anomaly_non_declarable_recargo_equivalencia: Equivalence surcharge
       censo_ratio_mismatch: Censo ratio
       domestic_identification_on_intra_community_transaction: Spanish id
       eu_member_state_on_export_transaction: Export state
@@ -3117,7 +3169,7 @@ desktop:
       unsupported_period: Period
     reason_detail:
       anomaly_non_declarable_iva_category: IVA category not declarable
-      anomaly_non_declarable_recargo_equivalencia: Recargo de equivalencia not declarable
+      anomaly_non_declarable_recargo_equivalencia: Equivalence surcharge not declarable
       censo_ratio_mismatch: Ratio differs from the censo
       domestic_identification_on_intra_community_transaction: Spanish tax id on an
         intra-community operation
@@ -5595,7 +5647,7 @@ tui:
           prorrata_reference: Prorrata reference
           prorrata_sector: Prorrata sector
           purchase_invoice_evidence_id: Purchase invoice evidence id
-          recargo_amount: Recargo de equivalencia amount
+          recargo_amount: Equivalence surcharge amount
           source_jurisdiction: Source jurisdiction (country code)
           taxable_base: Taxable base
           usage_ratio_id: Usage ratio id
