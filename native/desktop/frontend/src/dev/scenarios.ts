@@ -1102,7 +1102,7 @@ export const SCENARIOS: readonly Scenario[] = [
     id: "setup-first-run",
     title: "Components not set up",
     summary:
-      "Signed in on a computer where nothing is set up yet: the setup dialog opens once with one summary and one action, the browser and the local AI run one after the other with one overall progress bar, and Settings shows one line that leads back into setup.",
+      "Signed in on a computer where nothing is set up yet: the provisioning panel opens once with one row per component, each with its own action and progress; the browser and the local AI can run at the same time, the local AI opens to its program and models, the rail's Settings button shows a spinner while a run is live, and Settings' one section opens the panel again.",
     signIn: {
       status: { ...signedOut, state: "present" },
       submit: { kind: "accept" },
