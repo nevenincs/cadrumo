@@ -109,8 +109,6 @@ value already present in your shell always wins.
 | `CADRUMO_LOG_LEVEL` | str | empty | Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. Log views default to INFO and use this as their initial minimum level. CLI verbosity names quiet, default, verbose, and debug remain supported. |
 | `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
-| `CADRUMO_OLLAMA_HOME_DIR` | Path | (derived) | Private home for Cadrumo-owned Ollama processes, including their runtime identity. |
-| `CADRUMO_OLLAMA_MODELS_DIR` | Path | (derived) | Model weights for Cadrumo-owned Ollama processes. |
 | `CADRUMO_OUTPUT_LANGUAGE` | OutputLanguage | `es` | Target ISO 639-1 language code for user-facing content. Invalid values coerce to None and fall back to the default. |
 | `CADRUMO_PLAYWRIGHT_BROWSERS_DIR` | Path | (derived) | Managed Playwright browser binaries beneath the storage root. |
 | `CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION` | bool | `true` | Whether profile-custody KDF calibration MEASURES the parameter grid on this host. True (the default, and the only production posture) samples real supervised derivations to pick the strongest grid point that still lands inside the operator latency band. False skips the measurement loop and adopts the fixed fallback point the calibrator already falls back to when no point can be confirmed in time. Measuring can only strengthen a wrap: calibration never selects a point weaker than the fallback, so False leaves every new profile at the fallback's strength. The derivation itself is the same real Argon2id through the same supervised worker. |
@@ -278,6 +276,8 @@ The settings table above does not list these names.
 | `CADRUMO_AGENT_WORKER_PORT` | port | a launch parameter its parent supplies |
 | `CADRUMO_EXTERNAL_BIN_DIRS` | directory_list | a package-owned override |
 | `CADRUMO_GOOGLE_OAUTH_CLIENT_JSON` | text | a package fact the host sets |
+| `CADRUMO_OLLAMA_HOME_DIR` | directory | a storage location an operator may relocate |
+| `CADRUMO_OLLAMA_MODELS_DIR` | directory | a storage location an operator may relocate |
 | `CADRUMO_PACKAGE_AEAT_EXECUTABLE` | executable | a package fact the host sets |
 | `CADRUMO_PACKAGE_AGENT_EXECUTABLE` | executable | a package fact the host sets |
 | `CADRUMO_PACKAGE_PYTHON_EXECUTABLE` | executable | a package fact the host sets |
