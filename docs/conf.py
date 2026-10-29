@@ -857,6 +857,10 @@ myst_fence_as_directive = ["mermaid"]
 # baseline is curated alongside autodoc_mock_imports - adding a mock import
 # without its ignore entry is incomplete.
 nitpick_ignore_regex = [
+    # ``ThreadPoolExecutor`` is documented under ``concurrent.futures`` in the
+    # stdlib inventory; autodoc renders an annotation by the class's defining
+    # module, ``concurrent.futures.thread``, which the inventory does not carry.
+    (r"py:class", r"^concurrent\.futures\.thread\.ThreadPoolExecutor$"),
     # Heavy native deps are replaced by autodoc mocks, and ReportLab ships no
     # inventory; their types have no cross-reference target.
     (
@@ -876,7 +880,7 @@ nitpick_ignore_regex = [
     (
         r"py:.*",
         r"^(FieldInfo|MinLen|MaxLen|NoneType|EllipsisType|Annotated|"
-        r"Strict[A-Za-z]*|[A-Za-z]*Constraints|_PydanticGeneralMetadata)$",
+        r"Strict[A-Za-z]*|[A-Za-z]*Constraints|AllowInfNan|_PydanticGeneralMetadata)$",
     ),
     # pydantic's ``JsonValue`` is a recursive type alias, not a class, and
     # autodoc renders it by its BARE name wherever a signature carries it, so
@@ -984,7 +988,7 @@ nitpick_ignore_regex = [
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|"
         r"rich|yaml|rtoml|tomli|cryptography|jinja2|markupsafe|numpy|"
         r"prompt_toolkit|google|typing_extensions|asyncio|anyio|contextvars|"
-        r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
+        r"_pytest|playwright|_schema|_orm|annotated_types|httplib2)(\..*)?$",
     ),
     # Test modules are excluded from the documented API surface (see
     # ApiStubManager exclusions), so references into them have no stub target.
@@ -995,11 +999,12 @@ nitpick_ignore_regex = [
     # anchors such as ``89ab``), never real documentable objects.
     (r"py:.*", r"^([0-9][0-9a-fA-F]*|__all__|__repr__|__str__|__init__|__init_subclass__)$"),
     # Playwright SDK classes referenced bare (``:class:`Page```, ``BrowserContext``,
-    # ``Locator``, ``Response``, ``Playwright``) from the browser/sede adapters.
+    # ``Locator``, ``Response``, ``Playwright``, ``CDPSession``, ``Download``) from
+    # the browser/sede adapters.
     # Playwright is in ``autodoc_mock_imports`` (offline, no inventory), so the
     # dotted ignore above does not cover these short forms; the names are
     # playwright-owned in this codebase (no project class shares them).
-    (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response)$"),
+    (r"py:.*", r"^(Playwright|Page|BrowserContext|Locator|Response|CDPSession|Download)$"),
     # Project anchors referenced by bare short name (per the docstring-anchor
     # convention; qualifying a bare anchor is barred by
     # aeat-documentation) whose short name the auto short-reference
@@ -1132,9 +1137,9 @@ nitpick_ignore_regex = [
         r"^(App|VisualType|ContentText|RenderableType|"
         r"Button\.Pressed|DataTable\.RowHighlighted|Worker\.StateChanged)$",
     ),
-    # ``TYPE_CHECKING``-only aliases of googleapiclient stub types; the Google
-    # API client ships no inventory, and the aliases are not project classes.
-    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource)$"),
+    # ``TYPE_CHECKING``-only aliases and imports of googleapiclient stub types;
+    # the Google API client ships no inventory, and none is a project class.
+    (r"py:class", r"^(SheetsValueRange|SheetsResource|DriveResource|HttpMock)$"),
     # Project objects written by a path that omits the ``cadrumo.`` root and
     # whose package is excluded from the documented surface (``entrypoints.cli``
     # has no stubs) or whose bare name the resolver cannot reach

@@ -203,7 +203,7 @@ def maternidad_meses_withheld_advisory(
     reaches a child under three "con derecho a la aplicación del mínimo por
     descendientes" OR one inside the age-independent adopción/acogimiento
     entry-date window
-    (:meth:`~domain.contribuyente.descendant_maternity.DescendantMaternityMixin.art_81_1_entry_window_meses`),
+    (:meth:`~domain.contribuyente.descendant_maternity.DescendantMaternityMixin.maternidad_contributing_meses`),
     so months declared against a descendant BOTH limbs exclude are correctly
     withheld; withholding them SILENTLY is what this reports.
 
