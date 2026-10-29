@@ -1,0 +1,229 @@
+import { memo, useCallback, useState, type RefObject } from "react";
+import { Alert } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Icon, type IconName } from "@/components/ui/icon";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  AEAT_SYNC_AREAS,
+  aeatSyncDay,
+  aeatSyncFailure,
+  useAeatSync,
+  type AeatSyncArea,
+  type AeatSyncAreaId,
+  type AeatSyncCountKind,
+  type AeatSyncPort,
+  type AeatSyncState,
+} from "../../shell/aeatSync";
+import { useStrings, type Translate } from "../../shell/strings";
+
+const STATE_ICONS: Record<AeatSyncState, IconName> = {
+  never_brought: "pending",
+  current: "check",
+  possibly_stale: "alert",
+  unavailable: "unknown",
+};
+
+const COUNT_KEYS: Record<AeatSyncCountKind, string> = {
+  unread_notifications: "desktop.aeat_sync.count.unread_notifications",
+  filed_matched: "desktop.aeat_sync.count.filed_matched",
+  filed_aeat_only: "desktop.aeat_sync.count.filed_aeat_only",
+  filed_local_only: "desktop.aeat_sync.count.filed_local_only",
+  filed_differing: "desktop.aeat_sync.count.filed_differing",
+};
+
+/** The area's standing in words: only what the host served, with its date. */
+function standing(t: Translate, locale: string, area: AeatSyncArea): string {
+  const day = area.captured_at ? aeatSyncDay(locale, area.captured_at) : null;
+  switch (area.state) {
+    case "current":
+      return day
+        ? t("desktop.aeat_sync.state.current", { date: day })
+        : t("desktop.aeat_sync.state.current_undated");
+    case "possibly_stale":
+      return day
+        ? t("desktop.aeat_sync.state.possibly_stale", { date: day })
+        : t("desktop.aeat_sync.state.possibly_stale_undated");
+    case "never_brought":
+      return t("desktop.aeat_sync.state.never_brought");
+    case "unavailable":
+      return t("desktop.aeat_sync.state.unavailable");
+  }
+}
+
+/** How the last try ended, where it did not bring something. */
+function lastTry(t: Translate, locale: string, area: AeatSyncArea) {
+  const attempt = area.last_attempt;
+  if (!attempt || attempt.outcome === "brought") return null;
+  const date = aeatSyncDay(locale, attempt.at);
+  if (!date) return null;
+  return t(`desktop.aeat_sync.attempt.${attempt.outcome}`, { date });
+}
+
+/**
+ * What the person has from AEAT, area by area: whether it was ever brought,
+ * how current it is and the counts the host serves, with a way to bring it
+ * again. It draws served values only; the host owns what is current.
+ */
+export const AeatSyncPage = memo(function AeatSyncPage({
+  port,
+  reader,
+  language,
+  shown,
+  page,
+}: {
+  port: AeatSyncPort;
+  reader: string;
+  language: string;
+  shown: boolean;
+  /** The page's own element, for whoever sends focus to it. */
+  page: RefObject<HTMLElement | null>;
+}) {
+  const t = useStrings();
+  const status = useAeatSync(port, reader, language, shown);
+  const [starting, setStarting] = useState(false);
+  const [failure, setFailure] = useState<"failed" | "unknown" | null>(null);
+  const { refresh } = status;
+  const start = useCallback(
+    async (areas: AeatSyncAreaId[]) => {
+      setStarting(true);
+      setFailure(null);
+      try {
+        await port.start({ areas, dry_run: false });
+      } catch (error) {
+        setFailure(aeatSyncFailure(error) === "unknown" ? "unknown" : "failed");
+      } finally {
+        setStarting(false);
+        refresh();
+      }
+    },
+    [port, refresh],
+  );
+
+  const served = new Map(status.data?.areas.map((a) => [a.area, a]));
+  const rows = AEAT_SYNC_AREAS.map((id) => ({ id, area: served.get(id) }));
+  const bringable = (status.data?.areas ?? [])
+    .filter((area) => area.update === "bring")
+    .map((area) => area.area);
+
+  return (
+    <section
+      ref={page}
+      tabIndex={-1}
+      aria-label={t("desktop.aeat_sync.title")}
+      className="aeat-sync-page @container/aeat relative flex min-h-0 flex-1 flex-col overflow-y-auto outline-none"
+    >
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <p className="min-w-0 flex-1 basis-64 text-base text-muted-foreground">
+            {t("desktop.aeat_sync.intro")}
+          </p>
+          <Button
+            disabled={starting || bringable.length === 0}
+            onClick={() => void start(bringable)}
+          >
+            {starting ? <Spinner /> : <Icon name="sync" size="sm" />}
+            {t("desktop.aeat_sync.bring_all")}
+          </Button>
+        </div>
+        {failure && (
+          <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
+            {t(
+              failure === "unknown"
+                ? "desktop.aeat_sync.start_unknown"
+                : "desktop.aeat_sync.start_failed",
+            )}
+          </Alert>
+        )}
+        {status.error && (
+          <Alert
+            role="alert"
+            tone="danger"
+            icon={<Icon name="alert" />}
+            data-testid="aeat-sync-error"
+          >
+            {t("desktop.aeat_sync.unavailable")}
+            <span>
+              <Button size="xs" variant="outline" onClick={refresh}>
+                {t("desktop.aeat_sync.retry")}
+              </Button>
+            </span>
+          </Alert>
+        )}
+        {status.loading && !status.data && (
+          <div
+            role="status"
+            className="flex items-center gap-2 text-muted-foreground"
+          >
+            <Spinner />
+            {t("desktop.aeat_sync.loading")}
+          </div>
+        )}
+        {status.data && (
+          <ul
+            aria-label={t("desktop.aeat_sync.areas")}
+            className="grid gap-3 @2xl/aeat:grid-cols-2"
+          >
+            {rows.map(({ id, area }) => {
+              const state = area?.state ?? "unavailable";
+              const name = t(`desktop.aeat_sync.area.${id}.name`);
+              const attempt = area ? lastTry(t, language, area) : null;
+              const importing = area?.update === "import";
+              return (
+                <li
+                  key={id}
+                  data-area={id}
+                  data-state={state}
+                  className="flex flex-col gap-2 overflow-hidden rounded-lg border bg-card p-3"
+                >
+                  <div className="flex items-start gap-2">
+                    <span className="min-w-0 flex-1">
+                      <h3 className="text-base font-semibold text-foreground">
+                        {name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        {t(`desktop.aeat_sync.area.${id}.about`)}
+                      </p>
+                    </span>
+                    {!importing && (
+                      <Button
+                        size="xs"
+                        variant="outline"
+                        aria-label={t("desktop.aeat_sync.update_area", {
+                          area: name,
+                        })}
+                        disabled={starting || !area}
+                        onClick={() => void start([id])}
+                      >
+                        {t("desktop.aeat_sync.update")}
+                      </Button>
+                    )}
+                  </div>
+                  <p className="flex items-center gap-2 text-sm text-foreground">
+                    <Icon name={STATE_ICONS[state]} size="sm" />
+                    <span>
+                      {area
+                        ? standing(t, language, area)
+                        : t("desktop.aeat_sync.state.unavailable")}
+                    </span>
+                  </p>
+                  {attempt && (
+                    <p className="text-sm text-muted-foreground">{attempt}</p>
+                  )}
+                  {area && area.counts.length > 0 && (
+                    <ul className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
+                      {area.counts.map((count) => (
+                        <li key={count.kind}>
+                          {t(COUNT_KEYS[count.kind], { count: count.value })}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+    </section>
+  );
+});

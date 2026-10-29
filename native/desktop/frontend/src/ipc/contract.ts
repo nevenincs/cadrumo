@@ -1393,6 +1393,21 @@ export interface HostCommands {
    * and its outcome was not confirmed, and it is never retried.
    */
   profile_aeat_credential_save: { args: Authorized; result: null };
+  /** What was brought from AEAT, area by area, from the profile's own
+   * records; it reaches no network. */
+  aeat_sync_status: {
+    args: { language: string };
+    result: import("../shell/aeatSync").AeatSyncStatus;
+  };
+  aeat_sync_observe: { args: { updates: Channel<null> }; result: number };
+  aeat_sync_unobserve: { args: { subscription: number }; result: null };
+  /** Asks the host to bring the named areas. A rejection carries `{ code }`:
+   * `unknown` means the request was submitted and its outcome was not
+   * confirmed, and it is never retried. */
+  aeat_sync_start: {
+    args: { request: import("../shell/aeatSync").AeatSyncStart };
+    result: null;
+  };
   /** Counts of the last notifications capture; no row reaches the window. */
   profile_views_notifications: {
     args: Authorized;

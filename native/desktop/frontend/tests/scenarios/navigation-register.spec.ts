@@ -165,6 +165,25 @@ test("the window's table draws only elements the register gives the window", () 
   }
 });
 
+test("AEAT data is drawn as a page of the first pane, where the host has its port", () => {
+  const entry = WINDOW_VIEWS["aeat-sync"];
+  expect(entry?.view).toEqual({
+    kind: "page",
+    page: "aeat-sync",
+    section: null,
+  });
+  expect(entry?.port).toBe("aeatSync");
+  expect(entry?.signedIn).toBe(true);
+  expect(idsFor(register, "gui").has("aeat-sync")).toBe(true);
+  expect([
+    ...unmountedBy(
+      mountedNow("aeat-sync", "movements"),
+      WINDOW_VIEWS.calendar!.view,
+      "movements",
+    ),
+  ]).toEqual(["aeat-sync"]);
+});
+
 test("leaving a page takes it down; a section, a pane or the panel keeps it", () => {
   const onLedger = mountedNow("ledger", "movements");
   const view = (id: string) => {

@@ -78,7 +78,14 @@ export type LedgerView = {
 };
 
 export type Layout = {
-  page: "docs" | "calendar" | "profile" | "ledger" | "declarations" | "browser";
+  page:
+    | "docs"
+    | "calendar"
+    | "profile"
+    | "ledger"
+    | "declarations"
+    | "browser"
+    | "aeat-sync";
   maximized: Maximized;
   /** Null follows the host default until the person chooses a level. */
   logLevel: number | null;
@@ -295,7 +302,14 @@ export function loadState(): { prefs: Prefs; layout: Layout } {
       // by itself.
       page: pick(
         l.page,
-        ["docs", "calendar", "profile", "ledger", "declarations"] as const,
+        [
+          "docs",
+          "calendar",
+          "profile",
+          "ledger",
+          "declarations",
+          "aeat-sync",
+        ] as const,
         l.page === undefined &&
           (typeof l.tuiShown === "boolean" || typeof l.docsShown === "boolean")
           ? "docs"

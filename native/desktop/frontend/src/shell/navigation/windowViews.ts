@@ -8,14 +8,20 @@ import type { LedgerSection, PanelTab } from "../layout";
 
 /** The window's pages that a register element opens. */
 export type WindowPage =
-  "profile" | "calendar" | "ledger" | "declarations" | "docs" | "browser";
+  | "profile"
+  | "calendar"
+  | "ledger"
+  | "declarations"
+  | "docs"
+  | "browser"
+  | "aeat-sync";
 
 /** A dialog a page opens over itself as a view is shown. */
 export type WindowDialog = "aeat-access";
 
 /** A host port a view needs; without it the window does not implement it. */
 export type WindowPort =
-  "userProfile" | "views" | "ledger" | "modelo" | "sedeView";
+  "userProfile" | "views" | "ledger" | "modelo" | "sedeView" | "aeatSync";
 
 export type WindowView =
   /** A page of the first pane: opening it unmounts the page shown before. */
@@ -92,6 +98,7 @@ export const WINDOW_VIEWS: Readonly<Record<string, WindowViewEntry>> = {
   "ledger/health": page("ledger", "health", "ledger"),
   declarations: page("declarations", null, "modelo"),
   browser: page("browser", null, "sedeView"),
+  "aeat-sync": page("aeat-sync", null, "aeatSync"),
   agent: { view: { kind: "agent" }, signedIn: true, port: null, honours: [] },
   terminal: {
     view: { kind: "terminal" },

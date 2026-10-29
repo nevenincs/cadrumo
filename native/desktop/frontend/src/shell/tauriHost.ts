@@ -137,6 +137,25 @@ export function tauriHost(): Host {
         },
       },
     },
+    aeatSync: {
+      status: (language) => call("aeat_sync_status", { language }),
+      async observe(changed) {
+        let active = true;
+        const updates = new Channel<null>();
+        updates.onmessage = () => {
+          if (active) changed();
+        };
+        const subscription = await call("aeat_sync_observe", { updates });
+        return () => {
+          active = false;
+          void call("aeat_sync_unobserve", { subscription }).catch(
+            () => undefined,
+          );
+        };
+      },
+      start: (request) =>
+        call("aeat_sync_start", { request }).then(() => undefined),
+    },
     views: {
       notifications: () => call("profile_views_notifications", {}),
       filingCalendar: (range, language) =>

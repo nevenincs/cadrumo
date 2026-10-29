@@ -6,6 +6,7 @@
 
 import type { LedgerShape } from "./ledgerFixture";
 import type { CensoMode } from "./censoFixture";
+import type { AeatSyncMode } from "./aeatSyncFixture";
 import type { SetupShape } from "./setupFixture";
 import type {
   HostErrorCode,
@@ -27,6 +28,9 @@ export type SubmitOutcome =
 
 export type Scenario = {
   censo?: CensoMode;
+  /** The AEAT data page: left out, some areas were brought and some were
+   * not. */
+  aeatSync?: AeatSyncMode;
   /** The Sede browser: left out, it opens; `browser_missing`, the runtime
    * refuses every view for want of the browser and names its setup. */
   sedeView?: "browser_missing";
@@ -256,6 +260,42 @@ export const SCENARIOS: readonly Scenario[] = [
     title: "User profile: edit and filter",
     summary:
       "Open Your profile in the rail: search saved details, select sections, fill the missing tax ID, and add, edit or remove partners. All changes are in-memory demo data.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync",
+    title: "AEAT data: what was brought and when",
+    summary:
+      "Open AEAT data from the palette: six areas, each with its state, its date and the counts it serves. Bringing data is recorded and changes nothing.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-never",
+    title: "AEAT data: nothing brought yet",
+    summary: "Every area shows that it was never brought.",
+    aeatSync: "never",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-unavailable",
+    title: "AEAT data: cannot be read",
+    summary: "The page says it cannot be shown and offers to try again.",
+    aeatSync: "unavailable",
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "Ana Soler",

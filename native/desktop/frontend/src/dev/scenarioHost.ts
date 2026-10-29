@@ -24,6 +24,7 @@ import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
+import { aeatSyncFixture } from "./aeatSyncFixture";
 import type { Host } from "../shell/host";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
@@ -692,6 +693,7 @@ export function scenarioHost(
           views,
           ledger,
           modelo,
+          aeatSync: aeatSyncFixture(scenario.aeatSync ?? "mixed", say),
           sedeView: sedeViewFixture({
             say,
             ...(scenario.sedeView === "browser_missing"
