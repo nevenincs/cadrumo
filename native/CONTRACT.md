@@ -1168,7 +1168,7 @@ Tests, GUI demos, tkinter/IDLE, ensurepip and SDK development directories do not
 ship. The remaining runtime stdlib is retained because application imports can be
 dynamic. Only the locked base third-party dependency closure and the three CADRUMO
 wheels enter `cadrumo/site-packages/`, widened only by the locked closures of the
-native bundle's shipped extras (`llm` and `browser`); development and every other
+native bundle's shipped extra (`browser`); development and every other
 optional extra are excluded. Playwright's Node driver ships with `browser`; its
 Chromium builds do not, and are provisioned into profile storage on demand.
 `Lib`, `Libs`, `Scripts`, headers and import libraries stay in build inputs. Native

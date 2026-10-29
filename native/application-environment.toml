@@ -42,8 +42,6 @@ CADRUMO_LLM_CACHE_DIR = { kind = "directory", role = "location" }
 CADRUMO_LLM_RUN_RECORD_DIR = { kind = "directory", role = "location" }
 CADRUMO_LLM_USAGE_DIR = { kind = "directory", role = "location" }
 CADRUMO_LOG_DIR = { kind = "directory", role = "location" }
-CADRUMO_OLLAMA_HOME_DIR = { kind = "directory", role = "location" }
-CADRUMO_OLLAMA_MODELS_DIR = { kind = "directory", role = "location" }
 CADRUMO_PLAYWRIGHT_BROWSERS_DIR = { kind = "directory", role = "location" }
 CADRUMO_RUNS_DIR = { kind = "directory", role = "location" }
 CADRUMO_RUNTIME_SOCKET_DIR = { kind = "directory", role = "location" }
@@ -53,6 +51,11 @@ CADRUMO_TEMP_DIR = { kind = "directory", role = "location" }
 CADRUMO_TOKEN_DIR = { kind = "directory", role = "location" }
 CADRUMO_USAGE_RATIOS_PATH = { kind = "file", role = "location" }
 CADRUMO_WORKFLOW_RUNS_DIR = { kind = "directory", role = "location" }
+
+# CADRUMO_OLLAMA_HOME_DIR and CADRUMO_OLLAMA_MODELS_DIR relocate the local AI server's
+# home and the model weights. The desktop's native component engine alone reads them,
+# from its own environment, and the command line reads neither: no launch profile
+# admits them, so they are not declared here.
 
 CADRUMO_LOG_LEVEL = { kind = "text", role = "operator" }
 CADRUMO_LOG_STDERR_LEVEL = { kind = "text", role = "operator" }
@@ -162,8 +165,6 @@ locations = [
   "CADRUMO_LLM_RUN_RECORD_DIR",
   "CADRUMO_LLM_USAGE_DIR",
   "CADRUMO_LOG_DIR",
-  "CADRUMO_OLLAMA_HOME_DIR",
-  "CADRUMO_OLLAMA_MODELS_DIR",
   "CADRUMO_PLAYWRIGHT_BROWSERS_DIR",
   "CADRUMO_RUNS_DIR",
   "CADRUMO_RUNTIME_SOCKET_DIR",
