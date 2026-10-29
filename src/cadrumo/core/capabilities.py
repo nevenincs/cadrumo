@@ -1,24 +1,19 @@
 """Closed set of operator-selectable service capabilities.
 
 A *capability* is a per-profile opt-in/opt-out of an external service the app can
-use. It is operator intent, distinct from (a) the global safety posture (gestor
-mode, the secure-storage invariant) and (b) dependency availability (is the local AI
-set up?). The three axes are ANDed at the gate, and a capability may only NARROW
-the global safety floor, never widen it.
+use. It is operator intent, distinct from the global safety posture (gestor
+mode, the secure-storage invariant). The two axes are ANDed at the gate, and a
+capability may only NARROW the global safety floor, never widen it.
 
 The set is declared here in ``core/`` — the innermost hexagonal ring — so the
 Typer boundary renders the accepted-value ``Choice([...])`` from the enum,
-production code routes on members, and the profile schema / resolver / doctor
+production code routes on members, and the profile schema and resolver
 share one authority for the capability identifiers.
 
 The :class:`ServiceCapability` members are consumed by
 :func:`~application.user_profile.capabilities.resolve_capability`,
 :func:`~application.user_profile.capabilities.resolve_active_capability`, and by the
-setup wizard's capability questions. The product doctor renders those same
-members beside :class:`~application.workstation_probes.DependencyStatus` rows
-from :func:`~application.workstation_probes.probe_local_inference_hardware` and
-:func:`~application.workstation_probes.probe_optional_extras`, keeping operator
-intent separate from dependency availability.
+setup wizard's capability questions.
 
 This enum is deliberately separate from
 :attr:`domain.calculations.registry.schema.ModeloDefinition.capabilities` and
@@ -40,8 +35,7 @@ class ServiceCapability(StrEnum):
     resolver agree on one identifier. Optional package availability is modeled
     separately through :class:`~core.optional_extras.OptionalExtra` and
     :func:`~core.optional_extras.require_optional_extra`; a capability records whether the
-    profile permits the service, not whether its import/runtime dependency is
-    installed.
+    profile permits the service.
 
     See Also:
         :class:`~application.user_profile.capabilities.CapabilityDecision`

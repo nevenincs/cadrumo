@@ -24,7 +24,6 @@ from cadrumo_client.contracts.model_runs import (
 
 from .....application.operations.model_runs import ModelRunPort
 from .....application.operator_actions.models import PreconditionVerdict
-from .....application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from .....core.config_support import LLMProvider
 from .....core.model_roles import ModelRole
 from .....core.operator_action_enums import ActionEvidenceProvenance
@@ -66,22 +65,17 @@ def lane_model_label(lane: ModelRunLane | ModelRunOutput) -> str:
 def model_run_refusal_verdict(refusal: ModelRunRefusal, *, role: ModelRole) -> PreconditionVerdict:
     """Return the typed verdict for a refused model run.
 
-    A selected model the lane's local server does not hold is the
-    model-installed refusal. A model the agent could not load with the memory
-    free is the load-capacity refusal, a property of this computer. A role with
-    no selection says so in a stable fact. Every refusal names no action.
+    The verdict states the agent's refusal code and the role it was for, and
+    names no action. A selected model the lane's local server does not hold
+    also states that it is not installed, and a role with no selection says so
+    in a stable fact.
     """
     facts: dict[str, str | int | bool] = {"model_run_refusal": refusal.code.value, "model_role": role.value}
     if refusal.code is ModelRunRefusalCode.MODEL_DOES_NOT_FIT:
-        return probe_no_recovery_verdict(
-            ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE, facts={**facts, "role": role.value}
-        )
-    if refusal.code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
-        return probe_no_recovery_verdict(
-            ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-            facts={**facts, "role": role.value, "role_model_installed": False},
-        )
-    if refusal.code is ModelRunRefusalCode.NO_SELECTION:
+        facts |= {"role": role.value}
+    elif refusal.code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
+        facts |= {"role": role.value, "role_model_installed": False}
+    elif refusal.code is ModelRunRefusalCode.NO_SELECTION:
         facts |= {"role": role.value, "role_selection_required": True}
     return llm_no_recovery_verdict(
         LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED,

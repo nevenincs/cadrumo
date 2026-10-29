@@ -25,6 +25,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
+from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.attachment import AttachmentStore
@@ -49,7 +50,6 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
@@ -173,7 +173,7 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles(
     assert detail.error_code == _REGISTERED.code
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
-    assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
     assert verdict.evidence[0].values["role"] == ModelRole.VISION_TRANSCRIPTION.value
     assert verdict.action is None
     assert agent.lookups == [ModelRole.VISION_TRANSCRIPTION]

@@ -26,6 +26,7 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
+from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.operations.tests.supervisor_test_support import operation_repositories
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -46,7 +47,6 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -164,7 +164,7 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_missing_mode
     pause = run.inference_pause
     assert pause is not None, "the settled result lost the service's verdict"
     for verdict in (refused, pause.precondition_verdict):
-        assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
+        assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
         assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
         assert verdict.action is None
     # The closed role is not asked again for the second document.

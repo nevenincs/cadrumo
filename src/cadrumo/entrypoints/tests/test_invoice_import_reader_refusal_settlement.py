@@ -21,6 +21,7 @@ import pytest
 
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
+from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...application.invoices.catalogue_intake_contracts import (
     INVOICE_IMPORT_OPERATION_DEFINITION_ID,
     InvoiceImportRequest,
@@ -36,7 +37,6 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.registry import OperationRegistry
-from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -100,7 +100,7 @@ def test_an_invoice_book_whose_column_model_is_missing_settles(
     assert detail.error_code == _READER_REFUSAL_CODE
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
-    assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
     assert {str(item.values.get("role")) for item in verdict.evidence} == {ModelRole.COLUMN_ROLE_MAPPING.value}
     assert verdict.action is None
     published = detail.model_dump_json()

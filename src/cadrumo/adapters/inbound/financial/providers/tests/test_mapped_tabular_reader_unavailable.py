@@ -11,10 +11,7 @@ from __future__ import annotations
 import pytest
 
 from ......application.ledger.column_roles import ColumnRoleReaderUnavailable, bind_column_role_mapping_resolver
-from ......application.probe_outcomes import (
-    ProbePreconditionCondition,
-    probe_no_recovery_verdict,
-)
+from ......application.ledger.preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 from ......tests.english_locale_fixture import english_locale_fixture
 from ......tests.inventory import FIXTURES_DIR
 from .._mapped_tabular import MappedTabularProvider
@@ -33,9 +30,9 @@ _UNREAD_VOCABULARY = FIXTURES_DIR / "financial" / "tabular-dialects" / "expenses
 def _reader_unavailable() -> ColumnRoleReaderUnavailable:
     """The outcome a composed mapper reports when the role's model is not installed."""
     return ColumnRoleReaderUnavailable(
-        precondition_verdict=probe_no_recovery_verdict(
-            ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-            facts={"role": "column_role_mapping", "runtime_reachable": True, "role_model_installed": False},
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
+            facts={"role": "column_role_mapping", "role_model_installed": False},
         )
     )
 
@@ -75,9 +72,9 @@ def test_detection_hands_a_reader_blocked_file_to_its_lane() -> None:
 
 def test_the_reason_states_the_column_model_is_unavailable() -> None:
     unservable = ColumnRoleReaderUnavailable(
-        precondition_verdict=probe_no_recovery_verdict(
-            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
-            facts={"role": "column_role_mapping", "runtime_reachable": True, "role_model_selected": False},
+        precondition_verdict=ledger_no_recovery_verdict(
+            LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE,
+            facts={"role": "column_role_mapping", "role_model_selected": False},
         )
     )
     lane = MappedTabularProvider(mapping_resolver=lambda table: unservable)

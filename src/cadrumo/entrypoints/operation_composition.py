@@ -97,7 +97,6 @@ from .operation_composition_general import (
     compose_export_google_operation,
     compose_export_google_review_operation,
     compose_inventory_registered_operation,
-    compose_local_reader_operation_composition,
     compose_prorrata_register_registered_operations,
     compose_review_read_registration,
     compose_user_profile_archive_operation,
@@ -113,7 +112,6 @@ from .operation_composition_general import (
     compose_user_profile_recovery_revoke_operation,
     compose_user_profile_recovery_status_operation,
     compose_workbench_generation_operation,
-    compose_workstation_check_operation,
 )
 from .operation_composition_inputs import OperationCompositionInputs
 from .operation_composition_ledger import (
@@ -140,7 +138,6 @@ from .operation_composition_ledger import (
     compose_ledger_import_operation,
     compose_ledger_invoice_evidence_confirm_operation,
     compose_ledger_invoice_evidence_extract_operation,
-    compose_ledger_invoice_evidence_readiness_operation,
     compose_ledger_lifecycle_mutation_operation,
     compose_ledger_link_operation,
     compose_ledger_list_operation,
@@ -288,7 +285,6 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.ledger.import_operation": compose_ledger_import_operation,
     "application.ledger.invoice_evidence_confirm_operation": compose_ledger_invoice_evidence_confirm_operation,
     "application.ledger.invoice_evidence_extract_operation": compose_ledger_invoice_evidence_extract_operation,
-    "application.ledger.invoice_evidence_readiness_operation": compose_ledger_invoice_evidence_readiness_operation,
     "application.ledger.lifecycle_mutation_operation": compose_ledger_lifecycle_mutation_operation,
     "application.ledger.link_operation": compose_ledger_link_operation,
     "application.ledger.list_operation": compose_ledger_list_operation,
@@ -401,9 +397,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.workbench_generation_operation": compose_workbench_generation_operation,
     "application.workflow.resume_operation": compose_workflow_resume_operation,
     "application.workflow.run_read_operation": compose_workflow_run_read_operation,
-    "application.workstation_check_operation": compose_workstation_check_operation,
     "entrypoints.diagnostics_repair_composition": compose_diagnostics_repair_composition,
-    "entrypoints.local_reader_operation_composition": compose_local_reader_operation_composition,
 }
 
 

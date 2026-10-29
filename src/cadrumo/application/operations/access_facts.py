@@ -46,9 +46,6 @@ _LOCAL_READS: Final = (
     "config.google.status",
     "diagnostics.read",
     "diagnostics.secure-objects.check",
-    # The workstation check and the reader reads ask the agent service on this
-    # machine; none asks the local AI server.
-    "diagnostics.workstation.check",
     "ledger.actividad-asset.filing-handoff",
     "ledger.actividad-asset.forecast",
     "ledger.actividad-asset.inspect",
@@ -62,7 +59,6 @@ _LOCAL_READS: Final = (
     "ledger.evidence.list",
     "ledger.evidence.page",
     "ledger.evidence.query",
-    "ledger.evidence.reader-readiness",
     "ledger.evidence.review.list",
     "ledger.evidence.review.summary",
     "ledger.evidence.review.view",
@@ -103,8 +99,6 @@ _LOCAL_READS: Final = (
     "live.verify.latest",
     "live.verify.list",
     "live.verify.view",
-    "local-reader.report",
-    "local-reader.status",
     "modelo.036.query",
     "modelo.036.read",
     "modelo.audit.query",

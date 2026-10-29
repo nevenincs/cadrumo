@@ -47,7 +47,6 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
             "login",
             "logout",
             "repair",
-            "check",
             "storage",
             "google",
             "reset",
@@ -116,14 +115,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         ),
         service_owner="cadrumo.application.diagnostics",
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.DIAGNOSTICS,
-        root=RootSurfaceName.CONFIG,
-        child="check",
-        operator_question="check local dependency availability and active-profile capability state",
-        service_owner="cadrumo.application.workstation_probes",
-        mutability=OperatorMutability.READ_ONLY,
     ),
     MountedCommandFamily(
         domain=MountedCommandDomain.STORAGE,

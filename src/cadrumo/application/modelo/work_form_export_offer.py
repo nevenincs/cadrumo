@@ -1,9 +1,7 @@
 """What a declaration offers to export, the file format its revision writes, and its filing's receipt.
 
-The artefacts offered are the ones this installation can publish, probed in
-the worker that runs the export, so the filer never picks an export the
-installation would refuse. Each says whether it can be created now, and why
-not, by the same rules the export and the filing gates apply: the
+Every artefact an export publishes is offered. Each says whether it can be
+created now, and why not, by the same rules the export and the filing gates apply: the
 spreadsheet for review needs a calculation, the calculation report a checked
 calculation, and the file for the AEAT, like recording the filing, nothing
 that blocks filing or waits to be confirmed, as the header's hold says.
@@ -34,7 +32,6 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...core.optional_extras import PDF_EXTRA, OptionalExtra, optional_extra_available
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -56,11 +53,6 @@ EXPORT_ARTEFACT_LOCALE_KEYS: Final[Mapping[ModeloExportArtefact, str]] = Mapping
         ModeloExportArtefact.CALCULATION_REPORT_PDF: "tui.modelo.export.artefact.calculation_report_pdf",
         ModeloExportArtefact.CALCULATION_REVIEW_XLSX: "tui.modelo.export.artefact.calculation_review_xlsx",
     }
-)
-#: An artefact that needs an optional extra is offered only when the extra is
-#: installed, and no other artefact is ever published in its place.
-_EXPORT_ARTEFACT_EXTRAS: Final[Mapping[ModeloExportArtefact, OptionalExtra]] = MappingProxyType(
-    {ModeloExportArtefact.CALCULATION_REPORT_PDF: PDF_EXTRA},
 )
 REFUND_ELECTION_LOCALE_KEYS: Final[Mapping[RefundElection, str]] = MappingProxyType(
     {
@@ -227,19 +219,6 @@ class ModeloFormReceipt(BaseModel):
         return self
 
 
-def offered_export_artefacts() -> tuple[ModeloExportArtefact, ...]:
-    """The artefacts this installation can publish, in the order an export offers them.
-
-    Probed each time, through the same spec-only probe the export service's own
-    refusal rests on.
-    """
-    return tuple(
-        artefact
-        for artefact in EXPORT_ARTEFACT_LOCALE_KEYS
-        if (extra := _EXPORT_ARTEFACT_EXTRAS.get(artefact)) is None or optional_extra_available(extra)
-    )
-
-
 def asks_export_elections(modelo: str) -> bool:
     """Whether exporting ``modelo`` asks the payment and refund elections.
 
@@ -382,7 +361,7 @@ def form_export_offer(
                 words=tr(EXPORT_ARTEFACT_LOCALE_KEYS[artefact], locale=locale),
                 availability=artefact_availability(artefact, form, language, verified=verified),
             )
-            for artefact in offered_export_artefacts()
+            for artefact in EXPORT_ARTEFACT_LOCALE_KEYS
         ),
         record=record_availability(form, language, verified=verified, filed=filed),
         review_package=ModeloFormReviewPackageOffer(
@@ -462,7 +441,6 @@ __all__ = [
     "asks_export_elections",
     "form_export_offer",
     "form_receipt",
-    "offered_export_artefacts",
     "record_availability",
     "review_package_availability",
     "revision_file_format",

@@ -519,19 +519,6 @@ def compose_ledger_evidence_mutation_operation(inputs: OperationCompositionInput
     )
 
 
-def compose_ledger_invoice_evidence_readiness_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
-    """Compose ledger invoice evidence readiness operation."""
-    from ..application.ledger.invoice_evidence_readiness_operation import (
-        build_ledger_evidence_reader_readiness_definition,
-        build_ledger_evidence_reader_readiness_registration,
-    )
-    from ..application.local_reader import read_local_reader_status
-
-    del inputs
-    definition = build_ledger_evidence_reader_readiness_definition(read_local_reader_status)
-    return built((definition,), (build_ledger_evidence_reader_readiness_registration(definition),))
-
-
 def compose_ledger_invoice_evidence_extract_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose ledger invoice evidence extract operation."""
     from ..application.ledger.invoice_evidence_extract_operation import (

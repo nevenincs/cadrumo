@@ -25,7 +25,6 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     """Extract one registered terminal verdict from a single exception."""
     from ..core.errors.error_codes import get_registered_error_code
     from ..core.errors.hierarchy import CadrumoError, CoreValidationError
-    from ..core.optional_extras import MissingOptionalExtraError
 
     if not isinstance(current, CadrumoError):
         return None
@@ -40,15 +39,6 @@ def _registered_terminal_precondition_verdict(current: BaseException) -> Precond
     registry_verdict = _calculation_registry_verdict(current)
     if registry_verdict is not None:
         return registry_verdict
-    if isinstance(current, MissingOptionalExtraError):
-        return cli_exception_no_recovery_verdict(
-            CliExceptionPrecondition.OPTIONAL_EXTRA_IMPORTABLE,
-            facts={
-                "extra": current.extra.extra,
-                "import_name": current.extra.import_name,
-                "importable": False,
-            },
-        )
     if (
         isinstance(current, CoreValidationError)
         and current.context is not None
@@ -195,7 +185,6 @@ class CliExceptionPrecondition(StrEnum):
     LEDGER_TRANSACTION_ID_RESOLVES = "cli.ledger.transaction_id.resolves"
     LEDGER_TRANSACTION_VALID = "cli.ledger.transaction.valid"
     LEDGER_INVOICE_VALID = "cli.ledger.invoice.valid"
-    OPTIONAL_EXTRA_IMPORTABLE = "cli.optional_extra.importable"
     EXTERNAL_CONSTANTS_SECTION_VALID = "cli.external_constants.section_valid"
 
 

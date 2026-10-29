@@ -285,9 +285,8 @@ class ProviderConfigurationProbe(BaseModel):
     """Public per-provider local configuration readiness verdict.
 
     Wraps the pure-local :func:`probe_provider_credentials` (no network,
-    no active-profile requirement) so the workstation doctor
-    (``aeat config check``) can render one certificate / Cl@ve Móvil
-    readiness row per :class:`core.auth_provider.AuthProviderKind`
+    no active-profile requirement) so a caller can read one certificate /
+    Cl@ve Móvil readiness verdict per :class:`core.auth_provider.AuthProviderKind`
     directly from :class:`core.config.Settings`. ``result`` is the
     typed :class:`ProviderProbeResult`; ``summary`` is the localised
     one-line operator-facing verdict.

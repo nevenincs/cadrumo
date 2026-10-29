@@ -36,7 +36,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
 )
 
 from ...adapters.outbound.llm.column_role_mapping import resolve_column_roles
@@ -246,12 +245,6 @@ class RecordingRunsAuthority:
     async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
         del identity
         return await self._service.lookup(ModelRole(role))
-
-    async def model_run_selections(
-        self, identity: OperationIdentity
-    ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        del identity
-        return await self._service.selections()
 
     async def model_run(
         self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody

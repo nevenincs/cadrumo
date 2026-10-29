@@ -38,10 +38,9 @@ from cadrumo.application.ledger.evidence_ports import LedgerEvidencePorts
 from cadrumo.application.ledger.extraction_draft_store import load_extraction_drafts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import InvoiceDraftExtractionPorts
 from cadrumo.application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from cadrumo.application.local_reader import EXTRACTION_READER_ROLES
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
@@ -171,6 +170,9 @@ def _run_batch_with(
 
 #: The agent's answer when the selected model does not fit this computer's free memory.
 _DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
+
+#: The roles invoice evidence extraction reads with, text layer first.
+_EXTRACTION_READER_ROLES = (ModelRole.TEXT_EXTRACTION, ModelRole.VISION_TRANSCRIPTION)
 
 
 def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:
@@ -523,9 +525,8 @@ class TestInferencePacing:
 
         assert [item.status for item in result.items] == ["paused"] * 3
         assert result.inference_pause is not None, "three paused documents must carry one stated cause"
-        assert result.inference_pause.precondition_verdict.failed_condition_id == (
-            ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
-        )
+        refusal_facts = result.inference_pause.precondition_verdict.evidence[0].values
+        assert refusal_facts["model_run_refusal"] == _DOES_NOT_FIT.value
         # No per-item refusal text: the model forbids a reason under a non-refused
         # status, so this also proves the pause did not smuggle one in per row.
         assert all(item.refusal_verdict is None for item in result.items)
@@ -615,7 +616,7 @@ class TestInferencePacing:
         refused = [item for item in result.items if item.status == "refused"]
         paused = [item for item in result.items if item.status == "paused"]
         # Each reader role learns it once: at most one document per role is spent.
-        assert 1 <= len(refused) <= len(EXTRACTION_READER_ROLES), [item.status for item in result.items]
+        assert 1 <= len(refused) <= len(_EXTRACTION_READER_ROLES), [item.status for item in result.items]
         assert paused, "the rest wait on the closed roles"
         assert len(refused) + len(paused) == 3
         assert service.runs == [], "nothing is sent for a role with no selection"

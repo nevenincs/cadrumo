@@ -18,7 +18,6 @@ import pytest
 from ....core.export_layout_format import ExportLayoutFormat
 from ....core.external_constants import OutputLanguage
 from ....core.modelo_export_artefact import ModeloExportArtefact
-from ....core.optional_extras import PDF_EXTRA, optional_extra_available
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
@@ -42,6 +41,7 @@ from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASON
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_export_offer import (
+    EXPORT_ARTEFACT_LOCALE_KEYS,
     ModeloFormElection,
     ModeloFormUnavailable,
     asks_export_elections,
@@ -109,13 +109,12 @@ def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
     assert not other.asks_elections and other.elections == ()
 
 
-def test_the_artefacts_offered_follow_the_installed_extras(operation: PinnedAuthorityOperation) -> None:
+def test_every_export_artefact_is_offered_in_order(operation: PinnedAuthorityOperation) -> None:
     offer = _offer(operation, "130", 2026, "1T")
 
     artefacts = tuple(option.artefact for option in offer.artefacts)
     assert artefacts[0] is ModeloExportArtefact.FICHERO_BOE
-    assert (ModeloExportArtefact.CALCULATION_REPORT_PDF in artefacts) is optional_extra_available(PDF_EXTRA)
-    assert ModeloExportArtefact.CALCULATION_REPORT_CSV in artefacts
+    assert artefacts == tuple(EXPORT_ARTEFACT_LOCALE_KEYS)
 
 
 @pytest.mark.parametrize(

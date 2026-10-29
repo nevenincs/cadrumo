@@ -21,7 +21,6 @@ from .conformance_ledger_evidence_page_support import LEDGER_EVIDENCE_PAGE_CONFO
 from .conformance_ledger_export_link_support import LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY
 from .conformance_ledger_history_support import LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY
 from .conformance_live_borrador_support import LIVE_BORRADOR_CONFORMANCE_FAMILY
-from .conformance_local_reader_support import LOCAL_READER_CONFORMANCE_FAMILY
 from .conformance_m036_support import M036_CONFORMANCE_FAMILY
 from .conformance_m145_support import M145_CONFORMANCE_FAMILY
 from .conformance_maritime_preview_support import MARITIME_PREVIEW_CONFORMANCE_FAMILY
@@ -33,7 +32,6 @@ from .conformance_profile_history_support import PROFILE_HISTORY_CONFORMANCE_FAM
 from .conformance_quickfile_support import QUICKFILE_CONFORMANCE_FAMILY
 from .conformance_review_package_exchange_support import REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY
 from .conformance_saved_review_export_support import SAVED_REVIEW_EXPORT_CONFORMANCE_FAMILY
-from .conformance_workstation_check_support import WORKSTATION_CHECK_CONFORMANCE_FAMILY
 
 CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     AUTH_APODERADO_CONFORMANCE_FAMILY,
@@ -49,7 +47,6 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     LEDGER_EXPORT_LINK_CONFORMANCE_FAMILY,
     LEDGER_HISTORY_TYPED_CONFORMANCE_FAMILY,
     LIVE_BORRADOR_CONFORMANCE_FAMILY,
-    LOCAL_READER_CONFORMANCE_FAMILY,
     M036_CONFORMANCE_FAMILY,
     M145_CONFORMANCE_FAMILY,
     MARITIME_PREVIEW_CONFORMANCE_FAMILY,
@@ -61,7 +58,6 @@ CONFORMANCE_FAMILIES: tuple[ConformanceFamily, ...] = (
     QUICKFILE_CONFORMANCE_FAMILY,
     REVIEW_PACKAGE_EXCHANGE_CONFORMANCE_FAMILY,
     SAVED_REVIEW_EXPORT_CONFORMANCE_FAMILY,
-    WORKSTATION_CHECK_CONFORMANCE_FAMILY,
 )
 
 

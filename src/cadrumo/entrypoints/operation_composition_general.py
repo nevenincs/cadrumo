@@ -153,19 +153,6 @@ def compose_review_read_registration(inputs: OperationCompositionInputs) -> Oper
     return built(definitions, build_review_read_registrations(definitions))
 
 
-def compose_workstation_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
-    """Compose workstation check operation."""
-    from ..application.workstation_check_operation import (
-        build_workstation_check_definition,
-        build_workstation_check_registration,
-    )
-    from .workstation_check_operation_composition import build_workstation_check_operation_ports
-
-    del inputs
-    definition = build_workstation_check_definition(build_workstation_check_operation_ports)
-    return built((definition,), (build_workstation_check_registration(definition),))
-
-
 def compose_diagnostics_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose diagnostics operation."""
     from ..application.diagnostics_operation import (
@@ -187,15 +174,6 @@ def compose_diagnostics_repair_composition(inputs: OperationCompositionInputs) -
         execution_caller_reader=inputs.execution_caller_reader,
         connectivity_probe=supplied(inputs.connectivity_probe, probe_aeat_sede_connectivity),
     )
-    return built(operations.definitions, operations.registrations)
-
-
-def compose_local_reader_operation_composition(inputs: OperationCompositionInputs) -> OperationGroupBuild:
-    """Compose local reader operation composition."""
-    from .local_reader_operation_composition import build_local_reader_operations
-
-    del inputs
-    operations = build_local_reader_operations()
     return built(operations.definitions, operations.registrations)
 
 

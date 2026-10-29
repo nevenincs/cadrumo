@@ -650,23 +650,6 @@ _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
         grouping=StorageGrouping.STATE,
         override_policy=StorageOverridePolicy.FIXED,
     ),
-    _location(
-        # Excluded from the fingerprint: an installation that ran the probe
-        # keeps the file, and its presence must not change a replay's digest.
-        StorageCategory.LOCAL_READER_FITNESS_VERDICTS,
-        "local-reader-fitness.json",
-        dormant_reason=(
-            "the local reader's fitness probe was this record's only producer and reader, and it "
-            "was deleted with the direct on-host model adapter it ran through: every model read now "
-            "goes through the agent service. An installation that ran the probe may still hold the "
-            "file, so the path stays declared, but nothing now reads or writes it"
-        ),
-        node_kind=StorageNodeKind.FILE,
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        override_policy=StorageOverridePolicy.FIXED,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
     *(
         _location(
             category,

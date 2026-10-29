@@ -18,6 +18,7 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from ....core.hashing import sha256_hex
+from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -34,7 +35,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
+from ...tests.agent_refusal_support import model_not_installed_verdict
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
@@ -526,10 +527,7 @@ def test_a_book_whose_column_reader_is_unavailable_refuses_with_the_reader_verdi
 ) -> None:
     """The verdict the reader probe returned reaches the operation error detail, and nothing was written."""
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
-    verdict = probe_no_recovery_verdict(
-        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-        facts={"role": "column_role_mapping", "role_model_installed": False},
-    )
+    verdict = model_not_installed_verdict(ModelRole.COLUMN_ROLE_MAPPING)
     request = _unreadable_book_import(tmp_path)
     context, events, operands, _fence = _context(request, authority_operation)
     factory = _mapper_factory(ColumnRoleReaderUnavailable(precondition_verdict=verdict))

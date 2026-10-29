@@ -22,7 +22,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunLane,
     ModelRunOutput,
     ModelRunRefusal,
-    ModelRunRoleSelection,
 )
 
 from ...core.model_roles import ModelRole
@@ -36,10 +35,6 @@ class ModelRunPort(Protocol):
         """Return the lane and model the service would use for ``role``; nothing secret."""
         ...
 
-    async def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        """Return every role's selection state as the service reports it; nothing secret."""
-        ...
-
     async def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         """Run one tool-less request and return its final reply text, or a closed refusal."""
         ...
@@ -51,12 +46,6 @@ class OperationModelRuns(Protocol):
 
     async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
         """Resolve the lane for ``role`` on behalf of the running operation ``identity``."""
-        ...
-
-    async def model_run_selections(
-        self, identity: OperationIdentity
-    ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        """Read every role's selection state on behalf of the running operation ``identity``."""
         ...
 
     async def model_run(
@@ -96,9 +85,6 @@ class _OperationBoundModelRuns:
 
     async def lookup(self, role: ModelRole) -> ModelRunLane | ModelRunRefusal:
         return await self._on_owner_loop(self._owner.model_run_lookup(self._identity, role.value))
-
-    async def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        return await self._on_owner_loop(self._owner.model_run_selections(self._identity))
 
     async def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         return await self._on_owner_loop(self._owner.model_run(self._identity, header, body))

@@ -55,7 +55,6 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -193,7 +192,7 @@ def test_a_text_read_refused_for_its_missing_model_settles(
     detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
-    assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
     assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
     assert verdict.action is None
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
@@ -210,7 +209,7 @@ def test_an_image_read_refused_for_its_missing_vision_model_settles(
     detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
-    assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
+    assert verdict.failed_condition_id == LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
     assert verdict.evidence[0].values["role"] == ModelRole.VISION_TRANSCRIPTION.value
     assert verdict.action is None
     assert service.lookups == [ModelRole.VISION_TRANSCRIPTION]

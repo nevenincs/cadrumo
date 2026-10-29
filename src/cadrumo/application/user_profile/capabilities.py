@@ -207,9 +207,8 @@ def _active_profile_record() -> UserProfileRecord | None:
     """Return the active profile's record, or ``None`` when unavailable.
 
     Returns ``None`` — never raises — when there is no active session OR the secret
-    store cannot be opened (e.g. a locked store with no passphrase, as on a fresh
-    workstation running ``aeat config check``). A diagnostic/gate resolves to the
-    conservative global default rather than crashing when the profile is locked.
+    store cannot be opened (e.g. a locked store with no passphrase). A gate resolves
+    to the conservative global default rather than crashing when the profile is locked.
     """
     try:
         if profile_current_bucket_session() is None:

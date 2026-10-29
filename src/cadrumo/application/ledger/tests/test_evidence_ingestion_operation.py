@@ -110,7 +110,7 @@ def test_batch_snapshot_restores_all_rows_and_canonical_precondition_facts() -> 
                     cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
                     unread_fields=("supplier_name",),
                     reader_error_type="LLMContentionError",
-                    failed_condition_id="probe.load_capacity.available",
+                    failed_condition_id="llm.agent.model_run_completed",
                 )
                 if status == "no_op"
                 else None

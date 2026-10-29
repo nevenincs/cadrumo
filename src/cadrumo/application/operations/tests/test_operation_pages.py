@@ -32,7 +32,7 @@ def _registered() -> tuple[str, ...]:
 
 def test_every_registered_family_has_a_decided_page() -> None:
     # A new family must be given a page, or be named here as one no page shows.
-    pageless = {"app", "config", "diagnostics", "local-reader", "profile", "workbench", "workflow"}
+    pageless = {"app", "config", "diagnostics", "profile", "workbench", "workflow"}
     register = load_navigation_register()
     for definition_id in _registered():
         family = definition_id.split(".", 1)[0]

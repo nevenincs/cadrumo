@@ -265,7 +265,7 @@ def test_invoice_projection_preserves_label_fallback_across_json(cause: LabelRea
         cause=cause,
         unread_fields=("invoice_date", "supplier_tax_id"),
         reader_error_type="ReaderAdmissionRefusedError",
-        failed_condition_id="probe.load_capacity.available",
+        failed_condition_id="llm.agent.model_run_completed",
     )
     source = _draft().with_label_reading_fallback(fallback)
     assert source.label_reading_fallback is not None

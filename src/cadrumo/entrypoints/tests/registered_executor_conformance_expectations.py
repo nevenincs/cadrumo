@@ -668,12 +668,6 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             ("ledger.evidence.remove",),
         ),
         RegisteredExecutorConformanceCase(
-            "ledger.evidence.reader-readiness",
-            OperationTerminalCondition.SUCCEEDED,
-            OperationEffect.NONE,
-            ("ledger.evidence.reader-readiness",),
-        ),
-        RegisteredExecutorConformanceCase(
             "ledger.evidence.extract",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,

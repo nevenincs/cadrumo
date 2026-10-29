@@ -60,7 +60,6 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
@@ -200,7 +199,7 @@ def _assert_refused_by_the_reader(
     service: RecordingModelRuns,
     *,
     message_key: str,
-    condition: LLMPreconditionCondition | ProbePreconditionCondition,
+    condition: LLMPreconditionCondition,
 ) -> Mapping[str, str | int | bool | Decimal]:
     refused, refusal_ref, detail = settled
     assert refused is OperationTerminalCondition.REFUSED
@@ -230,7 +229,7 @@ def test_a_classification_refused_for_its_missing_text_model_settles(
         settled,
         service,
         message_key=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
-        condition=ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
+        condition=LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED,
     )
 
 

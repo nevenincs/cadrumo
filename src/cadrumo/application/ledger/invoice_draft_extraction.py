@@ -346,12 +346,12 @@ def _refuse_a_text_read_with_no_reader(
     The refusal carries only application-observed machine facts. Recovery is
     resolved later from the canonical action catalogue; this boundary neither
     invents a command nor copies dependency-owned presentation prose. When the
-    reader probe already knows why the reader cannot run, its verdict is the
-    refusal, so the setup it names reaches the operator unchanged.
+    agent already stated why the reader cannot run, its verdict is the
+    refusal and reaches the operator unchanged.
 
     Args:
         exc: The provider or dependency failure that prevented the read.
-        precondition_verdict: The reader probe's refusal, when it gave one.
+        precondition_verdict: The agent's refusal, when it gave one.
 
     Raises:
         PurchaseInvoiceEvidenceInputError: Always.
@@ -362,9 +362,9 @@ def _refuse_a_text_read_with_no_reader(
 
 
 def _refuse_with_reader_verdict(verdict: PreconditionVerdict, *, cause: Exception) -> NoReturn:
-    """Refuse with the reader probe's verdict, carried by exactly one refusal.
+    """Refuse with the agent's verdict, carried by exactly one refusal.
 
-    The pre-check already refuses with that verdict and hands the refusal up as
+    The reader already refuses with that verdict and hands the refusal up as
     the unavailable reader's cause. It is re-raised unchanged rather than
     wrapped in a second refusal: an operation's error detail keeps a verdict
     only when one registered error in the chain carries it, so two carriers of
@@ -941,7 +941,6 @@ def _extract_invoice_fields_via_vision(
             _refuse_with_reader_verdict(verdict, cause=cause)
         facts: dict[str, str | bool] = {
             "vision_reader_available": False,
-            "vision_reader_probe_available": True,
             "vision_reader_error_type": cause.__class__.__name__,
         }
         raise PurchaseInvoiceEvidenceReaderError(

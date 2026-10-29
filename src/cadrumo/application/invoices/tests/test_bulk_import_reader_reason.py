@@ -18,8 +18,8 @@ from ....core.model_roles import ModelRole
 from ....tests.inventory import FIXTURES_DIR
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
-from ...probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from ...reader_refusal_wording import column_reader_refusal_reason
+from ...tests.agent_refusal_support import model_not_installed_verdict
 from ..bulk_import import read_bulk_invoice_import_source
 
 __all__ = ["english_locale_fixture"]
@@ -30,11 +30,7 @@ _LIBRO = FIXTURES_DIR / "financial" / "tabular-dialects" / "libro_facturas_exped
 
 
 def _unavailable_reader() -> ColumnRoleReaderUnavailable:
-    verdict = probe_no_recovery_verdict(
-        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-        facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "runtime_reachable": True, "role_model_installed": False},
-    )
-    return ColumnRoleReaderUnavailable(precondition_verdict=verdict)
+    return ColumnRoleReaderUnavailable(precondition_verdict=model_not_installed_verdict(ModelRole.COLUMN_ROLE_MAPPING))
 
 
 def test_the_book_refusal_states_that_the_column_model_is_unavailable() -> None:

@@ -43,6 +43,8 @@ from typing import TYPE_CHECKING, Final, Literal, get_args, override
 
 from pydantic import BaseModel, Field, TypeAdapter
 
+from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+
 from ...core.directory_scan import scan_directory
 from ...core.identity.digest import ContentDigest
 from ...core.model_roles import ModelRole
@@ -50,7 +52,6 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.provenance_stamp import LOCAL_TRANSPORT_LABEL
 from ...domain.iva.schema import InvoiceKind
 from ..operator_actions.models import PreconditionVerdict
-from ..probe_outcomes import ProbePreconditionCondition
 from .invoice_draft_records import LabelReadingFallback
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
@@ -506,7 +507,7 @@ class _InferenceLaneState:
         """
         if verdict is None:
             return False
-        if verdict.failed_condition_id in _CONTENTION_CONDITIONS:
+        if _is_contention(verdict):
             if self._contention is None:
                 self._contention = _inference_pause(facts=_verdict_facts(verdict), precondition_verdict=verdict)
             return True
@@ -529,8 +530,9 @@ class _InferenceLaneState:
         return next(iter(self._reader_pauses.values()), None)
 
 
-#: The agent's refusal to load a model with the memory free; it is a property of the machine.
-_CONTENTION_CONDITIONS: Final = frozenset({ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value})
+def _is_contention(verdict: PreconditionVerdict) -> bool:
+    """Return whether the verdict is the agent's refusal to load a model with the memory free."""
+    return _verdict_facts(verdict).get(_MODEL_RUN_REFUSAL_FACT) == ModelRunRefusalCode.MODEL_DOES_NOT_FIT.value
 
 
 def _verdict_facts(verdict: PreconditionVerdict) -> dict[str, str | int | bool]:

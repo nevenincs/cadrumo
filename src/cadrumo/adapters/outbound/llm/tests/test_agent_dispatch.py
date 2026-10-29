@@ -193,7 +193,7 @@ def test_a_model_the_agent_cannot_fit_names_the_free_memory_condition_and_how_to
 
     verdict = caught.value.terminal_precondition_verdict
     assert verdict is not None
-    assert str(verdict.failed_condition_id) == "probe.load_capacity.available"
+    assert str(verdict.failed_condition_id) == "llm.agent.model_run_completed"
     assert verdict.action is None, "setup cannot free memory"
     assert verdict.evidence[0].values["model_run_refusal"] == "model_does_not_fit"
     sentence = resolve_error_message(caught.value, locale=locale)

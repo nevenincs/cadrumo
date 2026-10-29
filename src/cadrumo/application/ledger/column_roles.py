@@ -40,9 +40,7 @@ class ColumnRoleReaderUnavailable:
 
     Distinct from a decline. A decline says the model looked at the headers and
     established nothing; this says the file was never looked at, because the
-    local AI runtime does not answer, the role's model is not installed, or this
-    computer cannot run any model for the role. The verdict names which, and
-    carries the setup action when setup can supply what is missing.
+    agent refused the role. The verdict carries the agent's refusal.
     """
 
     precondition_verdict: PreconditionVerdict

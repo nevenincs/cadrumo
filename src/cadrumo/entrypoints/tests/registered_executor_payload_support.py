@@ -161,11 +161,7 @@ def _payload(
     values: dict[str, object]
     secret: bytes | None = None
     subject_ref = f"profile:{profile_id}"
-    if definition.definition_id in {
-        "ledger.evidence.reader-readiness",
-        "ledger.evidence.extract",
-        "ledger.evidence.confirm",
-    }:
+    if definition.definition_id in {"ledger.evidence.extract", "ledger.evidence.confirm"}:
         evidence_case = prepare_invoice_evidence_conformance_case(
             definition.definition_id, profile_id=profile_id, operation=operation
         )

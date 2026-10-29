@@ -1,19 +1,16 @@
 """Capability-gated optional package extras and their import guard.
 
-The shipped package is lean: a bare ``pip install cadrumo`` omits the optional
-integration stacks (Google export and the live-AEAT browser). Each maps to a
+The shipped package is lean: it omits the optional integration stacks (Google
+export and the live-AEAT browser). Each maps to a
 ``[project.optional-dependencies]`` extra and is
 imported lazily, so the core CLI builds and runs without it.
 
 This module is the single source of truth for those extras. It lives in ``core``
 — the innermost layer — so an adapter can guard its own external-library import
-without importing the application layer, and the application doctor can probe the
-same :data:`OPTIONAL_EXTRAS` registry through
-:func:`application.workstation_probes.probe_optional_extra`. :func:`require_optional_extra`
+without importing the application layer. :func:`require_optional_extra`
 is the seam every feature boundary calls before its lazy import so a missing
-extra becomes one instructive :class:`MissingOptionalExtraError` naming
-``pip install cadrumo[<extra>]`` instead of a raw deep-stack
-``ModuleNotFoundError``.
+extra becomes one :class:`MissingOptionalExtraError` naming the feature that
+needs it instead of a raw deep-stack ``ModuleNotFoundError``.
 
 These records describe package availability only. They do not decide whether an
 operator has opted into Google export, browser automation, or hosted LLM usage;
@@ -45,12 +42,12 @@ __all__ = [
 
 
 class OptionalExtra(BaseModel):
-    """A capability-gated optional package extra and how to probe/install it.
+    """A capability-gated optional package extra.
 
     Attributes:
         extra: The ``[project.optional-dependencies]`` key.
-        import_name: Importable package/module name used by the spec-only probe.
-        feature: Human-readable feature label used in refusals and doctor rows.
+        import_name: Importable package/module name the import guard looks for.
+        feature: Human-readable feature label used in refusals.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -62,29 +59,25 @@ class OptionalExtra(BaseModel):
 
 # The capability-mapped optional extras declared in
 # ``[project.optional-dependencies]``. Each adapter family guards its own entry
-# with the matching constant; the doctor enumerates the tuple.
+# with the matching constant.
 GOOGLE_EXTRA = OptionalExtra(extra="google", import_name="googleapiclient", feature="Google Drive / Sheets export")
 BROWSER_EXTRA = OptionalExtra(extra="browser", import_name="playwright", feature="live AEAT browser automation")
 # ``ofxtools`` is GPL-3.0-only; gating it behind an extra keeps the CORE
 # dependency closure free of strong copyleft.
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
 # Local-inference document reading (the gated outbound LLM adapter).
-# Registered here rather than hand-rolled outside the classifier like the
-# ``automation`` extra, so the doctor enumerates it and one refusal shape covers
-# every inference boundary.
+# Registered here so one refusal shape covers every inference boundary.
 #
-# **The probe target must be EXCLUSIVE to the extra, and that is why it is
-# ``pynvml`` rather than ``PIL``.** A probe answers one question: is the extra
-# installed. Pillow cannot answer it, because Pillow is also an unconditional
-# base dependency (declared directly, since ``pypdfium2``'s ``to_pil()`` relies
-# on it) -- so ``find_spec("PIL")`` succeeds in every core install,
+# **The guarded import name must be EXCLUSIVE to the extra, and that is why it is
+# ``pynvml`` rather than ``PIL``.** Pillow is also an unconditional base
+# dependency (declared directly, since ``pypdfium2``'s ``to_pil()`` relies on
+# it) -- so ``find_spec("PIL")`` succeeds in every core install,
 # :func:`optional_extra_available` is permanently true, and every
-# :func:`require_optional_extra` call below it is a no-op that reports the
-# boundary healthy while it fails open. ``pynvml`` is supplied by
-# ``nvidia-ml-py``, which the ``llm`` extra declares and the core closure does
-# not, so its spec is present exactly when the extra is installed. This is a
-# spec-only probe, so it needs no NVIDIA hardware and no NVML runtime: the
-# accelerator reader handles an absent driver on its own terms.
+# :func:`require_optional_extra` call below it is a no-op that fails open.
+# ``pynvml`` is supplied by ``nvidia-ml-py``, which the ``llm`` extra declares
+# and the core closure does not, so its spec is present exactly when the extra
+# is installed. The check is spec-only, so it needs no NVIDIA hardware and no
+# NVML runtime.
 LLM_EXTRA = OptionalExtra(extra="llm", import_name="pynvml", feature="local-inference document reading")
 # The calculation-summary PDF writer. ``reportlab`` is exclusive to the extra:
 # no core distribution requires it, so its spec is present exactly when the
@@ -105,10 +98,8 @@ class MissingOptionalExtraError(CoreError):
     """Raised when a feature is reached but its optional extra is not installed.
 
     Descends from :class:`~core.errors.hierarchy.CoreError` so the project-wide
-    :class:`~core.errors.hierarchy.CadrumoError` boundary sees the refusal. Application
-    probes report the same missing package as a
-    :class:`application.workstation_probes.DependencyStatus`; feature guards raise
-    this exception only when the operator reaches the guarded boundary.
+    :class:`~core.errors.hierarchy.CadrumoError` boundary sees the refusal. Feature
+    guards raise this exception only when the operator reaches the guarded boundary.
 
     The operator-facing text is the registered error code's own translation
     key, so this refusal renders through the same catalogue every other
@@ -143,11 +134,10 @@ def optional_extra_available(extra: OptionalExtra) -> bool:
     A spec-only check (:func:`importlib.util.find_spec`) — no side effects, no
     heavy module load. Never raises: a missing parent package resolves to
     ``False``. This helper intentionally does not call
-    :func:`require_optional_extra`; probes should report dependency status, not
-    raise feature-boundary refusals.
+    :func:`require_optional_extra`, which owns the feature-boundary refusal.
 
     Args:
-        extra: The :class:`OptionalExtra` registry record to probe.
+        extra: The :class:`OptionalExtra` registry record to look for.
 
     Returns:
         ``True`` when ``extra.import_name`` has an import spec; otherwise

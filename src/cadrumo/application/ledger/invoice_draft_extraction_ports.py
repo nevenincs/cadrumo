@@ -48,15 +48,14 @@ class StructuredInvoiceReadError(CadrumoError):
 class InvoiceDraftReaderUnavailableError(CadrumoError):
     """Selected reader or its runtime was unavailable; preserve its cause.
 
-    ``precondition_verdict`` is the reader probe's own refusal when the probe
-    knows why the reader cannot run -- the runtime does not answer, or the
-    role's model is not installed -- so the extraction refuses, or records its
-    label fallback, with the cause and the setup action the probe named rather
-    than a generic reader failure. ``None`` when no probe answered for it.
+    ``precondition_verdict`` is the agent's own refusal when it stated why the
+    reader cannot run, so the extraction refuses, or records its label
+    fallback, with that cause rather than a generic reader failure. ``None``
+    when the agent stated none.
     """
 
     def __init__(self, cause: Exception, *, precondition_verdict: PreconditionVerdict | None = None) -> None:
-        """Create an unavailable-reader error while preserving its cause and the probe's verdict."""
+        """Create an unavailable-reader error while preserving its cause and the agent's verdict."""
         super().__init__(str(cause))
         self.cause = cause
         self.precondition_verdict = precondition_verdict
@@ -72,7 +71,7 @@ class SupplyNatureProposalResult(Protocol):
 
     @property
     def reader_unavailable(self) -> PreconditionVerdict | None:
-        """Return the reader probe's verdict when the on-host reader could not be asked."""
+        """Return the agent's verdict when the reader could not be asked."""
         ...
 
 

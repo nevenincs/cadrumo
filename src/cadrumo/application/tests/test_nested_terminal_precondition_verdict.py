@@ -8,17 +8,16 @@ from __future__ import annotations
 
 import pytest
 
+from ...core.model_roles import ModelRole
 from ..cli_exception_preconditions import nested_terminal_precondition_verdict
 from ..ledger.import_ports import LedgerImportReaderUnavailableError
 from ..operator_actions.models import PreconditionVerdict
-from ..probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
+from .agent_refusal_support import model_not_installed_verdict
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_INSTALLED = probe_no_recovery_verdict(
-    ProbePreconditionCondition.ROLE_MODEL_INSTALLED, facts={"role": "text_extraction", "role_model_installed": False}
-)
-_REACHABLE = probe_no_recovery_verdict(ProbePreconditionCondition.RUNTIME_REACHABLE, facts={"runtime_reachable": False})
+_INSTALLED = model_not_installed_verdict(ModelRole.TEXT_EXTRACTION)
+_OTHER = model_not_installed_verdict(ModelRole.VISION_TRANSCRIPTION)
 
 
 def _chained(outer: PreconditionVerdict, inner: PreconditionVerdict) -> LedgerImportReaderUnavailableError:
@@ -36,4 +35,4 @@ def test_a_wrapper_carrying_its_causes_verdict_states_that_one_verdict() -> None
 
 
 def test_two_different_verdicts_in_one_chain_are_ambiguous() -> None:
-    assert nested_terminal_precondition_verdict(_chained(_INSTALLED, _REACHABLE)) is None
+    assert nested_terminal_precondition_verdict(_chained(_INSTALLED, _OTHER)) is None

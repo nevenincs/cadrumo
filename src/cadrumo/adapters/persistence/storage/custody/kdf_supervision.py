@@ -195,9 +195,7 @@ def _posix_memory_bytes() -> int:
     ``SC_AVPHYS_PAGES`` is the currently-free page count and is the figure to
     prefer, but it is NOT portable: macOS omits it from ``os.sysconf_names``
     entirely, so asking for it by name raises ``ValueError`` rather than
-    answering. The sibling probe in ``application/workstation_probes.py`` already
-    guards on membership for exactly this reason and calls the constant "the
-    more commonly absent of the three".
+    answering, and the lookup guards on membership for that reason.
 
     Reading it unguarded here made every macOS host refuse profile custody
     outright: the ``ValueError`` was caught beside genuine probe failures and

@@ -23,8 +23,6 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutput,
     ModelRunRefusal,
     ModelRunRefusalCode,
-    ModelRunRoleSelection,
-    ModelRunSelectedModel,
 )
 
 from .....application.operations.model_runs import bound_model_runs
@@ -71,14 +69,6 @@ class RecordingModelRuns:
         if self._lookup_refusal is not None:
             return ModelRunRefusal(code=self._lookup_refusal)
         return self._lane
-
-    async def selections(self) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        if self._lookup_refusal is not None:
-            return ModelRunRefusal(code=self._lookup_refusal)
-        selected = ModelRunSelectedModel(
-            lane_id=f"{self._lane.provider_id}_{self._lane.transport}", model=self._lane.model
-        )
-        return tuple(ModelRunRoleSelection(role=role.value, selected=selected, lane=self._lane) for role in ModelRole)
 
     async def run(self, header: ModelRunHeader, body: ModelRunBody) -> ModelRunOutput | ModelRunRefusal:
         self.runs.append((header, body))

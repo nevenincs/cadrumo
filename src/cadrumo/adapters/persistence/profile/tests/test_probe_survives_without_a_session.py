@@ -1,13 +1,10 @@
 """Real profile-storage proof that auth readiness probes do not read without a session.
 
 ``probe_provider_configuration`` promises it works "without any network
-call or active-profile session" and "never raises"; ``run_preflight_checks``
-promises "the aggregate never raises". Those promises lived only in
-docstrings until a change made the probes read the active profile, and
+call or active-profile session" and "never raises". That promise lived only
+in a docstring until a change made the probe read the active profile, and
 the encrypted store refuses without a bucket session: SQLAlchemy wraps
-that refusal in a driver exception no domain-level except clause catches,
-so ``config check`` emitted an error document instead of a payload and
-the operator could not run the doctor until they logged in.
+that refusal in a driver exception no domain-level except clause catches.
 
 What is asserted here is that the probe DECLINES the read, not merely
 that it survives one. "Does not raise" depends on which secret-store
@@ -32,7 +29,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.outbound.storage.path_budget import windows_worst_case_object_path_suffix_length
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -44,16 +40,10 @@ from cadrumo.application.auth.operator_probe_ports import (
     OperatorProbePorts,
 )
 from cadrumo.application.auth.operator_probes import live_auth_identity_state
-from cadrumo.application.preflight import run_preflight_checks
 from cadrumo.core.auth_provider import AuthProviderKind
 from cadrumo.core.config import override_settings
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
-
-#: Measured from the storage adapter's real on-disk grammar, the same value the
-#: composition root supplies in production. Reaching for it here keeps these
-#: probes exercising the true margin rather than a hand-picked sample.
-_SUFFIX_LENGTH = windows_worst_case_object_path_suffix_length()
 
 _BUCKET_ID = "99999999-9999-4999-8999-999999999999"
 _TAX_ID = "12345678Z"
@@ -112,24 +102,6 @@ def test_the_fixture_leaves_a_readable_profile_and_no_session() -> None:
     assert profile_present is True
     assert provider_present is True
     assert alignment == "matches"
-
-
-def test_the_preflight_aggregate_returns_rows_without_a_session() -> None:
-    """The contract the ``config check`` verb depends on.
-
-    The doctor emitted an error document instead of a payload when this
-    broke, which the operator met as a refusal to run at all.
-    """
-
-    rows = run_preflight_checks(
-        object_path_suffix_length=_SUFFIX_LENGTH,
-        operator_probe_ports=_LOCKED_OPERATOR_PROBE_PORTS,
-    )
-
-    assert rows
-    assert any(row.check.startswith("auth") for row in rows), (
-        f"no auth row survived the locked-store probe; got {[row.check for row in rows]}"
-    )
 
 
 @pytest.fixture(autouse=True)

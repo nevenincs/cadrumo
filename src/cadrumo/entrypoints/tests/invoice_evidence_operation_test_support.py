@@ -33,12 +33,7 @@ from ...application.ledger.invoice_evidence_operation_dtos import (
     InvoiceConfirmationProjectionV1,
     InvoiceDraftProjectionV1,
 )
-from ...application.ledger.invoice_evidence_readiness_operation import (
-    LedgerEvidenceReaderReadinessProjection,
-    LedgerEvidenceReaderReadinessRequest,
-)
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
-from ...application.local_reader import read_local_reader_status
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -61,13 +56,6 @@ def prepare_invoice_evidence_conformance_case(
     definition_id: str, *, profile_id: UUID, operation: PinnedAuthorityOperation
 ) -> InvoiceEvidenceConformanceCase:
     """Register a bundled synthetic XML in actual encrypted attachment custody."""
-    if definition_id == "ledger.evidence.reader-readiness":
-        return InvoiceEvidenceConformanceCase(
-            request=LedgerEvidenceReaderReadinessRequest(profile_id=profile_id),
-            expected_read=LedgerEvidenceReaderReadinessProjection.from_status(
-                profile_id=profile_id, status=read_local_reader_status({})
-            ),
-        )
     upsert_test_profile_facts(
         profile_id,
         (

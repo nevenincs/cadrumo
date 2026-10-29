@@ -407,10 +407,8 @@ def _publish_new_calculation_revision(
     revision: CalculationRevision,
     revisions: CalculationRevisionCatalogue,
     revisions_revision_id: str,
-    revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
-    work_unit_id: str,
     input_values_by_casilla_id: dict[CasillaId, str],
     row_binding_values: dict[BindingId, dict[str, str]],
     row_casilla_values: Mapping[RowCasillaKey, Decimal],
@@ -433,12 +431,12 @@ def _publish_new_calculation_revision(
     advanced_work_units = _advance_calculation_work_unit(
         work_units=work_units,
         work_unit=work_unit,
-        revision_id=revision_id,
+        revision_id=revision.calculation_revision_id,
         now=now,
     )
     created_event = _build_calculation_created_event(
-        revision_id=revision_id,
-        work_unit_id=work_unit_id,
+        revision_id=revision.calculation_revision_id,
+        work_unit_id=revision.work_unit_id,
         work_unit=work_unit,
         input_values_by_casilla_id=input_values_by_casilla_id,
         row_binding_values=row_binding_values,
@@ -532,6 +530,36 @@ def _derive_revision_identity_and_handoff(
     return revision_id, stamped_annual_summary_handoff
 
 
+def _load_calculation_publication_target(
+    *,
+    operation: PinnedAuthorityOperation,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+    revision_id: str,
+    work_unit: WorkUnit,
+    work_units: WorkUnitCatalogue,
+    work_units_revision_id: str,
+    now: datetime,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    additional_secure_object_writes_for_revision: Callable[[str, str | None], tuple[SecureObjectWrite, ...]] | None,
+) -> tuple[CalculationRevisionCatalogue, str, CalculationRevisionPublication | None]:
+    """Load the guarded catalogue and publish a duplicate when the identity already exists."""
+    revisions, revisions_revision_id = calculation_repository.load_revisioned(operation=operation)
+    existing = revisions.get(revision_id)
+    if existing is None:
+        return revisions, revisions_revision_id, None
+    publication = _persist_duplicate_calculation_revision(
+        existing=existing,
+        revision_id=revision_id,
+        work_unit=work_unit,
+        work_units=work_units,
+        work_units_revision_id=work_units_revision_id,
+        now=now,
+        work_unit_repository=work_unit_repository,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+    return revisions, revisions_revision_id, publication
+
+
 def persist_calculation_revision(
     *,
     operation: PinnedAuthorityOperation,
@@ -614,20 +642,19 @@ def persist_calculation_revision(
         operator_layer=operator_layer,
         rendering_snapshot=rendering_snapshot,
     )
-    # Guard the catalogue against concurrent calculations.
-    revisions, revisions_revision_id = calculation_repository.load_revisioned(operation=operation)
-    existing = revisions.get(revision_id)
-    if existing is not None:
-        return _persist_duplicate_calculation_revision(
-            existing=existing,
-            revision_id=revision_id,
-            work_unit=work_unit,
-            work_units=work_units,
-            work_units_revision_id=work_units_revision_id,
-            now=now,
-            work_unit_repository=work_unit_repository,
-            additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
-        )
+    revisions, revisions_revision_id, duplicate = _load_calculation_publication_target(
+        operation=operation,
+        calculation_repository=calculation_repository,
+        revision_id=revision_id,
+        work_unit=work_unit,
+        work_units=work_units,
+        work_units_revision_id=work_units_revision_id,
+        now=now,
+        work_unit_repository=work_unit_repository,
+        additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
+    )
+    if duplicate is not None:
+        return duplicate
     revision = _build_calculation_revision(
         revision_id=revision_id,
         work_unit_id=work_unit_id,
@@ -663,10 +690,8 @@ def persist_calculation_revision(
         revision=revision,
         revisions=revisions,
         revisions_revision_id=revisions_revision_id,
-        revision_id=revision_id,
         work_unit=work_unit,
         work_units=work_units,
-        work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         row_binding_values=row_binding_values,
         row_casilla_values=row_casilla_values,

@@ -52,7 +52,7 @@ from .ledger_evidence_extraction_composition import evidence_text_layer_ports
 
 
 def _reader_unavailable(verdict: PreconditionVerdict) -> PurchaseInvoiceEvidenceReaderError:
-    """Return the ledger reader refusal carrying the reader probe's own verdict."""
+    """Return the ledger reader refusal carrying the agent's own verdict."""
     return PurchaseInvoiceEvidenceReaderError(
         LedgerPreconditionCondition.EVIDENCE_READER_AVAILABLE.value,
         translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
