@@ -37,6 +37,17 @@ _PRESENCE_WAIT_MILLISECONDS = 1
 """The shortest explicit wait: zero would ask for the server's default timeout instead."""
 
 
+def _reset_disconnected_pipe(handle: NativeWindowsHandle) -> None:
+    import pywintypes
+    import win32pipe
+
+    try:
+        win32pipe.DisconnectNamedPipe(int(handle))
+    except pywintypes.error as reset_error:
+        if reset_error.winerror != 233:  # already disconnected
+            raise RefusalError(RefusalCode.UNAVAILABLE) from None
+
+
 class WindowsEndpoint:
     """First-instance ownership held continuously across independent pipe clients."""
 
@@ -166,7 +177,7 @@ class WindowsEndpoint:
         return EndpointPresence.HELD
 
     def accept(self, *, timeout: float | None = 5.0, wakes: tuple[ChannelWake, ...] = ()) -> WindowsChannel:
-        """Provision the next instance before transferring this connected handle.
+        """Create the next instance before transferring this connected handle.
 
         No connection by ``timeout``, or a set wake, ends the wait as an unmet
         deadline; with ``timeout`` ``None`` only a connection or a wake ends it.
@@ -203,11 +214,7 @@ class WindowsEndpoint:
             # A client can close between CreateFile and ConnectNamedPipe (or
             # completion of its overlapped connect). Reset this same instance:
             # closing/recreating the last handle would expose an ownership gap.
-            try:
-                win32pipe.DisconnectNamedPipe(int(handle))
-            except pywintypes.error as reset_error:
-                if reset_error.winerror != 233:  # already disconnected
-                    raise RefusalError(RefusalCode.UNAVAILABLE) from None
+            _reset_disconnected_pipe(handle)
             raise RefusalError(RefusalCode.CONNECTION_CLOSED) from None
         finally:
             win32api.CloseHandle(overlapped.hEvent)

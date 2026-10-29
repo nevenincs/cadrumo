@@ -1,7 +1,7 @@
 """The held person bridge and the runtime's commands stay a generic host: they name no product setup.
 
 The hold relays registered operations by the definition id its parent names.
-A module of the bridge that imports the product's setup, provisioning, model
+A module of the bridge that imports the product's setup, model
 catalogue or Google adapter code, or spells a ``dependencies.*`` definition id,
 has taken product meaning into the runtime; this gate refuses it. The runtime's
 commands likewise import no setup code and no Google adapter: a sign-in from
@@ -19,7 +19,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 _FORBIDDEN_MODULE_PREFIXES = (
     "cadrumo.application.dependency_",
-    "cadrumo.application.provisioning",
     "cadrumo.core.model_roles",
     "cadrumo.adapters.outbound.google",
     "cadrumo.entrypoints",

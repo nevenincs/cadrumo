@@ -77,7 +77,7 @@ def test_public_claim_cannot_target_a_different_profile_with_an_existing_human_s
             interaction_id="b" * 64,
             revision=1,
             review_projection_schema=OperationSchemaIdentityV1(
-                schema_id="config.provision.review",
+                schema_id="user-profile.censo-review.projection",
                 schema_version=1,
                 schema_fingerprint="c" * 64,
             ),

@@ -570,7 +570,7 @@ class ProfileWorkerReviewClaimed(BaseModel):
 
 
 class ProfileWorkerClaimableReviews(BaseModel):
-    """Operations whose current setup review the attested person may claim; no authority crosses."""
+    """Operations whose current review the attested person may claim; no authority crosses."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     kind: Literal["operation_reviews_claimable"] = "operation_reviews_claimable"

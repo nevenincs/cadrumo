@@ -33,7 +33,6 @@ sys.path.insert(0, sys.argv[1])
 blocked = {
     'cadrumo_client.transport.installed_client',
     'cadrumo_client.transport.frontend_client',
-    'cadrumo.application.provisioning',
     'cadrumo.application.workflow.profile_health',
     'cadrumo.application.workflow.run_models',
     'cadrumo.domain.calculations.registry.authority',

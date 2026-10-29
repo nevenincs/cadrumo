@@ -6,7 +6,7 @@ import asyncio
 import sys
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from dataclasses import dataclass, replace
+from dataclasses import replace
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID, uuid4
 
@@ -14,10 +14,6 @@ from pydantic import BaseModel, SecretBytes
 
 from cadrumo.adapters.persistence.storage.errors import StorageError
 from cadrumo.adapters.persistence.storage.master_key.profile_worker_custody import ProfileWorkerCustody
-from cadrumo.application.auth.operation_definitions import (
-    PROFILE_ROTATION_OPERATION_DEFINITION_ID,
-    ProfilePassphraseRotationOperationRequest,
-)
 from cadrumo.application.operations.access_resolution import (
     OperationAccessContext,
     ResolvedOperationAccess,
@@ -61,9 +57,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunOutcome,
     ModelRunOutput,
     ModelRunRefusal,
-    ModelRunRefusalCode,
     ModelRunRoleSelection,
-    encode_model_run_body,
 )
 from cadrumo_client.contracts.view_stream import SEDE_VIEW_DEFINITION_ID
 from cadrumo_runtime.contracts.worker_authorization import (
@@ -79,30 +73,15 @@ from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublicatio
 from ..adapters.worker_authorization_client import WorkerAuthorizationClient
 from ..adapters.worker_authorization_lease import WorkerAuthorizationLease
 from ..application.approval_binding import RuntimeApprovalBinding
+from .worker_human_review import require_review_attestation, require_review_claimant
+from .worker_model_run_results import model_run_lookup, model_run_result, model_run_selections
+from .worker_operation_binding import WorkerOperationBinding
+from .worker_password_retirement import password_retirement_payload, preserves_password_profile
 
 if TYPE_CHECKING:
     from cadrumo.application.workbench_generation_operation import WorkbenchGenerationOperationRequest
 
 _LOGGER = get_logger(__name__)
-
-_MODEL_RUN_LOOKUP_SECONDS = 30.0
-"""How long a lane lookup may wait for the service; it reads settings and runs nothing."""
-
-_MODEL_RUN_ANSWER_MARGIN_SECONDS = 130.0
-"""Time beyond a run's own deadline for the service to start the run and report the outcome it reached.
-
-It exceeds the connection's own margin, so the connection answers a run that overruns first.
-"""
-
-
-@dataclass(frozen=True, slots=True)
-class WorkerOperationBinding:
-    """Ephemeral admission identity; it is never reconstructed from a journal ID."""
-
-    session_id: UUID
-    frontend: OperationFrontendProjection
-    request: OperationRequest[BaseModel]
-    provenance: OperationAdmissionProvenance | None = None
 
 
 class ProfileWorkerOperationAuthority:
@@ -509,25 +488,12 @@ class ProfileWorkerOperationAuthority:
         self, identity: OperationIdentity, proof: RuntimeHumanReviewClaimAttestation, original_session_id: UUID
     ) -> AsyncGenerator[WorkerHumanReviewScopeRequest]:
         """Fence original START and separate verified HUMAN response without rebinding execution."""
-        worker = self.custody.identity
-        if (
-            identity.definition_id != "config.provision.setup"
-            or proof.worker_id != worker.worker_id
-            or proof.runtime_boot_id != worker.runtime_boot_id
-            or proof.profile_binding != worker.binding
-            or not is_persons_frontend(proof.frontend)
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        require_review_attestation(proof, self.custody.identity)
         original = self._bindings.get(identity.operation_id)
         if original is None or original.session_id != original_session_id:
             raise ProfileAccessRefusedError(AccessDenialCode.RESPONSE_AUTHORITY_REQUIRED)
         claimant = await self.custody.require_off_loop(proof.session_id)
-        if (
-            claimant.kind is not SessionKind.HUMAN
-            or claimant.connection_id != proof.connection_id
-            or claimant.originating_login_id != proof.source_ref
-        ):
-            raise ProfileAccessRefusedError(AccessDenialCode.HUMAN_AUTHORITY_REQUIRED)
+        require_review_claimant(claimant, proof)
         invocation = await self._resolve_binding_off_loop(identity, AccessAction.START, original)
         # The original START fence retains its admitted scope. The separate
         # human's disclosure destination must instead use that human's current
@@ -644,35 +610,20 @@ class ProfileWorkerOperationAuthority:
                 yield
 
     async def model_run_lookup(self, identity: OperationIdentity, role: str) -> ModelRunLane | ModelRunRefusal:
-        """Ask the profile's agent service which lane and model it would use for ``role``."""
-        outcome, text = await self._model_run(identity, role, None, bytearray(), _MODEL_RUN_LOOKUP_SECONDS)
-        text[:] = bytes(len(text))
-        if outcome.lane is not None:
-            return outcome.lane
-        return ModelRunRefusal(code=outcome.refusal or ModelRunRefusalCode.RUN_FAILED)
+        """Ask which admitted lane serves the requested role."""
+        return await model_run_lookup(self._model_run, identity, role)
 
     async def model_run_selections(
         self, identity: OperationIdentity
     ) -> tuple[ModelRunRoleSelection, ...] | ModelRunRefusal:
-        """Ask the profile's agent service for every role's selection state; nothing in it is secret."""
-        outcome, text = await self._model_run(identity, None, None, bytearray(), _MODEL_RUN_LOOKUP_SECONDS)
-        text[:] = bytes(len(text))
-        if outcome.selections is not None:
-            return outcome.selections
-        return ModelRunRefusal(code=outcome.refusal or ModelRunRefusalCode.RUN_FAILED)
+        """Ask the admitted service for its role selections."""
+        return await model_run_selections(self._model_run, identity)
 
     async def model_run(
         self, identity: OperationIdentity, header: ModelRunHeader, body: ModelRunBody
     ) -> ModelRunOutput | ModelRunRefusal:
-        """Have the profile's agent service run one tool-less request for this running operation."""
-        answer_seconds = header.deadline_seconds + _MODEL_RUN_ANSWER_MARGIN_SECONDS
-        outcome, text = await self._model_run(
-            identity, header.role, header, encode_model_run_body(body), answer_seconds
-        )
-        try:
-            return _model_run_output(outcome, text)
-        finally:
-            text[:] = bytes(len(text))
+        """Run the request and erase its returned secret text after projection."""
+        return await model_run_result(self._model_run, identity, header, body)
 
     async def _model_run(
         self,
@@ -713,8 +664,10 @@ class ProfileWorkerOperationAuthority:
         binding = self._bindings.get(identity.operation_id)
         if not self._owns_password_rotation_commit(task, identity):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
-        payload = self._password_retirement_payload(identity, binding)
-        if payload is None or not self._preserves_password_profile(payload, outcome):
+        payload = password_retirement_payload(identity, binding)
+        if payload is None or not preserves_password_profile(
+            payload, outcome, self.custody.identity.binding.profile_id
+        ):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         await await_cancellation_complete(
             asyncio.to_thread(self.custody.retire_password_successor, password_generation=outcome.password_generation),
@@ -726,52 +679,9 @@ class ProfileWorkerOperationAuthority:
             task is not None and self._held.get(task) == (identity, AccessAction.COMMIT) and task in self._held_leases
         )
 
-    @staticmethod
-    def _password_retirement_payload(
-        identity: OperationIdentity, binding: WorkerOperationBinding | None
-    ) -> ProfilePassphraseRotationOperationRequest | None:
-        if (
-            binding is None
-            or identity.definition_id != PROFILE_ROTATION_OPERATION_DEFINITION_ID
-            or binding.request.definition_id != identity.definition_id
-            or binding.request.subject_ref != identity.subject_ref
-            or not isinstance(binding.request.payload, ProfilePassphraseRotationOperationRequest)
-        ):
-            return None
-        return binding.request.payload
-
-    def _preserves_password_profile(
-        self, payload: ProfilePassphraseRotationOperationRequest, outcome: ProfilePassphraseRotationOutcome
-    ) -> bool:
-        return (
-            payload.profile_id == self.custody.identity.binding.profile_id
-            and outcome.profile_id == str(payload.profile_id)
-            and outcome.dek_epoch_preserved
-        )
-
     async def require_owner(self, operation_id: OperationId, session_id: UUID) -> None:
         """Refuse ID-only adoption even by another admitted same-profile session."""
         binding = self._bindings.get(operation_id)
         if binding is None or binding.session_id != session_id:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
         await self.custody.require_off_loop(session_id)
-
-
-def _model_run_output(outcome: ModelRunOutcome, text: bytearray) -> ModelRunOutput | ModelRunRefusal:
-    """Turn the service's answer to a run into its output, refusing an answer that is not a run's."""
-    if outcome.refusal is not None:
-        return ModelRunRefusal(code=outcome.refusal)
-    served = outcome.served
-    if served is None:
-        return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
-    try:
-        reply = text.decode("utf-8")
-    except UnicodeDecodeError:
-        return ModelRunRefusal(code=ModelRunRefusalCode.OUTPUT_INVALID)
-    return ModelRunOutput(
-        text=reply,
-        provider_id=served.provider_id,
-        transport=served.transport,
-        model=served.model,
-        agent_version=served.agent_version,
-    )

@@ -150,7 +150,7 @@ class OperationManage(OperationTarget):
 
 
 class OperationReviewClaim(OperationTarget):
-    """Explicitly claim a displayed provisioning review through verified person admission."""
+    """Explicitly claim a displayed review through verified person admission."""
 
     action: Literal["operation_review_claim"] = "operation_review_claim"
     review_claim_version: Literal[1] = 1
@@ -159,7 +159,7 @@ class OperationReviewClaim(OperationTarget):
 
 
 class OperationClaimableReviews(OperationTarget):
-    """Ask which provisioning reviews this verified desktop person may claim now."""
+    """Ask which reviews this verified desktop person may claim now."""
 
     action: Literal["operation_review_claimable"] = "operation_review_claimable"
 
@@ -266,7 +266,7 @@ class OperationReviewClaimed(OperationReplyIdentity):
 
 
 CLAIMABLE_REVIEWS_MAX: Final = 16
-"""The most claimable provisioning reviews one listing names."""
+"""The most claimable reviews one listing names."""
 
 
 class OperationClaimableReviewsListed(OperationReplyIdentity):

@@ -12,7 +12,7 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import AccessScope, AuthorityState, Availability, EffectiveScopeSummary
-from cadrumo_client.contracts.profile_access import PROFILE_ADMISSION_TIMEOUT_SECONDS
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_mcp.mcp.access_scope import surface_scope
 from cadrumo_mcp.mcp.surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES
 
@@ -56,9 +56,6 @@ async def test_fresh_adapter_orients_without_claiming_profile_access() -> None:
             "session",
             "installation",
         } & set(names)
-        for removed in ("setup_status", "setup_plan", "setup", "setup_remove"):
-            assert removed not in names
-            assert await adapter.call(removed, {}) == {"outcome": "refused", "code": "unknown_tool"}
 
         status = await client.call_tool("status", {})
         assert status.is_error is False
@@ -153,7 +150,7 @@ async def test_the_configured_key_admits_exact_profile_for_mcp_and_close_release
         timeout: float,
         scope: AccessScope,
     ) -> _RuntimeClientStub:
-        assert timeout == PROFILE_ADMISSION_TIMEOUT_SECONDS
+        assert timeout == DEFAULT_TIMEOUT_POLICY.timeout_seconds
         assert scope == surface_scope(MCP_SURFACES[DEFAULT_MCP_SURFACE])
         opened.append((profile_id, credential_reference, frontend))
         return admitted

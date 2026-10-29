@@ -31,7 +31,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 def _pending(revision: int) -> OperationReviewAvailableInteractionV1:
     schema = OperationSchemaIdentityV1(
-        schema_id="config.provision.review", schema_version=1, schema_fingerprint="f" * 64
+        schema_id="user-profile.censo-review.projection", schema_version=1, schema_fingerprint="f" * 64
     )
     reference = OperationReviewProjectionReferenceV1(
         operation_id="a" * 64,
@@ -45,7 +45,7 @@ def _pending(revision: int) -> OperationReviewAvailableInteractionV1:
         operation_id=reference.operation_id,
         interaction_id=reference.interaction_id,
         revision=revision,
-        presentation_code="config.provision.review",
+        presentation_code="user-profile.censo-review.projection",
         response_schema=schema,
         expires_at=None,
         review_reference=reference,

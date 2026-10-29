@@ -21,7 +21,7 @@ def _reference() -> OperationReviewProjectionReferenceV1:
         interaction_id="b" * 64,
         revision=5,
         review_projection_schema=OperationSchemaIdentityV1(
-            schema_id="config.provision.review",
+            schema_id="user-profile.censo-review.projection",
             schema_version=1,
             schema_fingerprint="c" * 64,
         ),

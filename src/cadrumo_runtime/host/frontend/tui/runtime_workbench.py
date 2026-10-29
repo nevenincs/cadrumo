@@ -30,7 +30,6 @@ from cadrumo.core.logging import get_logger
 from cadrumo.domain.user_profile.values import ProfileSetupState
 from cadrumo.entrypoints.tui.account import AccountSessionExpiredError, AccountSessionUnavailableError
 from cadrumo.entrypoints.tui.aeat_sync.routes import aeat_sync_screen_factory
-from cadrumo.entrypoints.tui.app import RootBindingV1, RootPresentationV1
 from cadrumo.entrypoints.tui.declarations.models import DeclarationsWorkspaceWiringV1
 from cadrumo.entrypoints.tui.declarations.routes import declarations_screen_factory
 from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewScreen
@@ -47,7 +46,7 @@ from cadrumo.entrypoints.tui.operations.destination import OperationsDestination
 from cadrumo.entrypoints.tui.presentation import opens_aeat_auth
 from cadrumo.entrypoints.tui.reconciliation_export import ReconciliationExportScreen
 from cadrumo.entrypoints.tui.reference.destination import reference_screen_factory
-from cadrumo.entrypoints.tui.setup.destination import SetupOperations
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1, RootPresentationV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.workbench_generation import read_workbench_generation
@@ -88,7 +87,7 @@ if TYPE_CHECKING:
     from cadrumo_client.transport.frontend_client import FrontendClient
     from cadrumo_client.transport.frontend_client_contracts import ProfileViewCollection
 
-    from .runtime_access_management import RecoveryClientOpener
+    from .runtime_recovery_client import RecoveryClientOpener
     from .secret.automation_requester import HumanAutomationRequesterFactory
 
 
@@ -246,7 +245,6 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         self._client = client
         self._operations = OperationsDestinationV1(client, OperationCatalogueSourceV1(operation_registry))
         self._session_id = client.session_id
-        self._setup = SetupOperations(client, self._session_id)
         self._label = profile_label
         self._open_recovery_client = open_recovery_client
         self._requester_factory = requester_factory
@@ -347,7 +345,6 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
             "workbench.profile": _available("workbench.profile"),
             "workbench.operations": _available("workbench.operations"),
             "workbench.installation": _available("workbench.installation"),
-            "workbench.setup": _available("workbench.setup"),
             "workbench.reference": _available("workbench.reference"),
             "workbench.ledger": generation.ledger_admission,
             "workbench.declarations": generation.declarations_admission,
@@ -362,7 +359,6 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
         factories = self._base_factories(generation, profile_factory)
         factories["workbench.operations"] = self._operations
         factories["workbench.installation"] = installation_screen_factory
-        factories["workbench.setup"] = self._setup
         factories["workbench.reference"] = reference_screen_factory
         ledger = self._ledger_factory(generation)
         if ledger is not None:
@@ -564,5 +560,4 @@ class RuntimeWorkbenchRoot(RuntimeProfileLanguage):
                 self._client, profile_id=self._profile_id, profile_label=self._label
             ),
             note_activity=runtime_account_activity_reporter(self._client),
-            setup_status=self._setup,
         )

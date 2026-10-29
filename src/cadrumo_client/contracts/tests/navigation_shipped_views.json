@@ -28,5 +28,7 @@
     "panel/logs",
     "browser"
   ],
-  "retired": []
+  "retired": [
+    "setup"
+  ]
 }

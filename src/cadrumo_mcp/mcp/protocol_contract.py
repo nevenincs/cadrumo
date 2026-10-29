@@ -359,10 +359,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "Every call submits a new operation, so two identical calls run twice. "
         "Use wait_seconds=2 for short work: wait on runtime cues and include completion (the authorized "
         "result envelope) when settled. Otherwise retain the receipt and follow next_call; pending human "
-        "interaction is never answered automatically. For config.provision.setup, ask the person to claim "
-        "and answer the current review in Cadrumo; MCP cannot inspect response authority or answer it. "
-        "The wait bounds idle waiting, not an in-flight "
-        "runtime exchange. start=false does not wait. Never resubmit to obtain a result. "
+        "interaction is never answered automatically. "
+        "The wait bounds idle waiting, not an in-flight runtime exchange. "
+        "start=false does not wait. Never resubmit to obtain a result. "
         "idempotency_key is optional, and giving one makes a repeat safe: a repeat with the same key, operation "
         f"and payload answers with the operation already recorded and submits nothing. {_UNKNOWN_OUTCOME} "
         "unless it carried an idempotency_key, and then repeat it only with that same key",
@@ -397,13 +396,9 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
         "code beside it repeats that refusal token, and error_detail beside it carries what the operation "
         "recorded about why, which is the registered error code, the message key, the context and any "
         "precondition verdict the command line prints; "
-        "when that verdict names its recovery, recovery_action_id carries the action's identifier, for example "
-        "operator.provision.browser when the browser needs setting up. A succeeded result whose verdicts name a "
-        "recovery, such as an import that read some files and refused one for want of the local AI, or a batch "
-        "paused for it, carries recovery_action_ids, each action once. A setup action is named only while the "
-        "item's quick setup row can set it up; while it cannot, setup_held names the item, its state and the "
-        "row's sentence in the profile's language instead, and while the setup status cannot be read neither is "
-        "given. A succeeded result that names exactly "
+        "when that verdict names its recovery, recovery_action_id carries the action's identifier. "
+        "A succeeded result whose verdicts name a recovery, such as a batch that refused some of its items, "
+        "carries recovery_action_ids, each action once. A succeeded result that names exactly "
         "one transaction or invoice carries record: its view, params with select, and link, the cadrumo://view "
         "link that opens that record for the person",
         _schema({"result": _DOC}),
@@ -425,8 +420,8 @@ _DECLARED_TOOLS: Final[tuple[tuple[str, str, _ToolSchema, ToolHints], ...]] = (
     ),
     (
         "respond",
-        "Inspect, apply, or reject a pending review owned by this admitted session. Component setup reviews "
-        "require a verified human claim and cannot be answered by MCP",
+        "Inspect, apply, or reject a pending review owned by this admitted session. A review that a verified "
+        "person has claimed cannot be answered by MCP",
         _schema(
             {
                 "action": {"type": "string", "enum": ["inspect", "apply", "reject"]},
@@ -624,6 +619,24 @@ def _observed_projection(value: dict[str, Any]) -> dict[str, Any] | None:
     return None if observation is None else _result_object(observation.get("projection"))
 
 
+def _unresolved_instruction(value: dict[str, Any]) -> str:
+    """Explain which retained identity can recover a reply whose effect is not known."""
+    if "operation_id" in value:
+        return (
+            f"{_NOT_KNOWN}. {_NEVER_REPEAT}: read the operation named by operation_id with observe, and with "
+            "result once it has settled."
+        )
+    if "definition_id" in value:
+        return (
+            f"{_NOT_KNOWN}: the reply that carried the operation's id was lost, and request_id and "
+            f"definition_id identify what was sent. {_NEVER_REPEAT}, because a repeat submits a second "
+            "operation, unless it carried an idempotency_key: then a repeat with the same key, operation and "
+            "payload answers with the operation already recorded. Otherwise read the records the operation "
+            "writes to learn whether it ran, and tell the person the outcome is not known."
+        )
+    return f"{_NOT_KNOWN}. {_NEVER_REPEAT}, and tell the person the outcome is not known."
+
+
 def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
     """Say what to do about a reply whose effect is not known, or ``None`` where the reply settles it.
 
@@ -632,20 +645,7 @@ def unknown_outcome_instruction(value: dict[str, Any]) -> str | None:
     instead: the operation, or the request alone.
     """
     if value.get("outcome") == "unresolved":
-        if "operation_id" in value:
-            return (
-                f"{_NOT_KNOWN}. {_NEVER_REPEAT}: read the operation named by operation_id with observe, and with "
-                "result once it has settled."
-            )
-        if "definition_id" in value:
-            return (
-                f"{_NOT_KNOWN}: the reply that carried the operation's id was lost, and request_id and "
-                f"definition_id identify what was sent. {_NEVER_REPEAT}, because a repeat submits a second "
-                "operation, unless it carried an idempotency_key: then a repeat with the same key, operation and "
-                "payload answers with the operation already recorded. Otherwise read the records the operation "
-                "writes to learn whether it ran, and tell the person the outcome is not known."
-            )
-        return f"{_NOT_KNOWN}. {_NEVER_REPEAT}, and tell the person the outcome is not known."
+        return _unresolved_instruction(value)
     unsettled = [
         step
         for step in _EXECUTE_STEPS

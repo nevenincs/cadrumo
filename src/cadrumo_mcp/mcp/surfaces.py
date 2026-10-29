@@ -7,8 +7,8 @@ on it reaches the network. Its operation list may grow between releases, and
 only within those properties.
 
 No release has yet been pinned by a consumer, so the default surface lost the
-tools that signed in, administered sessions and keys, served the
-installation, and ran component setup separately, under the name ``full``: an agent works only
+tools that signed in, administered sessions and keys, and served the
+installation, under the name ``full``: an agent works only
 inside the one profile the person signed in to or issued a key for. From the
 first release a consumer pins, a name moves with its tool list: a
 surface whose tools or properties change takes a new name, the name it had

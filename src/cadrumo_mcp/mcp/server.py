@@ -95,7 +95,6 @@ def _progress_sink(context: ServerRequestContext[Any]) -> ProgressSink | None:
             token,
             figure.progress,
             figure.total,
-            figure.message,
             related_request_id=None if context.request_id is None else str(context.request_id),
         )
 

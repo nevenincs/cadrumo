@@ -102,7 +102,7 @@ class _ProofChannel:
 def _request(identity: ProfileWorkerIdentity) -> WorkerHumanReviewScopeRequest:
     claimant, connection, destination = uuid4(), uuid4(), uuid4()
     policy = OperationAccessPolicy(
-        definition_id="config.provision.setup",
+        definition_id="user-profile.censo-review",
         definition_contract_digest="b" * 64,
         actions=frozenset({AccessAction.START, AccessAction.REVIEW, AccessAction.RESPOND}),
         disclosures=frozenset(),

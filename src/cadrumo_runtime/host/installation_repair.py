@@ -86,16 +86,13 @@ class _RepairActs:
         self._resolve_action = resolve_action
 
     def report(self, request: RepairReportRequest, exchange: InstallationActExchange, /) -> RepairReportReply:
-        """Diagnose local configuration, profile, sign-in, setup and log state, changing nothing."""
+        """Diagnose local configuration, profile, sign-in and log state, changing nothing."""
         from cadrumo.application.diagnostics import build_config_repair_report
-        from cadrumo.entrypoints.adapter_composition import build_diagnostics_ports
-        from cadrumo.entrypoints.diagnostics_repair_composition import read_component_setup_checks
+        from cadrumo.entrypoints.adapter_composition_ports import build_diagnostics_ports
 
         del request
         with _profile_stores(exchange):
-            report = build_config_repair_report(
-                ports=build_diagnostics_ports(), setup_checks=read_component_setup_checks() or ()
-            )
+            report = build_config_repair_report(ports=build_diagnostics_ports())
             document = repair_report_document(report, resolve_action=self._resolve_action)
         return _reply_with(exchange, RepairReportReply, document)
 

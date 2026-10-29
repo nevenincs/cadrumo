@@ -122,28 +122,42 @@ class WorkerHumanReviewScopeRequest(BaseModel):
     attestation: RuntimeHumanReviewClaimAttestation
 
     @model_validator(mode="after")
-    def _require_provisioning_review(self) -> WorkerHumanReviewScopeRequest:
-        if (
-            self.request.action is not AccessAction.RESPOND
-            or self.request.definition_id != "config.provision.setup"
-            or self.invocation.request.action is not AccessAction.START
-            or self.invocation.request.definition_id != self.request.definition_id
-            or self.invocation.operation_id != self.operation_id
-            or self.invocation.request.profile_id != self.request.profile_id
-            or self.review.request.action is not AccessAction.REVIEW
-            or self.review.operation_id != self.operation_id
-            or self.review.request.definition_id != self.request.definition_id
-            or self.review.request.profile_id != self.request.profile_id
-            or self.review.session_id != self.session_id
-            or self.review.connection_id != self.connection_id
-            or self.review.request.frontend != self.request.frontend
-            or self.request.frontend != self.attestation.frontend
-            or self.review.request.destination_id != self.request.destination_id
-            or self.attestation.connection_id != self.connection_id
-            or self.attestation.session_id != self.session_id
-        ):
-            raise ValueError("human review requires exact claimant and original provisioning invocation")
+    def _require_review_scope(self) -> WorkerHumanReviewScopeRequest:
+        if not self._invocation_matches() or not self._claimant_matches():
+            raise ValueError("human review requires exact claimant and original invocation")
         return self
+
+    def _invocation_matches(self) -> bool:
+        """Require the original START invocation for the exact reviewed operation."""
+        return (
+            self.request.action is AccessAction.RESPOND
+            and self.invocation.request.action is AccessAction.START
+            and self.invocation.request.definition_id == self.request.definition_id
+            and self.invocation.operation_id == self.operation_id
+            and self.invocation.request.profile_id == self.request.profile_id
+        )
+
+    def _claimant_matches(self) -> bool:
+        """Match review, response and native attestation to the same human claimant."""
+        return (
+            self.review.request.action is AccessAction.REVIEW
+            and self.review.operation_id == self.operation_id
+            and self.review.request.definition_id == self.request.definition_id
+            and self.review.request.profile_id == self.request.profile_id
+            and self.review.session_id == self.session_id
+            and self.review.connection_id == self.connection_id
+            and self._claimant_identity_matches()
+        )
+
+    def _claimant_identity_matches(self) -> bool:
+        """Match frontend, destination and attested connection identity."""
+        return (
+            self.review.request.frontend == self.request.frontend
+            and self.request.frontend == self.attestation.frontend
+            and self.review.request.destination_id == self.request.destination_id
+            and self.attestation.connection_id == self.connection_id
+            and self.attestation.session_id == self.session_id
+        )
 
 
 WORKER_OPERATIONS_ADVANCED_MAX = 64

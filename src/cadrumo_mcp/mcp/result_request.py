@@ -128,8 +128,7 @@ def stopped_operation_recovery_action(detail: JsonValue) -> str | None:
     """Return the operator action a stopped operation's precondition verdict names as its recovery, or ``None``.
 
     It is the same action the command line prints with the error, lifted out of
-    the verdict's text so a caller reads one typed identifier, for example
-    ``operator.provision.browser`` when a feature needs the browser set up.
+    the verdict's text so a caller reads one typed identifier.
     """
     from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 
@@ -151,32 +150,33 @@ _VERDICT_FIELDS = frozenset({"failed_condition_id", "evidence", "conditionality"
 def published_recovery_actions(document: dict[str, JsonValue]) -> tuple[str, ...]:
     """Return the recovery actions the verdicts of a succeeded result name, in document order, each once.
 
-    A succeeded operation can still carry verdicts inside its result: an
-    import that read some files and refused one for want of the local AI, or
-    a batch paused for it. Each object of the published projection that reads
+    A succeeded operation can still carry verdicts inside its result, such as
+    a batch that refused some of its items. Each object of the published projection that reads
     as a precondition verdict counts; any other value names nothing.
     """
-    from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
-
     if document.get("outcome") != "success":
         return ()
     found: list[str] = []
 
-    def walk(value: JsonValue) -> None:
-        if isinstance(value, dict):
-            if set(value) >= _VERDICT_FIELDS:
-                try:
-                    verdict = PreconditionVerdictSnapshot.model_validate_json(json.dumps(value))
-                except ValidationError:
-                    verdict = None
-                if verdict is not None and verdict.action_id is not None:
-                    found.append(verdict.action_id)
-                    return
-            for member in value.values():
-                walk(member)
-        elif isinstance(value, list):
-            for member in value:
-                walk(member)
-
-    walk(document.get("projection"))
+    _collect_recovery_actions(document.get("projection"), found)
     return tuple(dict.fromkeys(found))
+
+
+def _collect_recovery_actions(value: JsonValue, found: list[str]) -> None:
+    """Collect the first verdict action at each depth-first projection node."""
+    from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
+
+    if isinstance(value, dict):
+        if set(value) >= _VERDICT_FIELDS:
+            try:
+                verdict = PreconditionVerdictSnapshot.model_validate_json(json.dumps(value))
+            except ValidationError:
+                verdict = None
+            if verdict is not None and verdict.action_id is not None:
+                found.append(verdict.action_id)
+                return
+        for member in value.values():
+            _collect_recovery_actions(member, found)
+    elif isinstance(value, list):
+        for member in value:
+            _collect_recovery_actions(member, found)

@@ -23,14 +23,8 @@ from uuid import UUID, uuid4
 import pytest
 from click.testing import Result
 
-from cadrumo.adapters.outbound.components.client import ComponentsRequest, run_components_role
-from cadrumo.adapters.outbound.components.protocol import ComponentsCommand, ComponentsOutcome
-from cadrumo.adapters.outbound.components.role_image import components_role_image
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import publish_test_profile_capsule
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
-from cadrumo.application.dependency_contracts import DependencyBlockedReason, DependencyItemKind, DependencyState
-from cadrumo.application.dependency_registry import dependency_item_declarations
-from cadrumo.application.dependency_wording import dependency_held_sentence
 from cadrumo.application.diagnostics_repair_documents import RepairActionDocument, RepairCheckDocument
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.bucket_pointer import BucketPointer, pointer_path, read_pointer, write_pointer
@@ -289,29 +283,6 @@ def _check(reply: RuntimeRepairReportReply, name: str) -> RepairCheckDocument:
     return next(item for item in reply.checks if item.name == name)
 
 
-def _assert_setup_rows(reply: RuntimeRepairReportReply) -> None:
-    """Hold the reply's ``setup.<item>`` rows to what the components role reads on this computer now.
-
-    Without a built role binary every item reads blocked as not in this build;
-    with one, each row is ready exactly when the role says so.
-    """
-    read = run_components_role(ComponentsRequest(ComponentsCommand.STATUS), timeout=30.0)
-    assert read.outcome is ComponentsOutcome.OK
-    rows = {row.item_id: row for row in read.status_rows()}
-    assert set(rows) == {item.value for item in DependencyItemKind}
-    if components_role_image() is None:
-        assert {(row.state, row.blocked_reason) for row in rows.values()} == {
-            (DependencyState.BLOCKED, DependencyBlockedReason.NOT_IN_THIS_BUILD)
-        }
-    declarations = {declaration.item_id: declaration for declaration in dependency_item_declarations()}
-    shown = {check.name: check for check in reply.checks if check.name.startswith("setup.")}
-    assert set(shown) == {f"setup.{item_id}" for item_id in rows}
-    for item_id, row in rows.items():
-        check = shown[f"setup.{item_id}"]
-        assert check.status == ("ok" if row.state is DependencyState.READY else "warn")
-        assert check.summary == dependency_held_sentence(row, declarations[item_id])
-
-
 def _write_log() -> None:
     path = default_log_file_path()
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -351,7 +322,6 @@ def test_the_report_act_replies_with_the_diagnosis_the_command_prints(
     assert (reply.setup, reply.secure_objects.namespaces) == (None, ())
     assert Path(reply.log_file).is_relative_to(root)
     assert (pointer_after.bucket_id is None) == (kind == "fresh")
-    _assert_setup_rows(reply)
     _assert_prints(reply, commanded)
 
 
@@ -567,7 +537,6 @@ def test_the_installed_registration_names_the_recovery_commands_the_command_line
         if isinstance(reference, dict)
     ]
     assert paths and all(paths)
-    _assert_setup_rows(report)
     _assert_prints(report, commanded_report)
     _assert_prints(profile, commanded_profile)
 

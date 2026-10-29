@@ -81,7 +81,7 @@ class ProfileWorkerOperationClient(ProfileWorkerTransport):
         )
 
     def claimable_reviews(self, proof: RuntimeHumanReviewClaimAttestation) -> ProfileWorkerClaimableReviews:
-        """Ask which setup reviews the runtime parent's verified desktop person may claim."""
+        """Ask which reviews the runtime parent's verified desktop person may claim."""
         return self._exchange(
             ProfileWorkerRequest(ProfileWorkerClaimableReviewsRequest(request_id=uuid4(), attestation=proof)),
             ProfileWorkerClaimableReviews,

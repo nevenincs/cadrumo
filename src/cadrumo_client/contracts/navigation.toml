@@ -19,7 +19,7 @@
 # is never declared again, so an old link cannot open something new.
 
 schema = 1
-retired = []
+retired = ["setup"]
 
 # A bank or manual ledger movement: its content-derived SHA-256 transaction id.
 [[kind]]
@@ -118,12 +118,6 @@ surfaces = ["tui"]
 id = "installation"
 label = "navigation.view.installation.label"
 keywords = "installation runtime version instalacion"
-surfaces = ["tui"]
-
-[[element]]
-id = "setup"
-label = "navigation.view.setup.label"
-keywords = "setup components models dependencies componentes"
 surfaces = ["tui"]
 
 [[element]]

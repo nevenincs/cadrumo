@@ -6,10 +6,11 @@ import json
 import time
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final, Protocol
+from typing import Any, Final, Protocol, cast
 from uuid import UUID, uuid4
 
-from cadrumo.application.components_operations import COMPONENTS_STATUS_DEFINITION_ID
+from pydantic import JsonValue
+
 from cadrumo.application.operations.frontend_requests import (
     OperationCancellationRequestV1,
     OperationDetachRequestV1,
@@ -31,7 +32,6 @@ from cadrumo.application.operations.subject_reference import (
     expected_operation_subject,
 )
 from cadrumo.application.operator_output.connection_remedies import connection_unavailable_remedy
-from cadrumo.core.external_constants import DEFAULT_OUTPUT_LANGUAGE
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import DisclosurePageRequest
@@ -53,9 +53,7 @@ from cadrumo_client.contracts.projection_pages import ProjectionPageRequest
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_changes import OperationChanges
-from cadrumo_client.transport.profile_language import read_profile_language
 
-from .component_setup import gate_setup_actions
 from .operation_contract_cache import OperationContractCache
 from .operation_discovery import search_operations
 from .payload_vocabulary import PAYLOAD_VOCABULARY_MEMBER, payload_vocabulary
@@ -228,29 +226,42 @@ def _execute(client: FrontendClient, binding: _Binding, args: dict[str, Any], de
     return response
 
 
+def _person_act_refusal(contract: OperationPublicDefinitionContractV1) -> dict[str, Any]:
+    """Explain the person-owned act and retain its declared recovery action."""
+    refused: dict[str, Any] = {
+        "outcome": "refused",
+        "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
+        "remedy": PERSON_ACT_REMEDY,
+    }
+    if contract.action_reference is not None:
+        refused["recovery_action_id"] = contract.action_reference.action_id
+    return refused
+
+
+def _submit_runtime(
+    client: FrontendClient, submission: OperationSubmit | OperationFinancialInput, deadline: float
+) -> OperationSubmitted:
+    """Require the runtime's submitted receipt before any start or observation."""
+    reply = client.operation(submission, deadline=deadline)
+    if not isinstance(reply, OperationSubmitted):
+        raise RefusalError(RefusalCode.INVALID_FRAME)
+    return reply
+
+
 def _submit(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:
     definition_id = args["definition_id"]
     description = binding.contracts.description(client, definition_id, deadline=deadline)
     contract = description.contract
     if operation_is_persons_act(contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required):
         # A credential or access act is the person's own; nothing is submitted.
-        refused: dict[str, Any] = {
-            "outcome": "refused",
-            "code": AccessDenialCode.PERSON_ACT_REQUIRED.value,
-            "remedy": PERSON_ACT_REMEDY,
-        }
-        if contract.action_reference is not None:
-            refused["recovery_action_id"] = contract.action_reference.action_id
-        return refused
+        return _person_act_refusal(contract)
     try:
         submission = _submission(client, contract, args)
     except _ContractRefusedError as refused:
         # Nothing was submitted, and the wording quotes only the public contract.
         return {"outcome": "refused", "code": "invalid_request", "message": str(refused)}
     try:
-        reply = client.operation(submission, deadline=deadline)
-        if not isinstance(reply, OperationSubmitted):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
+        reply = _submit_runtime(client, submission, deadline)
     except FrontendRefusedError as refused:
         if refused.request_faults:
             # The validators' own reasons, as the runtime returned them and the command line shows them.
@@ -274,6 +285,13 @@ def _submit(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
         return _unresolved_submission(RefusalCode.TIMEOUT.value, submission.request_id, definition_id)
     except OSError:
         return _unresolved_submission(RefusalCode.CONNECTION_CLOSED.value, submission.request_id, definition_id)
+    return _submitted_response(client, binding, args, reply, deadline)
+
+
+def _submitted_response(
+    client: FrontendClient, binding: _Binding, args: dict[str, Any], reply: OperationSubmitted, deadline: float
+) -> dict[str, Any]:
+    """Retain the receipt while optionally starting and briefly observing the operation."""
     response: dict[str, Any] = {"outcome": "submitted", "receipt": public_value(reply.receipt)}
     if args.get("start", True):
         response["start"] = _start_submitted_operation(client, reply.receipt.operation_id, deadline)
@@ -354,6 +372,13 @@ def _named_field_faults(
         or not isinstance(properties, dict)
     ):
         return []
+    return _payload_field_faults(schema, properties, cast(dict[object, object], payload))
+
+
+def _payload_field_faults(
+    schema: dict[str, JsonValue], properties: dict[str, JsonValue], payload: dict[object, object]
+) -> list[dict[str, Any]]:
+    """Name missing and extra fields using only the described request schema."""
     required = schema.get("required")
     missing = [name for name in required if name not in payload] if isinstance(required, list) else []
     closed = schema.get("additionalProperties") is False
@@ -506,30 +531,12 @@ def _result(client: FrontendClient, binding: _Binding, args: dict[str, Any], dea
     if detail is not None:
         reply["error_detail"] = detail
         stopped_action = stopped_operation_recovery_action(detail)
-    # A verdict is offered as every surface offers it: a setup action only while the item's row can act.
     actions = (stopped_action,) if stopped_action is not None else published_recovery_actions(document)
-    if actions:
-        if request.result_schema.schema_id == COMPONENTS_STATUS_DEFINITION_ID + ".result":
-            named, held = list(actions), []
-        else:
-            named, held = gate_setup_actions(
-                client,
-                actions,
-                language=lambda: _profile_language(client),
-                deadline=deadline,
-                status_allowed=binding.surface.admits(COMPONENTS_STATUS_DEFINITION_ID),
-            )
-        if named and stopped_action is not None:
-            reply["recovery_action_id"] = named[0]
-        elif named:
-            reply["recovery_action_ids"] = named
-        if held:
-            reply["setup_held"] = held
+    if actions and stopped_action is not None:
+        reply["recovery_action_id"] = actions[0]
+    elif actions:
+        reply["recovery_action_ids"] = list(dict.fromkeys(actions))
     return reply
-
-
-def _profile_language(client: FrontendClient) -> str:
-    return (read_profile_language(client).language or DEFAULT_OUTPUT_LANGUAGE).value
 
 
 def _result_page(client: FrontendClient, binding: _Binding, args: dict[str, Any], deadline: float) -> dict[str, Any]:

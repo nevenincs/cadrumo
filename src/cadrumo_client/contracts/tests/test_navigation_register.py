@@ -197,7 +197,6 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "aeat-sync": {tui},
         "operations": {tui},
         "installation": {tui},
-        "setup": {tui},
         "reference": {tui},
         "profile": {gui, tui},
         "profile/aeat-access": {gui, tui},
@@ -286,17 +285,18 @@ def test_an_element_deleted_without_retiring_its_id_breaks_the_baseline() -> Non
     register = NavigationRegister.model_validate(data)
     assert _lifecycle_breaches(register, _shipped_ids()) == ["shipped id 'panel/logs' is neither declared nor retired"]
 
-    data["retired"] = ["panel/logs"]
+    data["retired"] = [*data["retired"], "panel/logs"]
     assert _lifecycle_breaches(NavigationRegister.model_validate(data), _shipped_ids()) == []
 
 
 def test_an_id_taken_out_of_retired_breaks_the_baseline() -> None:
     data = _shipped_register_data()
     shipped = (*_shipped_ids(), "statements")
-    data["retired"] = ["statements"]
+    retired = data["retired"]
+    data["retired"] = [*retired, "statements"]
     assert _lifecycle_breaches(NavigationRegister.model_validate(data), shipped) == []
 
-    data["retired"] = []
+    data["retired"] = retired
     assert _lifecycle_breaches(NavigationRegister.model_validate(data), shipped) == [
         "shipped id 'statements' is neither declared nor retired"
     ]

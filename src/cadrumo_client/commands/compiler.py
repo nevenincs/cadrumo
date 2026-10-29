@@ -339,7 +339,7 @@ def refuse_declared_live_write(policy: ExecutionPolicySpec) -> None:
 
     Live AEAT submission is permanently forbidden, so a ``live_write``
     declaration is never a permission: dispatch raises the access gate's typed
-    refusal before any preflight, provisioning or handler import can run.
+    refusal before any preflight or handler import can run.
 
     Raises:
         LiveSubmitForbiddenError: When ``policy.live_write`` is set.

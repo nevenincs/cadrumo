@@ -50,7 +50,7 @@ def _carry_cleanup_owner(target: BaseException, source: BaseException) -> None:
 
 
 class LaunchDoor:
-    """Connect to an existing owner without provisioning or starting a process."""
+    """Connect to an existing owner without starting a process."""
 
     def __init__(
         self,
@@ -125,29 +125,32 @@ class LaunchDoor:
                         task_name="runtime-connect-result-diagnostic-close",
                         primary_error=error,
                     )
-                refusal = isinstance(error, RefusalError)
-                cancelled = isinstance(error, asyncio.CancelledError)
-                diagnostic_event(
-                    _LOGGER,
-                    "runtime_connect_finished",
-                    fields={
-                        **diagnostic_error_fields(error),
-                        "outcome": "cancelled" if cancelled else "refused" if refusal else "failed",
-                        "reason_code": (
-                            error.reason.value
-                            if isinstance(error, RefusalError)
-                            else "operation_cancelled"
-                            if cancelled
-                            else "unexpected_failure"
-                        ),
-                        "elapsed_seconds": time.monotonic() - started,
-                        "cleanup_incomplete": bool(async_cleanup_failures(error)),
-                    },
-                    level=DEBUG if cancelled else WARNING if refusal else ERROR,
-                    primary_error=error,
-                )
+                self._report_open_failure(error, started)
                 raise
             return opened
+
+    def _report_open_failure(self, error: BaseException, started: float) -> None:
+        refusal = isinstance(error, RefusalError)
+        cancelled = isinstance(error, asyncio.CancelledError)
+        diagnostic_event(
+            _LOGGER,
+            "runtime_connect_finished",
+            fields={
+                **diagnostic_error_fields(error),
+                "outcome": "cancelled" if cancelled else "refused" if refusal else "failed",
+                "reason_code": (
+                    error.reason.value
+                    if isinstance(error, RefusalError)
+                    else "operation_cancelled"
+                    if cancelled
+                    else "unexpected_failure"
+                ),
+                "elapsed_seconds": time.monotonic() - started,
+                "cleanup_incomplete": bool(async_cleanup_failures(error)),
+            },
+            level=DEBUG if cancelled else WARNING if refusal else ERROR,
+            primary_error=error,
+        )
 
     async def _open_connection(self, *, deadline: float) -> VerifiedConnection:
         opened: VerifiedConnection | None = None
