@@ -84,7 +84,7 @@ chosen for the text extraction role in the Cadrumo agent. A page without
 a text layer is transcribed by the model chosen for the vision transcription
 role. The statement never leaves your computer: if the model chosen for a role
 would send it off the machine, the import refuses before anything is sent. See
-[Classify transactions with an LLM](classify-with-llm.md#set-up-a-provider).
+[Classify transactions with an LLM](classify-with-llm.md#how-a-read-chooses-its-model).
 
 If the path does not exist or is not readable, the command refuses cleanly and
 names the path (`Invalid value for '--file': the path ... does not exist or is

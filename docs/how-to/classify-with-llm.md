@@ -22,7 +22,6 @@ The examples in this documentation are recorded in English. `aeat` prints its
 messages in Spanish unless you
 [choose another language](profile-setup.md#choose-the-output-language).
 
-(set-up-a-provider)=
 ## How a read chooses its model
 
 `aeat` sends every model request through the Cadrumo agent service, which
