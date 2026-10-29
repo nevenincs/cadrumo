@@ -34,6 +34,7 @@ from ..state_projection_models import ModeloReadinessRequest, ProjectionModeloRe
 from .work_selection import (
     ModeloWorkSelectionMode,
 )
+from .workspace_baseline import resolve_workspace_baseline
 from .workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBoundedFacetV1,
@@ -108,11 +109,9 @@ from .workspace_producers import (
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
     ModeloWorkspaceBoundedReviewPortV1,
     ModeloWorkspaceCalculationPortV1,
-    ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceProducerContractV1,
-    ModeloWorkspaceProducerStampV1,
     ModeloWorkspaceReadinessPortV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceRegistryProjectionV1,
@@ -284,48 +283,6 @@ def graded_snapshot_contributors() -> tuple[ModeloWorkspaceContributorIdentityV1
             ),
             key=lambda contributor: (contributor.owner, contributor.producer),
         )
-    )
-
-
-def resolve_graded_snapshot_baseline(
-    target: ModeloWorkspaceResolvedTargetV1,
-    *,
-    schema_identity: ModeloWorkspaceSchemaIdentityV1,
-    locale: ModeloWorkspaceLocaleSummaryV1,
-    stamps: tuple[ModeloWorkspaceProducerStampV1, ...],
-    epochs: tuple[ModeloWorkspaceEpochV1, ...],
-) -> ModeloWorkspaceBaselineV1:
-    """Assemble the GRADED_SNAPSHOT baseline from its contributors' stamps and epochs.
-
-    Takes the stamps and epochs as tuples rather than one named pair per
-    contributor. The static admission's set is fixed at four and can be spelled
-    out; this admission's set is whatever :func:`graded_snapshot_contributors`
-    declares, and a signature that fixed the arity would need rewriting every
-    time that declaration changed -- exactly the drift the shared declaration
-    exists to prevent. Every stamp and epoch passed in MUST come from the same
-    captures that produced ``target``, ``schema_identity`` and ``locale``; this
-    function captures nothing of its own.
-    """
-    contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
-    contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
-    token = content_hash_hex(
-        {
-            "contributor_stamp_digest": contributor_stamp_digest,
-            "contributor_epoch_digest": contributor_epoch_digest,
-            "target": target.model_dump(mode="json"),
-            "selected_revision_id": target.law_selected_revision_id,
-            "schema_identity": schema_identity.model_dump(mode="json"),
-            "locale_catalogue_digest": locale.catalogue_digest,
-        }
-    )
-    return ModeloWorkspaceBaselineV1(
-        token=token,
-        contributor_stamp_digest=contributor_stamp_digest,
-        contributor_epoch_digest=contributor_epoch_digest,
-        target=target,
-        selected_revision_id=target.law_selected_revision_id,
-        schema_identity=schema_identity,
-        locale_catalogue_digest=locale.catalogue_digest,
     )
 
 
@@ -788,7 +745,7 @@ def resolve_graded_snapshot_result(
         review_capture,
         readiness_capture,
     )
-    baseline = resolve_graded_snapshot_baseline(
+    baseline = resolve_workspace_baseline(
         resolved_target,
         schema_identity=schema_identity,
         locale=locale,

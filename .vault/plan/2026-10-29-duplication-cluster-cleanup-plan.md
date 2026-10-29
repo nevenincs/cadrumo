@@ -12,7 +12,7 @@ related:
   - '[[2026-10-02-duplication-remediation-plan]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:c3e457ac7e9fb44cfcc21c018ad1ff82079d7c00fe6a1fe14caf363bf1ae08cb'
+body_hash: 'sha256:df42fbaf9b42079f9d0b4317d87bde91fa98cb78aaa3eb2895d2fb26cdac7556'
 ---
 
 # `duplication-cluster-cleanup` plan
@@ -32,7 +32,7 @@ The accepted canonical-module decision governs all extraction and atomic consume
 ## Steps
 
 - [x] `S01` - Consolidate AEAT Sync table repaint without changing interaction lifetime or localization behavior; `src/cadrumo/entrypoints/tui/aeat_sync/screens.py and owning tests/test_aeat_sync_workspace.py`.
-- [ ] `S02` - Unify Workspace baseline assembly with exact byte and contributor-order equivalence; `src/cadrumo/application/modelo/workspace_schema.py, workspace_graded.py, new workspace_baseline.py, tests/test_workspace_baseline.py and src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`.
+- [x] `S02` - Unify Workspace baseline assembly with exact byte and contributor-order equivalence; `src/cadrumo/application/modelo/workspace_schema.py, workspace_graded.py, new workspace_baseline.py, tests/test_workspace_baseline.py and src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`.
 - [ ] `S03` - Centralize filed-capture CLI payload projection while preserving each command's scope and error protection; `src/cadrumo/entrypoints/cli/app_live_commands.py owned helper and three constructor mappings, plus tests/test_operation_filed_single.py, test_operation_filed_bulk.py and test_operation_filed_source.py`.
 - [ ] `S04` - Share exact profile-connection admission checks while retaining desktop-only and guarded-status behavior; `src/cadrumo_runtime/host/profile_connection_operations.py, host/tests/test_view_stream_relay.py and host/tests/test_profile_connections.py`.
 - [ ] `S05` - Share the ordered workbench source capture leaf while preserving generation-specific consistency checks; `src/cadrumo/application/workbench_generation_reader.py and application/tests/test_workbench_generation.py`.

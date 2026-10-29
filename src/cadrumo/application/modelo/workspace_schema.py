@@ -30,6 +30,7 @@ from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryPr
 from .work_selection import (
     ModeloWorkSelectionMode,
 )
+from .workspace_baseline import resolve_workspace_baseline
 from .workspace_models import (
     ModeloWorkspaceBaselineV1,
     ModeloWorkspaceBindingReferenceV1,
@@ -51,7 +52,6 @@ from .workspace_models import (
     ModeloWorkspaceFormulaOperandReferenceV1,
     ModeloWorkspaceFormulaParameterOperandReferenceV1,
     ModeloWorkspaceFormulaReferenceV1,
-    ModeloWorkspaceLocaleSummaryV1,
     ModeloWorkspaceLocalizedTextV1,
     ModeloWorkspaceParameterReferenceV1,
     ModeloWorkspaceProjectionV1,
@@ -88,10 +88,8 @@ from .workspace_producers import (
     MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_REGISTRY_PRODUCER_CONTRACT_V1,
     MODELO_WORKSPACE_WORK_PRODUCER_CONTRACT_V1,
-    ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
-    ModeloWorkspaceProducerStampV1,
     ModeloWorkspaceRegistryPortV1,
     ModeloWorkspaceWorkPortV1,
     RegistryAuthorityCapturePort,
@@ -315,52 +313,6 @@ def static_inspection_contributors() -> tuple[ModeloWorkspaceContributorIdentity
             ),
             key=lambda contributor: (contributor.owner, contributor.producer),
         )
-    )
-
-
-def resolve_static_inspection_baseline(
-    target: ModeloWorkspaceResolvedTargetV1,
-    *,
-    schema_identity: ModeloWorkspaceSchemaIdentityV1,
-    locale: ModeloWorkspaceLocaleSummaryV1,
-    work_stamp: ModeloWorkspaceProducerStampV1,
-    work_epoch: ModeloWorkspaceEpochV1,
-    registry_stamp: ModeloWorkspaceProducerStampV1,
-    registry_epoch: ModeloWorkspaceEpochV1,
-    locale_stamp: ModeloWorkspaceProducerStampV1,
-    locale_epoch: ModeloWorkspaceEpochV1,
-    field_manifest_stamp: ModeloWorkspaceProducerStampV1,
-    field_manifest_epoch: ModeloWorkspaceEpochV1,
-) -> ModeloWorkspaceBaselineV1:
-    """Assemble the STATIC_INSPECTION baseline from the four contributors' own stamps and epochs.
-
-    Every stamp/epoch pair passed in MUST come from the exact same captures
-    that produced ``target``, ``schema_identity`` and ``locale`` -- this
-    function performs no capture of its own, only digesting what the caller
-    already atomically observed.
-    """
-    stamps = (work_stamp, registry_stamp, locale_stamp, field_manifest_stamp)
-    epochs = (work_epoch, registry_epoch, locale_epoch, field_manifest_epoch)
-    contributor_stamp_digest = content_hash_hex([stamp.model_dump(mode="json") for stamp in stamps])
-    contributor_epoch_digest = content_hash_hex([epoch.model_dump(mode="json") for epoch in epochs])
-    token = content_hash_hex(
-        {
-            "contributor_stamp_digest": contributor_stamp_digest,
-            "contributor_epoch_digest": contributor_epoch_digest,
-            "target": target.model_dump(mode="json"),
-            "selected_revision_id": target.law_selected_revision_id,
-            "schema_identity": schema_identity.model_dump(mode="json"),
-            "locale_catalogue_digest": locale.catalogue_digest,
-        }
-    )
-    return ModeloWorkspaceBaselineV1(
-        token=token,
-        contributor_stamp_digest=contributor_stamp_digest,
-        contributor_epoch_digest=contributor_epoch_digest,
-        target=target,
-        selected_revision_id=target.law_selected_revision_id,
-        schema_identity=schema_identity,
-        locale_catalogue_digest=locale.catalogue_digest,
     )
 
 
@@ -815,18 +767,12 @@ def resolve_static_inspection_result(
     ):
         return workspace_changed_refusal(target, resolved_target)
 
-    baseline = resolve_static_inspection_baseline(
+    baseline = resolve_workspace_baseline(
         resolved_target,
         schema_identity=schema_identity,
         locale=locale,
-        work_stamp=work_capture.stamp,
-        work_epoch=work_capture.epoch,
-        registry_stamp=registry_capture.stamp,
-        registry_epoch=registry_capture.epoch,
-        locale_stamp=locale_capture.stamp,
-        locale_epoch=locale_capture.epoch,
-        field_manifest_stamp=field_manifest_capture.stamp,
-        field_manifest_epoch=field_manifest_capture.epoch,
+        stamps=(work_capture.stamp, registry_capture.stamp, locale_capture.stamp, field_manifest_capture.stamp),
+        epochs=(work_capture.epoch, registry_capture.epoch, locale_capture.epoch, field_manifest_capture.epoch),
     )
     contributors = static_inspection_contributors()
 

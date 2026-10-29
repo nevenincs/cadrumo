@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:1b0d54d4c0fad1085285a0ad94f23d2b81931406babf8a0918aeed3beb37d00b'
+body_hash: 'sha256:546701ccf097b6d70e3df43adf4b2e435f48c5423b23af405b89e6e662916ae4'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -45,3 +45,18 @@ related:
 - `S01` `verify:` `uv run --no-sync pytest -n 0 -m integration src/cadrumo/entrypoints/tui/aeat_sync/tests/test_aeat_sync_workspace.py -q` -> `pass`
 - `S01` `verify:` `scoped Ruff check and format and Windows ty` -> `pass`
 - `S01` `by:` `Terra 6.1 xhigh`
+- `S02` `M` `src/cadrumo/application/modelo/workspace_schema.py`
+- `S02` `M` `src/cadrumo/application/modelo/workspace_graded.py`
+- `S02` `A` `src/cadrumo/application/modelo/workspace_baseline.py`
+- `S02` `A` `src/cadrumo/application/modelo/tests/test_workspace_baseline.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`
+- `S02` `verify:` `baseline/model/producer focused pytest 54 cases` -> `pass`
+- `S02` `verify:` `real persistence work-review pytest 21 cases` -> `pass`
+- `S02` `verify:` `static Workspace pytest 27 cases` -> `pass`
+- `S02` `verify:` `five-file Ruff check and format and Windows ty` -> `pass`
+- `S02` `verify:` `just generate-import-load-targets` -> `pass`
+- `S02` `by:` `Sol 6.1 high`
+
+## Notes
+
+- `S02` Generated metadata was adopted by concurrent commit 29d0663d16; no foreign metadata hunks restaged.

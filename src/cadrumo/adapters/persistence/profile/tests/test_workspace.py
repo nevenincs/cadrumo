@@ -40,6 +40,7 @@ from cadrumo.application.modelo.workspace import (
     contributors_still_current,
     modelo_work_selector_request_for_target,
 )
+from cadrumo.application.modelo.workspace_baseline import resolve_workspace_baseline
 from cadrumo.application.modelo.workspace_models import (
     ModeloWorkspaceBoundedFacetV1,
     ModeloWorkspaceCapabilityDisposition,
@@ -67,7 +68,6 @@ from cadrumo.application.modelo.workspace_schema import (
     parameter_schema_records,
     relation_source_endpoints_for_casilla,
     relation_target_endpoints_for_binding,
-    resolve_static_inspection_baseline,
     resolve_static_inspection_result,
     resolve_static_inspection_schema_identity,
     static_inspection_casilla_schema_records,
@@ -436,18 +436,12 @@ def _assemble_static_inspection_pieces(bucket_id: str, repository: WorkUnitCatal
         locale=OutputLanguage.ES.value,
     ).capture_projection_with_epoch()
     field_manifest_capture = ModeloWorkspaceFieldManifestPortV1(authority=inspection).capture_projection_with_epoch()
-    baseline = resolve_static_inspection_baseline(
+    baseline = resolve_workspace_baseline(
         target,
         schema_identity=schema_identity,
         locale=locale,
-        work_stamp=work_capture.stamp,
-        work_epoch=work_capture.epoch,
-        registry_stamp=registry_capture.stamp,
-        registry_epoch=registry_capture.epoch,
-        locale_stamp=locale_capture.stamp,
-        locale_epoch=locale_capture.epoch,
-        field_manifest_stamp=field_manifest_capture.stamp,
-        field_manifest_epoch=field_manifest_capture.epoch,
+        stamps=(work_capture.stamp, registry_capture.stamp, locale_capture.stamp, field_manifest_capture.stamp),
+        epochs=(work_capture.epoch, registry_capture.epoch, locale_capture.epoch, field_manifest_capture.epoch),
     )
     contributors = static_inspection_contributors()
     return inspection, target, schema_identity, baseline, contributors
