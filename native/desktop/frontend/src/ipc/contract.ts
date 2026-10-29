@@ -1456,8 +1456,11 @@ export interface HostCommands {
     result: import("../shell/aeatSyncResults").BorradorFile | null;
   };
   /** Imports the picked Borrador PDF into the profile. */
+  /** `year` is the filing year the Borrador is for, which the person
+   * chooses; without one the host refuses with `invalid`. A rejection
+   * `unknown` means the import may have been kept. */
   aeat_sync_borrador_import: {
-    args: { profile: string; file: string };
+    args: { profile: string; file: string; year?: number };
     result: import("../shell/aeatSyncResults").BorradorImportResult;
   };
   /** What an update needs before it reads AEAT: the secure browser's row and

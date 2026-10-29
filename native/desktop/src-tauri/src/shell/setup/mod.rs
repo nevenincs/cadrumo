@@ -314,6 +314,34 @@ impl SetupHost {
         }
     }
 
+    /// The secure browser's row as the engine last read it, reading every
+    /// item's quick state once when nothing has; none when no read settles
+    /// within `limit`. It reaches no network.
+    pub(crate) async fn browser_row(&self, limit: std::time::Duration) -> Option<wire::Row> {
+        let mut changes = self.components.changes();
+        self.components.observe();
+        let browser = ItemId::Browser.as_str();
+        tokio::time::timeout(limit, async {
+            loop {
+                let found = self
+                    .components
+                    .view()
+                    .rows
+                    .into_iter()
+                    .find(|row| row.item == browser);
+                if found.is_some() {
+                    return found;
+                }
+                if changes.changed().await.is_err() {
+                    return None;
+                }
+            }
+        })
+        .await
+        .ok()
+        .flatten()
+    }
+
     fn publish(&self, state: Availability, snapshot: Option<Snapshot>) -> DesktopSetup {
         lock(&self.current).update(state, snapshot)
     }

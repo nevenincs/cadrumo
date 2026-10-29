@@ -5,16 +5,23 @@
 //! it holds no tax rule, and nothing here submits a return.
 //!
 //! The window receives closed states and outcomes only, never an operation,
-//! snapshot or row identifier.
+//! snapshot or row identifier, a refusal code or a path.
 mod admitted;
+mod outcome;
+mod run;
 
-use super::relay::{Failure, Result, protocol};
-use super::user_profile::ProfileHost;
-use crate::agent::person::HeldPerson;
+use super::picked_files::Purpose;
+use super::relay::{self, Failure, Result, lock, protocol};
+use super::setup::{SetupHost, wire as setup_wire};
+use super::user_profile::{ProfileHost, censo};
+use crate::agent::person::{HeldPerson, PersonEvent};
 use admitted::{Area, admitted};
-use serde::Deserialize;
-use serde_json::Value;
-use std::sync::Arc;
+use outcome::{Counts, Outcome, Reason};
+use run::{ItemState, Run, Settled, Snapshot, Step};
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
+use std::sync::{Arc, Mutex};
+use std::time::Duration;
 use tauri::{State, ipc::Channel};
 
 /// The most areas, years and forms one selection may name.
@@ -23,13 +30,24 @@ const SELECTION_LIMIT: usize = 64;
 const FORM_LENGTH: std::ops::RangeInclusive<usize> = 1..=5;
 /// A calendar year as four digits; the years on offer are the backend's.
 const YEARS: std::ops::RangeInclusive<u16> = 1000..=9999;
+/// How long the preflight waits for the setup engine's first quick read.
+const PREPARE_LIMIT: Duration = Duration::from_secs(20);
+/// The most notification rows one reply carries.
+const NOTIFICATION_LIMIT: usize = 500;
+/// The longest text of a notification row the window is served.
+const TEXT_LIMIT: usize = 512;
+/// The Borrador 100 is an annual declaration: its one period.
+const BORRADOR_PERIOD: &str = "0A";
+/// What the dialog's filter calls a Borrador file: a format's name.
+const BORRADOR_KINDS: &str = "PDF";
 
 /// What the person chose to bring, as the window sends it.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Selection {
     areas: Vec<Area>,
-    /// The years for filed declarations and the VAT balance carried forward.
+    /// The years for filed declarations and the VAT balance carried forward;
+    /// none reads every year the backend serves.
     #[serde(default)]
     years: Vec<u16>,
     /// The forms to narrow filed declarations to; none means all discovered.
@@ -69,23 +87,19 @@ impl Selection {
         }
         // A dry run reads filed declarations only; every other area is left
         // out of it rather than refused.
-        let mut areas: Vec<Area> = Area::ORDER
+        let areas: Vec<Area> = Area::ORDER
             .into_iter()
             .filter(|area| areas.contains(area) && (!dry_run || *area == Area::Filed))
             .collect();
-        areas.dedup();
         years.sort_unstable();
         years.dedup();
         forms.sort_unstable();
         forms.dedup();
-        let needs_years = areas
-            .iter()
-            .any(|area| matches!(area, Area::Vat | Area::Filed));
         let closed = areas
             .iter()
             .flat_map(|area| area.definitions())
             .all(|id| admitted(id).is_some());
-        if areas.is_empty() || (needs_years && years.is_empty()) || !closed {
+        if areas.is_empty() || !closed {
             return Err(invalid());
         }
         Ok(Plan {
@@ -101,56 +115,567 @@ fn invalid() -> Failure {
     Failure::new("invalid")
 }
 
+/// A failure the window may read: its closed code, nothing else.
+fn bare(code: &'static str) -> Failure {
+    Failure::new(code)
+}
+
 /// The held person for exactly `profile`, or the refusal that the window's
 /// account is not the one signed in.
 async fn held(host: &ProfileHost, profile: &str) -> Result<HeldPerson> {
     host.person(Some(profile)).await
 }
 
-/// Not built yet: the commands below are named and admitted here and answer
-/// `unavailable` until the run is attached to them.
-fn unbuilt<T>() -> Result<T> {
-    Err(protocol())
+/// The run of one signed-in session.
+struct Held {
+    identity: Value,
+    run: Arc<Mutex<Run>>,
+    task: Option<tauri::async_runtime::JoinHandle<()>>,
+}
+impl Held {
+    fn end(&mut self) {
+        if let Some(task) = self.task.take() {
+            task.abort();
+        }
+    }
 }
 
-/// What the signed-in profile holds per area, as the backend judged it:
-/// `{ profile_id, areas: [{ area, state, captured_at, last_attempt, counts,
-/// update }] }`, with the states never brought, current, possibly out of date
-/// or unavailable.
+/// The AEAT sync run and its window cue, held by the profile host beside the
+/// census session. A sign-out, a profile change or the window's close
+/// discards the run.
+pub(crate) struct SyncHost {
+    held: Mutex<Option<Held>>,
+    observer: Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
+    changes: tokio::sync::watch::Sender<u64>,
+    /// Stops the sign-in waiting on the person's phone.
+    sign_in: Mutex<Option<Arc<tokio::sync::Notify>>>,
+}
+impl Default for SyncHost {
+    fn default() -> Self {
+        Self {
+            held: Mutex::new(None),
+            observer: Mutex::new(None),
+            changes: tokio::sync::watch::Sender::new(0),
+            sign_in: Mutex::new(None),
+        }
+    }
+}
+impl SyncHost {
+    fn changed(&self) {
+        self.changes
+            .send_modify(|revision| *revision = revision.wrapping_add(1));
+    }
+    pub(crate) fn close(&self) {
+        if let Some(mut held) = lock(&self.held).take() {
+            held.end();
+        }
+        if let Some((_, task)) = lock(&self.observer).take() {
+            task.abort();
+        }
+        if let Some(waiting) = lock(&self.sign_in).take() {
+            waiting.notify_one();
+        }
+    }
+    /// The run of the session `identity` names. A run of another session is
+    /// discarded: its person signed out or switched profile.
+    fn current(&self, identity: &Value) -> Option<Arc<Mutex<Run>>> {
+        let mut held = lock(&self.held);
+        if held.as_ref().is_some_and(|h| h.identity != *identity) {
+            if let Some(mut stale) = held.take() {
+                stale.end();
+            }
+            drop(held);
+            self.changed();
+            return None;
+        }
+        held.as_ref().map(|h| h.run.clone())
+    }
+    /// Follows `run` with a driver loop over the relay for `person`.
+    fn drive(&self, host: &Arc<ProfileHost>, person: HeldPerson, profile: String, identity: Value) {
+        let mut held = lock(&self.held);
+        let Some(current) = held.as_mut().filter(|h| h.identity == identity) else {
+            return;
+        };
+        let driver = Arc::new(RelayDriver {
+            host: host.clone(),
+            person,
+            profile,
+            identity,
+        });
+        if let Some(task) = current.task.take() {
+            task.abort();
+        }
+        current.task = Some(tauri::async_runtime::spawn(run::drive(
+            current.run.clone(),
+            driver,
+        )));
+    }
+}
+
+/// The relay side of the run: each item submitted, followed and read through
+/// the one closed outcome table.
+struct RelayDriver {
+    host: Arc<ProfileHost>,
+    person: HeldPerson,
+    profile: String,
+    identity: Value,
+}
+impl RelayDriver {
+    /// Submits one admitted capture and follows it to its settlement, with no
+    /// limit of its own: a lost reply or an unknown effect is unknown.
+    async fn capture(&self, definition: &'static str, payload: Value) -> (Settled, Option<Value>) {
+        if admitted(definition).is_none() {
+            return (Settled::of(Outcome::Failed(Reason::Other)), None);
+        }
+        let mut events = self.host.sign_in().person_events();
+        let subject = relay::subject(&self.profile);
+        let submitted = {
+            let _serial = self.host.serial().await;
+            relay::submit(&self.person, definition, &subject, payload, true).await
+        };
+        let operation = match submitted {
+            Ok(operation) => operation,
+            Err(refused) if refused.code == "refused" => {
+                let reason = outcome::reason(refused.reason.as_deref());
+                return (Settled::of(Outcome::Failed(reason)), None);
+            }
+            Err(_) => return (Settled::of(Outcome::Unknown), None),
+        };
+        let relayed = relay::Relayed {
+            person: &self.person,
+            operation,
+            definition,
+            subject,
+        };
+        let Ok(p) = relay::follow(&mut events, &relayed, |_| false).await else {
+            return (Settled::of(Outcome::Unknown), None);
+        };
+        if let Some(settled) = outcome::terminal(&p) {
+            return (Settled::of(settled), None);
+        }
+        let Ok(document) = relay::result(&relayed).await else {
+            return (Settled::of(Outcome::Unknown), None);
+        };
+        let projection = document["projection"].clone();
+        let (outcome, counts) = outcome::succeeded(definition, &projection);
+        (
+            Settled {
+                outcome,
+                counts,
+                ..Settled::default()
+            },
+            Some(projection),
+        )
+    }
+
+    /// The census item: the existing census session, followed until its
+    /// comparison waits for the person or it settles.
+    async fn census(&self) -> Settled {
+        let mut events = self.host.sign_in().person_events();
+        let mut state = match censo::begin(&self.host, self.profile.clone()).await {
+            Ok(snapshot) => snapshot.state(),
+            Err(failure) => {
+                return Settled::of(match failure.code {
+                    "refused" => Outcome::Failed(Reason::NoAccess),
+                    "unknown" => Outcome::Unknown,
+                    _ => Outcome::Failed(Reason::Unavailable),
+                });
+            }
+        };
+        loop {
+            match census_outcome(state) {
+                Some(settled) => return settled,
+                None => loop {
+                    match events.recv().await {
+                        Ok(PersonEvent::OperationChanged)
+                        | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => break,
+                        Ok(PersonEvent::Retired)
+                        | Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                            return Settled::of(Outcome::Unknown);
+                        }
+                        _ => {}
+                    }
+                },
+            }
+            state = match censo::standing(&self.host, &self.profile).await {
+                Ok(state) => state,
+                Err(_) => return Settled::of(Outcome::Unknown),
+            };
+        }
+    }
+
+    async fn vat(&self, years: Vec<u16>) -> Settled {
+        let years = if years.is_empty() {
+            match self.served_years("iva_wallet_years").await {
+                Some(years) => years,
+                None => return Settled::of(Outcome::Failed(Reason::Unavailable)),
+            }
+        } else {
+            years
+        };
+        let (Some(from), Some(to)) = (years.first(), years.last()) else {
+            return Settled::of(Outcome::NothingFound);
+        };
+        let payload = json!({"profile_id": self.profile, "year_from": from, "year_to": to});
+        self.capture("live.iva-wallet.history-capture", payload)
+            .await
+            .0
+    }
+
+    /// The years the backend serves for an area, from the status read.
+    async fn served_years(&self, key: &str) -> Option<Vec<u16>> {
+        let status = read_status(&self.host, &self.person, &self.profile)
+            .await
+            .ok()?;
+        status["status"][key]
+            .as_array()?
+            .iter()
+            .map(|year| year.as_u64().and_then(|y| u16::try_from(y).ok()))
+            .collect()
+    }
+}
+
+/// How the census session's state settles its item; none while it reads.
+fn census_outcome(state: &str) -> Option<Settled> {
+    Some(match state {
+        "review" => Settled {
+            outcome: Outcome::Brought,
+            review_pending: true,
+            ..Settled::default()
+        },
+        "done" => Settled::of(Outcome::Brought),
+        "stopped" => Settled::of(Outcome::NothingFound),
+        "failed" | "unsupported" => Settled::of(Outcome::Failed(Reason::Other)),
+        "unknown" => Settled::of(Outcome::Unknown),
+        _ => return None,
+    })
+}
+
+impl run::Driver for RelayDriver {
+    async fn run(&self, step: Step) -> Settled {
+        let profile = json!({ "profile_id": self.profile });
+        match step {
+            Step::Census => self.census().await,
+            Step::Verify(definition) => self.capture(definition, profile).await.0,
+            Step::Notifications => self.capture("live.notifications.capture", profile).await.0,
+            Step::Vat(years) => self.vat(years).await,
+            Step::Discover(_) => {
+                let (mut settled, document) = self.capture("live.filed-discover", profile).await;
+                settled.discovered = document.as_ref().and_then(outcome::discovered);
+                settled
+            }
+            Step::Filed {
+                year,
+                forms,
+                dry_run,
+            } => {
+                let payload = json!({"profile_id": self.profile, "year_from": year,
+                    "year_to": year, "modelos": forms, "dry_run": dry_run});
+                self.capture("live.filed-capture.bulk", payload).await.0
+            }
+        }
+    }
+    async fn current(&self) -> bool {
+        let Ok(person) = self.host.person(Some(&self.profile)).await else {
+            return false;
+        };
+        relay::identity(&person)
+            .await
+            .is_ok_and(|identity| identity == self.identity)
+    }
+    fn changed(&self) {
+        self.host.aeat_sync().changed();
+    }
+}
+
+async fn read_status(host: &ProfileHost, person: &HeldPerson, profile: &str) -> Result<Value> {
+    host.run(
+        person,
+        "live.sync.status",
+        json!({ "profile_id": profile }),
+        false,
+    )
+    .await
+    .map_err(|failure| {
+        bare(if failure.code == "not_signed_in" {
+            "not_signed_in"
+        } else {
+            "unavailable"
+        })
+    })
+}
+
+/// One area as the overview shows it.
+#[derive(Debug, PartialEq, Serialize)]
+struct StatusArea {
+    area: &'static str,
+    state: &'static str,
+    captured_at: Option<String>,
+    last_attempt: Option<Attempt>,
+    counts: Vec<CountValue>,
+    update: &'static str,
+}
+#[derive(Debug, PartialEq, Serialize)]
+struct Attempt {
+    at: String,
+    outcome: &'static str,
+}
+#[derive(Debug, PartialEq, Serialize)]
+struct CountValue {
+    kind: &'static str,
+    value: u64,
+}
+#[derive(Debug, PartialEq, Serialize)]
+pub struct Status {
+    profile_id: String,
+    areas: Vec<StatusArea>,
+}
+
+/// The window's name for a backend area.
+fn window_area(area: &str) -> Option<&'static str> {
+    Some(match area {
+        "census" => "census",
+        "identity_checks" => "identity",
+        "notifications" => "notifications",
+        "iva_wallet" => "vat",
+        "filed_declarations" => "filed",
+        "borrador_100" => "borrador",
+        _ => return None,
+    })
+}
+
+fn instant(value: &Value) -> Result<Option<String>> {
+    match value {
+        Value::Null => Ok(None),
+        Value::String(text) if (1..=64).contains(&text.len()) => Ok(Some(text.clone())),
+        _ => Err(protocol()),
+    }
+}
+
+/// The status read's result as the overview's areas: served states, instants
+/// and counts only; its refusal names stay here.
+fn status_reply(profile: &str, result: &Value) -> Result<Status> {
+    let areas = result["status"]["areas"].as_array().ok_or_else(protocol)?;
+    let areas = areas
+        .iter()
+        .map(|entry| {
+            let backend = entry["area"].as_str().ok_or_else(protocol)?;
+            let area = window_area(backend).ok_or_else(protocol)?;
+            let state = match entry["state"].as_str() {
+                Some("never_brought") => "never_brought",
+                Some("current") => "current",
+                Some("possibly_stale") => "possibly_stale",
+                Some("unavailable") => "unavailable",
+                _ => return Err(protocol()),
+            };
+            let last_attempt = match instant(&entry["last_attempt_at"])? {
+                Some(at) => Some(Attempt {
+                    at,
+                    outcome: match entry["last_attempt_succeeded"].as_bool() {
+                        Some(true) => "brought",
+                        Some(false) => "failed",
+                        None => return Err(protocol()),
+                    },
+                }),
+                None => None,
+            };
+            let mut counts = Vec::new();
+            if let Some(unread) = entry["unread_notification_count"].as_u64() {
+                counts.push(CountValue {
+                    kind: "unread_notifications",
+                    value: unread,
+                });
+            }
+            let periods = &entry["filed_periods"];
+            if periods.is_object() {
+                for (kind, key) in [
+                    ("filed_matched", "matched"),
+                    ("filed_aeat_only", "aeat_only"),
+                    ("filed_local_only", "local_only"),
+                    ("filed_differing", "differing"),
+                ] {
+                    let value = periods[key].as_u64().ok_or_else(protocol)?;
+                    counts.push(CountValue { kind, value });
+                }
+            }
+            Ok(StatusArea {
+                area,
+                state,
+                captured_at: instant(&entry["last_brought_at"])?,
+                last_attempt,
+                counts,
+                update: if area == "borrador" {
+                    "import"
+                } else {
+                    "bring"
+                },
+            })
+        })
+        .collect::<Result<Vec<_>>>()?;
+    Ok(Status {
+        profile_id: profile.to_owned(),
+        areas,
+    })
+}
+
+/// What the profile holds per area, as the backend judged it, with states
+/// never brought, current, possibly out of date or unavailable.
 #[tauri::command]
 pub async fn aeat_sync_status(
     host: State<'_, Arc<ProfileHost>>,
     language: String,
-) -> Result<Value> {
+) -> Result<Status> {
     if !super::language::supported(&language) {
         return Err(invalid());
     }
-    host.person(None).await?;
-    unbuilt()
+    let person = host.person(None).await?;
+    let profile = relay::profile_of(&person).await?;
+    let result = read_status(&host, &person, &profile).await?;
+    status_reply(&profile, &result)
 }
 
-/// Whether the secure browser and the AEAT access are ready to sign in.
+/// The secure browser as the setup engine's row reads it.
+#[derive(Debug, PartialEq, Serialize)]
+#[serde(tag = "state", rename_all = "snake_case")]
+enum Browser {
+    Ready,
+    Missing { bytes: Option<u64> },
+    Attention,
+}
+#[derive(Debug, PartialEq, Serialize)]
+pub struct Prepared {
+    browser: Browser,
+    access: &'static str,
+}
+/// The browser row as the preflight words it: what setup can install or
+/// update is missing; anything else needs the row's own recovery.
+fn browser(row: Option<&setup_wire::Row>) -> Browser {
+    match row.map(|row| row.state) {
+        Some(setup_wire::State::Ready) => Browser::Ready,
+        Some(setup_wire::State::Absent | setup_wire::State::Stale) => Browser::Missing {
+            bytes: row.and_then(|row| row.size_bytes),
+        },
+        _ => Browser::Attention,
+    }
+}
+
+/// Whether the secure browser and the AEAT access are ready to sign in. It
+/// reaches no network.
 #[tauri::command]
 pub async fn aeat_sync_prepare(
     host: State<'_, Arc<ProfileHost>>,
-    profile: String,
-) -> Result<Value> {
-    held(&host, &profile).await?;
-    unbuilt()
+    setup: State<'_, Arc<SetupHost>>,
+) -> Result<Prepared> {
+    let person = host.person(None).await?;
+    let profile = relay::profile_of(&person).await?;
+    let ready = {
+        let _serial = host.serial().await;
+        censo::readiness(&host, &person, &profile)
+            .await
+            .map_err(|_| bare("unavailable"))?
+            .ready
+    };
+    let row = setup.browser_row(PREPARE_LIMIT).await;
+    Ok(Prepared {
+        browser: browser(row.as_ref()),
+        access: if ready { "ready" } else { "needs_access" },
+    })
+}
+
+/// What a sign-in waits on, while it does.
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub enum SignInStage {
+    WaitingForPhone,
+}
+
+/// How a settled sign-in reads for the window.
+fn signed_in(p: &Value, result: Option<&Value>) -> Result<()> {
+    match outcome::terminal(p) {
+        None => match result {
+            Some(result) if result["result"]["authenticated"] == true => Ok(()),
+            Some(_) => Err(bare("refused")),
+            None => Err(bare("unavailable")),
+        },
+        Some(Outcome::Failed(Reason::NoAccess)) => Err(bare("needs_access")),
+        Some(Outcome::Failed(_)) => Err(bare("refused")),
+        Some(_) => Err(bare("unavailable")),
+    }
 }
 
 /// Signs in to AEAT with the profile's configured method, reusing a valid
-/// session.
+/// session, including one made in the in-app browser. `progress` is told
+/// when it waits on the person's phone.
 #[tauri::command]
 pub async fn aeat_sync_sign_in(
     host: State<'_, Arc<ProfileHost>>,
-    profile: String,
-) -> Result<Value> {
-    held(&host, &profile).await?;
-    unbuilt()
+    progress: Channel<SignInStage>,
+) -> Result<()> {
+    let person = host.person(None).await?;
+    let profile = relay::profile_of(&person).await?;
+    let waiting = Arc::new(tokio::sync::Notify::new());
+    *lock(&host.aeat_sync().sign_in) = Some(waiting.clone());
+    let definition = "auth.session.acquire";
+    let mut events = host.sign_in().person_events();
+    let subject = relay::subject(&profile);
+    let (readiness, submitted) = {
+        let _serial = host.serial().await;
+        let readiness = censo::readiness(&host, &person, &profile)
+            .await
+            .map_err(|_| bare("unavailable"))?;
+        if !readiness.ready {
+            return Err(bare("needs_access"));
+        }
+        let submitted = relay::submit(&person, definition, &subject, json!({}), true).await;
+        (readiness, submitted)
+    };
+    let operation = match submitted {
+        Ok(operation) => operation,
+        Err(refused) if refused.code == "refused" => {
+            return Err(match outcome::reason(refused.reason.as_deref()) {
+                Reason::NoAccess => bare("needs_access"),
+                _ => bare("refused"),
+            });
+        }
+        Err(_) => return Err(bare("unavailable")),
+    };
+    if readiness.provider == "clave_movil" {
+        let _ = progress.send(SignInStage::WaitingForPhone);
+    }
+    let relayed = relay::Relayed {
+        person: &person,
+        operation,
+        definition,
+        subject,
+    };
+    // The acquisition itself cannot be cancelled: a stop ends this wait, and
+    // the session it may still make is reused by the next sign-in.
+    let followed = tokio::select! {
+        followed = relay::follow(&mut events, &relayed, |_| false) => followed,
+        () = waiting.notified() => return Err(bare("cancelled")),
+    };
+    lock(&host.aeat_sync().sign_in).take();
+    let p = followed.map_err(|_| bare("unavailable"))?;
+    let result = if outcome::terminal(&p).is_none() {
+        relay::result(&relayed)
+            .await
+            .ok()
+            .map(|document| document["projection"].clone())
+    } else {
+        None
+    };
+    signed_in(&p, result.as_ref())
 }
 
-/// Starts the run for `request`, or reattaches to the one already running.
+/// Stops a sign-in that waits on the person's phone.
+#[tauri::command]
+pub fn aeat_sync_sign_in_cancel(host: State<'_, Arc<ProfileHost>>) {
+    if let Some(waiting) = lock(&host.aeat_sync().sign_in).take() {
+        waiting.notify_one();
+    }
+}
+
+/// Starts the run for `request`, or reattaches to the one still going on.
 /// The request is read here, so a malformed one is refused with a code.
 #[tauri::command]
 pub async fn aeat_sync_start(
@@ -158,53 +683,311 @@ pub async fn aeat_sync_start(
     profile: String,
     request: Value,
 ) -> Result<()> {
-    let _plan = serde_json::from_value::<Selection>(request)
+    let plan = serde_json::from_value::<Selection>(request)
         .map_err(|_| invalid())?
         .admit()?;
-    held(&host, &profile).await?;
-    unbuilt()
+    let person = held(&host, &profile).await?;
+    let identity = relay::identity(&person).await?;
+    let sync = host.aeat_sync();
+    if let Some(run) = sync.current(&identity)
+        && run::lock(&run).active()
+    {
+        return Ok(());
+    }
+    let mut fresh = Run::new(&plan);
+    fresh.claim();
+    *lock(&sync.held) = Some(Held {
+        identity: identity.clone(),
+        run: Arc::new(Mutex::new(fresh)),
+        task: None,
+    });
+    sync.drive(&host, person, profile, identity);
+    sync.changed();
+    Ok(())
 }
 
-/// Where the run stands: each area's items and their closed outcomes.
+/// The run of the window's session and its person.
+/// The window's session: its person, their identity and their run.
+type Session = (HeldPerson, Value, Option<Arc<Mutex<Run>>>);
+
+async fn session(host: &ProfileHost, profile: &str) -> Result<Session> {
+    let person = held(host, profile).await?;
+    let identity = relay::identity(&person).await?;
+    let run = host.aeat_sync().current(&identity);
+    Ok((person, identity, run))
+}
+
+/// The run now going on or last ended: each area's items and their closed
+/// outcomes; null before any.
 #[tauri::command]
 pub async fn aeat_sync_progress(
     host: State<'_, Arc<ProfileHost>>,
     profile: String,
-) -> Result<Value> {
-    held(&host, &profile).await?;
-    unbuilt()
+) -> Result<Option<Snapshot>> {
+    let (_, _, run) = session(&host, &profile).await?;
+    Ok(run.map(|run| run::lock(&run).snapshot()))
 }
 
-/// Cues the window to read the run's progress again when it changes.
+/// Cues the window to read the run, its results and the overview again.
 #[tauri::command]
-pub fn aeat_sync_observe(updates: Channel<()>) -> u32 {
-    updates.id()
+pub fn aeat_sync_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>) -> u32 {
+    let sync = host.aeat_sync();
+    let mut observer = lock(&sync.observer);
+    if let Some((_, task)) = observer.take() {
+        task.abort();
+    }
+    let subscription = updates.id();
+    if host.is_closed() {
+        return subscription;
+    }
+    let mut changes = sync.changes.subscribe();
+    let mut events = host.sign_in().person_events();
+    let task = tauri::async_runtime::spawn(async move {
+        loop {
+            tokio::select! {
+                changed = changes.changed() => if changed.is_err() { break },
+                event = events.recv() => match event {
+                    Ok(PersonEvent::RecordsChanged | PersonEvent::Retired)
+                    | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                    _ => continue,
+                },
+            }
+            if updates.send(()).is_err() {
+                break;
+            }
+        }
+    });
+    *observer = Some((subscription, task));
+    subscription
 }
 
 /// Ends the cue `subscription`.
 #[tauri::command]
-pub fn aeat_sync_unobserve(subscription: u32) {
-    let _ = subscription;
+pub fn aeat_sync_unobserve(host: State<'_, Arc<ProfileHost>>, subscription: u32) {
+    let mut observer = lock(&host.aeat_sync().observer);
+    if observer.as_ref().is_some_and(|(id, _)| *id == subscription)
+        && let Some((_, task)) = observer.take()
+    {
+        task.abort();
+    }
 }
 
 /// Lets the item in flight settle and starts nothing further.
 #[tauri::command]
-pub async fn aeat_sync_stop(host: State<'_, Arc<ProfileHost>>, profile: String) -> Result<Value> {
-    held(&host, &profile).await?;
-    unbuilt()
+pub async fn aeat_sync_stop(host: State<'_, Arc<ProfileHost>>, profile: String) -> Result<()> {
+    let (_, _, run) = session(&host, &profile).await?;
+    if let Some(run) = run {
+        run::lock(&run).stop();
+        host.aeat_sync().changed();
+    }
+    Ok(())
 }
 
-/// Runs one area again, or one of its items, on the person's request.
+fn refusal(refused: run::Refusal) -> Failure {
+    bare(match refused {
+        run::Refusal::Invalid => "invalid",
+        run::Refusal::Refused => "refused",
+        run::Refusal::Unknown => "unknown",
+    })
+}
+
+/// Reads one area again, or one of its items, on the person's request. An
+/// item whose outcome is unknown is read again only once the person was told
+/// it may already have been brought.
 #[tauri::command]
 pub async fn aeat_sync_retry(
     host: State<'_, Arc<ProfileHost>>,
     profile: String,
     area: Area,
     item: Option<u32>,
-) -> Result<Value> {
-    held(&host, &profile).await?;
-    let _ = (area, item);
-    unbuilt()
+    acknowledged_unknown: Option<bool>,
+) -> Result<()> {
+    let (person, identity, run) = session(&host, &profile).await?;
+    let run = run.ok_or_else(invalid)?;
+    let follow = run::lock(&run)
+        .retry(area, item, acknowledged_unknown == Some(true))
+        .map_err(refusal)?;
+    if follow {
+        host.aeat_sync().drive(&host, person, profile, identity);
+    }
+    host.aeat_sync().changed();
+    Ok(())
+}
+
+/// Carries a paused run on from the first item not brought, once the person
+/// signed in again.
+#[tauri::command]
+pub async fn aeat_sync_resume(host: State<'_, Arc<ProfileHost>>, profile: String) -> Result<()> {
+    let (person, identity, run) = session(&host, &profile).await?;
+    let run = run.ok_or_else(|| bare("refused"))?;
+    let follow = run::lock(&run).resume().map_err(refusal)?;
+    if follow {
+        host.aeat_sync().drive(&host, person, profile, identity);
+    }
+    host.aeat_sync().changed();
+    Ok(())
+}
+
+/// One failed part, by its retry address.
+#[derive(Debug, PartialEq, Serialize)]
+struct FailedPart {
+    part: u32,
+    year: Option<u16>,
+    form: Option<String>,
+    reason: Reason,
+}
+/// What the run brought for one area.
+#[derive(Debug, PartialEq, Serialize)]
+struct AreaResult {
+    area: Area,
+    outcome: &'static str,
+    at: Option<String>,
+    new_count: u64,
+    changed_count: u64,
+    failed: Vec<FailedPart>,
+    review_pending: bool,
+}
+#[derive(Debug, PartialEq, Serialize)]
+pub struct Results {
+    areas: Vec<AreaResult>,
+    /// The filed declarations set against the profile's own records; the
+    /// status read serves their counts only, so no row is served yet.
+    filed: Vec<Value>,
+}
+
+fn item_outcome(state: ItemState, reason: Option<Reason>) -> Option<Outcome> {
+    Some(match state {
+        ItemState::Brought => Outcome::Brought,
+        ItemState::NothingFound => Outcome::NothingFound,
+        ItemState::Failed => Outcome::Failed(reason.unwrap_or(Reason::Other)),
+        ItemState::Unknown => Outcome::Unknown,
+        _ => return None,
+    })
+}
+fn outcome_word(outcome: Outcome) -> &'static str {
+    match outcome {
+        Outcome::Brought => "brought",
+        Outcome::NothingFound => "nothing_found",
+        Outcome::Failed(_) => "failed",
+        Outcome::Unknown => "unknown",
+    }
+}
+
+/// The run's settled areas, each at the instant the status read last saw it
+/// brought.
+fn results_reply(run: &Run, status: &Status) -> Results {
+    let areas = run
+        .areas
+        .iter()
+        .filter_map(|area| {
+            let settled: Vec<_> = area
+                .items
+                .iter()
+                .filter_map(|item| item_outcome(item.state, item.reason).map(|o| (item, o)))
+                .collect();
+            let worst = outcome::worst(settled.iter().map(|(_, outcome)| *outcome))?;
+            let name = serde_json::to_value(area.area).ok()?;
+            let at = status
+                .areas
+                .iter()
+                .find(|entry| name == entry.area)
+                .and_then(|entry| entry.captured_at.clone());
+            let total = settled
+                .iter()
+                .fold(Counts::default(), |sum, (item, _)| Counts {
+                    new: sum.new + item.counts.new,
+                    changed: sum.changed + item.counts.changed,
+                });
+            Some(AreaResult {
+                area: area.area,
+                outcome: outcome_word(worst),
+                at,
+                new_count: total.new,
+                changed_count: total.changed,
+                failed: settled
+                    .iter()
+                    .filter_map(|(item, outcome)| match outcome {
+                        Outcome::Failed(reason) => Some(FailedPart {
+                            part: item.id,
+                            year: item.year,
+                            form: None,
+                            reason: *reason,
+                        }),
+                        _ => None,
+                    })
+                    .collect(),
+                review_pending: settled.iter().any(|(item, _)| item.review_pending),
+            })
+        })
+        .collect();
+    Results {
+        areas,
+        filed: Vec::new(),
+    }
+}
+
+/// What the last reads came to, per area, from the run and the profile's own
+/// records; it reaches no network.
+#[tauri::command]
+pub async fn aeat_sync_results(
+    host: State<'_, Arc<ProfileHost>>,
+    profile: String,
+    language: String,
+) -> Result<Results> {
+    if !super::language::supported(&language) {
+        return Err(invalid());
+    }
+    let (person, _, run) = session(&host, &profile).await?;
+    let status = status_reply(&profile, &read_status(&host, &person, &profile).await?)?;
+    Ok(match run {
+        Some(run) => results_reply(&run::lock(&run), &status),
+        None => Results {
+            areas: Vec::new(),
+            filed: Vec::new(),
+        },
+    })
+}
+
+/// One notification as the window lists it, without identifiers.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct NotificationRow {
+    subject: String,
+    sender: &'static str,
+    received_on: String,
+    read: bool,
+    read_on: Option<String>,
+}
+
+fn text(value: &Value) -> Result<String> {
+    value
+        .as_str()
+        .filter(|text| text.len() <= TEXT_LIMIT)
+        .map(str::to_owned)
+        .ok_or_else(protocol)
+}
+
+/// The rows of the latest notifications capture, with read state only. The
+/// notifications listed are those of AEAT's own mailbox.
+fn notification_rows(shown: &Value) -> Result<Vec<NotificationRow>> {
+    let rows = shown["rows"].as_array().ok_or_else(protocol)?;
+    rows.iter()
+        .take(NOTIFICATION_LIMIT)
+        .map(|row| {
+            let read = row["leida"] == true;
+            Ok(NotificationRow {
+                subject: text(&row["concepto"])?,
+                sender: "AEAT",
+                received_on: text(&row["fecha_emision"])?,
+                read,
+                read_on: if read && row["fecha_notificacion"].is_string() {
+                    Some(text(&row["fecha_notificacion"])?)
+                } else {
+                    None
+                },
+            })
+        })
+        .collect()
 }
 
 /// The notification rows with their read state, without identifiers.
@@ -212,21 +995,83 @@ pub async fn aeat_sync_retry(
 pub async fn aeat_sync_notifications(
     host: State<'_, Arc<ProfileHost>>,
     profile: String,
-) -> Result<Value> {
-    held(&host, &profile).await?;
-    unbuilt()
+) -> Result<Vec<NotificationRow>> {
+    let person = held(&host, &profile).await?;
+    let id = json!({ "profile_id": profile });
+    let latest = host
+        .run(&person, "live.notifications.latest", id, false)
+        .await
+        .map_err(|_| bare("unavailable"))?;
+    let Some(snapshot) = latest["snapshot_id"].as_str() else {
+        return Ok(Vec::new());
+    };
+    let shown = host
+        .run(
+            &person,
+            "live.notifications.show",
+            json!({ "profile_id": profile, "snapshot_id": snapshot }),
+            false,
+        )
+        .await
+        .map_err(|_| bare("unavailable"))?;
+    notification_rows(&shown)
 }
 
-/// Imports a Borrador 100 document the person picked, named by its file token.
+/// A Borrador PDF picked in the native dialog: its token and file name.
+#[derive(Debug, Serialize)]
+pub struct BorradorFile {
+    token: String,
+    name: String,
+}
+
+/// Opens the native dialog for a Borrador 100 PDF; null when it closes
+/// without a choice. The path stays in the host.
+#[tauri::command]
+pub async fn aeat_sync_borrador_pick<R: tauri::Runtime>(
+    host: State<'_, Arc<ProfileHost>>,
+    window: tauri::WebviewWindow<R>,
+) -> Result<Option<BorradorFile>> {
+    let picked = host
+        .pick_one(window, Purpose::Borrador, BORRADOR_KINDS)
+        .await?;
+    Ok(picked.map(|picked| BorradorFile {
+        token: picked.token,
+        name: picked.name,
+    }))
+}
+
+/// Imports a Borrador 100 document the person picked, named by its file
+/// token, for the filing year the person chose.
 #[tauri::command]
 pub async fn aeat_sync_borrador_import(
     host: State<'_, Arc<ProfileHost>>,
     profile: String,
     file: String,
-) -> Result<Value> {
-    held(&host, &profile).await?;
-    let _ = file;
-    unbuilt()
+    year: Option<u16>,
+) -> Result<&'static str> {
+    let year = year
+        .filter(|year| YEARS.contains(year))
+        .ok_or_else(invalid)?;
+    let person = held(&host, &profile).await?;
+    let path = host.picked(&person, &file, Purpose::Borrador).await?;
+    let payload = json!({
+        "profile_id": profile,
+        "source_path": super::picked_files::path_text(&path)?,
+        "filing_year": year,
+        "period": {"filing_year": year, "code": BORRADOR_PERIOD},
+    });
+    let imported = host
+        .run(&person, "live.borrador.100.import", payload, true)
+        .await;
+    Ok(match imported {
+        Ok(result) if result["snapshot"]["binding_count"].as_u64() == Some(0) => "nothing_found",
+        Ok(result) if result["snapshot"].is_object() => "imported",
+        Ok(_) => return Err(bare("unknown")),
+        Err(failure) if failure.code == "unknown" || failure.code == "saved_unread" => {
+            return Err(bare("unknown"));
+        }
+        Err(_) => "failed",
+    })
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
@@ -234,13 +1079,17 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         aeat_sync_status,
         aeat_sync_prepare,
         aeat_sync_sign_in,
+        aeat_sync_sign_in_cancel,
         aeat_sync_start,
         aeat_sync_progress,
         aeat_sync_observe,
         aeat_sync_unobserve,
         aeat_sync_stop,
         aeat_sync_retry,
+        aeat_sync_resume,
+        aeat_sync_results,
         aeat_sync_notifications,
+        aeat_sync_borrador_pick,
         aeat_sync_borrador_import
     ]
 }

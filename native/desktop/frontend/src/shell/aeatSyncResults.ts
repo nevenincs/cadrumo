@@ -91,8 +91,13 @@ export type AeatSyncResultsPort = {
   retry(profile: string, area: AeatSyncAreaId, part?: number): Promise<void>;
   /** Null when the person closes the dialog without choosing. */
   pickBorrador(): Promise<BorradorFile | null>;
-  /** Reads the chosen Borrador PDF into the profile. */
-  importBorrador(profile: string, file: string): Promise<BorradorImportResult>;
+  /** Reads the chosen Borrador PDF into the profile, for the filing `year`
+   * the person chose. */
+  importBorrador(
+    profile: string,
+    file: string,
+    year?: number,
+  ): Promise<BorradorImportResult>;
 };
 
 type State = {
