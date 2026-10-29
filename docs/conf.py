@@ -491,8 +491,20 @@ html_css_files = [
     "cadrumo-legal-reference.css",
 ]
 # The desktop bridge goes first, so its capture-phase key listener exists
-# before ``cadrumo-docs.js`` registers its own.
-html_js_files = ["cadrumo-desktop-bridge.js", "cadrumo-docs.js"] if _DESKTOP_FLAVOR else ["cadrumo-docs.js"]
+# before ``cadrumo-docs.js`` registers its own. The desktop window refuses to
+# turn a string into code, which Sphinx's ``doctools.js`` does to read a
+# language's plural-form expression; the plural evaluator replaces that one
+# function and so loads between ``doctools.js`` (200) and the language's
+# ``translations.js`` (500), which calls it as it loads.
+html_js_files = (
+    [
+        ("cadrumo-plural-expression.js", {"priority": 300}),
+        "cadrumo-desktop-bridge.js",
+        "cadrumo-docs.js",
+    ]
+    if _DESKTOP_FLAVOR
+    else ["cadrumo-docs.js"]
+)
 # The left sidebar carries the command-palette trigger and the navigation tree;
 # brand and the stock search box move into the sticky site header / palette.
 html_sidebars = {

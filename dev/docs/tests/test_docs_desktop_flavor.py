@@ -1230,3 +1230,118 @@ def test_language_rejects_external_fallback(open_window: Callable[..., _Window],
     window.settle()
     assert window.frame.url == before
     assert "cadrumo-desktop-bridge: refused message: language has no documentation target" in _bridge_logs(window)
+
+
+# ── A translated page under the window's script policy ─────────────────────
+
+#: The script directive of the policy the application serves every documentation
+#: response under (``content_security_policy`` in the shell's ``docs/policy.rs``),
+#: less the digests of inline scripts, which the application computes per page.
+#: The directives beside it in the test's policy are that function's, too.
+_SCRIPT_POLICY = "script-src 'self' 'wasm-unsafe-eval'"
+_PLURAL_SCRIPT = "_static/cadrumo-plural-expression.js"
+
+
+def _inline_script_digests(page: str) -> str:
+    """Return the policy source list entries admitting the page's own inline scripts."""
+    import base64
+    import hashlib
+    import re
+
+    bodies = re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", page, flags=re.DOTALL)
+    return "".join(
+        f" 'sha256-{base64.b64encode(hashlib.sha256(body.encode()).digest()).decode()}'" for body in bodies if body
+    )
+
+
+@pytest.fixture(scope="module")
+def spanish_desktop_site(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """The fixture page built in Spanish for the desktop flavor, which loads Sphinx's ``translations.js``."""
+    return _built_site(
+        tmp_path_factory.mktemp("spanish-desktop"),
+        CADRUMO_DOCS_FLAVOR="desktop",
+        CADRUMO_DOCS_LANGUAGE="es",
+    )
+
+
+def _load_under_script_policy(
+    site: Path, *, replace: dict[str, bytes] | None = None
+) -> tuple[list[str], list[str], Any]:
+    """Open the page under the application's script policy; return its errors, violations and plural form.
+
+    ``replace`` serves other bytes for the named site files, for the control
+    that removes the fix.
+    """
+    from playwright.sync_api import sync_playwright
+
+    page_text = (site / "fixture.html").read_text(encoding="utf-8")
+    policy = (
+        f"default-src 'self'; {_SCRIPT_POLICY}{_inline_script_digests(page_text)}; worker-src 'self'; "
+        "style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; "
+        "object-src 'none'; base-uri 'self'; form-action 'self'"
+    )
+    with serve_directory(site) as (_, port), sync_playwright() as playwright:
+        browser = playwright.chromium.launch()
+        try:
+            page = browser.new_page()
+            errors: list[str] = []
+            page.on("pageerror", lambda error: errors.append(error.message))
+
+            def _serve(route: Any) -> None:
+                name = route.request.url.removeprefix(f"http://127.0.0.1:{port}/").split("?", 1)[0]
+                if replace is not None and name in replace:
+                    route.fulfill(body=replace[name], content_type="text/javascript")
+                    return
+                response = route.fetch()
+                headers = dict(response.headers)
+                if name == "fixture.html":
+                    headers["content-security-policy"] = policy
+                route.fulfill(response=response, headers=headers)
+
+            page.route(f"http://127.0.0.1:{port}/**", _serve)
+            page.add_init_script(
+                "window.__violations = [];"
+                "document.addEventListener('securitypolicyviolation', (event) =>"
+                " window.__violations.push(event.violatedDirective + ' ' + event.sourceFile));"
+            )
+            page.goto(f"http://127.0.0.1:{port}/fixture.html", wait_until="load")
+            violations = list(page.evaluate("window.__violations"))
+            plural = page.evaluate(
+                "[Documentation.LOCALE, typeof Documentation.PLURAL_EXPR === 'function'"
+                " ? [0, 1, 2, 5, 1000000].map((n) => Documentation.PLURAL_EXPR(n)) : null]"
+            )
+            return errors, violations, plural
+        finally:
+            browser.close()
+
+
+def test_translated_desktop_page_loads_the_plural_form_script_before_the_catalog(
+    spanish_desktop_site: Path,
+) -> None:
+    """The evaluator replaces ``addTranslations`` after Sphinx defines it and before ``translations.js`` calls it."""
+    page = (spanish_desktop_site / "fixture.html").read_text(encoding="utf-8")
+    sources = [_without_version(tag["src"]) for tag in _script_tags(page)]
+    assert "_static/translations.js" in sources
+    sequence = [sources.index(name) for name in ("_static/doctools.js", _PLURAL_SCRIPT, "_static/translations.js")]
+    assert sequence == sorted(sequence)
+
+
+def test_translated_desktop_page_runs_under_the_script_policy_without_a_violation(
+    spanish_desktop_site: Path,
+) -> None:
+    """Under a script policy that refuses string evaluation, the Spanish page loads its catalog cleanly."""
+    errors, violations, (locale, forms) = _load_under_script_policy(spanish_desktop_site)
+    assert errors == []
+    assert violations == []
+    assert locale == "es"
+    # Spanish: one, then the million-multiple form, then every other count.
+    assert forms == [2, 0, 2, 2, 1]
+
+
+def test_the_policy_gate_detects_sphinx_building_a_function_from_the_plural_expression(
+    spanish_desktop_site: Path,
+) -> None:
+    """Without the evaluator the same page raises the policy's EvalError, so the gate above can fail."""
+    errors, violations, _ = _load_under_script_policy(spanish_desktop_site, replace={_PLURAL_SCRIPT: b""})
+    assert any("unsafe-eval" in error for error in errors)
+    assert any(violation.startswith("script-src") for violation in violations)
