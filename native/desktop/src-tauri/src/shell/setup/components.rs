@@ -747,6 +747,11 @@ impl Components {
             }
             track.cancellation.cancel();
             track.decline();
+            if track.stage == RunStage::Planning && !track.answered {
+                // Nothing is approved, so nothing will run: the setup ends here, whatever
+                // its planning is still doing, and its worker's later result is not shown.
+                settle_cancelled(track);
+            }
             Ok(None)
         })?;
         let Some(items) = followed else {
@@ -925,7 +930,7 @@ fn run_setup(
             // command returns this failure, so its cause is recorded here.
             shared.reports.error(&cause);
             shared.update(|window| {
-                if let Some(track) = window.setup_of(id) {
+                if let Some(track) = window.setup_of(id).filter(|track| track.live()) {
                     settle_failed(track, category);
                 }
             });
@@ -936,7 +941,8 @@ fn run_setup(
             // for it is refused instead, and the window shows no run. That start returns
             // the stop, so the host that answers the window records its cause.
             shared.update(|window| {
-                if let Some(item) = window.drop_setup(id) {
+                let live = window.setup_of(id).is_some_and(|track| track.live());
+                if let Some(item) = live.then(|| window.drop_setup(id)).flatten() {
                     window.refused.insert(item, (id.to_owned(), stop));
                 }
             });
@@ -984,7 +990,7 @@ fn run_setup(
         };
         let mut events = |event: Event| {
             shared.update(|window| {
-                if let Some(track) = window.setup_of(id) {
+                if let Some(track) = window.setup_of(id).filter(|track| track.live()) {
                     take_event(track, event);
                 }
             });
@@ -1003,20 +1009,28 @@ fn run_setup(
             });
             continue;
         }
-        shared.update(|window| {
+        let failed = shared.update(|window| {
             if !report.rows.is_empty() {
                 window.rows = Some((CheckMode::Quick, report.rows.clone()));
             }
+            // A setup cancelled before anything was approved has already ended.
+            let track = window.setup_of(id).filter(|track| track.live())?;
             if report.outcome == Ended::Busy {
                 // A removal changes the item, or the window stopped following
                 // another setup as it closed; this one set nothing up.
                 window.drop_setup(id);
-                return;
+                return None;
             }
-            if let Some(track) = window.setup_of(id) {
-                settle(track, &report);
-            }
+            settle(track, &report);
+            let category = report.failure?;
+            matches!(report.outcome, Ended::Refused | Ended::Failed)
+                .then_some((track.item, category))
         });
+        // No command returns how a setup ended, so a setup that failed, in its planning
+        // or later, records why here, once.
+        if let Some((item, category)) = failed {
+            shared.reports.error(&setup_failed(item, category));
+        }
         return;
     }
 }
@@ -1083,6 +1097,30 @@ fn take_event(track: &mut SetupTrack, event: Event) {
         }
         Event::WaitingForServer { .. } | Event::Following { .. } => {}
     }
+}
+
+/// What diagnostics keep of a setup that ended failed: the item, and the category the
+/// window words.
+fn setup_failed(item: ItemId, category: FailureCategory) -> ApplicationError {
+    let reason = match item {
+        ItemId::Browser => "setup_browser_failed",
+        ItemId::LocalAi => "setup_local_ai_failed",
+    };
+    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+        .with_reason(reason)
+        .caused_by(
+            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+                .with_reason(category.as_str()),
+        )
+}
+
+/// Ends a setup the person cancelled before approving anything.
+fn settle_cancelled(track: &mut SetupTrack) {
+    track.stage = RunStage::Settled;
+    track.review = None;
+    track.answers = None;
+    track.outcome = Some(Outcome::Cancelled);
+    track.failure = None;
 }
 
 fn settle_failed(track: &mut SetupTrack, failure: wire::Failure) {

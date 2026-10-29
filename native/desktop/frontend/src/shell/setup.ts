@@ -30,8 +30,13 @@ export type SetupControl = {
   read: AgentRead<DesktopSetup>;
   /** The current snapshot, once the host has one. */
   snapshot: SetupSnapshot | null;
-  /** A command of this window's is waiting for its answer. */
+  /** A command of this window's that names no item, a check or the Google
+   * account's, is waiting for its answer. */
   pending: boolean;
+  /** Whether `item`'s controls wait: a command naming it, such as its start
+   * while its plan is worked out, or one naming no item, is waiting for its
+   * answer. Another item's command leaves them free. */
+  busy(item: SetupItemId): boolean;
   /** Why the last command was refused, as its code; null once another one
    * is sent or it is put away. Never shown as it is. */
   refusal: string | null;
@@ -179,6 +184,7 @@ export function useSetup(
   const [pushed, setPushed] = useState<DesktopSetup | null>(null);
   const [commands, setCommands] = useState({
     pending: 0,
+    items: {} as Partial<Record<SetupItemId, number>>,
     refusal: null as string | null,
   });
 
@@ -238,27 +244,38 @@ export function useSetup(
   current.current = snapshot;
 
   const send = useCallback(
-    (act: (served: Setup) => Promise<DesktopSetup>) => {
+    (
+      act: (served: Setup) => Promise<DesktopSetup>,
+      item: SetupItemId | null = null,
+    ) => {
       if (!setup) return;
-      setCommands((held) => ({
-        ...held,
-        pending: held.pending + 1,
-        refusal: null,
-      }));
+      // A command naming an item holds that item's controls alone, so a
+      // setup still working out its plan never holds another row's.
+      const counted = (
+        held: typeof commands,
+        by: number,
+      ): Pick<typeof commands, "pending" | "items"> =>
+        item === null
+          ? { pending: Math.max(0, held.pending + by), items: held.items }
+          : {
+              pending: held.pending,
+              items: {
+                ...held.items,
+                [item]: Math.max(0, (held.items[item] ?? 0) + by),
+              },
+            };
+      setCommands((held) => ({ ...held, ...counted(held, 1), refusal: null }));
       act(setup)
         .then(checked)
         .then(
           (state) => {
             accept(state);
-            setCommands((held) => ({
-              ...held,
-              pending: Math.max(0, held.pending - 1),
-            }));
+            setCommands((held) => ({ ...held, ...counted(held, -1) }));
           },
           (error: unknown) =>
             setCommands((held) => ({
               ...held,
-              pending: Math.max(0, held.pending - 1),
+              ...counted(held, -1),
               refusal: failureCode(error),
             })),
         );
@@ -283,28 +300,33 @@ export function useSetup(
   );
 
   const pending = commands.pending > 0;
-  const { refusal } = commands;
+  const { items: waiting, refusal } = commands;
   return useMemo(
     (): SetupControl => ({
       offered,
       read,
       snapshot,
       pending,
+      busy: (item) => pending || (waiting[item] ?? 0) > 0,
       refusal,
       check: (mode) => send((served) => served.check(mode)),
       verify: (items) => send((served) => served.verify(items)),
-      start: (item, options) => send((served) => served.start(item, options)),
+      start: (item, options) =>
+        send((served) => served.start(item, options), item),
       answer: (item, decision) => {
         const run = runOf(current.current, item);
         if (!run || run.stage !== "review" || !run.review) return;
         const { operation_id: operationId } = run;
         const { plan_digest: planDigest } = run.review;
-        send((served) => served.answer(operationId, planDigest, decision));
+        send(
+          (served) => served.answer(operationId, planDigest, decision),
+          item,
+        );
       },
       cancel: (item) => {
         const run = liveRunOf(current.current, item);
         if (!run) return;
-        send((served) => served.cancel(run.operation_id));
+        send((served) => served.cancel(run.operation_id), item);
       },
       removeModel: (model) => removal(setup?.removeModel(model)),
       remove: (what) => removal(setup?.remove(what)),
@@ -315,6 +337,6 @@ export function useSetup(
           held.refusal === null ? held : { ...held, refusal: null },
         ),
     }),
-    [offered, read, snapshot, pending, refusal, send, setup, removal],
+    [offered, read, snapshot, pending, waiting, refusal, send, setup, removal],
   );
 }

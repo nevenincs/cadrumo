@@ -100,6 +100,7 @@ const NO_CONTROL: SetupControl = {
   read: { kind: "unavailable" },
   snapshot: null,
   pending: false,
+  busy: () => false,
   refusal: null,
   check: () => undefined,
   verify: () => undefined,

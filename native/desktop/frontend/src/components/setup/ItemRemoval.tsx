@@ -110,7 +110,7 @@ function ItemRemovalOffer({ row, removals, onRemoved }: ItemRemovalProps) {
               key={removal}
               variant="ghost"
               size="xs"
-              disabled={store.control.pending}
+              disabled={store.control.busy(row.item)}
               onClick={() => {
                 setRefusal(null);
                 setAsking(removal);

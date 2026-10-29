@@ -42,6 +42,18 @@ const TOLD_OUTCOMES: ReadonlySet<SetupOutcome> = new Set([
   "not_enough_space",
 ]);
 
+/** Whether `run` failed in a way `row` does not say: a setup refused before
+ * it changed anything, by its network check for one, leaves the row as it
+ * was, so the setup's own category says why it did not set anything up. */
+function failedUntold(run: SetupRun | null, row: SetupRow): boolean {
+  return (
+    run?.stage === "settled" &&
+    run.outcome === "failed" &&
+    row.state !== "failed" &&
+    row.state !== "blocked"
+  );
+}
+
 /** A setup's progress on one item or one of its parts. */
 export type StepProgress = {
   step: SetupStep | null;
@@ -170,14 +182,14 @@ function RowReview({ run, locale }: { run: SetupRun; locale: string }) {
         <Button
           variant="outline"
           size="sm"
-          disabled={store.control.pending}
+          disabled={store.control.busy(run.item)}
           onClick={() => store.control.answer(run.item, "reject")}
         >
           {t("desktop.setup.reject")}
         </Button>
         <Button
           size="sm"
-          disabled={store.control.pending || !review.space_sufficient}
+          disabled={store.control.busy(run.item) || !review.space_sufficient}
           onClick={() => store.control.answer(run.item, "apply")}
         >
           {approveLabel(t, review, locale)}
@@ -231,6 +243,17 @@ export function ProvisioningRow({
     status = <RowReview run={run} locale={locale} />;
   else if (run?.stage === "running" && shown)
     status = <StepFigure progress={shown} name={name} locale={locale} />;
+  else if (run && failedUntold(run, row))
+    status = (
+      <p
+        data-setup-sentence
+        role="alert"
+        className="flex items-start gap-2 text-sm text-foreground"
+      >
+        <Icon name="alert" className="mt-0.5 text-destructive" />
+        <span>{outcomeWords(t, "failed", run.failure)}</span>
+      </p>
+    );
   else if (
     run?.stage === "settled" &&
     run.outcome &&
@@ -272,14 +295,14 @@ export function ProvisioningRow({
           {t("desktop.setup.cancelling")}
         </p>
       )}
+      {/* A setup can be cancelled while its own start waits on its plan:
+          only the setup itself says whether it still can be. */}
       {(run?.stage === "running" || run?.stage === "planning") && (
         <Button
           variant="outline"
           size="xs"
           className="justify-self-start"
-          disabled={
-            store.control.pending || !run.cancellable || run.cancel_requested
-          }
+          disabled={!run.cancellable || run.cancel_requested}
           onClick={() => store.control.cancel(run.item)}
         >
           {t("desktop.setup.cancel")}
@@ -290,7 +313,7 @@ export function ProvisioningRow({
           variant="outline"
           size="xs"
           className="justify-self-start"
-          disabled={store.control.pending}
+          disabled={store.control.busy(row.item)}
           onClick={() => store.act(row)}
         >
           {action}

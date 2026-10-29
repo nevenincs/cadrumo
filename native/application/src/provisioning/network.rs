@@ -231,6 +231,26 @@ mod tests {
     }
 
     #[test]
+    fn a_host_answering_with_a_header_longer_than_a_line_is_reachable() {
+        // github.com, which the local AI program downloads from, answers `HEAD /` with a
+        // content security policy longer than 4 KiB.
+        let certificate = TestCertificate::new(&["github.com"]);
+        let policy = format!("default-src 'none'; {}", "a".repeat(4_200));
+        let server = TlsServer::start(&certificate, move |request: &Request| {
+            assert!(request.line.starts_with("HEAD / "));
+            Reply::Bytes(response(
+                "200 OK",
+                &[("Content-Security-Policy", policy.clone())],
+                b"",
+            ))
+        });
+        let network = network_to(certificate.roots(), server.address(), None);
+        let report = preflight(&network, &[host("github.com")], HOST_TIMEOUT);
+        assert_eq!(report.outcome(), Reachability::Reachable);
+        assert_eq!(report.hosts[0].status, Some(200));
+    }
+
+    #[test]
     fn an_untrusted_certificate_is_a_secure_connection_failure() {
         let certificate = TestCertificate::new(&["cdn.example.com"]);
         let server = TlsServer::start(&certificate, answering("200 OK"));

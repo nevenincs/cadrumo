@@ -458,6 +458,24 @@ test("offline, the elements that need the network say so and offer a check", asy
   await noInternalWords(target);
 });
 
+test("a setup its network check refuses says why in its row and offers its setup again", async ({
+  page: target,
+}) => {
+  await open(target, "unreachable");
+  await openLocalAi(target);
+  await setUpButton(programRow(target)).click();
+  // The refusal changed nothing, so the row's own sentence would still say it
+  // is not set up: the setup's failure says why instead.
+  await expect(programRow(target).getByRole("alert")).toHaveText(
+    label("desktop.setup.failure.host_unreachable"),
+  );
+  await expect(programRow(target)).not.toContainText(NOT_SET_UP);
+  await expect(setUpButton(programRow(target))).toBeEnabled();
+  await expect(setUpButton(browserRow(target))).toBeEnabled();
+  expect(await hostCalls(target)).toContain("setup.start local_ai");
+  await noInternalWords(target);
+});
+
 test("builds no current receipt records are checked again, with no download, and the check reads them ready", async ({
   page: target,
 }) => {

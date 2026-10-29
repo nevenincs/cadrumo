@@ -10,6 +10,9 @@
 use std::io::{self, BufRead, Read, Write};
 
 const HEAD_BYTES_LIMIT: usize = 16 * 1024;
+/// Bound for a status line and a chunk line. A header field line is bounded by what is
+/// left of the head's own bound instead: hosts send single fields longer than this, such
+/// as a content security policy, and the head bound already keeps the whole head small.
 const LINE_BYTES_LIMIT: usize = 4096;
 /// Interim `1xx` answers accepted before the final head.
 const INTERIM_ANSWERS_LIMIT: usize = 8;
@@ -124,7 +127,7 @@ pub(crate) fn read_head(reader: &mut impl BufRead, stop: Stop<'_>) -> io::Result
         let mut headers = Vec::new();
         loop {
             checked(stop)?;
-            let line = read_line(reader, LINE_BYTES_LIMIT)?;
+            let line = read_line(reader, HEAD_BYTES_LIMIT.saturating_sub(total))?;
             total += line.len() + 2;
             if total > HEAD_BYTES_LIMIT {
                 return Err(malformed());
@@ -329,6 +332,37 @@ mod tests {
         }
         huge.extend_from_slice(b"\r\n");
         assert_eq!(body(&huge).unwrap_err().kind(), io::ErrorKind::InvalidData);
+        let mut one_huge_field = b"HTTP/1.1 200 OK\r\nX-Pad: ".to_vec();
+        one_huge_field.extend_from_slice("a".repeat(HEAD_BYTES_LIMIT).as_bytes());
+        one_huge_field.extend_from_slice(b"\r\n\r\n");
+        assert_eq!(
+            body(&one_huge_field).unwrap_err().kind(),
+            io::ErrorKind::InvalidData
+        );
+        let long_status = format!("HTTP/1.1 200 {}\r\n\r\n", "a".repeat(LINE_BYTES_LIMIT));
+        assert_eq!(
+            body(long_status.as_bytes()).unwrap_err().kind(),
+            io::ErrorKind::InvalidData
+        );
+    }
+
+    #[test]
+    fn a_header_field_longer_than_a_line_is_read_within_the_head_bound() {
+        // A content security policy as long as the one github.com sends on every answer.
+        let policy = format!("default-src 'none'; {}", "a".repeat(4_200));
+        let raw = format!(
+            "HTTP/1.1 302 Found\r\nContent-Security-Policy: {policy}\r\nLocation: https://elsewhere.example.org/\r\nContent-Length: 0\r\n\r\n"
+        );
+        let head = read_head(&mut BufReader::new(Cursor::new(raw.into_bytes())), &never).unwrap();
+        assert_eq!(head.status, 302);
+        assert_eq!(
+            head.header("content-security-policy"),
+            Some(policy.as_str())
+        );
+        assert_eq!(
+            head.header("location"),
+            Some("https://elsewhere.example.org/")
+        );
     }
 
     #[test]

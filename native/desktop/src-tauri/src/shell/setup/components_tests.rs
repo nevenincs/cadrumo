@@ -10,6 +10,7 @@ use super::super::{
     wire::{Google, Snapshot},
 };
 use super::*;
+use cadrumo_application::error::application::Cause;
 use cadrumo_application::provisioning::{
     browser::DriverManifest,
     connection::{Network, Resolve},
@@ -134,6 +135,15 @@ fn program_archive() -> Vec<u8> {
     vec![b'p'; usize::try_from(PROGRAM_BYTES).unwrap()]
 }
 
+/// The content security policy every answer of the publisher carries: one field longer than
+/// 4 KiB, as github.com, the local AI program's publisher, sends on every answer.
+fn policy() -> (&'static str, String) {
+    (
+        "Content-Security-Policy",
+        format!("default-src 'none'; {}", "a".repeat(4_200)),
+    )
+}
+
 /// How the publisher answers the first archive it is asked for.
 #[derive(Clone)]
 pub(in super::super) enum Serving {
@@ -163,13 +173,13 @@ impl Fixture {
             let Some(bytes) = served.get(request.target()) else {
                 return Reply::Bytes(response(
                     "404 Not Found",
-                    &[("Content-Length", "0".into())],
+                    &[("Content-Length", "0".into()), policy()],
                     b"",
                 ));
             };
             let head = response(
                 "200 OK",
-                &[("Content-Length", bytes.len().to_string())],
+                &[("Content-Length", bytes.len().to_string()), policy()],
                 b"",
             );
             match &serving {
@@ -775,6 +785,97 @@ async fn too_little_space_and_no_network_refuse_before_anything_is_asked() {
         run.items[0].result.as_ref().unwrap().failure,
         Some(wire::Failure::Offline)
     );
+    assert_eq!(fixture.downloads(), 0);
+}
+
+#[tokio::test]
+async fn a_setup_refused_in_its_planning_settles_with_its_category_and_records_it_once() {
+    let mut fixture = Fixture::new(Serving::Whole).with_program();
+    fixture.reachable = false;
+    let (components, _, diagnostics) = watching(&fixture, Replies::default());
+    components
+        .start(ItemId::LocalAi, false, None)
+        .await
+        .unwrap();
+    let settled = until(&components, |view| stage(view) == Some(RunStage::Settled)).await;
+    let run = settled.runs.into_iter().next().unwrap();
+    assert_eq!(
+        (run.outcome, run.failure),
+        (Some(Outcome::Failed), Some(wire::Failure::Offline)),
+        "the window is given the category to word"
+    );
+    assert_eq!(
+        run.items[0].result.as_ref().unwrap().failure,
+        Some(wire::Failure::Offline)
+    );
+    let row = settled
+        .rows
+        .iter()
+        .find(|row| row.item == "local_ai")
+        .unwrap();
+    assert_eq!(
+        row.state,
+        wire::State::Absent,
+        "a refusal before any writer leaves the row as it was, so the run says why"
+    );
+    let [error] = &recorded(&diagnostics)[..] else {
+        panic!("one failure is recorded for the setup");
+    };
+    assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert!(
+        matches!(
+            &error.causes[..],
+            [Cause::Application { reason: Some(reason), .. }] if reason == "offline"
+        ),
+        "{:?}",
+        error.causes
+    );
+    assert_eq!(fixture.downloads(), 0);
+}
+
+#[tokio::test]
+async fn a_cancel_ends_a_setup_whose_planning_does_not_end_and_frees_its_start() {
+    let fixture = Fixture::new(Serving::Whole).with_program();
+    let engines = fixture.engines();
+    let gate = Arc::new(Released::default());
+    let held = gate.clone();
+    // An engine whose making does not end until the test lets it, as a planning that
+    // hangs reads to the window.
+    let hanging: Arc<Engines> = Arc::new(move || {
+        held.wait();
+        engines()
+    });
+    let diagnostics = Arc::new(Diagnostics::default());
+    let components = Arc::new(Components::new(hanging, unconsulted(), diagnostics.clone()));
+    let starting = {
+        let components = components.clone();
+        tokio::spawn(async move { components.start(ItemId::LocalAi, false, None).await })
+    };
+    let planning = until(&components, |view| stage(view) == Some(RunStage::Planning)).await;
+    let run = planning.runs.into_iter().next().unwrap();
+    assert!(run.cancellable, "a setup still planning can be cancelled");
+    assert!(!starting.is_finished(), "the start waits on the planning");
+
+    components.cancel(&run.operation_id).await.unwrap();
+    starting
+        .await
+        .unwrap()
+        .expect("the start returns once its setup ends");
+    let ended = components.view().runs.into_iter().next().unwrap();
+    assert_eq!(
+        (ended.stage, ended.outcome, ended.cancellable),
+        (RunStage::Settled, Some(Outcome::Cancelled), false)
+    );
+
+    // The planning ends after all: it is declined, and the setup stays as the person left it.
+    gate.release();
+    components.close().await;
+    let after = components.view().runs.into_iter().next().unwrap();
+    assert_eq!(
+        (after.operation_id, after.outcome, after.failure),
+        (run.operation_id, Some(Outcome::Cancelled), None)
+    );
+    assert!(recorded(&diagnostics).is_empty(), "a cancel is no failure");
     assert_eq!(fixture.downloads(), 0);
 }
 

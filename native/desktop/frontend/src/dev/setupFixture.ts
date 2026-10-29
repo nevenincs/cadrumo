@@ -56,6 +56,10 @@ export const SETUP_SHAPES = [
   "unrecorded",
   /** Nothing set up, and no status read settled until `readRows`. */
   "unread",
+  /** Nothing set up, and every setup's network check finds a host it
+   * downloads from unreachable: the setup settles failed before its review,
+   * leaving its row as it was. */
+  "unreachable",
 ] as const;
 export type SetupShape = (typeof SETUP_SHAPES)[number];
 
@@ -896,6 +900,26 @@ export function setupFixture({
         .map((seed) => planned(seed, model));
       if (download) say(`setup.download ${download.lane} ${download.model}`);
       operations += 1;
+      if (shape === "unreachable" && chosen.length > 0) {
+        const failure: SetupFailureCategory = "host_unreachable";
+        const result = { changed: false, failure, transferred_bytes: 0 };
+        put({
+          item: wanted,
+          operation_id: `setup-${operations}`,
+          stage: "settled",
+          review: null,
+          items: chosen.map((seed) => ({
+            ...progress(seed),
+            step: "preflight",
+            result,
+          })),
+          cancellable: false,
+          cancel_requested: false,
+          outcome: "failed",
+          failure,
+        });
+        return Promise.resolve(publish());
+      }
       const plan = chosen.length === 0 ? null : review(chosen);
       const run = put({
         item: wanted,
