@@ -215,15 +215,15 @@ BOOTSTRAP_EXEMPTIONS: tuple[BootstrapExemption, ...] = (
         verb_path="config profile delete",
         criterion=ExemptionCriterion.SESSIONLESS_TARGET_DESTRUCTION,
         note=(
-            "Deletion must run after logout, when the named target is inactive and no root "
-            "session can exist. The leaf still resolves one exact positional label, refuses "
-            "the active pointer, assesses legal retention before confirmation, and delegates "
-            "destruction to the journalled custody lifecycle. Exempting this exact leaf grants "
-            "none of its profile siblings the same posture."
+            "Deletion must run after logout, when no root session can exist. The leaf still "
+            "resolves one exact positional label, assesses legal retention before confirmation, "
+            "and delegates destruction to the journalled custody lifecycle; a selected target is "
+            "torn down only by the runtime, which drains its worker and clears the selection. "
+            "Exempting this exact leaf grants none of its profile siblings the same posture."
         ),
         cites_tests=(
             "test_logged_out_inactive_profile_delete_succeeds_through_real_root",
-            "test_active_profile_delete_still_refuses_through_real_root",
+            "test_active_profile_delete_is_torn_down_by_the_runtime_through_real_root",
         ),
     ),
     BootstrapExemption(
