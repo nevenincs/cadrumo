@@ -11,8 +11,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
-from ....core.errors.hierarchy import CadrumoError
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect
 from ....core.period import Period
@@ -24,6 +26,7 @@ from ...live.notifications import PersistedNotificationsSnapshot
 from ...live.verify import VerifyObservation, VerifySurface
 from ...operations.access_facts import operation_access_facts
 from ...overview.evidence import AeatCalendarEvidenceSources, CalendarEvidenceReadOutcome
+from ...persistence_errors import PersistenceDegradationError
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ...workbench_generation_calendar import unbound_calendar_aeat_evidence
 from ..status_operation import (
@@ -315,11 +318,11 @@ def test_identity_checks_that_only_got_no_answer_leave_the_area_never_brought(
     assert (row.state, row.last_brought_at) == (AeatSyncAreaState.NEVER_BROUGHT, None)
 
 
-def test_a_registered_error_from_one_store_makes_only_its_area_unavailable(
+def test_a_persistence_degradation_from_one_store_makes_only_its_area_unavailable(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     def refused() -> PersistedNotificationsSnapshot | None:
-        raise CadrumoError("synthetic store refusal")
+        raise PersistenceDegradationError("synthetic")
 
     brought_at = _NOW - timedelta(days=3)
 
@@ -332,6 +335,27 @@ def test_a_registered_error_from_one_store_makes_only_its_area_unavailable(
     )
     wallet = _area(result, AeatSyncStatusArea.IVA_WALLET)
     assert (wallet.state, wallet.last_brought_at) == (AeatSyncAreaState.CURRENT, brought_at)
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        RefusalError(RefusalCode.UNAVAILABLE),
+        AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE),
+        InternalInvariantError("synthetic invariant violation"),
+    ],
+    ids=["transport-refusal", "automation-custody", "internal-invariant"],
+)
+def test_a_refusal_or_other_registered_error_from_a_store_propagates_instead_of_reading_as_unavailable(
+    error: CadrumoError, authority_operation: PinnedAuthorityOperation
+) -> None:
+    def failing() -> PersistedNotificationsSnapshot | None:
+        raise error
+
+    with pytest.raises(type(error)) as raised:
+        _load(_ports(latest_notifications=failing), authority_operation)
+
+    assert raised.value is error
 
 
 def test_a_failed_filed_sweep_is_carried_as_the_last_attempt(authority_operation: PinnedAuthorityOperation) -> None:

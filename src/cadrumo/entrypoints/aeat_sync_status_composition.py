@@ -3,16 +3,32 @@
 from __future__ import annotations
 
 import asyncio
-from functools import cache
+from collections.abc import Callable
+from functools import cache, wraps
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from ..application.aeat_sync.status_operation import AeatSyncStatusPorts
+from ..application.persistence_errors import PersistenceDegradationError
 
 if TYPE_CHECKING:
     from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
     from ..core.config import Settings
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+def degrade_storage_failure[**P, R](operation: str, read: Callable[P, R]) -> Callable[P, R]:
+    """Translate an adapter storage failure of one reader into the application's persistence degradation."""
+    from ..adapters.persistence.storage.errors import StorageError
+
+    @wraps(read)
+    def translated(*args: P.args, **kwargs: P.kwargs) -> R:
+        try:
+            return read(*args, **kwargs)
+        except StorageError as exc:
+            raise PersistenceDegradationError(operation) from exc
+
+    return translated
 
 
 def compose_aeat_sync_status_ports(
@@ -101,17 +117,21 @@ def compose_aeat_sync_status_ports(
         return service.list_observations(bucket_id=bucket_id, nif=nif)
 
     return AeatSyncStatusPorts(
-        profile_tax_id=profile_tax_id,
-        filings=filings,
-        drafts=drafts,
-        census_observation=lambda: asyncio.run(read_stored_censal_observation(UUID(bucket_id))),
-        calendar_aeat_reader=compose_calendar_aeat_reader(operation),
-        filed_attempt=filed_attempt,
-        latest_notifications=latest_notifications,
-        iva_wallet_captured_at=iva_wallet_captured_at,
-        borrador_snapshots=borrador_snapshots,
-        verify_observations=verify_observations,
+        profile_tax_id=degrade_storage_failure("aeat_sync_status_profile_tax_id", profile_tax_id),
+        filings=degrade_storage_failure("aeat_sync_status_filings", filings),
+        drafts=degrade_storage_failure("aeat_sync_status_drafts", drafts),
+        census_observation=degrade_storage_failure(
+            "aeat_sync_status_census", lambda: asyncio.run(read_stored_censal_observation(UUID(bucket_id)))
+        ),
+        calendar_aeat_reader=degrade_storage_failure(
+            "aeat_sync_status_calendar_evidence", compose_calendar_aeat_reader(operation)
+        ),
+        filed_attempt=degrade_storage_failure("aeat_sync_status_filed_attempt", filed_attempt),
+        latest_notifications=degrade_storage_failure("aeat_sync_status_notifications", latest_notifications),
+        iva_wallet_captured_at=degrade_storage_failure("aeat_sync_status_iva_wallet", iva_wallet_captured_at),
+        borrador_snapshots=degrade_storage_failure("aeat_sync_status_borrador_snapshots", borrador_snapshots),
+        verify_observations=degrade_storage_failure("aeat_sync_status_verify_observations", verify_observations),
     )
 
 
-__all__ = ["compose_aeat_sync_status_ports"]
+__all__ = ["compose_aeat_sync_status_ports", "degrade_storage_failure"]

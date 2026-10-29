@@ -21,9 +21,10 @@ from uuid import UUID
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyError
+from cadrumo_client.contracts.contracts import RefusalError
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.bucket import BucketId
 from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -44,6 +45,7 @@ from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..persistence_errors import PersistenceDegradationError
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from ..workbench_generation_calendar import project_calendar_aeat_filing_evidence
 from .workspace import AeatSyncStatusArea, AeatSyncStatusV1
@@ -74,8 +76,13 @@ _STORE_UNREADABLE: Final[NamespacedId] = "aeat_sync.status.store_unreadable"
 _TAX_ID_MISSING: Final[NamespacedId] = "aeat_sync.status.profile_tax_id_missing"
 """The profile declares no tax number, so evidence cannot be scoped to it."""
 
-_STORE_READ_FAILURES: Final = (CadrumoError, LookupError, OSError, ValueError)
-"""Failures that mean one store could not be read; an access refusal is re-raised before this applies."""
+_STORE_READ_FAILURES: Final = (PersistenceDegradationError, LookupError, OSError, ValueError)
+"""Failures that mean one store could not provide its data.
+
+Access refusals, custody and transport refusals, and any other registered error
+keep their meaning: they are re-raised before this applies, never read as an
+unavailable area.
+"""
 
 
 class AeatSyncStatusRequest(CredentialFreeOperationRequest):
@@ -132,6 +139,18 @@ def _notification_capture(snapshot: PersistedNotificationsSnapshot | None) -> Ae
     )
 
 
+def _latest_identity_check(observations: tuple[VerifyObservation, ...]) -> UtcInstant | None:
+    """An unknown verdict got no answer and cannot establish a captured check."""
+    return max(
+        (
+            observation.checked_at
+            for observation in observations
+            if observation.verdict is not IdentityCheckVerdict.UNKNOWN
+        ),
+        default=None,
+    )
+
+
 def load_aeat_sync_status(
     ports: AeatSyncStatusPorts,
     *,
@@ -145,7 +164,7 @@ def load_aeat_sync_status(
     def guarded[T](areas: tuple[AeatSyncStatusArea, ...], read: Callable[[], T], fallback: T) -> T:
         try:
             return read()
-        except ProfileAccessRefusedError:
+        except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
             raise
         except _STORE_READ_FAILURES:
             unreadable.update(dict.fromkeys(areas, _STORE_UNREADABLE))
@@ -192,15 +211,7 @@ def load_aeat_sync_status(
         notifications=_notification_capture(notifications),
         iva_wallet_captured_at=guarded((AeatSyncStatusArea.IVA_WALLET,), ports.iva_wallet_captured_at, None),
         borrador_imported_at=max((snapshot.captured_at for snapshot in borrador), default=None),
-        identity_checked_at=max(
-            (
-                observation.checked_at
-                for observation in identity
-                # An unknown verdict is a check that got no answer, not a capture.
-                if observation.verdict is not IdentityCheckVerdict.UNKNOWN
-            ),
-            default=None,
-        ),
+        identity_checked_at=_latest_identity_check(identity),
         unreadable=unreadable,
     )
     years: tuple[FilingYear, ...] = tuple(sorted(operation.supported_filing_years().years))

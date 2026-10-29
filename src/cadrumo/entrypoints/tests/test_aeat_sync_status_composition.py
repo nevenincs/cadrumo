@@ -8,18 +8,22 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, TypeAdapter
 
+from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+
 from ...adapters.outbound.aeat.sede.observation_store import FiledDeclaracionObservationStore
 from ...adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
+from ...adapters.persistence.storage.errors import RepositoryError
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.aeat_sync.status_operation import load_aeat_sync_status
 from ...application.aeat_sync.workspace import AeatSyncAreaState, AeatSyncStatusArea
+from ...application.persistence_errors import PersistenceDegradationError
 from ...core.authority_grade import RegistryAuthorityGrade
 from ...core.config import load_settings
 from ...core.hashing import sha256_hex
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ..aeat_sync_status_composition import compose_aeat_sync_status_ports
+from ..aeat_sync_status_composition import compose_aeat_sync_status_ports, degrade_storage_failure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -95,3 +99,29 @@ def test_a_filed_declaration_of_another_form_does_not_date_the_iva_wallet(
 
     assert area.state is AeatSyncAreaState.NEVER_BROUGHT
     assert area.last_brought_at is None
+
+
+def test_a_reader_adapter_storage_failure_surfaces_as_a_persistence_degradation() -> None:
+    failure = RepositoryError("synthetic adapter failure")
+
+    def reader(nif: str) -> tuple[str, ...]:
+        raise failure
+
+    with pytest.raises(PersistenceDegradationError) as raised:
+        degrade_storage_failure("aeat_sync_status_synthetic", reader)("B12345674")
+
+    assert raised.value.operation == "aeat_sync_status_synthetic"
+    assert raised.value.__cause__ is failure
+
+
+def test_a_reader_refusal_and_its_value_pass_through_the_storage_translation_unchanged() -> None:
+    refusal = RefusalError(RefusalCode.UNAVAILABLE)
+
+    def refusing(nif: str) -> tuple[str, ...]:
+        raise refusal
+
+    with pytest.raises(RefusalError) as raised:
+        degrade_storage_failure("aeat_sync_status_synthetic", refusing)("B12345674")
+    assert raised.value is refusal
+
+    assert degrade_storage_failure("aeat_sync_status_synthetic", lambda nif: (nif,))("B12345674") == ("B12345674",)
