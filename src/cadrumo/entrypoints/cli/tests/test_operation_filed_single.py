@@ -51,15 +51,15 @@ def _projection() -> FiledSingleCapturePublicResultV1:
         observation_paths=("encrypted-observation",),
         observation_ids=("encrypted-observation",),
         artefact_refs=("sha256:1234",),
-        justificante_metadata_count=1,
-        justificante_csvs=("csv-1",),
-        filing_evidence_stamped_count=1,
-        filing_record_ids=("record-1",),
-        filing_evidence_conflict_count=0,
-        filing_evidence_conflict_record_ids=(),
+        justificante_metadata_count=2,
+        justificante_csvs=("csv-1", "csv-2"),
+        filing_evidence_stamped_count=2,
+        filing_record_ids=("record-1", "record-2"),
+        filing_evidence_conflict_count=1,
+        filing_evidence_conflict_record_ids=("record-3",),
         casilla_count=2,
-        calculation_observation_count=1,
-        calculation_observation_keys=("observation-1",),
+        calculation_observation_count=2,
+        calculation_observation_keys=("observation-1", "observation-2"),
         evidence_notices=(
             FiledCaptureNoticeV1(
                 severity=NoticeSeverity.WARNING,
@@ -77,8 +77,8 @@ def _projection() -> FiledSingleCapturePublicResultV1:
                 period="1T",
                 member_nif="X1234567A",
                 filing_record_id="record-1",
-                affected_filing_record_ids=("record-2",),
-                differing_casilla_ids=("casilla.a",),
+                affected_filing_record_ids=("record-2", "record-3"),
+                differing_casilla_ids=("casilla.a", "casilla.b"),
                 evidence_basis="casillas",
                 notices=(
                     FiledReconciliationNoticeV1(
@@ -205,9 +205,55 @@ def test_single_capture_cli_emits_restored_metrics_and_notices(monkeypatch: pyte
     assert envelope["command"] == "app.live.filed.pull"
     result = envelope["result"]
     assert isinstance(result, FiledCaptureResult)
+    assert result.model_dump(mode="json") == {
+        "mode": "single",
+        "output_root": "filed",
+        "modelo": "303",
+        "year": 2025,
+        "modelos": [],
+        "pair_outcomes": [],
+        "year_from": None,
+        "year_to": None,
+        "captured_count": 1,
+        "reached_count": 1,
+        "failed_count": 0,
+        "dry_run": False,
+        "sync_run_ref": None,
+        "observation_paths": ["encrypted-observation"],
+        "artefact_refs": ["sha256:1234"],
+        "justificante_metadata_count": 2,
+        "justificante_csvs": ["csv-1", "csv-2"],
+        "filing_evidence_stamped_count": 2,
+        "filing_record_ids": ["record-1", "record-2"],
+        "filing_evidence_conflict_count": 1,
+        "filing_evidence_conflict_record_ids": ["record-3"],
+        "casilla_count": 2,
+        "calculation_observation_count": 2,
+        "calculation_observation_keys": ["observation-1", "observation-2"],
+        "reconciliations": [
+            {
+                "outcome": "confirmed",
+                "bucket_id": "5aa00000-0000-4000-8000-0000000000aa",
+                "modelo": "303",
+                "filing_year": 2025,
+                "period": {"filing_year": 2025, "code": "1T"},
+                "member_nif": "X1234567A",
+                "filing_record_id": "record-1",
+                "affected_filing_record_ids": ["record-2", "record-3"],
+                "differing_casilla_ids": ["casilla.a", "casilla.b"],
+                "evidence_basis": "casillas",
+                "notices": [{"code": "receipt_totals_only", "context": {"reason": "receipt"}}],
+            }
+        ],
+        "failures": [],
+    }
     assert result.captured_count == 1
     assert result.reconciliations[0].outcome is FilingReconciliationOutcome.CONFIRMED
     notices = cast("tuple[Notice, ...]", envelope["notices"])
+    assert [notice.code for notice in notices] == [
+        "live.filed.capture_test",
+        "modelo.filing_chain.receipt_totals_only",
+    ]
     assert any(notice.code == "live.filed.capture_test" for notice in notices)
     assert any(notice.code == "modelo.filing_chain.receipt_totals_only" for notice in notices)
 

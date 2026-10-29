@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:546701ccf097b6d70e3df43adf4b2e435f48c5423b23af405b89e6e662916ae4'
+body_hash: 'sha256:d158cb30f14e85ab3aeb3a1edde383e0f3757ea2da9dae3805b1e3e2317b8827'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -56,7 +56,15 @@ related:
 - `S02` `verify:` `five-file Ruff check and format and Windows ty` -> `pass`
 - `S02` `verify:` `just generate-import-load-targets` -> `pass`
 - `S02` `by:` `Sol 6.1 high`
+- `S03` `M` `src/cadrumo/entrypoints/cli/app_live_commands.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_filed_single.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_filed_bulk.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_operation_filed_source.py`
+- `S03` `verify:` `filed capture owning and complementary pytest 59 cases` -> `pass`
+- `S03` `verify:` `scoped Ruff check and format and Windows ty` -> `pass`
+- `S03` `by:` `Terra 6.1 xhigh`
 
 ## Notes
 
 - `S02` Generated metadata was adopted by concurrent commit 29d0663d16; no foreign metadata hunks restaged.
+- `S03` Production mapping and bulk test adopted by concurrent commit b6e52594fb alongside foreign output-root feature; checkpoint retains remaining test delta.

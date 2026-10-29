@@ -52,15 +52,15 @@ def _projection() -> FiledSourceCapturePublicResultV1:
         reached_count=2,
         observation_paths=("encrypted-observation",),
         artefact_refs=("sha256:1234",),
-        justificante_metadata_count=1,
-        justificante_csvs=("csv-1",),
-        filing_evidence_stamped_count=1,
-        filing_record_ids=("record-1",),
-        filing_evidence_conflict_count=0,
-        filing_evidence_conflict_record_ids=(),
+        justificante_metadata_count=2,
+        justificante_csvs=("csv-1", "csv-2"),
+        filing_evidence_stamped_count=2,
+        filing_record_ids=("record-1", "record-2"),
+        filing_evidence_conflict_count=1,
+        filing_evidence_conflict_record_ids=("record-3",),
         casilla_count=2,
-        calculation_observation_count=1,
-        calculation_observation_keys=("observation-1",),
+        calculation_observation_count=2,
+        calculation_observation_keys=("observation-1", "observation-2"),
         evidence_notices=(
             FiledCaptureNoticeV1(
                 severity=NoticeSeverity.WARNING,
@@ -78,8 +78,8 @@ def _projection() -> FiledSourceCapturePublicResultV1:
                 period="4T",
                 member_nif="X1234567A",
                 filing_record_id="record-1",
-                affected_filing_record_ids=("record-2",),
-                differing_casilla_ids=("casilla.a",),
+                affected_filing_record_ids=("record-2", "record-3"),
+                differing_casilla_ids=("casilla.a", "casilla.b"),
                 evidence_basis="casillas",
                 notices=(
                     FiledReconciliationNoticeV1(
@@ -206,6 +206,40 @@ def test_source_capture_cli_emits_existing_metrics_reconciliations_and_notices(
     assert envelope["command"] == "app.live.filed.pull_sources"
     result = envelope["result"]
     assert isinstance(result, FiledCaptureSourcesResult)
+    assert result.model_dump(mode="json") == {
+        "output_root": "filed",
+        "target_modelo": "303",
+        "target_year": 2025,
+        "target_period": {"filing_year": 2025, "code": "1T"},
+        "captured_count": 1,
+        "reached_count": 2,
+        "observation_paths": ["encrypted-observation"],
+        "artefact_refs": ["sha256:1234"],
+        "justificante_metadata_count": 2,
+        "justificante_csvs": ["csv-1", "csv-2"],
+        "filing_evidence_stamped_count": 2,
+        "filing_record_ids": ["record-1", "record-2"],
+        "filing_evidence_conflict_count": 1,
+        "filing_evidence_conflict_record_ids": ["record-3"],
+        "casilla_count": 2,
+        "calculation_observation_count": 2,
+        "calculation_observation_keys": ["observation-1", "observation-2"],
+        "reconciliations": [
+            {
+                "outcome": "confirmed",
+                "bucket_id": "5aa00000-0000-4000-8000-0000000000aa",
+                "modelo": "303",
+                "filing_year": 2024,
+                "period": {"filing_year": 2024, "code": "4T"},
+                "member_nif": "X1234567A",
+                "filing_record_id": "record-1",
+                "affected_filing_record_ids": ["record-2", "record-3"],
+                "differing_casilla_ids": ["casilla.a", "casilla.b"],
+                "evidence_basis": "casillas",
+                "notices": [{"code": "receipt_totals_only", "context": {"reason": "receipt"}}],
+            }
+        ],
+    }
     assert result.target_period == Period.from_year_and_code(2025, "1T")
     assert result.captured_count == 1
     assert result.reconciliations[0].outcome is FilingReconciliationOutcome.CONFIRMED
@@ -213,6 +247,10 @@ def test_source_capture_cli_emits_existing_metrics_reconciliations_and_notices(
     assert "reconciliation_count\t1" in lines
     assert "captured_count=1" in lines
     notices = cast("tuple[Notice, ...]", envelope["notices"])
+    assert [notice.code for notice in notices] == [
+        "live.filed.capture_test",
+        "modelo.filing_chain.receipt_totals_only",
+    ]
     assert any(notice.code == "live.filed.capture_test" for notice in notices)
     assert any(notice.code == "modelo.filing_chain.receipt_totals_only" for notice in notices)
 
