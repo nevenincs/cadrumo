@@ -544,6 +544,13 @@ fn plain_option(text: Option<&String>, limit: usize) -> bool {
     text.is_none_or(|text| plain(text, limit))
 }
 
+/// The engine item a stopped operation's registered refusal stands for: the
+/// browser, for the plain refusal that it is not usable here. Whether setup
+/// can act on it is the item's row to say.
+pub fn refused_item(error_detail: &serde_json::Value) -> Option<ItemId> {
+    (error_detail["error_code"] == "REFUSED_BROWSER_NOT_READY").then_some(ItemId::Browser)
+}
+
 /// An operator action's identifier: `operator.` and dotted lower-case words.
 pub fn is_action_id(text: &str) -> bool {
     text.len() <= 64

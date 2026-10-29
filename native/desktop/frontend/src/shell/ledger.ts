@@ -95,7 +95,6 @@ export const LEDGER_DEFINITIONS = [
   "ledger.evidence.list",
   "ledger.evidence.page",
   "ledger.evidence.query",
-  "ledger.evidence.reader-readiness",
   "ledger.evidence.remove",
   "ledger.evidence.review.list",
   "ledger.evidence.review.summary",

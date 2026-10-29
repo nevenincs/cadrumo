@@ -1186,38 +1186,26 @@ fn a_view_that_ends_without_a_refusal_logs_none() {
 }
 
 #[test]
-fn the_component_is_the_setup_item_whose_action_the_recorded_verdict_names() {
-    let detail = |schema: &str, verdict: Option<&str>| {
+fn the_component_is_the_browser_for_its_plain_refusal_alone() {
+    let detail = |schema: &str, code: Option<&str>| {
         json!({"outcome":"success","result_schema":{"schema_id":schema},
-            "projection":{"error_code":"REFUSED_BROWSER_NOT_READY","precondition_verdict_json":verdict}})
+            "projection":{"error_code":code,"precondition_verdict_json":null}})
     };
-    let named = |action: &str| {
-        json!({"failed_condition_id":"probe.playwright_browser.installed",
-            "action":{"action_id":action}})
-        .to_string()
-    };
-    let browser = named("operator.provision.browser");
     assert_eq!(
-        needed_component(&detail("operation.error_detail", Some(&browser))),
+        needed_component(&detail(
+            "operation.error_detail",
+            Some("REFUSED_BROWSER_NOT_READY")
+        )),
         Some(ItemId::Browser)
-    );
-    let local_ai = named("operator.provision.local_ai");
-    assert_eq!(
-        needed_component(&detail("operation.error_detail", Some(&local_ai))),
-        Some(ItemId::LocalAi)
     );
     for refused in [
         detail("operation.error_detail", None),
         detail(
             "operation.error_detail",
-            Some(&named("operator.profile.edit")),
+            Some("REFUSED_LEDGER_EVIDENCE_READER"),
         ),
-        detail(
-            "operation.error_detail",
-            Some(&named("operator.provision.printer")),
-        ),
-        detail("operation.error_detail", Some("not json")),
-        detail("live.sede.view.result", Some(&browser)),
+        detail("operation.error_detail", Some("REFUSED_PROFILE_LOCKED")),
+        detail("live.sede.view.result", Some("REFUSED_BROWSER_NOT_READY")),
     ] {
         assert_eq!(needed_component(&refused), None, "{refused}");
     }

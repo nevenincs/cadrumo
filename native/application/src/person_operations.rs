@@ -4128,7 +4128,6 @@ mod tests {
 
     #[test]
     fn a_stop_its_definition_declares_no_document_for_is_read_as_its_recorded_detail() {
-        let verdict = r#"{"action":{"action_id":"operator.provision.browser"}}"#;
         let detail = error_detail_envelope(json!({
             "detail_version": 1,
             "kind": "registered_error",
@@ -4136,7 +4135,7 @@ mod tests {
             "message_key": "adapters.browser.errors.not_available",
             "context": [],
             "context_entries_omitted": 0,
-            "precondition_verdict_json": verdict,
+            "precondition_verdict_json": null,
         }));
         for state in [
             stopped("refused", Some("REFUSED_BROWSER_NOT_READY")),

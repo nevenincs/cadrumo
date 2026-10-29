@@ -234,14 +234,6 @@
         "path": []
       }
     },
-    "ledger.evidence.reader-readiness": {
-      "may_write": false,
-      "review": false,
-      "subject": {
-        "kind": "profile",
-        "path": []
-      }
-    },
     "ledger.evidence.remove": {
       "may_write": true,
       "review": false,

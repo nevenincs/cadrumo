@@ -130,7 +130,7 @@ impl Session {
         {
             return None;
         }
-        verdict_action(&result["document"]["projection"])
+        refused_action(&result["document"]["projection"])
     }
     async fn status(&mut self) -> Result<Snapshot> {
         let p = self.observe().await?;
@@ -188,18 +188,11 @@ impl Session {
         Ok(snapshot)
     }
 }
-/// The action an error detail's precondition verdict names, when it is a
-/// setup action.
-fn verdict_action(detail: &Value) -> Option<String> {
-    let verdict: Value =
-        serde_json::from_str(detail["precondition_verdict_json"].as_str()?).ok()?;
-    verdict["action"]["action_id"]
-        .as_str()
-        .filter(|action| {
-            super::super::setup::wire::is_action_id(action)
-                && action.starts_with("operator.provision.")
-        })
-        .map(str::to_owned)
+/// The setup action of the engine item an error detail's registered refusal
+/// stands for.
+fn refused_action(detail: &Value) -> Option<String> {
+    super::super::setup::wire::refused_item(detail)
+        .map(|item| item.declaration().recovery_action.to_owned())
 }
 fn settled_state(result: &Value, operation: &str) -> Result<&'static str> {
     if result["kind"] != "operation_result"
@@ -610,10 +603,9 @@ mod tests {
     #[tokio::test]
     async fn a_pull_refused_for_a_missing_component_names_its_setup_action() {
         use super::super::super::scripted::{OPERATION, PROFILE, holder, observed, resulted, step};
-        let verdict = |action: &str| {
-            json!({"detail_version":1,"kind":"registered_error","error_code":null,"message_key":null,
-                "context":[],"context_entries_omitted":0,
-                "precondition_verdict_json": json!({"action":{"action_id":action}}).to_string()})
+        let refusal = |code: &str| {
+            json!({"detail_version":1,"kind":"registered_error","error_code":code,"message_key":null,
+                "context":[],"context_entries_omitted":0,"precondition_verdict_json":null})
         };
         let refused = || {
             observed(
@@ -629,14 +621,14 @@ mod tests {
                 step(
                     "operation_result",
                     json!([["operation_id", OPERATION]]),
-                    resulted(DEFINITION, verdict("operator.provision.browser")),
+                    resulted(DEFINITION, refusal("REFUSED_BROWSER_NOT_READY")),
                     false,
                 ),
                 step("operation_observe", json!([]), refused(), false),
                 step(
                     "operation_result",
                     json!([["operation_id", OPERATION]]),
-                    resulted(DEFINITION, verdict("operator.profile.edit")),
+                    resulted(DEFINITION, refusal("REFUSED_PROFILE_LOCKED")),
                     false,
                 ),
             ]
@@ -655,7 +647,7 @@ mod tests {
             stopped.recovery_action_id.as_deref(),
             Some("operator.provision.browser")
         );
-        // An action that is not about setup is not passed on.
+        // A refusal that stands for no component names no setup.
         let other = session.status().await.unwrap();
         assert_eq!(other.state, "failed");
         assert_eq!(other.recovery_action_id, None);

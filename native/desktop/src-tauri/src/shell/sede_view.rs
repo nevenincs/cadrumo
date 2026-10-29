@@ -251,19 +251,12 @@ trait ViewRuntime: Send + Sync {
     fn needs(&self, operation: &str) -> Option<ItemId>;
 }
 
-/// The setup item whose action a stopped operation's recorded detail names
-/// as its recovery. Only an action the setup engine declares for one of its
-/// items counts.
+/// The setup item a stopped operation's recorded refusal stands for.
 fn needed_component(document: &Value) -> Option<ItemId> {
     if document["result_schema"]["schema_id"] != ERROR_DETAIL_SCHEMA {
         return None;
     }
-    let verdict: Value =
-        serde_json::from_str(document["projection"]["precondition_verdict_json"].as_str()?).ok()?;
-    let action = verdict["action"]["action_id"].as_str()?;
-    ItemId::ALL
-        .into_iter()
-        .find(|item| item.declaration().recovery_action == action)
+    super::setup::wire::refused_item(&document["projection"])
 }
 
 /// The runtime as the window's own person session reaches it.
