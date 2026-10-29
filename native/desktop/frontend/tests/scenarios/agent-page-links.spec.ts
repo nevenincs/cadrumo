@@ -88,19 +88,6 @@ test("a view only the TUI had says why and opens nothing", async ({ page }) => {
   await noLinkLeftTheWindow(page);
 });
 
-test("a window view asked of the TUI opens in the window and says so", async ({
-  page,
-}) => {
-  await linksReply(page, "signed-in");
-  await link(page, "los registros, en el espacio de trabajo").click();
-  await expect(page.locator(".logview")).toBeVisible();
-  await expect(windowToast(page)).toHaveText(
-    label("desktop.navigation.notice.in_window", {
-      view: label("navigation.view.panel.logs.label"),
-    }),
-  );
-});
-
 test("an unknown view and a link in the retired profile form say why and open nothing", async ({
   page,
 }) => {

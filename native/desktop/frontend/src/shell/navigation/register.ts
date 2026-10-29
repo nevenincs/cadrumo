@@ -4,7 +4,7 @@
 // window and against the projection read from disk in a test.
 
 /** An interface that can open a register element. */
-export type Surface = "gui" | "tui";
+export type Surface = "gui";
 
 /** A kind of link parameter value: opaque record ids of an exact shape. */
 export type ValueKind = {

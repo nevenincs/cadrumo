@@ -22,7 +22,7 @@ export type SurfaceImplementation = {
 export type Implemented = Partial<Record<Surface, SurfaceImplementation>>;
 
 /** Which element and surface opened compared with the request. */
-export type ViewFallback = "none" | "other_surface" | "ancestor";
+export type ViewFallback = "none" | "ancestor";
 
 export type ViewOpened = {
   readonly kind: "opened";
@@ -70,16 +70,13 @@ export function declaredImplementation(
         .map((element) => [element.id, new Set(Object.keys(element.params))]),
     ),
   });
-  return { gui: of("gui"), tui: of("tui") };
+  return { gui: of("gui") };
 }
 
 /**
- * Chooses the surface and element a view request opens. The preferred
- * surface is the window unless the request asks for the TUI. The first that
- * applies opens: the preferred surface honouring the element and every
- * parameter; the other surface likewise; the element without its parameters
- * on the preferred surface and then the other; the nearest ancestor without
- * parameters on the preferred surface and then the other. Otherwise the
+ * Chooses the element a view request opens. The first that applies opens:
+ * the element honouring every parameter; the element without its
+ * parameters; the nearest ancestor without parameters. Otherwise the
  * request is refused. A surface missing from `implemented` opens nothing.
  */
 export function resolveView(
@@ -89,8 +86,7 @@ export function resolveView(
 ): ViewOpened | ViewRefused {
   const refusal = paramRefusal(register, request.viewId, request.params);
   if (refusal) return { kind: "refused", requested: request, reason: refusal };
-  const first: Surface = request.prefer ?? "gui";
-  const order: Surface[] = [first, first === "gui" ? "tui" : "gui"];
+  const order: Surface[] = ["gui"];
   const names = Object.keys(request.params);
   const honours = (surface: Surface, id: string, wanted: string[]) => {
     const implementation = implemented[surface];
@@ -114,21 +110,11 @@ export function resolveView(
   });
   for (const surface of order)
     if (honours(surface, request.viewId, names))
-      return opened(
-        request.viewId,
-        surface,
-        surface === first ? "none" : "other_surface",
-        request.params,
-      );
+      return opened(request.viewId, surface, "none", request.params);
   if (names.length > 0)
     for (const surface of order)
       if (honours(surface, request.viewId, []))
-        return opened(
-          request.viewId,
-          surface,
-          surface === first ? "none" : "other_surface",
-          {},
-        );
+        return opened(request.viewId, surface, "none", {});
   for (const ancestor of lineage(register, request.viewId).slice(1))
     for (const surface of order)
       if (honours(surface, ancestor.id, []))

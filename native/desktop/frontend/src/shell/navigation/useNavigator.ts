@@ -401,14 +401,5 @@ function noticeText(
       requested: label(requested),
       view,
     });
-  const where =
-    opened.fallback === "other_surface"
-      ? t("desktop.navigation.notice.in_window", { view })
-      : null;
-  const dropped =
-    Object.keys(opened.params).length <
-    Object.keys(opened.requested.params).length
-      ? t("desktop.navigation.notice.params_dropped", { view })
-      : null;
-  return [where, dropped].filter((part) => part !== null).join(" ");
+  return t("desktop.navigation.notice.params_dropped", { view });
 }
