@@ -13,8 +13,10 @@ from pathlib import Path
 from typing import IO
 
 import pytest
+from coverage import CoverageData
 
 from dev._paths import REPO_ROOT
+from dev.packaging.command_execution import run_command
 from dev.test_runs.logging import RunLog, _redirect_collection_output
 from dev.test_runs.paths import (
     SCRATCH_PREFIX,
@@ -77,6 +79,235 @@ def _top_level_environment() -> dict[str, str]:
         if Path(configured_logs).resolve() == generated_logs.resolve():
             environment.pop("CADRUMO_LOG_DIR", None)
     return environment
+
+
+def _coverage_environment(log_root: Path) -> dict[str, str]:
+    """Give an independent configured pytest no injected module search path or inherited collector."""
+    environment = _top_level_environment()
+    for name in ("PYTHONPATH", "COVERAGE_FILE", "CADRUMO_TEST_COVERAGE_FILE", "CADRUMO_TEST_COVERAGE_WORKER_PID"):
+        environment.pop(name, None)
+    environment["CADRUMO_TEST_LOG_ROOT"] = str(log_root)
+    return environment
+
+
+def _coverage_probe(directory: Path, records: Path) -> Path:
+    directory.mkdir()
+    subject = directory / "coverage_subject.py"
+    subject.write_text(
+        'def choose(worker):\n    if worker == "gw0":\n        return 11\n    return 29\n', encoding="utf-8"
+    )
+    (directory / "test_coverage_probe.py").write_text(
+        "import json, os\n"
+        "from pathlib import Path\n"
+        "import pytest\n"
+        "from coverage_subject import choose\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "def test_probe():\n"
+        "    worker = os.environ['PYTEST_XDIST_WORKER']\n"
+        "    assert choose(worker) in (11, 29)\n"
+        f"    (Path({str(records)!r}) / (worker + '.json')).write_text(json.dumps({{\n"
+        "        'coverage': os.environ['COVERAGE_FILE'],\n"
+        "        'run_root': os.environ['CADRUMO_TEST_RUN_ROOT'],\n"
+        "    }))\n",
+        encoding="utf-8",
+    )
+    return subject
+
+
+@pytest.mark.parametrize("invocation", ["console", "configured-temporary-cwd"])
+@pytest.mark.parametrize("explicit_destination", [False, True], ids=["default", "explicit"])
+def test_coverage_controller_combines_both_workers_in_one_admitted_file(
+    tmp_path: Path, invocation: str, explicit_destination: bool
+) -> None:
+    records = tmp_path / "records"
+    records.mkdir()
+    fixture = tmp_path / "fixture"
+    subject = _coverage_probe(fixture, records)
+    report = tmp_path / "coverage.json"
+    environment = _coverage_environment(tmp_path / "logs")
+    explicit = tmp_path / "explicit" / ".coverage"
+    if explicit_destination:
+        environment["COVERAGE_FILE"] = str(explicit)
+    if invocation == "console":
+        uv = shutil.which("uv")
+        assert uv is not None
+        command = [uv, "run", "--no-sync", "pytest"]
+        cwd = REPO_ROOT
+    else:
+        command = [sys.executable, "-m", "pytest", "-c", str(REPO_ROOT / "pyproject.toml")]
+        cwd = fixture
+    result = run_command(
+        [
+            *command,
+            "-q",
+            "-n2",
+            "--dist=each",
+            f"--cov={fixture}",
+            f"--cov-config={REPO_ROOT / 'pyproject.toml'}",
+            f"--cov-report=json:{report}",
+            "--cov-fail-under=100",
+            str(fixture),
+        ],
+        cwd=cwd,
+        environment=environment,
+        errors="replace",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    observed = {path.stem: json.loads(path.read_text(encoding="utf-8")) for path in records.glob("*.json")}
+    assert set(observed) == {"gw0", "gw1"}
+    destinations = {Path(record["coverage"]) for record in observed.values()}
+    assert len(destinations) == 1
+    (destination,) = destinations
+    if explicit_destination:
+        assert destination == explicit
+    else:
+        (run_root,) = {Path(record["run_root"]) for record in observed.values()}
+        assert destination == run_root / "artifacts" / ".coverage"
+    assert list(destination.parent.glob(destination.name + ".*")) == []
+    data = CoverageData(basename=str(destination))
+    data.read()
+    assert set(data.lines(str(subject)) or ()) == {1, 2, 3, 4}
+    assert {(2, 3), (2, 4)} <= set(data.arcs(str(subject)) or ())
+    totals = json.loads(report.read_text(encoding="utf-8"))["totals"]
+    assert totals["percent_covered"] == 100
+    assert totals["covered_branches"] == totals["num_branches"] == 2
+
+
+def test_nested_coverage_gets_its_own_destination_without_replacing_its_parent(tmp_path: Path) -> None:
+    parent = tmp_path / "parent"
+    child = tmp_path / "child"
+    parent.mkdir()
+    child.mkdir()
+    subject = parent / "parent_subject.py"
+    subject.write_text("def before():\n    return 11\n\ndef after():\n    return 29\n", encoding="utf-8")
+    child_subject = child / "child_subject.py"
+    child_subject.write_text("def value():\n    return 7\n", encoding="utf-8")
+    child_file = tmp_path / "child-file.txt"
+    child_report = tmp_path / "child-report.json"
+    child_probe = child / "test_child_probe.py"
+    child_probe.write_text(
+        "import os\nfrom pathlib import Path\nimport pytest\nfrom child_subject import value\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "def test_child():\n    assert value() == 7\n"
+        f"    Path({str(child_file)!r}).write_text(os.environ['COVERAGE_FILE'])\n",
+        encoding="utf-8",
+    )
+    child_arguments = [
+        "-m",
+        "pytest",
+        "-c",
+        str(REPO_ROOT / "pyproject.toml"),
+        "-q",
+        "-n0",
+        f"--cov={child}",
+        f"--cov-config={REPO_ROOT / 'pyproject.toml'}",
+        f"--cov-report=json:{child_report}",
+        "--cov-fail-under=100",
+        str(child_probe),
+    ]
+    parent_file = tmp_path / "parent-file.txt"
+    (parent / "test_parent_probe.py").write_text(
+        "import os, subprocess, sys\nfrom pathlib import Path\nimport pytest\n"
+        "from parent_subject import before, after\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n"
+        "def test_parent():\n    assert before() == 11\n"
+        f"    Path({str(parent_file)!r}).write_text(os.environ['COVERAGE_FILE'])\n"
+        f"    result = subprocess.run([sys.executable, *{child_arguments!r}], cwd={str(child)!r}, "
+        "capture_output=True, text=True, check=False)\n"
+        "    assert result.returncode == 0, result.stdout + result.stderr\n"
+        "    assert after() == 29\n",
+        encoding="utf-8",
+    )
+    parent_report = tmp_path / "parent-report.json"
+    result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(REPO_ROOT / "pyproject.toml"),
+            "-q",
+            "-n1",
+            f"--cov={parent}",
+            f"--cov-config={REPO_ROOT / 'pyproject.toml'}",
+            f"--cov-report=json:{parent_report}",
+            "--cov-fail-under=100",
+            str(parent),
+        ],
+        cwd=parent,
+        environment=_coverage_environment(tmp_path / "logs"),
+        errors="replace",
+    )
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    parent_destination = Path(parent_file.read_text(encoding="utf-8"))
+    child_destination = Path(child_file.read_text(encoding="utf-8"))
+    assert parent_destination != child_destination
+    for destination, measured, expected in (
+        (parent_destination, subject, {1, 2, 4, 5}),
+        (child_destination, child_subject, {1, 2}),
+    ):
+        data = CoverageData(basename=str(destination))
+        data.read()
+        assert set(data.lines(str(measured)) or ()) == expected
+        assert set(data.measured_files()) == {str(measured)}
+        assert list(destination.parent.glob(destination.name + ".*")) == []
+
+
+def test_coverage_startup_failure_releases_its_reserved_run_directory(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    (fixture / "conftest.py").write_text('raise RuntimeError("coverage bootstrap probe failure")\n', encoding="utf-8")
+    logs = tmp_path / "logs"
+    result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(REPO_ROOT / "pyproject.toml"),
+            "-n0",
+            f"--confcutdir={fixture}",
+            f"--cov={fixture}",
+            str(fixture),
+        ],
+        cwd=fixture,
+        environment=_coverage_environment(logs),
+        errors="replace",
+    )
+
+    assert result.returncode == pytest.ExitCode.USAGE_ERROR, result.stdout + result.stderr
+    assert "coverage bootstrap probe failure" in result.stderr
+    assert list(logs.rglob("*-pytest-*")) == []
+
+
+def test_coverage_refuses_output_outside_the_admitted_temporary_tree(tmp_path: Path) -> None:
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    environment = _coverage_environment(tmp_path / "logs")
+    refused = REPO_ROOT / "coverage-refused-output" / ".coverage"
+    assert not refused.parent.exists()
+    environment["COVERAGE_FILE"] = str(refused)
+    result = run_command(
+        [
+            sys.executable,
+            "-m",
+            "pytest",
+            "-c",
+            str(REPO_ROOT / "pyproject.toml"),
+            "-n0",
+            f"--cov={fixture}",
+            str(fixture),
+        ],
+        cwd=fixture,
+        environment=environment,
+        errors="replace",
+    )
+
+    assert result.returncode == pytest.ExitCode.USAGE_ERROR, result.stdout + result.stderr
+    assert "COVERAGE_FILE" in result.stderr
+    assert not refused.parent.exists()
 
 
 def _child_run_log(result: subprocess.CompletedProcess[str]) -> Path:

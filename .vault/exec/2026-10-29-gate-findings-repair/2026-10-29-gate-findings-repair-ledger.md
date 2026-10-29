@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:0213684f86053e6ec6ac098ce0bf085fae41d4ebd878cfb9055d20440cbfce11'
+body_hash: 'sha256:d21e6938c58f3624d67b8ebd8b095c31307360d64cecb35ec115f9404f7e622d'
 related:
   - "[[2026-10-29-gate-findings-repair-plan]]"
 ---
@@ -121,9 +121,21 @@ related:
 - `S04` `verify:` `ruff check and format --check eight packaging paths` -> `pass`
 - `S04` `verify:` `ty check eight packaging paths` -> `pass`
 - `S04` `verify:` `just check-hooks` -> `pass`
+- `S05` `M` `pyproject.toml`
+- `S05` `M` `dev/test_runs/logging.py`
+- `S05` `M` `dev/test_runs/tests/test_logging.py`
+- `S05` `M` `.vaultspec/skills/cadrumo-start/references/build-python-packaging-and-release.md`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/test_runs/tests/test_logging.py -k coverage` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 -m integration dev/test_runs/tests/test_logging.py -k 'not coverage'` -> `pass`
+- `S05` `verify:` `uv run --no-sync pytest -q -n 0 dev/packaging/tests/test_preflight_recipe_selection.py::test_each_invocation_collects_a_non_empty_selection[campaign:preflight-tests]` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/test_runs/logging.py dev/test_runs/tests/test_logging.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff format --check dev/test_runs/logging.py dev/test_runs/tests/test_logging.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ty check dev/test_runs/logging.py dev/test_runs/tests/test_logging.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 
 ## Notes
 
 - `S02` 82 focused tests passed. Import scan kept all30 contracts, loaded5239 modules, zero hard findings; gate operational verdict unavailable because external governed source bytes changed. Final S03 rechecks.
 - `S01` 88 owner tests plus numeric and real-dictionary controls passed; renderer B10. Canonical casilla generation passed58modelos/14154casillas. Final locale gate10109 affected cells, zero missing/tool/placeholder failures; remaining content and mixed-language inventory debt retained. External exact Google/Drive spellings excluded from authored repair.
 - `S04` 100 focused tests and real two-build artifact reproducibility passed. Both independent medium cleanup findings resolved; false removal preserves exact path, primary failure, and SystemExit status with visible stderr. Native validator unchanged.
+- `S05` 7 real coverage controls,16 logging controls and1 nested packaging case passed; threshold unchanged. Foreign commit c8c3e350b4 captured authored pyproject bootstrap while retiring llm extra; remaining foreign edits preserved. Secondary copied database78.8845 does not replace original recipe5.46/exit1. Independent review PASS.
