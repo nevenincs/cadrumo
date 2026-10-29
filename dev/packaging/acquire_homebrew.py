@@ -158,6 +158,22 @@ def _homebrew_formula(info: CommandResult, qualified: str) -> dict[str, Any]:
     return formulae[0]
 
 
+def _prepare_homebrew_prefix(brew: Path, run_root: Path, logs: Path, timeout_seconds: float) -> None:
+    homebrew_environment = _homebrew_storage_environment()
+    os.environ.update(homebrew_environment)
+    prefix_result = _run(
+        brew,
+        ["--prefix"],
+        cwd=run_root,
+        log=logs / "brew-prefix-root.log",
+        timeout=timeout_seconds,
+    )
+    if prefix_result.returncode != 0:
+        raise AcquisitionError(f"brew --prefix failed: {prefix_result.stderr.strip()[:200]}")
+    brew_prefix = require_homebrew_installation_prefix(prefix_result.stdout)
+    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
+
+
 def run_homebrew_acquisition(
     *,
     cohort_dir: Path,
@@ -206,19 +222,7 @@ def run_homebrew_acquisition(
     logs = run_root / "logs"
     logs.mkdir()
 
-    homebrew_environment = _homebrew_storage_environment()
-    os.environ.update(homebrew_environment)
-    prefix_result = _run(
-        brew,
-        ["--prefix"],
-        cwd=run_root,
-        log=logs / "brew-prefix-root.log",
-        timeout=timeout_seconds,
-    )
-    if prefix_result.returncode != 0:
-        raise AcquisitionError(f"brew --prefix failed: {prefix_result.stderr.strip()[:200]}")
-    brew_prefix = require_homebrew_installation_prefix(prefix_result.stdout)
-    _require_homebrew_temp_volume(environment=homebrew_environment, brew_prefix=brew_prefix)
+    _prepare_homebrew_prefix(brew, run_root, logs, timeout_seconds)
 
     tap_result = _run(brew, ["tap", tap], cwd=run_root, log=logs / "brew-tap.log", timeout=timeout_seconds)
     require_command_succeeded(

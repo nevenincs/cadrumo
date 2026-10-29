@@ -49,8 +49,8 @@ def _percentile(values: list[int], fraction: float) -> float:
     return values[min(len(values) - 1, int(len(values) * fraction))] / 1000
 
 
-def main() -> None:
-    """Emit a bounded benchmark report, never diagnostic payloads."""
+def _options() -> argparse.Namespace:
+    """Parse and bound the synthetic benchmark workload before allocating resources."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("normal", "slow", "blocked", "large"), default="normal")
     parser.add_argument("--threads", type=int, default=8)
@@ -61,6 +61,31 @@ def main() -> None:
     options = parser.parse_args()
     if not 1 <= options.threads <= 32 or not 1 <= options.records <= 1_000_000 or not 0 <= options.duration <= 120:
         parser.error("threads must be 1..32, records 1..1000000 and duration 0..120")
+    return options
+
+
+def _queue_lifetime_handles() -> tuple[int | None, int | None]:
+    """Measure handles around repeated completely settled dispatch lifetimes."""
+    # Repeated queue lifetimes expose leaked native thread or event handles.
+    before_churn = _handles()
+    for _ in range(100):
+        queue = DiagnosticDispatch[int](lambda _: None, name="diagnostic-handle-probe")
+        queue.submit(1)
+        if not queue.close(timeout=HANG_GUARD_SECONDS):
+            raise RuntimeError("diagnostic queue did not terminate")
+    time.sleep(0.05)
+    after_churn = _handles()
+    return before_churn, after_churn
+
+
+def _delivery_status() -> dict[str, object]:
+    """Capture the delivery counters for each registered diagnostic sink."""
+    return {name: asdict(status) for name, status in diagnostic_delivery_status().items()}
+
+
+def main() -> None:
+    """Emit a bounded benchmark report, never diagnostic payloads."""
+    options = _options()
     baseline_handles = _handles()
     entered, release = threading.Event(), threading.Event()
     original = AnnouncingRotatingFileHandler.emit
@@ -121,23 +146,15 @@ def main() -> None:
                 barrier.wait()
                 measurements = [future.result() for future in futures]
                 elapsed = time.monotonic() - started
-            blocked_status = {name: asdict(status) for name, status in diagnostic_delivery_status().items()}
+            blocked_status = _delivery_status()
             release.set()
             drained = flush_logging(timeout=HANG_GUARD_SECONDS)
-            final_status = {name: asdict(status) for name, status in diagnostic_delivery_status().items()}
+            final_status = _delivery_status()
         finally:
             release.set()
             AnnouncingRotatingFileHandler.emit = original
         shutdown_logging(timeout=2)
-    # Repeated queue lifetimes expose leaked native thread or event handles.
-    before_churn = _handles()
-    for _ in range(100):
-        queue = DiagnosticDispatch[int](lambda _: None, name="diagnostic-handle-probe")
-        queue.submit(1)
-        if not queue.close(timeout=HANG_GUARD_SECONDS):
-            raise RuntimeError("diagnostic queue did not terminate")
-    time.sleep(0.05)
-    after_churn = _handles()
+    before_churn, after_churn = _queue_lifetime_handles()
     samples = sorted(sample for _, values in measurements for sample in values)
     records = sum(count for count, _ in measurements)
     report = {

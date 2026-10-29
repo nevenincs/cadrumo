@@ -11,7 +11,7 @@ from cadrumo.application.filing.producer_snapshot import (
 )
 from cadrumo.application.storage.calc_sheets.engine import build_template_preview_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_template_preview_form
-from cadrumo.application.storage.calc_sheets.layout import plan_layout
+from cadrumo.application.storage.calc_sheets.layout import SheetLayout, plan_layout
 from cadrumo.application.storage.calc_sheets.records import (
     OperatorInput,
     OperatorInputs,
@@ -29,6 +29,7 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.refund_election import RefundElection
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.period import calculation_filing_date
 
@@ -123,16 +124,7 @@ def build_group_aggregate_plan(
         layout = plan_layout(
             revision, bracket_filter_date=calculation_filing_date(Period.from_year_and_code(year, period))
         )
-        addresses: dict[SheetCellAddress, Decimal | str] = {}
-        for key, value in bindings.items():
-            if key in layout.binding_cells:
-                addresses[layout.binding_cells[key]] = value
-                continue
-            owners = [casilla for casilla in revision.casillas if casilla.binding == key]
-            if not owners:
-                raise ValueError("fictional binding has no declared workbook owner")
-            for owner in owners:
-                addresses[layout.entradas_cells[owner.id]] = value
+        addresses = _aggregate_addresses(bindings, layout, revision)
         cells = tuple(
             cell.model_copy(update={"value": addresses[cell.address]}) if cell.address in addresses else cell
             for cell in plan.value_cells
@@ -140,3 +132,19 @@ def build_group_aggregate_plan(
         plan = SheetExportPlan[SheetTemplatePreviewMetadata].model_validate({**dict(plan), "value_cells": cells})
         plan = add_template_preview_form(plan, source, illustrative_producer=producer)
     return source, plan
+
+
+def _aggregate_addresses(
+    bindings: dict[str, Decimal | str], layout: SheetLayout, revision: ModeloRevision
+) -> dict[SheetCellAddress, Decimal | str]:
+    addresses: dict[SheetCellAddress, Decimal | str] = {}
+    for key, value in bindings.items():
+        if key in layout.binding_cells:
+            addresses[layout.binding_cells[key]] = value
+            continue
+        owners = [casilla for casilla in revision.casillas if casilla.binding == key]
+        if not owners:
+            raise ValueError("fictional binding has no declared workbook owner")
+        for owner in owners:
+            addresses[layout.entradas_cells[owner.id]] = value
+    return addresses

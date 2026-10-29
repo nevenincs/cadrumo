@@ -11,7 +11,7 @@ from dev._paths import UTF_8
 from dev.docs import i18n as _docs_i18n
 
 from .docs_delivery_contracts import _REQUIRED_ROOT_ARTIFACTS, _REQUIRED_SITE_SEARCH_ARTIFACTS
-from .docs_site_languages import _language_site_url, localized_languages
+from .docs_site_languages import language_site_url, localized_languages
 
 
 def _require_sitemap_locations(locations: list[str], expected_base_url: str, root_label: str) -> None:
@@ -37,7 +37,7 @@ def _validate_apex(html_root: Path) -> None:
     except ElementTree.ParseError as exc:
         raise SystemExit("The apex sitemap index is not valid XML.") from exc
     listed = {(element.text or "").strip() for element in sitemap.iter() if element.tag.endswith("loc")}
-    expected = {f"{_language_site_url(language)}/sitemap.xml" for language in localized_languages()}
+    expected = {f"{language_site_url(language)}/sitemap.xml" for language in localized_languages()}
     if listed != expected:
         raise SystemExit(f"The apex sitemap index lists {sorted(listed)}, not every language root's sitemap.")
 
@@ -61,7 +61,7 @@ def _require_valid_sitemap(html_root: Path, *, expected_base_url: str, root_labe
 
     ``expected_base_url`` is the root's OWN canonical URL (the English site's
     ``CANONICAL_DOCS_BASE_URL``, or a localized root's ``/<language>``
-    sub-root via :func:`_language_site_url`) -- shared logic parameterized by
+    sub-root via :func:`language_site_url`) -- shared logic parameterized by
     the caller's expected root, since a localized root's sitemap is correctly
     rooted at its own language sub-path, not the English canonical root.
     """
@@ -163,7 +163,7 @@ def _validate_language_roots(html_root: Path) -> None:
         root = html_root / language
         label = f"Localized site root {language!r}"
         _require_artifacts_present(root, root_label=label)
-        _require_valid_sitemap(root, expected_base_url=_language_site_url(language), root_label=label)
+        _require_valid_sitemap(root, expected_base_url=language_site_url(language), root_label=label)
 
 
 def _validate_built_site(html_root: Path) -> None:

@@ -18,9 +18,7 @@ from cadrumo_agent_service.host.launch_environment import EXTERNAL_BIN_DIRECTORI
 from dev._paths import REPO_ROOT
 
 from .. import environment_facts
-from ..application_environment import DECLARATION
 from ..environment_conformance import (
-    Reference,
     build_request,
     collect_facts,
     conformance_findings,
@@ -29,6 +27,8 @@ from ..environment_conformance import (
     reference_from_text,
     run,
 )
+from ..environment_conformance_types import Reference
+from ..environment_declaration_primitives import DECLARATION
 from ..layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

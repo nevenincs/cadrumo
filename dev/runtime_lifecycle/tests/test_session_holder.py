@@ -12,9 +12,11 @@ from uuid import UUID
 
 import pytest
 
-from .. import session_holder
+from .. import async_holder_process, holder_protocol, session_holder, windows_holder, windows_holder_cleanup
+from ..async_holder_process import AsyncPipeOwner
 from ..caller_owned_root import AcceptanceError
-from ..session_holder import AsyncRuntimeSessionHolder, WindowsRuntimeSessionHolder, _AsyncPipeOwner
+from ..session_holder import AsyncRuntimeSessionHolder
+from ..windows_holder import WindowsRuntimeSessionHolder
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -87,7 +89,8 @@ def _patch_launcher(
         arguments = ("-u", "-c", script, *(("with-password",) if password is not None else ()))
         return Path(sys.executable).resolve(strict=True), arguments
 
-    monkeypatch.setattr(session_holder, "_holder_launch", launch)
+    monkeypatch.setattr(session_holder, "holder_launch", launch)
+    monkeypatch.setattr(windows_holder, "holder_launch", launch)
 
 
 def _test_environment() -> dict[str, str]:
@@ -133,17 +136,17 @@ async def test_async_holder_correlates_real_pipe_replies_and_drains_stderr(
 async def test_async_startup_refusal_reaps_the_exact_child(monkeypatch: pytest.MonkeyPatch) -> None:
     wrong_profile = "a9f239ad-e202-49d9-bf2a-e20a4be0ea15"
     _patch_launcher(monkeypatch, identity_profile=wrong_profile)
-    owners: list[_AsyncPipeOwner] = []
-    original_launch = _AsyncPipeOwner.launch
+    owners: list[AsyncPipeOwner] = []
+    original_launch = AsyncPipeOwner.launch
 
     async def observe_launch(
-        cls: type[_AsyncPipeOwner], executable: Path, arguments: tuple[str, ...], environment: dict[str, str]
-    ) -> _AsyncPipeOwner:
+        cls: type[AsyncPipeOwner], executable: Path, arguments: tuple[str, ...], environment: dict[str, str]
+    ) -> AsyncPipeOwner:
         owner = await original_launch(executable, arguments, environment)
         owners.append(owner)
         return owner
 
-    monkeypatch.setattr(_AsyncPipeOwner, "launch", classmethod(observe_launch))
+    monkeypatch.setattr(AsyncPipeOwner, "launch", classmethod(observe_launch))
 
     with pytest.raises(AcceptanceError, match="holder profile identity differs"):
         await AsyncRuntimeSessionHolder.start(
@@ -159,8 +162,8 @@ async def test_async_startup_refusal_reaps_the_exact_child(monkeypatch: pytest.M
 async def test_async_close_terminates_a_child_that_ignores_stdin_eof(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
-    owner = await _AsyncPipeOwner.launch(
+    monkeypatch.setattr(async_holder_process, "_CLOSE_SECONDS", 0.05)
+    owner = await AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "import time; time.sleep(30)"),
         os.environ,
@@ -181,8 +184,8 @@ async def test_async_close_terminates_a_child_that_ignores_stdin_eof(
 async def test_async_close_retries_stdin_wait_while_stream_is_already_closing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
-    owner = await _AsyncPipeOwner.launch(
+    monkeypatch.setattr(async_holder_process, "_CLOSE_SECONDS", 0.05)
+    owner = await AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "import sys; sys.stdin.buffer.read()"),
         os.environ,
@@ -218,8 +221,8 @@ async def test_async_close_retries_stdin_wait_while_stream_is_already_closing(
 async def test_async_close_retains_owner_until_stderr_drainer_finishes(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_holder, "_REAP_SECONDS", 0.05)
-    owner = await _AsyncPipeOwner.launch(
+    monkeypatch.setattr(async_holder_process, "_REAP_SECONDS", 0.05)
+    owner = await AsyncPipeOwner.launch(
         Path(sys.executable).resolve(strict=True),
         ("-u", "-c", "pass"),
         os.environ,
@@ -253,21 +256,21 @@ async def test_async_close_retains_owner_until_stderr_drainer_finishes(
 
 @pytest.mark.asyncio
 async def test_cancelling_start_waits_for_spawn_then_reaps_the_child(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(async_holder_process, "_CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch, wait_before_identity=True)
     launched = asyncio.Event()
-    owners: list[_AsyncPipeOwner] = []
-    original_launch = _AsyncPipeOwner.launch
+    owners: list[AsyncPipeOwner] = []
+    original_launch = AsyncPipeOwner.launch
 
     async def observe_launch(
-        cls: type[_AsyncPipeOwner], executable: Path, arguments: tuple[str, ...], environment: dict[str, str]
-    ) -> _AsyncPipeOwner:
+        cls: type[AsyncPipeOwner], executable: Path, arguments: tuple[str, ...], environment: dict[str, str]
+    ) -> AsyncPipeOwner:
         owner = await original_launch(executable, arguments, environment)
         owners.append(owner)
         launched.set()
         return owner
 
-    monkeypatch.setattr(_AsyncPipeOwner, "launch", classmethod(observe_launch))
+    monkeypatch.setattr(AsyncPipeOwner, "launch", classmethod(observe_launch))
     starting = asyncio.create_task(
         AsyncRuntimeSessionHolder.start(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
     )
@@ -317,7 +320,7 @@ def test_windows_holder_owns_correlated_pipe_session_and_cleans_threads(
 def test_windows_holder_job_terminates_and_reaps_an_unresponsive_child(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder_cleanup, "_CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch, wait_forever=True)
     holder = WindowsRuntimeSessionHolder(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
 
@@ -333,8 +336,8 @@ def test_windows_holder_job_terminates_and_reaps_an_unresponsive_child(
 def test_windows_holder_times_out_blocked_write_by_terminating_job_before_pipe_close(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setattr(session_holder, "_WRITE_SECONDS", 0.05)
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder, "_WRITE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder_cleanup, "_CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch, wait_forever=True)
     holder = WindowsRuntimeSessionHolder(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
     scope = holder._scope
@@ -354,7 +357,7 @@ def test_windows_holder_times_out_blocked_write_by_terminating_job_before_pipe_c
 
 @pytest.mark.windows_only
 def test_windows_holder_retries_a_failed_stdin_close(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(session_holder, "_CLOSE_SECONDS", 0.05)
+    monkeypatch.setattr(windows_holder_cleanup, "_CLOSE_SECONDS", 0.05)
     _patch_launcher(monkeypatch)
     holder = WindowsRuntimeSessionHolder(Path(sys.executable), profile_id=_PROFILE, environment=_test_environment())
     stream = holder._stdin
@@ -406,7 +409,7 @@ def _package(tmp_path: Path, holder_image: str | None) -> Path:
 
 def test_desktop_holder_runs_as_the_role_of_the_image_the_package_admits(tmp_path: Path) -> None:
     runtime = _package(tmp_path, "cadrumo.exe")
-    executable, arguments = session_holder._as_desktop_holder(runtime, ("session", "hold"))
+    executable, arguments = holder_protocol.as_desktop_holder(runtime, ("session", "hold"))
     assert executable == (tmp_path / "cadrumo.exe").resolve()
     assert arguments == ("--role", "runtime", "session", "hold")
 
@@ -416,11 +419,11 @@ def test_desktop_holder_keeps_the_runtime_image_the_package_admits_or_without_de
     tmp_path: Path, holder_image: str | None
 ) -> None:
     runtime = _package(tmp_path, holder_image)
-    assert session_holder._as_desktop_holder(runtime, ("session", "hold")) == (runtime, ("session", "hold"))
+    assert holder_protocol.as_desktop_holder(runtime, ("session", "hold")) == (runtime, ("session", "hold"))
 
 
 def test_a_package_without_a_desktop_session_holder_is_refused(tmp_path: Path) -> None:
     runtime = _package(tmp_path, "cadrumo.exe")
     (tmp_path / "data" / "service-descriptors.json").write_text("[]", encoding="utf-8")
     with pytest.raises(AcceptanceError):
-        session_holder._as_desktop_holder(runtime, ("session", "hold"))
+        holder_protocol.as_desktop_holder(runtime, ("session", "hold"))

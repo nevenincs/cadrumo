@@ -372,7 +372,166 @@ def build_installed_annual_cli_slices(
         raise ValueError(f"{INSTALLED_ANNUAL_CLI_SCENARIO_VERSION} is grounded only for {SUPPORTED_YEAR}")
 
     professional_primary, _periodic_rent = build_installed_periodic_cli_slices(year)
-    professional_second = InstalledPeriodicCliSlice(
+    professional_second = _scenario_professional_second(year)
+    property_a = Modelo180PropertyInput(
+        property_key="urban-rent-property-a",
+        situation="1",
+        cadastral_reference="1234567VK4713C0001XY",
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=year,
+        withholding_percentage=Decimal("19.00"),
+        province_code="28",
+        postal_code="28001",
+    )
+    property_b = Modelo180PropertyInput(
+        property_key="urban-rent-property-b",
+        situation="1",
+        cadastral_reference="9872023VH5797S0001WX",
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=year,
+        withholding_percentage=Decimal("19.00"),
+        province_code="28",
+        postal_code="28002",
+    )
+    rent_a_q1 = _scenario_rent_a_q1(year, property_a)
+    rent_a_q2 = _scenario_rent_a_q2(year, property_a)
+    rent_b_q2 = _scenario_rent_b_q2(year, property_b)
+    for capture in (professional_primary, professional_second, rent_a_q1, rent_a_q2, rent_b_q2):
+        _assert_slice_consistency(capture)
+
+    modelo_180 = _scenario_modelo_180(year, property_a, property_b, rent_a_q1, rent_a_q2, rent_b_q2)
+    modelo_190 = _scenario_modelo_190(year, professional_primary, professional_second)
+    return (modelo_180, modelo_190)
+
+
+def _assert_slice_consistency(slice_: InstalledPeriodicCliSlice) -> None:
+    """Reject an independently authored fixture that cannot close its invoice."""
+    allocated_base = money(sum((item.allocated_base for item in slice_.allocations), Decimal("0")))
+    allocated_withholding = money(sum((item.allocated_withholding for item in slice_.allocations), Decimal("0")))
+    allocated_settlement = money(sum((item.allocated_settlement for item in slice_.allocations), Decimal("0")))
+    if (allocated_base, allocated_withholding, allocated_settlement) != (
+        slice_.invoice_base,
+        slice_.invoice_withholding,
+        slice_.expected_settlement,
+    ):
+        raise ValueError(f"{slice_.slice_id} allocations do not close the stated invoice liability")
+
+
+def _periodic_payment_rows(payments: tuple[Payment, ...], modelo: str, period: str) -> tuple[Payment, ...]:
+    """Select paid-for-recipient facts at one exact periodic coordinate."""
+    return tuple(
+        row
+        for row in payments
+        if row.modelo == modelo and row.period == period and row.direction is Direction.PAID_FOR_RECIPIENT
+    )
+
+
+def _periodic_oracle(payments: tuple[Payment, ...]) -> tuple[PeriodicOracle, ...]:
+    keys = sorted({(row.modelo, row.period) for row in payments if row.direction is Direction.PAID_FOR_RECIPIENT})
+    result: list[PeriodicOracle] = []
+    for modelo, period in keys:
+        rows = _periodic_payment_rows(payments, modelo, period)
+        result.append(
+            PeriodicOracle(
+                modelo=modelo,
+                period=period,
+                payment_count=len(rows),
+                recipient_count=len({row.recipient_id for row in rows}),
+                taxable_base=money(sum((row.taxable_base for row in rows), Decimal("0"))),
+                withheld=money(sum((row.withheld for row in rows), Decimal("0"))),
+            )
+        )
+    return tuple(result)
+
+
+def _annual_oracle(payments: tuple[Payment, ...]) -> tuple[AnnualOracle, ...]:
+    result: list[AnnualOracle] = []
+    for modelo in ("180", "190", "193"):
+        rows = tuple(
+            row for row in payments if row.annual_modelo == modelo and row.direction is Direction.PAID_FOR_RECIPIENT
+        )
+        detail_keys = {
+            (row.recipient_id, row.property_reference)
+            if modelo == "180"
+            else (row.recipient_id, row.annual_key, row.annual_subkey)
+            for row in rows
+        }
+        result.append(
+            AnnualOracle(
+                modelo=modelo,
+                recipient_count=len({row.recipient_id for row in rows}),
+                detail_record_count=len(detail_keys),
+                taxable_base=money(sum((row.taxable_base for row in rows), Decimal("0"))),
+                withheld=money(sum((row.withheld for row in rows), Decimal("0"))),
+            )
+        )
+    return tuple(result)
+
+
+def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
+    """Build the pinned resident/common-regime withholding scenario.
+
+    The professional 15% and urban-rental 19% rates are grounded in RIRPF
+    arts. 95 and 100. The payroll percentage is an independently supplied
+    payroll fact, not a rate engine. Capital income is deliberately scoped to
+    the supported 123/193 branch and uses a supplied 19% payment fact.
+    """
+    if year != SUPPORTED_YEAR:
+        raise ValueError(f"{SCENARIO_VERSION} is grounded only for {SUPPORTED_YEAR}")
+
+    payments = _scenario_payments(year)
+    own_sale = Payment(
+        source_id="own-sale-withholding",
+        recipient_id="12345678Z",
+        recipient_name="Synthetic Autonomo",
+        modelo="111",
+        annual_modelo="190",
+        scheme="actividades_profesionales",
+        invoice_date=date(year, 2, 1),
+        paid_on=date(year, 2, 10),
+        taxable_base=Decimal("1000"),
+        withheld=Decimal("150"),
+        direction=Direction.SUFFERED_ON_OWN_SALE,
+        annual_key="G",
+        annual_subkey="01",
+    )
+    nonresident = Payment(
+        source_id="nonresident-boundary",
+        recipient_id="X0000000T",
+        recipient_name="Nonresident Recipient",
+        modelo="216",
+        annual_modelo="296",
+        scheme="nonresident_unscoped",
+        invoice_date=date(year, 9, 1),
+        paid_on=date(year, 9, 5),
+        taxable_base=Decimal("1000"),
+        withheld=Decimal("190"),
+    )
+    return RetencionesScenario(
+        year=year,
+        payments=payments,
+        own_sale_withholding=own_sale,
+        nonresident_boundary=nonresident,
+        missing_state=EvidenceState.MISSING,
+        no_activity_state=EvidenceState.NO_RELEVANT_PAYMENT,
+        periodic_oracle=_periodic_oracle(payments),
+        annual_oracle=_annual_oracle(payments),
+        revisions=(
+            ("111", "2019-y-siguientes"),
+            ("115", "2019-y-siguientes"),
+            ("123", "2024-y-siguientes"),
+            ("180", "2023-y-siguientes"),
+            ("190", "2025-y-siguientes"),
+            ("193", "2025-y-siguientes"),
+        ),
+    )
+
+
+def _scenario_professional_second(year: int) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored professional second scenario facts."""
+    return InstalledPeriodicCliSlice(
         slice_id="professional-111-q2-distinct-subclave",
         modelo="111",
         revision="2019-y-siguientes",
@@ -412,29 +571,11 @@ def build_installed_annual_cli_slices(
             territorial_deduction_clave=0,
         ),
     )
-    property_a = Modelo180PropertyInput(
-        property_key="urban-rent-property-a",
-        situation="1",
-        cadastral_reference="1234567VK4713C0001XY",
-        recipient_province_code="28",
-        modality="1",
-        accrual_year=year,
-        withholding_percentage=Decimal("19.00"),
-        province_code="28",
-        postal_code="28001",
-    )
-    property_b = Modelo180PropertyInput(
-        property_key="urban-rent-property-b",
-        situation="1",
-        cadastral_reference="9872023VH5797S0001WX",
-        recipient_province_code="28",
-        modality="1",
-        accrual_year=year,
-        withholding_percentage=Decimal("19.00"),
-        province_code="28",
-        postal_code="28002",
-    )
-    rent_a_q1 = InstalledPeriodicCliSlice(
+
+
+def _scenario_rent_a_q1(year: int, property_a: Modelo180PropertyInput) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored rent a q1 scenario facts."""
+    return InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q1-property-a",
         modelo="115",
         revision="2019-y-siguientes",
@@ -470,7 +611,11 @@ def build_installed_annual_cli_slices(
         annual_detail_capture_supported=True,
         modelo_180_property=property_a,
     )
-    rent_a_q2 = InstalledPeriodicCliSlice(
+
+
+def _scenario_rent_a_q2(year: int, property_a: Modelo180PropertyInput) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored rent a q2 scenario facts."""
+    return InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-property-a",
         modelo="115",
         revision="2019-y-siguientes",
@@ -506,7 +651,11 @@ def build_installed_annual_cli_slices(
         annual_detail_capture_supported=True,
         modelo_180_property=property_a,
     )
-    rent_b_q2 = InstalledPeriodicCliSlice(
+
+
+def _scenario_rent_b_q2(year: int, property_b: Modelo180PropertyInput) -> InstalledPeriodicCliSlice:
+    """Construct the independently authored rent b q2 scenario facts."""
+    return InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-property-b",
         modelo="115",
         revision="2019-y-siguientes",
@@ -542,10 +691,18 @@ def build_installed_annual_cli_slices(
         annual_detail_capture_supported=True,
         modelo_180_property=property_b,
     )
-    for capture in (professional_primary, professional_second, rent_a_q1, rent_a_q2, rent_b_q2):
-        _assert_slice_consistency(capture)
 
-    modelo_180 = InstalledAnnualCliSlice(
+
+def _scenario_modelo_180(
+    year: int,
+    property_a: Modelo180PropertyInput,
+    property_b: Modelo180PropertyInput,
+    rent_a_q1: InstalledPeriodicCliSlice,
+    rent_a_q2: InstalledPeriodicCliSlice,
+    rent_b_q2: InstalledPeriodicCliSlice,
+) -> InstalledAnnualCliSlice:
+    """Construct the independently authored modelo 180 scenario facts."""
+    return InstalledAnnualCliSlice(
         slice_id="urban-rent-180-annual-properties",
         modelo="180",
         revision="2023-y-siguientes",
@@ -634,7 +791,13 @@ def build_installed_annual_cli_slices(
             ),
         ),
     )
-    modelo_190 = InstalledAnnualCliSlice(
+
+
+def _scenario_modelo_190(
+    year: int, professional_primary: InstalledPeriodicCliSlice, professional_second: InstalledPeriodicCliSlice
+) -> InstalledAnnualCliSlice:
+    """Construct the independently authored modelo 190 scenario facts."""
+    return InstalledAnnualCliSlice(
         slice_id="professional-190-annual-detail",
         modelo="190",
         revision="2025-y-siguientes",
@@ -723,85 +886,11 @@ def build_installed_annual_cli_slices(
             ),
         ),
     )
-    return (modelo_180, modelo_190)
 
 
-def _assert_slice_consistency(slice_: InstalledPeriodicCliSlice) -> None:
-    """Reject an independently authored fixture that cannot close its invoice."""
-    allocated_base = money(sum((item.allocated_base for item in slice_.allocations), Decimal("0")))
-    allocated_withholding = money(sum((item.allocated_withholding for item in slice_.allocations), Decimal("0")))
-    allocated_settlement = money(sum((item.allocated_settlement for item in slice_.allocations), Decimal("0")))
-    if (allocated_base, allocated_withholding, allocated_settlement) != (
-        slice_.invoice_base,
-        slice_.invoice_withholding,
-        slice_.expected_settlement,
-    ):
-        raise ValueError(f"{slice_.slice_id} allocations do not close the stated invoice liability")
-
-
-def _periodic_payment_rows(payments: tuple[Payment, ...], modelo: str, period: str) -> tuple[Payment, ...]:
-    """Select paid-for-recipient facts at one exact periodic coordinate."""
-    return tuple(
-        row
-        for row in payments
-        if row.modelo == modelo and row.period == period and row.direction is Direction.PAID_FOR_RECIPIENT
-    )
-
-
-def _periodic_oracle(payments: tuple[Payment, ...]) -> tuple[PeriodicOracle, ...]:
-    keys = sorted({(row.modelo, row.period) for row in payments if row.direction is Direction.PAID_FOR_RECIPIENT})
-    result: list[PeriodicOracle] = []
-    for modelo, period in keys:
-        rows = _periodic_payment_rows(payments, modelo, period)
-        result.append(
-            PeriodicOracle(
-                modelo=modelo,
-                period=period,
-                payment_count=len(rows),
-                recipient_count=len({row.recipient_id for row in rows}),
-                taxable_base=money(sum((row.taxable_base for row in rows), Decimal("0"))),
-                withheld=money(sum((row.withheld for row in rows), Decimal("0"))),
-            )
-        )
-    return tuple(result)
-
-
-def _annual_oracle(payments: tuple[Payment, ...]) -> tuple[AnnualOracle, ...]:
-    result: list[AnnualOracle] = []
-    for modelo in ("180", "190", "193"):
-        rows = tuple(
-            row for row in payments if row.annual_modelo == modelo and row.direction is Direction.PAID_FOR_RECIPIENT
-        )
-        detail_keys = {
-            (row.recipient_id, row.property_reference)
-            if modelo == "180"
-            else (row.recipient_id, row.annual_key, row.annual_subkey)
-            for row in rows
-        }
-        result.append(
-            AnnualOracle(
-                modelo=modelo,
-                recipient_count=len({row.recipient_id for row in rows}),
-                detail_record_count=len(detail_keys),
-                taxable_base=money(sum((row.taxable_base for row in rows), Decimal("0"))),
-                withheld=money(sum((row.withheld for row in rows), Decimal("0"))),
-            )
-        )
-    return tuple(result)
-
-
-def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
-    """Build the pinned resident/common-regime withholding scenario.
-
-    The professional 15% and urban-rental 19% rates are grounded in RIRPF
-    arts. 95 and 100. The payroll percentage is an independently supplied
-    payroll fact, not a rate engine. Capital income is deliberately scoped to
-    the supported 123/193 branch and uses a supplied 19% payment fact.
-    """
-    if year != SUPPORTED_YEAR:
-        raise ValueError(f"{SCENARIO_VERSION} is grounded only for {SUPPORTED_YEAR}")
-
-    payments = (
+def _scenario_payments(year: int) -> tuple[Payment, ...]:
+    """Construct the independently authored payments scenario facts."""
+    return (
         Payment(
             source_id="professional-q1",
             recipient_id="00000000T",
@@ -897,50 +986,5 @@ def build_scenario(year: int = SUPPORTED_YEAR) -> RetencionesScenario:
             withheld=Decimal("190"),
             annual_key="B",
             annual_subkey="01",
-        ),
-    )
-    own_sale = Payment(
-        source_id="own-sale-withholding",
-        recipient_id="12345678Z",
-        recipient_name="Synthetic Autonomo",
-        modelo="111",
-        annual_modelo="190",
-        scheme="actividades_profesionales",
-        invoice_date=date(year, 2, 1),
-        paid_on=date(year, 2, 10),
-        taxable_base=Decimal("1000"),
-        withheld=Decimal("150"),
-        direction=Direction.SUFFERED_ON_OWN_SALE,
-        annual_key="G",
-        annual_subkey="01",
-    )
-    nonresident = Payment(
-        source_id="nonresident-boundary",
-        recipient_id="X0000000T",
-        recipient_name="Nonresident Recipient",
-        modelo="216",
-        annual_modelo="296",
-        scheme="nonresident_unscoped",
-        invoice_date=date(year, 9, 1),
-        paid_on=date(year, 9, 5),
-        taxable_base=Decimal("1000"),
-        withheld=Decimal("190"),
-    )
-    return RetencionesScenario(
-        year=year,
-        payments=payments,
-        own_sale_withholding=own_sale,
-        nonresident_boundary=nonresident,
-        missing_state=EvidenceState.MISSING,
-        no_activity_state=EvidenceState.NO_RELEVANT_PAYMENT,
-        periodic_oracle=_periodic_oracle(payments),
-        annual_oracle=_annual_oracle(payments),
-        revisions=(
-            ("111", "2019-y-siguientes"),
-            ("115", "2019-y-siguientes"),
-            ("123", "2024-y-siguientes"),
-            ("180", "2023-y-siguientes"),
-            ("190", "2025-y-siguientes"),
-            ("193", "2025-y-siguientes"),
         ),
     )

@@ -74,11 +74,7 @@ def stage_verdict(
                 refusals.append(f"{component} records nothing staged for {configuration}; {rebuild}")
                 continue
             package = build / str(staged["package"])
-            differing = sorted(
-                str(member)
-                for member, expected in staged["artifacts"].items()
-                if not (package / member).is_file() or digest(package / member) != expected
-            )
+            differing = _differing_artifacts(package, staged["artifacts"], digest)
             if differing:
                 refusals.append(
                     f"{component}'s staged bytes are not the ones build {record.get('build_id')} recorded "
@@ -86,11 +82,32 @@ def stage_verdict(
                 )
                 continue
             snapshot[component] = str(record.get("build_id"))
-            try:
-                newer = edited(build, component)
-            except FileNotFoundError:
-                refusals.append(f"{component}'s build records no inputs; {rebuild}")
-                continue
-            if newer:
-                changed[component] = newer
+            _record_changed_inputs(build, component, rebuild, edited, changed, refusals)
     return StageVerdict(refusals, snapshot, changed)
+
+
+def _differing_artifacts(package: Path, artifacts: Mapping[str, str], digest: Callable[[Path], str]) -> list[str]:
+    """Compare every recorded staged member while the caller owns its digest-cache scope."""
+    return sorted(
+        str(member)
+        for member, expected in artifacts.items()
+        if not (package / member).is_file() or digest(package / member) != expected
+    )
+
+
+def _record_changed_inputs(
+    build: Path,
+    component: str,
+    rebuild: str,
+    edited: Callable[[Path, str], list[str]],
+    changed: dict[str, list[str]],
+    refusals: list[str],
+) -> None:
+    """Retain post-snapshot edits and refuse missing input records without discarding the snapshot."""
+    try:
+        newer = edited(build, component)
+    except FileNotFoundError:
+        refusals.append(f"{component}'s build records no inputs; {rebuild}")
+        return
+    if newer:
+        changed[component] = newer

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
+    InstalledTuiChildProcessEvidence,
     read_passphrase_from_stdin,
     run_installed_tui_child_process,
     write_installed_tui_failure_receipt,
@@ -44,6 +45,14 @@ from .iva_tui_receipts import (
 )
 from .iva_tui_scenario import _synthetic_rows
 from .iva_tui_storage import _require_empty_directory
+
+_CANONICAL_READBACK_FIELDS = (
+    "business_classification",
+    "taxable_base",
+    "iva_rate",
+    "iva_amount",
+    "iva_category",
+)
 
 
 def _child_parser() -> argparse.ArgumentParser:
@@ -158,20 +167,8 @@ def run_installed_tui_capture_reopen(
             python_executable=python_executable,
             workspace_root=workspace,
             child_module="dev.acceptance.iva.installed_tui_capture_reopen",
-            child_args=(
-                "--child-mode",
-                "capture",
-                "--workspace-root",
-                str(workspace),
-                "--year",
-                str(journey_year.year),
-                "--scratch",
-                str(scratch),
-                "--receipt",
-                str(capture_path),
-                "--source-manifest-sha256",
-                source.manifest_sha256,
-                *source_arguments,
+            child_args=_capture_child_arguments(
+                workspace, journey_year.year, capture_path, source.manifest_sha256, source_arguments, scratch
             ),
             storage_root=storage_root,
             authority_root=authority_root,
@@ -198,22 +195,8 @@ def run_installed_tui_capture_reopen(
             python_executable=python_executable,
             workspace_root=workspace,
             child_module="dev.acceptance.iva.installed_tui_capture_reopen",
-            child_args=(
-                "--child-mode",
-                "reopen",
-                "--workspace-root",
-                str(workspace),
-                "--year",
-                str(journey_year.year),
-                "--receipt",
-                str(reopen_path),
-                "--source-manifest-sha256",
-                source.manifest_sha256,
-                *source_arguments,
-                "--expected-transaction-id",
-                transaction_ids[0],
-                "--expected-transaction-id",
-                transaction_ids[1],
+            child_args=_reopen_child_arguments(
+                workspace, journey_year.year, reopen_path, source.manifest_sha256, source_arguments, transaction_ids
             ),
             storage_root=storage_root,
             authority_root=authority_root,
@@ -264,38 +247,94 @@ def run_installed_tui_capture_reopen(
             authority_generation=authority.logical_generation,
             authority_descriptor_sha256=authority.descriptor_sha256,
             authority_database_sha256=authority.database_sha256,
-            child_handles=(
-                ChildHandle(
-                    mode="capture",
-                    returncode=capture_process.returncode,
-                    receipt_status=capture_process.receipt_status,
-                    receipt_sha256=capture_process.receipt_sha256,
-                    stdout_sha256=capture_process.stdout_sha256,
-                    stderr_sha256=capture_process.stderr_sha256,
-                ),
-                ChildHandle(
-                    mode="reopen",
-                    returncode=reopen_process.returncode,
-                    receipt_status=reopen_process.receipt_status,
-                    receipt_sha256=reopen_process.receipt_sha256,
-                    stdout_sha256=reopen_process.stdout_sha256,
-                    stderr_sha256=reopen_process.stderr_sha256,
-                ),
-            ),
+            child_handles=_installed_child_handles(capture_process, reopen_process),
             transaction_count=2,
             classification_fields_submitted=_CLASSIFICATION_FIELDS,
-            canonical_fields_read_back=(
-                "business_classification",
-                "taxable_base",
-                "iva_rate",
-                "iva_amount",
-                "iva_category",
-            ),
+            canonical_fields_read_back=_CANONICAL_READBACK_FIELDS,
             canonical_classification_fingerprint=fingerprint,
             continuation_command_handles=command_handles,
             deduction_kind_readback="not_proven_public_ledger_view_does_not_expose_deduction_fact_kind",
             unexercised=_UNEXERCISED,
         )
+
+
+def _installed_child_handles(
+    capture_process: InstalledTuiChildProcessEvidence,
+    reopen_process: InstalledTuiChildProcessEvidence,
+) -> tuple[ChildHandle, ChildHandle]:
+    """Project the two exact admitted child-process receipts without copying their output."""
+    return (
+        ChildHandle(
+            mode="capture",
+            returncode=capture_process.returncode,
+            receipt_status=capture_process.receipt_status,
+            receipt_sha256=capture_process.receipt_sha256,
+            stdout_sha256=capture_process.stdout_sha256,
+            stderr_sha256=capture_process.stderr_sha256,
+        ),
+        ChildHandle(
+            mode="reopen",
+            returncode=reopen_process.returncode,
+            receipt_status=reopen_process.receipt_status,
+            receipt_sha256=reopen_process.receipt_sha256,
+            stdout_sha256=reopen_process.stdout_sha256,
+            stderr_sha256=reopen_process.stderr_sha256,
+        ),
+    )
+
+
+def _capture_child_arguments(
+    workspace: Path,
+    year: int,
+    capture_path: Path,
+    source_manifest_sha256: str,
+    source_arguments: tuple[str, ...],
+    scratch: Path,
+) -> tuple[str, ...]:
+    """Build the exact installed capture child argument frame without starting it."""
+    return (
+        "--child-mode",
+        "capture",
+        "--workspace-root",
+        str(workspace),
+        "--year",
+        str(year),
+        "--scratch",
+        str(scratch),
+        "--receipt",
+        str(capture_path),
+        "--source-manifest-sha256",
+        source_manifest_sha256,
+        *source_arguments,
+    )
+
+
+def _reopen_child_arguments(
+    workspace: Path,
+    year: int,
+    reopen_path: Path,
+    source_manifest_sha256: str,
+    source_arguments: tuple[str, ...],
+    transaction_ids: tuple[str, str],
+) -> tuple[str, ...]:
+    """Build the exact installed reopen child argument frame without starting it."""
+    return (
+        "--child-mode",
+        "reopen",
+        "--workspace-root",
+        str(workspace),
+        "--year",
+        str(year),
+        "--receipt",
+        str(reopen_path),
+        "--source-manifest-sha256",
+        source_manifest_sha256,
+        *source_arguments,
+        "--expected-transaction-id",
+        transaction_ids[0],
+        "--expected-transaction-id",
+        transaction_ids[1],
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover - child execution is integration-owned

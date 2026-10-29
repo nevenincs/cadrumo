@@ -64,8 +64,6 @@ from cadrumo.domain.calculations.registry.ids import (
     BindingId,
     CrossReferenceId,
     LegalRefId,
-    ModeloId,
-    RevisionId,
     SourceRefId,
     WorkbookParityRefId,
 )
@@ -78,8 +76,9 @@ from cadrumo.domain.calculations.registry.schema import (
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, EvidenceTierField, coerce_enum_member
 from cadrumo.domain.calculations.registry.schema_formula import ParameterDefinition
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision, WorkbookParityReference
+from cadrumo.domain.calculations.registry.schema_verification import WorkbookParityReference
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_review_tier
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from dev.registry.compiler.schema_family_coverage import (
@@ -93,53 +92,9 @@ from ..maintenance_support import (
     declared_revision_selection_date,
     revision_selection_coordinates,
 )
+from .coverage_facts import RegistryCoverageFacts, coverage_facts
 
 CoverageGateStatus = Literal["satisfied", "gap"]
-
-
-@dataclass(frozen=True, slots=True)
-class RegistryCoverageFacts:
-    """Immutable evidence collections for one admitted filing coordinate."""
-
-    modelo: ModeloId
-    revision: RevisionId
-    filing_year: int
-    period: str
-    legal: tuple[LegalRefId, ...]
-    sources: Mapping[SourceRefId, SourceReference]
-    workbook_parity_refs: tuple[WorkbookParityReference, ...]
-    live_cross_references: tuple[LiveCrossReferenceDecision, ...]
-
-
-def coverage_facts(
-    authority: ValidatedRegistryAuthority,
-    modelo_id: str,
-    *,
-    filing_year: int,
-    period: str,
-    on: date | None = None,
-    revision_id: RevisionId | None = None,
-    grade: RegistryAuthorityGrade = RegistryAuthorityGrade.FILING,
-) -> RegistryCoverageFacts:
-    """Project immutable evidence from the same admitted snapshot consumers read."""
-    snapshot = authority.snapshot(
-        modelo_id,
-        filing_year=filing_year,
-        period=period,
-        on=on,
-        revision_id=revision_id,
-        grade=grade,
-    )
-    return RegistryCoverageFacts(
-        modelo=snapshot.modelo.id,
-        revision=snapshot.revision.id,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period,
-        legal=tuple(snapshot.legal),
-        sources=snapshot.sources,
-        workbook_parity_refs=tuple(snapshot.workbook_parity_refs.values()),
-        live_cross_references=tuple(snapshot.live_cross_references.values()),
-    )
 
 
 class CoverageAuthorityScope(StrEnum):

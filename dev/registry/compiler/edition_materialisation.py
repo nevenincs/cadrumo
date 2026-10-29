@@ -103,8 +103,6 @@ def materialise_edition(modelo_directory: Path, revision_id: str) -> Materialise
 
 def resolve_edition(modelo_directory: Path, revision_id: str) -> ResolvedEdition:
     """Resolve within the intact chain, preserving distinct attestation references."""
-    from .loader import load_modelo_directory
-
     resolved = modelo_directory.resolve()
     validate_modelo_directory_source(resolved)
     manifest = _load_modelo_manifest(resolved)
@@ -126,6 +124,19 @@ def resolve_edition(modelo_directory: Path, revision_id: str) -> ResolvedEdition
         raise RegistryLoadError(f"{resolved}: revision {revision_id!r} must be a table")
     predecessor = declared.get(_PREDECESSOR_FIELD)
     table = dict(materialised)
+    table = _preserve_lineage_projection(resolved, revision_id, table)
+    return ResolvedEdition(
+        modelo_id=modelo_id,
+        revision_id=revision_id,
+        table=table,
+        inherits_from=predecessor if isinstance(predecessor, str) else None,
+        label_origins=resolution.label_origins.get(revision_id),
+    )
+
+
+def _preserve_lineage_projection(resolved: Path, revision_id: str, table: dict[str, object]) -> dict[str, object]:
+    from .loader import load_modelo_directory
+
     if table.get("lineage_attestations"):
         revision = load_modelo_directory(resolved).revisions[revision_id]
         # The loader validates exact edges and projects casilla claims. Keep
@@ -140,13 +151,7 @@ def resolve_edition(modelo_directory: Path, revision_id: str) -> ResolvedEdition
         }
         projected = _project_inline_lineage_table(resolved, revision_id, table, claims)
         table = {**projected, "lineage_attestations": table["lineage_attestations"]}
-    return ResolvedEdition(
-        modelo_id=modelo_id,
-        revision_id=revision_id,
-        table=table,
-        inherits_from=predecessor if isinstance(predecessor, str) else None,
-        label_origins=resolution.label_origins.get(revision_id),
-    )
+    return table
 
 
 def _inline_lineage_claims(modelo_directory: Path, revision_id: str, table: dict[str, object]) -> dict[str, object]:

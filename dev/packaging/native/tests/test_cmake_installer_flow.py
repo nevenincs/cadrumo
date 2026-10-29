@@ -20,7 +20,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_health_failure_facts_preserve_native_io_codes_without_private_fields(tmp_path: Path) -> None:
-    from ..package_launch_smoke import _health_facts
+    from ..package_health_facts import health_facts
 
     events = [
         {
@@ -41,7 +41,7 @@ def test_health_failure_facts_preserve_native_io_codes_without_private_fields(tm
         },
     ]
     (tmp_path / "cadrumo-native.jsonl").write_text("\n".join(json.dumps(event) for event in events), encoding="utf-8")
-    facts = _health_facts(tmp_path)
+    facts = health_facts(tmp_path)
     assert facts == {
         "schema": 1,
         "failures": [

@@ -98,12 +98,9 @@ _ROLE_CUSTOMER: Final = "customer"
 
 def _require_mapping_targets(self: FieldMapping) -> None:
     """Require mapping targets."""
-    if self.kind is MappingKind.DIRECT and not (self.draft_field is not None and self.draft_field):
+    if self.kind is MappingKind.DIRECT and not bool(self.draft_field):
         raise ValueError("a direct mapping must name draft_field")
-    if self.kind is MappingKind.ROLE_DEPENDENT and not (
-        (self.supplier_field is not None and self.supplier_field)
-        and (self.customer_field is not None and self.customer_field)
-    ):
+    if self.kind is MappingKind.ROLE_DEPENDENT and not (bool(self.supplier_field) and bool(self.customer_field)):
         raise ValueError("a role-dependent mapping must name both supplier_field and customer_field")
     if self.kind is MappingKind.COMPOSITE and not self.leaves:
         raise ValueError("a composite mapping must name its leaves")
@@ -111,15 +108,13 @@ def _require_mapping_targets(self: FieldMapping) -> None:
 
 def _require_mapping_context(self: FieldMapping) -> None:
     """Require mapping context."""
-    if self.kind is MappingKind.SUPERSEDED and not (
-        (self.draft_field is not None and self.draft_field) and (self.superseded_by is not None and self.superseded_by)
-    ):
+    if self.kind is MappingKind.SUPERSEDED and not (bool(self.draft_field) and bool(self.superseded_by)):
         raise ValueError("a superseded mapping must name both draft_field and superseded_by")
     if self.kind in _NON_SCORED_KINDS and not self.rationale.strip():
         raise ValueError("an unscored field must state why it is not scored")
-    if self.kind not in _DRAFT_FIELD_KINDS and (self.draft_field is not None and self.draft_field):
+    if self.kind not in _DRAFT_FIELD_KINDS and bool(self.draft_field):
         raise ValueError(f"draft_field is not read for a {self.kind.value} mapping")
-    if self.kind is not MappingKind.SUPERSEDED and (self.superseded_by is not None and self.superseded_by):
+    if self.kind is not MappingKind.SUPERSEDED and bool(self.superseded_by):
         raise ValueError(f"superseded_by is not read for a {self.kind.value} mapping")
 
 

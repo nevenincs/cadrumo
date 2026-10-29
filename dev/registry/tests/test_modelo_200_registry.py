@@ -34,7 +34,8 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 from dev.registry.compiler.authority import compile_validated_authority, compiled_bundled_authority
 from dev.registry.compiler.legal_grounding import verify_legal_catalogue_grounding
 from dev.registry.compiler.loader import modelo_fact_scope
-from dev.registry.edition_export_scenarios import M200_SCENARIO_PERIODS, m200_export_scenario
+from dev.registry.edition_export_periods import M200_SCENARIO_PERIODS
+from dev.registry.edition_export_scenarios import m200_export_scenario
 from dev.registry.edition_round_trip import SYNTHETIC_TAX_ID
 
 from .authored_edition_support import source_first_exercise, source_with_sha256, sources_where

@@ -160,22 +160,7 @@ class LocaleManager:
         keys: set[str] = set()
         unread: list[str] = []
         source_roots = (self.src_dir, *self.extra_src_dirs)
-        for root in source_roots:
-            for py_file in iter_directory(root, pattern="*.py", recursive=True):
-                if is_test_source(py_file, root=root):
-                    continue
-                try:
-                    content = py_file.read_text(encoding=UTF_8_ENCODING)
-                except (OSError, UnicodeDecodeError) as exc:
-                    # Read strictly and say so. The lenient decode dropped bytes,
-                    # so a key literal could be cut in half and never matched, and
-                    # the read failure was logged at debug level - invisible in a
-                    # normal run. This set decides which keys the codebase uses, so
-                    # a key missed here is a live translation on a deletion path.
-                    unread.append(f"{py_file}: {type(exc).__name__}: {exc}")
-                    continue
-                for match in self.pattern.finditer(content):
-                    keys.add(match.group(1))
+        self._scan_literal_keys(source_roots, keys, unread)
         # The roots form one logical source corpus. Parse and index them in one
         # scanner invocation so cross-module analysis runs once instead of once
         # per root (the package, docs, and harness each contribute to the same
@@ -203,6 +188,25 @@ class LocaleManager:
         )
         self._codebase_keys = frozenset(keys)
         return keys
+
+    def _scan_literal_keys(self, source_roots: tuple[Path, ...], keys: set[str], unread: list[str]) -> None:
+        """Collect readable literal call sites and retain every unread-source diagnostic."""
+        for root in source_roots:
+            for py_file in iter_directory(root, pattern="*.py", recursive=True):
+                if is_test_source(py_file, root=root):
+                    continue
+                try:
+                    content = py_file.read_text(encoding=UTF_8_ENCODING)
+                except (OSError, UnicodeDecodeError) as exc:
+                    # Read strictly and say so. The lenient decode dropped bytes,
+                    # so a key literal could be cut in half and never matched, and
+                    # the read failure was logged at debug level - invisible in a
+                    # normal run. This set decides which keys the codebase uses, so
+                    # a key missed here is a live translation on a deletion path.
+                    unread.append(f"{py_file}: {type(exc).__name__}: {exc}")
+                    continue
+                for match in self.pattern.finditer(content):
+                    keys.add(match.group(1))
 
     def get_codebase_namespaces(self) -> set[str]:
         """Extract dynamic-namespace markers (``<prefix>.*``) from the codebase.

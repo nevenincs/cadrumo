@@ -167,43 +167,14 @@ def factor_roots(files: Mapping[str, Mapping[str, Path]], destination: Path) -> 
         raise LanguageRootsError("no language root was given")
     if destination.exists() and any(destination.iterdir()):
         raise LanguageRootsError(f"the destination is not empty: {destination}")
-    every_path = sorted({path for by_path in files.values() for path in by_path})
+    every_path = _root_paths(files)
     text = LanguageText(languages)
     pages: list[str] = []
     shared: list[str] = []
     language_files: dict[str, list[str]] = {language: [] for language in languages}
     uneven: list[str] = []
     for path in every_path:
-        sources = [files[language].get(path) for language in languages]
-        present = [source for source in sources if source is not None]
-        if len(present) < len(languages):
-            if path.endswith(_PAGE_SUFFIX):
-                uneven.append(path)
-                continue
-            for language, source in zip(languages, sources, strict=True):
-                if source is not None:
-                    _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), source.read_bytes())
-                    language_files[language].append(path)
-            continue
-        contents = [source.read_bytes() for source in present]
-        texts = [_page_text(content) for content in contents] if path.endswith(_PAGE_SUFFIX) else []
-        page_texts = [_without_terminators(page) for page in texts if page is not None]
-        if page_texts and len(page_texts) == len(contents):
-            if all(page == page_texts[0] for page in page_texts[1:]):
-                _write(_inside(destination / STRUCTURE_DIRECTORY, path), page_texts[0].encode(_UTF_8))
-                shared.append(path)
-                continue
-            structure = text.structure(factor_page(page_texts))
-            _write(_inside(destination / STRUCTURE_DIRECTORY, path), structure.encode(_UTF_8))
-            pages.append(path)
-            continue
-        if all(content == contents[0] for content in contents[1:]):
-            _write(_inside(destination / STRUCTURE_DIRECTORY, path), contents[0])
-            shared.append(path)
-            continue
-        for language, content in zip(languages, contents, strict=True):
-            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
-            language_files[language].append(path)
+        _factor_root_path(path, files, destination, text, pages, shared, language_files, uneven)
     if uneven:
         raise LanguageRootsError(
             f"{len(uneven)} page(s) exist in some languages and not in others, first {uneven[0]}; "
@@ -220,6 +191,88 @@ def factor_roots(files: Mapping[str, Mapping[str, Path]], destination: Path) -> 
     )
     _write(destination / LAYOUT_FILE, (json.dumps(layout.document(), indent=1) + "\n").encode(_UTF_8))
     return layout
+
+
+def _root_paths(files: Mapping[str, Mapping[str, Path]]) -> list[str]:
+    return sorted({path for by_path in files.values() for path in by_path})
+
+
+def _factor_root_path(
+    path: str,
+    files: Mapping[str, Mapping[str, Path]],
+    destination: Path,
+    text: LanguageText,
+    pages: list[str],
+    shared: list[str],
+    language_files: dict[str, list[str]],
+    uneven: list[str],
+) -> None:
+    languages = tuple(files)
+    sources = [files[language].get(path) for language in languages]
+    present = [source for source in sources if source is not None]
+    if len(present) < len(languages):
+        _factor_uneven_path(path, languages, sources, destination, language_files, uneven)
+        return
+    contents = [source.read_bytes() for source in present]
+    _factor_root_contents(path, contents, languages, destination, text, pages, shared, language_files)
+
+
+def _factor_root_contents(
+    path: str,
+    contents: list[bytes],
+    languages: tuple[str, ...],
+    destination: Path,
+    text: LanguageText,
+    pages: list[str],
+    shared: list[str],
+    language_files: dict[str, list[str]],
+) -> None:
+    texts = [_page_text(content) for content in contents] if path.endswith(_PAGE_SUFFIX) else []
+    page_texts = [_without_terminators(page) for page in texts if page is not None]
+    if page_texts and len(page_texts) == len(contents):
+        _factor_root_page(path, page_texts, destination, text, pages, shared)
+        return
+    if all(content == contents[0] for content in contents[1:]):
+        _write(_inside(destination / STRUCTURE_DIRECTORY, path), contents[0])
+        shared.append(path)
+        return
+    for language, content in zip(languages, contents, strict=True):
+        _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
+        language_files[language].append(path)
+
+
+def _factor_uneven_path(
+    path: str,
+    languages: tuple[str, ...],
+    sources: list[Path | None],
+    destination: Path,
+    language_files: dict[str, list[str]],
+    uneven: list[str],
+) -> None:
+    if path.endswith(_PAGE_SUFFIX):
+        uneven.append(path)
+        return
+    for language, source in zip(languages, sources, strict=True):
+        if source is not None:
+            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), source.read_bytes())
+            language_files[language].append(path)
+
+
+def _factor_root_page(
+    path: str,
+    page_texts: list[str],
+    destination: Path,
+    text: LanguageText,
+    pages: list[str],
+    shared: list[str],
+) -> None:
+    if all(page == page_texts[0] for page in page_texts[1:]):
+        _write(_inside(destination / STRUCTURE_DIRECTORY, path), page_texts[0].encode(_UTF_8))
+        shared.append(path)
+        return
+    structure = text.structure(factor_page(page_texts))
+    _write(_inside(destination / STRUCTURE_DIRECTORY, path), structure.encode(_UTF_8))
+    pages.append(path)
 
 
 def asset_cache_key(content: bytes) -> str:
@@ -306,23 +359,8 @@ def store_compiled_root(
     text = LanguageText(languages)
     own: dict[str, list[str]] = {language: [] for language in languages}
     keys: dict[str, tuple[str, ...]] = {}
-    for path in sorted({name for language in languages for name in extra[language]}):
-        written: list[str] = []
-        for language in languages:
-            source = extra[language].get(path)
-            if source is None:
-                continue
-            content = source.read_bytes()
-            decoded = _file_text(content)
-            if decoded is not None:
-                refuse_encoded_marks(decoded, f"{language}/{path}")
-            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
-            own[language].append(path)
-            written.append(asset_cache_key(content))
-        if len(written) == len(languages) and path in compiled:
-            name = PurePosixPath(path).name
-            keys[f"{name}?v={asset_cache_key(compiled[path].read_bytes())}"] = tuple(written)
-    per_language = {path for language in languages for path in own[language]}
+    _store_extra_files(extra, languages, destination, compiled, own, keys)
+    per_language = _owned_paths(own, languages)
     pages: list[str] = []
     shared: list[str] = []
     # Every file that is not a page is stored first, and the pages after it. A
@@ -330,39 +368,35 @@ def store_compiled_root(
     # each key the pages have to answer with one per language has to be known
     # before the first page is factored.
     page_paths: list[str] = []
-    for path in sorted(compiled):
-        if path in per_language:
-            continue
-        content = compiled[path].read_bytes()
-        if path.endswith(_PAGE_SUFFIX) and _page_text(content) is not None:
-            page_paths.append(path)
-            continue
-        if path.endswith(_PAGE_SUFFIX):
-            raise LanguageRootsError(
-                f"{path} is a page whose bytes are not the UTF-8 text a page is written as; "
-                "nothing can read the marks on it, and storing it whole would give every language "
-                "the compile's own"
-            )
-        decoded = _file_text(content)
-        if decoded is not None:
-            refuse_encoded_marks(decoded, path)
-        if decoded is None or MARK_OPEN not in decoded:
-            if decoded is not None:
-                refuse_escaped_marks(decoded, path)
-                # A lone closing delimiter is a mark whose opening something cut
-                # off, so no mark is found here and the file would be stored once
-                # and shipped to every language with half a delimiter in it.
-                refuse_stray_delimiters(decoded, path)
-            _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
-            shared.append(path)
-            continue
-        written = []
-        for index, language in enumerate(languages):
-            rendered = _rendered_language_file(content, slots, index, path)
-            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), rendered)
-            own[language].append(path)
-            written.append(asset_cache_key(rendered))
-        keys[f"{PurePosixPath(path).name}?v={asset_cache_key(content)}"] = tuple(written)
+    _store_compiled_assets(compiled, per_language, destination, slots, own, keys, shared, page_paths)
+    _store_compiled_pages(page_paths, compiled, destination, slots, text, keys, pages, shared)
+    for language in languages:
+        strings = json.dumps(text.strings[language], ensure_ascii=False, separators=(",", ":"))
+        _write(destination / text_file(language), strings.encode(_UTF_8))
+    layout = Layout(
+        languages=languages,
+        pages=tuple(pages),
+        shared=tuple(shared),
+        language_files={language: tuple(sorted(paths)) for language, paths in own.items()},
+    )
+    _write(destination / LAYOUT_FILE, (json.dumps(layout.document(), indent=1) + "\n").encode(_UTF_8))
+    return layout
+
+
+def _owned_paths(own: Mapping[str, Sequence[str]], languages: tuple[str, ...]) -> set[str]:
+    return {path for language in languages for path in own[language]}
+
+
+def _store_compiled_pages(
+    page_paths: list[str],
+    compiled: Mapping[str, Path],
+    destination: Path,
+    slots: CompileSlots,
+    text: LanguageText,
+    keys: dict[str, tuple[str, ...]],
+    pages: list[str],
+    shared: list[str],
+) -> None:
     for path in page_paths:
         content = compiled[path].read_bytes()
         text_of_page = _page_text(content)
@@ -383,17 +417,84 @@ def store_compiled_root(
         structure = text.structure(factored)
         _write(_inside(destination / STRUCTURE_DIRECTORY, path), structure.encode(_UTF_8))
         pages.append(path)
-    for language in languages:
-        strings = json.dumps(text.strings[language], ensure_ascii=False, separators=(",", ":"))
-        _write(destination / text_file(language), strings.encode(_UTF_8))
-    layout = Layout(
-        languages=languages,
-        pages=tuple(pages),
-        shared=tuple(shared),
-        language_files={language: tuple(sorted(paths)) for language, paths in own.items()},
-    )
-    _write(destination / LAYOUT_FILE, (json.dumps(layout.document(), indent=1) + "\n").encode(_UTF_8))
-    return layout
+
+
+def _store_compiled_assets(
+    compiled: Mapping[str, Path],
+    per_language: set[str],
+    destination: Path,
+    slots: CompileSlots,
+    own: dict[str, list[str]],
+    keys: dict[str, tuple[str, ...]],
+    shared: list[str],
+    page_paths: list[str],
+) -> None:
+    languages = slots.languages
+    for path in sorted(compiled):
+        if path in per_language:
+            continue
+        content = compiled[path].read_bytes()
+        if _compiled_page(path, content):
+            page_paths.append(path)
+            continue
+        decoded = _file_text(content)
+        if decoded is not None:
+            refuse_encoded_marks(decoded, path)
+        if decoded is None or MARK_OPEN not in decoded:
+            if decoded is not None:
+                refuse_escaped_marks(decoded, path)
+                # A lone closing delimiter is a mark whose opening something cut
+                # off, so no mark is found here and the file would be stored once
+                # and shipped to every language with half a delimiter in it.
+                refuse_stray_delimiters(decoded, path)
+            _write(_inside(destination / STRUCTURE_DIRECTORY, path), content)
+            shared.append(path)
+            continue
+        written = []
+        for index, language in enumerate(languages):
+            rendered = _rendered_language_file(content, slots, index, path)
+            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), rendered)
+            own[language].append(path)
+            written.append(asset_cache_key(rendered))
+        keys[f"{PurePosixPath(path).name}?v={asset_cache_key(content)}"] = tuple(written)
+
+
+def _compiled_page(path: str, content: bytes) -> bool:
+    if not path.endswith(_PAGE_SUFFIX):
+        return False
+    if _page_text(content) is None:
+        raise LanguageRootsError(
+            f"{path} is a page whose bytes are not the UTF-8 text a page is written as; "
+            "nothing can read the marks on it, and storing it whole would give every language "
+            "the compile's own"
+        )
+    return True
+
+
+def _store_extra_files(
+    extra: Mapping[str, Mapping[str, Path]],
+    languages: tuple[str, ...],
+    destination: Path,
+    compiled: Mapping[str, Path],
+    own: dict[str, list[str]],
+    keys: dict[str, tuple[str, ...]],
+) -> None:
+    for path in sorted({name for language in languages for name in extra[language]}):
+        written: list[str] = []
+        for language in languages:
+            source = extra[language].get(path)
+            if source is None:
+                continue
+            content = source.read_bytes()
+            decoded = _file_text(content)
+            if decoded is not None:
+                refuse_encoded_marks(decoded, f"{language}/{path}")
+            _write(_inside(destination / LANGUAGES_DIRECTORY / language, path), content)
+            own[language].append(path)
+            written.append(asset_cache_key(content))
+        if len(written) == len(languages) and path in compiled:
+            name = PurePosixPath(path).name
+            keys[f"{name}?v={asset_cache_key(compiled[path].read_bytes())}"] = tuple(written)
 
 
 def refuse_uneven_language_files(layout: Layout, *, absent: Mapping[str, Sequence[str]]) -> None:
@@ -443,7 +544,8 @@ def refuse_uneven_language_files(layout: Layout, *, absent: Mapping[str, Sequenc
         )
 
 
-def _string_list(value: object, where: str) -> tuple[str, ...]:
+def parse_layout_string_list(value: object, where: str) -> tuple[str, ...]:
+    """Decode an ordered layout string list, refusing malformed members."""
     if not isinstance(value, list):
         raise LanguageRootsError(f"{where} must be a list of strings")
     strings = tuple(item for item in value if isinstance(item, str))
@@ -460,15 +562,15 @@ def read_layout(stored: Path) -> Layout:
         raise LanguageRootsError(f"no readable layout in {stored}: {error}") from None
     if not isinstance(document, dict) or document.get("schema") != LAYOUT_SCHEMA:
         raise LanguageRootsError(f"{stored / LAYOUT_FILE} is not a schema {LAYOUT_SCHEMA} layout")
-    languages = _string_list(document.get("languages"), "languages")
+    languages = parse_layout_string_list(document.get("languages"), "languages")
     per_language = document.get("language_files")
     if not isinstance(per_language, dict) or set(per_language) != set(languages):
         raise LanguageRootsError("language_files must name exactly the layout's languages")
     return Layout(
         languages=languages,
-        pages=_string_list(document.get("pages"), "pages"),
-        shared=_string_list(document.get("shared"), "shared"),
-        language_files={language: _string_list(per_language[language], language) for language in languages},
+        pages=parse_layout_string_list(document.get("pages"), "pages"),
+        shared=parse_layout_string_list(document.get("shared"), "shared"),
+        language_files={language: parse_layout_string_list(per_language[language], language) for language in languages},
     )
 
 
@@ -478,7 +580,7 @@ def read_text(stored: Path, language: str) -> Sequence[str]:
         strings = json.loads((stored / text_file(language)).read_text(encoding=_UTF_8))
     except (OSError, ValueError) as error:
         raise LanguageRootsError(f"no readable text for {language} in {stored}: {error}") from None
-    return _string_list(strings, f"the text of {language}")
+    return parse_layout_string_list(strings, f"the text of {language}")
 
 
 def _stored(stored: Path, kind: str, language: str, path: str, strings: Sequence[str]) -> bytes:

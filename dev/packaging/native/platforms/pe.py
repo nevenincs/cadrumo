@@ -3,7 +3,50 @@
 from __future__ import annotations
 
 import struct
+from collections.abc import Callable
 from pathlib import Path
+
+
+def _directory_imports(
+    data: bytes,
+    path: Path,
+    directory: int,
+    width: int,
+    name_index: int,
+    start: int,
+    size: int,
+    unpack: Callable[[str, int], tuple[int, ...]],
+    offset: Callable[[int], int],
+) -> set[str]:
+    result: set[str] = set()
+    for position in range(start, start + size, width):
+        descriptor = unpack("<" + "I" * (width // 4), position)
+        if not any(descriptor):
+            break
+        if directory == 13 and descriptor[0] != 1:
+            raise ValueError(f"Unsupported non-RVA delayed import in {path}")
+        name_start = offset(descriptor[name_index])
+        name_end = data.find(b"\0", name_start, name_start + 1024)
+        if name_end < 0:
+            raise ValueError(f"Unterminated PE import in {path}")
+        name = data[name_start:name_end].decode("ascii").casefold()
+        if "/" in name or "\\" in name:
+            raise ValueError(f"Expected an import basename in {path}: {name}")
+        result.add(name)
+    return result
+
+
+def _directories(
+    data: bytes, path: Path, optional: int, unpack: Callable[[str, int], tuple[int, ...]], offset: Callable[[int], int]
+) -> set[str]:
+    result: set[str] = set()
+    for directory, width, name_index in ((1, 20, 3), (13, 32, 1)):
+        rva, size = unpack("<II", optional + 112 + directory * 8)
+        if not rva:
+            continue
+        start = offset(rva)
+        result.update(_directory_imports(data, path, directory, width, name_index, start, size, unpack, offset))
+    return result
 
 
 def imports(path: Path) -> set[str]:
@@ -37,24 +80,4 @@ def imports(path: Path) -> set[str]:
                     return result
         raise ValueError(f"Invalid PE import address in {path}: {rva}")
 
-    result = set()
-    for directory, width, name_index in ((1, 20, 3), (13, 32, 1)):
-        rva, size = unpack("<II", optional + 112 + directory * 8)
-        if not rva:
-            continue
-        start = offset(rva)
-        for position in range(start, start + size, width):
-            descriptor = unpack("<" + "I" * (width // 4), position)
-            if not any(descriptor):
-                break
-            if directory == 13 and descriptor[0] != 1:
-                raise ValueError(f"Unsupported non-RVA delayed import in {path}")
-            name_start = offset(descriptor[name_index])
-            name_end = data.find(b"\0", name_start, name_start + 1024)
-            if name_end < 0:
-                raise ValueError(f"Unterminated PE import in {path}")
-            name = data[name_start:name_end].decode("ascii").casefold()
-            if "/" in name or "\\" in name:
-                raise ValueError(f"Expected an import basename in {path}: {name}")
-            result.add(name)
-    return result
+    return _directories(data, path, optional, unpack, offset)

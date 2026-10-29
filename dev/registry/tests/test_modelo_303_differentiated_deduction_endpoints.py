@@ -12,8 +12,8 @@ from cadrumo.application.aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
     IvaLedgerProrrataApportionment,
     IvaLedgerSectorApportionment,
-    resolve_iva_differentiated_deduction_contributions,
 )
+from cadrumo.application.aggregation.iva_ledger_apportionment import resolve_iva_differentiated_deduction_contributions
 from cadrumo.core.filing_projection_ref import (
     M303DifferentiatedDeductionProjectionField,
     M303DifferentiatedDeductionProjectionRef,

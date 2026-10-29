@@ -122,9 +122,7 @@ def _seed_materialised(
     else:
         stated = frozenset(_edition_delta_source._row_id(row) for row in lift.rows) - plan.drops
         layout = _edition_delta_source._stated_layout(source, stated)
-        stated_rows = [
-            lift.lifts[_edition_delta_source._row_id(block.row)].row for _, blocks in layout for block in blocks
-        ]
+        stated_rows = _lifted_stated_rows(layout, lift)
         inherited = run.materialised[plan.predecessor]
         overrides = (
             *_edition_delta_row_delta_common.manifest_operations(source.manifest, "casilla_overrides"),
@@ -151,6 +149,12 @@ def _seed_materialised(
         by_id = {_edition_delta_source._row_id(item.row): item for item in placed}
         placed = [by_id[row_id] for row_id in plan.reconstructed_order]
     run.materialised[revision_id] = placed
+
+
+def _lifted_stated_rows(
+    layout: list[tuple[str, list[_edition_delta_source._Block]]], lift: _edition_delta_source._EditionLift
+) -> list[_edition_delta_source._Row]:
+    return [lift.lifts[_edition_delta_source._row_id(block.row)].row for _, blocks in layout for block in blocks]
 
 
 def _overridden_ids(overrides: tuple[_edition_delta_source._Row, ...]) -> set[str]:

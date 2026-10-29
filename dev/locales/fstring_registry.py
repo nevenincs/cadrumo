@@ -173,30 +173,18 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     stays import-error-safe. If a domain import fails, ``get_registered_keys``
     will propagate the error with full context rather than a silent empty set.
     """
-    from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
-    from cadrumo.application.dependency_contracts import DependencySetupStep
-    from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
-    from cadrumo.application.operations.frontend_requests import (
-        OperationCancellationRefusalCode,
-        OperationDetachRefusalCode,
-        OperationResponseControlRefusalCode,
-    )
     from cadrumo.application.overview.home import HOME_ACTION_REASON_CODES
-    from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.storage_management.models import StorageAreaDisposition, StorageOccupancy
     from cadrumo.application.user_profile.validation import PROFILE_VALIDATION_ISSUE_CODES
     from cadrumo.application.wizard.catalogue import build_setup_flow
     from cadrumo.application.wizard.widgets import WIZARD_VALIDATION_REASON_CODES
-    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
-    from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS, ErrorCategory
+    from cadrumo.core.errors.error_codes import ERROR_CONTEXT_LABEL_KEYS
     from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
-    from cadrumo.core.operations import OperationTerminalCondition
     from cadrumo.core.storage_taxonomy import StorageArea
     from cadrumo.domain.auth.apoderamientos.catalogue import load_default_catalogue
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
     from cadrumo.domain.calculations.registry.descendant_relacion_catalogue import descendant_relacion_tokens
     from cadrumo.domain.user_profile.values import ProfileSetupState
-    from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
     from dev.locales._registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
@@ -263,6 +251,38 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
         *_own_account_registrations(),
         *_modelo_review_filter_registrations(),
         *_generated_docs_registrations(),
+        *_runtime_registrations(descendant_relations),
+    )
+
+
+def _operation_refusal_values() -> tuple[str, ...]:
+    """Deduplicate the closed operation-control refusal enums in declaration order."""
+    from cadrumo.application.operations.frontend_requests import (
+        OperationCancellationRefusalCode,
+        OperationDetachRefusalCode,
+        OperationResponseControlRefusalCode,
+    )
+
+    return tuple(
+        dict.fromkeys(
+            [code.value for code in OperationResponseControlRefusalCode]
+            + [code.value for code in OperationCancellationRefusalCode]
+            + [code.value for code in OperationDetachRefusalCode]
+        )
+    )
+
+
+def _runtime_registrations(descendant_relations: tuple[str, ...]) -> tuple[FStringKeyRegistration, ...]:
+    """Enumerate runtime refusal, action and terminal-condition copy."""
+    from cadrumo.application.calculations.m303_carry_ingress import M303_CARRY_ERROR_NAMESPACE
+    from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
+    from cadrumo.application.review.filter import LedgerReviewStatus
+    from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
+    from cadrumo.core.errors.error_codes import ErrorCategory
+    from cadrumo.core.operations import OperationTerminalCondition
+    from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
+
+    return (
         FStringKeyRegistration(
             # The operations modal renders tr(terminal_copy_key), a key the
             # projection selects per terminal condition, plus the partial-success
@@ -277,18 +297,7 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
             # decide which keys must exist (entrypoints/tui/operations/modal.py).
             description="operation.modal.refusal.* (Operation{ResponseControl,Cancellation,Detach}RefusalCode)",
             key_factory=lambda v: f"operation.modal.refusal.{v}",
-            values=tuple(
-                dict.fromkeys(
-                    [code.value for code in OperationResponseControlRefusalCode]
-                    + [code.value for code in OperationCancellationRefusalCode]
-                    + [code.value for code in OperationDetachRefusalCode]
-                )
-            ),
-        ),
-        FStringKeyRegistration(
-            description="cli.config.provision.step.* (DependencySetupStep)",
-            key_factory=lambda v: f"cli.config.provision.step.{v}",
-            values=_enum_values(DependencySetupStep),
+            values=_operation_refusal_values(),
         ),
         FStringKeyRegistration(
             # Bounded enumeration: LedgerReviewStatus is a closed catalogue of

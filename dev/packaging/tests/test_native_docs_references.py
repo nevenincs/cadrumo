@@ -9,17 +9,9 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..native.docs_stage import (
-    DocsPackagingError,
-    ServedMediaTypes,
-    css_references,
-    declared_languages,
-    scan_page,
-    scan_stylesheet,
-    served_media_types,
-    stage_roots,
-    verified_stage,
-)
+from ..native.docs_errors import DocsPackagingError
+from ..native.docs_scan import ServedMediaTypes, css_references, scan_page, scan_stylesheet, served_media_types
+from ..native.docs_stage import declared_languages, stage_roots, verified_stage
 from ..native.layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

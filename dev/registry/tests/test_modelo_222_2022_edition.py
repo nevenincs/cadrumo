@@ -20,13 +20,9 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import validated_casilla_id_map
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import (
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import NUMERIC_CASILLA_DATA_TYPES
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection

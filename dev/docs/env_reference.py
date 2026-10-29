@@ -38,14 +38,13 @@ from pydantic_core import PydanticUndefined
 
 from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT, UTF_8
-from dev.packaging.native.application_environment import (
-    BASE_GROUPS,
-    NAME_ROLES,
+from dev.packaging.native.application_environment import load
+from dev.packaging.native.environment_declaration_constants import BASE_GROUPS, NAME_ROLES
+from dev.packaging.native.environment_models import (
     ApplicationEnvironment,
     ExternalPathDefault,
     Invocation,
     InvocationArgument,
-    load,
 )
 
 from ._locale_chrome import docs_chrome
@@ -167,10 +166,7 @@ def _started_with(declaration: ApplicationEnvironment, profile_name: str) -> str
 
 def _passed_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]) -> str:
     """Say what a profile takes from its caller: whole groups first, then the names left over."""
-    operator = set(profile["operator"])
-    groups = [group for group, members in declaration.groups.items() if members and set(members) <= operator]
-    covered = {name for group in groups for name in declaration.groups[group]}
-    singles = [name for name in profile["operator"] if name not in covered] + list(profile["pass"])
+    groups, singles = _passed_groups(declaration, profile["operator"], profile["pass"])
     parts = []
     if groups:
         parts.append(f"the name groups {_list_in_words([f'`{group}`' for group in groups])}")
@@ -180,6 +176,16 @@ def _passed_text(declaration: ApplicationEnvironment, profile: Mapping[str, Any]
         refused = _list_in_words([f"`{name}`" for name in profile["prefix_refused"]])
         parts.append(f"every name that starts with `{profile['prefix']}` except {refused}")
     return " and ".join(parts) if parts else "nothing beyond its operating-system groups"
+
+
+def _passed_groups(
+    declaration: ApplicationEnvironment, operator_names: Sequence[str], passed_names: Sequence[str]
+) -> tuple[list[str], list[str]]:
+    operator = set(operator_names)
+    groups = [group for group, members in declaration.groups.items() if members and set(members) <= operator]
+    covered = {name for group in groups for name in declaration.groups[group]}
+    singles = [name for name in operator_names if name not in covered] + list(passed_names)
+    return groups, singles
 
 
 def _fixed_text(source: str, value: str) -> str:
@@ -358,6 +364,12 @@ def render_installed_package(declaration: ApplicationEnvironment, settings_names
         for name, entry in sorted(declaration.names.items())
         if name not in known
     )
+    lines += _refused_launches(declaration)
+    return "\n".join(lines) + "\n"
+
+
+def _refused_launches(declaration: ApplicationEnvironment) -> list[str]:
+    lines: list[str] = []
     native_host = declaration.native_host
     defaulted = {profile["image"] for profile in declaration.profiles.values() if not profile["invoked"]}
     refusing = sorted({profile["image"] for profile in declaration.profiles.values()} - defaulted)
@@ -379,7 +391,7 @@ def render_installed_package(declaration: ApplicationEnvironment, settings_names
             f"{_list_in_words([f'`{image}`' for image in refusing])} accepts only the invocations its profiles "
             "list above and refuses every other, so it does not serve as a general interpreter.",
         ]
-    return "\n".join(lines) + "\n"
+    return lines
 
 
 def render_environment_reference(declaration: ApplicationEnvironment | None = None) -> str:

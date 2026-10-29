@@ -151,7 +151,10 @@ def _advertised_recipe_names_in_source() -> frozenset[str]:
     are what an operator is told to run next, so every one of them has to
     exist.
     """
-    source = Path(pipeline_cli.__file__).read_text(encoding="utf-8")
+    source = "\n".join(
+        path.read_text(encoding="utf-8")
+        for path in (Path(pipeline_cli.__file__), Path(pipeline_cli.__file__).with_name("authority_cli.py"))
+    )
     names: set[str] = set()
     for chunk in source.split('"next')[1:]:
         literal = chunk.split('"', 1)[0]

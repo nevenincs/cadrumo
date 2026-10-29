@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.edition_materialisation import materialise_edition
 from ..compiler.loader import load_modelo_directory
-from ..pipeline.cli import stage_isolated_edition
+from ..pipeline.published_edition_staging import stage_isolated_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -108,20 +108,7 @@ def find_unconsumed(
     under ``consumer_roots`` only consume. Findings are named relative to
     each root's ``src`` directory, so the package is part of the path.
     """
-    trees: dict[Path, tuple[Path, ast.Module]] = {}
-    unread: list[str] = []
-    for source_root in (*roots, *consumer_roots):
-        if not source_root.is_dir():
-            raise RuntimeError(f"unconsumed-export consumer root is unavailable: {source_root}")
-        for path in sorted(source_root.rglob("*.py")):
-            if not is_production_source(path, root=source_root):
-                continue
-            try:
-                trees[path] = (source_root, ast.parse(path.read_bytes(), filename=str(path)))
-            except (OSError, SyntaxError, UnicodeDecodeError) as error:
-                unread.append(f"{path}: {type(error).__name__}: {error}")
-    if unread:
-        raise RuntimeError(f"unconsumed-export scan unreadable for {len(unread)} file(s): {unread}")
+    trees = _parse_sources((*roots, *consumer_roots))
 
     consumed: set[tuple[str, str]] = set()
     for path, (source_root, tree) in trees.items():
@@ -137,6 +124,25 @@ def find_unconsumed(
             and (_audit_key(path, root), name) in unused
         ),
     )
+
+
+def _parse_sources(roots: tuple[Path, ...]) -> dict[Path, tuple[Path, ast.Module]]:
+    trees: dict[Path, tuple[Path, ast.Module]] = {}
+    unread: list[str] = []
+    for source_root in roots:
+        if not source_root.is_dir():
+            raise RuntimeError(f"unconsumed-export consumer root is unavailable: {source_root}")
+        for path in sorted(source_root.rglob("*.py")):
+            if not is_production_source(path, root=source_root):
+                continue
+            try:
+                trees[path] = (source_root, ast.parse(path.read_bytes(), filename=str(path)))
+            except (OSError, SyntaxError, UnicodeDecodeError) as error:
+                unread.append(f"{path}: {type(error).__name__}: {error}")
+    if unread:
+        raise RuntimeError(f"unconsumed-export scan unreadable for {len(unread)} file(s): {unread}")
+
+    return trees
 
 
 def run_gate(roots: tuple[Path, ...] = _SOURCE_ROOTS) -> UnconsumedExportVerdict:

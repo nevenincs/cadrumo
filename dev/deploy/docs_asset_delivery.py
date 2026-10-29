@@ -10,7 +10,7 @@ from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
-from dev.deploy.cloudflare_api import CloudflareAccount, _call
+from dev.deploy.cloudflare_api import CloudflareAccount, cloudflare_call
 from dev.deploy.docs_asset_manifest import (
     MANIFEST_NAME,
     PUBLIC_BUCKET,
@@ -112,7 +112,7 @@ def deploy_assets(account: CloudflareAccount, document: dict[str, Any], root: Pa
     manifest, sources = asset_layout(document)
     by_hash = {row["hash"]: sources[path] for path, row in manifest.items()}
     path = f"/accounts/{account.account_id}/workers/scripts/{script}"
-    session = _call(account, "POST", f"{path}/assets-upload-session", json={"manifest": manifest})
+    session = cloudflare_call(account, "POST", f"{path}/assets-upload-session", json={"manifest": manifest})
     completion = session["jwt"] if not session["buckets"] else None
     upload_account = CloudflareAccount(account.account_id, session["jwt"])
     for group in session["buckets"]:
@@ -130,7 +130,7 @@ def deploy_assets(account: CloudflareAccount, document: dict[str, Any], root: Pa
             if hashlib.md5(body, usedforsecurity=False).hexdigest() != digest:
                 raise ValueError(f"Static asset differs from manifest: {key}")
             files[digest] = (digest, base64.b64encode(body), content_type)
-        uploaded = _call(
+        uploaded = cloudflare_call(
             upload_account,
             "POST",
             f"/accounts/{account.account_id}/workers/assets/upload",
@@ -146,14 +146,16 @@ def deploy_assets(account: CloudflareAccount, document: dict[str, Any], root: Pa
         "bindings": [],
         "assets": {"jwt": completion, "config": delivery_config(document)},
     }
-    _call(account, "PUT", path, files={"metadata": (None, json.dumps(metadata), "application/json")})
-    _call(account, "POST", f"{path}/subdomain", json={"enabled": script == CANDIDATE_SCRIPT, "previews_enabled": False})
+    cloudflare_call(account, "PUT", path, files={"metadata": (None, json.dumps(metadata), "application/json")})
+    cloudflare_call(
+        account, "POST", f"{path}/subdomain", json={"enabled": script == CANDIDATE_SCRIPT, "previews_enabled": False}
+    )
     return active_version(account, script)
 
 
 def active_version(account: CloudflareAccount, script: str = STATIC_SCRIPT) -> str:
     """Read the single fully active version; refuse ambiguous deployments."""
-    response = _call(account, "GET", f"/accounts/{account.account_id}/workers/scripts/{script}/deployments")
+    response = cloudflare_call(account, "GET", f"/accounts/{account.account_id}/workers/scripts/{script}/deployments")
     deployments = response.get("deployments", [])
     if not deployments or len(deployments[0]["versions"]) != 1:
         raise ValueError("Expected one active documentation version")
@@ -165,7 +167,7 @@ def active_version(account: CloudflareAccount, script: str = STATIC_SCRIPT) -> s
 
 def restore_version(account: CloudflareAccount, version: str) -> None:
     """Restore the previous native asset version after failed public verification."""
-    _call(
+    cloudflare_call(
         account,
         "POST",
         f"/accounts/{account.account_id}/workers/scripts/{STATIC_SCRIPT}/deployments",

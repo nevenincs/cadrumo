@@ -7,7 +7,8 @@ from dataclasses import replace
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..compiler import fact_providers as provider_module
 from ..compiler.fact_providers import FACT_PROVIDER_REGISTRATIONS, compile_registered_fact_providers

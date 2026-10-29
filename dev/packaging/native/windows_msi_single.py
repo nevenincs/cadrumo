@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import json
 from pathlib import Path
+from typing import Literal, cast
 from xml.etree.ElementTree import Element, SubElement, tostring
 
 from defusedxml import ElementTree
@@ -12,7 +13,7 @@ from defusedxml import ElementTree
 from .hashing import digest
 from .identity import DistributionIdentity
 from .layout import load_layout
-from .windows_msi_identity import msi_identity, release_identity
+from .windows_msi_identity import MsiIdentity, msi_identity, release_identity
 from .windows_msi_paths import literal, source_path
 
 _NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
@@ -58,6 +59,34 @@ def source(
     package.attrib["Name"] = literal(f"{value.name} {value.version}")
     package.attrib["Scope"] = "perUserOrMachine"
     package.attrib["UpgradeStrategy"] = "none"
+    destination, shared_root, registration_feature = _merge_feature_roots(package, shared)
+    ownership = package.find("w:Property[@Id='CadrumoPackage']", _NS)
+    if ownership is None:
+        raise ValueError("Release feature has no immutable package ownership")
+    document = json.loads(ownership.attrib["Value"])
+    document.update(schema=2, role="application")
+    ownership.attrib["Value"] = json.dumps(document, separators=(",", ":"))
+    user_description, machine_description = _registration_descriptions(
+        shared, shared_root, destination, registration_feature, value, manager, service_resources
+    )
+    for scope, resources in (("User", user_description), ("Machine", machine_description)):
+        _property(package, "CadrumoRegistration" + scope, resources)
+    launch = package.find("w:Launch", _NS)
+    if launch is None:
+        raise ValueError("Release feature has no native installation gate")
+    launch.attrib["Condition"] = "1" if runner is not None else "0"
+    if runner is not None:
+        launch.attrib["Message"] = OWNER_GATE
+    _install_admission_actions(package, value, product, adapter, runner)
+    # ElementTree's generated ns0 prefix is a namespace serialization detail;
+    # WiX parses the same single Package and receives each payload member once.
+    content = tostring(root, encoding="utf-8", xml_declaration=True)
+    if not isinstance(content, bytes):
+        raise TypeError("Release WiX source serialization did not produce bytes")
+    return content
+
+
+def _merge_feature_roots(package: Element, shared: Element) -> tuple[Element, Element, Element]:
     _feature(package, "VersionFiles")
     registration_feature = _feature(shared, "SharedRegistration")
     package.append(registration_feature)
@@ -72,16 +101,81 @@ def source(
     for directory in shared.findall("w:StandardDirectory", _NS):
         if directory.find("w:Directory[@Id='INSTALL_ROOT']", _NS) is None:
             package.append(directory)
-    ownership = package.find("w:Property[@Id='CadrumoPackage']", _NS)
-    if ownership is None:
-        raise ValueError("Release feature has no immutable package ownership")
-    document = json.loads(ownership.attrib["Value"])
-    document.update(schema=2, role="application")
-    ownership.attrib["Value"] = json.dumps(document, separators=(",", ":"))
+    return destination, shared_root, registration_feature
+
+
+def _registration_descriptions(
+    shared: Element,
+    shared_root: Element,
+    destination: Element,
+    registration_feature: Element,
+    value: DistributionIdentity,
+    manager: str,
+    service_resources: list[Element],
+) -> tuple[dict[str, object], dict[str, object]]:
     description = shared.find("w:Property[@Id='CadrumoRegistration']", _NS)
     if description is None:
         raise ValueError("Release registration has no immutable resource inventory")
-    user_description = json.loads(description.attrib["Value"])
+    user_description = cast("dict[str, object]", json.loads(description.attrib["Value"]))
+    user_manager, machine_manager, service_guid = _install_machine_manager(
+        shared_root, destination, registration_feature, value, manager, service_resources
+    )
+    machine_description = copy.deepcopy(user_description)
+    machine_description["scope"] = "machine"
+    login_guids = _condition_user_login_components(shared_root)
+    machine_description["components"] = [
+        service_guid if component == user_manager.attrib["Guid"] else component
+        for component in cast("list[str]", machine_description["components"])
+        if component not in login_guids
+    ]
+    machine_description["registry"] = [
+        entry
+        for entry in cast("list[dict[str, str]]", machine_description["registry"])
+        if entry["component"] not in login_guids
+    ]
+    for registry in machine_description["registry"]:
+        if registry["component"] == user_manager.attrib["Guid"]:
+            registry["component"] = service_guid
+            registry["key"] = registry["key"].replace(user_manager.attrib["Id"], machine_manager.attrib["Id"])
+    machine_description["services"] = _machine_services(service_resources, service_guid, manager)
+    return user_description, machine_description
+
+
+def _machine_services(service_resources: list[Element], service_guid: str, manager: str) -> list[dict[str, str]]:
+    return [
+        {
+            "component": service_guid,
+            "name": service.attrib["Name"],
+            "binary": "[INSTALL_ROOT]" + manager,
+            "arguments": service.attrib["Arguments"],
+            "account": service.attrib["Account"],
+            "start": service.attrib["Start"],
+        }
+        for service in service_resources
+        if service.tag.rsplit("}", 1)[-1] == "ServiceInstall"
+    ]
+
+
+def _condition_user_login_components(shared_root: Element) -> set[str]:
+    login_guids: set[str] = set()
+    for component in shared_root.iter(_URI + "Component"):
+        if any(
+            entry.attrib["Key"] == "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+            for entry in component.findall("w:RegistryValue", _NS)
+        ):
+            component.attrib["Condition"] = "NOT ALLUSERS"
+            login_guids.add(component.attrib["Guid"])
+    return login_guids
+
+
+def _install_machine_manager(
+    shared_root: Element,
+    destination: Element,
+    registration_feature: Element,
+    value: DistributionIdentity,
+    manager: str,
+    service_resources: list[Element],
+) -> tuple[Element, Element, str]:
     managers = [
         component
         for component in shared_root.iter(_URI + "Component")
@@ -108,111 +202,18 @@ def source(
         machine_manager.append(resource)
     destination.append(machine_manager)
     _element(registration_feature, "ComponentRef", Id=machine_manager.attrib["Id"])
-    machine_description = copy.deepcopy(user_description)
-    machine_description["scope"] = "machine"
-    login_guids = set()
-    for component in shared_root.iter(_URI + "Component"):
-        if any(
-            entry.attrib["Key"] == "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
-            for entry in component.findall("w:RegistryValue", _NS)
-        ):
-            component.attrib["Condition"] = "NOT ALLUSERS"
-            login_guids.add(component.attrib["Guid"])
-    machine_description["components"] = [
-        service_guid if component == user_manager.attrib["Guid"] else component
-        for component in machine_description["components"]
-        if component not in login_guids
-    ]
-    machine_description["registry"] = [
-        entry for entry in machine_description["registry"] if entry["component"] not in login_guids
-    ]
-    for registry in machine_description["registry"]:
-        if registry["component"] == user_manager.attrib["Guid"]:
-            registry["component"] = service_guid
-            registry["key"] = registry["key"].replace(user_manager.attrib["Id"], machine_manager.attrib["Id"])
-    machine_description["services"] = [
-        {
-            "component": service_guid,
-            "name": service.attrib["Name"],
-            "binary": "[INSTALL_ROOT]" + manager,
-            "arguments": service.attrib["Arguments"],
-            "account": service.attrib["Account"],
-            "start": service.attrib["Start"],
-        }
-        for service in service_resources
-        if service.tag.rsplit("}", 1)[-1] == "ServiceInstall"
-    ]
-    for scope, resources in (("User", user_description), ("Machine", machine_description)):
-        _property(package, "CadrumoRegistration" + scope, resources)
-    launch = package.find("w:Launch", _NS)
-    if launch is None:
-        raise ValueError("Release feature has no native installation gate")
-    launch.attrib["Condition"] = "1" if runner is not None else "0"
-    if runner is not None:
-        launch.attrib["Message"] = OWNER_GATE
+    return user_manager, machine_manager, service_guid
+
+
+def _install_admission_actions(
+    package: Element, value: DistributionIdentity, product: MsiIdentity, adapter: Path | None, runner: Path | None
+) -> None:
     if adapter is not None:
         _element(package, "Binary", Id="CadrumoInstaller", SourceFile=source_path(adapter.resolve(strict=True)))
         sequence = _element(package, "InstallExecuteSequence")
         for scope in ("user", "machine"):
-            suffix = scope.title()
-            _property(
-                package,
-                "CadrumoAdmission" + suffix,
-                {
-                    "schema": 2,
-                    "scope": scope,
-                    "permitted_families": [product.upgrade_code],
-                    "conflicting_families": [
-                        msi_identity(value, old_scope, role).upgrade_code
-                        for old_scope in ("user", "machine")
-                        for role in ("version", "registration")
-                    ]
-                    + [value.upgrade_code],
-                },
-            )
-            condition = 'ALLUSERS = "1"' if scope == "machine" else "NOT ALLUSERS"
-            for kind in ("Owner", "Admission"):
-                if kind == "Owner" and runner is None:
-                    continue
-                entry = "CadrumoAuthenticateOwner" if kind == "Owner" else "CadrumoScopeAdmission"
-                _element(
-                    package,
-                    "CustomAction",
-                    Id=entry + suffix,
-                    BinaryRef="CadrumoInstaller",
-                    DllEntry=entry,
-                    Execute="deferred",
-                    Return="check",
-                    Impersonate="no" if scope == "machine" else "yes",
-                    HideTarget="yes",
-                )
-                _element(
-                    sequence,
-                    "Custom",
-                    Action=entry + suffix,
-                    After="CadrumoScopeAdmission" + suffix if kind == "Owner" else "InstallInitialize",
-                    Condition=condition if kind == "Owner" else f"({condition}) AND NOT REMOVE",
-                )
-        for kind in ("Admission", "Owner"):
-            if kind == "Owner" and runner is None:
-                continue
-            entry = "CadrumoPrepare" + kind
-            _element(
-                package,
-                "CustomAction",
-                Id=entry,
-                BinaryRef="CadrumoInstaller",
-                DllEntry=entry,
-                Execute="immediate",
-                Return="check",
-            )
-            _element(
-                sequence,
-                "Custom",
-                Action=entry,
-                Before="CadrumoPrepareAdmission" if kind == "Owner" else "InstallInitialize",
-                **({"Condition": "NOT REMOVE"} if kind == "Admission" else {}),
-            )
+            _scope_admission_actions(package, sequence, value, product, scope, runner)
+        _immediate_admission_actions(package, sequence, runner)
         if runner is not None:
             _property(
                 package,
@@ -233,9 +234,82 @@ def source(
             _element(package, "Property", Id="CADRUMO_MSI_OWNER", Secure="yes", Hidden="yes")
             _element(package, "Property", Id="CADRUMO_MSI_FEATURE", Secure="yes")
             _element(package, "Property", Id="INSTALL_ROOT", Secure="yes")
-    # ElementTree's generated ns0 prefix is a namespace serialization detail;
-    # WiX parses the same single Package and receives each payload member once.
-    content = tostring(root, encoding="utf-8", xml_declaration=True)
-    if not isinstance(content, bytes):
-        raise TypeError("Release WiX source serialization did not produce bytes")
-    return content
+
+
+def _scope_admission_actions(
+    package: Element,
+    sequence: Element,
+    value: DistributionIdentity,
+    product: MsiIdentity,
+    scope: Literal["user", "machine"],
+    runner: Path | None,
+) -> None:
+    suffix = scope.title()
+    _property(
+        package,
+        "CadrumoAdmission" + suffix,
+        {
+            "schema": 2,
+            "scope": scope,
+            "permitted_families": [product.upgrade_code],
+            "conflicting_families": _conflicting_families(value),
+        },
+    )
+    condition = _scope_condition(scope)
+    for kind in ("Owner", "Admission"):
+        if kind == "Owner" and runner is None:
+            continue
+        entry = "CadrumoAuthenticateOwner" if kind == "Owner" else "CadrumoScopeAdmission"
+        _element(
+            package,
+            "CustomAction",
+            Id=entry + suffix,
+            BinaryRef="CadrumoInstaller",
+            DllEntry=entry,
+            Execute="deferred",
+            Return="check",
+            Impersonate="no" if scope == "machine" else "yes",
+            HideTarget="yes",
+        )
+        _element(
+            sequence,
+            "Custom",
+            Action=entry + suffix,
+            After="CadrumoScopeAdmission" + suffix if kind == "Owner" else "InstallInitialize",
+            Condition=condition if kind == "Owner" else f"({condition}) AND NOT REMOVE",
+        )
+
+
+def _immediate_admission_actions(package: Element, sequence: Element, runner: Path | None) -> None:
+    for kind in ("Admission", "Owner"):
+        if kind == "Owner" and runner is None:
+            continue
+        entry = "CadrumoPrepare" + kind
+        _element(
+            package,
+            "CustomAction",
+            Id=entry,
+            BinaryRef="CadrumoInstaller",
+            DllEntry=entry,
+            Execute="immediate",
+            Return="check",
+        )
+        _element(
+            sequence,
+            "Custom",
+            Action=entry,
+            Before="CadrumoPrepareAdmission" if kind == "Owner" else "InstallInitialize",
+            **({"Condition": "NOT REMOVE"} if kind == "Admission" else {}),
+        )
+
+
+def _conflicting_families(value: DistributionIdentity) -> list[str]:
+    return [
+        msi_identity(value, old_scope, role).upgrade_code
+        for old_scope in ("user", "machine")
+        for role in ("version", "registration")
+    ] + [value.upgrade_code]
+
+
+def _scope_condition(scope: Literal["user", "machine"]) -> str:
+    return 'ALLUSERS = "1"' if scope == "machine" else "NOT ALLUSERS"

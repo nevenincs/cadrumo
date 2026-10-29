@@ -316,6 +316,13 @@ def _registry_identifier_rows(
     rows.append(
         (docs_chrome("docs.casilla.chrome.registry_section", language), f"<code>{escape(registry_section)}</code>")
     )
+    rows.extend(_registry_source_rows(record, language))
+    return rows
+
+
+def _registry_source_rows(record: CasillaSearchRecord, language: OutputLanguage) -> list[tuple[str, str]]:
+    """Render source and revision grounding in registry order after the identifiers."""
+    rows: list[tuple[str, str]] = []
     if record.source_refs:
         joined = " ".join(f"<code>{escape(ref)}</code>" for ref in record.source_refs)
         rows.append((docs_chrome("docs.casilla.chrome.sources", language), joined))

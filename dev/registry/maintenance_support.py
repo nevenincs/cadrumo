@@ -40,8 +40,9 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.m303_orden_constants import EXTRACTOR_VERSION
 from cadrumo.domain.calculations.registry.m303_orden_projection_models import M303AnnualOrdenGeneratedManifest
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ProjectionEndpointDeclaration
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource

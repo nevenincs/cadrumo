@@ -30,9 +30,9 @@ from cadrumo.domain.calculations.registry.binding_targets import casillas_by_bin
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
-    invoice_ledger_screen_bindings,
     resolve_ledger_iva_aggregation_binding_values,
 )
+from cadrumo.domain.calculations.registry.ledger_iva_screen_bindings import invoice_ledger_screen_bindings
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.flow import IvaFlowDirection

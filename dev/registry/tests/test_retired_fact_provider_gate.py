@@ -19,8 +19,8 @@ from cadrumo.domain.calculations.registry.facts.resolution import (
     resolve_governed_fact,
 )
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import DateAxis
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..compiler import fact_providers
 from ..compiler.authority import compile_validated_authority
@@ -29,7 +29,7 @@ from ..compiler.fact_validation import retired_fact_provider_closure_failures
 from ..compiler.loader import load_shared_catalogues
 from ..compiler.validator import RegistryValidator
 from ..pipeline.candidate_staging import stage_generated_export_candidate
-from ..pipeline.cli import supporting_modelos
+from ..pipeline.published_edition_staging import supporting_modelos
 from .profile_schema_support import committed_supported_filing_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

@@ -18,7 +18,7 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from dev.corpus.artifact_catalogue import (
     ArtifactDiagnosticKind,
     ArtifactDisposition,

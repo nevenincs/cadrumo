@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from dev.packaging.native import product
+from dev.packaging.native import product, product_snapshot
 from dev.source_tree import normalised_content, repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -44,7 +44,7 @@ def _product_tree(root: Path) -> tuple[Path, Path]:
     unrelated.write_text("export const value = 1;\n", encoding="utf-8")
 
     inputs = root.parent / "inputs-product.txt"
-    roots = product._product_source_roots(root)
+    roots = product_snapshot._product_source_roots(root)
     enrolled = (*repository_files(root, under=roots), "pyproject.toml", "uv.lock")
     inputs.write_text("\n".join(str(root / name) for name in enrolled) + "\n", encoding="utf-8")
     return inputs, package_file
@@ -65,8 +65,8 @@ def _capture(
         if after_snapshot is not None:
             after_snapshot(root_arg)
 
-    monkeypatch.setattr(product, "snapshot", capture)
-    product._capture_product_source_snapshot(root, destination, inputs)
+    monkeypatch.setattr(product_snapshot, "snapshot", capture)
+    product_snapshot.capture_product_source_snapshot(root, destination, inputs)
     return destination
 
 
@@ -98,10 +98,10 @@ def test_product_source_snapshot_rejects_content_changed_during_copy(
         snapshot(root_arg, files, destination)
         package_file.write_text(original, encoding="utf-8")
 
-    monkeypatch.setattr(product, "snapshot", restore_after_capture)
+    monkeypatch.setattr(product_snapshot, "snapshot", restore_after_capture)
 
     with pytest.raises(RuntimeError, match="Enrolled product source content changed"):
-        product._capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
+        product_snapshot.capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
 
     # The attempted snapshot is intentionally discarded by the caller on refusal.
     assert package_file.read_text(encoding="utf-8") == original
@@ -118,10 +118,10 @@ def test_product_source_snapshot_checks_explicit_root_uv_lock(tmp_path: Path, mo
         snapshot(root_arg, files, destination)
         lock.write_text(original, encoding="utf-8")
 
-    monkeypatch.setattr(product, "snapshot", change_and_restore)
+    monkeypatch.setattr(product_snapshot, "snapshot", change_and_restore)
 
     with pytest.raises(RuntimeError, match="Enrolled product source content changed"):
-        product._capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
+        product_snapshot.capture_product_source_snapshot(root, tmp_path / "snapshot", inputs)
 
 
 def test_product_source_snapshot_rejects_new_module_missing_from_cmake_census(
@@ -167,7 +167,7 @@ def test_product_snapshot_preserves_unchanged_files_and_removes_deleted_members(
     original_mtime = stable.stat().st_mtime_ns
     removed.unlink()
 
-    product._capture_product_source_snapshot(root, captured, inputs)
+    product_snapshot.capture_product_source_snapshot(root, captured, inputs)
 
     assert stable.stat().st_mtime_ns == original_mtime
     assert not (captured / removed.relative_to(root)).exists()

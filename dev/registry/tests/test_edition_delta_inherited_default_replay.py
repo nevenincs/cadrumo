@@ -8,7 +8,7 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError as MigrationRefusedError
 
 from ..edition_delta_manifest_writer import _replace_authored_overrides
-from ..edition_delta_row_delta_existing import normalize_authored_override_removals, preserve_inherited_rows
+from ..edition_delta_row_delta_preserving import normalize_authored_override_removals, preserve_inherited_rows
 from ..edition_delta_row_delta_reconstruction import _simulate_storage_output
 from ..edition_delta_source import _Defaults, _EditionSource, _EditionWork, _effective, _Placed
 from ..edition_delta_types import EditionPlan, LiftCounts, PredecessorBasis

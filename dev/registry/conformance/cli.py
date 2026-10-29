@@ -91,11 +91,10 @@ from .manager import (
     ConformanceReport,
     build_coverage_report,
     load_conformance_report,
-    render_coverage,
-    render_report,
-    vacuity_warning,
 )
-from .stamp import StampableReviewStatus, StampError, bundled_registry_root, stamp_revision
+from .render import render_coverage, render_report, vacuity_warning
+from .stamp import StampableReviewStatus, bundled_registry_root, stamp_revision
+from .stamp_toml import StampError
 
 if TYPE_CHECKING:
     from .closure import RegistryClosureReport

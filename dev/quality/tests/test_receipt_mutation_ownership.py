@@ -29,6 +29,7 @@ _MCP_ROOT = REPO_ROOT / "src/cadrumo_mcp"
 """``src/cadrumo_mcp``: the separately shipped MCP service, which owns no receipt mutation."""
 
 _RECEIPT = "adapters/persistence/storage/custody/acceleration_receipt.py"
+_KEYCHAIN = "adapters/persistence/storage/custody/acceleration_keychain.py"
 _ADAPTER = "adapters/persistence/storage/profile_login_session.py"
 _PORT = "application/user_profile/login_session_port.py"
 _LOGIN = "application/user_profile/login_session.py"
@@ -42,13 +43,13 @@ _TAXONOMY = "core/storage_taxonomy_locations.py"
 _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
     # The receipt module's own writers and the keychain material they hold.
     "_write_acceleration_receipt": frozenset({_RECEIPT}),
-    "_store_acceleration_secret": frozenset({_RECEIPT}),
-    "_delete_acceleration_secret": frozenset({_RECEIPT}),
-    "_delete_keychain_entry": frozenset({_RECEIPT}),
+    "store_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
+    "delete_acceleration_secret": frozenset({_RECEIPT, _KEYCHAIN}),
+    "_delete_keychain_entry": frozenset({_KEYCHAIN}),
     "_delete_profile_session": frozenset({_RECEIPT}),
     "_delete_refused_receipt": frozenset({_RECEIPT}),
     "_clear_captured_receipt": frozenset({_RECEIPT}),
-    "PROFILE_SESSION_KEYCHAIN_SERVICE": frozenset({_RECEIPT}),
+    "PROFILE_SESSION_KEYCHAIN_SERVICE": frozenset({_KEYCHAIN}),
     # Its public mutators, reached only through the storage adapter.
     "mint_profile_session": frozenset({_RECEIPT, _ADAPTER}),
     "delete_profile_session": frozenset({_RECEIPT, _ADAPTER}),
@@ -68,7 +69,7 @@ _RECEIPT_WRITERS: Mapping[str, frozenset[str]] = {
 """Each name that mutates a receipt, and the only modules that may name it."""
 
 _RECEIPT_LITERALS: Mapping[str, frozenset[str]] = {
-    "profile-session:v2": frozenset({_RECEIPT}),
+    "profile-session:v2": frozenset({_KEYCHAIN}),
     "session.v2.json": frozenset({_RECEIPT, _TAXONOMY}),
     "session.v2.retirement.json": frozenset({_RECEIPT, _TAXONOMY}),
 }

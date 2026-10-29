@@ -20,7 +20,7 @@ from collections.abc import Iterator, Mapping, Sequence
 
 from .import_authority import repository_python_files
 from .import_check_models import Authority, Finding, SourceModule
-from .import_dynamic_aliases import DYNAMIC_TARGET_KEYWORDS, dynamic_aliases
+from .import_dynamic_aliases import DYNAMIC_TARGET_KEYWORDS, DynamicLoaderKind, dynamic_aliases
 from .import_module_syntax import matches_any_module
 from .import_target_evaluation import TargetEvaluationContext
 
@@ -75,23 +75,28 @@ def _reached_targets(module: SourceModule) -> Iterator[tuple[int, str]]:
     context: TargetEvaluationContext | None = None
     for node in ast.walk(module.tree):
         if isinstance(node, ast.Import):
-            for alias in node.names:
-                yield node.lineno, alias.name
-        elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module is not None:
-            yield node.lineno, node.module
+            yield from ((node.lineno, alias.name) for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            yield from _absolute_import(node)
         elif isinstance(node, ast.Call):
             kind = aliases.loader_kind(node)
             if kind is None:
                 continue
-            target = (
-                node.args[0]
-                if node.args
-                else next(
-                    (keyword.value for keyword in node.keywords if keyword.arg == DYNAMIC_TARGET_KEYWORDS[kind]),
-                    None,
-                )
-            )
+            target = _dynamic_target(node, kind)
             if context is None:
                 context = TargetEvaluationContext(module.tree, module.name)
             for value in sorted(context.values_for(target, node.lineno) or ()):
                 yield node.lineno, value
+
+
+def _dynamic_target(node: ast.Call, kind: DynamicLoaderKind) -> ast.expr | None:
+    return (
+        node.args[0]
+        if node.args
+        else next((keyword.value for keyword in node.keywords if keyword.arg == DYNAMIC_TARGET_KEYWORDS[kind]), None)
+    )
+
+
+def _absolute_import(node: ast.ImportFrom) -> Iterator[tuple[int, str]]:
+    if node.level == 0 and node.module is not None:
+        yield node.lineno, node.module

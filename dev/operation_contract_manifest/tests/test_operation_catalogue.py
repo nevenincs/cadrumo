@@ -613,9 +613,9 @@ def _outbound_adapter_imports(tree: ast.Module) -> tuple[str, ...]:
 @pytest.mark.parametrize(
     "statement",
     (
-        "import cadrumo.adapters.outbound.components.client as role",
-        "from cadrumo.adapters.outbound.components.client import ComponentsClient",
-        "from ....adapters.outbound.components import client",
+        "import cadrumo.adapters.outbound.fx.client as role",
+        "from cadrumo.adapters.outbound.google.client import GoogleClient",
+        "from ....adapters.outbound.llm import client",
         "from ....adapters import outbound as transport",
     ),
 )

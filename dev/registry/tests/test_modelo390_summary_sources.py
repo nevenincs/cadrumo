@@ -21,7 +21,8 @@ from cadrumo.domain.filing.schema import ModeloDraft, registry_schema_version
 from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
-from ..workbook_demo import DemoCase, demonstration_producer, demonstration_snapshot
+from ..workbook_demo import demonstration_producer, demonstration_snapshot
+from ..workbook_demo_cases import DemoCase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

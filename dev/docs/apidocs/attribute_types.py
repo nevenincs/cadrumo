@@ -114,6 +114,11 @@ def render_signature_constraints(
         object_annotations[parameter.name] = rendered[0]
         constraints.append((parameter.name, rendered[1]))
 
+    _append_constraints(lines, constraints)
+
+
+def _append_constraints(lines: list[str], constraints: list[tuple[str, str]]) -> None:
+    """Append separated constraint notes after autodoc has normalized signature types."""
     if constraints:
         if lines and lines[-1].strip():
             lines.append("")

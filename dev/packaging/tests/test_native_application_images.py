@@ -11,7 +11,7 @@ from typing import Any
 import pytest
 
 from dev.packaging.command_execution import CommandResult
-from dev.packaging.native.assemble import image_artifact, named_application_images, stage_application_images
+from dev.packaging.native.assembly_images import image_artifact, named_application_images, stage_application_images
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.layout import application_images, desktop_image, load_layout
 from dev.packaging.native.platforms.windows_verify import verify_application_images

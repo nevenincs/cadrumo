@@ -16,7 +16,7 @@ import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from .caller_owned_root import consumer_environment
 from .proof_support import package_identity
@@ -120,21 +120,27 @@ def main() -> None:
             report["samples"].append({"package": name, "sample": sample + 1, "measurements": observation})
             arguments.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
             print(json.dumps(report["samples"][-1]), flush=True)
-    report["process_medians_seconds"] = {
-        name: {
-            scenario: statistics.median(
-                sample["measurements"][scenario]["process_seconds"]
-                for sample in report["samples"]
-                if sample["package"] == name
-            )
-            for scenario in report["samples"][0]["measurements"]
-        }
-        for name in packages
-    }
+    report["process_medians_seconds"] = _process_medians(packages, report["samples"])
     for name, package in packages.items():
         if package_identity(package) != identities[name]:
             raise RuntimeError(f"{name} changed during measurement")
     arguments.output.write_text(json.dumps(report, indent=2), encoding="utf-8")
+
+
+def _process_medians(packages: dict[str, Path], samples: list[dict[str, object]]) -> dict[str, dict[str, float]]:
+    """Summarize elapsed process times for each package and scenario."""
+    first = cast(dict[str, dict[str, object]], samples[0]["measurements"])
+    return {
+        name: {
+            scenario: statistics.median(
+                cast(float, cast(dict[str, dict[str, object]], sample["measurements"])[scenario]["process_seconds"])
+                for sample in samples
+                if sample["package"] == name
+            )
+            for scenario in first
+        }
+        for name in packages
+    }
 
 
 if __name__ == "__main__":

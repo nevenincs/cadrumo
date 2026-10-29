@@ -408,11 +408,7 @@ def _validate_composite_segment(
                 width=width,
             )
             continue
-        if (
-            _COMPOSITE_CURRENCY_RE.fullmatch(sentence)
-            or _COMPOSITE_SIGNED_SUM_RE.fullmatch(sentence)
-            or sentence == _COMPOSITE_PERCEPTOR_SIGNED_SUM
-        ):
+        if _known_composite_sentence(sentence):
             continue
         described = (
             _COMPOSITE_UNSIGNED_MAGNITUDE_RE.fullmatch(sentence)
@@ -423,6 +419,14 @@ def _validate_composite_segment(
         )
         _require_descriptive_composite_prose(sentence if described is None else described.group("rest") or "")
     return stated
+
+
+def _known_composite_sentence(sentence: str) -> bool:
+    return bool(
+        _COMPOSITE_CURRENCY_RE.fullmatch(sentence)
+        or _COMPOSITE_SIGNED_SUM_RE.fullmatch(sentence)
+        or sentence == _COMPOSITE_PERCEPTOR_SIGNED_SUM
+    )
 
 
 def _composite_sentences(segment: str | None) -> tuple[str, ...]:

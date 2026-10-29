@@ -47,17 +47,16 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.installed_client import open_installed_client
 
+from .. import sandbox as sequence_sandbox_module
 from ..errors import SequenceExecutionError
 from ..parser import parse_sequence
 from ..runner import (
-    SANDBOX_PROFILE_ID,
-    SANDBOX_REPLACEMENT_PROFILE_ID,
     SequenceTranscript,
     execute_page_sequences,
     execute_sequence,
-    sequence_sandbox,
 )
 from ..runtime_fixture import SANDBOX_INSTANT
+from ..sandbox import SANDBOX_PROFILE_ID, SANDBOX_REPLACEMENT_PROFILE_ID, sequence_sandbox
 from ..schema import CommandProgram, FrameKind, ParsedSequence
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -337,24 +336,23 @@ def test_delete_preserves_the_authenticated_replacement_selection(
 @pytest.mark.parametrize("lifetime_change", ["root_changed", "template_removed"])
 def test_sandbox_template_respects_temporary_root_lifetime(tmp_path: Path, lifetime_change: str) -> None:
     """Canonical provisioning owns both initial and replacement cached state."""
-    from .. import runner as sequence_runner
 
     authority_root = load_settings().cadrumo_authority_root
     first_root = tmp_path / "first-lifetime"
     second_root = tmp_path / "second-lifetime" if lifetime_change == "root_changed" else first_root
     with derived_storage_settings(first_root), override_settings(cadrumo_authority_root=authority_root):
-        first = sequence_runner._sandbox_template()
+        first = sequence_sandbox_module._sandbox_template()
         assert first.is_relative_to(first_root.resolve())
-        assert sequence_runner._sandbox_template() == first
+        assert sequence_sandbox_module._sandbox_template() == first
     if lifetime_change == "template_removed":
         assert first.resolve(strict=True).is_relative_to(tmp_path.resolve(strict=True))
         shutil.rmtree(first)
     with derived_storage_settings(second_root), override_settings(cadrumo_authority_root=authority_root):
-        second = sequence_runner._sandbox_template()
+        second = sequence_sandbox_module._sandbox_template()
         assert second != first
         assert second.is_relative_to(second_root.resolve())
         assert (second / "cadrumo-storage" / "buckets" / SANDBOX_PROFILE_ID).is_dir()
-        assert sequence_runner._sandbox_template() == second
+        assert sequence_sandbox_module._sandbox_template() == second
 
 
 @pytest.mark.parametrize("attempt_other_login", [False, True])
@@ -909,7 +907,7 @@ class TestAmbientEnvNeutralisation:
         survives, and everything is restored verbatim on exit."""
         import os
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         with (
             scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R"),
@@ -946,9 +944,9 @@ class TestAmbientEnvNeutralisation:
         """
         import os
 
-        from cadrumo.application.provisioning_browser import probe_playwright_browser
+        from cadrumo.application.browser_location import probe_playwright_browser
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         original_path = os.environ.get("PATH")
         with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
@@ -996,7 +994,7 @@ class TestAmbientEnvNeutralisation:
         import keyring
         import keyring.core
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         host_backend = keyring.core._keyring_backend
         with sequence_sandbox(sequence_id="credential-vault-probe", sandbox_root=tmp_path / "scope"):
@@ -1057,7 +1055,7 @@ class TestAmbientEnvNeutralisation:
 
         from cadrumo.tests.env_loader import bridge_env_file_into_environ
 
-        from ..runner import sequence_sandbox
+        from ..sandbox import sequence_sandbox
 
         operator_marker = "fake-operator-dni-77777777H"
         env_var_name = "CADRUMO_CLAVE_MOVIL_DNI_NIE"

@@ -26,6 +26,9 @@ def test_assembly_backend_currency_ignores_verification_siblings(tmp_path: Path,
     verifier = platform / f"{backend}_verify.py"
     producer.write_text("assembly producer one")
     verifier.write_text("verification one")
+    if backend != "windows":
+        for name in ("posix", "posix_assembly", "posix_images"):
+            (platform / f"{name}.py").write_text(f"{name} helper", encoding="utf-8")
     script = tmp_path / "inputs.cmake"
     listing = tmp_path / "inputs.txt"
     script.write_text(
@@ -44,6 +47,36 @@ def test_assembly_backend_currency_ignores_verification_siblings(tmp_path: Path,
     assert inventory(inputs) == baseline
     producer.write_text("assembly producer two")
     assert inventory(inputs) != baseline
+
+
+@pytest.mark.parametrize("backend", ["linux", "macos"])
+def test_posix_assembly_helpers_change_the_backend_identity(tmp_path: Path, backend: str) -> None:
+    platform = tmp_path / "dev/packaging/native/platforms"
+    platform.mkdir(parents=True)
+    names = (backend, "posix", "posix_assembly", "posix_images")
+    for name in names:
+        (platform / f"{name}.py").write_text(f"{name} original\n", encoding="utf-8")
+    script = tmp_path / "inputs.cmake"
+    listing = tmp_path / "inputs.txt"
+    script.write_text(
+        f'include("{(REPO_ROOT / "native/cmake/PackageInputs.cmake").as_posix()}")\n'
+        f'cadrumo_assembly_backend_inputs(inputs "{tmp_path.as_posix()}" "{backend}")\n'
+        'list(JOIN inputs "\\n" contents)\n'
+        f'file(WRITE "{listing.as_posix()}" "${{contents}}\\n")\n',
+        encoding="utf-8",
+    )
+    cmake = shutil.which("cmake")
+    assert cmake is not None
+    result = run_command([cmake, "-P", str(script)], cwd=tmp_path)
+    assert result.returncode == 0, result.stderr
+    inputs = listing.read_text(encoding="utf-8").splitlines()
+    assert {*map(Path, inputs)} == {platform / f"{name}.py" for name in names}
+    baseline = inventory(inputs)
+    for name in ("posix_assembly", "posix_images"):
+        path = platform / f"{name}.py"
+        path.write_text(f"{name} changed\n", encoding="utf-8")
+        assert inventory(inputs) != baseline
+        path.write_text(f"{name} original\n", encoding="utf-8")
 
 
 def test_assembly_consumes_payload_and_provenance_without_build_scratch(tmp_path: Path) -> None:
@@ -121,8 +154,10 @@ def test_imported_posix_helper_is_enrolled_and_changes_cache_identity(tmp_path: 
     platform.mkdir(parents=True)
     adapter = platform / "linux.py"
     shared = platform / "posix.py"
+    downloader = platform / "posix_sdk_download.py"
     adapter.write_text("from . import posix\n", encoding="utf-8")
     shared.write_text("selected acquisition checks\n", encoding="utf-8")
+    downloader.write_text("admitted download checks\n", encoding="utf-8")
     ignored = helper_root / "tests/test_fixture.py"
     ignored.parent.mkdir()
     ignored.write_text("not a builder input\n", encoding="utf-8")
@@ -142,11 +177,14 @@ def test_imported_posix_helper_is_enrolled_and_changes_cache_identity(tmp_path: 
     result = run_command([cmake, "-S", str(tmp_path), "-B", str(build)], cwd=tmp_path)
     assert result.returncode == 0, result.stderr
     inputs = build / "inputs.txt"
-    assert {*map(Path, inputs.read_text(encoding="utf-8").splitlines())} == {adapter, shared}
+    assert {*map(Path, inputs.read_text(encoding="utf-8").splitlines())} == {adapter, shared, downloader}
     baseline = fingerprint(inputs)
     unrelated.write_text("changed assembly logic\n", encoding="utf-8")
     assert fingerprint(inputs) == baseline
     shared.write_text("changed decoder or redirect admission\n", encoding="utf-8")
+    assert fingerprint(inputs) != baseline
+    shared.write_text("selected acquisition checks\n", encoding="utf-8")
+    downloader.write_text("changed download admission\n", encoding="utf-8")
     assert fingerprint(inputs) != baseline
 
 

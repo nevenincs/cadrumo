@@ -30,8 +30,8 @@ from cadrumo_runtime.host.frontend.tui.secret.runtime_login_session import (
 )
 from dev._paths import REPO_ROOT
 
-from ..manager import _public_type_aliases
 from ..rendering import TypeHintsFormatter, format_type_hint
+from ..type_aliases import public_type_aliases
 from ._sphinx_probe import run_sphinx_probe
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -194,7 +194,7 @@ def _build_type_alias_and_regex_probe(tmp_path: Path) -> None:
     docs.mkdir()
     alias_module = "cadrumo_client.transport.automation_decision"
     alias_source = REPO_ROOT / "src" / "cadrumo_client" / "transport" / "automation_decision.py"
-    alias_target = "\n".join(_public_type_aliases(alias_module, alias_source))
+    alias_target = "\n".join(public_type_aliases(alias_module, alias_source))
     assert ".. py:type:: AutomationDecision" in alias_target
     unresolved_reference = format_type_hint("Annotated[MissingFirstParty, Field(pattern='^[A-Z]+$')]")
     assert unresolved_reference is not None

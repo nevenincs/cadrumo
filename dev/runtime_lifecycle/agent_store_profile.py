@@ -17,9 +17,10 @@ import shutil
 import statistics
 import sys
 import time
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from threading import Event, Thread
-from typing import Any
+from typing import Any, cast
 
 import psutil
 
@@ -73,11 +74,10 @@ def _sample_resources(stopped: Event, observations: list[dict[str, Any]], starte
         stopped.wait(_SAMPLE_INTERVAL_SECONDS)
 
 
-def _measure(
-    package: Path, root: Path, artifact: Path, verb: str, spy: str, spy_program: Path | None
-) -> dict[str, Any]:
-    environment = consumer_environment(root, root / "secrets")
-    environment[HOSTED_ROOT_VARIABLE] = str(root / "agent")
+def _measurement_command(
+    package: Path, artifact: Path, verb: str, spy: str, spy_program: Path | None
+) -> tuple[Path, list[str], Path | None]:
+    """Build the package invocation and optional profiler wrapper."""
     program = package / "bin" / "cadrumo-agent.exe"
     arguments = ["-m", "cadrumo_agent.cli.main", verb]
     trace: Path | None = None
@@ -98,6 +98,15 @@ def _measure(
             *arguments,
         ]
         program = spy_program
+    return program, arguments, trace
+
+
+def _measure(
+    package: Path, root: Path, artifact: Path, verb: str, spy: str, spy_program: Path | None
+) -> dict[str, Any]:
+    environment = consumer_environment(root, root / "secrets")
+    environment[HOSTED_ROOT_VARIABLE] = str(root / "agent")
+    program, arguments, trace = _measurement_command(package, artifact, verb, spy, spy_program)
     observations: list[dict[str, Any]] = []
     stopped = Event()
     started = time.perf_counter()
@@ -121,16 +130,7 @@ def _measure(
     require(not sampler.is_alive(), "resource sampler did not stop")
     artifact.with_suffix(".stdout.txt").write_bytes(result.standard_output)
     artifact.with_suffix(".resources.json").write_text(json.dumps(observations, indent=2) + "\n", encoding="utf-8")
-    agent = [row for row in observations if row["name"].casefold() == "cadrumo-agent.exe"]
-    summary: dict[str, Any] = {
-        "wall_seconds": elapsed,
-        "exit_code": result.status,
-        "spy": spy,
-        "sampled_peak_handles": max((row["handles"] for row in agent), default=None),
-        "sampled_peak_threads": max((row["threads"] for row in agent), default=None),
-        "last_observed_io": agent[-1]["io"] if agent else None,
-        "last_observed_cpu": agent[-1]["cpu"] if agent else None,
-    }
+    summary = _resource_summary(observations, elapsed, result.status, spy)
     if spy == "none" and result.status == 0:
         response = json.loads(result.standard_output)
         summary["reported_work_seconds"] = response.get("duration_seconds")
@@ -139,6 +139,22 @@ def _measure(
     if trace is not None:
         require(trace.is_file() and trace.stat().st_size > 0, "py-spy produced no trace")
     return summary
+
+
+def _resource_summary(
+    observations: Sequence[Mapping[str, object]], elapsed: float, status: int | None, spy: str
+) -> dict[str, object]:
+    """Summarize the sampled child counters without retaining new observations."""
+    agent = [row for row in observations if cast(str, row["name"]).casefold() == "cadrumo-agent.exe"]
+    return {
+        "wall_seconds": elapsed,
+        "exit_code": status,
+        "spy": spy,
+        "sampled_peak_handles": max((cast(int, row["handles"]) for row in agent), default=None),
+        "sampled_peak_threads": max((cast(int, row["threads"]) for row in agent), default=None),
+        "last_observed_io": agent[-1]["io"] if agent else None,
+        "last_observed_cpu": agent[-1]["cpu"] if agent else None,
+    }
 
 
 def main() -> None:

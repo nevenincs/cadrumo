@@ -14,9 +14,11 @@ from cadrumo.application.calculations.m303_regimen_simplificado import (
 )
 from cadrumo.application.filing.producer_snapshot import (
     Modelo222ProfileFacts,
-    Modelo296ProfileFacts,
 )
 from cadrumo.application.filing.producer_snapshot_m200 import Modelo200ProfileFacts
+from cadrumo.application.filing.producer_snapshot_m296 import (
+    Modelo296ProfileFacts,
+)
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -27,7 +29,7 @@ from cadrumo.domain.iva.regimen_simplificado_rows import ActividadNoAgricolaSimp
 from ..compiler.loader import load_modelo_directory, load_shared_catalogues, modelo_fact_scope
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 from ..conformance.registry_schema_support import committed_modelo
-from ..edition_export_scenarios import (
+from ..edition_export_periods import (
     M123_SCENARIO_PERIODS,
     M200_SCENARIO_PERIODS,
     M222_SCENARIO_PERIODS,
@@ -35,6 +37,8 @@ from ..edition_export_scenarios import (
     M308_SCENARIO_PERIODS,
     M309_SCENARIO_PERIODS,
     M604_SCENARIO_PERIODS,
+)
+from ..edition_export_scenarios import (
     edition_export_scenarios,
     supported_scenario_periods,
 )

@@ -180,83 +180,10 @@ def ingest_income_fixture(
     invoice_ids: list[str] = []
     issued_pairs: list[LinkedLedgerPair] = []
     for issued in income_items:
-        income_tx = command_result(
-            cli.run(
-                (
-                    "app",
-                    "ledger",
-                    "add",
-                    "--date",
-                    issued.transaction_date.isoformat(),
-                    "--amount",
-                    _money(issued.net_receipt),
-                    "--direction",
-                    "INCOMING",
-                    "--description",
-                    f"Synthetic income {issued.period}",
-                    "--classification",
-                    "BUSINESS",
-                    "--taxable-base",
-                    _money(issued.taxable_base),
-                    "--iva-rate",
-                    str(issued.iva_rate),
-                    "--iva-amount",
-                    _money(issued.iva),
-                    "--iva-category",
-                    "domestic_general",
-                    "--irpf-category",
-                    "actividad_economica",
-                    "--source-jurisdiction",
-                    "ES",
-                    "--idempotency-key",
-                    issued.transaction_id,
-                )
-            )
-        )
-        income_invoice = command_result(
-            cli.run(
-                (
-                    "app",
-                    "ledger",
-                    "invoice",
-                    "add",
-                    "--kind",
-                    "issued",
-                    "--counterparty-name",
-                    "Synthetic Client SL",
-                    "--counterparty-nif",
-                    _CLIENT_NIF,
-                    "--invoice-number",
-                    issued.invoice_id.upper(),
-                    "--invoice-date",
-                    issued.invoice_date.isoformat(),
-                    "--taxable-base",
-                    _money(issued.taxable_base),
-                    "--iva-rate",
-                    "21",
-                    "--country-code",
-                    "ES",
-                    "--retention-rate",
-                    str(issued.withholding_rate),
-                    "--retention-amount",
-                    _money(issued.withholding),
-                    "--iva-category",
-                    "domestic_general",
-                )
-            )
-        )
-        income_tx_id = str(income_tx["transaction_id"])
-        income_invoice_id = str(income_invoice["invoice_id"])
-        cli.run(("app", "ledger", "link", income_tx_id, "--invoice-id", income_invoice_id))
-        transaction_ids.append(income_tx_id)
-        invoice_ids.append(income_invoice_id)
-        issued_pairs.append(
-            LinkedLedgerPair(
-                fixture_invoice_id=issued.invoice_id,
-                transaction_id=income_tx_id,
-                invoice_id=income_invoice_id,
-            )
-        )
+        pair = _ingest_issued_invoice(cli, issued)
+        transaction_ids.append(pair.transaction_id)
+        invoice_ids.append(pair.invoice_id)
+        issued_pairs.append(pair)
 
     for expense in expense_items:
         expense_tx = command_result(
@@ -329,6 +256,83 @@ def ingest_income_fixture(
         transaction_ids=tuple(transaction_ids),
         invoice_ids=tuple(invoice_ids),
         issued_pairs=tuple(issued_pairs),
+    )
+
+
+def _ingest_issued_invoice(cli: InstalledCli, issued: IssuedInvoice) -> LinkedLedgerPair:
+    """Capture and link one issued invoice through the installed CLI in command order."""
+    income_tx = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                issued.transaction_date.isoformat(),
+                "--amount",
+                _money(issued.net_receipt),
+                "--direction",
+                "INCOMING",
+                "--description",
+                f"Synthetic income {issued.period}",
+                "--classification",
+                "BUSINESS",
+                "--taxable-base",
+                _money(issued.taxable_base),
+                "--iva-rate",
+                str(issued.iva_rate),
+                "--iva-amount",
+                _money(issued.iva),
+                "--iva-category",
+                "domestic_general",
+                "--irpf-category",
+                "actividad_economica",
+                "--source-jurisdiction",
+                "ES",
+                "--idempotency-key",
+                issued.transaction_id,
+            )
+        )
+    )
+    income_invoice = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "invoice",
+                "add",
+                "--kind",
+                "issued",
+                "--counterparty-name",
+                "Synthetic Client SL",
+                "--counterparty-nif",
+                _CLIENT_NIF,
+                "--invoice-number",
+                issued.invoice_id.upper(),
+                "--invoice-date",
+                issued.invoice_date.isoformat(),
+                "--taxable-base",
+                _money(issued.taxable_base),
+                "--iva-rate",
+                "21",
+                "--country-code",
+                "ES",
+                "--retention-rate",
+                str(issued.withholding_rate),
+                "--retention-amount",
+                _money(issued.withholding),
+                "--iva-category",
+                "domestic_general",
+            )
+        )
+    )
+    income_tx_id = str(income_tx["transaction_id"])
+    income_invoice_id = str(income_invoice["invoice_id"])
+    cli.run(("app", "ledger", "link", income_tx_id, "--invoice-id", income_invoice_id))
+    return LinkedLedgerPair(
+        fixture_invoice_id=issued.invoice_id,
+        transaction_id=income_tx_id,
+        invoice_id=income_invoice_id,
     )
 
 

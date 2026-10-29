@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
 
 from ..docs_site_build import _write_apex_sitemap, indexed_roots
-from ..docs_site_languages import _language_site_url, _write_language_entry, localized_languages
+from ..docs_site_languages import language_site_url, localized_languages, write_language_entry
 from ..docs_site_preflight import _require_search_index, _validate_built_site, _validate_language_roots
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
@@ -202,7 +202,7 @@ def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, page
         root.mkdir(parents=True)
         (root / "index.html").write_text("<html lang='x'><body>root</body></html>", encoding="utf-8")
         (root / "404.html").write_text("<html lang='x'><body>not found</body></html>", encoding="utf-8")
-        canonical_root = f"{_language_site_url(language)}/"
+        canonical_root = f"{language_site_url(language)}/"
         (root / "sitemap.xml").write_text(
             '<?xml version="1.0" encoding="UTF-8"?>\n'
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -210,7 +210,7 @@ def test_the_whole_site_is_refused_on_one_record_free_index(tmp_path: Path, page
             "</urlset>\n",
             encoding="utf-8",
         )
-    _write_language_entry(html_root)
+    write_language_entry(html_root)
     _write_apex_sitemap(html_root)
     (html_root / "404.html").write_text("<html lang='en'><body>not found</body></html>", encoding="utf-8")
 

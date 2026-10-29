@@ -6,6 +6,7 @@ import hashlib
 import json
 import struct
 import zipfile
+from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
 
 from dev._paths import UTF_8
@@ -86,190 +87,13 @@ def _launcher_stub_projection(image: bytes) -> bytes:
     caller checks each launcher's script ZIP against its expected entry point
     before comparing these projections.
     """
-    if len(image) < 64 or image[:2] != b"MZ":
-        raise RuntimeError("console entry-point launcher is not a portable executable")
-    signature = _pe_unpack(image, _PE_SIGNATURE_POINTER, "<I", "DOS header")[0]
-    if image[signature : signature + len(_PE_SIGNATURE)] != _PE_SIGNATURE:
-        raise RuntimeError("console entry-point launcher is not a portable executable")
-    section_count = _pe_unpack(image, signature + _COFF_SECTION_COUNT_OFFSET, "<H", "COFF header")[0]
-    optional_size = _pe_unpack(image, signature + _COFF_OPTIONAL_SIZE_OFFSET, "<H", "COFF header")[0]
-    if section_count == 0:
-        raise RuntimeError("console entry-point launcher has no PE sections")
-    optional = signature + _COFF_HEADER_SIZE
-    optional_end = optional + optional_size
-    if optional_end > len(image):
-        raise RuntimeError("console entry-point launcher has a truncated optional header")
-    magic = _pe_unpack(image, optional, "<H", "optional header")[0]
-    if magic == _PE32_PLUS_MAGIC:
-        directories_offset = _PE32_PLUS_DATA_DIRECTORY_OFFSET
-        directory_count_offset = _PE32_PLUS_NUMBER_OF_RVA_AND_SIZES_OFFSET
-    elif magic == _PE32_MAGIC:
-        directories_offset = _PE32_DATA_DIRECTORY_OFFSET
-        directory_count_offset = _PE32_NUMBER_OF_RVA_AND_SIZES_OFFSET
-    else:
-        raise RuntimeError("console entry-point launcher has an unsupported PE optional header")
-    directory_end = directories_offset + (_RESOURCE_DIRECTORY_INDEX + 1) * _DATA_DIRECTORY_ENTRY_SIZE
-    if optional_size < max(directory_end, _PE_SIZE_OF_IMAGE_OFFSET + 4):
-        raise RuntimeError("console entry-point launcher has a truncated optional header")
-    directory_count = _pe_unpack(image, optional + directory_count_offset, "<I", "data-directory count")[0]
-    if directory_count <= _RESOURCE_DIRECTORY_INDEX:
-        raise RuntimeError("console entry-point launcher has no resource data directory")
-    directories = optional + directories_offset
-    resource_rva, resource_size = _pe_unpack(
-        image,
-        directories + _RESOURCE_DIRECTORY_INDEX * _DATA_DIRECTORY_ENTRY_SIZE,
-        "<II",
-        "resource data directory",
-    )
-    if resource_rva == 0 or resource_size == 0:
-        raise RuntimeError("console entry-point launcher carries no embedded script resource")
-
-    table = optional_end
-    table_end = table + section_count * _SECTION_HEADER_SIZE
-    if table_end > len(image):
-        raise RuntimeError("console entry-point launcher has a truncated section table")
-    section_alignment = _pe_unpack(image, optional + _PE_SECTION_ALIGNMENT_OFFSET, "<I", "section alignment")[0]
-    file_alignment = _pe_unpack(image, optional + _PE_FILE_ALIGNMENT_OFFSET, "<I", "file alignment")[0]
-    section_headers: list[tuple[int, int, int, int, int, int]] = []
-    for index in range(section_count):
-        header = table + index * _SECTION_HEADER_SIZE
-        virtual_size, virtual_address, raw_size, raw_offset = _pe_unpack(
-            image, header + _SECTION_VIRTUAL_SIZE_OFFSET, "<IIII", "section header"
-        )
-        if raw_size and (raw_offset < table_end or raw_offset + raw_size > len(image)):
-            raise RuntimeError("console entry-point launcher has an invalid section extent")
-        section_headers.append((header, virtual_size, virtual_address, raw_size, raw_offset, index))
-
-    owners = [
-        section
-        for section in section_headers
-        if section[2] <= resource_rva and resource_rva + resource_size <= section[2] + section[1]
-    ]
-    if len(owners) != 1:
-        raise RuntimeError("console entry-point launcher resource directory has no unique section")
-    resource = owners[0]
-    resource_header, virtual_size, virtual_address, raw_size, raw_offset, section_index = resource
-    if resource_rva != virtual_address or resource_size != virtual_size:
-        raise RuntimeError("console entry-point launcher resource section is not fully described")
-    if raw_size != _pe_align(virtual_size, file_alignment):
-        raise RuntimeError("console entry-point launcher resource section has an invalid raw size")
-    if raw_offset + raw_size != len(image):
-        raise RuntimeError("console entry-point launcher has bytes after its resource section")
-    if any(
-        other[3] and raw_offset < other[4] + other[3] and other[4] < raw_offset + raw_size
-        for other in section_headers
-        if other is not resource
-    ):
-        raise RuntimeError("console entry-point launcher sections overlap")
-    if any(other[2] + other[1] > virtual_address for other in section_headers if other is not resource):
-        raise RuntimeError("console entry-point launcher resource section is not the final image section")
-    if section_index != max(section[5] for section in section_headers):
-        raise RuntimeError("console entry-point launcher resource section is not last in the section table")
-
-    image_size = _pe_unpack(image, optional + _PE_SIZE_OF_IMAGE_OFFSET, "<I", "image size")[0]
-    image_end = max(section[2] + section[1] for section in section_headers)
-    if image_size != _pe_align(image_end, section_alignment):
-        raise RuntimeError("console entry-point launcher has an inconsistent image size")
-    if any(image[raw_offset + resource_size : raw_offset + raw_size]):
-        raise RuntimeError("console entry-point launcher resource padding is not zero")
-
-    resource_root = raw_offset
-    resource_end = resource_root + resource_size
-    used_ranges: list[tuple[int, int]] = []
-
-    def mark_used(start: int, size: int) -> None:
-        relative_start = start - resource_root
-        relative_end = relative_start + size
-        if size < 0 or relative_start < 0 or relative_end > resource_size:
-            raise RuntimeError("console entry-point launcher resource offset is out of bounds")
-        if size:
-            used_ranges.append((relative_start, relative_end))
-
-    def resource_name(field: int) -> tuple[str, int | str]:
-        if field & _RESOURCE_DIRECTORY_FLAG:
-            name_offset = resource_root + (field & _RESOURCE_OFFSET_MASK)
-            mark_used(name_offset, 2)
-            length = _pe_unpack(image, name_offset, "<H", "resource name")[0]
-            byte_length = length * 2
-            mark_used(name_offset + 2, byte_length)
-            try:
-                name = image[name_offset + 2 : name_offset + 2 + byte_length].decode("utf-16le")
-            except UnicodeDecodeError as exc:
-                raise RuntimeError("console entry-point launcher resource name is malformed") from exc
-            return ("name", name)
-        if field & 0xFFFF0000:
-            raise RuntimeError("console entry-point launcher resource identifier is malformed")
-        return ("id", field)
-
-    visited_directories: set[int] = set()
-    script_resources = 0
-
-    def read_directory(
-        relative_offset: int,
-        path: tuple[tuple[str, int | str], ...],
-        depth: int,
-    ) -> dict[str, object]:
-        nonlocal script_resources
-        if depth > _MAX_RESOURCE_DIRECTORY_DEPTH:
-            raise RuntimeError("console entry-point launcher resource tree is too deep")
-        if relative_offset in visited_directories:
-            raise RuntimeError("console entry-point launcher resource tree has a cycle or alias")
-        visited_directories.add(relative_offset)
-        directory = resource_root + relative_offset
-        mark_used(directory, _RESOURCE_DIRECTORY_HEADER_SIZE)
-        fields = _pe_unpack(image, directory, "<IIHHHH", "resource directory")
-        characteristics, timestamp, major, minor, named_count, id_count = fields
-        entry_count = named_count + id_count
-        entries_offset = directory + _RESOURCE_DIRECTORY_HEADER_SIZE
-        mark_used(entries_offset, entry_count * _RESOURCE_DIRECTORY_ENTRY_SIZE)
-        entries: list[list[object]] = []
-        for index in range(entry_count):
-            entry_offset = entries_offset + index * _RESOURCE_DIRECTORY_ENTRY_SIZE
-            name_field, target_field = _pe_unpack(image, entry_offset, "<II", "resource directory entry")
-            key = resource_name(name_field)
-            child_path = (*path, key)
-            target_offset = target_field & _RESOURCE_OFFSET_MASK
-            if target_field & _RESOURCE_DIRECTORY_FLAG:
-                value: object = read_directory(target_offset, child_path, depth + 1)
-            else:
-                data_entry = resource_root + target_offset
-                mark_used(data_entry, _RESOURCE_DATA_ENTRY_SIZE)
-                data_rva, data_size, codepage, reserved = _pe_unpack(image, data_entry, "<IIII", "resource data entry")
-                if data_rva < resource_rva or data_rva + data_size > resource_rva + resource_size:
-                    raise RuntimeError("console entry-point launcher resource payload is out of bounds")
-                payload_offset = resource_root + data_rva - resource_rva
-                mark_used(payload_offset, data_size)
-                is_script = child_path == _UV_SCRIPT_RESOURCE_PATH
-                if is_script:
-                    script_resources += 1
-                value = {
-                    "kind": "data",
-                    "codepage": codepage,
-                    "reserved": reserved,
-                    "payload": None if is_script else image[payload_offset : payload_offset + data_size].hex(),
-                }
-            entries.append([[key[0], key[1]], value])
-        return {
-            "kind": "directory",
-            "metadata": [characteristics, timestamp, major, minor, named_count, id_count],
-            "entries": entries,
-        }
-
-    tree = read_directory(0, (), 0)
-    if script_resources != 1:
-        raise RuntimeError("console entry-point launcher has no unique UV script resource")
-    previous_end = 0
-    for start, end in sorted(used_ranges):
-        if start < previous_end:
-            raise RuntimeError("console entry-point launcher resource extents overlap")
-        if any(image[resource_root + previous_end : resource_root + start]):
-            raise RuntimeError("console entry-point launcher has unreferenced resource bytes")
-        previous_end = end
-    if any(image[resource_root + previous_end : resource_end]):
-        raise RuntimeError("console entry-point launcher has unreferenced resource bytes")
-
-    canonical_resources = json.dumps(tree, ensure_ascii=False, separators=(",", ":")).encode(UTF_8)
-    base_image_end = max(section[2] + section[1] for section in section_headers if section is not resource)
+    header = _launcher_header(image)
+    optional, directories = header.optional, header.directories
+    resource_rva, resource_size = header.resource_rva, header.resource_size
+    sections, resource, section_alignment = _launcher_sections(image, header)
+    resource_header, _virtual_size, _virtual_address, raw_size, raw_offset, _section_index = resource
+    canonical_resources = _canonical_launcher_resources(image, raw_offset, resource_size, resource_rva)
+    base_image_end = max(section[2] + section[1] for section in sections if section is not resource)
     projected = bytearray(image)
     struct.pack_into(
         "<I",
@@ -288,6 +112,257 @@ def _launcher_stub_projection(image: bytes) -> bytes:
         + len(canonical_resources).to_bytes(8, "little")
         + canonical_resources
     )
+
+
+type _Section = tuple[int, int, int, int, int, int]
+
+
+def _launcher_sections(image: bytes, pe_header: _LauncherHeader) -> tuple[list[_Section], _Section, int]:
+    optional, optional_end, section_count = pe_header.optional, pe_header.optional_end, pe_header.section_count
+    table = optional_end
+    table_end = table + section_count * _SECTION_HEADER_SIZE
+    if table_end > len(image):
+        raise RuntimeError("console entry-point launcher has a truncated section table")
+    section_alignment = _pe_unpack(image, optional + _PE_SECTION_ALIGNMENT_OFFSET, "<I", "section alignment")[0]
+    file_alignment = _pe_unpack(image, optional + _PE_FILE_ALIGNMENT_OFFSET, "<I", "file alignment")[0]
+    section_headers: list[_Section] = []
+    for index in range(section_count):
+        header = table + index * _SECTION_HEADER_SIZE
+        virtual_size, virtual_address, raw_size, raw_offset = _pe_unpack(
+            image, header + _SECTION_VIRTUAL_SIZE_OFFSET, "<IIII", "section header"
+        )
+        if raw_size and (raw_offset < table_end or raw_offset + raw_size > len(image)):
+            raise RuntimeError("console entry-point launcher has an invalid section extent")
+        section_headers.append((header, virtual_size, virtual_address, raw_size, raw_offset, index))
+
+    resource = _validate_resource_section(image, pe_header, section_headers, file_alignment, section_alignment)
+    return section_headers, resource, section_alignment
+
+
+def _validate_resource_section(
+    image: bytes,
+    header: _LauncherHeader,
+    section_headers: list[_Section],
+    file_alignment: int,
+    section_alignment: int,
+) -> _Section:
+    optional = header.optional
+    resource_rva, resource_size = header.resource_rva, header.resource_size
+    resource = _resource_owner(section_headers, resource_rva, resource_size)
+    _resource_header, virtual_size, virtual_address, raw_size, raw_offset, _section_index = resource
+    if resource_rva != virtual_address or resource_size != virtual_size:
+        raise RuntimeError("console entry-point launcher resource section is not fully described")
+    if raw_size != _pe_align(virtual_size, file_alignment):
+        raise RuntimeError("console entry-point launcher resource section has an invalid raw size")
+    if raw_offset + raw_size != len(image):
+        raise RuntimeError("console entry-point launcher has bytes after its resource section")
+    _validate_resource_order(section_headers, resource)
+
+    image_size = _pe_unpack(image, optional + _PE_SIZE_OF_IMAGE_OFFSET, "<I", "image size")[0]
+    image_end = max(section[2] + section[1] for section in section_headers)
+    if image_size != _pe_align(image_end, section_alignment):
+        raise RuntimeError("console entry-point launcher has an inconsistent image size")
+    if any(image[raw_offset + resource_size : raw_offset + raw_size]):
+        raise RuntimeError("console entry-point launcher resource padding is not zero")
+
+    return resource
+
+
+def _validate_resource_order(section_headers: list[_Section], resource: _Section) -> None:
+    _resource_header, _virtual_size, virtual_address, _raw_size, _raw_offset, section_index = resource
+    _refuse_overlapping_sections(section_headers, resource)
+    if any(other[2] + other[1] > virtual_address for other in section_headers if other is not resource):
+        raise RuntimeError("console entry-point launcher resource section is not the final image section")
+    if section_index != max(section[5] for section in section_headers):
+        raise RuntimeError("console entry-point launcher resource section is not last in the section table")
+
+
+def _refuse_overlapping_sections(section_headers: list[_Section], resource: _Section) -> None:
+    _header, _virtual_size, _virtual_address, raw_size, raw_offset, _index = resource
+    if any(
+        other[3] and raw_offset < other[4] + other[3] and other[4] < raw_offset + raw_size
+        for other in section_headers
+        if other is not resource
+    ):
+        raise RuntimeError("console entry-point launcher sections overlap")
+
+
+def _resource_owner(section_headers: list[_Section], resource_rva: int, resource_size: int) -> _Section:
+    owners = [
+        section
+        for section in section_headers
+        if section[2] <= resource_rva and resource_rva + resource_size <= section[2] + section[1]
+    ]
+    if len(owners) != 1:
+        raise RuntimeError("console entry-point launcher resource directory has no unique section")
+    resource = owners[0]
+    return resource
+
+
+@dataclass(frozen=True)
+class _LauncherHeader:
+    optional: int
+    directories: int
+    resource_rva: int
+    resource_size: int
+    optional_end: int
+    section_count: int
+
+
+def _launcher_header(image: bytes) -> _LauncherHeader:
+    if len(image) < 64 or image[:2] != b"MZ":
+        raise RuntimeError("console entry-point launcher is not a portable executable")
+    signature = _pe_unpack(image, _PE_SIGNATURE_POINTER, "<I", "DOS header")[0]
+    if image[signature : signature + len(_PE_SIGNATURE)] != _PE_SIGNATURE:
+        raise RuntimeError("console entry-point launcher is not a portable executable")
+    section_count = _pe_unpack(image, signature + _COFF_SECTION_COUNT_OFFSET, "<H", "COFF header")[0]
+    optional_size = _pe_unpack(image, signature + _COFF_OPTIONAL_SIZE_OFFSET, "<H", "COFF header")[0]
+    if section_count == 0:
+        raise RuntimeError("console entry-point launcher has no PE sections")
+    optional = signature + _COFF_HEADER_SIZE
+    optional_end = optional + optional_size
+    if optional_end > len(image):
+        raise RuntimeError("console entry-point launcher has a truncated optional header")
+    directories_offset, directory_count_offset = _optional_directory_offsets(image, optional)
+    directory_end = directories_offset + (_RESOURCE_DIRECTORY_INDEX + 1) * _DATA_DIRECTORY_ENTRY_SIZE
+    if optional_size < max(directory_end, _PE_SIZE_OF_IMAGE_OFFSET + 4):
+        raise RuntimeError("console entry-point launcher has a truncated optional header")
+    directory_count = _pe_unpack(image, optional + directory_count_offset, "<I", "data-directory count")[0]
+    if directory_count <= _RESOURCE_DIRECTORY_INDEX:
+        raise RuntimeError("console entry-point launcher has no resource data directory")
+    directories = optional + directories_offset
+    resource_rva, resource_size = _pe_unpack(
+        image,
+        directories + _RESOURCE_DIRECTORY_INDEX * _DATA_DIRECTORY_ENTRY_SIZE,
+        "<II",
+        "resource data directory",
+    )
+    if resource_rva == 0 or resource_size == 0:
+        raise RuntimeError("console entry-point launcher carries no embedded script resource")
+
+    return _LauncherHeader(optional, directories, resource_rva, resource_size, optional_end, section_count)
+
+
+def _optional_directory_offsets(image: bytes, optional: int) -> tuple[int, int]:
+    magic = _pe_unpack(image, optional, "<H", "optional header")[0]
+    if magic == _PE32_PLUS_MAGIC:
+        directories_offset = _PE32_PLUS_DATA_DIRECTORY_OFFSET
+        directory_count_offset = _PE32_PLUS_NUMBER_OF_RVA_AND_SIZES_OFFSET
+    elif magic == _PE32_MAGIC:
+        directories_offset = _PE32_DATA_DIRECTORY_OFFSET
+        directory_count_offset = _PE32_NUMBER_OF_RVA_AND_SIZES_OFFSET
+    else:
+        raise RuntimeError("console entry-point launcher has an unsupported PE optional header")
+    return directories_offset, directory_count_offset
+
+
+@dataclass
+class _LauncherResources:
+    image: bytes
+    root: int
+    size: int
+    rva: int
+    used: list[tuple[int, int]] = field(default_factory=list)
+    visited: set[int] = field(default_factory=set)
+    scripts: int = 0
+
+    def mark_used(self, start: int, size: int) -> None:
+        relative_start = start - self.root
+        relative_end = relative_start + size
+        if size < 0 or relative_start < 0 or relative_end > self.size:
+            raise RuntimeError("console entry-point launcher resource offset is out of bounds")
+        if size:
+            self.used.append((relative_start, relative_end))
+
+    def resource_name(self, field: int) -> tuple[str, int | str]:
+        if field & _RESOURCE_DIRECTORY_FLAG:
+            name_offset = self.root + (field & _RESOURCE_OFFSET_MASK)
+            self.mark_used(name_offset, 2)
+            length = _pe_unpack(self.image, name_offset, "<H", "resource name")[0]
+            byte_length = length * 2
+            self.mark_used(name_offset + 2, byte_length)
+            try:
+                name = self.image[name_offset + 2 : name_offset + 2 + byte_length].decode("utf-16le")
+            except UnicodeDecodeError as exc:
+                raise RuntimeError("console entry-point launcher resource name is malformed") from exc
+            return ("name", name)
+        if field & 0xFFFF0000:
+            raise RuntimeError("console entry-point launcher resource identifier is malformed")
+        return ("id", field)
+
+    def data(self, target_offset: int, path: tuple[tuple[str, int | str], ...]) -> dict[str, object]:
+        data_entry = self.root + target_offset
+        self.mark_used(data_entry, _RESOURCE_DATA_ENTRY_SIZE)
+        data_rva, data_size, codepage, reserved = _pe_unpack(self.image, data_entry, "<IIII", "resource data entry")
+        if data_rva < self.rva or data_rva + data_size > self.rva + self.size:
+            raise RuntimeError("console entry-point launcher resource payload is out of bounds")
+        payload_offset = self.root + data_rva - self.rva
+        self.mark_used(payload_offset, data_size)
+        is_script = path == _UV_SCRIPT_RESOURCE_PATH
+        if is_script:
+            self.scripts += 1
+        return {
+            "kind": "data",
+            "codepage": codepage,
+            "reserved": reserved,
+            "payload": None if is_script else self.image[payload_offset : payload_offset + data_size].hex(),
+        }
+
+    def read_directory(
+        self, relative_offset: int, path: tuple[tuple[str, int | str], ...], depth: int
+    ) -> dict[str, object]:
+        if depth > _MAX_RESOURCE_DIRECTORY_DEPTH:
+            raise RuntimeError("console entry-point launcher resource tree is too deep")
+        if relative_offset in self.visited:
+            raise RuntimeError("console entry-point launcher resource tree has a cycle or alias")
+        self.visited.add(relative_offset)
+        directory = self.root + relative_offset
+        self.mark_used(directory, _RESOURCE_DIRECTORY_HEADER_SIZE)
+        fields = _pe_unpack(self.image, directory, "<IIHHHH", "resource directory")
+        characteristics, timestamp, major, minor, named_count, id_count = fields
+        entry_count = named_count + id_count
+        entries_offset = directory + _RESOURCE_DIRECTORY_HEADER_SIZE
+        self.mark_used(entries_offset, entry_count * _RESOURCE_DIRECTORY_ENTRY_SIZE)
+        entries = [
+            self.read_entry(entries_offset + index * _RESOURCE_DIRECTORY_ENTRY_SIZE, path, depth)
+            for index in range(entry_count)
+        ]
+        return {
+            "kind": "directory",
+            "metadata": [characteristics, timestamp, major, minor, named_count, id_count],
+            "entries": entries,
+        }
+
+    def read_entry(self, entry_offset: int, path: tuple[tuple[str, int | str], ...], depth: int) -> list[object]:
+        name_field, target_field = _pe_unpack(self.image, entry_offset, "<II", "resource directory entry")
+        key = self.resource_name(name_field)
+        child_path = (*path, key)
+        target_offset = target_field & _RESOURCE_OFFSET_MASK
+        value = (
+            self.read_directory(target_offset, child_path, depth + 1)
+            if target_field & _RESOURCE_DIRECTORY_FLAG
+            else self.data(target_offset, child_path)
+        )
+        return [[key[0], key[1]], value]
+
+    def canonical(self) -> bytes:
+        tree = self.read_directory(0, (), 0)
+        if self.scripts != 1:
+            raise RuntimeError("console entry-point launcher has no unique UV script resource")
+        previous_end = 0
+        for start, end in sorted(self.used):
+            if start < previous_end:
+                raise RuntimeError("console entry-point launcher resource extents overlap")
+            if any(self.image[self.root + previous_end : self.root + start]):
+                raise RuntimeError("console entry-point launcher has unreferenced resource bytes")
+            previous_end = end
+        if any(self.image[self.root + previous_end : self.root + self.size]):
+            raise RuntimeError("console entry-point launcher has unreferenced resource bytes")
+        return json.dumps(tree, ensure_ascii=False, separators=(",", ":")).encode(UTF_8)
+
+
+def _canonical_launcher_resources(image: bytes, resource_root: int, resource_size: int, resource_rva: int) -> bytes:
+    return _LauncherResources(image, resource_root, resource_size, resource_rva).canonical()
 
 
 def sealed_wheel_payload_sha256(wheel: Path) -> str:

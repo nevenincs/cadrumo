@@ -10,13 +10,15 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.applicability import (
     MODELO_APPLICABILITY_RULES,
-    ApplicabilityVerdict,
-    ModeloApplicability,
-    ModeloApplicabilityRule,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
 from cadrumo.domain.calculations.registry.applicability_modelo202 import Modelo202Modality, Modelo202ModalityVerdict
+from cadrumo.domain.calculations.registry.applicability_models import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
+)
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category
 from cadrumo.domain.calculations.registry.irpf_regimes import (

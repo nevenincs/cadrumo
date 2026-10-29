@@ -34,12 +34,8 @@ from cadrumo.core.aggregation import BindingAggregation, BindingAggregationOp
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import (
-    BindingDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .profile_schema_support import committed_registry_validator

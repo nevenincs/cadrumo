@@ -38,11 +38,10 @@ from ..cli import (
     PreparedGeneratedTreeInvocation,
     check_prepared_invocation,
     publish_prepared_invocation,
-    stage_published_modelo,
-    supporting_modelos,
 )
 from ..edition_candidate_staging import stage_continuity_metadata
 from ..export_fragment_provenance import ExportFragmentTarget
+from ..published_edition_staging import stage_published_modelo, supporting_modelos
 from ..render_check import revision_render_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

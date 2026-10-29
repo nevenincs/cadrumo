@@ -9,12 +9,16 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from ._tree_validation import validate_generated_export_tree
 from .export_tree_models import RenderedExportTree
 from .joined_record_design import JoinedRecordDesign
-from .render_check import compare_export_tree_roots
+from .render_check import RenderComparison, compare_export_tree_roots
 from .render_profile_evidence import RenderProfileSourceEvidence
 from .render_profile_model import RenderProfile
 from .semantic_map import SemanticMap
 from .tree_publication_artifacts import _verify_post_cutover_target, verify_generated_export_package
-from .tree_publication_contracts import GeneratedExportTransactionPaths, GeneratedExportTreePublicationContext
+from .tree_publication_contracts import (
+    GeneratedExportPublicationJournal,
+    GeneratedExportTransactionPaths,
+    GeneratedExportTreePublicationContext,
+)
 from .tree_publication_journal import (
     _delete_journal,
     _journal_backup_path,
@@ -44,16 +48,7 @@ def retire_completed_legacy_publication(
         if paths.journal.exists() or is_link_like(paths.journal):
             raise RegistryValidationError("legacy recovery refuses a concurrent current-location journal")
         journal = load_generated_export_publication_journal(paths.legacy_journal)
-        expected = context.expected_target_state
-        if (
-            journal.is_supersession
-            or journal.state != "candidate_live"
-            or journal.modelo != context.validation.target.modelo
-            or journal.revision_id != context.validation.target.revision_id
-            or expected is None
-            or expected.manifest_sha256 != journal.candidate_manifest_sha256
-        ):
-            raise RegistryValidationError("legacy cleanup requires the exact completed ordinary target receipt")
+        _require_legacy_receipt(context, journal)
         target = _admit_target_publication_path(context)
         require_expected_target_state(context, target)
         backup = _journal_backup_path(journal, target, paths.target_root)
@@ -89,10 +84,29 @@ def retire_completed_legacy_publication(
             committed_root=target,
             rendered_root=candidate,
         )
-        if comparison.record_differing or comparison.only_committed or comparison.only_rendered:
-            raise RegistryValidationError(
-                "legacy cleanup refuses live records that differ from current validated generation"
-            )
+        _require_matching_legacy_records(comparison)
         # Recheck the exact observed target after validation, before retiring its journal.
         require_expected_target_state(context, target)
         _delete_journal(paths.legacy_journal)
+
+
+def _require_legacy_receipt(
+    context: GeneratedExportTreePublicationContext, journal: GeneratedExportPublicationJournal
+) -> None:
+    expected = context.expected_target_state
+    if (
+        journal.is_supersession
+        or journal.state != "candidate_live"
+        or journal.modelo != context.validation.target.modelo
+        or journal.revision_id != context.validation.target.revision_id
+        or expected is None
+        or expected.manifest_sha256 != journal.candidate_manifest_sha256
+    ):
+        raise RegistryValidationError("legacy cleanup requires the exact completed ordinary target receipt")
+
+
+def _require_matching_legacy_records(comparison: RenderComparison) -> None:
+    if comparison.record_differing or comparison.only_committed or comparison.only_rendered:
+        raise RegistryValidationError(
+            "legacy cleanup refuses live records that differ from current validated generation"
+        )

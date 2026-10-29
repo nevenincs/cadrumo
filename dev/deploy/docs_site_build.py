@@ -20,14 +20,14 @@ from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import IndexedRoot
 from dev.packaging.command_execution import CommandResult, run_command
 
-from .docs_site_commands import _command_label
+from .docs_site_commands import command_label
 from .docs_site_languages import (
     SiteBuild,
-    _language_site_url,
-    _write_language_entry,
+    language_site_url,
     localized_languages,
     site_build_environment,
     site_builds,
+    write_language_entry,
 )
 
 
@@ -59,7 +59,7 @@ def _clear_apex(html_root: Path) -> None:
 def _write_apex_sitemap(html_root: Path) -> Path:
     """Write the apex sitemap as an index of every language root's own sitemap."""
     sitemaps = "".join(
-        f"  <sitemap><loc>{_language_site_url(language)}/sitemap.xml</loc></sitemap>\n"
+        f"  <sitemap><loc>{language_site_url(language)}/sitemap.xml</loc></sitemap>\n"
         for language in localized_languages()
     )
     path = html_root / "sitemap.xml"
@@ -120,7 +120,7 @@ def _compose_apex(html_root: Path) -> None:
     The site's one search index sits at the apex too, written by
     :func:`_index_site` before this runs.
     """
-    _write_language_entry(html_root)
+    write_language_entry(html_root)
     source = html_root / OutputLanguage.EN.value
     _write_apex_error_page(source / "404.html", html_root / "404.html")
     _write_apex_sitemap(html_root)
@@ -139,7 +139,7 @@ def _run_site_builds(
     :func:`_index_site` writes it once every root exists. English holds no
     privileged position either: the readers here file Spanish tax, so it sits at
     ``/en/`` like the rest and ``/`` resolves to the reader's own language
-    instead (:func:`_write_language_entry`).
+    instead (:func:`write_language_entry`).
 
     An index a PREVIOUS publish left inside a root is removed before the builds,
     because the source root is kept between publishes for its Sphinx environment
@@ -167,11 +167,7 @@ def _run_site_builds(
         replace(build, environment={**build.environment, "CADRUMO_DOCS_BUILD_ROOT": str(html_root.parent)})
         for build in builds_for(html_root)
     ]
-    for build in builds:
-        for language in build.languages:
-            stale_index = html_root / language / "pagefind"
-            if stale_index.exists():
-                shutil.rmtree(stale_index)
+    _clear_root_indexes(html_root, builds)
     written = "; ".join(f"{build.name} writes {', '.join(build.languages)}" for build in builds)
     print(f"Running {len(builds)} site build(s) at once on {os.cpu_count() or 1} CPUs: {written}.", flush=True)
     with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temporary_directory()) as scratch:
@@ -192,6 +188,20 @@ def _run_site_builds(
                 _record_site_build_result(name, future, failed)
     if failed:
         raise SystemExit(f"Documentation build failed for {', '.join(failed)}; refusing to publish.")
+    _validate_built_roots(html_root, builds)
+
+
+def _clear_root_indexes(html_root: Path, builds: Sequence[SiteBuild]) -> None:
+    """Remove previous indexes before building the language roots."""
+    for build in builds:
+        for language in build.languages:
+            stale_index = html_root / language / "pagefind"
+            if stale_index.exists():
+                shutil.rmtree(stale_index)
+
+
+def _validate_built_roots(html_root: Path, builds: Sequence[SiteBuild]) -> None:
+    """Require every promised root and reject indexes below the apex."""
     absent = sorted(language for build in builds for language in build.languages if not (html_root / language).is_dir())
     if absent:
         raise SystemExit(
@@ -307,7 +317,7 @@ def _index_site(repo_root: Path, html_root: Path, roots: Mapping[str, Path]) -> 
     )
 
 
-def _build_site_roots(repo_root: Path) -> Path:
+def build_site_roots(repo_root: Path) -> Path:
     """Build every language root, index the site once, and compose the apex.
 
     The write half of a publish's pre-upload work, factored out so the dry run
@@ -331,7 +341,7 @@ def _build_site_roots(repo_root: Path) -> Path:
 def _record_site_build_result(name: str, future: Future[CommandResult], failed: list[str]) -> None:
     """Print one site build's whole output and note it if it failed."""
     result = future.result()
-    print(f"+ [{name}] {_command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
+    print(f"+ [{name}] {command_label(result.argv)} ({result.duration_seconds:.0f}s)", flush=True)
     for stream, text in ((sys.stdout, result.stdout), (sys.stderr, result.stderr)):
         if text:
             print(text, end="" if text.endswith("\n") else "\n", file=stream, flush=True)

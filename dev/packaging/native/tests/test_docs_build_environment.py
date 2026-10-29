@@ -14,7 +14,7 @@ from dev.docs.sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
 
 from .. import docs_build
 from ..docs_build import compile_command, compile_environment
-from ..docs_stage import DocsPackagingError
+from ..docs_errors import DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -11,13 +11,9 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
-from cadrumo.domain.calculations.registry.schema import (
-    FormulaDefinition,
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-)
+from cadrumo.domain.calculations.registry.schema import FormulaDefinition, ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition, ModeloScheduleDefinition
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,

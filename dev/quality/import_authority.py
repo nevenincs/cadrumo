@@ -19,6 +19,7 @@ from .import_check_models import (
     ForbiddenContract,
     RootPackage,
 )
+from .import_root_candidates import inspect_root_base
 
 _DOTTED_NAME: Final[re.Pattern[str]] = re.compile(r"^[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*$")
 
@@ -238,7 +239,7 @@ def _check_undeclared_top_level_roots(
     candidates: set[str] = set()
     source_modules: set[str] = set()
     for base in (repository / _SOURCE_CONTAINER, repository):
-        _inspect_root_base(base, repository, candidates, source_modules, findings)
+        inspect_root_base(base, repository, candidates, source_modules, findings)
     candidates -= declared_trees
     for candidate in sorted(candidates | source_modules):
         if candidate not in declared:
@@ -355,21 +356,28 @@ def _read_consumer_contracts(
         if contract is None:
             findings.append(f"[AUTHORITY_CONFIG] section {name!r} names no forbidden Import Linter contract")
             continue
-        paths: list[str] = []
-        for raw_path, raw_reason in parser.items(name):
-            path = PurePosixPath(raw_path.strip().replace("\\", "/")).as_posix()
-            if not " ".join(raw_reason.split()):
-                findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} states no reason")
-            if not any(path == tree or path.startswith(f"{tree}/") for tree in tree_paths):
-                findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} lies outside every consumer tree")
-            elif not holds_repository_python(repository, path):
-                findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} holds no repository Python")
-            else:
-                paths.append(path)
+        paths = _consumer_contract_paths(parser, name, tree_paths, repository, findings)
         if not paths:
             findings.append(f"[AUTHORITY_CONFIG] section {name!r} binds no consumer path")
         scopes.append(ConsumerContractScope(contract, tuple(sorted(paths))))
     return tuple(sorted(scopes, key=lambda scope: scope.contract.key))
+
+
+def _consumer_contract_paths(
+    parser: configparser.ConfigParser, name: str, tree_paths: tuple[str, ...], repository: Path, findings: list[str]
+) -> list[str]:
+    paths: list[str] = []
+    for raw_path, raw_reason in parser.items(name):
+        path = PurePosixPath(raw_path.strip().replace("\\", "/")).as_posix()
+        if not " ".join(raw_reason.split()):
+            findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} states no reason")
+        if not any(path == tree or path.startswith(f"{tree}/") for tree in tree_paths):
+            findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} lies outside every consumer tree")
+        elif not holds_repository_python(repository, path):
+            findings.append(f"[AUTHORITY_CONFIG] [{name}] entry {path!r} holds no repository Python")
+        else:
+            paths.append(path)
+    return paths
 
 
 def _truthy(value: str) -> bool:
@@ -424,36 +432,6 @@ def _check_contract_suppressions(name: str, parser: configparser.ConfigParser, f
     alerting = contract.get("unmatched_ignore_imports_alerting", "error").strip().lower()
     if alerting not in {"error", ""}:
         findings.append(f"[AUTHORITY_CONFIG] contract {name!r} treats unmatched imports as {alerting}")
-
-
-def _collect_root_candidate(
-    entry: Path, base: Path, repository: Path, candidates: set[str], source_modules: set[str]
-) -> None:
-    """Collect root candidate."""
-    if entry.name.startswith("."):
-        return
-    if base == repository / "src" and entry.is_file() and entry.suffix == ".py":
-        source_modules.add(entry.stem)
-        return
-    if not entry.is_dir():
-        return
-    if (entry / "__init__.py").is_file() or (base == repository / "src" and any(entry.rglob("*.py"))):
-        candidates.add(entry.name)
-
-
-def _inspect_root_base(
-    base: Path, repository: Path, candidates: set[str], source_modules: set[str], findings: list[str]
-) -> None:
-    """Inspect root base."""
-    if not base.is_dir():
-        return
-    try:
-        entries = tuple(base.iterdir())
-    except OSError as exc:
-        findings.append(f"[AUTHORITY_CONFIG] cannot inspect source-root directory {base}: {exc}")
-        return
-    for entry in entries:
-        _collect_root_candidate(entry, base, repository, candidates, source_modules)
 
 
 def _read_forbidden_contract(

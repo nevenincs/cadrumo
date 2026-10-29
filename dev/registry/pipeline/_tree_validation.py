@@ -20,7 +20,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import SourceRefId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory, select_authored_revision_metadata
@@ -117,30 +118,36 @@ class GeneratedExportTreeValidationContext:
     source_chain_non_export_sha256: str | None = None
 
     def __post_init__(self) -> None:
-        if self.source_chain_revisions:
-            if self.scope_authority is None:
-                raise RegistryValidationError("source-chain validation requires source authority")
-            source = self.scope_authority.modelo(str(self.target.modelo))
-            if tuple(source.revisions) != self.source_chain_revisions:
-                raise RegistryValidationError("source-chain validation must retain the complete validated modelo")
-            if self.inheritance is not None:
-                ancestors = tuple(item[0] for item in self.inheritance.pinned_ancestors)
-                if len(set((*ancestors, str(self.target.revision_id)))) != len(ancestors) + 1 or not set(
-                    (*ancestors, str(self.target.revision_id))
-                ).issubset(self.source_chain_revisions):
-                    raise RegistryValidationError("source-chain validation lost an attested ancestor or target")
-                if (
-                    self.source_chain_registry_root is None
-                    or self.source_chain_sha256 is None
-                    or self.source_chain_non_export_sha256 is None
-                ):
-                    raise RegistryValidationError("compact source-chain validation requires exact origin byte pins")
+        self._validate_source_chain()
         if not self.period.strip():
             raise RegistryValidationError("generated-tree validation requires a non-empty filing period")
         if str(self.target.modelo) in self.supporting_modelos:
             raise RegistryValidationError(
                 "generated-tree validation must not name the target modelo as a supporting modelo",
             )
+
+    def _validate_source_chain(self) -> None:
+        if self.source_chain_revisions:
+            if self.scope_authority is None:
+                raise RegistryValidationError("source-chain validation requires source authority")
+            source = self.scope_authority.modelo(str(self.target.modelo))
+            if tuple(source.revisions) != self.source_chain_revisions:
+                raise RegistryValidationError("source-chain validation must retain the complete validated modelo")
+            self._validate_source_chain_ancestors()
+
+    def _validate_source_chain_ancestors(self) -> None:
+        if self.inheritance is not None:
+            ancestors = tuple(item[0] for item in self.inheritance.pinned_ancestors)
+            if len(set((*ancestors, str(self.target.revision_id)))) != len(ancestors) + 1 or not set(
+                (*ancestors, str(self.target.revision_id))
+            ).issubset(self.source_chain_revisions):
+                raise RegistryValidationError("source-chain validation lost an attested ancestor or target")
+            if (
+                self.source_chain_registry_root is None
+                or self.source_chain_sha256 is None
+                or self.source_chain_non_export_sha256 is None
+            ):
+                raise RegistryValidationError("compact source-chain validation requires exact origin byte pins")
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,24 +210,7 @@ def validate_generated_export_tree(
         source_chain_revisions=context.source_chain_revisions,
     )
     source_registry_root = context.source_chain_registry_root or source_root / "registry" / "aeat"
-    if context.source_chain_sha256 is not None:
-        current_source = generated_export_source_chain_fingerprint(
-            source_registry_root, modelo=modelo_id, revision=revision_id
-        )
-        if current_source != context.source_chain_sha256:
-            raise RegistryValidationError("generated source-chain bytes changed before export publication")
-    if context.inheritance is not None:
-        if context.scope_authority is None:
-            raise RegistryValidationError("generated export inheritance requires the complete validated source")
-        require_generated_export_inheritance(
-            context.inheritance,
-            context.scope_authority,
-            source_registry_root,
-            modelo=modelo_id,
-            revision=revision_id,
-            retain_source_chain=bool(context.source_chain_revisions),
-            source_root=source_root,
-        )
+    _require_source_chain_inputs(context, source_registry_root, source_root, modelo_id, revision_id)
     _require_exact_generated_outputs(export_root, rendered.output_files)
 
     definition = load_modelo_directory(modelo_root)
@@ -228,36 +218,7 @@ def validate_generated_export_tree(
         raise RegistryValidationError(
             f"generated modelo directory loads modelo {definition.id!r}, expected {modelo_id!r}",
         )
-    expected_revisions = context.source_chain_revisions or (
-        (revision_id,)
-        if context.inheritance is None
-        else (*tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors), revision_id)
-    )
-    if tuple(definition.revisions) != expected_revisions:
-        raise RegistryValidationError(
-            f"isolated generated modelo must load exactly revisions {expected_revisions!r}, "
-            f"got {tuple(definition.revisions)!r}",
-        )
-    if context.source_chain_revisions:
-        if context.scope_authority is None:
-            raise RegistryValidationError("source-chain validation has no source authority")
-        require_source_chain_unchanged(context.scope_authority.modelo(modelo_id), definition, revision=revision_id)
-    if context.inheritance is not None and (
-        definition.revisions[str(context.inheritance.attestation.baseline_revision_id)].export_layouts
-        != (context.inheritance.baseline_layout,)
-    ):
-        raise RegistryValidationError("generated export inheritance staged baseline layout changed")
-    if context.inheritance is not None:
-        source_modelo_root = source_registry_root / "modelos" / modelo_id
-        for selected_id in expected_revisions:
-            original = read_staged_edition(source_modelo_root, selected_id, side="source")
-            staged = read_staged_edition(modelo_root, selected_id, side="staged")
-            if member_identities(staged) != member_identities(original) or chain_materialisation(
-                staged,
-            ) != chain_materialisation(original):
-                raise RegistryValidationError(
-                    f"generated export inheritance changed hydrated {modelo_id}/{selected_id} source facts",
-                )
+    _require_loaded_source_chain(context, definition, modelo_root, source_registry_root, modelo_id, revision_id)
     loaded_revision = definition.revisions[revision_id]
     loaded_layout = _require_exact_generated_layout(
         loaded_revision.export_layouts,
@@ -317,6 +278,83 @@ def validate_generated_export_tree(
         snapshot=snapshot,
         provenance_manifest=provenance,
     )
+
+
+def _require_loaded_source_chain(
+    context: GeneratedExportTreeValidationContext,
+    definition: ModeloDefinition,
+    modelo_root: Path,
+    source_registry_root: Path,
+    modelo_id: str,
+    revision_id: str,
+) -> None:
+    expected_revisions = context.source_chain_revisions or (
+        (revision_id,)
+        if context.inheritance is None
+        else (*tuple(revision_id for revision_id, _digest in context.inheritance.pinned_ancestors), revision_id)
+    )
+    if tuple(definition.revisions) != expected_revisions:
+        raise RegistryValidationError(
+            f"isolated generated modelo must load exactly revisions {expected_revisions!r}, "
+            f"got {tuple(definition.revisions)!r}",
+        )
+    if context.source_chain_revisions:
+        if context.scope_authority is None:
+            raise RegistryValidationError("source-chain validation has no source authority")
+        require_source_chain_unchanged(context.scope_authority.modelo(modelo_id), definition, revision=revision_id)
+    if context.inheritance is not None and (
+        definition.revisions[str(context.inheritance.attestation.baseline_revision_id)].export_layouts
+        != (context.inheritance.baseline_layout,)
+    ):
+        raise RegistryValidationError("generated export inheritance staged baseline layout changed")
+    _require_hydrated_source_chain(context, source_registry_root, modelo_root, modelo_id, expected_revisions)
+
+
+def _require_hydrated_source_chain(
+    context: GeneratedExportTreeValidationContext,
+    source_registry_root: Path,
+    modelo_root: Path,
+    modelo_id: str,
+    expected_revisions: tuple[str, ...],
+) -> None:
+    if context.inheritance is not None:
+        source_modelo_root = source_registry_root / "modelos" / modelo_id
+        for selected_id in expected_revisions:
+            original = read_staged_edition(source_modelo_root, selected_id, side="source")
+            staged = read_staged_edition(modelo_root, selected_id, side="staged")
+            if member_identities(staged) != member_identities(original) or chain_materialisation(
+                staged,
+            ) != chain_materialisation(original):
+                raise RegistryValidationError(
+                    f"generated export inheritance changed hydrated {modelo_id}/{selected_id} source facts",
+                )
+
+
+def _require_source_chain_inputs(
+    context: GeneratedExportTreeValidationContext,
+    source_registry_root: Path,
+    source_root: Path,
+    modelo_id: str,
+    revision_id: str,
+) -> None:
+    if context.source_chain_sha256 is not None:
+        current_source = generated_export_source_chain_fingerprint(
+            source_registry_root, modelo=modelo_id, revision=revision_id
+        )
+        if current_source != context.source_chain_sha256:
+            raise RegistryValidationError("generated source-chain bytes changed before export publication")
+    if context.inheritance is not None:
+        if context.scope_authority is None:
+            raise RegistryValidationError("generated export inheritance requires the complete validated source")
+        require_generated_export_inheritance(
+            context.inheritance,
+            context.scope_authority,
+            source_registry_root,
+            modelo=modelo_id,
+            revision=revision_id,
+            retain_source_chain=bool(context.source_chain_revisions),
+            source_root=source_root,
+        )
 
 
 def _validated_target_snapshot(
@@ -380,11 +418,7 @@ def _validated_historical_static_target(
         context, loaded_modelos, modelo_id=modelo_id, revision_id=revision_id, target_definition=target_definition
     )
     _validate_scoped_candidate(source_root, loaded_modelos, catalogues, scoped_modelos)
-    support = catalogues.require_supported_filing_years()
-    if support != authority.catalogues.require_supported_filing_years():
-        raise RegistryValidationError("historical static target changed the supported filing years catalogue")
-    if context.filing_year >= support.floor:
-        raise RegistryValidationError("historical static target must be below the unchanged filing support floor")
+    _require_historical_support(context, authority, catalogues)
     scoped_modelo = next(modelo for modelo in scoped_modelos if str(modelo.id) == modelo_id)
     selected = select_authored_revision_metadata(
         ModeloRevisionDirectory.from_modelo(scoped_modelo),
@@ -405,6 +439,24 @@ def _validated_historical_static_target(
         period=context.period,
         source_ref=None,
     )
+    _require_historical_source(context, joined, catalogues, source_ref, selected_source_ref, epoch)
+    return RegistryRevisionInspection.from_revision(
+        modelo=scoped_modelo,
+        revision=target_definition.revisions[revision_id],
+        source_root=source_root,
+        sources=catalogues.sources,
+        legal_ref_ids=frozenset(catalogues.legal),
+    )
+
+
+def _require_historical_source(
+    context: GeneratedExportTreeValidationContext,
+    joined: JoinedRecordDesign,
+    catalogues: RegistryCatalogues,
+    source_ref: SourceRefId,
+    selected_source_ref: SourceRefId,
+    epoch: str,
+) -> None:
     if (
         selected_source_ref != source_ref
         or joined.source.source_ref != source_ref
@@ -414,13 +466,16 @@ def _validated_historical_static_target(
     source = catalogues.sources.get(source_ref)
     if source is None or joined.source.source_sha256 != source.sha256:
         raise RegistryValidationError("historical static target source digest differs from the candidate catalogue")
-    return RegistryRevisionInspection.from_revision(
-        modelo=scoped_modelo,
-        revision=target_definition.revisions[revision_id],
-        source_root=source_root,
-        sources=catalogues.sources,
-        legal_ref_ids=frozenset(catalogues.legal),
-    )
+
+
+def _require_historical_support(
+    context: GeneratedExportTreeValidationContext, authority: ValidatedRegistryAuthority, catalogues: RegistryCatalogues
+) -> None:
+    support = catalogues.require_supported_filing_years()
+    if support != authority.catalogues.require_supported_filing_years():
+        raise RegistryValidationError("historical static target changed the supported filing years catalogue")
+    if context.filing_year >= support.floor:
+        raise RegistryValidationError("historical static target must be below the unchanged filing support floor")
 
 
 def _validated_authority_target_snapshot(

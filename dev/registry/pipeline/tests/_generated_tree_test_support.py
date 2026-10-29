@@ -8,7 +8,8 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 
 from ...compiler.authority import compiled_bundled_authority

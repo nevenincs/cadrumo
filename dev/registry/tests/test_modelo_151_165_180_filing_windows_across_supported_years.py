@@ -28,7 +28,8 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority as CompiledAuthority
-from cadrumo.domain.calculations.registry.schema import ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from dev.corpus.manual_corpus_sidecar import (
     MANUAL_CORPUS_TEXT_CORPUS_PATH_PREFIX,

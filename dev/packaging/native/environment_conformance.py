@@ -21,24 +21,21 @@ import json
 import sys
 import tempfile
 import tomllib
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path, PurePath, PurePosixPath, PureWindowsPath
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
-from .application_environment import (
-    DECLARATION,
-    ApplicationEnvironment,
-    bind_build_provisioning,
-    channel_directory,
-    compile_section,
-    parse,
-)
+from .application_environment import bind_build_provisioning, parse
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
+from .environment_compile import compile_section
+from .environment_conformance_cli import accepts_kind, check_command_line_names
+from .environment_conformance_types import Finding, Reference
+from .environment_declaration_primitives import DECLARATION
+from .environment_root import channel_directory
 
 LOG_RELOCATION: Final = "relocated-logs"
 """A relative diagnostic-log directory the command line must anchor beneath its storage root."""
@@ -50,43 +47,6 @@ _INTERPRETER_IMAGE: Final = "python"
 # A package kind may be no wider than the component's own field: the package must never
 # declare, pass or validate a value the component's schema would refuse. A narrower kind is
 # fine, so a numeric kind is satisfied by a field that holds any string.
-_FIELD_ACCEPTS: Final[Mapping[str, frozenset[str]]] = {
-    "path": frozenset({"directory", "file", "executable"}),
-    "boolean": frozenset({"boolean"}),
-    "integer": frozenset({"integer", "port"}),
-    "number": frozenset({"number", "integer"}),
-    "language": frozenset({"language"}),
-    "text": frozenset({"text", "language", "integer", "number", "boolean", "port"}),
-}
-
-
-@dataclass(frozen=True)
-class Finding:
-    """One disagreement between the package's declaration and an installed component."""
-
-    check: str
-    subject: str
-    message: str
-
-    def render(self) -> str:
-        """Spell the finding on one line."""
-        return f"[{self.check}] {self.subject}: {self.message}"
-
-
-@dataclass(frozen=True)
-class Reference:
-    """The package's declaration, resolved for one build target: the side every comparison trusts."""
-
-    declaration: ApplicationEnvironment
-    section: Mapping[str, Any]
-    layout: Mapping[str, Any]
-    agent: Mapping[str, Any]
-    family: str
-
-    @property
-    def windows(self) -> bool:
-        """Whether the target's environment names compare without case."""
-        return self.family == "windows"
 
 
 def reference_from_text(text: str, layout: Mapping[str, Any], *, source: Path = REPO_ROOT) -> Reference:
@@ -113,7 +73,9 @@ def build_request(reference: Reference) -> dict[str, Any]:
     absolute sample path, and names no component may forward or honour: a
     foreign credential, the agent's settings file and the root itself.
     """
-    sample = (lambda name: f"C:\\conformance\\{name}") if reference.windows else (lambda name: f"/conformance/{name}")
+    sample: Callable[[str], str] = (
+        (lambda name: f"C:\\conformance\\{name}") if reference.windows else (lambda name: f"/conformance/{name}")
+    )
     declaration = reference.declaration
     received = {name: sample(name) for group in declaration.base[reference.family].values() for name in group}
     for name in ("ANTHROPIC_API_KEY", "AWS_SECRET_ACCESS_KEY", declaration.root["variable"]):
@@ -124,65 +86,6 @@ def build_request(reference: Reference) -> dict[str, Any]:
 
 def _fold(reference: Reference, name: str) -> str:
     return name.upper() if reference.windows else name
-
-
-def _accepts(label: str | None, kind: str) -> bool:
-    return label is not None and kind in _FIELD_ACCEPTS.get(label, frozenset())
-
-
-def _reads(subject: str, reader: str, name: str, kind: str, settings: Mapping[str, str | None]) -> list[Finding]:
-    if name not in settings:
-        return [Finding(subject, name, f"{reader} reads no such setting")]
-    label = settings[name]
-    if label is None:
-        return [Finding(subject, name, f"{reader} names it without a settings field to hold a value")]
-    if label == "secret":
-        return [Finding(subject, name, f"{reader} holds a credential in it; a package name never carries one")]
-    if not _accepts(label, kind):
-        return [Finding(subject, name, f"the package declares kind {kind}, wider than {reader}'s {label} field")]
-    return []
-
-
-def check_command_line_names(reference: Reference, cli: Mapping[str, Any]) -> list[Finding]:
-    """Hold every name the package sets, passes or lets an operator override to what the command line reads."""
-    check, reader = "command-line-names", "the command line"
-    declaration = reference.declaration
-    settings = cli["settings"]
-    findings: list[Finding] = []
-    for name, entry in declaration.names.items():
-        role, kind = entry["role"], entry["kind"]
-        if role in {"location", "operator"}:
-            findings += _reads(check, reader, name, kind, settings)
-        elif role == "package":
-            if name in settings:
-                findings += _reads(check, reader, name, kind, settings)
-            elif name != declaration.path_external:
-                findings.append(Finding(check, name, "neither the command line reads it nor the host consumes it"))
-        elif role == "pin":
-            if name not in cli["temporary_variables"]:
-                findings.append(Finding(check, name, "is pinned as a temporary variable the command line does not use"))
-        elif role == "fixed":
-            if name == declaration.authority.name:
-                findings += _reads(check, reader, name, kind, settings)
-                if name not in cli["authority_variables"]:
-                    findings.append(Finding(check, name, "is not the setting that names the command line's authority"))
-        elif role == "pass" and name in settings:
-            # A command-line setting the runtime passes on to its workers unchanged.
-            findings += _reads(check, reader, name, kind, settings)
-        elif role == "slot" and name in cli.get("profile_variables", ()):
-            # The command line derives it for the children it starts for one profile, and reads it back for nothing.
-            continue
-        elif not name.startswith(reference.agent["prefix"]):
-            findings.append(Finding(check, name, f"role {role} is read by no installed component"))
-    if set(declaration.temporary) != set(cli["temporary_variables"]):
-        findings.append(
-            Finding(
-                check,
-                "temporary variables",
-                f"the package pins {sorted(declaration.temporary)}; the command line pins {cli['temporary_variables']}",
-            )
-        )
-    return findings
 
 
 def gateway_profile(reference: Reference, arguments: Sequence[str]) -> Mapping[str, Any] | None:
@@ -212,17 +115,8 @@ def _admits_by_prefix(reference: Reference, profile: Mapping[str, Any], name: st
     return bool(prefix) and folded.startswith(prefix) and len(name) > len(prefix) and folded not in refused
 
 
-def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping[str, Any] | None) -> list[Finding]:
-    """Hold the agent image's names to the bundled agent's own settings, credentials and worker handover.
-
-    The gateway and worker admit the agent's names by its prefix, so no agent setting is listed:
-    what is compared is the prefix, the contract version, the declared slots, the names never
-    admitted, and that every name the gateway writes for its worker reaches the worker.
-    """
+def _check_agent_settings(reference: Reference, agent: Mapping[str, object], findings: list[Finding]) -> None:
     check = "agent-names"
-    if agent is None:
-        return [Finding(check, "bundled agent", "is not installed in the interpreter under test")]
-    findings: list[Finding] = []
     declared = reference.agent
     if agent["prefix"] != declared["prefix"]:
         findings.append(
@@ -241,24 +135,49 @@ def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping
         findings.append(Finding(check, "settings file", "the bundled agent admits a dotenv settings source"))
     for name, entry in reference.declaration.names.items():
         if name.startswith(declared["prefix"]):
-            label = agent["settings"].get(name)
+            label = cast(Mapping[str, str | None], agent["settings"]).get(name)
             if label is None:
                 findings.append(Finding(check, name, "the bundled agent reads no such setting"))
-            elif not _accepts(label, entry["kind"]):
+            elif not accepts_kind(label, entry["kind"]):
                 findings.append(
                     Finding(check, name, f"the package declares kind {entry['kind']}, wider than the agent's {label}")
                 )
-    gateway = gateway_profile(reference, runtime["gateway_arguments"])
-    profiles = [profile for profile in reference.section["profiles"] if profile["image"] == declared["image"]]
+
+
+def _check_agent_credentials(
+    agent: Mapping[str, object], profiles: list[Mapping[str, object]], findings: list[Finding]
+) -> None:
+    check = "agent-names"
     # A credential is never a name the package declares; one the prefix admits meets the agent's own refusals.
     for profile in profiles:
         findings.extend(
             Finding(check, name, f"is a credential the agent holds, declared for {profile['name']}")
-            for name in sorted(_admitted(profile) & set(agent["credentials"]))
+            for name in sorted(_admitted(profile) & set(cast(Sequence[str], agent["credentials"])))
         )
-    writes = set(agent["worker_environment_writes"])
-    if not writes:
-        findings.append(Finding(check, "worker handover", "found no environment the gateway writes for its worker"))
+
+
+def _check_one_worker(
+    reference: Reference, profile: Mapping[str, object], writes: set[str], findings: list[Finding]
+) -> None:
+    check = "agent-names"
+    slots = {slot["name"] for slot in cast(Sequence[Mapping[str, str]], profile["slots"])}
+    findings.extend(
+        Finding(check, name, f"the gateway writes it for its worker, which {profile['name']} does not admit")
+        for name in sorted(writes)
+        if name not in slots
+        and name not in cast(Sequence[str], profile["pass"])
+        and not _admits_by_prefix(reference, profile, name)
+    )
+
+
+def _check_worker_admission(
+    reference: Reference,
+    gateway: Mapping[str, object] | None,
+    profiles: list[Mapping[str, object]],
+    writes: set[str],
+    findings: list[Finding],
+) -> None:
+    check = "agent-names"
     worker = [
         profile
         for profile in profiles
@@ -267,37 +186,51 @@ def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping
     if gateway is not None and not worker:
         findings.append(Finding(check, "worker handover", "no agent profile but the gateway's admits the prefix"))
     for profile in worker:
-        slots = {slot["name"] for slot in profile["slots"]}
-        findings.extend(
-            Finding(check, name, f"the gateway writes it for its worker, which {profile['name']} does not admit")
-            for name in sorted(writes)
-            if name not in slots and name not in profile["pass"] and not _admits_by_prefix(reference, profile, name)
-        )
+        _check_one_worker(reference, profile, writes, findings)
+
+
+def _check_agent_worker(
+    reference: Reference,
+    agent: Mapping[str, object],
+    gateway: Mapping[str, object] | None,
+    profiles: list[Mapping[str, object]],
+    findings: list[Finding],
+) -> None:
+    check = "agent-names"
+    _check_agent_credentials(agent, profiles, findings)
+    writes = set(cast(Sequence[str], agent["worker_environment_writes"]))
+    if not writes:
+        findings.append(Finding(check, "worker handover", "found no environment the gateway writes for its worker"))
+    _check_worker_admission(reference, gateway, profiles, writes, findings)
+
+
+def check_agent(reference: Reference, runtime: Mapping[str, Any], agent: Mapping[str, Any] | None) -> list[Finding]:
+    """Hold the agent image's names to the bundled agent's own settings, credentials and worker handover.
+
+    The gateway and worker admit the agent's names by its prefix, so no agent setting is listed:
+    what is compared is the prefix, the contract version, the declared slots, the names never
+    admitted, and that every name the gateway writes for its worker reaches the worker.
+    """
+    check = "agent-names"
+    if agent is None:
+        return [Finding(check, "bundled agent", "is not installed in the interpreter under test")]
+    findings: list[Finding] = []
+    _check_agent_settings(reference, agent, findings)
+    declared = reference.agent
+    gateway = gateway_profile(reference, runtime["gateway_arguments"])
+    profiles = [profile for profile in reference.section["profiles"] if profile["image"] == declared["image"]]
+    _check_agent_worker(reference, agent, gateway, profiles, findings)
     return findings
 
 
-def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> list[Finding]:
-    """Hold the runtime's agent launch to the gateway profile: its invocation, its slots and nothing else."""
+def _check_gateway_advertised(
+    reference: Reference,
+    gateway: Mapping[str, object],
+    advertised: set[str],
+    declared_slots: set[str],
+    findings: list[Finding],
+) -> None:
     check = "runtime-launch"
-    gateway = gateway_profile(reference, runtime["gateway_arguments"])
-    if gateway is None:
-        return [Finding(check, "gateway invocation", f"no declared invocation is {runtime['gateway_arguments']}")]
-    findings: list[Finding] = []
-    slots = {slot["name"] for slot in gateway["slots"]}
-    runtime_slots = set(runtime["gateway_slots"])
-    findings.extend(
-        Finding(check, name, "is a declared gateway slot the runtime does not fill")
-        for name in sorted(slots - runtime_slots)
-    )
-    findings.extend(
-        Finding(check, name, "is a slot the runtime fills that the gateway does not declare")
-        for name in sorted(runtime_slots - slots)
-    )
-    composed = {_fold(reference, name) for name in runtime["composed"]}
-    base = {_fold(reference, name) for name in gateway["base"]}
-    pins = {_fold(reference, name) for name in reference.section["pins"]["temporary"]}
-    declared_slots = {_fold(reference, name) for name in slots}
-    advertised = {_fold(reference, name) for name in runtime["advertised_variables"]}
     admitted_by_prefix = {name for name in advertised if _admits_by_prefix(reference, gateway, name)}
     findings.extend(
         Finding(
@@ -309,10 +242,40 @@ def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> li
         Finding(check, name, "is advertised to the agent and declared as a launch slot")
         for name in sorted(advertised & declared_slots)
     )
+
+
+def _check_gateway_slots(
+    gateway: Mapping[str, object], runtime: Mapping[str, object], findings: list[Finding]
+) -> set[str]:
+    check = "runtime-launch"
+    slots = {slot["name"] for slot in cast(Sequence[Mapping[str, str]], gateway["slots"])}
+    runtime_slots = set(cast(Sequence[str], runtime["gateway_slots"]))
+    findings.extend(
+        Finding(check, name, "is a declared gateway slot the runtime does not fill")
+        for name in sorted(slots - runtime_slots)
+    )
+    findings.extend(
+        Finding(check, name, "is a slot the runtime fills that the gateway does not declare")
+        for name in sorted(runtime_slots - slots)
+    )
+    return slots
+
+
+def _check_composed_names(
+    reference: Reference,
+    gateway: Mapping[str, object],
+    composed: set[str],
+    declared_slots: set[str],
+    base: set[str],
+    pins: set[str],
+    advertised: set[str],
+    findings: list[Finding],
+) -> None:
+    check = "runtime-launch"
     # The gateway admits every name under the agent's prefix but the never-admitted ones, so a
     # setting the composer writes there, advertised or not, reaches the agent without a listing.
     composed_by_prefix = {name for name in composed if _admits_by_prefix(reference, gateway, name)}
-    passed = {_fold(reference, name) for name in gateway["pass"]}
+    passed = {_fold(reference, name) for name in cast(Sequence[str], gateway["pass"])}
     unadmitted = composed - declared_slots - base - pins - passed - {"PATH"} - composed_by_prefix
     findings.extend(
         Finding(check, name, "is written by the composer, and the gateway profile does not admit it")
@@ -330,26 +293,114 @@ def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> li
         Finding(check, name, "is an operating-system name the gateway profile admits and the composer omits")
         for name in sorted(base - composed)
     )
-    section = reference.section
-    fixed = {value["name"]: value for profile in section["profiles"] for value in profile["fixed"]}
-    bundled = set(reference.layout.get("bundled_images", {}))
-    agent_variable, relay_variable = runtime["agent_variable"], runtime["relay_variable"]
-    aeat_variable, python_variable = runtime["program_variables"]
-    agent_fixed, relay_fixed = fixed.get(agent_variable), fixed.get(relay_variable)
-    aeat_fixed, python_fixed = fixed.get(aeat_variable), fixed.get(python_variable)
+
+
+def _check_gateway_composition(
+    reference: Reference, gateway: Mapping[str, object], runtime: Mapping[str, object], findings: list[Finding]
+) -> None:
+    slots = _check_gateway_slots(gateway, runtime, findings)
+    composed = {_fold(reference, name) for name in cast(Sequence[str], runtime["composed"])}
+    base = {_fold(reference, name) for name in cast(Sequence[str], gateway["base"])}
+    pins = {_fold(reference, name) for name in reference.section["pins"]["temporary"]}
+    declared_slots = {_fold(reference, name) for name in slots}
+    advertised = {_fold(reference, name) for name in cast(Sequence[str], runtime["advertised_variables"])}
+    _check_gateway_advertised(reference, gateway, advertised, declared_slots, findings)
+    _check_composed_names(reference, gateway, composed, declared_slots, base, pins, advertised, findings)
+
+
+def _check_one_entrypoint(
+    reference: Reference, variable: str, program: Mapping[str, str] | None, findings: list[Finding]
+) -> None:
+    check = "runtime-launch"
+    if program is None or program["source"] != "image" or program["value"] not in reference.layout["entrypoints"]:
+        findings.append(Finding(check, variable, "is not fixed as the path of an entrypoint image"))
+
+
+def _check_fixed_entrypoints(
+    reference: Reference,
+    bundled: set[str],
+    agent_variable: str,
+    relay_variable: str,
+    aeat_variable: str,
+    python_variable: str,
+    agent_fixed: Mapping[str, str] | None,
+    relay_fixed: Mapping[str, str] | None,
+    aeat_fixed: Mapping[str, str] | None,
+    python_fixed: Mapping[str, str] | None,
+    findings: list[Finding],
+) -> None:
+    check = "runtime-launch"
     if agent_fixed is None or agent_fixed["source"] != "image" or agent_fixed["value"] not in bundled:
         findings.append(Finding(check, agent_variable, "is not fixed as the path of a bundled agent image"))
     for variable, program in ((relay_variable, relay_fixed), (aeat_variable, aeat_fixed)):
-        if program is None or program["source"] != "image" or program["value"] not in reference.layout["entrypoints"]:
-            findings.append(Finding(check, variable, "is not fixed as the path of an entrypoint image"))
+        _check_one_entrypoint(reference, variable, program, findings)
     if python_fixed is None or python_fixed["source"] != "image" or python_fixed["value"] != _INTERPRETER_IMAGE:
         findings.append(Finding(check, python_variable, "is not fixed as the path of the package's interpreter image"))
+
+
+def _check_fixed_programs(reference: Reference, runtime: Mapping[str, object], findings: list[Finding]) -> None:
+    check = "runtime-launch"
+    section = reference.section
+    fixed = {value["name"]: value for profile in section["profiles"] for value in profile["fixed"]}
+    bundled = set(reference.layout.get("bundled_images", {}))
+    agent_variable, relay_variable = cast(str, runtime["agent_variable"]), cast(str, runtime["relay_variable"])
+    aeat_variable, python_variable = cast(tuple[str, str], runtime["program_variables"])
+    agent_fixed, relay_fixed = fixed.get(agent_variable), fixed.get(relay_variable)
+    aeat_fixed, python_fixed = fixed.get(aeat_variable), fixed.get(python_variable)
+    _check_fixed_entrypoints(
+        reference,
+        bundled,
+        agent_variable,
+        relay_variable,
+        aeat_variable,
+        python_variable,
+        agent_fixed,
+        relay_fixed,
+        aeat_fixed,
+        python_fixed,
+        findings,
+    )
     reads_it = {agent_variable, relay_variable, aeat_variable, python_variable, reference.declaration.authority.name}
     findings.extend(
         Finding(check, name, "is fixed by the package and read by no installed component")
         for name in sorted(set(fixed) - reads_it)
     )
+
+
+def check_runtime_launch(reference: Reference, runtime: Mapping[str, Any]) -> list[Finding]:
+    """Hold the runtime's agent launch to the gateway profile: its invocation, its slots and nothing else."""
+    check = "runtime-launch"
+    gateway = gateway_profile(reference, runtime["gateway_arguments"])
+    if gateway is None:
+        return [Finding(check, "gateway invocation", f"no declared invocation is {runtime['gateway_arguments']}")]
+    findings: list[Finding] = []
+    _check_gateway_composition(reference, gateway, runtime, findings)
+    _check_fixed_programs(reference, runtime, findings)
     return findings
+
+
+def _check_native_refusals(
+    declared: Mapping[str, object], runtime: Mapping[str, object], findings: list[Finding]
+) -> None:
+    check = "native-host"
+    if runtime["launch_profile_refused"] != declared["launch_profile_refused"]:
+        findings.append(
+            Finding(
+                check,
+                "launch_profile_refused",
+                f"the package exits {declared['launch_profile_refused']}; "
+                f"the runtime reads {runtime['launch_profile_refused']}",
+            )
+        )
+    if list(cast(Sequence[object], runtime["native_refusals"])) != list(cast(Sequence[object], declared["refusals"])):
+        findings.append(
+            Finding(
+                check,
+                "refusal codes",
+                f"the package writes {list(cast(Sequence[object], declared['refusals']))}; "
+                f"the runtime reads {list(cast(Sequence[object], runtime['native_refusals']))}",
+            )
+        )
 
 
 def check_native_host(reference: Reference, runtime: Mapping[str, Any]) -> list[Finding]:
@@ -372,24 +423,7 @@ def check_native_host(reference: Reference, runtime: Mapping[str, Any]) -> list[
     for other in runtime["reserved_exit_codes"]:
         if other is not owned[0] and not (other["last"] < declared["first"] or other["first"] > declared["last"]):
             findings.append(Finding(check, other["owner"], "overlaps the native host's reserved range"))
-    if runtime["launch_profile_refused"] != declared["launch_profile_refused"]:
-        findings.append(
-            Finding(
-                check,
-                "launch_profile_refused",
-                f"the package exits {declared['launch_profile_refused']}; "
-                f"the runtime reads {runtime['launch_profile_refused']}",
-            )
-        )
-    if list(runtime["native_refusals"]) != list(declared["refusals"]):
-        findings.append(
-            Finding(
-                check,
-                "refusal codes",
-                f"the package writes {list(declared['refusals'])}; "
-                f"the runtime reads {list(runtime['native_refusals'])}",
-            )
-        )
+    _check_native_refusals(declared, runtime, findings)
     return findings
 
 

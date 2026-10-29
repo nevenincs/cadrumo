@@ -24,7 +24,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 

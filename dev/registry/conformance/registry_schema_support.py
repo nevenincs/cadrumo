@@ -14,12 +14,8 @@ from functools import cache
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import KeyedBracketEntry
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 

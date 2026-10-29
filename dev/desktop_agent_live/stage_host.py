@@ -12,7 +12,8 @@ from __future__ import annotations
 import argparse
 import json
 
-from .lane import UnavailableError, require_current, stage_package, test_host
+from .lane_errors import UnavailableError
+from .lane_stage import require_current, stage_package, test_host
 
 
 def main(argv: list[str] | None = None) -> int:

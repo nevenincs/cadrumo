@@ -76,7 +76,6 @@ from cadrumo.application.ledger.evidence_followup_contracts import (
     LedgerEvidenceConsentListRequest,
     LedgerEvidenceReviewListProjection,
     LedgerEvidenceReviewListRequest,
-    LedgerEvidenceReviewSummaryProjection,
     LedgerEvidenceReviewViewRequest,
 )
 from cadrumo.application.ledger.evidence_read_operation import (
@@ -88,6 +87,7 @@ from cadrumo.application.ledger.evidence_read_operation import (
     LedgerEvidenceViewRequest,
     LedgerEvidenceViewSuccess,
 )
+from cadrumo.application.ledger.evidence_review_summaries import LedgerEvidenceReviewSummaryProjection
 from cadrumo.application.ledger.history_operation import LedgerHistoryRequest
 from cadrumo.application.ledger.list_operation import LedgerListRequest
 from cadrumo.application.ledger.llm_diagnostics import DEFAULT_LOW_CONFIDENCE_THRESHOLD
@@ -135,8 +135,9 @@ from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.categories.spending_category_catalogue import require_spending_category
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.transactions.classification_rule import LedgerClassificationRule
 from cadrumo.domain.transactions.enums import (
@@ -148,12 +149,12 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import (
+from cadrumo.entrypoints.adapter_composition_ports import (
     build_bienes_inversion_repository,
     build_inventory_service_ports,
-    build_ledger_evidence_ports,
     build_prorrata_register_repository,
 )
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_evidence_ports
 from cadrumo.entrypoints.ledger_action_composition import compose_ledger_action_ports
 from cadrumo.entrypoints.tests.evidence_followup_operation_test_support import (
     prepare_evidence_followup_conformance_case,

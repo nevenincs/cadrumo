@@ -32,6 +32,7 @@ from dev.corpus.text import resolve_anchored_extracted_unit
 from dev.docs.preprocess.normatives_html import build_xml_outputs
 
 from ..legal_catalogue import LEGAL_DIR, load_legal_entries, required_text_by_entry
+from ..legal_citation_keys import candidate_keys, ordinal_spellings, structural_key
 from ..legal_excerpt_vintage_screen import (
     Finding,
     OracleKind,
@@ -39,13 +40,10 @@ from ..legal_excerpt_vintage_screen import (
     _classify,
     _is_vintaged,
     article_payloads,
-    candidate_keys,
     clause_chunks,
     confirms_citation,
     norm_root,
-    ordinal_spellings,
     screen,
-    structural_key,
     summarise,
 )
 

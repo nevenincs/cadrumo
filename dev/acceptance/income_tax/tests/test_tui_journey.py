@@ -277,14 +277,30 @@ def _form_with_assumed_withholding(*, entries_known: bool) -> Any:
     the confirmation dialog can list: a box a source fills is confirmed in its
     own panel instead, since keeping a value there would replace the source.
     """
-    from cadrumo.application.modelo.work_form_models import ModeloFormFieldBlock, ModeloFormOrigin
+    from cadrumo.application.modelo.work_form_models import ModeloFormField, ModeloFormFieldBlock, ModeloFormOrigin
     from cadrumo.entrypoints.tui.modelo.workbench.tests.workbench_fixture import synthetic_form
 
     form = synthetic_form(needs_input=False)
 
     def swap(block: object) -> object:
         if isinstance(block, ModeloFormFieldBlock) and block.field.box == "06":
-            field = block.field.model_copy(update={"origin": ModeloFormOrigin.DEFAULT_TO_CONFIRM, "bindings": ()})
+            derived = {
+                "standing",
+                "edit_address",
+                "confirmable",
+                "held_zero",
+                "takes_typed_value",
+                "clearable",
+                "own_value",
+                "confirm_comparable",
+                "state_digest",
+                "restorable",
+                "filers_own",
+                "confirm_value",
+            }
+            values = block.field.model_dump(exclude=derived)
+            values.update(origin=ModeloFormOrigin.DEFAULT_TO_CONFIRM, bindings=(), unattributed=True)
+            field = ModeloFormField.model_validate(values)
             return block.model_copy(update={"field": field})
         return block
 

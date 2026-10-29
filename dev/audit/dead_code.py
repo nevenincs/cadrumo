@@ -357,6 +357,10 @@ def run_dead_code_scan(repo_root: Path, *, timeout: float = _VULTURE_TIMEOUT_SEC
     except OSError as exc:
         return DeadCodeResult.error(f"vulture could not be launched ({exc})")
 
+    return _classify_vulture(completed, offered)
+
+
+def _classify_vulture(completed: CommandResult, offered: int) -> DeadCodeResult:
     error = _vulture_diagnostic_error(completed)
     if error is not None:
         return error

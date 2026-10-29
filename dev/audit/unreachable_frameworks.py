@@ -55,40 +55,58 @@ class FrameworkContract:
     http_handler: bool = False
 
 
-def _expression_name(node: ast.expr) -> str:
+def expression_name(node: ast.expr) -> str:
+    """Return the qualified spelling of a source expression."""
     if isinstance(node, ast.Subscript):
-        return _expression_name(node.value)
+        return expression_name(node.value)
     if isinstance(node, ast.Name):
         return node.id
     if isinstance(node, ast.Attribute):
-        owner = _expression_name(node.value)
+        owner = expression_name(node.value)
         return f"{owner}.{node.attr}" if owner else ""
     return ""
 
 
-def _import_bindings(module: ShippedModule) -> dict[str, str]:
+def import_bindings(module: ShippedModule) -> dict[str, str]:
+    """Map source import bindings to their qualified names."""
     bindings: dict[str, str] = {}
     for node in module.tree.body:
-        if isinstance(node, ast.ImportFrom):
-            base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
-            if base is not None and base:
-                bindings.update((alias.asname or alias.name, f"{base}.{alias.name}") for alias in node.names)
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                bindings[alias.asname or alias.name.split(".")[0]] = (
-                    alias.name if (alias.asname is not None and alias.asname) else alias.name.split(".")[0]
-                )
-        elif isinstance(node, ast.Assign | ast.AnnAssign) and node.value is not None:
-            original = _expression_name(node.value)
-            if not original:
-                continue
-            head, separator, tail = original.partition(".")
-            qualified = f"{bindings.get(head, f'{module.name}.{head}')}{separator}{tail}"
-            targets = node.targets if isinstance(node, ast.Assign) else [node.target]
-            for target in targets:
-                if isinstance(target, ast.Name):
-                    bindings[target.id] = qualified
+        _collect_binding(node, module, bindings)
     return bindings
+
+
+def _collect_binding(node: ast.stmt, module: ShippedModule, bindings: dict[str, str]) -> None:
+    if isinstance(node, ast.ImportFrom):
+        base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
+        if base is not None and base:
+            bindings.update((alias.asname or alias.name, f"{base}.{alias.name}") for alias in node.names)
+    elif isinstance(node, ast.Import):
+        _collect_import_binding(node, bindings)
+    elif isinstance(node, ast.Assign | ast.AnnAssign) and node.value is not None:
+        _collect_assignment_binding(node, module, bindings)
+
+
+def _collect_import_binding(node: ast.Import, bindings: dict[str, str]) -> None:
+    for alias in node.names:
+        bindings[alias.asname or alias.name.split(".")[0]] = (
+            alias.name if (alias.asname is not None and alias.asname) else alias.name.split(".")[0]
+        )
+
+
+def _collect_assignment_binding(
+    node: ast.Assign | ast.AnnAssign, module: ShippedModule, bindings: dict[str, str]
+) -> None:
+    if node.value is None:
+        return
+    original = expression_name(node.value)
+    if not original:
+        return
+    head, separator, tail = original.partition(".")
+    qualified = f"{bindings.get(head, f'{module.name}.{head}')}{separator}{tail}"
+    targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+    for target in targets:
+        if isinstance(target, ast.Name):
+            bindings[target.id] = qualified
 
 
 def _installed_contract(target: str) -> FrameworkContract:
@@ -115,6 +133,10 @@ def _installed_contract(target: str) -> FrameworkContract:
         raise ValueError(f"framework contract requires an explicitly declared installed module: {module_name}")
     if not isinstance(base, type):
         return FrameworkContract()
+    return _contract_for_base(base)
+
+
+def _contract_for_base(base: type) -> FrameworkContract:
     members: set[str] = set()
     for ancestor in base.__mro__:
         if ancestor is object:
@@ -142,7 +164,7 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
         for node in module.tree.body
         if isinstance(node, ast.ClassDef)
     }
-    bindings = {name: _import_bindings(module) for name, module in modules.items()}
+    bindings = {name: import_bindings(module) for name, module in modules.items()}
     resolved: dict[tuple[str, str], FrameworkContract] = {}
     installed: dict[str, FrameworkContract] = {}
     parents: dict[tuple[str, str], set[tuple[str, str]]] = {}
@@ -158,18 +180,7 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
         pydantic = False
         http_handler = False
         for base in node.bases:
-            target = _expression_name(base)
-            head, separator, tail = target.partition(".")
-            bound = bindings[key[0]].get(head)
-            qualified = f"{bound}{separator}{tail}" if (bound is not None and bound) else f"{key[0]}.{target}"
-            followed: set[str] = set()
-            while qualified not in followed:
-                followed.add(qualified)
-                owner, _, name = qualified.rpartition(".")
-                rebound = bindings.get(owner, {}).get(name)
-                if rebound is None or rebound == qualified:
-                    break
-                qualified = rebound
+            qualified = _qualified_base(key[0], base, bindings)
             owner, _, name = qualified.rpartition(".")
             if (owner, name) in classes:
                 parents.setdefault(key, set()).add((owner, name))
@@ -188,6 +199,33 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
 
     for key in classes:
         resolve(key, frozenset())
+    _propagate_contracts(resolved, parents)
+    by_module: dict[str, dict[str, FrameworkContract]] = {}
+    for key, contract in resolved.items():
+        by_module.setdefault(key[0], {})[key[1]] = contract
+    return by_module
+
+
+def _qualified_base(module: str, base: ast.expr, bindings: Mapping[str, Mapping[str, str]]) -> str:
+    target = expression_name(base)
+    head, separator, tail = target.partition(".")
+    bound = bindings[module].get(head)
+    qualified = f"{bound}{separator}{tail}" if (bound is not None and bound) else f"{module}.{target}"
+    followed: set[str] = set()
+    while qualified not in followed:
+        followed.add(qualified)
+        owner, _, name = qualified.rpartition(".")
+        owner_bindings = bindings.get(owner)
+        rebound = owner_bindings.get(name) if owner_bindings is not None else None
+        if rebound is None or rebound == qualified:
+            break
+        qualified = rebound
+    return qualified
+
+
+def _propagate_contracts(
+    resolved: dict[tuple[str, str], FrameworkContract], parents: Mapping[tuple[str, str], set[tuple[str, str]]]
+) -> None:
     pending = list(resolved)
     while pending:
         child = pending.pop()
@@ -203,7 +241,3 @@ def framework_contracts(modules: Mapping[str, ShippedModule]) -> dict[str, dict[
             if merged != inherited:
                 resolved[parent] = merged
                 pending.append(parent)
-    by_module: dict[str, dict[str, FrameworkContract]] = {}
-    for key, contract in resolved.items():
-        by_module.setdefault(key[0], {})[key[1]] = contract
-    return by_module

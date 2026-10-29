@@ -40,6 +40,17 @@ def _text(library: ctypes.CDLL, name: str, argument: object) -> str:
         libc.free(pointer)
 
 
+def _observe_session_flags(library: ctypes.CDLL, session: str, evidence: dict[str, object]) -> None:
+    for field in ("active", "remote"):
+        function = getattr(library, f"sd_session_is_{field}")
+        function.argtypes = [ctypes.c_char_p]
+        function.restype = ctypes.c_int
+        result = function(session.encode())
+        if result < 0:
+            raise OSError(-result, os.strerror(-result))
+        evidence[field] = bool(result)
+
+
 def observe(pid: int, pidfd: int) -> dict[str, object]:
     """Bracket native observations with liveness of the held process identity."""
     if select.select([pidfd], [], [], 0)[0]:
@@ -70,14 +81,7 @@ def observe(pid: int, pidfd: int) -> dict[str, object]:
         evidence["owner_uid"] = owner.value
         for field in ("type", "class", "state"):
             evidence[field] = _text(library, f"sd_session_get_{field}", session.encode())
-        for field in ("active", "remote"):
-            function = getattr(library, f"sd_session_is_{field}")
-            function.argtypes = [ctypes.c_char_p]
-            function.restype = ctypes.c_int
-            result = function(session.encode())
-            if result < 0:
-                raise OSError(-result, os.strerror(-result))
-            evidence[field] = bool(result)
+        _observe_session_flags(library, session, evidence)
         if _text(library, "sd_pidfd_get_session", pidfd) != session:
             raise RuntimeError("Native session changed during observation")
     except OSError as error:
@@ -86,6 +90,17 @@ def observe(pid: int, pidfd: int) -> dict[str, object]:
     if select.select([pidfd], [], [], 0)[0]:
         raise RuntimeError("Observed process exited during observation")
     return evidence
+
+
+def _local_graphical(evidence: dict[str, object]) -> bool:
+    return not (
+        evidence.get("type") not in ("x11", "wayland")
+        or evidence.get("class") != "user"
+        or evidence.get("state") != "active"
+        or evidence.get("active") is not True
+        or evidence.get("remote") is not False
+        or "native_identity_error" in evidence
+    )
 
 
 def require_graphical(evidence: dict[str, object], uid: int) -> None:
@@ -97,21 +112,12 @@ def require_graphical(evidence: dict[str, object], uid: int) -> None:
         or evidence.get("owner_uid") != uid
         or not isinstance(evidence.get("session"), str)
         or not evidence.get("session")
-        or evidence.get("type") not in ("x11", "wayland")
-        or evidence.get("class") != "user"
-        or evidence.get("state") != "active"
-        or evidence.get("active") is not True
-        or evidence.get("remote") is not False
-        or "native_identity_error" in evidence
+        or not _local_graphical(evidence)
     ):
         raise RuntimeError("A local, active, unelevated graphical logind session is required")
 
 
-def _placement(mode: str) -> dict[str, object]:
-    if sys.platform != "linux":
-        raise RuntimeError("Linux is required")
-    unit = f"cadrumo-placement-probe-{uuid.uuid4().hex}"
-    child = [sys.executable, "-I", str(Path(__file__).resolve()), "--child"]
+def _placement_command(mode: str, unit: str, child: list[str]) -> list[str]:
     command = child
     if mode != "direct":
         command = [
@@ -133,6 +139,43 @@ def _placement(mode: str) -> dict[str, object]:
                 "--property=TimeoutStopSec=4s",
             ]
         command += ["--", *child]
+    return command
+
+
+def _cleanup_placement(process: subprocess.Popen[bytes], mode: str, unit: str, result: dict[str, object]) -> None:
+    if mode != "direct":
+        # Only the uniquely named transient unit created by this probe.
+        try:
+            subprocess.run(  # noqa: S603 - fixed systemctl and locally generated unique unit.
+                [
+                    "/usr/bin/systemctl",
+                    "--user",
+                    "--no-ask-password",
+                    "stop",
+                    unit + (".scope" if mode == "scope" else ".service"),
+                ],
+                timeout=8,
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except (OSError, subprocess.TimeoutExpired) as error:
+            result["cleanup_error"] = str(error)
+    if process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=3)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait(timeout=3)
+
+
+def _placement(mode: str) -> dict[str, object]:
+    if sys.platform != "linux":
+        raise RuntimeError("Linux is required")
+    unit = f"cadrumo-placement-probe-{uuid.uuid4().hex}"
+    child = [sys.executable, "-I", str(Path(__file__).resolve()), "--child"]
+    command = _placement_command(mode, unit, child)
     result: dict[str, object] = {"mode": mode, "command": command}
     # A live stdin handshake is necessary to observe the actual child while a
     # pidfd remains held. A collect-after-exit subprocess helper cannot do that.
@@ -157,31 +200,7 @@ def _placement(mode: str) -> dict[str, object]:
         except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
             result["error"] = str(error)
         finally:
-            if mode != "direct":
-                # Only the uniquely named transient unit created by this probe.
-                try:
-                    subprocess.run(  # noqa: S603 - fixed systemctl and locally generated unique unit.
-                        [
-                            "/usr/bin/systemctl",
-                            "--user",
-                            "--no-ask-password",
-                            "stop",
-                            unit + (".scope" if mode == "scope" else ".service"),
-                        ],
-                        timeout=8,
-                        check=False,
-                        stdout=subprocess.DEVNULL,
-                        stderr=subprocess.DEVNULL,
-                    )
-                except (OSError, subprocess.TimeoutExpired) as error:
-                    result["cleanup_error"] = str(error)
-            if process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=3)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait(timeout=3)
+            _cleanup_placement(process, mode, unit, result)
     return result
 
 

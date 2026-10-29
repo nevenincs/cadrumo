@@ -52,6 +52,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final, cast, override
 
+from sphinx import addnodes
 from sphinx.transforms import SphinxTransform
 from sphinx.transforms.post_transforms import SphinxPostTransform
 
@@ -331,12 +332,12 @@ class MessagePlan:
 # The transform that tells each fragment paragraph which language it holds runs
 # inside Sphinx's read phase, where no argument of ours reaches it. One active
 # plan, set for the compile and cleared after it, is how it gets there.
-_ACTIVE: MessagePlan | None = None
+_active_plan: MessagePlan | None = None
 
 
 def active() -> MessagePlan | None:
     """Return this compile's message plan, or None outside a multilingual compile."""
-    return _ACTIVE
+    return _active_plan
 
 
 def _read_catalogue(path: Path) -> tuple[dict[str, str], dict[str, tuple[tuple[str, int], ...]]]:
@@ -576,6 +577,53 @@ def _extracted_from(locations: Sequence[tuple[str, int]], source: Path) -> int:
     return 1
 
 
+def _prepare_catalogue_blocks(
+    catalogues: _Catalogues,
+    source: Path,
+    docname: str,
+    source_language: str,
+    plan: MessagePlan,
+    slots: CompileSlots,
+    blocks: list[tuple[int, _Block]],
+) -> dict[str, str]:
+    """Recover source messages and reserve every catalogue translation in order."""
+    marked: dict[str, str] = {}
+    authored = _SourceText(source.read_text(encoding=_UTF_8))
+    for message in next(iter(catalogues.by_language.values())):
+        line = _extracted_from(catalogues.locations.get(message, ()), source)
+        authored_source = authored.unfolded(message, line)
+        # A message a language has not translated reaches that language's
+        # own page as the message itself, line breaks and all -- and that
+        # build still typesets it in its own language, educating its
+        # quotation marks, dashes and ellipses the way it educates every
+        # other text block. So the string recorded for such a language is
+        # the recovered source rather than nothing: left out, the message
+        # would reach the composed page as the compile's own language
+        # typeset it, which is a different page for every language whose
+        # quotation marks differ.
+        translations = [
+            authored_source
+            if language == source_language
+            else _one_line(catalogues.by_language[language].get(message, "")) or authored_source
+            for language in plan.languages
+        ]
+        _refuse_reserved(docname, translations)
+        mark = slots.reserve(Rendering.MESSAGE)
+        marked[message] = f"{mark}{_NOQA}"
+        _add_blocks(plan, blocks, mark, translations)
+    return marked
+
+
+def _prepare_requested_blocks(
+    asked: _Pending | None, docname: str, plan: MessagePlan, blocks: list[tuple[int, _Block]]
+) -> None:
+    """Append explicitly requested markup after the page's catalogue messages."""
+    if asked is not None:
+        for mark, strings in asked.blocks:
+            _refuse_reserved(docname, strings)
+            _add_blocks(plan, blocks, mark, [_one_line(string) for string in strings])
+
+
 def prepare(
     srcdir: Path,
     *,
@@ -611,7 +659,7 @@ def prepare(
     """
     from sphinx.util.i18n import docname_to_domain
 
-    global _ACTIVE
+    global _active_plan
     plan = MessagePlan(languages=slots.languages, source_language=source_language)
     locales = srcdir / "locales"
     pseudo = srcdir / PSEUDO_LOCALE_DIR / source_language / "LC_MESSAGES"
@@ -627,33 +675,8 @@ def prepare(
         blocks: list[tuple[int, _Block]] = []
         source = doc2path(docname)
         if catalogues is not None:
-            authored = _SourceText(source.read_text(encoding=_UTF_8))
-            for message in next(iter(catalogues.by_language.values())):
-                line = _extracted_from(catalogues.locations.get(message, ()), source)
-                authored_source = authored.unfolded(message, line)
-                # A message a language has not translated reaches that language's
-                # own page as the message itself, line breaks and all -- and that
-                # build still typesets it in its own language, educating its
-                # quotation marks, dashes and ellipses the way it educates every
-                # other text block. So the string recorded for such a language is
-                # the recovered source rather than nothing: left out, the message
-                # would reach the composed page as the compile's own language
-                # typeset it, which is a different page for every language whose
-                # quotation marks differ.
-                translations = [
-                    authored_source
-                    if language == source_language
-                    else _one_line(catalogues.by_language[language].get(message, "")) or authored_source
-                    for language in plan.languages
-                ]
-                _refuse_reserved(docname, translations)
-                mark = slots.reserve(Rendering.MESSAGE)
-                marked[message] = f"{mark}{_NOQA}"
-                _add_blocks(plan, blocks, mark, translations)
-        if asked is not None:
-            for mark, strings in asked.blocks:
-                _refuse_reserved(docname, strings)
-                _add_blocks(plan, blocks, mark, [_one_line(string) for string in strings])
+            marked = _prepare_catalogue_blocks(catalogues, source, docname, source_language, plan, slots, blocks)
+        _prepare_requested_blocks(asked, docname, plan, blocks)
         if not blocks:
             continue
         if marked:
@@ -667,7 +690,7 @@ def prepare(
             f"markup was asked to be rendered on {len(pending)} page(s) this build does not read, "
             f"first {sorted(pending)[0]!r}; nothing would render their marks"
         )
-    _ACTIVE = plan
+    _active_plan = plan
     return plan
 
 
@@ -750,6 +773,66 @@ def _without_marks(
     return MARK.sub(read, markup)
 
 
+def _harvest_fragments(plan: MessagePlan, page_path: Callable[[str], Path]) -> dict[str, list[str | None]]:
+    """Decode marked fragment renderings and remove only the consumed fragment pages."""
+    rendered: dict[str, list[str | None]] = {}
+    for docname, owner in zip(plan.fragments, plan.pages, strict=True):
+        page = page_path(docname)
+        if not page.is_file():
+            raise MessageMarksError(f"the compile wrote no fragment document for {docname} at {page}")
+        # A reference to the owning page's own targets resolves from the
+        # fragment as a reference to another document, because that is what the
+        # fragment is; on the page it is a reference within one. The fragment
+        # stands in the page's own directory, so the one difference the move
+        # makes to a resolved link is the page's own filename in front of the
+        # anchor, which is taken back off here, and -- for a link to one of the
+        # page's own headings -- the title wrapper a cross-document reference
+        # carries (:class:`ResolveOwnPageAnchors`).
+        own = f'href="{page_path(owner).name}#'
+        anchors = plan.anchors.get(owner, frozenset[str]())
+        for found in _RENDERED.finditer(page.read_text(encoding=_UTF_8)):
+            block = plan.blocks[int(found.group(1), 16)]
+            # The paragraph's own spaces around the translation are the ones
+            # that let its outermost inline markup be recognised; exactly one
+            # of each is given back.
+            # A recorded string stands in a page stored without the terminators
+            # of the platform that wrote it, which is the form reading the
+            # fragment back through universal newlines already leaves.
+            markup = _unwrapped(
+                found.group(2).removeprefix(" ").removesuffix(" ").replace(own, 'href="#'),
+                anchors,
+            )
+            empty: list[str | None] = [None] * len(plan.languages)
+            strings = rendered.setdefault(block.mark, empty)
+            strings[block.language] = markup
+        page.unlink()
+    return rendered
+
+
+def _apply_dropped_headings(plan: MessagePlan, rendered: dict[str, list[str | None]]) -> None:
+    """Restore each dropped heading to the same source rendering Sphinx keeps."""
+    source = plan.languages.index(plan.source_language) if plan.source_language in plan.languages else -1
+    if source >= 0:
+        for mark, languages in plan.dropped.items():
+            strings = rendered.get(mark)
+            if strings is None:
+                continue
+            for language in languages:
+                strings[language] = strings[source]
+
+
+def _require_complete_renderings(plan: MessagePlan, rendered: Mapping[str, list[str | None]]) -> None:
+    """Refuse missing marks or missing language renderings before supplying any slots."""
+    incomplete = [(mark, plan.languages[strings.index(None)]) for mark, strings in rendered.items() if None in strings]
+    absent = sorted({block.mark for block in plan.blocks} - set(rendered))
+    if incomplete or absent:
+        raise MessageMarksError(
+            f"{len(incomplete)} marked message(s) did not render in every language "
+            f"(first {incomplete[:2]}) and {len(absent)} did not render at all "
+            f"(first {absent[:2]}); the fragment documents did not carry what was marked"
+        )
+
+
 def harvest(plan: MessagePlan, slots: CompileSlots, page_path: Callable[[str], Path]) -> int:
     """Read every rendered translation back and record it, then drop the fragments.
 
@@ -765,56 +848,13 @@ def harvest(plan: MessagePlan, slots: CompileSlots, page_path: Callable[[str], P
         MessageMarksError: If a fragment document was not written, or a block
             it declared did not render.
     """
-    global _ACTIVE
-    rendered: dict[str, list[str | None]] = {}
-    for docname, owner in zip(plan.fragments, plan.pages, strict=True):
-        page = page_path(docname)
-        if not page.is_file():
-            raise MessageMarksError(f"the compile wrote no fragment document for {docname} at {page}")
-        # A reference to the owning page's own targets resolves from the
-        # fragment as a reference to another document, because that is what the
-        # fragment is; on the page it is a reference within one. The fragment
-        # stands in the page's own directory, so the one difference the move
-        # makes to a resolved link is the page's own filename in front of the
-        # anchor, which is taken back off here, and -- for a link to one of the
-        # page's own headings -- the title wrapper a cross-document reference
-        # carries (:class:`ResolveOwnPageAnchors`).
-        own = f'href="{page_path(owner).name}#'
-        anchors = plan.anchors.get(owner, frozenset())
-        for found in _RENDERED.finditer(page.read_text(encoding=_UTF_8)):
-            block = plan.blocks[int(found.group(1), 16)]
-            # The paragraph's own spaces around the translation are the ones
-            # that let its outermost inline markup be recognised; exactly one
-            # of each is given back.
-            # A recorded string stands in a page stored without the terminators
-            # of the platform that wrote it, which is the form reading the
-            # fragment back through universal newlines already leaves.
-            markup = _unwrapped(
-                found.group(2).removeprefix(" ").removesuffix(" ").replace(own, 'href="#'),
-                anchors,
-            )
-            strings = rendered.setdefault(block.mark, [None] * len(plan.languages))
-            strings[block.language] = markup
-        page.unlink()
-    incomplete = [(mark, plan.languages[strings.index(None)]) for mark, strings in rendered.items() if None in strings]
-    absent = sorted({block.mark for block in plan.blocks} - set(rendered))
-    if incomplete or absent:
-        raise MessageMarksError(
-            f"{len(incomplete)} marked message(s) did not render in every language "
-            f"(first {incomplete[:2]}) and {len(absent)} did not render at all "
-            f"(first {absent[:2]}); the fragment documents did not carry what was marked"
-        )
+    global _active_plan
+    rendered = _harvest_fragments(plan, page_path)
+    _require_complete_renderings(plan, rendered)
     # A heading whose translation Sphinx drops reaches that language's own page
     # in the source language, so that is what the mark reads there: the source
     # language's own rendering, which the same fragment already produced.
-    source = plan.languages.index(plan.source_language) if plan.source_language in plan.languages else -1
-    if source >= 0:
-        for mark, languages in plan.dropped.items():
-            strings = rendered.get(mark)
-            if strings is None:
-                continue
-            for language in languages:
-                strings[language] = strings[source]
+    _apply_dropped_headings(plan, rendered)
     # A toctree title is the catalogue's own string, so the rendering the
     # fragment produced for it is not what any page carries. They are recorded
     # first, so a translation that names one reads the recorded string rather
@@ -829,7 +869,7 @@ def harvest(plan: MessagePlan, slots: CompileSlots, page_path: Callable[[str], P
             _without_marks(mark, string or "", language, rendered, slots) for language, string in enumerate(strings)
         ]
         slots.supply(mark, markup, [plain_text(string) for string in markup])
-    _ACTIVE = None
+    _active_plan = None
     return supplied
 
 
@@ -871,31 +911,33 @@ class ResolveOwnPageAnchors(SphinxPostTransform):
         """Rewrite every link to one of the owning page's headings that nothing else resolves."""
         from sphinx import addnodes
 
-        plan = _ACTIVE
+        plan = _active_plan
         owner = plan.owner_of(self.env.docname) if plan is not None else None
         if owner is None or plan is None:
             return
+        plan.anchors.setdefault(owner, set())
+        for node in self.document.findall(addnodes.pending_xref):
+            self._resolve_reference(node, owner, plan)
+
+    def _resolve_reference(self, node: addnodes.pending_xref, owner: str, plan: MessagePlan) -> None:
+        """Preserve declared-target precedence while resolving an owning page's heading."""
         slugs = self.env.metadata.get(owner, {}).get("myst_slugs", {})
         standard = self.env.domains.standard_domain
-        # The identifiers noted are how :func:`harvest` tells a link the page
-        # writes plain from a cross-reference the page writes wrapped: the
-        # markup the two reach the fragment as is the same.
         noted = plan.anchors.setdefault(owner, set())
-        for node in self.document.findall(addnodes.pending_xref):
-            if node.get("reftype") != "myst" or node.get("refdomain"):
-                continue
-            target = node["reftarget"]
-            declared = standard.labels.get(target.lower()) or standard.anonlabels.get(target.lower())
-            if declared is not None:
-                if declared[0] == owner:
-                    noted.add(declared[1])
-                continue
-            if target not in slugs:
-                continue
-            node["refdomain"] = "doc"
-            node["reftargetid"] = target
-            node["reftarget"] = owner
-            noted.add(slugs[target][1])
+        if node.get("reftype") != "myst" or node.get("refdomain"):
+            return
+        target = node["reftarget"]
+        declared = standard.labels.get(target.lower()) or standard.anonlabels.get(target.lower())
+        if declared is not None:
+            if declared[0] == owner:
+                noted.add(declared[1])
+            return
+        if target not in slugs:
+            return
+        node["refdomain"] = "doc"
+        node["reftargetid"] = target
+        node["reftarget"] = owner
+        noted.add(slugs[target][1])
 
 
 class NoteToctreeTitleMarks(SphinxTransform):
@@ -920,7 +962,7 @@ class NoteToctreeTitleMarks(SphinxTransform):
         """Record every mark this document's toctrees carry as a title."""
         from sphinx import addnodes
 
-        if _ACTIVE is None:
+        if _active_plan is None:
             return
         notes = notes_for(self.env, self.env.docname)
         for toctree in self.document.findall(addnodes.toctree):
@@ -964,7 +1006,7 @@ class NoteDroppedHeadingTranslations(SphinxTransform):
         """Note, for every marked heading of this document, the languages that lose it."""
         from docutils import nodes
 
-        plan = _ACTIVE
+        plan = _active_plan
         if plan is None or self.env.docname in plan.fragments:
             return
         source = plan.languages.index(plan.source_language) if plan.source_language in plan.languages else -1
@@ -981,15 +1023,19 @@ class NoteDroppedHeadingTranslations(SphinxTransform):
                 line = int(getattr(heading, "line", None) or 0)
                 for mark in {found.group() for found in MARK.finditer(heading.astext())}:
                     translations = plan.sources_of(mark)
-                    dropped = {
-                        index
-                        for index, translation in enumerate(translations)
-                        if index != source and translation and not self._kept(translation, line)
-                    }
+                    dropped = self._dropped_languages(translations, source, line)
                     if dropped:
                         notes.dropped.setdefault(mark, set()).update(dropped)
         finally:
             self.env.metadata[self.env.docname] = metadata
+
+    def _dropped_languages(self, translations: Sequence[str], source: int, line: int) -> set[int]:
+        """Identify nonempty translated headings that Sphinx's own parser drops."""
+        return {
+            index
+            for index, translation in enumerate(translations)
+            if index != source and translation and not self._kept(translation, line)
+        }
 
     def _kept(self, msgstr: str, line: int) -> bool:
         """Return whether Sphinx's heading substitution keeps *msgstr*.
@@ -1053,7 +1099,7 @@ class DeclareBlockLanguage(SphinxTransform):
         """Class every paragraph of a fragment document with its own language."""
         from docutils import nodes
 
-        plan = _ACTIVE
+        plan = _active_plan
         if plan is None or self.env.docname not in plan.fragments:
             return
         for paragraph in self.document.findall(nodes.paragraph):

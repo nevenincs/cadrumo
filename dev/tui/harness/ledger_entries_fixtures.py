@@ -18,7 +18,7 @@ from textual.widgets import Collapsible, DataTable, Input, Select
 
 from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
-from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController, LedgerWorkspaceScreen
+from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
 from cadrumo.entrypoints.tui.ledger.entries_add import LedgerEntryAddScreen
 from cadrumo.entrypoints.tui.ledger.entries_browse import LedgerEntriesBrowseScreen
 from cadrumo.entrypoints.tui.ledger.entries_export import LedgerEntriesExportScreen
@@ -31,6 +31,7 @@ from cadrumo.entrypoints.tui.ledger.tests.entries_door_fixtures import (
     entries_controller,
     entry_id,
 )
+from cadrumo.entrypoints.tui.ledger.workspace_screen import LedgerWorkspaceScreen
 from cadrumo.entrypoints.tui.tests.settling import settle_host, settle_host_until
 
 from .settling import press_when_enabled

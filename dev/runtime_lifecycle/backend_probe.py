@@ -44,7 +44,7 @@ from dev._paths import REPO_ROOT
 from .agent_service_session import agent_service_session
 from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, consumer_environment, require
 from .proof_support import create_profile, identify_profile, login_profile
-from .session_holder import WindowsRuntimeSessionHolder
+from .windows_holder import WindowsRuntimeSessionHolder
 
 _COMMAND_SECONDS = 120
 # The runtime renews sibling human leases only after this much quiet time.

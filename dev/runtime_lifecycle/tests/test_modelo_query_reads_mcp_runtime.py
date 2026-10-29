@@ -15,7 +15,7 @@ from mcp.types import CallToolResult
 from pydantic import JsonValue
 
 from cadrumo.application.auth.operation_definitions import AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_FILE_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.query_read_contracts import (
     ModeloBindingsListProjection,
     ModeloBindingsListRequest,

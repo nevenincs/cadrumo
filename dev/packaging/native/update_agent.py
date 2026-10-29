@@ -19,7 +19,7 @@ from ..runtime_wheel_selection import marker_environment
 from ..runtime_wheelhouse_contract import target_platform
 from ..wheel_metadata import read_wheel_metadata
 from .agent import agent_wheel, validate_wheel_dependencies
-from .assemble import agent_closure, record_staging, stamp_package
+from .assembly_identity import agent_closure, record_staging, stamp_package
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
@@ -46,16 +46,7 @@ def wheel_files(wheel: Path, *, version: str, prefix: str) -> dict[str, bytes]:
     with zipfile.ZipFile(wheel) as archive:
         for entry in archive.infolist():
             name = PurePosixPath(entry.filename)
-            if (
-                not name.parts
-                or name.is_absolute()
-                or ".." in name.parts
-                or ":" in entry.filename
-                or "\\" in entry.filename
-                or name.parts[0] not in owned
-                or (entry.external_attr >> 16) & 0o170000 == 0o120000
-            ):
-                raise ValueError("Agent wheel contains an unowned or linked member")
+            _require_owned_wheel_member(entry, name, owned)
             if entry.is_dir() or is_test_source(name) or "__pycache__" in name.parts:
                 continue
             member = f"{prefix}/{name}"
@@ -70,6 +61,19 @@ def wheel_files(wheel: Path, *, version: str, prefix: str) -> dict[str, bytes]:
     if f"{prefix}/cadrumo_agent/__init__.py" not in prepared:
         raise ValueError("Agent wheel has no package root")
     return prepared
+
+
+def _require_owned_wheel_member(entry: zipfile.ZipInfo, name: PurePosixPath, owned: set[str]) -> None:
+    if (
+        not name.parts
+        or name.is_absolute()
+        or ".." in name.parts
+        or ":" in entry.filename
+        or "\\" in entry.filename
+        or name.parts[0] not in owned
+        or (entry.external_attr >> 16) & 0o170000 == 0o120000
+    ):
+        raise ValueError("Agent wheel contains an unowned or linked member")
 
 
 def update(build: Path, config: str) -> None:
@@ -89,54 +93,25 @@ def update(build: Path, config: str) -> None:
     require_bytecode_compiler(manifest["python"])
     wheel = agent_wheel(paths["agent"])
     resolved = validate_wheel_dependencies(wheel, target, manifest["python"], paths["agent"])
-    for name, requirement in resolved.items():
-        installed = manifest["distributions"].get(name)
-        if installed is None or installed not in requirement.specifier:
-            raise ValueError(f"Agent requires a dependency update: {name}; build app-payload")
-    environment = marker_environment(target_platform(target), manifest["python"])
-    for value in read_wheel_metadata(wheel).get_all("Requires-Dist", []):
-        requirement = Requirement(value)
-        if requirement.marker is None or requirement.marker.evaluate(environment):
-            installed = manifest["distributions"].get(canonicalize_name(requirement.name))
-            if installed is None or installed not in requirement.specifier:
-                raise ValueError(f"Agent requires a dependency update: {requirement.name}")
+    _require_installed_dependencies(resolved, manifest["distributions"])
+    _require_wheel_dependencies(wheel, target, manifest["python"], manifest["distributions"])
     prefix = contract["paths"]["packages"]
     _require_runtime_receipt(root, paths["agent"] / "runtime", prefix, manifest["files"])
     prepared = wheel_files(wheel, version=receipt["version"], prefix=prefix)
     owned = (f"{prefix}/cadrumo_agent/", f"{prefix}/cadrumo_agent-{receipt['version']}.dist-info/")
-    previous = {member for member in manifest["files"] if member.startswith(owned)}
+    previous = _previous_agent_members(manifest["files"], owned)
     members = previous | prepared.keys()
-    for member in members:
-        path = root / member
-        if ".." in PurePosixPath(member).parts or not path.resolve().is_relative_to(root):
-            raise ValueError("Agent update escapes its package")
-        if member in previous and (not path.is_file() or digest(path) != manifest["files"][member]):
-            raise ValueError(f"Existing agent file does not match its inventory: {member}")
-    changed = {
-        member
-        for member in members
-        if member not in prepared
-        or member not in previous
-        or hashlib.sha256(prepared[member]).hexdigest() != manifest["files"][member]
-    }
+    _require_existing_agent_files(root, members, previous, manifest["files"])
+    changed = _changed_agent_files(members, prepared, previous, manifest["files"])
     if changed:
         quiesce(build.resolve(), target)
     build_member = contract["files"]["build_metadata"]
-    backups = {
-        member: (root / member).read_bytes() if (root / member).is_file() else None
-        for member in (changed | {build_member} if changed else changed)
-    }
+    backups = _agent_backups(root, changed, build_member)
     try:
-        for member in changed:
-            path = root / member
-            if member in prepared:
-                path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_bytes(prepared[member])
-            else:
-                path.unlink()
+        _write_agent_files(root, changed, prepared)
         for member in previous:
             manifest["files"].pop(member)
-        manifest["files"].update({member: hashlib.sha256(content).hexdigest() for member, content in prepared.items()})
+        manifest["files"].update(_prepared_hashes(prepared))
         closure = agent_closure(manifest["distributions"], resolved)
         manifest["agent"] = {"bundled": True, **receipt, "dependencies": closure}
         manifest["inputs"]["agent"] = receipt
@@ -162,14 +137,83 @@ def update(build: Path, config: str) -> None:
         if staged_records is not None:
             record_staging(build, staged_records)
     except BaseException:
-        for member, content in backups.items():
-            path = root / member
-            if content is None:
-                path.unlink(missing_ok=True)
-            else:
-                path.write_bytes(content)
+        _restore_agent_files(root, backups)
         raise
     print(f"Agent files updated: {len(changed)}; application, dependencies and native images preserved", flush=True)
+
+
+def _previous_agent_members(files: Mapping[str, str], owned: tuple[str, str]) -> set[str]:
+    return {member for member in files if member.startswith(owned)}
+
+
+def _prepared_hashes(prepared: Mapping[str, bytes]) -> dict[str, str]:
+    return {member: hashlib.sha256(content).hexdigest() for member, content in prepared.items()}
+
+
+def _restore_agent_files(root: Path, backups: Mapping[str, bytes | None]) -> None:
+    for member, content in backups.items():
+        path = root / member
+        if content is None:
+            path.unlink(missing_ok=True)
+        else:
+            path.write_bytes(content)
+
+
+def _write_agent_files(root: Path, changed: set[str], prepared: Mapping[str, bytes]) -> None:
+    for member in changed:
+        path = root / member
+        if member in prepared:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(prepared[member])
+        else:
+            path.unlink()
+
+
+def _agent_backups(root: Path, changed: set[str], build_member: str) -> dict[str, bytes | None]:
+    backups = {
+        member: (root / member).read_bytes() if (root / member).is_file() else None
+        for member in (changed | {build_member} if changed else changed)
+    }
+    return backups
+
+
+def _changed_agent_files(
+    members: set[str], prepared: Mapping[str, bytes], previous: set[str], files: Mapping[str, str]
+) -> set[str]:
+    changed = {
+        member
+        for member in members
+        if member not in prepared
+        or member not in previous
+        or hashlib.sha256(prepared[member]).hexdigest() != files[member]
+    }
+    return changed
+
+
+def _require_existing_agent_files(root: Path, members: set[str], previous: set[str], files: Mapping[str, str]) -> None:
+    for member in members:
+        path = root / member
+        if ".." in PurePosixPath(member).parts or not path.resolve().is_relative_to(root):
+            raise ValueError("Agent update escapes its package")
+        if member in previous and (not path.is_file() or digest(path) != files[member]):
+            raise ValueError(f"Existing agent file does not match its inventory: {member}")
+
+
+def _require_installed_dependencies(resolved: Mapping[str, Requirement], distributions: Mapping[str, str]) -> None:
+    for name, requirement in resolved.items():
+        installed = distributions.get(name)
+        if installed is None or installed not in requirement.specifier:
+            raise ValueError(f"Agent requires a dependency update: {name}; build app-payload")
+
+
+def _require_wheel_dependencies(wheel: Path, target: str, python: str, distributions: Mapping[str, str]) -> None:
+    environment = marker_environment(target_platform(target), python)
+    for value in read_wheel_metadata(wheel).get_all("Requires-Dist", []):
+        requirement = Requirement(value)
+        if requirement.marker is None or requirement.marker.evaluate(environment):
+            installed = distributions.get(canonicalize_name(requirement.name))
+            if installed is None or installed not in requirement.specifier:
+                raise ValueError(f"Agent requires a dependency update: {requirement.name}")
 
 
 def main() -> None:

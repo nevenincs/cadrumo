@@ -34,13 +34,13 @@ from cadrumo.domain.calculations.registry.authority_component_codec import (
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DATABASE_FORMAT, AuthorityDescriptor
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.snapshot_globals import SnapshotGlobalCatalogues
 from cadrumo.domain.calculations.registry.snapshot_proof import (
     SNAPSHOT_PROOF_DDL,
     SnapshotProofSet,
     prove_snapshot_selectors,
 )
+from cadrumo.domain.calculations.registry.snapshot_references import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.temporal import ModeloRevisionDirectory
 
 

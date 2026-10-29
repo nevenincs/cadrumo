@@ -13,15 +13,10 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..application_environment import (
-    ApplicationEnvironment,
-    LaunchRefusedError,
-    compile_section,
-    load,
-    load_for_build,
-    reference_define,
-    reference_select,
-)
+from ..application_environment import load, load_for_build
+from ..environment_compile import compile_section
+from ..environment_models import ApplicationEnvironment
+from ..environment_reference import LaunchRefusedError, reference_define, reference_select
 from ..generate import generate
 from ..layout import load_layout
 from .google_identity import PUBLISHER_CLIENT_JSON

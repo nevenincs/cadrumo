@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .installed_method_fixture import (
     METHOD_ASSET_ID,
@@ -18,6 +18,9 @@ from .installed_tui_controls import (
     _wait_for_asset_result,
     _wait_for_current_revision_id,
 )
+
+if TYPE_CHECKING:
+    from textual.pilot import Pilot
 
 
 def _claim_result_reused(*, rendered: str, expected: bool, stage: str) -> None:
@@ -161,6 +164,27 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     _claim_result_reused(rendered=replayed_claim, expected=True, stage="asset_claim_replay")
     progress("asset_claim_replay")
 
+    await _supersede_method_claim(pilot, progress, first_claim)
+
+    await _prove_method_filing_handoff(pilot, progress)
+
+    return {
+        "asset_created": True,
+        "asset_inspected": True,
+        "correction_uses_public_revision_identity": True,
+        "forecast_amount": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "forecast_provenance_present": True,
+        "claim_replay_reused": True,
+        "superseding_claim_replaced_the_first": True,
+        "filing_handoff_material_m100": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "filing_handoff_material_m130": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "inspection_revision_identity_exposed": True,
+        "filing_handoff_control_exposed": True,
+    }
+
+
+async def _supersede_method_claim[T](pilot: Pilot[T], progress: Callable[[str], None], first_claim: str) -> None:
+    """Exercise this asset lifecycle phase through the rendered public controls."""
     # Replace the recorded claim through the public supersession control.  The
     # superseding forecast leaves the replaced claim out, so it reproduces the
     # same amount, and the filing handoff below must still count one claim.
@@ -203,6 +227,9 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         )
     progress("asset_superseding_claim")
 
+
+async def _prove_method_filing_handoff[T](pilot: Pilot[T], progress: Callable[[str], None]) -> None:
+    """Exercise this asset lifecycle phase through the rendered public controls."""
     await _set_public_input(
         pilot=pilot,
         selector="#asset-filing-tax-year",
@@ -239,19 +266,6 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
             stage="asset_filing_handoff",
         )
     progress("asset_filing_handoff")
-    return {
-        "asset_created": True,
-        "asset_inspected": True,
-        "correction_uses_public_revision_identity": True,
-        "forecast_amount": METHOD_CORRECTED_FORECAST_AMOUNT,
-        "forecast_provenance_present": True,
-        "claim_replay_reused": True,
-        "superseding_claim_replaced_the_first": True,
-        "filing_handoff_material_m100": METHOD_CORRECTED_FORECAST_AMOUNT,
-        "filing_handoff_material_m130": METHOD_CORRECTED_FORECAST_AMOUNT,
-        "inspection_revision_identity_exposed": True,
-        "filing_handoff_control_exposed": True,
-    }
 
 
 async def _exercise_method_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:

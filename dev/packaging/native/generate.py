@@ -6,15 +6,16 @@ import argparse
 import json
 from collections.abc import Iterable
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
-from cadrumo_client.contracts.deadline_budget import DEFAULT_EMERGENCY_WAIT_POLICY
+from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from dev.locales.manager_chrome import manager_chrome_strings
 
-from . import application_environment
-from .application_environment import ApplicationEnvironment, channel_directory
+from . import application_environment, environment_compile
 from .build_directory import require_enrolled_output
+from .environment_models import ApplicationEnvironment
+from .environment_root import channel_directory
 from .identity import identity
 from .layout import bundled_image_files, distribution_target, entrypoint_files, load_layout
 from .linux_desktop_runtime import declaration as desktop_runtime_declaration
@@ -83,6 +84,52 @@ def _mode_section(layout: dict[str, Any], declaration: ApplicationEnvironment) -
         "package_root_from_executable": layout["package_root_from_executable"],
         "checkout_marker": declaration.root["checkout_marker"],
     }
+
+
+class _PathVector(TypedDict):
+    name: str
+    components: list[str]
+    directories: list[str]
+    files: list[str]
+    links: list[list[str]]
+    expected_components: list[str] | None
+    refusal: str | None
+
+
+class _MemberVector(TypedDict):
+    name: str
+    platform: str
+    variable: str
+    value: str
+    expected_components: list[str] | None
+    refusal: str | None
+
+
+def _rust_path_vectors(lines: list[str], vectors: list[_PathVector]) -> None:
+    for vector in vectors:
+        links = ",".join(f"({_rust_string(name)},{_rust_string(target)})" for name, target in vector["links"])
+        expected = (
+            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
+        )
+        lines.append(
+            f"StoragePathVector {{ name: {_rust_string(vector['name'])}, "
+            f"components: {_rust_strings(vector['components'])}, directories: {_rust_strings(vector['directories'])}, "
+            f"files: {_rust_strings(vector['files'])}, links: &[{links}], "
+            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
+        )
+
+
+def _rust_member_vectors(lines: list[str], vectors: list[_MemberVector]) -> None:
+    for vector in vectors:
+        expected = (
+            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
+        )
+        lines.append(
+            f"StorageMemberVector {{ name: {_rust_string(vector['name'])}, "
+            f"platform: {_rust_string(vector['platform'])}, variable: {_rust_string(vector['variable'])}, "
+            f"value: {_rust_string(vector['value'])}, "
+            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
+        )
 
 
 def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
@@ -190,17 +237,7 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "pub expected_components: Option<&'static [&'static str]>, pub refusal: Option<&'static str> }",
         "pub const STORAGE_PATH_VECTORS: &[StoragePathVector] = &[",
     ]
-    for vector in contract["path_vectors"]:
-        links = ",".join(f"({_rust_string(name)},{_rust_string(target)})" for name, target in vector["links"])
-        expected = (
-            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
-        )
-        lines.append(
-            f"StoragePathVector {{ name: {_rust_string(vector['name'])}, "
-            f"components: {_rust_strings(vector['components'])}, directories: {_rust_strings(vector['directories'])}, "
-            f"files: {_rust_strings(vector['files'])}, links: &[{links}], "
-            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
-        )
+    _rust_path_vectors(lines, contract["path_vectors"])
     lines.append("];")
     lines += [
         "pub struct StorageMemberVector { pub name: &'static str, pub platform: &'static str, "
@@ -208,18 +245,16 @@ def _rust_root_and_environment(contract: dict[str, Any]) -> list[str]:
         "pub expected_components: Option<&'static [&'static str]>, pub refusal: Option<&'static str> }",
         "pub const STORAGE_MEMBER_VECTORS: &[StorageMemberVector] = &[",
     ]
-    for vector in contract["member_vectors"]:
-        expected = (
-            "None" if vector["expected_components"] is None else f"Some({_rust_strings(vector['expected_components'])})"
-        )
-        lines.append(
-            f"StorageMemberVector {{ name: {_rust_string(vector['name'])}, "
-            f"platform: {_rust_string(vector['platform'])}, variable: {_rust_string(vector['variable'])}, "
-            f"value: {_rust_string(vector['value'])}, "
-            f"expected_components: {expected}, refusal: {_rust_option(vector['refusal'])} }},"
-        )
+    _rust_member_vectors(lines, contract["member_vectors"])
     lines.append("];")
     return lines
+
+
+def _entrypoint_names(layout: dict[str, object]) -> list[str]:
+    entrypoints = [
+        Path(relative).name for relative in (*entrypoint_files(layout).values(), *bundled_image_files(layout).values())
+    ]
+    return entrypoints
 
 
 def generate(root: Path, destination: Path, channel: str = "stable", *, target: str | None = None) -> None:
@@ -229,7 +264,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     """
     layout = load_layout(target, root=root)
     declaration = application_environment.load_for_build(root)
-    launch = application_environment.compile_section(declaration, layout)
+    launch = environment_compile.compile_section(declaration, layout)
     release = identity(distribution_target(layout), channel, project_file=root / "pyproject.toml")
     build_channel = release.channel
     version = (root / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
@@ -293,7 +328,7 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     }
     rust = [
         f"pub const ABI: u32 = {layout['abi']};",
-        f"pub const DEFAULT_EMERGENCY_WAIT_CUTOFF_SECONDS: u64 = {int(DEFAULT_EMERGENCY_WAIT_POLICY.cutoff_seconds)};",
+        f"pub const DEFAULT_ORCHESTRATION_TIMEOUT_SECONDS: u64 = {int(DEFAULT_TIMEOUT_POLICY.timeout_seconds)};",
     ]
     discovery = {"layout": layout, "installation_identity": contract["installation_identity"]}
     rust.append(f"pub const INSTALLATION_CONTRACT: &str = {_rust_string(json.dumps(discovery))};")
@@ -314,21 +349,19 @@ def generate(root: Path, destination: Path, channel: str = "stable", *, target: 
     rust.extend(f"pub const {key}: &str = {_rust_string(value)};" for key, value in package_strings.items())
     rust.append(f"pub const TEMPORARY_CREATE_EXPLICIT: bool = {str(temporary['create_explicit']).lower()};")
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
-    entrypoints = [
-        Path(relative).name for relative in (*entrypoint_files(layout).values(), *bundled_image_files(layout).values())
-    ]
+    entrypoints = _entrypoint_names(layout)
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")
     rust.extend(_rust_root_and_environment(contract))
     rust.extend(rust_transport(contract["runtime_transport"]))
     rust.extend(rust_runtime_exit_reasons(contract["runtime_exit"]))
-    rust.extend(application_environment.rust_lines(launch))
+    rust.extend(environment_compile.rust_lines(launch))
     destination.mkdir(parents=True, exist_ok=True)
     write_text(destination / "contract.rs", "\n".join(rust) + "\n")
     write_text(
         destination / "contract.h",
         f'#define CADRUMO_PYTHON_VERSION "{version}"\n#define CADRUMO_PLATFORM_ABI {layout["abi"]}\n'
         f"#define CADRUMO_CONTRACT_SCHEMA {CONTRACT_SCHEMA}\n"
-        + "".join(f"{line}\n" for line in application_environment.c_lines(launch)),
+        + "".join(f"{line}\n" for line in environment_compile.c_lines(launch)),
     )
     write_text(destination / "contract.json", json.dumps(contract, indent=2) + "\n")
 

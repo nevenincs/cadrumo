@@ -3,12 +3,13 @@
 
 Every first-party source root -- each package under ``src/``, the development
 tooling, and the packaging build hooks -- is measured directly
-with Radon cyclomatic complexity, Radon maintainability index, and Complexipy
-cognitive complexity. There is no baseline, allowlist, disposition, or
+with Radon cyclomatic complexity, Radon maintainability index, Complexipy
+cognitive complexity, and physical module/callable length. There is no baseline, allowlist, disposition, or
 development-state partition: every hit is a current finding and an empty hit
 set is the only clean result.
 
-All three detectors measure one population. The file set is enumerated once
+All detectors measure one population. Modules may contain at most 1,250 lines
+and callables at most 150 lines, including decorators. The file set is enumerated once
 from :mod:`dev.first_party_source`, each file is decoded once the way the
 interpreter decodes source (BOM and coding cookie honoured), and that text is
 handed to every detector in-process. No detector discovers files of its own,
@@ -35,7 +36,7 @@ from types import ModuleType
 from typing import Any, Final
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
-from dev.exit_codes import ADVISORY_BROKEN, OK
+from dev.exit_codes import ADVISORY_BROKEN, FAILED, OK
 from dev.first_party_source import (
     FIRST_PARTY_ROOTS,
     SOURCE_PACKAGES,
@@ -46,6 +47,9 @@ from dev.first_party_source import (
 
 DEFAULT_COGNITIVE_THRESHOLD: Final[int] = 20
 """Complexipy scores above this are reported."""
+
+MODULE_LINE_LIMIT: Final[int] = 1250
+CALLABLE_LINE_LIMIT: Final[int] = 150
 
 _CC_REPORTED_RANK: Final[str] = "C"
 _MI_CLEAN_RANK: Final[str] = "A"
@@ -120,17 +124,33 @@ class CogHit:
 
 
 @dataclass(frozen=True)
+class LengthHit:
+    """A module or callable exceeding its physical source-line ceiling."""
+
+    path: str
+    name: str
+    lines: int
+    limit: int
+
+    def render(self) -> str:
+        """Render the defining location and its measured line count."""
+        location = f"{self.path}::{self.name}" if self.name else self.path
+        return f"{self.lines} lines (limit {self.limit})  {location}"
+
+
+@dataclass(frozen=True)
 class ComplexityScan:
-    """The three live finding populations from one scan."""
+    """The live complexity and length findings from one source population."""
 
     cyclomatic: tuple[CcHit, ...]
     maintainability: tuple[MiHit, ...]
     cognitive: tuple[CogHit, ...]
+    lengths: tuple[LengthHit, ...] = ()
 
     @property
     def finding_count(self) -> int:
         """Return the total live finding count."""
-        return len(self.cyclomatic) + len(self.maintainability) + len(self.cognitive)
+        return len(self.cyclomatic) + len(self.maintainability) + len(self.cognitive) + len(self.lengths)
 
     def rendered_findings(self) -> list[str]:
         """Render every finding without development-state labels."""
@@ -138,6 +158,7 @@ class ComplexityScan:
             *(f"cyclomatic: {hit.render()}" for hit in self.cyclomatic),
             *(f"maintainability: {hit.render()}" for hit in self.maintainability),
             *(f"cognitive: {hit.render()}" for hit in self.cognitive),
+            *(f"length: {hit.render()}" for hit in self.lengths),
         ]
 
 
@@ -152,6 +173,8 @@ def source_population(roots: tuple[str, ...], *, tests: bool = False) -> tuple[P
         roots: The source roots to enumerate; each must exist and contribute files.
         tests: Enumerate the test surface instead of production source.
     """
+    if not roots:
+        raise FileNotFoundError("no complexity roots supplied: a scan of nothing is not clean")
     admit = _is_test_population if tests else is_production_source
     population: list[Path] = []
     for root in roots:
@@ -229,6 +252,22 @@ def cognitive_hits(path: str, source: str, threshold: int) -> list[CogHit]:
     ]
 
 
+def length_hits(path: str, source: str) -> list[LengthHit]:
+    """Measure module and callable spans, including nested and decorated definitions."""
+    hits: list[LengthHit] = []
+    lines = len(source.splitlines())
+    if lines > MODULE_LINE_LIMIT:
+        hits.append(LengthHit(path, "", lines, MODULE_LINE_LIMIT))
+    for name, node in _blocks(ast.parse(source, filename=path)):
+        if isinstance(node, ast.ClassDef):
+            continue
+        start = min((decorator.lineno for decorator in node.decorator_list), default=node.lineno)
+        span = (node.end_lineno or node.lineno) - start + 1
+        if span > CALLABLE_LINE_LIMIT:
+            hits.append(LengthHit(path, name, span, CALLABLE_LINE_LIMIT))
+    return hits
+
+
 def _attempt[Hit](
     detector: str, measure: Callable[[str, str], list[Hit]], path: str, source: str, failures: list[str]
 ) -> list[Hit]:
@@ -241,11 +280,14 @@ def _attempt[Hit](
 
 
 def measure_population(files: tuple[Path, ...], *, cognitive_threshold: int) -> ComplexityScan:
-    """Measure every file with all three detectors, failing closed on any file one cannot measure."""
+    """Measure every file with every detector, failing closed on any file one cannot measure."""
+    if not files:
+        raise IncompleteScanError("no Python files supplied: a complexity scan of nothing is not clean")
     cognitive_detector = functools.partial(cognitive_hits, threshold=cognitive_threshold)
     cyclomatic: list[CcHit] = []
     maintainability: list[MiHit] = []
     cognitive: list[CogHit] = []
+    lengths: list[LengthHit] = []
     failures: list[str] = []
     for file in files:
         path = file.as_posix()
@@ -257,6 +299,7 @@ def measure_population(files: tuple[Path, ...], *, cognitive_threshold: int) -> 
         cyclomatic.extend(_attempt("radon cyclomatic", cyclomatic_hits, path, source, failures))
         maintainability.extend(_attempt("radon maintainability", maintainability_hits, path, source, failures))
         cognitive.extend(_attempt("complexipy cognitive", cognitive_detector, path, source, failures))
+        lengths.extend(_attempt("source length", length_hits, path, source, failures))
     if failures:
         raise IncompleteScanError(
             f"{len(failures)} measurement(s) failed, so the scan is incomplete and not clean: {'; '.join(failures)}"
@@ -265,6 +308,7 @@ def measure_population(files: tuple[Path, ...], *, cognitive_threshold: int) -> 
         cyclomatic=tuple(sorted(cyclomatic, key=lambda hit: (-hit.score, hit.path, hit.name))),
         maintainability=tuple(sorted(maintainability, key=lambda hit: (hit.score, hit.path))),
         cognitive=tuple(sorted(cognitive, key=lambda hit: (-hit.score, hit.path, hit.name))),
+        lengths=tuple(sorted(lengths, key=lambda hit: (-hit.lines, hit.path, hit.name))),
     )
 
 
@@ -290,12 +334,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Report every current code-complexity hotspot.")
     parser.add_argument("--tests", action="store_true", help="Audit test files instead of production packages.")
     parser.add_argument(
+        "--gate", action="store_true", help="Fail when any current complexity or length finding exists."
+    )
+    parser.add_argument(
         "--threshold",
         type=int,
         default=DEFAULT_COGNITIVE_THRESHOLD,
         help="Cognitive complexity threshold for Complexipy.",
     )
     args = parser.parse_args()
+    if args.gate and args.tests:
+        parser.error("--gate requires the full first-party production scope")
+    if args.gate and args.threshold != DEFAULT_COGNITIVE_THRESHOLD:
+        parser.error("--gate requires the fixed cognitive complexity threshold of 20")
     try:
         scan = scan_complexity(tests=args.tests, cognitive_threshold=args.threshold)
     except (OSError, RuntimeError) as exc:
@@ -309,7 +360,7 @@ def main() -> int:
     print(f"complexity ({scope}): {scan.finding_count} current hotspot(s)")
     for line in scan.rendered_findings():
         print(f"  {line}")
-    return OK
+    return FAILED if args.gate and scan.finding_count else OK
 
 
 if __name__ == "__main__":

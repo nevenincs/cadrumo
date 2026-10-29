@@ -6,6 +6,7 @@ import json
 import os
 import re
 from pathlib import Path
+from typing import cast
 
 from dev._paths import REPO_ROOT
 
@@ -39,6 +40,32 @@ def _require_physical(path: Path, root: Path, description: str) -> None:
             raise ValueError(f"{description} must not use symlinks or junctions: {member}")
 
 
+def _preset_name(name: object) -> str:
+    if (
+        not isinstance(name, str)
+        or not name
+        or name.startswith(".")
+        or name in {".", ".."}
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+    ):
+        raise ValueError(f"CMake configure preset has an invalid enrolled name: {name!r}")
+    return name
+
+
+def _enroll_presets(presets: list[object], project_root: Path, enrolled: dict[str, Path]) -> None:
+    for preset in presets:
+        if not isinstance(preset, dict) or cast(dict[str, object], preset).get("hidden", False):
+            continue
+        name = cast(dict[str, object], preset).get("name")
+        name = _preset_name(name)
+        previous = enrolled.get(name)
+        if previous is not None and not _same_path(previous, project_root):
+            raise ValueError(f"CMake configure preset name is ambiguous: {name}")
+        enrolled[name] = project_root
+
+
 def _preset_sources(source_root: Path) -> dict[str, Path]:
     enrolled: dict[str, Path] = {}
     for relative_file, relative_project in _PRESET_PROJECTS:
@@ -54,49 +81,13 @@ def _preset_sources(source_root: Path) -> dict[str, Path]:
         if not isinstance(presets, list):
             raise ValueError(f"CMake preset file has no configure preset list: {preset_file}")
         project_root = (source_root / relative_project).resolve(strict=True)
-        for preset in presets:
-            if not isinstance(preset, dict) or preset.get("hidden", False):
-                continue
-            name = preset.get("name")
-            if (
-                not isinstance(name, str)
-                or not name
-                or name.startswith(".")
-                or name in {".", ".."}
-                or "/" in name
-                or "\\" in name
-                or ":" in name
-            ):
-                raise ValueError(f"CMake configure preset has an invalid enrolled name: {name!r}")
-            previous = enrolled.get(name)
-            if previous is not None and not _same_path(previous, project_root):
-                raise ValueError(f"CMake configure preset name is ambiguous: {name}")
-            enrolled[name] = project_root
+        _enroll_presets(cast(list[object], presets), project_root, enrolled)
     if not enrolled:
         raise ValueError("The repository has no visible CMake configure presets")
     return enrolled
 
 
-def _configured_sources(build: Path, *, require_cache: bool) -> tuple[Path, Path | None]:
-    manifest = build / "build-paths.json"
-    cache = build / "CMakeCache.txt"
-    if _is_link(manifest) or not manifest.is_file():
-        raise ValueError(f"CMake build-path manifest is missing or linked: {manifest}")
-    if _is_link(cache) or (cache.exists() and not cache.is_file()) or (require_cache and not cache.is_file()):
-        raise ValueError(f"CMake cache is missing or linked; configure the enrolled build first: {cache}")
-    try:
-        document = json.loads(manifest.read_text(encoding="utf-8"))
-        source_value = document["source"]
-    except (json.JSONDecodeError, KeyError, TypeError) as error:
-        raise ValueError(f"CMake build-path manifest is invalid: {manifest}") from error
-    if not isinstance(source_value, str):
-        raise ValueError(f"CMake build-path manifest has no source directory: {manifest}")
-    try:
-        manifest_source = Path(source_value).resolve(strict=True)
-    except (OSError, RuntimeError) as error:
-        raise ValueError(f"CMake build-path manifest source is unavailable: {manifest}") from error
-    if not cache.is_file():
-        return manifest_source, None
+def _validate_cache(build: Path, cache: Path, manifest_source: Path) -> Path:
     settings: dict[str, str] = {}
     for line in cache.read_text(encoding="utf-8", errors="replace").splitlines():
         match = _CACHE_SETTING.match(line)
@@ -111,21 +102,39 @@ def _configured_sources(build: Path, *, require_cache: bool) -> tuple[Path, Path
         raise ValueError(f"CMake cache and build-path manifest disagree about the source directory: {build}")
     if not _same_path(cache_build, build):
         raise ValueError(f"CMake cache belongs to another binary directory: {build}")
+    return cache_source
+
+
+def _manifest_source(manifest: Path) -> Path:
+    try:
+        document = json.loads(manifest.read_text(encoding="utf-8"))
+        source_value = document["source"]
+    except (json.JSONDecodeError, KeyError, TypeError) as error:
+        raise ValueError(f"CMake build-path manifest is invalid: {manifest}") from error
+    if not isinstance(source_value, str):
+        raise ValueError(f"CMake build-path manifest has no source directory: {manifest}")
+    try:
+        manifest_source = Path(source_value).resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        raise ValueError(f"CMake build-path manifest source is unavailable: {manifest}") from error
+    return manifest_source
+
+
+def _configured_sources(build: Path, *, require_cache: bool) -> tuple[Path, Path | None]:
+    manifest = build / "build-paths.json"
+    cache = build / "CMakeCache.txt"
+    if _is_link(manifest) or not manifest.is_file():
+        raise ValueError(f"CMake build-path manifest is missing or linked: {manifest}")
+    if _is_link(cache) or (cache.exists() and not cache.is_file()) or (require_cache and not cache.is_file()):
+        raise ValueError(f"CMake cache is missing or linked; configure the enrolled build first: {cache}")
+    manifest_source = _manifest_source(manifest)
+    if not cache.is_file():
+        return manifest_source, None
+    cache_source = _validate_cache(build, cache, manifest_source)
     return manifest_source, cache_source
 
 
-def require_enrolled_build(build: Path | str, *, configured: bool = True) -> Path:
-    """Admit a repository preset directory before a CLI build action writes."""
-    source_root = REPO_ROOT.resolve(strict=True)
-    selected = Path(build)
-    if ".." in selected.parts:
-        raise ValueError("Native build directory must not contain traversal components")
-    enrolled = _preset_sources(source_root)
-    owner = source_root / "build"
-    _require_physical(owner, source_root, "Repository build directory")
-    if not owner.is_dir():
-        raise ValueError(f"Repository build directory is missing: {owner}")
-
+def _enrolled_location(selected: Path, owner: Path, source_root: Path, enrolled: dict[str, Path]) -> tuple[Path, str]:
     lexical = selected.absolute()
     try:
         relative = lexical.relative_to(owner)
@@ -142,10 +151,27 @@ def require_enrolled_build(build: Path | str, *, configured: bool = True) -> Pat
     if not _same_path(lexical, canonical) or not _same_path(resolved, canonical):
         raise ValueError(f"Native build directory is not its enrolled physical path: {selected}")
 
+    return canonical, relative.name
+
+
+def require_enrolled_build(build: Path | str, *, configured: bool = True) -> Path:
+    """Admit a repository preset directory before a CLI build action writes."""
+    source_root = REPO_ROOT.resolve(strict=True)
+    selected = Path(build)
+    if ".." in selected.parts:
+        raise ValueError("Native build directory must not contain traversal components")
+    enrolled = _preset_sources(source_root)
+    owner = source_root / "build"
+    _require_physical(owner, source_root, "Repository build directory")
+    if not owner.is_dir():
+        raise ValueError(f"Repository build directory is missing: {owner}")
+
+    canonical, preset_name = _enrolled_location(selected, owner, source_root, enrolled)
+
     manifest_source, _cache_source = _configured_sources(canonical, require_cache=configured)
-    expected_source = enrolled[relative.name]
+    expected_source = enrolled[preset_name]
     if not _same_path(manifest_source, expected_source):
-        raise ValueError(f"Configured build source does not match preset {relative.name!r}: {canonical}")
+        raise ValueError(f"Configured build source does not match preset {preset_name!r}: {canonical}")
     try:
         build_paths(canonical)
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as error:

@@ -19,7 +19,7 @@ import time
 from contextlib import ExitStack
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import httpx
 import psutil
@@ -30,15 +30,15 @@ from cadrumo_runtime.application.development_root import mark_development_root
 from .agent_service_session import (
     _close_holder,
     _logout_profile,
-    _PackagedServiceProcess,
     _require_runtime_stopped,
     _validate_agent_event,
     _validate_service_lease,
     _validate_service_ready,
 )
 from .caller_owned_root import Programs, caller_owned_runtime, consumer_environment, require
+from .packaged_service_process import PackagedServiceProcess
 from .proof_support import create_profile, identify_profile, login_profile, package_identity, started_processes
-from .session_holder import WindowsRuntimeSessionHolder
+from .windows_holder import WindowsRuntimeSessionHolder
 
 _PHASE_MESSAGES = (
     "agent service ready ",
@@ -89,32 +89,41 @@ def _milestones(root: Path, since: float, *, timeout: float = 60.0) -> dict[str,
     """Read only this synthetic run's bounded startup facts, never profile values."""
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        records: list[tuple[float, str]] = []
-        for path in (root / "logs" / "cadrumo.log",):
-            if not path.is_file():
-                continue
-            for line in path.read_text(encoding="utf-8").splitlines():
-                try:
-                    stamp = datetime.fromisoformat(line.split(maxsplit=1)[0]).timestamp()
-                except (ValueError, IndexError):
-                    continue
-                if stamp >= since:
-                    records.append((stamp, line))
+        records = _startup_records(root, since)
         warmed = [stamp for stamp, line in records if "Worker model warm-up done" in line]
         available = [stamp for stamp, line in records if "Worker available" in line]
         if warmed and available:
-            phases = []
-            for _, line in records:
-                for prefix in _PHASE_MESSAGES:
-                    if prefix in line:
-                        # Retain the fixed timing message only, without diagnostic
-                        # context, process identifiers, paths or profile values.
-                        message = prefix + line.split(prefix, 1)[1].split(" | ", 1)[0]
-                        phases.append(message)
-                        break
+            phases = _startup_phases(records)
             return {"worker_available_at": min(available), "worker_warmed_at": min(warmed), "phases": phases}
         time.sleep(0.05)
     raise RuntimeError("packaged worker did not publish availability and completed warm-up within 60 seconds")
+
+
+def _startup_records(root: Path, since: float) -> list[tuple[float, str]]:
+    """Read timestamped startup messages from this synthetic run."""
+    records: list[tuple[float, str]] = []
+    for path in (root / "logs" / "cadrumo.log",):
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            try:
+                stamp = datetime.fromisoformat(line.split(maxsplit=1)[0]).timestamp()
+            except (ValueError, IndexError):
+                continue
+            if stamp >= since:
+                records.append((stamp, line))
+    return records
+
+
+def _startup_phases(records: list[tuple[float, str]]) -> list[str]:
+    """Retain only fixed timing messages without private diagnostic context."""
+    phases: list[str] = []
+    for _, line in records:
+        for prefix in _PHASE_MESSAGES:
+            if prefix in line:
+                phases.append(prefix + line.split(prefix, 1)[1].split(" | ", 1)[0])
+                break
+    return phases
 
 
 def measure(package: Path, scratch: Path) -> dict[str, Any]:
@@ -169,7 +178,7 @@ def measure(package: Path, scratch: Path) -> dict[str, Any]:
             wall_start, phase = time.time(), time.monotonic()
             try:
                 with ExitStack() as service_cleanup:
-                    service = _PackagedServiceProcess(
+                    service = PackagedServiceProcess(
                         package / "bin" / "cadrumo-agent-service.exe",
                         profile_id=profile.profile_id,
                         environment=environment,
@@ -262,76 +271,106 @@ def main() -> None:
             "wait for observed builds" if arguments.wait_for_builds else "measure under current load"
         )
         output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-        for index in range(arguments.samples):
-            order = ("baseline", "candidate") if index % 2 == 0 else ("candidate", "baseline")
-            for name in order:
-                if any(sample["package"] == name and sample["sample"] == index + 1 for sample in report["samples"]):
-                    continue
-                if arguments.wait_for_builds:
-                    _wait_for_builds()
-                require(package_identity(packages[name]) == report["packages"][name], "package changed before sample")
-                print(json.dumps({"starting": name, "sample": index + 1}), flush=True)
-                sample_root = scratch / f"{name}-{index + 1}"
-                sample_root.mkdir()
-                sample = measure(packages[name], sample_root)
-                sample["scratch"] = str(sample_root)
-                sample["scratch_retained"] = False
-                require(package_identity(packages[name]) == report["packages"][name], "package changed during sample")
-                report["samples"].append({"package": name, "sample": index + 1, **sample})
-                output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-                print(
-                    json.dumps(
-                        {
-                            "completed": name,
-                            "sample": index + 1,
-                            "starts": [
-                                {
-                                    k: v
-                                    for k, v in start.items()
-                                    if k.endswith("_seconds") or k == "store_state_before_start"
-                                }
-                                for start in sample["starts"]
-                            ],
-                        }
-                    ),
-                    flush=True,
-                )
-        report["medians_seconds"] = {
-            name: {
-                state: {
-                    key: statistics.median(
-                        start[key]
-                        for sample in report["samples"]
-                        if sample["package"] == name
-                        for start in sample["starts"]
-                        if start["store_state_before_start"] == state
-                    )
-                    for key in (
-                        "service_ready_seconds",
-                        "gateway_ready_seconds",
-                        "worker_available_seconds",
-                        "worker_warmed_seconds",
-                    )
-                }
-                for state in ("absent", "current")
-            }
-            for name in packages
-        }
-        report["setup_medians_seconds"] = {
-            name: {
-                key: statistics.median(sample[key] for sample in report["samples"] if sample["package"] == name)
-                for key in (
-                    "runtime_ready_seconds",
-                    "profile_create_and_login_seconds",
-                    "holder_start_seconds",
-                    "profile_language_first_seconds",
-                    "profile_language_cached_seconds",
-                )
-            }
-            for name in packages
-        }
+        _collect_samples(
+            packages, report, scratch, output, arguments.samples, wait_for_builds=arguments.wait_for_builds
+        )
+        report["medians_seconds"], report["setup_medians_seconds"] = _sample_medians(packages, report["samples"])
         output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(report["medians_seconds"], indent=2), flush=True)
+
+
+def _sample_medians(
+    packages: dict[str, Path], samples: list[dict[str, object]]
+) -> tuple[dict[str, dict[str, dict[str, float]]], dict[str, dict[str, float]]]:
+    """Summarize startup and setup timings for each package."""
+    medians = {
+        name: {
+            state: {
+                key: statistics.median(
+                    cast(float, start[key])
+                    for sample in samples
+                    if sample["package"] == name
+                    for start in cast(list[dict[str, object]], sample["starts"])
+                    if start["store_state_before_start"] == state
+                )
+                for key in (
+                    "service_ready_seconds",
+                    "gateway_ready_seconds",
+                    "worker_available_seconds",
+                    "worker_warmed_seconds",
+                )
+            }
+            for state in ("absent", "current")
+        }
+        for name in packages
+    }
+    return medians, _setup_medians(packages, samples)
+
+
+def _setup_medians(packages: dict[str, Path], samples: list[dict[str, object]]) -> dict[str, dict[str, float]]:
+    """Summarize the independent setup stages for each package."""
+    return {
+        name: {
+            key: statistics.median(cast(float, sample[key]) for sample in samples if sample["package"] == name)
+            for key in (
+                "runtime_ready_seconds",
+                "profile_create_and_login_seconds",
+                "holder_start_seconds",
+                "profile_language_first_seconds",
+                "profile_language_cached_seconds",
+            )
+        }
+        for name in packages
+    }
+
+
+def _collect_samples(
+    packages: dict[str, Path],
+    report: dict[str, object],
+    scratch: Path,
+    output: Path,
+    count: int,
+    *,
+    wait_for_builds: bool,
+) -> None:
+    """Collect missing samples in alternating order, persisting each completed result."""
+    samples = cast(list[dict[str, object]], report["samples"])
+    identities = cast(dict[str, dict[str, object]], report["packages"])
+    for index in range(count):
+        order = ("baseline", "candidate") if index % 2 == 0 else ("candidate", "baseline")
+        for name in order:
+            if any(sample["package"] == name and sample["sample"] == index + 1 for sample in samples):
+                continue
+            if wait_for_builds:
+                _wait_for_builds()
+            require(package_identity(packages[name]) == identities[name], "package changed before sample")
+            print(json.dumps({"starting": name, "sample": index + 1}), flush=True)
+            sample_root = scratch / f"{name}-{index + 1}"
+            sample_root.mkdir()
+            sample = measure(packages[name], sample_root)
+            sample["scratch"] = str(sample_root)
+            sample["scratch_retained"] = False
+            require(package_identity(packages[name]) == identities[name], "package changed during sample")
+            samples.append({"package": name, "sample": index + 1, **sample})
+            output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+            _print_completed(name, index + 1, sample)
+
+
+def _print_completed(name: str, number: int, sample: dict[str, object]) -> None:
+    """Print only timing fields and the pre-start store state."""
+    print(
+        json.dumps(
+            {
+                "completed": name,
+                "sample": number,
+                "starts": [
+                    {k: v for k, v in start.items() if k.endswith("_seconds") or k == "store_state_before_start"}
+                    for start in cast(list[dict[str, object]], sample["starts"])
+                ],
+            }
+        ),
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

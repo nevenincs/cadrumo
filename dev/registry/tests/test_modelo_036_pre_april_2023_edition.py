@@ -18,7 +18,8 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..conformance.registry_schema_support import committed_modelo

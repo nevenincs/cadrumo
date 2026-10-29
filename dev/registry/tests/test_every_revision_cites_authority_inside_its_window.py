@@ -25,7 +25,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 # The canonical definitions of both window rules. They are private to the
 # snapshot module because runtime reaches them only through snapshot build; this

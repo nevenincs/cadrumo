@@ -54,6 +54,16 @@ def _assert_sdist_contains_data(repo_root: Path, sdist: Path) -> None:
     )
 
 
+def _assert_no_corpus_leaks(names: set[str], corpus_binary_suffixes: tuple[str, ...]) -> None:
+    leaked = sorted(
+        name for name in names if "/src/cadrumo/_data/corpus/" in name and name.lower().endswith(corpus_binary_suffixes)
+    )
+    if leaked:
+        raise SystemExit(
+            f"root sdist leaked {len(leaked)} companion-owned corpus binaries; first ten: {leaked[:10]!r}",
+        )
+
+
 def _assert_sdist_contains_expected_data(
     sdist: Path,
     expected: set[str],
@@ -84,13 +94,7 @@ def _assert_sdist_contains_expected_data(
     )
     if excluded:
         raise SystemExit(f"sdist leaked configured exclusions: {excluded[:10]!r}")
-    leaked = sorted(
-        name for name in names if "/src/cadrumo/_data/corpus/" in name and name.lower().endswith(corpus_binary_suffixes)
-    )
-    if leaked:
-        raise SystemExit(
-            f"root sdist leaked {len(leaked)} companion-owned corpus binaries; first ten: {leaked[:10]!r}",
-        )
+    _assert_no_corpus_leaks(names, corpus_binary_suffixes)
     record_proof("source shipped-data preflight")
     record_proof("sdist source shipped-data payload")
 

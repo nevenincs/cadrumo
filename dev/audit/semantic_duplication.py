@@ -512,13 +512,10 @@ def _declared_field_names(node: ast.ClassDef) -> tuple[str, ...]:
 
 def _populate_reference_node(node: ast.AST, module: Module, enum_names: frozenset[str]) -> None:
     """Populate reference node."""
-    if (
-        isinstance(node, ast.Attribute)
-        and isinstance(node.value, ast.Name)
-        and node.value.id in enum_names
-        and node.attr.isupper()
-    ):
-        module.enum_members.setdefault(node.value.id, set()).add(node.attr)
+    enum_member = _enum_reference(node, enum_names)
+    if enum_member is not None:
+        owner, member = enum_member
+        module.enum_members.setdefault(owner, set()).add(member)
     elif isinstance(node, ast.Constant) and _meaningful_literal(node):
         module.literals.add(node.value)
     elif isinstance(node, ast.ImportFrom) and (node.module is not None and node.module):
@@ -585,3 +582,14 @@ def _append_expression_mark(inner: ast.AST, marks: list[str]) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _enum_reference(node: ast.AST, enum_names: frozenset[str]) -> tuple[str, str] | None:
+    if (
+        isinstance(node, ast.Attribute)
+        and isinstance(node.value, ast.Name)
+        and node.value.id in enum_names
+        and node.attr.isupper()
+    ):
+        return node.value.id, node.attr
+    return None

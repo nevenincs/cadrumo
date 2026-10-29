@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tests.legal_text import spanish_date
 
 from ..conformance.registry_schema_support import (

@@ -12,7 +12,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..maintenance_support import _COMPATIBLE_SURFACE_PAIRS

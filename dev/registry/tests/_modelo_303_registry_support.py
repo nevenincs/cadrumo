@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 from dev.registry.compiler.authority import compiled_bundled_authority
 

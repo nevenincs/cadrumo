@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.application.modelo.profile_binding import madrid_nacimiento_adopcion_candidate_weighted_count
+from cadrumo.application.modelo.profile_derived_facts import madrid_nacimiento_adopcion_candidate_weighted_count
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingDataType, BindingValueChannel
 

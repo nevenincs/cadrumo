@@ -15,7 +15,7 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt_custody
+from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.config import override_settings
@@ -167,7 +167,7 @@ def _in_a_logon_without_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
     from keyring.errors import KeyringError, PasswordDeleteError
 
     store = _LogonWithoutCredentials()
-    monkeypatch.setattr(receipt_custody, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
+    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (store, KeyringError, PasswordDeleteError))
 
 
 @pytest.mark.anyio

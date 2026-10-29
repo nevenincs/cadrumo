@@ -21,7 +21,8 @@ from ._tree_validation import GeneratedExportTreeValidationContext
 from .tree_paths import contains, require_existing_non_link
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 __all__ = ["prepare_generated_form_layout_companion"]
 

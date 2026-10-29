@@ -21,12 +21,10 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import itertools
 import json
-import re
 import sys
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from collections.abc import Mapping
+from email.message import Message
 from pathlib import Path
 
 from packaging.requirements import Requirement
@@ -42,6 +40,7 @@ from ..runtime_wheel_selection import active_requirements, marker_environment
 from ..runtime_wheelhouse_contract import target_platform
 from ..uv_constraints import local_product_packages
 from ..wheel_metadata import read_wheel_metadata
+from .agent_resolution import DependencyGateError, ResolvedDistribution, requirement_rows, resolve_shared_dependencies
 from .build_directory import require_enrolled_build
 from .build_paths import build_paths
 from .hashing import digest
@@ -52,7 +51,6 @@ AGENT_DEPENDENCIES = "agent-dependencies.txt"
 """Hash-pinned requirements the agent adds to, or replaces in, Cadrumo's base closure."""
 AGENT_DEPENDENCY_RECORD = "agent-dependencies.json"
 """The resolution's inputs, selected versions and the replaced Cadrumo versions."""
-_HASHES = re.compile(r"sha256:[0-9a-f]{64}(?:\s+--hash=sha256:[0-9a-f]{64})*")
 _AGENT_EXPORT = (
     "export",
     "--frozen",
@@ -65,45 +63,10 @@ _AGENT_EXPORT = (
 _OVERRIDE_PREFIXES = ("UV_", "PIP_")
 
 
-@dataclass(frozen=True)
-class ResolvedDistribution:
-    """One distribution of the resolved set with the hashes the installer requires."""
-
-    version: str
-    hashes: tuple[str, ...]
-
-
-class DependencyGateError(ValueError):
-    """The two projects' locks admit no common version of a shared distribution."""
-
-
-def _requirement_rows(text: str, origin: str) -> list[tuple[Requirement, tuple[str, ...]]]:
-    """Parse exact, optionally hashed requirement rows as uv writes them."""
-    rows: list[tuple[Requirement, tuple[str, ...]]] = []
-    for row in text.replace("\\\n", " ").splitlines():
-        row = row.strip()
-        if not row or row.startswith("#"):
-            continue
-        specification, separator, hashes = row.partition(" --hash=")
-        requirement = Requirement(specification.strip())
-        pins = tuple(requirement.specifier)
-        if (
-            (separator and not _HASHES.fullmatch(hashes.strip()))
-            or requirement.url is not None
-            or len(pins) != 1
-            or pins[0].operator != "=="
-            or "*" in pins[0].version
-        ):
-            raise ValueError(f"{origin} row must name one exact version: {specification}")
-        found = tuple(item.removeprefix("sha256:") for item in re.findall(r"sha256:[0-9a-f]{64}", hashes))
-        rows.append((requirement, found))
-    return rows
-
-
 def locked_distributions(text: str, environment: Mapping[str, str], origin: str) -> dict[str, ResolvedDistribution]:
     """Return the exact versions and recorded hashes a lock export activates for one target environment."""
     distributions: dict[str, ResolvedDistribution] = {}
-    for requirement, hashes in _requirement_rows(text, origin):
+    for requirement, hashes in requirement_rows(text, origin):
         if requirement.marker is not None and not requirement.marker.evaluate(dict(environment)):
             continue
         if not hashes:
@@ -175,196 +138,6 @@ def wheel_requirements(wheel: Path, environment: Mapping[str, str]) -> list[Requ
     return requirements
 
 
-def _declared_refusals(
-    name: str, version: str, declared: Mapping[str, Sequence[Requirement]]
-) -> list[tuple[str, Requirement]]:
-    return [
-        (owner, requirement)
-        for owner, requirements in declared.items()
-        for requirement in requirements
-        if canonicalize_name(requirement.name) == name and not requirement.specifier.contains(version, prereleases=True)
-    ]
-
-
-def _compile(
-    requirements: Sequence[Requirement],
-    pins: Mapping[str, str],
-    *,
-    python: str,
-    platform: str,
-    uv: str,
-    work: Path,
-    environment: Mapping[str, str] | None,
-    index_arguments: Sequence[str],
-) -> tuple[dict[str, ResolvedDistribution] | None, str]:
-    """Resolve the declared requirements with every version fixed; report an unsatisfiable set."""
-    work.mkdir(parents=True, exist_ok=True)
-    inputs = work / "requirements.in"
-    constraints = work / "constraints.txt"
-    output = work / "requirements.txt"
-    output.unlink(missing_ok=True)
-    inputs.write_text("".join(f"{requirement}\n" for requirement in requirements), encoding="utf-8")
-    constraints.write_text("".join(f"{name}=={version}\n" for name, version in sorted(pins.items())), encoding="utf-8")
-    result = run_command(
-        [
-            uv,
-            "pip",
-            "compile",
-            "--no-config",
-            str(inputs),
-            "--constraint",
-            str(constraints),
-            "--python-version",
-            python,
-            "--python-platform",
-            platform,
-            "--only-binary",
-            ":all:",
-            "--generate-hashes",
-            "--no-header",
-            "--no-annotate",
-            "--output-file",
-            str(output),
-            *index_arguments,
-        ],
-        cwd=REPO_ROOT,
-        environment=environment,
-    )
-    if result.returncode:
-        if "No solution found" not in result.stderr:
-            raise RuntimeError(f"Resolving the agent dependencies failed: {result.stderr.strip()}")
-        return None, result.stderr.strip()
-    resolved: dict[str, ResolvedDistribution] = {}
-    for requirement, hashes in _requirement_rows(output.read_text(encoding="utf-8"), "Resolved agent dependency"):
-        if not hashes:
-            raise ValueError(f"Resolved agent dependency has no hashes: {requirement}")
-        resolved[canonicalize_name(requirement.name)] = ResolvedDistribution(
-            next(iter(requirement.specifier)).version, hashes
-        )
-    return resolved, ""
-
-
-def resolve_shared_dependencies(
-    *,
-    cadrumo_declared: Sequence[Requirement],
-    agent_declared: Sequence[Requirement],
-    cadrumo_locked: Mapping[str, ResolvedDistribution],
-    agent_locked: Mapping[str, ResolvedDistribution],
-    python: str,
-    platform: str,
-    uv: str,
-    work: Path,
-    repositories: Mapping[str, Path],
-    environment: Mapping[str, str] | None = None,
-    index_arguments: Sequence[str] = (),
-) -> dict[str, ResolvedDistribution]:
-    """Select one version of every distribution both projects need and return the hashed set.
-
-    Each distribution only one lock names keeps that lock's version. A distribution both
-    name at one version keeps it. For one they name at different versions, the newer is
-    tried first, then the older; a version either project's declared requirements refuse
-    is dropped before resolving. Every combination is resolved with all other versions
-    fixed, so a transitive requirement of any locked distribution is enforced by the
-    resolver. Combinations taking the newer version for more distributions are tried
-    first. Each returned hash is one the lock holding the selected version recorded.
-    """
-    versions = {"Cadrumo": {name: item.version for name, item in cadrumo_locked.items()}}
-    versions["cadrumo-agent"] = {name: item.version for name, item in agent_locked.items()}
-    declared = {"Cadrumo": cadrumo_declared, "cadrumo-agent": agent_declared}
-    differing = sorted(
-        name
-        for name in cadrumo_locked.keys() & agent_locked.keys()
-        if Version(cadrumo_locked[name].version) != Version(agent_locked[name].version)
-    )
-    remedy = (
-        "Change the refusing requirement or upgrade the lagging lock in its repository, then run "
-        "`uv lock --upgrade` there: " + "; ".join(f"{owner} at {path}" for owner, path in repositories.items())
-    )
-    candidates: dict[str, list[str]] = {}
-    for name in differing:
-        ordered = sorted({cadrumo_locked[name].version, agent_locked[name].version}, key=Version, reverse=True)
-        admitted = []
-        reasons = []
-        for version in ordered:
-            holders = " and ".join(f"{owner}'s lock" for owner, locked in versions.items() if locked[name] == version)
-            refusals = _declared_refusals(name, version, declared)
-            if refusals:
-                refused = "; ".join(f"{owner} requires {requirement}" for owner, requirement in refusals)
-                reasons.append(f"{holders} holds {name} {version}, refused because {refused}")
-            else:
-                admitted.append(version)
-        if not admitted:
-            raise DependencyGateError(f"No version of {name} satisfies both projects: {'. '.join(reasons)}. {remedy}")
-        candidates[name] = admitted
-    base = {**versions["Cadrumo"], **versions["cadrumo-agent"]}
-    requirements = [*cadrumo_declared, *agent_declared]
-    # Index 0 is each distribution's newest admitted version: fewest older picks first.
-    choices = sorted(
-        itertools.product(*(range(len(candidates[name])) for name in differing)),
-        key=lambda indices: (sum(indices), indices),
-    )
-    attempts: list[str] = []
-    for indices in choices:
-        selected = {name: candidates[name][index] for name, index in zip(differing, indices, strict=True)}
-        pins = {**base, **selected}
-        resolved, explanation = _compile(
-            requirements,
-            pins,
-            python=python,
-            platform=platform,
-            uv=uv,
-            work=work,
-            environment=environment,
-            index_arguments=index_arguments,
-        )
-        if resolved is None:
-            chosen = ", ".join(f"{name} {version}" for name, version in selected.items()) or "the locked versions"
-            attempts.append(f"with {chosen}: {explanation}")
-            continue
-        outside = sorted(resolved.keys() - pins.keys())
-        if outside:
-            raise DependencyGateError(f"Resolution reached distributions neither lock holds: {', '.join(outside)}")
-        return {
-            name: _lock_owned(
-                name, distribution, pins[name], {"Cadrumo": cadrumo_locked, "cadrumo-agent": agent_locked}
-            )
-            for name, distribution in resolved.items()
-        }
-    names = ", ".join(
-        f"{name} (Cadrumo's lock {cadrumo_locked[name].version}, cadrumo-agent's lock {agent_locked[name].version})"
-        for name in differing
-    )
-    raise DependencyGateError(
-        f"No common version satisfies both projects for {names or 'the shared distributions'}. "
-        + " ".join(attempts)
-        + f" {remedy}"
-    )
-
-
-def _lock_owned(
-    name: str,
-    resolved: ResolvedDistribution,
-    pinned: str,
-    locks: Mapping[str, Mapping[str, ResolvedDistribution]],
-) -> ResolvedDistribution:
-    """Keep only the resolver's hashes that a lock holding the selected version recorded."""
-    if Version(resolved.version) != Version(pinned):
-        raise DependencyGateError(f"Resolution moved {name} off its locked version {pinned}")
-    owners = {
-        owner: locked[name].hashes
-        for owner, locked in locks.items()
-        if name in locked and Version(locked[name].version) == Version(pinned)
-    }
-    recorded = {value for hashes in owners.values() for value in hashes}
-    hashes = tuple(value for value in resolved.hashes if value in recorded)
-    if not hashes:
-        raise DependencyGateError(
-            f"The index serves no file of {name} {pinned} whose hash {' or '.join(owners) or 'a lock'} recorded; "
-            "refusing bytes neither lock tested. Re-lock the owning repository against the current index."
-        )
-    return ResolvedDistribution(resolved.version, hashes)
-
-
 def require_single_lock_provenance(
     replaced: Mapping[str, Mapping[str, str | None]], repositories: Mapping[str, Path]
 ) -> None:
@@ -427,6 +200,46 @@ def _gate_inputs(source: Path, wheel: Path, target: str, python: str, uv_version
     return hashlib.sha256(json.dumps(identity, sort_keys=True).encode()).hexdigest()
 
 
+def _cadrumo_locked(target: str, python: str) -> dict[str, ResolvedDistribution]:
+    recorded = cadrumo_lock_hashes()
+    cadrumo_locked: dict[str, ResolvedDistribution] = {}
+    for name, requirement in active_requirements(
+        REPO_ROOT, target_platform(target), python, extras=BUNDLED_EXTRAS
+    ).items():
+        version = next(iter(requirement.specifier)).version
+        hashes = recorded.get((name, version), ())
+        if len(hashes) == 0:
+            raise ValueError(f"Cadrumo's uv.lock records no hashes for {name} {version}")
+        cadrumo_locked[name] = ResolvedDistribution(version, hashes)
+    return cadrumo_locked
+
+
+def _additional_distributions(
+    resolved: Mapping[str, ResolvedDistribution], cadrumo_locked: Mapping[str, ResolvedDistribution]
+) -> dict[str, ResolvedDistribution]:
+    added = {
+        name: distribution
+        for name, distribution in sorted(resolved.items())
+        if name not in cadrumo_locked or Version(cadrumo_locked[name].version) != Version(distribution.version)
+    }
+    return added
+
+
+def _replaced_distributions(
+    cadrumo_locked: Mapping[str, ResolvedDistribution],
+    agent_locked: Mapping[str, ResolvedDistribution],
+    resolved: Mapping[str, ResolvedDistribution],
+) -> dict[str, dict[str, str]]:
+    replaced = {
+        name: dict(
+            selected=resolved[name].version, cadrumo=cadrumo_locked[name].version, agent=agent_locked[name].version
+        )
+        for name in sorted(cadrumo_locked.keys() & agent_locked.keys() & resolved.keys())
+        if Version(cadrumo_locked[name].version) != Version(agent_locked[name].version)
+    }
+    return replaced
+
+
 def gate_agent_dependencies(output: Path, source: Path, target: str, uv: str) -> None:
     """Resolve the built wheel against both locks and record the requirements the agent adds."""
     source = source.resolve(strict=True)
@@ -451,16 +264,7 @@ def gate_agent_dependencies(output: Path, source: Path, target: str, uv: str) ->
     if exported.returncode:
         raise RuntimeError(f"Exporting the agent lock failed in {source}: {exported.stderr.strip()}")
     agent_locked = locked_distributions(exported.stdout, environment, "Agent lock export")
-    recorded = cadrumo_lock_hashes()
-    cadrumo_locked: dict[str, ResolvedDistribution] = {}
-    for name, requirement in active_requirements(
-        REPO_ROOT, target_platform(target), python, extras=BUNDLED_EXTRAS
-    ).items():
-        version = next(iter(requirement.specifier)).version
-        hashes = recorded.get((name, version), ())
-        if len(hashes) == 0:
-            raise ValueError(f"Cadrumo's uv.lock records no hashes for {name} {version}")
-        cadrumo_locked[name] = ResolvedDistribution(version, hashes)
+    cadrumo_locked = _cadrumo_locked(target, python)
     repositories = {"Cadrumo": REPO_ROOT, "cadrumo-agent": source}
     resolved = resolve_shared_dependencies(
         cadrumo_declared=cadrumo_requirements(environment),
@@ -474,19 +278,9 @@ def gate_agent_dependencies(output: Path, source: Path, target: str, uv: str) ->
         repositories=repositories,
         environment=subprocess_environment,
     )
-    replaced = {
-        name: dict(
-            selected=resolved[name].version, cadrumo=cadrumo_locked[name].version, agent=agent_locked[name].version
-        )
-        for name in sorted(cadrumo_locked.keys() & agent_locked.keys() & resolved.keys())
-        if Version(cadrumo_locked[name].version) != Version(agent_locked[name].version)
-    }
+    replaced = _replaced_distributions(cadrumo_locked, agent_locked, resolved)
     require_single_lock_provenance(replaced, repositories)
-    added = {
-        name: distribution
-        for name, distribution in sorted(resolved.items())
-        if name not in cadrumo_locked or Version(cadrumo_locked[name].version) != Version(distribution.version)
-    }
+    added = _additional_distributions(resolved, cadrumo_locked)
     requirements = "".join(
         f"{name}=={distribution.version} " + " ".join(f"--hash=sha256:{value}" for value in distribution.hashes) + "\n"
         for name, distribution in added.items()
@@ -516,6 +310,20 @@ def _gate_record(output: Path) -> dict[str, object]:
     return {str(key): value for key, value in record.items()}
 
 
+def _load_requirement_set(path: Path, environment: Mapping[str, str]) -> dict[str, Requirement]:
+    requirements: dict[str, Requirement] = {}
+    for requirement, hashes in requirement_rows(path.read_text(encoding="utf-8"), "Agent dependency"):
+        if not hashes:
+            raise ValueError(f"Agent dependency must carry SHA-256 hashes: {requirement}")
+        if requirement.marker is not None and not requirement.marker.evaluate(environment):
+            continue
+        name = canonicalize_name(requirement.name)
+        if name in requirements:
+            raise ValueError(f"Duplicate agent dependency: {name}")
+        requirements[name] = requirement
+    return requirements
+
+
 def resolved_requirements(output: Path, target: str, python: str) -> dict[str, Requirement]:
     """Return the recorded requirements the agent adds to Cadrumo's base closure."""
     record = _gate_record(output)
@@ -525,22 +333,34 @@ def resolved_requirements(output: Path, target: str, python: str) -> dict[str, R
     if digest(path) != record.get("requirements_sha256"):
         raise ValueError("Agent dependency requirements differ from their resolution record")
     environment = marker_environment(target_platform(target), python)
-    requirements: dict[str, Requirement] = {}
-    for requirement, hashes in _requirement_rows(path.read_text(encoding="utf-8"), "Agent dependency"):
-        if not hashes:
-            raise ValueError(f"Agent dependency must carry SHA-256 hashes: {requirement}")
-        if requirement.marker is not None and not requirement.marker.evaluate(environment):
-            continue
-        name = canonicalize_name(requirement.name)
-        if name in requirements:
-            raise ValueError(f"Duplicate agent dependency: {name}")
-        requirements[name] = requirement
+    requirements = _load_requirement_set(path, environment)
     versions = record.get("versions")
     if not isinstance(versions, dict) or versions != {
         name: next(iter(requirement.specifier)).version for name, requirement in requirements.items()
     }:
         raise ValueError("Agent dependency requirements differ from their resolution record")
     return requirements
+
+
+def _agent_build_reusable(output: Path, input_receipt: Path, inputs: str) -> bool:
+    try:
+        prior = json.loads(input_receipt.read_text(encoding="utf-8"))
+        if prior == inputs:
+            agent_wheel(output)
+            return True
+    except (OSError, ValueError, KeyError):
+        pass
+    return False
+
+
+def _built_agent_wheel(wheels: Path, version: str) -> tuple[Path, Message]:
+    artifacts = [wheel for wheel in wheels.glob("*.whl") if read_wheel_metadata(wheel)["Version"] == version]
+    if len(artifacts) != 1:
+        raise ValueError("Agent build must produce exactly one wheel")
+    metadata = read_wheel_metadata(artifacts[0])
+    if metadata["Name"] != "cadrumo-agent" or metadata["Version"] != version:
+        raise ValueError("Agent wheel metadata differs from the configured project")
+    return artifacts[0], metadata
 
 
 def build_agent(output: Path, source: Path, uv: str) -> None:
@@ -553,13 +373,8 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
     wheels = output / "wheels"
     inputs = _wheel_input_digest(source, toolchain={"python": sys.version, "uv": uv})
     input_receipt = output / "agent-inputs.json"
-    try:
-        prior = json.loads(input_receipt.read_text(encoding="utf-8"))
-        if prior == inputs:
-            agent_wheel(output)
-            return
-    except (OSError, ValueError, KeyError):
-        pass
+    if _agent_build_reusable(output, input_receipt, inputs):
+        return
     result = run_command(
         [
             uv,
@@ -577,19 +392,14 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
     )
     if result.returncode:
         raise RuntimeError(result.stderr)
-    artifacts = [wheel for wheel in wheels.glob("*.whl") if read_wheel_metadata(wheel)["Version"] == project["version"]]
-    if len(artifacts) != 1:
-        raise ValueError("Agent build must produce exactly one wheel")
-    metadata = read_wheel_metadata(artifacts[0])
-    if metadata["Name"] != "cadrumo-agent" or metadata["Version"] != project["version"]:
-        raise ValueError("Agent wheel metadata differs from the configured project")
+    artifact, metadata = _built_agent_wheel(wheels, project["version"])
     (output / "agent-wheel.json").write_text(
         json.dumps(
             dict(
                 source=str(source),
                 version=metadata["Version"],
-                wheel=artifacts[0].name,
-                wheel_sha256=digest(artifacts[0]),
+                wheel=artifact.name,
+                wheel_sha256=digest(artifact),
             ),
             indent=2,
         )
@@ -597,7 +407,7 @@ def build_agent(output: Path, source: Path, uv: str) -> None:
         encoding="utf-8",
     )
     for wheel in wheels.glob("*.whl"):
-        if wheel != artifacts[0]:
+        if wheel != artifact:
             wheel.unlink()
     input_receipt.write_text(json.dumps(inputs) + "\n", encoding="utf-8")
 

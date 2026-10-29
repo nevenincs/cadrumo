@@ -145,46 +145,9 @@ def run_iva_multirate_cli_journey(
         _create_profile(cli=cli, receipts=receipts, artifact=artifact, journey_year=journey_year)
 
         evidence_id = _add_purchase_evidence(cli=cli, receipts=receipts, artifact=artifact)
-        general_transaction_id = _add_transaction(
-            cli=cli,
-            receipts=receipts,
-            artifact=artifact,
-            journey_year=journey_year,
-            amount="121.00",
-            description="Synthetic multirate IVA sale at 21 percent",
-            taxable_base=_GENERAL_BASE,
-            iva_rate="0.21",
-            iva_amount=_GENERAL_IVA,
-            iva_category="domestic_general",
-            idempotency_key=f"iva-acceptance-multirate-general-{year}-1t",
+        general_transaction_id, reduced_transaction_id, issued_invoice_id = _capture_multirate_sales(
+            cli, receipts, artifact, journey_year, year
         )
-        reduced_transaction_id = _add_transaction(
-            cli=cli,
-            receipts=receipts,
-            artifact=artifact,
-            journey_year=journey_year,
-            amount="55.00",
-            description="Synthetic multirate IVA sale at 10 percent",
-            taxable_base=_REDUCED_BASE,
-            iva_rate="0.10",
-            iva_amount=_REDUCED_IVA,
-            iva_category="domestic_reduced",
-            idempotency_key=f"iva-acceptance-multirate-reduced-{year}-1t",
-        )
-        issued_invoice_id = _add_issued_invoice(
-            cli=cli,
-            receipts=receipts,
-            artifact=artifact,
-            journey_year=journey_year,
-        )
-        for transaction_id in (general_transaction_id, reduced_transaction_id):
-            _run(
-                cli,
-                receipts,
-                artifact,
-                ("app", "ledger", "link", transaction_id, "--invoice-id", issued_invoice_id),
-                result_keys=(),
-            )
 
         purchase_transaction_id = _add_purchase_transaction(
             cli=cli,
@@ -222,60 +185,9 @@ def run_iva_multirate_cli_journey(
             evidence_id=evidence_id,
         )
 
-        _run(
-            reopened,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                str(year),
-                "--period",
-                _PERIOD,
-                "--amount",
-                "0.00",
-                "--confirm",
-            ),
-            result_keys=(),
+        work_unit_id, calculation_revision_id, iva_resultado, rate_observations = _calculate_multirate_quarter(
+            reopened, receipts, artifact, journey_year, year
         )
-        created = _result(
-            _run(
-                reopened,
-                receipts,
-                artifact,
-                ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
-                result_keys=("work_unit_id",),
-            )
-        )
-        work_unit_id = _required_id(created, "work_unit_id")
-        calculated = _result(
-            _run(
-                reopened,
-                receipts,
-                artifact,
-                (
-                    "app",
-                    "modelo",
-                    "work",
-                    "calculate",
-                    work_unit_id,
-                    "--no-joint-return-elected",
-                ),
-                result_keys=("calculation_revision_id",),
-            )
-        )
-        if calculated.get("saved") is not True:
-            raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-        calculation_revision_id = _required_id(calculated, "calculation_revision_id")
-        iva_resultado = _decimal_field(calculated, "iva.resultado")
-        if iva_resultado != _EXPECTED_RESULT:
-            raise IvaCliJourneyError(
-                f"independent multi-rate IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
-            )
-        rate_observations = _rate_observations(calculated=calculated)
 
         verification_cli = InstalledCli(
             cli.executable,
@@ -331,6 +243,120 @@ def run_iva_multirate_cli_journey(
             export_status="not_attempted_product_software_identity_pending",
             commands=tuple(receipts),
         )
+
+
+def _capture_multirate_sales(
+    cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear, year: int
+) -> tuple[str, str, str]:
+    """Execute this acceptance phase in order through its existing command boundary."""
+    general_transaction_id = _add_transaction(
+        cli=cli,
+        receipts=receipts,
+        artifact=artifact,
+        journey_year=journey_year,
+        amount="121.00",
+        description="Synthetic multirate IVA sale at 21 percent",
+        taxable_base=_GENERAL_BASE,
+        iva_rate="0.21",
+        iva_amount=_GENERAL_IVA,
+        iva_category="domestic_general",
+        idempotency_key=f"iva-acceptance-multirate-general-{year}-1t",
+    )
+    reduced_transaction_id = _add_transaction(
+        cli=cli,
+        receipts=receipts,
+        artifact=artifact,
+        journey_year=journey_year,
+        amount="55.00",
+        description="Synthetic multirate IVA sale at 10 percent",
+        taxable_base=_REDUCED_BASE,
+        iva_rate="0.10",
+        iva_amount=_REDUCED_IVA,
+        iva_category="domestic_reduced",
+        idempotency_key=f"iva-acceptance-multirate-reduced-{year}-1t",
+    )
+    issued_invoice_id = _add_issued_invoice(
+        cli=cli,
+        receipts=receipts,
+        artifact=artifact,
+        journey_year=journey_year,
+    )
+    for transaction_id in (general_transaction_id, reduced_transaction_id):
+        _run(
+            cli,
+            receipts,
+            artifact,
+            ("app", "ledger", "link", transaction_id, "--invoice-id", issued_invoice_id),
+            result_keys=(),
+        )
+
+    return general_transaction_id, reduced_transaction_id, issued_invoice_id
+
+
+def _calculate_multirate_quarter(
+    reopened: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    journey_year: IvaJourneyYear,
+    year: int,
+) -> tuple[str, str, Decimal, tuple[RateObservation, RateObservation, RateObservation]]:
+    """Execute this acceptance phase in order through its existing command boundary."""
+    _run(
+        reopened,
+        receipts,
+        artifact,
+        (
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            str(year),
+            "--period",
+            _PERIOD,
+            "--amount",
+            "0.00",
+            "--confirm",
+        ),
+        result_keys=(),
+    )
+    created = _result(
+        _run(
+            reopened,
+            receipts,
+            artifact,
+            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
+            result_keys=("work_unit_id",),
+        )
+    )
+    work_unit_id = _required_id(created, "work_unit_id")
+    calculated = _result(
+        _run(
+            reopened,
+            receipts,
+            artifact,
+            (
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--no-joint-return-elected",
+            ),
+            result_keys=("calculation_revision_id",),
+        )
+    )
+    if calculated.get("saved") is not True:
+        raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
+    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
+    iva_resultado = _decimal_field(calculated, "iva.resultado")
+    if iva_resultado != _EXPECTED_RESULT:
+        raise IvaCliJourneyError(
+            f"independent multi-rate IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+        )
+    rate_observations = _rate_observations(calculated=calculated)
+
+    return work_unit_id, calculation_revision_id, iva_resultado, rate_observations
 
 
 def _create_profile(

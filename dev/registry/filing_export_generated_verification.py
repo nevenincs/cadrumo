@@ -22,10 +22,12 @@ from .pipeline.generated_export_inheritance import (
     select_generated_export_inheritance,
     verify_generated_export_inheritance_storage,
 )
+from .pipeline.generated_export_inheritance_model import GeneratedExportInheritance, GeneratedExportInheritanceContext
 from .pipeline.joined_record_design import join_record_design_semantics
 from .pipeline.record_design_intermediate import load_record_design_intermediate
 from .pipeline.render_profile_evidence import RenderProfileSourceEvidence
 from .pipeline.render_profile_loading import load_render_profile_for_revision
+from .pipeline.render_profile_model import RenderProfile
 from .pipeline.render_profile_source_reader import load_render_profile_source_evidence
 from .pipeline.semantic_map import load_semantic_map_for_revision
 from .pipeline.semantic_map_validation import verify_requirement_statements
@@ -79,10 +81,7 @@ def _verify_generated_revision(
     )
     joined = join_record_design_semantics(semantic_map, intermediate, inspection)
     verify_requirement_statements(semantic_map, source_root=source_root, sources=inspection.sources)
-    claims_official = any(
-        rule.evidence.authority_kind != "reviewed_policy"
-        for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
-    )
+    claims_official = _claims_official_evidence(render_profile)
     source_evidence = (
         load_render_profile_source_evidence(
             source_root / inspection.sources[manifest.source_ref].corpus_path,
@@ -122,14 +121,27 @@ def _verify_generated_revision(
         field_derivations=manifest.field_derivations,
         render_profile=render_profile,
         render_profile_source_evidence=source_evidence,
-        generated_export_inheritance=(
-            manifest.generated_export_inheritance
-            if authority is None
-            else None
-            if inheritance is None
-            else inheritance.attestation
+        generated_export_inheritance=_verified_inheritance(
+            authority, inheritance, manifest.generated_export_inheritance
         ),
     )
     if export_fragment_provenance_manifest_json_bytes(verified) != manifest_path.read_bytes():
         raise RegistryValidationError("canonical export manifest bytes changed during live verification")
     return verified, manifest_path
+
+
+def _claims_official_evidence(render_profile: RenderProfile) -> bool:
+    return any(
+        rule.evidence.authority_kind != "reviewed_policy"
+        for rule in (*render_profile.singleton_rules, *render_profile.width_17_rules)
+    )
+
+
+def _verified_inheritance(
+    authority: ValidatedRegistryAuthority | None,
+    inheritance: GeneratedExportInheritanceContext | None,
+    stored: GeneratedExportInheritance | None,
+) -> GeneratedExportInheritance | None:
+    if authority is None:
+        return stored
+    return None if inheritance is None else inheritance.attestation

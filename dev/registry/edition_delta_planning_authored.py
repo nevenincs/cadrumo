@@ -14,6 +14,7 @@ from . import edition_delta_planning_mode as _edition_delta_planning_mode
 from . import edition_delta_planning_state as _edition_delta_planning_state
 from . import edition_delta_row_delta_common as _edition_delta_row_delta_common
 from . import edition_delta_row_delta_existing as _edition_delta_row_delta_existing
+from . import edition_delta_row_delta_preserving as _edition_delta_row_delta_preserving
 from . import edition_delta_row_delta_reconstruction as _edition_delta_row_delta_reconstruction
 from . import edition_delta_source as _edition_delta_source
 from . import edition_delta_types as _edition_delta_types
@@ -154,11 +155,7 @@ def _replay_authored_output(
             source.declarations,
         )
         if effective is None or effective != target:
-            differing = sorted(
-                key
-                for key in set(target) | set(effective or {})
-                if effective is None or target.get(key) != effective.get(key)
-            )
+            differing = _replay_differing_fields(target, effective)
             raise _edition_delta_errors.MigrationRefusedError(
                 f"edition {revision_id!r}: planned raw storage for casilla {row_id!r} does not preserve its "
                 f"effective target; differing fields: {differing!r}; sidecar projection for lineage "
@@ -172,6 +169,14 @@ def _replay_authored_output(
             f"edition {revision_id!r}: planned storage omitted effective casillas {missing!r}"
         )
     return replayed
+
+
+def _replay_differing_fields(
+    target: _edition_delta_source._Row, effective: _edition_delta_source._Row | None
+) -> list[str]:
+    return sorted(
+        key for key in set(target) | set(effective or {}) if effective is None or target.get(key) != effective.get(key)
+    )
 
 
 def _attested_lineages(
@@ -280,7 +285,7 @@ def plan_authored_edition(
     }
     selector_ids = _authored_selector_ids(run.materialised[predecessor], dropped_authored, dropped_lineages)
     authored_overrides = _matching_authored_overrides(generated_overrides, selector_ids)
-    normalized_replacements = _edition_delta_row_delta_existing.normalize_authored_override_removals(
+    normalized_replacements = _edition_delta_row_delta_preserving.normalize_authored_override_removals(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=run.materialised[predecessor],
@@ -289,7 +294,7 @@ def plan_authored_edition(
         defaults=lift.defaults,
     )
     current_output = _replay_authored_source(run, revision_id, predecessor, source, normalized_replacements)
-    preserving_overrides, preserving_replacements = _edition_delta_row_delta_existing.preserve_inherited_rows(
+    preserving_overrides, preserving_replacements = _edition_delta_row_delta_preserving.preserve_inherited_rows(
         revision_id=revision_id,
         predecessor=predecessor,
         inherited=run.materialised[predecessor],

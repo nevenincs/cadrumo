@@ -10,7 +10,8 @@ from cadrumo.application.overview.calendar import build_overview_calendar
 from cadrumo.application.overview.calendar_models import OverviewCalendarRange
 from cadrumo.application.overview.coverage import CoverageAdviceReason
 from cadrumo.core.period import Period
-from cadrumo.domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
+from cadrumo.domain.calculations.registry.applicability import derive_modelo_applicability
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import AuthorityArtifact
 from cadrumo.domain.calculations.registry.iva_regime_vocabulary import require_iva_regime

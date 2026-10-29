@@ -12,12 +12,13 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_temporal import FilingYearOffsetByTargetPeriod, TargetPeriods
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 

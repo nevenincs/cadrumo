@@ -16,9 +16,10 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
     evaluate_remote_operation,
     remote_state_policy_from_cross_reference,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import (
     AEAT_HOST_SUFFIX_EXPECTED,

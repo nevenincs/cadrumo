@@ -24,7 +24,8 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_revision,
     synthetic_legal_identity,
 )
-from cadrumo.entrypoints.adapter_composition import build_ledger_membership_ports, profile_adapter_composition
+from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+from cadrumo.entrypoints.adapter_composition_work_ports import build_ledger_membership_ports
 from cadrumo.entrypoints.tests.profile_persistence.ledger_drift_support import BUCKET_ID, calculate_irene_revision
 from cadrumo.tests.audited_process import run_audited_process
 from dev.registry.pipeline.authority_publication import install_validated_authority_database

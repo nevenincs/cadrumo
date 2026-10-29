@@ -39,10 +39,14 @@ DEPENDENCY_INPUTS = {
     # statically linked: the Linux-target graph gains no sys-crate, and the platform crate
     # reaches only libc there. The locked GTK/WebKit sys-crates and rfd's GTK3-only backend
     # are unchanged (rfd 0.16.1; no ashpd).
+    # The diagnostics test-support feature is empty and is selected only by tests;
+    # the distributed desktop still selects only application/platform. Dependency
+    # tables and the reviewed desktop lock are unchanged, so the prior provider
+    # evidence remains applicable.
     # This is source/feature evidence, not new artifact or minimum-host proof.
     "native/desktop/src-tauri/Cargo.lock": "242ee51e510b32d9f872d405561b09530658fa7bfb89c063a3f61069fd6d836c",
     "native/desktop/src-tauri/Cargo.toml": "be225b1da025a41482cddf26b757c13ecc418dec51f4997ff91b846db0d224a8",
-    "native/application/Cargo.toml": "8433af116b0af1aa424f88018ccbfbb3aa94409f222e8342082dfda7a71e4165",
+    "native/application/Cargo.toml": "45b431600a5da6caa057865bdb39afc3aae4f9512d51d598f9d04e380cc03499",
     "native/platform/Cargo.toml": "45e633cefce86ce0a233670b94839e23bca14aba65b8d1c3b870718f50d01c37",
 }
 
@@ -156,16 +160,30 @@ def stage(root: Path, layout: dict[str, Any]) -> None:
         path.write_text(json.dumps(declaration(layout), indent=2) + "\n", encoding="utf-8")
 
 
+def _validate_desktop_manifest(path: Path, layout: dict[str, object], target: str, files: dict[str, str]) -> None:
+    if layout["platform"] != target:
+        raise ValueError("Linux desktop prerequisite target differs from payload")
+    if not path.is_file() or path.is_symlink() or digest(path) != files.get(MANIFEST):
+        raise ValueError("Linux desktop prerequisite manifest is missing or modified")
+    if json.loads(path.read_text(encoding="utf-8")) != json.loads(json.dumps(declaration(layout))):
+        raise ValueError("Linux desktop prerequisite manifest differs from canonical policy")
+
+
+def _declares_desktop(layout: dict[str, object], target: str, files: dict[str, str]) -> bool:
+    canonical = next(item for item in application_images(load_layout(target)) if item.desktop)
+    desktop = canonical.package_path in files or any(
+        item.desktop and item.package_path in files for item in application_images(layout)
+    )
+    return desktop
+
+
 def validate_payload(root: Path, manifest: dict[str, Any]) -> bool:
     """Check the metadata bytes and exact image association against the canonical policy."""
     layout = manifest["layout"]
     if not manifest["build"]["target"].startswith("linux-"):
         return False
     image = desktop_path(layout)
-    canonical = next(item for item in application_images(load_layout(manifest["build"]["target"])) if item.desktop)
-    desktop = canonical.package_path in manifest["files"] or any(
-        item.desktop and item.package_path in manifest["files"] for item in application_images(layout)
-    )
+    desktop = _declares_desktop(layout, manifest["build"]["target"], manifest["files"])
     if desktop and image is None:
         raise ValueError("Linux desktop payload lacks its canonical runtime policy")
     path = root / MANIFEST
@@ -173,12 +191,7 @@ def validate_payload(root: Path, manifest: dict[str, Any]) -> bool:
         if path.exists() or MANIFEST in manifest["files"]:
             raise ValueError("Runtime-only payload contains desktop prerequisite metadata")
         return False
-    if layout["platform"] != manifest["build"]["target"]:
-        raise ValueError("Linux desktop prerequisite target differs from payload")
-    if not path.is_file() or path.is_symlink() or digest(path) != manifest["files"].get(MANIFEST):
-        raise ValueError("Linux desktop prerequisite manifest is missing or modified")
-    if json.loads(path.read_text(encoding="utf-8")) != json.loads(json.dumps(declaration(layout))):
-        raise ValueError("Linux desktop prerequisite manifest differs from canonical policy")
+    _validate_desktop_manifest(path, layout, manifest["build"]["target"], manifest["files"])
     return True
 
 
@@ -186,7 +199,7 @@ def package_requirements(package_format: Literal["deb", "rpm"]) -> tuple[str, ..
     """Project explicit provider alternatives with the same bound on every branch."""
     if package_format not in {"deb", "rpm"}:
         raise ValueError("Unsupported Linux dependency format")
-    clauses = []
+    clauses: list[str] = []
     for requirement in REQUIREMENTS:
         if package_format == "deb":
             suffix = f" (>= {requirement.minimum})" if (requirement.minimum is not None and requirement.minimum) else ""
@@ -219,7 +232,7 @@ def main() -> None:
     arguments = parser.parse_args()
     manifest = json.loads((arguments.payload / "data/package-manifest.json").read_text(encoding="utf-8"))
     included = validate_payload(arguments.payload, manifest)
-    lines = []
+    lines: list[str] = []
     for package_format in ("deb", "rpm"):
         value = ", ".join(package_requirements(package_format)) if included else ""
         lines.append(f"set(CADRUMO_LINUX_{package_format.upper()}_DESKTOP_DEPENDS [=[{value}]=])")

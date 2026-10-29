@@ -24,9 +24,11 @@ from pydantic import ValidationError
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.orden_applicability import RevisionLegalApplicabilityWindow
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, LegalReferenceKind
-from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS, collect_snapshot_ref_ids
+from cadrumo.domain.calculations.registry.snapshot import SUBSTANTIVE_LAW_KINDS
+from cadrumo.domain.calculations.registry.snapshot_references import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ..conformance.registry_schema_support import (

@@ -47,7 +47,7 @@ def shared_scan_memo() -> Generator[None]:
         _SCAN_MEMO.reset(token)
 
 
-def _walked(tree: ast.AST) -> Iterable[ast.AST]:
+def walked(tree: ast.AST) -> Iterable[ast.AST]:
     """Every node under ``tree`` in ``ast.walk`` order, walked once per scan."""
     memo = _SCAN_MEMO.get()
     if memo is None:

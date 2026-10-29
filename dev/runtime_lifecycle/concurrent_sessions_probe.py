@@ -35,9 +35,8 @@ import sys
 import tempfile
 import time
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 import psutil
@@ -56,6 +55,8 @@ from .caller_owned_root import (
     require,
     run_cli,
 )
+from .concurrent_session_context import Context, Held, Run, describe, gather_actor_outcomes
+from .concurrent_tui_program import TUI_CLIENT
 from .mcp_proof_support import execute, mcp_session, settled
 from .proof_support import Profile, create_profile
 from .session_holder import AsyncRuntimeSessionHolder
@@ -65,110 +66,6 @@ _TUI_SECONDS = 20.0
 _RETIREMENT_SECONDS = 15.0
 _RACE_SETTLE_SECONDS = 8.0
 _PROCESS_SECONDS = 180
-
-# The production TUI client calls without mounting Textual: resume the person's
-# sign-in, read the protected overview, then report activity and status.
-_TUI_CLIENT = """
-import asyncio, json, sys, time
-from uuid import UUID
-
-import psutil
-from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
-from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo_client.contracts.contracts import RefusalError
-from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
-from cadrumo_client.transport.installed_client import open_installed_client
-from cadrumo_runtime.host.frontend.tui.profile.overview_client import read_profile_overview
-REFUSALS = (FrontendRefusedError, RefusalError, ProfileReceiptRefusedError)
-def emit(**document):
-    print(json.dumps(document), flush=True)
-def code(error):
-    reason = getattr(error, 'reason', None)
-    return str(getattr(reason, 'value', reason) or type(error).__name__)
-async def main():
-    client = await open_installed_client(profile_id=UUID(sys.argv[1]), frontend=OperationFrontendProjection.TUI)
-    try:
-        try:
-            await asyncio.to_thread(client.resume_receipt)
-            view = await asyncio.to_thread(
-                read_profile_overview, client, profile_label='Probe', output_language=OutputLanguage.EN
-            )
-        except REFUSALS as error:
-            emit(event='refused', code=code(error))
-            return 2
-        emit(event='admitted', sections=len(view.sections))
-        deadline = time.monotonic() + float(sys.argv[2])
-        while time.monotonic() < deadline:
-            try:
-                await asyncio.to_thread(client.note_activity)
-                status = (await asyncio.to_thread(client.status)).status
-            except REFUSALS as error:
-                emit(event='refused', code=code(error))
-                return 3
-            denial = None if status.denial is None else str(status.denial.value)
-            emit(event='status', denial=denial, own=status.session_id == client.session_id)
-            if denial is not None or status.session_id != client.session_id:
-                return 4
-            await asyncio.sleep(1)
-        return 0
-    finally:
-        await asyncio.to_thread(client.close)
-with composed_profile_persistence_ports():
-    sys.exit(asyncio.run(main()))
-"""
-
-
-@dataclass(slots=True)
-class Run:
-    """The recorded checks of one run, printed as they happen."""
-
-    checks: list[dict[str, Any]] = field(default_factory=list)
-
-    def check(self, name: str, ok: bool, **facts: Any) -> bool:
-        """Record one expectation and its observed facts."""
-        entry = {"check": name, "ok": ok, **facts}
-        self.checks.append(entry)
-        print(json.dumps(entry, sort_keys=True, default=str), flush=True)
-        return ok
-
-    @property
-    def failed(self) -> list[str]:
-        """Name every check that did not hold."""
-        return [entry["check"] for entry in self.checks if not entry["ok"]]
-
-
-@dataclass(slots=True)
-class Context:
-    """The programs, environment and profiles one run drives."""
-
-    programs: Programs
-    environment: dict[str, str]
-    python: list[str]
-    scratch: Path
-    profiles: dict[str, Profile] = field(default_factory=dict)
-
-
-@dataclass(slots=True)
-class Held:
-    """One running session holder and the profile it signed in to."""
-
-    name: str
-    profile: str
-    holder: AsyncRuntimeSessionHolder
-
-
-def _describe(error: BaseException) -> str:
-    if isinstance(error, BaseExceptionGroup):
-        return "; ".join(_describe(inner) for inner in error.exceptions)
-    return f"{type(error).__name__}: {error}"
-
-
-async def _outcomes(actors: Mapping[str, Awaitable[Any]]) -> dict[str, Any]:
-    """Start every actor at once and return each one's result or failure."""
-    results = await asyncio.gather(*actors.values(), return_exceptions=True)
-    return dict(zip(actors, results, strict=True))
 
 
 def _profile_ids(context: Context) -> dict[str, UUID]:
@@ -235,7 +132,7 @@ async def holder_state(held: Held, action: str = "status") -> str:
     try:
         reply = await holder.command(action)
     except Exception as error:
-        return _ended(holder) or f"failed: {_describe(error)}"
+        return _ended(holder) or f"failed: {describe(error)}"
     status = reply.get("status") if isinstance(reply.get("status"), dict) else reply
     denial = status.get("denial") if isinstance(status, dict) else None
     own = isinstance(status, dict) and status.get("session_id") == held.holder.identity.get("session_id")
@@ -250,7 +147,7 @@ async def tui_client(context: Context, name: str, seconds: float) -> dict[str, A
     process = await asyncio.create_subprocess_exec(
         *context.python,
         "-c",
-        _TUI_CLIENT,
+        TUI_CLIENT,
         str(record.profile_id),
         str(seconds),
         env=context.environment,
@@ -329,7 +226,7 @@ async def _close(holders: list[Held]) -> None:
         try:
             await held.holder.close()
         except Exception as error:
-            print(json.dumps({"teardown": held.name, "error": _describe(error)}), flush=True)
+            print(json.dumps({"teardown": held.name, "error": describe(error)}), flush=True)
 
 
 def _ok(result: Any) -> bool:
@@ -339,7 +236,7 @@ def _ok(result: Any) -> bool:
 def _show(result: Any) -> Any:
     if isinstance(result, Held):
         return {"session": result.holder.identity.get("session_id")}
-    return _describe(result) if isinstance(result, BaseException) else result
+    return describe(result) if isinstance(result, BaseException) else result
 
 
 async def phases(run: Run, context: Context, runtime: Any, *, stop_after: str | None = None) -> None:
@@ -378,7 +275,7 @@ async def _fan_in(run: Run, context: Context, holders: list[Held]) -> None:
         await asyncio.wait_for(signed_in.wait(), timeout=_PROCESS_SECONDS)
         return await mcp_read(context, attendant)
 
-    outcomes = await _outcomes(
+    outcomes = await gather_actor_outcomes(
         {
             "cli_login_A_1": login_then_signal(),
             "cli_login_A_2": login_then_signal(),
@@ -410,20 +307,25 @@ async def _partial_sign_out(run: Run, context: Context, holders: list[Held]) -> 
     }
     if leaving is not None:
         actors["close_cli_hold_A_1"] = leaving.holder.close()
-    outcomes = await _outcomes(actors)
+    outcomes = await gather_actor_outcomes(actors)
     if leaving is not None:
         holders.remove(leaving)
     joined = outcomes["new_cli_hold_A_3"]
     if isinstance(joined, Held):
         holders.append(joined)
-    for name, result in outcomes.items():
-        run.check(
-            f"partial_sign_out.{name}", isinstance(result, Held) or result in {None, "live"}, outcome=_show(result)
-        )
+    _check_partial_outcomes(run, outcomes)
     states = await _all_states(holders, "status")
     run.check(
         "partial_sign_out.others_still_signed_in", all(state == "live" for state in states.values()), states=states
     )
+
+
+def _check_partial_outcomes(run: Run, outcomes: Mapping[str, object]) -> None:
+    """Record each actor's outcome after one holder leaves."""
+    for name, result in outcomes.items():
+        run.check(
+            f"partial_sign_out.{name}", isinstance(result, Held) or result in {None, "live"}, outcome=_show(result)
+        )
 
 
 async def mcp_through_handover(
@@ -463,7 +365,7 @@ async def _cross_profile(run: Run, context: Context, holders: list[Held]) -> Non
     if desktop is not None:
         mcp = asyncio.ensure_future(mcp_through_handover(context, desktop, ready, handed_over))
         await ready.wait()
-    outcomes = await _outcomes(
+    outcomes = await gather_actor_outcomes(
         {
             "cli_login_B": cli_login(context, "B"),
             "tui_A_polling": tui_client(context, "A", _TUI_SECONDS),
@@ -474,7 +376,7 @@ async def _cross_profile(run: Run, context: Context, holders: list[Held]) -> Non
     tui = outcomes["tui_A_polling"]
     run.check(
         "cross_profile.tui_A_signed_out",
-        isinstance(tui, dict) and tui.get("exit") in {2, 3, 4},
+        _tui_signed_out(tui),
         outcome=_show(tui),
     )
     states = await _wait_retired(from_a)
@@ -483,19 +385,21 @@ async def _cross_profile(run: Run, context: Context, holders: list[Held]) -> Non
     )
     handed_over.set()
     if mcp is not None:
-        handover = (await _outcomes({"mcp": mcp}))["mcp"]
+        handover = (await gather_actor_outcomes({"mcp": mcp}))["mcp"]
         run.check(
             "cross_profile.mcp_A_refused_after_handover",
-            isinstance(handover, dict)
-            and handover["attended"]
-            and handover["read_before"]
-            and handover["refused_after"],
+            _handover_refused(handover),
             outcome=_show(handover),
         )
     for held in from_a:
         holders.remove(held)
         await _close([held])
-    joined = await _outcomes(
+    await _join_profile_b(run, context, holders)
+
+
+async def _join_profile_b(run: Run, context: Context, holders: list[Held]) -> None:
+    """Record the new profile's admitted desktop and CLI holders."""
+    joined = await gather_actor_outcomes(
         {"desktop_B": hold(context, "desktop_B", "B", "desktop"), "cli_hold_B": hold(context, "cli_hold_B", "B", "cli")}
     )
     for name, result in joined.items():
@@ -504,8 +408,21 @@ async def _cross_profile(run: Run, context: Context, holders: list[Held]) -> Non
         run.check(f"cross_profile.{name}", isinstance(result, Held), outcome=_show(result))
 
 
+def _tui_signed_out(result: object) -> bool:
+    """Recognize the TUI's signed-out exit codes after handover."""
+    return isinstance(result, dict) and cast(dict[str, object], result).get("exit") in {2, 3, 4}
+
+
+def _handover_refused(result: object) -> bool:
+    """Require an attended pre-handover read and a refused later read."""
+    if not isinstance(result, dict):
+        return False
+    handover = cast(dict[str, object], result)
+    return bool(handover["attended"] and handover["read_before"] and handover["refused_after"])
+
+
 async def _race(run: Run, context: Context, holders: list[Held]) -> None:
-    outcomes = await _outcomes(
+    outcomes = await gather_actor_outcomes(
         {
             "cli_login_A": cli_login(context, "A"),
             "cli_login_B": cli_login(context, "B"),
@@ -517,9 +434,7 @@ async def _race(run: Run, context: Context, holders: list[Held]) -> None:
     holders.extend(result for result in outcomes.values() if isinstance(result, Held))
     run.check(
         "race.every_actor_answered",
-        all(
-            not isinstance(result, BaseException) or isinstance(result, AcceptanceError) for result in outcomes.values()
-        ),
+        _race_answers_valid(outcomes),
         outcomes={name: _show(result) for name, result in outcomes.items()},
     )
     await asyncio.sleep(_RACE_SETTLE_SECONDS)
@@ -532,8 +447,15 @@ async def _race(run: Run, context: Context, holders: list[Held]) -> None:
     await _close(retired)
 
 
+def _race_answers_valid(outcomes: Mapping[str, object]) -> bool:
+    """Accept completed actors and the explicitly expected admission refusal."""
+    return all(
+        not isinstance(result, BaseException) or isinstance(result, AcceptanceError) for result in outcomes.values()
+    )
+
+
 async def _sign_out(run: Run, context: Context, holders: list[Held]) -> None:
-    outcomes = await _outcomes(
+    outcomes = await gather_actor_outcomes(
         {
             "cli_logout": cli_logout(context),
             **{f"activity_{held.name}": holder_state(held, "activity") for held in holders},
@@ -557,7 +479,7 @@ async def _resume_race(run: Run, context: Context, holders: list[Held]) -> None:
     del holders
     first = await cli_login(context, "A")
     run.check("resume_race.cli_login_A", _ok(first), outcome=first)
-    outcomes = await _outcomes(
+    outcomes = await gather_actor_outcomes(
         {
             "cli_login_B": cli_login(context, "B"),
             **{f"cli_resume_A_{index}": cli_profile_view(context, "A") for index in range(3)},
@@ -569,7 +491,7 @@ async def _resume_race(run: Run, context: Context, holders: list[Held]) -> None:
         all(isinstance(result, dict) for result in outcomes.values()),
         outcomes={name: _show(result) for name, result in outcomes.items()},
     )
-    after = await _outcomes({"tui_B": tui_client(context, "B", 3), "tui_A": tui_client(context, "A", 3)})
+    after = await gather_actor_outcomes({"tui_B": tui_client(context, "B", 3), "tui_A": tui_client(context, "A", 3)})
     tui_b, tui_a = after["tui_B"], after["tui_A"]
     run.check("resume_race.B_still_signed_in", isinstance(tui_b, dict) and tui_b.get("exit") == 0, outcome=_show(tui_b))
     run.check(

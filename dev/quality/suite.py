@@ -41,6 +41,7 @@ GATES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("check-format", ("ruff", "format", "--check", ".")),
     ("check-data-format", (sys.executable, "-m", "dev.quality.data_files", "check")),
     ("check-types", (sys.executable, "-m", "dev.quality.types")),
+    ("complexity-gate", (sys.executable, "-m", "dev.audit.complexity", "--gate")),
     ("check-import-boundaries", (sys.executable, "-m", "dev.quality.import_gate")),
     (
         "check-dependency-declarations",

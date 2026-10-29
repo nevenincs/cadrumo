@@ -133,6 +133,14 @@ async def _observe_operation_terminal(
         if not review_applied:
             review_applied = await _apply_visible_operation_review(pilot, modal, binding)
         await pilot.pause()
+    detail = _terminal_timeout_detail(modal, status, review_applied)
+    raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status ({detail})")
+
+
+def _terminal_timeout_detail(modal: _TuiScreen, status: str | None, review_applied: bool) -> str:
+    """Describe only the retained public terminal controls when observation times out."""
+    from textual.css.query import NoMatches
+
     try:
         apply = modal.query_one("#btn-operation-apply")
         phase = _rendered_text(modal.query_one("#operation-modal-phase"))
@@ -142,7 +150,7 @@ async def _observe_operation_terminal(
         )
     except NoMatches:
         detail = f"modal_unmounted=True, apply_attempted={review_applied!r}"
-    raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status ({detail})")
+    return detail
 
 
 async def _close_operation_result_statement(pilot: Pilot[Any]) -> None:

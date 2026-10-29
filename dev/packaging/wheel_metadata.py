@@ -48,64 +48,86 @@ def installed_wheel_matches(wheel: Path, dependencies: Path) -> bool:
         records = [name for name in archive.namelist() if name.endswith(".dist-info/RECORD")]
         if len(records) != 1:
             raise ValueError("Wheel must contain one RECORD")
-        record_member = PurePosixPath(records[0])
-        if len(record_member.parts) != 2 or record_member.is_absolute() or "\\" in records[0] or ":" in records[0]:
-            return False
-        rows = list(csv.reader(io.StringIO(archive.read(records[0]).decode(UTF_8))))
-        if any(len(row) != 3 for row in rows):
-            return False
-        wheel_members = {name for name, _checksum, _size in rows}
-        if len(wheel_members) != len(rows):
-            return False
-        record = dependencies / records[0]
-        if not record.is_file() or any(path.is_symlink() or path.is_junction() for path in (record, *record.parents)):
-            return False
-        installed_rows = list(csv.reader(io.StringIO(record.read_text(encoding=UTF_8))))
-        if any(len(row) != 3 for row in installed_rows):
-            return False
-        installed_members = {name for name, _checksum, _size in installed_rows}
-        if len(installed_members) != len(installed_rows):
-            return False
-        # uv adds these exact installation records. Other extra members still
-        # belong to the previous wheel and must force its uninstall/reinstall.
-        metadata = PurePosixPath(records[0]).parent
-        generated = {str(metadata / name) for name in ("INSTALLER", "REQUESTED", "direct_url.json", "uv_cache.json")}
-        entry_points = str(metadata / "entry_points.txt")
-        if entry_points in archive.namelist():
-            configuration = _WheelEntryPoints(interpolation=None)
-            configuration.read_string(archive.read(entry_points).decode(UTF_8))
-            for group in ("console_scripts", "gui_scripts"):
-                if configuration.has_section(group):
-                    for name in configuration[group]:
-                        if PurePosixPath(name).name != name or name in {".", ".."} or "\\" in name or ":" in name:
-                            return False
-                        generated.add(f"bin/{name}{'.exe' if os.name == 'nt' else ''}")
-        if not wheel_members <= installed_members or installed_members - wheel_members - generated:
-            return False
-        for name, checksum, _size in rows:
-            if not checksum:
-                continue
-            relative = PurePosixPath(name)
-            if (
-                not relative.parts
-                or relative.is_absolute()
-                or ".." in relative.parts
-                or relative.parts[0].endswith(".data")
-                or "\\" in name
-                or ":" in name
-            ):
-                return False
-            installed = dependencies.joinpath(*relative.parts)
-            algorithm, _, encoded = checksum.partition("=")
-            if (
-                algorithm != "sha256"
-                or not installed.is_file()
-                or any(path.is_symlink() or path.is_junction() for path in (installed, *installed.parents))
-            ):
-                return False
-            with installed.open("rb") as stream:
-                checksum_bytes = hashlib.file_digest(stream, "sha256").digest()
-            observed = base64.urlsafe_b64encode(checksum_bytes).rstrip(b"=").decode()
-            if observed != encoded:
-                return False
-    return True
+        return _matches_record(archive, records[0], dependencies)
+
+
+def _matches_record(archive: zipfile.ZipFile, record_name: str, dependencies: Path) -> bool:
+    record_member = PurePosixPath(record_name)
+    if not _valid_record_name(record_name, record_member):
+        return False
+    rows = list(csv.reader(io.StringIO(archive.read(record_name).decode(UTF_8))))
+    wheel_members = _record_members(rows)
+    if wheel_members is None:
+        return False
+    record = dependencies / record_name
+    if not record.is_file() or _has_link_ancestor(record):
+        return False
+    installed_rows = list(csv.reader(io.StringIO(record.read_text(encoding=UTF_8))))
+    installed_members = _record_members(installed_rows)
+    if installed_members is None:
+        return False
+    generated = _generated_members(archive, record_member.parent)
+    if generated is None or not wheel_members <= installed_members or installed_members - wheel_members - generated:
+        return False
+    return all(_record_member_matches(name, checksum, dependencies) for name, checksum, _size in rows)
+
+
+def _valid_record_name(name: str, member: PurePosixPath) -> bool:
+    return len(member.parts) == 2 and not member.is_absolute() and "\\" not in name and ":" not in name
+
+
+def _record_members(rows: list[list[str]]) -> set[str] | None:
+    if any(len(row) != 3 for row in rows):
+        return None
+    members = {name for name, _checksum, _size in rows}
+    return members if len(members) == len(rows) else None
+
+
+def _has_link_ancestor(path: Path) -> bool:
+    return any(parent.is_symlink() or parent.is_junction() for parent in (path, *path.parents))
+
+
+def _generated_members(archive: zipfile.ZipFile, metadata: PurePosixPath) -> set[str] | None:
+    generated = {str(metadata / name) for name in ("INSTALLER", "REQUESTED", "direct_url.json", "uv_cache.json")}
+    entry_points = str(metadata / "entry_points.txt")
+    if entry_points not in archive.namelist():
+        return generated
+    configuration = _WheelEntryPoints(interpolation=None)
+    configuration.read_string(archive.read(entry_points).decode(UTF_8))
+    for group in ("console_scripts", "gui_scripts"):
+        if configuration.has_section(group):
+            for name in configuration[group]:
+                if not _valid_entry_point_name(name):
+                    return None
+                generated.add(f"bin/{name}{'.exe' if os.name == 'nt' else ''}")
+    return generated
+
+
+def _valid_entry_point_name(name: str) -> bool:
+    return PurePosixPath(name).name == name and name not in {".", ".."} and "\\" not in name and ":" not in name
+
+
+def _record_member_matches(name: str, checksum: str, dependencies: Path) -> bool:
+    if not checksum:
+        return True
+    relative = PurePosixPath(name)
+    if not _valid_record_member(name, relative):
+        return False
+    installed = dependencies.joinpath(*relative.parts)
+    algorithm, _, encoded = checksum.partition("=")
+    if algorithm != "sha256" or not installed.is_file() or _has_link_ancestor(installed):
+        return False
+    with installed.open("rb") as stream:
+        checksum_bytes = hashlib.file_digest(stream, "sha256").digest()
+    observed = base64.urlsafe_b64encode(checksum_bytes).rstrip(b"=").decode()
+    return observed == encoded
+
+
+def _valid_record_member(name: str, relative: PurePosixPath) -> bool:
+    return bool(relative.parts) and not (
+        relative.is_absolute()
+        or ".." in relative.parts
+        or relative.parts[0].endswith(".data")
+        or "\\" in name
+        or ":" in name
+    )

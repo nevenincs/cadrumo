@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from ..docs_build import require_host_product_metadata
-from ..docs_stage import DocsPackagingError
+from ..docs_errors import DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

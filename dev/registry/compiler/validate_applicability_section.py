@@ -4,7 +4,7 @@ Validates the ``applicability`` schema family declared on a
 :class:`~cadrumo.domain.calculations.registry.ModeloRevision`: its legal refs
 and those of its exclusions resolve to grounded legal authority, at most one
 rule is declared per revision, the rule hydrates into the runtime
-:class:`~cadrumo.domain.calculations.registry.applicability.ModeloApplicabilityRule`
+:class:`~cadrumo.domain.calculations.registry.applicability_models.ModeloApplicabilityRule`
 without error, and a ledger source declared on the rule's payer fact names
 this modelo and a declared-record count binding of this revision.
 

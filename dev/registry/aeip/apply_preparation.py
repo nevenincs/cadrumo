@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.loader import load_modelo_directory
 from . import constants as _constants
@@ -211,17 +212,21 @@ def _refuse_unplanned_category_lineage(
     for key, current in current_rows.items():
         if key in planned_keys or _constants.ANEXO_A_SECTION_LEAF not in tuple(current.section or ()):
             continue
-        category_chain = None if current.continuidad_id is None else str(current.continuidad_id)
-        if (
-            str(current.semantic_role or "") == _constants.CATEGORY_SEMANTIC_ROLE
-            and (category_chain is not None and category_chain)
-            and category_chain.startswith(_constants.CHAIN_PREFIX)
-        ):
+        if _is_unplanned_category(current):
             _add_refusal(
                 refusals,
                 seen_refusals,
                 f"{key[0]}/{key[1]} category row carries an AEIP continuidad_id outside the plan",
             )
+
+
+def _is_unplanned_category(current: CasillaDefinition) -> bool:
+    category_chain = None if current.continuidad_id is None else str(current.continuidad_id)
+    return bool(
+        str(current.semantic_role or "") == _constants.CATEGORY_SEMANTIC_ROLE
+        and (category_chain is not None and category_chain)
+        and category_chain.startswith(_constants.CHAIN_PREFIX)
+    )
 
 
 def _refuse_duplicate_targets(

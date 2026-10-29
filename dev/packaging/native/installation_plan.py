@@ -7,9 +7,10 @@ import json
 import os
 import plistlib
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid5
 from xml.etree.ElementTree import Element, SubElement, tostring
 
@@ -54,28 +55,52 @@ def project(payload: Path, identity_file: Path, desktop: str | None, control_roo
     managers = [image for image in application_images(manifest["layout"]) if image.target == "rust_manager"]
     versioned = target.startswith("windows-") and bool(managers)
     definition = manifest["layout"].get("installation", {})
-    if versioned:
-        if definition != load_layout("windows-x64")["installation"]:
-            raise ValueError("Manager payload requires the canonical installation layout; rebuild the package")
-        if len(managers) != 1 or managers[0].placement != ".":
-            raise ValueError("Versioned installation requires one root-level manager image")
-        if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", value["version"]):
-            raise ValueError("Versioned installation requires a canonical numeric release")
-    if target.startswith("linux-"):
-        destination = f"opt/{value['package_name']}"
-    elif target.startswith("macos-"):
-        if desktop is None or not desktop or "/" in desktop:
-            raise ValueError("A macOS application bundle requires a root-level desktop executable")
-        destination = f"{value['name']}.app/Contents/MacOS"
-    elif versioned:
-        destination = f"{definition['versions']}/{value['version']}"
-    else:
-        destination = "app"
+    destination = _installation_destination(target, value, definition, managers, desktop, versioned)
     source = {**package_inventory(payload, manifest), "data/package-manifest.json": digest(manifest_file)}
-    files = {f"{destination}/{name}": value for name, value in source.items()}
-    modes = {f"{destination}/{name}": (payload / name).stat().st_mode & 0o777 for name in source}
+    files, modes = _payload_projection(payload, destination, source)
     controls: dict[str, bytes] = {}
     metadata: dict[str, bytes] = {}
+    _license_controls(versioned, destination, control_root, controls, modes)
+    if versioned:
+        _versioned_controls(
+            payload,
+            managers[0],
+            source,
+            definition,
+            value,
+            manifest["layout"]["platform"],
+            manifest["layout"]["abi"],
+            controls,
+            modes,
+        )
+    _linux_controls(target, desktop, value, control_root, controls)
+    _macos_controls(target, desktop, value, managers, manifest["files"], controls)
+    if target.startswith("windows-") and bool(desktop) and not versioned:
+        metadata = windows_metadata(value, managers, destination, desktop, versioned)
+    _include_controls(controls, files, modes)
+    helpers = _installation_helper_hashes()
+    binding = {
+        "schema": 1,
+        "identity": digest(identity_file),
+        "desktop": desktop,
+        "payload_manifest": source["data/package-manifest.json"],
+        "helpers": helpers,
+        "files": files,
+        "modes": modes,
+        "metadata": {name: checksum(data) for name, data in metadata.items()},
+        "layout": load_layout(),
+    }
+    identity: dict[str, object] = {
+        "schema": 1,
+        "inputs": checksum(json.dumps(binding, sort_keys=True).encode("utf-8")),
+        "payload_manifest": source["data/package-manifest.json"],
+    }
+    return Preparation(destination, files, modes, controls, metadata, identity)
+
+
+def _license_controls(
+    versioned: bool, destination: str, control_root: Path, controls: dict[str, bytes], modes: dict[str, int]
+) -> None:
     license_dir = "docs/licenses" if versioned else f"{destination}/docs/licenses"
     for filename, name in (("LICENSE", "CADRUMO.txt"), ("NOTICE", "NOTICE.txt")):
         controls[f"{license_dir}/{name}"] = (control_root / filename).read_bytes()
@@ -84,62 +109,9 @@ def project(payload: Path, identity_file: Path, desktop: str | None, control_roo
     for name in modes:
         if PurePosixPath(name).parent.as_posix() == license_dir:
             modes[name] = output_mode(name)
-    if versioned:
-        manager = managers[0]
-        contents = (payload / manager.package_path).read_bytes()
-        if checksum(contents) != source[manager.package_path]:
-            raise ValueError("Shared manager source changed after payload validation")
-        controls[manager.package_path] = contents
-        modes[manager.package_path] = (payload / manager.package_path).stat().st_mode & 0o777
-        controls[definition["marker"]] = (
-            json.dumps(
-                {
-                    "schema": definition["schema"],
-                    "application_id": value["application_id"],
-                    "channel": value["channel"],
-                    "platform": manifest["layout"]["platform"],
-                    "abi": manifest["layout"]["abi"],
-                    "launch_policy": "portable",
-                },
-                indent=2,
-            )
-            + "\n"
-        ).encode("utf-8")
-    if target.startswith("linux-") and bool(desktop):
-        controls[f"usr/share/applications/{value['application_id']}.desktop"] = (
-            f"[Desktop Entry]\nType=Application\nVersion=1.5\nName={value['name']}\n"
-            f'Exec="/opt/{value["package_name"]}/{desktop}"\n'
-            f"Icon={value['application_id']}\nTerminal=false\nCategories=Office;Finance;\n"
-            "StartupNotify=true\n"
-        ).encode()
-        controls[f"usr/share/icons/hicolor/scalable/apps/{value['application_id']}.svg"] = (
-            control_root / "docs/_static/cadrumo-icon.svg"
-        ).read_bytes()
-    if target.startswith("macos-"):
-        plist = {
-            "CFBundleIdentifier": value["application_id"],
-            "CFBundleName": value["name"],
-            "CFBundleDisplayName": value["name"],
-            "CFBundleExecutable": desktop,
-            "CFBundlePackageType": "APPL",
-            "CFBundleShortVersionString": value["version"],
-            "CFBundleVersion": value["version"],
-            "LSMinimumSystemVersion": value["compatibility_floor"].removeprefix("macos-"),
-            "LSApplicationCategoryType": "public.app-category.finance",
-            "NSHighResolutionCapable": True,
-        }
-        controls[f"{value['name']}.app/Contents/Info.plist"] = plistlib.dumps(plist)
-        if managers:
-            if len(managers) != 1 or managers[0].package_path not in manifest["files"]:
-                raise ValueError("A macOS LaunchAgent requires one inventory-owned manager image")
-            agent = author_agent(DistributionIdentity(**value), managers[0])
-            verify_agent(agent.contents, DistributionIdentity(**value), managers[0])
-            controls[f"{value['name']}.app/{agent.destination.as_posix()}"] = agent.contents
-    if target.startswith("windows-") and bool(desktop) and not versioned:
-        metadata = windows_metadata(value, managers, destination, desktop, versioned)
-    for name, contents in controls.items():
-        files[name] = checksum(contents)
-        modes.setdefault(name, output_mode(name))
+
+
+def _installation_helper_hashes() -> dict[str, str]:
     helpers = {
         name: digest(Path(__file__).with_name(name + ".py"))
         for name in (
@@ -159,23 +131,130 @@ def project(payload: Path, identity_file: Path, desktop: str | None, control_roo
             "linux_desktop_runtime",
         )
     }
-    binding = {
-        "schema": 1,
-        "identity": digest(identity_file),
-        "desktop": desktop,
-        "payload_manifest": source["data/package-manifest.json"],
-        "helpers": helpers,
-        "files": files,
-        "modes": modes,
-        "metadata": {name: checksum(data) for name, data in metadata.items()},
-        "layout": load_layout(),
-    }
-    identity = {
-        "schema": 1,
-        "inputs": checksum(json.dumps(binding, sort_keys=True).encode("utf-8")),
-        "payload_manifest": source["data/package-manifest.json"],
-    }
-    return Preparation(destination, files, modes, controls, metadata, identity)
+    return helpers
+
+
+def _include_controls(controls: Mapping[str, bytes], files: dict[str, str], modes: dict[str, int]) -> None:
+    for name, contents in controls.items():
+        files[name] = checksum(contents)
+        modes.setdefault(name, output_mode(name))
+
+
+def _payload_projection(
+    payload: Path, destination: str, source: Mapping[str, str]
+) -> tuple[dict[str, str], dict[str, int]]:
+    files = {f"{destination}/{name}": value for name, value in source.items()}
+    modes = {f"{destination}/{name}": (payload / name).stat().st_mode & 0o777 for name in source}
+    return files, modes
+
+
+def _versioned_controls(
+    payload: Path,
+    manager: ApplicationImage,
+    source: Mapping[str, str],
+    definition: Mapping[str, str | int],
+    value: Mapping[str, str],
+    platform: str,
+    abi: str,
+    controls: dict[str, bytes],
+    modes: dict[str, int],
+) -> None:
+    contents = (payload / manager.package_path).read_bytes()
+    if checksum(contents) != source[manager.package_path]:
+        raise ValueError("Shared manager source changed after payload validation")
+    controls[manager.package_path] = contents
+    modes[manager.package_path] = (payload / manager.package_path).stat().st_mode & 0o777
+    controls[cast("str", definition["marker"])] = (
+        json.dumps(
+            {
+                "schema": definition["schema"],
+                "application_id": value["application_id"],
+                "channel": value["channel"],
+                "platform": platform,
+                "abi": abi,
+                "launch_policy": "portable",
+            },
+            indent=2,
+        )
+        + "\n"
+    ).encode("utf-8")
+
+
+def _linux_controls(
+    target: str, desktop: str | None, value: Mapping[str, str], control_root: Path, controls: dict[str, bytes]
+) -> None:
+    if target.startswith("linux-") and bool(desktop):
+        controls[f"usr/share/applications/{value['application_id']}.desktop"] = (
+            f"[Desktop Entry]\nType=Application\nVersion=1.5\nName={value['name']}\n"
+            f'Exec="/opt/{value["package_name"]}/{desktop}"\n'
+            f"Icon={value['application_id']}\nTerminal=false\nCategories=Office;Finance;\n"
+            "StartupNotify=true\n"
+        ).encode()
+        controls[f"usr/share/icons/hicolor/scalable/apps/{value['application_id']}.svg"] = (
+            control_root / "docs/_static/cadrumo-icon.svg"
+        ).read_bytes()
+
+
+def _macos_controls(
+    target: str,
+    desktop: str | None,
+    value: Mapping[str, str],
+    managers: list[ApplicationImage],
+    files: Mapping[str, object],
+    controls: dict[str, bytes],
+) -> None:
+    if target.startswith("macos-"):
+        plist = {
+            "CFBundleIdentifier": value["application_id"],
+            "CFBundleName": value["name"],
+            "CFBundleDisplayName": value["name"],
+            "CFBundleExecutable": desktop,
+            "CFBundlePackageType": "APPL",
+            "CFBundleShortVersionString": value["version"],
+            "CFBundleVersion": value["version"],
+            "LSMinimumSystemVersion": value["compatibility_floor"].removeprefix("macos-"),
+            "LSApplicationCategoryType": "public.app-category.finance",
+            "NSHighResolutionCapable": True,
+        }
+        controls[f"{value['name']}.app/Contents/Info.plist"] = plistlib.dumps(plist)
+        if managers:
+            if len(managers) != 1 or managers[0].package_path not in files:
+                raise ValueError("A macOS LaunchAgent requires one inventory-owned manager image")
+            agent = author_agent(DistributionIdentity(**value), managers[0])
+            verify_agent(agent.contents, DistributionIdentity(**value), managers[0])
+            controls[f"{value['name']}.app/{agent.destination.as_posix()}"] = agent.contents
+
+
+def _installation_destination(
+    target: str,
+    value: Mapping[str, str],
+    definition: Mapping[str, object],
+    managers: list[ApplicationImage],
+    desktop: str | None,
+    versioned: bool,
+) -> str:
+    if versioned:
+        _require_versioned_layout(definition, managers, value["version"])
+    if target.startswith("linux-"):
+        destination = f"opt/{value['package_name']}"
+    elif target.startswith("macos-"):
+        if desktop is None or not desktop or "/" in desktop:
+            raise ValueError("A macOS application bundle requires a root-level desktop executable")
+        destination = f"{value['name']}.app/Contents/MacOS"
+    elif versioned:
+        destination = f"{definition['versions']}/{value['version']}"
+    else:
+        destination = "app"
+    return destination
+
+
+def _require_versioned_layout(definition: Mapping[str, object], managers: list[ApplicationImage], version: str) -> None:
+    if definition != load_layout("windows-x64")["installation"]:
+        raise ValueError("Manager payload requires the canonical installation layout; rebuild the package")
+    if len(managers) != 1 or managers[0].placement != ".":
+        raise ValueError("Versioned installation requires one root-level manager image")
+    if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
+        raise ValueError("Versioned installation requires a canonical numeric release")
 
 
 def windows_metadata(

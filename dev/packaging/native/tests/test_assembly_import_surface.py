@@ -6,7 +6,7 @@ from importlib.metadata import PackagePath
 
 import pytest
 
-from ..assemble import import_surface
+from ..assembly_identity import import_surface
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

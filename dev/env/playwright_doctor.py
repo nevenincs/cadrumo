@@ -2,9 +2,8 @@
 
 This is the ``just doctor-browser`` recipe. It launches the headless build in
 the managed browser directory once, through the bundled Playwright driver, and
-compares the version the browser reports with the driver's own manifest. The
-product's browser item is checked by the native component engine; this probe
-only tells a developer whether the browsers the test lanes share are usable.
+compares the version the browser reports with the driver's own manifest. It
+tells a developer whether the browsers the test lanes share are usable.
 
 The probe is read-only and downloads nothing. It runs as a standalone process,
 so a hung launch surfaces here rather than inside a CLI session.
@@ -26,7 +25,7 @@ from pathlib import Path
 from playwright.sync_api import Error as PlaywrightError
 from playwright.sync_api import sync_playwright
 
-from cadrumo.application.provisioning_browser import playwright_browsers_root, required_browser_builds
+from cadrumo.application.browser_location import playwright_browsers_root, required_browser_builds
 
 REMEDIATION = "run 'playwright install chromium' (or 'just setup-browser') to install the browser binary"
 

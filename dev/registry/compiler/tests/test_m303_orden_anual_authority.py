@@ -23,7 +23,8 @@ from cadrumo.domain.calculations.registry.m303_orden_resolution import resolve_m
 from cadrumo.domain.calculations.registry.m303_schema_vocabulary import (
     m303_regime_composition_simplified_scope,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScope,
     M303RegimenSimplificadoScopeDecision,

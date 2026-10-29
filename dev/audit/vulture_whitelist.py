@@ -5,7 +5,7 @@ read, because the parameter exists to satisfy a contract rather than to be
 consumed in the body:
 
 * ``http`` / ``num_retries`` — part of the ``google-api-python-client``
-  ``execute()`` keyword contract on the ``_ExecutableRequest`` Protocol stub
+  ``execute()`` keyword contract on the ``ExecutableRequest`` Protocol stub
   (:mod:`cadrumo.adapters.outbound.google.api`). The stub body is ``...``; the
   names match the wire client's keyword arguments and cannot be renamed.
 * ``protocol`` — the positional argument of the ``__reduce_ex__`` dunder
@@ -48,7 +48,7 @@ from __future__ import annotations
 
 
 def _execute(http: object, num_retries: object) -> tuple[object, object]:
-    """Mirror ``_ExecutableRequest.execute`` keyword contract."""
+    """Mirror ``ExecutableRequest.execute`` keyword contract."""
     return http, num_retries
 
 

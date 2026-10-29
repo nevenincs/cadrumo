@@ -11,10 +11,10 @@ import hashlib
 import json
 import re
 import subprocess
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from cadrumo.domain.calculations.registry.authority_store import (
     AUTHORITY_DESCRIPTOR_FILENAME,
@@ -119,32 +119,7 @@ class InstalledCli:
         try:
             document = decode_cli_document(completed.stdout, completed.stderr)
         except json.JSONDecodeError as exc:
-            self.commands.append(
-                CommandEvidence(
-                    command=command_identity,
-                    returncode=completed.returncode,
-                    status="non_json_failure",
-                    notice_codes=(),
-                    error_code="acceptance.installed_cli.non_json_failure",
-                )
-            )
-            if allow_error:
-                return {
-                    "status": "error",
-                    "error": {
-                        "code": "acceptance.installed_cli.non_json_failure",
-                        "context": {
-                            "returncode": completed.returncode,
-                            "stderr_length": len(completed.stderr),
-                            "stderr_sha256": hashlib.sha256(completed.stderr.encode("utf-8")).hexdigest(),
-                        },
-                    },
-                }
-            raise InstalledCliError(
-                f"{command_identity}: no CLI JSON envelope",
-                diagnostic_code="acceptance.installed_cli.non_json_failure",
-                commands=tuple(self.commands),
-            ) from exc
+            return self._non_json_result(completed, command_identity, allow_error=allow_error, exc=exc)
         notices = document.get("notices", [])
         self.commands.append(
             CommandEvidence(
@@ -171,6 +146,42 @@ class InstalledCli:
                 commands=tuple(self.commands),
             )
         return document
+
+    def _non_json_result(
+        self,
+        completed: subprocess.CompletedProcess[str],
+        command_identity: str,
+        *,
+        allow_error: bool,
+        exc: json.JSONDecodeError,
+    ) -> dict[str, Any]:
+        """Record sanitized evidence and return or raise the non-JSON failure."""
+        self.commands.append(
+            CommandEvidence(
+                command=command_identity,
+                returncode=completed.returncode,
+                status="non_json_failure",
+                notice_codes=(),
+                error_code="acceptance.installed_cli.non_json_failure",
+            )
+        )
+        if allow_error:
+            return {
+                "status": "error",
+                "error": {
+                    "code": "acceptance.installed_cli.non_json_failure",
+                    "context": {
+                        "returncode": completed.returncode,
+                        "stderr_length": len(completed.stderr),
+                        "stderr_sha256": hashlib.sha256(completed.stderr.encode("utf-8")).hexdigest(),
+                    },
+                },
+            }
+        raise InstalledCliError(
+            f"{command_identity}: no CLI JSON envelope",
+            diagnostic_code="acceptance.installed_cli.non_json_failure",
+            commands=tuple(self.commands),
+        ) from exc
 
     def run_text(self, args: Sequence[str], *, authenticated: bool = True, command: str | None = None) -> str:
         """Run one command in its default text format and return its standard output."""
@@ -352,18 +363,24 @@ def typed_refusal(document: dict[str, Any]) -> str | None:
         return None
     context = error.get("context")
     reason = context.get("refusal") if isinstance(context, dict) else None
-    if (
-        reason is None
-        and error.get("code") == "REFUSED_LOCAL_RUNTIME"
-        and isinstance(context, dict)
-        and isinstance(context.get("reason"), str)
-        and context.get("reason") in {code.value for code in RefusalCode}
-    ):
-        return f"REFUSED/{context['reason']}"
+    local_runtime = _local_runtime_refusal(cast(dict[str, object], error), context, reason)
+    if local_runtime is not None:
+        return local_runtime
     if not isinstance(reason, str) or not _ENUM_TOKEN.fullmatch(reason):
         return None
     category = error.get("category")
     return f"{category}/{reason}" if isinstance(category, str) and _ENUM_TOKEN.fullmatch(category) else reason
+
+
+def _local_runtime_refusal(error: Mapping[str, object], context: object, reason: object) -> str | None:
+    """Retain only an allowlisted native runtime refusal reason."""
+    if reason is not None or error.get("code") != "REFUSED_LOCAL_RUNTIME" or not isinstance(context, dict):
+        return None
+    fields = cast(dict[str, object], context)
+    code = fields.get("reason")
+    if isinstance(code, str) and code in {item.value for item in RefusalCode}:
+        return f"REFUSED/{code}"
+    return None
 
 
 def _error_code(document: dict[str, Any]) -> str:

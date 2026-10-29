@@ -19,7 +19,7 @@ from cadrumo.domain.calculations.registry.remote_state_guard import (
     remote_state_policy_from_cross_reference,
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
 
 from ..live_parity import ParityFieldComparison, ParityVerdictKind

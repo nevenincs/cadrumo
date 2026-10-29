@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
 import json
 import time
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import suppress
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
-
-from mcp import ClientSession
 
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.automation_store_composition import installed_automation_secret_store
@@ -20,20 +17,13 @@ from cadrumo.application.diagnostics_read_contracts import DiagnosticsReadProjec
 from cadrumo.application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
-    OperationPublicTerminalEventV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationId
+from cadrumo.application.user_profile.automation_enrollment import AutomationReviewProjection
 from cadrumo.application.user_profile.automation_operations import AUTOMATION_APPROVE_OPERATION_DEFINITION_ID
-from cadrumo.application.user_profile.profile_operation_contracts import (
-    PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
-    ProfileMutationOperationProjection,
-)
 from cadrumo.application.user_profile.view_operation import (
-    PROFILE_VIEW_OPERATION_DEFINITION_ID,
-    ProfileViewFactItem,
-    ProfileViewOperationProjection,
     ProfileViewPageKind,
 )
 from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition, profile_operation_subject
@@ -61,8 +51,6 @@ from dev.packaging.command_execution import run_command
 
 from . import agent_key_proposal
 from .harness import Connection, LifecycleHarness, Profile
-from .proof_support import ProcessIdentity, verified_relay
-from .session_holder import AsyncRuntimeSessionHolder
 
 # The package interpreter imports the production TUI adapter without mounting Textual.
 _TUI_READ = """
@@ -189,203 +177,6 @@ def _tui(harness: LifecycleHarness, profile: Profile, *, admitted: bool) -> None
             raise AssertionError("Protected application probe failed")
 
 
-async def _call(
-    client: ClientSession, name: str, arguments: dict[str, Any], *, admitted: bool = True
-) -> dict[str, Any]:
-    reply = await client.call_tool(name, arguments)
-    if not (isinstance(reply.structured_content, dict)):
-        raise AssertionError("Protected application probe failed")
-    document = reply.structured_content
-    if not (reply.is_error is not admitted):
-        raise AssertionError(
-            f"MCP {name} admission differed: {document.get('outcome', 'unreported')} "
-            f"{document.get('code', 'unreported')}"
-        )
-    if not admitted and not (document["outcome"] == "refused" and isinstance(document["code"], str)):
-        raise AssertionError("Protected application probe failed")
-    return document
-
-
-async def _mcp_settle(
-    client: ClientSession,
-    profile: Profile,
-    definition_id: str,
-    payload: dict[str, Any],
-    *,
-    idempotency_key: str | None = None,
-) -> dict[str, Any]:
-    """Run one operation over MCP to a successful terminal and return its released projection."""
-    described = await _call(client, "describe", {"definition_id": definition_id})
-    contract = described["description"]["contract"]
-    request: dict[str, Any] = {
-        "definition_id": definition_id,
-        "subject_ref": profile_operation_subject(str(profile.profile_id)),
-        "payload": payload,
-    }
-    if idempotency_key is not None:
-        request["idempotency_key"] = idempotency_key
-    submitted = await _call(client, "execute", request)
-    operation_id = submitted["receipt"]["operation_id"]
-    deadline = time.monotonic() + 60
-    while True:
-        observed = await _call(
-            client, "observe", {"observation": {"operation_id": operation_id, "after_cursor": 0, "page_limit": 32}}
-        )
-        observation = OperationObservationSuccessV1.model_validate_json(json.dumps(observed["reply"]["observation"]))
-        projection = observation.projection
-        if projection.lifecycle.value == "terminal":
-            break
-        if not (time.monotonic() < deadline):
-            raise AssertionError("Protected application probe failed")
-        await asyncio.sleep(0.05)
-    terminal = projection.terminal_condition
-    failure_codes = tuple(
-        event.failure_error_code
-        for event in observation.event_page.events
-        if isinstance(event, OperationPublicTerminalEventV1) and event.failure_error_code is not None
-    )
-    if not (terminal is not None and terminal.value == "succeeded"):
-        raise AssertionError(f"MCP {definition_id} terminal={terminal}; failure_codes={failure_codes}")
-    result = await _call(
-        client,
-        "result",
-        {
-            "result": {
-                "operation_id": operation_id,
-                "terminal_revision": projection.revision,
-                "definition_contract_digest": contract["definition_contract_digest"],
-                "result_schema": contract["result_schema"],
-            }
-        },
-    )
-    return result["document"]["projection"]
-
-
-async def attend_mcp(
-    holder: AsyncRuntimeSessionHolder,
-    client: ClientSession,
-    *,
-    harness: LifecycleHarness,
-    invocation: ProcessIdentity,
-) -> None:
-    """Review only this retained packaged relay's ask through the held person session."""
-    asking = asyncio.create_task(_call(client, "describe", {"definition_id": "auth.local-read"}))
-    deadline = time.monotonic() + 90
-    try:
-        while True:
-            inventory = await holder.command("attendance_inventory")
-            candidates = inventory.get("candidates")
-            if not isinstance(candidates, list):
-                raise AssertionError("Held runtime returned no attendance inventory")
-            matching = [
-                item
-                for item in candidates
-                if isinstance(item, dict)
-                and verified_relay(item.get("process_id"), harness.package / "bin/cadrumo-mcp.exe", invocation)
-            ]
-            if len(matching) > 1:
-                raise AssertionError("Multiple asks came from the owned relay")
-            if matching:
-                attendance_id = matching[0].get("attendance_id")
-                if not isinstance(attendance_id, str):
-                    raise AssertionError("Owned relay ask has no identity")
-                decided = await holder.command("attendance_decision", attendance_id=attendance_id, approve=True)
-                if decided.get("kind") != "attendance_decided" or decided.get("approved") is not True:
-                    raise AssertionError("Runtime did not approve the reviewed relay")
-                await asking
-                return
-            if asking.done():
-                await asking
-                raise AssertionError("Relay answered without the person's attendance review")
-            if time.monotonic() >= deadline:
-                raise AssertionError("Runtime recorded no ask from the owned relay")
-            await asyncio.sleep(0.05)
-    finally:
-        if not asking.done():
-            asking.cancel()
-            with suppress(asyncio.CancelledError):
-                await asking
-
-
-async def _mcp_read(client: ClientSession, profile: Profile) -> None:
-    document = await _mcp_settle(
-        client, profile, "auth.local-read", {"profile_id": str(profile.profile_id), "kind": "status"}
-    )
-    body = AuthReadProjection.model_validate_json(json.dumps(document))
-    if not (body.profile_id == profile.profile_id and body.status is not None):
-        raise AssertionError("Protected application probe failed")
-
-
-async def _mcp_profile_facts(client: ClientSession, profile: Profile) -> ProfileViewOperationProjection:
-    """Read every stored fact of the profile over MCP, pinned to one revision."""
-    payload: dict[str, Any] = {"profile_id": str(profile.profile_id), "page_kind": ProfileViewPageKind.FACTS.value}
-    first = ProfileViewOperationProjection.model_validate_json(
-        json.dumps(await _mcp_settle(client, profile, PROFILE_VIEW_OPERATION_DEFINITION_ID, payload))
-    )
-    if not (first.profile_id == profile.profile_id and first.outcome == "page"):
-        raise AssertionError("MCP profile view was not released")
-    items = list(first.items)
-    cursor = first.next_cursor
-    while cursor is not None:
-        page = ProfileViewOperationProjection.model_validate_json(
-            json.dumps(
-                await _mcp_settle(
-                    client,
-                    profile,
-                    PROFILE_VIEW_OPERATION_DEFINITION_ID,
-                    payload
-                    | {
-                        "cursor": cursor,
-                        "expected_revision": first.record_revision,
-                        "expected_content_digest": str(first.content_digest),
-                    },
-                )
-            )
-        )
-        if not (page.outcome == "page" and page.record_revision == first.record_revision):
-            raise AssertionError("MCP profile view changed revision while paging")
-        items.extend(page.items)
-        cursor = page.next_cursor
-    return first.model_copy(update={"items": tuple(items), "next_cursor": None})
-
-
-def _fact(view: ProfileViewOperationProjection, path: str) -> str | None:
-    return next(
-        (item.value for item in view.items if isinstance(item, ProfileViewFactItem) and item.path == path), None
-    )
-
-
-async def mcp_edit_profile(
-    client: ClientSession, profile: Profile, *, path: str, previous: str | None, value: str
-) -> None:
-    """Read the profile, change one fact and read it back, all as the agent."""
-    before = await _mcp_profile_facts(client, profile)
-    if _fact(before, path) != previous:
-        raise AssertionError("The agent did not read the profile value it expected before editing")
-    mutation = ProfileMutationOperationProjection.model_validate_json(
-        json.dumps(
-            await _mcp_settle(
-                client,
-                profile,
-                PROFILE_FIELD_MUTATION_OPERATION_DEFINITION_ID,
-                {
-                    "profile_id": str(profile.profile_id),
-                    "expected_revision": before.record_revision,
-                    "expected_content_digest": str(before.content_digest),
-                    "path": path,
-                    "value": value,
-                },
-                idempotency_key=str(uuid4()),
-            )
-        )
-    )
-    after = await _mcp_profile_facts(client, profile)
-    if not (after.record_revision > before.record_revision and after.record_revision == mutation.record_revision):
-        raise AssertionError("The agent's profile edit did not publish a new revision")
-    if _fact(after, path) != value:
-        raise AssertionError("The agent did not read back the profile value it wrote")
-
-
 def _observe_read(
     connection: Connection, operation_id: OperationId, definition_id: str = "auth.local-read"
 ) -> OperationObservationSuccessV1:
@@ -444,6 +235,80 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
     continuing = operation_id is not None
     if operation_id is None:
         operation_id = _submit_read(connection)
+    _start_protected_read(connection, operation_id, definition_id, deadline, continuing=continuing)
+    projection = _wait_protected_read(connection, operation_id, definition_id, deadline).projection
+    reply = client.operation(
+        OperationResult(
+            request_id=uuid4(),
+            profile_id=client.profile_id,
+            session_id=client.session_id,
+            result=OperationResultProjectionRequestV1(
+                operation_id=operation_id,
+                terminal_revision=projection.revision,
+                definition_contract_digest=contract.definition_contract_digest,
+                result_schema=contract.result_schema,
+            ),
+        ),
+        deadline=deadline,
+    )
+    reply = _require_result_reply(reply, operation_id)
+    result = OperationResultProjectionSuccessV1[AuthReadProjection | DiagnosticsReadProjection].model_validate_json(
+        json.dumps(reply.document)
+    )
+    if not (result.definition_contract_digest == contract.definition_contract_digest):
+        raise AssertionError("Protected durable-operation probe failed")
+    if not (result.result_schema == contract.result_schema):
+        raise AssertionError("Protected durable-operation probe failed")
+    if not (result.projection.profile_id == client.profile_id):
+        raise AssertionError("Protected durable-operation probe failed")
+    _validate_read_projection(result.projection, continuing=continuing)
+    return operation_id
+
+
+def _require_result_reply(reply: object, operation_id: OperationId) -> OperationProjected:
+    """Check the result projection belongs to the submitted operation."""
+    if not isinstance(reply, OperationProjected):
+        raise AssertionError("Protected durable-operation probe failed")
+    if not (reply.operation_id == operation_id and reply.projection_kind == "result"):
+        raise AssertionError("Protected durable-operation probe failed")
+    return reply
+
+
+def _wait_protected_read(
+    connection: Connection, operation_id: OperationId, definition_id: str, deadline: float
+) -> OperationObservationSuccessV1:
+    """Observe the operation to its successful terminal state within the original deadline."""
+    while True:
+        observation = _observe_read(connection, operation_id, definition_id)
+        if observation.projection.lifecycle is OperationLifecycle.TERMINAL:
+            break
+        if not (time.monotonic() < deadline):
+            raise AssertionError("Protected read did not settle")
+        time.sleep(0.05)
+    if observation.projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
+        raise AssertionError("Protected durable-operation probe failed")
+    return observation
+
+
+def _validate_read_projection(projection: AuthReadProjection | DiagnosticsReadProjection, *, continuing: bool) -> None:
+    """Verify the operation-specific protected result shape."""
+    if continuing:
+        if not (isinstance(projection, DiagnosticsReadProjection)):
+            raise AssertionError("Protected durable-operation probe failed")
+        if not (projection.kind == "errors" and projection.errors is not None):
+            raise AssertionError("Protected durable-operation probe failed")
+    else:
+        if not (isinstance(projection, AuthReadProjection)):
+            raise AssertionError("Protected durable-operation probe failed")
+        if not (projection.kind == "status" and projection.status is not None):
+            raise AssertionError("Protected durable-operation probe failed")
+
+
+def _start_protected_read(
+    connection: Connection, operation_id: OperationId, definition_id: str, deadline: float, *, continuing: bool
+) -> None:
+    """Start or resume the operation within the retained lease deadline."""
+    client = connection.client
     while True:
         try:
             started = client.operation(
@@ -468,53 +333,6 @@ def _execute_read(connection: Connection, operation_id: OperationId | None = Non
             time.sleep(2)
     if not (isinstance(started, OperationAcknowledged)):
         raise AssertionError("Protected durable-operation probe failed")
-    while True:
-        projection = _observe_read(connection, operation_id, definition_id).projection
-        if projection.lifecycle is OperationLifecycle.TERMINAL:
-            break
-        if not (time.monotonic() < deadline):
-            raise AssertionError("Protected read did not settle")
-        time.sleep(0.05)
-    if projection.terminal_condition is not OperationTerminalCondition.SUCCEEDED:
-        raise AssertionError("Protected durable-operation probe failed")
-    reply = client.operation(
-        OperationResult(
-            request_id=uuid4(),
-            profile_id=client.profile_id,
-            session_id=client.session_id,
-            result=OperationResultProjectionRequestV1(
-                operation_id=operation_id,
-                terminal_revision=projection.revision,
-                definition_contract_digest=contract.definition_contract_digest,
-                result_schema=contract.result_schema,
-            ),
-        ),
-        deadline=deadline,
-    )
-    if not (isinstance(reply, OperationProjected)):
-        raise AssertionError("Protected durable-operation probe failed")
-    if not (reply.operation_id == operation_id and reply.projection_kind == "result"):
-        raise AssertionError("Protected durable-operation probe failed")
-    result = OperationResultProjectionSuccessV1[AuthReadProjection | DiagnosticsReadProjection].model_validate_json(
-        json.dumps(reply.document)
-    )
-    if not (result.definition_contract_digest == contract.definition_contract_digest):
-        raise AssertionError("Protected durable-operation probe failed")
-    if not (result.result_schema == contract.result_schema):
-        raise AssertionError("Protected durable-operation probe failed")
-    if not (result.projection.profile_id == client.profile_id):
-        raise AssertionError("Protected durable-operation probe failed")
-    if continuing:
-        if not (isinstance(result.projection, DiagnosticsReadProjection)):
-            raise AssertionError("Protected durable-operation probe failed")
-        if not (result.projection.kind == "errors" and result.projection.errors is not None):
-            raise AssertionError("Protected durable-operation probe failed")
-    else:
-        if not (isinstance(result.projection, AuthReadProjection)):
-            raise AssertionError("Protected durable-operation probe failed")
-        if not (result.projection.kind == "status" and result.projection.status is not None):
-            raise AssertionError("Protected durable-operation probe failed")
-    return operation_id
 
 
 def _read(connection: Connection) -> None:
@@ -607,20 +425,7 @@ def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
         if selected["profile_id"] != str(profile.profile_id):
             raise AssertionError("The key requester selected another profile")
         receipt = selected["receipt"]
-        while True:
-            requests = read_automation_inventory(human.client).projection.requests
-            matching = [
-                item
-                for item in requests
-                if str(item.receipt.request_id) == receipt["request_id"]
-                and str(item.receipt.review_digest) == receipt["review_digest"]
-            ]
-            if len(matching) == 1:
-                review = matching[0]
-                break
-            if matching or creating.done() or time.monotonic() >= deadline:
-                raise AssertionError("The exact SDK key request was not available for review")
-            time.sleep(0.5)
+        review = _wait_enrollment_review(human, receipt, creating.done, deadline)
         # An agent key always grants the profile's values and its own operations' metadata.
         if {item.category for item in review.proposal.scope.disclosure_categories} != {
             DisclosureCategory.PROFILE_VALUES,
@@ -635,19 +440,50 @@ def issue_key(harness: LifecycleHarness, profile: Profile) -> UUID:
             error.add_note("approval_failure " + json.dumps(_approval_facts(human, error, deadline)))
             raise
         created = creating.result(timeout=120)
-    if created["submitted"] != receipt or any(
-        created["terminal"][member] != receipt[member]
-        for member in ("profile_id", "request_id", "review_digest", "grant_id")
-    ):
-        raise AssertionError("Protected delivery differs from the reviewed SDK request")
+    _require_delivery_receipt(created, receipt)
     request_control.unlink(missing_ok=True)
-    reference = UUID(created["credential_reference"])
-    if str(reference) != created["terminal"]["credential_reference"]:
-        raise AssertionError("Credential reference differs from protected terminal delivery")
+    reference = _delivered_credential(created)
     harness.resources.callback(installed_automation_secret_store().delete, CLIENT_NAMESPACE, str(reference))
     if decided.effect.value != "updated":
         raise AssertionError("Enrollment approval did not update native custody")
     return reference
+
+
+def _require_delivery_receipt(created: Mapping[str, object], receipt: Mapping[str, object]) -> None:
+    """Verify protected delivery names the exact reviewed request."""
+    if created["submitted"] != receipt or any(
+        cast(dict[str, object], created["terminal"])[member] != receipt[member]
+        for member in ("profile_id", "request_id", "review_digest", "grant_id")
+    ):
+        raise AssertionError("Protected delivery differs from the reviewed SDK request")
+
+
+def _delivered_credential(created: Mapping[str, object]) -> UUID:
+    """Verify the returned credential reference agrees with terminal delivery."""
+    reference = UUID(cast(str, created["credential_reference"]))
+    terminal = cast(dict[str, object], created["terminal"])
+    if str(reference) != terminal["credential_reference"]:
+        raise AssertionError("Credential reference differs from protected terminal delivery")
+    return reference
+
+
+def _wait_enrollment_review(
+    human: Connection, receipt: Mapping[str, object], requester_done: Callable[[], bool], deadline: float
+) -> AutomationReviewProjection:
+    """Wait for exactly the submitted request and digest, without extending the budget."""
+    while True:
+        requests = read_automation_inventory(human.client).projection.requests
+        matching = [
+            item
+            for item in requests
+            if str(item.receipt.request_id) == receipt["request_id"]
+            and str(item.receipt.review_digest) == receipt["review_digest"]
+        ]
+        if len(matching) == 1:
+            return matching[0]
+        if matching or requester_done() or time.monotonic() >= deadline:
+            raise AssertionError("The exact SDK key request was not available for review")
+        time.sleep(0.5)
 
 
 def _approval_facts(human: Connection, error: AutomationDecisionRunError, deadline: float) -> dict[str, str]:
@@ -671,6 +507,11 @@ def _approval_facts(human: Connection, error: AutomationDecisionRunError, deadli
             )
         except Exception as observation_error:
             facts.update(observation="unavailable", observation_code=frontend_failure_code(observation_error))
+    return _sanitize_approval_facts(facts)
+
+
+def _sanitize_approval_facts(facts: dict[str, str]) -> dict[str, str]:
+    """Retain only public allowlisted codes in approval diagnostics."""
     codes = {
         "unknown",
         "unreported",
@@ -689,18 +530,3 @@ def _approval_facts(human: Connection, error: AutomationDecisionRunError, deadli
     }:
         facts["phase_code"] = "unreported"
     return dict(sorted(facts.items()))
-
-
-async def _mcp_refuse_profile(client: ClientSession, profile: Profile) -> None:
-    crossed = await _call(
-        client,
-        "execute",
-        {
-            "definition_id": "auth.local-read",
-            "subject_ref": profile_operation_subject(str(profile.profile_id)),
-            "payload": {"profile_id": str(profile.profile_id), "kind": "status"},
-        },
-        admitted=False,
-    )
-    if crossed["code"] not in {"profile_mismatch", "operation_denied", "invalid_request"}:
-        raise AssertionError("MCP cross-profile probe returned an unexpected refusal")

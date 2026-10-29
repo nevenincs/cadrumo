@@ -8,14 +8,16 @@ import os
 import signal
 import sys
 import time
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from pathlib import Path
+from typing import cast
 
 import psutil
 
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog
-from .layout import application_images, load_layout
+from .layout import ApplicationImage, application_images, load_layout
 
 
 def running(process: psutil.Process) -> bool:
@@ -175,13 +177,8 @@ def stop_service(build: Path, application_id: str, names: set[str]) -> None:
             raise RuntimeError("Cannot inspect or stop the installed Cadrumo service") from error
         try:
             command = win32service.QueryServiceConfig(service)[3]
-            # The installer owns this exact quoted command, never a shell expression.
-            if not command.startswith('"') or '"' not in command[1:]:
-                raise RuntimeError("Installed Cadrumo service image could not be verified")
-            image, arguments = command[1:].split('"', 1)
-            if arguments.strip() != "--service":
-                raise RuntimeError("Installed Cadrumo service image could not be verified")
-            if not product_process(Path(image), build, names):
+            image = _service_executable(command)
+            if not product_process(image, build, names):
                 # The product service may be installed outside this build. It
                 # belongs to the operator's active installation, not this
                 # build's images, so package replacement must leave it alone.
@@ -202,6 +199,15 @@ def stop_service(build: Path, application_id: str, names: set[str]) -> None:
         win32service.CloseServiceHandle(scm)
 
 
+def _service_executable(command: str) -> Path:
+    if not command.startswith('"') or '"' not in command[1:]:
+        raise RuntimeError("Installed Cadrumo service image could not be verified")
+    image, arguments = command[1:].split('"', 1)
+    if arguments.strip() != "--service":
+        raise RuntimeError("Installed Cadrumo service image could not be verified")
+    return Path(image)
+
+
 def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate_timeout: float = 10) -> None:
     """Retain process creation identities and refuse surviving or respawned owners."""
     started = time.monotonic()
@@ -210,16 +216,8 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
     layout = load_layout(target)
     identity = json.loads((build / "generated/contract.json").read_text(encoding="utf-8"))["installation_identity"]
     images = application_images(layout)
-    names = {image.file.casefold() for image in images}
-    names.add(Path(layout["paths"]["executable"]).name.casefold())
-    if development := layout["files"].get("development_executable"):
-        names.add(Path(development).name.casefold())
-    supervisors = {image.file.casefold() for image in images if image.startup or image.desktop}
+    names, supervisors = _product_image_names(layout, images)
     manager_pids: set[int] = set()
-    names.update(
-        f"{name}{layout['entrypoint_suffix']}".casefold()
-        for name in (*layout["entrypoints"], *layout.get("bundled_images", {}))
-    )
     excluded = {os.getpid(), *(process.pid for process in psutil.Process().parents())}
 
     service_started = time.monotonic()
@@ -227,29 +225,7 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
     log.status(f"service stop request took {time.monotonic() - service_started:.3f} s")
 
     def discover() -> list[psutil.Process]:
-        found: dict[int, psutil.Process] = {}
-        for process in psutil.process_iter(["name"], ad_value=""):
-            try:
-                if process.pid in excluded or not product_process(Path(process.exe()), build, names):
-                    continue
-                # Cache creation time before any shutdown request. psutil checks
-                # this identity again before signals, killing and descendant reads.
-                process.create_time()
-                if not running(process):
-                    continue
-                found[process.pid] = process
-                if str(process.info["name"]).casefold() in supervisors:
-                    manager_pids.add(process.pid)
-                for child in process.children(recursive=True):
-                    if child.pid not in excluded and running(child):
-                        child.create_time()
-                        found[child.pid] = child
-            except psutil.NoSuchProcess:
-                continue
-            except psutil.AccessDenied as error:
-                if str(process.info["name"]).casefold() in names:
-                    raise RuntimeError("Cannot verify or stop a running Cadrumo process") from error
-        return list(found.values())
+        return _discover_processes(build, names, supervisors, excluded, manager_pids)
 
     discovery_started = time.monotonic()
     processes = discover()
@@ -271,6 +247,35 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
     alive.sort(key=lambda process: process.pid not in manager_pids)
     if alive:
         log.warning(f"terminating {len(alive)} processes that did not exit gracefully")
+    _force_stop_processes(alive, manager_pids, discover, terminate_timeout, log, started)
+
+
+def _product_image_names(
+    layout: Mapping[str, object], images: tuple[ApplicationImage, ...]
+) -> tuple[set[str], set[str]]:
+    paths = cast("Mapping[str, str]", layout["paths"])
+    files = cast("Mapping[str, str]", layout["files"])
+    names = {image.file.casefold() for image in images}
+    names.add(Path(paths["executable"]).name.casefold())
+    development = files.get("development_executable")
+    if development is not None and development:
+        names.add(Path(development).name.casefold())
+    supervisors = {image.file.casefold() for image in images if image.startup or image.desktop}
+    entrypoints = cast("Mapping[str, object]", layout["entrypoints"])
+    bundled = cast("Mapping[str, object]", layout.get("bundled_images", {}))
+    suffix = cast("str", layout["entrypoint_suffix"])
+    names.update(f"{name}{suffix}".casefold() for name in (*entrypoints, *bundled))
+    return names, supervisors
+
+
+def _force_stop_processes(
+    alive: list[psutil.Process],
+    manager_pids: set[int],
+    discover: Callable[[], list[psutil.Process]],
+    terminate_timeout: float,
+    log: BuildLog,
+    started: float,
+) -> None:
     forced_started = time.monotonic()
     deadline = forced_started + terminate_timeout
     remaining = {process.pid: process for process in alive if running(process)}
@@ -295,6 +300,38 @@ def quiesce(build: Path, target: str, *, graceful_timeout: float = 10, terminate
     log.status(
         f"quiescent after {time.monotonic() - started:.3f} s; force attempted for {len(attempted)} process identities"
     )
+
+
+def _discover_processes(
+    build: Path, names: set[str], supervisors: set[str], excluded: set[int], manager_pids: set[int]
+) -> list[psutil.Process]:
+    found: dict[int, psutil.Process] = {}
+    for process in psutil.process_iter(["name"], ad_value=""):
+        try:
+            if process.pid in excluded or not product_process(Path(process.exe()), build, names):
+                continue
+            # Cache creation time before any shutdown request. psutil checks
+            # this identity again before signals, killing and descendant reads.
+            process.create_time()
+            if not running(process):
+                continue
+            found[process.pid] = process
+            if str(process.info["name"]).casefold() in supervisors:
+                manager_pids.add(process.pid)
+            _collect_children(process, excluded, found)
+        except psutil.NoSuchProcess:
+            continue
+        except psutil.AccessDenied as error:
+            if str(process.info["name"]).casefold() in names:
+                raise RuntimeError("Cannot verify or stop a running Cadrumo process") from error
+    return list(found.values())
+
+
+def _collect_children(process: psutil.Process, excluded: set[int], found: dict[int, psutil.Process]) -> None:
+    for child in process.children(recursive=True):
+        if child.pid not in excluded and running(child):
+            child.create_time()
+            found[child.pid] = child
 
 
 if __name__ == "__main__":

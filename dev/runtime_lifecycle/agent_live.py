@@ -60,7 +60,7 @@ from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import psutil
 
@@ -293,30 +293,14 @@ async def _attending(
     async def attend() -> None:
         while not stop.is_set():
             try:
-                inventory = await holder.command("attendance_inventory")
-                require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
-                candidates = inventory.get("candidates")
-                if not isinstance(candidates, list):
-                    raise AcceptanceError("runtime attendance inventory has no candidate list")
+                candidates = await _attendance_candidates(holder)
                 if stop.is_set():
                     return
                 for ask in candidates:
                     if stop.is_set():
                         return
-                    require(isinstance(ask, dict), "runtime attendance candidate is not an object")
-                    require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
-                    process_id = ask.get("process_id")
-                    relay_ask = type(process_id) is int and is_announced_relay(
-                        process_id, relay, gateway.get("identity")
-                    )
-                    decision = await holder.command(
-                        "attendance_decision", attendance_id=str(ask["attendance_id"]), approve=relay_ask
-                    )
-                    require(
-                        decision.get("kind") == "attendance_decided" and decision.get("approved") is relay_ask,
-                        "runtime attendance decision differs from the person's answer",
-                    )
-                    if relay_ask:
+                    process_id = await _decide_attendance(holder, ask, relay, gateway)
+                    if process_id is not None:
                         approved.append(process_id)
             except (AcceptanceError, OSError, ValueError) as refusal:
                 failures.append(str(refusal))
@@ -331,6 +315,36 @@ async def _attending(
         stop.set()
         await watcher
     require(not failures, f"attendance: {failures}")
+
+
+async def _attendance_candidates(holder: AsyncRuntimeSessionHolder) -> list[object]:
+    """Read the runtime's candidate list before making attendance decisions."""
+    inventory = await holder.command("attendance_inventory")
+    require(inventory.get("kind") == "attendance_inventory", "runtime returned no attendance inventory")
+    candidates = inventory.get("candidates")
+    if not isinstance(candidates, list):
+        raise AcceptanceError("runtime attendance inventory has no candidate list")
+    return cast(list[object], candidates)
+
+
+async def _decide_attendance(
+    holder: AsyncRuntimeSessionHolder,
+    candidate: object,
+    relay: Path,
+    gateway: Mapping[str, ProcessIdentity | None],
+) -> int | None:
+    """Decide one candidate and retain only the verified relay identity."""
+    require(isinstance(candidate, dict), "runtime attendance candidate is not an object")
+    ask = cast(dict[str, object], candidate)
+    require(isinstance(ask.get("attendance_id"), str), "runtime candidate omitted its ask identity")
+    process_id = ask.get("process_id")
+    relay_ask = type(process_id) is int and is_announced_relay(process_id, relay, gateway.get("identity"))
+    decision = await holder.command("attendance_decision", attendance_id=str(ask["attendance_id"]), approve=relay_ask)
+    require(
+        decision.get("kind") == "attendance_decided" and decision.get("approved") is relay_ask,
+        "runtime attendance decision differs from the person's answer",
+    )
+    return process_id if relay_ask and type(process_id) is int else None
 
 
 def _ledger_text(programs: Programs, environment: Mapping[str, str], profile: Profile) -> str:

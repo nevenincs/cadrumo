@@ -43,8 +43,7 @@ from ..docs_site_download import _DOWNLOAD_LATEST_SCHEMA, _DOWNLOAD_LATEST_STATI
 from ..docs_site_languages import (
     TRANSLATED_ROOTS_BUILD,
     SiteBuild,
-    _language_site_url,
-    _write_language_entry,
+    language_site_url,
     localized_languages,
     site_build_environment,
     site_build_jobs,
@@ -52,6 +51,7 @@ from ..docs_site_languages import (
     source_root_build_command,
     source_root_build_environment,
     translated_roots_compile_command,
+    write_language_entry,
 )
 from ..docs_site_preflight import _validate_built_site, _validate_language_entry, _validate_language_roots
 from ..docs_static_site import _dry_run
@@ -98,7 +98,7 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
     its apex (:func:`_materialise_site_search_index`), and a root that carried
     its own would be exactly the per-language index this layout replaced.
     """
-    _materialise_site_root(html_root / language, canonical_base=_language_site_url(language))
+    _materialise_site_root(html_root / language, canonical_base=language_site_url(language))
 
 
 def _materialise_apex_root(html_root: Path) -> None:
@@ -184,7 +184,7 @@ def test_default_site_language_is_spanish() -> None:
 
 def test_language_entry_routes_to_every_root_and_declares_the_spanish_floor(tmp_path: Path) -> None:
     """The apex entry reaches every built language and names the fallback."""
-    _write_language_entry(tmp_path)
+    write_language_entry(tmp_path)
     body = (tmp_path / "index.html").read_text(encoding="utf-8")
     for language in localized_languages():
         assert f'"{language}"' in body
@@ -198,7 +198,7 @@ def test_language_entry_validation_refuses_a_root_it_cannot_reach(tmp_path: Path
     Nothing else in the pipeline notices an unreachable root: it uploads, it
     responds on its own URL, and no reader without that URL ever finds it.
     """
-    _write_language_entry(tmp_path)
+    write_language_entry(tmp_path)
     entry = tmp_path / "index.html"
     entry.write_text(entry.read_text(encoding="utf-8").replace('"hu"', '"xx"'), encoding="utf-8")
     with pytest.raises(SystemExit, match="hu"):
@@ -207,7 +207,7 @@ def test_language_entry_validation_refuses_a_root_it_cannot_reach(tmp_path: Path
 
 def test_language_site_url_is_a_subroot_of_the_canonical_docs_url() -> None:
     """A localized root URL is the canonical docs URL plus the language segment."""
-    assert _language_site_url("es") == f"{CANONICAL_DOCS_BASE_URL}/es"
+    assert language_site_url("es") == f"{CANONICAL_DOCS_BASE_URL}/es"
 
 
 _SOURCE = OutputLanguage.EN.value
@@ -435,7 +435,7 @@ def test_the_publisher_produces_its_roots_in_one_place(tmp_path: Path) -> None:
     this one function because nothing downstream reaches for the roots itself,
     which is what this pins.
     """
-    calls = _direct_calls(_docs_site_build._build_site_roots)
+    calls = _direct_calls(_docs_site_build.build_site_roots)
 
     assert calls.index("_produce_language_roots") < calls.index("_index_site") < calls.index("_compose_apex")
     assert "_run_site_builds" not in calls, "the build bypasses its own root producer"
@@ -690,7 +690,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     """Publish and dry run share ONE build-and-validate prefix, and nothing may re-inline it.
 
     The dry run is only worth running if its verdict is the publish's verdict.
-    That holds today because both go through ``_build_site_roots`` and
+    That holds today because both go through ``build_site_roots`` and
     ``_validate_built_site``, but "holds by construction" is not a gate: the
     exact shape that existed before this composition was extracted -- the
     validation calls written out inline in the publish -- would reintroduce a
@@ -698,16 +698,16 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     inlined form is refused here by name.
     """
     calls = _direct_calls(_docs_delivery_activation._publish)
-    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
+    assert calls.index("build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
     inlined = sorted(
-        {"_run_site_builds", "_write_language_entry", "_validate_language_entry", "_validate_language_roots"}
+        {"_run_site_builds", "write_language_entry", "_validate_language_entry", "_validate_language_roots"}
         & set(calls)
     )
     assert not inlined, f"the publish re-inlines {inlined} instead of sharing the dry run's composition"
 
-    assert inspect.signature(_dry_run).parameters["build"].default is _docs_site_build._build_site_roots
+    assert inspect.signature(_dry_run).parameters["build"].default is _docs_site_build.build_site_roots
 
 
 def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:
@@ -754,7 +754,7 @@ def test_the_apex_carries_the_entry_error_page_sitemap_index_and_the_one_search_
     assert apex_directories == {"pagefind", *localized_languages()}
     sitemap = (tmp_path / "sitemap.xml").read_text(encoding="utf-8")
     for language in localized_languages():
-        assert f"<loc>{_language_site_url(language)}/sitemap.xml</loc>" in sitemap
+        assert f"<loc>{language_site_url(language)}/sitemap.xml</loc>" in sitemap
 
 
 def test_the_apex_error_page_declares_the_apex_as_its_place_in_the_site(tmp_path: Path) -> None:
@@ -798,7 +798,7 @@ def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) ->
     dropped = localized_languages()[-1]
     sitemap = tmp_path / "sitemap.xml"
     sitemap.write_text(
-        sitemap.read_text(encoding="utf-8").replace(f"{_language_site_url(dropped)}/sitemap.xml", "https://x.invalid/"),
+        sitemap.read_text(encoding="utf-8").replace(f"{language_site_url(dropped)}/sitemap.xml", "https://x.invalid/"),
         encoding="utf-8",
     )
 

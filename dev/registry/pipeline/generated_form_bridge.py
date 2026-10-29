@@ -29,8 +29,9 @@ from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from ..registry_collapse_fingerprints import fingerprint_digest, fingerprint_paths, fingerprint_tree
 from ..registry_collapse_inputs import _tool_input_paths
+from .export_fragment_provenance import ExportFragmentProvenanceManifest
 from .tree_publication_artifacts import verify_generated_export_package
-from .tree_publication_contracts import GeneratedExportTransactionPaths
+from .tree_publication_contracts import GeneratedExportPublicationJournal, GeneratedExportTransactionPaths
 from .tree_publication_journal import _journal_backup_path, load_generated_export_publication_journal
 
 _REVIEWED: dict[tuple[str, str], tuple[str, str, str, str]] = {
@@ -104,14 +105,7 @@ def _active_verified_backup(
     if not paths.journal.exists():
         return None
     journal = load_generated_export_publication_journal(paths.journal)
-    if (
-        journal.state != "candidate_live"
-        or journal.is_supersession
-        or str(journal.modelo) != modelo
-        or str(journal.revision_id) != revision
-        or journal.candidate_manifest_sha256 != candidate_manifest_sha256
-    ):
-        raise RegistryValidationError("Generated export cutover has no matching active publication journal")
+    _require_matching_active_journal(journal, modelo, revision, candidate_manifest_sha256)
     staged = paths.target_root / journal.candidate_export
     if not staged.name.startswith(paths.staging_prefix) or staged.exists():
         raise RegistryValidationError("Generated export cutover journal has no consumed target-scoped candidate")
@@ -133,6 +127,19 @@ def _active_verified_backup(
     ) != (modelo, revision, source_ref, source_sha256):
         raise RegistryValidationError("Generated export cutover backup differs from reviewed old source")
     return backup
+
+
+def _require_matching_active_journal(
+    journal: GeneratedExportPublicationJournal, modelo: str, revision: str, candidate_manifest_sha256: str
+) -> None:
+    if (
+        journal.state != "candidate_live"
+        or journal.is_supersession
+        or str(journal.modelo) != modelo
+        or str(journal.revision_id) != revision
+        or journal.candidate_manifest_sha256 != candidate_manifest_sha256
+    ):
+        raise RegistryValidationError("Generated export cutover has no matching active publication journal")
 
 
 def generated_form_interpreting_input_digest(modelo: str) -> str:
@@ -167,17 +174,7 @@ def _candidate_generated_form_bytes(candidate_root: Path, modelo_id: str, revisi
     """
     revision_root = candidate_root / "modelos" / modelo_id / "revisions" / revision_id
     form_root = revision_root / "form_layouts"
-    fragments = scan_directory(form_root)
-    if (
-        len(fragments) != 1
-        or fragments[0].name
-        not in {
-            "0001-form-layout.toml",
-            "0001-complete-edition.toml",
-        }
-        or is_link_like(fragments[0])
-    ):
-        raise RegistryValidationError("Generated bridge candidate has no unique generated form fragment")
+    _require_candidate_form_fragment(form_root)
     modelos, catalogues = load_registry_tree(candidate_root)
     modelo = next((item for item in modelos if str(item.id) == modelo_id), None)
     if modelo is None or revision_id not in modelo.revisions:
@@ -189,6 +186,20 @@ def _candidate_generated_form_bytes(candidate_root: Path, modelo_id: str, revisi
     if generated.layout is None or generated.layout != revision.form_layouts[0]:
         raise RegistryValidationError("Generated bridge candidate form differs from its fresh canonical generation")
     return render_form_layout_toml(revision_id, generated.layout).encode("utf-8")
+
+
+def _require_candidate_form_fragment(form_root: Path) -> None:
+    fragments = scan_directory(form_root)
+    if (
+        len(fragments) != 1
+        or fragments[0].name
+        not in {
+            "0001-form-layout.toml",
+            "0001-complete-edition.toml",
+        }
+        or is_link_like(fragments[0])
+    ):
+        raise RegistryValidationError("Generated bridge candidate has no unique generated form fragment")
 
 
 def generated_form_companion_changed(registry_root: Path, candidate_root: Path, modelo: str, revision: str) -> bool:
@@ -268,7 +279,9 @@ class GeneratedFormBridge:
         self.require_export_cutover(registry_root)
         target_form = form_layout_fragment_path(registry_root / "modelos" / self.modelo / "revisions" / self.revision)
         stale, undeclared = synchronise_form_layouts(registry_root, source_root, modelos=(self.modelo,), check=True)
-        expected_changes = set() if self.candidate_form_sha256 == self.old_form_sha256 else {target_form.resolve()}
+        expected_changes: set[Path] = (
+            set() if self.candidate_form_sha256 == self.old_form_sha256 else {target_form.resolve()}
+        )
         if undeclared or {Path(path).resolve() for path in stale} != expected_changes:
             raise RegistryValidationError("Generated form owner found a stale companion outside the exact target")
         if expected_changes:
@@ -282,6 +295,9 @@ class GeneratedFormBridge:
                 expected_new_sha256=self.candidate_form_sha256,
             ):
                 raise RegistryValidationError("Generated selected form owner did not perform its required write")
+        self._require_finished_form(registry_root, source_root, target_form)
+
+    def _require_finished_form(self, registry_root: Path, source_root: Path, target_form: Path) -> None:
         if _sha(target_form) != self.candidate_form_sha256:
             raise RegistryValidationError(
                 "Generated canonical form owner output differs from the prevalidated candidate"
@@ -322,12 +338,7 @@ def prepare_generated_form_bridge(
         raise RegistryValidationError("Generated form bridge old manifest or form differs from reviewed bytes")
     old_package = verify_generated_export_package(live_revision / "export")
     new_package = verify_generated_export_package(candidate_revision / "export")
-    if any(
-        (str(package.modelo), str(package.revision_id), str(package.source_ref), package.source_sha256)
-        != (modelo, revision, source_ref, source_sha256)
-        for package in (old_package, new_package)
-    ):
-        raise RegistryValidationError("Generated form bridge package identity or official source changed")
+    _require_reviewed_package_identities(old_package, new_package, modelo, revision, source_ref, source_sha256)
     generated_form_bytes = _candidate_generated_form_bytes(candidate_root, modelo, revision, source_root)
     other = _other_files(registry_root, modelo, revision)
     with tempfile.TemporaryDirectory(
@@ -352,12 +363,9 @@ def prepare_generated_form_bridge(
         )
     if _other_files(registry_root, modelo, revision) != other or _sha(old_manifest) != expected_manifest_sha256:
         raise RegistryValidationError("Generated form bridge live source changed during complete validation")
-    if (
-        generated_form_interpreting_input_digest(modelo) != interpreting_digest
-        or registry_evidence_content_digest(source_root) != evidence_content_digest
-        or fingerprint_tree(source_root / "registry" / "cadrumo") != profile_fingerprint
-    ):
-        raise RegistryValidationError("Generated bridge interpreting or evidence inputs changed during validation")
+    _require_bridge_inputs_stable(
+        modelo, source_root, interpreting_digest, evidence_content_digest, profile_fingerprint
+    )
     return GeneratedFormBridge(
         modelo=modelo,
         revision=revision,
@@ -372,3 +380,30 @@ def prepare_generated_form_bridge(
         evidence_content_digest=evidence_content_digest,
         profile_schema_fingerprint=profile_fingerprint,
     )
+
+
+def _require_reviewed_package_identities(
+    old_package: ExportFragmentProvenanceManifest,
+    new_package: ExportFragmentProvenanceManifest,
+    modelo: str,
+    revision: str,
+    source_ref: str,
+    source_sha256: str,
+) -> None:
+    if any(
+        (str(package.modelo), str(package.revision_id), str(package.source_ref), package.source_sha256)
+        != (modelo, revision, source_ref, source_sha256)
+        for package in (old_package, new_package)
+    ):
+        raise RegistryValidationError("Generated form bridge package identity or official source changed")
+
+
+def _require_bridge_inputs_stable(
+    modelo: str, source_root: Path, interpreting_digest: str, evidence_content_digest: str, profile_fingerprint: object
+) -> None:
+    if (
+        generated_form_interpreting_input_digest(modelo) != interpreting_digest
+        or registry_evidence_content_digest(source_root) != evidence_content_digest
+        or fingerprint_tree(source_root / "registry" / "cadrumo") != profile_fingerprint
+    ):
+        raise RegistryValidationError("Generated bridge interpreting or evidence inputs changed during validation")

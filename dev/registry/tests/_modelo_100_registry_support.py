@@ -12,12 +12,8 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import legal_window_covers_devengo
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.contribuyente.deduccion_maternidad import compute_deduccion_maternidad_0611

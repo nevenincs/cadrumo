@@ -23,7 +23,8 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryError
 
 from ...compiler.loader import load_modelo_directory
-from ..stamp import GOVERNANCE_KEYS, stamp_revision
+from ..stamp import stamp_revision
+from ..stamp_toml import GOVERNANCE_KEYS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

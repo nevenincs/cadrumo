@@ -17,7 +17,8 @@ from cadrumo.core.config import override_settings
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
 from .compiler.authority import compiled_bundled_authority
-from .workbook_demo import DemoCase, demonstration_producer
+from .workbook_demo import demonstration_producer
+from .workbook_demo_cases import DemoCase
 from .workbook_demo_nonperiodic import nonperiodic_vat_inputs
 from .workbook_template_source import load_workbook_template_source
 

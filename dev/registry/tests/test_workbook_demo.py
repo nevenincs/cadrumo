@@ -22,7 +22,7 @@ from cadrumo.core.i18n.render import lookup_translation, tr
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.afiliado_contribution_bindings import AfiliadoContributionProvider
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError, apply_rounding
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
@@ -33,9 +33,13 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 )
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
-from .. import workbook_demo
+from .. import workbook_demo, workbook_demo_formula_inputs
 from ..compiler.authority import compiled_bundled_authority
-from ..workbook_demo import DEMO_CASES, DemoCase, build_demonstration_plan, demonstration_inputs
+from ..workbook_demo import build_demonstration_plan
+from ..workbook_demo_cases import DEMO_CASES, DemoCase
+from ..workbook_demo_formula_graph import scenario_leaves
+from ..workbook_demo_inputs import demonstration_inputs
+from ..workbook_demo_m303 import m303_demonstration_facts
 from ..workbook_demo_records import (
     annual_capital_records,
     annual_employment_records,
@@ -226,7 +230,7 @@ def test_303_early_2024_demo_omits_year_end_facts_and_pages() -> None:
     case = next(case for case in DEMO_CASES if case.modelo == "303" and case.revision == "2024-hasta-08-y-2t")
     snapshot, plan = build_demonstration_plan(case)
     assert snapshot.period == "2T"
-    saved, _ = workbook_demo.m303_demonstration_facts(snapshot)
+    saved, _ = m303_demonstration_facts(snapshot)
     assert saved.filing_instance_evidence is not None
     assert saved.filing_instance_evidence.m303 is not None
     assert saved.filing_instance_evidence.m303.exonerado_390 is None
@@ -408,7 +412,7 @@ def test_193_expense_rows_do_not_leak_into_recipient_sections(case: DemoCase) ->
     inputs, bindings = demonstration_inputs(snapshot, case)
     values = _numeric_inputs(inputs)
     assert _expected_result(snapshot, values, bindings, "decl.base-total") == Decimal("3000")
-    _, withholding = workbook_demo._scenario_leaves(snapshot, "decl.retenciones-total")
+    _, withholding = scenario_leaves(snapshot, "decl.retenciones-total")
     assert len(withholding) == 1
     changed = {**bindings, next(iter(withholding)): Decimal("600")}
     assert _expected_result(snapshot, values, changed, "decl.retenciones-total") == Decimal("600")
@@ -1038,8 +1042,8 @@ def test_demo_and_oracle_refuse_calculated_input_overrides(monkeypatch: pytest.M
     inputs, bindings = demonstration_inputs(snapshot, case)
     with pytest.raises(ValueError, match="oracle inputs cannot override"):
         _expected_result(snapshot, {**_numeric_inputs(inputs), "19": Decimal("100000")}, bindings, "34")
-    leaves, binding_ids = workbook_demo._scenario_leaves(snapshot, "34")
-    monkeypatch.setattr(workbook_demo, "_scenario_leaves", lambda *_: (leaves | {"34"}, binding_ids))
+    leaves, binding_ids = scenario_leaves(snapshot, "34")
+    monkeypatch.setattr(workbook_demo_formula_inputs, "scenario_leaves", lambda *_: (leaves | {"34"}, binding_ids))
     with pytest.raises(ValueError, match="demonstration inputs cannot override"):
         demonstration_inputs(snapshot, case)
 

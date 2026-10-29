@@ -26,7 +26,7 @@ import argparse
 import ast
 import re
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
@@ -120,18 +120,23 @@ def _variables(display: ast.Dict, scheme: str, strings: Mapping[str, str | None]
         if not (isinstance(key, ast.Constant) and isinstance(key.value, str)):
             raise PaletteSourceError(f"{scheme} keys must be string literals")
         name = key.value
-        if isinstance(value, ast.Constant) and isinstance(value.value, str):
-            text: str | None = value.value
-        elif isinstance(value, ast.Name):
-            text = strings.get(value.id)
-        else:
-            text = None
-        if text is None:
-            raise PaletteSourceError(f"{scheme}[{name!r}] is not a string literal or a name bound once to one")
+        text = _variable_text(value, strings, scheme, name)
         variables[_checked_name(name, scheme)] = _checked_value(text, f"{scheme}[{name!r}]")
     if not variables:
         raise PaletteSourceError(f"{scheme} declares no variables")
     return variables
+
+
+def _variable_text(value: ast.expr, strings: Mapping[str, str | None], scheme: str, name: str) -> str:
+    if isinstance(value, ast.Constant) and isinstance(value.value, str):
+        text: str | None = value.value
+    elif isinstance(value, ast.Name):
+        text = strings.get(value.id)
+    else:
+        text = None
+    if text is None:
+        raise PaletteSourceError(f"{scheme}[{name!r}] is not a string literal or a name bound once to one")
+    return text
 
 
 def _checked_name(name: str, where: str) -> str:
@@ -161,55 +166,77 @@ def theme_variables(conf_source: str) -> Palette:
 
 def _root_declarations(stylesheet: str) -> list[tuple[str, str]]:
     """Return the declarations of every top-level ``:root`` block, in order."""
-    declarations: list[tuple[str, str]] = []
-    depth = 0
-    prelude: list[str] = []
-    block: list[str] = []
-    selectors: list[str] = []
+    state = _StylesheetState()
     index = 0
     while index < len(stylesheet):
         char = stylesheet[index]
-        if stylesheet.startswith("/*", index):
-            end = stylesheet.find("*/", index + 2)
-            if end < 0:
-                raise PaletteSourceError("the stylesheet has an unterminated comment")
-            index = end + 2
+        token_end = _ignored_or_quoted_end(stylesheet, index)
+        if token_end is not None:
+            if char in "\"'":
+                (state.block if state.depth else state.prelude).append(stylesheet[index:token_end])
+            index = token_end
             continue
-        if char in "\"'":
-            end = index + 1
-            while end < len(stylesheet) and stylesheet[end] != char:
-                end += 2 if stylesheet[end] == "\\" else 1
-            if end >= len(stylesheet):
-                raise PaletteSourceError("the stylesheet has an unterminated string")
-            (block if depth else prelude).append(stylesheet[index : end + 1])
-            index = end + 1
-            continue
-        if char == "{":
-            if depth == 0:
-                selectors.append("".join(prelude).strip())
-                prelude.clear()
-                block.clear()
-            elif selectors[-1] == ":root":
-                raise PaletteSourceError("a :root block contains a nested block")
-            depth += 1
-        elif char == "}":
-            if depth == 0:
-                raise PaletteSourceError("the stylesheet closes a block it never opened")
-            depth -= 1
-            if depth == 0:
-                if selectors[-1] == ":root":
-                    declarations.extend(_declarations("".join(block)))
-                prelude.clear()
-        elif depth == 0:
-            prelude.append(char)
-            if char == ";":
-                prelude.clear()
-        elif depth == 1:
-            block.append(char)
+        state.accept(char)
         index += 1
-    if depth:
+    if state.depth:
         raise PaletteSourceError("the stylesheet leaves a block open")
-    return declarations
+    return state.declarations
+
+
+@dataclass
+class _StylesheetState:
+    declarations: list[tuple[str, str]] = field(default_factory=list)
+    depth: int = 0
+    prelude: list[str] = field(default_factory=list)
+    block: list[str] = field(default_factory=list)
+    selectors: list[str] = field(default_factory=list)
+
+    def accept(self, char: str) -> None:
+        if char == "{":
+            self.open_block()
+        elif char == "}":
+            self.close_block()
+        elif self.depth == 0:
+            self.prelude.append(char)
+            if char == ";":
+                self.prelude.clear()
+        elif self.depth == 1:
+            self.block.append(char)
+
+    def open_block(self) -> None:
+        if self.depth == 0:
+            self.selectors.append("".join(self.prelude).strip())
+            self.prelude.clear()
+            self.block.clear()
+        elif self.selectors[-1] == ":root":
+            raise PaletteSourceError("a :root block contains a nested block")
+        self.depth += 1
+
+    def close_block(self) -> None:
+        if self.depth == 0:
+            raise PaletteSourceError("the stylesheet closes a block it never opened")
+        self.depth -= 1
+        if self.depth == 0:
+            if self.selectors[-1] == ":root":
+                self.declarations.extend(_declarations("".join(self.block)))
+            self.prelude.clear()
+
+
+def _ignored_or_quoted_end(stylesheet: str, index: int) -> int | None:
+    if stylesheet.startswith("/*", index):
+        end = stylesheet.find("*/", index + 2)
+        if end < 0:
+            raise PaletteSourceError("the stylesheet has an unterminated comment")
+        return end + 2
+    char = stylesheet[index]
+    if char not in "\"'":
+        return None
+    end = index + 1
+    while end < len(stylesheet) and stylesheet[end] != char:
+        end += 2 if stylesheet[end] == "\\" else 1
+    if end >= len(stylesheet):
+        raise PaletteSourceError("the stylesheet has an unterminated string")
+    return end + 1
 
 
 def _declarations(block: str) -> list[tuple[str, str]]:

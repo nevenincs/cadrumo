@@ -10,7 +10,7 @@ from cadrumo.application.storage.calc_sheets.fictional_rows import fictional_unu
 from cadrumo.application.storage.calc_sheets.formula_guards import conditional_missing_input_guard
 from cadrumo.application.storage.calc_sheets.layout import plan_layout
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormGridBlock
 

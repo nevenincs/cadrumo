@@ -157,8 +157,6 @@ _CANONICAL_POPULATION_RECIPES: frozenset[str] = frozenset(
         "test-ingest-corpus",
         "test-powershell-literal",
         "test-calculation-summary-pdf",
-        "test-components-role",
-        "test-components-role-windows",
         # CTest's package-stage process assertions have their own opt-in lane;
         # ordinary native verification is a distinct population with no pytest tests.
         "test-native-live",

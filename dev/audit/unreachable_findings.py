@@ -14,29 +14,29 @@ from dev.quality.source_import_analysis import (
 )
 
 from .unreachable_dataclasses import dataclass_member_uses
-from .unreachable_definitions import _collection_uses, _definitions
+from .unreachable_definitions import collection_uses, source_definitions
 from .unreachable_frameworks import framework_contracts
 from .unreachable_graph import _collapse_packages, _importers_of_span, reachable_closure, resolved_symbol_uses
-from .unreachable_memo import _walked, parse_module
+from .unreachable_memo import parse_module, walked
 from .unreachable_models import (
     _CONFIDENCE_BY_ORDER,
     _CONFIDENCE_ORDER,
     _DATA_SHAPED_KINDS,
     _TOP_LEVEL_KINDS,
     Confidence,
+    Definition,
     ModuleFinding,
     ModuleReach,
+    OutsideUse,
     ShippedModule,
     SymbolFinding,
     SymbolKind,
     TestFinding,
-    _Definition,
-    _OutsideUse,
 )
-from .unreachable_policy import _DEV_LABEL
+from .unreachable_policy import DEV_LABEL
 from .unreachable_receiver_types import receiver_types
 from .unreachable_records import record_member_uses
-from .unreachable_references import _references, _string_tokens, assembled_reference_names
+from .unreachable_references import assembled_reference_names, source_references, string_tokens
 from .unreachable_schemas import schema_member_uses
 from .unreachable_tree import ShippedTreeSpec, iter_python_files, relative_to_repo
 
@@ -47,7 +47,7 @@ def _module_findings(
     script_reach: frozenset[str],
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
-    outside: _OutsideUse,
+    outside: OutsideUse,
     importers: Mapping[str, frozenset[str]],
     edges: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
@@ -60,7 +60,7 @@ def _module_findings(
     only annotates the finding.
     """
     findings: list[ModuleFinding] = []
-    dev_roots = [name for name in modules if _DEV_LABEL in outside.labels_for_module(name)]
+    dev_roots = [name for name in modules if DEV_LABEL in outside.labels_for_module(name)]
     dev_reach = reachable_closure(dev_roots, modules, dict(edges))
     audited = frozenset(name for name in modules if spec.audits(name)) - dev_reach
     unreachable = audited - full_reach
@@ -98,7 +98,7 @@ def _symbol_findings(
     modules: dict[str, ShippedModule],
     runtime_reach: frozenset[str],
     full_reach: frozenset[str],
-    outside: _OutsideUse,
+    outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
 ) -> tuple[tuple[SymbolFinding, ...], int, int]:
@@ -119,12 +119,12 @@ def _symbol_findings(
     receivers = receiver_types(modules)
     for name in full_reach:
         tree = modules[name].tree
-        member_names |= _references(tree)
-        literal_tokens |= _string_tokens(tree)
+        member_names |= source_references(tree)
+        literal_tokens |= string_tokens(tree)
         literal_tokens |= set(assembled_reference_names(tree))
         resolved_uses |= resolved_symbol_uses(modules[name], frozenset(modules), receivers)
-        self_uses[name] = _references(tree)
-        whole_use |= _collection_uses(tree)
+        self_uses[name] = source_references(tree)
+        whole_use |= collection_uses(tree)
 
     contracts = framework_contracts(modules)
     schema_uses = (
@@ -139,7 +139,7 @@ def _symbol_findings(
     audited_reach = sorted(name for name in runtime_reach if spec.audits(name))
     for name in audited_reach:
         module = modules[name]
-        for definition in _definitions(module.tree, contracts.get(name)):
+        for definition in source_definitions(module.tree, contracts.get(name)):
             finding, data_clear, dev_clear = _definition_finding(
                 name,
                 module,
@@ -162,7 +162,7 @@ def _test_subjects(test: ShippedModule, known: frozenset[str]) -> tuple[frozense
     """Return ``(module subjects, (module, name) symbol subjects)`` a test imports from the shipped tree."""
     modules: set[str] = set()
     symbols: set[tuple[str, str]] = set()
-    for node in _walked(test.tree):
+    for node in walked(test.tree):
         if isinstance(node, ast.Import):
             modules.update(alias.name for alias in node.names if alias.name in known)
         elif isinstance(node, ast.ImportFrom):
@@ -199,7 +199,7 @@ def _support_hop_subjects(
     """
     reached_modules: set[str] = set()
     reached_symbols: set[tuple[str, str]] = set()
-    for node in _walked(test.tree):
+    for node in walked(test.tree):
         if not isinstance(node, ast.ImportFrom):
             continue
         base = resolve_relative_import(test.name, test.is_package, node.level, node.module)
@@ -255,7 +255,7 @@ def _unreachable_module_finding(
     spanned: int,
     spec: ShippedTreeSpec,
     modules: dict[str, ShippedModule],
-    outside: _OutsideUse,
+    outside: OutsideUse,
     importers: Mapping[str, frozenset[str]],
 ) -> ModuleFinding:
     """Combine the unreachable package span with all outside-use labels."""
@@ -289,7 +289,7 @@ class _SymbolUsage:
     schema_uses: frozenset[tuple[str, str]]
 
 
-def _python_reaches_definition(name: str, definition: _Definition, usage: _SymbolUsage) -> bool:
+def _python_reaches_definition(name: str, definition: Definition, usage: _SymbolUsage) -> bool:
     """Apply exact top-level references before member and enum-collection uses."""
     if (name, definition.qualname) in usage.schema_uses or (name, definition.qualname) in usage.resolved_uses:
         return True
@@ -304,7 +304,7 @@ def _python_reaches_definition(name: str, definition: _Definition, usage: _Symbo
 
 
 def _data_reaches_definition(
-    definition: _Definition,
+    definition: Definition,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
 ) -> bool:
@@ -320,10 +320,10 @@ def _data_reaches_definition(
 def _definition_finding(
     name: str,
     module: ShippedModule,
-    definition: _Definition,
+    definition: Definition,
     spec: ShippedTreeSpec,
     usage: _SymbolUsage,
-    outside: _OutsideUse,
+    outside: OutsideUse,
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
 ) -> tuple[SymbolFinding | None, int, int]:
@@ -334,7 +334,7 @@ def _definition_finding(
         return None, 1, 0
     labels = outside.labels_for_name(definition.name)
     # Tests annotate findings; only an exact development-tool reference clears.
-    if _DEV_LABEL in outside.resolved_labels(name, definition.qualname):
+    if DEV_LABEL in outside.resolved_labels(name, definition.qualname):
         return None, 0, 1
     return (
         SymbolFinding(

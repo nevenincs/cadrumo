@@ -1,11 +1,11 @@
 """No product Python downloads, installs, extracts, starts, asks or decides the state of a component.
 
-The native component engine owns the browser and the local AI: it downloads
-their pinned archives, installs and checks them, runs the local AI's program
-through the runtime manager, writes the receipts and location records, and
-decides every item's state. Python locates and uses the browser it installed.
-The local AI is reached only through the agent: no product Python calls the
-local AI server or looks for its executable.
+The desktop application owns the browser and the local AI: it downloads their
+pinned archives, installs and checks them, runs the local AI's program, writes
+the receipts and location records, and decides every item's state. Python
+locates and uses the browser the desktop installed. The local AI is reached
+only through the agent: no product Python calls the local AI server or looks
+for its executable.
 This gate reads the product's Python sources and refuses each way a Python
 module could take that work back. Every row is first shown to catch a
 representative defect in an isolated fixture, then run against the real tree.
@@ -50,41 +50,21 @@ Where each row stops:
   (``DEPENDENCY_RECEIPTS`` or the ``components/receipts`` and
   ``components/activity`` folders) and also writes, renames or removes a file.
 - Decide state. A call that builds a status row with a literal
-  ``state=DependencyState.<member>``, or any name of the removed derivation
-  (``derive_dependency_row``, ``DependencyProbeReading``, ``DependencyRegistry``,
-  ``DependencyItemProvisioner``), defined, imported or used. The one sanctioned
-  builder is the components client's answer for a build without the role,
-  which the Rust ADR's exposure rule makes every surface read as not in this
-  build. A state built from a mapping the module does not spell is not seen.
-- Setup operation. A string that is exactly a removed setup operation id
-  (``dependencies.setup``, ``dependencies.status``, ``dependencies.verify``).
-  The components role's phase codes extend the id with further segments and
-  pass.
-- Local AI request. A ``ComponentsRequest(...)`` call whose command is spelled
-  plan, setup or remove and whose items name the local AI, or a list or tuple
-  literal that spells a plan, setup or remove command line with ``--item
-  local_ai``. Only the desktop plans, sets up or removes the local AI; a status
-  or a verify may name it. A command or items held in a variable are not seen:
-  the request's own constructor refuses them when they are built.
+  ``state=DependencyState.<member>``. A state built from a mapping the module
+  does not spell is not seen.
 - Model argument. A string that is exactly ``--model`` or begins with
   ``--model=``, in any module. The person's selection is the agent's and only
   the desktop hands it to the engine, so no product Python passes a model on a
   command line. A longer option name, such as ``--model-file``, is another
   option and passes this row.
-- Components client. Outside the components adapter itself, only the registered
-  components composition module imports the client or its protocol. Absolute,
-  relative and aliased imports are resolved; dynamically constructed import
-  names remain governed by the general import-boundary gate.
 """
 
 from __future__ import annotations
 
 import ast
-import itertools
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from functools import cached_property
-from importlib.util import resolve_name
 from pathlib import Path
 from typing import Final
 
@@ -121,15 +101,7 @@ _PROGRAM_NAMES: Final = frozenset({"ollama", *_PROGRAM_FILES})
 #: The modules that read the component pins: the bytes only the engine may fetch.
 _PIN_MODULES: Final = ("cadrumo.application.browser_archive_pins",)
 _PIN_MODULE_NAMES: Final = frozenset(module.rsplit(".", 1)[1] for module in _PIN_MODULES)
-_REMOVED_OPERATIONS: Final = frozenset({"dependencies.setup", "dependencies.status", "dependencies.verify"})
 
-#: The request type that carries a command and its items to the components role.
-_REQUEST_TYPE: Final = "ComponentsRequest"
-#: The commands that plan, set up or remove what is installed; the local AI is outside them.
-_CHANGING_COMMANDS: Final = frozenset({"plan", "setup", "remove"})
-_LOCAL_AI_MEMBER: Final = "LOCAL_AI"
-_LOCAL_AI_WORD: Final = "local_ai"
-_ITEM_FLAG: Final = "--item"
 _MODEL_FLAG: Final = "--model"
 
 #: Process starters, by the module they are reached through.
@@ -158,7 +130,6 @@ _NAMED_STARTERS: Final = frozenset(
         "check_output",
         "launch_with_standard_pipes",
         "launch_worker",
-        "launch_components_role",
     }
 )
 _INSTALLER_WORDS: Final = frozenset(
@@ -187,12 +158,7 @@ _WRITE_CALLS: Final = frozenset(
     }
 )
 
-_ROW_TYPES: Final = frozenset({"DependencyStatusRow", "ComponentsRow"})
-_REMOVED_DERIVATION: Final = frozenset(
-    {"derive_dependency_row", "DependencyProbeReading", "DependencyRegistry", "DependencyItemProvisioner"}
-)
-#: The one sanctioned row builder: the answer for a build that has no components role.
-_NOT_IN_THIS_BUILD_BUILDER: Final = "cadrumo.adapters.outbound.components.client"
+_ROW_TYPE: Final = "DependencyStatusRow"
 
 
 @dataclass(frozen=True)
@@ -201,7 +167,6 @@ class Source:
 
     module: str
     tree: ast.Module
-    is_package: bool = False
 
     @cached_property
     def strings(self) -> tuple[str, ...]:
@@ -296,9 +261,9 @@ def _docstrings(tree: ast.Module) -> Iterator[ast.Constant]:
                 yield first.value
 
 
-def parse_source(module: str, text: str, *, is_package: bool = False) -> Source:
+def parse_source(module: str, text: str) -> Source:
     """Parse ``text`` as the module named ``module``."""
-    return Source(module=module, tree=ast.parse(text), is_package=is_package)
+    return Source(module=module, tree=ast.parse(text))
 
 
 # --------------------------------------------------------------------------
@@ -441,15 +406,10 @@ def _opens_for_writing(call: ast.Call) -> bool:
 
 
 def state_findings(source: Source) -> list[str]:
-    """Name a module that builds a status row with a literal state or brings back the removed derivation."""
-    findings = [
-        f"{source.module}: names the removed state derivation {name}"
-        for name in sorted(source.names & _REMOVED_DERIVATION)
-    ]
-    if source.module == _NOT_IN_THIS_BUILD_BUILDER:
-        return findings
+    """Name a module that builds a status row with a literal state."""
+    findings: list[str] = []
     for name, call in source.calls():
-        if name not in _ROW_TYPES:
+        if name != _ROW_TYPE:
             continue
         for keyword in call.keywords:
             value = keyword.value
@@ -472,94 +432,12 @@ def _defined_names(node: ast.AST) -> tuple[str, ...]:
     return tuple(target.id for target in targets if isinstance(target, ast.Name))
 
 
-def operation_findings(source: Source) -> list[str]:
-    """Name a module that spells a removed setup operation id on its own."""
-    return [
-        f"{source.module}: names the removed setup operation {identity!r}"
-        for identity in sorted({text for text in source.strings if text in _REMOVED_OPERATIONS})
-    ]
-
-
-def _command_word(node: ast.expr | None) -> str | None:
-    """Return the command a request names, spelled as a member (``ComponentsCommand.SETUP``) or a string."""
-    if isinstance(node, ast.Attribute):
-        return node.attr.lower()
-    if isinstance(node, ast.Constant) and isinstance(node.value, str):
-        return node.value.lower()
-    return None
-
-
-def _names_local_ai(node: ast.expr | None) -> bool:
-    """Whether an expression spells the local AI item, as a member or as its id."""
-    return node is not None and any(
-        (isinstance(part, ast.Attribute) and part.attr == _LOCAL_AI_MEMBER)
-        or (isinstance(part, ast.Constant) and part.value == _LOCAL_AI_WORD)
-        for part in ast.walk(node)
-    )
-
-
-def _argument(call: ast.Call, position: int, keyword: str) -> ast.expr | None:
-    if len(call.args) > position:
-        return call.args[position]
-    return next((item.value for item in call.keywords if item.arg == keyword), None)
-
-
-def _command_line_names_local_ai(words: list[str]) -> bool:
-    return _ITEM_FLAG + "=" + _LOCAL_AI_WORD in words or any(
-        flag == _ITEM_FLAG and item == _LOCAL_AI_WORD for flag, item in itertools.pairwise(words)
-    )
-
-
-def local_ai_request_findings(source: Source) -> list[str]:
-    """Name a module that asks for the local AI to be planned, set up or removed."""
-    findings = [
-        f"{source.module}:{call.lineno}: builds a {word} request naming the local AI"
-        for name, call in source.calls()
-        if name == _REQUEST_TYPE
-        and (word := _command_word(_argument(call, 0, "command"))) in _CHANGING_COMMANDS
-        and _names_local_ai(_argument(call, 1, "items"))
-    ]
-    for node in ast.walk(source.tree):
-        if not isinstance(node, ast.List | ast.Tuple):
-            continue
-        words = [item.value for item in node.elts if isinstance(item, ast.Constant) and isinstance(item.value, str)]
-        changing = sorted(set(words) & _CHANGING_COMMANDS)
-        if changing and _command_line_names_local_ai(words):
-            findings.append(f"{source.module}:{node.lineno}: spells a {changing[0]} command line naming the local AI")
-    return findings
-
-
 def model_argument_findings(source: Source) -> list[str]:
     """Name a module that spells a ``--model`` argument."""
     return [
         f"{source.module}: passes the argument {text!r}"
         for text in sorted(set(source.strings))
         if text == _MODEL_FLAG or text.startswith(_MODEL_FLAG + "=")
-    ]
-
-
-def components_client_findings(source: Source) -> list[str]:
-    """Keep the role transport behind its registered-operation composition seam."""
-    adapter = "cadrumo.adapters.outbound.components"
-    if source.module == "cadrumo.entrypoints.components_operation_composition" or source.module.startswith(
-        adapter + "."
-    ):
-        return []
-    package = source.module if source.is_package else source.module.rpartition(".")[0]
-    imports: set[str] = set()
-    for node in ast.walk(source.tree):
-        if isinstance(node, ast.Import):
-            imports.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            module = node.module or ""
-            if node.level:
-                module = resolve_name("." * node.level + module, package)
-            imports.add(module)
-            imports.update(f"{module}.{alias.name}" for alias in node.names)
-    return [
-        f"{source.module}: imports the components transport {module} outside its composition"
-        for module in sorted(imports)
-        if module in {f"{adapter}.client", f"{adapter}.protocol"}
     ]
 
 
@@ -574,10 +452,7 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
         *locate_findings(source),
         *record_findings(source),
         *state_findings(source),
-        *operation_findings(source),
-        *local_ai_request_findings(source),
         *model_argument_findings(source),
-        *components_client_findings(source),
     ]
 
 
@@ -609,9 +484,7 @@ def _module_name(path: Path) -> str:
 
 def _product_sources() -> Mapping[str, Source]:
     return {
-        _module_name(path): parse_source(
-            _module_name(path), path.read_text(encoding="utf-8"), is_package=path.name == "__init__.py"
-        )
+        _module_name(path): parse_source(_module_name(path), path.read_text(encoding="utf-8"))
         for path in _product_files()
     }
 
@@ -753,106 +626,11 @@ def test_a_module_that_decides_component_state_is_refused() -> None:
         "def row(DependencyStatusRow, DependencyState):\n"
         "    return DependencyStatusRow(item_id='browser', state=DependencyState.READY)\n",
     )
-    derivation = parse_source("fixture.derive", "def derive_dependency_row(declaration, reading):\n    pass\n")
-    probing = parse_source("fixture.probe", "from ..application.dependency_contracts import DependencyProbeReading\n")
     rendering = parse_source(
         "fixture.render", "def ready(row, DependencyState):\n    return row.state is DependencyState.READY\n"
     )
-    exempt = parse_source(
-        _NOT_IN_THIS_BUILD_BUILDER,
-        "def blocked(ComponentsRow, DependencyState):\n    return ComponentsRow(state=DependencyState.BLOCKED)\n",
-    )
     assert state_findings(deciding) == ["fixture.state:2: builds a DependencyStatusRow that decides state=READY"]
-    assert state_findings(derivation) == ["fixture.derive: names the removed state derivation derive_dependency_row"]
-    assert state_findings(probing) == ["fixture.probe: names the removed state derivation DependencyProbeReading"]
     assert state_findings(rendering) == [], "rendering a reported state decides nothing"
-    assert state_findings(exempt) == [], "a build without the role reads every item as not in this build"
-
-
-def test_a_module_that_names_a_removed_setup_operation_is_refused() -> None:
-    operation = parse_source("fixture.operation", 'DEFINITION_ID = "dependencies.setup"\n')
-    phase = parse_source("fixture.phase", 'def code(item):\n    return f"dependencies.setup.{item}.plan"\n')
-    assert operation_findings(operation) == [
-        "fixture.operation: names the removed setup operation 'dependencies.setup'"
-    ]
-    assert operation_findings(phase) == [], "a phase code names a setup step, not the operation"
-
-
-def test_a_module_that_asks_for_the_local_ai_to_be_planned_set_up_or_removed_is_refused() -> None:
-    member = parse_source(
-        "fixture.member",
-        "def ask():\n    return ComponentsRequest(ComponentsCommand.SETUP, items=(DependencyItemKind.LOCAL_AI,))\n",
-    )
-    keyword = parse_source(
-        "fixture.keyword",
-        "def ask():\n    return ComponentsRequest(command=ComponentsCommand.REMOVE, items=('local_ai',))\n",
-    )
-    line = parse_source("fixture.line", "ARGUMENTS = ['--role', 'components', 'plan', '--item', 'local_ai']\n")
-    joined = parse_source("fixture.joined", "ARGUMENTS = ('setup', '--item=local_ai')\n")
-    reading = parse_source(
-        "fixture.reading",
-        "def ask(browser):\n"
-        "    ComponentsRequest(ComponentsCommand.STATUS, items=(DependencyItemKind.LOCAL_AI,))\n"
-        "    ComponentsRequest(ComponentsCommand.VERIFY, items=('local_ai',))\n"
-        "    ComponentsRequest(ComponentsCommand.SETUP, items=(browser,))\n"
-        "    ComponentsRequest(ComponentsCommand.SETUP)\n"
-        "    return ['status', '--item', 'local_ai'], ['setup', '--item', 'browser'], ['setup', 'local_ai']\n",
-    )
-    assert local_ai_request_findings(member) == ["fixture.member:2: builds a setup request naming the local AI"]
-    assert local_ai_request_findings(keyword) == ["fixture.keyword:2: builds a remove request naming the local AI"]
-    assert local_ai_request_findings(line) == ["fixture.line:1: spells a plan command line naming the local AI"]
-    assert local_ai_request_findings(joined) == ["fixture.joined:1: spells a setup command line naming the local AI"]
-    assert local_ai_request_findings(reading) == [], (
-        "reading or checking the local AI, and setting up the browser, pass"
-    )
-
-
-@pytest.mark.parametrize(
-    "statement",
-    (
-        "import cadrumo.adapters.outbound.components.client as role",
-        "from cadrumo.adapters.outbound.components.protocol import ComponentsRequest",
-        "from ...adapters.outbound.components.client import ComponentsClient",
-        "from ...adapters.outbound.components import protocol as wire",
-    ),
-)
-def test_another_module_cannot_import_the_components_transport(statement: str) -> None:
-    source = parse_source("cadrumo.entrypoints.cli.bypass", statement)
-    assert len(components_client_findings(source)) == 1
-
-
-def test_the_components_import_gate_resolves_package_initializers() -> None:
-    source = parse_source(
-        "cadrumo.entrypoints.cli", "from ...adapters.outbound.components import client", is_package=True
-    )
-    assert components_client_findings(source) == [
-        "cadrumo.entrypoints.cli: imports the components transport "
-        "cadrumo.adapters.outbound.components.client outside its composition"
-    ]
-
-
-def test_the_components_import_gate_preserves_its_owner_and_unrelated_names() -> None:
-    assert (
-        components_client_findings(
-            parse_source(
-                "cadrumo.entrypoints.components_operation_composition",
-                "from ..adapters.outbound.components import client",
-            )
-        )
-        == []
-    )
-    assert (
-        components_client_findings(
-            parse_source("cadrumo.adapters.outbound.components.client", "from .protocol import ComponentsRequest")
-        )
-        == []
-    )
-    assert (
-        components_client_findings(
-            parse_source("fixture.unrelated", "from another.components import client\nLABEL = 'components.protocol'")
-        )
-        == []
-    )
 
 
 def test_a_module_that_passes_a_model_argument_is_refused() -> None:
@@ -874,25 +652,6 @@ def test_no_product_python_downloads_installs_extracts_spawns_asks_locates_write
     hosts = _component_hosts()
     assert len(sources) > 2000, f"the census read only {len(sources)} product modules, so it would pass by reading none"
     assert len(hosts) >= 5, f"the component host census read {hosts}"
-    assert "cadrumo.application.provisioning_browser" in sources, "the census missed the browser's locate module"
+    assert "cadrumo.application.browser_location" in sources, "the census missed the browser's locate module"
     findings = [finding for source in sources.values() for finding in provisioning_findings(source, hosts)]
     assert not findings, "\n".join(findings)
-
-
-def test_the_removed_python_provisioning_modules_are_gone() -> None:
-    removed = (
-        "src/cadrumo/application/dependency_setup_operation.py",
-        "src/cadrumo/application/dependency_transfer.py",
-        "src/cadrumo/application/dependency_network.py",
-        "src/cadrumo/application/dependency_receipts.py",
-        "src/cadrumo/application/dependency_activity.py",
-        "src/cadrumo/application/dependency_withdrawal.py",
-        "src/cadrumo/application/local_reader_setup_items.py",
-        "src/cadrumo/application/provisioning_host.py",
-        "src/cadrumo/application/provisioning_runtime.py",
-        "src/cadrumo/entrypoints/dependency_operation_composition.py",
-        "src/cadrumo/adapters/outbound/browser_runtime",
-        "src/cadrumo/adapters/outbound/model_runtime",
-    )
-    present = [path for path in removed if (REPO_ROOT / path).exists()]
-    assert not present, f"removed provisioning code came back: {present}"

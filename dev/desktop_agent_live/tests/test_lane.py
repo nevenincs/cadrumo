@@ -6,16 +6,13 @@ from pathlib import Path
 
 import pytest
 
+from ..desktop_processes import classify_desktops, person_environment
 from ..lane import (
     LANE_ATTACHMENTS,
-    classify_desktops,
     created_during,
-    lane_problems,
-    person_environment,
-    ready_lanes,
-    sign_in_failures,
     write_lane_attachments,
 )
+from ..lane_diagnostics import lane_problems, ready_lanes, sign_in_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

@@ -18,7 +18,8 @@ from cadrumo.domain.submission.models import ModeloDraftStatus
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_modelo_directory
-from ..workbook_demo import DEMO_CASES, demonstration_producer
+from ..workbook_demo import demonstration_producer
+from ..workbook_demo_cases import DEMO_CASES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

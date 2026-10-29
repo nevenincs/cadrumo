@@ -39,6 +39,20 @@ def require_bytecode_compiler(version: str) -> None:
         raise ValueError("Bytecode assembly requires compatible development Python at least as new as the runtime")
 
 
+def _reusable_bytecode(old: Path | None, expected: str | None, content: bytes) -> bytes | None:
+    if (
+        old is not None
+        and expected is not None
+        and old.is_file()
+        and not any(path.is_symlink() or path.is_junction() for path in (old, *old.parents))
+    ):
+        cached = old.read_bytes()
+        header = importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(content)
+        if cached[:16] == header and hashlib.sha256(cached).hexdigest() == expected:
+            return cached
+    return None
+
+
 def compile_packages_bytecode(
     source: Path,
     *,
@@ -63,20 +77,13 @@ def compile_packages_bytecode(
         relative = destination.relative_to(source)
         old = None if previous is None else previous / relative
         expected = (previous_files or {}).get(f"{prefix}/{relative.as_posix()}")
-        if (
-            old is not None
-            and expected is not None
-            and old.is_file()
-            and not any(path.is_symlink() or path.is_junction() for path in (old, *old.parents))
-        ):
-            cached = old.read_bytes()
-            header = importlib.util.MAGIC_NUMBER + struct.pack("<I", 3) + importlib.util.source_hash(content)
-            if cached[:16] == header and hashlib.sha256(cached).hexdigest() == expected:
-                try:
-                    os.link(old, destination)
-                except OSError:
-                    destination.write_bytes(cached)
-                return
+        cached = _reusable_bytecode(old, expected, content)
+        if cached is not None and old is not None:
+            try:
+                os.link(old, destination)
+            except OSError:
+                destination.write_bytes(cached)
+            return
         destination.write_bytes(bytecode(content, file.relative_to(source).as_posix(), prefix=prefix))
 
     # Each file's cache is decided and written on its own, and most of the work

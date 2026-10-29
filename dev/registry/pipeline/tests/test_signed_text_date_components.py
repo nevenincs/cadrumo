@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import ParsedExportFieldValue, parse_export_payload
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue
 from cadrumo.domain.calculations.registry.export_value_policy import ExportValuePolicy
 from cadrumo.domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType

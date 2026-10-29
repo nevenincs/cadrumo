@@ -44,7 +44,8 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import CommandResult, run_command
 
-from ..compile_once import INTENDED_DIFFERENCES, WITNESS_LANGUAGE, Comparison, compare, witness_build
+from ..compile_comparison import INTENDED_DIFFERENCES, Comparison, compare
+from ..compile_once import WITNESS_LANGUAGE, witness_build
 from ..i18n import SITE_ROOT_LANGUAGES
 from ._sphinx_build_harness import gate_build_concurrency, gate_build_env, gate_build_jobs
 

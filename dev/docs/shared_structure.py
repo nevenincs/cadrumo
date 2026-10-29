@@ -162,6 +162,22 @@ def compare_page(base: str, other: str) -> list[Difference]:
     ]
 
 
+def _slot_value(
+    pieces: Sequence[str], language: Sequence[tuple[int, int, str]], start: int, end: int, cursor: int
+) -> tuple[str, int]:
+    """Render one language's replacements within a slot and advance its cursor."""
+    text: list[str] = []
+    at = start
+    while cursor < len(language) and language[cursor][1] <= end and language[cursor][0] >= start:
+        piece_start, piece_end, replacement = language[cursor]
+        text.append("".join(pieces[at:piece_start]))
+        text.append(replacement)
+        at = piece_end
+        cursor += 1
+    text.append("".join(pieces[at:end]))
+    return "".join(text), cursor
+
+
 def factor_page(pages: Sequence[str]) -> list[str | tuple[str, ...]]:
     """Return one page's structure as shared text and, per slot, each language's string.
 
@@ -189,18 +205,8 @@ def factor_page(pages: Sequence[str]) -> list[str | tuple[str, ...]]:
             structure.append("".join(pieces[position:start]))
         values = ["".join(pieces[start:end])]
         for index, language in enumerate(differences):
-            text: list[str] = []
-            at = start
-            cursor = cursors[index]
-            while cursor < len(language) and language[cursor][1] <= end and language[cursor][0] >= start:
-                piece_start, piece_end, replacement = language[cursor]
-                text.append("".join(pieces[at:piece_start]))
-                text.append(replacement)
-                at = piece_end
-                cursor += 1
-            cursors[index] = cursor
-            text.append("".join(pieces[at:end]))
-            values.append("".join(text))
+            value, cursors[index] = _slot_value(pieces, language, start, end, cursors[index])
+            values.append(value)
         structure.append(tuple(values))
         position = end
     if position < len(pieces):

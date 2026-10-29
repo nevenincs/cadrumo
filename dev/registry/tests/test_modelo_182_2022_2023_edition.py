@@ -18,7 +18,8 @@ from functools import cache
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.temporal import revision_temporal_resolution, select_revision
 

@@ -60,7 +60,7 @@ from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
-from cadrumo.entrypoints.adapter_composition import build_borrador_100_snapshot_repository
+from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
 from cadrumo.tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.contracts.access_vocabulary import (

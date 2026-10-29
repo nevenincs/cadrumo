@@ -296,7 +296,7 @@ def _patch_function_aliases[**P, R](
 
 
 def _observe_functions(patch: pytest.MonkeyPatch, recorder: RuntimeBenchmarkRecorder) -> None:
-    from cadrumo.application.modelo.calculation_actions import (
+    from cadrumo.application.modelo.calculation_bucket_actions import (
         calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
     )
     from cadrumo.application.modelo.export import export_modelo_revision

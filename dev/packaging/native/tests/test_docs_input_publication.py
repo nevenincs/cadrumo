@@ -10,7 +10,7 @@ import pytest
 from .. import docs_build
 from ..action_cache import current, fingerprint
 from ..build_log import display_path
-from ..docs_stage import DocsPackagingError
+from ..docs_errors import DocsPackagingError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

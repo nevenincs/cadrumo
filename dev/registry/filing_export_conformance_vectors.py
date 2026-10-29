@@ -32,7 +32,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import validating_
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.filing.protocols import ModeloInputs
 from cadrumo.domain.filing.schema import ModeloDraft
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.protocols import InvoiceCatalogueRepositoryProtocol
 from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol

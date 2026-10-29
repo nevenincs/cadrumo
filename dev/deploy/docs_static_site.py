@@ -15,13 +15,13 @@ from dev.deploy.docs_delivery_settings import configure_delivery, prepare_storag
 from .docs_delivery_activation import _activate_existing, _provision, _publish, _rollback
 from .docs_delivery_contracts import DOCS_ZONE
 from .docs_delivery_policy import _delivery_credentials, _require_local_session
-from .docs_site_build import _build_site_roots
+from .docs_site_build import build_site_roots
 from .docs_site_commands import _repo_root
 from .docs_site_languages import localized_languages
 from .docs_site_preflight import _validate_built_site
 
 
-def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = _build_site_roots) -> int:
+def _dry_run(repo_root: Path, *, build: Callable[[Path], Path] = build_site_roots) -> int:
     """Build every site root and validate it exactly as a publish would, uploading nothing.
 
     Without this verb the whole build-and-validate prefix was reachable only

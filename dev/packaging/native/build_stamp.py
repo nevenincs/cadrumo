@@ -29,7 +29,7 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from dev._paths import REPO_ROOT
 
@@ -220,6 +220,29 @@ def _stamp(entry: dict[str, str | int]) -> BuildStamp:
     return _validate(BuildStamp(str(entry["build_id"]), int(entry["build_sequence"]), str(entry["build_date"])))
 
 
+def _allocate_record(
+    registry: _Registry, directory: Path, content: str, freeze: Freeze, now: datetime | None
+) -> dict[str, str | int]:
+    built = _build_date(freeze.date, now)
+    day = built[:10].replace("-", "")
+    iteration = registry.iteration + 1 if registry.day == day else 1
+    sequence = registry.sequence + 1
+    if sequence > SEQUENCE_LIMIT:
+        if freeze.number is None:
+            raise ValueError(
+                f"The build sequence of {directory} reached {SEQUENCE_LIMIT}, the Windows FILEVERSION limit; "
+                "configure with -DCADRUMO_BUILD_NUMBER=<n> or build in a new binary directory"
+            )
+        sequence = SEQUENCE_LIMIT
+    registry.day, registry.iteration, registry.sequence = day, iteration, sequence
+    return {
+        "fingerprint": content,
+        "build_id": f"{day}{iteration:02d}",
+        "build_sequence": sequence,
+        "build_date": built,
+    }
+
+
 def allocate(
     directory: Path, key: str, content: str, *, freeze: Freeze | None = None, now: datetime | None = None
 ) -> BuildStamp:
@@ -240,24 +263,7 @@ def allocate(
         history = registry.identities.setdefault(key, [])
         recorded = next((entry for entry in history if entry["fingerprint"] == content), None)
         if recorded is None:
-            built = _build_date(freeze.date, now)
-            day = built[:10].replace("-", "")
-            iteration = registry.iteration + 1 if registry.day == day else 1
-            sequence = registry.sequence + 1
-            if sequence > SEQUENCE_LIMIT:
-                if freeze.number is None:
-                    raise ValueError(
-                        f"The build sequence of {directory} reached {SEQUENCE_LIMIT}, the Windows FILEVERSION limit; "
-                        "configure with -DCADRUMO_BUILD_NUMBER=<n> or build in a new binary directory"
-                    )
-                sequence = SEQUENCE_LIMIT
-            registry.day, registry.iteration, registry.sequence = day, iteration, sequence
-            recorded = {
-                "fingerprint": content,
-                "build_id": f"{day}{iteration:02d}",
-                "build_sequence": sequence,
-                "build_date": built,
-            }
+            recorded = _allocate_record(registry, directory, content, freeze, now)
         else:
             history.remove(recorded)
         # Most recently used last; the oldest fingerprints fall out of the history.
@@ -394,6 +400,13 @@ def read_record(build: Path, component: str) -> dict[str, Any] | None:
     return document if _is_record(document, component) else None
 
 
+def _valid_staged(staged: object) -> bool:
+    return isinstance(staged, dict) and all(
+        isinstance(entry, dict) and isinstance(cast(dict[str, object], entry).get("artifacts"), dict)
+        for entry in cast(dict[object, object], staged).values()
+    )
+
+
 def _is_record(document: object, component: str) -> bool:
     if not isinstance(document, dict) or document.get("schema") != RECORD_SCHEMA:
         return False
@@ -404,8 +417,7 @@ def _is_record(document: object, component: str) -> bool:
         and isinstance(document.get("fingerprint"), str)
         and _FINGERPRINT.fullmatch(document["fingerprint"]) is not None
         and isinstance(document.get("inputs"), str)
-        and isinstance(staged, dict)
-        and all(isinstance(entry, dict) and isinstance(entry.get("artifacts"), dict) for entry in staged.values())
+        and _valid_staged(staged)
     )
 
 

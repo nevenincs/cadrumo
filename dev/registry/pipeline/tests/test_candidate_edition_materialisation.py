@@ -23,7 +23,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from ...compiler.edition_materialisation import materialise_edition
 from ...compiler.loader import load_modelo_directory
 from ..candidate_staging import stage_generated_export_candidate
-from ..cli import supporting_modelos
+from ..published_edition_staging import supporting_modelos
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

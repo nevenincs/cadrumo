@@ -7,7 +7,8 @@ import pytest
 
 from cadrumo.application.storage.calc_sheets.records import TabName
 
-from ..workbook_demo import DemoCase, build_demonstration_plan
+from ..workbook_demo import build_demonstration_plan
+from ..workbook_demo_cases import DemoCase
 from ..workbook_demo_intracommunity import intracommunity_records, intracommunity_summary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]

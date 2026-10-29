@@ -457,24 +457,18 @@ def _meta_for(
         **{summary_meta_key(language): _summary_for(record, language) for language in languages},
     }
     md = record.metadata
-    if md.concept_id is not None and md.concept_id:
-        meta["concept_id"] = md.concept_id
-    if md.domain is not None and md.domain:
-        meta["domain"] = md.domain
-    if md.modelo is not None and md.modelo:
-        meta["modelo"] = md.modelo
-    if record.kind.value == "casilla" and (md.casilla_id is not None and md.casilla_id):
-        meta["casilla_id"] = md.casilla_id
-    if md.number is not None and md.number:
-        meta["number"] = md.number
-    if md.segmento is not None and md.segmento:
-        # The casilla card crumb: a segmented modelo (M200 ``DP200014:00562``)
-        # shows its segmento beside the modelo/number so the operator can tell
-        # sibling casillas apart at a glance. Grounding (legal/source refs) stays
-        # off the index meta and renders at the destination (D6).
-        meta["segmento"] = md.segmento
-    if md.command_path is not None and md.command_path:
-        meta["command_path"] = md.command_path
+    optional = {
+        "concept_id": md.concept_id,
+        "domain": md.domain,
+        "modelo": md.modelo,
+        "casilla_id": md.casilla_id if record.kind.value == "casilla" else None,
+        "number": md.number,
+        # A segmented modelo's card shows its segmento beside the number;
+        # legal/source grounding remains at the destination.
+        "segmento": md.segmento,
+        "command_path": md.command_path,
+    }
+    meta.update({key: value for key, value in optional.items() if value is not None and value})
     return meta
 
 

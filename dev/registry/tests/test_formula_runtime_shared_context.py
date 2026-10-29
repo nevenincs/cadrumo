@@ -26,14 +26,15 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.casilla_id import CasillaId
-from cadrumo.domain.calculations.registry.formula_runtime import (
+from cadrumo.domain.calculations.registry.formula_expression import (
     SPECIALIZED_EXPRESSION_EVALUATORS,
     EvalContext,
     evaluate_expression,
     evaluate_with_context,
 )
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

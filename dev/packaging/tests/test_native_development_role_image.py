@@ -8,7 +8,8 @@ import pytest
 
 from cadrumo.core.storage_environment import DEVELOPMENT_ROLE_IMAGE_VARIABLE
 from dev._paths import REPO_ROOT
-from dev.packaging.native.application_environment import DECLARATION, ApplicationEnvironmentError, load, parse
+from dev.packaging.native.application_environment import load, parse
+from dev.packaging.native.environment_declaration_primitives import DECLARATION, ApplicationEnvironmentError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

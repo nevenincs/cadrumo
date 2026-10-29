@@ -6,10 +6,8 @@ from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation
 from typing import Any, cast
 
-from cadrumo.domain.calculations.registry.export_parse import (
-    ParsedExportPayload,
-    parse_export_payload,
-)
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
+from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportPayload
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
 from .cli_contracts import ExportValidationEvidence, RetencionesInstalledCliError

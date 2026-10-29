@@ -30,11 +30,8 @@ import pytest
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    ModeloApplicabilityRule,
-    resolve_applicability_rule_from_authority,
-)
+from cadrumo.domain.calculations.registry.applicability import resolve_applicability_rule_from_authority
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict, ModeloApplicabilityRule
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile

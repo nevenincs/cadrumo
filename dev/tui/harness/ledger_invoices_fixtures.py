@@ -19,10 +19,11 @@ from textual.widgets import Input, Select
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
+from cadrumo.entrypoints.tui.ledger.invoice_detail import LedgerInvoiceDetailScreen
 from cadrumo.entrypoints.tui.ledger.invoices_import import LedgerInvoiceImportScreen
 from cadrumo.entrypoints.tui.ledger.invoices_wizard import LedgerInvoiceWizardScreen
 from cadrumo.entrypoints.tui.ledger.models import LedgerRecordDoorsV1
-from cadrumo.entrypoints.tui.ledger.record_views import LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen
+from cadrumo.entrypoints.tui.ledger.record_views import LedgerInvoiceCatalogueScreen
 from cadrumo.entrypoints.tui.ledger.tests.invoices_fixtures import (
     SYNTHETIC_SOURCE_PATH,
     MemoryInvoiceImportDoor,
@@ -63,7 +64,7 @@ class InvoicesFixtureState(StrEnum):
 
 _INTERFACES = {
     "catalogue": "cadrumo.entrypoints.tui.ledger.record_views.LedgerInvoiceCatalogueScreen",
-    "invoice": "cadrumo.entrypoints.tui.ledger.record_views.LedgerInvoiceDetailScreen",
+    "invoice": "cadrumo.entrypoints.tui.ledger.invoice_detail.LedgerInvoiceDetailScreen",
     "transaction": "cadrumo.entrypoints.tui.ledger.transaction_views.LedgerTransactionDetailScreen",
     "import": "cadrumo.entrypoints.tui.ledger.invoices_import.LedgerInvoiceImportScreen",
     "wizard": "cadrumo.entrypoints.tui.ledger.invoices_wizard.LedgerInvoiceWizardScreen",

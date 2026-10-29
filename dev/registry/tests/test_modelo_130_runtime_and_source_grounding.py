@@ -16,7 +16,8 @@ from cadrumo.domain.calculations.registry.bindings import CasillaObservation, Re
 from cadrumo.domain.calculations.registry.bindings_previous_filing import resolve_previous_filing_binding_values
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation

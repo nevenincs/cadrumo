@@ -74,17 +74,21 @@ def _collect_dynamic_alias_node(node: ast.AST, aliases: DynamicAliases) -> None:
 def _collect_dynamic_import_aliases(node: ast.Import, aliases: DynamicAliases) -> None:
     """Collect dynamic import aliases."""
     for alias in node.names:
-        local = alias.asname or alias.name.split(".", 1)[0]
-        if alias.name == "importlib":
-            aliases.importlib_names.add(local)
-        elif alias.name == "importlib.import_module" and (alias.asname is not None and alias.asname):
-            aliases.import_module_names.add(local)
-        elif alias.name == "builtins":
-            aliases.raw_import_names.add(f"{local}.__import__")
-        elif alias.name == "builtins.__import__" and (alias.asname is not None and alias.asname):
-            aliases.raw_import_names.add(local)
-        elif alias.name == "runpy":
-            aliases.runpy_names.add(local)
+        _collect_dynamic_import_alias(alias, aliases)
+
+
+def _collect_dynamic_import_alias(alias: ast.alias, aliases: DynamicAliases) -> None:
+    local = alias.asname or alias.name.split(".", 1)[0]
+    if alias.name == "importlib":
+        aliases.importlib_names.add(local)
+    elif alias.name == "importlib.import_module" and _has_alias(alias):
+        aliases.import_module_names.add(local)
+    elif alias.name == "builtins":
+        aliases.raw_import_names.add(f"{local}.__import__")
+    elif alias.name == "builtins.__import__" and _has_alias(alias):
+        aliases.raw_import_names.add(local)
+    elif alias.name == "runpy":
+        aliases.runpy_names.add(local)
 
 
 def _collect_dynamic_from_aliases(node: ast.ImportFrom, aliases: DynamicAliases) -> None:
@@ -124,6 +128,10 @@ def _collect_dynamic_local_alias(local: str, qualified: str | None, value: ast.A
         aliases.runpy_names.add(local)
     if qualified == "builtins":
         aliases.raw_import_names.add(f"{local}.__import__")
+    _collect_dynamic_loader_alias(local, qualified, value, aliases)
+
+
+def _collect_dynamic_loader_alias(local: str, qualified: str | None, value: ast.AST, aliases: DynamicAliases) -> None:
     if qualified in aliases.import_module_names or _is_module_attribute(
         value, "import_module", aliases.importlib_names
     ):
@@ -132,3 +140,7 @@ def _collect_dynamic_local_alias(local: str, qualified: str | None, value: ast.A
         aliases.run_module_names.add(local)
     if qualified in aliases.raw_import_names:
         aliases.raw_import_names.add(local)
+
+
+def _has_alias(alias: ast.alias) -> bool:
+    return alias.asname is not None and bool(alias.asname)

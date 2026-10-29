@@ -16,7 +16,8 @@ from .common import load_toml, relative, revision_table, rows
 from .models import RawInventory, SignalInputs, SupportScope
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+    from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
     from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
 

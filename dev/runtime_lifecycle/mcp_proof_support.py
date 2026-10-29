@@ -9,7 +9,7 @@ from collections.abc import AsyncGenerator, Callable, Mapping, Sequence
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, TextIO
+from typing import Any, TextIO, cast
 
 import anyio
 from anyio.abc import ObjectReceiveStream, ObjectSendStream
@@ -159,13 +159,7 @@ async def ask_and_decide(
             candidates = inventory.get("candidates")
             if not isinstance(candidates, list):
                 raise AcceptanceError("runtime attendance inventory has no candidate list")
-            owned = [
-                item
-                for item in candidates
-                if isinstance(item, dict)
-                and type(item.get("process_id")) is int
-                and verified_relay(item["process_id"], session.relay_image, session.invocation)
-            ]
+            owned = _owned_relay_candidates(cast(list[object], candidates), session)
             require(len(owned) <= 1, "multiple owned relays ask on one proof connection")
             if owned:
                 ask = owned[0]
@@ -195,6 +189,19 @@ async def ask_and_decide(
             call.cancel()
             with suppress(asyncio.CancelledError):
                 await call
+
+
+def _owned_relay_candidates(candidates: list[object], session: McpSession) -> list[dict[str, object]]:
+    """Select asks belonging to the verified relay for this connection."""
+    owned: list[dict[str, object]] = []
+    for candidate in candidates:
+        if not isinstance(candidate, dict):
+            continue
+        item = cast(dict[str, object], candidate)
+        process_id = item.get("process_id")
+        if type(process_id) is int and verified_relay(process_id, session.relay_image, session.invocation):
+            owned.append(item)
+    return owned
 
 
 async def observe(session: McpSession, operation_id: str) -> dict[str, Any]:

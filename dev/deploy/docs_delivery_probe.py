@@ -12,8 +12,8 @@ from urllib.parse import urljoin, urlsplit
 from cadrumo.core.external_constants import OutputLanguage
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
+    cloudflare_call,
 )
-from dev.deploy.cloudflare_api import _call as cloudflare_call
 from dev.deploy.docs_asset_delivery import (
     CANDIDATE_SCRIPT,
 )

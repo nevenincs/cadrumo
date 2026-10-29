@@ -63,7 +63,8 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     CandidateFactAuthority,
     validating_governed_facts,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from .loader_cache import registry_disk_cache_max_entries
 

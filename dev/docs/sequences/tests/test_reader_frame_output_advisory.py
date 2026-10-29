@@ -267,8 +267,8 @@ def _readiness_transcript(
         envelope["error"] = {
             "code": "REFUSED_LOCAL_RUNTIME",
             "category": "REFUSED",
-            "context": {"reason": "runtime_deadline_exceeded"},
-            "message": "runtime_deadline_exceeded",
+            "context": {"reason": "runtime_timeout"},
+            "message": "runtime_timeout",
             "retryable": False,
             "action": None,
             "runbook_id": None,

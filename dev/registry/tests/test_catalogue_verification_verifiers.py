@@ -15,8 +15,8 @@ from cadrumo.core.config import Settings
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.citation_blocklist import find_known_bad
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier, SourceCitation
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import (
     LegalReference,
     LegalReferenceKind,

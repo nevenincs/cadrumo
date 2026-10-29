@@ -13,8 +13,8 @@ from typing import Any
 import pytest
 
 from ...command_execution import run_command
-from .. import cmake_build
-from ..cmake_build import run_configured_command
+from .. import cargo_command
+from ..cargo_command import run_configured_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -147,7 +147,7 @@ def test_failed_cargo_action_keeps_identity_unpublished_and_retry_rebuilds(
             status, failed = 1, True
         return SimpleNamespace(returncode=status, stdout="", stderr="")
 
-    monkeypatch.setattr(cmake_build, "run_command", command)
+    monkeypatch.setattr(cargo_command, "run_command", command)
     argv = [str(tmp_path / "cargo.exe"), "build"]
     assert run_configured_command(tmp_path, {}, argv).returncode == 1
     assert not list(generated.glob("rust-toolchain-*.txt"))
@@ -241,7 +241,7 @@ def test_linked_native_root_is_refused_before_clean_without_sibling_damage(
     def unexpected_command(*args: object, **kwargs: object) -> Any:
         raise AssertionError("Linked target root must be refused before any Cargo command")
 
-    monkeypatch.setattr(cmake_build, "run_command", unexpected_command)
+    monkeypatch.setattr(cargo_command, "run_command", unexpected_command)
     with pytest.raises(ValueError, match="Linked CMake output directory"):
         run_configured_command(build, {}, [str(tmp_path / "cargo.exe"), "build"])
     assert sentinel.read_bytes() == b"retain desktop"

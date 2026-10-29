@@ -60,7 +60,7 @@ from cadrumo.domain.calculations.registry.binding_provider_registration import (
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
 from cadrumo.domain.calculations.registry.binding_targets import binding_consumers, revision_bindings_by_id
 from cadrumo.domain.calculations.registry.binding_temporal import BindingApplicabilityKind
-from cadrumo.domain.calculations.registry.ledger_iva_bindings import deducible_deduction_kind_overlaps
+from cadrumo.domain.calculations.registry.ledger_iva_screen_bindings import deducible_deduction_kind_overlaps
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 

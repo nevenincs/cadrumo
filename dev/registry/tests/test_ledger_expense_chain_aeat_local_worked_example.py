@@ -54,10 +54,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.aggregation.renta_ledger import (
-    RentaLedgerAggregationIssueReason,
-    aggregate_renta_ledger_expenses,
-)
+from cadrumo.application.aggregation.renta_ledger import aggregate_renta_ledger_expenses
+from cadrumo.application.aggregation.renta_ledger_models import RentaLedgerAggregationIssueReason
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -67,7 +65,7 @@ from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.categories.spending_category import SpendingCategory
-from cadrumo.domain.invoices.models import InvoiceCatalogue
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

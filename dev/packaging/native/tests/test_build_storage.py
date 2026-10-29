@@ -14,8 +14,8 @@ from cadrumo.core.storage_environment import tool_storage_environment
 from dev._paths import REPO_ROOT
 
 from ...command_execution import run_command
-from ..assemble import installed_distributions
-from ..cmake_build import _sync_base_dependencies
+from ..assembly_identity import installed_distributions
+from ..base_dependencies import sync_base_dependencies
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -46,19 +46,19 @@ def test_base_closure_refresh_preserves_unchanged_and_other_owners(tmp_path: Pat
     (source / "obsolete.py").write_text("old", encoding="utf-8")
     product = tmp_path / "product"
     product.mkdir()
-    _sync_base_dependencies(source, product)
+    sync_base_dependencies(source, product)
     installed = product / "dependencies/kept.py"
     stamp = installed.stat().st_mtime_ns
     (product / "dependencies/app.py").write_text("separately owned", encoding="utf-8")
     (source / "obsolete.py").unlink()
     (source / "new.py").write_text("new", encoding="utf-8")
-    _sync_base_dependencies(source, product)
+    sync_base_dependencies(source, product)
     assert installed.stat().st_mtime_ns == stamp
     assert not (product / "dependencies/obsolete.py").exists()
     assert (product / "dependencies/new.py").read_text(encoding="utf-8") == "new"
     assert (product / "dependencies/app.py").read_text(encoding="utf-8") == "separately owned"
     installed.write_text("tampered", encoding="utf-8")
-    _sync_base_dependencies(source, product)
+    sync_base_dependencies(source, product)
     assert installed.read_text(encoding="utf-8") == "original"
 
 
@@ -108,7 +108,7 @@ def test_replacing_a_distribution_leaves_no_stale_metadata_directory(tmp_path: P
     for version in ("1.0", "2.0"):
         base = tmp_path / f"base-{version}"
         _install(_licensed_wheel(tmp_path / "wheels", version), base)
-        _sync_base_dependencies(base, product)
+        sync_base_dependencies(base, product)
     dependencies = product / "dependencies"
     assert sorted(path.name for path in dependencies.glob("*.dist-info")) == ["sample-2.0.dist-info"]
     assert not any("1.0" in path.as_posix() for path in dependencies.rglob("*"))
@@ -131,10 +131,10 @@ def test_base_closure_refuses_tampered_obsolete_members(tmp_path: Path) -> None:
     (source / "obsolete.py").write_text("owned", encoding="utf-8")
     product = tmp_path / "product"
     product.mkdir()
-    _sync_base_dependencies(source, product)
+    sync_base_dependencies(source, product)
     receipt = (product / "base-dependencies.json").read_bytes()
     (source / "obsolete.py").unlink()
     (product / "dependencies/obsolete.py").write_text("unexpected", encoding="utf-8")
     with pytest.raises(ValueError, match="Obsolete base dependency changed"):
-        _sync_base_dependencies(source, product)
+        sync_base_dependencies(source, product)
     assert (product / "base-dependencies.json").read_bytes() == receipt

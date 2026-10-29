@@ -152,14 +152,7 @@ def _rewrite_operation_fields(lines: list[str], span: tuple[int, int], replaceme
         if match is None or match.group(2) not in updates:
             continue
         key = match.group(2)
-        original_value = match.group(4)
-        comment = _line_comment_suffix(original_value)
-        newline = match.group(5) or ""
-        lines[index] = (
-            f"{match.group(1)}{key}{match.group(3)}"
-            f"{_edition_delta_toml_writer.toml_value(updates[key])}"
-            f"{(' ' if comment and not comment.startswith(' ') else '')}{comment}{newline}"
-        )
+        lines[index] = _rewritten_assignment(match, updates[key])
         found.add(key)
     missing = [key for key in updates if key not in found]
     if missing:
@@ -168,6 +161,17 @@ def _rewrite_operation_fields(lines: list[str], span: tuple[int, int], replaceme
             insertion -= 1
         new_lines = [f"{key} = {_edition_delta_toml_writer.toml_value(updates[key])}\n" for key in missing]
         lines[insertion:insertion] = new_lines
+
+
+def _rewritten_assignment(match: re.Match[str], value: object) -> str:
+    original_value = match.group(4)
+    comment = _line_comment_suffix(original_value)
+    newline = match.group(5) or ""
+    return (
+        f"{match.group(1)}{match.group(2)}{match.group(3)}"
+        f"{_edition_delta_toml_writer.toml_value(value)}"
+        f"{(' ' if comment and not comment.startswith(' ') else '')}{comment}{newline}"
+    )
 
 
 def _replace_authored_overrides(text: str, work: _edition_delta_source._EditionWork) -> str:
@@ -182,15 +186,7 @@ def _replace_authored_overrides(text: str, work: _edition_delta_source._EditionW
         raise _edition_delta_errors.MigrationRefusedError(
             f"{work.source.revision_id}: expected {len(authored)} authored casilla override blocks, found {len(spans)}"
         )
-    indexed: list[tuple[int, Mapping[str, object]]] = []
-    for replacement in replacements:
-        selector = replacement.get("selector")
-        matching = [index for index, operation in enumerate(authored) if operation.get("selector") == selector]
-        if len(matching) != 1:
-            raise _edition_delta_errors.MigrationRefusedError(
-                f"{work.source.revision_id}: cannot locate exactly one authored override for selector {selector!r}"
-            )
-        indexed.append((matching[0], replacement))
+    indexed = _indexed_override_replacements(replacements, authored, work.source.revision_id)
     for operation_index, replacement in sorted(indexed, key=lambda item: spans[item[0]][0], reverse=True):
         _rewrite_operation_fields(
             lines,
@@ -209,6 +205,23 @@ def _replace_authored_overrides(text: str, work: _edition_delta_source._EditionW
                 f"{work.source.revision_id}: rewriting authored override {selector!r} changed its parsed operation"
             )
     return rewritten
+
+
+def _indexed_override_replacements(
+    replacements: Sequence[Mapping[str, object]],
+    authored: Sequence[Mapping[str, object]],
+    revision_id: str,
+) -> list[tuple[int, Mapping[str, object]]]:
+    indexed: list[tuple[int, Mapping[str, object]]] = []
+    for replacement in replacements:
+        selector = replacement.get("selector")
+        matching = [index for index, operation in enumerate(authored) if operation.get("selector") == selector]
+        if len(matching) != 1:
+            raise _edition_delta_errors.MigrationRefusedError(
+                f"{revision_id}: cannot locate exactly one authored override for selector {selector!r}"
+            )
+        indexed.append((matching[0], replacement))
+    return indexed
 
 
 def _append_lineage_attestations(text: str, attestations: Sequence[LineageAttestation]) -> str:

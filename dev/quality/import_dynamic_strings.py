@@ -206,9 +206,14 @@ def _statement_imports(node: ast.AST, lineno: int) -> Iterator[StringImport]:
     elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module is not None:
         for alias in node.names:
             yield from _reportable(node.module, (alias.name,), lineno)
-    elif (
-        isinstance(node, ast.Call)
-        and qualified_name(node.func) in _PAYLOAD_LOADERS
+    elif isinstance(node, ast.Call):
+        yield from _payload_loader_imports(node, lineno)
+
+
+def _payload_loader_imports(node: ast.Call, lineno: int) -> Iterator[StringImport]:
+    """Yield a supported dynamic loader's literal target within an interpreter payload."""
+    if (
+        qualified_name(node.func) in _PAYLOAD_LOADERS
         and node.args
         and isinstance(node.args[0], ast.Constant)
         and isinstance(node.args[0].value, str)

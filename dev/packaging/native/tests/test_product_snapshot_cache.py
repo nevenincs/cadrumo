@@ -11,7 +11,7 @@ import pytest
 from dev.source_tree import content_digest
 
 from ..hashing import digest_cache, transformed_digest
-from ..product import _source_digest
+from ..product_snapshot import _source_digest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

@@ -121,6 +121,11 @@ def unprovable_review_refusal(result: Mapping[str, Any]) -> ModelRunRefusalCode 
         return None
     if verdict.get("failed_condition_id") != LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value:
         return None
+    return _unprovable_evidence(verdict)
+
+
+def _unprovable_evidence(verdict: Mapping[str, Any]) -> ModelRunRefusalCode | None:
+    """Select only an explicitly allowed model-run refusal from evidence."""
     for evidence in verdict.get("evidence") or ():
         values = evidence.get("values") if isinstance(evidence, dict) else None
         refusal = values.get("model_run_refusal") if isinstance(values, dict) else None
@@ -298,10 +303,7 @@ async def _reject_then_apply(
     require(len(after_apply) == len(rows), f"rows changed on apply: {len(rows)} -> {len(after_apply)}")
     applied_row = _row(after_apply, transaction_id)
     require(applied_row != before, "the applied review left the row as it was")
-    classification = stored.get("business_classification")
-    if not isinstance(classification, str) or not classification:
-        raise AcceptanceError(f"no classification was stored: {stored}")
-    require(classification in json.dumps(applied_row), f"the command line reads another classification: {applied_row}")
+    _require_stored_classification(stored, applied_row)
     applied_history = _history(programs, environment, profile, transaction_id)
     _one_more_event(rejected_history, applied_history, _CLASSIFIED, "apply")
 
@@ -320,6 +322,14 @@ async def _reject_then_apply(
         second_answer_refused=True,
         rows=len(after_apply),
     )
+
+
+def _require_stored_classification(stored: Mapping[str, object], applied_row: Mapping[str, object]) -> None:
+    """Check that the command-line row contains the stored classification."""
+    classification = stored.get("business_classification")
+    if not isinstance(classification, str) or not classification:
+        raise AcceptanceError(f"no classification was stored: {stored}")
+    require(classification in json.dumps(applied_row), f"the command line reads another classification: {applied_row}")
 
 
 async def run(programs: Programs, package: Path | None, scratch: Path) -> Receipt:

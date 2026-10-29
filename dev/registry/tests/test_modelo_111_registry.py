@@ -7,7 +7,8 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority

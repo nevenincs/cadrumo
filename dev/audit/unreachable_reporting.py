@@ -8,25 +8,25 @@ from .unreachable_models import (
     Confidence,
     ModuleFinding,
     ModuleReach,
+    ReachabilityFinding,
     SymbolFinding,
     TestFinding,
     UnreachableCodeOutcome,
     UnreachableCodeResult,
-    _Finding,
 )
-from .unreachable_policy import _FINDING_CAP
+from .unreachable_policy import FINDING_CAP
 
 # ---------------------------------------------------------------------------
 # Rendering
 # ---------------------------------------------------------------------------
 
 
-def _console_finding_sections(result: UnreachableCodeResult) -> list[tuple[str, tuple[_Finding, ...]]]:
+def _console_finding_sections(result: UnreachableCodeResult) -> list[tuple[str, tuple[ReachabilityFinding, ...]]]:
     """Console finding sections."""
     unreachable = tuple(f for f in result.modules if f.reach is ModuleReach.UNREACHABLE)
     exec_only = tuple(f for f in result.modules if f.reach is ModuleReach.MODULE_EXEC_ONLY)
     type_only = tuple(f for f in result.modules if f.reach is ModuleReach.TYPE_ONLY)
-    sections: list[tuple[str, tuple[_Finding, ...]]] = [
+    sections: list[tuple[str, tuple[ReachabilityFinding, ...]]] = [
         (f"modules unreachable from the entrypoints ({result.unreachable_module_total} modules) [exact]", unreachable),
         (
             f"modules only a `python -m` surface reaches, never a console script ({len(exec_only)}) [exact]",
@@ -75,7 +75,7 @@ def _capped[T](items: tuple[T, ...], *, full: bool, cap: int) -> tuple[tuple[T, 
     return shown, len(items) - len(shown)
 
 
-def render_console_report(result: UnreachableCodeResult, *, full: bool = False, cap: int = _FINDING_CAP) -> str:
+def render_console_report(result: UnreachableCodeResult, *, full: bool = False, cap: int = FINDING_CAP) -> str:
     """Render the operator-facing console report for `just report-product-reachability`."""
     out = [f"unreachable code: {result.headline()}"]
     if result.outcome is UnreachableCodeOutcome.ERROR:
@@ -92,6 +92,11 @@ def render_console_report(result: UnreachableCodeResult, *, full: bool = False, 
     if any(finding.confidence is not Confidence.EXACT for finding in result.symbols + result.tests):
         out.append("  name-match tiers are heuristic candidates; framework or dynamic use may require confirmation")
 
+    _append_finding_sections(out, result, full, cap)
+    return "\n".join(out)
+
+
+def _append_finding_sections(out: list[str], result: UnreachableCodeResult, full: bool, cap: int) -> None:
     sections = _console_finding_sections(result)
     for title, findings in sections:
         if not findings:
@@ -102,10 +107,9 @@ def render_console_report(result: UnreachableCodeResult, *, full: bool = False, 
             out.append(f"    {_render_finding(finding)}")
         if hidden:
             out.append(f"    ... {hidden} more (--full for all)")
-    return "\n".join(out)
 
 
-def _render_finding(finding: _Finding) -> str:
+def _render_finding(finding: ReachabilityFinding) -> str:
     if isinstance(finding, ModuleFinding):
         label = "package" if finding.is_package else "module"
         span = f"  ({finding.spanned_modules} modules)" if finding.spanned_modules > 1 else ""

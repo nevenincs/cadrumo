@@ -6,7 +6,7 @@ import argparse
 import json
 from collections.abc import Mapping
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from dev._paths import REPO_ROOT
 
@@ -22,7 +22,11 @@ _FIELDS = {"target", "floor", "admitted_image", "proof", "proof_sha256", "provid
 def _floor(target: str, root: Path) -> dict[str, str]:
     policy = target_platform(target)
     pin = toolchain_for_target(target, root=root).get("cpp_abi_floor")
-    if policy.sys_platform != "linux" or not isinstance(pin, dict) or set(pin) != {"floor", "image"}:
+    if (
+        policy.sys_platform != "linux"
+        or not isinstance(pin, dict)
+        or set(cast(dict[str, object], pin)) != {"floor", "image"}
+    ):
         raise ValueError("Linux C++ ABI verification requires separately admitted target-floor pins")
     if pin["floor"] != policy.floor or not isinstance(pin["image"], str):
         raise ValueError("Linux C++ ABI floor pin differs from the canonical target")
@@ -47,6 +51,33 @@ def linux_cpp_abi_inputs(target: str, proof: Path, *, root: Path = REPO_ROOT) ->
     }
 
 
+def _require_floor_match(selection: Mapping[str, object], target: str, pin: Mapping[str, str]) -> None:
+    if (
+        selection["target"] != target
+        or selection["floor"] != pin["floor"]
+        or selection["admitted_image"] != pin["image"]
+    ):
+        raise ValueError("Configured Linux C++ ABI target-floor admission differs from canonical pins")
+
+
+def _verified_builder_records(
+    labels: Mapping[str, tuple[object, object]], configured: Mapping[str, object], shipped: Mapping[str, object]
+) -> dict[str, dict[str, object]]:
+    records: dict[str, dict[str, object]] = {}
+    for name, (path, sha256) in labels.items():
+        record = cast(Mapping[str, object], configured.get("builder_files", {})).get(name)
+        if (
+            not isinstance(record, dict)
+            or cast(dict[str, object], record).get("path") != path
+            or cast(dict[str, object], record).get("sha256") != sha256
+        ):
+            raise ValueError(f"Linux C++ ABI input lacks its configured builder identity: {name}")
+        if cast(Mapping[str, object], shipped.get("builder_files", {})).get(name) != record:
+            raise ValueError(f"Packaged Linux C++ ABI builder input differs: {name}")
+        records[name] = cast(dict[str, object], record)
+    return records
+
+
 def verify_linux_cpp_abi_inputs(
     package: Path,
     manifest: Mapping[str, Any],
@@ -59,19 +90,15 @@ def verify_linux_cpp_abi_inputs(
     if target_platform(target).sys_platform != "linux":
         return None
     selection = configured.get("linux_cpp_abi")
-    if not isinstance(selection, dict) or set(selection) != _FIELDS:
+    if not isinstance(selection, dict) or set(cast(dict[str, object], selection)) != _FIELDS:
         raise ValueError("Linux artifact verification requires CADRUMO_LINUX_CPP_ABI_PROOF; reconfigure CMake")
+    selection = cast(dict[str, str], selection)
     pin = _floor(target, root)
-    if (
-        selection["target"] != target
-        or selection["floor"] != pin["floor"]
-        or selection["admitted_image"] != pin["image"]
-    ):
-        raise ValueError("Configured Linux C++ ABI target-floor admission differs from canonical pins")
+    _require_floor_match(selection, target, pin)
     shipped = manifest.get("inputs", {}).get("build_toolchain", {})
     if shipped.get("linux_cpp_abi") != selection:
         raise ValueError("Packaged Linux C++ ABI evidence differs from the configured builder")
-    labels = {
+    labels: dict[str, tuple[str, str]] = {
         "linux_cpp_abi/proof": (selection["proof"], selection["proof_sha256"]),
         "linux_cpp_abi/provider": (selection["provider"], selection["provider_sha256"]),
         "native/readelf": (
@@ -79,14 +106,7 @@ def verify_linux_cpp_abi_inputs(
             configured.get("native_tool_sha256", {}).get("readelf"),
         ),
     }
-    records = {}
-    for name, (path, sha256) in labels.items():
-        record = configured.get("builder_files", {}).get(name)
-        if not isinstance(record, dict) or record.get("path") != path or record.get("sha256") != sha256:
-            raise ValueError(f"Linux C++ ABI input lacks its configured builder identity: {name}")
-        if shipped.get("builder_files", {}).get(name) != record:
-            raise ValueError(f"Packaged Linux C++ ABI builder input differs: {name}")
-        records[name] = record
+    records = _verified_builder_records(labels, configured, shipped)
     builder_inputs({"builder_files": records})
     proof = Path(selection["proof"])
     declaration, provider = admit_linux_cxx_proof(

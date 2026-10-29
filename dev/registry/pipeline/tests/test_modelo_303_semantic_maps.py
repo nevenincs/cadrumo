@@ -32,7 +32,8 @@ from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export_semantics import ExportComputedKey
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding, render_fixed_width_export_field
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
 from cadrumo.domain.calculations.registry.temporal import select_revision
 

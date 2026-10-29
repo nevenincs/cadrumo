@@ -14,12 +14,12 @@ from typing import Any
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
+    cloudflare_call,
     disable_redirect_rules,
     ensure_proxied,
     ensure_routes,
     zone_id,
 )
-from dev.deploy.cloudflare_api import _call as cloudflare_call
 from dev.deploy.docs_asset_delivery import (
     CANDIDATE_SCRIPT,
     active_version,
@@ -68,7 +68,7 @@ from .docs_delivery_probe import (
     _verify_public_delivery,
     _verify_published_search_index,
 )
-from .docs_site_build import _build_site_roots
+from .docs_site_build import build_site_roots
 from .docs_site_download import _refresh_download_latest
 from .docs_site_preflight import _validate_built_site
 
@@ -212,7 +212,7 @@ def _publish(
     zone = zone_id(credentials.account, DOCS_ZONE)
     release = release_id(release_label or _local_release_label(repo_root), now=datetime.now(UTC))
     _refresh_download_latest(repo_root)
-    html_root = _build_site_roots(repo_root)
+    html_root = build_site_roots(repo_root)
     _validate_built_site(html_root)
     with deployment_lock(credentials.bucket):
         _upload_release(credentials, html_root, release)

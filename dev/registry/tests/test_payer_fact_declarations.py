@@ -15,10 +15,10 @@ import pytest
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
     derive_modelo_applicability,
     iter_modelo_applicability_rules,
 )
+from cadrumo.domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from cadrumo.domain.calculations.registry.applicability_payer_facts import (
     PayerFactDeclaration,
     PayerFactLedgerSource,

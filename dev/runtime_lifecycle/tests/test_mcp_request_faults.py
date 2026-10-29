@@ -24,7 +24,7 @@ import pytest
 from cadrumo.application.ledger.classify_requests import LEDGER_CLASSIFY_OPERATION_DEFINITION_ID
 from cadrumo.application.ledger.own_account_operation import LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.action_errors import WorkUnitNotFoundError
-from cadrumo.application.modelo.operation_definitions import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
+from cadrumo.application.modelo.operation_shared import MODELO_WORK_RENAME_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.query_read_contracts import ModeloBindingsListRequest
 from cadrumo.application.modelo.query_read_operation import MODELO_BINDINGS_LIST_OPERATION_DEFINITION_ID
 from cadrumo.core.config import override_settings

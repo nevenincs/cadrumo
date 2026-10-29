@@ -12,7 +12,7 @@ from dev.quality.source_import_analysis import (
 )
 
 from .unreachable_members import resolved_member_uses
-from .unreachable_memo import _walked
+from .unreachable_memo import walked
 from .unreachable_models import ShippedModule
 from .unreachable_policy import _DOTTED_SPEC, _MODULE_EXEC_FLAG
 from .unreachable_receiver_types import ReceiverTypes
@@ -78,7 +78,7 @@ def _spawn_edges(module: ShippedModule, known: frozenset[str]) -> frozenset[str]
     for any other reason draws nothing, because the flag will be absent.
     """
     literals = {
-        node.value for node in _walked(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
+        node.value for node in walked(module.tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)
     }
     if _MODULE_EXEC_FLAG not in literals:
         return frozenset[str]()
@@ -95,7 +95,7 @@ def module_edges(module: ShippedModule, known: frozenset[str]) -> tuple[frozense
     guarded = type_checking_guarded_nodes(module.tree)
     runtime: set[str] = set()
     type_only: set[str] = set()
-    for node in _walked(module.tree):
+    for node in walked(module.tree):
         targets = _node_module_targets(node, module, known)
         if targets is None:
             continue
@@ -142,7 +142,7 @@ def _import_aliases(module: ShippedModule, known: frozenset[str]) -> dict[str, s
     importing module's own position, so a package-relative alias is not lost.
     """
     aliases: dict[str, str] = {}
-    for node in _walked(module.tree):
+    for node in walked(module.tree):
         _read_import_alias_node(node, module, known, aliases)
     return aliases
 
@@ -158,14 +158,14 @@ def resolved_symbol_uses(
     it says nothing about which module defined the name.
     """
     uses: set[tuple[str, str]] = resolved_member_uses(module, known, receivers=receivers)
-    for node in _walked(module.tree):
+    for node in walked(module.tree):
         if isinstance(node, ast.ImportFrom):
             base = resolve_relative_import(module.name, module.is_package, node.level, node.module)
             if base in known:
                 uses.update((base, alias.name) for alias in node.names)
     aliases = _import_aliases(module, known)
     if aliases:
-        for node in _walked(module.tree):
+        for node in walked(module.tree):
             _read_alias_attribute_use(node, aliases, uses)
     return uses
 

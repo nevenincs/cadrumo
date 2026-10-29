@@ -34,7 +34,7 @@ verified on the cited line of a source the revision cites.
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
@@ -263,26 +263,11 @@ def generate_modelo_layouts(
 
     def current(revision_id: str, visiting: frozenset[str]) -> FormLayoutDefinition | None:
         revision = modelo.revisions[revision_id]
-        existing = revision.form_layouts[0] if revision.form_layouts else None
-        if existing is not None and existing.seed_source is FormLayoutSeedSource.AUTHORED:
-            if existing.source_state_digest != form_layout_source_digest(revision):
-                raise RegistryValidationError(
-                    f"{modelo.id} {revision_id}: authored form layout is stale; reconcile its declarations"
-                )
-            return existing
-        if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
+        existing = _preserved_form_layout(modelo, revision_id, revision)
+        if existing is not None:
             return existing
         if revision_id not in outcomes:
-            followed: PredecessorLayout | None = None
-            declared = revision.predecessor
-            if (
-                isinstance(declared, DeclaredPredecessor)
-                and declared.revision_id in modelo.revisions
-                and declared.revision_id not in visiting
-            ):
-                layout = current(declared.revision_id, visiting | {revision_id})
-                if layout is not None:
-                    followed = PredecessorLayout(revision=modelo.revisions[declared.revision_id], layout=layout)
+            followed = _followed_predecessor(modelo, revision_id, revision, visiting, current)
             outcomes[revision_id] = generate_revision_layout(
                 str(modelo.id), revision, sources=sources, data_root=data_root, predecessor=followed
             )
@@ -295,3 +280,37 @@ def generate_modelo_layouts(
         for revision_id in sorted(modelo.revisions, key=str)
         if revision_id in outcomes
     }
+
+
+def _preserved_form_layout(
+    modelo: ModeloDefinition, revision_id: str, revision: ModeloRevision
+) -> FormLayoutDefinition | None:
+    existing = revision.form_layouts[0] if revision.form_layouts else None
+    if existing is not None and existing.seed_source is FormLayoutSeedSource.AUTHORED:
+        if existing.source_state_digest != form_layout_source_digest(revision):
+            raise RegistryValidationError(
+                f"{modelo.id} {revision_id}: authored form layout is stale; reconcile its declarations"
+            )
+        return existing
+    if existing is not None and existing.review.state is FormLayoutReviewState.REVIEWED:
+        return existing
+    return None
+
+
+def _followed_predecessor(
+    modelo: ModeloDefinition,
+    revision_id: str,
+    revision: ModeloRevision,
+    visiting: frozenset[str],
+    current: Callable[[str, frozenset[str]], FormLayoutDefinition | None],
+) -> PredecessorLayout | None:
+    declared = revision.predecessor
+    if (
+        isinstance(declared, DeclaredPredecessor)
+        and declared.revision_id in modelo.revisions
+        and declared.revision_id not in visiting
+    ):
+        layout = current(declared.revision_id, visiting | {revision_id})
+        if layout is not None:
+            return PredecessorLayout(revision=modelo.revisions[declared.revision_id], layout=layout)
+    return None

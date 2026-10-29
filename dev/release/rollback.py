@@ -59,7 +59,7 @@ def procedure(version: str) -> str:
 3. Yank the bad version from PyPI so pip/uv skip it by default (this does
    NOT delete the artifact; it only stops new installs from resolving it):
 {yanks}
-4. Publish a corrected patch release following the emergency hotfix cycle
+4. Publish a corrected patch release following the timeout hotfix cycle
    time for the trigger category (docs/_release_checklist.yaml 'hotfix').
 5. Update docs/updates.md per its critical-updates contract and note the
    rollback + corrected version in the GitHub Release notes for v{version}."""

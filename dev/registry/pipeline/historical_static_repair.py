@@ -20,17 +20,24 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
-from ..compiler.authority import compile_validated_authority, inspect_authoring_candidate
-from ..compiler.identity import resolve_registry_identity
+from ..compiler.authority import AuthoringCandidateInspection, compile_validated_authority, inspect_authoring_candidate
+from ..compiler.identity import RegistryIdentity, resolve_registry_identity
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_fingerprints import collect_registry_tree_fingerprints
 from ..compiler.source_evidence_fingerprint import collect_source_evidence_fingerprints
 from ..form_layout.generator import generate_revision_layout
 from ..form_layout.serialization import form_layout_fragment_path, render_form_layout_toml
 from ._export_tree import render_complete_export_tree
+from .export_tree_models import RenderedExportTree
 from .generated_form_bridge import generated_form_interpreting_input_digest, registry_evidence_content_digest
-from .render_check import _revision_render_inputs, compare_export_tree_roots, revision_render_inputs
+from .render_check import (
+    RevisionRenderInputs,
+    _revision_render_inputs,
+    compare_export_tree_roots,
+    revision_render_inputs,
+)
 from .source_defects import source_defects_for
 from .tree_publication_artifacts import verify_generated_export_package
 
@@ -153,47 +160,25 @@ def validated_historical_repair_source(
     *, modelo: str, revision: str, source_ref: str, filing_year: int, period: str, expected_manifest_sha256: str | None
 ) -> ValidatedRegistryAuthority:
     """Validate a one-target temporary overlay before the normal publisher runs."""
-    if expected_manifest_sha256 is None:
-        raise RegistryValidationError("historical repair requires the exact reviewed target manifest")
-    target = _REVIEWED_TARGETS.get((modelo, revision, source_ref, filing_year, period, expected_manifest_sha256))
-    if target is None:
-        raise RegistryValidationError(
-            "historical repair requires an exact reviewed M232/2016 or M720/2024 target and manifest"
-        )
+    target, expected_manifest_sha256 = _reviewed_repair_target(
+        modelo, revision, source_ref, filing_year, period, expected_manifest_sha256
+    )
     source_root = bundled_path()
     registry_root = bundled_path("registry", "aeat")
     interpreting_digest = generated_form_interpreting_input_digest(modelo)
     evidence_content_digest = registry_evidence_content_digest(source_root)
     target_export = registry_root / "modelos" / modelo / "revisions" / revision / "export"
     old_manifest = target_export / "_generation.provenance.json"
-    if sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256:
-        raise RegistryValidationError("historical repair old manifest changed from the reviewed digest")
-    old_package = verify_generated_export_package(target_export)
-    old_identity = (
-        str(old_package.modelo),
-        str(old_package.revision_id),
-        str(old_package.source_ref),
-        old_package.source_sha256,
+    _require_old_repair_package(
+        old_manifest, target_export, expected_manifest_sha256, modelo, revision, source_ref, target
     )
-    if old_identity != (
-        modelo,
-        revision,
-        source_ref,
-        target.source_sha256,
-    ):
-        raise RegistryValidationError("historical repair old package identity or source pin changed")
     initial_identity = resolve_registry_identity(
         registry_root,
         collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
     )
     original = inspect_authoring_candidate(registry_root, source_root, identity=initial_identity)
     _validate_repair_findings(target, original.findings)
-    selected_source = original.components.catalogues.sources.get(source_ref)
-    if selected_source is None or selected_source.sha256 != target.source_sha256:
-        raise RegistryValidationError("historical repair selected official source changed")
-    definition = next((item for item in original.components.modelos if str(item.id) == modelo), None)
-    if definition is None:
-        raise RegistryValidationError("historical repair structural source lacks its target modelo")
+    definition = _reviewed_repair_definition(original, source_ref, target, modelo)
     preliminary = _revision_render_inputs(
         definition,
         original.components.catalogues,
@@ -262,59 +247,149 @@ def validated_historical_repair_source(
         )
         if ordinary != preliminary:
             raise RegistryValidationError("historical repair validated render inputs differ from structural inputs")
-        with tempfile.TemporaryDirectory(
-            prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temporary_directory()
-        ) as rerender:
-            confirmed_root = Path(rerender) / "export"
-            confirmed = render_complete_export_tree(
-                confirmed_root,
-                revision_id=ordinary.revision_id,
-                joined=ordinary.joined,
-                semantic_map=ordinary.semantic_map,
-                transport_profile=ordinary.transport_profile,
-                render_profile=ordinary.render_profile,
-                render_profile_source_evidence=ordinary.render_profile_source_evidence,
-                source_defects=source_defects_for(source_ref),
-            )
-            if (
-                confirmed.layout != preliminary_render.layout
-                or confirmed.field_derivations != preliminary_render.field_derivations
-            ):
-                raise RegistryValidationError("historical repair validated output differs from structural render")
-            comparison = compare_export_tree_roots(
-                modelo=modelo,
-                revision=revision,
-                layout_id=ordinary.layout_id,
-                committed_root=overlay_export,
-                rendered_root=confirmed_root,
-            )
-            if not comparison.reproduced:
-                raise RegistryValidationError("historical repair validated render does not reproduce overlay")
-        after = resolve_registry_identity(
+        _require_reproduced_repair(ordinary, preliminary_render, overlay_export, modelo, revision, source_ref)
+        _require_unchanged_repair_inputs(
             registry_root,
-            collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
+            source_root,
+            modelo,
+            original,
+            initial_identity,
+            evidence_content_digest,
+            interpreting_digest,
+            old_manifest,
+            expected_manifest_sha256,
         )
-        evidence_after = collect_source_evidence_fingerprints(source_root, use_cache=False)
-        changed_inputs = {
-            "registry": after.digest != original.registry_fingerprint,
-            "evidence_inventory": evidence_after != original.source_evidence_fingerprint,
-            "evidence_content": registry_evidence_content_digest(source_root) != evidence_content_digest,
-            "interpreting_inputs": generated_form_interpreting_input_digest(modelo) != interpreting_digest,
-            "target_manifest": sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256,
-        }
-        changed = [name for name, differs in changed_inputs.items() if differs]
-        if changed:
-            before_paths = {
-                path: (size, modified, digest) for path, size, modified, digest in initial_identity.fingerprints
-            }
-            after_paths = {path: (size, modified, digest) for path, size, modified, digest in after.fingerprints}
-            changed_paths = sorted(
-                path
-                for path in before_paths.keys() | after_paths.keys()
-                if before_paths.get(path) != after_paths.get(path)
-            )
-            raise RegistryValidationError(
-                "historical repair live source or old target changed during validation: "
-                f"inputs={changed}; registry_paths={changed_paths[:12]}; registry_path_count={len(changed_paths)}"
-            )
         return validated
+
+
+def _reviewed_repair_definition(
+    original: AuthoringCandidateInspection, source_ref: str, target: _RepairTarget, modelo: str
+) -> ModeloDefinition:
+    selected_source = original.components.catalogues.sources.get(source_ref)
+    if selected_source is None or selected_source.sha256 != target.source_sha256:
+        raise RegistryValidationError("historical repair selected official source changed")
+    definition = next((item for item in original.components.modelos if str(item.id) == modelo), None)
+    if definition is None:
+        raise RegistryValidationError("historical repair structural source lacks its target modelo")
+    return definition
+
+
+def _reviewed_repair_target(
+    modelo: str,
+    revision: str,
+    source_ref: str,
+    filing_year: int,
+    period: str,
+    expected_manifest_sha256: str | None,
+) -> tuple[_RepairTarget, str]:
+    if expected_manifest_sha256 is None:
+        raise RegistryValidationError("historical repair requires the exact reviewed target manifest")
+    target = _REVIEWED_TARGETS.get((modelo, revision, source_ref, filing_year, period, expected_manifest_sha256))
+    if target is None:
+        raise RegistryValidationError(
+            "historical repair requires an exact reviewed M232/2016 or M720/2024 target and manifest"
+        )
+    return target, expected_manifest_sha256
+
+
+def _require_unchanged_repair_inputs(
+    registry_root: Path,
+    source_root: Path,
+    modelo: str,
+    original: AuthoringCandidateInspection,
+    initial_identity: RegistryIdentity,
+    evidence_content_digest: str,
+    interpreting_digest: str,
+    old_manifest: Path,
+    expected_manifest_sha256: str,
+) -> None:
+    after = resolve_registry_identity(
+        registry_root,
+        collect_fingerprints=lambda path: collect_registry_tree_fingerprints(path, use_cache=False),
+    )
+    evidence_after = collect_source_evidence_fingerprints(source_root, use_cache=False)
+    changed_inputs = {
+        "registry": after.digest != original.registry_fingerprint,
+        "evidence_inventory": evidence_after != original.source_evidence_fingerprint,
+        "evidence_content": registry_evidence_content_digest(source_root) != evidence_content_digest,
+        "interpreting_inputs": generated_form_interpreting_input_digest(modelo) != interpreting_digest,
+        "target_manifest": sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256,
+    }
+    changed = [name for name, differs in changed_inputs.items() if differs]
+    if changed:
+        before_paths = {
+            path: (size, modified, digest) for path, size, modified, digest in initial_identity.fingerprints
+        }
+        after_paths = {path: (size, modified, digest) for path, size, modified, digest in after.fingerprints}
+        changed_paths = sorted(
+            path for path in before_paths.keys() | after_paths.keys() if before_paths.get(path) != after_paths.get(path)
+        )
+        raise RegistryValidationError(
+            "historical repair live source or old target changed during validation: "
+            f"inputs={changed}; registry_paths={changed_paths[:12]}; registry_path_count={len(changed_paths)}"
+        )
+
+
+def _require_reproduced_repair(
+    ordinary: RevisionRenderInputs,
+    preliminary_render: RenderedExportTree,
+    overlay_export: Path,
+    modelo: str,
+    revision: str,
+    source_ref: str,
+) -> None:
+    with tempfile.TemporaryDirectory(
+        prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temporary_directory()
+    ) as rerender:
+        confirmed_root = Path(rerender) / "export"
+        confirmed = render_complete_export_tree(
+            confirmed_root,
+            revision_id=ordinary.revision_id,
+            joined=ordinary.joined,
+            semantic_map=ordinary.semantic_map,
+            transport_profile=ordinary.transport_profile,
+            render_profile=ordinary.render_profile,
+            render_profile_source_evidence=ordinary.render_profile_source_evidence,
+            source_defects=source_defects_for(source_ref),
+        )
+        if (
+            confirmed.layout != preliminary_render.layout
+            or confirmed.field_derivations != preliminary_render.field_derivations
+        ):
+            raise RegistryValidationError("historical repair validated output differs from structural render")
+        comparison = compare_export_tree_roots(
+            modelo=modelo,
+            revision=revision,
+            layout_id=ordinary.layout_id,
+            committed_root=overlay_export,
+            rendered_root=confirmed_root,
+        )
+        if not comparison.reproduced:
+            raise RegistryValidationError("historical repair validated render does not reproduce overlay")
+
+
+def _require_old_repair_package(
+    old_manifest: Path,
+    target_export: Path,
+    expected_manifest_sha256: str,
+    modelo: str,
+    revision: str,
+    source_ref: str,
+    target: _RepairTarget,
+) -> None:
+    if sha256(old_manifest.read_bytes()).hexdigest() != expected_manifest_sha256:
+        raise RegistryValidationError("historical repair old manifest changed from the reviewed digest")
+    old_package = verify_generated_export_package(target_export)
+    old_identity = (
+        str(old_package.modelo),
+        str(old_package.revision_id),
+        str(old_package.source_ref),
+        old_package.source_sha256,
+    )
+    if old_identity != (
+        modelo,
+        revision,
+        source_ref,
+        target.source_sha256,
+    ):
+        raise RegistryValidationError("historical repair old package identity or source pin changed")

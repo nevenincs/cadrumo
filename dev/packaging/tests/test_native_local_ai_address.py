@@ -10,7 +10,8 @@ import pytest
 from cadrumo.core.config_runtime_fields import LOCAL_AI_SERVER_ADDRESS
 from cadrumo_agent_service.host.launch_environment import OLLAMA_BASE_URL
 from dev._paths import REPO_ROOT
-from dev.packaging.native.application_environment import DECLARATION, ApplicationEnvironmentError, load, parse
+from dev.packaging.native.application_environment import load, parse
+from dev.packaging.native.environment_declaration_primitives import DECLARATION, ApplicationEnvironmentError
 from dev.packaging.native.generate import generate
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

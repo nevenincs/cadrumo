@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.domain.calculations.registry.schema_verification import (
+from cadrumo.domain.calculations.registry.schema_live_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,
 )

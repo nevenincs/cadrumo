@@ -14,12 +14,14 @@ import pytest
 
 from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.applicability import (
-    ApplicabilityVerdict,
-    ModeloApplicability,
-    ModeloApplicabilityRule,
     derive_modelo_applicability,
     hydrate_applicability_rule,
     resolve_applicability_rule_from_authority,
+)
+from cadrumo.domain.calculations.registry.applicability_models import (
+    ApplicabilityVerdict,
+    ModeloApplicability,
+    ModeloApplicabilityRule,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.irpf_income_categories import require_irpf_income_category

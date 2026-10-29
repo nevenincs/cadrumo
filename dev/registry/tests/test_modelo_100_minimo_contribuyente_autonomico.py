@@ -27,7 +27,7 @@ import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.registry.errors import RegistryError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ._modelo_100_registry_support import _loaded_registry

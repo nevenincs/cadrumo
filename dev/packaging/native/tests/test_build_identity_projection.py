@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ..assemble import agent_closure, package_binaries, package_build_record, package_components
+from ..assembly_identity import agent_closure, package_binaries, package_build_record, package_components
 from ..build_stamp import BuildStamp, ComponentIdentity
 from ..layout import application_images, load_layout
 from ..metadata import generate

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..compiler.validator import RegistryValidator
 

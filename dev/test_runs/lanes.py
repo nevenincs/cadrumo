@@ -212,6 +212,11 @@ def _run_all(
     return results
 
 
+def _first_failed_status(results: Sequence[LaneResult | SkippedLane]) -> int:
+    """Preserve the first executed lane's nonzero status, ignoring skipped lanes."""
+    return next((result.status for result in results if isinstance(result, LaneResult) and result.status != 0), 0)
+
+
 def run_lanes(
     lanes: Sequence[str],
     repository: Path | None = None,
@@ -248,7 +253,7 @@ def run_lanes(
             lane_kinds=declared_kinds,
         )
         _summarise(results)
-        return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
+        return _first_failed_status(results)
 
     run_root = allocate_run_directory(repository or test_log_root(), family="lane-runs", label="lanes")
     for name in RUN_SUBDIRECTORIES:
@@ -275,7 +280,7 @@ def run_lanes(
         finally:
             sys.stdout, sys.stderr = original_out, original_err
 
-    return next((r.status for r in results if isinstance(r, LaneResult) and r.status != 0), 0)
+    return _first_failed_status(results)
 
 
 def lane_command_parser() -> argparse.ArgumentParser:

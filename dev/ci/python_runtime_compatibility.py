@@ -44,6 +44,36 @@ from .runtime_probe_installation import (
 )
 
 
+def _initial_dependency(selected_mode: ProbeMode) -> dict[str, str]:
+    """Start with explicit failed installation evidence until a probe resolves dependencies."""
+    dependency = {
+        "status": PythonRuntimeDependencyStatus.FAILED.value,
+        "detail": "probe did not reach installation",
+    }
+    if selected_mode is ProbeMode.BINARY:
+        dependency.update(
+            {
+                "source": "sealed-runtime-wheelhouse",
+                "wheelhouse_platform": "unresolved",
+                "wheelhouse_runtime": "unresolved",
+            }
+        )
+    return dependency
+
+
+def _initial_runtime(runtime_id: str, python: str, stability: str) -> dict[str, str]:
+    """Record the selected runtime while leaving unobserved interpreter facts unknown."""
+    return {
+        "id": runtime_id,
+        "selector": python,
+        "python": "unknown",
+        "implementation": "unknown",
+        "stability": stability,
+        "platform": platform.system(),
+        "machine": platform.machine(),
+    }
+
+
 def run_probe(
     *,
     mode: ProbeMode | str,
@@ -78,30 +108,11 @@ def run_probe(
     cohort_manifest_sha256: str | None = None
     builder_python: str | None = None
     artifact_sha256 = sha256_hex(b"unavailable")
-    dependency = {
-        "status": PythonRuntimeDependencyStatus.FAILED.value,
-        "detail": "probe did not reach installation",
-    }
-    if selected_mode is ProbeMode.BINARY:
-        dependency.update(
-            {
-                "source": "sealed-runtime-wheelhouse",
-                "wheelhouse_platform": "unresolved",
-                "wheelhouse_runtime": "unresolved",
-            }
-        )
+    dependency = _initial_dependency(selected_mode)
     isolation = {"checkout_imports_removed": False, "ambient_product_executables_removed": False}
     focused_tests: tuple[FocusedTestEvidence, ...] = ()
     failure: dict[str, str] | None = None
-    runtime: dict[str, str] = {
-        "id": runtime_id,
-        "selector": python,
-        "python": "unknown",
-        "implementation": "unknown",
-        "stability": stability,
-        "platform": platform.system(),
-        "machine": platform.machine(),
-    }
+    runtime = _initial_runtime(runtime_id, python, stability)
     try:
         if selected_mode is ProbeMode.SOURCE:
             artifacts, lock_sha256, artifact_digests, source_digest = _source_artifacts(repo_root, work_dir)

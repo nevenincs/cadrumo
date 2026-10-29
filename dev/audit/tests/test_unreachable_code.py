@@ -30,7 +30,7 @@ from ..unreachable_tree import EntryPoint, OutsideCorpus, ShippedTreeSpec
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _EXCLUDES = ("src/pkg/tests", "src/pkg/tests/**", "src/pkg/**/tests", "src/pkg/**/tests/**")
-_DATA_GLOBS = ("_data/**/*.toml",)
+DATA_GLOBS = ("_data/**/*.toml",)
 
 _CLI = '''
 """Entry module.
@@ -243,7 +243,7 @@ def _build_tree(root: Path) -> ShippedTreeSpec:
             OutsideCorpus(label="tests", root=root / "src" / "pkg", test_modules_only=True),
             OutsideCorpus(label="dev", root=root / "dev"),
         ),
-        data_globs=_DATA_GLOBS,
+        data_globs=DATA_GLOBS,
     )
 
 
@@ -989,9 +989,9 @@ def test_the_reference_walk_records_what_it_could_not_read() -> None:
     over an incomplete corpus with nothing saying so. Any deletion list derived
     from that corpus could name a symbol that is used.
     """
-    from ..unreachable_models import _OutsideUse
+    from ..unreachable_models import OutsideUse
 
-    fresh = _OutsideUse()
+    fresh = OutsideUse()
 
     assert fresh.unreadable == [], "the accumulator starts with nothing lost"
 

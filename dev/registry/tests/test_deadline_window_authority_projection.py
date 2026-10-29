@@ -129,8 +129,8 @@ def test_shared_iva_group_year_end_rule_stays_relationally_consistent_over_suppo
                 expected.opens_on,
                 expected.closes_on,
             ), f"modelo {modelo} diverges from the shared monthly IVA year-end rule for {filing_year}"
-        declared_cutoffs = [window.payment_cutoff_on for window in year_end.values() if window.payment_cutoff_on]
-        assert len(set(declared_cutoffs)) <= 1
+        declared_timeouts = [window.payment_cutoff_on for window in year_end.values() if window.payment_cutoff_on]
+        assert len(set(declared_timeouts)) <= 1
     assert compared_years > 0
 
 

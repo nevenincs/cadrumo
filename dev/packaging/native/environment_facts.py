@@ -31,6 +31,21 @@ _WORKER_ENVIRONMENT = "spawn_env"
 """The name under which the agent's worker management builds its worker's environment."""
 
 
+def _type_label(annotation: type) -> str:
+    if issubclass(annotation, enum.Enum):
+        return "language" if annotation.__name__ == "OutputLanguage" else "text"
+    for label, accepted in (
+        ("boolean", bool),
+        ("integer", int),
+        ("number", float),
+        ("text", str),
+        ("path", PurePath),
+    ):
+        if issubclass(annotation, accepted):
+            return label
+    return f"other:{annotation!r}"
+
+
 def kind_label(annotation: object) -> str:
     """Name the value space of a settings field, as the package's kinds are compared with it.
 
@@ -51,18 +66,7 @@ def kind_label(annotation: object) -> str:
         return "secret"
     if not isinstance(annotation, type):
         return f"other:{annotation!r}"
-    if issubclass(annotation, enum.Enum):
-        return "language" if annotation.__name__ == "OutputLanguage" else "text"
-    for label, accepted in (
-        ("boolean", bool),
-        ("integer", int),
-        ("number", float),
-        ("text", str),
-        ("path", PurePath),
-    ):
-        if issubclass(annotation, accepted):
-            return label
-    return f"other:{annotation!r}"
+    return _type_label(annotation)
 
 
 def _relative(path: Path, root: Path) -> str:
@@ -85,33 +89,10 @@ def _without_environment(names: set[str]) -> Generator[None]:
         os.environ.update(hidden)
 
 
-def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
-    """Collect the command line's settings, built-in storage root and diagnostic-log placement."""
-    from cadrumo.core.config import AuthorityRootSettings, Settings
-    from cadrumo.core.errors.hierarchy import CoreValidationError
-    from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
-    from cadrumo.core.storage_environment import (
-        STORAGE_PATH_RULES,
-        STORAGE_ROOT,
-        TEMPORARY_VARIABLES,
-        StorageMode,
-        StorageRootRefusal,
-        host_installed_default_root,
-    )
-    from cadrumo.core.storage_taxonomy import StorageCategory
-    from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
+def _storage_root_facts() -> dict[str, object]:
+    from cadrumo.core.storage_environment import STORAGE_PATH_RULES, STORAGE_ROOT, StorageMode, StorageRootRefusal
 
-    fields = Settings.model_fields
-    environment_fields = {
-        environment_name: field
-        for field_name, field in fields.items()
-        for environment_name in Settings._environment_names_for_field(field_name)
-    }
-    settings = {
-        name: kind_label(environment_fields[name].annotation) if name in environment_fields else None
-        for name in sorted(Settings.env_var_names())
-    }
-    root = {
+    root: dict[str, object] = {
         "variable": STORAGE_ROOT.variable,
         "development_variable": STORAGE_ROOT.development_variable,
         "development_default": Path(*STORAGE_ROOT.development_default).as_posix(),
@@ -138,6 +119,33 @@ def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
         "refusals": [refusal.value for refusal in StorageRootRefusal],
         "path_rules": STORAGE_PATH_RULES._asdict(),
     }
+    return root
+
+
+def collect_cli(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]:
+    """Collect the command line's settings, built-in storage root and diagnostic-log placement."""
+    from cadrumo.core.config import AuthorityRootSettings, Settings
+    from cadrumo.core.errors.hierarchy import CoreValidationError
+    from cadrumo.core.profile_root_environment import PROFILE_ROOT_VARIABLE
+    from cadrumo.core.storage_environment import (
+        STORAGE_ROOT,
+        TEMPORARY_VARIABLES,
+        host_installed_default_root,
+    )
+    from cadrumo.core.storage_taxonomy import StorageCategory
+    from cadrumo.core.storage_taxonomy_locations import storage_location, storage_path
+
+    fields = Settings.model_fields
+    environment_fields = {
+        environment_name: field
+        for field_name, field in fields.items()
+        for environment_name in Settings._environment_names_for_field(field_name)
+    }
+    settings = {
+        name: kind_label(environment_fields[name].annotation) if name in environment_fields else None
+        for name in sorted(Settings.env_var_names())
+    }
+    root = _storage_root_facts()
     try:
         default_root: dict[str, str] = {"root": str(host_installed_default_root(request["received"]))}
     except CoreValidationError as error:
@@ -216,6 +224,23 @@ def collect_runtime(request: Mapping[str, Any], scratch: Path) -> dict[str, Any]
     }
 
 
+def _worker_setting_name(target: ast.expr) -> str | None:
+    if (
+        isinstance(target, ast.Subscript)
+        and isinstance(target.value, ast.Name)
+        and target.value.id == _WORKER_ENVIRONMENT
+        and isinstance(target.slice, ast.Call)
+        and isinstance(target.slice.func, ast.Name)
+        and target.slice.func.id == "setting_env"
+        and len(target.slice.args) == 1
+        and isinstance(target.slice.args[0], ast.Constant)
+        and isinstance(target.slice.args[0].value, str)
+    ):
+        return target.slice.args[0].value
+
+    return None
+
+
 def worker_environment_writes(module: str, setting_env: Callable[[str], str]) -> list[str]:
     """Return the environment names the gateway writes into its worker's environment.
 
@@ -231,18 +256,9 @@ def worker_environment_writes(module: str, setting_env: Callable[[str], str]) ->
         if not isinstance(node, ast.Assign):
             continue
         for target in node.targets:
-            if (
-                isinstance(target, ast.Subscript)
-                and isinstance(target.value, ast.Name)
-                and target.value.id == _WORKER_ENVIRONMENT
-                and isinstance(target.slice, ast.Call)
-                and isinstance(target.slice.func, ast.Name)
-                and target.slice.func.id == "setting_env"
-                and len(target.slice.args) == 1
-                and isinstance(target.slice.args[0], ast.Constant)
-                and isinstance(target.slice.args[0].value, str)
-            ):
-                names.add(setting_env(target.slice.args[0].value))
+            name = _worker_setting_name(target)
+            if name is not None:
+                names.add(setting_env(name))
     return sorted(names)
 
 

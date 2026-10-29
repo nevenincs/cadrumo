@@ -18,17 +18,7 @@ _POSIX_EXIT_STATUS_MAX = 0xFF
 _TOKEN = re.compile(r"[a-z][a-z0-9_]*")
 
 
-def runtime_exit_section(native_host: Mapping[str, Any]) -> dict[str, Any]:
-    """Return the exit reasons and reserved ranges, refusing any reason another owner already holds.
-
-    The native interpreter host's range is a package fact taken from ``native_host``; the
-    runtime's own copy of that range is not read here.
-    """
-    package_range = ReservedExitCodes(native_host["owner"], native_host["first"], native_host["last"])
-    ranges = sorted(
-        (*(item for item in RESERVED_HOST_EXIT_CODES if item.owner != package_range.owner), package_range),
-        key=lambda item: item.first,
-    )
+def _validate_exit_ranges(ranges: list[ReservedExitCodes]) -> None:
     for reserved in ranges:
         if not _TOKEN.fullmatch(reserved.owner):
             raise ValueError(f"Reserved exit code owner is not a contract token: {reserved.owner!r}")
@@ -41,6 +31,20 @@ def runtime_exit_section(native_host: Mapping[str, Any]) -> dict[str, Any]:
         # POSIX reports only the low byte of an exit status.
         if not 0 < reason.value <= _POSIX_EXIT_STATUS_MAX or owners:
             raise ValueError(f"Runtime exit reason {reason.name} uses a reserved code: {reason.value} {owners}")
+
+
+def runtime_exit_section(native_host: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the exit reasons and reserved ranges, refusing any reason another owner already holds.
+
+    The native interpreter host's range is a package fact taken from ``native_host``; the
+    runtime's own copy of that range is not read here.
+    """
+    package_range = ReservedExitCodes(native_host["owner"], native_host["first"], native_host["last"])
+    ranges = sorted(
+        (*(item for item in RESERVED_HOST_EXIT_CODES if item.owner != package_range.owner), package_range),
+        key=lambda item: item.first,
+    )
+    _validate_exit_ranges(ranges)
     return {
         "reasons": [{"name": reason.name.lower(), "code": reason.value} for reason in ExitReason],
         "reserved": [{"owner": reserved.owner, "first": reserved.first, "last": reserved.last} for reserved in ranges],

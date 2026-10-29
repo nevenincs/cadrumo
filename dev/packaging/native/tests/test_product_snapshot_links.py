@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ..product import _sync_source_snapshot
+from ..product_snapshot import _sync_source_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

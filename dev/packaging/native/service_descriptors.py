@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
     EXTENSION_SETTINGS_NAMESPACE,
@@ -19,16 +19,15 @@ from cadrumo_client.contracts.model_runs import MODEL_RUN_CAPABILITY, MODEL_RUN_
 from .hashing import digest
 from .layout import ApplicationImage, entrypoint_files
 
+if TYPE_CHECKING:
+    from cadrumo.application.operations.contract_manifest import ManifestOperationRegistry
+
 # The leading arguments that start the runtime console script as a role of the desktop image.
 _RUNTIME_ROLE = ("--role", "runtime")
 
 
-def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[ApplicationImage, ...]) -> str:
-    """Write immutable policy only after relocation has fixed executable hashes."""
-    from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
-
-    entrypoints = entrypoint_files(layout)
-    registry = build_manifest_operation_registry()
+def _public_operations(build_registry: Callable[[], ManifestOperationRegistry]) -> list[str]:
+    registry = build_registry()
     operations = sorted(
         contract.definition_id
         for contract in registry.public_contract_set.definitions
@@ -36,6 +35,15 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
             contract.definition_id, ephemeral_secret_required=contract.ephemeral_secret_required
         )
     )
+    return operations
+
+
+def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[ApplicationImage, ...]) -> str:
+    """Write immutable policy only after relocation has fixed executable hashes."""
+    from cadrumo.entrypoints.operation_composition import build_manifest_operation_registry
+
+    entrypoints = entrypoint_files(layout)
+    operations = _public_operations(build_manifest_operation_registry)
     ceiling = {
         "operations": operations,
         "actions": sorted(action.value for action in AccessAction),

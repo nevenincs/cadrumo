@@ -19,7 +19,7 @@ contract names:
    :func:`aggregate_iva_ledger_observations_from_repositories`, the
    partitioned period-scoped path covered by the latency decision.
 4. **Modelo calculate diagnostic** —
-   :func:`~cadrumo.application.modelo.calculation_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
+   :func:`~cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`
    for a real M130 quarter, exercising the full registry engine over the
    ledger-backed income resolver.
 
@@ -99,7 +99,7 @@ from cadrumo.application.aggregation.renta_ledger import (
 )
 from cadrumo.application.aggregation.tests.iva_authority_support import aggregate_iva_ledger_observations
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from cadrumo.application.modelo.calculation_actions import (
+from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from cadrumo.application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
@@ -125,7 +125,7 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
 from cadrumo.tests.log_records import delivered_records
 

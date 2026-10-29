@@ -20,6 +20,21 @@ WORKERS = 12
 """Enough threads to keep a local disk busy with links and small copies."""
 
 
+def _plan_copy(
+    source: Path, destination: Path, ignore: Callable[[str, list[str]], Iterable[str]] | None
+) -> tuple[list[tuple[Path, Path]], list[tuple[Path, Path]]]:
+    directories: list[tuple[Path, Path]] = []
+    files: list[tuple[Path, Path]] = []
+    for current, names, members in os.walk(source, followlinks=True):
+        skipped: set[str] = set(ignore(current, [*names, *members])) if ignore is not None else set()
+        names[:] = sorted(name for name in names if name not in skipped)
+        here = Path(current)
+        target = destination / here.relative_to(source)
+        directories.append((here, target))
+        files.extend((here / name, target / name) for name in sorted(members) if name not in skipped)
+    return directories, files
+
+
 def copy_tree(
     source: Path,
     destination: Path,
@@ -29,15 +44,7 @@ def copy_tree(
     workers: int = WORKERS,
 ) -> None:
     """Make the new ``destination`` hold ``source``'s files, each placed by ``copy_function``."""
-    directories: list[tuple[Path, Path]] = []
-    files: list[tuple[Path, Path]] = []
-    for current, names, members in os.walk(source, followlinks=True):
-        skipped = set(ignore(current, [*names, *members])) if ignore is not None else set()
-        names[:] = sorted(name for name in names if name not in skipped)
-        here = Path(current)
-        target = destination / here.relative_to(source)
-        directories.append((here, target))
-        files.extend((here / name, target / name) for name in sorted(members) if name not in skipped)
+    directories, files = _plan_copy(source, destination, ignore)
     destination.mkdir(parents=True, exist_ok=False)
     for _here, target in directories:
         target.mkdir(parents=True, exist_ok=True)

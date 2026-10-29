@@ -19,19 +19,21 @@ from cadrumo.domain.calculations.registry.schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    RegistryCatalogues,
 )
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_formula import DatedValue, FormulaExpression, ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints
-from cadrumo.domain.calculations.registry.schema_verification import (
+from cadrumo.domain.calculations.registry.schema_live_verification import (
     LiveCrossReferenceDecision,
     ProfilePredicateDefinition,
+)
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaAlias, CasillaConstraints
+from cadrumo.domain.calculations.registry.schema_verification import (
     VerificationExpectationDefinition,
     VerificationPredicateDefinition,
 )

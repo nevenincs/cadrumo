@@ -17,8 +17,8 @@ from dataclasses import dataclass
 import pytest
 
 from cadrumo.application.filing.draft_construction import binding_provenance
-from cadrumo.application.modelo.calculation_actions import assert_no_novel_source_kinds
 from cadrumo.application.modelo.calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
+from cadrumo.application.modelo.calculation_source_guards import assert_no_novel_source_kinds
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.binding_provider_registration import (

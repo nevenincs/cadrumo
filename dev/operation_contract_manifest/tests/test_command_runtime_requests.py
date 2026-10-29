@@ -34,7 +34,8 @@ from dev.operation_contract_manifest.command_operation_derivation import (
     main,
     render_command_operation_table,
 )
-from dev.operation_contract_manifest.submission_flow import SubmissionFlow, Symbol
+from dev.operation_contract_manifest.submission_flow import SubmissionFlow
+from dev.operation_contract_manifest.submission_source import Symbol
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

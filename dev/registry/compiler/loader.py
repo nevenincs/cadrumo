@@ -33,8 +33,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     modelo_locale_key,
     revision_locale_key,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import (
     RegistryCatalogues,
     SociedadesAnnualManualCoverageCatalogue,
     SociedadesAnnualManualCoverageStatus,

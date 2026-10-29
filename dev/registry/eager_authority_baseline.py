@@ -34,7 +34,8 @@ from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalo
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor, NoPredecessor
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from dev.registry.pipeline.authority_publication import require_evidence_closure

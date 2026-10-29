@@ -33,18 +33,18 @@ from typing import Final
 from urllib.parse import urlsplit
 
 import httpx
-
 from cadrumo.application.browser_archive_pins import (
     BROWSER_ARCHIVE_PINS_RESOURCE,
     BrowserArchivePin,
     BrowserArchivePins,
     load_browser_archive_pins,
 )
-from cadrumo.application.provisioning_browser import installed_playwright_driver_version
+
 from cadrumo.core.external_constants import load_external_constants
 from dev import exit_codes
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.packaging.playwright_driver import installed_playwright_driver_version
 
 PINS_PATH: Final = REPO_ROOT.joinpath("src", "cadrumo", "_data", *BROWSER_ARCHIVE_PINS_RESOURCE)
 
@@ -156,6 +156,14 @@ def check_pins(pins: BrowserArchivePins | None, listed: Sequence[ListedArchive],
         problems.append(f"pins are for driver {pins.playwright_driver}, the locked driver is {driver}")
     if pins.hosts != _browser_hosts():
         problems.append("the pinned hosts are not the declared browser hosts")
+    problems.extend(_archive_pin_problems(pins, listed))
+    problems.extend(_source_pin_problems(pins))
+    return problems
+
+
+def _archive_pin_problems(pins: BrowserArchivePins, listed: Sequence[ListedArchive]) -> list[str]:
+    """Compare the complete driver archive population and each pinned source list."""
+    problems: list[str] = []
     expected: dict[tuple[str, str], tuple[str, tuple[str, ...]]] = {
         (a.platform, a.directory_name): (a.path, a.urls) for a in listed
     }
@@ -169,6 +177,12 @@ def check_pins(pins: BrowserArchivePins | None, listed: Sequence[ListedArchive],
     for key in sorted(expected.keys() & actual.keys()):
         if expected[key] != actual[key]:
             problems.append(f"{key[0]} {key[1]} is pinned at another path or with other sources")
+    return problems
+
+
+def _source_pin_problems(pins: BrowserArchivePins) -> list[str]:
+    """Report each pinned URL outside the declared browser hosts."""
+    problems: list[str] = []
     declared = set(_browser_hosts())
     for pin in pins.archives:
         for url in pin.urls:

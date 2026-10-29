@@ -25,12 +25,14 @@ from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Link, Static
 
 import cadrumo
+from cadrumo.application.modelo.work_form_models import ModeloWorkForm
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
 from cadrumo.core.i18n.render import output_language
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.review_publication_labels import GoogleReviewLabels
+from cadrumo.entrypoints.tui.account import AccountRecomposeRequiredV1
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
 from cadrumo.entrypoints.tui.declarations.grouped import GroupedDeclarationsScreen
 from cadrumo.entrypoints.tui.google_saved_review import GoogleSavedReviewModal, GoogleSavedReviewScreen
@@ -216,6 +218,187 @@ async def _reject_failed_prepublication(app: CadrumoTuiApp, output_dir: Path) ->
         raise
 
 
+async def _select_saved_declaration(
+    app: CadrumoTuiApp,
+    pilot: Pilot[AccountRecomposeRequiredV1 | None],
+    work_unit_id: str,
+) -> None:
+    """Select one exact saved work unit from the visible production declaration table."""
+    portfolio = app.screen
+    if not isinstance(portfolio, GroupedDeclarationsScreen):
+        raise GoogleReviewTuiAcceptanceError("the declaration surface changed before selection")
+    matches = [
+        row
+        for row in portfolio.rows
+        if row.declaration is not None and str(row.declaration.work_unit_id) == work_unit_id
+    ]
+    if len(matches) != 1:
+        raise GoogleReviewTuiAcceptanceError("declarations do not expose one exact selected work unit")
+    table = portfolio.query_one("#declarations-list", DataTable)
+    row_indices = [index for index, row in enumerate(table.ordered_rows) if row.key.value == matches[0].key]
+    if len(row_indices) != 1:
+        raise GoogleReviewTuiAcceptanceError("the selected declaration is not visible in the production table")
+    table.move_cursor(row=row_indices[0])
+    table.focus()
+    await pilot.press("enter")
+
+
+def _require_saved_workbench(
+    app: CadrumoTuiApp,
+    work_unit_id: str,
+    calculation_revision_id: str,
+) -> tuple[ModeloWorkbenchScreen, ModeloWorkForm]:
+    """Refuse changed, staged or mismatched saved workbench selection before disclosure."""
+    workbench = app.screen
+    if not isinstance(workbench, ModeloWorkbenchScreen):
+        raise GoogleReviewTuiAcceptanceError("the workbench surface changed before selection")
+    form = workbench.form
+    if form is None:
+        raise GoogleReviewTuiAcceptanceError("the saved workbench form disappeared")
+    if (
+        form.work_unit_id != work_unit_id
+        or form.calculation_revision_id != calculation_revision_id
+        or workbench.staged_changes
+    ):
+        raise GoogleReviewTuiAcceptanceError("the production workbench differs from the exact saved selection")
+    return workbench, form
+
+
+async def _open_saved_review(
+    app: CadrumoTuiApp,
+    pilot: Pilot[AccountRecomposeRequiredV1 | None],
+    output_dir: Path,
+    deadline: float,
+    work_unit_id: str,
+    calculation_revision_id: str,
+    screenshots: list[tuple[str, str]],
+) -> ModeloWorkForm:
+    """Open the exact saved declaration through the rendered workbench controls."""
+    await _until(
+        pilot,
+        lambda: isinstance(app.screen, HomeScreen),
+        deadline=min(deadline, monotonic() + 60),
+        stage="production Home",
+        output_dir=output_dir,
+    )
+    app.navigate_to(
+        TuiNavigationTargetV1(
+            destination="workbench.declarations",
+            focus=TuiFocusIdentityV1(destination="workbench.declarations", semantic_key="declarations.work"),
+        )
+    )
+    await _until(
+        pilot,
+        lambda: isinstance(app.screen, GroupedDeclarationsScreen) and bool(app.screen.rows),
+        deadline=min(deadline, monotonic() + 60),
+        stage="production declarations",
+        output_dir=output_dir,
+    )
+    await _select_saved_declaration(app, pilot, work_unit_id)
+    await _until(
+        pilot,
+        lambda: isinstance(app.screen, ModeloWorkbenchScreen) and app.screen.form is not None,
+        deadline=min(deadline, monotonic() + 60),
+        stage="selected saved workbench",
+        output_dir=output_dir,
+    )
+    workbench, form = _require_saved_workbench(app, work_unit_id, calculation_revision_id)
+    await pilot.pause()
+    path = Path(app.save_screenshot("01-saved-workbench.svg", str(output_dir)))
+    screenshots.append((str(path), sha256_file(path)))
+    button = workbench.query_one("#wb-google-review", Button)
+    if button.disabled or not await pilot.click("#wb-google-review"):
+        raise GoogleReviewTuiAcceptanceError("the actual Google review workbench button is unavailable")
+    return form
+
+
+async def _inspect_review_disclosure(
+    app: CadrumoTuiApp,
+    pilot: Pilot[AccountRecomposeRequiredV1 | None],
+    output_dir: Path,
+    deadline: float,
+    calculation_revision_id: str,
+    screenshots: list[tuple[str, str]],
+    refusal: Callable[[], str | None],
+) -> tuple[GoogleReviewTuiDisclosureEvidence, GoogleReviewLabels]:
+    """Read and verify the exact human disclosure before any publication response."""
+    labels = GoogleReviewLabels(OutputLanguage(output_language()))
+
+    def disclosure_ready() -> bool:
+        if not isinstance(app.screen, GoogleSavedReviewModal):
+            return False
+        button = app.screen.query_one("#btn-operation-apply", Button)
+        text = public_static_text(app.screen.query_one("#operation-modal-review", Static))
+        return (
+            not button.disabled
+            and str(button.label) == labels("google_review.publish")
+            and labels("google_review.offer.title") in text
+            and labels("google_review.notice.external_copy") in text
+            and labels("google_review.notice.evidence_index") in text
+        )
+
+    disclosure_deadline = min(deadline, monotonic() + 60)
+    await _until(
+        pilot,
+        disclosure_ready,
+        deadline=disclosure_deadline,
+        stage="registered human disclosure",
+        output_dir=output_dir,
+        refusal=refusal,
+    )
+    await pilot.pause()
+    path = Path(app.save_screenshot("02-human-disclosure.svg", str(output_dir)))
+    screenshots.append((str(path), sha256_file(path)))
+    await pilot.press("t")
+    await _until(
+        pilot,
+        lambda: (
+            isinstance(app.screen, GoogleSavedReviewModal)
+            and labels("google_review.label.calculation_revision_id") + ": " + calculation_revision_id
+            in public_static_text(app.screen.query_one("#operation-modal-review", Static))
+        ),
+        deadline=disclosure_deadline,
+        stage="exact technical disclosure",
+        output_dir=output_dir,
+        refusal=refusal,
+    )
+    disclosure = read_public_disclosure(
+        public_static_text(app.screen.query_one("#operation-modal-review", Static)),
+        labels=labels,
+        calculation_revision_id=calculation_revision_id,
+    )
+    path = Path(app.save_screenshot("03-exact-disclosure.svg", str(output_dir)))
+    screenshots.append((str(path), sha256_file(path)))
+    apply_button = app.screen.query_one("#btn-operation-apply", Button)
+    if str(apply_button.label) != labels("google_review.publish"):
+        raise GoogleReviewTuiAcceptanceError("the actual human response control does not say Publish")
+    return disclosure, labels
+
+
+async def _admit_review_request(
+    client: FrontendClient,
+    work_unit_id: str,
+    calculation_revision_id: str,
+    seconds: float,
+) -> tuple[UUID, UUID]:
+    """Require the exact native TUI session and selection before writing acceptance artifacts."""
+    if not isinstance(client, FrontendClient) or client.frontend is not OperationFrontendProjection.TUI:
+        raise GoogleReviewTuiAcceptanceError("acceptance requires a real native TUI client")
+    if seconds <= 0 or not work_unit_id or not re.fullmatch(r"[0-9a-f]{64}", calculation_revision_id):
+        raise GoogleReviewTuiAcceptanceError("acceptance selection or deadline is invalid")
+    profile_id, session_id = client.profile_id, client.session_id
+    status = await asyncio.to_thread(client.status)
+    if not status_admits_session(
+        status.status,
+        profile_id=profile_id,
+        session_id=session_id,
+        at=datetime.now(UTC),
+        requires_automation_grant=False,
+    ):
+        raise GoogleReviewTuiAcceptanceError("the native TUI lease is not authenticated for this profile")
+    return profile_id, session_id
+
+
 async def run_google_saved_review_tui(
     client: FrontendClient,
     *,
@@ -233,20 +416,7 @@ async def run_google_saved_review_tui(
     supply its existing synthetic profile and a native-authenticated TUI lease.
     No replacement runtime, sign-in, recovery, consent or publication is retried.
     """
-    if not isinstance(client, FrontendClient) or client.frontend is not OperationFrontendProjection.TUI:
-        raise GoogleReviewTuiAcceptanceError("acceptance requires a real native TUI client")
-    if seconds <= 0 or not work_unit_id or not re.fullmatch(r"[0-9a-f]{64}", calculation_revision_id):
-        raise GoogleReviewTuiAcceptanceError("acceptance selection or deadline is invalid")
-    profile_id, session_id = client.profile_id, client.session_id
-    status = await asyncio.to_thread(client.status)
-    if not status_admits_session(
-        status.status,
-        profile_id=profile_id,
-        session_id=session_id,
-        at=datetime.now(UTC),
-        requires_automation_grant=False,
-    ):
-        raise GoogleReviewTuiAcceptanceError("the native TUI lease is not authenticated for this profile")
+    profile_id, session_id = await _admit_review_request(client, work_unit_id, calculation_revision_id, seconds)
     output_dir.mkdir(parents=True, exist_ok=False)
     deadline = monotonic() + seconds
 
@@ -264,124 +434,18 @@ async def run_google_saved_review_tui(
     screenshots: list[tuple[str, str]] = []
 
     async with app.run_test(size=(160, 55)) as pilot, _reject_failed_prepublication(app, output_dir):
-        await _until(
-            pilot,
-            lambda: isinstance(app.screen, HomeScreen),
-            deadline=min(deadline, monotonic() + 60),
-            stage="production Home",
-            output_dir=output_dir,
+        form = await _open_saved_review(
+            app, pilot, output_dir, deadline, work_unit_id, calculation_revision_id, screenshots
         )
-        app.navigate_to(
-            TuiNavigationTargetV1(
-                destination="workbench.declarations",
-                focus=TuiFocusIdentityV1(destination="workbench.declarations", semantic_key="declarations.work"),
-            )
-        )
-        await _until(
-            pilot,
-            lambda: isinstance(app.screen, GroupedDeclarationsScreen) and bool(app.screen.rows),
-            deadline=min(deadline, monotonic() + 60),
-            stage="production declarations",
-            output_dir=output_dir,
-        )
-        portfolio = app.screen
-        if not isinstance(portfolio, GroupedDeclarationsScreen):
-            raise GoogleReviewTuiAcceptanceError("the declaration surface changed before selection")
-        matches = [
-            row
-            for row in portfolio.rows
-            if row.declaration is not None and str(row.declaration.work_unit_id) == work_unit_id
-        ]
-        if len(matches) != 1:
-            raise GoogleReviewTuiAcceptanceError("declarations do not expose one exact selected work unit")
-        table = portfolio.query_one("#declarations-list", DataTable)
-        row_indices = [index for index, row in enumerate(table.ordered_rows) if row.key.value == matches[0].key]
-        if len(row_indices) != 1:
-            raise GoogleReviewTuiAcceptanceError("the selected declaration is not visible in the production table")
-        table.move_cursor(row=row_indices[0])
-        table.focus()
-        await pilot.press("enter")
-        await _until(
-            pilot,
-            lambda: isinstance(app.screen, ModeloWorkbenchScreen) and app.screen.form is not None,
-            deadline=min(deadline, monotonic() + 60),
-            stage="selected saved workbench",
-            output_dir=output_dir,
-        )
-        workbench = app.screen
-        if not isinstance(workbench, ModeloWorkbenchScreen):
-            raise GoogleReviewTuiAcceptanceError("the workbench surface changed before selection")
-        form = workbench.form
-        if form is None:
-            raise GoogleReviewTuiAcceptanceError("the saved workbench form disappeared")
-        if (
-            form.work_unit_id != work_unit_id
-            or form.calculation_revision_id != calculation_revision_id
-            or workbench.staged_changes
-        ):
-            raise GoogleReviewTuiAcceptanceError("the production workbench differs from the exact saved selection")
-        await pilot.pause()
-        path = Path(app.save_screenshot("01-saved-workbench.svg", str(output_dir)))
-        screenshots.append((str(path), sha256_file(path)))
-        button = workbench.query_one("#wb-google-review", Button)
-        if button.disabled or not await pilot.click("#wb-google-review"):
-            raise GoogleReviewTuiAcceptanceError("the actual Google review workbench button is unavailable")
 
         def prepare_refusal() -> str | None:
             if isinstance(app.screen, GoogleSavedReviewScreen):
                 return public_static_text(app.screen.query_one("#saved-google-review-notice", Static)) or None
             return None
 
-        labels = GoogleReviewLabels(OutputLanguage(output_language()))
-
-        def disclosure_ready() -> bool:
-            if not isinstance(app.screen, GoogleSavedReviewModal):
-                return False
-            button = app.screen.query_one("#btn-operation-apply", Button)
-            text = public_static_text(app.screen.query_one("#operation-modal-review", Static))
-            return (
-                not button.disabled
-                and str(button.label) == labels("google_review.publish")
-                and labels("google_review.offer.title") in text
-                and labels("google_review.notice.external_copy") in text
-                and labels("google_review.notice.evidence_index") in text
-            )
-
-        disclosure_deadline = min(deadline, monotonic() + 60)
-        await _until(
-            pilot,
-            disclosure_ready,
-            deadline=disclosure_deadline,
-            stage="registered human disclosure",
-            output_dir=output_dir,
-            refusal=prepare_refusal,
+        disclosure, labels = await _inspect_review_disclosure(
+            app, pilot, output_dir, deadline, calculation_revision_id, screenshots, prepare_refusal
         )
-        await pilot.pause()
-        path = Path(app.save_screenshot("02-human-disclosure.svg", str(output_dir)))
-        screenshots.append((str(path), sha256_file(path)))
-        await pilot.press("t")
-        await _until(
-            pilot,
-            lambda: (
-                isinstance(app.screen, GoogleSavedReviewModal)
-                and labels("google_review.label.calculation_revision_id") + ": " + calculation_revision_id
-                in public_static_text(app.screen.query_one("#operation-modal-review", Static))
-            ),
-            deadline=disclosure_deadline,
-            stage="exact technical disclosure",
-            output_dir=output_dir,
-            refusal=prepare_refusal,
-        )
-        disclosure = read_public_disclosure(
-            public_static_text(app.screen.query_one("#operation-modal-review", Static)),
-            labels=labels,
-            calculation_revision_id=calculation_revision_id,
-        )
-        path = Path(app.save_screenshot("03-exact-disclosure.svg", str(output_dir)))
-        screenshots.append((str(path), sha256_file(path)))
-        apply_button = app.screen.query_one("#btn-operation-apply", Button)
-        if str(apply_button.label) != labels("google_review.publish"):
-            raise GoogleReviewTuiAcceptanceError("the actual human response control does not say Publish")
         # Persist the exact publication identity BEFORE delivering its response.
         # An interrupted run must be reconciled against runtime/provider receipts;
         # invoking this helper again is never an automatic recovery action.

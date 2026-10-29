@@ -3,7 +3,7 @@
 Furo bakes theme variables and templates into every page at build time, so a
 built page whose source was removed keeps rendering its build-era design and
 leaks into the search index (the docs-brand audit found 2208 such orphans
-rendering a retired theme). :func:`dev.docs.build.remove_orphan_pages` is the
+rendering a retired theme). :func:`dev.docs.output_cleanup.remove_orphan_pages` is the
 full-build purge; :func:`dev.docs.build.ensure_isolated_storage_root` keeps
 the build's application imports off the workstation's product state.
 
@@ -19,7 +19,8 @@ from pathlib import Path
 
 import pytest
 
-from ..build import ensure_isolated_storage_root, remove_orphan_pages
+from ..build import ensure_isolated_storage_root
+from ..output_cleanup import remove_orphan_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 

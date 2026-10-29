@@ -23,8 +23,8 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS as _REVISION_MANIFEST_ONLY_FIELDS,
 )
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import (
     RegistryCatalogues,
     SociedadesAnnualManualCoverageCatalogue,
 )

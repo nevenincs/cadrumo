@@ -344,13 +344,7 @@ def run_import_linter(
         )
     step_budget = budget or step_budget_for(authority)
 
-    environment = os.environ.copy()
-    import_paths = [str(root.source_root) for root in authority.roots]
-    existing = environment.get("PYTHONPATH")
-    if existing is not None and existing:
-        import_paths.append(existing)
-    environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
-    environment["PYTHONIOENCODING"] = UTF_8
+    environment = _import_environment([str(root.source_root) for root in authority.roots])
     command = (
         resolved,
         "--config",
@@ -469,24 +463,14 @@ def run_loadability(
     # The harness is tool code and must resolve from the tool tree; the audited
     # targets are imported by the probe's own isolated worker, so no audited
     # source root belongs on this path.
-    environment = os.environ.copy()
-    import_paths = list(harness_roots)
-    existing = environment.get("PYTHONPATH")
-    if existing is not None and existing:
-        import_paths.append(existing)
-    environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
-    environment["PYTHONIOENCODING"] = UTF_8
+    environment = _import_environment(list(harness_roots))
 
     artifact_directory = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
     try:
         with tempfile.TemporaryDirectory(
             prefix="cadrumo-import-loadability-", dir=prepare_temporary_directory()
         ) as temporary:
-            if artifact_directory is not None and artifact_directory:
-                report_path = resolve_storage_path(artifact_directory) / "import-loadability.json"
-                report_path.parent.mkdir(parents=True, exist_ok=True)
-            else:
-                report_path = Path(temporary) / "import-loadability.json"
+            report_path = _loadability_report_path(artifact_directory, temporary)
             command = (
                 sys.executable,
                 "-P",
@@ -531,6 +515,24 @@ def run_loadability(
     payload.setdefault("operational_error", f"loadability probe exited unexpectedly with {completed.returncode}")
     diagnostic = str(payload["operational_error"])
     return ComponentResult("loadability", TOOL_BROKEN, _combined_output(output, diagnostic), cpu_seconds), payload
+
+
+def _import_environment(import_paths: list[str]) -> dict[str, str]:
+    environment = os.environ.copy()
+    existing = environment.get("PYTHONPATH")
+    if existing is not None and existing:
+        import_paths.append(existing)
+    environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(import_paths))
+    environment["PYTHONIOENCODING"] = UTF_8
+    return environment
+
+
+def _loadability_report_path(artifact_directory: str | None, temporary: str) -> Path:
+    if artifact_directory is not None and artifact_directory:
+        report_path = resolve_storage_path(artifact_directory) / "import-loadability.json"
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        return report_path
+    return Path(temporary) / "import-loadability.json"
 
 
 def _load_harness_import_roots() -> tuple[str, ...] | str:

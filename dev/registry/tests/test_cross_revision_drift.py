@@ -27,7 +27,8 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
 )
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 

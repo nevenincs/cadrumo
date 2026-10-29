@@ -59,7 +59,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 

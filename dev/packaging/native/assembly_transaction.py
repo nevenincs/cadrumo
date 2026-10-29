@@ -8,11 +8,11 @@ import shutil
 from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 from .hashing import digest
-from .platforms.posix import native_image
+from .platforms.posix_images import native_image
 
 
 class AssemblyReuse:
@@ -33,7 +33,7 @@ class AssemblyReuse:
     def verified(self, member: str) -> Path | None:
         """Return an old file only when its complete bytes match the package receipt."""
         relative = PurePosixPath(member)
-        if relative.is_absolute() or ".." in relative.parts or "\\" in member or ":" in member:
+        if _unsafe_member(relative, member):
             return None
         expected = self.manifest.get("files", {}).get(member)
         path = self.previous / member
@@ -54,17 +54,7 @@ class AssemblyReuse:
         mutable = member.endswith(("pypdfium2_raw/bindings.py", "win32com/__init__.py")) or (
             self.rewrite_native and native_image(source)
         )
-        layout = self.manifest.get("layout", {}).get("paths", {})
-        if "packages" in layout and "authority" in layout:
-            authority_source = PurePosixPath(layout["packages"]) / "cadrumo/_data/registry/authority"
-            relative = PurePosixPath(member)
-            if relative.is_relative_to(authority_source):
-                # Assembly moves the published registry out of site-packages.
-                # Its immutable bytes live only at this final path in the old stage.
-                member = (PurePosixPath(layout["authority"]) / relative.relative_to(authority_source)).as_posix()
-        if not self.rewrite_native:
-            # Windows moves PE modules without rewriting their contents.
-            member = self.manifest.get("relocation", {}).get(member, member)
+        member = self._previous_member(member)
         previous = None if mutable else self.verified(member)
         if (
             previous is not None
@@ -79,12 +69,30 @@ class AssemblyReuse:
                 pass
         return str(shutil.copy2(source, destination))
 
+    def _previous_member(self, member: str) -> str:
+        layout = self.manifest.get("layout", {}).get("paths", {})
+        if "packages" in layout and "authority" in layout:
+            authority_source = PurePosixPath(layout["packages"]) / "cadrumo/_data/registry/authority"
+            relative = PurePosixPath(member)
+            if relative.is_relative_to(authority_source):
+                # Assembly moves the published registry out of site-packages.
+                # Its immutable bytes live only at this final path in the old stage.
+                member = (PurePosixPath(layout["authority"]) / relative.relative_to(authority_source)).as_posix()
+        if not self.rewrite_native:
+            # Windows moves PE modules without rewriting their contents.
+            member = cast(str, self.manifest.get("relocation", {}).get(member, member))
+        return member
+
     def link(self, previous: Path, destination: Path) -> None:
         """Reuse a verified generated output that no subsequent phase modifies."""
         try:
             os.link(previous, destination)
         except OSError:
             shutil.copy2(previous, destination)
+
+
+def _unsafe_member(relative: PurePosixPath, member: str) -> bool:
+    return relative.is_absolute() or ".." in relative.parts or "\\" in member or ":" in member
 
 
 @contextmanager

@@ -12,8 +12,9 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.keyed_families import CASILLAS_FAMILY
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
-from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+from cadrumo.domain.calculations.registry.snapshot_references import collect_snapshot_ref_ids
 
 from ..compiler.export_fragment_grammar import EXPORT_SECTION_DIRECTORY_NAMES, revision_section_for_directory
 from ..compiler.loader import load_modelo_declarations, load_registry_tree

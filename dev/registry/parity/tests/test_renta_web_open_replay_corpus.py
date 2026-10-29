@@ -42,7 +42,8 @@ from ..renta_web_open_replay_corpus import (
 )
 
 if TYPE_CHECKING:
-    from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+    from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+    from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

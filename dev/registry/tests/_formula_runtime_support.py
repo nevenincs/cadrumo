@@ -7,13 +7,9 @@ from decimal import Decimal
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
-from cadrumo.domain.calculations.registry.schema import (
-    BindingDefinition,
-    ModeloDefinition,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
+from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloDefinition, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 

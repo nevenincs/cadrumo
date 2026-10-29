@@ -130,9 +130,7 @@ def _dynamic_package(
     record_provenance: RecordTargetProvenance | None,
 ) -> str | None:
     """Dynamic package."""
-    package_node = next((keyword.value for keyword in call.keywords if keyword.arg == "package"), None)
-    if package_node is None and len(call.args) > 1:
-        package_node = call.args[1]
+    package_node = _call_argument(call, "package", positional_index=1)
     if isinstance(package_node, ast.Name) and package_node.id == "__package__":
         package = module.name if module.is_package else module.name.rpartition(".")[0]
     else:

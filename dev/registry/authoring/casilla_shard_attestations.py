@@ -35,23 +35,27 @@ def harvest_attestations(out_dir: Path, revision_id: str) -> dict[str, tuple[str
     if not out_dir.is_dir():
         return harvested
     for path in sorted(out_dir.glob("*.toml")):
-        current: list[str] = []
-        casilla_id: str | None = None
-        for line in _source_lines(path.read_bytes()):
-            if line.strip() == marker:
-                if casilla_id is not None and casilla_id:
-                    harvested[casilla_id] = (path.name, current)
-                current = []
-                casilla_id = None
-                continue
-            if line.startswith("id = "):
-                casilla_id = line.split("=", 1)[1].strip().strip('"')
-                continue
-            if _KEY_LINE.match(line):
-                current.append(line)
-        if casilla_id is not None and casilla_id:
-            harvested[casilla_id] = (path.name, current)
+        _harvest_shard(path, marker, harvested)
     return harvested
+
+
+def _harvest_shard(path: Path, marker: str, harvested: dict[str, tuple[str, list[str]]]) -> None:
+    current: list[str] = []
+    casilla_id: str | None = None
+    for line in _source_lines(path.read_bytes()):
+        if line.strip() == marker:
+            if casilla_id is not None and casilla_id:
+                harvested[casilla_id] = (path.name, current)
+            current = []
+            casilla_id = None
+            continue
+        if line.startswith("id = "):
+            casilla_id = line.split("=", 1)[1].strip().strip('"')
+            continue
+        if _KEY_LINE.match(line):
+            current.append(line)
+    if casilla_id is not None and casilla_id:
+        harvested[casilla_id] = (path.name, current)
 
 
 def reattach_attestations(body: str, harvested: dict[str, tuple[str, list[str]]], revision_id: str) -> tuple[str, int]:

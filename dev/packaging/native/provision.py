@@ -8,10 +8,10 @@ import json
 import os
 import shutil
 import sys
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from packaging.utils import canonicalize_name
 
@@ -19,6 +19,7 @@ from dev._paths import REPO_ROOT
 
 from ..command_execution import run_command
 from ..runtime_wheel_selection import plan_target_wheels
+from ..runtime_wheelhouse_contract import LockedWheel
 from .agent import AGENT_DEPENDENCIES, AGENT_DEPENDENCY_RECORD, resolved_requirements
 from .build_directory import require_enrolled_output
 from .build_log import BuildLog, display_path
@@ -181,6 +182,29 @@ def provisioning_tools(target: str, build_toolchain: Mapping[str, Any] | None) -
     return dict(tools, cpython_archive_decoder=decoder)
 
 
+def _require_sdk(
+    sdk: Path | None, destination: Path, pin: str, tools: dict[str, object], contract: dict[str, object]
+) -> None:
+    if sdk is None:
+        produced = backend(contract).provision_sdk(destination, pin, tools, contract)
+        if not isinstance(produced, Path):
+            raise ValueError("SDK backend must return its produced directory")
+        sdk = produced
+        if sdk.resolve() != (destination / cast(dict[str, str], contract["sdk"])["root"]).resolve():
+            raise ValueError("SDK backend output differs from the declared SDK root")
+    elif not sdk.is_dir():
+        raise ValueError("Provisioning requires the separately verified SDK target")
+
+
+def _base_wheels(target: str, pin: str, agent_names: Collection[str]) -> tuple[LockedWheel, ...]:
+    wheels = tuple(
+        wheel
+        for wheel in plan_target_wheels(REPO_ROOT, target, pin, extras=BUNDLED_EXTRAS)
+        if canonicalize_name(wheel.distribution) not in agent_names
+    )
+    return wheels
+
+
 def provision(
     destination: Path,
     target: str,
@@ -203,20 +227,8 @@ def provision(
     tools = provisioning_tools(target, build_toolchain)
     contract = load_layout(target)
     agent_requirements = resolved_requirements(agent_dependencies, target, pin)
-    wheels = tuple(
-        wheel
-        for wheel in plan_target_wheels(REPO_ROOT, target, pin, extras=BUNDLED_EXTRAS)
-        if canonicalize_name(wheel.distribution) not in agent_requirements
-    )
-    if sdk is None:
-        produced = backend(contract).provision_sdk(destination, pin, tools, contract)
-        if not isinstance(produced, Path):
-            raise ValueError("SDK backend must return its produced directory")
-        sdk = produced
-        if sdk.resolve() != (destination / contract["sdk"]["root"]).resolve():
-            raise ValueError("SDK backend output differs from the declared SDK root")
-    elif not sdk.is_dir():
-        raise ValueError("Provisioning requires the separately verified SDK target")
+    wheels = _base_wheels(target, pin, agent_requirements)
+    _require_sdk(sdk, destination, pin, tools, contract)
     requirements = destination / "requirements.txt"
     requirements.write_text(
         "".join(f"{wheel.distribution} @ {wheel.url} --hash=sha256:{wheel.sha256}\n" for wheel in wheels),

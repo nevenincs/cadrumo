@@ -14,7 +14,7 @@ backwards — not debt that may only shrink, but evidence that may only shrink.
 are hand-written translations, and no regeneration restores them.
 
 By contrast two prunes act on genuinely derived trees and are correctly
-unbounded, so they are not gated here: :func:`dev.docs.build.remove_orphan_pages`
+unbounded, so they are not gated here: :func:`dev.docs.output_cleanup.remove_orphan_pages`
 prunes the BUILT HTML tree, and :meth:`dev.docs.apidocs.manager.ApiStubManager.scaffold`
 prunes the ``docs/api/*.rst`` stubs a full build regenerates from the module
 tree. The stubs are not committed, so no stub tree records coverage; the

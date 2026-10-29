@@ -5,8 +5,9 @@ from typing import Literal
 
 from cadrumo.application.storage.calc_sheets.engine import build_template_preview_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_template_preview_form
-from cadrumo.application.storage.calc_sheets.layout import plan_layout
+from cadrumo.application.storage.calc_sheets.layout import SheetLayout, plan_layout
 from cadrumo.application.storage.calc_sheets.records import (
+    SheetCellAddress,
     SheetExportPlan,
     SheetGuideContent,
     SheetTemplatePreviewMetadata,
@@ -33,14 +34,7 @@ def build_oss_detail_plan(
         preview_period=period,
     )
     names = {"exterior": "Régimen exterior", "union": "Régimen de la Unión", "importacion": "Importación"}
-    grids = tuple(
-        block
-        for form in source.revision.form_layouts
-        for page in form.pages
-        for section in page.sections
-        for block in section.blocks
-        if isinstance(block, FormGridBlock) and block.id != "resultado-estados"
-    )
+    grids = _oss_grids(source)
     populated_rows = 1 if scheme == "union" else 2
     unused_rows = {grid.id: tuple(row.key for row in grid.rows[populated_rows:]) for grid in grids}
     with override_settings(cadrumo_output_language="es"), validating_governed_facts(compiled_bundled_authority()):
@@ -70,44 +64,66 @@ def build_oss_detail_plan(
             ),
         )
         layout = plan_layout(source.revision)
-        values = {}
-        for grid in grids:
-            # Different amounts expose accidental mixing of the Union's two
-            # other-member-state flows, a defect in the former generated layout.
-            base = Decimal("2000") if grid.id == "union-envio" else Decimal("1000")
-            example: dict[str, Decimal | str] = {
-                "pais-consumo": "DE",
-                "pais-origen": "FR",
-                "niva": "FR-EJEMPLO",
-                "tipo": Decimal("19"),
-                "clase": "S",
-                "base": base,
-                "cuota": base * Decimal("0.19"),
-                "ejercicio": Decimal(year - 1),
-                "tipo-periodo": "M" if scheme == "importacion" else "T",
-                "periodo": "12" if scheme == "importacion" else "4T",
-                "correccion": Decimal("-20"),
-            }
-            examples = [example]
-            if scheme != "union":
-                examples.append(
-                    {
-                        **example,
-                        "pais-consumo": "FR",
-                        "tipo": Decimal("20"),
-                        "base": Decimal("500"),
-                        "cuota": Decimal("100"),
-                        "correccion": Decimal("-140"),
-                    }
-                )
-            for row, row_values in zip(grid.rows[: len(examples)], examples, strict=True):
-                for column, cell in zip(grid.columns, row.cells, strict=True):
-                    if cell.binding_id is None:
-                        raise ValueError("OSS detail example requires an exact declared binding owner")
-                    values[layout.binding_cells[cell.binding_id]] = row_values[column.key]
+        values = _oss_values(grids, layout, scheme, year)
         cells = tuple(
             cell.model_copy(update={"value": values[cell.address]}) if cell.address in values else cell
             for cell in plan.value_cells
         )
         plan = SheetExportPlan[SheetTemplatePreviewMetadata].model_validate({**dict(plan), "value_cells": cells})
         return source, add_template_preview_form(plan, source)
+
+
+def _oss_values(
+    grids: tuple[FormGridBlock, ...],
+    layout: SheetLayout,
+    scheme: Literal["exterior", "union", "importacion"],
+    year: int,
+) -> dict[SheetCellAddress, Decimal | str]:
+    values: dict[SheetCellAddress, Decimal | str] = {}
+    for grid in grids:
+        # Different amounts expose accidental mixing of the Union's two
+        # other-member-state flows, a defect in the former generated layout.
+        base = Decimal("2000") if grid.id == "union-envio" else Decimal("1000")
+        example: dict[str, Decimal | str] = {
+            "pais-consumo": "DE",
+            "pais-origen": "FR",
+            "niva": "FR-EJEMPLO",
+            "tipo": Decimal("19"),
+            "clase": "S",
+            "base": base,
+            "cuota": base * Decimal("0.19"),
+            "ejercicio": Decimal(year - 1),
+            "tipo-periodo": "M" if scheme == "importacion" else "T",
+            "periodo": "12" if scheme == "importacion" else "4T",
+            "correccion": Decimal("-20"),
+        }
+        examples = [example]
+        if scheme != "union":
+            examples.append(
+                {
+                    **example,
+                    "pais-consumo": "FR",
+                    "tipo": Decimal("20"),
+                    "base": Decimal("500"),
+                    "cuota": Decimal("100"),
+                    "correccion": Decimal("-140"),
+                }
+            )
+        for row, row_values in zip(grid.rows[: len(examples)], examples, strict=True):
+            for column, cell in zip(grid.columns, row.cells, strict=True):
+                if cell.binding_id is None:
+                    raise ValueError("OSS detail example requires an exact declared binding owner")
+                values[layout.binding_cells[cell.binding_id]] = row_values[column.key]
+    return values
+
+
+def _oss_grids(source: WorkbookTemplateSource) -> tuple[FormGridBlock, ...]:
+    grids = tuple(
+        block
+        for form in source.revision.form_layouts
+        for page in form.pages
+        for section in page.sections
+        for block in section.blocks
+        if isinstance(block, FormGridBlock) and block.id != "resultado-estados"
+    )
+    return grids

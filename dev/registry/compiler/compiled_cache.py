@@ -5,7 +5,8 @@ from __future__ import annotations
 from functools import cache
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ._compiled_cache import (
     _LOGGER,

@@ -19,6 +19,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.entrypoints.operation_composition import build_production_operation_contract_manifest
 from dev._paths import REPO_ROOT, UTF_8
 
@@ -57,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"OK: {path} matches the registered operations.")
         return 0
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(fresh, encoding=UTF_8, newline="\n")
+    atomic_write_text(path, fresh, encoding=UTF_8)
     print(f"Wrote {path}")
     return 0
 

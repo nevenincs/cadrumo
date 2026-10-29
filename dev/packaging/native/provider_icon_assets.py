@@ -9,11 +9,11 @@ import re
 import sys
 import tempfile
 import zipfile
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from types import ModuleType
-from typing import TypedDict
+from typing import TypedDict, cast
 from urllib.parse import quote_from_bytes
 from uuid import uuid4
 
@@ -46,10 +46,7 @@ def _read_once(archive: zipfile.ZipFile, name: str) -> bytes:
         raise ProviderIconGenerationError(f"The agent wheel cannot read {name}") from error
 
 
-@contextmanager
-def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
-    """Load the wheel's stdlib-only validator without importing the agent runtime."""
-    source = _read_once(archive, _ICON_MODULE)
+def _icon_assets(archive: zipfile.ZipFile) -> dict[str, bytes]:
     members = archive.namelist()
     assets: dict[str, bytes] = {}
     for member in members:
@@ -61,6 +58,15 @@ def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
         if filename in assets:
             raise ProviderIconGenerationError("The provider icon directory has duplicate artwork")
         assets[filename] = _read_once(archive, member)
+
+    return assets
+
+
+@contextmanager
+def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
+    """Load the wheel's stdlib-only validator without importing the agent runtime."""
+    source = _read_once(archive, _ICON_MODULE)
+    assets = _icon_assets(archive)
 
     with tempfile.TemporaryDirectory(prefix="cadrumo-provider-icons-", dir=prepare_temporary_directory()) as temporary:
         package_name = f"_cadrumo_provider_icons_{uuid4().hex}"
@@ -95,25 +101,32 @@ def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
                     del sys.modules[name]
 
 
+def _provider_row(row: object, seen: set[str]) -> tuple[str, str | None]:
+    if not isinstance(row, dict):
+        raise ProviderIconGenerationError("The agent provider metadata has an invalid provider")
+    row = cast(dict[str, object], row)
+    provider = row.get("id")
+    if "icon" not in row:
+        raise ProviderIconGenerationError("The agent provider metadata omits an icon declaration")
+    icon = row["icon"]
+    if not isinstance(provider, str) or _PROVIDER_ID.fullmatch(provider) is None:
+        raise ProviderIconGenerationError("The agent provider metadata has an invalid provider ID")
+    if provider in seen:
+        raise ProviderIconGenerationError("The agent provider metadata has duplicate provider IDs")
+    if icon is not None and (not isinstance(icon, str) or not icon or icon != icon.strip()):
+        raise ProviderIconGenerationError(f"Provider {provider} has no declared icon key")
+
+    return provider, icon
+
+
 def _provider_rows(document: object) -> list[tuple[str, str | None]]:
     """Read provider IDs and icon keys from the wheel's packaged metadata."""
-    if not isinstance(document, dict) or not isinstance(document.get("providers"), list):
+    if not isinstance(document, dict) or not isinstance(cast(dict[str, object], document).get("providers"), list):
         raise ProviderIconGenerationError("The agent provider metadata has no providers list")
     rows: list[tuple[str, str | None]] = []
     seen: set[str] = set()
-    for row in document["providers"]:
-        if not isinstance(row, dict):
-            raise ProviderIconGenerationError("The agent provider metadata has an invalid provider")
-        provider = row.get("id")
-        if "icon" not in row:
-            raise ProviderIconGenerationError("The agent provider metadata omits an icon declaration")
-        icon = row["icon"]
-        if not isinstance(provider, str) or _PROVIDER_ID.fullmatch(provider) is None:
-            raise ProviderIconGenerationError("The agent provider metadata has an invalid provider ID")
-        if provider in seen:
-            raise ProviderIconGenerationError("The agent provider metadata has duplicate provider IDs")
-        if icon is not None and (not isinstance(icon, str) or not icon or icon != icon.strip()):
-            raise ProviderIconGenerationError(f"Provider {provider} has no declared icon key")
+    for row in cast(list[object], document["providers"]):
+        provider, icon = _provider_row(row, seen)
         seen.add(provider)
         rows.append((provider, icon))
     return rows
@@ -131,6 +144,68 @@ class ProviderIconDocument(TypedDict):
     attribution: dict[str, str]
 
 
+def _validate_variants(provider_id: str, variants: Sequence[object], icons: ModuleType) -> None:
+    if (
+        not variants
+        or variants[0] is not icons.IconVariant.MONO
+        or any(variant not in (icons.IconVariant.MONO, icons.IconVariant.COLOR) for variant in variants)
+        or len(set(variants)) != len(variants)
+    ):
+        raise ProviderIconGenerationError(f"Provider {provider_id} has no preferred mono artwork")
+
+
+def _render_providers(
+    providers: list[tuple[str, str | None]], icons: ModuleType
+) -> tuple[dict[str, dict[str, str]], set[str]]:
+    output: dict[str, dict[str, str]] = {}
+    expected_assets: set[str] = set()
+    for provider_id, icon_key in providers:
+        if icon_key is None:
+            continue
+        try:
+            variants = icons.icon_variants(icon_key)
+        except (LookupError, ValueError) as error:
+            raise ProviderIconGenerationError(
+                f"Provider {provider_id} names artwork absent from the agent wheel"
+            ) from error
+        _validate_variants(provider_id, variants, icons)
+
+        rendered: dict[str, str] = {}
+        for variant in variants:
+            filename = f"{icon_key}.svg" if variant is icons.IconVariant.MONO else f"{icon_key}-{variant.value}.svg"
+            expected_assets.add(filename)
+            try:
+                rendered[variant.value] = _data_url(icons.read_icon(icon_key, variant))
+            except (LookupError, OSError, ValueError) as error:
+                raise ProviderIconGenerationError(
+                    f"The agent wheel refused artwork for provider {provider_id}"
+                ) from error
+        output[provider_id] = rendered
+
+    return output, expected_assets
+
+
+def _validate_assets(archive: zipfile.ZipFile, expected_assets: set[str]) -> None:
+    actual_assets = {
+        name.removeprefix(_ICON_DIRECTORY)
+        for name in archive.namelist()
+        if name.startswith(_ICON_DIRECTORY) and not name.endswith("/")
+    }
+    if expected_assets != actual_assets:
+        raise ProviderIconGenerationError("The provider catalog and bundled icon files differ")
+
+
+def _attribution(icons: ModuleType) -> dict[str, str]:
+    attribution = icons.ICON_ATTRIBUTION
+    credit: dict[str, str] = {}
+    for field in ("title", "url", "pin", "licence", "notice", "trademarks"):
+        value = getattr(attribution, field)
+        if not isinstance(value, str) or not value:
+            raise ProviderIconGenerationError("The agent icon attribution is incomplete")
+        credit[field] = value
+    return credit
+
+
 def provider_icon_document(wheel: Path) -> ProviderIconDocument:
     """Project provider IDs, validated SVGs and license terms from *wheel*."""
     try:
@@ -145,55 +220,9 @@ def provider_icon_document(wheel: Path) -> ProviderIconDocument:
             raise ProviderIconGenerationError("The agent provider metadata is not valid JSON") from error
         providers = _provider_rows(metadata)
         with _provider_icons_module(archive) as icons:
-            output: dict[str, dict[str, str]] = {}
-            expected_assets: set[str] = set()
-            for provider_id, icon_key in providers:
-                if icon_key is None:
-                    continue
-                try:
-                    variants = icons.icon_variants(icon_key)
-                except (LookupError, ValueError) as error:
-                    raise ProviderIconGenerationError(
-                        f"Provider {provider_id} names artwork absent from the agent wheel"
-                    ) from error
-                if (
-                    not variants
-                    or variants[0] is not icons.IconVariant.MONO
-                    or any(variant not in (icons.IconVariant.MONO, icons.IconVariant.COLOR) for variant in variants)
-                    or len(set(variants)) != len(variants)
-                ):
-                    raise ProviderIconGenerationError(f"Provider {provider_id} has no preferred mono artwork")
-
-                rendered: dict[str, str] = {}
-                for variant in variants:
-                    filename = (
-                        f"{icon_key}.svg" if variant is icons.IconVariant.MONO else f"{icon_key}-{variant.value}.svg"
-                    )
-                    expected_assets.add(filename)
-                    try:
-                        rendered[variant.value] = _data_url(icons.read_icon(icon_key, variant))
-                    except (LookupError, OSError, ValueError) as error:
-                        raise ProviderIconGenerationError(
-                            f"The agent wheel refused artwork for provider {provider_id}"
-                        ) from error
-                output[provider_id] = rendered
-
-            actual_assets = {
-                name.removeprefix(_ICON_DIRECTORY)
-                for name in archive.namelist()
-                if name.startswith(_ICON_DIRECTORY) and not name.endswith("/")
-            }
-            if expected_assets != actual_assets:
-                raise ProviderIconGenerationError("The provider catalog and bundled icon files differ")
-
-            attribution = icons.ICON_ATTRIBUTION
-            credit: dict[str, str] = {}
-            for field in ("title", "url", "pin", "licence", "notice", "trademarks"):
-                value = getattr(attribution, field)
-                if not isinstance(value, str) or not value:
-                    raise ProviderIconGenerationError("The agent icon attribution is incomplete")
-                credit[field] = value
-            return ProviderIconDocument(providers=dict(sorted(output.items())), attribution=credit)
+            output, expected_assets = _render_providers(providers, icons)
+            _validate_assets(archive, expected_assets)
+            return ProviderIconDocument(providers=dict(sorted(output.items())), attribution=_attribution(icons))
 
 
 def generate(wheel: Path, output: Path) -> None:

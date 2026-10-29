@@ -22,13 +22,13 @@ is the one output an audit instrument must never emit.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 from pydantic import ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import freeze_toml, parse_toml
-from cadrumo.domain.calculations.registry.schema import RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
 from dev._paths import UTF_8
 from dev.registry.compiler.loader_materialisation import validate_catalogue_section
@@ -60,41 +60,53 @@ def load_legal_entries(root: Path) -> dict[str, dict[str, object]]:
         raise SystemExit(f"legal catalogue is missing, so the result would be meaningless: {legal_dir}")
     entries: dict[str, dict[str, object]] = {}
     for path in scan_directory(legal_dir, pattern="*.toml"):
-        data = parse_toml(path.read_text(encoding=_UTF_8))
-        unknown = set(data) - RegistryCatalogues.model_fields.keys() - {"band"}
-        if unknown or not data:
-            raise SystemExit(f"{path}: unrecognized or empty catalogue declarations: {sorted(unknown)}")
-        if "band" in data:
-            published_recargo_bands(data)
-        metadata = {key: value for key, value in data.items() if key not in {"legal", "band"}}
-        if "sources" in metadata:
-            raw_sources = metadata["sources"]
-            if not isinstance(raw_sources, dict) or not raw_sources:
-                raise SystemExit(f"{path}: source declarations must be a non-empty table")
-            metadata["sources"] = validate_catalogue_section(
-                path,
-                raw=freeze_toml(raw_sources),
-                kind="source reference",
-                model=SourceReference,
-            )
-        try:
-            RegistryCatalogues.model_validate(freeze_toml({"sources": {}, **metadata, "legal": {}}))
-        except ValidationError as exc:
-            raise SystemExit(f"{path}: invalid non-legal catalogue declarations: {exc}") from exc
-        if "legal" not in data:
-            continue
-        legal = data["legal"]
-        if not isinstance(legal, dict) or not legal:
-            raise SystemExit(f"{path}: legal declarations must be a non-empty table")
-        for entry_id, body in legal.items():
-            if not isinstance(body, dict) or not body:
-                raise SystemExit(f"{path}: legal entry {entry_id!r} must be a non-empty table")
-            if entry_id in entries:
-                raise SystemExit(f"{path}: duplicate legal entry {entry_id!r}")
-            entries[entry_id] = body
+        _load_catalogue_file(path, entries)
     if not entries:
         raise SystemExit(f"legal catalogue contains no legal entries: {legal_dir}")
     return entries
+
+
+def _load_catalogue_file(path: Path, entries: dict[str, dict[str, object]]) -> None:
+    data = parse_toml(path.read_text(encoding=_UTF_8))
+    unknown = set(data) - RegistryCatalogues.model_fields.keys() - {"band"}
+    if unknown or not data:
+        raise SystemExit(f"{path}: unrecognized or empty catalogue declarations: {sorted(unknown)}")
+    if "band" in data:
+        published_recargo_bands(data)
+    _validate_metadata(path, data)
+    if "legal" not in data:
+        return
+    legal = data["legal"]
+    if not isinstance(legal, dict) or not legal:
+        raise SystemExit(f"{path}: legal declarations must be a non-empty table")
+    _add_legal_entries(path, cast(dict[str, object], legal), entries)
+
+
+def _add_legal_entries(path: Path, legal: dict[str, object], entries: dict[str, dict[str, object]]) -> None:
+    for entry_id, body in legal.items():
+        if not isinstance(body, dict) or not body:
+            raise SystemExit(f"{path}: legal entry {entry_id!r} must be a non-empty table")
+        if entry_id in entries:
+            raise SystemExit(f"{path}: duplicate legal entry {entry_id!r}")
+        entries[entry_id] = body
+
+
+def _validate_metadata(path: Path, data: dict[str, object]) -> None:
+    metadata = {key: value for key, value in data.items() if key not in {"legal", "band"}}
+    if "sources" in metadata:
+        raw_sources = metadata["sources"]
+        if not isinstance(raw_sources, dict) or not raw_sources:
+            raise SystemExit(f"{path}: source declarations must be a non-empty table")
+        metadata["sources"] = validate_catalogue_section(
+            path,
+            raw=freeze_toml(cast(dict[str, object], raw_sources)),
+            kind="source reference",
+            model=SourceReference,
+        )
+    try:
+        RegistryCatalogues.model_validate(freeze_toml({"sources": {}, **metadata, "legal": {}}))
+    except ValidationError as exc:
+        raise SystemExit(f"{path}: invalid non-legal catalogue declarations: {exc}") from exc
 
 
 def required_text_by_entry(entries: dict[str, dict[str, object]]) -> dict[str, tuple[str, ...]]:
@@ -114,5 +126,7 @@ def required_text_by_entry(entries: dict[str, dict[str, object]]) -> dict[str, t
     projected: dict[str, tuple[str, ...]] = {}
     for entry_id, body in entries.items():
         declared = body.get("required_text")
-        projected[entry_id] = tuple(str(phrase) for phrase in declared) if isinstance(declared, list) else ()
+        projected[entry_id] = (
+            tuple(str(phrase) for phrase in cast(list[object], declared)) if isinstance(declared, list) else ()
+        )
     return projected

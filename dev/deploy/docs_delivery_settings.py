@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from dev.deploy.cloudflare_api import CloudflareAccount, _call
+from dev.deploy.cloudflare_api import CloudflareAccount, cloudflare_call
 from dev.deploy.docs_asset_manifest import PUBLIC_BUCKET, PUBLIC_HOST
 
 DOCS_EXPRESSION = (
@@ -19,7 +19,7 @@ DOCS_EXPRESSION = (
 def optional_get(account: CloudflareAccount, path: str) -> Any:
     """Treat only an explicit missing resource as absent."""
     try:
-        return _call(account, "GET", path)
+        return cloudflare_call(account, "GET", path)
     except SystemExit as exc:
         if "HTTP 404" not in str(exc):
             raise
@@ -30,7 +30,7 @@ def prepare_storage(account: CloudflareAccount) -> None:
     """Create an isolated search bucket without exposing the private archive."""
     base = f"/accounts/{account.account_id}/r2/buckets"
     if optional_get(account, f"{base}/{PUBLIC_BUCKET}") is None:
-        _call(account, "POST", base, json={"name": PUBLIC_BUCKET, "locationHint": "weur"})
+        cloudflare_call(account, "POST", base, json={"name": PUBLIC_BUCKET, "locationHint": "weur"})
 
 
 def reconcile_rule(account: CloudflareAccount, zone: str, phase: str, rule: dict[str, Any]) -> None:
@@ -38,7 +38,7 @@ def reconcile_rule(account: CloudflareAccount, zone: str, phase: str, rule: dict
     base = f"/zones/{zone}/rulesets"
     current = optional_get(account, f"{base}/phases/{phase}/entrypoint")
     if current is None:
-        _call(
+        cloudflare_call(
             account,
             "POST",
             base,
@@ -47,7 +47,9 @@ def reconcile_rule(account: CloudflareAccount, zone: str, phase: str, rule: dict
         return
     existing = next((item for item in current["rules"] if item.get("ref") == rule["ref"]), None)
     path = f"{base}/{current['id']}/rules"
-    _call(account, "PATCH" if existing else "POST", f"{path}/{existing['id']}" if existing else path, json=rule)
+    cloudflare_call(
+        account, "PATCH" if existing else "POST", f"{path}/{existing['id']}" if existing else path, json=rule
+    )
 
 
 def configure_delivery(account: CloudflareAccount, zone: str, snapshot: Path) -> None:
@@ -63,11 +65,11 @@ def configure_delivery(account: CloudflareAccount, zone: str, snapshot: Path) ->
     )
     before = {phase: optional_get(account, f"/zones/{zone}/rulesets/phases/{phase}/entrypoint") for phase in phases}
     before["cors"] = optional_get(account, f"{base}/cors")
-    before["domains"] = _call(account, "GET", f"{base}/domains/custom")
-    before["tls"] = _call(account, "GET", f"/zones/{zone}/hostnames/settings/min_tls_version")
-    before["tiered"] = _call(account, "GET", f"/zones/{zone}/cache/tiered_cache_smart_topology_enable")
+    before["domains"] = cloudflare_call(account, "GET", f"{base}/domains/custom")
+    before["tls"] = cloudflare_call(account, "GET", f"/zones/{zone}/hostnames/settings/min_tls_version")
+    before["tiered"] = cloudflare_call(account, "GET", f"/zones/{zone}/cache/tiered_cache_smart_topology_enable")
     (snapshot / "before.json").write_text(json.dumps(before, indent=2), encoding="utf-8")
-    _call(
+    cloudflare_call(
         account,
         "PUT",
         f"{base}/cors",
@@ -83,12 +85,17 @@ def configure_delivery(account: CloudflareAccount, zone: str, snapshot: Path) ->
         },
     )
     if not any(item["domain"] == PUBLIC_HOST for item in before["domains"]["domains"]):
-        _call(
+        cloudflare_call(
             account,
             "POST",
             f"{base}/domains/custom",
             json={"domain": PUBLIC_HOST, "enabled": True, "zoneId": zone, "minTLS": "1.2"},
         )
+    _configure_delivery_rules(account, zone)
+
+
+def _configure_delivery_rules(account: CloudflareAccount, zone: str) -> None:
+    """Apply the scoped identity, cache, header, transport and redirect rules."""
     public = f'(http.host eq "{PUBLIC_HOST}" and starts_with(http.request.uri.path, "/releases/"))'
     reconcile_rule(
         account,
@@ -184,7 +191,7 @@ def configure_delivery(account: CloudflareAccount, zone: str, snapshot: Path) ->
             "enabled": True,
         },
     )
-    _call(account, "PATCH", f"/zones/{zone}/cache/tiered_cache_smart_topology_enable", json={"value": "on"})
+    cloudflare_call(account, "PATCH", f"/zones/{zone}/cache/tiered_cache_smart_topology_enable", json={"value": "on"})
     # Exact Worker routes do not match a bare mount with a query string.
     # Keep those requests off the unrelated origin without matching /docsfoo.
     reconcile_rule(

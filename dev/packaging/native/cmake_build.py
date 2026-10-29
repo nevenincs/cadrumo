@@ -6,20 +6,20 @@ import argparse
 import hashlib
 import json
 import os
-import re
 import shutil
 import sys
 import tempfile
 import time
-from collections.abc import Mapping
-from contextlib import nullcontext
-from dataclasses import asdict
+from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 
 from dev._paths import REPO_ROOT
 
 from ..command_execution import CommandResult, run_command
 from .action_cache import action_lock, completed, fingerprint, modified_inputs, receipt_staleness, staleness
+from .action_selection import action_toolchain
+from .base_dependencies import sync_base_dependencies
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, command_line, display_path
 from .build_paths import build_paths
@@ -38,52 +38,11 @@ from .build_stamp import (
     settle_record,
 )
 from .build_timing import BuildTimings, measure_build
-from .build_toolchain import builder_inputs, native_toolchain_identity, selected_uv
+from .build_toolchain import builder_inputs, selected_uv
+from .cargo_command import run_configured_command
 from .hashing import digest, digest_cache
 from .stable_output import write_text
 from .stage_reuse import record_reuse
-
-
-def action_toolchain(configured: Mapping[str, object], action: str, target: str) -> dict[str, object]:
-    """Select only producers and pins consumed by this action, not desktop inputs."""
-    from ..runtime_wheel_selection import plan_target_wheels
-    from .product import BUNDLED_EXTRAS
-    from .target import toolchain_for_target
-
-    files = configured.get("builder_files", {})
-    if not isinstance(files, dict):
-        raise ValueError("Configured builder_files must be a mapping")
-    selected: dict[str, object] = {
-        "builder_files": {name: record for name, record in files.items() if name == "CADRUMO_UV" and action != "sdk"}
-    }
-    pins = toolchain_for_target(target)
-    if action in {"sdk", "provision"}:
-        selected["pins"] = {name: value for name, value in pins.items() if name.startswith("cpython_")}
-        if action == "provision":
-            python = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-            wheels = plan_target_wheels(REPO_ROOT, target, python, extras=BUNDLED_EXTRAS)
-            selected["wheels"] = [asdict(wheel) for wheel in wheels]
-        if action == "sdk" and "cpython_archive_decoder" in configured:
-            selected["cpython_archive_decoder"] = configured["cpython_archive_decoder"]
-    elif action == "tools":
-        selected["pins"] = {"resvg_py": pins["resvg_py"]}
-    elif action == "agent":
-        tools = configured.get("desktop_tools")
-        if not isinstance(tools, dict) or not all(isinstance(tools.get(name), str) for name in ("node", "npm_cli")):
-            raise ValueError("Agent runtime construction requires configured Node/npm builders; reconfigure CMake")
-        selected["node"] = tools["node"]
-        selected["npm_cli"] = tools["npm_cli"]
-        selected["builder_files"] = {
-            name: record
-            for name, record in files.items()
-            if name in {"CADRUMO_UV", "desktop/node", "desktop/npm-cli", "desktop/npm-package"}
-        }
-    elif action != "product":
-        raise ValueError(f"No shared producer selection for {action}")
-    # Product wheels use Hatchling's Python/data hooks; native compilers and SDKs
-    # never produce their contents. CMake enrolls their declared sources/backend,
-    # and the action caller hashes the admitted Python executable.
-    return selected
 
 
 def owned(build: Path, relative: str) -> Path:
@@ -107,116 +66,51 @@ def reset(build: Path, relative: str) -> Path:
     return destination
 
 
-def run_configured_command(
-    build: Path, configured: dict[str, object], command: list[str], *, timings: BuildTimings | None = None
-) -> CommandResult:
-    """Invalidate only the isolated native Cargo cache when selected producer bytes change."""
-    if Path(command[0]).name.lower() not in {"cargo", "cargo.exe"} or command[1:2] not in (
-        ["build"],
-        ["test"],
-        ["check"],
-        ["run"],
-        ["clippy"],
-        ["rustc"],
-    ):
-        with timings.phase("builder-admission") if timings is not None else nullcontext():
-            builder_inputs(configured)
-        _announce(timings, command)
-        with timings.phase("configured-command") if timings is not None else nullcontext():
-            result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
-            if timings is not None:
-                timings.command_completed(result.returncode)
-            return result
-    files = configured.get("builder_files", {})
-    if not isinstance(files, dict):
-        raise ValueError("Configured builder_files must be a mapping")
-    with timings.phase("builder-admission") if timings is not None else nullcontext():
-        builder_inputs(
-            {
-                "builder_files": {
-                    name: record
-                    for name, record in files.items()
-                    if name != "CADRUMO_UV" and not name.startswith("desktop/")
-                },
-                "sysroots": configured.get("sysroots", {}),
-            }
-        )
-    paths = build_paths(build)
-    native = paths["cargo"]
-    desktop = paths.get("desktop_cargo")
-    if desktop is not None and (desktop.is_relative_to(native) or native.is_relative_to(desktop)):
-        raise ValueError("Native Cargo invalidation requires a directory isolated from desktop Cargo outputs")
-    exported = Path(os.environ.get("CARGO_TARGET_DIR", ""))
-    if not exported.is_absolute() or exported.resolve() != native:
-        raise ValueError("Native Cargo command requires its declared absolute target directory")
-    # The exported directory is only checked against the build's own; every
-    # path written below derives from the build layout.
-    selected = native
-    for index, argument in enumerate(command):
-        if argument == "--target-dir":
-            selected = Path(command[index + 1])
-        elif argument.startswith("--target-dir="):
-            selected = Path(argument.partition("=")[2])
-    if not selected.is_absolute() or not selected.resolve().is_relative_to(native):
-        raise ValueError("Native Cargo target override escapes its owning binary directory")
-    directory = build.resolve(strict=True)
-    for part in selected.relative_to(directory).parts:
-        directory /= part
-        if directory.is_symlink() or directory.is_junction():
-            raise ValueError("Native Cargo target directory contains a linked member")
-    directory = selected.resolve()
-    # CMake's own C compile and link flags reach only the targets CMake compiles; Cargo never
-    # reads them, so a change to them must not clean the Cargo directory.
-    cmake_flags = re.compile(r"CMAKE_C_FLAGS(_.+)?|CMAKE_[A-Z]+_LINKER_FLAGS(_.+)?")
-    target_configuration = configured.get("target_configuration", {})
-    identity = native_toolchain_identity(
-        {
-            **configured,
-            "target_configuration": {
-                name: value
-                for name, value in (target_configuration.items() if isinstance(target_configuration, dict) else ())
-                if not cmake_flags.fullmatch(str(name))
-            },
-        }
-    )
-    marker = paths["generated"] / f"rust-toolchain-{hashlib.sha256(str(directory).encode()).hexdigest()}.txt"
-    # Cargo subcommands and their drivers must use the selected toolchain too.
-    environment = dict(os.environ)
-    environment["PATH"] = os.pathsep.join((str(Path(command[0]).parent), environment.get("PATH", "")))
-    with action_lock(build, "native-cargo", timings=timings):
-        if not marker.is_file() or marker.read_text(encoding="utf-8").strip() != identity:
-            clean = [command[0], "clean", "--target-dir", str(directory)]
-            if "--manifest-path" in command:
-                clean.extend(["--manifest-path", command[command.index("--manifest-path") + 1]])
-            if timings is not None:
-                timings.log.status(
-                    "the selected Rust toolchain or SDK changed; "
-                    f"cleaning {display_path(directory)} before a full Cargo rebuild"
-                )
-            _announce(timings, clean)
-            with timings.phase("cargo-clean") if timings is not None else nullcontext():
-                result = run_command(clean, cwd=REPO_ROOT, environment=environment, inherit_output=True)
-                if timings is not None:
-                    timings.command_completed(result.returncode)
-            if result.returncode:
-                return result
-        _announce(timings, command)
-        with timings.phase("cargo-command") if timings is not None else nullcontext():
-            result = run_command(command, cwd=REPO_ROOT, environment=environment, inherit_output=True)
-            if timings is not None:
-                timings.command_completed(result.returncode)
-        if result.returncode == 0:
-            marker.parent.mkdir(parents=True, exist_ok=True)
-            marker.write_text(identity + "\n", encoding="utf-8")
-        return result
+def _run_unenrolled(command: list[str]) -> CommandResult:
+    log = BuildLog(_command_step(command))
+    log.debug(f"command: {command_line(command)}")
+    result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
+    if result.returncode:
+        log.error(f"exited with status {result.returncode} after {result.duration_seconds:.1f} s")
+    else:
+        log.verbose(f"finished in {result.duration_seconds:.1f} s")
+    return result
 
 
-def _announce(timings: BuildTimings | None, command: list[str]) -> None:
-    """Name the program a step runs at STATUS, and its whole command line at DEBUG."""
-    if timings is not None:
-        subcommand = next((argument for argument in command[1:] if not argument.startswith("-")), "")
-        timings.log.status(f"running {Path(command[0]).stem} {subcommand}".rstrip())
-        timings.log.debug(f"command: {command_line(command)}")
+def _record_command_result(
+    arguments: argparse.Namespace, command: list[str], result: CommandResult, reuse: list[str] | None
+) -> None:
+    if result.returncode == 0 and arguments.build_identity is not None and command[1:2] in (["build"], ["rustc"]):
+        # The component's images are compiled; staging adds what it ships of them.
+        component = arguments.build_identity
+        settled = native_settled(arguments.build, [component], configuration=arguments.config)[component]
+        settle_record(arguments.build, component, settled=settled)
+    if result.returncode == 0 and reuse is not None:
+        record_built(arguments.build, reuse[0], str(arguments.config), Path(reuse[1]), command)
+
+
+def _run_command_action(parser: argparse.ArgumentParser, arguments: argparse.Namespace, command: list[str]) -> None:
+    if not command:
+        parser.error("run requires -- followed by an executable and arguments")
+    reuse = arguments.reuse_built
+    if reuse is not None:
+        if arguments.config is None:
+            parser.error("--reuse-built requires --config")
+        if built_current(arguments.build, reuse[0], arguments.config, Path(reuse[1]), command):
+            BuildLog(_command_step(command)).status(
+                f"up to date, reusing {display_path(Path(reuse[1]))}: built from the current {reuse[0]} fingerprint"
+            )
+            raise SystemExit(0)
+    if arguments.build is not None:
+        selected = build_paths(arguments.build)["generated"] / "build-toolchain.json"
+        with measure_build(arguments.build, _command_step(command)) as timings:
+            result = run_configured_command(
+                arguments.build, json.loads(selected.read_text(encoding="utf-8")), command, timings=timings
+            )
+    else:
+        result = _run_unenrolled(command)
+    _record_command_result(arguments, command, result, reuse)
+    raise SystemExit(result.returncode)
 
 
 def main() -> None:
@@ -251,43 +145,11 @@ def main() -> None:
         environment.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary)))
         tempfile.tempdir = str(temporary)
     if arguments.build_identity is not None:
-        resolved = resolve(arguments.build, [arguments.build_identity], configuration=arguments.config)
+        resolved = resolve(cast(Path, arguments.build), [arguments.build_identity], configuration=arguments.config)
         environment.update(image_environment(resolved[arguments.build_identity]))
     os.environ.update(environment)
     if arguments.action == "run":
-        if not command:
-            parser.error("run requires -- followed by an executable and arguments")
-        reuse = arguments.reuse_built
-        if reuse is not None:
-            if arguments.config is None:
-                parser.error("--reuse-built requires --config")
-            if built_current(arguments.build, reuse[0], arguments.config, Path(reuse[1]), command):
-                BuildLog(_command_step(command)).status(
-                    f"up to date, reusing {display_path(Path(reuse[1]))}: built from the current {reuse[0]} fingerprint"
-                )
-                raise SystemExit(0)
-        if arguments.build is not None:
-            selected = build_paths(arguments.build)["generated"] / "build-toolchain.json"
-            with measure_build(arguments.build, _command_step(command)) as timings:
-                result = run_configured_command(
-                    arguments.build, json.loads(selected.read_text(encoding="utf-8")), command, timings=timings
-                )
-        else:
-            log = BuildLog(_command_step(command))
-            log.debug(f"command: {command_line(command)}")
-            result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
-            if result.returncode:
-                log.error(f"exited with status {result.returncode} after {result.duration_seconds:.1f} s")
-            else:
-                log.verbose(f"finished in {result.duration_seconds:.1f} s")
-        if result.returncode == 0 and arguments.build_identity is not None and command[1:2] in (["build"], ["rustc"]):
-            # The component's images are compiled; staging adds what it ships of them.
-            component = arguments.build_identity
-            settled = native_settled(arguments.build, [component], configuration=arguments.config)[component]
-            settle_record(arguments.build, component, settled=settled)
-        if result.returncode == 0 and reuse is not None:
-            record_built(arguments.build, reuse[0], str(arguments.config), Path(reuse[1]), command)
-        raise SystemExit(result.returncode)
+        _run_command_action(parser, arguments, command)
     if arguments.build is None:
         parser.error("--build is required")
     if arguments.action in {"sdk", "provision", "product", "tools", "agent"} and arguments.inputs is None:
@@ -317,187 +179,265 @@ def action_inventory(build: Path, inputs: Path, extra: tuple[Path, ...], selecti
     return entries
 
 
-def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTimings) -> None:
-    """Admit one stable producer generation and retain its phase durations."""
+def _check_input_stability(
+    build: Path,
+    arguments: argparse.Namespace,
+    timings: BuildTimings,
+    identity_file: Path,
+    paths: dict[str, Path],
+    selected: dict[str, object],
+    component: str | None,
+    admitted_identity: Callable[[], str],
+    identity: str,
+    extra: tuple[Path, ...],
+    selected_builder_inputs: tuple[Path, ...],
+    started_ns: int,
+) -> tuple[str, bool]:
+    with timings.phase("input-stability"):
+        latest_target = json.loads(identity_file.read_text(encoding="utf-8"))["target"]
+        latest_configured = json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8"))
+        latest_selected = action_toolchain(latest_configured, arguments.action, latest_target)
+        if latest_target != arguments.target or latest_selected != selected:
+            if component is not None:
+                settle_record(build, component, settled=False)
+            raise RuntimeError(
+                f"The configured target or toolchain changed during {arguments.action}; completion receipt refused"
+            )
+        settled = admitted_identity() == identity
+        if not settled:
+            if component is not None:
+                settle_record(build, component, settled=False)
+            changed = modified_inputs(
+                arguments.inputs, (*extra, Path(sys.executable), *selected_builder_inputs), started_ns
+            )
+            detail = (
+                f"{len(changed)} modified while it ran, first {display_path(changed[0])}"
+                if changed
+                else "no enrolled file was modified while it ran; the client build identity changed"
+            )
+            if arguments.action == "product":
+                # The wheels were built from the producer's isolated
+                # snapshot. Later checkout edits invalidate reuse, not
+                # those completed outputs. Give this receipt an identity
+                # that no checkout fingerprint can claim on a later run.
+                identity = hashlib.sha256(f"snapshot:{identity}:{time.time_ns()}".encode()).hexdigest()
+                timings.log.status(
+                    f"Checkout changed during the product snapshot build ({detail}); "
+                    "keeping the completed output without reusable checkout identity"
+                )
+            else:
+                raise RuntimeError(
+                    f"Inputs changed during {arguments.action} ({detail}); completion receipt refused. "
+                    "Build again once nothing edits the checkout."
+                )
+    return identity, settled
+
+
+def _record_current_output(
+    build: Path,
+    arguments: argparse.Namespace,
+    component: str | None,
+    identity: str,
+    enrolled: tuple[Path, ...],
+    selection: list[object],
+) -> None:
+    if component is not None:
+        record = read_record(build, component)
+        if record is None or record["fingerprint"] != identity or record["state"] != SETTLED:
+            # The receipt proves these outputs were built from exactly these inputs.
+            begin_record(
+                build,
+                action_identity(build, arguments.action, identity),
+                action_inventory(build, arguments.inputs, enrolled, selection),
+            )
+            settle_record(build, component, settled=True)
+
+
+def _execute_shared_action(
+    build: Path,
+    arguments: argparse.Namespace,
+    timings: BuildTimings,
+    identity_file: Path,
+    configured: dict[str, object],
+) -> None:
     from ..authority_staging import selected_published_authority
     from ..google_oauth import build_client_json, client_build_identity
 
+    if arguments.inputs is None:
+        raise ValueError("Shared actions require --inputs")
+    paths = build_paths(build)
+    destination = paths[
+        {"sdk": "python_sdk", "provision": "runtime", "tools": "tools", "product": "product", "agent": "agent"}[
+            arguments.action
+        ]
+    ]
+    extra = selected_published_authority(REPO_ROOT) if arguments.action == "product" else ()
+    selected = action_toolchain(configured, arguments.action, arguments.target)
+    with timings.phase("builder-admission"):
+        selected_builder_inputs = builder_inputs(selected)
+    # One digest cache serves the input fingerprint, the reuse checks and the stability recheck.
+    with action_lock(build, "shared-inputs", timings=timings), digest_cache(build):
+
+        def admitted_identity() -> str:
+            identity = fingerprint(arguments.inputs, (*extra, Path(sys.executable), *selected_builder_inputs))
+            # Hash only this producer's selections, not independent desktop/native inputs.
+            identity = hashlib.sha256(
+                json.dumps([identity, arguments.target, selected], sort_keys=True).encode("utf-8")
+            ).hexdigest()
+            if arguments.action == "product":
+                identity = client_build_identity(identity, build_client_json(REPO_ROOT))
+            return identity
+
+        with timings.phase("input-fingerprint"):
+            identity = admitted_identity()
+        timings.log.debug(f"input identity {identity}")
+        # The Python payload producers keep build records beside the native components.
+        component = ACTION_COMPONENTS.get(arguments.action)
+        if component is not None:
+            # The receipt was written for exactly these inputs and the settled record of that
+            # build still matches every artifact it staged: nothing to rebuild or re-read.
+            with timings.phase("record-currency"):
+                unproven = receipt_staleness(destination, identity) or record_reuse(build, component, identity)
+            if unproven is None:
+                timings.log.status(
+                    f"up to date, reusing {display_path(destination)}: "
+                    f"inputs unchanged and the settled {component} record matches its staged artifacts"
+                )
+                return
+            timings.log.verbose(f"verifying every output: {unproven}")
+        with timings.phase("existing-output-inventory"):
+            reason = staleness(destination, identity)
+        enrolled = (*extra, Path(sys.executable), *selected_builder_inputs)
+        selection: list[object] = [arguments.target, selected]
+        if reason is None:
+            _record_current_output(build, arguments, component, identity, enrolled, selection)
+            timings.log.status(
+                f"up to date, reusing {display_path(destination)}: inputs and output inventory unchanged"
+            )
+            return
+        if component is not None:
+            begin_record(
+                build,
+                action_identity(build, arguments.action, identity),
+                action_inventory(build, arguments.inputs, enrolled, selection),
+            )
+        timings.log.status(f"building ({reason}) -> {display_path(destination)}")
+        (destination / "ready").unlink(missing_ok=True)
+        started_ns = time.time_ns()
+        with timings.phase("producer"):
+            destination = build_action(build, arguments, timings=timings)
+        identity, settled = _check_input_stability(
+            build,
+            arguments,
+            timings,
+            identity_file,
+            paths,
+            selected,
+            component,
+            admitted_identity,
+            identity,
+            extra,
+            selected_builder_inputs,
+            started_ns,
+        )
+        with timings.phase("output-inventory"):
+            completed(destination, identity)
+        if component is not None and settled:
+            settle_record(build, component, settled=True)
+        timings.log.status(f"built {display_path(destination)}")
+
+
+def execute_action(build: Path, arguments: argparse.Namespace, timings: BuildTimings) -> None:
+    """Admit one stable producer generation and retain its phase durations."""
     paths = build_paths(build)
     identity_file = paths["generated"] / "identity.json"
     configured = json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8"))
     arguments.target = json.loads(identity_file.read_text(encoding="utf-8"))["target"]
     if arguments.action in {"sdk", "provision", "product", "tools", "agent"}:
-        if arguments.inputs is None:
-            raise ValueError("Shared actions require --inputs")
-        paths = build_paths(build)
-        destination = paths[
-            {"sdk": "python_sdk", "provision": "runtime", "tools": "tools", "product": "product", "agent": "agent"}[
-                arguments.action
-            ]
-        ]
-        extra = selected_published_authority(REPO_ROOT) if arguments.action == "product" else ()
-        selected = action_toolchain(configured, arguments.action, arguments.target)
-        with timings.phase("builder-admission"):
-            selected_builder_inputs = builder_inputs(selected)
-        # One digest cache serves the input fingerprint, the reuse checks and the stability recheck.
-        with action_lock(build, "shared-inputs", timings=timings), digest_cache(build):
-
-            def admitted_identity() -> str:
-                identity = fingerprint(arguments.inputs, (*extra, Path(sys.executable), *selected_builder_inputs))
-                # Hash only this producer's selections, not independent desktop/native inputs.
-                identity = hashlib.sha256(
-                    json.dumps([identity, arguments.target, selected], sort_keys=True).encode("utf-8")
-                ).hexdigest()
-                if arguments.action == "product":
-                    identity = client_build_identity(identity, build_client_json(REPO_ROOT))
-                return identity
-
-            with timings.phase("input-fingerprint"):
-                identity = admitted_identity()
-            timings.log.debug(f"input identity {identity}")
-            # The Python payload producers keep build records beside the native components.
-            component = ACTION_COMPONENTS.get(arguments.action)
-            if component is not None:
-                # The receipt was written for exactly these inputs and the settled record of that
-                # build still matches every artifact it staged: nothing to rebuild or re-read.
-                with timings.phase("record-currency"):
-                    unproven = receipt_staleness(destination, identity) or record_reuse(build, component, identity)
-                if unproven is None:
-                    timings.log.status(
-                        f"up to date, reusing {display_path(destination)}: "
-                        f"inputs unchanged and the settled {component} record matches its staged artifacts"
-                    )
-                    return
-                timings.log.verbose(f"verifying every output: {unproven}")
-            with timings.phase("existing-output-inventory"):
-                reason = staleness(destination, identity)
-            enrolled = (*extra, Path(sys.executable), *selected_builder_inputs)
-            selection = [arguments.target, selected]
-            if reason is None:
-                if component is not None:
-                    record = read_record(build, component)
-                    if record is None or record["fingerprint"] != identity or record["state"] != SETTLED:
-                        # The receipt proves these outputs were built from exactly these inputs.
-                        begin_record(
-                            build,
-                            action_identity(build, arguments.action, identity),
-                            action_inventory(build, arguments.inputs, enrolled, selection),
-                        )
-                        settle_record(build, component, settled=True)
-                timings.log.status(
-                    f"up to date, reusing {display_path(destination)}: inputs and output inventory unchanged"
-                )
-                return
-            if component is not None:
-                begin_record(
-                    build,
-                    action_identity(build, arguments.action, identity),
-                    action_inventory(build, arguments.inputs, enrolled, selection),
-                )
-            timings.log.status(f"building ({reason}) -> {display_path(destination)}")
-            (destination / "ready").unlink(missing_ok=True)
-            started_ns = time.time_ns()
-            with timings.phase("producer"):
-                destination = build_action(build, arguments, timings=timings)
-            with timings.phase("input-stability"):
-                latest_target = json.loads(identity_file.read_text(encoding="utf-8"))["target"]
-                latest_configured = json.loads(
-                    (paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")
-                )
-                latest_selected = action_toolchain(latest_configured, arguments.action, latest_target)
-                if latest_target != arguments.target or latest_selected != selected:
-                    if component is not None:
-                        settle_record(build, component, settled=False)
-                    raise RuntimeError(
-                        f"The configured target or toolchain changed during {arguments.action}; "
-                        "completion receipt refused"
-                    )
-                settled = admitted_identity() == identity
-                if not settled:
-                    if component is not None:
-                        settle_record(build, component, settled=False)
-                    changed = modified_inputs(
-                        arguments.inputs, (*extra, Path(sys.executable), *selected_builder_inputs), started_ns
-                    )
-                    detail = (
-                        f"{len(changed)} modified while it ran, first {display_path(changed[0])}"
-                        if changed
-                        else "no enrolled file was modified while it ran; the client build identity changed"
-                    )
-                    if arguments.action == "product":
-                        # The wheels were built from the producer's isolated
-                        # snapshot. Later checkout edits invalidate reuse, not
-                        # those completed outputs. Give this receipt an identity
-                        # that no checkout fingerprint can claim on a later run.
-                        identity = hashlib.sha256(f"snapshot:{identity}:{time.time_ns()}".encode()).hexdigest()
-                        timings.log.status(
-                            f"Checkout changed during the product snapshot build ({detail}); "
-                            "keeping the completed output without reusable checkout identity"
-                        )
-                    else:
-                        raise RuntimeError(
-                            f"Inputs changed during {arguments.action} ({detail}); completion receipt refused. "
-                            "Build again once nothing edits the checkout."
-                        )
-            with timings.phase("output-inventory"):
-                completed(destination, identity)
-            if component is not None and settled:
-                settle_record(build, component, settled=True)
-            timings.log.status(f"built {display_path(destination)}")
+        _execute_shared_action(build, arguments, timings, identity_file, configured)
     else:
         timings.log.status(f"assembling the {arguments.config} payload")
         destination = build_action(build, arguments, timings=timings)
         (destination / "ready").write_text("complete\n", encoding="utf-8")
 
 
-def _sync_base_dependencies(source: Path, product: Path) -> None:
-    """Refresh only changed base wheels, retaining the separately owned product build."""
-    destination = product / "dependencies"
-    receipt = product / "base-dependencies.json"
-    previous = json.loads(receipt.read_text(encoding="utf-8")) if receipt.is_file() else {}
-    members: dict[str, str] = {}
-    for member in sorted(source.rglob("*")):
-        if member.is_symlink() or member.is_junction():
-            raise ValueError("Base dependency closure contains a linked member")
-        if not member.is_file():
-            continue
-        relative = member.relative_to(source).as_posix()
-        identity = digest(member)
-        members[relative] = identity
-        target = destination / relative
-        for ancestor in (target, *target.parents):
-            if ancestor == product:
-                break
-            if ancestor.is_symlink() or ancestor.is_junction():
-                raise ValueError("Base dependency destination contains a linked member")
-        if not target.is_file() or digest(target) != identity:
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(member, target)
-    for relative, identity in previous.items():
-        target = destination / relative
-        if not target.resolve().is_relative_to(destination.resolve()):
-            raise ValueError("Base dependency receipt escapes its owning directory")
-        if relative not in members and target.is_file():
-            if digest(target) != identity:
-                raise ValueError(f"Obsolete base dependency changed outside its producer: {relative}")
-            target.unlink()
-    _remove_empty_directories(destination)
-    write_text(receipt, json.dumps(members, sort_keys=True) + "\n")
+def _assembly_provenance(paths: dict[str, Path], runtime: Path, interpreter: bool) -> dict[str, object]:
+    return {
+        "runtime": {} if interpreter else json.loads((runtime / "runtime-inputs.json").read_text(encoding="utf-8")),
+        "cohort_wheels": {}
+        if interpreter
+        else json.loads((paths["product"] / "build/product-wheels.json").read_text(encoding="utf-8")),
+        "agent": {} if interpreter else json.loads((paths["product"] / "agent-wheel.json").read_text(encoding="utf-8")),
+        "build_toolchain": json.loads((paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")),
+    }
 
 
-def _remove_empty_directories(root: Path) -> None:
-    """Remove directories a replaced distribution left empty, deepest first.
+def _assemble_action(
+    build: Path,
+    arguments: argparse.Namespace,
+    timings: BuildTimings | None,
+    paths: dict[str, Path],
+    runtime: Path,
+    sdk: Path,
+) -> Path:
+    from .assemble import assemble
+    from .assembly_images import image_artifact
+    from .docs_stage import RECONFIGURE
+    from .process_quiescence import quiesce
 
-    An emptied ``*.dist-info`` directory (one that kept only a ``licenses`` folder, or
-    nothing) is still discovered as an installed distribution without metadata, so the
-    staged closure must not keep it. No installed payload is an empty directory.
-    """
-    directories = [path for path in root.rglob("*") if path.is_dir()]
-    for directory in sorted(directories, key=lambda path: len(path.parts), reverse=True):
-        if directory.is_symlink() or directory.is_junction():
-            raise ValueError("Base dependency destination contains a linked member")
-        if not any(directory.iterdir()):
-            directory.rmdir()
+    if arguments.config is None:
+        raise ValueError("assemble requires --config")
+    if not arguments.without_user_docs and "user_docs_stage" not in paths:
+        raise SystemExit(RECONFIGURE)
+    quiesce(build, arguments.target)
+    destination = paths["stage"] / arguments.config
+    destination.mkdir(parents=True, exist_ok=True)
+    assemble(
+        sdk,
+        None if arguments.interpreter else paths["product"] / "dependencies",
+        paths["bin"] / arguments.config,
+        destination / "app",
+        paths["generated"] / arguments.config / "build.json",
+        None if arguments.without_user_docs else paths["user_docs_stage"],
+        images=dict(image_artifact(item) for item in arguments.image),
+        binary_dir=build,
+        build_type=build_type(arguments.config),
+        development=arguments.development,
+        interpreter=arguments.interpreter,
+        target=arguments.target,
+        agent_runtime=None if arguments.interpreter else paths["agent"] / "runtime",
+        agent_dependencies=None if arguments.interpreter else paths["agent"],
+        provenance=_assembly_provenance(paths, runtime, arguments.interpreter),
+        timings=timings,
+    )
+    return destination
+
+
+def _build_sdk(
+    build: Path,
+    arguments: argparse.Namespace,
+    configured: dict[str, object],
+    contract: dict[str, object],
+    sdk_root: Path,
+    sdk: Path,
+) -> Path:
+    from .layout import backend
+    from .provision import provisioning_tools
+
+    # The backend reconciles the SDK in place; the archive download is kept.
+    destination = owned(build, str(sdk_root.relative_to(build)))
+    pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
+    produced = backend(contract).provision_sdk(
+        destination, pin, provisioning_tools(arguments.target, configured), contract
+    )
+    if produced.resolve() != sdk.resolve():
+        raise ValueError("SDK backend output differs from the declared SDK root")
+    return destination
+
+
+def _require_tools_installed(result: CommandResult) -> None:
+    if result.returncode:
+        raise RuntimeError(f"Installing the pinned build tools failed with exit status {result.returncode}")
 
 
 def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTimings | None = None) -> Path:
@@ -505,12 +445,9 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
     from ..wheel_metadata import installed_wheel_matches
     from .agent import agent_wheel, build_agent, gate_agent_dependencies, validate_wheel_dependencies
     from .agent_runtime import build_agent_runtime
-    from .assemble import assemble, image_artifact
-    from .docs_stage import RECONFIGURE
-    from .layout import backend, load_layout
-    from .process_quiescence import quiesce
+    from .layout import load_layout
     from .product import build_product
-    from .provision import provision, provisioning_tools
+    from .provision import provision
 
     paths = build_paths(build)
     runtime = paths["runtime"]
@@ -534,14 +471,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             npm_cli=Path(tools["npm_cli"]),
         )
     elif arguments.action == "sdk":
-        # The backend reconciles the SDK in place; the archive download is kept.
-        destination = owned(build, str(sdk_root.relative_to(build)))
-        pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
-        produced = backend(contract).provision_sdk(
-            destination, pin, provisioning_tools(arguments.target, configured), contract
-        )
-        if produced.resolve() != sdk.resolve():
-            raise ValueError("SDK backend output differs from the declared SDK root")
+        destination = _build_sdk(build, arguments, configured, contract, sdk_root, sdk)
     elif arguments.action == "tools":
         destination = reset(build, str(paths["tools"].relative_to(build)))
         uv = selected_uv(configured)
@@ -565,8 +495,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
             cwd=REPO_ROOT,
             inherit_output=True,
         )
-        if result.returncode:
-            raise RuntimeError(f"Installing the pinned build tools failed with exit status {result.returncode}")
+        _require_tools_installed(result)
     elif arguments.action == "provision":
         destination = reset(build, str(runtime.relative_to(build)))
         provision(
@@ -579,7 +508,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
     elif arguments.action == "product":
         destination = paths["product"]
         destination.mkdir(parents=True, exist_ok=True)
-        _sync_base_dependencies(runtime / "dependencies", destination)
+        sync_base_dependencies(runtime / "dependencies", destination)
         build_product(
             destination / "build",
             Path(sys.executable),
@@ -614,44 +543,7 @@ def build_action(build: Path, arguments: argparse.Namespace, *, timings: BuildTi
                 raise RuntimeError(result.stderr)
         write_text(destination / "agent-wheel.json", (paths["agent"] / "agent-wheel.json").read_text(encoding="utf-8"))
     else:
-        if arguments.config is None:
-            raise ValueError("assemble requires --config")
-        if not arguments.without_user_docs and "user_docs_stage" not in paths:
-            raise SystemExit(RECONFIGURE)
-        quiesce(build, arguments.target)
-        destination = paths["stage"] / arguments.config
-        destination.mkdir(parents=True, exist_ok=True)
-        assemble(
-            sdk,
-            None if arguments.interpreter else paths["product"] / "dependencies",
-            paths["bin"] / arguments.config,
-            destination / "app",
-            paths["generated"] / arguments.config / "build.json",
-            None if arguments.without_user_docs else paths["user_docs_stage"],
-            images=dict(image_artifact(item) for item in arguments.image),
-            binary_dir=build,
-            build_type=build_type(arguments.config),
-            development=arguments.development,
-            interpreter=arguments.interpreter,
-            target=arguments.target,
-            agent_runtime=None if arguments.interpreter else paths["agent"] / "runtime",
-            agent_dependencies=None if arguments.interpreter else paths["agent"],
-            provenance={
-                "runtime": {}
-                if arguments.interpreter
-                else json.loads((runtime / "runtime-inputs.json").read_text(encoding="utf-8")),
-                "cohort_wheels": {}
-                if arguments.interpreter
-                else json.loads((paths["product"] / "build/product-wheels.json").read_text(encoding="utf-8")),
-                "agent": {}
-                if arguments.interpreter
-                else json.loads((paths["product"] / "agent-wheel.json").read_text(encoding="utf-8")),
-                "build_toolchain": json.loads(
-                    (paths["generated"] / "build-toolchain.json").read_text(encoding="utf-8")
-                ),
-            },
-            timings=timings,
-        )
+        destination = _assemble_action(build, arguments, timings, paths, runtime, sdk)
     return destination
 
 

@@ -18,7 +18,8 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     validating_governed_facts,
 )
 from cadrumo.domain.calculations.registry.ids import RevisionId
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tax_id_format import tax_id_format_from_catalogue
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 from dev.registry.compiler.compilation_catalogues import compiling_catalogues

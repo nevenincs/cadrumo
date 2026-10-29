@@ -61,7 +61,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from enum import StrEnum
 from pathlib import Path
-from typing import Final
+from typing import Final, cast
 
 #: Private-use characters delimiting a mark's number inside a compiled page.
 #: Adjacent to, and deliberately distinct from, the stored form's slot
@@ -320,6 +320,10 @@ def _written(rendering: Rendering, position: Position, value: str, plain: str | 
             f"a mark whose strings a Jinja template owns reached {position.value} markup: {value!r}. "
             "Only text and attribute values a template writes can be recorded that way."
         )
+    return _docutils_written(position, value, language)
+
+
+def _docutils_written(position: Position, value: str, language: str) -> str:
     educated = _educated(value, language)
     if position in {Position.TEXT, Position.ENTRY_TEXT}:
         return _docutils_text(educated)
@@ -620,30 +624,42 @@ def read_slots(path: Path) -> CompileSlots:
         document = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as error:
         raise CompileSlotsError(f"no readable compile marks at {path}: {error}") from None
-    if not isinstance(document, dict) or document.get("schema") != SLOTS_SCHEMA:
+    if not isinstance(document, dict):
+        raise CompileSlotsError(f"{path} is not a schema {SLOTS_SCHEMA} mark record")
+    document = cast("dict[str, object]", document)
+    if document.get("schema") != SLOTS_SCHEMA:
         raise CompileSlotsError(f"{path} is not a schema {SLOTS_SCHEMA} mark record")
     languages = document.get("languages")
     marks = document.get("marks")
-    if not isinstance(languages, list) or not all(isinstance(item, str) for item in languages):
+    if not isinstance(languages, list) or not all(isinstance(item, str) for item in cast("list[object]", languages)):
         raise CompileSlotsError(f"{path} must declare its languages")
     if not isinstance(marks, list):
         raise CompileSlotsError(f"{path} must declare its marks")
+    languages = cast("list[str]", languages)
+    marks = cast("list[object]", marks)
     slots = CompileSlots(tuple(str(language) for language in languages))
     for entry in marks:
-        if not isinstance(entry, dict) or not isinstance(entry.get("values"), list):
-            raise CompileSlotsError(f"{path} holds a mark with no strings")
-        rendering = Rendering(entry.get("rendering"))
-        values = [str(value) for value in entry["values"]]
-        recorded = entry.get("plain")
-        if recorded is None:
-            slots.mark(rendering, values)
-            continue
-        if not isinstance(recorded, list):
-            raise CompileSlotsError(f"{path} holds a mark whose plain form is not a list of strings")
-        # A message mark is read back as it was reserved, because two marks
-        # reading the same rendering can still be two messages.
-        slots.supply(slots.reserve(rendering), values, [str(value) for value in recorded])
+        _read_slot_entry(slots, entry, path)
     return slots
+
+
+def _read_slot_entry(slots: CompileSlots, entry: object, path: Path) -> None:
+    if not isinstance(entry, dict):
+        raise CompileSlotsError(f"{path} holds a mark with no strings")
+    entry = cast("dict[str, object]", entry)
+    if not isinstance(entry.get("values"), list):
+        raise CompileSlotsError(f"{path} holds a mark with no strings")
+    rendering = Rendering(entry.get("rendering"))
+    values = [str(value) for value in cast("list[object]", entry["values"])]
+    recorded = entry.get("plain")
+    if recorded is None:
+        slots.mark(rendering, values)
+        return
+    if not isinstance(recorded, list):
+        raise CompileSlotsError(f"{path} holds a mark whose plain form is not a list of strings")
+    # A message mark is read back as it was reserved, because two marks
+    # reading the same rendering can still be two messages.
+    slots.supply(slots.reserve(rendering), values, [str(value) for value in cast("list[object]", recorded)])
 
 
 # ── The compile's one active record ──────────────────────────────────────────
@@ -877,27 +893,38 @@ def mark_positions(page: str) -> list[tuple[re.Match[str], Position]]:
         closing = text.startswith("</")
         if tag == "title":
             in_title = not closing
-        if region is None:
-            # Both regions are written as a div, which is what makes the nesting
-            # of divs enough to find where each one ends.
-            region = _region_entered(text) if tag == "div" and not closing else None
-            depth = 1 if region is not None else 0
-        elif tag == "div":
-            # The region ends with the element that opened it, so the nesting of
-            # its own kind of element is what says where that is.
-            depth += -1 if closing else 1
-            if depth == 0:
-                region = None
-        spans = [
-            (piece.start() + attribute.start(2), piece.start() + attribute.end(2))
-            for attribute in _ATTRIBUTE.finditer(text)
-        ]
-        for mark in MARK.finditer(page, piece.start(), piece.end()):
-            inside = any(start <= mark.start() and mark.end() <= end for start, end in spans)
-            if not inside:
-                found.append((mark, Position.MARKUP))
-            else:
-                found.append((mark, Position.ATTRIBUTE if region is None else region[1]))
+        region, depth = _advance_region(text, tag, closing, region, depth)
+        found.extend(_tag_mark_positions(page, piece, text, region))
+    return found
+
+
+def _advance_region(
+    text: str, tag: str, closing: bool, region: tuple[Position, Position] | None, depth: int
+) -> tuple[tuple[Position, Position] | None, int]:
+    if region is None:
+        region = _region_entered(text) if tag == "div" and not closing else None
+        return region, 1 if region is not None else 0
+    if tag == "div":
+        depth += -1 if closing else 1
+        if depth == 0:
+            region = None
+    return region, depth
+
+
+def _tag_mark_positions(
+    page: str, piece: re.Match[str], text: str, region: tuple[Position, Position] | None
+) -> list[tuple[re.Match[str], Position]]:
+    found: list[tuple[re.Match[str], Position]] = []
+    spans = [
+        (piece.start() + attribute.start(2), piece.start() + attribute.end(2))
+        for attribute in _ATTRIBUTE.finditer(text)
+    ]
+    for mark in MARK.finditer(page, piece.start(), piece.end()):
+        inside = any(start <= mark.start() and mark.end() <= end for start, end in spans)
+        if not inside:
+            found.append((mark, Position.MARKUP))
+        else:
+            found.append((mark, Position.ATTRIBUTE if region is None else region[1]))
     return found
 
 

@@ -17,17 +17,15 @@ from ...runtime_wheelhouse_contract import target_platform
 from ..agent import (
     AGENT_DEPENDENCIES,
     AGENT_DEPENDENCY_RECORD,
-    DependencyGateError,
-    ResolvedDistribution,
     agent_wheel,
     build_agent,
     gate_environment,
     locked_distributions,
     require_python_step_lock,
     require_single_lock_provenance,
-    resolve_shared_dependencies,
     resolved_requirements,
 )
+from ..agent_resolution import DependencyGateError, ResolvedDistribution, resolve_shared_dependencies
 from ..target import uv_platform
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

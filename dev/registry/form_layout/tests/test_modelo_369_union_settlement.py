@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormGridBlock
 
 from ...compiler.loader import load_modelo_directory

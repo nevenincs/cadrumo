@@ -32,8 +32,9 @@ from cadrumo.domain.calculations.registry.invoice_bindings import (
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, invoice_class_rectificativa
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test

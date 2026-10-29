@@ -82,16 +82,21 @@ def verified_relay(process_id: object, relay: Path, invocation: ProcessIdentity 
                 continue
             if not invocation.matches(process):
                 return False
-            branch = [ProcessIdentity.capture(item.pid) for item in chain[: index + 1]]
-            return (
-                all(parent.birth <= child.birth for child, parent in pairwise(branch))
-                and all(psutil.Process(child.pid).ppid() == parent.pid for child, parent in pairwise(branch))
-                and all(identity.matches(psutil.Process(identity.pid)) for identity in branch)
-                and peer_identity.matches(peer)
-            )
+            return _verified_branch(chain[: index + 1], peer_identity, peer)
         return False
     except (psutil.Error, OSError, AcceptanceError):
         return False
+
+
+def _verified_branch(chain: list[psutil.Process], peer_identity: ProcessIdentity, peer: psutil.Process) -> bool:
+    """Verify each live parent edge and retained process birth identity."""
+    branch = [ProcessIdentity.capture(item.pid) for item in chain]
+    return (
+        all(parent.birth <= child.birth for child, parent in pairwise(branch))
+        and all(psutil.Process(child.pid).ppid() == parent.pid for child, parent in pairwise(branch))
+        and all(identity.matches(psutil.Process(identity.pid)) for identity in branch)
+        and peer_identity.matches(peer)
+    )
 
 
 def create_profile(programs: Programs, environment: Mapping[str, str], name: str) -> Profile:

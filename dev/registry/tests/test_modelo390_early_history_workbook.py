@@ -11,7 +11,8 @@ from cadrumo.application.storage.calc_sheets.engine import build_export_plan
 from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workbook
 from cadrumo.application.storage.calc_sheets.records import OperatorInput, OperatorInputs, TabName
 
-from ..workbook_demo import DemoCase, demonstration_snapshot
+from ..workbook_demo import demonstration_snapshot
+from ..workbook_demo_cases import DemoCase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

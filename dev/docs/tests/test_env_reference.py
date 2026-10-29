@@ -31,7 +31,8 @@ from dev._paths import REPO_ROOT
 from dev.cache_root import DEV_CACHE_ROOT_ENV
 from dev.deploy.docs_delivery_contracts import DELIVERY_CREDENTIAL_ENV
 from dev.packaging.google_oauth import GOOGLE_OAUTH_ENV
-from dev.packaging.native.application_environment import ApplicationEnvironment, load
+from dev.packaging.native.application_environment import load
+from dev.packaging.native.environment_models import ApplicationEnvironment
 
 from ..env_reference import render_environment_reference, render_installed_package, target_path
 

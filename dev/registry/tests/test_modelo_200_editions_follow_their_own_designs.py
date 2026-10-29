@@ -23,7 +23,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.casilla_lineage import CasillaLineageOrigin
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaEvolutionKind
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue

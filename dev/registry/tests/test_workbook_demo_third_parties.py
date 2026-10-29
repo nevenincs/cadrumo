@@ -6,7 +6,8 @@ import pytest
 
 from cadrumo.domain.modelos.calculation_revision import derive_calculation_revision_id
 
-from ..workbook_demo import DemoCase, demonstration_snapshot
+from ..workbook_demo import demonstration_snapshot
+from ..workbook_demo_cases import DemoCase
 from ..workbook_demo_third_parties import third_party_observations, third_party_records, third_party_summary
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]

@@ -72,7 +72,7 @@ async def _ranked(adapter: RuntimeMcpAdapter, args: dict[str, Any]) -> dict[str,
     """Search by query as an agent does: a search that ran out of time resumes from the contracts it read."""
     for _attempt in range(10):
         reply = await adapter.call("search", args)
-        if reply.get("code") != "runtime_deadline_exceeded":
+        if reply.get("code") != "runtime_timeout":
             return reply
     return reply
 

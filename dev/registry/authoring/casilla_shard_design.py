@@ -6,6 +6,7 @@ import json
 import re
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import cast
 
 from cadrumo.core.hashing import sha256_file
 from dev.registry.compiler.record_design_schema import (
@@ -282,12 +283,17 @@ def _row_declaration_problems(
         problems.append(
             f"{name} @{row.offset}: more than one box token in one description; the number rule has become ambiguous"
         )
+    recognised = _recognised_box_tokens(row, grammar)
+    problems.extend(_unrecognised_bracket_problems(name, row, recognised))
+    return problems
+
+
+def _recognised_box_tokens(row: RecordDesignField, grammar: str | None) -> set[str]:
     pattern = re.compile(grammar) if (grammar is not None and grammar) else _NUMBERED
     recognised = {
         match.group(1) if pattern.groups else match.group(0) for match in pattern.finditer(row.description)
     } | {match.group(1) for match in _LETTERED.finditer(row.description)}
-    problems.extend(_unrecognised_bracket_problems(name, row, recognised))
-    return problems
+    return cast("set[str]", recognised)
 
 
 def _unrecognised_bracket_problems(

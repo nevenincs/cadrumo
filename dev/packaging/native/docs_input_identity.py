@@ -18,6 +18,15 @@ def _canonical_file(path: Path) -> Path:
     return resolved
 
 
+def _enroll_name(relative: str, names: set[str]) -> None:
+    if "\\" in relative or ":" in relative:
+        raise ValueError(f"Documentation input has a nonportable name: {relative}")
+    collision = unicodedata.normalize("NFC", relative).casefold()
+    if collision in names:
+        raise ValueError(f"Documentation input names collide: {relative}")
+    names.add(collision)
+
+
 def shared_docs_inputs(inputs: Path, authority: tuple[Path, Path], *, source: Path, build: Path) -> str:
     """Hash relative source names and bytes, plus the two selected authority roles.
 
@@ -55,12 +64,7 @@ def shared_docs_inputs(inputs: Path, authority: tuple[Path, Path], *, source: Pa
         if not path.is_relative_to(source):
             raise ValueError(f"Documentation input is outside the enrolled checkout: {path}")
         relative = path.relative_to(source).as_posix()
-        if "\\" in relative or ":" in relative:
-            raise ValueError(f"Documentation input has a nonportable name: {relative}")
-        collision = unicodedata.normalize("NFC", relative).casefold()
-        if collision in names:
-            raise ValueError(f"Documentation input names collide: {relative}")
-        names.add(collision)
+        _enroll_name(relative, names)
         enroll(f"source/{relative}", path)
     encoded = json.dumps({"schema": 1, "files": sorted(records)}, ensure_ascii=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()

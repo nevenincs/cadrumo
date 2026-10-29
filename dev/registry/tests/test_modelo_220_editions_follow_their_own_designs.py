@@ -20,7 +20,8 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import TemporalProjectionDirection
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
@@ -210,7 +211,7 @@ def test_each_edition_files_in_the_25_days_after_june_following_its_year(year: i
     assert window.payment_cutoff_on is not None and window.opens_on < window.payment_cutoff_on < window.closes_on
 
 
-def _cutoff_unstated(revision: ModeloRevision) -> list[str]:
+def _timeout_unstated(revision: ModeloRevision) -> list[str]:
     """Return the windows citing their approving orden whose cited provisions never state the payment cutoff."""
     _, catalogues = _modelo()
     (approval,) = revision.orden_aplicabilidad
@@ -232,10 +233,10 @@ def _cites_its_orden(revision: ModeloRevision) -> bool:
     return any(ref.startswith(f"{orden}:") for window in revision.deadline_windows for ref in window.legal_refs)
 
 
-def test_a_window_citing_its_ordens_domiciliacion_window_takes_its_cutoff_from_it() -> None:
+def test_a_window_citing_its_ordens_domiciliacion_window_takes_its_timeout_from_it() -> None:
     citing = [revision for revision in _editions() if _cites_its_orden(revision)]
     assert len(citing) >= 2, [revision.id for revision in citing]
-    assert {str(revision.id): _cutoff_unstated(revision) for revision in citing} == {str(r.id): [] for r in citing}
+    assert {str(revision.id): _timeout_unstated(revision) for revision in citing} == {str(r.id): [] for r in citing}
     shifted = citing[0].model_copy(
         update={
             "deadline_windows": tuple(
@@ -244,4 +245,4 @@ def test_a_window_citing_its_ordens_domiciliacion_window_takes_its_cutoff_from_i
             )
         }
     )
-    assert _cutoff_unstated(shifted) == [window.id for window in citing[0].deadline_windows]
+    assert _timeout_unstated(shifted) == [window.id for window in citing[0].deadline_windows]

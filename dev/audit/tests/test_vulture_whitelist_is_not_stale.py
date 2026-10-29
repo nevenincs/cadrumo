@@ -46,7 +46,7 @@ _CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
     "_command_group_get_command": (cli_common, "_CommandGroup", "get_command"),
     "_installation_area_factory_call": (area_factory, "InstallationAreaFactory", "__call__"),
     "_custom_document_properties_append": (calc_sheets_xlsx, "_CustomDocumentProperties", "append"),
-    "_execute": (google_api, "_ExecutableRequest", "execute"),
+    "_execute": (google_api, "ExecutableRequest", "execute"),
     "_reduce_ex": (evidence_input, "EvidenceInput", "__reduce_ex__"),
     "_set_language_field": (curation, None, "set_language_field"),
     "_parent_poll_register": (linux_worker_guardian, "_ParentPoll", "register"),

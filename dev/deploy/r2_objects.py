@@ -242,10 +242,18 @@ def list_keys(bucket: R2Bucket, prefix: str) -> set[str]:
             raise SystemExit(f"R2 refused to list {prefix!r}: HTTP {status} {payload[:300]!r}")
         document = ElementTree.fromstring(payload)
         keys.update(node.text or "" for node in document.iter(f"{_S3_NAMESPACE}Key"))
-        truncated = (document.findtext(f"{_S3_NAMESPACE}IsTruncated") or "").strip() == "true"
-        token = document.findtext(f"{_S3_NAMESPACE}NextContinuationToken")
-        if not truncated or not (token is not None and token):
+        token = _next_list_token(document)
+        if token is None:
             return keys
+
+
+def _next_list_token(document: Element) -> str | None:
+    """Return a usable continuation token only for a truncated listing."""
+    truncated = (document.findtext(f"{_S3_NAMESPACE}IsTruncated") or "").strip() == "true"
+    token = document.findtext(f"{_S3_NAMESPACE}NextContinuationToken")
+    if not truncated or not (token is not None and token):
+        return None
+    return token
 
 
 def files_to_publish(root: Path, *, excludes: Iterable[str]) -> dict[str, Path]:

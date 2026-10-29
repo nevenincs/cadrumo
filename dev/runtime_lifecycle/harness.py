@@ -10,7 +10,7 @@ from contextlib import ExitStack
 from dataclasses import dataclass, field
 from importlib.metadata import version
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 from uuid import UUID
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
@@ -25,7 +25,8 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_client.transport.windows_channel import WindowsChannel
 from cadrumo_client.transport.windows_native_io import owned_windows_handle
-from cadrumo_client.transport.windows_process import WindowsOwnedProcess, WindowsProcessScope
+from cadrumo_client.transport.windows_owned_process import WindowsOwnedProcess
+from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.adapters.boot_record import RuntimeBootRecord, read_runtime_boot_record
 from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from dev.packaging.command_execution import run_command
@@ -41,19 +42,25 @@ def _cli_document(output: str, *, success: bool) -> dict[str, Any]:
     except json.JSONDecodeError:
         if success:
             raise
-        lines = [line for line in output.splitlines() if line.strip()]
-        if not lines:
-            raise RuntimeError("Lifecycle CLI returned no error envelope") from None
-        document = json.loads(lines[-1])
-        for line in lines[:-1]:
-            try:
-                prior = json.loads(line)
-            except json.JSONDecodeError:
-                continue
-            if isinstance(prior, dict) and prior.get("schema_version") == "2" and "status" in prior:
-                raise RuntimeError("Lifecycle CLI returned multiple envelopes") from None
+        document = _cli_error_document(output)
     if not isinstance(document, dict) or document.get("schema_version") != "2":
         raise RuntimeError("Lifecycle CLI returned no versioned envelope")
+    return document
+
+
+def _cli_error_document(output: str) -> object:
+    """Read the final refusal and reject an earlier versioned envelope."""
+    lines = [line for line in output.splitlines() if line.strip()]
+    if not lines:
+        raise RuntimeError("Lifecycle CLI returned no error envelope") from None
+    document = json.loads(lines[-1])
+    for line in lines[:-1]:
+        try:
+            prior = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(prior, dict) and prior.get("schema_version") == "2" and "status" in prior:
+            raise RuntimeError("Lifecycle CLI returned multiple envelopes") from None
     return document
 
 
@@ -234,22 +241,13 @@ class LifecycleHarness:
         opt-in the package admits for the command line, for a result whose identifier
         the caller must use, such as the reference an agent is launched with.
         """
-        if secret is not None and profile_secret is not None:
-            raise ValueError("CLI leaf and root profile secret inputs cannot share stdin")
-        profile_arguments = () if profile_secret is None else ("--profile-secrets-stdin",)
-        if profile_secret is not None:
-            secret = {"profile_passphrase": profile_secret}
+        profile_arguments, secret = _cli_secret_input(secret, profile_secret)
         environment = child_environment(ChildEnvironmentProfile.STRICT, self.root)
         if reveal_identifiers:
             environment[_REVEAL_IDENTIFIERS] = "1"
-        payload = None if secret is None else bytearray(json.dumps(secret), "utf-8")
+        payload = _cli_secret_bytes(secret)
         invocation = ["--format", "json", *profile_arguments, "config", *arguments]
-        if COMMAND_GRAPH.resolve_invocation(invocation) is not None:
-            image = self.cli_image
-        elif RUNTIME_COMMAND_GRAPH.resolve_invocation(invocation) is not None:
-            image = self.runtime_image
-        else:
-            raise ValueError("Lifecycle command has no declared owning graph")
+        image = _cli_image(invocation, self.cli_image, self.runtime_image)
         try:
             result = run_command(
                 [str(image), *invocation],
@@ -270,18 +268,7 @@ class LifecycleHarness:
                 f"{error}; exit={result.returncode}, "
                 f"stdout_bytes={len(result.stdout.encode('utf-8'))}, stderr_bytes={len(result.stderr.encode('utf-8'))}"
             ) from None
-        if expect_success and result.returncode != 0:
-            detail = document.get("error")
-            code = detail.get("code") if isinstance(detail, dict) else None
-            raise RuntimeError(f"Lifecycle CLI command failed: exit {result.returncode}, code={code!r}")
-        if expect_success and document.get("status") not in {"success", "warning"}:
-            raise RuntimeError(f"Lifecycle CLI envelope status: {document.get('status')!r}")
-        if not expect_success and (result.returncode == 0 or document.get("status") in {"success", "warning"}):
-            raise AssertionError("Protected CLI call unexpectedly succeeded")
-        if not expect_success and (
-            not isinstance(document.get("error"), dict) or not isinstance(document["error"].get("code"), str)
-        ):
-            raise AssertionError("Protected CLI call returned no typed refusal")
+        _validate_cli_result(document, result.returncode, expect_success=expect_success)
         return document
 
     def create_profile(self, name: str) -> Profile:
@@ -358,8 +345,61 @@ class LifecycleHarness:
                     raise RuntimeError("Terminal driver failure must not invent a canonical sequence")
                 terminal = True
                 continue
-            sequence = event.get("sequence") if isinstance(event, dict) else None
-            if type(sequence) is not int or not previous < sequence <= 2**64 - 1:
-                raise RuntimeError("Native lifecycle facts lack a strictly increasing canonical sequence")
-            previous = sequence
+            previous = _next_event_sequence(cast(object, event), previous)
         return events
+
+
+def _cli_secret_input(
+    secret: dict[str, str] | None, profile_secret: str | None
+) -> tuple[tuple[str, ...], dict[str, str] | None]:
+    """Prepare one mutually exclusive protected stdin payload."""
+    if secret is not None and profile_secret is not None:
+        raise ValueError("CLI leaf and root profile secret inputs cannot share stdin")
+    profile_arguments = () if profile_secret is None else ("--profile-secrets-stdin",)
+    if profile_secret is not None:
+        secret = {"profile_passphrase": profile_secret}
+    return profile_arguments, secret
+
+
+def _cli_secret_bytes(secret: dict[str, str] | None) -> bytearray | None:
+    """Encode protected stdin only once the child environment is prepared."""
+    return None if secret is None else bytearray(json.dumps(secret), "utf-8")
+
+
+def _cli_image(invocation: list[str], cli_image: Path, runtime_image: Path) -> Path:
+    """Select the declared owner of the exact command invocation."""
+    if COMMAND_GRAPH.resolve_invocation(invocation) is not None:
+        return cli_image
+    if RUNTIME_COMMAND_GRAPH.resolve_invocation(invocation) is not None:
+        return runtime_image
+    raise ValueError("Lifecycle command has no declared owning graph")
+
+
+def _validate_cli_result(document: dict[str, object], returncode: int, *, expect_success: bool) -> None:
+    """Validate the requested success or typed refusal without exposing payloads."""
+    if expect_success and returncode != 0:
+        detail = document.get("error")
+        code = cast(dict[str, object], detail).get("code") if isinstance(detail, dict) else None
+        raise RuntimeError(f"Lifecycle CLI command failed: exit {returncode}, code={code!r}")
+    if expect_success and document.get("status") not in {"success", "warning"}:
+        raise RuntimeError(f"Lifecycle CLI envelope status: {document.get('status')!r}")
+    if not expect_success:
+        _validate_cli_refusal(document, returncode)
+
+
+def _validate_cli_refusal(document: dict[str, object], returncode: int) -> None:
+    """Require a failed command and its typed refusal code."""
+    if returncode == 0 or document.get("status") in {"success", "warning"}:
+        raise AssertionError("Protected CLI call unexpectedly succeeded")
+    if not isinstance(document.get("error"), dict) or not isinstance(
+        cast(dict[str, object], document["error"]).get("code"), str
+    ):
+        raise AssertionError("Protected CLI call returned no typed refusal")
+
+
+def _next_event_sequence(event: object, previous: int) -> int:
+    """Validate the monotonically increasing native event sequence."""
+    sequence = cast(dict[str, object], event).get("sequence") if isinstance(event, dict) else None
+    if type(sequence) is not int or not previous < sequence <= 2**64 - 1:
+        raise RuntimeError("Native lifecycle facts lack a strictly increasing canonical sequence")
+    return sequence

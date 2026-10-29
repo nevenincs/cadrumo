@@ -536,6 +536,20 @@ def _live_run_count(repo_root: Path, relative: str) -> int:
     return sum(1 for family in families for verdict in assess_run_directories(family) if not verdict.reclaimable)
 
 
+def _generated_output_verdict(repo_root: Path, stripped: str) -> tuple[Verdict, str] | None:
+    """Classify build output and scratch logs after protected paths are excluded."""
+    if stripped.startswith(f"{BUILD_OUTPUT_ROOT}/"):
+        if matching_family(Path(stripped).name) is not None:
+            return Verdict.KEEP, "registered build scratch, judged by its owning section below"
+        return Verdict.REAP, "generated build output"
+    if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
+        live = _live_run_count(repo_root, stripped)
+        if live:
+            return Verdict.KEEP, f"{live} run directory(s) whose owner is still writing; reaped by their section below"
+        return Verdict.REAP, f"'{LOGS_SCRATCH_OWNER}' is scratch output that no code may read back"
+    return None
+
+
 def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = frozenset()) -> tuple[Verdict, str]:
     """Decide one ignored entry, protection first.
 
@@ -551,15 +565,9 @@ def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = froze
     stripped = relative.strip("/")
     if stripped.startswith(f"{VAR_SCRATCH_OWNER}/") and not stripped.startswith(VAR_APPLICATION_STORAGE):
         return Verdict.KEEP, "release-build scratch, judged by its owning section below"
-    if stripped.startswith(f"{BUILD_OUTPUT_ROOT}/"):
-        if matching_family(Path(stripped).name) is not None:
-            return Verdict.KEEP, "registered build scratch, judged by its owning section below"
-        return Verdict.REAP, "generated build output"
-    if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
-        live = _live_run_count(repo_root, stripped)
-        if live:
-            return Verdict.KEEP, f"{live} run directory(s) whose owner is still writing; reaped by their section below"
-        return Verdict.REAP, f"'{LOGS_SCRATCH_OWNER}' is scratch output that no code may read back"
+    owned = _generated_output_verdict(repo_root, stripped)
+    if owned is not None:
+        return owned
     reason = _reapable(relative)
     if reason is not None:
         return Verdict.REAP, reason

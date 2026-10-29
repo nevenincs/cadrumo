@@ -32,7 +32,7 @@ import re
 from collections.abc import Iterable, Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any
+from typing import Any, cast
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
@@ -207,15 +207,24 @@ def crate_closure(crates: tuple[str, ...], *, root: Path = REPO_ROOT) -> list[st
         if crate in seen:
             continue
         seen[crate] = None
-        manifest = parse_toml((crate / "Cargo.toml").read_text(encoding="utf-8"))
-        tables = [manifest.get(name, {}) for name in _DEPENDENCY_TABLES]
-        for platform in manifest.get("target", {}).values():
-            tables += [platform.get(name, {}) for name in _DEPENDENCY_TABLES]
-        for table in tables:
-            for dependency in table.values():
-                if isinstance(dependency, dict) and isinstance(dependency.get("path"), str):
-                    pending.append((crate / dependency["path"]).resolve())
+        pending.extend(_crate_dependencies(crate))
     return sorted(path.relative_to(root.resolve()).as_posix() for path in seen)
+
+
+def _crate_dependencies(crate: Path) -> list[Path]:
+    found: list[Path] = []
+    manifest = parse_toml((crate / "Cargo.toml").read_text(encoding="utf-8"))
+    tables = [manifest.get(name, {}) for name in _DEPENDENCY_TABLES]
+    for platform in manifest.get("target", {}).values():
+        tables += [platform.get(name, {}) for name in _DEPENDENCY_TABLES]
+    for table in tables:
+        for dependency in table.values():
+            if isinstance(dependency, dict):
+                dependency_map = cast("dict[str, object]", dependency)
+                dependency_path = dependency_map.get("path")
+                if isinstance(dependency_path, str):
+                    found.append((crate / dependency_path).resolve())
+    return found
 
 
 def binary_sources(crate: Path) -> tuple[str, ...]:
@@ -319,39 +328,59 @@ def consumed_inputs(name: str, build: Path, *, root: Path = REPO_ROOT) -> dict[s
     excluded = (build_text, os.path.join(root_text, "build"))
     consumed: dict[str, Path] = {}
     seen: set[str] = set()
+    context = _ConsumedContext(root, resolved_root, root_text, excluded, snapshots, seen)
     for pattern in component.records:
         for record in sorted(build.glob(pattern)):
             for listed in dependency_record_paths(_read_record(record), record=record):
-                text = os.path.normpath(str(listed))
-                folded = os.path.normcase(text)
-                for base, length in snapshots:
-                    if _under(folded, base):
-                        text = os.path.join(str(root), "native", text[length:].lstrip(r"\/"))
-                        folded = os.path.normcase(text)
-                        break
-                if folded in seen:
-                    continue
-                seen.add(folded)
-                # A file only the snapshot holds was generated there, and a file since removed
-                # is no longer read; neither is a checkout input.
-                if (
-                    not os.path.isabs(text)
-                    or not _under(folded, root_text)
-                    or any(_under(folded, base) for base in excluded)
-                    or not os.path.isfile(text)
-                ):
-                    continue
-                # Only the few survivors resolve, which restores the on-disk case that compiler
-                # read logs fold away.
-                path = Path(text)
-                try:
-                    relative = path.resolve().relative_to(resolved_root)
-                except ValueError:
-                    continue
-                if relative.parts and relative.parts[0] == "build":
-                    continue
-                consumed[relative.as_posix()] = path
+                _record_consumed_input(listed, context, consumed)
     return consumed
+
+
+@dataclass(frozen=True)
+class _ConsumedContext:
+    root: Path
+    resolved_root: Path
+    root_text: str
+    excluded: tuple[str, str]
+    snapshots: list[tuple[str, int]]
+    seen: set[str]
+
+
+def _record_consumed_input(listed: Path, context: _ConsumedContext, consumed: dict[str, Path]) -> None:
+    text = os.path.normpath(str(listed))
+    folded = os.path.normcase(text)
+    text, folded = _map_snapshot_input(text, folded, context)
+    if folded in context.seen:
+        return
+    context.seen.add(folded)
+    if not _is_checkout_input(text, folded, context):
+        return
+    path = Path(text)
+    try:
+        relative = path.resolve().relative_to(context.resolved_root)
+    except ValueError:
+        return
+    if relative.parts and relative.parts[0] == "build":
+        return
+    consumed[relative.as_posix()] = path
+
+
+def _is_checkout_input(text: str, folded: str, context: _ConsumedContext) -> bool:
+    return (
+        os.path.isabs(text)
+        and _under(folded, context.root_text)
+        and not any(_under(folded, base) for base in context.excluded)
+        and os.path.isfile(text)
+    )
+
+
+def _map_snapshot_input(text: str, folded: str, context: _ConsumedContext) -> tuple[str, str]:
+    for base, length in context.snapshots:
+        if _under(folded, base):
+            text = os.path.join(str(context.root), "native", text[length:].lstrip(r"\/"))
+            folded = os.path.normcase(text)
+            break
+    return text, folded
 
 
 def uncovered_inputs(name: str, build: Path, *, root: Path = REPO_ROOT) -> list[str]:
@@ -424,8 +453,15 @@ def toolchain_identity(name: str, build: Path) -> dict[str, Any]:
     }
     if desktop:
         tools = configured.get("desktop_tools", {})
-        identity["desktop_tools"] = {key: tools.get(key) for key in ("npm_version",) if isinstance(tools, dict)}
+        identity["desktop_tools"] = _desktop_tool_identity(tools)
     return identity
+
+
+def _desktop_tool_identity(tools: object) -> dict[str, object]:
+    if not isinstance(tools, dict):
+        return {}
+    values = cast("dict[str, object]", tools)
+    return {key: values.get(key) for key in ("npm_version",)}
 
 
 def _matches(target: str, patterns: Iterable[str]) -> bool:
@@ -470,28 +506,39 @@ def target_settings(name: str, build: Path, *, root: Path = REPO_ROOT) -> dict[s
             if not _matches(reference["name"], patterns):
                 continue
             target = _json(reply / reference["jsonFile"])
-            sources = [source.get("path", "") for source in target.get("sources", [])]
-            settings[f"{configuration['name']}/{reference['name']}"] = {
-                "type": target.get("type"),
-                "name_on_disk": target.get("nameOnDisk"),
-                "compile": [
-                    {
-                        "language": group.get("language"),
-                        "fragments": [
-                            fragment.get("fragment") for fragment in group.get("compileCommandFragments", [])
-                        ],
-                        "defines": [define.get("define") for define in group.get("defines", [])],
-                        "includes": [_portable(include.get("path", ""), root) for include in group.get("includes", [])],
-                        "sources": [_portable(sources[index], root) for index in group.get("sourceIndexes", [])],
-                    }
-                    for group in target.get("compileGroups", [])
-                ],
-                "link": [
-                    {"role": fragment.get("role"), "fragment": fragment.get("fragment")}
-                    for fragment in target.get("link", {}).get("commandFragments", [])
-                ],
-            }
+            settings[f"{configuration['name']}/{reference['name']}"] = _target_compilation(target, root)
     return settings
+
+
+def _target_compilation(target: dict[str, object], root: Path) -> dict[str, object]:
+    sources = [source.get("path", "") for source in cast("list[dict[str, str]]", target.get("sources", []))]
+    groups = cast("list[dict[str, object]]", target.get("compileGroups", []))
+    link = cast("dict[str, object]", target.get("link", {}))
+    return {
+        "type": target.get("type"),
+        "name_on_disk": target.get("nameOnDisk"),
+        "compile": [_compile_group(group, sources, root) for group in groups],
+        "link": [
+            {"role": fragment.get("role"), "fragment": fragment.get("fragment")}
+            for fragment in cast("list[dict[str, object]]", link.get("commandFragments", []))
+        ],
+    }
+
+
+def _compile_group(group: dict[str, object], sources: list[str], root: Path) -> dict[str, object]:
+    return {
+        "language": group.get("language"),
+        "fragments": [
+            fragment.get("fragment")
+            for fragment in cast("list[dict[str, object]]", group.get("compileCommandFragments", []))
+        ],
+        "defines": [define.get("define") for define in cast("list[dict[str, object]]", group.get("defines", []))],
+        "includes": [
+            _portable(include.get("path", ""), root)
+            for include in cast("list[dict[str, str]]", group.get("includes", []))
+        ],
+        "sources": [_portable(sources[index], root) for index in cast("list[int]", group.get("sourceIndexes", []))],
+    }
 
 
 def rust_settings(build: Path) -> Any:

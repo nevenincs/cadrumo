@@ -204,7 +204,7 @@ def test_docs_build_root_defaults_to_the_checkout_build_tree(tmp_path: Path, mon
 
 def test_docs_build_cleanup_removes_noncanonical_entries(tmp_path: Path) -> None:
     """Canonical docs builds clear stale preview files from their build root."""
-    from ..build import remove_noncanonical_build_entries
+    from ..output_cleanup import remove_noncanonical_build_entries
 
     build_root = tmp_path / "storage" / "development" / "build" / "docs"
     html_root = build_root / "html"
@@ -481,7 +481,7 @@ def test_deployment_sitemap_uses_canonical_human_doc_urls(tmp_path: Path) -> Non
     """The deployed sitemap uses canonical URLs and omits generated surfaces."""
     from defusedxml import ElementTree
 
-    from ..build import write_deployment_sitemap
+    from ..sitemap import write_deployment_sitemap
 
     for relative in (
         "index.html",
@@ -1122,7 +1122,7 @@ def test_desktop_flavor_links_only_icons_the_package_serves(tmp_path: Path) -> N
     """The packaged copy's head names no favicon or manifest file the documentation scheme refuses."""
     from bs4 import BeautifulSoup
 
-    from dev.packaging.native.docs_stage import scan_page, served_media_types
+    from dev.packaging.native.docs_scan import scan_page, served_media_types
     from dev.packaging.native.layout import load_layout
 
     output = _render_focused_index(tmp_path, "desktop")

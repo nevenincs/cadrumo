@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from functools import cache
 
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 __all__ = ["authored_catalogues", "registry_tree"]

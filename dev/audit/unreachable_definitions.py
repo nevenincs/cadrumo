@@ -6,14 +6,14 @@ import ast
 from collections.abc import Callable, Iterator, Mapping
 
 from .unreachable_frameworks import FrameworkContract
-from .unreachable_memo import _walked
-from .unreachable_models import SymbolKind, _Definition
+from .unreachable_memo import walked
+from .unreachable_models import Definition, SymbolKind
 from .unreachable_policy import (
-    _ENUM_BASE_SUFFIXES,
-    _ENUM_COLLECTION_ATTRS,
-    _HOOK_METHOD_NAMES,
-    _HOOK_METHOD_PREFIXES,
-    _HTTP_VERB_METHOD_PREFIX,
+    ENUM_BASE_SUFFIXES,
+    ENUM_COLLECTION_ATTRS,
+    HOOK_METHOD_NAMES,
+    HOOK_METHOD_PREFIXES,
+    HTTP_VERB_METHOD_PREFIX,
 )
 
 
@@ -32,7 +32,7 @@ def _is_dunder(name: str) -> bool:
 
 def _registration_names(tree: ast.Module, contract: FrameworkContract) -> frozenset[str]:
     """Resolve the supported framework registration decorators from actual imports."""
-    exports = {
+    exports: dict[str, set[str]] = {
         "pydantic": {"field_validator", "model_validator", "field_serializer", "model_serializer", "computed_field"}
         if contract.pydantic
         else set(),
@@ -40,13 +40,21 @@ def _registration_names(tree: ast.Module, contract: FrameworkContract) -> frozen
     }
     names: set[str] = set()
     for node in tree.body:
-        if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module in exports:
-            names.update(alias.asname or alias.name for alias in node.names if alias.name in exports[node.module])
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                if alias.name in exports:
-                    names.update(f"{alias.asname or alias.name}.{name}" for name in exports[alias.name])
+        _note_registration(node, exports, names)
     return frozenset(names)
+
+
+def _note_registration(node: ast.stmt, exports: dict[str, set[str]], names: set[str]) -> None:
+    if isinstance(node, ast.ImportFrom) and node.level == 0 and node.module in exports:
+        names.update(alias.asname or alias.name for alias in node.names if alias.name in exports[node.module])
+    elif isinstance(node, ast.Import):
+        _note_import_registration(node, exports, names)
+
+
+def _note_import_registration(node: ast.Import, exports: dict[str, set[str]], names: set[str]) -> None:
+    for alias in node.names:
+        if alias.name in exports:
+            names.update(f"{alias.asname or alias.name}.{name}" for name in exports[alias.name])
 
 
 def _is_registered(function: ast.FunctionDef | ast.AsyncFunctionDef, registrations: frozenset[str]) -> bool:
@@ -77,18 +85,18 @@ def _is_framework_bound(
     name = function.name
     if _is_dunder(name) or name in contract.members:
         return True
-    if contract.textual and (name in _HOOK_METHOD_NAMES or name.startswith(_HOOK_METHOD_PREFIXES)):
+    if contract.textual and (name in HOOK_METHOD_NAMES or name.startswith(HOOK_METHOD_PREFIXES)):
         return True
     # ``BaseHTTPRequestHandler`` dispatches ``getattr(self, "do_" + command)``, so a verb
     # handler is named by the request line and never by a reference in source.
-    verb = name.removeprefix(_HTTP_VERB_METHOD_PREFIX)
+    verb = name.removeprefix(HTTP_VERB_METHOD_PREFIX)
     if contract.http_handler and verb != name and verb.isupper():
         return True
     return _is_registered(function, registrations)
 
 
 def _is_enum_class(node: ast.ClassDef) -> bool:
-    return any(_decorator_name(base).endswith(_ENUM_BASE_SUFFIXES) for base in node.bases)
+    return any(_decorator_name(base).endswith(ENUM_BASE_SUFFIXES) for base in node.bases)
 
 
 def _assigned_names(node: ast.stmt) -> Iterator[str]:
@@ -122,54 +130,66 @@ def _assigned_str_value(statement: ast.stmt) -> str:
 
 def _class_definitions(
     node: ast.ClassDef, contract: FrameworkContract, registrations: frozenset[str]
-) -> Iterator[_Definition]:
+) -> Iterator[Definition]:
     member_kind = SymbolKind.ENUM_MEMBER if _is_enum_class(node) else SymbolKind.ATTRIBUTE
     for statement in node.body:
         if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef):
             if not _is_framework_bound(statement, contract, registrations):
-                yield _Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.METHOD)
+                yield Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.METHOD)
         elif isinstance(statement, ast.ClassDef):
-            yield _Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.CLASS)
+            yield Definition(statement.name, f"{node.name}.{statement.name}", statement.lineno, SymbolKind.CLASS)
             yield from (
-                _Definition(inner.name, f"{node.name}.{inner.qualname}", inner.line, inner.kind, owner=inner.owner)
+                Definition(inner.name, f"{node.name}.{inner.qualname}", inner.line, inner.kind, owner=inner.owner)
                 for inner in _class_definitions(statement, FrameworkContract(), frozenset())
             )
         else:
-            if _is_registered_assignment(statement, registrations):
-                continue
-            declared = _assigned_str_value(statement)
-            for name in _assigned_names(statement):
-                if (
-                    not _is_dunder(name)
-                    and not (member_kind is SymbolKind.ENUM_MEMBER and name == "_ignore_")
-                    and name not in contract.members
-                ):
-                    yield _Definition(
-                        name,
-                        f"{node.name}.{name}",
-                        statement.lineno,
-                        member_kind,
-                        owner=node.name,
-                        value=declared,
-                    )
+            yield from _class_attributes(node, statement, contract, registrations, member_kind)
 
 
-def _definitions(tree: ast.Module, contracts: Mapping[str, FrameworkContract] | None = None) -> Iterator[_Definition]:
+def _class_attributes(
+    node: ast.ClassDef,
+    statement: ast.stmt,
+    contract: FrameworkContract,
+    registrations: frozenset[str],
+    member_kind: SymbolKind,
+) -> Iterator[Definition]:
+    if _is_registered_assignment(statement, registrations):
+        return
+    declared = _assigned_str_value(statement)
+    for name in _assigned_names(statement):
+        if (
+            not _is_dunder(name)
+            and not (member_kind is SymbolKind.ENUM_MEMBER and name == "_ignore_")
+            and name not in contract.members
+        ):
+            yield Definition(
+                name,
+                f"{node.name}.{name}",
+                statement.lineno,
+                member_kind,
+                owner=node.name,
+                value=declared,
+            )
+
+
+def source_definitions(
+    tree: ast.Module, contracts: Mapping[str, FrameworkContract] | None = None
+) -> Iterator[Definition]:
     """Top-level functions, classes, constants, and the members inside each class."""
     for statement in tree.body:
         if isinstance(statement, ast.FunctionDef | ast.AsyncFunctionDef):
-            yield _Definition(statement.name, statement.name, statement.lineno, SymbolKind.FUNCTION)
+            yield Definition(statement.name, statement.name, statement.lineno, SymbolKind.FUNCTION)
         elif isinstance(statement, ast.ClassDef):
-            yield _Definition(statement.name, statement.name, statement.lineno, SymbolKind.CLASS)
+            yield Definition(statement.name, statement.name, statement.lineno, SymbolKind.CLASS)
             contract = (contracts or {}).get(statement.name, FrameworkContract())
             yield from _class_definitions(statement, contract, _registration_names(tree, contract))
         else:
             for name in _assigned_names(statement):
                 if not _is_dunder(name):
-                    yield _Definition(name, name, statement.lineno, SymbolKind.CONSTANT)
+                    yield Definition(name, name, statement.lineno, SymbolKind.CONSTANT)
 
 
-def _collection_uses(tree: ast.Module) -> set[str]:
+def collection_uses(tree: ast.Module) -> set[str]:
     """Names used as a whole rather than through one attribute.
 
     An enum whose class is called (value lookup), iterated, passed as an
@@ -183,7 +203,7 @@ def _collection_uses(tree: ast.Module) -> set[str]:
         if isinstance(node, ast.Name):
             names.add(node.id)
 
-    for node in _walked(tree):
+    for node in walked(tree):
         if not _note_collection_expressions(node, note):
             _note_collection_membership(node, note)
     return names
@@ -217,5 +237,5 @@ def _note_collection_membership(node: ast.AST, note: Callable[[ast.expr], None])
         for operator, comparator in zip(node.ops, node.comparators, strict=True):
             if isinstance(operator, ast.In | ast.NotIn):
                 note(comparator)
-    elif isinstance(node, ast.Attribute) and node.attr in _ENUM_COLLECTION_ATTRS:
+    elif isinstance(node, ast.Attribute) and node.attr in ENUM_COLLECTION_ATTRS:
         note(node.value)

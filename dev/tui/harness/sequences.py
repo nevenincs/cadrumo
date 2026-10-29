@@ -54,7 +54,6 @@ from cadrumo.core.i18n.render import output_language
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
-from cadrumo.entrypoints.tui.app import RootBindingV1
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.components.theme import resolve_theme_name
@@ -70,6 +69,7 @@ from cadrumo.entrypoints.tui.modelo.workbench.screen import ModeloWorkbenchScree
 from cadrumo.entrypoints.tui.modelo.workbench.search import WorkbenchSearchPanel
 from cadrumo.entrypoints.tui.modelo.workbench.sources import WorkbenchSourcesScreen
 from cadrumo.entrypoints.tui.navigation import TuiScreenContextV1
+from cadrumo.entrypoints.tui.root_binding import RootBindingV1
 from cadrumo.entrypoints.tui.tests.frame import capture
 from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -78,7 +78,8 @@ from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbench
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
-from dev.docs.sequences.runner import SANDBOX_PROFILE_LABEL, SequenceSandbox, executed_sequence_sandbox
+from dev.docs.sequences.runner import executed_sequence_sandbox
+from dev.docs.sequences.sandbox import SANDBOX_PROFILE_LABEL, SequenceSandbox
 
 DECLARATIONS_PAGE: Final[str] = "declarations"
 NEXT_PAGE: Final[str] = "next-page"

@@ -248,7 +248,7 @@ def _record_import_bindings(node: ast.stmt, module: str, is_package: bool, bindi
     elif isinstance(node, ast.Import):
         for alias in node.names:
             local = alias.asname or alias.name.split(".", maxsplit=1)[0]
-            bindings[local] = alias.name if (alias.asname is not None and alias.asname) else local
+            bindings[local] = alias.name if bool(alias.asname) else local
 
 
 def _record_class_declaration(

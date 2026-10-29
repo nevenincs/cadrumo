@@ -220,7 +220,7 @@ def observe_worker(recorder: RuntimeBenchmarkRecorder) -> Generator[None]:
         _observe(patch, recorder, view_reader, "_paginate_source", "profile.paginate")
         _observe(patch, recorder, WorkerAuthorizationLease, "acquire", "authority.lease_acquire")
         _observe(patch, recorder, WorkerAuthorizationLease, "release", "authority.lease_release")
-        _observe(patch, recorder, ProfileWorkerOperationHost, "_require_current_inventory", "worker.current_inventory")
+        _observe(patch, recorder, ProfileWorkerOperationHost, "require_current_inventory", "worker.current_inventory")
         delivered = ProfileWorkerOperationHost.release_delivered_result
 
         @functools.wraps(delivered)
@@ -402,34 +402,43 @@ class _BenchmarkPlugin:
             output.mkdir()
         recorder = ProfileBenchmarkRecorder(output, role="parent")
         recorder._write({"event": "case", "name": item.name})
+        journey = item.module
+        if journey is None:
+            raise TypeError("profile benchmark requires a pytest module")
         with (
-            observe_parent(recorder, output, item.module),
+            observe_parent(recorder, output, journey),
             record_runtime_tree(recorder),
             recorder.measure("wizard.total"),
         ):
             yield
 
 
+def _event_records(records: list[dict[str, object]], events: set[str]) -> list[dict[str, object]]:
+    """Keep trace records in publication order for the requested event kinds."""
+    return [record for record in records if record["event"] in events]
+
+
+def _process_summary(path: Path, output: Path) -> dict[str, object]:
+    """Read each process final cumulative snapshots without double counting."""
+    records: list[dict[str, object]] = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+    aggregates = _event_records(records, {"aggregate"})
+    distributions = _event_records(records, {"distributions"})
+    timeline = _event_records(records, {"timeline"})
+    return {
+        "source": str(path.relative_to(output)),
+        "totals": aggregates[-1]["boundaries"] if aggregates else {},
+        "distributions": distributions[-1]["boundaries"] if distributions else {},
+        "timeline": timeline[-1]["measurements"] if timeline else [],
+        "milestones": _event_records(records, {"milestone"}),
+        "measurements": _event_records(records, {"case", "scope_size", "process_tree", "finish"}),
+    }
+
+
 def summarize(output: Path, exit_code: int) -> None:
     """Retain final cumulative counters once per process, without double counting snapshots."""
     processes = []
     for path in sorted(output.rglob("*.jsonl")):
-        records = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
-        aggregates = [record for record in records if record["event"] == "aggregate"]
-        distributions = [record for record in records if record["event"] == "distributions"]
-        timeline = [record for record in records if record["event"] == "timeline"]
-        processes.append(
-            {
-                "source": str(path.relative_to(output)),
-                "totals": aggregates[-1]["boundaries"] if aggregates else {},
-                "distributions": distributions[-1]["boundaries"] if distributions else {},
-                "timeline": timeline[-1]["measurements"] if timeline else [],
-                "milestones": [record for record in records if record["event"] == "milestone"],
-                "measurements": [
-                    record for record in records if record["event"] in {"case", "scope_size", "process_tree", "finish"}
-                ],
-            }
-        )
+        processes.append(_process_summary(path, output))
     (output / "summary.json").write_text(
         json.dumps(
             {

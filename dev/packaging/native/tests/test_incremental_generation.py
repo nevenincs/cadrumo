@@ -23,9 +23,9 @@ from ... import runtime_wheel_selection
 from ...command_execution import run_command
 from ...runtime_wheelhouse_contract import LockedWheel
 from .. import cmake_build, layout, provision
+from ..action_selection import action_toolchain
 from ..build_stamp import BuildStamp
 from ..build_timing import measure_build
-from ..cmake_build import action_toolchain
 from ..generate import generate
 from ..metadata import generate as generate_metadata
 

@@ -403,6 +403,13 @@ def render_command(
     write_manifest(directory, manifest)
     write_index(directory, manifest)
 
+    discarded, purge_refusal = _purge_render_artifacts(directory, manifest)
+
+    _report_render_result(directory, manifest, frames, failures, skipped, discarded, purge_refusal)
+
+
+def _purge_render_artifacts(directory: Path, manifest: Manifest) -> tuple[tuple[Path, ...], str | None]:
+    """Sweep only after publishing the completed manifest, retaining any refusal for reporting."""
     discarded: tuple[Path, ...] = ()
     purge_refusal: str | None = None
     try:
@@ -410,7 +417,7 @@ def render_command(
     except StaleArtifactPurgeRefusedError as exc:
         purge_refusal = str(exc)
 
-    _report_render_result(directory, manifest, frames, failures, skipped, discarded, purge_refusal)
+    return discarded, purge_refusal
 
 
 @app.command("snapshot")

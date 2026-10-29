@@ -351,6 +351,27 @@ def _assert_prepared_source_unchanged(root: Path, source_files: tuple[str, ...],
         )
 
 
+def _configure_builder_environment(root: Path) -> None:
+    build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
+    os.environ["SOURCE_DATE_EPOCH"] = _SOURCE_DATE_EPOCH
+    os.environ["PYTHONHASHSEED"] = "0"
+    os.environ["UV_BUILD_CONSTRAINT"] = str(build_constraints)
+    os.environ["UV_REQUIRE_HASHES"] = "1"
+    os.environ["UV_PYTHON"] = sys.executable
+    os.environ["UV_PYTHON_DOWNLOADS"] = "never"
+
+
+def _assert_release_inventory(output: Path, declared: set[str]) -> None:
+    observed = {
+        path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()
+    }
+    if observed != declared:
+        raise SystemExit(
+            "release cohort contains undeclared or missing files: "
+            f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
+        )
+
+
 def build_from_clean_source(
     *,
     clean_root: Path,
@@ -378,13 +399,7 @@ def build_from_clean_source(
     output = _safe_new_output(output_dir, repo_root=root)
 
     builder = _build_identity(root)
-    build_constraints = (root / _BUILD_CONSTRAINTS).resolve(strict=True)
-    os.environ["SOURCE_DATE_EPOCH"] = _SOURCE_DATE_EPOCH
-    os.environ["PYTHONHASHSEED"] = "0"
-    os.environ["UV_BUILD_CONSTRAINT"] = str(build_constraints)
-    os.environ["UV_REQUIRE_HASHES"] = "1"
-    os.environ["UV_PYTHON"] = sys.executable
-    os.environ["UV_PYTHON_DOWNLOADS"] = "never"
+    _configure_builder_environment(root)
 
     try:
         build_root = require_build_path(root / "build", repo_root=root)
@@ -489,14 +504,7 @@ def build_from_clean_source(
     )
     manifest_path = write_manifest(output, manifest)
     declared = {record.path for record in manifest.artifacts} | {"release-cohort.json"}
-    observed = {
-        path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()
-    }
-    if observed != declared:
-        raise SystemExit(
-            "release cohort contains undeclared or missing files: "
-            f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
-        )
+    _assert_release_inventory(output, declared)
     if use_prepared_source:
         _assert_prepared_source_unchanged(root, source_files, expected_source_digest)
     return _complete_release_cohort(
@@ -517,6 +525,11 @@ def _clean_builder_command() -> list[str]:
     # Resolve the clean source's frozen project closure in an isolated environment.
     # The child still validates its exact interpreter before producing any artifact.
     return [uv, "run", "--isolated", "--frozen", "--no-editable", "--python", REQUIRED_PYTHON_VERSION, "python"]
+
+
+def _remove_failed_staging(staging: Path, build: Path) -> None:
+    if staging.parent == build and matching_family(staging.name) is not None and staging.exists():
+        shutil.rmtree(staging)
 
 
 def build_release_cohort(
@@ -604,8 +617,7 @@ def build_release_cohort(
             except (OSError, SystemExit):
                 # Judged by the same registry the sweep uses, so the guard cannot
                 # drift from the name that was minted a few lines above.
-                if staging.parent == build and matching_family(staging.name) is not None and staging.exists():
-                    shutil.rmtree(staging)
+                _remove_failed_staging(staging, build)
                 raise
     finally:
         remove_tree(snapshot_work)

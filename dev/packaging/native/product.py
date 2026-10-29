@@ -11,10 +11,10 @@ import sys
 import tempfile
 from collections.abc import Mapping
 from contextlib import nullcontext
-from functools import partial
+from email.message import Message
 from importlib.metadata import version
-from pathlib import Path, PurePosixPath
-from typing import Any
+from pathlib import Path
+from typing import cast
 
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
@@ -22,8 +22,6 @@ from packaging.utils import canonicalize_name
 from cadrumo.core.product_identity import PRODUCT_IDENTITY
 from cadrumo.core.toml import parse_toml
 from dev._paths import AUTHORITY_ROOT_ENV, REPO_ROOT
-from dev.first_party_source import PYTEST_CONFTEST
-from dev.source_tree import line_ending_policies, normalise_with, repository_files, snapshot
 
 from ..authority_staging import selected_published_authority
 from ..command_execution import run_command
@@ -33,7 +31,9 @@ from .build_directory import require_enrolled_output
 from .build_log import BuildLog, display_path
 from .build_timing import BuildTimings
 from .build_toolchain import selected_uv
-from .hashing import digest, digest_cache, transformed_digest
+from .hashing import digest, digest_cache
+from .product_hatch_types import HatchWheelBuilder
+from .product_snapshot import capture_product_source_snapshot
 from .target import uv_environment, uv_platform
 
 BUNDLED_EXTRAS: tuple[str, ...] = ("llm", "browser")
@@ -46,196 +46,17 @@ provisioned into profile storage on demand. The wheel's core install stays
 without either extra.
 """
 
-_PRODUCT_INPUT_EXCLUSIONS = frozenset({"__pycache__", ".git", "tests"})
+
+def _include_hook_metadata(hook_path: Path, directory: Path, metadata: dict[str, str]) -> None:
+    if hook_path.is_file():
+        metadata[hook_path.relative_to(directory).as_posix()] = digest(hook_path)
 
 
-def _product_source_roots(root: Path) -> tuple[str, ...]:
-    """Read the package roots from the same declarations used by CMake."""
-    project = parse_toml((root / "pyproject.toml").read_text(encoding="utf-8"))
-    paths = [project["tool"]["uv"]["sources"][name]["path"] for name in PRODUCT_IDENTITY.companion_distributions]
-    hook = Path(project["tool"]["hatch"]["build"]["targets"]["wheel"]["hooks"]["custom"]["path"])
-    paths.append(hook.parent.as_posix())
-
-    root = root.resolve()
-    resolved: list[str] = ["src"]
-    for value in paths:
-        candidate = (root / value).resolve(strict=False)
-        try:
-            relative = candidate.relative_to(root).as_posix()
-        except ValueError as exc:
-            raise ValueError("Product wheel source roots must stay inside the repository") from exc
-        resolved.append("" if relative == "." else relative)
-    return tuple(dict.fromkeys(resolved))
-
-
-def _excluded_product_input(relative: str) -> bool:
-    """Mirror cadrumo_product_inputs' exclusions for the snapshot source census."""
-    path = PurePosixPath(relative)
-    parts = path.parts
-    return (
-        relative == "src/cadrumo/_data/google/oauth_client.json"
-        or any(part in _PRODUCT_INPUT_EXCLUSIONS for part in parts)
-        or path.suffix in {".pyc", ".lock"}
-        or path.name == PYTEST_CONFTEST
-        or any(
-            part.startswith(
-                (".aeat-generated-export-transaction-", ".generated-export-backup-", ".generated-export-stage-")
-            )
-            for part in parts
-        )
-    )
-
-
-def _input_manifest_members(root: Path, inputs: Path | None) -> frozenset[str] | None:
-    """Return manifest paths that belong to the source snapshot."""
-    if inputs is None:
-        return None
-    repository = root.resolve()
-    members: set[str] = set()
-    for line in inputs.read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        candidate = Path(line)
-        if not candidate.is_absolute():
-            candidate = repository / candidate
-        try:
-            relative = candidate.resolve(strict=False).relative_to(repository).as_posix()
-        except ValueError:
-            # Runtime receipts and generated authority are admitted by CMake but
-            # live outside the source snapshot and are checked by its input hash.
-            continue
-        # CMake has already filtered recursive inputs. Keep explicit owners such
-        # as the root uv.lock even when their suffix matches that filter.
-        members.add(relative)
-    return frozenset(members)
-
-
-def _membership_changed(detail: str) -> RuntimeError:
-    return RuntimeError(
-        "Product source membership changed while capturing the wheel inputs "
-        f"({detail}). Re-run the CMake build so CONFIGURE_DEPENDS refreshes inputs-product.txt, then retry."
-    )
-
-
-def _normalised_digest(root: Path, relative: str, policy: str) -> str:
-    """The digest of one source file's content as the repository records it."""
-    return transformed_digest(root / relative, f"line-endings:{policy}", partial(normalise_with, policy))
-
-
-def _framed_digest(digests: Mapping[str, str]) -> str:
-    """Frame member digests exactly as ``source_tree.member_content_digest`` frames member bytes."""
-    framed = hashlib.sha256()
-    for relative in sorted(digests):
-        framed.update(relative.encode("utf-8"))
-        framed.update(b"\0")
-        framed.update(bytes.fromhex(digests[relative]))
-        framed.update(b"\n")
-    return framed.hexdigest()
-
-
-def _source_digest(root: Path, files: tuple[str, ...]) -> str:
-    """``source_tree.content_digest`` of ``files``, answered from the digest cache where it can be."""
-    policies = line_ending_policies(root, files)
-    return _framed_digest({relative: _normalised_digest(root, relative, policies[relative]) for relative in files})
-
-
-def _capture_product_source_snapshot(root: Path, destination: Path, inputs: Path | None) -> None:
-    """Capture and verify one coherent, enrolled source set before building any wheel."""
-    root = root.resolve()
-    source_roots = _product_source_roots(root)
-    metadata = ("pyproject.toml", "uv.lock", "README.md", "LICENSE", "NOTICE", ".gitignore", ".gitattributes")
-    # One census names the package members; the snapshot adds the project's metadata files.
-    package_members = frozenset(
-        name for name in repository_files(root, under=source_roots) if not _excluded_product_input(name)
-    )
-    files = tuple(sorted({*package_members, *(name for name in metadata if (root / name).is_file())}))
-    file_members = frozenset(files)
-
-    manifest_members = _input_manifest_members(root, inputs)
-    if manifest_members is None:
-        # Standalone callers still receive a bounded content-stability check.
-        enrolled = set(package_members)
-        if "pyproject.toml" in file_members:
-            enrolled.add("pyproject.toml")
-    else:
-        missing = sorted(package_members - manifest_members)
-        if missing:
-            raise _membership_changed(f"{missing[0]} is absent from inputs-product.txt")
-        enrolled = set(file_members & manifest_members)
-    enrolled_members = tuple(sorted(enrolled))
-    before = _source_digest(root, enrolled_members)
-
-    _sync_source_snapshot(root, files, destination)
-    captured = _framed_digest({name: digest(destination / name) for name in enrolled_members})
-    captured_package_members = frozenset(
-        name for name in repository_files(destination, under=source_roots) if not _excluded_product_input(name)
-    )
-    if captured_package_members != package_members:
-        raise _membership_changed("the captured wheel source membership differs from its initial census")
-
-    current_roots = _product_source_roots(root)
-    current_package_members = frozenset(
-        name for name in repository_files(root, under=current_roots) if not _excluded_product_input(name)
-    )
-    if current_roots != source_roots or current_package_members != package_members:
-        raise _membership_changed("wheel package roots or source files changed during snapshotting")
-    if manifest_members is not None:
-        missing = sorted(current_package_members - manifest_members)
-        if missing:
-            raise _membership_changed(f"{missing[0]} is absent from inputs-product.txt")
-
-    after = _source_digest(root, enrolled_members)
-    if before != captured or captured != after:
-        raise RuntimeError(
-            "Enrolled product source content changed while capturing the wheel inputs; "
-            "retry after the enrolled source files are stable."
-        )
-
-
-def _sync_source_snapshot(root: Path, files: tuple[str, ...], destination: Path) -> None:
-    """Preserve unchanged normalized source files and remove obsolete snapshot members."""
-    for ancestor in (destination, *destination.parents):
-        if ancestor.is_symlink() or ancestor.is_junction():
-            raise ValueError("Product source snapshot contains a linked member")
-    pending = [destination] if destination.is_dir() else []
-    while pending:
-        for member in pending.pop().iterdir():
-            if member.is_symlink() or member.is_junction():
-                raise ValueError("Product source snapshot contains a linked member")
-            if member.is_dir():
-                pending.append(member)
-    if not destination.exists():
-        snapshot(root, files, destination)
-        return
-    expected = set(files)
-    for path in destination.rglob("*"):
-        if not path.is_file():
-            continue
-        relative = path.relative_to(destination).as_posix()
-        if relative.startswith(".authority/") or relative == "src/cadrumo/_data/google/oauth_client.json":
-            continue
-        if relative not in expected:
-            path.unlink()
-    # The line-ending rules are read once for every file, not once per file.
-    policies = line_ending_policies(root, files)
-    for relative in files:
-        path = destination / relative
-        expected = _normalised_digest(root, relative, policies[relative])
-        if path.is_file() and digest(path) == expected:
-            continue
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(normalise_with(policies[relative], (root / relative).read_bytes()))
-        shutil.copystat(root / relative, path)
-    for directory in sorted(destination.rglob("*"), reverse=True):
-        if directory.is_dir() and not any(directory.iterdir()):
-            directory.rmdir()
-
-
-def _wheel_input_digest(directory: Path, *, toolchain: Mapping[str, Any] | None) -> str:
+def _wheel_input_digest(directory: Path, *, toolchain: Mapping[str, object] | None) -> str:
     """Name the actual Hatch selection, including hook-owned payloads and metadata."""
     from hatchling.builders.wheel import WheelBuilder
 
-    builder = WheelBuilder(str(directory))
+    builder = cast(HatchWheelBuilder, WheelBuilder(str(directory)))
     data = builder.get_default_build_data()
     builder.set_build_data_defaults(data)
     hooks = list(builder.get_build_hooks(str(directory.parent)).values())
@@ -249,15 +70,14 @@ def _wheel_input_digest(directory: Path, *, toolchain: Mapping[str, Any] | None)
         # Metadata and hook implementations affect the archive even when they
         # aren't themselves selected as wheel members.
         metadata_paths = {directory / "pyproject.toml"}
-        if builder.metadata.core.readme_path:
+        if bool(builder.metadata.core.readme_path):
             metadata_paths.add(directory / builder.metadata.core.readme_path)
         for pattern in builder.metadata.core.license_files:
             metadata_paths.update(path for path in directory.glob(pattern) if path.is_file())
         metadata = {path.relative_to(directory).as_posix(): digest(path) for path in metadata_paths}
         for hook in hooks:
             hook_path = directory / hook.config.get("path", "hatch_build.py")
-            if hook_path.is_file():
-                metadata[hook_path.relative_to(directory).as_posix()] = digest(hook_path)
+            _include_hook_metadata(hook_path, directory, metadata)
         configuration = dict(members=members, metadata=metadata, backend=version("hatchling"), toolchain=toolchain)
         return hashlib.sha256(json.dumps(configuration, sort_keys=True).encode()).hexdigest()
     finally:
@@ -265,22 +85,23 @@ def _wheel_input_digest(directory: Path, *, toolchain: Mapping[str, Any] | None)
             hook.finalize("standard", data, "")
 
 
-def _stage_product_authority(root: Path, source: Path) -> None:
-    """Capture the selected pair before publication and retire old snapshot generations."""
-    originals = selected_published_authority(root)
-    expected = {path.name: digest(path) for path in originals}
-    destination = source / ".authority"
+def _validate_authority_destination(destination: Path) -> None:
     if destination.is_symlink() or destination.is_junction():
         raise ValueError("Product authority snapshot cannot be linked")
     destination.mkdir(parents=True, exist_ok=True)
     for member in destination.iterdir():
         if member.is_symlink() or member.is_junction() or not member.is_file():
             raise ValueError("Product authority snapshot must contain only regular files")
-    changed = [
-        path
-        for path in originals
-        if not (destination / path.name).is_file() or digest(destination / path.name) != expected[path.name]
-    ]
+
+
+def _capture_authority(
+    root: Path,
+    source: Path,
+    destination: Path,
+    originals: tuple[Path, ...],
+    expected: dict[str, str],
+    changed: list[Path],
+) -> None:
     with tempfile.TemporaryDirectory(prefix=".authority-capture-", dir=source) as temporary:
         candidate = Path(temporary)
         for original in changed:
@@ -295,27 +116,26 @@ def _stage_product_authority(root: Path, source: Path) -> None:
         # their complete bytes atomically. Failed capture never touches the pair.
         for original in sorted(changed, key=lambda path: path.name == "authority.current.json"):
             (candidate / original.name).replace(destination / original.name)
+
+
+def _stage_product_authority(root: Path, source: Path) -> None:
+    """Capture the selected pair before publication and retire old snapshot generations."""
+    originals = selected_published_authority(root)
+    expected = {path.name: digest(path) for path in originals}
+    destination = source / ".authority"
+    _validate_authority_destination(destination)
+    changed = [
+        path
+        for path in originals
+        if not (destination / path.name).is_file() or digest(destination / path.name) != expected[path.name]
+    ]
+    _capture_authority(root, source, destination, originals, expected, changed)
     for member in destination.iterdir():
         if member.name not in expected:
             member.unlink()
 
 
-def build_product(
-    output: Path,
-    python: Path,
-    dependencies: Path,
-    target: str,
-    *,
-    inputs: Path | None = None,
-    build_toolchain: Mapping[str, Any] | None = None,
-    uv_executable: Path | None = None,
-    timings: BuildTimings | None = None,
-) -> None:
-    """Compose existing snapshot, build hooks and wheel metadata owners."""
-    client = build_client_json(REPO_ROOT)
-    output = output.absolute()
-    output.mkdir(parents=True, exist_ok=True)
-    python = python.resolve(strict=True)
+def _require_host_python(python: Path) -> str:
     pin = (REPO_ROOT / "dev/packaging/release-python-version").read_text(encoding="utf-8").strip()
     observed = run_command(
         [str(python), "-I", "-c", "import platform; print(platform.python_version())"], cwd=REPO_ROOT
@@ -326,65 +146,66 @@ def build_product(
         raise ValueError(
             f"Product construction requires host CPython {minimum[0]}.{minimum[1]} >= {pin}: {observed.stdout.strip()}"
         )
-    dependencies = dependencies.resolve(strict=True)
-    uv = selected_uv(build_toolchain, executable=uv_executable)
-    source = output / "source"
-    # The binary directory's digest cache answers for every unchanged source file.
-    with timings.phase("source-snapshot") if timings is not None else nullcontext(), digest_cache(output.parent):
-        _capture_product_source_snapshot(REPO_ROOT, source, inputs)
-    with timings.phase("published-authority-staging") if timings is not None else nullcontext():
-        _stage_product_authority(REPO_ROOT, source)
-    embedded_client = source / "src/cadrumo/_data/google/oauth_client.json"
-    embedded_client.parent.mkdir(parents=True, exist_ok=True)
-    encoded_client = client.get_secret_value().encode()
-    if not embedded_client.is_file() or embedded_client.read_bytes() != encoded_client:
-        embedded_client.write_bytes(encoded_client)
-    environment = dict(os.environ)
-    environment[GOOGLE_OAUTH_ENV] = client.get_secret_value()
-    environment[AUTHORITY_ROOT_ENV] = str(source / ".authority")
-    project = parse_toml((source / "pyproject.toml").read_text(encoding="utf-8"))
-    wheels = output / "wheels"
-    projects = [source]
-    projects.extend(
-        source / project["tool"]["uv"]["sources"][name]["path"] for name in PRODUCT_IDENTITY.companion_distributions
-    )
-    receipts_path = output / "wheel-inputs.json"
+    return pin
+
+
+def _wheel_identity(
+    directory: Path, source: Path, python: Path, uv: str, build_toolchain: Mapping[str, object] | None
+) -> str:
+    prior_authority = os.environ.get(AUTHORITY_ROOT_ENV)
+    os.environ[AUTHORITY_ROOT_ENV] = str(source / ".authority")
     try:
-        receipts = json.loads(receipts_path.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        receipts = {}
-    if not isinstance(receipts, dict):
-        receipts = {}
-    current_receipts = {}
+        identity = _wheel_input_digest(
+            directory,
+            toolchain={
+                "python": digest(python),
+                "python_version": sys.version,
+                "uv": cast(Mapping[str, object], build_toolchain["builder_files"])["CADRUMO_UV"]
+                if build_toolchain is not None
+                else {"path": uv, "sha256": digest(Path(uv))},
+            },
+        )
+    finally:
+        if prior_authority is None:
+            os.environ.pop(AUTHORITY_ROOT_ENV, None)
+        else:
+            os.environ[AUTHORITY_ROOT_ENV] = prior_authority
+    return identity
+
+
+def _reusable_wheel_receipt(prior: object, wheels: Path, identity: str) -> dict[str, object] | None:
+    if not isinstance(prior, dict):
+        return None
+    record = cast(dict[str, object], prior)
+    artifact = wheels / str(record.get("wheel", ""))
+    if (
+        record.get("inputs") == identity
+        and artifact.is_file()
+        and artifact.parent == wheels
+        and digest(artifact) == record.get("sha256")
+    ):
+        return record
+    return None
+
+
+def _build_wheels(
+    source: Path,
+    python: Path,
+    uv: str,
+    wheels: Path,
+    projects: list[Path],
+    receipts: dict[str, object],
+    expected_version: str,
+    environment: dict[str, str],
+    build_toolchain: Mapping[str, object] | None,
+    timings: BuildTimings | None,
+) -> dict[str, dict[str, object]]:
+    current_receipts: dict[str, dict[str, object]] = {}
     for directory in projects:
-        name = parse_toml((directory / "pyproject.toml").read_text(encoding="utf-8"))["project"]["name"]
-        prior_authority = os.environ.get(AUTHORITY_ROOT_ENV)
-        os.environ[AUTHORITY_ROOT_ENV] = str(source / ".authority")
-        try:
-            identity = _wheel_input_digest(
-                directory,
-                toolchain={
-                    "python": digest(python),
-                    "python_version": sys.version,
-                    "uv": build_toolchain["builder_files"]["CADRUMO_UV"]
-                    if build_toolchain is not None
-                    else {"path": uv, "sha256": digest(Path(uv))},
-                },
-            )
-        finally:
-            if prior_authority is None:
-                os.environ.pop(AUTHORITY_ROOT_ENV, None)
-            else:
-                os.environ[AUTHORITY_ROOT_ENV] = prior_authority
-        prior = receipts.get(name, {})
-        artifact = wheels / str(prior.get("wheel", "")) if isinstance(prior, dict) else wheels
-        if (
-            isinstance(prior, dict)
-            and prior.get("inputs") == identity
-            and artifact.is_file()
-            and artifact.parent == wheels
-            and digest(artifact) == prior.get("sha256")
-        ):
+        name = cast(str, parse_toml((directory / "pyproject.toml").read_text(encoding="utf-8"))["project"]["name"])
+        identity = _wheel_identity(directory, source, python, uv, build_toolchain)
+        prior = _reusable_wheel_receipt(receipts.get(name, {}), wheels, identity)
+        if prior is not None:
             current_receipts[name] = prior
             continue
         with timings.phase(f"wheel-build-{directory.name}") if timings is not None else nullcontext():
@@ -408,23 +229,15 @@ def build_product(
             if result.returncode:
                 raise RuntimeError(result.stderr)
         matches = [wheel for wheel in wheels.glob("*.whl") if read_wheel_metadata(wheel)["Name"] == name]
-        expected_version = project["project"]["version"]
         matches = [wheel for wheel in matches if read_wheel_metadata(wheel)["Version"] == expected_version]
         if len(matches) != 1:
             raise ValueError(f"Product build must produce exactly one current wheel for {name}")
         artifact = matches[0]
         current_receipts[name] = dict(inputs=identity, wheel=artifact.name, sha256=digest(artifact))
-    retained = {record["wheel"] for record in current_receipts.values()}
-    for wheel in wheels.glob("*.whl"):
-        if wheel.name not in retained:
-            wheel.unlink()
-    artifacts = sorted(wheels.glob("*.whl"))
-    metadata = [read_wheel_metadata(wheel) for wheel in artifacts]
-    expected = set(PRODUCT_IDENTITY.cohort_distributions)
-    if {item["Name"] for item in metadata} != expected or len(artifacts) != len(expected):
-        raise ValueError("Incomplete product wheel cohort")
-    if {item["Version"] for item in metadata} != {project["project"]["version"]}:
-        raise ValueError("Product cohort versions differ")
+    return current_receipts
+
+
+def _validate_companion_pins(metadata: list[Message], expected_version: str) -> None:
     root_metadata = next(item for item in metadata if item["Name"] == PRODUCT_IDENTITY.distribution)
     companion_pins = {}
     for value in root_metadata.get_all("Requires-Dist", []):
@@ -434,10 +247,23 @@ def build_product(
             if requirement.marker is not None or requirement.url is not None or name in companion_pins:
                 raise ValueError(f"Companion requirement is not one unconditional exact pin: {value}")
             companion_pins[name] = str(requirement.specifier)
-    if companion_pins != {
-        name: f"=={project['project']['version']}" for name in PRODUCT_IDENTITY.companion_distributions
-    }:
+    if companion_pins != {name: f"=={expected_version}" for name in PRODUCT_IDENTITY.companion_distributions}:
         raise ValueError("Product companion requirements must match the exact cohort version")
+
+
+def _validate_wheel_cohort(artifacts: list[Path], expected_version: str) -> None:
+    metadata = [read_wheel_metadata(wheel) for wheel in artifacts]
+    expected = set(PRODUCT_IDENTITY.cohort_distributions)
+    if {item["Name"] for item in metadata} != expected or len(artifacts) != len(expected):
+        raise ValueError("Incomplete product wheel cohort")
+    if {item["Version"] for item in metadata} != {expected_version}:
+        raise ValueError("Product cohort versions differ")
+    _validate_companion_pins(metadata, expected_version)
+
+
+def _install_changed_wheels(
+    artifacts: list[Path], dependencies: Path, uv: str, python: Path, pin: str, target: str
+) -> list[Path]:
     changed_artifacts = [wheel for wheel in artifacts if not installed_wheel_matches(wheel, dependencies)]
     if changed_artifacts:
         result = run_command(
@@ -464,6 +290,79 @@ def build_product(
         )
         if result.returncode:
             raise RuntimeError(result.stderr)
+    return changed_artifacts
+
+
+def _remove_obsolete_wheels(wheels: Path, current_receipts: dict[str, dict[str, object]]) -> None:
+    retained = {cast(str, record["wheel"]) for record in current_receipts.values()}
+    for wheel in wheels.glob("*.whl"):
+        if wheel.name not in retained:
+            wheel.unlink()
+
+
+def build_product(
+    output: Path,
+    python: Path,
+    dependencies: Path,
+    target: str,
+    *,
+    inputs: Path | None = None,
+    build_toolchain: Mapping[str, object] | None = None,
+    uv_executable: Path | None = None,
+    timings: BuildTimings | None = None,
+) -> None:
+    """Compose existing snapshot, build hooks and wheel metadata owners."""
+    client = build_client_json(REPO_ROOT)
+    output = output.absolute()
+    output.mkdir(parents=True, exist_ok=True)
+    python = python.resolve(strict=True)
+    pin = _require_host_python(python)
+    dependencies = dependencies.resolve(strict=True)
+    uv = selected_uv(build_toolchain, executable=uv_executable)
+    source = output / "source"
+    # The binary directory's digest cache answers for every unchanged source file.
+    with timings.phase("source-snapshot") if timings is not None else nullcontext(), digest_cache(output.parent):
+        capture_product_source_snapshot(REPO_ROOT, source, inputs)
+    with timings.phase("published-authority-staging") if timings is not None else nullcontext():
+        _stage_product_authority(REPO_ROOT, source)
+    embedded_client = source / "src/cadrumo/_data/google/oauth_client.json"
+    embedded_client.parent.mkdir(parents=True, exist_ok=True)
+    encoded_client = client.get_secret_value().encode()
+    if not embedded_client.is_file() or embedded_client.read_bytes() != encoded_client:
+        embedded_client.write_bytes(encoded_client)
+    environment = dict(os.environ)
+    environment[GOOGLE_OAUTH_ENV] = client.get_secret_value()
+    environment[AUTHORITY_ROOT_ENV] = str(source / ".authority")
+    project = parse_toml((source / "pyproject.toml").read_text(encoding="utf-8"))
+    wheels = output / "wheels"
+    projects = [source]
+    projects.extend(
+        source / project["tool"]["uv"]["sources"][name]["path"] for name in PRODUCT_IDENTITY.companion_distributions
+    )
+    receipts_path = output / "wheel-inputs.json"
+    try:
+        receipts = json.loads(receipts_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        receipts = {}
+    if not isinstance(receipts, dict):
+        receipts = {}
+    receipts = cast(dict[str, object], receipts)
+    current_receipts = _build_wheels(
+        source,
+        python,
+        uv,
+        wheels,
+        projects,
+        receipts,
+        project["project"]["version"],
+        environment,
+        build_toolchain,
+        timings,
+    )
+    _remove_obsolete_wheels(wheels, current_receipts)
+    artifacts = sorted(wheels.glob("*.whl"))
+    _validate_wheel_cohort(artifacts, project["project"]["version"])
+    changed_artifacts = _install_changed_wheels(artifacts, dependencies, uv, python, pin, target)
     receipts_path.write_text(json.dumps(current_receipts, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     (output / "product-wheels.json").write_text(
         json.dumps({p.name: digest(p) for p in artifacts}, indent=2),
@@ -495,6 +394,6 @@ if __name__ == "__main__":
         args.dependencies,
         args.target,
         inputs=args.inputs,
-        build_toolchain=configured,
+        build_toolchain=cast(Mapping[str, object] | None, configured),
         uv_executable=args.uv,
     )

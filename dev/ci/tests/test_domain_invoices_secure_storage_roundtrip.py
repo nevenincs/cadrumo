@@ -47,6 +47,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
 from cadrumo.domain.calculations.registry.iva_rate_kind_catalogue import require_iva_rate_kind
 from cadrumo.domain.calculations.registry.travel_agency_mediation import require_travel_agency_mediation
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import (
     InvoiceClass,
     InvoiceOperationDateRole,
@@ -57,7 +58,7 @@ from cadrumo.domain.invoices.enums import (
     operation_performed_role,
     resolve_iva_rate_token,
 )
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import TransactionKind, require_transaction_kind
 from cadrumo.domain.iva.oss import OssIossRegime, require_oss_ioss_regime
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory, IvaRateKind

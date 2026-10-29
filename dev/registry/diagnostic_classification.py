@@ -16,12 +16,8 @@ from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.ids import ModeloId, RevisionId
-from cadrumo.domain.calculations.registry.schema import (
-    ModeloDefinition,
-    ModeloRevision,
-    RegistryCatalogues,
-    RegistrySnapshot,
-)
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistrySnapshot
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import build_validated_snapshot
 from cadrumo.domain.calculations.registry.static_inspection import (
     RegistryRevisionInspection,

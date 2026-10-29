@@ -155,12 +155,12 @@ def test_the_change_rule_detects_each_contradiction() -> None:
     assert _change_finding(read, permitted=reading, permits_more=False, holds_a_commit_door=True) is not None
 
 
-def test_every_definition_that_owns_a_process_is_recorded_as_reaching_the_network() -> None:
-    """The one resource a definition declares for a remote read is its browser process."""
-    unrecorded = sorted(
+def test_every_operation_that_owns_a_process_reaches_the_network() -> None:
+    """Browser processes reach the network; no registered operation owns a process for local work."""
+    local_process_owners = sorted(
         item.contract.definition_id
         for item in _registrations()
         if OperationOwnedResource.PROCESS in item.contract.owned_resources
         and not operation_access_facts(item.contract.definition_id).reaches_network
     )
-    assert not unrecorded, f"definitions that own a browser process but are recorded as local: {unrecorded}"
+    assert not local_process_owners, f"operations owning a process without reaching the network: {local_process_owners}"

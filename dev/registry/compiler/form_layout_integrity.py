@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
     FormRepeatingGroupBlock,
     FormRepeatingRowSource,
 )
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 __all__ = ["form_layout_failures", "form_layout_source_digest"]
 
@@ -74,13 +75,14 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
     }
     if literal_scales:
         payload["literal_scales"] = literal_scales
-    projection_blocks = tuple(
-        block
-        for layout in revision.form_layouts
-        for block in _layout_blocks(layout)
-        if isinstance(block, FormRepeatingGroupBlock)
-        and any(column.export_field_id is not None for column in block.columns)
-    )
+    _projection_digest_sources(revision, payload)
+    _context_projection_digest_sources(revision, payload)
+    _context_digest_sources(revision, payload)
+    return sha256_hex(canonical_json_bytes(payload))
+
+
+def _projection_digest_sources(revision: ModeloRevision, payload: dict[str, object]) -> None:
+    projection_blocks = _projection_blocks(revision)
     if projection_blocks:
         payload["projection_sources"] = [
             (record.id, field.id, field.data_type, field.projection_ref.model_dump(mode="json"))
@@ -90,12 +92,21 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
             if field.projection_ref is not None
             and any(block.export_record_id == record.id for block in projection_blocks)
         ]
-    context_projection_blocks = tuple(
+
+
+def _projection_blocks(revision: ModeloRevision) -> tuple[FormRepeatingGroupBlock, ...]:
+    projection_blocks = tuple(
         block
         for layout in revision.form_layouts
         for block in _layout_blocks(layout)
-        if isinstance(block, FormContextFieldBlock)
+        if isinstance(block, FormRepeatingGroupBlock)
+        and any(column.export_field_id is not None for column in block.columns)
     )
+    return projection_blocks
+
+
+def _context_projection_digest_sources(revision: ModeloRevision, payload: dict[str, object]) -> None:
+    context_projection_blocks = _context_projection_blocks(revision)
     context_projections = [
         (layout.id, record.id, field.id, field.projection_ref.model_dump(mode="json"))
         for layout in derive_export_layouts_from_bindings(revision)
@@ -111,6 +122,19 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
     ]
     if context_projections:
         payload["context_projection_sources"] = context_projections
+
+
+def _context_projection_blocks(revision: ModeloRevision) -> tuple[FormContextFieldBlock, ...]:
+    context_projection_blocks = tuple(
+        block
+        for layout in revision.form_layouts
+        for block in _layout_blocks(layout)
+        if isinstance(block, FormContextFieldBlock)
+    )
+    return context_projection_blocks
+
+
+def _context_digest_sources(revision: ModeloRevision, payload: dict[str, object]) -> None:
     # Keep existing declarations' digest contract unchanged. Context-bearing
     # layouts additionally depend on the exact filing producer semantics.
     if any(
@@ -122,7 +146,6 @@ def form_layout_source_digest(revision: ModeloRevision) -> str:
             for record in layout.records
             for field in record.fields
         ]
-    return sha256_hex(canonical_json_bytes(payload))
 
 
 def _casilla_digest_rows(revision: ModeloRevision) -> list[tuple[object, ...]]:
@@ -287,25 +310,36 @@ def _placement_count_failures(
     layout: FormLayoutDefinition, placed: dict[str, FormPlacementDefinition], references: Counter[str]
 ) -> Iterator[str]:
     """Report references inconsistent with each placement's on-form status."""
+    positions = _placement_positions(layout)
+    for casilla_id, placement in sorted(placed.items()):
+        count = references.get(casilla_id, 0)
+        if (
+            placement.kind is FormPlacementKind.ON_FORM
+            and count != 1
+            and _invalid_placement_positions(positions.get(casilla_id, []), placement)
+        ):
+            yield f"shows on-form casilla {casilla_id!r} in {count} positions; it belongs in exactly one"
+        if placement.kind is not FormPlacementKind.ON_FORM and count:
+            yield f"shows casilla {casilla_id!r} on the form although it is placed {placement.kind.value!r}"
+
+
+def _invalid_placement_positions(locations: list[tuple[str, str]], placement: FormPlacementDefinition) -> bool:
+    aliases = {(alias.page_id, alias.section_id) for alias in placement.aliases}
+    return (
+        not locations
+        or len(locations) != len(set(locations))
+        or any(location not in aliases for location in locations[1:])
+    )
+
+
+def _placement_positions(layout: FormLayoutDefinition) -> dict[str, list[tuple[str, str]]]:
     positions: dict[str, list[tuple[str, str]]] = {}
     for page in layout.pages:
         for section in page.sections:
             for block in section.blocks:
                 for casilla_id in _block_casilla_references(block):
                     positions.setdefault(casilla_id, []).append((page.id, section.id))
-    for casilla_id, placement in sorted(placed.items()):
-        count = references.get(casilla_id, 0)
-        if placement.kind is FormPlacementKind.ON_FORM and count != 1:
-            locations = positions.get(casilla_id, [])
-            aliases = {(alias.page_id, alias.section_id) for alias in placement.aliases}
-            if (
-                not locations
-                or len(locations) != len(set(locations))
-                or any(location not in aliases for location in locations[1:])
-            ):
-                yield f"shows on-form casilla {casilla_id!r} in {count} positions; it belongs in exactly one"
-        if placement.kind is not FormPlacementKind.ON_FORM and count:
-            yield f"shows casilla {casilla_id!r} on the form although it is placed {placement.kind.value!r}"
+    return positions
 
 
 def _binding_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
@@ -341,14 +375,22 @@ def _context_failures(layout: FormLayoutDefinition, revision: ModeloRevision) ->
 def _choice_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     for block in _layout_blocks(layout):
-        if not isinstance(block, FormFieldBlock) or not block.choices:
-            continue
-        casilla = casillas.get(block.casilla_id)
-        domain = casilla.constraints.enum if casilla is not None and casilla.constraints is not None else None
-        if casilla is None or casilla.data_type.value != "text" or domain is None:
-            yield f"choice field {block.id!r} requires a closed text casilla domain"
-        elif any(choice.value not in domain for choice in block.choices):
-            yield f"choice field {block.id!r} names a value outside its casilla domain"
+        yield from _choice_block_failures(block, casillas)
+
+
+def _choice_block_failures(block: FormBlockDefinition, casillas: dict[str, CasillaDefinition]) -> Iterator[str]:
+    if not isinstance(block, FormFieldBlock) or not block.choices:
+        return
+    casilla = casillas.get(block.casilla_id) if block.casilla_id is not None else None
+    domain = _choice_domain(casilla)
+    if casilla is None or casilla.data_type.value != "text" or domain is None:
+        yield f"choice field {block.id!r} requires a closed text casilla domain"
+    elif any(choice.value not in domain for choice in block.choices):
+        yield f"choice field {block.id!r} names a value outside its casilla domain"
+
+
+def _choice_domain(casilla: CasillaDefinition | None) -> tuple[str, ...] | None:
+    return casilla.constraints.enum if casilla is not None and casilla.constraints is not None else None
 
 
 def form_layout_failures(revision: ModeloRevision) -> tuple[str, ...]:

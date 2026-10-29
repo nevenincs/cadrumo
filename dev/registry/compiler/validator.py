@@ -28,8 +28,9 @@ from typing import TYPE_CHECKING
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.runtime_catalogues import RuntimeRegistryCatalogues
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import REGISTRY_SOURCE_GROUNDING_TIERS
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ._validate_helpers import missing_refs as _missing_refs
 from ._validate_producer_inventory import validate_producer_inventory

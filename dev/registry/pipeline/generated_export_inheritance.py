@@ -13,13 +13,15 @@ from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
-from cadrumo.domain.calculations.registry.ids import SourceRefId
+from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision import strict_cross_revision_casilla_continuity_failures
 from .bootstrap_supersession import bootstrap_layout_supersession_fingerprint
+from .export_fragment_provenance import ExportFragmentProvenanceManifest
 from .export_fragment_provenance_projection import loader_semantic_digest
 from .generated_export_inheritance_model import GeneratedExportInheritance, GeneratedExportInheritanceContext
 
@@ -47,17 +49,7 @@ def verify_generated_export_inheritance_storage(
     export_root = baseline_root / "export"
     manifest = verify_generated_export_package(export_root)
     manifest_digest = sha256((export_root / "_generation.provenance.json").read_bytes()).hexdigest()
-    if (
-        str(manifest.modelo) != modelo
-        or str(manifest.revision_id) != baseline_id
-        or manifest_digest != attestation.baseline_manifest_sha256
-        or bootstrap_layout_supersession_fingerprint(baseline_root) != attestation.baseline_revision_sha256
-        or loader_semantic_digest(effective_layout) != attestation.baseline_layout_sha256
-        or manifest.loader_semantic_sha256 != attestation.baseline_layout_sha256
-        or manifest.source_ref != attestation.baseline_source_ref
-        or manifest.source_sha256 != attestation.baseline_source_sha256
-    ):
-        raise RegistryValidationError("generated export inheritance storage differs from its baseline pins")
+    _require_storage_pins(attestation, manifest, modelo, baseline_id, baseline_root, effective_layout, manifest_digest)
     source = sources.get(attestation.baseline_source_ref)
     if source is None or source.sha256 != attestation.baseline_source_sha256:
         raise RegistryValidationError("generated export inheritance storage source pin is not current")
@@ -70,6 +62,28 @@ def verify_generated_export_inheritance_storage(
             sources=sources,
             _visited=_visited | {baseline_id},
         )
+
+
+def _require_storage_pins(
+    attestation: GeneratedExportInheritance,
+    manifest: ExportFragmentProvenanceManifest,
+    modelo: str,
+    baseline_id: str,
+    baseline_root: Path,
+    effective_layout: ExportLayoutDefinition,
+    manifest_digest: str,
+) -> None:
+    if (
+        str(manifest.modelo) != modelo
+        or str(manifest.revision_id) != baseline_id
+        or manifest_digest != attestation.baseline_manifest_sha256
+        or bootstrap_layout_supersession_fingerprint(baseline_root) != attestation.baseline_revision_sha256
+        or loader_semantic_digest(effective_layout) != attestation.baseline_layout_sha256
+        or manifest.loader_semantic_sha256 != attestation.baseline_layout_sha256
+        or manifest.source_ref != attestation.baseline_source_ref
+        or manifest.source_sha256 != attestation.baseline_source_sha256
+    ):
+        raise RegistryValidationError("generated export inheritance storage differs from its baseline pins")
 
 
 def select_generated_export_inheritance(
@@ -92,37 +106,14 @@ def select_generated_export_inheritance(
     the same compact storage only after its live complete continuity agrees
     with the validated authority; injected or stale evolution data still refuses.
     """
-    if revision in _visited:
-        raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{revision}")
-    visited = _visited | {revision}
-    definition = authority.modelo(modelo)
-    selected = definition.revisions[revision]
-    baseline_id = selected.family_storage_baseline
-    if baseline_id is None:
+    selected_baseline = _select_equal_baseline(authority, modelo, revision, _visited)
+    if selected_baseline is None:
         return None
-    if str(baseline_id) in visited:
-        raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{baseline_id}")
-    baseline = definition.revisions.get(str(baseline_id))
-    if baseline is None:
-        raise RegistryValidationError(f"generated export inheritance baseline {baseline_id!r} is absent")
-    if len(selected.export_layouts) != 1 or len(baseline.export_layouts) != 1:
+    baseline_id, baseline, visited = selected_baseline
+    if not _eligible_source_chains(
+        authority, registry_root, modelo, revision, str(baseline_id), retain_source_chain, _require_eligible
+    ):
         return None
-    if selected.export_layouts != baseline.export_layouts:
-        return None
-    for selected_id in (str(baseline_id), revision):
-        evolution_root = (
-            registry_root / "modelos" / modelo / "revisions" / selected_id / "casilla_continuidad_evolutions"
-        )
-        if evolution_root.exists() and (
-            not retain_source_chain
-            or not _validated_continuity_source_chain(authority, registry_root, modelo=modelo, revision=selected_id)
-        ):
-            if not _require_eligible:
-                return None
-            raise RegistryValidationError(
-                "generated export inheritance cannot detach a revision with continuity evolutions: "
-                f"{modelo}/{selected_id}",
-            )
     # Artifact verification imports publication contracts, which refer to the
     # validator. Keep that dependency at the call boundary instead of creating
     # an import cycle while the validator is being defined.
@@ -133,9 +124,7 @@ def select_generated_export_inheritance(
     manifest = verify_generated_export_package(export_root)
     if str(manifest.modelo) != modelo or str(manifest.revision_id) != str(baseline_id):
         raise RegistryValidationError("generated export inheritance baseline package names another revision")
-    source = authority.catalogues.sources.get(manifest.source_ref)
-    if source is None or source.sha256 != manifest.source_sha256:
-        raise RegistryValidationError("generated export inheritance baseline source pin is not current")
+    _require_current_manifest_source(authority, manifest)
     baseline_layout = baseline.export_layouts[0]
     layout_sha256 = loader_semantic_digest(baseline_layout)
     if manifest.loader_semantic_sha256 != layout_sha256:
@@ -156,6 +145,65 @@ def select_generated_export_inheritance(
             raise RegistryValidationError("generated export inheritance baseline chain attestation changed")
     # A self-consistent old manifest is insufficient: each chain link must
     # reproduce its current official design, semantic map and profile.
+    _require_current_baseline_render(
+        authority, modelo, str(baseline_id), source_root, export_root, baseline_layout, baseline_context
+    )
+    manifest_path = export_root / "_generation.provenance.json"
+    attestation = GeneratedExportInheritance(
+        baseline_revision_id=baseline_id,
+        baseline_revision_sha256=bootstrap_layout_supersession_fingerprint(baseline_root),
+        baseline_manifest_sha256=sha256(manifest_path.read_bytes()).hexdigest(),
+        baseline_layout_sha256=layout_sha256,
+        baseline_source_ref=manifest.source_ref,
+        baseline_source_sha256=manifest.source_sha256,
+    )
+    return GeneratedExportInheritanceContext(
+        attestation=attestation,
+        baseline_layout=baseline_layout,
+        baseline_context=baseline_context,
+    )
+
+
+def _require_current_manifest_source(
+    authority: ValidatedRegistryAuthority, manifest: ExportFragmentProvenanceManifest
+) -> None:
+    source = authority.catalogues.sources.get(manifest.source_ref)
+    if source is None or source.sha256 != manifest.source_sha256:
+        raise RegistryValidationError("generated export inheritance baseline source pin is not current")
+
+
+def _select_equal_baseline(
+    authority: ValidatedRegistryAuthority, modelo: str, revision: str, visited_input: frozenset[str]
+) -> tuple[RevisionId, ModeloRevision, frozenset[str]] | None:
+    if revision in visited_input:
+        raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{revision}")
+    visited = visited_input | {revision}
+    definition = authority.modelo(modelo)
+    selected = definition.revisions[revision]
+    baseline_id = selected.family_storage_baseline
+    if baseline_id is None:
+        return None
+    if str(baseline_id) in visited:
+        raise RegistryValidationError(f"generated export inheritance ancestor cycle at {modelo}/{baseline_id}")
+    baseline = definition.revisions.get(str(baseline_id))
+    if baseline is None:
+        raise RegistryValidationError(f"generated export inheritance baseline {baseline_id!r} is absent")
+    if len(selected.export_layouts) != 1 or len(baseline.export_layouts) != 1:
+        return None
+    if selected.export_layouts != baseline.export_layouts:
+        return None
+    return baseline_id, baseline, visited
+
+
+def _require_current_baseline_render(
+    authority: ValidatedRegistryAuthority,
+    modelo: str,
+    baseline_id: str,
+    source_root: Path | None,
+    export_root: Path,
+    baseline_layout: ExportLayoutDefinition,
+    baseline_context: GeneratedExportInheritanceContext | None,
+) -> None:
     from ._export_tree import render_complete_export_tree
     from .render_check import compare_export_tree_roots, revision_render_inputs
     from .source_defects import source_defects_for
@@ -187,20 +235,32 @@ def select_generated_export_inheritance(
             ).reproduced
         ):
             raise RegistryValidationError("generated export inheritance baseline source render is no longer current")
-    manifest_path = export_root / "_generation.provenance.json"
-    attestation = GeneratedExportInheritance(
-        baseline_revision_id=baseline_id,
-        baseline_revision_sha256=bootstrap_layout_supersession_fingerprint(baseline_root),
-        baseline_manifest_sha256=sha256(manifest_path.read_bytes()).hexdigest(),
-        baseline_layout_sha256=layout_sha256,
-        baseline_source_ref=manifest.source_ref,
-        baseline_source_sha256=manifest.source_sha256,
-    )
-    return GeneratedExportInheritanceContext(
-        attestation=attestation,
-        baseline_layout=baseline_layout,
-        baseline_context=baseline_context,
-    )
+
+
+def _eligible_source_chains(
+    authority: ValidatedRegistryAuthority,
+    registry_root: Path,
+    modelo: str,
+    revision: str,
+    baseline_id: str,
+    retain_source_chain: bool,
+    require_eligible: bool,
+) -> bool:
+    for selected_id in (baseline_id, revision):
+        evolution_root = (
+            registry_root / "modelos" / modelo / "revisions" / selected_id / "casilla_continuidad_evolutions"
+        )
+        if evolution_root.exists() and (
+            not retain_source_chain
+            or not _validated_continuity_source_chain(authority, registry_root, modelo=modelo, revision=selected_id)
+        ):
+            if not require_eligible:
+                return False
+            raise RegistryValidationError(
+                "generated export inheritance cannot detach a revision with continuity evolutions: "
+                f"{modelo}/{selected_id}",
+            )
+    return True
 
 
 def require_generated_export_inheritance(

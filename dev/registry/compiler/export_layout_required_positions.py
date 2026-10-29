@@ -257,14 +257,20 @@ def _omissible_reason(field: RecordDesignField, sheet: RecordDesignSheet | None 
         return "reserved for the Administración"
     if (sealed := _aeat_program_sealed_reason(field)) is not None:
         return sealed
-    for text in (field.description, field.content):
-        if (text is not None and text) and _DECLARED_FILL.match(text.strip()):
-            return "declared fill"
+    if _declared_fill_text(field):
+        return "declared fill"
     if _declared_fill_naturaleza(field):
         return "declared fill by naturaleza"
     if sheet is not None:
         return _eedd_delegated_reason(field, sheet)
     return None
+
+
+def _declared_fill_text(field: RecordDesignField) -> bool:
+    return any(
+        (text is not None and text) and _DECLARED_FILL.match(text.strip())
+        for text in (field.description, field.content)
+    )
 
 
 def _declared_fill_naturaleza(field: RecordDesignField) -> bool:

@@ -9,13 +9,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-import xml.etree.ElementTree as ET
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, cast
-
-_UTF_8: Final[str] = "utf-8"
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -33,7 +30,9 @@ from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin
 from .cli_reference import generate_cli_reference
 from .download_matrix import descriptor_path as _download_descriptor_path
 from .download_matrix import inject_download_matrix
+from .output_cleanup import remove_noncanonical_build_entries, remove_orphan_pages
 from .sequence_build_gate import SEQUENCE_CHECK_SKIP_ENV
+from .sitemap import write_deployment_sitemap
 
 if TYPE_CHECKING:
     from .pagefind_index import InjectCallback
@@ -354,68 +353,6 @@ def ensure_private_diagnostic_log() -> None:
     configure_logging()
 
 
-#: Builder-owned pages with no corresponding source document.
-_ORPHAN_SPECIAL_PAGES = {"genindex.html", "search.html", "404.html", "py-modindex.html"}
-
-#: Asset and infrastructure directories that carry no docname-addressed pages.
-_ORPHAN_SKIP_DIRS = {"_static", "_sources", "_images", "_downloads", "_sphinx_design_static", "pagefind"}
-
-#: Per-language site roots living beside the English root inside the same HTML
-#: tree. Their pages are docname-addressed against the SAME ``docs/`` sources,
-#: one directory level down, so the sweep below would resolve ``es/index.html``
-#: to a ``docs/es/index.md`` that never existed and delete every page of every
-#: localized root. Derived from :class:`OutputLanguage` rather than imported
-#: from the module that names the deploy root set, because that module imports
-#: this one.
-_ORPHAN_SKIP_SITE_ROOTS = frozenset(member.value for member in OutputLanguage)
-
-
-def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> int:
-    """Delete built pages whose source document no longer exists.
-
-    Furo bakes the theme's variables and templates into every page at build
-    time, so a page whose source was removed or renamed keeps rendering its
-    build-era design indefinitely and leaks stale results into the search
-    index (the docs-brand audit found 2208 such orphans rendering a retired
-    theme). Every docname maps to a ``.md``/``.rst`` source under ``docs/`` —
-    including the generated ``api/``, ``cli/``, and ``_generated/`` sources,
-    which are written to disk before Sphinx reads the tree — and ``_modules``
-    viewcode pages map back to ``src/`` modules.
-
-    A per-language site root nested in the same tree is exempt: its pages carry
-    the same docnames one directory down, so resolving them against ``docs/``
-    finds nothing and an apex build would empty every localized root beside it.
-
-    Returns:
-        The number of orphaned pages removed.
-    """
-    if not html_root.exists():
-        return 0
-    removed = 0
-    for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        removed += int(_remove_orphan_page(page, html_root, docs_root, repo_root))
-    if removed:
-        print(f"Removed {removed} orphaned page(s) whose source no longer exists.", flush=True)
-    return removed
-
-
-def remove_noncanonical_build_entries(build_root: Path) -> None:
-    """Remove stale entries beside the canonical HTML and doctree trees."""
-    if not build_root.exists():
-        return
-    allowed = {(build_root / "html").resolve(), (build_root / "doctrees").resolve()}
-    for entry in scan_directory(build_root):
-        resolved = entry.resolve()
-        if resolved in allowed:
-            continue
-        if build_root.resolve() not in resolved.parents:
-            raise SystemExit(f"Refusing to remove docs build entry outside the configured build root: {entry}")
-        if entry.is_dir():
-            shutil.rmtree(entry)
-        else:
-            entry.unlink()
-
-
 def _targets_for_docs_root(
     original_docs_root: Path,
     copied_docs_root: Path,
@@ -645,78 +582,6 @@ def resolve_record_injector(
 
 
 #: Sitemaps.org urlset namespace for the deployment sitemap.
-_SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
-
-#: Top-level built pages that carry no canonical human content (Sphinx
-#: builder-owned orphans); excluded from the deployment sitemap.
-_SITEMAP_EXCLUDED_PAGES = frozenset({"search.html", "genindex.html", "py-modindex.html", "404.html"})
-
-#: Top-level directories of generated / infrastructure surfaces that never
-#: belong in the human sitemap (API autodoc, viewcode, assets, sources).
-_SITEMAP_EXCLUDED_ROOTS = frozenset({"api", "_modules", "_static", "_sources"})
-
-
-def _sitemap_page_url(base_url: str, rel_posix: str) -> str:
-    """Map a built page's relative path to its canonical deployment URL.
-
-    ``index.html`` pages canonicalise to their directory root (the site root
-    for the top-level index), matching how the served site addresses them; any
-    other page keeps its ``.html`` path.
-    """
-    if rel_posix == "index.html":
-        suffix = ""
-    elif rel_posix.endswith("/index.html"):
-        suffix = rel_posix[: -len("index.html")]
-    else:
-        suffix = rel_posix
-    return f"{base_url}/{suffix}"
-
-
-def _sitemap_urls(html_root: Path, base_url: str) -> list[str]:
-    """Return the deterministic canonical human-page URL set for the sitemap."""
-    urls: set[str] = set()
-    for page in scan_directory(html_root, pattern="*.html", recursive=True):
-        rel = page.relative_to(html_root)
-        parts = rel.parts
-        if parts[0] in _SITEMAP_EXCLUDED_ROOTS:
-            continue
-        if len(parts) == 1 and rel.name in _SITEMAP_EXCLUDED_PAGES:
-            continue
-        urls.add(_sitemap_page_url(base_url, rel.as_posix()))
-    return sorted(urls)
-
-
-def write_deployment_sitemap(html_root: Path, base_url: str) -> Path:
-    """Write a deterministic, canonical-human-page ``sitemap.xml`` for deployment.
-
-    Walks the built HTML tree, filters to canonical human pages (excluding the
-    generated ``api``/``_modules`` trees, the ``_static``/``_sources`` asset
-    roots, and the builder-owned ``search``/``genindex``/``py-modindex``/``404``
-    orphans), canonicalises ``index.html`` pages to their directory roots,
-    sorts the URLs lexicographically, and emits the sitemaps.org urlset with no
-    ``lastmod`` stamps. Stdlib-only and side-effect-deterministic so the deploy
-    validator's exact canonical-root and canonical-prefix checks hold.
-
-    Args:
-        html_root: The built Sphinx HTML output directory.
-        base_url: The canonical docs base URL (trailing slash tolerated).
-
-    Returns:
-        The path to the written ``sitemap.xml``.
-    """
-    base = base_url.rstrip("/")
-    ET.register_namespace("", _SITEMAP_NS)
-    urlset = ET.Element(f"{{{_SITEMAP_NS}}}urlset")
-    for url in _sitemap_urls(html_root, base):
-        entry = ET.SubElement(urlset, f"{{{_SITEMAP_NS}}}url")
-        ET.SubElement(entry, f"{{{_SITEMAP_NS}}}loc").text = url
-    tree = ET.ElementTree(urlset)
-    ET.indent(tree)
-    sitemap_path = html_root / "sitemap.xml"
-    tree.write(sitemap_path, encoding=_UTF_8, xml_declaration=True)
-    return sitemap_path
-
-
 def build_docs(
     repo_root: Path,
     plan: DocBuildPlan,
@@ -793,18 +658,19 @@ def build_docs(
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
-        html_root = html_output_root
-        base_url = os.environ.get(DOCS_BASE_URL_ENV)
-        if (base_url is not None and base_url) and flavor == "web":
-            sitemap_path = write_deployment_sitemap(html_root, base_url)
-            print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
-        if pagefind_index_mode(os.environ) == "none":
-            # A root of a multi-root site: the one index is built over every
-            # root after they are all built, so indexing here would write an
-            # index the served site does not use.
-            print("Search index skipped: this root is indexed with the rest of the site.", flush=True)
-        else:
-            compile_search_index(html_root, repo_root)
+        _finish_full_build(html_output_root, repo_root, flavor)
+
+
+def _finish_full_build(html_root: Path, repo_root: Path, flavor: str) -> None:
+    base_url = os.environ.get(DOCS_BASE_URL_ENV)
+    if base_url is not None and base_url != "" and flavor == "web":
+        sitemap_path = write_deployment_sitemap(html_root, base_url)
+        print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
+    if pagefind_index_mode(os.environ) == "none":
+        # Multi-root sites build one index after every root is complete.
+        print("Search index skipped: this root is indexed with the rest of the site.", flush=True)
+    else:
+        compile_search_index(html_root, repo_root)
 
 
 def compile_search_index(
@@ -1031,26 +897,6 @@ def _preview_directory_pages(docs_root: Path, candidate: Path, requested: str) -
     if not pages:
         raise SystemExit(f"--single-page found no documentation page under {requested!r}.")
     return pages
-
-
-def _remove_orphan_page(page: Path, html_root: Path, docs_root: Path, repo_root: Path) -> bool:
-    rel = page.relative_to(html_root)
-    if rel.as_posix() in _ORPHAN_SPECIAL_PAGES or rel.parts[0] in _ORPHAN_SKIP_DIRS:
-        return False
-    if rel.parts[0] in _ORPHAN_SKIP_SITE_ROOTS and len(rel.parts) > 1:
-        return False
-    docname = rel.with_suffix("")
-    if rel.parts[0] == "_modules":
-        if rel.as_posix() == "_modules/index.html":
-            return False
-        module_path = Path(*docname.parts[1:])
-        candidates = [repo_root / "src" / Path(f"{module_path}.py")]
-    else:
-        candidates = [docs_root / Path(f"{docname}{suffix}") for suffix in (".md", ".rst")]
-    if any(candidate.is_file() for candidate in candidates):
-        return False
-    page.unlink()
-    return True
 
 
 def _build_full_docs(

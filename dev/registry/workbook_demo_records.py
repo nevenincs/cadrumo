@@ -232,7 +232,7 @@ def _saved_record_groups(
             for field in record.fields
             if field.id in targets and field.binding is not None
         }
-        supplied = {target for row in rows for target in row}
+        supplied = _supplied_targets(rows)
         if not supplied <= binding_by_target.keys():
             raise ValueError("fictional recipient fields no longer match the selected registry")
         for index, row in enumerate(rows, 1):
@@ -240,6 +240,10 @@ def _saved_record_groups(
                 binding = binding_by_target[target]
                 bindings.setdefault(binding, {})[str(index)] = value
     return _saved_binding_records(snapshot, bindings)
+
+
+def _supplied_targets(rows: tuple[dict[str, str], ...]) -> set[str]:
+    return {target for row in rows for target in row}
 
 
 def _saved_binding_records(

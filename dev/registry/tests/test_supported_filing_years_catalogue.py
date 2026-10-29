@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.schema import (
+from cadrumo.domain.calculations.registry.schema_catalogues import (
     SociedadesAnnualManualCoverageDisposition,
     SociedadesAnnualManualCoverageStatus,
 )

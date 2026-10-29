@@ -91,6 +91,10 @@ def m714_numeric_values_for(
         and str(joined_field.semantic_entry.casilla_id) in {"identificacion-3", "identificacion-8"}
     ):
         return ()
-    if anchor == ("714-03 Patrimonio", 27, "A27", "22", 147, 1) and field.content == "0, 1 , 2, 3, 4 o 5 o 5":
+    if _m714_situation_domain(anchor, field.content):
         return ("0", "1", "2", "3", "4", "5")
     return None
+
+
+def _m714_situation_domain(anchor: tuple[str, int, str | None, str | None, int, int], content: str | None) -> bool:
+    return anchor == ("714-03 Patrimonio", 27, "A27", "22", 147, 1) and content == "0, 1 , 2, 3, 4 o 5 o 5"

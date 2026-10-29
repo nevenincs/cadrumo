@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 
 from ...command_execution import run_command
-from ..assemble import logical_inventory, package_fingerprint, stamp_package
+from ..assembly_identity import logical_inventory, package_fingerprint, stamp_package
 from ..build_fingerprint import (
     COMPONENTS,
     FILE_API_QUERY,

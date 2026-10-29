@@ -12,7 +12,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.hashing import sha256_file
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
-from cadrumo.domain.calculations.registry.export_parse import XmlDictionaryEntry, xml_dictionary_entries
+from cadrumo.domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportLayoutDefinition,

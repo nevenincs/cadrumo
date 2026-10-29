@@ -7,7 +7,7 @@ from decimal import Decimal
 from pathlib import Path
 
 from cadrumo.domain.calculations.registry.authority_store import AUTHORITY_DESCRIPTOR_FILENAME
-from dev.acceptance.installed_cli import authority_generation
+from dev.acceptance.installed_cli import InstalledCli, authority_generation
 
 from .annual_capture import _add_documented_ledger_facts, _add_issued_invoice
 from .annual_contracts import (
@@ -33,6 +33,7 @@ from .annual_quarter_work import (
 from .annual_runtime import _reopen, _start
 from .cli_journey import (
     IvaCliJourneyError,
+    SanitizedCommandReceipt,
     _checkout_source_identity,
     _installed_package_identity,
     _required_id,
@@ -41,7 +42,7 @@ from .cli_journey import (
     _run,
     _sha256_path,
 )
-from .filing_year import require_journey_year
+from .filing_year import IvaJourneyYear, require_journey_year
 from .multirate_cli_journey import (
     _add_purchase_evidence,
     _add_purchase_invoice,
@@ -115,85 +116,13 @@ def run_iva_annual_foundation_cli_journey(
         )
 
         work_cli = _reopen(cli, authority_root, storage_root)
-        _run(
-            work_cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                str(year),
-                "--period",
-                _FOUNDATION_PERIOD,
-                "--amount",
-                "0.00",
-                "--confirm",
-            ),
-            result_keys=(),
+        work_unit_id, calculation_revision_id, iva_resultado = _calculate_foundation_quarter(
+            work_cli, receipts, artifact, journey_year, year
         )
-        created = _result(
-            _run(
-                work_cli,
-                receipts,
-                artifact,
-                (
-                    "app",
-                    "modelo",
-                    "work",
-                    "create",
-                    "--modelo",
-                    "303",
-                    "--year",
-                    str(year),
-                    "--period",
-                    _FOUNDATION_PERIOD,
-                ),
-                result_keys=("work_unit_id",),
-            )
+
+        verification_report_id, verification_status = _verify_foundation_quarter(
+            work_cli, receipts, artifact, calculation_revision_id
         )
-        work_unit_id = _required_id(created, "work_unit_id")
-        calculated = _result(
-            _run(
-                work_cli,
-                receipts,
-                artifact,
-                (
-                    "app",
-                    "modelo",
-                    "work",
-                    "calculate",
-                    work_unit_id,
-                    "--no-joint-return-elected",
-                ),
-                result_keys=("calculation_revision_id",),
-            )
-        )
-        if calculated.get("saved") is not True:
-            raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
-        calculation_revision_id = _required_id(calculated, "calculation_revision_id")
-        iva_resultado = _decimal_casilla(calculated, "iva.resultado")
-        if iva_resultado != _FOUNDATION_EXPECTED_RESULT:
-            raise IvaCliJourneyError(
-                f"independent IVA oracle mismatch: expected {_FOUNDATION_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
-            )
-        verification = _result(
-            _run(
-                work_cli,
-                receipts,
-                artifact,
-                ("app", "modelo", "work", "verify", calculation_revision_id),
-                result_keys=("verification_report_id", "calculation_revision_id"),
-            )
-        )
-        verification_report_id = _required_id(verification, "verification_report_id")
-        verification_status = _required_text(verification, "completeness_status")
-        if verification.get("calculation_revision_id") != calculation_revision_id:
-            raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
-        if verification.get("granted_verificado_completo") is not True:
-            raise IvaCliJourneyError("Modelo 303 verify did not grant complete verification")
         filed = _result(
             _run(
                 work_cli,
@@ -263,6 +192,106 @@ def run_iva_annual_foundation_cli_journey(
             filing_live_submission=False,
             commands=tuple(receipts),
         )
+
+
+def _verify_foundation_quarter(
+    work_cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    calculation_revision_id: str,
+) -> tuple[str, str]:
+    """Require complete verification of the same saved foundation revision."""
+    verification = _result(
+        _run(
+            work_cli,
+            receipts,
+            artifact,
+            ("app", "modelo", "work", "verify", calculation_revision_id),
+            result_keys=("verification_report_id", "calculation_revision_id"),
+        )
+    )
+    verification_report_id = _required_id(verification, "verification_report_id")
+    verification_status = _required_text(verification, "completeness_status")
+    if verification.get("calculation_revision_id") != calculation_revision_id:
+        raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
+    if verification.get("granted_verificado_completo") is not True:
+        raise IvaCliJourneyError("Modelo 303 verify did not grant complete verification")
+    return verification_report_id, verification_status
+
+
+def _calculate_foundation_quarter(
+    work_cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    journey_year: IvaJourneyYear,
+    year: int,
+) -> tuple[str, str, Decimal]:
+    """Execute this acceptance phase in order through its existing command boundary."""
+    _run(
+        work_cli,
+        receipts,
+        artifact,
+        (
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            str(year),
+            "--period",
+            _FOUNDATION_PERIOD,
+            "--amount",
+            "0.00",
+            "--confirm",
+        ),
+        result_keys=(),
+    )
+    created = _result(
+        _run(
+            work_cli,
+            receipts,
+            artifact,
+            (
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "303",
+                "--year",
+                str(year),
+                "--period",
+                _FOUNDATION_PERIOD,
+            ),
+            result_keys=("work_unit_id",),
+        )
+    )
+    work_unit_id = _required_id(created, "work_unit_id")
+    calculated = _result(
+        _run(
+            work_cli,
+            receipts,
+            artifact,
+            (
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--no-joint-return-elected",
+            ),
+            result_keys=("calculation_revision_id",),
+        )
+    )
+    if calculated.get("saved") is not True:
+        raise IvaCliJourneyError("Modelo 303 calculate did not confirm a saved revision")
+    calculation_revision_id = _required_id(calculated, "calculation_revision_id")
+    iva_resultado = _decimal_casilla(calculated, "iva.resultado")
+    if iva_resultado != _FOUNDATION_EXPECTED_RESULT:
+        raise IvaCliJourneyError(
+            f"independent IVA oracle mismatch: expected {_FOUNDATION_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
+        )
+    return work_unit_id, calculation_revision_id, iva_resultado
 
 
 def run_iva_annual_m390_cli_journey(

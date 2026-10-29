@@ -14,11 +14,8 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.modelo import Modelo
-from cadrumo.domain.calculations.registry.applicability import (
-    ModeloApplicabilityRule,
-    hydrate_applicability_rule,
-    modelo_requires_iva_regime,
-)
+from cadrumo.domain.calculations.registry.applicability import hydrate_applicability_rule, modelo_requires_iva_regime
+from cadrumo.domain.calculations.registry.applicability_models import ModeloApplicabilityRule
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import schema_family_fields

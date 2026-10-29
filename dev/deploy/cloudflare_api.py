@@ -29,7 +29,7 @@ class WorkerRoute:
     script: str
 
 
-def _call(account: CloudflareAccount, method: str, path: str, **kwargs: Any) -> Any:
+def cloudflare_call(account: CloudflareAccount, method: str, path: str, **kwargs: Any) -> Any:
     """Send one API request and return its ``result``, refusing any failure."""
     headers = {"Authorization": f"Bearer {account.api_token}", **kwargs.pop("headers", {})}
     try:
@@ -48,7 +48,7 @@ def _call(account: CloudflareAccount, method: str, path: str, **kwargs: Any) -> 
 
 def zone_id(account: CloudflareAccount, zone_name: str) -> str:
     """Return the id of the one zone named ``zone_name``."""
-    zones = _call(account, "GET", "/zones", params={"name": zone_name, "account.id": account.account_id})
+    zones = cloudflare_call(account, "GET", "/zones", params={"name": zone_name, "account.id": account.account_id})
     if not isinstance(zones, list) or len(zones) != 1:
         raise SystemExit(f"Expected exactly one Cloudflare zone named {zone_name!r}.")
     return str(zones[0]["id"])
@@ -56,15 +56,15 @@ def zone_id(account: CloudflareAccount, zone_name: str) -> str:
 
 def ensure_routes(account: CloudflareAccount, zone: str, routes: Sequence[WorkerRoute]) -> None:
     """Make every route exist on ``zone`` and invoke its declared Worker."""
-    existing = {route["pattern"]: route for route in _call(account, "GET", f"/zones/{zone}/workers/routes")}
+    existing = {route["pattern"]: route for route in cloudflare_call(account, "GET", f"/zones/{zone}/workers/routes")}
     for route in routes:
         current = existing.get(route.pattern)
         body = {"pattern": route.pattern, "script": route.script}
         if current is None:
-            _call(account, "POST", f"/zones/{zone}/workers/routes", json=body)
+            cloudflare_call(account, "POST", f"/zones/{zone}/workers/routes", json=body)
             print(f"Created route {route.pattern} -> {route.script}", flush=True)
         elif current.get("script") != route.script:
-            _call(account, "PUT", f"/zones/{zone}/workers/routes/{current['id']}", json=body)
+            cloudflare_call(account, "PUT", f"/zones/{zone}/workers/routes/{current['id']}", json=body)
             print(f"Repointed route {route.pattern} -> {route.script}", flush=True)
 
 
@@ -74,13 +74,13 @@ def ensure_proxied(account: CloudflareAccount, zone: str, record_name: str) -> N
     Only the proxy flag changes; the record keeps its type and target, so the
     host's existing origin goes on answering every path no route claims.
     """
-    records = _call(account, "GET", f"/zones/{zone}/dns_records", params={"name": record_name})
+    records = cloudflare_call(account, "GET", f"/zones/{zone}/dns_records", params={"name": record_name})
     if not isinstance(records, list) or len(records) != 1:
         raise SystemExit(f"Expected exactly one DNS record for {record_name!r}; found {len(records or [])}.")
     record = records[0]
     if record.get("proxied"):
         return
-    _call(account, "PATCH", f"/zones/{zone}/dns_records/{record['id']}", json={"proxied": True})
+    cloudflare_call(account, "PATCH", f"/zones/{zone}/dns_records/{record['id']}", json={"proxied": True})
     print(f"Proxied {record_name} ({record['type']} -> {record['content']}) through Cloudflare", flush=True)
 
 
@@ -91,11 +91,11 @@ def disable_redirect_rules(account: CloudflareAccount, zone: str, *, source_pref
     elsewhere would hide the Worker entirely. Disabling keeps the rule on
     record, so reverting the cutover is re-enabling it.
     """
-    ruleset = _call(account, "GET", f"/zones/{zone}/rulesets/phases/http_request_dynamic_redirect/entrypoint")
+    ruleset = cloudflare_call(account, "GET", f"/zones/{zone}/rulesets/phases/http_request_dynamic_redirect/entrypoint")
     for rule in ruleset.get("rules", []):
         if source_prefix not in rule.get("expression", "") or not rule.get("enabled", True):
             continue
         body = {key: rule[key] for key in ("expression", "action", "action_parameters", "description") if key in rule}
         body["enabled"] = False
-        _call(account, "PATCH", f"/zones/{zone}/rulesets/{ruleset['id']}/rules/{rule['id']}", json=body)
+        cloudflare_call(account, "PATCH", f"/zones/{zone}/rulesets/{ruleset['id']}/rules/{rule['id']}", json=body)
         print(f"Disabled redirect rule {rule['id']} ({rule.get('expression')})", flush=True)

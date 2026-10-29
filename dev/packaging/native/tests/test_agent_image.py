@@ -15,15 +15,10 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..application_environment import (
-    DECLARATION,
-    ApplicationEnvironmentError,
-    LaunchRefusedError,
-    compile_section,
-    load_for_build,
-    parse,
-    reference_select,
-)
+from ..application_environment import load_for_build, parse
+from ..environment_compile import compile_section
+from ..environment_declaration_primitives import DECLARATION, ApplicationEnvironmentError
+from ..environment_reference import LaunchRefusedError, reference_select
 from ..generate import generate
 from ..layout import bundled_image_files, bundled_images, load_layout
 

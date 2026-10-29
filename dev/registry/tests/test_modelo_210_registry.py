@@ -15,7 +15,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 

@@ -20,8 +20,8 @@ from ..manager import (
     ApiStubManager,
     DriftResult,
     ScaffoldResult,
-    _type_alias_declarations,
 )
+from ..type_aliases import type_alias_declarations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -134,7 +134,7 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
         assert stub.count(directive) == 1, f"{module_name}.{alias} must have one owner target"
 
     for module_name, is_package in modules:
-        aliases = _type_alias_declarations(_source_path_for_module(module_name, is_package))
+        aliases = type_alias_declarations(_source_path_for_module(module_name, is_package))
         if not aliases:
             continue
         stub = (tmp_path / "api" / f"{module_name}.rst").read_text(encoding="utf-8")
@@ -163,7 +163,7 @@ def test_public_type_aliases_have_one_canonical_module_target(tmp_path: Path) ->
     )
     cli_program = (tmp_path / "api" / "cadrumo_agent_service.providers.domain.catalog.rst").read_text(encoding="utf-8")
     assert ".. py:type:: CliProgram\n   :module: cadrumo_agent_service.providers.domain.catalog" in cli_program
-    assert "CliProgram = Annotated[str, StringConstraints" in cli_program
+    assert "CliProgram = Annotated[\n          str,\n          StringConstraints" in cli_program
     binding_selector = (tmp_path / "api" / "cadrumo.domain.calculations.registry.binding_selector_utils.rst").read_text(
         encoding="utf-8"
     )
@@ -203,7 +203,7 @@ def test_pep604_alias_detection_rejects_value_unions(tmp_path: Path) -> None:
         encoding="utf-8",
     )
 
-    aliases = dict(_type_alias_declarations(source))
+    aliases = dict(type_alias_declarations(source))
 
     assert set(aliases) == {"PublicUnion", "PrimitiveUnion"}
 
@@ -247,9 +247,9 @@ def test_type_alias_factories_resolve_imports_and_reject_shadowed_values(tmp_pat
         encoding="utf-8",
     )
 
-    canonical_aliases = dict(_type_alias_declarations(canonical))
-    generic_aliases = dict(_type_alias_declarations(source_root / "generic_factory.py"))
-    shadowed_aliases = dict(_type_alias_declarations(shadowed))
+    canonical_aliases = dict(type_alias_declarations(canonical))
+    generic_aliases = dict(type_alias_declarations(source_root / "generic_factory.py"))
+    shadowed_aliases = dict(type_alias_declarations(shadowed))
 
     assert set(canonical_aliases) == {
         "ImportedMapping",
@@ -320,9 +320,9 @@ def test_type_checking_aliases_are_source_targets_only_for_canonical_guards(tmp_
         encoding="utf-8",
     )
 
-    aliases = dict(_type_alias_declarations(guarded))
+    aliases = dict(type_alias_declarations(guarded))
     assert set(aliases) == {"ImportedGuardAlias", "QualifiedGuardAlias"}
-    assert _type_alias_declarations(shadowed) == ()
+    assert type_alias_declarations(shadowed) == ()
 
     manager = ApiStubManager(source_root, tmp_path / "api")
     manager.scaffold()
@@ -416,7 +416,7 @@ def test_imported_generic_models_are_excluded_only_at_consumers(tmp_path: Path) 
     manager.scaffold()
 
     owner = (tmp_path / "api" / "cadrumo.application.aggregation._models.rst").read_text(encoding="utf-8")
-    consumer = (tmp_path / "api" / "cadrumo.application.aggregation.renta_ledger.rst").read_text(
+    consumer = (tmp_path / "api" / "cadrumo.application.aggregation.renta_income_ledger.rst").read_text(
         encoding="utf-8",
     )
     assert "LedgerAggregationResultBase" not in owner

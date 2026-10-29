@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from ..build_timing import measure_build
-from ..cmake_build import run_configured_command
+from ..cargo_command import run_configured_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

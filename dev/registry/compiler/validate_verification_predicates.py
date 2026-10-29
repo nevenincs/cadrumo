@@ -132,15 +132,28 @@ def _casilla_list_predicate_failures(
         if casilla_id not in casillas:
             failures.append(f"{prefix}: {owner} {operator.value} references unknown casilla {casilla_id!r}")
     if operator is VerificationPredicateOperator.POSITIVE_APPLICATION_LE_PRESENT_STOCK:
-        for role, casilla_id in zip(("application", "stock"), ids, strict=False):
-            if casilla_id not in casillas:
-                continue
-            casilla = casilla_by_id.get(casilla_id)
-            if casilla is not None and registry_scalar_value_type(casilla.data_type) != "decimal":
-                failures.append(
-                    f"{prefix}: {owner} {operator.value} {role} casilla {casilla_id!r} must be a Decimal "
-                    f"numeric casilla (scalar family 'decimal'), not data_type {casilla.data_type!r}",
-                )
+        failures.extend(_positive_application_casilla_failures(prefix, owner, operator, ids, casillas, casilla_by_id))
+    return failures
+
+
+def _positive_application_casilla_failures(
+    prefix: str,
+    owner: str,
+    operator: VerificationPredicateOperator,
+    ids: tuple[CasillaId, ...],
+    casillas: set[CasillaId],
+    casilla_by_id: Mapping[CasillaId, CasillaDefinition],
+) -> list[str]:
+    failures: list[str] = []
+    for role, casilla_id in zip(("application", "stock"), ids, strict=False):
+        if casilla_id not in casillas:
+            continue
+        casilla = casilla_by_id.get(casilla_id)
+        if casilla is not None and registry_scalar_value_type(casilla.data_type) != "decimal":
+            failures.append(
+                f"{prefix}: {owner} {operator.value} {role} casilla {casilla_id!r} must be a Decimal "
+                f"numeric casilla (scalar family 'decimal'), not data_type {casilla.data_type!r}",
+            )
     return failures
 
 

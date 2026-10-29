@@ -33,9 +33,9 @@ from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepos
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.ledger.actions_manual import ledger_transaction_payload
 from cadrumo.application.ledger.list_operation import LedgerListProjection, LedgerListRequest
 from cadrumo.application.ledger.list_query import LedgerTransactionListQuery, query_ledger_transaction_list
+from cadrumo.application.ledger.manual_read import ledger_transaction_payload
 from cadrumo.application.ledger.read_ports import LedgerReadPorts
 from cadrumo.application.ledger.review_projection import ledger_transaction_review_status
 from cadrumo.application.ledger.transaction_projection import (

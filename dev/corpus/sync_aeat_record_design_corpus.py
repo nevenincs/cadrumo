@@ -30,17 +30,11 @@ from dev.corpus.artifact_catalogue import (  # noqa: E402
     record_design_manifest_identities,
 )
 from dev.corpus.record_design_inventory import (  # noqa: E402
-    _CORRECTION_SUFFIX,
     _CURRENT_PAGE_KEYS,
-    _DECLARATION_NAMES,
-    _DERIVED_SUFFIXES,
-    _EXTRACTION_SIDECAR_DERIVATIONS,
     _HISTORICAL_PAGE_KEYS,
-    _MANIFEST_NAME,
     _PAGES,
     _REQUIRED,
     _RETRIEVED_AT,
-    UNATTESTED_CORPUS_FILES,
     _RequiredArtifact,
 )
 from dev.packaging.hashing import sha256_path  # noqa: E402
@@ -56,6 +50,14 @@ from .record_design_manifests import (  # noqa: E402
     _represented_urls,
     _root_aggregate,
     _RootAggregate,
+)
+from .record_design_policy import (  # noqa: E402
+    _CORRECTION_SUFFIX,
+    _DECLARATION_NAMES,
+    _DERIVED_SUFFIXES,
+    _EXTRACTION_SIDECAR_DERIVATIONS,
+    _MANIFEST_NAME,
+    UNATTESTED_CORPUS_FILES,
 )
 
 _UTF_8: Final[str] = "utf-8"

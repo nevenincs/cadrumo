@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from textual.widgets import OptionList
 
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
@@ -37,12 +40,7 @@ async def _open_ledger(pilot: Any) -> None:
     await pilot.pause()
     for _ in range(180):
         options = pilot.app.screen.query_one(OptionList)
-        matches: list[int] = []
-        for index in range(options.option_count):
-            option = options.get_option_at_index(index)
-            hit = getattr(option, "hit", None)
-            if getattr(hit, "text", None) == destination_label and getattr(hit, "help", None) == destination_help:
-                matches.append(index)
+        matches = _ledger_destination_matches(options, destination_label, destination_help)
         if len(matches) > 1:
             raise InstalledTuiChildError("installed command palette offered ambiguous Ledger destinations")
         if matches:
@@ -55,6 +53,17 @@ async def _open_ledger(pilot: Any) -> None:
         "installed command palette did not offer the Ledger destination",
         diagnostic=public_surface_diagnostic(pilot),
     )
+
+
+def _ledger_destination_matches(options: OptionList, destination_label: str, destination_help: str) -> list[int]:
+    """Match both public destination label and help without accepting ambiguous lookalikes."""
+    matches: list[int] = []
+    for index in range(options.option_count):
+        option = options.get_option_at_index(index)
+        hit = getattr(option, "hit", None)
+        if getattr(hit, "text", None) == destination_label and getattr(hit, "help", None) == destination_help:
+            matches.append(index)
+    return matches
 
 
 async def _activate(pilot: Any, selector: str) -> None:

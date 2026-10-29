@@ -8,7 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from .. import lane
+from .. import lane_stage
+from ..lane_errors import UnavailableError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -33,11 +34,11 @@ def _record(build: Path, **fields: object) -> None:
 def test_the_package_follows_the_host_configuration(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, configuration: str
 ) -> None:
-    monkeypatch.setattr(lane, "_BUILD", tmp_path)
-    monkeypatch.setattr(lane, "_TESTING", tmp_path / "desktop" / "testing")
-    monkeypatch.setattr(lane, "_STAGE", tmp_path / "stage")
+    monkeypatch.setattr(lane_stage, "_BUILD", tmp_path)
+    monkeypatch.setattr(lane_stage, "_TESTING", tmp_path / "desktop" / "testing")
+    monkeypatch.setattr(lane_stage, "_STAGE", tmp_path / "stage")
     _record(tmp_path, configuration=configuration)
-    host = lane.test_host(served=False)
+    host = lane_stage.test_host(served=False)
     assert host.configuration == configuration
     assert host.package == tmp_path / "stage" / configuration / "app"
 
@@ -46,9 +47,9 @@ def test_the_package_follows_the_host_configuration(
 def test_a_host_record_without_a_known_configuration_is_unavailable(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, configuration: object
 ) -> None:
-    monkeypatch.setattr(lane, "_BUILD", tmp_path)
-    monkeypatch.setattr(lane, "_TESTING", tmp_path / "desktop" / "testing")
+    monkeypatch.setattr(lane_stage, "_BUILD", tmp_path)
+    monkeypatch.setattr(lane_stage, "_TESTING", tmp_path / "desktop" / "testing")
     fields = {} if configuration is None else {"configuration": configuration}
     _record(tmp_path, **fields)
-    with pytest.raises(lane.UnavailableError, match="build configuration"):
-        lane.test_host(served=False)
+    with pytest.raises(UnavailableError, match="build configuration"):
+        lane_stage.test_host(served=False)

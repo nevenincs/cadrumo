@@ -35,20 +35,7 @@ def seed_withholding_work(cli: InstalledCli, *, year: int) -> tuple[WithholdingW
     """
     if year != SUPPORTED_YEAR:
         raise ValueError("the withholding continuation has independent oracles only for the supported year")
-    try:
-        _create_withholding_profile(cli, year=year)
-    except RetencionesInstalledCliError as error:
-        cause = error.__cause__
-        if isinstance(cause, InstalledCliError):
-            stage = error.stage
-            if cause.commands and cause.commands[-1].command == "config profile complete-setup":
-                stage = "profile_complete_setup"
-            raise RetencionesInstalledCliError(
-                stage=stage, diagnostic_code=cause.diagnostic_code, commands=tuple(cli.commands)
-            ) from cause
-        raise RetencionesInstalledCliError(
-            stage=error.stage, diagnostic_code=error.diagnostic_code, commands=tuple(cli.commands)
-        ) from error
+    _create_continuation_profile(cli, year)
     sources: list[WithholdingWork] = []
     annuals: list[WithholdingWork] = []
     for slice_ in build_installed_annual_cli_slices(year):
@@ -77,6 +64,24 @@ def seed_withholding_work(cli: InstalledCli, *, year: int) -> tuple[WithholdingW
         )
     # All quarterly local records must exist before an annual calculation reads them.
     return tuple((*sources, *annuals))
+
+
+def _create_continuation_profile(cli: InstalledCli, year: int) -> None:
+    """Retain public profile completion refusal stage and command evidence."""
+    try:
+        _create_withholding_profile(cli, year=year)
+    except RetencionesInstalledCliError as error:
+        cause = error.__cause__
+        if isinstance(cause, InstalledCliError):
+            stage = error.stage
+            if cause.commands and cause.commands[-1].command == "config profile complete-setup":
+                stage = "profile_complete_setup"
+            raise RetencionesInstalledCliError(
+                stage=stage, diagnostic_code=cause.diagnostic_code, commands=tuple(cli.commands)
+            ) from cause
+        raise RetencionesInstalledCliError(
+            stage=error.stage, diagnostic_code=error.diagnostic_code, commands=tuple(cli.commands)
+        ) from error
 
 
 def _create_work(

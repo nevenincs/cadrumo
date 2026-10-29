@@ -178,32 +178,7 @@ def run_iva_m303_cli_journey(
             cli_argument_prefix=cli_argument_prefix,
         )
         receipts: list[SanitizedCommandReceipt] = []
-        profile_start = len(cli.commands)
-        try:
-            cli.create_profile(year=year)
-        except InstalledCliError as exc:
-            raise IvaCliJourneyError("config profile create refused") from exc
-        profile_commands = cli.commands[profile_start:]
-        if len(profile_commands) != 2:
-            raise IvaCliJourneyError("profile setup did not produce its two public command receipts")
-        receipts.extend(
-            (
-                _command_receipt(
-                    args=profile_create_args(year),
-                    evidence=profile_commands[0],
-                    artifact=artifact,
-                    result_ids=(),
-                    cli_argument_prefix=cli.cli_argument_prefix,
-                ),
-                _command_receipt(
-                    args=("config", "profile", "complete-setup"),
-                    evidence=profile_commands[1],
-                    artifact=artifact,
-                    result_ids=(),
-                    cli_argument_prefix=cli.cli_argument_prefix,
-                ),
-            )
-        )
+        _create_ordinary_profile(cli, receipts, artifact, year)
 
         evidence = _result(
             _run(
@@ -216,151 +191,10 @@ def run_iva_m303_cli_journey(
         )
         evidence_id = _required_id(evidence, "evidence_id")
 
-        sale_transaction = _result(
-            _run(
-                cli,
-                receipts,
-                artifact,
-                (
-                    "app",
-                    "ledger",
-                    "add",
-                    "--date",
-                    journey_year.iso_date(2, 15),
-                    "--amount",
-                    "121.00",
-                    "--direction",
-                    "INCOMING",
-                    "--description",
-                    "Synthetic ordinary IVA sale",
-                    "--classification",
-                    "BUSINESS",
-                    "--taxable-base",
-                    "100.00",
-                    "--iva-rate",
-                    "0.21",
-                    "--iva-amount",
-                    "21.00",
-                    "--iva-category",
-                    "domestic_general",
-                    "--source-jurisdiction",
-                    "ES",
-                    "--idempotency-key",
-                    f"iva-acceptance-sale-{year}-1t",
-                ),
-                result_keys=("transaction_id",),
-            )
-        )
-        sale_transaction_id = _required_id(sale_transaction, "transaction_id")
-        sale_invoice = _result(
-            _run(
-                cli,
-                receipts,
-                artifact,
-                _invoice_add_args(
-                    kind="issued",
-                    counterparty_name="Synthetic client SL",
-                    counterparty_nif="A58818501",
-                    invoice_number=f"IVA-ISS-{year}-1T",
-                    invoice_date=journey_year.iso_date(2, 15),
-                    iva_category="domestic_general",
-                    line=_invoice_line(description="Synthetic sale", subtotal="100.00", iva_amount="21.00"),
-                ),
-                result_keys=("invoice_id",),
-            )
-        )
-        sale_invoice_id = _required_id(sale_invoice, "invoice_id")
-        _run(
-            cli,
-            receipts,
-            artifact,
-            ("app", "ledger", "link", sale_transaction_id, "--invoice-id", sale_invoice_id),
-            result_keys=(),
-        )
+        sale_transaction_id, sale_invoice_id = _capture_ordinary_sale(cli, receipts, artifact, journey_year, year)
 
-        purchase_transaction = _result(
-            _run(
-                cli,
-                receipts,
-                artifact,
-                (
-                    "app",
-                    "ledger",
-                    "add",
-                    "--date",
-                    journey_year.iso_date(2, 18),
-                    "--amount",
-                    "60.50",
-                    "--direction",
-                    "OUTGOING",
-                    "--description",
-                    "Synthetic ordinary IVA purchase",
-                    "--classification",
-                    "BUSINESS",
-                    "--category-id",
-                    "material_oficina",
-                    "--taxable-base",
-                    "50.00",
-                    "--iva-rate",
-                    "0.21",
-                    "--iva-amount",
-                    "10.50",
-                    "--iva-category",
-                    "domestic_general",
-                    "--purchase-invoice-evidence-id",
-                    evidence_id,
-                    "--source-jurisdiction",
-                    "ES",
-                    "--idempotency-key",
-                    f"iva-acceptance-purchase-{year}-1t",
-                ),
-                result_keys=("transaction_id",),
-            )
-        )
-        purchase_transaction_id = _required_id(purchase_transaction, "transaction_id")
-        _run(
-            cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "ledger",
-                "classify",
-                purchase_transaction_id,
-                "--classification",
-                "BUSINESS",
-                "--deduction-kind",
-                "domestic_current",
-                "--counterparty-country",
-                "ES",
-                "--reaffirm",
-            ),
-            result_keys=(),
-        )
-        purchase_invoice = _result(
-            _run(
-                cli,
-                receipts,
-                artifact,
-                _invoice_add_args(
-                    kind="received",
-                    counterparty_name="Synthetic supplier SL",
-                    counterparty_nif="A58818501",
-                    invoice_number=f"IVA-REC-{year}-1T",
-                    invoice_date=journey_year.iso_date(2, 15),
-                    iva_category="domestic_general",
-                    line=_invoice_line(description="Synthetic purchase", subtotal="50.00", iva_amount="10.50"),
-                ),
-                result_keys=("invoice_id",),
-            )
-        )
-        purchase_invoice_id = _required_id(purchase_invoice, "invoice_id")
-        _run(
-            cli,
-            receipts,
-            artifact,
-            ("app", "ledger", "link", purchase_transaction_id, "--invoice-id", purchase_invoice_id),
-            result_keys=(),
+        purchase_transaction_id, purchase_invoice_id = _capture_ordinary_purchase(
+            cli, receipts, artifact, journey_year, year, evidence_id
         )
 
         reopened = InstalledCli(
@@ -379,35 +213,7 @@ def run_iva_m303_cli_journey(
             evidence_id=evidence_id,
         )
 
-        _run(
-            reopened,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "iva-wallet",
-                "seed",
-                "--filing-year",
-                str(year),
-                "--period",
-                _PERIOD,
-                "--amount",
-                "0.00",
-                "--confirm",
-            ),
-            result_keys=(),
-        )
-        created = _result(
-            _run(
-                reopened,
-                receipts,
-                artifact,
-                ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
-                result_keys=("work_unit_id",),
-            )
-        )
-        work_unit_id = _required_id(created, "work_unit_id")
+        work_unit_id = _create_ordinary_work(reopened, receipts, artifact, year)
         revision_id, iva_resultado = _require_ordinary_calculation(reopened, receipts, artifact, work_unit_id)
 
         export_cli = InstalledCli(
@@ -436,38 +242,18 @@ def run_iva_m303_cli_journey(
                 f"status={verification_status}; findings={verification.get('finding_count')}"
             )
 
-        export_artifact = artifact_root / f"m303-{year}-1t.fichero-boe"
-        export_document = _run(
+        payload, software_identity_grade, export_layout_id, parsed_resultado = _export_ordinary_quarter(
             export_cli,
             receipts,
             artifact,
-            ("app", "modelo", "export", work_unit_id, "--output", str(export_artifact)),
-            result_keys=("work_unit_id", "calculation_revision_id", "file_sha256"),
-            redacted_paths={export_artifact: _EXPORT_ARTIFACT_PLACEHOLDER},
+            artifact_root,
+            year,
+            work_unit_id,
+            revision_id,
+            developer_header_positions,
+            authority_root,
+            journey_year,
         )
-        exported = _result(export_document)
-        _require_export_receipt(
-            exported=exported,
-            work_unit_id=work_unit_id,
-            calculation_revision_id=revision_id,
-            artifact=export_artifact,
-        )
-        payload = export_artifact.read_bytes()
-        if not payload:
-            raise IvaCliJourneyError("Modelo 303 export wrote an empty artifact")
-        software_identity_grade = str(exported.get("software_identity_grade"))
-        if software_identity_grade != "development_mock":
-            raise IvaCliJourneyError(f"Modelo 303 export reported software identity grade {software_identity_grade!r}")
-        _require_developer_header(payload, developer_header_positions)
-        export_layout_id, parsed_resultado = _parse_exported_iva_resultado(
-            authority_root=authority_root,
-            journey_year=journey_year,
-            payload=payload,
-        )
-        if parsed_resultado != _EXPECTED_RESULT:
-            raise IvaCliJourneyError(
-                f"canonical export IVA result mismatch: expected {_EXPECTED_RESULT:.2f}, got {parsed_resultado:.2f}"
-            )
 
         descriptor = authority_root.resolve(strict=True) / AUTHORITY_DESCRIPTOR_FILENAME
         return IvaM303CliJourneyReceipt(
@@ -502,6 +288,289 @@ def run_iva_m303_cli_journey(
             developer_header_record=developer_header_positions[0],
             commands=tuple(receipts),
         )
+
+
+def _create_ordinary_work(
+    reopened: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, year: int
+) -> str:
+    """Seed the explicit zero opening wallet and create the ordinary first-quarter work unit."""
+    _run(
+        reopened,
+        receipts,
+        artifact,
+        (
+            "app",
+            "modelo",
+            "iva-wallet",
+            "seed",
+            "--filing-year",
+            str(year),
+            "--period",
+            _PERIOD,
+            "--amount",
+            "0.00",
+            "--confirm",
+        ),
+        result_keys=(),
+    )
+    created = _result(
+        _run(
+            reopened,
+            receipts,
+            artifact,
+            ("app", "modelo", "work", "create", "--modelo", "303", "--year", str(year), "--period", _PERIOD),
+            result_keys=("work_unit_id",),
+        )
+    )
+    work_unit_id = _required_id(created, "work_unit_id")
+    return work_unit_id
+
+
+def _export_ordinary_quarter(
+    export_cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    artifact_root: Path,
+    year: int,
+    work_unit_id: str,
+    revision_id: str,
+    developer_header_positions: tuple[str, str, str],
+    authority_root: Path,
+    journey_year: IvaJourneyYear,
+) -> tuple[bytes, str, str, Decimal]:
+    """Export locally and independently validate the header and parsed IVA result."""
+    export_artifact = artifact_root / f"m303-{year}-1t.fichero-boe"
+    export_document = _run(
+        export_cli,
+        receipts,
+        artifact,
+        ("app", "modelo", "export", work_unit_id, "--output", str(export_artifact)),
+        result_keys=("work_unit_id", "calculation_revision_id", "file_sha256"),
+        redacted_paths={export_artifact: _EXPORT_ARTIFACT_PLACEHOLDER},
+    )
+    exported = _result(export_document)
+    _require_export_receipt(
+        exported=exported,
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        artifact=export_artifact,
+    )
+    payload = export_artifact.read_bytes()
+    if not payload:
+        raise IvaCliJourneyError("Modelo 303 export wrote an empty artifact")
+    software_identity_grade = str(exported.get("software_identity_grade"))
+    if software_identity_grade != "development_mock":
+        raise IvaCliJourneyError(f"Modelo 303 export reported software identity grade {software_identity_grade!r}")
+    _require_developer_header(payload, developer_header_positions)
+    export_layout_id, parsed_resultado = _parse_exported_iva_resultado(
+        authority_root=authority_root,
+        journey_year=journey_year,
+        payload=payload,
+    )
+    if parsed_resultado != _EXPECTED_RESULT:
+        raise IvaCliJourneyError(
+            f"canonical export IVA result mismatch: expected {_EXPECTED_RESULT:.2f}, got {parsed_resultado:.2f}"
+        )
+
+    return payload, software_identity_grade, export_layout_id, parsed_resultado
+
+
+def _create_ordinary_profile(
+    cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, year: int
+) -> None:
+    """Perform this ordinary IVA capture phase through the installed command boundary."""
+    profile_start = len(cli.commands)
+    try:
+        cli.create_profile(year=year)
+    except InstalledCliError as exc:
+        raise IvaCliJourneyError("config profile create refused") from exc
+    profile_commands = cli.commands[profile_start:]
+    if len(profile_commands) != 2:
+        raise IvaCliJourneyError("profile setup did not produce its two public command receipts")
+    receipts.extend(
+        (
+            _command_receipt(
+                args=profile_create_args(year),
+                evidence=profile_commands[0],
+                artifact=artifact,
+                result_ids=(),
+                cli_argument_prefix=cli.cli_argument_prefix,
+            ),
+            _command_receipt(
+                args=("config", "profile", "complete-setup"),
+                evidence=profile_commands[1],
+                artifact=artifact,
+                result_ids=(),
+                cli_argument_prefix=cli.cli_argument_prefix,
+            ),
+        )
+    )
+
+
+def _capture_ordinary_sale(
+    cli: InstalledCli, receipts: list[SanitizedCommandReceipt], artifact: Path, journey_year: IvaJourneyYear, year: int
+) -> tuple[str, str]:
+    """Perform this ordinary IVA capture phase through the installed command boundary."""
+    sale_transaction = _result(
+        _run(
+            cli,
+            receipts,
+            artifact,
+            (
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                journey_year.iso_date(2, 15),
+                "--amount",
+                "121.00",
+                "--direction",
+                "INCOMING",
+                "--description",
+                "Synthetic ordinary IVA sale",
+                "--classification",
+                "BUSINESS",
+                "--taxable-base",
+                "100.00",
+                "--iva-rate",
+                "0.21",
+                "--iva-amount",
+                "21.00",
+                "--iva-category",
+                "domestic_general",
+                "--source-jurisdiction",
+                "ES",
+                "--idempotency-key",
+                f"iva-acceptance-sale-{year}-1t",
+            ),
+            result_keys=("transaction_id",),
+        )
+    )
+    sale_transaction_id = _required_id(sale_transaction, "transaction_id")
+    sale_invoice = _result(
+        _run(
+            cli,
+            receipts,
+            artifact,
+            _invoice_add_args(
+                kind="issued",
+                counterparty_name="Synthetic client SL",
+                counterparty_nif="A58818501",
+                invoice_number=f"IVA-ISS-{year}-1T",
+                invoice_date=journey_year.iso_date(2, 15),
+                iva_category="domestic_general",
+                line=_invoice_line(description="Synthetic sale", subtotal="100.00", iva_amount="21.00"),
+            ),
+            result_keys=("invoice_id",),
+        )
+    )
+    sale_invoice_id = _required_id(sale_invoice, "invoice_id")
+    _run(
+        cli,
+        receipts,
+        artifact,
+        ("app", "ledger", "link", sale_transaction_id, "--invoice-id", sale_invoice_id),
+        result_keys=(),
+    )
+
+    return sale_transaction_id, sale_invoice_id
+
+
+def _capture_ordinary_purchase(
+    cli: InstalledCli,
+    receipts: list[SanitizedCommandReceipt],
+    artifact: Path,
+    journey_year: IvaJourneyYear,
+    year: int,
+    evidence_id: str,
+) -> tuple[str, str]:
+    """Perform this ordinary IVA capture phase through the installed command boundary."""
+    purchase_transaction = _result(
+        _run(
+            cli,
+            receipts,
+            artifact,
+            (
+                "app",
+                "ledger",
+                "add",
+                "--date",
+                journey_year.iso_date(2, 18),
+                "--amount",
+                "60.50",
+                "--direction",
+                "OUTGOING",
+                "--description",
+                "Synthetic ordinary IVA purchase",
+                "--classification",
+                "BUSINESS",
+                "--category-id",
+                "material_oficina",
+                "--taxable-base",
+                "50.00",
+                "--iva-rate",
+                "0.21",
+                "--iva-amount",
+                "10.50",
+                "--iva-category",
+                "domestic_general",
+                "--purchase-invoice-evidence-id",
+                evidence_id,
+                "--source-jurisdiction",
+                "ES",
+                "--idempotency-key",
+                f"iva-acceptance-purchase-{year}-1t",
+            ),
+            result_keys=("transaction_id",),
+        )
+    )
+    purchase_transaction_id = _required_id(purchase_transaction, "transaction_id")
+    _run(
+        cli,
+        receipts,
+        artifact,
+        (
+            "app",
+            "ledger",
+            "classify",
+            purchase_transaction_id,
+            "--classification",
+            "BUSINESS",
+            "--deduction-kind",
+            "domestic_current",
+            "--counterparty-country",
+            "ES",
+            "--reaffirm",
+        ),
+        result_keys=(),
+    )
+    purchase_invoice = _result(
+        _run(
+            cli,
+            receipts,
+            artifact,
+            _invoice_add_args(
+                kind="received",
+                counterparty_name="Synthetic supplier SL",
+                counterparty_nif="A58818501",
+                invoice_number=f"IVA-REC-{year}-1T",
+                invoice_date=journey_year.iso_date(2, 15),
+                iva_category="domestic_general",
+                line=_invoice_line(description="Synthetic purchase", subtotal="50.00", iva_amount="10.50"),
+            ),
+            result_keys=("invoice_id",),
+        )
+    )
+    purchase_invoice_id = _required_id(purchase_invoice, "invoice_id")
+    _run(
+        cli,
+        receipts,
+        artifact,
+        ("app", "ledger", "link", purchase_transaction_id, "--invoice-id", purchase_invoice_id),
+        result_keys=(),
+    )
+
+    return purchase_transaction_id, purchase_invoice_id
 
 
 def _invoice_add_args(

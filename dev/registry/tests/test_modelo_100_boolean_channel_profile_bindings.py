@@ -26,10 +26,8 @@ from typing import Any
 
 import pytest
 
-from cadrumo.application.modelo.profile_binding import (
-    inject_derived_anualidades_eligibility_facts,
-    resolve_profile_binding_value,
-)
+from cadrumo.application.modelo.profile_binding import resolve_profile_binding_value
+from cadrumo.application.modelo.profile_derived_facts import inject_derived_anualidades_eligibility_facts
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.calculations.registry.binding_value_contract import (
     BindingDataType,

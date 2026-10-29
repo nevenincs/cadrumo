@@ -279,9 +279,9 @@ class UnreachableCodeResult:
         return self.outcome is UnreachableCodeOutcome.CLEAN
 
     @property
-    def exact_findings(self) -> tuple[_Finding, ...]:
+    def exact_findings(self) -> tuple[ReachabilityFinding, ...]:
         """Every finding resolved through the import graph, safe to act on first."""
-        ordered: tuple[_Finding, ...] = self.modules + self.tests + self.symbols
+        ordered: tuple[ReachabilityFinding, ...] = self.modules + self.tests + self.symbols
         return tuple(finding for finding in ordered if finding.confidence is Confidence.EXACT)
 
     @property
@@ -331,7 +331,9 @@ class ShippedModule:
 
 
 @dataclass(frozen=True)
-class _Definition:
+class Definition:
+    """A source definition considered by reachability analysis."""
+
     name: str
     qualname: str
     line: int
@@ -349,13 +351,15 @@ class _Definition:
 
 
 @dataclass
-class _OutsideUse:
+class OutsideUse:
+    """Collect references from non-shipped source trees."""
+
     names: dict[str, set[str]] = field(default_factory=dict)
     modules: dict[str, set[str]] = field(default_factory=dict)
     resolved: dict[tuple[str, str], set[str]] = field(default_factory=dict)
     """Corpus labels keyed by the ``(defining module, symbol)`` pair they reach.
 
-    ``names`` is a bare-token index: :func:`_references` harvests attribute
+    ``names`` is a bare-token index: :func:`source_references` harvests attribute
     names, keyword-argument names and identifiers spelled inside strings, none
     of which say which module defined the name. That looseness is harmless
     while a label only ANNOTATES a finding, and unacceptable once a label
@@ -376,9 +380,11 @@ class _OutsideUse:
     """
 
     def labels_for_name(self, name: str) -> tuple[str, ...]:
+        """Return outside source labels for a referenced name."""
         return tuple(sorted(self.names.get(name, ())))
 
     def labels_for_module(self, name: str) -> tuple[str, ...]:
+        """Return outside source labels for a referenced module."""
         return tuple(sorted(self.modules.get(name, ())))
 
     def resolved_labels(self, module: str, name: str) -> tuple[str, ...]:
@@ -386,4 +392,4 @@ class _OutsideUse:
         return tuple(sorted(self.resolved.get((module, name), ())))
 
 
-type _Finding = ModuleFinding | SymbolFinding | TestFinding
+type ReachabilityFinding = ModuleFinding | SymbolFinding | TestFinding

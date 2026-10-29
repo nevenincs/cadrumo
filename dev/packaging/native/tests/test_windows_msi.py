@@ -18,17 +18,13 @@ from dev.packaging.command_execution import run_command
 from dev.packaging.native.distribution_prepare import refresh
 from dev.packaging.native.hashing import digest
 from dev.packaging.native.identity import DistributionIdentity
-from dev.packaging.native.windows_msi import MAINTENANCE_GATE, author, reject_combined_manager_msi
-from dev.packaging.native.windows_msi_build import (
-    bootstrap_kit,
-    compile_products,
-    maintenance_plan,
-    verify_database,
-    verify_products,
-)
+from dev.packaging.native.windows_msi import author, reject_combined_manager_msi
+from dev.packaging.native.windows_msi_build import bootstrap_kit, compile_products, maintenance_plan, verify_products
+from dev.packaging.native.windows_msi_contract import MAINTENANCE_GATE
 from dev.packaging.native.windows_msi_database import verify_admission_order, verify_feature_ownership
 from dev.packaging.native.windows_msi_identity import msi_identity
 from dev.packaging.native.windows_msi_paths import source_path as _source_path
+from dev.packaging.native.windows_msi_verify import verify_database
 from dev.packaging.tests.test_native_installation import payload_fixture
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -39,12 +35,12 @@ NS = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
 def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_path: Path, count: int) -> None:
     from xml.etree.ElementTree import Element, SubElement, tostring
 
-    from dev.packaging.native.windows_msi import _partition_features, _source
+    from dev.packaging.native.windows_msi_source import msi_source, partition_features
 
     _, identity = _prepared(tmp_path)
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
     files = {f"versions/{value.version}/payload/{index}.dll": "0" * 64 for index in range(count)}
-    source = _source(
+    source = msi_source(
         tmp_path,
         files,
         value,
@@ -78,14 +74,14 @@ def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_pat
     ordered = [SubElement(feature, "ComponentRef", Id=f"C_{index}") for index in range(count)]
     existing = Element("Feature", Id="ExistingFeature")
     feature.insert(1, existing)
-    _partition_features(feature)
+    partition_features(feature)
     assert list(feature)[:2] == [ordered[0], existing]
     assert feature.findall("ComponentRef") == ordered[:1600]
     assert [
         reference for child in feature.findall("Feature") for reference in child.findall("ComponentRef")
     ] == ordered[1600:]
     grouped = tostring(feature)
-    _partition_features(feature)
+    partition_features(feature)
     assert tostring(feature) == grouped
 
 
@@ -93,7 +89,7 @@ def test_msi_authoring_partitions_complete_mandatory_component_ownership(tmp_pat
 def test_version_data_components_preserve_directory_inventory_and_binary_ownership(
     tmp_path: Path, scope: Literal["user", "machine"]
 ) -> None:
-    from dev.packaging.native.windows_msi import _source
+    from dev.packaging.native.windows_msi_source import msi_source
 
     _, identity = _prepared(tmp_path)
     value = DistributionIdentity(**json.loads(identity.read_text(encoding="utf-8")))
@@ -112,7 +108,7 @@ def test_version_data_components_preserve_directory_inventory_and_binary_ownersh
     members = {f"versions/{value.version}/{name}": "0" * 64 for name in names}
 
     def components(files: dict[str, str]) -> list[Element]:
-        source = _source(
+        source = msi_source(
             tmp_path,
             files,
             value,

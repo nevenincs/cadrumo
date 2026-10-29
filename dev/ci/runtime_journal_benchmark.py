@@ -23,7 +23,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, TypedDict
 
 import pytest
 
@@ -306,36 +306,58 @@ def _worker_script(output: Path) -> Path:
     return destination
 
 
+class _TraceRow(TypedDict):
+    id: int
+    parent_id: int | None
+    lock_id: int | None
+    kind: str
+    wall_seconds: float
+    boundary: str
+    outcome: str
+
+
+def _longest_lock_holds(
+    holds: list[_TraceRow],
+    rows: list[_TraceRow],
+    by_id: dict[int, _TraceRow],
+) -> list[dict[str, object]]:
+    """Retain the longest ten holds with their parent and inclusive nested phases."""
+    longest: list[dict[str, object]] = []
+    for hold in holds[:10]:
+        parent = hold["parent_id"]
+        owner = None if parent is None else by_id.get(parent)
+        phases = [row for row in rows if row["lock_id"] == hold["id"]]
+        longest.append(
+            {
+                "hold": hold,
+                "owner": owner["boundary"] if owner else None,
+                "phases_inclusive": sorted(phases, key=lambda row: row["wall_seconds"], reverse=True),
+            }
+        )
+    return longest
+
+
+def _journal_process_summary(path: Path) -> dict[str, object]:
+    """Summarize the lock owners and drain evidence belonging to one process."""
+    rows: list[_TraceRow] = [json.loads(line) for line in path.read_text(encoding=UTF_8).splitlines()]
+    by_id = {row["id"]: row for row in rows}
+    holds = sorted((row for row in rows if row["kind"] == "lock"), key=lambda row: row["wall_seconds"], reverse=True)
+    longest = _longest_lock_holds(holds, rows, by_id)
+    return {
+        "trace": path.name,
+        "operations_drained": any(row["boundary"] == "worker.operations_drained" for row in rows),
+        "lock_count": len(holds),
+        "max_hold_seconds": holds[0]["wall_seconds"] if holds else None,
+        "longest_holds": longest,
+        "failed_spans": [row for row in rows if row["outcome"] != "ok"],
+    }
+
+
 def summarize(output: Path) -> None:
     """Retain lock owners and nested phase evidence without conflating inclusive costs."""
     processes = []
     for path in sorted(output.glob("journal-*.jsonl")):
-        rows = [json.loads(line) for line in path.read_text(encoding=UTF_8).splitlines()]
-        by_id = {row["id"]: row for row in rows}
-        holds = sorted(
-            (row for row in rows if row["kind"] == "lock"), key=lambda row: row["wall_seconds"], reverse=True
-        )
-        longest = []
-        for hold in holds[:10]:
-            owner = by_id.get(hold["parent_id"])
-            phases = [row for row in rows if row["lock_id"] == hold["id"]]
-            longest.append(
-                {
-                    "hold": hold,
-                    "owner": owner["boundary"] if owner else None,
-                    "phases_inclusive": sorted(phases, key=lambda row: row["wall_seconds"], reverse=True),
-                }
-            )
-        processes.append(
-            {
-                "trace": path.name,
-                "operations_drained": any(row["boundary"] == "worker.operations_drained" for row in rows),
-                "lock_count": len(holds),
-                "max_hold_seconds": holds[0]["wall_seconds"] if holds else None,
-                "longest_holds": longest,
-                "failed_spans": [row for row in rows if row["outcome"] != "ok"],
-            }
-        )
+        processes.append(_journal_process_summary(path))
     (output / "summary.json").write_text(
         json.dumps(
             {

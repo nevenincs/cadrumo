@@ -44,7 +44,8 @@ from cadrumo.core.operations import (
     profile_operation_subject,
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports, build_modelo_history_ports
+from cadrumo.entrypoints.adapter_composition_ports import build_modelo_history_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
 from cadrumo.entrypoints.tests.modelo_projection_history_conformance_support import (
     prepare_modelo_projection_history_conformance_case,
 )

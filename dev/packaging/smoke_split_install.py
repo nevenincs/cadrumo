@@ -93,6 +93,16 @@ print(f"joined-companion-corpus-ok: {len(expected)} verified binary members")
 """
 
 
+def _validate_corpus_path(logical_path: str) -> None:
+    path = PurePosixPath(logical_path)
+    if (
+        path.as_posix() != logical_path
+        or any(part in {"", ".", ".."} or ":" in part for part in path.parts)
+        or "\\" in logical_path
+    ):
+        raise SystemExit(f"companion corpus member has an unsafe logical path: {logical_path!r}")
+
+
 def _companion_corpus_hashes(data_wheels: Sequence[Path]) -> dict[str, str]:
     """Hash every supplied companion corpus member without trusting installed files."""
     if len(data_wheels) != len(PRODUCT_IDENTITY.companion_distributions):
@@ -106,13 +116,7 @@ def _companion_corpus_hashes(data_wheels: Sequence[Path]) -> dict[str, str]:
                 if member.is_dir() or not member.filename.startswith(f"{prefix}corpus/"):
                     continue
                 logical_path = member.filename.removeprefix(prefix)
-                path = PurePosixPath(logical_path)
-                if (
-                    path.as_posix() != logical_path
-                    or any(part in {"", ".", ".."} or ":" in part for part in path.parts)
-                    or "\\" in logical_path
-                ):
-                    raise SystemExit(f"companion corpus member has an unsafe logical path: {logical_path!r}")
+                _validate_corpus_path(logical_path)
                 if logical_path in expected:
                     raise SystemExit(f"companion corpus member has duplicate ownership: {logical_path}")
                 expected[logical_path] = hashlib.sha256(archive.read(member)).hexdigest()

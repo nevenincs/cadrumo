@@ -12,6 +12,7 @@ import tarfile
 import zipfile
 from collections.abc import Collection, Sequence
 from dataclasses import dataclass
+from email.message import Message
 from email.parser import Parser
 from pathlib import Path
 from typing import Any, Final
@@ -46,6 +47,7 @@ from .distribution_names import normalise_distribution_name
 from .hashing import sha256_path
 from .proof_ledger import record_proof
 from .runtime_wheelhouse import build_runtime_wheelhouse
+from .runtime_wheelhouse_contract import RuntimeWheelhouse
 from .runtime_wheelhouse_reader import load_runtime_wheelhouse
 from .wheel_metadata import read_wheel_metadata
 
@@ -159,18 +161,23 @@ def _wheel_identity(wheel: Path) -> tuple[str, str, tuple[str, ...]]:
     )
 
 
+def _read_sdist_metadata(sdist: Path) -> Message:
+    with tarfile.open(sdist, mode="r:gz") as archive:
+        metadata_names = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
+        if len(metadata_names) != 1:
+            raise SystemExit(
+                f"expected one PKG-INFO member in {sdist}; got {[member.name for member in metadata_names]!r}",
+            )
+        handle = archive.extractfile(metadata_names[0])
+        if handle is None:
+            raise SystemExit(f"could not read PKG-INFO from {sdist}")
+        metadata = Parser().parsestr(handle.read().decode(_UTF_8))
+    return metadata
+
+
 def _sdist_identity(sdist: Path) -> tuple[str, str, tuple[str, ...]]:
     try:
-        with tarfile.open(sdist, mode="r:gz") as archive:
-            metadata_names = tuple(member for member in archive.getmembers() if member.name.endswith("/PKG-INFO"))
-            if len(metadata_names) != 1:
-                raise SystemExit(
-                    f"expected one PKG-INFO member in {sdist}; got {[member.name for member in metadata_names]!r}",
-                )
-            handle = archive.extractfile(metadata_names[0])
-            if handle is None:
-                raise SystemExit(f"could not read PKG-INFO from {sdist}")
-            metadata = Parser().parsestr(handle.read().decode(_UTF_8))
+        metadata = _read_sdist_metadata(sdist)
     except (tarfile.TarError, UnicodeDecodeError) as exc:
         raise SystemExit(f"invalid source distribution {sdist}: {exc}") from exc
     name = metadata.get("Name")
@@ -436,6 +443,82 @@ def build_python_cohort_from_clean_snapshot(
         )
 
 
+def _produce_cohort_artifacts(
+    build_root: Path,
+    output: Path,
+    source_files: Sequence[str],
+    source_digest: str,
+    authority_source_root: Path | None,
+    archive: Path,
+    retained_source_archive: Path,
+) -> RuntimeWheelhouse:
+    # The ordinary builder made this snapshot just before entering here;
+    # the release builder has already verified its clean snapshot. The
+    # retained archive is written from those same normalized source bytes.
+    _archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
+    stage_build_client(build_root, build_client_json(authority_source_root or build_root))
+    if authority_source_root is not None:
+        # The published authority is absent from the source archive but is
+        # staged into the private build root after that archive is sealed.
+        stage_published_authority(authority_source_root, build_root)
+    uv = shutil.which("uv")
+    if uv is None:
+        raise SystemExit("uv is required to build the Python cohort")
+    _run([uv, "build", "--wheel", "--sdist", "--out-dir", str(output)], cwd=build_root)
+    _run(
+        [
+            uv,
+            "build",
+            "--wheel",
+            "--sdist",
+            "--project",
+            str(build_root / "packaging" / "cadrumo_data_manuals"),
+            "--out-dir",
+            str(output),
+        ],
+        cwd=build_root,
+    )
+    wheelhouse = build_runtime_wheelhouse(
+        build_root,
+        output / "cadrumo-runtime-wheelhouse.zip",
+    )
+    shutil.move(archive, retained_source_archive)
+    _run(
+        [
+            uv,
+            "build",
+            "--wheel",
+            "--sdist",
+            "--project",
+            str(build_root / "packaging" / "cadrumo_data_official"),
+            "--out-dir",
+            str(output),
+        ],
+        cwd=build_root,
+    )
+    _run(
+        [
+            uv,
+            "build",
+            "--wheel",
+            "--sdist",
+            "--project",
+            str(build_root / "packaging" / "cadrumo_data_normatives"),
+            "--out-dir",
+            str(output),
+        ],
+        cwd=build_root,
+    )
+    # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
+    # artifact, not a release artifact, and the release-cohort completeness
+    # check refuses any file the manifest does not declare.
+    uv_gitignore = output / ".gitignore"
+    if uv_gitignore.exists():
+        uv_gitignore.unlink()
+
+    return wheelhouse
+
+
 def _build_python_cohort_from_snapshot(
     *,
     build_root: Path,
@@ -452,69 +535,9 @@ def _build_python_cohort_from_snapshot(
         archive.unlink()
     retained_source_archive = output / f"cadrumo-source-{source_digest}.zip"
     try:
-        # The ordinary builder made this snapshot just before entering here;
-        # the release builder has already verified its clean snapshot. The
-        # retained archive is written from those same normalized source bytes.
-        _archive_source_snapshot(build_root, source_files, archive, expected_source_digest=source_digest)
-        stage_build_client(build_root, build_client_json(authority_source_root or build_root))
-        if authority_source_root is not None:
-            # The published authority is absent from the source archive but is
-            # staged into the private build root after that archive is sealed.
-            stage_published_authority(authority_source_root, build_root)
-        uv = shutil.which("uv")
-        if uv is None:
-            raise SystemExit("uv is required to build the Python cohort")
-        _run([uv, "build", "--wheel", "--sdist", "--out-dir", str(output)], cwd=build_root)
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "packaging" / "cadrumo_data_manuals"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
+        wheelhouse = _produce_cohort_artifacts(
+            build_root, output, source_files, source_digest, authority_source_root, archive, retained_source_archive
         )
-        wheelhouse = build_runtime_wheelhouse(
-            build_root,
-            output / "cadrumo-runtime-wheelhouse.zip",
-        )
-        shutil.move(archive, retained_source_archive)
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "packaging" / "cadrumo_data_official"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
-        )
-        _run(
-            [
-                uv,
-                "build",
-                "--wheel",
-                "--sdist",
-                "--project",
-                str(build_root / "packaging" / "cadrumo_data_normatives"),
-                "--out-dir",
-                str(output),
-            ],
-            cwd=build_root,
-        )
-        # uv seeds its --out-dir with a `.gitignore`; that is a build-tool
-        # artifact, not a release artifact, and the release-cohort completeness
-        # check refuses any file the manifest does not declare.
-        uv_gitignore = output / ".gitignore"
-        if uv_gitignore.exists():
-            uv_gitignore.unlink()
 
         root_wheel = _single(output, "cadrumo-*.whl", label="cadrumo wheel")
         root_sdist = _single(output, "cadrumo-*.tar.gz", label="cadrumo sdist")

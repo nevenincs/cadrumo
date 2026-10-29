@@ -5,7 +5,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 
 from ..compiler.legal_grounding import verify_legal_catalogue
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo

@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.form_context import resolve_form_context_field
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.formula_runtime_ops import UnresolvedFormulaDependencyError
 
 from ...compiler.form_layout_integrity import form_layout_failures

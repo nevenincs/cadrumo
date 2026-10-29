@@ -14,13 +14,50 @@ from ..identity import DistributionIdentity
 from ..linux_desktop_runtime import desktop_path, external_sonames
 from .posix import (
     acquire_sdk,
-    assemble,
     command,
     dependencies_by_name,
     install_external_probe,
     relative_loader_path,
     verify_package,
 )
+from .posix_assembly import PosixAssemblyResult, assemble
+
+
+def _validate_elf(path: Path, machine: int, floor: tuple[int, ...], readelf: str) -> None:
+    with path.open("rb") as source:
+        header = source.read(20)
+    if len(header) != 20 or header[:6] != b"\x7fELF\x02\x01" or struct.unpack_from("<H", header, 18)[0] != machine:
+        raise ValueError(f"Wrong ELF architecture or ABI: {path}")
+    versions = command(readelf, "--version-info", str(path))
+    for version in re.findall(r"\bGLIBC_([A-Za-z0-9_.]+)", versions):
+        if not re.fullmatch(r"\d+\.\d+(?:\.\d+)?", version):
+            raise ValueError(f"ELF uses an unadmitted glibc ABI requirement: {path}: {version}")
+        required = tuple(map(int, version.split(".")))
+        if required > floor:
+            raise ValueError(f"ELF exceeds canonical glibc floor: {path}: {version}")
+
+
+def _needed_directories(
+    path: Path,
+    root: Path,
+    desktop: str | None,
+    external: frozenset[str],
+    system: set[str],
+    names: dict[str, Path],
+    needed: list[str],
+) -> set[str]:
+    directories: set[str] = set()
+    for dependency in needed:
+        if path.relative_to(root).as_posix() == desktop and dependency in external:
+            continue
+        if dependency in system:
+            if dependency in names:
+                raise ValueError(f"Bundled image shadows a system dependency: {dependency}")
+            continue
+        if "/" in dependency or dependency not in names:
+            raise ValueError(f"Unresolved ELF dependency: {path}: {dependency}")
+        directories.add(relative_loader_path(path.parent, names[dependency].parent, "$ORIGIN"))
+    return directories
 
 
 def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
@@ -36,29 +73,9 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
     machine = {"x86_64": 62, "aarch64": 183}[target.platform_machine]
     floor = (*map(int, target.floor.removeprefix("glibc-").split(".")), 0)
     for path in images:
-        with path.open("rb") as source:
-            header = source.read(20)
-        if len(header) != 20 or header[:6] != b"\x7fELF\x02\x01" or struct.unpack_from("<H", header, 18)[0] != machine:
-            raise ValueError(f"Wrong ELF architecture or ABI: {path}")
-        versions = command(tools["readelf"], "--version-info", str(path))
-        for version in re.findall(r"\bGLIBC_([A-Za-z0-9_.]+)", versions):
-            if not re.fullmatch(r"\d+\.\d+(?:\.\d+)?", version):
-                raise ValueError(f"ELF uses an unadmitted glibc ABI requirement: {path}: {version}")
-            required = tuple(map(int, version.split(".")))
-            if required > floor:
-                raise ValueError(f"ELF exceeds canonical glibc floor: {path}: {version}")
+        _validate_elf(path, machine, floor, tools["readelf"])
         needed = command(tools["patchelf"], "--print-needed", str(path)).splitlines()
-        directories = set()
-        for dependency in needed:
-            if path.relative_to(root).as_posix() == desktop and dependency in external:
-                continue
-            if dependency in system:
-                if dependency in names:
-                    raise ValueError(f"Bundled image shadows a system dependency: {dependency}")
-                continue
-            if "/" in dependency or dependency not in names:
-                raise ValueError(f"Unresolved ELF dependency: {path}: {dependency}")
-            directories.add(relative_loader_path(path.parent, names[dependency].parent, "$ORIGIN"))
+        directories = _needed_directories(path, root, desktop, external, system, names, needed)
         if directories:
             command(tools["patchelf"], "--set-rpath", ":".join(sorted(directories)), str(path))
         else:
@@ -68,7 +85,9 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
             raise ValueError(f"ELF RUNPATH rewrite failed: {path}")
 
 
-def assemble_native(python: Path, packages: Path, native: Path, root: Path, contract: dict[str, Any]) -> dict[str, Any]:
+def assemble_native(
+    python: Path, packages: Path, native: Path, root: Path, contract: dict[str, Any]
+) -> PosixAssemblyResult:
     """Assemble the selected Linux SDK and wheel closure."""
     return assemble(python, packages, native, root, contract, relocate)
 

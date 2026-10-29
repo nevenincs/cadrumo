@@ -27,6 +27,7 @@
         "cadrumo_agent_service.adapters.served_catalog_models",
         "cadrumo_agent_service.admin",
         "cadrumo_agent_service.contracts",
+        "cadrumo_agent_service.gateway_credentials",
         "cadrumo_agent_service.host",
         "cadrumo_agent_service.host.auth_attempt",
         "cadrumo_agent_service.host.auth_protocol",
@@ -55,7 +56,11 @@
         "cadrumo_agent_service.providers.domain.record",
         "cadrumo_agent_service.providers.persistence",
         "cadrumo_agent_service.providers.persistence.store",
-        "cadrumo_agent_service.service"
+        "cadrumo_agent_service.service",
+        "cadrumo_agent_service.service_administration",
+        "cadrumo_agent_service.service_scheduling",
+        "cadrumo_agent_service.service_startup",
+        "cadrumo_agent_service.service_support"
       ]
     }
   }

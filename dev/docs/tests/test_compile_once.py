@@ -20,11 +20,10 @@ from sphinx.config import Config
 
 from cadrumo.core.external_constants import OutputLanguage
 
+from ..compile_comparison import IntendedDifference, compare
 from ..compile_once import (
     WITNESS_LANGUAGE,
-    IntendedDifference,
     _per_language_inventory,
-    compare,
     main,
     roots_to_write,
     witness_root,
@@ -181,7 +180,7 @@ def test_a_declared_intended_difference_is_reported_apart_with_its_reason(
 ) -> None:
     """A difference kept on purpose must never be folded into the count it would hide in."""
     monkeypatch.setattr(
-        "dev.docs.compile_once.INTENDED_DIFFERENCES",
+        "dev.docs.compile_comparison.INTENDED_DIFFERENCES",
         (
             IntendedDifference(
                 context="attr:h1.id",
@@ -215,7 +214,7 @@ def test_a_declared_difference_covers_the_page_and_the_bytes_it_names_and_no_oth
     one difference and no whole difference at all.
     """
     monkeypatch.setattr(
-        "dev.docs.compile_once.INTENDED_DIFFERENCES",
+        "dev.docs.compile_comparison.INTENDED_DIFFERENCES",
         (
             IntendedDifference(
                 context="attr:a.title",

@@ -12,16 +12,9 @@ import pytest
 
 from dev.docs.shared_structure import compose_page
 
-from ..native.docs_stage import (
-    DocsPackagingError,
-    csp_hash,
-    declared_languages,
-    package_prefix,
-    scan_page,
-    served_media_types,
-    stage_roots,
-    verified_stage,
-)
+from ..native.docs_errors import DocsPackagingError
+from ..native.docs_scan import csp_hash, scan_page, served_media_types
+from ..native.docs_stage import declared_languages, package_prefix, stage_roots, verified_stage
 from ..native.layout import load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

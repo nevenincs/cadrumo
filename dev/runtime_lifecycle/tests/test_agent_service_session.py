@@ -7,7 +7,7 @@ from contextlib import contextmanager
 from io import BytesIO
 from pathlib import Path
 from queue import Queue
-from threading import Event
+from threading import Event, Lock
 from types import SimpleNamespace
 from typing import Any
 from uuid import UUID, uuid4
@@ -15,10 +15,12 @@ from uuid import UUID, uuid4
 import pytest
 
 import dev.runtime_lifecycle.agent_service_session as session_module
+import dev.runtime_lifecycle.service_admin_channel as process_module
 from cadrumo_agent_service.admin import AdminAction, AdminServer
 from cadrumo_agent_service.host.bounded_read import BoundedRead
 from cadrumo_client.contracts.service_access import ServiceConnected, ServiceLease
 from dev.runtime_lifecycle.caller_owned_root import Programs
+from dev.runtime_lifecycle.packaged_service_process import PackagedServiceProcess
 from dev.runtime_lifecycle.proof_support import Profile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -41,7 +43,7 @@ def test_ready_event_uses_the_services_integer_hosting_contract(contract: object
 
 
 def test_service_shutdown_drains_pending_events_before_the_stop_acknowledgement() -> None:
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._closed = False
     process._stdin = BytesIO()
     process._stdout = process._stderr = None
@@ -224,7 +226,7 @@ def _install_lifecycle(
 
     monkeypatch.setattr(session_module, "caller_owned_runtime", fake_runtime)
     monkeypatch.setattr(session_module, "WindowsRuntimeSessionHolder", FakeHolder)
-    monkeypatch.setattr(session_module, "_PackagedServiceProcess", FakeService)
+    monkeypatch.setattr(session_module, "PackagedServiceProcess", FakeService)
     monkeypatch.setattr(session_module, "run_cli", lambda *args, **kwargs: (0, {"status": "success"}))
     return steps
 
@@ -360,7 +362,7 @@ def test_admin_uses_the_actual_typed_service_request_and_bounded_wire(tmp_path: 
 
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(AdminTarget(), bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         result = process.admin(server.port, "status")
@@ -399,7 +401,7 @@ def test_admin_observes_the_same_bounded_read_after_its_busy_answer(action: Admi
     target = DelayedRead()
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(target, bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         assert process.admin(server.port, action) == {"providers": []}
@@ -423,7 +425,7 @@ def test_admin_does_not_replay_other_refusals(code: str) -> None:
     target = RefusedRead()
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(target, bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         assert process.admin(server.port, "status") == {"kind": "refused", "code": code}
@@ -438,10 +440,10 @@ def test_admin_never_extends_its_budget_for_a_busy_read(monkeypatch: pytest.Monk
         def admin(self, action: AdminAction, **_fields: object) -> dict[str, Any]:
             return {"kind": "refused", "code": "busy"}
 
-    monkeypatch.setattr(session_module, "_ADMIN_EXCHANGE_SECONDS", 0.15)
+    monkeypatch.setattr(process_module, "_ADMIN_EXCHANGE_SECONDS", 0.15)
     bearer = bytearray(b"synthetic-test-admin-authority")
     server = AdminServer(BusyRead(), bearer=bearer)
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._bearer = bearer
     try:
         with pytest.raises(session_module.AcceptanceError, match="exceeded its bound"):
@@ -487,7 +489,7 @@ def test_service_lease_mismatch_is_rejected_before_exposing_session() -> None:
 
 
 def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
-    process = object.__new__(session_module._PackagedServiceProcess)
+    process = object.__new__(PackagedServiceProcess)
     process._stderr = BytesIO(
         b"private-prefix password=password-value: agent launch refused by the native host exit=125 "
         b'native_refusal=launch_value_malformed subject=PACKAGE_SLOT | {"token":"bearer-value"} private-suffix\n'
@@ -505,7 +507,7 @@ def test_service_stderr_retains_only_bounded_native_machine_codes() -> None:
         + b"agent launch refused by the native host exit=125 native_refusal=launch_value_missing subject=SLOT\n"
     )
     process._stderr_machine_codes = []
-    process._stderr_machine_codes_lock = session_module.Lock()
+    process._stderr_machine_codes_lock = Lock()
     process._stderr_diagnostics_ready = Event()
 
     process._drain_stderr()

@@ -26,8 +26,9 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import LegalRefId, SourceRefId
 from cadrumo.domain.calculations.registry.orden_applicability import validate_orden_aplicabilidad
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, PeriodSelector
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 

@@ -114,9 +114,7 @@ def _modelo_export_selector_matches(
     """
     coordinates = tuple(_option(argv, name) for name in ("--modelo", "--year", "--period"))
     calculation_revision = _option(argv, "--revision")
-    if evidence.period.filing_year != evidence.filing_year:
-        return False
-    if calculation_revision is not None and calculation_revision != evidence.calculation_revision_id:
+    if not _modelo_revision_matches(evidence, calculation_revision):
         return False
     work_unit = _export_work_unit_argument(argv)
     if work_unit is None:
@@ -142,6 +140,12 @@ def _modelo_export_selector_matches(
     )
 
 
+def _modelo_revision_matches(evidence: _ModeloExportEvidence, revision: str | None) -> bool:
+    return evidence.period.filing_year == evidence.filing_year and (
+        revision is None or revision == evidence.calculation_revision_id
+    )
+
+
 def normalise_ledger_export_evidence(
     document: dict[str, JsonValue],
     *,
@@ -164,33 +168,43 @@ def normalise_ledger_export_evidence(
         return document
     root = Path(workdir)
     destination = (root / authored).absolute()
-    try:
-        relative = destination.resolve().relative_to(root.resolve())
-        rows = result.get("rows")
-        if not isinstance(rows, list):
-            return document
-        identities = []
-        for row in rows:
-            if not isinstance(row, dict):
-                return document
-            identities.append({"transaction_id": row.get("transaction_id")})
-        evidence = _ExportEvidence.model_validate_json(
-            canonical_json_bytes(
-                {
-                    **{key: result[key] for key in _ExportEvidence.model_fields if key != "rows"},
-                    "rows": identities,
-                },
-            ),
-        )
-    except (KeyError, ValueError, ValidationError, OSError):
+    checked = _ledger_evidence(result, root, destination)
+    if checked is None:
         return document
-    if evidence.bucket_id not in {profile_id, "<bucket-id>"} or evidence.row_count != len(evidence.rows):
+    evidence, relative = checked
+    if not _ledger_identity_matches(evidence, profile_id):
         return document
     ids = tuple(row.transaction_id for row in evidence.rows)
     if evidence.export_id != derive_ledger_export_id(
         bucket_id=profile_id, export_format=evidence.export_format.value, sha256=evidence.sha256, transaction_ids=ids
     ):
         return document
+    payload = _ledger_event_payload(evidence, ids, argv, destination)
+
+    def event_id(event_payload: dict[str, str]) -> str:
+        return derive_bucket_event_id(
+            bucket_id=profile_id,
+            event_type=BucketEventType.LEDGER_TRANSACTION_EXPORTED,
+            occurred_at=instant,
+            actor=_option(argv, "--actor") or profile_id,
+            object_type=BucketEventObjectType.LEDGER_EXPORT,
+            object_id=evidence.export_id,
+            payload=event_payload,
+        )
+
+    if evidence.bucket_event_ids != [event_id(payload)]:
+        return document
+    canonical = event_id({**payload, "output_path": destination_token + "/" + relative.as_posix()})
+    return {**document, "result": {**result, "bucket_event_ids": [canonical]}}
+
+
+def _ledger_identity_matches(evidence: _ExportEvidence, profile_id: str) -> bool:
+    return evidence.bucket_id in {profile_id, "<bucket-id>"} and evidence.row_count == len(evidence.rows)
+
+
+def _ledger_event_payload(
+    evidence: _ExportEvidence, ids: tuple[str, ...], argv: tuple[str, ...], destination: Path
+) -> dict[str, str]:
     include_inactive = False
     for argument in argv:
         if argument in {"--include-inactive", "--no-include-inactive"}:
@@ -208,21 +222,30 @@ def normalise_ledger_export_evidence(
         "last_transaction_id": ids[-1] if ids else "",
     }
 
-    def event_id(event_payload: dict[str, str]) -> str:
-        return derive_bucket_event_id(
-            bucket_id=profile_id,
-            event_type=BucketEventType.LEDGER_TRANSACTION_EXPORTED,
-            occurred_at=instant,
-            actor=_option(argv, "--actor") or profile_id,
-            object_type=BucketEventObjectType.LEDGER_EXPORT,
-            object_id=evidence.export_id,
-            payload=event_payload,
-        )
+    return payload
 
-    if evidence.bucket_event_ids != [event_id(payload)]:
-        return document
-    canonical = event_id({**payload, "output_path": destination_token + "/" + relative.as_posix()})
-    return {**document, "result": {**result, "bucket_event_ids": [canonical]}}
+
+def _ledger_evidence(
+    result: dict[str, JsonValue], root: Path, destination: Path
+) -> tuple[_ExportEvidence, Path] | None:
+    try:
+        relative = destination.resolve().relative_to(root.resolve())
+        rows = result.get("rows")
+        if not isinstance(rows, list):
+            return None
+        identities: list[dict[str, JsonValue]] = []
+        for row in rows:
+            if not isinstance(row, dict):
+                return None
+            identities.append({"transaction_id": row.get("transaction_id")})
+        evidence = _ExportEvidence.model_validate_json(
+            canonical_json_bytes(
+                {**{key: result[key] for key in _ExportEvidence.model_fields if key != "rows"}, "rows": identities},
+            ),
+        )
+    except (KeyError, ValueError, ValidationError, OSError):
+        return None
+    return evidence, relative
 
 
 def normalise_modelo_export_evidence(
@@ -245,6 +268,58 @@ def normalise_modelo_export_evidence(
     authored = _option(argv, "--output")
     if authored is None:
         return document
+    parsed = _modelo_evidence(result, workdir, authored)
+    if parsed is None:
+        return document
+    evidence, destination, relative = parsed
+    actor = _modelo_valid_actor(evidence, destination, argv, profile_id, document)
+    if actor is None:
+        return document
+    payload = _modelo_event_payload(evidence)
+    if payload is None:
+        return document
+
+    def event_id(event_payload: dict[str, str]) -> str:
+        return derive_bucket_event_id(
+            bucket_id=profile_id,
+            event_type=BucketEventType.MODELO_EXPORTED,
+            occurred_at=instant,
+            actor=actor,
+            object_type=BucketEventObjectType.CALCULATION_REVISION,
+            object_id=evidence.calculation_revision_id,
+            payload=event_payload,
+        )
+
+    if evidence.bucket_event_id != event_id(payload):
+        return document
+    canonical = event_id({**payload, "output_path": destination_token + "/" + relative.as_posix()})
+    return {**document, "result": {**result, "bucket_event_id": canonical}}
+
+
+def _modelo_valid_actor(
+    evidence: _ModeloExportEvidence,
+    destination: Path,
+    argv: tuple[str, ...],
+    profile_id: str,
+    document: dict[str, JsonValue],
+) -> str | None:
+    if evidence.bucket_id not in {profile_id, "<bucket-id>"} or evidence.output_path != str(destination):
+        return None
+    try:
+        registry_revision_id = _modelo_registry_revision(evidence, argv)
+    except CadrumoError:
+        return None
+    if not _modelo_export_selector_matches(
+        evidence, argv=argv, profile_id=profile_id, registry_revision_id=registry_revision_id
+    ):
+        return None
+    actor = _option(argv, "--actor") or document.get("active_profile") or profile_id
+    return actor if isinstance(actor, str) else None
+
+
+def _modelo_evidence(
+    result: dict[str, JsonValue], workdir: str, authored: str
+) -> tuple[_ModeloExportEvidence, Path, Path] | None:
     try:
         root = Path(workdir).resolve()
         destination = (root / authored).resolve()
@@ -253,31 +328,26 @@ def normalise_modelo_export_evidence(
             canonical_json_bytes({key: result[key] for key in _ModeloExportEvidence.model_fields if key in result}),
         )
     except (ValueError, ValidationError, OSError):
-        return document
-    if evidence.bucket_id not in {profile_id, "<bucket-id>"} or evidence.output_path != str(destination):
-        return document
-    registry_revision_id = None
-    if _export_work_unit_argument(argv) is not None:
-        from cadrumo.application.modelo.work_addressing import law_selected_revision_for_work_target
-        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+        return None
+    return evidence, destination, relative
 
-        try:
-            with bundled_indexed_authority().operation() as operation:
-                registry_revision_id = law_selected_revision_for_work_target(
-                    modelo=evidence.modelo,
-                    filing_year=evidence.filing_year,
-                    period=evidence.period.to_period(),
-                    operation=operation,
-                )
-        except CadrumoError:
-            return document
-    if not _modelo_export_selector_matches(
-        evidence, argv=argv, profile_id=profile_id, registry_revision_id=registry_revision_id
-    ):
-        return document
-    actor = _option(argv, "--actor") or document.get("active_profile") or profile_id
-    if not isinstance(actor, str):
-        return document
+
+def _modelo_registry_revision(evidence: _ModeloExportEvidence, argv: tuple[str, ...]) -> RevisionId | None:
+    if _export_work_unit_argument(argv) is None:
+        return None
+    from cadrumo.application.modelo.work_addressing import law_selected_revision_for_work_target
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+    with bundled_indexed_authority().operation() as operation:
+        return law_selected_revision_for_work_target(
+            modelo=evidence.modelo,
+            filing_year=evidence.filing_year,
+            period=evidence.period.to_period(),
+            operation=operation,
+        )
+
+
+def _modelo_event_payload(evidence: _ModeloExportEvidence) -> dict[str, str] | None:
     payload = {
         "calculation_revision_id": evidence.calculation_revision_id,
         "work_unit_id": evidence.work_unit_id,
@@ -299,7 +369,7 @@ def normalise_modelo_export_evidence(
         ResultDisposition.CUENTA_CORRIENTE_INGRESO,
     }:
         if evidence.payment_election is None:
-            return document
+            return None
         payload["payment_election"] = evidence.payment_election.value
     if disposition in {
         ResultDisposition.COMPENSACION,
@@ -308,8 +378,13 @@ def normalise_modelo_export_evidence(
         ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
     }:
         if evidence.refund_election is None:
-            return document
+            return None
         payload["refund_election"] = evidence.refund_election.value
+    _add_modelo_provenance(payload, evidence)
+    return payload
+
+
+def _add_modelo_provenance(payload: dict[str, str], evidence: _ModeloExportEvidence) -> None:
     prior = evidence.prior_domiciliation_election
     if prior.baseline_filing_record_id is not None:
         payload.update(
@@ -336,21 +411,16 @@ def normalise_modelo_export_evidence(
             },
         )
 
-    def event_id(event_payload: dict[str, str]) -> str:
-        return derive_bucket_event_id(
-            bucket_id=profile_id,
-            event_type=BucketEventType.MODELO_EXPORTED,
-            occurred_at=instant,
-            actor=actor,
-            object_type=BucketEventObjectType.CALCULATION_REVISION,
-            object_id=evidence.calculation_revision_id,
-            payload=event_payload,
-        )
 
-    if evidence.bucket_event_id != event_id(payload):
-        return document
-    canonical = event_id({**payload, "output_path": destination_token + "/" + relative.as_posix()})
-    return {**document, "result": {**result, "bucket_event_id": canonical}}
+def _modelo_problem_result(document: dict[str, JsonValue]) -> dict[str, JsonValue] | None:
+    result = document.get("result")
+    if (
+        document.get("command") != "modelo.export"
+        or not isinstance(result, dict)
+        or result.get("format") not in ("fichero-boe", "xml-dictionary")
+    ):
+        return None
+    return result
 
 
 def modelo_export_evidence_problem(
@@ -368,12 +438,8 @@ def modelo_export_evidence_problem(
     its actual artifact. Unsupported private event branches remain an explicit
     evidence failure rather than disappearing through that mask.
     """
-    result = document.get("result")
-    if (
-        document.get("command") != "modelo.export"
-        or not isinstance(result, dict)
-        or result.get("format") not in ("fichero-boe", "xml-dictionary")
-    ):
+    result = _modelo_problem_result(document)
+    if result is None:
         return None
     label = "fichero" if result["format"] == "fichero-boe" else "XML"
     verified = normalise_modelo_export_evidence(

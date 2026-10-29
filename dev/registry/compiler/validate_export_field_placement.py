@@ -248,12 +248,19 @@ def _inline_fields_match_selector(fields: tuple[ExportFieldDefinition, ...], spa
     ):
         return False
     return (
-        span.decimals > 0
-        and span.length > span.decimals
+        _valid_split_decimal_span(span)
         and (first.offset, first.length, second.offset, second.length)
         == (span.offset, span.length - span.decimals, span.end - span.decimals, span.decimals)
-        and all((field.data_type, field.decimals, field.signed) == ("integer", None, False) for field in fields)
+        and _integer_split_fields(fields)
     )
+
+
+def _integer_split_fields(fields: tuple[ExportFieldDefinition, ...]) -> bool:
+    return all((field.data_type, field.decimals, field.signed) == ("integer", None, False) for field in fields)
+
+
+def _valid_split_decimal_span(span: PlacedSpan) -> bool:
+    return span.decimals is not None and span.decimals > 0 and span.length > span.decimals
 
 
 def _binding_reconciliation_failures(

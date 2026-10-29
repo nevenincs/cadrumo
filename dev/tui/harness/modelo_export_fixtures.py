@@ -19,7 +19,7 @@ from textual.containers import VerticalScroll
 from textual.events import Mount
 
 from cadrumo.application.ledger.own_account_operation import LedgerOwnAccountRequest
-from cadrumo.application.modelo.export import ModeloExportAccountReference, ModeloExportResult
+from cadrumo.application.modelo.export_contracts import ModeloExportAccountReference, ModeloExportResult
 from cadrumo.application.modelo.export_projection import (
     ModeloExportCompleteness,
     ModeloExportEvidenceStatus,

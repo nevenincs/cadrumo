@@ -5,10 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from decimal import Decimal
 
-from cadrumo.domain.calculations.registry.export_parse import (
-    ParsedExportFieldValue,
-    ParsedExportPayload,
-)
+from cadrumo.domain.calculations.registry.export_parse_models import ParsedExportFieldValue, ParsedExportPayload
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
 
 from .cli_contracts import RetencionesInstalledCliError

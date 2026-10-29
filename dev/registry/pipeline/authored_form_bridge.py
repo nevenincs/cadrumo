@@ -12,6 +12,8 @@ from shutil import copytree
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_modelo_directory
@@ -147,12 +149,8 @@ def prepare_authored_form_bridge(
     """Reconcile one first-export candidate and validate the complete future tree."""
     if sum((unreferenced_producers, casilla_splits, row_bindings, scalar_sources)) > 1:
         raise RegistryValidationError("choose one authored form reconciliation mode")
-    replacing = unreferenced_producers or casilla_splits or row_bindings or scalar_sources
-    require_existing_non_link(candidate_root, subject="authored form candidate")
-    if candidate_root.resolve() == registry_root.resolve() or not candidate_root.resolve().is_relative_to(
-        temporary_root.resolve()
-    ):
-        raise RegistryValidationError("authored form reconciliation requires an isolated candidate")
+    replacing = any((unreferenced_producers, casilla_splits, row_bindings, scalar_sources))
+    _require_isolated_candidate(candidate_root, registry_root, temporary_root)
     live_revision = registry_root / "modelos" / modelo / "revisions" / revision
     candidate_revision = candidate_root / "modelos" / modelo / "revisions" / revision
     old_manifest = _sha(live_revision / "export" / "_generation.provenance.json") if replacing else None
@@ -167,40 +165,8 @@ def prepare_authored_form_bridge(
     # The pipeline candidate may detach storage ancestry for isolated rendering.
     # Compare the actual future chain so no lineage or family metadata is waived.
     after = load_modelo_directory(overlay / "modelos" / modelo).revisions[revision]
-    replacements = None
-    if scalar_sources:
-        old_fields = {
-            str(field.id): field
-            for layout in before.export_layouts
-            for record in layout.records
-            for field in record.fields
-        }
-        # The reviewed semantic mapping has already rendered these endpoints.
-        # Capture exact old/new identities for the independent form-owner finish.
-        replacements = {
-            str(field.id): (str(old.binding if old.kind.value == "binding" else old.casilla_id), str(field.casilla_id))
-            for layout in after.export_layouts
-            for record in layout.records
-            for field in record.fields
-            if (old := old_fields.get(str(field.id))) is not None
-            and old.kind.value in {"binding", "casilla"}
-            and field.kind.value == "casilla"
-            and field.casilla_id is not None
-            and (old.kind.value == "binding" or old.casilla_id != field.casilla_id)
-        }
-    reconciled = (
-        reconcile_scalar_export_sources(before, after, replacements=replacements)
-        if replacements is not None
-        else reconcile_export_row_bindings(before, after)
-        if row_bindings
-        else reconcile_export_casilla_splits(before, after)
-        if casilla_splits
-        else (
-            reconcile_unreferenced_export_producers(before, after)
-            if unreferenced_producers
-            else reconcile_authored_export_addition(before, after)
-        )
-    )
+    replacements = _scalar_replacements(before, after, scalar_sources)
+    reconciled = _reconciled_form(before, after, replacements, row_bindings, casilla_splits, unreferenced_producers)
     new_bytes = render_form_layout_toml(revision, reconciled).encode("utf-8")
     live_form = form_layout_fragment_path(live_revision)
     old_sha = _sha(live_form)
@@ -213,12 +179,7 @@ def prepare_authored_form_bridge(
     form_layout_fragment_path(overlay_revision).write_bytes(new_bytes)
     if _other_files(overlay, modelo, revision) != other:
         raise RegistryValidationError("authored first-export overlay changed unrelated source")
-    clearance = prepare_export_clearance_retirement(registry_root / "modelos" / modelo, revision)
-    if clearance is not None:
-        clearance.install(overlay / "modelos" / modelo)
-        candidate_clearance = prepare_export_clearance_retirement(candidate_root / "modelos" / modelo, revision)
-        if candidate_clearance is not None:
-            candidate_clearance.install(candidate_root / "modelos" / modelo)
+    clearance = _prepare_overlay_clearance(registry_root, candidate_root, overlay, modelo, revision)
     compile_validated_authority(overlay, source_root, complete_validation=True, verify_evidence_bytes=True)
     bridge = AuthoredFormBridge(
         registry_root,
@@ -241,11 +202,97 @@ def prepare_authored_form_bridge(
         replacements,
     )
     bridge.require_dependencies()
+    target_changed = _target_changed(live_revision, replacing, old_manifest)
+    if target_changed or _sha(live_form) != old_sha:
+        raise RegistryValidationError("authored first-export target changed during prevalidation")
+    return bridge
+
+
+def _target_changed(live_revision: Path, replacing: bool, old_manifest: str | None) -> bool:
     target_changed = (
         _sha(live_revision / "export" / "_generation.provenance.json") != old_manifest
         if replacing
         else (live_revision / "export").exists()
     )
-    if target_changed or _sha(live_form) != old_sha:
-        raise RegistryValidationError("authored first-export target changed during prevalidation")
-    return bridge
+    return target_changed
+
+
+def _prepare_overlay_clearance(
+    registry_root: Path, candidate_root: Path, overlay: Path, modelo: str, revision: str
+) -> ExportClearanceRetirement | None:
+    clearance = prepare_export_clearance_retirement(registry_root / "modelos" / modelo, revision)
+    if clearance is not None:
+        clearance.install(overlay / "modelos" / modelo)
+        candidate_clearance = prepare_export_clearance_retirement(candidate_root / "modelos" / modelo, revision)
+        if candidate_clearance is not None:
+            candidate_clearance.install(candidate_root / "modelos" / modelo)
+    return clearance
+
+
+def _require_isolated_candidate(candidate_root: Path, registry_root: Path, temporary_root: Path) -> None:
+    require_existing_non_link(candidate_root, subject="authored form candidate")
+    if candidate_root.resolve() == registry_root.resolve() or not candidate_root.resolve().is_relative_to(
+        temporary_root.resolve()
+    ):
+        raise RegistryValidationError("authored form reconciliation requires an isolated candidate")
+
+
+def _scalar_replacements(
+    before: ModeloRevision, after: ModeloRevision, scalar_sources: bool
+) -> dict[str, tuple[str, str]] | None:
+    if not scalar_sources:
+        return None
+    old_fields = _export_fields_by_id(before)
+    # The reviewed semantic mapping has already rendered these endpoints.
+    # Capture exact old/new identities for the independent form-owner finish.
+    replacements = {
+        str(field.id): (str(old.binding if old.kind.value == "binding" else old.casilla_id), str(field.casilla_id))
+        for layout in after.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if (old := old_fields.get(str(field.id))) is not None and _is_scalar_replacement(old, field)
+    }
+    return replacements
+
+
+def _export_fields_by_id(revision: ModeloRevision) -> dict[str, ExportFieldDefinition]:
+    old_fields = {
+        str(field.id): field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+    }
+    return old_fields
+
+
+def _is_scalar_replacement(old: ExportFieldDefinition, field: ExportFieldDefinition) -> bool:
+    return (
+        old.kind.value in {"binding", "casilla"}
+        and field.kind.value == "casilla"
+        and field.casilla_id is not None
+        and (old.kind.value == "binding" or old.casilla_id != field.casilla_id)
+    )
+
+
+def _reconciled_form(
+    before: ModeloRevision,
+    after: ModeloRevision,
+    replacements: dict[str, tuple[str, str]] | None,
+    row_bindings: bool,
+    casilla_splits: bool,
+    unreferenced_producers: bool,
+) -> FormLayoutDefinition:
+    reconciled = (
+        reconcile_scalar_export_sources(before, after, replacements=replacements)
+        if replacements is not None
+        else reconcile_export_row_bindings(before, after)
+        if row_bindings
+        else reconcile_export_casilla_splits(before, after)
+        if casilla_splits
+        else (
+            reconcile_unreferenced_export_producers(before, after)
+            if unreferenced_producers
+            else reconcile_authored_export_addition(before, after)
+        )
+    )
+    return reconciled

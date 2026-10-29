@@ -46,8 +46,9 @@ from cadrumo.adapters.persistence.storage.secure_object_namespaces import INVOIC
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.iva_category_catalogue import require_iva_category
+from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.invoices.enums import PaymentStatus, iva_rate_percentage, resolve_iva_rate_token
-from cadrumo.domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.schema import InvoiceKind
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]

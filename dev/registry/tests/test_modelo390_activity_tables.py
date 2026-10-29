@@ -12,7 +12,8 @@ from cadrumo.application.storage.calc_sheets.form_workbook import add_form_workb
 from cadrumo.application.storage.calc_sheets.layout import plan_layout
 from cadrumo.application.storage.calc_sheets.records import TabName
 
-from ..workbook_demo import DemoCase, demonstration_snapshot
+from ..workbook_demo import demonstration_snapshot
+from ..workbook_demo_cases import DemoCase
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 

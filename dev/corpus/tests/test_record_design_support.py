@@ -17,14 +17,13 @@ from dev.corpus.artifact_catalogue import (
 from .. import sync_aeat_record_design_corpus as record_design_sync
 from ..record_design_acquisition import _store_acquired_payload
 from ..record_design_inventory import (
-    _EXTRACTION_SIDECAR_DERIVATIONS,
     _PAGES,
     _REQUIRED,
     _STATIC,
-    UNATTESTED_CORPUS_FILES,
     _RequiredArtifact,
 )
 from ..record_design_manifests import _Artifact, _Manifest, _root_aggregate
+from ..record_design_policy import _EXTRACTION_SIDECAR_DERIVATIONS, UNATTESTED_CORPUS_FILES
 from ..sync_aeat_record_design_corpus import (
     _CORPUS,
     _HISTORICAL_EXCLUSIONS_PATH,

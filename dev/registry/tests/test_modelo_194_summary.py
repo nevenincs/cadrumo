@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.aggregation import RetencionClave
-from cadrumo.domain.calculations.registry.formula_runtime import evaluate_expression
+from cadrumo.domain.calculations.registry.formula_expression import evaluate_expression
 from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
     resolve_withholding_binding_values,

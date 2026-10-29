@@ -15,7 +15,7 @@ import pytest
 
 from dev.packaging.native import layout as native_layout
 from dev.packaging.native.hashing import digest
-from dev.packaging.native.platforms import linux, macos, posix
+from dev.packaging.native.platforms import linux, macos, posix, posix_assembly, posix_sdk_download
 from dev.packaging.native.platforms.posix import acquire_sdk, dependencies_by_name, relative_loader_path
 from dev.packaging.native.tests.binary_fixtures import elf_image
 
@@ -271,7 +271,7 @@ def test_sdk_download_follows_only_bounded_github_https_asset_redirects(
         return httpx.Response(200, content=content)
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         selected = acquire_sdk(
             tmp_path, "3.13.11", tools, {"platform": "linux-x86-64", "sdk": {"archive_root": "python", "root": "sdk"}}
         )
@@ -300,9 +300,9 @@ def test_sdk_download_rejects_redirect_before_contacting_unadmitted_origin(
 
     archive = tmp_path / "sdk.tar"
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="admitted HTTPS"):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk", archive
             )
     assert len(requests) == 1
@@ -317,9 +317,9 @@ def test_sdk_redirect_loop_is_bounded(tmp_path: Path, monkeypatch: pytest.Monkey
         return httpx.Response(307, headers={"location": str(request.url)})
 
     with httpx.Client(transport=httpx.MockTransport(respond)) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="redirect limit"):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk",
                 tmp_path / "sdk.tar",
             )
@@ -331,9 +331,9 @@ def test_failed_download_preserves_an_existing_partial_file(tmp_path: Path, monk
     partial = tmp_path / "sdk.tar.partial"
     partial.write_bytes(b"existing owner data")
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, content=b"new"))) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(FileExistsError):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk", archive
             )
     assert partial.read_bytes() == b"existing owner data"
@@ -342,11 +342,11 @@ def test_failed_download_preserves_an_existing_partial_file(tmp_path: Path, monk
 
 def test_sdk_download_size_limit_removes_only_its_partial_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     archive = tmp_path / "sdk.tar"
-    monkeypatch.setattr(posix, "_SDK_DOWNLOAD_LIMIT", 3)
+    monkeypatch.setattr(posix_sdk_download, "_SDK_DOWNLOAD_LIMIT", 3)
     with httpx.Client(transport=httpx.MockTransport(lambda _: httpx.Response(200, content=b"four"))) as client:
-        monkeypatch.setattr(posix.httpx, "stream", client.stream)
+        monkeypatch.setattr(posix_sdk_download.httpx, "stream", client.stream)
         with pytest.raises(ValueError, match="size limit"):
-            posix._download_sdk(
+            posix_sdk_download.download_sdk(
                 "https://github.com/astral-sh/python-build-standalone/releases/download/fixture/sdk", archive
             )
     assert not archive.exists()
@@ -437,7 +437,7 @@ def test_sdk_extensions_follow_declared_exclusions_with_recorded_reasons(tmp_pat
             ],
         }
     }
-    result = posix.assemble(sdk, packages, native, root, contract, lambda *_: None)
+    result = posix_assembly.assemble(sdk, packages, native, root, contract, lambda *_: None)
     assert result["modules"] == {"_sqlite3": "native/_sqlite3" + suffix}
     assert {path.name for path in native.iterdir()} == {"runtime.so", "_sqlite3" + suffix}
     assert {entry["reasons"][0] for entry in result["sdk_extension_exclusions"]} == {

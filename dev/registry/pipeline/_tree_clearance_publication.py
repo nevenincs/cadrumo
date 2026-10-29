@@ -44,6 +44,29 @@ def _has_export_clearance(revision_root: Path, revision_id: str) -> bool:
     return any(row.get("family") == "export_layouts" for row in table.get("cleared_families", ()))
 
 
+def _require_unambiguous_clearance(revision_root: Path, revision_id: str) -> None:
+    admitted = parse_toml((revision_root / "revision.toml").read_text(encoding="utf-8"))["revisions"][revision_id]
+    withdrawn = [row for row in admitted.get("cleared_families", ()) if row["family"] == "export_layouts"]
+    if len(withdrawn) != 1 or withdrawn[0]["cause"] != "not_authored_for_this_edition":
+        raise RegistryValidationError("export publication cannot retire an ambiguous or differently grounded clearance")
+
+
+def _retire_staged_clearance(staged: Path, revision_id: str) -> None:
+    metadata = staged / "revision.toml"
+    payload = parse_toml(metadata.read_text(encoding="utf-8"))
+    table = payload["revisions"][revision_id]
+    clearances = table["cleared_families"]
+    withdrawn = [row for row in clearances if row["family"] == "export_layouts"]
+    if len(withdrawn) != 1 or withdrawn[0]["cause"] != "not_authored_for_this_edition":
+        raise RegistryValidationError("export publication cannot retire an ambiguous or differently grounded clearance")
+    remaining = [row for row in clearances if row["family"] != "export_layouts"]
+    if remaining:
+        table["cleared_families"] = remaining
+    else:
+        del table["cleared_families"]
+    metadata.write_bytes(render_toml_bytes(metadata.name, payload))
+
+
 def _publish_export_clearance_bundle(
     *,
     context: GeneratedExportTreePublicationContext,
@@ -63,28 +86,13 @@ def _publish_export_clearance_bundle(
     source_digest = bootstrap_layout_supersession_fingerprint(revision_root)
     if context.expected_target_state is None or context.expected_target_state.clearance_source_sha256 != source_digest:
         raise RegistryValidationError("export clearance source changed after check")
-    admitted = parse_toml((revision_root / "revision.toml").read_text(encoding="utf-8"))["revisions"][revision_id]
-    withdrawn = [row for row in admitted.get("cleared_families", ()) if row["family"] == "export_layouts"]
-    if len(withdrawn) != 1 or withdrawn[0]["cause"] != "not_authored_for_this_edition":
-        raise RegistryValidationError("export publication cannot retire an ambiguous or differently grounded clearance")
+    _require_unambiguous_clearance(revision_root, revision_id)
     staged = transaction_paths.new_bundle_staging_sibling()
     backup = transaction_paths.new_bundle_backup_sibling()
     shutil.copytree(revision_root, staged)
     if bootstrap_layout_supersession_fingerprint(staged) != source_digest:
         raise RegistryValidationError("export clearance source changed during candidate copy")
-    metadata = staged / "revision.toml"
-    payload = parse_toml(metadata.read_text(encoding="utf-8"))
-    table = payload["revisions"][revision_id]
-    clearances = table["cleared_families"]
-    withdrawn = [row for row in clearances if row["family"] == "export_layouts"]
-    if len(withdrawn) != 1 or withdrawn[0]["cause"] != "not_authored_for_this_edition":
-        raise RegistryValidationError("export publication cannot retire an ambiguous or differently grounded clearance")
-    remaining = [row for row in clearances if row["family"] != "export_layouts"]
-    if remaining:
-        table["cleared_families"] = remaining
-    else:
-        del table["cleared_families"]
-    metadata.write_bytes(render_toml_bytes(metadata.name, payload))
+    _retire_staged_clearance(staged, revision_id)
     os.replace(staged_candidate_export_root, staged / "export")
     fsync_parent_dir(staged / "export")
     candidate_digest = bootstrap_layout_supersession_fingerprint(staged)

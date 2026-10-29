@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from ..assemble import stage_sdk_licenses
+from ..assembly_images import stage_sdk_licenses
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

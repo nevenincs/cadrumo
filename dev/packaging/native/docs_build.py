@@ -23,8 +23,9 @@ from .action_cache import action_lock, changed_inputs, completed, current, diges
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, display_path
 from .build_paths import build_paths
+from .docs_errors import DocsPackagingError
 from .docs_input_identity import shared_docs_inputs
-from .docs_stage import DocsPackagingError, declared_languages, language_roots, package_prefix
+from .docs_stage import declared_languages, language_roots, package_prefix
 from .identity import identity
 from .layout import distribution_target, load_layout
 
@@ -272,6 +273,15 @@ def _copy_site(source: Path, destination: Path) -> None:
     )
 
 
+def _raise_compile_failure(log: Path, returncode: int) -> None:
+    lines = log.read_text(encoding="utf-8").splitlines()
+    _log().error(f"the documentation compile failed with exit status {returncode}; log: {display_path(log)}")
+    _log().notice("\n".join(lines[-25:]))
+    causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
+    _log().error(f"cause: {causes[-1] if causes else 'see the log excerpt above'}")
+    raise SystemExit(f"User documentation compile failed: exit {returncode}")
+
+
 def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> None:
     """Write every declared language root from ONE compile of the documentation.
 
@@ -308,12 +318,7 @@ def _compile_roots(build_root: Path, work: Path, languages: tuple[str, ...]) -> 
     log.write_text(result.stdout + result.stderr, encoding="utf-8")
     _log().verbose(f"documentation compile exited with status {result.returncode} in {result.duration_seconds:.0f} s")
     if result.returncode:
-        lines = log.read_text(encoding="utf-8").splitlines()
-        _log().error(f"the documentation compile failed with exit status {result.returncode}; log: {display_path(log)}")
-        _log().notice("\n".join(lines[-25:]))
-        causes = [match.group(1) for line in lines if (match := _RAISED.search(line))]
-        _log().error(f"cause: {causes[-1] if causes else 'see the log excerpt above'}")
-        raise SystemExit(f"User documentation compile failed: exit {result.returncode}")
+        _raise_compile_failure(log, result.returncode)
     absent = sorted(language for language, root in roots.items() if not root.is_dir())
     if absent:
         raise DocsPackagingError(

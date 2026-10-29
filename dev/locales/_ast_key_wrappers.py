@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+from collections.abc import Iterator
 from pathlib import Path
 
 from ._ast_key_calls import _call_site_key_argument_exprs, _collect_conditional_dotted_literal, _translation_call_names
@@ -34,15 +35,34 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
     Resolved to a fixpoint across the whole tree, because a wrapper may be
     imported from another module and may itself wrap a wrapper.
     """
+    definitions = _wrapper_definitions(modules)
+
+    known = set(CANONICAL_TRANSLATORS)
+    while True:
+        discovered = set()
+        for name, first, node in definitions:
+            discover_translator_wrapper(name, first, node, known, discovered)
+        if not discovered:
+            return frozenset[str](known - CANONICAL_TRANSLATORS)
+        known |= discovered
+
+
+def _method_node_ids(tree: ast.Module) -> set[int]:
+    """Identify actual class members rather than similarly named free functions."""
+    return {
+        id(member)
+        for owner in _walk_nodes(tree)
+        if isinstance(owner, ast.ClassDef)
+        for member in owner.body
+        if isinstance(member, ast.FunctionDef | ast.AsyncFunctionDef)
+    }
+
+
+def _wrapper_definitions(modules: list[tuple[Path, ast.Module]]) -> list[tuple[str, str, ast.AST]]:
+    """Index wrapper candidates using bound-method call positions."""
     definitions: list[tuple[str, str, ast.AST]] = []
     for _path, tree in modules:
-        methods = {
-            id(member)
-            for owner in _walk_nodes(tree)
-            if isinstance(owner, ast.ClassDef)
-            for member in owner.body
-            if isinstance(member, ast.FunctionDef | ast.AsyncFunctionDef)
-        }
+        methods = _method_node_ids(tree)
         for node in _walk_nodes(tree):
             if not isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
                 continue
@@ -53,14 +73,7 @@ def _translation_wrapper_names(modules: list[tuple[Path, ast.Module]]) -> frozen
                 name = method_wrapper_name(node.name) if id(node) in methods else node.name
                 definitions.append((name, parameters[0].arg, node))
 
-    known = set(CANONICAL_TRANSLATORS)
-    while True:
-        discovered = set()
-        for name, first, node in definitions:
-            discover_translator_wrapper(name, first, node, known, discovered)
-        if not discovered:
-            return frozenset[str](known - CANONICAL_TRANSLATORS)
-        known |= discovered
+    return definitions
 
 
 def _translated_value_names(
@@ -130,6 +143,49 @@ def _membership_guard_keys(tree: ast.AST, translated_names: frozenset[str]) -> s
     return findings
 
 
+def _forwarded_keyword_positions(call: ast.Call, parameter_positions: dict[str, int]) -> frozenset[int]:
+    """Recognize named key arguments forwarded directly from a caller parameter."""
+    return frozenset(
+        parameter_positions[keyword.value.id]
+        for keyword in call.keywords
+        if keyword.arg in _TRANSLATION_KEY_KWARGS
+        and isinstance(keyword.value, ast.Name)
+        and keyword.value.id in parameter_positions
+    )
+
+
+def _forwarded_positional_positions(call: ast.Call, parameter_positions: dict[str, int]) -> tuple[int | None, ...]:
+    """Retain call-site positions while recognizing direct caller parameters."""
+    return tuple(
+        parameter_positions.get(argument.id) if isinstance(argument, ast.Name) else None for argument in call.args
+    )
+
+
+def _bound_parameter_positions(node: ast.FunctionDef | ast.AsyncFunctionDef) -> dict[str, int]:
+    """Index arguments as callers supply them, omitting a bound receiver."""
+    parameters = [argument.arg for argument in [*node.args.posonlyargs, *node.args.args]]
+    if parameters and parameters[0] in {"self", "cls"}:
+        parameters = parameters[1:]
+    return {name: index for index, name in enumerate(parameters)}
+
+
+def _definition_forwarding(
+    node: ast.FunctionDef | ast.AsyncFunctionDef, positions: set[int]
+) -> Iterator[tuple[str, tuple[int | None, ...], frozenset[int], set[int]]]:
+    """Index caller parameter forwarding without treating other expressions as keys."""
+    parameter_positions = _bound_parameter_positions(node)
+    for call in _walk_nodes(node):
+        if not isinstance(call, ast.Call):
+            continue
+        callee = getattr(call.func, "id", getattr(call.func, "attr", None))
+        if not isinstance(callee, str):
+            continue
+        positional = _forwarded_positional_positions(call, parameter_positions)
+        keywords = _forwarded_keyword_positions(call, parameter_positions)
+        if any(index is not None for index in positional) or keywords:
+            yield callee, positional, keywords, positions
+
+
 def _translation_key_parameter_positions(
     modules: list[tuple[Path, ast.Module]],
 ) -> dict[str, frozenset[int]]:
@@ -161,52 +217,43 @@ def _translation_key_parameter_positions(
         for node in _walk_nodes(tree):
             collect_translation_key_parameter_positions(node, per_definition)
             if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-                parameters = [argument.arg for argument in [*node.args.posonlyargs, *node.args.args]]
-                if parameters and parameters[0] in {"self", "cls"}:
-                    parameters = parameters[1:]
-                parameter_positions = {name: index for index, name in enumerate(parameters)}
-                positions = per_definition[node.name][-1]
-                for call in _walk_nodes(node):
-                    if not isinstance(call, ast.Call):
-                        continue
-                    callee = getattr(call.func, "id", getattr(call.func, "attr", None))
-                    if not isinstance(callee, str):
-                        continue
-                    positional = tuple(
-                        parameter_positions.get(argument.id) if isinstance(argument, ast.Name) else None
-                        for argument in call.args
-                    )
-                    keywords = frozenset(
-                        parameter_positions[keyword.value.id]
-                        for keyword in call.keywords
-                        if keyword.arg in _TRANSLATION_KEY_KWARGS
-                        and isinstance(keyword.value, ast.Name)
-                        and keyword.value.id in parameter_positions
-                    )
-                    if any(index is not None for index in positional) or keywords:
-                        forwarded_calls.append((callee, positional, keywords, positions))
+                forwarded_calls.extend(_definition_forwarding(node, per_definition[node.name][-1]))
     while True:
         known = {name: set.intersection(*positions) for name, positions in per_definition.items()}
         known.update({name: {0} for name in ("tr", "t", "lookup_translation")})
-        changed = False
-        for callee, positional, keywords, positions in forwarded_calls:
-            candidates = set(keywords)
-            candidates.update(
-                parameter
-                for index in known.get(callee, ())
-                if index < len(positional) and (parameter := positional[index]) is not None
-            )
-            if candidates - positions:
-                positions.update(candidates)
-                changed = True
+        changed = _propagate_forwarded_positions(forwarded_calls, known)
         if not changed:
             break
+    return _agreed_parameter_positions(per_definition)
+
+
+def _agreed_parameter_positions(per_definition: dict[str, list[set[int]]]) -> dict[str, frozenset[int]]:
+    """Admit positions shared by every definition of a colliding callable name."""
     agreed: dict[str, frozenset[int]] = {}
     for name, definition_positions in per_definition.items():
         shared = set.intersection(*definition_positions) if definition_positions else set()
         if shared:
             agreed[name] = frozenset(shared)
     return agreed
+
+
+def _propagate_forwarded_positions(
+    forwarded_calls: list[tuple[str, tuple[int | None, ...], frozenset[int], set[int]]],
+    known: dict[str, set[int]],
+) -> bool:
+    """Advance the parameter-position fixpoint by one ordered pass."""
+    changed = False
+    for callee, positional, keywords, positions in forwarded_calls:
+        candidates = set(keywords)
+        candidates.update(
+            parameter
+            for index in known.get(callee, ())
+            if index < len(positional) and (parameter := positional[index]) is not None
+        )
+        if candidates - positions:
+            positions.update(candidates)
+            changed = True
+    return changed
 
 
 def _extract_positional_translation_key_arguments(

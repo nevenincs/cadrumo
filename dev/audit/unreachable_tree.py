@@ -6,6 +6,7 @@ import ast
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
+from typing import cast
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
@@ -18,7 +19,7 @@ from dev.quality.source_import_analysis import (
 
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule
-from .unreachable_policy import _DATA_GLOBS, _DEV_LABEL, _SKIPPED_DIRS
+from .unreachable_policy import DATA_GLOBS, DEV_LABEL, SKIPPED_DIRS
 
 
 def _repository_console_scripts(repo_root: Path) -> tuple[Path, dict[str, str]]:
@@ -28,11 +29,12 @@ def _repository_console_scripts(repo_root: Path) -> tuple[Path, dict[str, str]]:
     project = data.get("project")
     if not isinstance(project, dict):
         raise ValueError(f"{pyproject} has no [project] table")
-    raw_scripts = project.get("scripts", {})
+    project_table = cast(dict[str, object], project)
+    raw_scripts = project_table.get("scripts", {})
     if not isinstance(raw_scripts, dict):
         raise ValueError(f"{pyproject} has an invalid [project.scripts] table")
     scripts: dict[str, str] = {}
-    for name, spec in raw_scripts.items():
+    for name, spec in cast(dict[str, object], raw_scripts).items():
         if not isinstance(name, str) or not isinstance(spec, str):
             raise ValueError(f"{pyproject} has a non-text [project.scripts] entry")
         scripts[name] = spec
@@ -145,17 +147,7 @@ class ShippedTreeSpec:
         if outside_scripts:
             msg = f"console script(s) target no audited source package: {', '.join(outside_scripts)}"
             raise ValueError(msg)
-        module_roots = tuple(
-            sorted(
-                module_name_for(path, src_root=src_root)
-                for package in packages
-                for path in (src_root / package).rglob("*.py")
-                if _SKIPPED_DIRS.isdisjoint(path.parts)
-                and not is_test_source(path, root=src_root)
-                and is_shipped_module(path, src_root=src_root, exclude_globs=excludes)
-                and is_module_execution_surface(path)
-            ),
-        )
+        module_roots = _module_execution_roots(src_root, packages, excludes)
         return cls(
             repo_root=repo_root,
             src_root=src_root,
@@ -169,10 +161,25 @@ class ShippedTreeSpec:
                     for package in packages
                 ),
                 OutsideCorpus(label="tests", root=repo_root / "conftest.py"),
-                OutsideCorpus(label=_DEV_LABEL, root=repo_root / DEVELOPMENT_TOOLING),
+                OutsideCorpus(label=DEV_LABEL, root=repo_root / DEVELOPMENT_TOOLING),
             ),
-            data_globs=_DATA_GLOBS,
+            data_globs=DATA_GLOBS,
         )
+
+
+def _module_execution_roots(src_root: Path, packages: tuple[str, ...], excludes: tuple[str, ...]) -> tuple[str, ...]:
+    module_roots = tuple(
+        sorted(
+            module_name_for(path, src_root=src_root)
+            for package in packages
+            for path in (src_root / package).rglob("*.py")
+            if SKIPPED_DIRS.isdisjoint(path.parts)
+            and not is_test_source(path, root=src_root)
+            and is_shipped_module(path, src_root=src_root, exclude_globs=excludes)
+            and is_module_execution_surface(path)
+        ),
+    )
+    return module_roots
 
 
 def _source_packages(repo_root: Path, src_root: Path) -> tuple[str, ...]:
@@ -183,13 +190,7 @@ def _source_packages(repo_root: Path, src_root: Path) -> tuple[str, ...]:
     scope is refused, because auditing around it would report its consumers'
     code reachable or dead without the audit ever saying it stopped short.
     """
-    packages: list[str] = []
-    for source_root in SOURCE_PACKAGES:
-        directory = repo_root / source_root
-        if directory.parent != src_root:
-            raise ValueError(f"source package {source_root} does not live directly under {src_root}")
-        if directory.is_dir():
-            packages.append(directory.name)
+    packages = _present_declared_packages(repo_root, src_root)
     present = (
         sorted(child.name for child in src_root.iterdir() if (child / "__init__.py").is_file())
         if src_root.is_dir()
@@ -201,6 +202,17 @@ def _source_packages(repo_root: Path, src_root: Path) -> tuple[str, ...]:
     if not packages:
         raise ValueError(f"no declared source package exists under {src_root}")
     return tuple(packages)
+
+
+def _present_declared_packages(repo_root: Path, src_root: Path) -> list[str]:
+    packages: list[str] = []
+    for source_root in SOURCE_PACKAGES:
+        directory = repo_root / source_root
+        if directory.parent != src_root:
+            raise ValueError(f"source package {source_root} does not live directly under {src_root}")
+        if directory.is_dir():
+            packages.append(directory.name)
+    return packages
 
 
 def iter_python_files(root: Path) -> Iterator[Path]:
@@ -220,7 +232,7 @@ def iter_python_files(root: Path) -> Iterator[Path]:
     if not root.is_dir():
         raise FileNotFoundError(f"unreachable-code corpus {root} does not exist; coverage is unproven")
     for path in sorted(root.rglob("*.py")):
-        if _SKIPPED_DIRS.isdisjoint(path.parts):
+        if SKIPPED_DIRS.isdisjoint(path.parts):
             yield path
 
 

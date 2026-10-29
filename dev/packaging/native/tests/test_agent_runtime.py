@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import io
 import json
@@ -18,7 +19,7 @@ from typing import Any
 import httpx
 import pytest
 
-from .. import agent_runtime
+from .. import agent_runtime, agent_runtime_archive, agent_runtime_validation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -26,7 +27,7 @@ _NODE_VERSION = "26.10.0"
 _ACP_PACKAGE = "@agentclientprotocol/claude-agent-acp"
 
 
-_DECLARATION: dict[str, Any] = {
+_DECLARATION: agent_runtime_validation.NodeRuntimeDeclaration = {
     "schema_version": 1,
     "node_version": _NODE_VERSION,
     "targets": {
@@ -55,7 +56,7 @@ def test_runtime_declaration_is_read_from_the_agent_project(tmp_path: Path) -> N
     source = tmp_path / "agent-source"
     (source / "runtime").mkdir(parents=True)
     (source / "runtime/node.json").write_text(json.dumps(_DECLARATION), encoding="utf-8")
-    assert agent_runtime.load_runtime_declaration(source) == _DECLARATION
+    assert agent_runtime_validation.load_runtime_declaration(source) == _DECLARATION
 
 
 @pytest.mark.parametrize("defect", ["missing", "archive", "target", "digest"])
@@ -73,7 +74,7 @@ def test_runtime_declaration_refuses_an_unofficial_or_incomplete_pin(tmp_path: P
     if defect != "missing":
         (source / "runtime/node.json").write_text(json.dumps(declaration), encoding="utf-8")
     with pytest.raises(ValueError, match=r"runtime/node\.json|Pinned"):
-        agent_runtime.load_runtime_declaration(source)
+        agent_runtime_validation.load_runtime_declaration(source)
 
 
 @pytest.mark.parametrize("target", ["windows-x86-64", "linux-x86-64"])
@@ -123,7 +124,7 @@ def test_build_uses_locked_production_closure_and_stage_preserves_package_files(
     assert (output / "node_modules/@agentclientprotocol/claude-agent-acp/LICENSE").is_file()
     assert (output / "node_modules/@agentclientprotocol/claude-agent-acp/NOTICE").is_file()
 
-    receipt = agent_runtime.verify_agent_runtime(output, declaration)
+    receipt = agent_runtime_validation.verify_agent_runtime(output, declaration)
     assert receipt["target"] == target
     assert receipt["node_version"] == _NODE_VERSION
     assert receipt["package_lock_sha256"] == hashlib.sha256(_package_lock_bytes()).hexdigest()
@@ -151,7 +152,7 @@ def test_ranged_adapter_spec_installs_the_locked_exact_version(tmp_path: Path, m
     _mock_npm(monkeypatch, node)
     output = tmp_path / "build" / "agent" / "runtime"
     agent_runtime.build_agent_runtime(output, source, "windows-x86-64", node=node, npm_cli=npm_cli)
-    assert _ACP_ENTRY_NAME in agent_runtime.verify_agent_runtime(output, declaration)["files"]
+    assert _ACP_ENTRY_NAME in agent_runtime_validation.verify_agent_runtime(output, declaration)["files"]
 
 
 def test_adapter_spec_differing_from_the_lock_is_refused(tmp_path: Path) -> None:
@@ -223,7 +224,7 @@ def test_runtime_rebuilds_tampered_payload_without_destroying_previous_tree_firs
 
     assert len(calls) == 4
     assert (output / "node/node.exe").read_bytes() == b"pinned-node-binary"
-    agent_runtime.verify_agent_runtime(output, declaration)
+    agent_runtime_validation.verify_agent_runtime(output, declaration)
 
 
 def test_builder_refuses_sdk_platform_cli_payload_and_does_not_publish_partial_output(
@@ -257,7 +258,7 @@ def test_verifier_refuses_changed_or_added_runtime_files(tmp_path: Path, monkeyp
     output, declaration = _build_runtime(tmp_path, monkeypatch, "windows-x86-64")
     (output / _ACP_ENTRY_NAME).write_text("changed", encoding="utf-8")
     with pytest.raises(ValueError, match="differs from its receipt"):
-        agent_runtime.verify_agent_runtime(output, declaration)
+        agent_runtime_validation.verify_agent_runtime(output, declaration)
 
     (output / _ACP_ENTRY_NAME).write_text("acp entry\n", encoding="utf-8")
     (output / "unexpected-empty-directory").mkdir()
@@ -295,7 +296,7 @@ def test_download_rejects_wrong_archive_digest_and_removes_partial_file(
     }
 
     with pytest.raises(ValueError, match="SHA256 mismatch"):
-        agent_runtime._download_node_archive(archive, _NODE_VERSION, row)
+        agent_runtime_archive.download_node_archive(archive, _NODE_VERSION, row)
     assert not archive.exists()
     assert not archive.with_name(archive.name + ".partial").exists()
 
@@ -303,7 +304,9 @@ def test_download_rejects_wrong_archive_digest_and_removes_partial_file(
 _ACP_ENTRY_NAME = "node_modules/@agentclientprotocol/claude-agent-acp/dist/index.js"
 
 
-def _build_runtime(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str) -> tuple[Path, dict[str, Any]]:
+def _build_runtime(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, target: str
+) -> tuple[Path, agent_runtime_validation.NodeRuntimeDeclaration]:
     source = _agent_source(tmp_path / "agent-source")
     node, npm_cli = _build_tools(tmp_path)
     archive = _node_archive(target)
@@ -359,7 +362,7 @@ def _build_tools(root: Path) -> tuple[Path, Path]:
 
 
 def _node_archive(target: str, *, include_distribution_symlink: bool = False) -> bytes:
-    suffix, kind = agent_runtime._NODE_TARGETS[target]
+    suffix, kind = agent_runtime_archive.NODE_TARGETS[target]
     archive_root = f"node-v{_NODE_VERSION}-{suffix}"
     if kind == "zip":
         output = io.BytesIO()
@@ -386,9 +389,11 @@ def _node_archive(target: str, *, include_distribution_symlink: bool = False) ->
     return output.getvalue()
 
 
-def _point_config_at_archive(source: Path, target: str, archive: bytes) -> dict[str, Any]:
+def _point_config_at_archive(
+    source: Path, target: str, archive: bytes
+) -> agent_runtime_validation.NodeRuntimeDeclaration:
     """Pin the fixture archive's digest in the agent project's own Node declaration."""
-    declaration = json.loads(json.dumps(_DECLARATION))
+    declaration = copy.deepcopy(_DECLARATION)
     declaration["targets"][target]["sha256"] = hashlib.sha256(archive).hexdigest()
     (source / "runtime").mkdir(exist_ok=True)
     (source / "runtime/node.json").write_text(json.dumps(declaration), encoding="utf-8")
@@ -404,7 +409,7 @@ def _mock_download(monkeypatch: pytest.MonkeyPatch, archive: bytes) -> None:
         finally:
             response.close()
 
-    monkeypatch.setattr(agent_runtime.httpx, "stream", stream)
+    monkeypatch.setattr(agent_runtime_archive.httpx, "stream", stream)
 
 
 def _mock_npm(monkeypatch: pytest.MonkeyPatch, node: Path) -> list[tuple[list[str], Path, Mapping[str, str]]]:

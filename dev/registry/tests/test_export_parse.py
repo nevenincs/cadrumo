@@ -14,7 +14,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.fixed_width_parser import parse_fixed_width_export_field
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition

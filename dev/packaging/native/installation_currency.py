@@ -6,6 +6,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+from typing import NotRequired, TypedDict, cast
 
 from .installation_plan import Preparation, project
 
@@ -43,6 +44,62 @@ def _permissions(root: Path, metadata: Path, plan: Preparation) -> None:
         raise ValueError("Installation root permissions changed")
 
 
+class _Receipt(TypedDict):
+    files: dict[str, str]
+    preparation: NotRequired[object]
+    application_id: NotRequired[object]
+    staging_generation: NotRequired[object]
+
+
+def _validate_metadata(receipt_file: Path, metadata: Path, plan: Preparation) -> None:
+    from .installation import member
+
+    allowed = {"installation.json", "wix", *plan.metadata}
+    if any(member(metadata, child.name).name not in allowed for child in metadata.iterdir()):
+        raise ValueError("Installation metadata membership changed")
+    for name, contents in plan.metadata.items():
+        output = member(metadata, name)
+        if output.read_bytes() != contents or not public_permissions(output):
+            raise ValueError("Installation metadata changed")
+    if not public_permissions(receipt_file):
+        raise ValueError("Installation receipt permissions changed")
+
+
+def _validate_current(
+    receipt: _Receipt, receipt_file: Path, payload: Path, root: Path, metadata: Path, plan: Preparation
+) -> None:
+    from .installation import member
+
+    source_manifest = json.loads(member(payload, "data/package-manifest.json").read_text(encoding="utf-8"))
+    if (
+        receipt.get("application_id") != source_manifest["build"]["application_id"]
+        or receipt.get("staging_generation") != 1
+    ):
+        raise ValueError("Installation receipt identity or staging generation changed")
+    expected_manifest = member(root, f"{plan.destination}/data/package-manifest.json")
+    if expected_manifest.read_bytes() != member(payload, "data/package-manifest.json").read_bytes():
+        raise ValueError("Installation package manifest differs from current source")
+    if receipt["files"] != plan.files:
+        raise ValueError("Installation inventory differs from current payload and controls")
+    _validate_metadata(receipt_file, metadata, plan)
+    _permissions(root, metadata, plan)
+
+
+def _validate_manifest_anchor(receipt: _Receipt, recorded: object, root: Path) -> None:
+    from .installation import member
+
+    anchors = [name for name in receipt["files"] if name.endswith("/data/package-manifest.json")]
+    if len(anchors) != 1:
+        raise ValueError("Installation receipt must identify exactly one package manifest")
+    staged_manifest = member(root, anchors[0])
+    if (
+        isinstance(recorded, dict)
+        and cast(dict[str, object], recorded).get("payload_manifest")
+        != hashlib.sha256(staged_manifest.read_bytes()).hexdigest()
+    ):
+        raise ValueError("Installation package manifest changed from its preparation")
+
+
 def existing(
     payload: Path,
     identity_file: Path,
@@ -63,44 +120,16 @@ def existing(
     receipt_file = member(metadata, "installation.json")
     if not receipt_file.is_file():
         raise ValueError("Existing native installation stage has no owning receipt; select a fresh build directory")
-    receipt = json.loads(receipt_file.read_text(encoding="utf-8"))
+    receipt = cast(_Receipt, json.loads(receipt_file.read_text(encoding="utf-8")))
     validate_payload(payload, identity_file, desktop)
     plan = project(payload, identity_file, desktop, control_root)
     recorded = receipt.get("preparation")
     # Bind the existing package manifest independently of a potentially edited
     # file inventory. A forged inventory cannot disguise a different package.
-    anchors = [name for name in receipt["files"] if name.endswith("/data/package-manifest.json")]
-    if len(anchors) != 1:
-        raise ValueError("Installation receipt must identify exactly one package manifest")
-    staged_manifest = member(root, anchors[0])
-    if (
-        isinstance(recorded, dict)
-        and recorded.get("payload_manifest") != hashlib.sha256(staged_manifest.read_bytes()).hexdigest()
-    ):
-        raise ValueError("Installation package manifest changed from its preparation")
+    _validate_manifest_anchor(receipt, recorded, root)
     current = bool(recorded == plan.identity)
     if current:
-        source_manifest = json.loads(member(payload, "data/package-manifest.json").read_text(encoding="utf-8"))
-        if (
-            receipt.get("application_id") != source_manifest["build"]["application_id"]
-            or receipt.get("staging_generation") != 1
-        ):
-            raise ValueError("Installation receipt identity or staging generation changed")
-        expected_manifest = member(root, f"{plan.destination}/data/package-manifest.json")
-        if expected_manifest.read_bytes() != member(payload, "data/package-manifest.json").read_bytes():
-            raise ValueError("Installation package manifest differs from current source")
-        if receipt["files"] != plan.files:
-            raise ValueError("Installation inventory differs from current payload and controls")
-        allowed = {"installation.json", "wix", *plan.metadata}
-        if any(member(metadata, child.name).name not in allowed for child in metadata.iterdir()):
-            raise ValueError("Installation metadata membership changed")
-        for name, contents in plan.metadata.items():
-            output = member(metadata, name)
-            if output.read_bytes() != contents or not public_permissions(output):
-                raise ValueError("Installation metadata changed")
-        if not public_permissions(receipt_file):
-            raise ValueError("Installation receipt permissions changed")
-        _permissions(root, metadata, plan)
+        _validate_current(receipt, receipt_file, payload, root, metadata, plan)
     elif not allow_change and (recorded is not None or receipt["files"] != plan.files):
         raise ValueError("Native installation stage differs from the requested payload; select a fresh build directory")
     # Full membership and bytes are checked against the independently projected

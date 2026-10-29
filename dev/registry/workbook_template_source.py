@@ -6,7 +6,7 @@ from cadrumo.application.storage.calc_sheets.records import SheetAdministrativeF
 from cadrumo.application.storage.calc_sheets.template_source import WorkbookTemplateSource
 from cadrumo.core.period import Period, is_administrative_period_token
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
+from cadrumo.domain.calculations.registry.snapshot_references import collect_snapshot_ref_ids
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from .compiler.authority import compiled_bundled_authority

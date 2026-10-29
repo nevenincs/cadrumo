@@ -11,7 +11,8 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.record_design_coverage import calculation_closure_casilla_ids
 from cadrumo.domain.calculations.registry.reference_checks import check_all_id_references
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_surfaces import (
     CalculationCompletenessCasilla,

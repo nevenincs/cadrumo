@@ -20,6 +20,21 @@ from dev.packaging.hashing import sha256_path
 from .record_design_manifests import _Artifact, _artifact_urls, _Manifest
 
 
+def _acquired_filename(extension: str, artifacts: list[_Artifact], required: _RequiredArtifact) -> str:
+    """Allocate the next bounded readable artifact name without publishing it."""
+    indexes = [
+        int(match.group(1))
+        for artifact in artifacts
+        if (match := re.match(r"files/(\d+)-", str(artifact["stored_path"])))
+    ]
+    ordinal = f"{max(indexes, default=0) + 1:02d}"
+    slug = _slug(required.title)[: 48 - len(ordinal) - 1].rstrip("-")
+    if not slug or len(ordinal) >= 47:
+        raise ValueError("Record-design artifact needs a bounded readable filename")
+    filename = f"{ordinal}-{slug}{extension}"
+    return filename
+
+
 def _store_acquired_payload(
     files_dir: Path, extension: str, data: bytes, digest: str, artifacts: list[_Artifact], required: _RequiredArtifact
 ) -> Path:
@@ -33,16 +48,7 @@ def _store_acquired_payload(
         None,
     )
     if local_match is None:
-        indexes = [
-            int(match.group(1))
-            for artifact in artifacts
-            if (match := re.match(r"files/(\d+)-", str(artifact["stored_path"])))
-        ]
-        ordinal = f"{max(indexes, default=0) + 1:02d}"
-        slug = _slug(required.title)[: 48 - len(ordinal) - 1].rstrip("-")
-        if not slug or len(ordinal) >= 47:
-            raise ValueError("Record-design artifact needs a bounded readable filename")
-        filename = f"{ordinal}-{slug}{extension}"
+        filename = _acquired_filename(extension, artifacts, required)
         if any(
             candidate.name.casefold() == filename.casefold()
             or candidate.name.casefold().startswith(filename.casefold() + ".")

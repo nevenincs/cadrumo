@@ -88,25 +88,7 @@ def installed_foreground_runtime(
                 )
             )
             deadline = time.monotonic() + startup_timeout_seconds
-            while True:
-                if process.returncode is not None:
-                    raise RetencionesInstalledCliError(stage="runtime_startup", diagnostic_code="runtime_exited")
-                try:
-                    channel = endpoint.connect(timeout=0.2)
-                    connection = VerifiedConnection(
-                        channel,
-                        expected=ClientHello(product_version=cohort, storage_identity=endpoint.storage_identity),
-                        deadline=deadline,
-                    )
-                    boot_id = str(connection.hello.boot_id)
-                    connection.close()
-                    break
-                except RefusalError as error:
-                    if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
-                        raise RetencionesInstalledCliError(
-                            stage="runtime_readiness", diagnostic_code=error.reason.value
-                        ) from error
-                    runner.run(asyncio.sleep(0.05))
+            boot_id = _wait_runtime_ready(runner, process, endpoint, cohort, deadline)
             evidence = {
                 "mode": "test_owned_installed_foreground",
                 "session_policy": "explicit_boot_bounded_development",
@@ -124,3 +106,32 @@ def installed_foreground_runtime(
                 endpoint.close()
             if evidence is not None:
                 evidence["shutdown"] = shutdown
+
+
+def _wait_runtime_ready(
+    runner: asyncio.Runner,
+    process: asyncio.subprocess.Process,
+    endpoint: PosixEndpoint,
+    cohort: str,
+    deadline: float,
+) -> str:
+    """Require the exact installed cohort/root handshake while retaining process exit and deadline refusal."""
+    while True:
+        if process.returncode is not None:
+            raise RetencionesInstalledCliError(stage="runtime_startup", diagnostic_code="runtime_exited")
+        try:
+            channel = endpoint.connect(timeout=0.2)
+            connection = VerifiedConnection(
+                channel,
+                expected=ClientHello(product_version=cohort, storage_identity=endpoint.storage_identity),
+                deadline=deadline,
+            )
+            boot_id = str(connection.hello.boot_id)
+            connection.close()
+            return boot_id
+        except RefusalError as error:
+            if error.reason is not RefusalCode.ENDPOINT_NOT_READY or time.monotonic() >= deadline:
+                raise RetencionesInstalledCliError(
+                    stage="runtime_readiness", diagnostic_code=error.reason.value
+                ) from error
+            runner.run(asyncio.sleep(0.05))

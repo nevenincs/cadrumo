@@ -21,6 +21,21 @@ def refresh(payload: Path, identity: Path, build: Path, desktop: str | None = No
         _refresh(payload, identity, build, desktop)
 
 
+def _retain_receipts(stage: Path, receipt: Path, candidate: Path, receipt_root: Path) -> None:
+    # Receipts outlive generated staging, including an explicit target clean.
+    receipts = receipt_root
+    receipts.mkdir(parents=True, exist_ok=True)
+    retained_sources = [candidate / "metadata/installation.json"]
+    if stage.exists():
+        retained_sources.append(receipt)
+    for owned in retained_sources:
+        retained = member(receipts, f"{digest(owned)}.json")
+        if retained.exists() and retained.read_bytes() != owned.read_bytes():
+            raise ValueError("Retained installation receipt differs from its content identity")
+        if not retained.exists():
+            retained.write_bytes(owned.read_bytes())
+
+
 def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = None) -> None:
     """Construct the next stage before replacing a verified, generated previous stage."""
     paths = build_paths(build)
@@ -55,18 +70,7 @@ def _refresh(payload: Path, identity: Path, build: Path, desktop: str | None = N
             if previous.get("staging_generation") == 1:
                 reuse = InstallationReuse(stage, candidate / "stage", previous["files"])
         prepare(payload, identity, candidate, desktop, copy_file=reuse.copy if reuse else None)
-        # Receipts outlive generated staging, including an explicit target clean.
-        receipts = paths["installation_receipts"]
-        receipts.mkdir(parents=True, exist_ok=True)
-        retained_sources = [candidate / "metadata/installation.json"]
-        if stage.exists():
-            retained_sources.append(receipt)
-        for owned in retained_sources:
-            retained = member(receipts, f"{digest(owned)}.json")
-            if retained.exists() and retained.read_bytes() != owned.read_bytes():
-                raise ValueError("Retained installation receipt differs from its content identity")
-            if not retained.exists():
-                retained.write_bytes(owned.read_bytes())
+        _retain_receipts(stage, receipt, candidate, paths["installation_receipts"])
         if stage.exists():
             verify_inventory(stage, receipt)
         publish(stage, metadata, candidate)

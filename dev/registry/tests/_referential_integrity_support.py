@@ -24,10 +24,10 @@ from cadrumo.domain.calculations.registry.schema import (
     FormulaDefinition,
     ModeloDefinition,
     ModeloRevision,
-    RegistryCatalogues,
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
@@ -40,6 +40,7 @@ from cadrumo.domain.calculations.registry.schema_extraction import (
 )
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression, ParameterDefinition
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from cadrumo.domain.calculations.registry.schema_revision_members import (
     ApplicationLinkDefinition,
@@ -52,7 +53,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import (
     CasillaDefinition,
 )
 from cadrumo.domain.calculations.registry.schema_verification import (
-    LiveCrossReferenceDecision,
     VerificationExpectationDefinition,
     WorkbookParityReference,
 )

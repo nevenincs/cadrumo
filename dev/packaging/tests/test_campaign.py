@@ -177,7 +177,7 @@ def test_preflight_test_workers_resolve_flag_then_env_then_local_auto() -> None:
 
 
 @pytest.mark.parametrize("test_workers", [None, 8], ids=["local-auto", "ci-width"])
-def test_campaign_passes_do_not_install_an_elapsed_cutoff(test_workers: int | None) -> None:
+def test_campaign_passes_do_not_install_an_elapsed_timeout(test_workers: int | None) -> None:
     """All ordinary campaign passes run to completion at either worker width."""
     invocations = campaign_pytest_argv(REPO_ROOT, test_workers)
 

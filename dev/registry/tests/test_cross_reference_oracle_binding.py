@@ -14,7 +14,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_verification import LiveCrossReferenceDecision
+from cadrumo.domain.calculations.registry.schema_live_verification import LiveCrossReferenceDecision
 
 from ..conformance.registry_schema_support import (
     committed_modelo as _committed_modelo,

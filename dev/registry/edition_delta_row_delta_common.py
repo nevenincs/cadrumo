@@ -145,3 +145,25 @@ def authored_override_selectors(manifest: Mapping[str, object]) -> frozenset[str
             if isinstance(operation, Mapping) and isinstance((selector := operation.get("selector")), Mapping)
         )
     return frozenset(claimed)
+
+
+def candidate_for_authored(
+    authored: _edition_delta_source._Row,
+    by_lineage: Mapping[str, list[_edition_delta_source._Placed]],
+    by_storage_id: Mapping[str, list[_edition_delta_source._Placed]],
+    claimed: frozenset[str],
+) -> _edition_delta_source._Placed | None:
+    """Select the unique unclaimed predecessor matching an authored row."""
+    row_id = _edition_delta_source._row_id(authored)
+    lineage = _edition_delta_source._lineage(authored)
+    lineage_candidates = by_lineage.get(lineage, []) if lineage is not None else []
+    storage_candidates = by_storage_id.get(row_id, []) if lineage is None else []
+    candidates = lineage_candidates or storage_candidates
+    if len(candidates) != 1:
+        return None
+    candidate = candidates[0]
+    if _edition_delta_source._row_id(candidate.row) in claimed:
+        return None
+    if not lineage_candidates and lineage is None and _edition_delta_source._lineage(candidate.row) is not None:
+        return None
+    return candidate

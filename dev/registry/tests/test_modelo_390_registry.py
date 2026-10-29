@@ -16,7 +16,8 @@ from cadrumo.domain.calculations.registry.binding_selector_utils import selector
 from cadrumo.domain.calculations.registry.bindings import binding_source_casilla_ids, binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind

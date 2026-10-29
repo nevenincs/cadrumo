@@ -15,12 +15,89 @@ from ..complexity import (
     IncompleteScanError,
     MiHit,
     cognitive_hits,
+    length_hits,
     measure_population,
     source_population,
 )
 from ..report import Status
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_length_limits_include_nested_decorated_callables() -> None:
+    source = "@decorate\ndef outer():\n    def inner():\n" + "        pass\n" * 150
+    findings = length_hits("dev/tool.py", source)
+    assert [(hit.name, hit.lines, hit.limit) for hit in findings] == [("outer", 153, 150), ("outer.inner", 151, 150)]
+    assert length_hits("src/package/module.py", "# line\n" * 1250) == []
+    oversized = length_hits("src/package/module.py", "# line\n" * 1251)
+    assert [(hit.name, hit.lines, hit.limit) for hit in oversized] == [("", 1251, 1250)]
+
+
+def test_async_callable_limit_includes_decorators_and_nested_definitions() -> None:
+    source = "@decorate\nasync def exact():\n" + "    pass\n" * 148
+    assert length_hits("dev/async.py", source) == []
+    source = "async def outer():\n    @decorate\n    async def inner():\n" + "        pass\n" * 149
+    assert [(hit.name, hit.lines) for hit in length_hits("dev/async.py", source)] == [
+        ("outer", 152),
+        ("outer.inner", 151),
+    ]
+
+
+@pytest.mark.parametrize("threshold", [19, 21, 999])
+def test_gate_refuses_a_nonstandard_cognitive_threshold(
+    threshold: int, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr("sys.argv", ["complexity", "--gate", "--threshold", str(threshold)])
+    with pytest.raises(SystemExit) as caught:
+        complexity.main()
+    assert caught.value.code == 2
+    assert "fixed cognitive complexity threshold of 20" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("root_name", ["src", "dev"])
+def test_gate_detects_length_in_each_root_then_accepts_repair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], root_name: str
+) -> None:
+    roots = tuple(tmp_path / name for name in ("src", "dev"))
+    for root in roots:
+        root.mkdir()
+        (root / "module.py").write_text("VALUE = 1\n", encoding="utf-8")
+    oversized = tmp_path / root_name / "module.py"
+    oversized.write_text("# line\n" * 1251, encoding="utf-8")
+    monkeypatch.setattr(complexity, "FIRST_PARTY_ROOTS", tuple(root.as_posix() for root in roots))
+    monkeypatch.setattr("sys.argv", ["complexity", "--gate"])
+    assert complexity.main() == 1
+    assert f"1251 lines (limit 1250)  {oversized.as_posix()}" in capsys.readouterr().out
+    oversized.write_text("VALUE = 1\n", encoding="utf-8")
+    assert complexity.main() == 0
+    assert "0 current hotspot(s)" in capsys.readouterr().out
+
+
+def test_gate_refuses_an_unmeasurable_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (tmp_path / "broken.py").write_text("def broken(:", encoding="utf-8")
+    monkeypatch.setattr(complexity, "FIRST_PARTY_ROOTS", (tmp_path.as_posix(),))
+    monkeypatch.setattr("sys.argv", ["complexity", "--gate"])
+    assert complexity.main() == 7
+
+
+def test_gate_refuses_test_only_scope(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setattr("sys.argv", ["complexity", "--gate", "--tests"])
+    with pytest.raises(SystemExit) as caught:
+        complexity.main()
+    assert caught.value.code == 2
+    assert "full first-party production scope" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("detector", ["radon_visitors", "radon_complexity", "radon_metrics", "code_complexity"])
+def test_gate_reports_each_unavailable_detector(
+    detector: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    (tmp_path / "module.py").write_text("def sample():\n    return 1\n", encoding="utf-8")
+    monkeypatch.setattr(complexity, "FIRST_PARTY_ROOTS", (tmp_path.as_posix(),))
+    monkeypatch.setattr(complexity, detector, None)
+    monkeypatch.setattr("sys.argv", ["complexity", "--gate"])
+    assert complexity.main() == 7
+    assert "scan is incomplete and not clean" in capsys.readouterr().err
 
 
 def test_scan_projects_every_live_hit_without_a_disposition() -> None:
@@ -54,6 +131,13 @@ def test_cognitive_detector_turns_the_same_planted_function_red_then_green(monke
         lambda _source: SimpleNamespace(functions=[SimpleNamespace(name="planted", complexity=20)]),
     )
     assert cognitive_hits("pkg/module.py", source, 20) == []
+
+
+def test_empty_explicit_population_never_reads_as_clean() -> None:
+    with pytest.raises(FileNotFoundError, match="scan of nothing"):
+        complexity.scan_complexity(roots=())
+    with pytest.raises(IncompleteScanError, match="scan of nothing"):
+        measure_population((), cognitive_threshold=20)
 
 
 def test_population_refuses_an_empty_source_root(tmp_path: Path) -> None:

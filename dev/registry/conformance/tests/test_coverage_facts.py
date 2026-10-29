@@ -23,7 +23,8 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
-from ..coverage import build_model_law_coverage_ledger, coverage_facts
+from ..coverage import build_model_law_coverage_ledger
+from ..coverage_facts import coverage_facts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

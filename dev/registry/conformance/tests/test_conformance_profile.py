@@ -28,7 +28,7 @@ from cadrumo.core.export_layout_format import ExportLayoutFormat
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
-from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
+from cadrumo.domain.calculations.registry.export_xml_dictionary import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.modelo_obligation_scope import resolve_modelo_obligation_scope
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
@@ -40,18 +40,20 @@ from ...maintenance_support import (
     load_bundled_external_oracle_inventory,
     revision_selection_coordinates,
 )
+from ..annual_population import (
+    AnnualCasillaPopulationComparison,
+    compare_annual_casilla_population,
+    compare_annual_casilla_population_for_revision,
+)
 from ..errors import RegistryApplicationInputError
 from ..external_grounding import (
     RegistryExternalGroundingAudit,
     build_external_grounding_audit,
 )
 from ..profile import (
-    AnnualCasillaPopulationComparison,
     RegistryConformanceProfile,
     RevisionConformanceRow,
     build_registry_conformance_profile,
-    compare_annual_casilla_population,
-    compare_annual_casilla_population_for_revision,
 )
 from ..registry_classification_coherence import build_classification_coherence_audit
 from ._conformance_profile_fixtures import degraded_profile, validated_profile

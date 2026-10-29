@@ -30,10 +30,10 @@ from cadrumo.domain.calculations.registry.schema import (
     BindingDefinition,
     ModeloDefinition,
     ModeloRevision,
-    RegistryCatalogues,
     RegistrySnapshot,
 )
 from cadrumo.domain.calculations.registry.schema_base import EvidenceTier
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, FilingEnvelopePrefixRole
 from cadrumo.domain.calculations.registry.schema_extraction import BboxAnchorSpec, ExtractionTargetDefinition
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression

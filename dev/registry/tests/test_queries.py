@@ -13,7 +13,8 @@ from cadrumo.core.modelo import Modelo
 from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriodOffset
 from cadrumo.domain.calculations.registry.bindings_previous_filing import PreviousFilingProvider
 from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
-from cadrumo.domain.calculations.registry.queries import RegistryQueryService, ResolvedRegistryQueryContext
+from cadrumo.domain.calculations.registry.queries import RegistryQueryService
+from cadrumo.domain.calculations.registry.query_builders import ResolvedRegistryQueryContext
 from cadrumo.domain.calculations.registry.query_reports import (
     ModeloBindingsReport,
     ModeloCasillaDetailReport,

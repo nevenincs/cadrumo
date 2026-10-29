@@ -9,7 +9,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..unreachable_definitions import _definitions
+from ..unreachable_definitions import source_definitions
 from ..unreachable_frameworks import framework_contracts
 from ..unreachable_models import ShippedModule
 
@@ -41,7 +41,7 @@ raise RuntimeError('product modules must never execute')
 """,
     )
     contracts = framework_contracts({base.name: base, child.name: child})
-    definitions = {definition.qualname for definition in _definitions(child.tree, contracts[child.name])}
+    definitions = {definition.qualname for definition in source_definitions(child.tree, contracts[child.name])}
 
     assert definitions == {
         "Dialog",
@@ -59,14 +59,14 @@ def test_live_logging_override_is_bound_but_an_unrelated_method_is_reported() ->
     tree = ast.parse(path.read_bytes())
     module = ShippedModule("cadrumo.core.diagnostic_log", path, False, tree)
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
     assert "DiagnosticFormatter.formatTime" not in definitions
     formatter = next(
         node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "DiagnosticFormatter"
     )
     method = next(node for node in formatter.body if isinstance(node, ast.FunctionDef) and node.name == "formatTime")
     method.name = "orphan_time"
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
     assert "DiagnosticFormatter.orphan_time" in definitions
 
 
@@ -75,14 +75,14 @@ def test_live_rotating_handler_override_is_bound_but_an_unrelated_method_is_repo
     tree = ast.parse(path.read_bytes())
     module = ShippedModule("cadrumo.core.log_file_handler", path, False, tree)
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
     assert "AnnouncingRotatingFileHandler.emit" not in definitions
     handler = next(
         node for node in tree.body if isinstance(node, ast.ClassDef) and node.name == "AnnouncingRotatingFileHandler"
     )
     method = next(node for node in handler.body if isinstance(node, ast.FunctionDef) and node.name == "emit")
     method.name = "orphan_emit"
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
     assert "AnnouncingRotatingFileHandler.orphan_emit" in definitions
 
 
@@ -102,7 +102,7 @@ class Plain:
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert definitions == {"Origin", "Origin.PERSON", "Origin.unused", "Plain", "Plain._missing_"}
 
@@ -122,7 +122,7 @@ class Lookup(ColumnType[bytes]):
     )
     contracts = framework_contracts({module.name: module})
 
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert definitions == {"Lookup", "Lookup.UNUSED", "Lookup.unused"}
 
@@ -152,7 +152,7 @@ raise RuntimeError('product modules must never execute')
     )
     contracts = framework_contracts({module.name: module})
     contract = contracts[module.name]["Generator"]
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert "_build_definitions_remapping" in contract.members
     assert not contract.pydantic
@@ -170,7 +170,7 @@ def test_live_schema_generator_override_uses_the_installed_framework_contract() 
     tree = ast.parse(path.read_bytes())
     module = ShippedModule("cadrumo.application.operations.registry_schema_validation", path, False, tree)
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
 
     assert not contracts[module.name]["_UnambiguousDefinitionsSchemaGenerator"].pydantic
     assert "_UnambiguousDefinitionsSchemaGenerator._build_definitions_remapping" not in definitions
@@ -181,7 +181,7 @@ def test_live_checkbox_override_is_bound_and_a_renamed_member_is_reported() -> N
     tree = ast.parse(path.read_bytes())
     module = ShippedModule("cadrumo.entrypoints.tui.modelo.workbench.bulk_confirm", path, False, tree)
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
     assert "TickBox._button" not in definitions
     assert "BulkConfirmScreen.DEFAULT_CSS" not in definitions
     assert "BulkConfirmScreen.SCOPED_CSS" not in definitions
@@ -189,7 +189,7 @@ def test_live_checkbox_override_is_bound_and_a_renamed_member_is_reported() -> N
     for node in ast.walk(tree):
         if isinstance(node, ast.Name) and node.id == "DEFAULT_CSS" and isinstance(node.ctx, ast.Store):
             node.id = "UNUSED_CSS"
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
     assert "BulkConfirmScreen.UNUSED_CSS" in definitions
 
 
@@ -214,7 +214,7 @@ class Model(BaseModel):
     )
     module = ShippedModule("pkg.models", Path("models.py"), False, tree)
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(tree, contracts[module.name])}
 
     assert definitions == {"unused", "also_unused", "Model", "Model.unused_method"}
 
@@ -232,7 +232,7 @@ class Plain:
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert definitions == {"Record", "Record.unused", "Plain", "Plain._fields_"}
 
@@ -251,7 +251,7 @@ class Dialog(Form, Screen): pass
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert definitions == {"Form", "Form.unused", "Plain", "Plain.on_mount", "Dialog"}
 
@@ -270,7 +270,7 @@ class Settings(SettingsBase):
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert definitions == {"Settings", "Settings.unused"}
 
@@ -293,7 +293,7 @@ class Plain:
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
     assert definitions == {
         "Model",
         "Model.unused",
@@ -326,7 +326,7 @@ class Plain:
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
 
     assert definitions == {
         "Host",
@@ -356,5 +356,5 @@ class Plain:
 """,
     )
     contracts = framework_contracts({module.name: module})
-    definitions = {definition.qualname for definition in _definitions(module.tree, contracts[module.name])}
+    definitions = {definition.qualname for definition in source_definitions(module.tree, contracts[module.name])}
     assert definitions == {"Commands", "Commands.unused", "Plain", "Plain.format_commands"}
