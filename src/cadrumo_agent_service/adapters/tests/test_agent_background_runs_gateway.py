@@ -521,18 +521,11 @@ def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_cat
     assert installed.licence.spdx is None
 
     model_list = MemoryLocalModelListStore()
-    added = LocalModelListService(store=model_list, catalog_source=declared).add(
-        "ollama_api", model=_INSTALLED_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID
-    )
+    service = LocalModelListService(store=model_list, catalog_source=declared)
+    added = service.add("ollama_api", model=_INSTALLED_MODEL, expected_revision=ABSENT_SECURE_OBJECT_REVISION_ID)
     assert isinstance(added, LocalModelListStatus), added
-    live_entries = {entry.id: entry for entry in entries}
-    declared_models = {model.id for model in local.models}
-    usable = [
-        model
-        for model in dict.fromkeys((local.recommended.get("text", _INSTALLED_MODEL), *local.recommended.values()))
-        if (model in live_entries and live_entries[model].installed is not False)
-        or (model not in live_entries and model in declared_models)
-    ]
+    chosen = service.choose_reading("ollama_api", model=_INSTALLED_MODEL, expected_revision=added.revision)
+    assert isinstance(chosen, LocalModelListStatus), chosen
 
     def lookup(served: ServedCatalogModels, role: str) -> ModelRunLane | ModelRunRefusal:
         resolver = ProviderCredentialResolver(store=MemoryProviderSettingsStore(), catalog_source=declared)
@@ -546,8 +539,10 @@ def test_a_model_installed_on_the_local_server_is_read_with_through_the_live_cat
 
     text = lookup(live, "text_extraction")
     assert isinstance(text, ModelRunLane), text
-    assert text.model == (usable[0] if usable else _INSTALLED_MODEL)
-    vision = lookup(live, "vision_transcription")
-    assert not (isinstance(vision, ModelRunLane) and vision.model == _INSTALLED_MODEL)
-    stopped = lookup(ServedCatalogModels(lambda: None), "text_extraction")
-    assert not (isinstance(stopped, ModelRunLane) and stopped.model == _INSTALLED_MODEL)
+    assert text.model == _INSTALLED_MODEL
+    cannot_read_images = ModelRunRefusal(code=ModelRunRefusalCode.MODEL_CANNOT_READ_IMAGES)
+    assert lookup(live, "vision_transcription") == cannot_read_images
+    stopped = ServedCatalogModels(lambda: None)
+    stopped_text = lookup(stopped, "text_extraction")
+    assert isinstance(stopped_text, ModelRunLane) and stopped_text.model == _INSTALLED_MODEL
+    assert lookup(stopped, "vision_transcription") == cannot_read_images
