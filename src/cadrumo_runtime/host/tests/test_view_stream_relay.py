@@ -16,17 +16,22 @@ import time
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
-from threading import Thread
+from threading import Event, Thread
+from typing import cast
 from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.automation_codes import AutomationCustodyCode
 from cadrumo_client.contracts.contracts import ByteChannel, Peer, RefusalCode, RefusalError, ServerHello
-from cadrumo_client.contracts.profile_access import Request
+from cadrumo_client.contracts.login import LoginEvidence
+from cadrumo_client.contracts.operation_access import OperationContract
+from cadrumo_client.contracts.profile_access import AccessRefusal, Request
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.view_stream import (
     KeyAction,
@@ -65,6 +70,7 @@ from cadrumo_client.contracts.view_transfer import (
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
+from cadrumo_client.transport.tests.view_stream_peer import ViewDownstreamReader
 from cadrumo_client.transport.view_stream import (
     AssembledViewImage,
     ViewTransferChunk,
@@ -75,11 +81,12 @@ from cadrumo_client.transport.view_stream import (
     write_view_transfer_chunk,
     write_view_transfer_document,
 )
-from cadrumo_client.transport.view_stream_readers import ViewDownstreamReader
 
 from ...adapters.connection_handshake import accept_connection_handshake
 from ...adapters.worker_native_identity import worker_view_namespace
 from ...adapters.worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
+from ..profile_connection import ProfileConnection
+from ..profile_connections import RuntimeProfileConnections
 from ..view_stream_relay import ViewStreamRelay
 from ..view_stream_state import ViewAttachGrant
 from ..view_stream_worker_link import open_worker_view_leg
@@ -771,6 +778,82 @@ def test_view_attach_documents_travel_the_public_request_door() -> None:
         ViewConnect(request_id=uuid4(), operation_id=operation_id, attach_token=token.upper())
     with pytest.raises(ValueError, match="attach_token"):
         ViewConnect(request_id=uuid4(), operation_id=operation_id, attach_token=token[:62])
+
+
+def test_operation_and_view_doors_preserve_admission_refusal_order(tmp_path: Path) -> None:
+    """The two public doors share identity checks before view-specific admission."""
+    endpoint = worker_endpoint(storage_root=tmp_path, worker_namespace=uuid4())
+    endpoint.listen()
+    accepted: list[ByteChannel] = []
+    accepting = Thread(target=lambda: accepted.append(endpoint.accept(timeout=5)))
+    accepting.start()
+    client = endpoint.connect(timeout=5)
+    accepting.join(timeout=5)
+    assert len(accepted) == 1
+    server = accepted[0]
+    stop = Event()
+    profiles = RuntimeProfileConnections(
+        storage_root=tmp_path, storage_identity="a" * 64, runtime_boot_id=uuid4(), stop=stop, service_descriptors=()
+    )
+    context = ConnectionContext(uuid4(), profiles.boot, server.peer)
+    profile_id, session_id = uuid4(), uuid4()
+    connection = ProfileConnection(
+        context=context,
+        login=cast(LoginEvidence, object()),
+        client_id=uuid4(),
+        profile_id=profile_id,
+        frontend=OperationFrontendProjection.TUI,
+        session_id=session_id,
+    )
+    profiles._connections[context.connection_id] = connection
+
+    def refusal(request_context: ConnectionContext, *, profile: UUID, session: UUID, view: bool) -> object:
+        request_id = uuid4()
+        if view:
+            profiles.view_attach(
+                request_context,
+                server,
+                ViewAttachRequest(
+                    request_id=request_id, profile_id=profile, session_id=session, operation_id=_operation_id()
+                ),
+            )
+        else:
+            profiles.operation(
+                request_context,
+                server,
+                OperationContract(
+                    request_id=request_id,
+                    profile_id=profile,
+                    session_id=session,
+                    definition_id="user-profile.field-mutation",
+                ),
+            )
+        result = read_document(client, AccessRefusal, deadline=time.monotonic() + 5)
+        assert result.request_id == request_id
+        return result.code
+
+    try:
+        untrusted = ConnectionContext(
+            context.connection_id, context.runtime_boot_id, Peer(os_owner_id="other-owner", process_id=1)
+        )
+        for view in (False, True):
+            assert refusal(untrusted, profile=uuid4(), session=uuid4(), view=view) is RefusalCode.PEER_UNTRUSTED
+            assert refusal(context, profile=uuid4(), session=uuid4(), view=view) is AccessDenialCode.PROFILE_MISMATCH
+            assert (
+                refusal(context, profile=profile_id, session=uuid4(), view=view) is AccessDenialCode.CONNECTION_MISMATCH
+            )
+        # A non-desktop view refuses before missing-host lookup; ordinary operations do not require desktop.
+        assert refusal(context, profile=profile_id, session=session_id, view=True) is AccessDenialCode.FRONTEND_DENIED
+        assert refusal(context, profile=profile_id, session=session_id, view=False) is AutomationCustodyCode.UNAVAILABLE
+        connection.frontend = OperationFrontendProjection.DESKTOP
+        assert refusal(context, profile=profile_id, session=session_id, view=True) is AutomationCustodyCode.UNAVAILABLE
+        stop.set()
+        for view in (False, True):
+            assert refusal(context, profile=uuid4(), session=uuid4(), view=view) is RefusalCode.DRAINING
+    finally:
+        client.close()
+        server.close()
+        endpoint.close()
 
 
 def _transfer_window(window: _Window) -> tuple[ViewDownstreamReader, ViewTransferReceiver]:

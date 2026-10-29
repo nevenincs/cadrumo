@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:d158cb30f14e85ab3aeb3a1edde383e0f3757ea2da9dae3805b1e3e2317b8827'
+body_hash: 'sha256:eac31c29ac62a59ab13dacfd85136188f569f0dd4b567c0781cf8fab1fcacaac'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -63,8 +63,23 @@ related:
 - `S03` `verify:` `filed capture owning and complementary pytest 59 cases` -> `pass`
 - `S03` `verify:` `scoped Ruff check and format and Windows ty` -> `pass`
 - `S03` `by:` `Terra 6.1 xhigh`
+- `S04` `M` `src/cadrumo_runtime/host/profile_connection_operations.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/test_view_stream_relay.py`
+- `S04` `M` `src/cadrumo_runtime/host/tests/test_profile_connections.py`
+- `S04` `verify:` `runtime view stream integration pytest 26 cases` -> `pass`
+- `S04` `verify:` `runtime profile connections integration pytest 5 cases` -> `pass`
+- `S04` `verify:` `three-file Ruff check and format and Windows ty` -> `pass`
+- `S04` `by:` `Terra 6.1 xhigh`
+- `S05` `M` `src/cadrumo/application/workbench_generation_reader.py`
+- `S05` `M` `src/cadrumo/application/tests/test_workbench_generation.py`
+- `S05` `verify:` `workbench generation and capture-memory pytest 46 cases` -> `pass`
+- `S05` `verify:` `workbench capture order and phase controls 5 cases` -> `pass`
+- `S05` `verify:` `two-file Ruff check and format and Windows ty` -> `pass`
+- `S05` `by:` `Sol 6.1 high`
 
 ## Notes
 
 - `S02` Generated metadata was adopted by concurrent commit 29d0663d16; no foreign metadata hunks restaged.
 - `S03` Production mapping and bulk test adopted by concurrent commit b6e52594fb alongside foreign output-root feature; checkpoint retains remaining test delta.
+- `S04` Existing worker-loss writer thread warning `CONNECTION_CLOSED` retained in test evidence.
+- `S05` Reader source adopted by concurrent commit b9003df9be with foreign calendar/staleness changes preserved; authored patch and receipt retain attribution.

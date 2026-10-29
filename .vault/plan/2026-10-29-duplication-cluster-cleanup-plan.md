@@ -12,7 +12,7 @@ related:
   - '[[2026-10-02-duplication-remediation-plan]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:68fc04a6fb87ff2c9c0f889679cdb1321562b71a6d5cf49785d018d7ed8085fa'
+body_hash: 'sha256:380bf91206d8133513e9de6177c7406d87e873a2f36df8028b62b6b408e2e425'
 ---
 
 # `duplication-cluster-cleanup` plan
@@ -34,9 +34,10 @@ The accepted canonical-module decision governs all extraction and atomic consume
 - [x] `S01` - Consolidate AEAT Sync table repaint without changing interaction lifetime or localization behavior; `src/cadrumo/entrypoints/tui/aeat_sync/screens.py and owning tests/test_aeat_sync_workspace.py`.
 - [x] `S02` - Unify Workspace baseline assembly with exact byte and contributor-order equivalence; `src/cadrumo/application/modelo/workspace_schema.py, workspace_graded.py, new workspace_baseline.py, tests/test_workspace_baseline.py and src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`.
 - [x] `S03` - Centralize filed-capture CLI payload projection while preserving each command's scope and error protection; `src/cadrumo/entrypoints/cli/app_live_commands.py owned helper and three constructor mappings, plus tests/test_operation_filed_single.py, test_operation_filed_bulk.py and test_operation_filed_source.py`.
-- [ ] `S04` - Share exact profile-connection admission checks while retaining desktop-only and guarded-status behavior; `src/cadrumo_runtime/host/profile_connection_operations.py, host/tests/test_view_stream_relay.py and host/tests/test_profile_connections.py`.
-- [ ] `S05` - Share the ordered workbench source capture leaf while preserving generation-specific consistency checks; `src/cadrumo/application/workbench_generation_reader.py and application/tests/test_workbench_generation.py`.
+- [x] `S04` - Share exact profile-connection admission checks while retaining desktop-only and guarded-status behavior; `src/cadrumo_runtime/host/profile_connection_operations.py, host/tests/test_view_stream_relay.py and host/tests/test_profile_connections.py`.
+- [x] `S05` - Share the ordered workbench source capture leaf while preserving generation-specific consistency checks; `src/cadrumo/application/workbench_generation_reader.py and application/tests/test_workbench_generation.py`.
 - [ ] `S06` - Share explicit-kind cleanup matching, durable intent preparation and its ambient storage/mutation scope; `src/cadrumo/application/auth/operator_cleanup.py, operator_revocation.py, new auth/tests/test_operator_cleanup_matching.py and adapters/persistence/profile/tests/test_operator_transaction_recovery.py for the proven writer-ready synchronization repair`.
+- [ ] `S07` - Correct the reader-consumer negative oracle to require the actual refusal evidence mismatch; `src/cadrumo/entrypoints/tests/test_reader_consumer_gating.py wrong-code assertion, matching explanation and targeted verification`.
 
 ## Parallelization
 

@@ -407,6 +407,20 @@ class ProfileConnectionOperationMixin:
         channel: ByteChannel,
         request: OperationRequest,
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
+        connection = self._request_connection(context, channel, request)
+        with self._guard:
+            host = self._profiles.get(connection.profile_id)
+        if host is None:
+            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
+        return connection, host
+
+    def _request_connection(
+        self: RuntimeProfileConnections,
+        context: ConnectionContext,
+        channel: ByteChannel,
+        request: OperationRequest | ViewAttachRequest,
+    ) -> ProfileConnection:
+        """Check the shared native peer, runtime and exact profile session."""
         if context.runtime_boot_id != self.boot or context.peer != channel.peer:
             raise RefusalError(RefusalCode.PEER_UNTRUSTED)
         if not self._admitting():
@@ -416,11 +430,7 @@ class ProfileConnectionOperationMixin:
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         if connection.session_id != request.session_id:
             raise ProfileAccessRefusedError(_session_mismatch(connection))
-        with self._guard:
-            host = self._profiles.get(connection.profile_id)
-        if host is None:
-            raise AutomationCustodyError(AutomationCustodyCode.UNAVAILABLE)
-        return connection, host
+        return connection
 
     def _operation_reply(
         self: RuntimeProfileConnections,
@@ -621,15 +631,7 @@ class ProfileConnectionOperationMixin:
         self: RuntimeProfileConnections, context: ConnectionContext, channel: ByteChannel, request: ViewAttachRequest
     ) -> tuple[ProfileConnection, RuntimeProfileHost]:
         """Require the exact desktop person connection, its profile and its current session."""
-        if context.runtime_boot_id != self.boot or context.peer != channel.peer:
-            raise RefusalError(RefusalCode.PEER_UNTRUSTED)
-        if not self._admitting():
-            raise RefusalError(RefusalCode.DRAINING)
-        connection = self._connected(context.connection_id)
-        if connection.context != context or connection.profile_id != request.profile_id:
-            raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-        if connection.session_id != request.session_id:
-            raise ProfileAccessRefusedError(_session_mismatch(connection))
+        connection = self._request_connection(context, channel, request)
         if connection.frontend is not OperationFrontendProjection.DESKTOP:
             raise ProfileAccessRefusedError(AccessDenialCode.FRONTEND_DENIED)
         with self._guard:

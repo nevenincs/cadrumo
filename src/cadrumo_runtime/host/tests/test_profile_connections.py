@@ -81,6 +81,8 @@ from cadrumo_client.contracts.profile_access import (
     SessionsLocked,
 )
 from cadrumo_client.contracts.sign_in import HumanSignedOut
+from cadrumo_client.contracts.view_stream import ViewAttachRequest
+from cadrumo_client.transport.frame_io import write_document
 from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
@@ -765,6 +767,32 @@ def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not
                 )
                 assert isinstance(uncertain, ProfileStatus)
                 assert uncertain.status.denial is AccessDenialCode.OS_SESSION_UNAVAILABLE
+                connection = profiles._connections[uncertain.connection_id]
+                assert connection.frontend is OperationFrontendProjection.CLI
+
+                def attach_refusal() -> AccessRefusal:
+                    request = ViewAttachRequest(
+                        request_id=uuid4(),
+                        profile_id=profile,
+                        session_id=session_id,
+                        operation_id=content_hash_hex({"view": "synthetic"}),
+                    )
+                    deadline = time.monotonic() + 5
+                    with client._exchange(deadline=deadline):
+                        write_document(client._channel, request, deadline=deadline)
+                        reply = client._reply(request.request_id, deadline=deadline).root
+                    assert isinstance(reply, AccessRefusal)
+                    return reply
+
+                # Frontend refusal precedes the uncertain session status. Once
+                # the trusted host binding is desktop, that status still stops
+                # the request before any view worker leg is opened.
+                assert attach_refusal().code is AccessDenialCode.FRONTEND_DENIED
+                connection.frontend = OperationFrontendProjection.DESKTOP
+                try:
+                    assert attach_refusal().code is AccessDenialCode.OS_SESSION_UNAVAILABLE
+                finally:
+                    connection.frontend = OperationFrontendProjection.CLI
                 native_login.lock_state = OsLockState.UNLOCKED
                 native_login.unattended = LoginEligibility.ELIGIBLE
                 recovered = client.session(
