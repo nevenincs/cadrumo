@@ -23,12 +23,12 @@ from .posix import (
 from .posix_assembly import PosixAssemblyResult, assemble
 
 
-def _validate_elf(path: Path, machine: int, floor: tuple[int, ...], readelf: str) -> None:
+def _validate_elf(path: Path, machine: int, floor: tuple[int, ...], tools: dict[str, Any]) -> None:
     with path.open("rb") as source:
         header = source.read(20)
     if len(header) != 20 or header[:6] != b"\x7fELF\x02\x01" or struct.unpack_from("<H", header, 18)[0] != machine:
         raise ValueError(f"Wrong ELF architecture or ABI: {path}")
-    versions = command(readelf, "--version-info", str(path))
+    versions = command(tools["readelf"], "--version-info", str(path))
     for version in re.findall(r"\bGLIBC_([A-Za-z0-9_.]+)", versions):
         if not re.fullmatch(r"\d+\.\d+(?:\.\d+)?", version):
             raise ValueError(f"ELF uses an unadmitted glibc ABI requirement: {path}: {version}")
@@ -73,7 +73,7 @@ def relocate(images: list[Path], root: Path, contract: dict[str, Any]) -> None:
     machine = {"x86_64": 62, "aarch64": 183}[target.platform_machine]
     floor = (*map(int, target.floor.removeprefix("glibc-").split(".")), 0)
     for path in images:
-        _validate_elf(path, machine, floor, tools["readelf"])
+        _validate_elf(path, machine, floor, tools)
         needed = command(tools["patchelf"], "--print-needed", str(path)).splitlines()
         directories = _needed_directories(path, root, desktop, external, system, names, needed)
         if directories:
