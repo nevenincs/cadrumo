@@ -362,7 +362,7 @@ wizard:
         help: Razón social de la persona jurídica para cabeceras de exportación
       llm-vision:
         help: Permitir leer documentos escaneados o en imagen con el modelo de lectura
-          de imágenes elegido en la aplicación de escritorio.
+          de imágenes elegido.
       modelo-111-no-retenciones-periods:
         help: Periodos Modelo 111 sin obligación, separados por comas, formato AAAA:PERIODO
           (por ejemplo 2025:2T,2025:3T). Usar solo cuando no se pagaron rentas sujetas.

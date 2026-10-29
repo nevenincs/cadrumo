@@ -1205,8 +1205,7 @@ errors:
     refused_ledger_evidence_input: Un dato de evidencia indicado infringe el contrato
       de la factura de compra. Corrige la entrada y vuelve a intentarlo.
     refused_ledger_evidence_local_ai_not_ready: La IA local no está lista, así que
-      no se ha leído nada. Configura la IA local en la aplicación de escritorio de
-      Cadrumo y vuelve a intentarlo.
+      no se ha leído nada. Vuelve a intentarlo cuando esté lista.
     refused_ledger_evidence_not_found: No existe ninguna evidencia de factura de compra
       con el identificador indicado.
     refused_ledger_evidence_page_digest_mismatch: El documento guardado no coincide
@@ -1222,8 +1221,7 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Solo los documentos PDF, JPEG
       y PNG se pueden mostrar como página.
     refused_ledger_evidence_reader_unavailable: El lector automático no ha podido
-      funcionar, así que no se ha leído nada. Revisa el modelo que elegiste en el
-      selector de modelos del agente en la aplicación de escritorio de Cadrumo y vuelve
+      funcionar, así que no se ha leído nada. Revisa el modelo que elegiste y vuelve
       a intentarlo.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documentos respondió
       en un formato que este comando no ha podido leer, así que no se ha tomado nada
@@ -1250,10 +1248,8 @@ errors:
     refused_llm_contention: El modelo con el que lee Cadrumo no cabe ahora mismo en
       la memoria libre de este equipo. Cierra otros programas y vuelve a intentarlo.
     refused_llm_model_cannot_read_images: El modelo que elegiste no puede leer imágenes.
-      Elige un modelo que pueda leer imágenes en el selector de modelos del agente
-      en la aplicación de escritorio de Cadrumo y vuelve a intentarlo.
+      Elige un modelo que pueda leer imágenes y vuelve a intentarlo.
     refused_llm_no_model_selected: No has elegido ningún modelo para leer. Elige uno
-      en el selector de modelos del agente en la aplicación de escritorio de Cadrumo
       y vuelve a intentarlo.
     refused_llm_validation: Un objeto del modelo de lenguaje no superó la validación.
     refused_modelo_100_borrador_binding: Los valores del borrador de Modelo 100 no

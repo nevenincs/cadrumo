@@ -665,11 +665,10 @@ application:
       label_reading:
         local_ai_not_ready: 'La IA local no està a punt, així que els %{count} camps
           que les etiquetes no cobrien no s''han llegit i queden buits: %{fields}.
-          Configura-la a l''aplicació d''escriptori de Cadrumo i torna a extreure.'
+          Torna a extreure quan estigui a punt.'
         reader_unavailable: 'El lector automàtic no ha pogut funcionar, així que els
           %{count} camps que les etiquetes no cobrien queden buits: %{fields}. Revisa
-          el model que has triat al selector de models de l''agent a l''aplicació
-          d''escriptori de Cadrumo i torna a extreure, o emplena''ls tu.'
+          el model que has triat i torna a extreure, o emplena''ls tu.'
   live:
     borrador:
       errors:

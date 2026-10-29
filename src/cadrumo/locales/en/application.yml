@@ -618,12 +618,11 @@ application:
           the stored invoice instead of confirming the same document twice.'
       label_reading:
         local_ai_not_ready: 'Local AI is not ready, so the %{count} field(s) the labels
-          did not cover were not read and stay empty: %{fields}. Set it up in the
-          Cadrumo desktop app, then extract again.'
+          did not cover were not read and stay empty: %{fields}. Extract again once
+          it is ready.'
         reader_unavailable: 'The automatic reader could not run, so the %{count} field(s)
           the labels did not cover stay empty: %{fields}. Check the model you picked
-          in the agent''s model picker in the Cadrumo desktop app and extract again,
-          or fill them in yourself.'
+          and extract again, or fill them in yourself.'
   live:
     borrador:
       errors:

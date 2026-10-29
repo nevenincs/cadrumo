@@ -5917,8 +5917,7 @@ tui:
             again.'
           reader_unavailable: 'The automatic reader could not start. {count} field(s)
             the labels did not cover have not been read yet and stay empty: {fields}.
-            Check the model you picked in the agent''s model picker in the Cadrumo
-            desktop app, then read the document again.'
+            Check the model you picked, then read the document again.'
         line: '{index}. {description} · quantity: {quantity} · unit price: {unit_price}
           · base: {base} · rate: {rate} · IVA: {iva} · surcharge rate: {recargo_rate}
           · surcharge: {recargo}'
@@ -6036,8 +6035,7 @@ tui:
             were not. Run it again after fixing the refused ones; stored documents
             are not stored twice.'
           paused: The model you picked could not read the paused documents. Check
-            it in the agent's model picker in the Cadrumo desktop app, then run the
-            batch again to finish them.
+            the model you picked, then run the batch again to finish them.
           paused_local_ai_not_ready: Local AI, which reads the paused documents, is
             not ready. Run the batch again once it is ready to finish them.
           writes: 'Records written: {count}.'
@@ -6272,8 +6270,7 @@ tui:
         reader_unavailable: the local AI, which reads this file, is not ready, so
           the file was not read
         reader_unavailable_here: the model you picked is not available right now,
-          so the file was not read; check it in the agent's model picker in the Cadrumo
-          desktop app
+          so the file was not read; try again once it is available
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
           imported; preview it again

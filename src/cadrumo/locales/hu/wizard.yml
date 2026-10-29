@@ -375,8 +375,8 @@ wizard:
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
       llm-vision:
-        help: Beolvasott vagy kép alapú dokumentumok olvasásának engedélyezése az
-          asztali alkalmazásban kiválasztott képolvasó modellel.
+        help: Beolvasott vagy kép alapú dokumentumok olvasásának engedélyezése a kiválasztott
+          képolvasó modellel.
       modelo-111-no-retenciones-periods:
         help: Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
           formátumban (például 2025:2T,2025:3T). Csak akkor használd, ha nem történt

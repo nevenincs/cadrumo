@@ -362,7 +362,7 @@ wizard:
         help: Raó social de la persona jurídica per a capçaleres d'exportació
       llm-vision:
         help: Permetre llegir documents escanejats o en imatge amb el model de lectura
-          d'imatges triat a l'aplicació d'escriptori.
+          d'imatges triat.
       modelo-111-no-retenciones-periods:
         help: Períodes Model 111 sense obligació, separats per comes, format AAAA:Període
           (per exemple 2025:2T,2025:3T). Fes-ho servir només quan no es van pagar

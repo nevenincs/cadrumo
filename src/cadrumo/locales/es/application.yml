@@ -667,12 +667,10 @@ application:
       label_reading:
         local_ai_not_ready: 'La IA local no está lista, así que los %{count} campo(s)
           que las etiquetas no cubrían no se han leído y siguen vacíos: %{fields}.
-          Configura la IA local en la aplicación de escritorio de Cadrumo y vuelve
-          a extraer.'
+          Vuelve a extraer cuando esté lista.'
         reader_unavailable: 'El lector automático no ha podido funcionar, así que
           los %{count} campo(s) que las etiquetas no cubrían siguen vacíos: %{fields}.
-          Revisa el modelo que elegiste en el selector de modelos del agente en la
-          aplicación de escritorio de Cadrumo y vuelve a extraer, o rellénalos tú.'
+          Revisa el modelo que elegiste y vuelve a extraer, o rellénalos tú.'
   live:
     borrador:
       errors:

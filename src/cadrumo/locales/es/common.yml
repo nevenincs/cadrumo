@@ -6033,8 +6033,7 @@ tui:
             leer el documento.'
           reader_unavailable: 'El lector automático no pudo iniciarse. {count} campo(s)
             que las etiquetas no cubrían aún no se han leído y siguen vacíos: {fields}.
-            Revisa el modelo que elegiste en el selector de modelos del agente en
-            la aplicación de escritorio de Cadrumo y vuelve a leer el documento.'
+            Revisa el modelo que elegiste y vuelve a leer el documento.'
         line: '{index}. {description} · cantidad: {quantity} · precio unitario: {unit_price}
           · base: {base} · tipo: {rate} · IVA: {iva} · tipo de recargo: {recargo_rate}
           · recargo: {recargo}'
@@ -6157,8 +6156,7 @@ tui:
             no. Vuelve a lanzarlo después de corregir los rechazados; los documentos
             guardados no se guardan dos veces.'
           paused: El modelo que elegiste no ha podido leer los documentos en pausa.
-            Revísalo en el selector de modelos del agente en la aplicación de escritorio
-            de Cadrumo y vuelve a lanzar el lote para terminarlos.
+            Revisa el modelo que elegiste y vuelve a lanzar el lote para terminarlos.
           paused_local_ai_not_ready: La IA local, que lee los documentos en pausa,
             no está lista. Vuelve a lanzar el lote cuando esté lista para terminarlos.
           writes: 'Registros escritos: {count}.'
@@ -6401,8 +6399,7 @@ tui:
         reader_unavailable: la IA local, que lee este fichero, no está lista, así
           que no se leyó el fichero
         reader_unavailable_here: el modelo que elegiste no está disponible ahora mismo,
-          así que no se leyó el fichero; revísalo en el selector de modelos del agente
-          en la aplicación de escritorio de Cadrumo
+          así que no se leyó el fichero; vuelve a intentarlo cuando esté disponible
         result_limit: la importación alcanzó su límite de filas antes de este fichero
         source_changed: el fichero cambió después de la previsualización y no se importó
           nada de él; vuelve a previsualizarlo

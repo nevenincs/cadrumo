@@ -6020,8 +6020,7 @@ tui:
             a llegir el document.'
           reader_unavailable: 'El lector automàtic no s''ha pogut iniciar. {count}
             camps que les etiquetes no cobrien encara no s''han llegit i queden buits:
-            {fields}. Revisa el model que has triat al selector de models de l''agent
-            a l''aplicació d''escriptori de Cadrumo i torna a llegir el document.'
+            {fields}. Revisa el model que has triat i torna a llegir el document.'
         line: '{index}. {description} · quantitat: {quantity} · preu unitari: {unit_price}
           · base: {base} · tipus: {rate} · IVA: {iva} · tipus de recàrrec: {recargo_rate}
           · recàrrec: {recargo}'
@@ -6143,8 +6142,7 @@ tui:
             no. Torna a llançar-lo després de corregir els rebutjats; els documents
             desats no es desen dues vegades.'
           paused: El model que has triat no ha pogut llegir els documents en pausa.
-            Revisa'l al selector de models de l'agent a l'aplicació d'escriptori de
-            Cadrumo i torna a llançar el lot per acabar-los.
+            Revisa el model que has triat i torna a llançar el lot per acabar-los.
           paused_local_ai_not_ready: La IA local, que llegeix els documents en pausa,
             no està a punt. Torna a llançar el lot quan estigui a punt per acabar-los.
           writes: 'Registres escrits: {count}.'
@@ -6384,8 +6382,7 @@ tui:
         reader_unavailable: la IA local, que llegeix aquest fitxer, no està a punt,
           així que no s'ha llegit el fitxer
         reader_unavailable_here: el model que has triat no està disponible ara mateix,
-          així que no s'ha llegit el fitxer; revisa'l al selector de models de l'agent
-          a l'aplicació d'escriptori de Cadrumo
+          així que no s'ha llegit el fitxer; torna-ho a provar quan estigui disponible
         result_limit: la importació ha arribat al límit de files abans d'aquest fitxer
         source_changed: el fitxer ha canviat després de la previsualització i no se
           n'ha importat res; torna a previsualitzar-lo

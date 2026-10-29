@@ -352,7 +352,7 @@ wizard:
         help: Legal or company name for legal-entity export headers
       llm-vision:
         help: Allow reading scanned or image documents with the image-reading model
-          selected in the desktop app.
+          you selected.
       modelo-111-no-retenciones-periods:
         help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
           (for example 2025:2T,2025:3T). Use only when no subject payments were made.

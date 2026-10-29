@@ -1116,7 +1116,7 @@ errors:
     refused_ledger_evidence_input: An evidence input provided violates the purchase-invoice
       contract. Correct the input and try again.
     refused_ledger_evidence_local_ai_not_ready: Local AI is not ready, so nothing
-      was read. Set it up in the Cadrumo desktop app, then try again.
+      was read. Try again once it is ready.
     refused_ledger_evidence_not_found: No purchase-invoice evidence exists with the
       identifier provided.
     refused_ledger_evidence_page_digest_mismatch: The stored document does not match
@@ -1132,8 +1132,7 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Only PDF, JPEG and PNG documents
       can be shown as a page.
     refused_ledger_evidence_reader_unavailable: The automatic reader could not run,
-      so nothing was read. Check the model you picked in the agent's model picker
-      in the Cadrumo desktop app, then try again.
+      so nothing was read. Check the model you picked, then try again.
     refused_ledger_evidence_reader_unreadable_answer: The document reader answered
       in a form this command could not read, so nothing was taken from the document.
       Nothing was saved; run the command again, and if it keeps happening the reader
@@ -1158,10 +1157,9 @@ errors:
     refused_llm_contention: The model Cadrumo reads with does not fit in this computer's
       free memory right now. Close other programs, then try again.
     refused_llm_model_cannot_read_images: The model you picked can't read images.
-      Pick a model that can read images in the agent's model picker in the Cadrumo
-      desktop app, then try again.
-    refused_llm_no_model_selected: No model is picked to read with. Pick one in the
-      agent's model picker in the Cadrumo desktop app, then try again.
+      Pick a model that can read images, then try again.
+    refused_llm_no_model_selected: No model is picked to read with. Pick one, then
+      try again.
     refused_llm_validation: A language-model object failed validation.
     refused_modelo_100_borrador_binding: The Modelo 100 borrador values cannot be
       consumed for the calculation.
