@@ -79,12 +79,24 @@ test("a window link opens its page and gives it the keyboard", async ({
 
 test("a view only the TUI had says why and opens nothing", async ({ page }) => {
   await linksReply(page, "signed-in");
-  await link(page, "la sincronización con la AEAT").click();
+  await link(page, "las operaciones").click();
   await expect(windowToast(page)).toHaveText(
     label("desktop.navigation.refused.not_implemented", {
-      view: label("navigation.view.aeat_sync.label"),
+      view: label("navigation.view.operations.label"),
     }),
   );
+  await noLinkLeftTheWindow(page);
+});
+
+test("a link to the AEAT data opens its page and gives it the keyboard", async ({
+  page,
+}) => {
+  await linksReply(page, "signed-in");
+  await link(page, "los datos de la AEAT").click();
+  const aeat = page.locator(".aeat-sync-page");
+  await expect(aeat).toBeVisible();
+  await expect(aeat).toBeFocused();
+  await expect(windowToast(page)).toHaveText("");
   await noLinkLeftTheWindow(page);
 });
 
