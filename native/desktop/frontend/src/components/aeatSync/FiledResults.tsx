@@ -108,9 +108,6 @@ export function FiledResults({
     );
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground">
-        {t("desktop.aeat_sync.results.filed.note")}
-      </p>
       {GROUPS.map((match) => {
         const group = rows.filter((row) => row.match === match);
         if (group.length === 0) return null;
@@ -138,9 +135,6 @@ export function FiledResults({
         ) : (
           <section key={match} data-group={match} aria-label={heading}>
             <h4 className="text-base font-medium text-foreground">{heading}</h4>
-            <p className="text-sm text-muted-foreground">
-              {t(`desktop.aeat_sync.results.filed.group_about.${match}`)}
-            </p>
             {list}
           </section>
         );

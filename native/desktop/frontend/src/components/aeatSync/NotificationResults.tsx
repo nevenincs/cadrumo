@@ -35,15 +35,13 @@ function Row({ row, language }: { row: NotificationRow; language: string }) {
             date: received,
           })}
         </span>
-        <span className="block text-sm text-muted-foreground">
-          {row.read
-            ? readOn
-              ? t("desktop.aeat_sync.results.notifications.read_on", {
-                  date: readOn,
-                })
-              : t("desktop.aeat_sync.results.notifications.read")
-            : t("desktop.aeat_sync.results.notifications.unread_about")}
-        </span>
+        {readOn && (
+          <span className="block text-sm text-muted-foreground">
+            {t("desktop.aeat_sync.results.notifications.read_on", {
+              date: readOn,
+            })}
+          </span>
+        )}
       </span>
     </li>
   );

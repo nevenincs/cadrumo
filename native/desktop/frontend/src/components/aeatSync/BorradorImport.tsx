@@ -48,9 +48,6 @@ export function BorradorImport({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-3">
-        <p className="min-w-0 flex-1 basis-56 text-base text-foreground">
-          {t("desktop.aeat_sync.results.borrador.about")}
-        </p>
         <Button
           size="xs"
           variant="outline"

@@ -71,7 +71,9 @@ function ending(t: Translate, result: AeatSyncResult): string {
     case "unknown":
       return t("desktop.aeat_sync.results.unknown");
     case "nothing_found":
-      return t("desktop.aeat_sync.results.nothing_found");
+      return result.area === "borrador"
+        ? ""
+        : t("desktop.aeat_sync.results.nothing_found");
     case "brought":
       return news(t, result).length === 0
         ? t("desktop.aeat_sync.results.nothing_new")
@@ -79,7 +81,7 @@ function ending(t: Translate, result: AeatSyncResult): string {
   }
 }
 
-function partName(t: Translate, part: AeatSyncFailedPart): string {
+function partName(t: Translate, part: AeatSyncFailedPart): string | null {
   if (part.form !== null && part.year !== null)
     return t("desktop.aeat_sync.results.part.form", {
       form: part.form,
@@ -87,7 +89,7 @@ function partName(t: Translate, part: AeatSyncFailedPart): string {
     });
   if (part.year !== null)
     return t("desktop.aeat_sync.results.part.year", { year: part.year });
-  return t("desktop.aeat_sync.results.part.all");
+  return null;
 }
 
 /**
@@ -171,9 +173,6 @@ export const Results = memo(function Results({
       className="@container/aeat flex flex-col gap-3"
       data-testid="aeat-sync-results"
     >
-      <p className="text-sm text-muted-foreground">
-        {t("desktop.aeat_sync.results.read_only")}
-      </p>
       <ul
         aria-label={t("desktop.aeat_sync.results.title")}
         className="flex flex-col gap-3"
@@ -214,6 +213,11 @@ export const Results = memo(function Results({
                     </p>
                   )}
                 </span>
+                {result.area === "census" && result.review_pending && (
+                  <Button size="xs" onClick={onReviewCensus}>
+                    {t("desktop.aeat_sync.results.census_review")}
+                  </Button>
+                )}
                 {result.outcome === "failed" && result.failed.length > 1 && (
                   <Button
                     size="xs"
@@ -249,10 +253,18 @@ export const Results = memo(function Results({
                         className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-md bg-accent px-3 py-2"
                       >
                         <span className="min-w-0 flex-1 basis-56">
-                          <span className="block text-sm font-medium text-foreground">
-                            {label}
-                          </span>
-                          <span className="block text-sm text-muted-foreground">
+                          {label && (
+                            <span className="block text-sm font-medium text-foreground">
+                              {label}
+                            </span>
+                          )}
+                          <span
+                            className={
+                              label
+                                ? "block text-sm text-muted-foreground"
+                                : "block text-sm text-foreground"
+                            }
+                          >
                             {t(
                               `desktop.aeat_sync.results.reason.${part.reason}`,
                             )}
@@ -265,7 +277,7 @@ export const Results = memo(function Results({
                           aria-label={t(
                             "desktop.aeat_sync.results.retry_named",
                             {
-                              name: label,
+                              name: label ?? name,
                             },
                           )}
                           onClick={() => void retry(result.area, part.part)}
@@ -297,16 +309,6 @@ export const Results = memo(function Results({
                       : "desktop.aeat_sync.results.retry_failed",
                   )}
                 </Alert>
-              )}
-              {result.area === "census" && result.review_pending && (
-                <div className="flex flex-wrap items-center gap-3">
-                  <p className="min-w-0 flex-1 basis-56 text-base text-foreground">
-                    {t("desktop.aeat_sync.results.census_waiting")}
-                  </p>
-                  <Button size="xs" onClick={onReviewCensus}>
-                    {t("desktop.aeat_sync.results.census_review")}
-                  </Button>
-                </div>
               )}
               {result.area === "filed" && (
                 <FiledResults rows={data.filed} language={language} />
