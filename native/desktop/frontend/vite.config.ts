@@ -1,4 +1,4 @@
-import { buildPath } from "../scripts/build-paths.mjs";
+import { buildPath, requireBuildOutput } from "../scripts/build-paths.mjs";
 import { identity as readIdentity, server } from "../scripts/configuration.mjs";
 import { docsFixture } from "./dev/docs-fixture/plugin.ts";
 import { productBoundary } from "./dev/product-boundary.ts";
@@ -64,23 +64,29 @@ export default defineConfig(({ command, mode }) => {
         index: resolve(root, "index.html"),
         startup: resolve(root, "startup.html"),
       };
+  const cacheDirectory = requireBuildOutput(
+    scenarios
+      ? resolve(buildPath("desktop_cache"), "scenarios")
+      : buildPath("desktop_cache"),
+  );
+  const outputDirectory = requireBuildOutput(
+    scenarios
+      ? (testRunScenariosBuild(buildPath("desktop_results")) ??
+          resolve(buildPath("desktop_testing"), "scenarios"))
+      : buildPath("desktop_frontend"),
+  );
   return {
     base: "./",
     // A development server keeps its optimized dependencies here, keyed by the
     // mode among other things, and a server of another mode would discard them.
     // The test server of mode scenarios has its own, so it cannot make the
     // display a developer has open reload.
-    cacheDir: scenarios
-      ? resolve(buildPath("desktop_cache"), "scenarios")
-      : buildPath("desktop_cache"),
+    cacheDir: cacheDirectory,
     build: {
       // A browser test run builds the scenarios into its own directory: the
       // build empties its output, so a second run's build under the first
       // run's live server would remove the page it is serving.
-      outDir: scenarios
-        ? (testRunScenariosBuild(buildPath("desktop_results")) ??
-          resolve(buildPath("desktop_testing"), "scenarios"))
-        : buildPath("desktop_frontend"),
+      outDir: outputDirectory,
       // The desktop package embeds this whole directory, so nothing from an
       // earlier build may be left in it.
       emptyOutDir: true,
@@ -106,6 +112,13 @@ export default defineConfig(({ command, mode }) => {
       {
         name: "desktop-server-ports",
         configResolved(config) {
+          if (
+            resolve(config.build.outDir) !== resolve(outputDirectory) ||
+            resolve(config.cacheDir) !== resolve(cacheDirectory)
+          )
+            throw new Error(
+              "Desktop output and cache directories are owned by the selected CMake build.",
+            );
           if (
             config.server.port !== listening.server ||
             config.preview.port !== listening.preview ||

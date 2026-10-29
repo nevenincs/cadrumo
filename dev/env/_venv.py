@@ -11,8 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root
 
 if TYPE_CHECKING:
     pass
@@ -81,7 +80,7 @@ def _exclusive(venv: Path) -> Generator[None]:
     Raises:
         RuntimeError: When another install already owns this environment.
     """
-    lock = prepare_temporary_directory() / _lock_name(venv)
+    lock = prepare_temp_root() / _lock_name(venv)
     handle = os.open(lock, os.O_CREAT | os.O_RDWR)
     try:
         if not _try_lock(handle):

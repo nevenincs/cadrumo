@@ -9,7 +9,7 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 
 from .hashing import sha256_path
 from .runtime_wheel_acquisition import _acquire_all, prune_wheel_cache, wheel_cache_dir
@@ -84,9 +84,7 @@ def build_runtime_wheelhouse(
     manifest, plans = _manifest_document(root, python_versions=python_versions)
     output.parent.mkdir(parents=True, exist_ok=True)
     cache = wheel_cache_dir()
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-runtime-wheelhouse-", dir=prepare_temporary_directory()
-    ) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-runtime-wheelhouse-", dir=prepare_temp_root()) as temporary:
         wheel_dir = Path(temporary)
         for plan in plans:
             (wheel_dir / plan.python_version).mkdir()

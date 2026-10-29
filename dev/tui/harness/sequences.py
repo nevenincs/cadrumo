@@ -51,7 +51,6 @@ from cadrumo.core.config import load_settings
 from cadrumo.core.config_support import TuiAppearance
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import output_language
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
 from cadrumo.entrypoints.operation_composition import build_production_operation_registry
 from cadrumo.entrypoints.tui.components.dialogs import ConfirmScreen
@@ -75,6 +74,7 @@ from cadrumo_client.contracts.deadline_budget import MAX_CONNECTION_EXCHANGE_TIM
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.installed_client import open_installed_client
 from cadrumo_runtime.host.frontend.tui.runtime_workbench import RuntimeWorkbenchRoot
+from dev._paths import prepare_temp_root
 from dev.docs.sequences.checks import discover_sequences
 from dev.docs.sequences.compare import check_transcript
 from dev.docs.sequences.golden_store import golden_path, read_golden
@@ -576,7 +576,7 @@ def capture_scenario(
 
     with (
         TemporaryDirectory(
-            prefix="cadrumo-tui-scenario-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+            prefix="cadrumo-tui-scenario-", ignore_cleanup_errors=True, dir=prepare_temp_root()
         ) as scratch,
         executed_sequence_sandbox(item.sequence, sandbox_root=Path(scratch)) as (sandbox, transcript),
     ):

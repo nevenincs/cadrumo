@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview",
+    "build": "tsc --noEmit && vite build --configLoader runner",
+    "preview": "vite preview --configLoader runner",
     "check": "tsc --noEmit && eslint . && node --test dev/eslint/tests/*.test.mjs tests/live/*.unit.ts && node --check ../scripts/tauri.mjs && prettier --check . ../scripts ../tests ../CMakeLists.txt --ignore-unknown",
     "format": "prettier --write . ../scripts ../tests --ignore-unknown",
     "test": "playwright test",

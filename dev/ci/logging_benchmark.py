@@ -26,6 +26,7 @@ from cadrumo.core.logging import (
     shutdown_logging,
 )
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
+from dev._paths import prepare_temp_root
 
 
 def _handles() -> int | None:
@@ -98,7 +99,7 @@ def main() -> None:
             release.wait(0.005)
         original(self, record)
 
-    with tempfile.TemporaryDirectory(prefix="cadrumo-logging-benchmark-") as directory:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-logging-benchmark-", dir=prepare_temp_root()) as directory:
         with override_settings(
             cadrumo_local_storage_root=Path(directory),
             cadrumo_log_dir=Path(directory) / "logs",

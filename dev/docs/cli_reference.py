@@ -52,9 +52,8 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
-from dev._paths import AUTHORITY_ROOT_ENV
+from dev._paths import AUTHORITY_ROOT_ENV, prepare_temp_root
 from dev.product_environment import ambient_product_settings_removed
 
 from ._locale_chrome import chrome_anchor, docs_chrome, markup_page, same_wording
@@ -598,7 +597,7 @@ def generate_cli_reference_in_subprocess(docs_root: Path) -> dict[str, str]:
         """,
     )
 
-    with TemporaryDirectory(prefix="cadrumo-cli-reference-", dir=prepare_temporary_directory()) as storage_root:
+    with TemporaryDirectory(prefix="cadrumo-cli-reference-", dir=prepare_temp_root()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
             env=_reference_subprocess_environment(Path(storage_root)),
@@ -649,7 +648,7 @@ def collect_live_leaf_paths_in_subprocess() -> list[str]:
         """,
     )
 
-    with TemporaryDirectory(prefix="cadrumo-cli-reference-", dir=prepare_temporary_directory()) as storage_root:
+    with TemporaryDirectory(prefix="cadrumo-cli-reference-", dir=prepare_temp_root()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
             env=_reference_subprocess_environment(Path(storage_root)),

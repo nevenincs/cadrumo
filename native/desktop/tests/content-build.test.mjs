@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import {
+  copyFileSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -23,6 +24,45 @@ function fixture(t) {
   mkdirSync(source);
   writeFileSync(join(source, "input"), "first");
   return { root, source, output, record: join(root, "record.json") };
+}
+
+function cliFixture(root) {
+  const repository = join(root, "repository");
+  const scripts = join(repository, "native", "desktop", "scripts");
+  const binary = join(repository, "build", "test-preset");
+  const outputRoot = join(binary, "desktop", "testing");
+  mkdirSync(scripts, { recursive: true });
+  mkdirSync(outputRoot, { recursive: true });
+  for (const name of [
+    "build-paths.mjs",
+    "content-build.mjs",
+    "backend-snapshot.mjs",
+  ])
+    copyFileSync(
+      fileURLToPath(new URL(`../scripts/${name}`, import.meta.url)),
+      join(scripts, name),
+    );
+  writeFileSync(
+    join(repository, "CMakePresets.json"),
+    JSON.stringify({ configurePresets: [{ name: "test-preset" }] }),
+  );
+  writeFileSync(
+    join(binary, "build-paths.json"),
+    JSON.stringify({
+      source: repository,
+      paths: { desktop_testing: "desktop/testing" },
+    }),
+  );
+  writeFileSync(
+    join(binary, "CMakeCache.txt"),
+    `CMAKE_HOME_DIRECTORY:INTERNAL=${repository}\nCMAKE_CACHEFILE_DIR:INTERNAL=${binary}\n`,
+  );
+  return {
+    helper: join(scripts, "content-build.mjs"),
+    binary,
+    output: join(outputRoot, "output"),
+    record: join(outputRoot, "record.json"),
+  };
 }
 
 test("content fingerprints recover missing outputs and detect additions/deletions without timestamp rebuilds", (t) => {
@@ -117,10 +157,8 @@ test("identical regenerated assets retain their original file objects and precis
 });
 
 test("CMake independently invokes content-aware actions and recovers deleted products", (t) => {
-  const { root, source, output, record } = fixture(t);
-  const helper = fileURLToPath(
-    new URL("../scripts/content-build.mjs", import.meta.url),
-  );
+  const { root, source } = fixture(t);
+  const { helper, binary: enrolled, output, record } = cliFixture(root);
   const producer = join(root, "producer.mjs");
   writeFileSync(
     producer,
@@ -152,6 +190,7 @@ add_custom_target(unrelated COMMAND ${quote(process.execPath)} -e "throw new Err
     const result = spawnSync("cmake", args, {
       encoding: "utf8",
       windowsHide: true,
+      env: { ...process.env, CADRUMO_CMAKE_BINARY_DIR: enrolled },
     });
     assert.equal(result.status, 0, result.stdout + result.stderr);
   }
@@ -168,4 +207,34 @@ add_custom_target(unrelated COMMAND ${quote(process.execPath)} -e "throw new Err
   rmSync(output);
   build();
   assert.equal(readFileSync(log, "utf8"), "build\nbuild\nbuild\n");
+});
+
+test("CLI refuses undeclared outputs before running the producer", (t) => {
+  const { root } = fixture(t);
+  const { helper, binary, record } = cliFixture(root);
+  const marker = join(root, "producer-ran");
+  const sourceOutput = fileURLToPath(
+    new URL("../refused-output", import.meta.url),
+  );
+  const result = spawnSync(
+    process.execPath,
+    [
+      helper,
+      "--record",
+      record,
+      "--output",
+      sourceOutput,
+      "--",
+      process.execPath,
+      "-e",
+      `require('fs').writeFileSync(${JSON.stringify(marker)}, 'ran')`,
+    ],
+    {
+      encoding: "utf8",
+      env: { ...process.env, CADRUMO_CMAKE_BINARY_DIR: binary },
+    },
+  );
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /outside declared CMake outputs/);
+  assert.throws(() => statSync(marker), { code: "ENOENT" });
 });

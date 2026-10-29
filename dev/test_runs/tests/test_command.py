@@ -8,8 +8,16 @@ import pytest
 
 from ..command import run
 from ..paths import SCRATCH_BASE_ENV
+from ..pytest_transcript_syntax import _normalize_root_cause
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+
+def test_run_paths_do_not_split_root_cause_signatures() -> None:
+    first = _normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-29/run-1/file.txt")
+    second = _normalize_root_cause("Failure: /.tmp/logs/test-runs/2026-10-30/run-2/file.txt")
+    legacy = _normalize_root_cause("Failure: /.logs/test-runs/2026-10-29/run-3/file.txt")
+    assert first == second == legacy == "Failure: /.tmp/logs/test-runs/<run>/file.txt"
 
 
 def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -19,7 +27,7 @@ def test_command_run_streams_and_persists_identity(tmp_path: Path, capsys: pytes
 
     assert status == 0
     assert "observable signal" in capsys.readouterr().out
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["command"] == list(command)
     assert metadata["exit_status"] == 0
@@ -47,8 +55,8 @@ def test_command_run_keeps_log_location_separate_from_child_working_directory(tm
 
     assert status == 0
     assert (repository / "cwd-marker").read_text() == "child ran here"
-    assert not (repository / ".logs").exists()
-    run_dir = next((log_root / ".logs" / "audit-runs").glob("*/*"))
+    assert not (repository / "logs").exists()
+    run_dir = next((log_root / "logs" / "audit-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["command"] == list(command)
     assert metadata["exit_status"] == 0
@@ -65,7 +73,7 @@ def test_command_run_removes_its_scratch_after_a_failing_run(tmp_path: Path, mon
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="scratch-probe")
 
     assert status == 3
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
     assert scratch.parent.resolve() == base.resolve()
     assert not scratch.exists()
@@ -78,7 +86,7 @@ def test_command_run_finalizes_metadata_when_interrupted(
 ) -> None:
     class InterruptingOutput:
         async def read(self, size: int = -1) -> bytes:
-            run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+            run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
             seeded = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
             assert seeded["exit_status"] == 130
             assert seeded["finished_at"]
@@ -112,7 +120,7 @@ def test_command_run_finalizes_metadata_when_interrupted(
 
     assert status == 130
     assert process.terminated is True
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 130
     assert metadata["finished_at"]
@@ -143,7 +151,7 @@ def test_command_run_keeps_a_line_longer_than_the_default_stream_limit_whole(
     status = run((sys.executable, "-c", script), repository=tmp_path, family="audit-runs", label="audit-probe")
 
     assert status == 0
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     transcript = (run_dir / "run.log").read_text(encoding="utf-8").splitlines()
     start = transcript.index("before")
     assert transcript[start : start + 3] == ["before", long_line, "after"]
@@ -186,7 +194,7 @@ def test_locale_signal_reads_a_report_longer_than_the_default_stream_limit(
     assert finished["event"] == "run_finished"
     assert finished["classification"] == "blocking_findings"
     assert finished["translation_backlog"]["cells_to_translate"] == 4_000
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     persisted = (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8").splitlines()
     assert [json.loads(row) for row in persisted] == backlog
 
@@ -232,7 +240,7 @@ def test_locale_signal_persists_backlog_and_keeps_stdout_bounded(
     finished = envelopes[-1]
     assert finished["translation_backlog"]["cells_to_translate"] == 1
     assert "cli.save" not in json.dumps(finished)
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     assert (run_dir / "artifacts" / "locale-status.json").is_file()
     assert "cli.save" in (run_dir / "artifacts" / "locale-backlog.jsonl").read_text(encoding="utf-8")
     assert "translation_missing" in (run_dir / "artifacts" / "locale-findings.jsonl").read_text(encoding="utf-8")
@@ -250,7 +258,7 @@ def test_locale_signal_fails_closed_when_child_payload_is_not_parseable(
     )
 
     assert status == 7
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 7
 
@@ -265,7 +273,7 @@ def test_locale_signal_normalizes_nonzero_child_without_payload_to_tool_failure(
     )
 
     assert status == 7
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     metadata = json.loads((run_dir / "run.json").read_text(encoding="utf-8"))
     assert metadata["exit_status"] == 7
 
@@ -310,7 +318,7 @@ def test_locale_signal_normalizes_rich_traceback_without_leaking_it_to_stdout(
         "exact": False,
         "unique_keys_to_translate": None,
     }
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     log = (run_dir / "run.log").read_text(encoding="utf-8")
     assert "AuthorityComponentCodecError" in log
     report = json.loads((run_dir / "artifacts" / "locale-status.json").read_text(encoding="utf-8"))
@@ -364,7 +372,7 @@ def test_command_run_confines_child_temp_and_preserves_tool_cache_environment(
     status = run((sys.executable, "-c", probe), repository=tmp_path, family="audit-runs", label="path-probe")
 
     assert status == 0
-    run_dir = next((tmp_path / ".logs" / "audit-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "audit-runs").glob("*/*"))
     paths = json.loads((run_dir / "artifacts" / "paths.json").read_text(encoding="utf-8"))
     scratch = Path(json.loads((run_dir / "run.json").read_text(encoding="utf-8"))["scratch"])
     assert Path(paths["temp"]).resolve() == scratch.resolve()
@@ -539,7 +547,7 @@ def test_pytest_summary_signal_aggregates_lanes_without_streaming_details(
             "phase": "execution",
         }
     ]
-    run_dir = next((tmp_path / ".logs" / "test-runs").glob("*/*"))
+    run_dir = next((tmp_path / "logs" / "test-runs").glob("*/*"))
     assert "collection detail" in (run_dir / "run.log").read_text(encoding="utf-8")
 
 

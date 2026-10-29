@@ -52,13 +52,13 @@ from pydantic import Field, RootModel, StringConstraints
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_client.commands.parameters import ArgumentSpec
 from cadrumo_client.commands.shared_contracts import DefaultKind
 from cadrumo_client.contracts.command_ports import (
     MachineSecretPayloadMetadata,
     ProfileAuthenticationContractMetadata,
 )
+from dev._paths import prepare_temp_root
 
 from .cli_reference import _reference_subprocess_environment
 
@@ -305,7 +305,7 @@ def build_cli_tree_in_subprocess() -> CliTree:
         sys.stdout.write(serialise_cli_tree(_build_cli_tree_loaded()))
         """,
     )
-    with TemporaryDirectory(prefix="cadrumo-cli-tree-", dir=prepare_temporary_directory()) as storage_root:
+    with TemporaryDirectory(prefix="cadrumo-cli-tree-", dir=prepare_temp_root()) as storage_root:
         result = subprocess.run(
             [sys.executable, "-c", code],
             env=_reference_subprocess_environment(Path(storage_root)),

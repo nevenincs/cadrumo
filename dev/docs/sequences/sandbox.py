@@ -39,10 +39,9 @@ from cadrumo.application.user_profile.custody_ports import create_profile_custod
 from cadrumo.application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root
 
 from .errors import SequenceExecutionError
 from .receipt_fixture import requires_persistent_sign_in, sequence_receipt_store
@@ -315,7 +314,7 @@ def _sandbox_template() -> Path:
     # operator password must never enter the template identity or its custody.
     with _neutralized_ambient_env():
         password_digest = sha256_hex(load_settings().cadrumo_dev_test_database_password.get_secret_value().encode())
-    temporary_root = prepare_temporary_directory().resolve()
+    temporary_root = prepare_temp_root().resolve()
     identity = (generation, password_digest, temporary_root)
     template = _SANDBOX_TEMPLATES.get(identity)
     if template is not None and template.is_dir():

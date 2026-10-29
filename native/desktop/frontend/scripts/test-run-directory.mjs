@@ -4,6 +4,7 @@
 // under `runs/<start>-<pid>` of the build's test results instead.
 import { mkdirSync, readdirSync, rmSync } from "node:fs";
 import { resolve } from "node:path";
+import { requireBuildOutput } from "../../scripts/build-paths.mjs";
 
 // Workers and web servers inherit the environment of the run that starts
 // them and load this configuration again: the variable keeps them on the
@@ -50,7 +51,7 @@ function removeStale(runs, now) {
 
 /** This run's own results directory below `results`, created on first use. */
 export function testRunDirectory(results) {
-  const runs = resolve(results, "runs");
+  const runs = requireBuildOutput(resolve(results, "runs"));
   let name = process.env[RUN];
   if (!name) {
     const now = Date.now();
@@ -60,7 +61,7 @@ export function testRunDirectory(results) {
     process.env[RUN] = name;
   }
   if (!NAME.test(name)) throw new Error(`Invalid ${RUN}: ${name}`);
-  const directory = resolve(runs, name);
+  const directory = requireBuildOutput(resolve(runs, name));
   mkdirSync(directory, { recursive: true });
   return directory;
 }
@@ -73,5 +74,5 @@ export function testRunScenariosBuild(results) {
   const name = process.env[RUN];
   if (!name) return null;
   if (!NAME.test(name)) throw new Error(`Invalid ${RUN}: ${name}`);
-  return resolve(results, "runs", name, "scenarios");
+  return requireBuildOutput(resolve(results, "runs", name, "scenarios"));
 }

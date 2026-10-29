@@ -183,7 +183,7 @@ doctor-browser:
 # ignored worktree output, registered build scratch (now under `build/`, with legacy release-build scratch still swept from `var/`), and the temp
 # directory's pytest/session/test-run storage. They were split by which module
 # happened to own the rules, which is not a split an operator can act on -- the
-# largest accrual moves between `var/` and `.logs/` depending on what has been
+# largest accrual moves between `var/` and `.tmp/logs/` depending on what has been
 # run, so a report covering one at a time never showed where the space went.
 #
 # ── Blast radius, for whoever or whatever is about to run `clean-apply` ──────
@@ -197,10 +197,10 @@ doctor-browser:
 #
 # AT RISK, and the reason this is not a routine command. `clean-apply` deletes
 # irreversibly -- no trash, no undo. Inside the worktree it now claims two
-# surfaces it used to spare: `.logs/` in full apart from `test-runs/`, and every
+# surfaces it used to spare: `.tmp/logs/` in full apart from `test-runs/`, and every
 # directory named `cache` or `.cache` at any depth outside a protected tree.
 # Both are scratch -- a run writes them and nothing reads back across a run
-# boundary -- but `.logs/` holds captured output and downloaded payloads that
+# boundary -- but `.tmp/logs/` holds captured output and downloaded payloads that
 # are not re-fetched automatically, so promote anything you still want into
 # `.vault/` before running this. It also REACHES OUTSIDE THIS WORKTREE:
 #   * the OS temp directory, including the scratchpads of OTHER Claude Code
@@ -458,7 +458,7 @@ check-dependency-vulnerabilities:
 [doc('Run the blocking semgrep scan against the full source tree; read-only.')]
 [group('check')]
 check-security-full:
-    @uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
+    @uvx --from semgrep==1.182.1 semgrep --config .semgrep/rules/ --error --strict --no-git-ignore src/cadrumo/
 
 # Cheap dependency-surface preflight: verify pyproject, optional-extra registry,
 # and frozen core/all-extras/all-groups exports before any artifact work.
@@ -882,12 +882,12 @@ report-registry-form-layout-coverage:
 registry-governance-stamp REGISTRY_ROOT MODELO REVISION ENGINEERED_BY="" CLEAR_ENGINEERED_BY="false" REVIEW_STATUS="" REVIEWED_BY="" REVIEWED_AT="":
     @uv run --no-sync python -m dev.registry.conformance stamp {{MODELO}} {{REVISION}} --registry-root {{quote(REGISTRY_ROOT)}}{{ if ENGINEERED_BY == "" { "" } else { " --engineered-by " + quote(ENGINEERED_BY) } }}{{ if CLEAR_ENGINEERED_BY == "true" { " --clear-engineered-by" } else { "" } }}{{ if REVIEW_STATUS == "" { "" } else { " --review-status " + quote(REVIEW_STATUS) } }}{{ if REVIEWED_BY == "" { "" } else { " --reviewed-by " + quote(REVIEWED_BY) } }}{{ if REVIEWED_AT == "" { "" } else { " --reviewed-at " + quote(REVIEWED_AT) } }}
 
-[doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and the run report under .logs, which the next clean reclaims.')]
+[doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and the run report under .tmp/logs, which the next clean reclaims.')]
 [group('maintenance')]
 registry-edition-migrate REGISTRY_ROOT MODELO WORK_DIR:
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} --apply
 
-[doc('Stage one modelo edition migration under WORK_DIR and write its run report under .logs, which the next clean reclaims; never apply it to the registry.')]
+[doc('Stage one modelo edition migration under WORK_DIR and write its run report under .tmp/logs, which the next clean reclaims; never apply it to the registry.')]
 [group('report')]
 report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR:
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}}
@@ -1587,9 +1587,9 @@ docs-locales-set-batch-dry-run MANIFEST:
     uv run --no-sync python -m dev.docs.i18n set-batch {{quote(MANIFEST)}} --dry-run
 
 # Measure terminology coverage. The report is run output, not committed state:
-# it lands in a fresh `.logs/audit-runs/` directory the next clean reclaims, and
+# it lands in a fresh `.tmp/logs/audit-runs/` directory the next clean reclaims, and
 # the command prints the path it wrote.
-[doc('Measure terminology coverage and write the report under .logs, which the next clean reclaims.')]
+[doc('Measure terminology coverage and write the report under .tmp/logs, which the next clean reclaims.')]
 [group('report')]
 report-terminology-coverage:
     uv run --no-sync python -m dev.docs.terminology.coverage report

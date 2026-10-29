@@ -22,9 +22,8 @@ from pydantic import BaseModel, Field, StringConstraints, ValidationError
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.golden_comparison import canonicalise
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
 from dev.packaging.command_execution import run_command
 from dev.product_environment import ambient_product_settings_removed
 
@@ -420,7 +419,7 @@ def english_pinned_environment() -> dict[str, str]:
     # This is the check runner's scratch allocation, not product configuration.
     # Preserve its resolved location across children: a build-tree default can
     # exceed the native Unix socket path bound before a sequence starts.
-    environment["CADRUMO_TEMP_DIR"] = str(prepare_temporary_directory())
+    environment["CADRUMO_TEMP_DIR"] = str(prepare_temp_root())
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["PYTHONIOENCODING"] = _UTF_8
     environment["PYTHONUTF8"] = "1"
@@ -464,7 +463,7 @@ def _run_check_child(command: list[str], *, timeout: float | None) -> tuple[str,
             (any exit other than 0 or 1).
     """
     with TemporaryDirectory(
-        prefix="cli-sequence-progress-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()
+        prefix="cli-sequence-progress-", ignore_cleanup_errors=True, dir=prepare_temp_root()
     ) as tmp:
         journal = Path(tmp) / "last-frame.json"
         environment = english_pinned_environment()
@@ -657,7 +656,7 @@ def check_page_coherence_in_subprocess(
 @contextmanager
 def _execute_in_fresh_sandbox(sequence: ParsedSequence) -> Generator[SequenceTranscript]:
     """Keep disposable artifacts alive through their owning refresh/check."""
-    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
         yield execute_sequence(sequence, sandbox_root=Path(tmp))
 
 
@@ -851,7 +850,7 @@ def _check_page_coherence_items(docname: str, items: list[DiscoveredSequence], a
     """Check page coherence items."""
     executable = [item for item in items if item.sequence.executed_frames]
     try:
-        with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+        with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
             with _sequence_progress_scope(docname):
                 transcripts = execute_page_sequences(
                     [item.sequence for item in executable],

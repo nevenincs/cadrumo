@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 
 __all__ = [
     "CANDIDATE_COMPILER_MODULE",
@@ -84,7 +84,7 @@ def run_candidate_compiler(
     ]
     if eager_baseline_path is not None:
         command.extend(("--eager-baseline", str(eager_baseline_path)))
-    with tempfile.TemporaryFile(dir=prepare_temporary_directory()) as diagnostics:
+    with tempfile.TemporaryFile(dir=prepare_temp_root()) as diagnostics:
         with subprocess.Popen(
             command,
             cwd=_REPOSITORY_ROOT,

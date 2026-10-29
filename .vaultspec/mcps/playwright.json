@@ -1,0 +1,11 @@
+{
+  "command": "npx",
+  "args": [
+    "-y",
+    "@playwright/mcp",
+    "--headless",
+    "--isolated",
+    "--output-dir",
+    ".tmp/playwright-mcp"
+  ]
+}

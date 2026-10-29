@@ -16,6 +16,7 @@ import {
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { syncBackendSource } from "./backend-snapshot.mjs";
+import { requireBuildOutput } from "./build-paths.mjs";
 
 export function writeStable(file, content) {
   const bytes = Buffer.from(content);
@@ -150,6 +151,8 @@ if (
   }
   if (!options.record || !options.outputs.length)
     throw new Error("Declare the action record and outputs");
+  options.record = requireBuildOutput(options.record);
+  options.outputs = options.outputs.map((output) => requireBuildOutput(output));
   const command = args.slice(boundary + 1);
   options.identity = { command, node: process.version };
   contentBuild(options, () => {

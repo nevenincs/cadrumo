@@ -18,6 +18,8 @@ import time
 from pathlib import Path
 from typing import Any, cast
 
+from dev._paths import prepare_temp_root
+
 from .caller_owned_root import consumer_environment
 from .proof_support import package_identity
 
@@ -113,7 +115,7 @@ def main() -> None:
     for sample in range(arguments.samples):
         order = ("baseline", "candidate") if sample % 2 == 0 else ("candidate", "baseline")
         for name in order:
-            with tempfile.TemporaryDirectory(prefix="frontend-startup-", dir=arguments.output.parent) as temporary:
+            with tempfile.TemporaryDirectory(prefix="frontend-startup-", dir=prepare_temp_root()) as temporary:
                 observation = measure(packages[name], Path(temporary).resolve())
             if package_identity(packages[name]) != identities[name]:
                 raise RuntimeError(f"{name} changed during measurement")

@@ -43,7 +43,12 @@ const RUNS = Number(values.runs);
 function vite(...args) {
   const result = spawnSync(
     process.execPath,
-    [resolve(frontend, "node_modules/vite/bin/vite.js"), ...args],
+    [
+      resolve(frontend, "node_modules/vite/bin/vite.js"),
+      ...args,
+      "--configLoader",
+      "runner",
+    ],
     { cwd: frontend, stdio: ["ignore", "ignore", "inherit"] },
   );
   if (result.status !== 0) throw new Error(`vite ${args.join(" ")} failed`);

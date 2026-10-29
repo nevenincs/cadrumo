@@ -574,13 +574,17 @@ def main(arguments: list[str] | None = None) -> int:
     parser.add_argument(
         "--scratch-parent",
         type=Path,
-        help="Parent for disposable data; choose a directory outside repositories for CLI provider proofs.",
+        help="Parent below the worktree .tmp or an admitted native build temporary directory.",
     )
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    if options.scratch_parent is not None:
-        options.scratch_parent.mkdir(parents=True, exist_ok=True)
-    scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=options.scratch_parent))
+    from dev._paths import prepare_temp_root
+
+    requested_parent = options.scratch_parent.resolve() if options.scratch_parent is not None else None
+    scratch_parent = prepare_temp_root(override=requested_parent)
+    if requested_parent is not None and scratch_parent != requested_parent:
+        parser.error("--scratch-parent must stay in controlled worktree temporary storage")
+    scratch = Path(tempfile.mkdtemp(prefix="agent-live-", dir=scratch_parent))
     try:
         asyncio.run(run(package, scratch))
     except (AcceptanceError, BaseExceptionGroup) as failure:

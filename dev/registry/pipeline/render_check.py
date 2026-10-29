@@ -54,7 +54,6 @@ import rtoml
 
 from cadrumo.core.period import Period, PeriodError, is_administrative_period_token, is_symbolic_event_selector
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
@@ -63,6 +62,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector, SourceReference
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
+from dev._paths import prepare_temp_root
 
 from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..maintenance_support import coverage_assessment_horizon, revision_selection_coordinates
@@ -745,7 +745,7 @@ def compare_revision_against_committed(
     )
 
     committed_root = resolved_registry_root / "modelos" / modelo / "revisions" / revision / "export"
-    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-render-check-", dir=prepare_temp_root()) as scratch:
         target = Path(scratch) / "export"
         render_complete_export_tree(
             target,

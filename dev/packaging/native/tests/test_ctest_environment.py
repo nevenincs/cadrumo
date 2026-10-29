@@ -38,7 +38,12 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
     shutil.copyfile(MODULE, module)
 
     (source / "verify.cmake").write_text(
-        "foreach(name IN ITEMS TEMP TMP TMPDIR)\n"
+        "foreach(name IN ITEMS CADRUMO_TEMP_DIR TEMP TMP TMPDIR)\n"
+        '  if(NOT "$ENV{${name}}" STREQUAL "${EXPECT_${name}}")\n'
+        "    message(FATAL_ERROR \"${name} was not pinned: '$ENV{${name}}'\")\n"
+        "  endif()\n"
+        "endforeach()\n"
+        "foreach(name IN ITEMS CADRUMO_TEST_LOG_ROOT CADRUMO_SCRATCH_BASE CADRUMO_DEV_CACHE_ROOT)\n"
         '  if(NOT "$ENV{${name}}" STREQUAL "${EXPECT_${name}}")\n'
         "    message(FATAL_ERROR \"${name} was not pinned: '$ENV{${name}}'\")\n"
         "  endif()\n"
@@ -69,6 +74,10 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
         "include(CTestEnvironment.cmake)\n"
         'add_test(NAME root.test COMMAND "${CMAKE_COMMAND}"\n'
         '  "-DEXPECT_TEMP=${CADRUMO_CTEST_TEMPORARY}"\n'
+        '  "-DEXPECT_CADRUMO_TEMP_DIR=${CADRUMO_CTEST_TEMPORARY}"\n'
+        '  "-DEXPECT_CADRUMO_TEST_LOG_ROOT=${CADRUMO_PATH_TESTING}/Debug/test-logs"\n'
+        '  "-DEXPECT_CADRUMO_SCRATCH_BASE=${CADRUMO_PATH_TESTING}/Debug/scratch"\n'
+        '  "-DEXPECT_CADRUMO_DEV_CACHE_ROOT=${CADRUMO_PATH_TESTING}/Debug/cache"\n'
         '  "-DEXPECT_TMP=${CADRUMO_CTEST_TEMPORARY}"\n'
         '  "-DEXPECT_TMPDIR=${CADRUMO_CTEST_TEMPORARY}"\n'
         '  "-DEXPECT_STORAGE=${CADRUMO_PATH_TESTING}/Debug/storage"\n'
@@ -80,6 +89,10 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
     (child / "CMakeLists.txt").write_text(
         'add_test(NAME child.test COMMAND "${CMAKE_COMMAND}"\n'
         '  "-DEXPECT_TEMP=${CMAKE_BINARY_DIR}/custom-temp"\n'
+        '  "-DEXPECT_CADRUMO_TEMP_DIR=${CMAKE_BINARY_DIR}/ctest-temp"\n'
+        '  "-DEXPECT_CADRUMO_TEST_LOG_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/test-logs"\n'
+        '  "-DEXPECT_CADRUMO_SCRATCH_BASE=${CMAKE_BINARY_DIR}/testing/Debug/scratch"\n'
+        '  "-DEXPECT_CADRUMO_DEV_CACHE_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/cache"\n'
         '  "-DEXPECT_TMP=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_TMPDIR=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_LOCAL_STORAGE=${CMAKE_BINARY_DIR}/custom-local-storage"\n'
@@ -94,6 +107,10 @@ def test_ctest_environment_reaches_nested_tests_and_preserves_custom_roots(tmp_p
     (nested / "CMakeLists.txt").write_text(
         'add_test(NAME nested.test COMMAND "${CMAKE_COMMAND}"\n'
         '  "-DEXPECT_TEMP=${CMAKE_BINARY_DIR}/ctest-temp"\n'
+        '  "-DEXPECT_CADRUMO_TEMP_DIR=${CMAKE_BINARY_DIR}/ctest-temp"\n'
+        '  "-DEXPECT_CADRUMO_TEST_LOG_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/test-logs"\n'
+        '  "-DEXPECT_CADRUMO_SCRATCH_BASE=${CMAKE_BINARY_DIR}/testing/Debug/scratch"\n'
+        '  "-DEXPECT_CADRUMO_DEV_CACHE_ROOT=${CMAKE_BINARY_DIR}/testing/Debug/cache"\n'
         '  "-DEXPECT_TMP=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_TMPDIR=${CMAKE_BINARY_DIR}/ctest-temp"\n'
         '  "-DEXPECT_STORAGE=${CMAKE_BINARY_DIR}/nested-storage"\n'

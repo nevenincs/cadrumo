@@ -14,6 +14,8 @@ Use the reference indexes to select the files relevant to the actual task: the n
 
 All rules must be respected when working. Selective reading limits session context; it does not exempt work from applicable rules.
 
+General developer and agent scratch, temporary files, captures and disposable reports belong only under the owning worktree's `.tmp/`, which must be vacated after use. Never create alternate artifact roots or home/other-drive workspaces. Native build artifacts and native build scratch belong only under the selected CMake `build/<preset>/` tree, never under `native/`; see the canonical `worktree-temporary-output` rule.
+
 ## Architecture
 
 ```mermaid

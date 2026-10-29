@@ -20,7 +20,7 @@ set(desktop_temporary "${CADRUMO_PATH_DESKTOP_TESTING}/temporary")
 cadrumo_require_physical_build_member("${desktop_temporary}" "Desktop test temporary directory")
 file(MAKE_DIRECTORY "${desktop_temporary}")
 list(APPEND desktop_environment
-  "TEMP=${desktop_temporary}" "TMP=${desktop_temporary}" "TMPDIR=${desktop_temporary}")
+  "CADRUMO_TEMP_DIR=${desktop_temporary}" "TEMP=${desktop_temporary}" "TMP=${desktop_temporary}" "TMPDIR=${desktop_temporary}")
 set(desktop_configuration "CADRUMO_BUILD_CONFIG=$<CONFIG>")
 set(desktop_server_contract "${CMAKE_CURRENT_SOURCE_DIR}/development-server.json")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${desktop_server_contract}")
@@ -203,7 +203,7 @@ foreach(generator IN ITEMS chrome palette icons navigation)
     SUMMARY "generate the shell ${desktop_${generator}_description}"
     OUTPUTS "${desktop_generated}/${desktop_${generator}_output}")
   add_custom_target(desktop-frontend-${generator}
-    COMMAND "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/content-build.mjs"
+    COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/content-build.mjs"
       --record "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json"
       --output "${desktop_generated}/${desktop_${generator}_output}" --inputs-file "${generator_input_file}"
       -- ${desktop_generator} ${desktop_${generator}_module} --output "${desktop_generated}/${desktop_${generator}_output}"

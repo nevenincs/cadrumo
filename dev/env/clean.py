@@ -20,7 +20,7 @@ ignored paths into three populations that are not interchangeable:
 
 **Regenerable output.** ``__pycache__``, the tool caches, every ``cache`` and
 ``.cache`` tree, ``build/``, ``dist/``, the generated documentation trees, and
-the ``.logs/`` scratch root. Every byte of it is reproduced by a command that
+the current ``.tmp/logs/`` and legacy ``.logs/`` run roots. Every byte is reproduced by a command that
 already exists, nothing reads it across a run boundary, and deleting it costs a
 rebuild. This is the only family this module removes.
 
@@ -32,7 +32,7 @@ the repository, and some of it is live key material and taxpayer financial
 data. This family is protected by name and is never walked, never sized and
 never removed -- not even when a cache directory sits inside it.
 
-**Everything else that is ignored.** ``scratch/``, ``.tmp/``, ``dbg/``, the
+**Everything else that is ignored.** ``scratch/``, ad-hoc children of ``.tmp/``, ``dbg/``, the
 root-level one-shot dumps the ``.gitignore`` collects at its foot. It is
 *probably* disposable and it is *often* the biggest thing on the disk, but the
 name says "ad-hoc", not "reproducible", and an agent's half-finished capture is
@@ -59,7 +59,7 @@ from cadrumo.core.link_safety import is_link_like
 from dev._paths import REPO_ROOT
 from dev.packaging.build_scratch_reclaim import matching_family, report_build_scratch, report_var_scratch
 from dev.source_tree import ignored_paths
-from dev.test_runs.reaper import assess_run_directories
+from dev.test_runs.reaper import assess_run_directories, assess_scratch_directories
 
 from .temp_reaper import report_temporary_storage
 
@@ -161,6 +161,7 @@ minted. It stays with the worktree section, which is what owns caches.
 """
 
 LOGS_SCRATCH_OWNER: Final = ".logs"
+TEMP_RUN_LOGS: Final = ".tmp/logs"
 """The repository's scratch log root, removed by this section in full.
 
 Captured stdout and stderr, downloaded BOE payloads, draft vault bodies staged
@@ -181,7 +182,7 @@ entitled to read one back, so the whole root is regenerable by definition.
 
 BUILD_OUTPUT_ROOT: Final = "build"
 MIXED_ROOTS: Final[frozenset[str]] = frozenset(
-    {VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER, BUILD_OUTPUT_ROOT}
+    {VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER, BUILD_OUTPUT_ROOT, ".tmp", TEMP_RUN_LOGS}
 )
 """Ignored directories whose children are classified individually.
 
@@ -508,7 +509,7 @@ def expand(repo_root: Path, relative: str) -> list[str]:
 
 
 def _live_run_count(repo_root: Path, relative: str) -> int:
-    """Return how many run directories under this ``.logs`` entry an owner is still writing.
+    """Return how many run directories under this log entry an owner is still writing.
 
     The only question ``.logs`` can raise, and it is asked of the operating
     system rather than of the path. :func:`assess_run_directories` resolves each
@@ -525,15 +526,24 @@ def _live_run_count(repo_root: Path, relative: str) -> int:
     therefore normalised here rather than assumed by the caller.
     """
     parts = relative.strip("/").split("/")
-    root = repo_root / LOGS_SCRATCH_OWNER
-    if len(parts) == 1:
+    prefix = TEMP_RUN_LOGS if relative.strip("/").startswith(TEMP_RUN_LOGS) else LOGS_SCRATCH_OWNER
+    root = repo_root / prefix
+    prefix_parts = prefix.split("/")
+    if len(parts) == len(prefix_parts):
         try:
             families = [child for child in sorted(root.iterdir()) if child.is_dir() and not child.is_symlink()]
         except OSError:
             return 0
     else:
-        families = [root / parts[1]]
+        families = [root / parts[len(prefix_parts)]]
     return sum(1 for family in families for verdict in assess_run_directories(family) if not verdict.reclaimable)
+
+
+def _scratch_directory_verdict(repo_root: Path, stripped: str) -> tuple[Verdict, str] | None:
+    for verdict in assess_scratch_directories(repo_root / ".tmp"):
+        if verdict.directory.name == Path(stripped).name:
+            return (Verdict.REAP if verdict.reclaimable else Verdict.KEEP), verdict.reason
+    return None
 
 
 def _generated_output_verdict(repo_root: Path, stripped: str) -> tuple[Verdict, str] | None:
@@ -542,11 +552,13 @@ def _generated_output_verdict(repo_root: Path, stripped: str) -> tuple[Verdict, 
         if matching_family(Path(stripped).name) is not None:
             return Verdict.KEEP, "registered build scratch, judged by its owning section below"
         return Verdict.REAP, "generated build output"
-    if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
+    if any(stripped == prefix or stripped.startswith(f"{prefix}/") for prefix in (LOGS_SCRATCH_OWNER, TEMP_RUN_LOGS)):
         live = _live_run_count(repo_root, stripped)
         if live:
             return Verdict.KEEP, f"{live} run directory(s) whose owner is still writing; reaped by their section below"
-        return Verdict.REAP, f"'{LOGS_SCRATCH_OWNER}' is scratch output that no code may read back"
+        return Verdict.REAP, "run logs are temporary output"
+    if stripped.startswith(".tmp/") and "/" not in stripped[len(".tmp/") :]:
+        return _scratch_directory_verdict(repo_root, stripped)
     return None
 
 

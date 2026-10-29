@@ -8,7 +8,9 @@ function(cadrumo_cargo_command output)
   set(command ${CADRUMO_HELPER} run --build "${PROJECT_BINARY_DIR}" --config "$<CONFIG>"
     --env "RUSTC=${CADRUMO_RUST_ROOT}/bin/rustc${CMAKE_EXECUTABLE_SUFFIX}"
     --env "RUSTDOC=${CADRUMO_RUST_ROOT}/bin/rustdoc${CMAKE_EXECUTABLE_SUFFIX}"
-    --env "CARGO_TARGET_DIR=${cargo_directory}")
+    --env "CARGO_TARGET_DIR=${cargo_directory}"
+    --env "CARGO_BUILD_TARGET_DIR=${cargo_directory}"
+    --env "CARGO_BUILD_BUILD_DIR=${cargo_directory}")
   foreach(name IN LISTS CADRUMO_RUST_ENVIRONMENT_NAMES)
     string(REPLACE ";" "\\;" value "${CADRUMO_RUST_ENV_${name}}")
     list(APPEND command --env "${name}=${value}")

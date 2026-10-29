@@ -15,7 +15,7 @@ from cadrumo.application.filing.runtime import (
     RegistrySchemaAccessor,
 )
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 
 from .filing_export_proof_contracts import (
     FilingExportConformanceReceipt,
@@ -95,7 +95,7 @@ def prove_export_conformance(
         or render_inputs.period != evidence.period
     ):
         raise ValueError("conformance vector builder returned inputs for another coordinate")
-    with TemporaryDirectory(prefix="cadrumo-export-conformance-", dir=prepare_temporary_directory()) as temporary:
+    with TemporaryDirectory(prefix="cadrumo-export-conformance-", dir=prepare_temp_root()) as temporary:
         output_path = Path(temporary) / "proof-output"
         result = _export(render_inputs, output_path=output_path, schema_provider=schema_provider)
         payload = output_path.read_bytes()

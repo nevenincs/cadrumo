@@ -644,7 +644,7 @@ def _pytest_temp_bootstrap(root: Path) -> bool:
                 ):
                     roots.update(name for target in targets for name in _assigned_names(target))
                     root_lines.append(statement.lineno)
-            elif call[-1:] == ("prepare_temporary_directory",):
+            elif call[-1:] == ("prepare_temporary_directory",) or call == ("dev", "_paths", "prepare_temp_root"):
                 roots.update(name for target in targets for name in _assigned_names(target))
                 root_lines.append(statement.lineno)
 

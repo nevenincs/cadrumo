@@ -20,7 +20,7 @@ from typing import TypedDict
 
 def locations(root: Path) -> dict[str, object]:
     """Resolve each relocatable location and name the ones outside ``root``."""
-    from cadrumo.application.provisioning_browser import playwright_browsers_root
+    from cadrumo.application.browser_location import playwright_browsers_root
     from cadrumo.core.storage_taxonomy_locations import ROOT_DERIVED_STORAGE_LOCATIONS, storage_path
 
     resolved = {location.category.value: storage_path(location.category) for location in ROOT_DERIVED_STORAGE_LOCATIONS}

@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import stat
-import tempfile
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev import _paths
+from dev._paths import REPO_ROOT, TEMP_ROOT
 
+from .. import paths
 from ..paths import (
     SCRATCH_PREFIX,
     SCRATCH_SEPARATOR,
@@ -39,9 +41,16 @@ def test_run_directory_is_date_partitioned_unique_and_repository_local(tmp_path:
     first = allocate_run_directory(tmp_path, family="audit-runs", label="audit-code", now=instant)
     second = allocate_run_directory(tmp_path, family="audit-runs", label="audit-code", now=instant)
 
-    assert first.parent == tmp_path / ".logs" / "audit-runs" / "2026-09-08"
+    assert first.parent == tmp_path / "logs" / "audit-runs" / "2026-09-08"
     assert first.name.startswith("20260908T123456.123456Z-audit-code-")
     assert first != second
+
+
+@pytest.mark.parametrize("family,label", [("../outside", "run"), ("safe", "../outside"), ("C:\\outside", "run")])
+def test_run_directory_rejects_traversal(tmp_path: Path, family: str, label: str) -> None:
+    with pytest.raises(ValueError, match="one path component"):
+        allocate_run_directory(tmp_path, family=family, label=label)
+    assert not (tmp_path / "logs").exists()
 
 
 def test_every_base_a_run_can_land_under_is_enumerated() -> None:
@@ -54,21 +63,58 @@ def test_every_base_a_run_can_land_under_is_enumerated() -> None:
 
     assert configured_test_log_root() in bases, "configured run families would be left unreaped"
     assert REPO_ROOT in bases, "legacy repository run families would be left unreaped"
-    assert Path(tempfile.gettempdir()) in bases, "pytest controller runs would be left unreaped"
+    assert configured_test_log_root() == TEMP_ROOT
     conftest = (REPO_ROOT / "conftest.py").read_text(encoding="utf-8")
-    assert "prepare_environment(_TEST_LOG_ROOT)" in conftest, (
-        "conftest.py no longer roots its run under CADRUMO_TEST_LOG_ROOT; run_log_bases must"
-        " be updated to match wherever it roots now, or that base goes unreaped"
-    )
+    assert "prepare_environment(" in conftest
 
 
 def test_a_family_root_is_reported_only_where_it_exists(tmp_path: Path) -> None:
     """``run_log_roots`` filters to real directories, so a missing base is not a failure."""
-    present = tmp_path / ".logs" / "test-runs"
+    present = tmp_path / "logs" / "test-runs"
     present.mkdir(parents=True)
 
     assert run_log_roots("test-runs", bases=(tmp_path, tmp_path / "absent")) == (present,)
     assert run_log_roots("never-written", bases=(tmp_path,)) == ()
+
+
+def test_legacy_log_roots_remain_discoverable(tmp_path: Path) -> None:
+    legacy = tmp_path / ".logs" / "audit-runs"
+    legacy.mkdir(parents=True)
+    assert run_log_roots("audit-runs", bases=(tmp_path,)) == (legacy,)
+    assert run_log_families(bases=(tmp_path,)) == ("audit-runs",)
+
+
+@pytest.mark.parametrize("stem", ["logs", ".logs"])
+def test_discovery_never_follows_linked_log_containers_or_families(tmp_path: Path, stem: str) -> None:
+    outside = tmp_path / "outside"
+    (outside / "audit-runs").mkdir(parents=True)
+    base = tmp_path / "base"
+    base.mkdir()
+    link = base / stem
+    link.symlink_to(outside, target_is_directory=True)
+    assert run_log_families(bases=(base,)) == ()
+    assert run_log_roots("audit-runs", bases=(base,)) == ()
+    link.unlink()
+    link.mkdir()
+    (link / "audit-runs").symlink_to(outside / "audit-runs", target_is_directory=True)
+    assert run_log_families(bases=(base,)) == ()
+    assert run_log_roots("audit-runs", bases=(base,)) == ()
+
+
+def test_allocator_refuses_linked_log_destination(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = tmp_path / "checkout"
+    temp = root / ".tmp"
+    temp.mkdir(parents=True)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (temp / "logs").symlink_to(outside, target_is_directory=True)
+    monkeypatch.setattr(_paths, "REPO_ROOT", root)
+    monkeypatch.setattr(_paths, "TEMP_ROOT", temp)
+    monkeypatch.setattr(paths, "REPO_ROOT", root)
+    monkeypatch.setenv("CADRUMO_TEST_LOG_ROOT", str(temp))
+    with pytest.raises(ValueError, match="link"):
+        allocate_run_directory(root, family="audit-runs", label="probe")
+    assert list(outside.iterdir()) == []
 
 
 def test_every_run_family_is_discovered_rather_than_named(tmp_path: Path) -> None:
@@ -81,9 +127,9 @@ def test_every_run_family_is_discovered_rather_than_named(tmp_path: Path) -> Non
     """
     other = tmp_path / "second-base"
     for family in ("audit-runs", "lane-runs", "test-runs"):
-        (tmp_path / ".logs" / family).mkdir(parents=True)
-    (other / ".logs" / "test-runs").mkdir(parents=True)
-    (other / ".logs" / "unfinished-capture.err").write_text("captured", encoding="utf-8")
+        (tmp_path / "logs" / family).mkdir(parents=True)
+    (other / "logs" / "test-runs").mkdir(parents=True)
+    (other / "logs" / "unfinished-capture.err").write_text("captured", encoding="utf-8")
 
     assert run_log_families(bases=(tmp_path, other)) == ("audit-runs", "lane-runs", "test-runs")
     assert run_log_families(bases=(tmp_path / "absent",)) == ()
@@ -101,6 +147,54 @@ def test_run_scratch_is_short_owned_and_beside_the_pinned_base() -> None:
     finally:
         scratch.rmdir()
         sibling.rmdir()
+
+
+def test_external_scratch_override_does_not_escape_the_worktree(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(tmp_path.anchor))
+    assert scratch_base() == TEMP_ROOT
+
+
+def test_real_worktree_run_logs_are_confined_to_temporary_root() -> None:
+    run = allocate_run_directory(REPO_ROOT, family="audit-runs", label="probe")
+    assert run.is_relative_to(TEMP_ROOT / "logs")
+
+
+def test_run_bases_validate_and_discover_declared_native_outputs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    root = tmp_path / "checkout"
+    build = root / "build" / "preset"
+    build.mkdir(parents=True)
+    (root / "CMakePresets.json").write_text(json.dumps({"configurePresets": [{"name": "preset"}]}), encoding="utf-8")
+    distribution = root / "native" / "cmake" / "distribution"
+    distribution.mkdir(parents=True)
+    (distribution / "CMakePresets.json").write_text(json.dumps({"configurePresets": []}), encoding="utf-8")
+    (build / "build-paths.json").write_text(
+        json.dumps({"source": str(root), "paths": {"testing": "testing"}}), encoding="utf-8"
+    )
+    monkeypatch.setattr(_paths, "REPO_ROOT", root)
+    monkeypatch.setattr(_paths, "TEMP_ROOT", root / ".tmp")
+    monkeypatch.setattr(paths, "REPO_ROOT", root)
+    monkeypatch.setenv("CADRUMO_TEST_LOG_ROOT", str(build / "testing" / "run-logs"))
+    monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(build / "testing" / "scratch"))
+    assert configured_test_log_root() == build / "testing" / "run-logs"
+    assert scratch_base() == build / "testing" / "scratch"
+    run = allocate_run_directory(root, family="audit-runs", label="probe")
+    run.mkdir(parents=True)
+    assert run_log_roots("audit-runs") == (run.parents[1],)
+
+
+def test_run_bases_reject_traversal_before_allocation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    root = tmp_path / "checkout"
+    root.mkdir()
+    monkeypatch.setattr(_paths, "REPO_ROOT", root)
+    monkeypatch.setattr(_paths, "TEMP_ROOT", root / ".tmp")
+    monkeypatch.setenv("CADRUMO_SCRATCH_BASE", str(root / ".tmp" / ".." / "escape"))
+    with pytest.raises(ValueError, match="traversal"):
+        allocate_scratch_directory()
+    assert not (root / "escape").exists()
 
 
 def test_nested_runs_allocate_beside_the_first_rather_than_inside_it(monkeypatch: pytest.MonkeyPatch) -> None:

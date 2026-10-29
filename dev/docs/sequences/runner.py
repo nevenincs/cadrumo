@@ -75,13 +75,13 @@ from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.entrypoints.cli.command_schema import command_registration_for_node
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 from cadrumo.entrypoints.cli.tests.cli_runner import semantic_cli_text
 from cadrumo.tests.cli_fixture_ports import ClickInvokeKwargs
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 from cadrumo_runtime.host.tests.frontend.cli.cli_runner import cadrumo_click_command
+from dev._paths import prepare_temp_root
 
 from .errors import SequenceExecutionError
 from .sandbox import SequenceSandbox, _publish_replacement_sandbox_profile, sequence_sandbox
@@ -740,7 +740,7 @@ def execute_sequence(
         return _execute_in_root(sequence, sandbox_root, fixtures_root)
     # Engine handles on Windows can outlive the run despite the teardown's
     # dispose; ignore_cleanup_errors keeps a stale handle from failing the run.
-    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+    with TemporaryDirectory(prefix="seq-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
         return _execute_in_root(sequence, Path(tmp), fixtures_root)
 
 
@@ -868,7 +868,7 @@ def execute_page_sequences(
         return ()
     if sandbox_root is not None:
         return _execute_page_in_root(sequences, label, sandbox_root, fixtures_root)
-    with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temporary_directory()) as tmp:
+    with TemporaryDirectory(prefix="page-", ignore_cleanup_errors=True, dir=prepare_temp_root()) as tmp:
         return _execute_page_in_root(sequences, label, Path(tmp), fixtures_root)
 
 
@@ -906,7 +906,7 @@ def _execute_page_in_root(
 def _retained_logs_root() -> Path:
     """Return where a failed sandbox's logs are kept, read before the sandbox rebinds the log directory."""
     configured = load_settings().cadrumo_log_dir
-    return (Path(configured) if configured is not None else Path(prepare_temporary_directory())) / "failed-sandboxes"
+    return (Path(configured) if configured is not None else Path(prepare_temp_root())) / "failed-sandboxes"
 
 
 @contextmanager

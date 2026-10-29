@@ -138,7 +138,7 @@ def test_a_passing_run_removes_its_scratch_and_leaves_its_run_log() -> None:
     assert result.returncode == pytest.ExitCode.OK, output
     scratch = _scratch_of(run_log)
     assert not scratch.exists(), f"a passing run left its scratch behind: {scratch}"
-    # The run's own logs sit under `.logs/test-runs`, not in the scratch, and survive it.
+    # The run's own logs sit under `.tmp/logs/test-runs`, not in the scratch, and survive it.
     assert run_log.with_name("run.json").is_file()
     assert run_log.read_text(encoding="utf-8").splitlines()[-1] == f"SCRATCH REMOVED {scratch}"
 

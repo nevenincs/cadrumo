@@ -14,13 +14,12 @@ from pathlib import Path
 from typing import Final, cast
 
 from cadrumo.core.atomic_write import atomic_write_text
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.tests.module_target_inventory import (
     assert_all_target_sets_current,
     compile_inventory,
     load_all_target_sets,
 )
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
 from dev.first_party_source import is_test_source
 from dev.packaging.command_execution import run_command
 
@@ -127,9 +126,7 @@ def _load_in_authority_interpreter(
     environment = os.environ.copy()
     environment["PYTHONPATH"] = os.pathsep.join(dict.fromkeys(str(root.source_root) for root in authority.roots))
     environment["PYTHONIOENCODING"] = UTF_8
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-import-load-worker-", dir=prepare_temporary_directory()
-    ) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-import-load-worker-", dir=prepare_temp_root()) as temporary:
         report_path = Path(temporary) / "report.json"
         completed = run_command(
             (

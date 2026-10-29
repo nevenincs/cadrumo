@@ -6,7 +6,7 @@ import { chromium } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { parseArgs } from "node:util";
-import { buildPath } from "../../scripts/build-paths.mjs";
+import { buildPath, requireBuildOutput } from "../../scripts/build-paths.mjs";
 import { server } from "../../scripts/configuration.mjs";
 
 const { values } = parseArgs({
@@ -25,8 +25,8 @@ const { values } = parseArgs({
   },
 });
 
-const out = resolve(
-  values.out ?? resolve(buildPath("desktop_results"), "catalogue"),
+const out = requireBuildOutput(
+  resolve(values.out ?? resolve(buildPath("desktop_results"), "catalogue")),
 );
 mkdirSync(out, { recursive: true });
 

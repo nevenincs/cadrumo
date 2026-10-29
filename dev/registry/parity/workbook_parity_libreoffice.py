@@ -16,11 +16,11 @@ from typing import TYPE_CHECKING
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import XLSX_EXTENSION as _XLSX_EXTENSION
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import (
     WorkbookOutputId,
 )
+from dev._paths import prepare_temp_root
 from dev.packaging.command_execution import CommandResult, run_command
 
 from .workbook_parity_models import (
@@ -178,7 +178,7 @@ def _libreoffice_workspace() -> Generator[_LibreOfficeWorkspace]:
     (see ``_LIBREOFFICE_PROFILE_ROOT_MAX_CHARS``). Operators with a long checkout
     path can point ``CADRUMO_TEMP_DIR`` at a shorter controlled location.
     """
-    with TemporaryDirectory(prefix="lo-", dir=prepare_temporary_directory()) as tmp:
+    with TemporaryDirectory(prefix="lo-", dir=prepare_temp_root()) as tmp:
         root = Path(tmp).resolve()
         output = root / "o"
         output.mkdir()

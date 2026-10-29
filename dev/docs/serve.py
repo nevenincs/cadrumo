@@ -72,8 +72,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Final
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
 from dev.first_party_source import PRODUCT_PACKAGE
 from dev.product_environment import ambient_product_settings_removed
 
@@ -564,9 +563,7 @@ def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
             "CADRUMO_OUTPUT_LANGUAGE": "en",
             "CADRUMO_DOCS_LANGUAGE": "en",
             "CADRUMO_DOCS_SCOPE": scope,
-            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(
-                prefix="cadrumo-docs-serve-", dir=prepare_temporary_directory()
-            ),
+            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-", dir=prepare_temp_root()),
         }
     )
     return environment

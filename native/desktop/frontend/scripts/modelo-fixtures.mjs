@@ -17,7 +17,6 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
@@ -47,7 +46,7 @@ if (!environment.CADRUMO_AUTHORITY_ROOT && existsSync(authority))
 function python(step, ...rest) {
   const run = spawnSync(
     "uv",
-    ["run", "--no-sync", "python", producer, step, ...rest],
+    ["run", "--no-sync", "python", "-B", producer, step, ...rest],
     {
       cwd: repository,
       env: environment,
@@ -121,7 +120,24 @@ console.log("wrote src/shell/relayBounds.ts");
 if (!values.contract) {
   // Read into a scratch directory, then write each envelope once, formatted:
   // a development server watching the fixtures may hold one open briefly.
-  const scratch = mkdtempSync(resolve(tmpdir(), "modelo-envelopes-"));
+  const temporary = spawnSync(
+    "uv",
+    [
+      "run",
+      "--no-sync",
+      "python",
+      "-B",
+      "-c",
+      "from dev._paths import prepare_temp_root; print(prepare_temp_root())",
+    ],
+    { cwd: repository, env: environment, encoding: "utf8", windowsHide: true },
+  );
+  if (temporary.error) throw temporary.error;
+  if (temporary.status !== 0)
+    throw new Error(`Could not prepare fixture scratch: ${temporary.stderr}`);
+  const scratch = mkdtempSync(
+    resolve(temporary.stdout.trim(), "modelo-envelopes-"),
+  );
   try {
     const read = python("envelopes", scratch);
     if (read.status !== 0) process.exit(read.status);

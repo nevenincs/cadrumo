@@ -20,13 +20,17 @@ from .build_toolchain import builder_inputs, native_toolchain_identity
 
 
 def _run_plain_command(
-    configured: dict[str, object], command: list[str], timings: BuildTimings | None
+    configured: dict[str, object],
+    command: list[str],
+    timings: BuildTimings | None,
+    *,
+    environment: dict[str, str] | None = None,
 ) -> CommandResult:
     with timings.phase("builder-admission") if timings is not None else nullcontext():
         builder_inputs(configured)
     _announce(timings, command)
     with timings.phase("configured-command") if timings is not None else nullcontext():
-        result = run_command(command, cwd=REPO_ROOT, inherit_output=True)
+        result = run_command(command, cwd=REPO_ROOT, environment=environment, inherit_output=True)
         if timings is not None:
             timings.command_completed(result.returncode)
         return result
@@ -43,7 +47,11 @@ def _check_cargo_members(build: Path, selected: Path) -> None:
 def _selected_target_directory(native: Path, command: list[str]) -> Path:
     selected = native
     for index, argument in enumerate(command):
+        if argument == "--":
+            break
         if argument == "--target-dir":
+            if index + 1 >= len(command) or command[index + 1] == "--":
+                raise ValueError("Native Cargo target override requires a directory")
             selected = Path(command[index + 1])
         elif argument.startswith("--target-dir="):
             selected = Path(argument.partition("=")[2])
@@ -90,8 +98,9 @@ def _run_locked_cargo(
     with action_lock(build, "native-cargo", timings=timings):
         if not marker.is_file() or marker.read_text(encoding="utf-8").strip() != identity:
             clean = [command[0], "clean", "--target-dir", str(directory)]
-            if "--manifest-path" in command:
-                clean.extend(["--manifest-path", command[command.index("--manifest-path") + 1]])
+            cargo_options = command[: command.index("--")] if "--" in command else command
+            if "--manifest-path" in cargo_options:
+                clean.extend(["--manifest-path", cargo_options[cargo_options.index("--manifest-path") + 1]])
             if timings is not None:
                 timings.log.status(
                     "the selected Rust toolchain or SDK changed; "
@@ -109,14 +118,46 @@ def _run_locked_cargo(
         return result
 
 
-def _is_cargo_command(command: list[str]) -> bool:
-    return Path(command[0]).name.lower() in {"cargo", "cargo.exe"} and command[1:2] in (
-        ["build"],
-        ["test"],
-        ["check"],
-        ["run"],
-        ["clippy"],
-        ["rustc"],
+def _cargo_quality_command(command: list[str]) -> bool:
+    arguments = command[1:]
+    if arguments[:3] == ["fmt", "--check", "--manifest-path"] and len(arguments) == 4:
+        return True
+    return (
+        len(arguments) == 12
+        and arguments[:3] == ["deny", "--locked", "--manifest-path"]
+        and arguments[4:6] == ["check", "--config"]
+        and arguments[7:] == ["--hide-inclusion-graph", "advisories", "bans", "licenses", "sources"]
+    )
+
+
+def _validate_cargo_build_command(command: list[str]) -> None:
+    """Admit only supported subcommands without Cargo output or configuration overrides."""
+    if command[1:2] not in (["build"], ["test"], ["check"], ["run"], ["clippy"], ["rustc"]):
+        raise ValueError("Native Cargo does not accept this subcommand or global option")
+    cargo_options = command[1 : command.index("--")] if "--" in command else command[1:]
+    if any(option == "--config" or option.startswith("--config=") for option in cargo_options):
+        raise ValueError("Native Cargo commands do not accept configuration overrides")
+    if any(option == "--artifact-dir" or option.startswith("--artifact-dir=") for option in cargo_options):
+        raise ValueError("Native Cargo commands do not accept artifact directory overrides")
+
+
+def _cargo_toolchain_identity(configured: dict[str, object]) -> str:
+    """Exclude CMake-only flags from the identity governing Cargo invalidation."""
+    cmake_flags = re.compile(r"CMAKE_C_FLAGS(_.+)?|CMAKE_[A-Z]+_LINKER_FLAGS(_.+)?")
+    target_configuration = configured.get("target_configuration", {})
+    return native_toolchain_identity(
+        {
+            **configured,
+            "target_configuration": {
+                name: value
+                for name, value in (
+                    cast(dict[str, object], target_configuration).items()
+                    if isinstance(target_configuration, dict)
+                    else ()
+                )
+                if not cmake_flags.fullmatch(str(name))
+            },
+        }
     )
 
 
@@ -124,8 +165,17 @@ def run_configured_command(
     build: Path, configured: dict[str, object], command: list[str], *, timings: BuildTimings | None = None
 ) -> CommandResult:
     """Invalidate only the isolated native Cargo cache when selected producer bytes change."""
-    if not _is_cargo_command(command):
+    if Path(command[0]).name.lower() not in {"cargo", "cargo.exe"}:
         return _run_plain_command(configured, command, timings)
+    quality = _cargo_quality_command(command)
+    if not quality:
+        _validate_cargo_build_command(command)
+    if quality:
+        directory, _ = _cargo_directory(build, command)
+        environment = dict(os.environ)
+        environment["CARGO_BUILD_TARGET_DIR"] = str(directory)
+        environment["CARGO_BUILD_BUILD_DIR"] = str(directory)
+        return _run_plain_command(configured, command, timings, environment=environment)
     files = configured.get("builder_files", {})
     if not isinstance(files, dict):
         raise ValueError("Configured builder_files must be a mapping")
@@ -144,25 +194,12 @@ def run_configured_command(
     directory, generated = _cargo_directory(build, command)
     # CMake's own C compile and link flags reach only the targets CMake compiles; Cargo never
     # reads them, so a change to them must not clean the Cargo directory.
-    cmake_flags = re.compile(r"CMAKE_C_FLAGS(_.+)?|CMAKE_[A-Z]+_LINKER_FLAGS(_.+)?")
-    target_configuration = configured.get("target_configuration", {})
-    identity = native_toolchain_identity(
-        {
-            **configured,
-            "target_configuration": {
-                name: value
-                for name, value in (
-                    cast(dict[str, object], target_configuration).items()
-                    if isinstance(target_configuration, dict)
-                    else ()
-                )
-                if not cmake_flags.fullmatch(str(name))
-            },
-        }
-    )
+    identity = _cargo_toolchain_identity(configured)
     marker = generated / f"rust-toolchain-{hashlib.sha256(str(directory).encode()).hexdigest()}.txt"
     # Cargo subcommands and their drivers must use the selected toolchain too.
     environment = dict(os.environ)
+    environment["CARGO_BUILD_TARGET_DIR"] = str(directory)
+    environment["CARGO_BUILD_BUILD_DIR"] = str(directory)
     environment["PATH"] = os.pathsep.join((str(Path(command[0]).parent), environment.get("PATH", "")))
     return _run_locked_cargo(build, command, directory, marker, identity, environment, timings)
 

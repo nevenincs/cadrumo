@@ -56,7 +56,11 @@ _PYTEST_OUTCOME_KEYS: Final[dict[str, str]] = {
 def _normalize_root_cause(message: str) -> str:
     """Remove checkout and run-specific identity from a root-cause signature."""
     normalized = message.replace(str(REPO_ROOT), "<repo>").replace(REPO_ROOT.as_posix(), "<repo>")
-    normalized = re.sub(r"[\\/]\.logs[\\/]test-runs[\\/][^\\/\s]+[\\/][^\\/\s]+", "/.logs/test-runs/<run>", normalized)
+    normalized = re.sub(
+        r"[\\/](?:\.tmp[\\/]logs|\.logs)[\\/]test-runs[\\/][^\\/\s]+[\\/][^\\/\s]+",
+        "/.tmp/logs/test-runs/<run>",
+        normalized,
+    )
     return re.sub(r"\s+", " ", normalized).strip()
 
 

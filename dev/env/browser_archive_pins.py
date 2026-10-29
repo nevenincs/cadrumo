@@ -42,7 +42,7 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.toml import parse_toml
 from cadrumo.core.type_guards import is_object_list
 from dev import exit_codes
-from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
+from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT, prepare_temp_root
 from dev.packaging.command_execution import run_command
 from dev.packaging.playwright_driver import installed_playwright_driver_version
 
@@ -222,7 +222,7 @@ def _dry_run(host_platform: str, *, download_host: str | None) -> str:
     environment["PLAYWRIGHT_HOST_PLATFORM_OVERRIDE"] = host_platform
     if download_host is not None:
         environment["PLAYWRIGHT_DOWNLOAD_HOST"] = download_host
-    with tempfile.TemporaryDirectory(prefix="browser-pins-") as root:
+    with tempfile.TemporaryDirectory(prefix="browser-pins-", dir=prepare_temp_root()) as root:
         environment["PLAYWRIGHT_BROWSERS_PATH"] = root
         completed = run_command(
             [str(node), str(cli), "install", "--dry-run", "chromium"],

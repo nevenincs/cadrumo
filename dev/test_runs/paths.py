@@ -1,11 +1,4 @@
-"""Canonical paths for date-partitioned development run output.
-
-Run output is transient by construction: one invocation writes a directory
-under the configured Cadrumo storage root, nothing reads it back, and every
-base below is reclaimed. The word "evidence" does not appear in this module's
-vocabulary on purpose -- a finding that must outlive its run belongs in durable
-evidence, not in a path under ``.logs``.
-"""
+"""Paths for temporary developer runs, with legacy log discovery for cleanup."""
 
 from __future__ import annotations
 
@@ -13,7 +6,6 @@ import os
 import re
 import shutil
 import stat
-import tempfile
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -21,10 +13,9 @@ from pathlib import Path
 from typing import Final
 from uuid import uuid4
 
-from cadrumo.core.storage_environment import prepare_temporary_directory, resolve_storage_path, storage_directory
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root, resolve_temporary_output
 
-LOGS_STEM = ".logs"
+LOGS_STEM = "logs"
 """The one directory name every run family lives under, whatever the base."""
 
 TEST_RUNS_FAMILY = "test-runs"
@@ -32,38 +23,39 @@ TEST_RUNS_FAMILY = "test-runs"
 
 
 def run_log_bases() -> tuple[Path, ...]:
-    """Return every base directory that can hold a ``.logs`` run family.
-
-    The configured storage root is the active base. The repository and current
-    OS temp roots remain in the list so the reaper can find output made by older
-    versions while new writers use the overrideable root.
-    """
-    current = test_log_root()
-    # Keep old bases in the reaper population while new writers use the
-    # configured Cadrumo log root.
-    return tuple(dict.fromkeys((current, REPO_ROOT, Path(tempfile.gettempdir()))))
+    """Return the current temporary base and the legacy repository log base."""
+    return (test_log_root(), REPO_ROOT)
 
 
 def test_log_root() -> Path:
-    """Return the operator-controlled base for test and development run logs."""
-    return storage_directory("CADRUMO_TEST_LOG_ROOT", "development")
+    """Return the validated worktree or native-build base for run logs."""
+    return prepare_temp_root(override=os.environ.get("CADRUMO_TEST_LOG_ROOT", ""))
+
+
+def _has_link(path: Path) -> bool:
+    """Treat any linked component as unsafe for allocation or discovery."""
+    return any(component.is_symlink() or component.is_junction() for component in (path, *path.parents))
 
 
 def run_log_roots(family: str, *, bases: tuple[Path, ...] | None = None) -> tuple[Path, ...]:
-    """Return every existing ``.logs/<family>`` root across ``bases``.
+    """Return existing current and legacy log family roots across ``bases``.
 
     Absent bases are filtered out rather than reported: a checkout that has never
     run the audit tooling simply has no such root, and that is not a condition a
     reclamation report should raise. ``bases`` is injectable so a caller can be
     tested against a tree it controls without substituting this module.
     """
-    candidates = run_log_bases() if bases is None else bases
-    roots = tuple(dict.fromkeys(base / LOGS_STEM / family for base in candidates))
-    return tuple(root for root in roots if root.is_dir())
+    containers = (
+        (test_log_root() / LOGS_STEM, REPO_ROOT / ".logs")
+        if bases is None
+        else tuple(base / stem for base in bases for stem in (LOGS_STEM, ".logs"))
+    )
+    roots = tuple(dict.fromkeys(container / family for container in containers))
+    return tuple(root for root in roots if not _has_link(root) and root.is_dir())
 
 
 def run_log_families(*, bases: tuple[Path, ...] | None = None) -> tuple[str, ...]:
-    """Return every run family that exists under any ``.logs`` base.
+    """Return every run family under the current or legacy log names.
 
     DISCOVERED, never enumerated. A family named in a constant list is a list
     someone has to remember to extend, and the cost of forgetting is not
@@ -76,16 +68,21 @@ def run_log_families(*, bases: tuple[Path, ...] | None = None) -> tuple[str, ...
     Returns:
         Each family's directory name, sorted and deduplicated across bases.
     """
-    candidates = run_log_bases() if bases is None else bases
+    containers = (
+        (test_log_root() / LOGS_STEM, REPO_ROOT / ".logs")
+        if bases is None
+        else tuple(base / stem for base in bases for stem in (LOGS_STEM, ".logs"))
+    )
     families: dict[str, None] = {}
-    for base in candidates:
-        root = base / LOGS_STEM
+    for root in containers:
+        if _has_link(root):
+            continue
         try:
             children = sorted(root.iterdir())
         except OSError:
             continue
         for child in children:
-            if child.is_dir() and not child.is_symlink():
+            if not _has_link(child) and child.is_dir():
                 families[child.name] = None
     return tuple(sorted(families))
 
@@ -121,8 +118,7 @@ SCRATCH_NAME: Final = re.compile(
 
 def scratch_base() -> Path:
     """Return the controlled base for run scratch allocations."""
-    inherited = os.environ.get(SCRATCH_BASE_ENV, "").strip()
-    return resolve_storage_path(inherited) if inherited else prepare_temporary_directory()
+    return prepare_temp_root(override=os.environ.get(SCRATCH_BASE_ENV, ""))
 
 
 def allocate_scratch_directory() -> Path:
@@ -235,6 +231,11 @@ def remove_scratch_directory(allocation: ScratchAllocation) -> None:
         raise OSError(f"{len(failures)} entries under {scratch} could not be removed; first: {failures[0]}")
 
 
+def _validate_run_component(value: str) -> None:
+    if not value or value in {".", ".."} or any(character in value for character in "/\\:"):
+        raise ValueError("Run family and label must each be one path component")
+
+
 def allocate_run_directory(
     repository: Path,
     *,
@@ -242,12 +243,20 @@ def allocate_run_directory(
     label: str,
     now: datetime | None = None,
 ) -> Path:
-    """Return a collision-resistant run path below ``repository``'s ``.logs``.
+    """Return a collision-resistant run path under the temporary log base.
 
     The PID in the marker is load-bearing rather than decorative: it is what lets
     the reaper resolve a directory's owner against the OS and so distinguish a run
     still being written from output that can go.
     """
+    for value in (family, label):
+        _validate_run_component(value)
     started = now or datetime.now(tz=UTC)
     marker = f"{started:%Y%m%dT%H%M%S.%fZ}-{label}-{os.getpid()}-{uuid4().hex[:8]}"
-    return repository / LOGS_STEM / family / f"{started:%Y-%m-%d}" / marker
+    base = test_log_root() if repository == REPO_ROOT else repository
+    destination = base / LOGS_STEM / family / f"{started:%Y-%m-%d}" / marker
+    if base.is_relative_to(REPO_ROOT / ".tmp") or base.is_relative_to(REPO_ROOT / "build"):
+        return resolve_temporary_output(override=destination)
+    if _has_link(destination):
+        raise ValueError(f"Run output must not follow a link: {destination}")
+    return destination

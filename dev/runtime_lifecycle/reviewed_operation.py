@@ -43,8 +43,8 @@ from pathlib import Path
 from typing import Any, Final
 
 from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
+from dev._paths import prepare_temp_root
 
 from .caller_owned_root import (
     AcceptanceError,
@@ -388,7 +388,7 @@ def main(arguments: list[str] | None = None) -> int:
     parser.add_argument("--keep", action="store_true", help="Keep the disposable root for inspection.")
     options = parser.parse_args(arguments)
     package = Path(options.package).resolve(strict=True)
-    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=prepare_temporary_directory()))
+    scratch = Path(tempfile.mkdtemp(prefix="reviewed-operation-", dir=prepare_temp_root()))
     try:
         receipt = asyncio.run(run(Programs.of(package), package, scratch))
     except (AcceptanceError, BaseExceptionGroup) as failure:

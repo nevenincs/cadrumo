@@ -32,4 +32,5 @@ You MUST respect these rules at all times:
 @.claude/rules/vaultspec-rag.builtin.md
 @.claude/rules/vaultspec-system.builtin.md
 @.claude/rules/vaultspec.builtin.md
+@.claude/rules/worktree-temporary-output.md
 </vaultspec>

@@ -26,6 +26,7 @@ import psutil
 
 from cadrumo_agent_service.installed_client import SERVICE_ID
 from cadrumo_runtime.application.development_root import mark_development_root
+from dev._paths import prepare_temp_root
 
 from .agent_service_session import (
     _close_holder,
@@ -247,14 +248,18 @@ def main() -> None:
     output = arguments.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     identities = {name: package_identity(package) for name, package in packages.items()}
-    with tempfile.TemporaryDirectory(prefix="agent-startup-", dir=output.parent) as temporary:
+    scratch_parent = prepare_temp_root()
+    with tempfile.TemporaryDirectory(prefix="agent-startup-", dir=scratch_parent) as temporary:
         scratch = Path(temporary)
         report: dict[str, Any]
         if arguments.resume:
             report = json.loads(output.read_text(encoding="utf-8"))
             require(report["packages"] == identities, "cannot resume with changed packages")
             previous_scratch = Path(report["scratch"]).resolve()
-            require(previous_scratch.parent == output.parent, "benchmark scratch must remain beside its report")
+            require(
+                previous_scratch.parent == scratch_parent,
+                "benchmark scratch must remain in controlled temporary storage",
+            )
             require(all(sample["sample"] <= arguments.samples for sample in report["samples"]), "cannot reduce samples")
         else:
             require(not output.exists(), "output already exists; use --resume or a new output path")

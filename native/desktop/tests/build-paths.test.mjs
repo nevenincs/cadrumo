@@ -8,7 +8,11 @@ import {
 } from "node:fs";
 import { resolve } from "node:path";
 import test from "node:test";
-import { buildPath, readBuildPaths } from "../scripts/build-paths.mjs";
+import {
+  buildPath,
+  readBuildPaths,
+  requireBuildOutput,
+} from "../scripts/build-paths.mjs";
 
 const testing = buildPath("desktop_testing");
 mkdirSync(testing, { recursive: true });
@@ -199,4 +203,58 @@ test("production buildPath uses the selected CMake binary directory", () => {
     target,
     resolve(process.env.CADRUMO_CMAKE_BINARY_DIR, "desktop/testing"),
   );
+});
+
+test("output admission rejects source, traversal and linked descendants", (t) => {
+  const fixture = configuredBuild();
+  try {
+    const output = resolve(fixture.build, "desktop/testing");
+    mkdirSync(output, { recursive: true });
+    assert.equal(
+      requireBuildOutput(
+        resolve(output, "record.json"),
+        fixture.build,
+        fixture.repository,
+      ),
+      resolve(output, "record.json"),
+    );
+    assert.throws(
+      () =>
+        requireBuildOutput(
+          resolve(fixture.repository, "native/result"),
+          fixture.build,
+          fixture.repository,
+        ),
+      /outside declared/,
+    );
+    assert.throws(
+      () =>
+        requireBuildOutput(
+          `${output}/../testing/result`,
+          fixture.build,
+          fixture.repository,
+        ),
+      /traversal/,
+    );
+    try {
+      symlinkSync(fixture.repository, resolve(output, "escape"), "junction");
+    } catch (error) {
+      if (["EACCES", "EPERM", "ENOTSUP"].includes(error.code)) {
+        t.skip("This host does not permit creating a directory junction");
+        return;
+      }
+      throw error;
+    }
+    assert.throws(
+      () =>
+        requireBuildOutput(
+          resolve(output, "escape/result"),
+          fixture.build,
+          fixture.repository,
+        ),
+      /Linked CMake output/,
+    );
+  } finally {
+    rmSync(fixture.repository, { recursive: true, force: true });
+  }
 });

@@ -22,8 +22,7 @@ if not (__package__ is not None and __package__):
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root
 
 from .apidocs.manager import API_SOURCE_PACKAGE, API_SOURCE_ROOTS, CLI_REFERENCE_SUBTREE, ApiStubManager, stub_filename
 from .build_paths import DOCS_BASE_URL_ENV, docs_build_root, docs_html_root, pin_docs_build_root
@@ -285,7 +284,7 @@ def _full_build_source(docs_root: Path, *, isolated: bool) -> Generator[Path]:
     if not isolated:
         yield docs_root
         return
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-", dir=prepare_temporary_directory()) as tmp:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-source-", dir=prepare_temp_root()) as tmp:
         source_root = Path(tmp) / "docs"
         _copy_docs_source(docs_root, source_root)
         yield source_root
@@ -302,7 +301,7 @@ def ensure_isolated_storage_root() -> None:
     refusal must not red a docs build on a machine that carries retired
     ``aeat`` state. Callers that deliberately pin a storage root keep it.
     """
-    scratch = prepare_temporary_directory() / "cadrumo-docs-build-storage"
+    scratch = prepare_temp_root() / "cadrumo-docs-build-storage"
     os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(scratch))
     Path(os.environ["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
     ensure_private_diagnostic_log()
@@ -950,7 +949,7 @@ def _build_changed_docs(
     generated_api_stubs = (
         _generated_api_stub_names(repo_root) if plan.api_scaffold_required and scope != "user" else frozenset()
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-", dir=prepare_temporary_directory()) as tmp:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-changed-", dir=prepare_temp_root()) as tmp:
         temp_root = Path(tmp)
         temp_docs_root = temp_root / "docs-source"
         _copy_docs_source(docs_root, temp_docs_root)

@@ -22,9 +22,9 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.locks_errors import LockAcquisitionError
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryValidationError
+from dev._paths import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority, compiled_bundled_authority
 from ._export_tree import render_complete_export_tree
@@ -911,7 +911,7 @@ def target_currentness(
         effective_period,
     )
     with tempfile.TemporaryDirectory(
-        prefix="cadrumo-generated-export-currentness-", dir=prepare_temporary_directory()
+        prefix="cadrumo-generated-export-currentness-", dir=prepare_temp_root()
     ) as temporary_name:
         prepared = at_edition_grade(
             prepare_generated_tree_invocation(invocation, Path(temporary_name), authority=effective_authority),
@@ -1072,7 +1072,7 @@ def recover_completed_legacy_target_command(
             raise ValueError("legacy recovery requires an exact lowercase target manifest sha256")
         authority = compiled_bundled_authority()
         with tempfile.TemporaryDirectory(
-            prefix="cadrumo-legacy-export-recovery-", dir=prepare_temporary_directory()
+            prefix="cadrumo-legacy-export-recovery-", dir=prepare_temp_root()
         ) as directory:
             prepared = prepare_generated_tree_invocation(invocation, Path(directory), authority=authority)
             rendered = _render_candidate(prepared)

@@ -177,11 +177,6 @@ function build(variant) {
     ...selected.environment,
     CARGO_TARGET_DIR: paths.cargo,
     CADRUMO_NATIVE_CONTRACT: contract,
-    // The host admits only the TUI views this navigation projection declares.
-    CADRUMO_DESKTOP_NAVIGATION: resolve(
-      buildPath("desktop_frontend_generated"),
-      "navigation.json",
-    ),
     CADRUMO_CONTRACT_RS: resolve(contract, "../contract.rs"),
     CADRUMO_PROCESS_MANIFEST: resolve(
       contract,
@@ -194,6 +189,8 @@ function build(variant) {
     CADRUMO_ID_MANAGER_NAME: identity.manager_name,
     ...stamp.environment,
   };
+  environment.CARGO_BUILD_BUILD_DIR = environment.CARGO_TARGET_DIR;
+  environment.CARGO_BUILD_TARGET_DIR = environment.CARGO_TARGET_DIR;
   if (process.env.CADRUMO_DESKTOP_RUST_BIN) {
     const key =
       Object.keys(environment).find((name) => name.toUpperCase() === "PATH") ??

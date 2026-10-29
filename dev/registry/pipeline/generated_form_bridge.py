@@ -17,9 +17,9 @@ from pathlib import Path
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormLayoutReviewState
+from dev._paths import prepare_temp_root
 
 from ..compiler.authority import compile_validated_authority
 from ..compiler.loader import load_registry_tree
@@ -341,9 +341,7 @@ def prepare_generated_form_bridge(
     _require_reviewed_package_identities(old_package, new_package, modelo, revision, source_ref, source_sha256)
     generated_form_bytes = _candidate_generated_form_bytes(candidate_root, modelo, revision, source_root)
     other = _other_files(registry_root, modelo, revision)
-    with tempfile.TemporaryDirectory(
-        prefix="cadrumo-generated-form-bridge-", dir=prepare_temporary_directory()
-    ) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-generated-form-bridge-", dir=prepare_temp_root()) as scratch:
         overlay = Path(scratch) / "registry" / "aeat"
         shutil.copytree(registry_root, overlay)
         overlay_revision = overlay / "modelos" / modelo / "revisions" / revision

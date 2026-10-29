@@ -12,9 +12,9 @@ related:
   - '[[2026-06-03-modelo-export-visual-design-adr]]'
   - '[[2026-09-26-export-parity-calculation-report-adr]]'
   - '[[2026-09-26-export-parity-calculation-summary-pdf-adr]]'
-modified: '2026-09-27'
+modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:aa5ad6dd4462d2b5a5fb325569173de7fb63ce5df44e171264228768ddd49acd'
+body_hash: 'sha256:c31c079cb0543996a7836715cc10f71d964e150f997f12831e3d741f2e88e4c2'
 ---
 
 # `export-parity` plan
@@ -39,13 +39,13 @@ The live working ledger is the gitignored campaign scratch home; durable finding
 - [x] `S16` - Give exempt and out-of-scope inputs (exempt premiums, RETA quotas) a grounded IVA treatment that needs no deduction kind, and a supported write path for a bien de inversion's investment asset identity, so 303/390 calculate over a complete autonomo ledger; `src/cadrumo/domain/iva/**, src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/domain/iva/**, src/cadrumo/application/**, src/cadrumo/_data/registry/aeat/**`.
 - [x] `S15` - Refuse or block filing grade for an annual withholding summary (190/180/193) with no per-perceptor detail when the ledger holds evidence of practised withholding, grounded in the Modelo 190 order and RIRPF art. 108; `src/cadrumo/application/**, src/cadrumo/domain/modelos/**`.; `src/cadrumo/application/**, src/cadrumo/domain/modelos/**`.
 - [ ] `S14` - Author the withholding recognition rules on a 2022 baseline in place of the hard-coded 2025-only year gate, grounded in RIRPF art. 78 (operator direction 2026-09-27); `src/cadrumo/application/aggregation/**, src/cadrumo/_data/registry/aeat/**`.; `src/cadrumo/application/aggregation/**, src/cadrumo/_data/registry/aeat/**`.
-- [ ] `S13` - Audit the registry for conformance with delta keying against a baseline, filing-year keying and temporal projection using the dev/registry tooling, then rectify every nonconformity per modelo with one writer, starting with Modelo 100's 2022/2023 coverage (operator direction 2026-09-27); `src/cadrumo/_data/registry/aeat/**, scratch/export-parity/reports/**`.; `src/cadrumo/_data/registry/aeat/**, scratch/export-parity/reports/**`.
+- [ ] `S13` - Audit the registry for conformance with delta keying against a baseline, filing-year keying and temporal projection using the dev/registry tooling, then rectify every nonconformity per modelo with one writer, starting with Modelo 100's 2022/2023 coverage (operator direction 2026-09-27); `src/cadrumo/_data/registry/aeat/**, .tmp/export-parity/reports/**`.
 - [x] `S07` - Introduce the typed export destination contract and refuse to overwrite an existing export file; `src/cadrumo/application/modelo/**, src/cadrumo/entrypoints/**`.
 - [x] `S08` - Wire the offline XLSX workbook destination from the shared calc-sheets plan; `src/cadrumo/adapters/outbound/**, src/cadrumo/application/storage/calc_sheets/**, src/cadrumo/entrypoints/**`.
 - [x] `S09` - Build the typed calculation-report builder with traceability facts and the CSV destination, and wire it to the CLI and TUI; the PDF moves to its own designed artefact (operator direction 2026-09-26); `src/cadrumo/application/**, src/cadrumo/entrypoints/**`.; `src/cadrumo/application/**, src/cadrumo/entrypoints/**`.
 - [x] `S12` - Design the calculation-summary PDF as its own artefact (human-readable and machine-readable, embedded data, calculation certification, metadata hash identifiers traceable to the encrypted store), record it as a proposed ADR amending the calculation-report decision, and implement it only after operator acceptance; `.vault/research/**, .vault/adr/**, src/cadrumo/application/**, src/cadrumo/adapters/outbound/**, src/cadrumo/entrypoints/**`.; `.vault/research/**, .vault/adr/**, src/cadrumo/application/**, src/cadrumo/adapters/outbound/**, src/cadrumo/entrypoints/**`.
 - [x] `S10` - Give the TUI export the widened public result so it states evidence status, completeness and identity grade; `src/cadrumo/application/modelo/operation_definitions.py, src/cadrumo/entrypoints/tui/**`.
-- [ ] `S11` - Run CLI and TUI parity lanes per modelo family and year for every format, including both cross-year carry lanes, and render the export matrix; `scratch/export-parity/**, dev/acceptance/export_parity/**`.
+- [ ] `S11` - Run CLI and TUI parity lanes per modelo family and year for every format, including both cross-year carry lanes, and render the export matrix; `.tmp/export-parity/**, dev/acceptance/export_parity/**`.
 
 ## Parallelization
 

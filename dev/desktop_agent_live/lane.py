@@ -59,7 +59,7 @@ from typing import TYPE_CHECKING, Any, Final, cast
 import httpx
 import psutil
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 
 from ..packaging.command_execution import run_command
 from ..runtime_lifecycle.caller_owned_root import AcceptanceError, require
@@ -736,9 +736,7 @@ def _main(argv: list[str] | None) -> int:
     parser.add_argument("playwright", nargs="*", help="Arguments after -- go to Playwright, such as -g PATTERN.")
     options = parser.parse_args(argv)
     run_directory = Path(
-        tempfile.mkdtemp(
-            prefix=f"desktop-agent-live-{datetime.now(UTC):%Y%m%dT%H%M%SZ}-", dir=prepare_temporary_directory()
-        )
+        tempfile.mkdtemp(prefix=f"desktop-agent-live-{datetime.now(UTC):%Y%m%dT%H%M%SZ}-", dir=prepare_temp_root())
     )
     base = run_directory.parent
     try:

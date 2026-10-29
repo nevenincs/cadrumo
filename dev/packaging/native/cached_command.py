@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import os
+import tempfile
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, cast
@@ -17,6 +18,7 @@ from ..google_oauth import build_client_json, client_build_identity
 from .action_cache import action_lock, receipt_owner
 from .build_directory import require_enrolled_build
 from .build_log import BuildLog, command_line, display_path
+from .build_paths import build_paths
 from .build_timing import BuildTimings, measure_build
 from .build_toolchain import sysroot_inventory
 from .hashing import digest, digest_cache
@@ -265,6 +267,14 @@ def _write_marker(marker: Path, state: dict[str, Any]) -> None:
     marker.write_text(json.dumps(state, sort_keys=True), encoding="utf-8")
 
 
+def _configure_temporary(build: Path) -> None:
+    """Keep this CMake action and its child process in the build's temporary directory."""
+    temporary = build_paths(build)["temporary"]
+    temporary.mkdir(parents=True, exist_ok=True)
+    os.environ.update(dict.fromkeys(("CADRUMO_TEMP_DIR", "TEMP", "TMP", "TMPDIR"), str(temporary)))
+    tempfile.tempdir = str(temporary)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=require_enrolled_build, required=True)
@@ -274,4 +284,5 @@ if __name__ == "__main__":
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         parser.error("an executable command is required")
+    _configure_temporary(args.build)
     run_cached(args.build, args.spec, command)

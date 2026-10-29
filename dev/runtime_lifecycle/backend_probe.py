@@ -37,9 +37,8 @@ from pathlib import Path
 from typing import Any
 
 from cadrumo.core.errors.failure_report import failure_chain
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root
 
 from .agent_service_session import agent_service_session
 from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, consumer_environment, require
@@ -228,7 +227,7 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment; no agent phase.")
     parser.add_argument("--skip-agent", action="store_true", help="Probe sign-in and activity only.")
     options = parser.parse_args(arguments)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-probe-", dir=prepare_temporary_directory()) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-probe-", dir=prepare_temp_root()) as temporary:
         scratch = Path(temporary)
         probe = Probe()
         if options.source:

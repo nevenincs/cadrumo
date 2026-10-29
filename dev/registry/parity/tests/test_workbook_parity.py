@@ -667,7 +667,7 @@ def test_libreoffice_refuses_a_profile_root_too_deep_to_initialise(
     shutil.copy(r"C:\Windows\System32\where.exe", fake_soffice)
     deep_temp_root = tmp_path / ("t" * 150)
     deep_temp_root.mkdir()
-    monkeypatch.setattr(_libreoffice, "prepare_temporary_directory", lambda: deep_temp_root)
+    monkeypatch.setattr(_libreoffice, "prepare_temp_root", lambda: deep_temp_root)
 
     with pytest.raises(RegistryValidationError, match="user profile root") as excinfo:
         run_workbook_with_libreoffice(

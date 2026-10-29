@@ -49,7 +49,8 @@ from typing import Any
 from mcp import ClientSession
 from mcp.client.stdio import StdioServerParameters, stdio_client
 
-from cadrumo.core.storage_environment import host_installed_default_root, prepare_temporary_directory
+from cadrumo.core.storage_environment import host_installed_default_root
+from dev._paths import prepare_temp_root
 
 _PROFILE_NAME = "caller-owned-acceptance"
 _READY_SECONDS = 180
@@ -493,7 +494,7 @@ def main(arguments: list[str] | None = None) -> int:
     options = parser.parse_args(arguments)
     # The disposable root sits outside the installed default root whose
     # changes this proof attributes to the run.
-    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-", dir=prepare_temporary_directory()))
+    scratch = Path(tempfile.mkdtemp(prefix="cadrumo-co-", dir=prepare_temp_root()))
     try:
         receipt = run(options.package.resolve(strict=True), scratch)
     except AcceptanceError as failure:

@@ -14,8 +14,7 @@ from pathlib import Path
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import UTF_8
+from dev._paths import UTF_8, prepare_temp_root
 from dev.docs.build_paths import docs_html_root
 from dev.docs.pagefind_index import IndexedRoot
 from dev.packaging.command_execution import CommandResult, run_command
@@ -170,7 +169,7 @@ def _run_site_builds(
     _clear_root_indexes(html_root, builds)
     written = "; ".join(f"{build.name} writes {', '.join(build.languages)}" for build in builds)
     print(f"Running {len(builds)} site build(s) at once on {os.cpu_count() or 1} CPUs: {written}.", flush=True)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-docs-roots-", dir=prepare_temp_root()) as scratch:
 
         def run(index: int, build: SiteBuild) -> CommandResult:
             storage_root = Path(scratch) / str(index)

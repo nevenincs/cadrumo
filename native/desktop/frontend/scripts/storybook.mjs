@@ -45,7 +45,11 @@ const result = spawnSync(
   {
     cwd: frontend,
     stdio: "inherit",
-    env: { ...process.env, STORYBOOK_DISABLE_TELEMETRY: "1" },
+    env: {
+      ...process.env,
+      STORYBOOK_DISABLE_TELEMETRY: "1",
+      CACHE_DIR: buildPath("desktop_cache"),
+    },
   },
 );
 if (result.error) throw result.error;

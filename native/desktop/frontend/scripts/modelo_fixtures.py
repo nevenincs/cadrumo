@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any, cast
 from uuid import UUID
 
+from dev._paths import prepare_temp_root
 from pydantic import BaseModel
 from pydantic.json_schema import models_json_schema
 
@@ -1495,7 +1496,10 @@ def write_envelopes(directory: Path) -> None:
 
     directory.mkdir(parents=True, exist_ok=True)
     income = (_income_categories_fact(),)
-    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=income) as first:
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _seeded(Path(tmp), facts=income) as first,
+    ):
         works = {DECLARATIONS[0][0]: first}
         for modelo, period_code, _ in DECLARATIONS[1:]:
             works[modelo] = _other_declaration(first, modelo, period_code)
@@ -1515,7 +1519,10 @@ def write_envelopes(directory: Path) -> None:
         _write_unverified_export(directory, first, Path(tmp) / "modelo-165.txt")
     # Its own profile: recording needs the earlier Renta filed under the profile's tax id.
     facts = (*income, UserProfileFact(path="identity.tax_id", value=SEEDED_SOURCE_TAX_ID))
-    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=facts) as filed:
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _seeded(Path(tmp), facts=facts) as filed,
+    ):
         _seed_income(filed)
         _write(directory, "file-130.json", _record_filed(filed))
         _write_form(directory, filed, "modelo-130-1T-filed")
@@ -1529,14 +1536,17 @@ def write_envelopes(directory: Path) -> None:
     # Its own profile, on a frozen timeline: a review half an hour after the form was read, and its renewal.
     started = now()
     with (
-        tempfile.TemporaryDirectory() as tmp,
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         frozen_clock(started - timedelta(minutes=40)),
         _seeded(Path(tmp), facts=income) as renewing,
     ):
         renewing.recalculate()
         _write_renewal_flow(directory, renewing, started)
     # Its own profile: the file for the AEAT is written, then the declaration changes and is checked again.
-    with tempfile.TemporaryDirectory() as tmp, _seeded(Path(tmp), facts=facts) as stale:
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _seeded(Path(tmp), facts=facts) as stale,
+    ):
         _seed_income(stale)
         _check_clean(stale)
         _write(directory, "export-130.json", _export_file(stale, Path(tmp) / "modelo-130.txt"))

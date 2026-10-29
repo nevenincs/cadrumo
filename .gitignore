@@ -356,7 +356,7 @@ cache/
 **/.cache/
 
 # Root-level ad-hoc agent run directories (the retired .runtime-sNN-*
-# convention; ruling R5 mandates scratch/ as the sole scratch location).
+# convention; current policy mandates .tmp/ as the sole general scratch root).
 # Ignored so a future one-off cannot land tracked; existing dirs are
 # cleaned up under S22.
 .runtime-*/
@@ -382,8 +382,9 @@ cache/
 /euipo-*.png
 /oepm-*.png
 
-# Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
-# agent workspaces). Same role as scratch/ — ephemeral, never in git.
+# Canonical general developer/agent temporary output root. Vacate after use.
+# Legacy scratch/output spellings remain ignored as a safety net, not approved
+# destinations. Native build output and scratch stay in CMake build/<preset>/.
 /.tmp/
 /.tmp_*/
 /.tmp-*/

@@ -3,8 +3,8 @@ tags:
   - '#adr'
   - '#data-output-standardization'
 date: '2026-07-13'
-modified: '2026-10-08'
-body_hash: 'sha256:646bd3d9e2c70c29dc572755d848c02c0cd651bf1ff91fcb72744e2670759452'
+modified: '2026-10-29'
+body_hash: 'sha256:150c57ec7280ade907dfd19849844cd5b403812660c1a144d514d38a139549ad'
 related:
   - "[[2026-07-13-data-output-standardization-research]]"
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
@@ -132,17 +132,17 @@ is fixed as `modelo-<id>-<year>-<period>` with canonical AEAT period tokens
 (e.g. `modelo-303-2026-1T`), used by tests and any future default composer.
 No aliases, no read-tolerance of old names.
 
-**R5 — One scratch convention.** Repo-root `scratch/` is the sole mandated
+**R5 — One scratch convention (amended 2026-10-29).** Repo-root `.tmp/` is the sole mandated
 dev/agent scratch location, with schema
-`scratch/<yyyy-mm-dd>-<owner-or-session>-<label>/` for directories and the
-same stem for loose files; `.gitignore` keeps ignoring all of it, gains a
+`.tmp/<yyyy-mm-dd>-<owner-or-session>-<label>/` for directories and the
+same stem for loose files; programmatic runs may instead use collision-resistant PID-owned children. Native build scratch is excluded from this root and stays under its enrolled CMake `build/<preset>/` tree. `.gitignore` keeps ignoring general scratch, gains a
 `.runtime-*/` pattern (the ad-hoc `.runtime-sNN-*` convention is retired and
 its existing dirs cleaned up), repairs the dead `src/cadrumo/...` corpus-manual
 rules to `src/cadrumo/...`, and broadens root-level scratch patterns so
 one-off scripts/dumps cannot land tracked. The currently tracked repo-root
 run artifacts (`revert.patch`, `rail-snap.md`, `add_frontmatter.py`,
 `test_docs_output.txt`, `scratch_pathspec.txt`) are deleted from tracking.
-Naked `test_*.py` under `scratch/` are deleted (stale imports) — the
+Naked `test_*.py` under `.tmp/` are deleted (stale imports) — the
 tests-topology rule already forbids their shape.
 
 **R6 — Env-var prefix adjudication.** The settings-field rename wave migrates
@@ -183,9 +183,7 @@ with eviction (R2) close both. Lifecycle-by-declaration (R3) generalises the
 three managed exemplars the codebase already ships instead of importing a new
 mechanism. The naming rulings (R4, R6) apply the accepted cadrumo ownership
 doctrine to the artifact surface the rename campaign did not sweep, using
-the hard-cut precedent already in-tree. R5 formalises what `scratch/` already
-is de facto — the swarm's working area — and kills the parallel undocumented
-`.runtime-s*` convention. R7 and R8 are consolidation of proven in-tree
+the hard-cut precedent already in-tree. R5 establishes `.tmp/` as the general working area under the explicit 2026-10-29 amendment, replacing the earlier scratch root, and kills the parallel undocumented `.runtime-s*` convention. R7 and R8 are consolidation of proven in-tree
 patterns onto single authorities, the same shape as prior single-contract
 campaigns (binding validation, period filter).
 
@@ -194,7 +192,7 @@ campaigns (binding validation, period filter).
 - Persistent application data stays under the categorised storage root;
   default transport sockets and namespace locks in installed Darwin mode use
   the narrowly declared external anchor below. Nothing durable enters the OS temp
-  dir; scratch stays under `scratch/`. Backup/GDPR-export data locations remain
+  dir; scratch stays under `.tmp/`. Backup/GDPR-export data locations remain
   unchanged by the transport exception.
 - The settings surface changes shape (defaults move; two dormant fields
   deleted; several fields renamed) — pre-release zero-legacy makes this
@@ -219,3 +217,13 @@ campaigns (binding validation, period filter).
 Persistent data, encrypted custody, logs, preferences, boot/installation records and start claims remain at existing locations. R8 isolation remains binding: development roots stay root-relative and explicit synthetic/operator socket namespaces do not resolve into the installed transport namespace. Custom installed data roots remain separated by root-derived endpoint identities. Namespace locks remain stable while contenders may exist and ordinary reclaim/uninstall never deletes their directory or inodes. There is no old-path reader, data movement or migration. The successor governs exact selection, naming, native validation and refusal.
 
 Accepted 2026-10-08 under the user's advance authorization to fix defects and code/build all installer/manager work except signing. This remedies the measured Darwin socket-path launch blocker without claiming implementation or native lifecycle acceptance.
+
+## 2026-10-29 accepted workspace temporary-output amendment
+
+The operator explicitly directed removal of all scattered scratch/temp output and mandated repository-root .tmp for general programmatic and agent temporary work, then separately required that native build artifacts never be written to native or outside the CMake-owned build outline. This authorizes the amendment and implementation without another approval.
+
+R5 formerly named scratch as the general workspace; that spelling has no continuing placement authority. General developer/agent scratch, captures, disposable reports and temporary files use .tmp/<date>-<owner>-<purpose> or collision-resistant process-owned children and are vacated after the task. Do not create alternative artifact roots, provider-local scratch or home/other-drive evidence directories.
+
+Native compilation, generated assets, test results and native verification scratch remain under the enrolled CMake build/<preset> tree. Native build producers must reject arbitrary output destinations and source-local output defaults. This qualifies the general .tmp rule for native build ownership; it does not authorize moving native outputs into root .tmp.
+
+Installed runtime state, machine-managed dependency/tool caches and destination-adjacent atomic-publication transactions retain their separate contracts. The amendment changes development workspace placement and cleanup, not taxpayer custody or installed storage. Historical ledgers/research record prior paths and must not be rewritten as though past runs used the new convention.

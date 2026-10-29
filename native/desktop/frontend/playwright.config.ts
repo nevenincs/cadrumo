@@ -11,7 +11,7 @@ const hot = `http://127.0.0.1:${hotPort}`;
 const viewport = { width: 1440, height: 1050 };
 const results = testRunDirectory(buildPath("desktop_results"));
 // The record `--last-failed` reads sits beside the runs, not in one of them.
-process.env.PLAYWRIGHT_LAST_RUN_OUTPUT_FILE ??= resolve(
+process.env.PLAYWRIGHT_LAST_RUN_OUTPUT_FILE = resolve(
   buildPath("desktop_results"),
   "last-run.json",
 );
@@ -61,7 +61,8 @@ export default defineConfig({
       name: "product",
       // Built by the run that tests it, so the product project and the
       // bundle check never read a stale build.
-      command: "npx vite build && npx vite preview",
+      command:
+        "npx vite build --configLoader runner && npx vite preview --configLoader runner",
       url: preview,
       reuseExistingServer: false,
       timeout: 120_000,
@@ -71,14 +72,14 @@ export default defineConfig({
       // Built by the run that tests it, into the testing directory beside
       // the benchmark's, never the product's.
       command:
-        "npx vite build --mode scenarios && npx vite preview --mode scenarios",
+        "npx vite build --configLoader runner --mode scenarios && npx vite preview --configLoader runner --mode scenarios",
       url: `${scenarios}/scenarios.html`,
       reuseExistingServer: false,
       timeout: 120_000,
     },
     {
       name: "hot-reload",
-      command: "npx vite --mode scenarios",
+      command: "npx vite --configLoader runner --mode scenarios",
       url: `${hot}/scenarios.html`,
       reuseExistingServer: false,
       timeout: 120_000,

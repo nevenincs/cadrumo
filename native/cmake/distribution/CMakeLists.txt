@@ -4,6 +4,10 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_BINARY_DIR)
   message(FATAL_ERROR "Use an out-of-source distribution build directory")
 endif()
 include(../Identity.cmake)
+file(MAKE_DIRECTORY "${CADRUMO_PATH_TEMPORARY}")
+set(distribution_environment "${CMAKE_COMMAND}" -E env
+  "CADRUMO_TEMP_DIR=${CADRUMO_PATH_TEMPORARY}"
+  "TEMP=${CADRUMO_PATH_TEMPORARY}" "TMP=${CADRUMO_PATH_TEMPORARY}" "TMPDIR=${CADRUMO_PATH_TEMPORARY}")
 include(../ToolchainFloor.cmake)
 file(READ "${CADRUMO_SOURCE_ROOT}/native/toolchain.json" toolchain)
 string(JSON cmake_floor GET "${toolchain}" cmake)
@@ -221,7 +225,7 @@ function(cadrumo_distribution_package target generator)
     OUTPUTS "${CADRUMO_PATH_PACKAGES}")
   add_custom_target(${target}
     ${msi_guard}
-    COMMAND "${CMAKE_CPACK_COMMAND}" --config "${CMAKE_BINARY_DIR}/CPackConfig.cmake"
+    COMMAND ${distribution_environment} "${CMAKE_CPACK_COMMAND}" --config "${CMAKE_BINARY_DIR}/CPackConfig.cmake"
       -C "$<CONFIG>" -G "${generator}"
     DEPENDS installation_prepare COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
 endfunction()
@@ -244,14 +248,14 @@ if(CADRUMO_TARGET STREQUAL "windows-x86-64")
   cadrumo_build_step(step_comment msi-author GROUP package
     SUMMARY "author the WiX sources for the MSI" OUTPUTS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
   add_custom_target(msi-author
-    COMMAND "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
+    COMMAND ${distribution_environment} "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi author
       --build "${CMAKE_BINARY_DIR}" --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args} ${msi_adapter_arguments}
     DEPENDS installation_prepare
     WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${step_comment}" VERBATIM)
   cadrumo_register_clean(TARGET msi-author PATHS "${CADRUMO_PATH_INSTALLATION_METADATA}/wix")
   if(installed_manager)
     find_program(CADRUMO_WIX_EXECUTABLE NAMES wix DOC "WiX 5+ compiler for scoped MSI products")
-    set(msi_build_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi_build)
+    set(msi_build_helper ${distribution_environment} "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.windows_msi_build)
     set(msi_build_arguments --build "${CMAKE_BINARY_DIR}"
       --identity "${CADRUMO_PATH_GENERATED}/identity.json" ${desktop_args} ${msi_adapter_arguments})
     cadrumo_build_step(step_comment msi GROUP package
@@ -354,7 +358,7 @@ elseif(CADRUMO_TARGET MATCHES "^linux-")
   if(linux_manager)
     find_program(CADRUMO_DPKG_DEB_EXECUTABLE NAMES dpkg-deb)
     find_program(CADRUMO_RPM_EXECUTABLE NAMES rpm)
-    set(linux_package_helper "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.linux_packages)
+    set(linux_package_helper ${distribution_environment} "${CADRUMO_DEV_PYTHON}" -B -m dev.packaging.native.linux_packages)
     set(linux_package_arguments --build "${CMAKE_BINARY_DIR}"
       --identity "${CADRUMO_PATH_GENERATED}/identity.json")
     foreach(format deb rpm)

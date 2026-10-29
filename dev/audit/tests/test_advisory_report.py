@@ -40,7 +40,7 @@ def test_allocate_run_dir_uses_logs_date_partition_and_unique_run_identity(tmp_p
     first = allocate_run_dir(tmp_path, now=instant)
     second = allocate_run_dir(tmp_path, now=instant)
 
-    assert first.parent == tmp_path / ".logs" / "audit-runs" / "2026-09-08"
+    assert first.parent == tmp_path / "logs" / "audit-runs" / "2026-09-08"
     assert first.name.startswith("20260908T123456.123456Z-audit-code-")
     assert first != second
 

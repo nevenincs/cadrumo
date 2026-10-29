@@ -30,7 +30,7 @@ def test_probe_reclaims_only_its_controlled_scratch(
         if fails:
             raise RuntimeError("probe failed")
 
-    monkeypatch.setattr(probe, "prepare_temporary_directory", lambda: tmp_path)
+    monkeypatch.setattr(probe, "prepare_temp_root", lambda: tmp_path)
     monkeypatch.setattr(probe, "source_programs", lambda: None)
     if probe_name == "backend":
 

@@ -1,4 +1,4 @@
-"""Development-owned per-invocation pytest logs under ``.logs``."""
+"""Development-owned per-invocation pytest logs under ``.tmp/logs``."""
 
 from __future__ import annotations
 
@@ -11,7 +11,6 @@ import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import IO, Any, Final
-from uuid import uuid4
 
 import pytest
 
@@ -20,6 +19,7 @@ from cadrumo.core.storage_environment import resolve_storage_path
 from .paths import (
     ScratchAllocation,
     ScratchOwnershipError,
+    allocate_run_directory,
     allocate_scratch_directory,
     remove_scratch_directory,
     scratch_base,
@@ -66,8 +66,7 @@ class RunLog:
         """
         now = datetime.now(UTC)
         repository = repository.resolve()
-        marker = f"{now:%Y%m%dT%H%M%S.%fZ}-pytest-{os.getpid()}-{uuid4().hex[:8]}"
-        self.root = repository / ".logs" / "test-runs" / f"{now:%Y-%m-%d}" / marker
+        self.root = allocate_run_directory(repository, family="test-runs", label="pytest", now=now)
         self.root.mkdir(parents=True, exist_ok=False)
         self.artifacts = self.root / "artifacts"
         self.cache = self.root / "cache"

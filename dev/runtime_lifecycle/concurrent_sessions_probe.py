@@ -41,9 +41,8 @@ from uuid import UUID
 
 import psutil
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_runtime.application.development_root import mark_development_root
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root
 
 from .backend_probe import logged_problems, runtime_alive, source_programs
 from .caller_owned_root import (
@@ -534,7 +533,7 @@ def main(arguments: list[str] | None = None) -> int:
     selection.add_argument("--source", action="store_true", help="This checkout's environment.")
     parser.add_argument("--stop-after", choices=tuple(_PHASES), help="Run the phases up to this one only.")
     options = parser.parse_args(arguments)
-    with tempfile.TemporaryDirectory(prefix="cadrumo-concurrent-", dir=prepare_temporary_directory()) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-concurrent-", dir=prepare_temp_root()) as temporary:
         scratch = Path(temporary)
         root, secrets = scratch / "storage", scratch / "secrets"
         root.mkdir()

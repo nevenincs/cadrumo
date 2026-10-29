@@ -28,7 +28,7 @@ for (const name of [
     );
 
 const frontend = fileURLToPath(new URL("..", import.meta.url));
-const server = await createServer({ root: frontend });
+const server = await createServer({ root: frontend, configLoader: "runner" });
 try {
   await server.listen();
 } catch (error) {

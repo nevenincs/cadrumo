@@ -19,6 +19,68 @@ from ..cargo_command import run_configured_command
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.mark.parametrize(
+    "arguments", [["--config", "build.build-dir='outside'", "build"], ["build", "--artifact-dir=outside"]]
+)
+def test_cargo_output_overrides_are_refused_before_launch(tmp_path: Path, arguments: list[str]) -> None:
+    with pytest.raises(ValueError, match="not accept"):
+        run_configured_command(tmp_path, {}, ["cargo", *arguments])
+
+
+@pytest.mark.parametrize("arguments", [["b"], ["doc"], ["bench"], ["+nightly", "build"], ["--version"], ["fmt"]])
+def test_unrecognized_cargo_commands_are_refused_before_launch(tmp_path: Path, arguments: list[str]) -> None:
+    with pytest.raises(ValueError, match="subcommand or global option"):
+        run_configured_command(tmp_path, {}, ["cargo", *arguments])
+
+
+def test_test_program_target_dir_is_not_a_cargo_override(tmp_path: Path) -> None:
+    native = tmp_path / "cargo"
+    assert (
+        cargo_command._selected_target_directory(native, ["cargo", "test", "--", "--target-dir", "outside"]) == native
+    )
+
+
+@pytest.mark.parametrize(
+    "arguments",
+    [
+        ["fmt", "--check", "--manifest-path", "Cargo.toml"],
+        [
+            "deny",
+            "--locked",
+            "--manifest-path",
+            "Cargo.toml",
+            "check",
+            "--config",
+            "deny.toml",
+            "--hide-inclusion-graph",
+            "advisories",
+            "bans",
+            "licenses",
+            "sources",
+        ],
+    ],
+)
+def test_quality_commands_use_owned_cargo_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, arguments: list[str]
+) -> None:
+    native = tmp_path / "cargo/native"
+    (tmp_path / "build-paths.json").write_text(
+        json.dumps({"paths": {"generated": "generated", "cargo": "cargo/native", "desktop_cargo": "cargo/desktop"}}),
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("CARGO_TARGET_DIR", str(native))
+    monkeypatch.setenv("CARGO_BUILD_TARGET_DIR", str(tmp_path / "outside"))
+    monkeypatch.setenv("CARGO_BUILD_BUILD_DIR", str(tmp_path / "outside"))
+
+    def command(_argv: list[str], **kwargs: Any) -> Any:
+        assert kwargs["environment"]["CARGO_BUILD_TARGET_DIR"] == str(native)
+        assert kwargs["environment"]["CARGO_BUILD_BUILD_DIR"] == str(native)
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(cargo_command, "run_command", command)
+    assert run_configured_command(tmp_path, {}, ["cargo", *arguments]).returncode == 0
+
+
 def _toolchain(wrapper: Path) -> dict[str, Any]:
     return {
         "builder_files": {
@@ -133,6 +195,8 @@ def test_failed_cargo_action_keeps_identity_unpublished_and_retry_rebuilds(
         encoding="utf-8",
     )
     monkeypatch.setenv("CARGO_TARGET_DIR", str(native))
+    monkeypatch.setenv("CARGO_BUILD_BUILD_DIR", str(tmp_path / "outside"))
+    monkeypatch.setenv("CARGO_BUILD_TARGET_DIR", str(tmp_path / "outside"))
     inherited_path = os.pathsep.join((str(tmp_path / "path with spaces"), os.environ["PATH"]))
     monkeypatch.setenv("PATH", inherited_path)
     calls = []
@@ -140,7 +204,12 @@ def test_failed_cargo_action_keeps_identity_unpublished_and_retry_rebuilds(
 
     def command(argv: list[str], **kwargs: object) -> Any:
         nonlocal failed
-        assert kwargs["environment"] == dict(os.environ, PATH=os.pathsep.join((str(tmp_path), inherited_path)))
+        assert kwargs["environment"] == dict(
+            os.environ,
+            PATH=os.pathsep.join((str(tmp_path), inherited_path)),
+            CARGO_BUILD_BUILD_DIR=str(native),
+            CARGO_BUILD_TARGET_DIR=str(native),
+        )
         calls.append(argv[1])
         status = 0
         if argv[1] == failed_action and not failed:

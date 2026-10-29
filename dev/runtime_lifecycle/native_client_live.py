@@ -39,7 +39,7 @@ import sysconfig
 import tempfile
 from pathlib import Path
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 
 from .caller_owned_root import AcceptanceError, Programs, caller_owned_runtime, require, run_cli
 
@@ -92,7 +92,7 @@ def run(contract: Path, keep: bool) -> int:
     from cadrumo_runtime.application.development_root import mark_development_root
 
     programs = _programs()
-    scratch = Path(tempfile.mkdtemp(prefix="native-client-live-", dir=prepare_temporary_directory()))
+    scratch = Path(tempfile.mkdtemp(prefix="native-client-live-", dir=prepare_temp_root()))
     try:
         root = scratch / "storage"
         environment = _environment(root)

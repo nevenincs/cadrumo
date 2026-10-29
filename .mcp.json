@@ -5,7 +5,10 @@
       "args": [
         "-y",
         "@playwright/mcp",
-        "--headless"
+        "--headless",
+        "--isolated",
+        "--output-dir",
+        ".tmp/playwright-mcp"
       ]
     },
     "context7": {

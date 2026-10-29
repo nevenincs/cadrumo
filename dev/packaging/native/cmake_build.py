@@ -142,7 +142,7 @@ def main() -> None:
     if arguments.build is not None:
         temporary = build_paths(arguments.build)["temporary"]
         temporary.mkdir(exist_ok=True)
-        environment.update(dict.fromkeys(("TEMP", "TMP", "TMPDIR"), str(temporary)))
+        environment.update(dict.fromkeys(("CADRUMO_TEMP_DIR", "TEMP", "TMP", "TMPDIR"), str(temporary)))
         tempfile.tempdir = str(temporary)
     if arguments.build_identity is not None:
         resolved = resolve(cast(Path, arguments.build), [arguments.build_identity], configuration=arguments.config)

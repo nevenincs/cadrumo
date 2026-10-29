@@ -36,8 +36,8 @@ from typing import Final, cast
 
 import psutil
 
-from cadrumo.core.storage_environment import prepare_temporary_directory, resolve_storage_path
-from dev._paths import REPO_ROOT, UTF_8
+from cadrumo.core.storage_environment import resolve_storage_path
+from dev._paths import REPO_ROOT, UTF_8, prepare_temp_root
 from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
 
 from .import_authority import read_authority
@@ -212,8 +212,8 @@ def run_within_budget(
             f"has no work budget ({budget.cpu_seconds:g} CPU-s, {budget.stall_seconds:g} s stall limit)"
         )
     with (
-        tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stdout_file,
-        tempfile.TemporaryFile(dir=prepare_temporary_directory()) as stderr_file,
+        tempfile.TemporaryFile(dir=prepare_temp_root()) as stdout_file,
+        tempfile.TemporaryFile(dir=prepare_temp_root()) as stderr_file,
     ):
         returncode, cpu_seconds = asyncio.run(
             _supervise(
@@ -398,9 +398,7 @@ def run_subordinate(
                 CheckResult((), 0),
             )
         environment = _subordinate_environment()
-        with tempfile.TemporaryDirectory(
-            prefix="cadrumo-import-checker-", dir=prepare_temporary_directory()
-        ) as temporary:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-import-checker-", dir=prepare_temp_root()) as temporary:
             report_path = Path(temporary) / "checker.json"
             command = (
                 resolved,
@@ -467,9 +465,7 @@ def run_loadability(
 
     artifact_directory = os.environ.get("CADRUMO_DEV_ARTIFACTS_DIR")
     try:
-        with tempfile.TemporaryDirectory(
-            prefix="cadrumo-import-loadability-", dir=prepare_temporary_directory()
-        ) as temporary:
+        with tempfile.TemporaryDirectory(prefix="cadrumo-import-loadability-", dir=prepare_temp_root()) as temporary:
             report_path = _loadability_report_path(artifact_directory, temporary)
             command = (
                 sys.executable,

@@ -24,12 +24,12 @@ from typing import Final
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from dev._paths import REPO_ROOT, UTF_8
+from dev._paths import TEMP_ROOT, UTF_8, prepare_temp_root
 
 from ._inventory import InterfaceKind
 from ._viewports import VIEWPORTS, Orientation, ViewportName
 
-RUN_ROOT: Final[Path] = REPO_ROOT / ".tmp-tui-visual-inventory"
+RUN_ROOT: Final[Path] = TEMP_ROOT / "tui-visual-inventory"
 """Where runs land. Gitignored: these are review artefacts, never durable."""
 
 RUNS_DIR: Final[Path] = RUN_ROOT / "runs"
@@ -408,7 +408,15 @@ def now() -> str:
 
 def run_directory(name: str) -> Path:
     """The directory a run by this name occupies."""
-    return RUNS_DIR / name
+    if not name or Path(name).name != name or name in {".", ".."}:
+        raise ValueError("A review run name must be one directory name")
+    return prepare_temp_root(override=RUNS_DIR) / name
+
+
+def _require_run_output(directory: Path) -> None:
+    """Refuse a write or removal outside physically admitted temporary storage."""
+    if prepare_temp_root(override=directory) != directory:
+        raise ValueError(f"Review output must stay in admitted temporary storage: {directory}")
 
 
 def known_runs() -> tuple[Path, ...]:
@@ -420,6 +428,7 @@ def known_runs() -> tuple[Path, ...]:
 
 def write_manifest(directory: Path, manifest: Manifest) -> Path:
     """Persist ``manifest`` into ``directory`` and return its path."""
+    _require_run_output(directory)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / MANIFEST_NAME
     path.write_text(manifest.model_dump_json(indent=2) + "\n", encoding=UTF_8, newline="\n")
@@ -555,6 +564,7 @@ def stage_run_copy(source: Path, staging: Path) -> Path:
     construction is the residue of a copy that did not finish and is
     therefore never the only copy of anything.
     """
+    _require_run_output(staging)
     if staging.exists():
         shutil.rmtree(staging)
     staging.parent.mkdir(parents=True, exist_ok=True)
@@ -577,6 +587,8 @@ def commit_staged_run(staging: Path, destination: Path) -> Path:
     parked at ``staging``. That state is recoverable by hand and, because
     the source run is never touched, by running the snapshot again.
     """
+    _require_run_output(staging)
+    _require_run_output(destination)
     if destination.exists():
         shutil.rmtree(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)

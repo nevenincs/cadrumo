@@ -11,7 +11,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 from dev.deploy.cloudflare_api import (
     CloudflareAccount,
     cloudflare_call,
@@ -233,7 +233,7 @@ def _rollback(release: str, *, environment: Mapping[str, str] | None = None) -> 
     credentials = _delivery_credentials(env)
     with (
         deployment_lock(credentials.bucket),
-        tempfile.TemporaryDirectory(prefix="cadrumo-docs-rollback-", dir=prepare_temporary_directory()) as directory,
+        tempfile.TemporaryDirectory(prefix="cadrumo-docs-rollback-", dir=prepare_temp_root()) as directory,
     ):
         root = Path(directory)
         document = load_release(credentials.bucket, release, root)

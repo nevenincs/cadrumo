@@ -10,13 +10,13 @@ from pathlib import Path
 from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.link_safety import is_link_like
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource
+from dev._paths import prepare_temp_root
 
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_cross_revision import strict_cross_revision_casilla_continuity_failures
@@ -211,7 +211,7 @@ def _require_current_baseline_render(
     baseline_inputs = revision_render_inputs(
         authority, modelo=modelo, revision=str(baseline_id), source_root=source_root
     )
-    with tempfile.TemporaryDirectory(prefix="cadrumo-export-baseline-", dir=prepare_temporary_directory()) as scratch:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-export-baseline-", dir=prepare_temp_root()) as scratch:
         fresh_root = Path(scratch) / "export"
         fresh = render_complete_export_tree(
             fresh_root,

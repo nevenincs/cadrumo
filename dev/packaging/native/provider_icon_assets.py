@@ -17,7 +17,7 @@ from typing import TypedDict, cast
 from urllib.parse import quote_from_bytes
 from uuid import uuid4
 
-from cadrumo.core.storage_environment import prepare_temporary_directory
+from dev._paths import prepare_temp_root
 from dev.packaging.native.build_directory import require_enrolled_build
 
 from .agent import agent_wheel
@@ -68,7 +68,7 @@ def _provider_icons_module(archive: zipfile.ZipFile) -> Generator[ModuleType]:
     source = _read_once(archive, _ICON_MODULE)
     assets = _icon_assets(archive)
 
-    with tempfile.TemporaryDirectory(prefix="cadrumo-provider-icons-", dir=prepare_temporary_directory()) as temporary:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-provider-icons-", dir=prepare_temp_root()) as temporary:
         package_name = f"_cadrumo_provider_icons_{uuid4().hex}"
         package = Path(temporary) / package_name
         icon_directory = package / "icons"

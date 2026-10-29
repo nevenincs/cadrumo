@@ -51,6 +51,7 @@ secrets/
 .vault/
 .vaultspec/
 .logs/
+.tmp/
 scratch/
 .coverage
 """
@@ -60,6 +61,22 @@ def _write(path: Path, content: str = "x") -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
     return path
+
+
+def test_canonical_temp_keeps_live_scratch_and_flags_unowned_work(repository: Path) -> None:
+    live = _write(repository / ".tmp" / f"cr_{os.getpid()}_abc123" / "work.txt")
+    capture = _write(repository / ".tmp" / "manual" / "capture.txt")
+    live_verdict, _ = classify(repository, live.parent.relative_to(repository).as_posix())
+    capture_verdict, _ = classify(repository, capture.parent.relative_to(repository).as_posix())
+    assert live_verdict is Verdict.KEEP
+    assert capture_verdict is Verdict.FLAG
+
+
+def test_canonical_logs_preserve_live_run(repository: Path) -> None:
+    run = repository / ".tmp" / "logs" / "audit-runs" / "2026-10-29" / f"run-audit-{os.getpid()}-abcdef"
+    _write(run / "run.log")
+    verdict, _ = classify(repository, ".tmp/logs/audit-runs")
+    assert verdict is Verdict.KEEP
 
 
 @pytest.fixture

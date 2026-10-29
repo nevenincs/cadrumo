@@ -17,10 +17,10 @@ from hashlib import sha256
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
+from dev._paths import prepare_temp_root
 
 from ..compiler.authority import AuthoringCandidateInspection, compile_validated_authority, inspect_authoring_candidate
 from ..compiler.identity import RegistryIdentity, resolve_registry_identity
@@ -192,9 +192,7 @@ def validated_historical_repair_source(
     )
     if preliminary.layout_id != target.layout_id or (preliminary.transport_profile.line_ending != "crlf"):
         raise RegistryValidationError("historical repair generated transport differs from the reviewed target")
-    with tempfile.TemporaryDirectory(
-        prefix=f"cadrumo-m{modelo}-static-repair-", dir=prepare_temporary_directory()
-    ) as scratch:
+    with tempfile.TemporaryDirectory(prefix=f"cadrumo-m{modelo}-static-repair-", dir=prepare_temp_root()) as scratch:
         overlay = Path(scratch) / "registry" / "aeat"
         shutil.copytree(registry_root, overlay)
         overlay_export = overlay / "modelos" / modelo / "revisions" / revision / "export"
@@ -338,9 +336,7 @@ def _require_reproduced_repair(
     revision: str,
     source_ref: str,
 ) -> None:
-    with tempfile.TemporaryDirectory(
-        prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temporary_directory()
-    ) as rerender:
+    with tempfile.TemporaryDirectory(prefix=f"cadrumo-m{modelo}-static-rerender-", dir=prepare_temp_root()) as rerender:
         confirmed_root = Path(rerender) / "export"
         confirmed = render_complete_export_tree(
             confirmed_root,
