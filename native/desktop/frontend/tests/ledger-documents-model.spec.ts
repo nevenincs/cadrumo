@@ -284,7 +284,7 @@ test("model problems are said once, and only for roles held back by the model", 
     model: null,
     installed: null,
     ready: false,
-    failed_condition_id: "provisioning.selected_model.available",
+    failed_condition_id: "probe.selected_model.available",
     recovery_action_id: null,
   };
   expect(readerProblems([held, { ...held, role: "text_extraction" }])).toEqual({
@@ -295,15 +295,15 @@ test("model problems are said once, and only for roles held back by the model", 
     readerProblems([
       {
         ...held,
-        failed_condition_id: "provisioning.selected_model.reads_images",
+        failed_condition_id: "probe.selected_model.reads_images",
       },
     ]),
   ).toEqual({ noModel: false, cannotReadImages: true });
   // A role that reads, or is held back for another reason, says no model problem.
   for (const role of [
     { ...held, ready: true, failed_condition_id: null },
-    { ...held, failed_condition_id: "provisioning.role_model.installed" },
-    { ...held, failed_condition_id: "provisioning.runtime.installed" },
+    { ...held, failed_condition_id: "probe.role_model.installed" },
+    { ...held, failed_condition_id: "probe.runtime.reachable" },
     { role: "vision_transcription", ready: false },
   ])
     expect(readerProblems([role])).toEqual({

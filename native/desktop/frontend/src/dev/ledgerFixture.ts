@@ -1742,7 +1742,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     return {
       facts: [{ name: "local_ai_state", value: "absent" }],
       precondition_verdict: {
-        failed_condition_id: "provisioning.runtime.installed",
+        failed_condition_id: "probe.runtime.reachable",
         evidence: [],
         action_id: "operator.provision.local_ai",
         argument_bindings: [],

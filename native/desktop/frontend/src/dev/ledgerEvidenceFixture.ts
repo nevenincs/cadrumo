@@ -97,21 +97,21 @@ const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 /** The setup the components role names when the local AI is missing. */
 const LOCAL_AI_SETUP = "operator.provision.local_ai";
 /** What the reader check found missing: the program that runs the models. */
-const RUNTIME_INSTALLED = "provisioning.runtime.installed";
+const RUNTIME_REACHABLE = "probe.runtime.reachable";
 /** What the reader check found missing for a role the agent resolves no model
  * for: none is picked, or the one picked cannot run. The person picks it in
  * the agent's model picker, which no setup replaces. */
-const SELECTED_MODEL_AVAILABLE = "provisioning.selected_model.available";
+const SELECTED_MODEL_AVAILABLE = "probe.selected_model.available";
 /** What the reader check found missing for reading images: the model picked
  * is not stated to read them. */
-const SELECTED_MODEL_READS_IMAGES = "provisioning.selected_model.reads_images";
+const SELECTED_MODEL_READS_IMAGES = "probe.selected_model.reads_images";
 
 /** A label reading that stood without the model fill the local AI gives. */
 const withoutReader = (unread: string[]): LabelReadingFallback => ({
   cause: "reader_unavailable",
   unread_fields: unread,
   reader_error_type: "InvoiceDraftReaderUnavailableError",
-  failed_condition_id: RUNTIME_INSTALLED,
+  failed_condition_id: RUNTIME_REACHABLE,
   recovery_action_id: LOCAL_AI_SETUP,
 });
 
@@ -126,11 +126,11 @@ const readerRefusal = () =>
     context: [],
     context_entries_omitted: 0,
     precondition_verdict_json: JSON.stringify({
-      failed_condition_id: RUNTIME_INSTALLED,
+      failed_condition_id: RUNTIME_REACHABLE,
       evidence: [
         {
-          condition_id: RUNTIME_INSTALLED,
-          evidence_id: `${RUNTIME_INSTALLED}.observation`,
+          condition_id: RUNTIME_REACHABLE,
+          evidence_id: `${RUNTIME_REACHABLE}.observation`,
           provenance: "runtime_observation",
           values: { local_ai_state: "absent" },
         },
@@ -1473,7 +1473,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       model: null,
       installed: null,
       ready: false,
-      failed_condition_id: RUNTIME_INSTALLED,
+      failed_condition_id: RUNTIME_REACHABLE,
       // The components role names the local AI setup for an absent program.
       recovery_action_id: LOCAL_AI_SETUP,
     });
@@ -1483,7 +1483,7 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         state: "absent",
         version: null,
         available: false,
-        failed_condition_id: RUNTIME_INSTALLED,
+        failed_condition_id: RUNTIME_REACHABLE,
       },
       roles: [role("text_extraction"), role("vision_transcription")],
       extraction_ready: false,

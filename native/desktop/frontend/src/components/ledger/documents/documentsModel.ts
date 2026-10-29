@@ -617,8 +617,8 @@ export const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 
 /** The reader check's condition for a role the agent resolves no model
  * for. */
-const NO_USABLE_MODEL = "provisioning.selected_model.available";
-const READS_NO_IMAGES = "provisioning.selected_model.reads_images";
+const NO_USABLE_MODEL = "probe.selected_model.available";
+const READS_NO_IMAGES = "probe.selected_model.reads_images";
 
 /** What keeps documents from being read that the person settles by picking
  * another model in the agent's model picker; no setup supplies either. */
