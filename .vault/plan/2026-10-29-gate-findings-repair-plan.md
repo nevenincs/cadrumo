@@ -13,7 +13,7 @@ related:
   - '[[2026-07-13-data-output-standardization-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:3417f663601766bc74e420091cac8ceec2462357e54d422dee7a9813022f5da8'
+body_hash: 'sha256:6b78f87ec6f316955c4d1d45e9d14de29f5b517030db50d5a3d7779e33aaaf93'
 ---
 
 # `gate-findings-repair` plan
@@ -30,7 +30,7 @@ Earlier direct repairs normalized two mixed-ending files without a Git diff, wra
 
 ## Steps
 
-- [ ] `S01` - Align spelling segmentation with accepted Spanish AEAT terminology and exact product names while preserving typo detection; `dev/locales spelling owners and focused tests, dev/docs/casilla_page_rendering.py and numeric section regression test, canonical generated casilla refresh`.
+- [x] `S01` - Align spelling segmentation with accepted Spanish AEAT terminology and exact product names while preserving typo detection; `dev/locales spelling owners and focused tests, dev/docs/casilla_page_rendering.py and numeric section regression test, canonical generated casilla refresh`.
 - [x] `S02` - Repair reproducible import authority violations and regenerate the governed module census after sources stabilize; `dev/temporary_output.py, dev/_paths.py and all moved-function consumers, dev/docs/i18n.py, dev/locales/signal_documentation_inventory.py, .importlinter, import census and focused tests`.
 - [ ] `S04` - Keep Python release cohort temporary state inside owning worktree scratch while preserving snapshot and native build admission; `dev/packaging/build_storage.py, dev/packaging/python_cohort.py, dev/packaging/release_cohort.py, snapshot reclaim contracts and focused packaging tests`.
 - [ ] `S03` - Reconcile all eleven requested gate results and review integrated repairs against their governing decisions; `gate verification and final audit`.

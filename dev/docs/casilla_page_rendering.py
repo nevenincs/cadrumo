@@ -49,6 +49,15 @@ def _box_sort_key(box_number: str) -> tuple[int, int, str]:
     return (1, 0, box_number)
 
 
+def _registry_heading_anchor(section_title: str) -> str:
+    """Preserve text heading ids and give numeric registry paths a stable id."""
+    # Numeric paths have no docutils slug. Keep their declared heading id
+    # distinct from the navigation's existing section-* span.
+    if re.fullmatch(r"[\d\s›]+", section_title):
+        return heading_anchor(f"registry section {section_title}")
+    return heading_anchor(section_title)
+
+
 def _chip_title(record: CasillaSearchRecord, language: OutputLanguage) -> str:
     """Return one index chip's hover title in ``language``, escaped as an attribute.
 
@@ -240,7 +249,7 @@ def _render_modelo_page(
         if any(section):
             # The path is Spanish registry vocabulary, not translated chrome.
             # Preserve the old heading id while marking its rendered language.
-            blocks.append(section_anchor_directive(heading_anchor(section_title)))
+            blocks.append(section_anchor_directive(_registry_heading_anchor(section_title)))
             safe_title = html.escape(section_title).replace("`", "&#96;")
             section_title = f':casilla-section-source:`<span lang="es">{safe_title}</span>`'
         else:

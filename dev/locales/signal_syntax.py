@@ -123,6 +123,31 @@ TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
 )
 
 
+# The terminology handbook keeps these Spanish tax nouns in foreign prose.
+# Match complete terms, including only their ordinary singular/plural forms;
+# the Spanish dictionary still checks every matched word. Multiword terms
+# must stay whole so their prepositions do not become global exceptions.
+# Owners: _data/terminology/concepts and the bienes de inversión register.
+TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w'’])(?:bienes de inversión|recargo de equivalencia|"
+    r"regla de prorrata|prorrata especial|datos censales|"
+    r"declaración (?:tributaria|censal|de la renta)|"
+    r"justificante de presentación|retenciones (?:del trabajo|de alquiler)|"
+    r"atribución de rentas|impuesto sobre sociedades|"
+    r"operaciones (?:vinculadas|intracomunitarias|con terceros)|"
+    r"sede electrónica|casillas?|modelos?|borrador(?:es)?|censos?|"
+    r"expedientes?|justificantes?|prorratas?|prorrateo|renta)(?![\w'’])",
+    re.IGNORECASE,
+)
+
+
+# These are AEAT's exact service names, not separate vocabulary exceptions
+# for the fragments that punctuation would otherwise split apart.
+TRANSLATION_CLAVE_NAME_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w'’])Cl@ve(?: Móvil| PIN| Permanente)?(?![\w'’])"
+)
+
+
 TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])ÉÉÉÉ-HH-NN(?:TÓÓ:PP:MMZ)?(?![\w-])")
 
 

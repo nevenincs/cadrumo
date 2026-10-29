@@ -6,6 +6,7 @@ from .signal_contracts import DictionaryLike
 from .signal_policy import LOCALES
 from .signal_syntax import (
     MODELO_FORM_RE,
+    TRANSLATION_CLAVE_NAME_RE,
     TRANSLATION_HTML_LANGUAGE_RE,
     TRANSLATION_HUNGARIAN_ACRONYM_CASE_RE,
     TRANSLATION_HUNGARIAN_DATE_RE,
@@ -14,6 +15,7 @@ from .signal_syntax import (
     TRANSLATION_MARKDOWN_LINK_CONTEXT_RE,
     TRANSLATION_RST_LINK_RE,
     TRANSLATION_SPANISH_AUTHORITY_RE,
+    TRANSLATION_SPANISH_TAX_TERM_RE,
 )
 from .signal_tokens import filtered_translation_text, translation_words
 
@@ -80,7 +82,13 @@ def legal_title_spelling_segments(
     """Legal title spelling segments."""
     if default_locale != "es":
         literal_ranges = tuple((match.start(), match.end()) for match in TRANSLATION_LITERAL_RE.finditer(value))
-        for pattern in (MODELO_FORM_RE, TRANSLATION_LEGAL_TITLE_RE, TRANSLATION_SPANISH_AUTHORITY_RE):
+        for pattern in (
+            MODELO_FORM_RE,
+            TRANSLATION_LEGAL_TITLE_RE,
+            TRANSLATION_SPANISH_AUTHORITY_RE,
+            TRANSLATION_SPANISH_TAX_TERM_RE,
+            TRANSLATION_CLAVE_NAME_RE,
+        ):
             for match in pattern.finditer(value):
                 if any(start <= match.start() and match.end() <= end for start, end in literal_ranges):
                     continue
@@ -145,7 +153,10 @@ def locale_spelling_words(value: str, locale: str) -> tuple[tuple[str, ...], int
     # Catalan elisions still need their lexical word checked separately.
     if locale == "en":
         filtered = filtered.replace("’", "'")
-    return translation_words(filtered, preserve_apostrophes=locale == "en"), excluded + structural_excluded
+    return (
+        translation_words(filtered, preserve_apostrophes=locale == "en", preserve_periods=locale == "hu"),
+        excluded + structural_excluded,
+    )
 
 
 def is_legal_authority_target(target: str) -> bool:

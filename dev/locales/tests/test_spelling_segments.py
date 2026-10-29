@@ -72,3 +72,47 @@ def test_spanish_title_does_not_reassign_surrounding_english_typo() -> None:
         dictionary=Dictionary(),
         spanish_dictionary=Dictionary(),
     )
+
+
+@pytest.mark.parametrize("locale", ["en", "ca", "hu"])
+def test_exact_spanish_tax_terms_own_their_words_only(locale: str) -> None:
+    assert words_by_language("Read bienes de inversión and casillas misspeling", locale) == {
+        locale: {"Read", "and", "misspeling"},
+        "es": {"bienes", "de", "inversión", "casillas"},
+    }
+
+
+def test_tax_term_prepositions_and_near_misses_stay_in_the_surrounding_language() -> None:
+    assert words_by_language("de bienes de inversióm casillass misspeling") == {
+        "en": {"de", "bienes", "inversióm", "casillass", "misspeling"},
+    }
+
+
+def test_exact_tax_terms_inside_literals_do_not_add_prose() -> None:
+    assert words_by_language("Read `bienes de inversión` misspeling") == {"en": {"Read", "misspeling"}}
+
+
+@pytest.mark.parametrize("name", ["Cl@ve", "Cl@ve Móvil", "Cl@ve PIN", "Cl@ve Permanente"])
+def test_exact_clave_service_names_are_checked_as_spanish(name: str) -> None:
+    words = words_by_language(f"Read {name} misspeling")
+    assert words["en"] == {"Read", "misspeling"}
+    assert "ve" in words["es"]
+
+
+def test_misspelled_clave_service_names_keep_unknown_fragments() -> None:
+    assert "Móvill" in words_by_language("Cl@ve Móvill misspeling")["en"]
+    assert "Móvilx" in words_by_language("Cl@ve Móvilx misspeling")["en"]
+    assert "Móvil" in words_by_language("Cl@vee Móvil misspeling")["en"]
+
+
+def test_explicit_language_wins_over_exact_tax_term_recognition() -> None:
+    assert words_by_language('<span lang="ca">casillas errror</span> misspeling') == {
+        "en": {"misspeling"},
+        "ca": {"casillas", "errror"},
+    }
+
+
+def test_hungarian_abbreviation_keeps_dictionary_significant_period() -> None:
+    assert words_by_language("pl. hibásszó. pl hibásszó", "hu") == {
+        "hu": {"pl.", "hibásszó.", "pl", "hibásszó"},
+    }

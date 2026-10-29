@@ -103,9 +103,12 @@ def visible_role_label(match: re.Match[str]) -> str:
     return f" {label} " if label else " "
 
 
-def translation_words(value: str, *, preserve_apostrophes: bool = False) -> tuple[str, ...]:
+def translation_words(
+    value: str, *, preserve_apostrophes: bool = False, preserve_periods: bool = False
+) -> tuple[str, ...]:
     """Return alphabetic prose words for locale-quality signals."""
     joiners = "·'’" if preserve_apostrophes else "·"
+    ending = r"\.?" if preserve_periods else ""
     return tuple(
-        match.group(0) for match in re.finditer(rf"[^\W\d_]+(?:[{joiners}][^\W\d_]+)*", value, flags=re.UNICODE)
+        match.group(0) for match in re.finditer(rf"[^\W\d_]+(?:[{joiners}][^\W\d_]+)*{ending}", value, flags=re.UNICODE)
     )

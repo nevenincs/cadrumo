@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:51bc0b87b89404efb10fec31d4e771d36212783812f40447f17121274baecc23'
+body_hash: 'sha256:29d7a6261154ecae84cd3dc28db325d4324bb22ce986bd3cff61ed466d2bc7fa'
 related:
   - "[[2026-10-29-gate-findings-repair-plan]]"
 ---
@@ -94,7 +94,21 @@ related:
 - `S02` `verify:` `ruff check touched Python paths` -> `pass`
 - `S02` `verify:` `ty check dev/temporary_output.py dev/_paths.py dev/docs/i18n.py dev/locales/signal_documentation_inventory.py` -> `pass`
 - `S02` `verify:` `just report-code-health` -> `fail`
+- `S01` `M` `dev/locales/signal_spelling_segments.py`
+- `S01` `M` `dev/locales/signal_syntax.py`
+- `S01` `M` `dev/locales/signal_tokens.py`
+- `S01` `M` `dev/locales/signal_spelling_enrollment.py`
+- `S01` `M` `dev/locales/tests/test_spelling_segments.py`
+- `S01` `M` `dev/locales/tests/test_spelling_lexicon.py`
+- `S01` `M` `dev/docs/casilla_page_rendering.py`
+- `S01` `M` `dev/docs/tests/test_casilla_reference_presentation.py`
+- `S01` `verify:` `pytest dev/docs/tests/test_casilla_reference_presentation.py dev/docs/tests/test_section_anchors.py dev/locales/tests/test_spelling_segments.py dev/locales/tests/test_spelling_lexicon.py` -> `pass`
+- `S01` `verify:` `ruff check assigned locale and renderer paths` -> `pass`
+- `S01` `verify:` `ruff format --check assigned locale and renderer paths` -> `pass`
+- `S01` `verify:` `ty check assigned locale and renderer paths` -> `pass`
+- `S01` `verify:` `just check-locales` -> `fail`
 
 ## Notes
 
 - `S02` 82 focused tests passed. Import scan kept all30 contracts, loaded5239 modules, zero hard findings; gate operational verdict unavailable because external governed source bytes changed. Final S03 rechecks.
+- `S01` 88 owner tests plus numeric and real-dictionary controls passed; renderer B10. Canonical casilla generation passed58modelos/14154casillas. Final locale gate10109 affected cells, zero missing/tool/placeholder failures; remaining content and mixed-language inventory debt retained. External exact Google/Drive spellings excluded from authored repair.

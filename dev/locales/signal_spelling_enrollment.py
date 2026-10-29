@@ -21,6 +21,10 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
 
 def is_project_spelling(locale: str, word: str) -> bool:
     """Accept only explicitly attested forms, without changing Hunspell data."""
+    if locale == "en" and word.endswith("'s"):
+        # A grammatical possessive does not change an exact enrolled name.
+        # Other apostrophe forms and misspelled stems still need a dictionary.
+        word = word[:-2]
     return word in _SHARED_SPELLINGS or word in _LOCALE_SPELLINGS.get(locale, frozenset())
 
 
@@ -132,7 +136,15 @@ def check_dictionary_spelling_words(
     """Check dictionary spelling words."""
     dictionary = dictionaries[dictionary_locale]
     for word in words:
-        if is_project_spelling(dictionary_locale, word) or dictionary.lookup(word):
+        # Hungarian abbreviations such as "pl." need their final period.
+        # Ordinary sentence-final words instead need the unpunctuated stem;
+        # neither path admits a form the dictionary does not recognise.
+        stem = word.removesuffix(".") if dictionary_locale == "hu" else word
+        if (
+            is_project_spelling(dictionary_locale, stem)
+            or dictionary.lookup(word)
+            or (stem != word and dictionary.lookup(stem))
+        ):
             continue
         for owner_locale, key in words[word]:
             record_unknown_spelling_word(

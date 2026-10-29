@@ -586,6 +586,25 @@ def test_registry_section_labels_declare_spanish_but_translated_fallback_does_no
     assert "Declaracion" in locale_spelling_words(foreign[0][2], "es")[0]
 
 
+def test_numeric_registry_section_has_distinct_heading_and_navigation_ids() -> None:
+    """Modelo 490's numeric source path has no implicit docutils heading id."""
+    rst = _render((_record(section=("490_01",)),), OutputLanguage.EN)
+
+    assert ".. cadrumo-section-anchor:: registry-section-490-01" in rst
+    assert ':casilla-section-source:`<span lang="es">490 01</span>`' in rst
+    assert rst.count('id="section-490-01"') == 1
+    assert 'href="#section-490-01"' in rst
+    assert 'id="registry-section-490-01"' not in rst
+
+
+def test_non_numeric_registry_section_with_no_slug_still_refuses() -> None:
+    """The numeric exception does not make malformed source paths renderable."""
+    from ..section_anchors import SectionAnchorError
+
+    with pytest.raises(SectionAnchorError, match="slugs to no anchor"):
+        _render((_record(section=("!!!",)),), OutputLanguage.EN)
+
+
 def test_colliding_section_anchors_are_a_build_failure() -> None:
     """Two section paths folding to one jump target are refused, never merged."""
     from ..casilla_display import _section_anchor
