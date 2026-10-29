@@ -822,10 +822,12 @@ async fn a_setup_refused_in_its_planning_settles_with_its_category_and_records_i
         panic!("one failure is recorded for the setup");
     };
     assert_eq!(error.reason.as_deref(), Some("setup_local_ai_failed"));
+    assert_eq!(error.code, ErrorCode::SetupFailed);
     assert!(
         matches!(
             &error.causes[..],
-            [Cause::Application { reason: Some(reason), .. }] if reason == "offline"
+            [Cause::Application { code: ErrorCode::SetupFailed, reason: Some(reason), .. }]
+                if reason == "offline"
         ),
         "{:?}",
         error.causes
@@ -922,7 +924,7 @@ async fn a_setting_the_engine_cannot_use_gives_the_check_its_category() {
         panic!("one failure is recorded for the check");
     };
     assert_eq!(error.reason.as_deref(), Some("setup_engine_unavailable"));
-    assert_eq!(error.code, ErrorCode::SessionUnavailable);
+    assert_eq!(error.code, ErrorCode::SetupFailed);
 }
 
 #[tokio::test]
@@ -946,6 +948,28 @@ async fn a_setting_the_engine_cannot_use_fails_the_setup_with_its_category_and_r
         panic!("one failure is recorded for the setup");
     };
     assert_eq!(error.reason.as_deref(), Some("setup_engine_unavailable"));
+    assert_eq!(error.code, ErrorCode::SetupFailed);
+}
+
+#[test]
+fn a_failed_setup_is_recorded_as_a_setup_failure_for_either_component_with_its_category() {
+    for (item, reason) in [
+        (ItemId::Browser, "setup_browser_failed"),
+        (ItemId::LocalAi, "setup_local_ai_failed"),
+    ] {
+        let error = setup_failed(item, FailureCategory::Offline);
+        assert_eq!(error.code, ErrorCode::SetupFailed, "{reason}");
+        assert_eq!(error.reason.as_deref(), Some(reason));
+        assert_eq!(
+            error.message, "The component setup could not be completed",
+            "the log line must not call a failed setup a terminal session"
+        );
+        assert!(matches!(
+            &error.causes[..],
+            [Cause::Application { code: ErrorCode::SetupFailed, reason: Some(category), .. }]
+                if category == "offline"
+        ));
+    }
 }
 
 #[tokio::test]

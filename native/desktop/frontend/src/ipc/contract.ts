@@ -100,6 +100,7 @@ export type HostErrorCode =
   | "resize_failed"
   | "cleanup_failed"
   | "session_unavailable"
+  | "setup_failed"
   | "queue_full"
   | "cli_busy"
   | "cli_wait_timed_out"

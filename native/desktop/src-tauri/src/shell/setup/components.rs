@@ -125,7 +125,7 @@ impl Unready {
 
 /// The engine of this installation could not be made.
 fn engine_unavailable(error: Error) -> ApplicationError {
-    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+    ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
         .with_reason("setup_engine_unavailable")
         .caused_by(error)
 }
@@ -1106,10 +1106,10 @@ fn setup_failed(item: ItemId, category: FailureCategory) -> ApplicationError {
         ItemId::Browser => "setup_browser_failed",
         ItemId::LocalAi => "setup_local_ai_failed",
     };
-    ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+    ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
         .with_reason(reason)
         .caused_by(
-            ApplicationError::new(ErrorCode::SessionUnavailable, Operation::Cli)
+            ApplicationError::new(ErrorCode::SetupFailed, Operation::Cli)
                 .with_reason(category.as_str()),
         )
 }

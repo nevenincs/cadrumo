@@ -28,7 +28,7 @@ def health_facts(root: Path) -> dict[str, object]:
     """Project bounded native codes and timings; discard messages and coordinates."""
     code_names = (
         "invalid_arguments package_unavailable environment_failed timed_out output_limit spawn_failed "
-        "read_failed write_failed resize_failed cleanup_failed session_unavailable queue_full cli_busy "
+        "read_failed write_failed resize_failed cleanup_failed session_unavailable setup_failed queue_full cli_busy "
         "cli_wait_timed_out lock_poisoned log_unavailable desktop_unavailable webview_failed "
         "webview_process_failed webview_monitor_unavailable unsupported_platform instance_lock_foreign "
         "manager_unavailable manager_dispatch_failed installation_unavailable installation_refused "
