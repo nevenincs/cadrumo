@@ -761,11 +761,14 @@ fn builds_already_in_place_are_adopted_by_an_approved_setup_that_downloads_nothi
     let status = world.run(&["status"]);
     let browser = row(&status.result, "browser");
     assert_eq!(
-        browser["state"], "absent",
+        browser["state"], "unknown",
         "builds no record describes are not believed"
     );
-    assert_eq!(browser["recovery"], "set_up");
-    assert_eq!(browser["size_estimate_bytes"], 0);
+    assert_eq!(browser["recovery"], "check_again");
+    assert!(
+        browser.get("size_estimate_bytes").is_none(),
+        "a check states no download: {browser}"
+    );
     let plan = world.run(&["plan"]);
     assert_eq!(plan.result["plan"]["entries"][0]["download_bytes"], 0);
     let digest = plan.result["plan_digest"].as_str().unwrap().to_owned();
@@ -816,6 +819,49 @@ fn builds_already_in_place_are_adopted_by_an_approved_setup_that_downloads_nothi
     );
     assert_eq!(world.archive_requests(), archives + 1);
     assert_eq!(row(&repaired.result, "browser")["state"], "ready");
+}
+
+#[test]
+fn a_full_check_records_builds_an_earlier_installer_recorded_without_their_location() {
+    let world = World::browser();
+    let digest = world.run(&["plan"]).result["plan_digest"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+    let installed = world.run(&["setup", "--approve", &digest]);
+    assert_eq!(installed.result["outcome"], "completed");
+    // The earlier installer's record: the same files, its fractional time, no location.
+    let record = world.root().join("components/receipts/browser.json");
+    let mut earlier: Value = serde_json::from_slice(&fs::read(&record).unwrap()).unwrap();
+    earlier.as_object_mut().unwrap().remove("location");
+    earlier["verified_at"] = json!("2026-10-22T07:34:53.797382Z");
+    fs::write(&record, serde_json::to_vec(&earlier).unwrap()).unwrap();
+
+    let status = world.run(&["status"]);
+    let browser = row(&status.result, "browser");
+    assert_eq!(
+        (&browser["state"], &browser["recovery"]),
+        (&json!("unknown"), &json!("check_again")),
+        "a record that does not say where the builds are proves nothing: {browser}"
+    );
+    assert!(browser.get("size_estimate_bytes").is_none(), "{browser}");
+
+    let archives = world.archive_requests();
+    let verified = world.run(&["verify", "--item", "browser"]);
+    assert_eq!(verified.result["outcome"], "ok", "{}", verified.result);
+    assert_eq!(row(&verified.result, "browser")["state"], "ready");
+    assert_eq!(world.archive_requests(), archives, "nothing is downloaded");
+    let current: Value = serde_json::from_slice(&fs::read(&record).unwrap()).unwrap();
+    assert_eq!(
+        current["location"]["root"].as_str().map(PathBuf::from),
+        Some(world.root().join("components").join("playwright")),
+        "the passing launch recorded where the builds are"
+    );
+    assert_eq!(
+        row(&world.run(&["status"]).result, "browser")["state"],
+        "ready",
+        "the quick check reads the current receipt"
+    );
 }
 
 /// How many builds the browser's plan installs, one archive each: the test pins' families.

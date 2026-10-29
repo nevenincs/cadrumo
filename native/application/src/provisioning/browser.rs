@@ -359,6 +359,12 @@ impl BrowserLayout {
             .collect()
     }
 
+    /// Whether every build is installed while `reading` is not this layout's receipt: the
+    /// builds are there, but nothing this engine verified records them.
+    pub fn unrecorded(&self, reading: &ReceiptReading) -> bool {
+        self.incomplete().is_empty() && self.receipt(reading).is_none()
+    }
+
     /// Whether `reading` is this layout's receipt: for these builds, at this root, of this
     /// driver. Any other receipt describes something else.
     pub fn receipt<'a>(&self, reading: &'a ReceiptReading) -> Option<&'a Receipt> {
@@ -552,8 +558,9 @@ impl BrowserLayout {
 
     /// The quick check: no network and no launch. Every build must be installed as the
     /// driver reads it, and each executable must hold the bytes this layout's receipt
-    /// recorded. Installed builds that no receipt describes read absent: setup then
-    /// verifies and records them without downloading anything.
+    /// recorded. Installed builds that no receipt of this layout describes, such as those
+    /// an earlier installer recorded in its own shape, cannot be told from local facts:
+    /// they read unreadable, and a full check launches them and records them.
     pub fn quick_check(&self, reading: &ReceiptReading) -> Reading {
         self.local_reading(CheckMode::Quick, reading)
     }
@@ -567,8 +574,6 @@ impl BrowserLayout {
             } else {
                 Observation::Blocked(BlockedReason::NotInThisBuild)
             }
-        } else if matches!(reading, ReceiptReading::Unreadable) {
-            Observation::Unreadable
         } else if let Some(receipt) = self.receipt(reading) {
             let executables: Vec<RelativePath> = self
                 .builds
@@ -582,7 +587,7 @@ impl BrowserLayout {
                 Observation::Failed(FailureCategory::DamagedDownload)
             }
         } else {
-            Observation::Absent
+            Observation::Unreadable
         };
         Reading {
             mode,
@@ -594,7 +599,7 @@ impl BrowserLayout {
     /// The full check: every recorded file against the receipt, then one headless launch
     /// of the headless build, whose reported version must be the one the driver names.
     /// Installed builds without a readable receipt of this layout are launched too, and a
-    /// passing launch is what lets setup record them. Only a passing full check mints the
+    /// passing launch is what lets setup, or the engine's full check, record them. Only a passing full check mints the
     /// proof [`Self::settle`] needs.
     pub fn full_check(
         &self,
@@ -673,15 +678,28 @@ impl BrowserLayout {
     }
 
     /// Records the verified builds and then removes the builds of the same families they
-    /// supersede. The receipt says where the builds are, which executable each one has
-    /// and which driver they belong to, so a consumer locates them without probing.
+    /// supersede.
     pub fn settle(
+        &self,
+        verified: Verified,
+        receipts: &ReceiptStore,
+        hosts: Vec<HostName>,
+        verified_at: SystemTime,
+    ) -> Result<Settled, Error> {
+        self.record(verified, receipts, hosts, verified_at)?;
+        Ok(self.remove_superseded())
+    }
+
+    /// Records the verified builds, changing no build. The receipt says where the builds
+    /// are, which executable each one has and which driver they belong to, so a consumer
+    /// locates them without probing.
+    pub fn record(
         &self,
         _verified: Verified,
         receipts: &ReceiptStore,
         hosts: Vec<HostName>,
         verified_at: SystemTime,
-    ) -> Result<Settled, Error> {
+    ) -> Result<(), Error> {
         let mut files = Vec::new();
         let mut links = Vec::new();
         let inside = |build: &BrowserBuild, path: &RelativePath| {
@@ -722,8 +740,7 @@ impl BrowserLayout {
         )?
         .linked(links)?
         .located(location)?;
-        receipts.write(&receipt)?;
-        Ok(self.remove_superseded())
+        receipts.write(&receipt)
     }
 
     /// Removes the item: its receipt first, so no consumer locates a build being removed,
@@ -1578,10 +1595,31 @@ pub(crate) mod tests {
         fixture.install(&Mutex::new(Vec::new())).unwrap();
         assert_eq!(
             quick(&fixture),
-            Observation::Absent,
-            "installed builds no receipt describes are recorded by setup, not believed"
+            Observation::Unreadable,
+            "installed builds no receipt describes are checked again, not believed"
+        );
+        assert!(fixture.layout.unrecorded(&ReceiptReading::Absent));
+        // The earlier installer's record names the files but not where the builds are.
+        let receipts = fixture.directory.path().join("components/receipts");
+        fs::create_dir_all(&receipts).unwrap();
+        let earlier = format!(
+            r#"{{"files":[],"hosts":["cdn.playwright.dev"],"item_id":"browser","receipt_version":1,"verified_at":"2026-10-22T07:34:53.797382Z","version":"{BROWSER_VERSION}"}}"#
+        );
+        fs::write(receipts.join("browser.json"), earlier).unwrap();
+        let reading = fixture.receipts.read(ItemId::Browser);
+        assert!(matches!(reading, ReceiptReading::Present(_)));
+        assert!(fixture.layout.unrecorded(&reading));
+        assert_eq!(
+            quick(&fixture),
+            Observation::Unreadable,
+            "a record without a location is not this layout's"
         );
         fixture.settle();
+        assert!(
+            !fixture
+                .layout
+                .unrecorded(&fixture.receipts.read(ItemId::Browser))
+        );
         let reading = fixture
             .layout
             .quick_check(&fixture.receipts.read(ItemId::Browser));

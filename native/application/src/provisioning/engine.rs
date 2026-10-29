@@ -983,7 +983,8 @@ impl Engine {
                 None,
             ),
         };
-        if row.state != ItemState::Ready {
+        // An unknown item is checked again, not set up, so it states no download.
+        if !matches!(row.state, ItemState::Ready | ItemState::Unknown) {
             // An entry that totals only the parts whose size is known would state too little,
             // or nothing at all as zero, so its size is unknown instead.
             row.size_estimate_bytes = survey
@@ -1070,14 +1071,64 @@ impl Engine {
     }
 
     /// The browser's full check, or `None` when this build cannot read its layout.
+    /// Pinned builds already in place that no receipt of this layout records, as an
+    /// earlier installer left them, are recorded once their launch passes, so the next
+    /// quick check reads them from a current receipt.
     fn full_browser(&self, cancellation: &Cancellation) -> Option<Reading> {
         let layout = self.browser_layout()?.ok()?;
         let receipt = self.receipts.read(ItemId::Browser);
-        Some(
-            layout
-                .full_check(&receipt, &self.launch_context(), cancellation)
-                .reading,
-        )
+        let check = layout.full_check(&receipt, &self.launch_context(), cancellation);
+        match check.verified {
+            Some(verified) if layout.pinned() && layout.unrecorded(&receipt) => {
+                Some(self.record_browser(&layout, verified, check.reading))
+            }
+            _ => Some(check.reading),
+        }
+    }
+
+    /// Records builds a full check verified, under the browser's writer lock. A setup or
+    /// removal holding the lock changes the builds itself, so the reading stands
+    /// unrecorded; a receipt another writer recorded meanwhile is kept.
+    fn record_browser(
+        &self,
+        layout: &BrowserLayout,
+        verified: browser::Verified,
+        reading: Reading,
+    ) -> Reading {
+        let item = ItemId::Browser;
+        let Ok(writer) = self.activity.begin(item, SetupStep::Verify) else {
+            return reading;
+        };
+        if !layout.unrecorded(&self.receipts.read(item)) {
+            let _ = writer.held();
+            return reading;
+        }
+        let hosts = self
+            .config
+            .pins
+            .browser
+            .as_ref()
+            .map(|pins| pins.hosts.iter().cloned().collect())
+            .unwrap_or_default();
+        let recorded = layout
+            .record(verified, &self.receipts, hosts, SystemTime::now())
+            .map_err(|error| browser::failure_category(&error));
+        let ended = match recorded {
+            Ok(()) => writer
+                .finished()
+                .map_err(|error| browser::failure_category(&error)),
+            Err(category) => {
+                let _ = writer.failed(category);
+                Err(category)
+            }
+        };
+        match ended {
+            Ok(()) => reading,
+            Err(category) => Reading {
+                observation: Observation::Failed(category),
+                ..reading
+            },
+        }
     }
 
     /// The local AI's full check: the program's files and the manager's server answering
