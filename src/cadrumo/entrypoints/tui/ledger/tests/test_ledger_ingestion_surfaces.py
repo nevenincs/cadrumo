@@ -246,7 +246,7 @@ class _EvidenceDoor:
     def reader_readiness(self) -> LedgerReaderReadinessV1:
         if self.ready:
             return LedgerReaderReadinessV1(extraction_ready=True)
-        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="provisioning.runtime.reachable")
+        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="probe.runtime.reachable")
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         self.extracted.append(evidence_id)
@@ -311,7 +311,7 @@ async def test_evidence_is_added_listed_and_reader_readiness_is_informational() 
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
             await settle(pilot)
-            assert "provisioning.runtime.reachable" in str(screen.query_one("#ledger-evidence-reader", Static).render())
+            assert "probe.runtime.reachable" in str(screen.query_one("#ledger-evidence-reader", Static).render())
             screen.query_one("#ledger-evidence-path", Input).value = "notes.txt"
             screen.query_one("#ledger-evidence-add", Button).press()
             await settle(pilot)

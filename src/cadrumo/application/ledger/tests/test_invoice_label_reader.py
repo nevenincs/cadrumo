@@ -643,7 +643,7 @@ def test_a_refused_model_load_leaves_the_partial_rule_reading_standing(operation
     def refused(_transcription: DocumentTranscription, *_rest: object) -> InvoiceDraft:
         raise InvoiceDraftReaderHeadroomRefusedError(
             refusal,
-            failed_condition_id="provisioning.load_capacity.available",
+            failed_condition_id="probe.load_capacity.available",
         )
 
     draft = _extract(_router_ports((_SIMPLIFIED,), read_text=refused), operation)
@@ -655,7 +655,7 @@ def test_a_refused_model_load_leaves_the_partial_rule_reading_standing(operation
         cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         unread_fields=("supplier_name",),
         reader_error_type="_HeadroomRefusalForTestError",
-        failed_condition_id="provisioning.load_capacity.available",
+        failed_condition_id="probe.load_capacity.available",
     )
 
 

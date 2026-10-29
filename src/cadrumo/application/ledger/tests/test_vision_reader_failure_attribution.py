@@ -20,7 +20,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.iva.regime_legend import resolve_regime_legends
 from ....tests.llm_vision_evidence_support import png_image
 from ...operator_actions.models import PreconditionVerdict
-from ...probe_outcomes import ProbePreconditionCondition, provisioning_setup_verdict
+from ...probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from .. import invoice_draft_extraction as invoice_draft_extraction_module
 from ..document_transcription import DocumentTranscription
 from ..evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -40,7 +40,6 @@ from ._evidence_textlayer_test_support import text_layer_ports_for_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_LOCAL_AI_SETUP = "operator.provision.local_ai"
 
 
 class _ProviderReadFailedError(Exception):
@@ -117,9 +116,8 @@ def test_a_failed_read_without_a_verdict_names_the_reader_and_no_setup() -> None
 
 
 def test_a_refused_read_reports_the_services_own_verdict_unchanged() -> None:
-    service_verdict = provisioning_setup_verdict(
+    service_verdict = probe_no_recovery_verdict(
         ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-        action_id=_LOCAL_AI_SETUP,
         facts={"role": "vision_transcription", "role_model_installed": False},
     )
 

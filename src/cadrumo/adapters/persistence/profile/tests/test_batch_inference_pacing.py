@@ -94,7 +94,7 @@ def labelled_batch(mixed_batch: Path) -> Path:
 #: The agent owns load admission and refuses a run at its start when the
 #: selected model does not fit this computer's free memory.
 _DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
-_LOAD_CAPACITY = "provisioning.load_capacity.available"
+_LOAD_CAPACITY = "probe.load_capacity.available"
 
 
 def _run(profile: TestRuntimeProfile, folder: Path) -> BatchRunResult:

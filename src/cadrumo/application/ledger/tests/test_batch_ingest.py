@@ -200,7 +200,7 @@ def _degraded_fallback() -> LabelReadingFallback:
         cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
         unread_fields=("supplier_name",),
         reader_error_type="LLMContentionError",
-        failed_condition_id="provisioning.load_capacity.available",
+        failed_condition_id="probe.load_capacity.available",
     )
 
 

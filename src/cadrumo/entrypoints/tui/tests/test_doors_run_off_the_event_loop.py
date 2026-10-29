@@ -127,7 +127,7 @@ class _GuardedEvidenceDoor:
 
     def reader_readiness(self) -> LedgerReaderReadinessV1:
         self.boundary.enter("reader_readiness")
-        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="provisioning.runtime.reachable")
+        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="probe.runtime.reachable")
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         raise AssertionError(f"not exercised: {evidence_id}")
