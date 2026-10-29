@@ -269,6 +269,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
               port={results}
               profile={profile}
               language={language}
+              filedCounts={served.get("filed")?.counts}
               onOpenAeat={onOpenAeat}
               onReviewCensus={onReviewCensus}
             />

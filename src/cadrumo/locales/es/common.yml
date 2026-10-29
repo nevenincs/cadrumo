@@ -815,6 +815,7 @@ desktop:
         imported: Importado {name}.
         nothing_found: No hay Borrador en {name}.
         unknown: No se sabe si se importó {name}. Compruébalo antes.
+        year: Año
       census_review: Revisar
       changed:
         census:
@@ -869,7 +870,6 @@ desktop:
       nothing_new: Nada nuevo.
       notifications:
         empty: Sin notificaciones.
-        from: '{sender}, {date}'
         group:
           read: Leídas ({count})
           unread: Sin leer ({count})

@@ -29,12 +29,7 @@ function Row({ row, language }: { row: NotificationRow; language: string }) {
         >
           {row.subject}
         </span>
-        <span className="block text-sm text-muted-foreground">
-          {t("desktop.aeat_sync.results.notifications.from", {
-            sender: row.sender,
-            date: received,
-          })}
-        </span>
+        <span className="block text-sm text-muted-foreground">{received}</span>
         {readOn && (
           <span className="block text-sm text-muted-foreground">
             {t("desktop.aeat_sync.results.notifications.read_on", {

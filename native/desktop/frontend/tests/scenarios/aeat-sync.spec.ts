@@ -362,3 +362,52 @@ test("the results lead on to the AEAT browser", async ({ page: target }) => {
     }),
   ).toBeVisible();
 });
+
+test("filed declarations show the served counts while no row is served", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-counts");
+  await update(page).click();
+  await expect(results(page)).toBeVisible();
+  const filed = results(page).locator('[data-area="filed"]');
+  for (const [match, count] of [
+    ["matched", 9],
+    ["aeat_only", 2],
+    ["local_only", 1],
+    ["differing", 1],
+  ] as const)
+    await expect(filed).toContainText(
+      label(`desktop.aeat_sync.results.filed.group.${match}`, { count }),
+    );
+  await expect(filed).not.toContainText(
+    label("desktop.aeat_sync.results.filed.empty"),
+  );
+});
+
+test("a notification shows its date and no sender", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync");
+  await update(page).click();
+  const list = results(page).locator('[data-area="notifications"]');
+  await expect(list).toContainText("Requerimiento de información");
+  await expect(list).not.toContainText("Agencia Tributaria");
+});
+
+test("the Borrador import is for the year the person chooses", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync");
+  await update(page).click();
+  const borrador = results(page).locator('[data-area="borrador"]');
+  const year = borrador.getByRole("combobox", {
+    name: label("desktop.aeat_sync.results.borrador.year"),
+  });
+  const previous = new Date().getFullYear() - 1;
+  await expect(year).toHaveValue(String(previous));
+  await year.selectOption(String(previous - 1));
+  await button(borrador, "desktop.aeat_sync.results.borrador.import").click();
+  await expect
+    .poll(() => calls(target, "aeatSyncResults.importBorrador"))
+    .toEqual([`aeatSyncResults.importBorrador ${previous - 1}`]);
+});

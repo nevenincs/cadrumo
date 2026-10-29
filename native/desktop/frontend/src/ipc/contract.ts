@@ -1455,10 +1455,9 @@ export interface HostCommands {
     args: Record<never, never>;
     result: import("../shell/aeatSyncResults").BorradorFile | null;
   };
-  /** Imports the picked Borrador PDF into the profile. */
-  /** `year` is the filing year the Borrador is for, which the person
-   * chooses; without one the host refuses with `invalid`. A rejection
-   * `unknown` means the import may have been kept. */
+  /** Imports the picked Borrador PDF into the profile for the filing `year`
+   * the person chose; without one the host refuses with `invalid`. A
+   * rejection `unknown` means the import may have been kept. */
   aeat_sync_borrador_import: {
     args: { profile: string; file: string; year?: number };
     result: import("../shell/aeatSyncResults").BorradorImportResult;

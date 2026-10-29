@@ -10,6 +10,9 @@ import type {
 export type AeatSyncResultsMode =
   /** Every kind of result: news, changes, failures, an unread notification. */
   | "mixed"
+  /** As the host serves them for now: no filed declaration row, so the
+   * counts the status serves are all the page has of them. */
+  | "counts"
   /** Everything read and nothing new anywhere. */
   | "quiet"
   /** Nothing was found at AEAT. */
@@ -116,28 +119,24 @@ const filed: FiledRow[] = [
 const notifications: NotificationRow[] = [
   {
     subject: "Requerimiento de información sobre el modelo 303",
-    sender: "Agencia Tributaria",
     received_on: ago(2),
     read: false,
     read_on: null,
   },
   {
     subject: "Aviso de vencimiento de plazo",
-    sender: "Agencia Tributaria",
     received_on: ago(6),
     read: false,
     read_on: null,
   },
   {
     subject: "Comunicación sobre el modelo 130",
-    sender: "Agencia Tributaria",
     received_on: ago(25),
     read: true,
     read_on: ago(24),
   },
   {
     subject: "Acuse de recibo de la declaración anual",
-    sender: "Agencia Tributaria",
     received_on: ago(80),
     read: true,
     read_on: ago(79),
@@ -165,6 +164,8 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         filed,
         notifications,
       };
+    case "counts":
+      return { ...served("mixed"), filed: [] };
     case "quiet":
       return {
         areas: [
@@ -275,8 +276,8 @@ export function aeatSyncResultsFixture(
           : null,
       );
     },
-    importBorrador() {
-      say("aeatSyncResults.importBorrador");
+    importBorrador(_profile, _file, year) {
+      say(`aeatSyncResults.importBorrador ${year ?? ""}`.trim());
       return importResult === "failed"
         ? Promise.reject({ code: "unavailable" })
         : Promise.resolve(importResult);

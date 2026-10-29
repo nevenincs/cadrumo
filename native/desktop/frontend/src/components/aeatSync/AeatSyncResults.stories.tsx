@@ -15,14 +15,23 @@ import { Results } from "./Results";
 
 type Args = {
   mode: AeatSyncResultsMode | "loading";
+  filedCounts?: boolean;
   picked?: "file" | "cancelled";
   imported?: "imported" | "nothing_found" | "failed";
 };
 
 const noop = () => undefined;
 
+const FILED_COUNTS = [
+  { kind: "filed_matched", value: 9 },
+  { kind: "filed_aeat_only", value: 2 },
+  { kind: "filed_local_only", value: 1 },
+  { kind: "filed_differing", value: 1 },
+] as const;
+
 function Page({
   mode,
+  filedCounts,
   picked,
   imported,
   language,
@@ -41,6 +50,7 @@ function Page({
         port={port.current}
         profile="synthetic"
         language={language}
+        filedCounts={filedCounts ? FILED_COUNTS : undefined}
         onOpenAeat={noop}
         onReviewCensus={noop}
       />
@@ -61,6 +71,10 @@ type Story = StoryObj<Args>;
 
 /** News, differences, a part that failed, unread notifications. */
 export const Mixed: Story = { args: { mode: "mixed" } };
+/** No declaration row is served, so the counts stand in for them. */
+export const FiledCountsOnly: Story = {
+  args: { mode: "counts", filedCounts: true },
+};
 /** Everything read and nothing new. */
 export const NothingNew: Story = { args: { mode: "quiet" } };
 /** AEAT has nothing to show for any of it. */

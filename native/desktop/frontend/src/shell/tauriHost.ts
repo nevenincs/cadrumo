@@ -171,8 +171,8 @@ export function tauriHost(): Host {
           () => undefined,
         ),
       pickBorrador: () => call("aeat_sync_borrador_pick", {}),
-      importBorrador: (profile, file) =>
-        call("aeat_sync_borrador_import", { profile, file }),
+      importBorrador: (profile, file, year) =>
+        call("aeat_sync_borrador_import", { profile, file, year }),
     },
     aeatSyncRun: {
       progress: (profile) => call("aeat_sync_progress", { profile }),

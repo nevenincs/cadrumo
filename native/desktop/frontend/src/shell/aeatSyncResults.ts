@@ -61,7 +61,6 @@ export type FiledRow = {
 
 export type NotificationRow = {
   subject: string;
-  sender: string;
   /** An ISO date the notification reached the person's mailbox at AEAT. */
   received_on: string;
   read: boolean;

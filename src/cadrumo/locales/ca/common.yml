@@ -809,6 +809,7 @@ desktop:
         imported: Importat {name}.
         nothing_found: No hi ha Borrador a {name}.
         unknown: No se sap si s'ha importat {name}. Comprova-ho abans.
+        year: Any
       census_review: Revisa
       changed:
         census:
@@ -863,7 +864,6 @@ desktop:
       nothing_new: Res de nou.
       notifications:
         empty: Sense notificacions.
-        from: '{sender}, {date}'
         group:
           read: Llegides ({count})
           unread: Sense llegir ({count})

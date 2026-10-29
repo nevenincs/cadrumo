@@ -793,6 +793,7 @@ desktop:
         imported: '{name} importálva.'
         nothing_found: Nincs Borrador a(z) {name} fájlban.
         unknown: Nem tudni, hogy a(z) {name} importálva lett-e. Előbb ellenőrizd.
+        year: Év
       census_review: Átnézés
       changed:
         census:
@@ -847,7 +848,6 @@ desktop:
       nothing_new: Nincs újdonság.
       notifications:
         empty: Nincs értesítés.
-        from: '{sender}, {date}'
         group:
           read: Olvasott ({count})
           unread: Olvasatlan ({count})

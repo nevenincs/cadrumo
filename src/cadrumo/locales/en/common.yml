@@ -786,6 +786,7 @@ desktop:
         imported: Imported {name}.
         nothing_found: No Borrador in {name}.
         unknown: Can't tell if {name} was imported. Check first.
+        year: Year
       census_review: Review
       changed:
         census:
@@ -840,7 +841,6 @@ desktop:
       nothing_new: Nothing new.
       notifications:
         empty: No notifications.
-        from: '{sender}, {date}'
         group:
           read: Read ({count})
           unread: Unread ({count})

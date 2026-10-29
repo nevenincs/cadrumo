@@ -369,6 +369,19 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "aeat-sync-counts",
+    title: "AEAT data: filed declarations as counts",
+    summary:
+      "An update ends and no filed declaration row is served, so the page shows the counts. The Borrador import asks for its year.",
+    aeatUpdate: { run: "done", results: "counts" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
     id: "aeat-sync-quiet",
     title: "AEAT data: nothing new",
     summary: "An update ends and AEAT had nothing new.",
