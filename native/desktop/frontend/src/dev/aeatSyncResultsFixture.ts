@@ -1,3 +1,4 @@
+import { DEMO_BORRADOR_YEARS } from "./aeatSyncFixture";
 import type {
   AeatSyncResult,
   AeatSyncResults,
@@ -141,6 +142,7 @@ const notifications: NotificationRow[] = [
 ];
 
 function served(mode: AeatSyncResultsMode): AeatSyncResults {
+  const years = { borrador_years: [...DEMO_BORRADOR_YEARS] };
   switch (mode) {
     case "mixed":
       return {
@@ -149,9 +151,7 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
           summary("filed", {
             new_count: 2,
             changed_count: 1,
-            failed: [
-              { part: 2, year: 2023, form: null, reason: "unavailable" },
-            ],
+            failed: [{ part: 2, year: 2023, reason: "unavailable" }],
           }),
           summary("notifications", { new_count: 2 }),
           summary("vat", { outcome: "nothing_found" }),
@@ -160,6 +160,7 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         ],
         filed,
         notifications,
+        ...years,
       };
     case "quiet":
       return {
@@ -173,6 +174,7 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         ],
         filed: filed.filter((row) => row.match === "matched"),
         notifications: notifications.filter((row) => row.read),
+        ...years,
       };
     case "empty":
       return {
@@ -186,43 +188,41 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         ],
         filed: [],
         notifications: [],
+        ...years,
       };
     case "failed":
       return {
         areas: [
           summary("census", {
             outcome: "failed",
-            failed: [{ part: 0, year: null, form: null, reason: "no_access" }],
+            failed: [{ part: 0, year: null, reason: "no_access" }],
           }),
           summary("filed", {
             outcome: "failed",
             new_count: 1,
             failed: [
-              { part: 1, year: 2025, form: null, reason: "session_ended" },
-              { part: 2, year: 2024, form: "303", reason: "refused" },
-              { part: 3, year: 2023, form: null, reason: "other" },
+              { part: 1, year: 2025, reason: "session_ended" },
+              { part: 2, year: 2024, reason: "refused" },
+              { part: 3, year: 2023, reason: "other" },
             ],
           }),
           summary("notifications", {
             outcome: "failed",
-            failed: [
-              { part: 0, year: null, form: null, reason: "unavailable" },
-            ],
+            failed: [{ part: 0, year: null, reason: "unavailable" }],
           }),
           summary("vat", {
             outcome: "failed",
-            failed: [{ part: 0, year: 2025, form: null, reason: "other" }],
+            failed: [{ part: 0, year: 2025, reason: "other" }],
           }),
           summary("borrador", { outcome: "nothing_found", at: null }),
           summary("identity", {
             outcome: "failed",
-            failed: [
-              { part: 0, year: null, form: null, reason: "session_ended" },
-            ],
+            failed: [{ part: 0, year: null, reason: "session_ended" }],
           }),
         ],
         filed: filed.filter((row) => row.match === "matched"),
         notifications: [],
+        ...years,
       };
     case "unknown":
       return {
@@ -236,6 +236,7 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         ],
         filed,
         notifications,
+        ...years,
       };
     case "unavailable":
       throw new Error("unavailable");
@@ -258,9 +259,9 @@ export function aeatSyncResultsFixture(
         return Promise.reject({ code: "unavailable" });
       }
     },
-    retry(_profile, area, part) {
+    retry(_profile, area, part, acknowledgedUnknown) {
       say(
-        `aeatSyncResults.retry ${area}${part === undefined ? "" : ` ${part}`}`,
+        `aeatSyncResults.retry ${area} ${part ?? "all"} acknowledged=${acknowledgedUnknown}`,
       );
       return Promise.resolve();
     },

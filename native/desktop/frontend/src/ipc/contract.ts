@@ -1401,9 +1401,10 @@ export interface HostCommands {
   };
   aeat_sync_observe: { args: { updates: Channel<null> }; result: number };
   aeat_sync_unobserve: { args: { subscription: number }; result: null };
-  /** Asks the host to bring the named areas. A rejection carries `{ code }`:
-   * `unknown` means the request was submitted and its outcome was not
-   * confirmed, and it is never retried. */
+  /** Asks the host to bring the named areas, each over every year the
+   * backend serves; while a run still goes on, the request reattaches to it.
+   * A rejection carries `{ code }`: `unknown` means the request was
+   * submitted and its outcome was not confirmed, and it is never retried. */
   aeat_sync_start: {
     args: {
       profile: string;
@@ -1456,8 +1457,9 @@ export interface HostCommands {
     result: import("../shell/aeatSyncResults").BorradorFile | null;
   };
   /** Imports the picked Borrador PDF into the profile for the filing `year`
-   * the person chose; without one the host refuses with `invalid`. A
-   * rejection `unknown` means the import may have been kept. */
+   * the person chose from the years the host served; without one the host
+   * refuses with `invalid`. A rejection `unknown` means the import may have
+   * been kept. */
   aeat_sync_borrador_import: {
     args: { profile: string; file: string; year?: number };
     result: import("../shell/aeatSyncResults").BorradorImportResult;

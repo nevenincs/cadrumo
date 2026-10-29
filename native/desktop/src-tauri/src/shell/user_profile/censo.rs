@@ -2,7 +2,7 @@
 use super::{Failure, HeldPerson, PersonEvent, ProfileHost, Result, lock, protocol};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use std::sync::{Arc, atomic::Ordering};
+use std::sync::Arc;
 use tauri::{State, ipc::Channel};
 
 const DEFINITION: &str = "user-profile.censo-review";
@@ -435,40 +435,26 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
 
 #[tauri::command]
 fn profile_censo_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>) -> u32 {
-    let mut observer = lock(&host.censo_observer);
-    if let Some((_, task)) = observer.take() {
-        task.abort();
-    }
-    let subscription = updates.id();
-    if host.closed.load(Ordering::Acquire) {
-        return subscription;
-    }
     let mut events = host.sign_in.person_events();
-    let task = tauri::async_runtime::spawn(async move {
-        loop {
-            match events.recv().await {
-                Ok(PersonEvent::OperationChanged | PersonEvent::Retired)
-                | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
-                    if updates.send(()).is_err() {
-                        break;
+    host.censo_observer
+        .observe(host.is_closed(), updates, |updates| async move {
+            loop {
+                match events.recv().await {
+                    Ok(PersonEvent::OperationChanged | PersonEvent::Retired)
+                    | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {
+                        if updates.send(()).is_err() {
+                            break;
+                        }
                     }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                    _ => {}
                 }
-                Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                _ => {}
             }
-        }
-    });
-    *observer = Some((subscription, task));
-    subscription
+        })
 }
 #[tauri::command]
 fn profile_censo_unobserve(host: State<'_, Arc<ProfileHost>>, subscription: u32) {
-    let mut observer = lock(&host.censo_observer);
-    if observer.as_ref().is_some_and(|(id, _)| *id == subscription)
-        && let Some((_, task)) = observer.take()
-    {
-        task.abort();
-    }
+    host.censo_observer.unobserve(subscription);
 }
 
 #[cfg(test)]

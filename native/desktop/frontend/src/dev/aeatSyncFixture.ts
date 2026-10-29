@@ -20,6 +20,9 @@ export type AeatSyncMode =
 
 const DAY = 24 * 60 * 60 * 1000;
 
+/** The filing years the demo host offers a Borrador import for. */
+export const DEMO_BORRADOR_YEARS: readonly number[] = [2025, 2024, 2023];
+
 function mixed(now: number): AeatSyncArea[] {
   const ago = (days: number) => new Date(now - days * DAY).toISOString();
   return [
@@ -147,6 +150,7 @@ export function aeatSyncFixture(
         return Promise.reject({ code: "unavailable" });
       const status: AeatSyncStatus = {
         profile_id: "demo",
+        borrador_years: [...DEMO_BORRADOR_YEARS],
         areas:
           mode === "never"
             ? never()

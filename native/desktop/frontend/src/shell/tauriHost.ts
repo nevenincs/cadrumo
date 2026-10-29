@@ -166,10 +166,13 @@ export function tauriHost(): Host {
         ]);
         return { ...served, notifications };
       },
-      retry: (profile, area, part) =>
-        call("aeat_sync_retry", { profile, area, item: part ?? null }).then(
-          () => undefined,
-        ),
+      retry: (profile, area, part, acknowledgedUnknown) =>
+        call("aeat_sync_retry", {
+          profile,
+          area,
+          item: part,
+          acknowledged_unknown: acknowledgedUnknown,
+        }).then(() => undefined),
       pickBorrador: () => call("aeat_sync_borrador_pick", {}),
       importBorrador: (profile, file, year) =>
         call("aeat_sync_borrador_import", { profile, file, year }),

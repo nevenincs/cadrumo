@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { DEMO_BORRADOR_YEARS } from "../../src/dev/aeatSyncFixture";
 import { AEAT_SYNC_AREAS } from "../../src/shell/aeatSync";
 import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
@@ -48,6 +49,28 @@ const calls = (target: Page, prefix: string) =>
       ),
     prefix,
   );
+
+// A host call follows the click that causes it by a few turns of the event
+// loop, so "never called" is held across a short window instead of read once.
+async function expectNoCalls(target: Page, prefix: string) {
+  const seen = await target.evaluate(
+    (start: string) =>
+      new Promise<string[]>((resolve) => {
+        const found = () =>
+          (window.__scenarioHostCalls ?? []).filter((call: string) =>
+            call.startsWith(start),
+          );
+        const until = Date.now() + 300;
+        const look = () => {
+          if (found().length > 0 || Date.now() >= until) resolve(found());
+          else setTimeout(look, 25);
+        };
+        look();
+      }),
+    prefix,
+  );
+  expect(seen).toEqual([]);
+}
 
 test("the page names its six areas and their states from what is served", async ({
   page: target,
@@ -207,7 +230,7 @@ test("a missing secure browser is installed in the page and the update then goes
   await expect(card).toContainText(
     label("desktop.aeat_sync.before.browser_title"),
   );
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
   await button(card, "desktop.aeat_sync.before.browser_install").click();
   await card
     .getByRole("button", {
@@ -233,7 +256,7 @@ test("AEAT access that is not set up leads to the access editor", async ({
   await update(page).click();
   const card = page.getByTestId("aeat-sync-access");
   await expect(card).toBeVisible();
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
   await button(card, "desktop.aeat_sync.before.access_open").click();
   await expect(
     target.getByRole("dialog", {
@@ -253,7 +276,7 @@ test("leaving the checks asks nothing of the host", async ({
     "desktop.aeat_sync.before.not_now",
   ).click();
   await expect(area(page, "census")).toBeVisible();
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
 });
 
 test("signed out, the page says so and offers no update; signing in shows the overview", async ({
@@ -275,7 +298,7 @@ test("signed out, the page says so and offers no update; signing in shows the ov
   await expect(page).toBeVisible();
   await expect(page.locator("[data-area]")).toHaveCount(AEAT_SYNC_AREAS.length);
   await expect(update(page)).toBeEnabled();
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
 });
 
 test("waiting for the phone shows the approval and carries the update on once approved", async ({
@@ -291,7 +314,7 @@ test("waiting for the phone shows the approval and carries the update on once ap
     label("desktop.aeat_sync.before.phone_body"),
   );
   await expect(button(phone, "desktop.aeat_sync.before.cancel")).toBeVisible();
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
   await target.evaluate(() => window.__scenarioAeatPhone?.approve());
   await expect
     .poll(() => calls(target, "aeatSync.start"))
@@ -310,8 +333,8 @@ test("cancelling the wait for the phone returns to the overview and starts nothi
   await expect(phone).toHaveCount(0);
   await expect(update(page)).toBeEnabled();
   await expect(page.locator("[data-area]")).toHaveCount(AEAT_SYNC_AREAS.length);
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
-  expect(await calls(target, "aeatSyncRun")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
+  await expectNoCalls(target, "aeatSyncRun");
 });
 
 test("a browser that cannot be downloaded says why, offers another try and a way back, and starts nothing", async ({
@@ -337,11 +360,11 @@ test("a browser that cannot be downloaded says why, offers another try and a way
       exact: true,
     }),
   ).toBeEnabled();
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
   await button(card, "desktop.aeat_sync.before.not_now").click();
   await expect(card).toHaveCount(0);
   await expect(update(page)).toBeEnabled();
-  expect(await calls(target, "aeatSync.start")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSync.start");
 });
 
 test("a session that times out pauses the update until the person signs in again", async ({
@@ -352,7 +375,7 @@ test("a session that times out pauses the update until the person signs in again
   const ended = page.getByTestId("aeat-sync-ended");
   await expect(ended).toBeVisible();
   await expect(page.locator("[data-run=paused]")).toBeVisible();
-  expect(await calls(target, "aeatSyncRun.resume")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSyncRun.resume");
   await button(ended, "desktop.aeat_sync.before.ended_sign_in").click();
   await expect.poll(() => calls(target, "aeatSyncRun.resume")).toHaveLength(1);
   await expect(done(page)).toBeVisible();
@@ -368,7 +391,7 @@ test("parts that failed are shown and read again only when asked", async ({
     label("desktop.aeat_sync.progress.done_problems"),
   );
   await expect(results(page)).toBeVisible();
-  expect(await calls(target, "aeatSyncRun.retry")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSyncRun.retry");
   await button(progress(page), "desktop.aeat_sync.progress.try_again_for", {
     name: label("desktop.aeat_sync.area.identity.name"),
   }).click();
@@ -395,13 +418,13 @@ test("a part whose outcome is unknown is read again only after the warning", asy
   await expect(progress(page)).toContainText(
     label("desktop.aeat_sync.progress.warn_unknown"),
   );
-  expect(await calls(target, "aeatSyncRun.retry")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSyncRun.retry");
   // Cancelling the warning leaves it unread.
   await button(
     progress(page),
     "desktop.aeat_sync.progress.warn_cancel",
   ).click();
-  expect(await calls(target, "aeatSyncRun.retry")).toHaveLength(0);
+  await expectNoCalls(target, "aeatSyncRun.retry");
   await check.click();
   await button(
     progress(page),
@@ -410,6 +433,28 @@ test("a part whose outcome is unknown is read again only after the warning", asy
   await expect
     .poll(() => calls(target, "aeatSyncRun.retry"))
     .toEqual(["aeatSyncRun.retry notifications 3 acknowledged=true"]);
+});
+
+test("in the results, an area whose outcome is unknown is read again only after the warning", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-unknown");
+  await update(page).click();
+  const census = results(page).locator('[data-area="census"]');
+  await expect(census).toHaveAttribute("data-outcome", "unknown");
+  await button(census, "desktop.aeat_sync.results.retry").click();
+  await expect(census).toContainText(
+    label("desktop.aeat_sync.progress.warn_unknown"),
+  );
+  await expectNoCalls(target, "aeatSyncResults.retry");
+  // Cancelling the warning leaves it unread.
+  await button(census, "desktop.aeat_sync.progress.warn_cancel").click();
+  await expectNoCalls(target, "aeatSyncResults.retry");
+  await button(census, "desktop.aeat_sync.results.retry").click();
+  await button(census, "desktop.aeat_sync.progress.warn_confirm").click();
+  await expect
+    .poll(() => calls(target, "aeatSyncResults.retry"))
+    .toEqual(["aeatSyncResults.retry census all acknowledged=true"]);
 });
 
 test("an update that finds nothing new says so in its results", async ({
@@ -533,13 +578,16 @@ test("the Borrador import is for the year the person chooses", async ({
   const year = borrador.getByRole("combobox", {
     name: label("desktop.aeat_sync.results.borrador.year"),
   });
-  const previous = new Date().getFullYear() - 1;
-  await expect(year).toHaveValue(String(previous));
-  await year.selectOption(String(previous - 1));
+  const [latest, chosen] = DEMO_BORRADOR_YEARS;
+  await expect(year.locator("option")).toHaveText(
+    DEMO_BORRADOR_YEARS.map(String),
+  );
+  await expect(year).toHaveValue(String(latest));
+  await year.selectOption(String(chosen));
   await button(borrador, "desktop.aeat_sync.results.borrador.import").click();
   await expect
     .poll(() => calls(target, "aeatSyncResults.importBorrador"))
-    .toEqual([`aeatSyncResults.importBorrador ${previous - 1}`]);
+    .toEqual([`aeatSyncResults.importBorrador ${chosen}`]);
 });
 
 // Each area is served as up to date or possibly out of date by the backend,

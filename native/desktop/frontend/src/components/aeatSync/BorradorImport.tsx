@@ -10,17 +10,6 @@ import type {
 } from "../../shell/aeatSyncResults";
 import { useStrings } from "../../shell/strings";
 
-/** How many filing years the person can choose from. */
-const YEARS_OFFERED = 6;
-
-/** The filing years on offer, latest first. The Borrador 100 for a year is
- * downloaded the year after, so the latest is the previous calendar year; the
- * status the host serves names no year. */
-export function borradorYears(today: Date = new Date()): number[] {
-  const latest = today.getFullYear() - 1;
-  return Array.from({ length: YEARS_OFFERED }, (_, i) => latest - i);
-}
-
 /**
  * The Borrador 100 is not read from AEAT: the person downloads it there and
  * imports the PDF here. The file is chosen in the system dialog and only its
@@ -29,15 +18,19 @@ export function borradorYears(today: Date = new Date()): number[] {
 export function BorradorImport({
   port,
   profile,
+  years,
   onImported,
 }: {
   port: AeatSyncResultsPort;
   profile: string;
+  /** The filing years on offer, latest first, as the host serves them. */
+  years: readonly number[];
   onImported(): void;
 }) {
   const t = useStrings();
-  const years = borradorYears();
-  const [year, setYear] = useState(years[0]);
+  const [picked, setPicked] = useState<number | null>(null);
+  // The latest year until the person picks one the host still offers.
+  const year = picked !== null && years.includes(picked) ? picked : years[0];
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<
@@ -47,6 +40,7 @@ export function BorradorImport({
     setBusy(true);
     setOutcome(null);
     try {
+      if (year === undefined) return;
       const file = await port.pickBorrador();
       if (!file) return;
       setName(file.name);
@@ -66,9 +60,9 @@ export function BorradorImport({
           controlSize="sm"
           className="w-24"
           aria-label={t("desktop.aeat_sync.results.borrador.year")}
-          value={year}
-          disabled={busy}
-          onChange={(event) => setYear(Number(event.target.value))}
+          value={year ?? ""}
+          disabled={busy || year === undefined}
+          onChange={(event) => setPicked(Number(event.target.value))}
         >
           {years.map((value) => (
             <option key={value} value={value}>
@@ -80,6 +74,7 @@ export function BorradorImport({
           size="xs"
           variant="outline"
           pending={busy}
+          disabled={year === undefined}
           onClick={() => void choose()}
         >
           <Icon name="upload" size="xs" />

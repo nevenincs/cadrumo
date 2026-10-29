@@ -6,7 +6,6 @@ import { Icon, type IconName } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import {
   AEAT_SYNC_AREAS,
-  aeatSyncDay,
   aeatSyncFailure,
   useAeatSync,
   type AeatSyncArea,
@@ -23,6 +22,7 @@ import {
   useAeatSyncRun,
   type AeatSyncRunPort,
 } from "../../shell/aeatSyncRun";
+import { dateFormats } from "../../shared/dateFormats";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AeatSyncFlow } from "./AeatSyncFlow";
 import { AeatSyncRunView } from "./AeatSyncProgress";
@@ -46,7 +46,9 @@ const COUNT_KEYS: Partial<Record<AeatSyncCountKind, string>> = {
 
 /** The area's standing in words: only what the host served, with its date. */
 function standing(t: Translate, locale: string, area: AeatSyncArea): string {
-  const day = area.captured_at ? aeatSyncDay(locale, area.captured_at) : null;
+  const day = area.captured_at
+    ? dateFormats(locale).medium.format(new Date(area.captured_at))
+    : null;
   switch (area.state) {
     case "current":
       return day
@@ -69,8 +71,7 @@ function lastTry(t: Translate, locale: string, area: AeatSyncArea) {
   if (!attempt) return null;
   if (attempt.outcome !== "failed" && attempt.outcome !== "unknown")
     return null;
-  const date = aeatSyncDay(locale, attempt.at);
-  if (!date) return null;
+  const date = dateFormats(locale).medium.format(new Date(attempt.at));
   return t(`desktop.aeat_sync.attempt.${attempt.outcome}`, { date });
 }
 
@@ -149,7 +150,6 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         areas: areas.filter(
           (area): area is AeatSyncBringArea => area !== "borrador",
         ),
-        dry_run: false,
       });
     },
     [port, profile],
@@ -400,6 +400,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
                       <BorradorImport
                         port={results}
                         profile={profile}
+                        years={status.data?.borrador_years ?? []}
                         onImported={refresh}
                       />
                     ) : (

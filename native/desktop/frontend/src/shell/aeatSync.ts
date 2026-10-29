@@ -46,18 +46,20 @@ export type AeatSyncArea = {
 export type AeatSyncStatus = {
   profile_id: string;
   areas: AeatSyncArea[];
+  /** The filing years a Borrador import offers, latest first, as the host
+   * chose them. */
+  borrador_years: number[];
 };
 
 /** The areas an update reads from AEAT; Borrador 100 is only imported from a
  * file, and the host refuses it in a start. */
 export type AeatSyncBringArea = Exclude<AeatSyncAreaId, "borrador">;
 
-/** What the window asks the host to bring. */
+/** What the window asks the host to bring: every area for an update from
+ * AEAT, or one area for its own update. Each reads every year the backend
+ * serves. */
 export type AeatSyncStart = {
   areas: AeatSyncBringArea[];
-  years?: number[];
-  forms?: string[];
-  dry_run: boolean;
 };
 
 export type AeatSyncPort = {
@@ -81,24 +83,6 @@ export function aeatSyncFailure(error: unknown): AeatSyncFailure {
   return code === "not_signed_in" || code === "refused" || code === "unknown"
     ? code
     : "unavailable";
-}
-
-const dayFormats = new Map<string, Intl.DateTimeFormat>();
-
-/** An instant as a day in `locale`; null where it is not a date. */
-export function aeatSyncDay(locale: string, instant: string): string | null {
-  const at = new Date(instant);
-  if (!Number.isFinite(at.getTime())) return null;
-  let format = dayFormats.get(locale);
-  if (!format) {
-    try {
-      format = new Intl.DateTimeFormat(locale, { dateStyle: "medium" });
-    } catch {
-      format = new Intl.DateTimeFormat(undefined, { dateStyle: "medium" });
-    }
-    dayFormats.set(locale, format);
-  }
-  return format.format(at);
 }
 
 type State = {

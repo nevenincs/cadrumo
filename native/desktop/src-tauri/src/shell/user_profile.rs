@@ -35,6 +35,55 @@ const PROFILE_CHANGE_ADMISSION_LIMIT: Duration = Duration::from_secs(15);
 const AUTH_FACT_PATHS: [&str; 3] = ["auth.dni_nie", "auth.numero_soporte", "auth.fecha_validez"];
 const AUTH_METHOD: &str = "auth.provider.configure";
 const CREDENTIAL_SAVE: &str = "auth.credential.save";
+/// One window cue a command family holds: a later subscription replaces the
+/// earlier one, and only the subscription held can end it.
+#[derive(Default)]
+pub(crate) struct Cue(Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>);
+impl Cue {
+    /// Holds `updates` in place of the cue held before, sent to by the task
+    /// `follow` makes; once the host closed nothing is followed.
+    pub(crate) fn observe<F>(
+        &self,
+        closed: bool,
+        updates: Channel<()>,
+        follow: impl FnOnce(Channel<()>) -> F,
+    ) -> u32
+    where
+        F: std::future::Future<Output = ()> + Send + 'static,
+    {
+        let mut held = lock(&self.0);
+        if let Some((_, task)) = held.take() {
+            task.abort();
+        }
+        let subscription = updates.id();
+        if !closed {
+            // Synchronous commands run on the webview thread, outside Tokio.
+            // Spawn through the application's runtime rather than a
+            // thread-local handle.
+            *held = Some((subscription, tauri::async_runtime::spawn(follow(updates))));
+        }
+        subscription
+    }
+    /// Ends the cue `subscription`, if it is still the one held.
+    pub(crate) fn unobserve(&self, subscription: u32) {
+        let mut held = lock(&self.0);
+        if held.as_ref().is_some_and(|(id, _)| *id == subscription)
+            && let Some((_, task)) = held.take()
+        {
+            task.abort();
+        }
+    }
+    pub(crate) fn end(&self) {
+        if let Some((_, task)) = lock(&self.0).take() {
+            task.abort();
+        }
+    }
+    #[cfg(test)]
+    pub(crate) fn held(&self) -> Option<u32> {
+        lock(&self.0).as_ref().map(|(id, _)| *id)
+    }
+}
+
 /// The providers whose secret is kept apart from the profile.
 const CREDENTIAL_PROVIDERS: [&str; 2] = ["certificate", "clave_permanente"];
 /// A credential's JSON-escaped body: the profile, the provider and a password.
@@ -47,8 +96,8 @@ const MEMBERS_LIMIT: usize = 10_000;
 pub struct ProfileHost {
     sign_in: Arc<SignIn>,
     operation: tokio::sync::Mutex<()>,
-    observer: Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
-    censo_observer: Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
+    observer: Cue,
+    censo_observer: Cue,
     held: Mutex<Option<HeldPerson>>,
     closed: AtomicBool,
     censo: tokio::sync::Mutex<Option<censo::Session>>,
@@ -62,8 +111,8 @@ impl ProfileHost {
         Self {
             sign_in,
             operation: tokio::sync::Mutex::new(()),
-            observer: Mutex::new(None),
-            censo_observer: Mutex::new(None),
+            observer: Cue::default(),
+            censo_observer: Cue::default(),
             held: Mutex::new(None),
             closed: AtomicBool::new(false),
             censo: tokio::sync::Mutex::new(None),
@@ -73,12 +122,8 @@ impl ProfileHost {
     }
     pub fn close(&self) {
         self.closed.store(true, Ordering::Release);
-        if let Some((_, task)) = lock(&self.observer).take() {
-            task.abort();
-        }
-        if let Some((_, task)) = lock(&self.censo_observer).take() {
-            task.abort();
-        }
+        self.observer.end();
+        self.censo_observer.end();
         *lock(&self.held) = None;
         self.aeat_sync.close();
         self.files.clear();
@@ -706,19 +751,9 @@ async fn profile_views_calendar(
 }
 #[tauri::command]
 fn user_profile_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>) -> u32 {
-    let mut observer = lock(&host.observer);
-    if let Some((_, task)) = observer.take() {
-        task.abort();
-    }
-    let subscription = updates.id();
-    if host.closed.load(Ordering::Acquire) {
-        return subscription;
-    }
     let owner = host.sign_in.clone();
     let mut events = owner.person_events();
-    // Synchronous commands run on the webview thread, outside Tokio. Spawn
-    // through the application's runtime rather than a thread-local handle.
-    let task = tauri::async_runtime::spawn(async move {
+    host.observer.observe(host.is_closed(), updates, |updates| async move {
         loop {
             tokio::select! {
                 () = owner.observation_changed() => {},
@@ -733,18 +768,11 @@ fn user_profile_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>)
                 break;
             }
         }
-    });
-    *observer = Some((subscription, task));
-    subscription
+    })
 }
 #[tauri::command]
 fn user_profile_unobserve(host: State<'_, Arc<ProfileHost>>, subscription: u32) {
-    let mut observer = lock(&host.observer);
-    if observer.as_ref().is_some_and(|(id, _)| *id == subscription)
-        && let Some((_, task)) = observer.take()
-    {
-        task.abort();
-    }
+    host.observer.unobserve(subscription);
 }
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
@@ -863,14 +891,14 @@ mod tests {
         let second = invoke("user_profile_observe", json!({"updates":"__CHANNEL__:8"}));
         assert_eq!(second, 8);
         invoke("user_profile_unobserve", json!({"subscription":first}));
-        assert_eq!(lock(&host.observer).as_ref().unwrap().0, 8);
+        assert_eq!(host.observer.held(), Some(8));
         invoke("user_profile_unobserve", json!({"subscription":second}));
-        assert!(lock(&host.observer).is_none());
+        assert_eq!(host.observer.held(), None);
         invoke("user_profile_observe", json!({"updates":"__CHANNEL__:9"}));
         host.close();
-        assert!(lock(&host.observer).is_none());
+        assert_eq!(host.observer.held(), None);
         invoke("user_profile_observe", json!({"updates":"__CHANNEL__:10"}));
-        assert!(lock(&host.observer).is_none());
+        assert_eq!(host.observer.held(), None);
     }
 
     const PROFILE_ID: &str = "11111111-1111-4111-8111-111111111111";

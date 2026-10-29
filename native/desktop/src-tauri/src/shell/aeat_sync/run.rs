@@ -1,4 +1,4 @@
-//! The run the AEAT sync page follows: a queue of items over the chosen areas,
+//! The run the AEAT sync page follows: a queue of items over the asked areas,
 //! held by the profile host so it survives page navigation and reattaches on a
 //! repeat start. Items run one at a time in the fixed area order; a stop lets
 //! the item in flight settle and starts nothing further, and an ended AEAT
@@ -7,7 +7,7 @@
 //! The run keeps item addresses and closed states only. Which operation an
 //! item submits, and how its settlement reads, belong to the driver.
 use super::admitted::Area;
-use super::outcome::{Counts, Outcome, Reason};
+use super::outcome::{self, Counts, Outcome, Reason};
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet};
 use std::future::Future;
@@ -21,15 +21,14 @@ pub(crate) enum Step {
     /// One identity check of the profile's own tax number.
     Verify(&'static str),
     Notifications,
-    /// The VAT balance carried forward over these years.
-    Vat(Vec<u16>),
-    /// Which forms AEAT holds filed for these years.
-    Discover(Vec<u16>),
+    /// The VAT balance carried forward over every year the backend serves.
+    Vat,
+    /// Which forms AEAT holds filed, by year.
+    Discover,
     /// The filed declarations of one year, for the forms discovered in it.
     Filed {
         year: u16,
         forms: Vec<String>,
-        dry_run: bool,
     },
 }
 
@@ -103,6 +102,16 @@ impl Item {
             ItemState::Waiting | ItemState::Running | ItemState::NotStarted
         )
     }
+    /// How the item settled; none while it has not.
+    pub(crate) fn outcome(&self) -> Option<Outcome> {
+        Some(match self.state {
+            ItemState::Brought => Outcome::Brought,
+            ItemState::NothingFound => Outcome::NothingFound,
+            ItemState::Failed => Outcome::Failed(self.reason.unwrap_or(Reason::Other)),
+            ItemState::Unknown => Outcome::Unknown,
+            ItemState::Waiting | ItemState::Running | ItemState::NotStarted => return None,
+        })
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -127,6 +136,10 @@ impl AreaRun {
             AreaState::NotStarted
         }
     }
+    /// The worst outcome of the items settled so far; none before any.
+    pub(crate) fn outcome(&self) -> Option<Outcome> {
+        outcome::worst(self.items.iter().filter_map(Item::outcome))
+    }
 }
 
 /// The window's view of one item: its address, year, state and reason.
@@ -141,6 +154,8 @@ pub(crate) struct ItemView {
 pub(crate) struct AreaView {
     pub(crate) area: Area,
     pub(crate) state: AreaState,
+    /// The worst of the items settled so far, in the window's words.
+    pub(crate) outcome: Option<&'static str>,
     pub(crate) items: Vec<ItemView>,
 }
 #[derive(Debug, PartialEq, Eq, Serialize)]
@@ -149,7 +164,7 @@ pub(crate) struct Snapshot {
     pub(crate) areas: Vec<AreaView>,
 }
 
-/// The forms a discovery found for each chosen year, in year order.
+/// The forms a discovery found for each year, in year order.
 type Parts = Vec<(u16, Vec<String>)>;
 
 /// Why the run refused a person's request.
@@ -166,8 +181,6 @@ pub(crate) enum Refusal {
 pub(crate) struct Run {
     pub(crate) state: RunState,
     pub(crate) areas: Vec<AreaRun>,
-    forms: Vec<String>,
-    dry_run: bool,
     /// Whether a driver loop is following the queue.
     driving: bool,
     next_id: u32,
@@ -178,8 +191,6 @@ impl Run {
         let mut run = Self {
             state: RunState::Running,
             areas: Vec::new(),
-            forms: plan.forms.clone(),
-            dry_run: plan.dry_run,
             driving: false,
             next_id: 0,
         };
@@ -192,8 +203,8 @@ impl Run {
                     .map(|id| (Step::Verify(id), false))
                     .collect(),
                 Area::Notifications => vec![(Step::Notifications, false)],
-                Area::Vat => vec![(Step::Vat(plan.years.clone()), false)],
-                Area::Filed => vec![(Step::Discover(plan.years.clone()), true)],
+                Area::Vat => vec![(Step::Vat, false)],
+                Area::Filed => vec![(Step::Discover, true)],
             };
             let items = steps
                 .into_iter()
@@ -228,6 +239,7 @@ impl Run {
                 .map(|area| AreaView {
                     area: area.area,
                     state: area.state(),
+                    outcome: area.outcome().map(Outcome::word),
                     items: area
                         .items
                         .iter()
@@ -246,10 +258,11 @@ impl Run {
 
     /// Whether the run still moves: a driver follows it or may be asked to.
     pub(crate) fn active(&self) -> bool {
-        matches!(
-            self.state,
-            RunState::Running | RunState::Stopping | RunState::Paused
-        )
+        self.driving
+            || matches!(
+                self.state,
+                RunState::Running | RunState::Stopping | RunState::Paused
+            )
     }
 
     /// Claims the queue for one driver loop; false when one already follows it.
@@ -297,10 +310,8 @@ impl Run {
     }
 
     /// Records how item `id` settled. An ended AEAT session pauses the run at
-    /// that item; a discovery is replaced by one item per chosen year.
+    /// that item; a discovery is replaced by one item per year it found.
     pub(crate) fn settle(&mut self, id: u32, settled: Settled) {
-        let dry_run = self.dry_run;
-        let chosen: BTreeSet<String> = self.forms.iter().cloned().collect();
         let mut fresh: Option<(usize, Parts)> = None;
         let mut pause = false;
         let Some((index, item)) = self.areas.iter_mut().enumerate().find_map(|(index, area)| {
@@ -321,25 +332,10 @@ impl Run {
             review_pending,
         } = settled;
         match (&item.step, outcome, discovered) {
-            (Step::Discover(years), Outcome::Brought | Outcome::NothingFound, Some(found)) => {
-                // No chosen years reads every year AEAT holds filings for.
-                let years: Vec<u16> = if years.is_empty() {
-                    found.keys().copied().collect()
-                } else {
-                    years.clone()
-                };
-                let parts = years
+            (Step::Discover, Outcome::Brought | Outcome::NothingFound, Some(found)) => {
+                let parts = found
                     .into_iter()
-                    .map(|year| {
-                        let forms = found
-                            .get(&year)
-                            .into_iter()
-                            .flatten()
-                            .filter(|form| chosen.is_empty() || chosen.contains(*form))
-                            .cloned()
-                            .collect();
-                        (year, forms)
-                    })
+                    .map(|(year, forms)| (year, forms.into_iter().collect()))
                     .collect();
                 fresh = Some((index, parts));
             }
@@ -370,11 +366,7 @@ impl Run {
                 } else {
                     ItemState::Waiting
                 };
-                let step = Step::Filed {
-                    year,
-                    forms,
-                    dry_run,
-                };
+                let step = Step::Filed { year, forms };
                 items.push(self.item(Some(year), step, state, false));
             }
             if self.state != RunState::Running {

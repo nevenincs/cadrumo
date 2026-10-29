@@ -1,13 +1,12 @@
 import { memo, useCallback, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
 import {
-  aeatSyncDay,
+  AEAT_SYNC_AREAS,
   aeatSyncFailure,
   type AeatSyncAreaId,
-  type AeatSyncOutcome,
 } from "../../shell/aeatSync";
 import {
   useAeatSyncResults,
@@ -15,26 +14,13 @@ import {
   type AeatSyncResult,
   type AeatSyncResultsPort,
 } from "../../shell/aeatSyncResults";
+import { dateFormats } from "../../shared/dateFormats";
 import { useStrings, type Translate } from "../../shell/strings";
 import { BorradorImport } from "./BorradorImport";
 import { FiledResults } from "./FiledResults";
 import { NotificationResults } from "./NotificationResults";
-
-const OUTCOME_ICONS: Record<AeatSyncOutcome, IconName> = {
-  brought: "check",
-  nothing_found: "info",
-  failed: "alert",
-  unknown: "unknown",
-};
-
-const AREA_ORDER: readonly AeatSyncAreaId[] = [
-  "census",
-  "filed",
-  "notifications",
-  "vat",
-  "borrador",
-  "identity",
-];
+import { OUTCOME_ICONS } from "./outcomeIcons";
+import { UnknownWarning } from "./UnknownWarning";
 
 /** A count's sentence, in its singular or plural form. */
 function counted(t: Translate, key: string, count: number): string {
@@ -82,11 +68,6 @@ function ending(t: Translate, result: AeatSyncResult): string {
 }
 
 function partName(t: Translate, part: AeatSyncFailedPart): string | null {
-  if (part.form !== null && part.year !== null)
-    return t("desktop.aeat_sync.results.part.form", {
-      form: part.form,
-      year: part.year,
-    });
   if (part.year !== null)
     return t("desktop.aeat_sync.results.part.year", { year: part.year });
   return null;
@@ -117,12 +98,20 @@ export const Results = memo(function Results({
   const results = useAeatSyncResults(port, profile, language);
   const { refresh } = results;
   const [trying, setTrying] = useState<string | null>(null);
+  // The area or part whose outcome is unknown, awaiting the person's word to
+  // read it again.
+  const [confirming, setConfirming] = useState<string | null>(null);
   const [trouble, setTrouble] = useState<
     Partial<Record<AeatSyncAreaId, "failed" | "unknown">>
   >({});
   const retry = useCallback(
-    async (area: AeatSyncAreaId, part?: number) => {
+    async (
+      area: AeatSyncAreaId,
+      part: number | null,
+      acknowledgedUnknown: boolean,
+    ) => {
       const key = `${area}:${part ?? "all"}`;
+      setConfirming(null);
       setTrying(key);
       setTrouble((now) => {
         const next = { ...now };
@@ -130,7 +119,7 @@ export const Results = memo(function Results({
         return next;
       });
       try {
-        await port.retry(profile, area, part);
+        await port.retry(profile, area, part, acknowledgedUnknown);
       } catch (error) {
         setTrouble((now) => ({
           ...now,
@@ -177,7 +166,7 @@ export const Results = memo(function Results({
         aria-label={t("desktop.aeat_sync.results.title")}
         className="flex flex-col gap-3"
       >
-        {AREA_ORDER.flatMap((id) => {
+        {AEAT_SYNC_AREAS.flatMap((id) => {
           const result = served.get(id);
           return result ? [result] : [];
         }).map((result) => {
@@ -186,7 +175,7 @@ export const Results = memo(function Results({
           const sentence = ending(t, result);
           const day =
             result.at && (result.outcome !== "failed" || lines.length > 0)
-              ? aeatSyncDay(language, result.at)
+              ? dateFormats(language).medium.format(new Date(result.at))
               : null;
           const busy = trying?.startsWith(`${result.area}:`) ?? false;
           const problem = trouble[result.area];
@@ -226,7 +215,7 @@ export const Results = memo(function Results({
                     aria-label={t("desktop.aeat_sync.results.retry_named", {
                       name,
                     })}
-                    onClick={() => void retry(result.area)}
+                    onClick={() => void retry(result.area, null, false)}
                   >
                     {t("desktop.aeat_sync.results.retry")}
                   </Button>
@@ -280,7 +269,9 @@ export const Results = memo(function Results({
                               name: label ?? name,
                             },
                           )}
-                          onClick={() => void retry(result.area, part.part)}
+                          onClick={() =>
+                            void retry(result.area, part.part, false)
+                          }
                         >
                           {t("desktop.aeat_sync.results.retry")}
                         </Button>
@@ -289,18 +280,25 @@ export const Results = memo(function Results({
                   })}
                 </ul>
               )}
-              {result.outcome === "unknown" && (
-                <div>
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    pending={busy}
-                    onClick={() => void retry(result.area)}
-                  >
-                    {t("desktop.aeat_sync.results.retry")}
-                  </Button>
-                </div>
-              )}
+              {result.outcome === "unknown" &&
+                (confirming === `${result.area}:all` ? (
+                  <UnknownWarning
+                    busy={busy}
+                    onProceed={() => void retry(result.area, null, true)}
+                    onCancel={() => setConfirming(null)}
+                  />
+                ) : (
+                  <div>
+                    <Button
+                      size="xs"
+                      variant="outline"
+                      pending={busy}
+                      onClick={() => setConfirming(`${result.area}:all`)}
+                    >
+                      {t("desktop.aeat_sync.results.retry")}
+                    </Button>
+                  </div>
+                ))}
               {problem && (
                 <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
                   {t(
@@ -324,6 +322,7 @@ export const Results = memo(function Results({
                 <BorradorImport
                   port={port}
                   profile={profile}
+                  years={data.borrador_years}
                   onImported={refresh}
                 />
               )}

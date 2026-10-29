@@ -38,6 +38,9 @@ export type AeatSyncRunAreaState =
 export type AeatSyncRunArea = {
   area: AeatSyncAreaId;
   state: AeatSyncRunAreaState;
+  /** The worst outcome of the parts settled so far, as the host judged it;
+   * null before any part settled. */
+  outcome: AeatSyncAreaOutcome | null;
   /** Empty while the host is still working out the parts, as for the years
    * of filed declarations before they are known. */
   items: AeatSyncRunItem[];
@@ -75,24 +78,9 @@ export type AeatSyncRunPort = {
   resume(profile: string): Promise<void>;
 };
 
-/** How a part or an area came out once settled: the worst part decides, an
- * unknown outcome outranking a failure. */
+/** How an area came out once its parts settled, as the host serves it. */
 export type AeatSyncAreaOutcome =
   "brought" | "nothing_found" | "failed" | "unknown";
-
-export function aeatSyncAreaOutcome(
-  items: readonly AeatSyncRunItem[],
-): AeatSyncAreaOutcome | null {
-  const settled = items.filter((i) =>
-    ["brought", "nothing_found", "failed", "unknown"].includes(i.state),
-  );
-  if (settled.length === 0) return null;
-  if (settled.some((i) => i.state === "unknown")) return "unknown";
-  if (settled.some((i) => i.state === "failed")) return "failed";
-  return settled.some((i) => i.state === "brought")
-    ? "brought"
-    : "nothing_found";
-}
 
 /** How many parts are done, and how many there are, for a progress bar. */
 export function aeatSyncRunShare(snapshot: AeatSyncRunSnapshot): {

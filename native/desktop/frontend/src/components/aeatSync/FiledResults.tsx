@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { aeatSyncDay } from "../../shell/aeatSync";
+import { dateFormats } from "../../shared/dateFormats";
 import type { FiledMatch, FiledRow } from "../../shell/aeatSyncResults";
 import { useStrings, type Translate } from "../../shell/strings";
 
@@ -28,7 +28,8 @@ function title(t: Translate, row: FiledRow): string {
  * what AEAT shows, and whether AEAT's receipt was confirmed. */
 function Row({ row, language }: { row: FiledRow; language: string }) {
   const t = useStrings();
-  const day = (value: string) => aeatSyncDay(language, value) ?? value;
+  const day = (value: string) =>
+    dateFormats(language).medium.format(new Date(value));
   const record = row.record
     ? t(`desktop.aeat_sync.results.filed.record.${row.record.status}`, {
         date: day(row.record.on),

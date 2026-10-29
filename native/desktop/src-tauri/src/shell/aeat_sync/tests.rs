@@ -112,9 +112,16 @@ fn the_areas_submit_only_admitted_definitions_and_leave_none_unused() {
 
 #[test]
 fn areas_run_in_the_fixed_order() {
-    let mut ordered = Area::ORDER;
-    ordered.sort();
-    assert_eq!(ordered, Area::ORDER);
+    assert_eq!(
+        Area::ORDER,
+        [
+            Area::Census,
+            Area::Identity,
+            Area::Notifications,
+            Area::Vat,
+            Area::Filed
+        ]
+    );
 }
 
 fn selection(value: Value) -> Result<Plan> {
@@ -125,52 +132,25 @@ fn selection(value: Value) -> Result<Plan> {
 
 #[test]
 fn a_selection_runs_each_area_once_in_the_fixed_order() {
-    let plan = selection(json!({
-        "areas": ["filed", "census", "filed", "vat"],
-        "years": [2025, 2023, 2025],
-        "forms": ["303", "130", "303"],
-    }))
-    .unwrap();
+    let plan = selection(json!({"areas": ["filed", "census", "filed", "vat"]})).unwrap();
     assert_eq!(plan.areas, [Area::Census, Area::Vat, Area::Filed]);
-    assert_eq!(plan.years, [2023, 2025]);
-    assert_eq!(plan.forms, ["130", "303"]);
-    assert!(!plan.dry_run);
-}
-
-#[test]
-fn a_dry_run_leaves_out_every_area_but_filed_declarations() {
-    let plan = selection(json!({
-        "areas": ["census", "notifications", "filed"],
-        "years": [2025],
-        "dry_run": true,
-    }))
-    .unwrap();
-    assert_eq!(plan.areas, [Area::Filed]);
-    assert!(plan.dry_run);
-    assert!(
-        selection(json!({"areas": ["census", "notifications"], "dry_run": true})).is_err(),
-        "a dry run with nothing to read is refused"
-    );
-}
-
-#[test]
-fn a_selection_without_years_reads_every_served_year() {
     for area in ["census", "identity", "notifications", "vat", "filed"] {
-        let plan = selection(json!({"areas": [area]})).unwrap();
-        assert!(plan.years.is_empty(), "{area}");
+        assert!(selection(json!({"areas": [area]})).is_ok(), "{area}");
     }
 }
 
 #[test]
 fn a_selection_refuses_what_the_window_may_not_name() {
+    // Years, forms and a dry run are not the window's to choose: every area
+    // reads every year the backend serves, and every read keeps what it read.
     for refused in [
         json!({"areas": []}),
         json!({"areas": ["borrador"]}),
         json!({"areas": ["census"], "output_root": "C:\\"}),
         json!({"areas": ["census"], "nif": "00000000T"}),
-        json!({"areas": ["filed"], "years": [25]}),
-        json!({"areas": ["filed"], "years": [2025], "forms": ["../x"]}),
-        json!({"areas": ["filed"], "years": [2025], "forms": [""]}),
+        json!({"areas": ["filed"], "years": [2025]}),
+        json!({"areas": ["filed"], "forms": ["303"]}),
+        json!({"areas": ["filed"], "dry_run": false}),
     ] {
         assert!(selection(refused.clone()).is_err(), "{refused}");
     }
@@ -246,7 +226,7 @@ fn found(pairs: &[(u16, &[&str])]) -> Settled {
     }
 }
 fn brought(step: &Step, _: usize) -> Settled {
-    if matches!(step, Step::Discover(_)) {
+    if matches!(step, Step::Discover) {
         found(&[(2024, &["130", "303"]), (2025, &["303"])])
     } else {
         Settled::of(Outcome::Brought)
@@ -257,9 +237,7 @@ fn plan(value: Value) -> Plan {
     selection(value).unwrap()
 }
 fn everything() -> Plan {
-    plan(
-        json!({"areas": ["filed", "vat", "notifications", "identity", "census"], "years": [2024, 2025]}),
-    )
+    plan(json!({"areas": ["filed", "vat", "notifications", "identity", "census"]}))
 }
 
 /// Starts `plan` and follows it with `driver` until the driver loop ends.
@@ -293,7 +271,6 @@ fn filed(year: u16, forms: &[&str]) -> Step {
     Step::Filed {
         year,
         forms: forms.iter().map(|f| (*f).to_owned()).collect(),
-        dry_run: false,
     }
 }
 
@@ -307,8 +284,8 @@ async fn a_run_brings_the_areas_in_the_fixed_order_and_filed_declarations_year_b
             Step::Verify("live.verify.nif-iva"),
             Step::Verify("live.verify.tgvi"),
             Step::Notifications,
-            Step::Vat(vec![2024, 2025]),
-            Step::Discover(vec![2024, 2025]),
+            Step::Vat,
+            Step::Discover,
             filed(2024, &["130", "303"]),
             filed(2025, &["303"]),
         ]
@@ -329,42 +306,28 @@ async fn a_run_brings_the_areas_in_the_fixed_order_and_filed_declarations_year_b
 }
 
 #[tokio::test]
-async fn chosen_forms_narrow_each_year_and_a_year_without_one_is_nothing_found() {
-    let chosen = plan(
-        json!({"areas": ["filed"], "years": [2023, 2024, 2025], "forms": ["130"], "dry_run": true}),
-    );
-    let (run, driver) = follow(&chosen, Scripted::new(brought)).await;
+async fn filed_declarations_read_every_year_the_discovery_finds_with_its_forms() {
+    let (run, driver) = follow(&plan(json!({"areas": ["filed"]})), Scripted::new(brought)).await;
     assert_eq!(
         driver.ran(),
         [
-            Step::Discover(vec![2023, 2024, 2025]),
-            Step::Filed {
-                year: 2024,
-                forms: vec!["130".into()],
-                dry_run: true
-            },
+            Step::Discover,
+            filed(2024, &["130", "303"]),
+            filed(2025, &["303"])
         ]
     );
     assert_eq!(
         states(&run),
         [
-            (Area::Filed, Some(2023), ItemState::NothingFound),
             (Area::Filed, Some(2024), ItemState::Brought),
-            (Area::Filed, Some(2025), ItemState::NothingFound),
+            (Area::Filed, Some(2025), ItemState::Brought),
         ]
     );
 }
 
-#[tokio::test]
-async fn no_chosen_years_reads_every_year_the_discovery_finds() {
-    let (run, driver) = follow(&plan(json!({"areas": ["filed"]})), Scripted::new(brought)).await;
-    assert_eq!(driver.ran().len(), 3);
-    assert_eq!(states(&run).len(), 2);
-}
-
 #[test]
 fn the_filed_parts_are_unknown_to_the_window_until_the_discovery_settles() {
-    let run = Run::new(&plan(json!({"areas": ["filed"], "years": [2025]})));
+    let run = Run::new(&plan(json!({"areas": ["filed"]})));
     let snapshot = run.snapshot();
     assert!(snapshot.areas[0].items.is_empty());
     assert_eq!(snapshot.areas[0].state, queue::AreaState::Waiting);
@@ -373,10 +336,10 @@ fn the_filed_parts_are_unknown_to_the_window_until_the_discovery_settles() {
 #[tokio::test]
 async fn a_failed_discovery_is_one_part_the_person_can_read_again() {
     let driver = Scripted::new(|step, times| match step {
-        Step::Discover(_) if times == 1 => Settled::of(Outcome::Failed(Reason::Unavailable)),
+        Step::Discover if times == 1 => Settled::of(Outcome::Failed(Reason::Unavailable)),
         _ => brought(step, times),
     });
-    let (run, driver) = follow(&plan(json!({"areas": ["filed"], "years": [2025]})), driver).await;
+    let (run, driver) = follow(&plan(json!({"areas": ["filed"]})), driver).await;
     assert_eq!(states(&run), [(Area::Filed, None, ItemState::Failed)]);
     let item = queue::lock(&run).snapshot().areas[0].items[0].item;
     assert_eq!(
@@ -386,7 +349,10 @@ async fn a_failed_discovery_is_one_part_the_person_can_read_again() {
     again(&run, &driver).await;
     assert_eq!(
         states(&run),
-        [(Area::Filed, Some(2025), ItemState::Brought)]
+        [
+            (Area::Filed, Some(2024), ItemState::Brought),
+            (Area::Filed, Some(2025), ItemState::Brought)
+        ]
     );
 }
 
@@ -415,7 +381,7 @@ async fn stop_lets_the_item_in_flight_settle_and_starts_nothing_further() {
 async fn an_ended_session_pauses_and_resume_starts_from_the_first_item_not_brought() {
     let driver = Scripted::new(|step, times| match step {
         Step::Notifications => Settled::of(Outcome::Unknown),
-        Step::Vat(_) if times == 1 => Settled::of(Outcome::Failed(Reason::SessionEnded)),
+        Step::Vat if times == 1 => Settled::of(Outcome::Failed(Reason::SessionEnded)),
         _ => brought(step, times),
     });
     let (run, driver) = follow(&everything(), driver).await;
@@ -436,8 +402,8 @@ async fn an_ended_session_pauses_and_resume_starts_from_the_first_item_not_broug
     assert_eq!(
         ran[5..],
         [
-            Step::Vat(vec![2024, 2025]),
-            Step::Discover(vec![2024, 2025]),
+            Step::Vat,
+            Step::Discover,
             filed(2024, &["130", "303"]),
             filed(2025, &["303"]),
         ]
@@ -508,6 +474,80 @@ async fn a_sign_out_ends_the_driver_without_running_anything_further() {
     assert!(queue::lock(&run).claim(), "the queue is released");
 }
 
+#[tokio::test]
+async fn an_ended_session_that_may_have_kept_something_is_unknown_and_never_resumed() {
+    // The VAT capture ended its session after keeping a part: the run does
+    // not pause there, and the item is never read again by itself.
+    let ended = |effect: &str| {
+        table::terminal(&projection("refused", effect, Some(table::SESSION_ENDED))).unwrap()
+    };
+    let driver = Scripted::new(move |step, times| match step {
+        Step::Vat => Settled::of(ended("partial")),
+        Step::Discover if times == 1 => Settled::of(ended("none")),
+        _ => brought(step, times),
+    });
+    let (run, driver) = follow(&everything(), driver).await;
+    assert_eq!(queue::lock(&run).state, RunState::Paused);
+    let paused = states(&run);
+    assert!(paused.contains(&(Area::Vat, None, ItemState::Unknown)));
+    assert!(paused.contains(&(Area::Filed, None, ItemState::Failed)));
+    assert_eq!(queue::lock(&run).resume(), Ok(true));
+    again(&run, &driver).await;
+    let ran = driver.ran();
+    assert_eq!(ran.iter().filter(|s| **s == Step::Vat).count(), 1);
+    assert_eq!(ran.iter().filter(|s| **s == Step::Discover).count(), 2);
+    assert_eq!(queue::lock(&run).state, RunState::Done);
+    assert!(states(&run).contains(&(Area::Vat, None, ItemState::Unknown)));
+}
+
+#[test]
+fn an_area_is_served_the_worst_of_its_settled_items() {
+    let mut run = Run::new(&plan(json!({"areas": ["identity", "notifications"]})));
+    let outcome = |run: &Run, index: usize| run.snapshot().areas[index].outcome;
+    assert_eq!((outcome(&run, 0), outcome(&run, 1)), (None, None));
+    let (first, _) = run.next().unwrap();
+    run.settle(first, Settled::of(Outcome::Brought));
+    assert_eq!(outcome(&run, 0), Some("brought"));
+    let (second, _) = run.next().unwrap();
+    run.settle(second, Settled::of(Outcome::Failed(Reason::Unavailable)));
+    assert_eq!(outcome(&run, 0), Some("failed"));
+    let (third, _) = run.next().unwrap();
+    run.settle(third, Settled::of(Outcome::NothingFound));
+    assert_eq!(outcome(&run, 1), Some("nothing_found"));
+}
+
+#[test]
+fn a_start_keeps_a_run_that_still_moves_and_replaces_only_a_settled_one() {
+    let sync = SyncHost::default();
+    let ours = json!({"profile_id": "a", "session_id": "1"});
+    assert!(
+        sync.begin(&ours, &everything()),
+        "the first start holds a run"
+    );
+    let first = sync.current(&ours).unwrap();
+    // A second start, as from a second click racing the first, reattaches.
+    assert!(!sync.begin(&ours, &everything()));
+    assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
+    // A run whose driver still follows it is kept, whatever its state says.
+    queue::lock(&first).stop();
+    assert!(queue::lock(&first).active(), "its driver has not let go");
+    assert!(!sync.begin(&ours, &everything()));
+    assert!(Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
+    // Once its driver let go of a stopped run, a start holds a fresh one.
+    assert_eq!(queue::lock(&first).next(), None);
+    assert!(!queue::lock(&first).active());
+    assert!(sync.begin(&ours, &everything()));
+    assert!(!Arc::ptr_eq(&sync.current(&ours).unwrap(), &first));
+    // Another session's start replaces this session's run.
+    let other = json!({"profile_id": "a", "session_id": "2"});
+    assert!(sync.begin(&other, &everything()));
+    assert!(
+        lock(&sync.held)
+            .as_ref()
+            .is_some_and(|h| h.identity == other)
+    );
+}
+
 #[test]
 fn a_run_reattaches_for_its_session_and_is_discarded_for_another() {
     let sync = SyncHost::default();
@@ -562,8 +602,21 @@ fn a_terminal_condition_reads_as_one_outcome() {
             Outcome::Failed(Reason::SessionEnded),
         ),
         (
-            projection("refused", "updated", Some(table::SESSION_ENDED)),
+            projection("failed", "none", Some(table::SESSION_ENDED)),
             Outcome::Failed(Reason::SessionEnded),
+        ),
+        // An ended session that may have kept something is never resumed.
+        (
+            projection("refused", "updated", Some(table::SESSION_ENDED)),
+            Outcome::Unknown,
+        ),
+        (
+            projection("refused", "partial", Some(table::SESSION_ENDED)),
+            Outcome::Unknown,
+        ),
+        (
+            projection("refused", "unknown", Some(table::SESSION_ENDED)),
+            Outcome::Unknown,
         ),
         (
             projection(
@@ -608,7 +661,7 @@ type Row = (&'static str, Value, Outcome, Value, Outcome);
 fn results() -> Vec<Row> {
     let bulk = |captured: u64, rows: u64| {
         json!({"captured_count": captured, "failed_count": 0,
-            "filing_evidence_conflict_count": 0, "dry_run": false,
+            "filing_evidence_conflict_count": 0,
             "pair_outcomes": [{"modelo": "303", "year": 2025, "row_count": rows}]})
     };
     let vat = |captured: u64| {
@@ -616,19 +669,20 @@ fn results() -> Vec<Row> {
             "failed_declaration_count": 0})
     };
     vec![
+        // A check that got no answer brought nothing.
         (
             "live.verify.nif-iva",
             json!({"verdict": "valid"}),
             Outcome::Brought,
             json!({"verdict": "unknown"}),
-            Outcome::Brought,
+            Outcome::Failed(Reason::Unavailable),
         ),
         (
             "live.verify.tgvi",
             json!({"verdict": "invalid"}),
             Outcome::Brought,
             json!({"verdict": "unknown"}),
-            Outcome::Brought,
+            Outcome::Failed(Reason::Unavailable),
         ),
         (
             "live.notifications.capture",
@@ -692,12 +746,12 @@ fn a_capture_with_failed_parts_is_failed_and_counts_what_it_kept() {
     );
     assert_eq!(outcome, Outcome::Failed(Reason::Other));
     assert_eq!(counts, Counts { new: 4, changed: 2 });
-    let dry = table::succeeded(
+    let held = table::succeeded(
         "live.filed-capture.bulk",
         &json!({"captured_count": 0, "failed_count": 0, "filing_evidence_conflict_count": 0,
             "pair_outcomes": [{"row_count": 3}]}),
     );
-    assert_eq!(dry.0, Outcome::Brought, "a dry run finds what it read");
+    assert_eq!(held.0, Outcome::Brought, "rows already held are found");
     let vat = table::succeeded(
         "live.iva-wallet.history-capture",
         &json!({"captured_count": 1, "calculation_observation_count": 0,
@@ -828,7 +882,7 @@ fn no_identifier_code_or_path_reaches_the_window() {
     let status = json!({"bucket_id": "11111111-2222-4333-8444-555555555555", "status": {
         "contract_version": 1, "observed_at": "2026-10-29T10:00:00Z",
         "filed_declaration_years": [2025], "iva_wallet_years": [2025], "areas": areas}});
-    let served = status_reply("p", &status).unwrap();
+    let served = status_reply("p", &status, std::time::SystemTime::now()).unwrap();
     leaks(&serde_json::to_string(&served).unwrap());
     let names: Vec<&str> = served.areas.iter().map(|a| a.area).collect();
     assert_eq!(
@@ -851,13 +905,14 @@ fn no_identifier_code_or_path_reaches_the_window() {
     assert_eq!(served.areas[5].update, "import");
     let mut unknown_area = status.clone();
     unknown_area["status"]["areas"][0]["area"] = json!("payroll");
-    assert!(status_reply("p", &unknown_area).is_err());
+    assert!(status_reply("p", &unknown_area, std::time::SystemTime::now()).is_err());
+    assert_eq!(served.borrador_years, [2025]);
 
     let mut run = Run::new(&everything());
     while let Some((id, step)) = run.next() {
         let settled = match step {
-            Step::Discover(_) => found(&[(2025, &["303"])]),
-            Step::Vat(_) => Settled::of(Outcome::Failed(Reason::Refused)),
+            Step::Discover => found(&[(2025, &["303"])]),
+            Step::Vat => Settled::of(Outcome::Failed(Reason::Refused)),
             Step::Census => Settled {
                 outcome: Outcome::Brought,
                 review_pending: true,
@@ -870,7 +925,7 @@ fn no_identifier_code_or_path_reaches_the_window() {
     let snapshot = serde_json::to_string(&run.snapshot()).unwrap();
     leaks(&snapshot);
     assert!(snapshot.contains(r#""reason":"refused""#));
-    let results = results_reply(Some(&run), &served, filed_rows(&status).unwrap());
+    let results = results_reply(Some(&run), served, filed_rows(&status).unwrap());
     leaks(&serde_json::to_string(&results).unwrap());
     assert_eq!(results.areas[0].at.as_deref(), at);
     assert!(results.areas[0].review_pending);
@@ -900,6 +955,38 @@ fn no_identifier_code_or_path_reaches_the_window() {
         serde_json::to_value(&prepared).unwrap(),
         json!({"browser": {"state": "attention"}, "access": "ready"})
     );
+}
+
+#[test]
+fn the_borrador_years_are_the_served_ones_or_the_last_six_before_this_year() {
+    let served = json!({"status": {"filed_declaration_years": [2023, 2025, 2024, 2025]}});
+    let now = std::time::SystemTime::now();
+    assert_eq!(borrador_years(&served, now), [2025, 2024, 2023]);
+    // 2026-10-29T00:00:00Z: the latest Borrador on offer is for 2025.
+    let in_2026 = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1_793_232_000);
+    for none in [
+        json!({"status": {"filed_declaration_years": []}}),
+        json!({"status": {}}),
+        json!({"status": {"filed_declaration_years": [25]}}),
+    ] {
+        assert_eq!(
+            borrador_years(&none, in_2026),
+            [2025, 2024, 2023, 2022, 2021, 2020],
+            "{none}"
+        );
+    }
+    // Year boundaries in UTC, from the proleptic calendar's own dates.
+    for (seconds, year) in [
+        (0, 1970),
+        (951_782_400, 2000),   // 2000-02-29
+        (978_307_199, 2000),   // 2000-12-31T23:59:59Z
+        (978_307_200, 2001),   // 2001-01-01
+        (1_767_225_599, 2025), // 2025-12-31T23:59:59Z
+        (1_767_225_600, 2026), // 2026-01-01
+        (4_107_542_400, 2100), // 2100-03-01
+    ] {
+        assert_eq!(calendar_year(seconds), year, "{seconds}");
+    }
 }
 
 #[test]

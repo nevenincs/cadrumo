@@ -11,14 +11,12 @@ import type { AeatSyncAreaId, AeatSyncOutcome } from "./aeatSync";
 export type AeatSyncReason =
   "session_ended" | "no_access" | "unavailable" | "refused" | "other";
 
-/** One part of a read that failed: which declarations, if the read was
- * narrowed to a year or a form. */
+/** One part of a read that failed: the year of filed declarations, where
+ * the part is one year. */
 export type AeatSyncFailedPart = {
   /** The retry's address for this part. */
   part: number;
   year: number | null;
-  /** A modelo number such as "303"; null where not narrowed to a form. */
-  form: string | null;
   reason: AeatSyncReason;
 };
 
@@ -75,6 +73,9 @@ export type AeatSyncResults = {
   areas: AeatSyncResult[];
   filed: FiledRow[];
   notifications: NotificationRow[];
+  /** The filing years a Borrador import offers, latest first, as the host
+   * chose them. */
+  borrador_years: number[];
 };
 
 /** A Borrador file chosen in the native dialog: a token the host resolves and
@@ -88,9 +89,16 @@ export type AeatSyncResultsPort = {
   /** Reads the profile's own records of what was read from AEAT; it reaches
    * no network. */
   results(profile: string, language: string): Promise<AeatSyncResults>;
-  /** Reads one kind of data again, or one failed part of it. A rejection is
-   * read by `aeatSyncFailure`; after `unknown` it is not retried. */
-  retry(profile: string, area: AeatSyncAreaId, part?: number): Promise<void>;
+  /** Reads one kind of data again, or one failed part of it. Data whose last
+   * outcome is unknown is read again only when `acknowledgedUnknown` says the
+   * person was told it may already have been brought. A rejection is read by
+   * `aeatSyncFailure`; after `unknown` it is not retried. */
+  retry(
+    profile: string,
+    area: AeatSyncAreaId,
+    part: number | null,
+    acknowledgedUnknown: boolean,
+  ): Promise<void>;
   /** Null when the person closes the dialog without choosing. */
   pickBorrador(): Promise<BorradorFile | null>;
   /** Reads the chosen Borrador PDF into the profile, for the filing `year`

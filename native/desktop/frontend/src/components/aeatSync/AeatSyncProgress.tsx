@@ -1,38 +1,24 @@
 import { useState, type ReactNode } from "react";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
 import type { AeatSyncAreaId } from "../../shell/aeatSync";
 import {
-  aeatSyncAreaOutcome,
   aeatSyncRunProblems,
   aeatSyncRunShare,
   useAeatSyncRun,
-  type AeatSyncAreaOutcome,
-  type AeatSyncItemState,
   type AeatSyncRunArea,
   type AeatSyncRunItem,
   type AeatSyncRunPort,
   type AeatSyncRunSnapshot,
 } from "../../shell/aeatSyncRun";
 import { useStrings, type Translate } from "../../shell/strings";
+import { OUTCOME_ICONS } from "./outcomeIcons";
+import { UnknownWarning } from "./UnknownWarning";
 
 const KEY = "desktop.aeat_sync.progress.";
-
-const OUTCOME_ICONS: Record<AeatSyncAreaOutcome, IconName> = {
-  brought: "check",
-  nothing_found: "info",
-  failed: "alert",
-  unknown: "unknown",
-};
-
-/** What a part that is not under way or settled says. */
-const IDLE_KEYS: Partial<Record<AeatSyncItemState, string>> = {
-  waiting: `${KEY}waiting`,
-  not_started: `${KEY}not_started`,
-};
 
 type Retry = (
   area: AeatSyncAreaId,
@@ -102,52 +88,16 @@ function Action({
   return null;
 }
 
-/** The warning that guards reading a part again whose outcome is unknown. */
-function Warning({
-  t,
-  area,
-  busy,
-  item,
-  onConfirm,
-  onRetry,
-}: {
-  t: Translate;
-  area: AeatSyncAreaId;
-  busy: boolean;
-  item: number;
-  onConfirm(item: number | null): void;
-  onRetry: Retry;
-}) {
-  return (
-    <Alert tone="warning" icon={<Icon name="alert" />}>
-      {t(`${KEY}warn_unknown`)}
-      <span className="mt-1 flex flex-wrap gap-2">
-        <Button
-          size="xs"
-          variant="outline"
-          disabled={busy}
-          onClick={() => {
-            onConfirm(null);
-            onRetry(area, item, true);
-          }}
-        >
-          {t(`${KEY}warn_confirm`)}
-        </Button>
-        <Button size="xs" variant="ghost" onClick={() => onConfirm(null)}>
-          {t(`${KEY}warn_cancel`)}
-        </Button>
-      </span>
-    </Alert>
-  );
-}
-
 function ItemLine({ t, item }: { t: Translate; item: AeatSyncRunItem }) {
-  const idle = IDLE_KEYS[item.state];
-  if (idle)
-    return <Standing icon={<Icon name="pending" />}>{t(idle)}</Standing>;
-  if (item.state === "running")
+  const outcome = item.state;
+  if (outcome === "waiting" || outcome === "not_started")
+    return (
+      <Standing icon={<Icon name="pending" />}>
+        {t(`${KEY}${outcome}`)}
+      </Standing>
+    );
+  if (outcome === "running")
     return <Standing icon={<Spinner />}>{t(`${KEY}running`)}</Standing>;
-  const outcome = aeatSyncAreaOutcome([item]) ?? "nothing_found";
   return (
     <div className="flex flex-col gap-0.5">
       <Standing icon={<Icon name={OUTCOME_ICONS[outcome]} />}>
@@ -182,7 +132,7 @@ function AreaRow({
     area.items.length === 1 && area.items[0]!.year === null
       ? area.items[0]!
       : null;
-  const outcome = aeatSyncAreaOutcome(area.items);
+  const { outcome } = area;
   // Year rows say how each part stands; the header speaks for an area that
   // is one part or has none yet.
   let header: ReactNode;
@@ -225,13 +175,13 @@ function AreaRow({
         )}
       </div>
       {only && confirming === only.item && (
-        <Warning
-          t={t}
-          area={area.area}
+        <UnknownWarning
           busy={busy}
-          item={only.item}
-          onConfirm={onConfirm}
-          onRetry={onRetry}
+          onProceed={() => {
+            onConfirm(null);
+            onRetry(area.area, only.item, true);
+          }}
+          onCancel={() => onConfirm(null)}
         />
       )}
       {!only && area.items.length > 0 && (
@@ -261,13 +211,13 @@ function AreaRow({
                 />
               </div>
               {confirming === item.item && (
-                <Warning
-                  t={t}
-                  area={area.area}
+                <UnknownWarning
                   busy={busy}
-                  item={item.item}
-                  onConfirm={onConfirm}
-                  onRetry={onRetry}
+                  onProceed={() => {
+                    onConfirm(null);
+                    onRetry(area.area, item.item, true);
+                  }}
+                  onCancel={() => onConfirm(null)}
                 />
               )}
             </li>

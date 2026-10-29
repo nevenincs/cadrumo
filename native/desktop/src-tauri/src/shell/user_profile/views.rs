@@ -325,9 +325,20 @@ impl ProfileHost {
         Ok(())
     }
     pub(super) async fn notifications(&self) -> Result<NotificationsSummary> {
+        let (latest, shown) = self.notifications_read(None).await?;
+        notifications_summary(latest, shown)
+    }
+    /// The latest notifications capture and, where there is one, its shown
+    /// rows, for exactly `profile` or the signed-in one. It reads under the
+    /// serial lock within the read limit, and refuses an answer read while
+    /// the window's account changed underneath.
+    pub(crate) async fn notifications_read(
+        &self,
+        profile: Option<&str>,
+    ) -> Result<(Value, Option<Value>)> {
         tokio::time::timeout(PROFILE_READ_LIMIT, async {
             let _serial = self.operation.lock().await;
-            let person = self.person(None).await?;
+            let person = self.person(profile).await?;
             let profile = Self::profile_of(&person).await?;
             let latest = self
                 .run(
@@ -350,7 +361,7 @@ impl ProfileHost {
                 None => None,
             };
             self.still_held(&person, &profile).await?;
-            notifications_summary(latest, shown)
+            Ok((latest, shown))
         })
         .await
         .unwrap_or_else(|_| Err(protocol()))

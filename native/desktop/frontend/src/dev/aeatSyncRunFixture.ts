@@ -1,4 +1,5 @@
 import type {
+  AeatSyncAreaOutcome,
   AeatSyncItemState,
   AeatSyncRunArea,
   AeatSyncRunPort,
@@ -43,7 +44,31 @@ function area(
   state: AeatSyncRunArea["state"],
   items: ReturnType<typeof part>[],
 ): AeatSyncRunArea {
-  return { area: id, state, items };
+  return { area: id, state, outcome: null, items };
+}
+
+/** Each area's outcome as the host serves it: the worst of its settled
+ * parts. The demo stands in for the host's own judgement. */
+function served(snapshot: AeatSyncRunSnapshot): AeatSyncRunSnapshot {
+  const rank: AeatSyncAreaOutcome[] = [
+    "nothing_found",
+    "brought",
+    "failed",
+    "unknown",
+  ];
+  return {
+    ...snapshot,
+    areas: snapshot.areas.map((a) => {
+      const settled = a.items
+        .map((i) => i.state)
+        .filter((s): s is AeatSyncAreaOutcome =>
+          (rank as string[]).includes(s),
+        );
+      const outcome =
+        rank[Math.max(-1, ...settled.map((s) => rank.indexOf(s)))] ?? null;
+      return { ...a, outcome };
+    }),
+  };
 }
 
 function years(...states: AeatSyncItemState[]) {
@@ -174,7 +199,7 @@ export function aeatSyncRunFixture(
           push();
         }, 700);
     },
-    progress: () => Promise.resolve(current),
+    progress: () => Promise.resolve(current && served(current)),
     observe(changed) {
       listeners.add(changed);
       return Promise.resolve(() => listeners.delete(changed));

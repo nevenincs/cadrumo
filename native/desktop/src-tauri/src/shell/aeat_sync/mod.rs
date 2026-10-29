@@ -13,23 +13,28 @@ mod run;
 use super::picked_files::Purpose;
 use super::relay::{self, Failure, Result, lock, protocol};
 use super::setup::{SetupHost, wire as setup_wire};
-use super::user_profile::{ProfileHost, censo};
+use super::user_profile::{Cue, ProfileHost, censo};
 use crate::agent::person::{HeldPerson, PersonEvent};
 use admitted::{Area, admitted};
 use outcome::{Counts, Outcome, Reason};
-use run::{ItemState, Run, Settled, Snapshot, Step};
+use run::{Run, Settled, Snapshot, Step};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{State, ipc::Channel};
 
-/// The most areas, years and forms one selection may name.
+/// The most areas one request may name.
 const SELECTION_LIMIT: usize = 64;
 /// A modelo number: short, ASCII and alphanumeric.
 const FORM_LENGTH: std::ops::RangeInclusive<usize> = 1..=5;
 /// A calendar year as four digits; the years on offer are the backend's.
 const YEARS: std::ops::RangeInclusive<u16> = 1000..=9999;
+/// How many filing years the Borrador import offers where the backend serves
+/// none, ending with the last calendar year.
+const BORRADOR_FALLBACK_YEARS: u16 = 6;
+/// The most served years one reply carries.
+const YEAR_LIMIT: usize = 64;
 /// How long the preflight waits for the setup engine's first quick read.
 const PREPARE_LIMIT: Duration = Duration::from_secs(20);
 /// The most filed declaration rows one reply carries.
@@ -43,60 +48,29 @@ const BORRADOR_PERIOD: &str = "0A";
 /// What the dialog's filter calls a Borrador file: a format's name.
 const BORRADOR_KINDS: &str = "PDF";
 
-/// What the person chose to bring, as the window sends it.
+/// The areas the window asks to bring: every one for "Update from AEAT", one
+/// for an area's own update. Each reads every year the backend serves.
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(crate) struct Selection {
     areas: Vec<Area>,
-    /// The years for filed declarations and the VAT balance carried forward;
-    /// none reads every year the backend serves.
-    #[serde(default)]
-    years: Vec<u16>,
-    /// The forms to narrow filed declarations to; none means all discovered.
-    #[serde(default)]
-    forms: Vec<String>,
-    /// Reads filed declarations from AEAT and saves nothing.
-    #[serde(default)]
-    dry_run: bool,
 }
 
-/// A selection the host accepts: its areas in run order, once each, and every
+/// A request the host accepts: its areas in run order, once each, and every
 /// definition they submit on the closed list.
 #[derive(Debug, PartialEq, Eq)]
 pub(crate) struct Plan {
     pub(crate) areas: Vec<Area>,
-    pub(crate) years: Vec<u16>,
-    pub(crate) forms: Vec<String>,
-    pub(crate) dry_run: bool,
 }
 impl Selection {
     pub(crate) fn admit(self) -> Result<Plan> {
-        let Self {
-            areas,
-            mut years,
-            mut forms,
-            dry_run,
-        } = self;
-        if areas.len() > SELECTION_LIMIT
-            || years.len() > SELECTION_LIMIT
-            || forms.len() > SELECTION_LIMIT
-            || !years.iter().all(|year| YEARS.contains(year))
-            || !forms.iter().all(|form| {
-                FORM_LENGTH.contains(&form.len()) && form.bytes().all(|b| b.is_ascii_alphanumeric())
-            })
-        {
+        if self.areas.len() > SELECTION_LIMIT {
             return Err(invalid());
         }
-        // A dry run reads filed declarations only; every other area is left
-        // out of it rather than refused.
         let areas: Vec<Area> = Area::ORDER
             .into_iter()
-            .filter(|area| areas.contains(area) && (!dry_run || *area == Area::Filed))
+            .filter(|area| self.areas.contains(area))
             .collect();
-        years.sort_unstable();
-        years.dedup();
-        forms.sort_unstable();
-        forms.dedup();
         let closed = areas
             .iter()
             .flat_map(|area| area.definitions())
@@ -104,12 +78,7 @@ impl Selection {
         if areas.is_empty() || !closed {
             return Err(invalid());
         }
-        Ok(Plan {
-            areas,
-            years,
-            forms,
-            dry_run,
-        })
+        Ok(Plan { areas })
     }
 }
 
@@ -147,7 +116,7 @@ impl Held {
 /// discards the run.
 pub(crate) struct SyncHost {
     held: Mutex<Option<Held>>,
-    observer: Mutex<Option<(u32, tauri::async_runtime::JoinHandle<()>)>>,
+    observer: Cue,
     changes: tokio::sync::watch::Sender<u64>,
     /// Stops the sign-in waiting on the person's phone.
     sign_in: Mutex<Option<Arc<tokio::sync::Notify>>>,
@@ -156,7 +125,7 @@ impl Default for SyncHost {
     fn default() -> Self {
         Self {
             held: Mutex::new(None),
-            observer: Mutex::new(None),
+            observer: Cue::default(),
             changes: tokio::sync::watch::Sender::new(0),
             sign_in: Mutex::new(None),
         }
@@ -171,9 +140,7 @@ impl SyncHost {
         if let Some(mut held) = lock(&self.held).take() {
             held.end();
         }
-        if let Some((_, task)) = lock(&self.observer).take() {
-            task.abort();
-        }
+        self.observer.end();
         if let Some(waiting) = lock(&self.sign_in).take() {
             waiting.notify_one();
         }
@@ -191,6 +158,30 @@ impl SyncHost {
             return None;
         }
         held.as_ref().map(|h| h.run.clone())
+    }
+    /// Holds a fresh run of `plan` for the session `identity` names, under one
+    /// hold of the lock: a run of that session that still moves, or whose
+    /// driver still follows it, is kept and false answered; a run it replaces
+    /// is ended. True when a driver must follow the fresh run.
+    fn begin(&self, identity: &Value, plan: &Plan) -> bool {
+        let mut held = lock(&self.held);
+        if let Some(current) = held.as_ref()
+            && current.identity == *identity
+            && run::lock(&current.run).active()
+        {
+            return false;
+        }
+        if let Some(mut replaced) = held.take() {
+            replaced.end();
+        }
+        let mut fresh = Run::new(plan);
+        fresh.claim();
+        *held = Some(Held {
+            identity: identity.clone(),
+            run: Arc::new(Mutex::new(fresh)),
+            task: None,
+        });
+        true
     }
     /// Follows `run` with a driver loop over the relay for `person`.
     fn drive(&self, host: &Arc<ProfileHost>, person: HeldPerson, profile: String, identity: Value) {
@@ -306,16 +297,11 @@ impl RelayDriver {
         }
     }
 
-    async fn vat(&self, years: Vec<u16>) -> Settled {
-        let years = if years.is_empty() {
-            match self.served_years("iva_wallet_years").await {
-                Some(years) => years,
-                None => return Settled::of(Outcome::Failed(Reason::Unavailable)),
-            }
-        } else {
-            years
+    async fn vat(&self) -> Settled {
+        let Some(years) = self.served_years("iva_wallet_years").await else {
+            return Settled::of(Outcome::Failed(Reason::Unavailable));
         };
-        let (Some(from), Some(to)) = (years.first(), years.last()) else {
+        let (Some(from), Some(to)) = (years.iter().min(), years.iter().max()) else {
             return Settled::of(Outcome::NothingFound);
         };
         let payload = json!({"profile_id": self.profile, "year_from": from, "year_to": to});
@@ -329,12 +315,59 @@ impl RelayDriver {
         let status = read_status(&self.host, &self.person, &self.profile)
             .await
             .ok()?;
-        status["status"][key]
-            .as_array()?
-            .iter()
-            .map(|year| year.as_u64().and_then(|y| u16::try_from(y).ok()))
-            .collect()
+        served_years(&status, key)
     }
+}
+
+/// The years `key` of a status read lists; none where it does not read as a
+/// bounded list of four-digit years.
+fn served_years(status: &Value, key: &str) -> Option<Vec<u16>> {
+    let years = status["status"][key].as_array()?;
+    if years.len() > YEAR_LIMIT {
+        return None;
+    }
+    years
+        .iter()
+        .map(|year| {
+            year.as_u64()
+                .and_then(|y| u16::try_from(y).ok())
+                .filter(|y| YEARS.contains(y))
+        })
+        .collect()
+}
+
+/// The calendar year, in UTC, of the instant `seconds` after the Unix epoch.
+fn calendar_year(seconds: u64) -> u16 {
+    // The civil-from-days conversion of the proleptic Gregorian calendar,
+    // counted in 400-year eras from 0000-03-01.
+    let days = i64::try_from(seconds / 86_400).unwrap_or(i64::MAX / 2) + 719_468;
+    let era = days.div_euclid(146_097);
+    let day_of_era = days.rem_euclid(146_097);
+    let year_of_era =
+        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_index = (5 * day_of_year + 2) / 153;
+    let year = year_of_era + era * 400 + i64::from(month_index >= 10);
+    u16::try_from(year).unwrap_or(u16::MAX)
+}
+
+/// The filing years the Borrador import offers, latest first: the years the
+/// backend serves, or, where it serves none, the last few calendar years up
+/// to the last one, since a year's Borrador is downloaded the year after.
+fn borrador_years(status: &Value, now: std::time::SystemTime) -> Vec<u16> {
+    let mut years = served_years(status, "filed_declaration_years").unwrap_or_default();
+    if years.is_empty() {
+        let seconds = now
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0, |since| since.as_secs());
+        let latest = calendar_year(seconds).saturating_sub(1);
+        years = (0..BORRADOR_FALLBACK_YEARS)
+            .map(|back| latest.saturating_sub(back))
+            .collect();
+    }
+    years.sort_unstable_by(|a, b| b.cmp(a));
+    years.dedup();
+    years
 }
 
 /// How the census session's state settles its item; none while it reads.
@@ -360,19 +393,15 @@ impl run::Driver for RelayDriver {
             Step::Census => self.census().await,
             Step::Verify(definition) => self.capture(definition, profile).await.0,
             Step::Notifications => self.capture("live.notifications.capture", profile).await.0,
-            Step::Vat(years) => self.vat(years).await,
-            Step::Discover(_) => {
+            Step::Vat => self.vat().await,
+            Step::Discover => {
                 let (mut settled, document) = self.capture("live.filed-discover", profile).await;
                 settled.discovered = document.as_ref().and_then(outcome::discovered);
                 settled
             }
-            Step::Filed {
-                year,
-                forms,
-                dry_run,
-            } => {
+            Step::Filed { year, forms } => {
                 let payload = json!({"profile_id": self.profile, "year_from": year,
-                    "year_to": year, "modelos": forms, "dry_run": dry_run});
+                    "year_to": year, "modelos": forms});
                 self.capture("live.filed-capture.bulk", payload).await.0
             }
         }
@@ -431,6 +460,8 @@ struct CountValue {
 pub struct Status {
     profile_id: String,
     areas: Vec<StatusArea>,
+    /// The filing years the Borrador import offers, latest first.
+    borrador_years: Vec<u16>,
 }
 
 /// The window's name for a backend area.
@@ -456,7 +487,7 @@ fn instant(value: &Value) -> Result<Option<String>> {
 
 /// The status read's result as the overview's areas: served states, instants
 /// and counts only; its refusal names stay here.
-fn status_reply(profile: &str, result: &Value) -> Result<Status> {
+fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Result<Status> {
     let areas = result["status"]["areas"].as_array().ok_or_else(protocol)?;
     let areas = areas
         .iter()
@@ -517,6 +548,7 @@ fn status_reply(profile: &str, result: &Value) -> Result<Status> {
     Ok(Status {
         profile_id: profile.to_owned(),
         areas,
+        borrador_years: borrador_years(result, now),
     })
 }
 
@@ -533,7 +565,7 @@ pub async fn aeat_sync_status(
     let person = host.person(None).await?;
     let profile = relay::profile_of(&person).await?;
     let result = read_status(&host, &person, &profile).await?;
-    status_reply(&profile, &result)
+    status_reply(&profile, &result, std::time::SystemTime::now())
 }
 
 /// The secure browser as the setup engine's row reads it.
@@ -694,20 +726,10 @@ pub async fn aeat_sync_start(
     let person = held(&host, &profile).await?;
     let identity = relay::identity(&person).await?;
     let sync = host.aeat_sync();
-    if let Some(run) = sync.current(&identity)
-        && run::lock(&run).active()
-    {
-        return Ok(());
+    if sync.begin(&identity, &plan) {
+        sync.drive(&host, person, profile, identity);
+        sync.changed();
     }
-    let mut fresh = Run::new(&plan);
-    fresh.claim();
-    *lock(&sync.held) = Some(Held {
-        identity: identity.clone(),
-        run: Arc::new(Mutex::new(fresh)),
-        task: None,
-    });
-    sync.drive(&host, person, profile, identity);
-    sync.changed();
     Ok(())
 }
 
@@ -737,45 +759,31 @@ pub async fn aeat_sync_progress(
 #[tauri::command]
 pub fn aeat_sync_observe(host: State<'_, Arc<ProfileHost>>, updates: Channel<()>) -> u32 {
     let sync = host.aeat_sync();
-    let mut observer = lock(&sync.observer);
-    if let Some((_, task)) = observer.take() {
-        task.abort();
-    }
-    let subscription = updates.id();
-    if host.is_closed() {
-        return subscription;
-    }
     let mut changes = sync.changes.subscribe();
     let mut events = host.sign_in().person_events();
-    let task = tauri::async_runtime::spawn(async move {
-        loop {
-            tokio::select! {
-                changed = changes.changed() => if changed.is_err() { break },
-                event = events.recv() => match event {
-                    Ok(PersonEvent::RecordsChanged | PersonEvent::Retired)
-                    | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
-                    Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
-                    _ => continue,
-                },
+    sync.observer
+        .observe(host.is_closed(), updates, |updates| async move {
+            loop {
+                tokio::select! {
+                    changed = changes.changed() => if changed.is_err() { break },
+                    event = events.recv() => match event {
+                        Ok(PersonEvent::RecordsChanged | PersonEvent::Retired)
+                        | Err(tokio::sync::broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
+                        _ => continue,
+                    },
+                }
+                if updates.send(()).is_err() {
+                    break;
+                }
             }
-            if updates.send(()).is_err() {
-                break;
-            }
-        }
-    });
-    *observer = Some((subscription, task));
-    subscription
+        })
 }
 
 /// Ends the cue `subscription`.
 #[tauri::command]
 pub fn aeat_sync_unobserve(host: State<'_, Arc<ProfileHost>>, subscription: u32) {
-    let mut observer = lock(&host.aeat_sync().observer);
-    if observer.as_ref().is_some_and(|(id, _)| *id == subscription)
-        && let Some((_, task)) = observer.take()
-    {
-        task.abort();
-    }
+    host.aeat_sync().observer.unobserve(subscription);
 }
 
 /// Lets the item in flight settle and starts nothing further.
@@ -839,7 +847,6 @@ pub async fn aeat_sync_resume(host: State<'_, Arc<ProfileHost>>, profile: String
 struct FailedPart {
     part: u32,
     year: Option<u16>,
-    form: Option<String>,
     reason: Reason,
 }
 /// What the run brought for one area.
@@ -859,6 +866,8 @@ pub struct Results {
     /// The filed declarations set against the profile's own records, as the
     /// status read classified them.
     filed: Vec<FiledRow>,
+    /// The filing years the Borrador import offers, latest first.
+    borrador_years: Vec<u16>,
 }
 
 /// One filed declaration as the window lists it, without identifiers: the
@@ -973,43 +982,26 @@ fn filed_rows(result: &Value) -> Result<Vec<FiledRow>> {
     }
 }
 
-fn item_outcome(state: ItemState, reason: Option<Reason>) -> Option<Outcome> {
-    Some(match state {
-        ItemState::Brought => Outcome::Brought,
-        ItemState::NothingFound => Outcome::NothingFound,
-        ItemState::Failed => Outcome::Failed(reason.unwrap_or(Reason::Other)),
-        ItemState::Unknown => Outcome::Unknown,
-        _ => return None,
-    })
-}
-fn outcome_word(outcome: Outcome) -> &'static str {
-    match outcome {
-        Outcome::Brought => "brought",
-        Outcome::NothingFound => "nothing_found",
-        Outcome::Failed(_) => "failed",
-        Outcome::Unknown => "unknown",
-    }
-}
-
 /// The run's settled areas, each at the instant the status read last saw it
-/// brought, beside the served filed rows.
-fn results_reply(run: Option<&Run>, status: &Status, filed: Vec<FiledRow>) -> Results {
+/// brought, beside the served filed rows and Borrador years.
+fn results_reply(run: Option<&Run>, status: Status, filed: Vec<FiledRow>) -> Results {
     let Some(run) = run else {
         return Results {
             areas: Vec::new(),
             filed,
+            borrador_years: status.borrador_years,
         };
     };
     let areas = run
         .areas
         .iter()
         .filter_map(|area| {
+            let worst = area.outcome()?;
             let settled: Vec<_> = area
                 .items
                 .iter()
-                .filter_map(|item| item_outcome(item.state, item.reason).map(|o| (item, o)))
+                .filter_map(|item| item.outcome().map(|o| (item, o)))
                 .collect();
-            let worst = outcome::worst(settled.iter().map(|(_, outcome)| *outcome))?;
             let name = serde_json::to_value(area.area).ok()?;
             let at = status
                 .areas
@@ -1024,7 +1016,7 @@ fn results_reply(run: Option<&Run>, status: &Status, filed: Vec<FiledRow>) -> Re
                 });
             Some(AreaResult {
                 area: area.area,
-                outcome: outcome_word(worst),
+                outcome: worst.word(),
                 at,
                 new_count: total.new,
                 changed_count: total.changed,
@@ -1034,7 +1026,6 @@ fn results_reply(run: Option<&Run>, status: &Status, filed: Vec<FiledRow>) -> Re
                         Outcome::Failed(reason) => Some(FailedPart {
                             part: item.id,
                             year: item.year,
-                            form: None,
                             reason: *reason,
                         }),
                         _ => None,
@@ -1044,7 +1035,11 @@ fn results_reply(run: Option<&Run>, status: &Status, filed: Vec<FiledRow>) -> Re
             })
         })
         .collect();
-    Results { areas, filed }
+    Results {
+        areas,
+        filed,
+        borrador_years: status.borrador_years,
+    }
 }
 
 /// What the last reads came to, per area, from the run and the profile's own
@@ -1060,11 +1055,11 @@ pub async fn aeat_sync_results(
     }
     let (person, _, run) = session(&host, &profile).await?;
     let result = read_status(&host, &person, &profile).await?;
-    let status = status_reply(&profile, &result)?;
+    let status = status_reply(&profile, &result, std::time::SystemTime::now())?;
     let filed = filed_rows(&result)?;
     Ok(match run {
-        Some(run) => results_reply(Some(&run::lock(&run)), &status, filed),
-        None => results_reply(None, &status, filed),
+        Some(run) => results_reply(Some(&run::lock(&run)), status, filed),
+        None => results_reply(None, status, filed),
     })
 }
 
@@ -1109,31 +1104,27 @@ fn notification_rows(shown: &Value) -> Result<Vec<NotificationRow>> {
         .collect()
 }
 
-/// The notification rows with their read state, without identifiers.
+/// The notification rows with their read state, without identifiers: the
+/// profile views' own read of the latest capture.
 #[tauri::command]
 pub async fn aeat_sync_notifications(
     host: State<'_, Arc<ProfileHost>>,
     profile: String,
 ) -> Result<Vec<NotificationRow>> {
-    let person = held(&host, &profile).await?;
-    let id = json!({ "profile_id": profile });
-    let latest = host
-        .run(&person, "live.notifications.latest", id, false)
+    let (_, shown) = host
+        .notifications_read(Some(&profile))
         .await
-        .map_err(|_| bare("unavailable"))?;
-    let Some(snapshot) = latest["snapshot_id"].as_str() else {
-        return Ok(Vec::new());
-    };
-    let shown = host
-        .run(
-            &person,
-            "live.notifications.show",
-            json!({ "profile_id": profile, "snapshot_id": snapshot }),
-            false,
-        )
-        .await
-        .map_err(|_| bare("unavailable"))?;
-    notification_rows(&shown)
+        .map_err(|failure| {
+            bare(if failure.code == "not_signed_in" {
+                "not_signed_in"
+            } else {
+                "unavailable"
+            })
+        })?;
+    match shown {
+        Some(shown) => notification_rows(&shown),
+        None => Ok(Vec::new()),
+    }
 }
 
 /// A Borrador PDF picked in the native dialog: its token and file name.
@@ -1179,9 +1170,11 @@ pub async fn aeat_sync_borrador_import(
         "filing_year": year,
         "period": {"filing_year": year, "code": BORRADOR_PERIOD},
     });
-    let imported = host
-        .run(&person, "live.borrador.100.import", payload, true)
-        .await;
+    let imported = {
+        let _serial = host.serial().await;
+        host.run(&person, "live.borrador.100.import", payload, true)
+            .await
+    };
     Ok(match imported {
         Ok(result) if result["snapshot"]["binding_count"].as_u64() == Some(0) => "nothing_found",
         Ok(result) if result["snapshot"].is_object() => "imported",

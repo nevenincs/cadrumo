@@ -67,13 +67,13 @@ pub(crate) fn terminal(p: &Value) -> Option<Outcome> {
     if p["terminal_condition"] == "succeeded" {
         return None;
     }
-    // An ended session refuses before anything is kept: the run pauses there
-    // whatever the receipt's effect says, and the item is read again later.
-    if p["refusal_ref"] == SESSION_ENDED {
-        return Some(Outcome::Failed(Reason::SessionEnded));
-    }
+    // A capture may end its session part way, after earlier parts were kept:
+    // only an ended session that kept nothing pauses the run to be read again.
     if p["effect"] != "none" {
         return Some(Outcome::Unknown);
+    }
+    if p["refusal_ref"] == SESSION_ENDED {
+        return Some(Outcome::Failed(Reason::SessionEnded));
     }
     Some(match p["terminal_condition"].as_str() {
         Some("refused") => Outcome::Failed(reason(p["refusal_ref"].as_str())),
@@ -100,9 +100,11 @@ pub(crate) fn succeeded(definition: &str, document: &Value) -> (Outcome, Counts)
     };
     match definition {
         "live.verify.nif-iva" | "live.verify.tgvi" => {
-            // A verdict, whatever it is, is what the check brings.
+            // A verdict is what the check brings; an unknown verdict is a
+            // check that got no answer.
             match document["verdict"].as_str() {
-                Some("valid" | "invalid" | "unknown") => (Outcome::Brought, Counts::default()),
+                Some("valid" | "invalid") => (Outcome::Brought, Counts::default()),
+                Some("unknown") => (Outcome::Failed(Reason::Unavailable), Counts::default()),
                 _ => unknown,
             }
         }
@@ -140,7 +142,7 @@ pub(crate) fn succeeded(definition: &str, document: &Value) -> (Outcome, Counts)
             ) else {
                 return unknown;
             };
-            // A dry run keeps nothing: what it found is the rows it read.
+            // Rows read that the profile already held are found, not new.
             let rows: u64 = pairs
                 .iter()
                 .filter_map(|pair| count(&pair["row_count"]))
@@ -179,6 +181,18 @@ pub(crate) fn discovered(document: &Value) -> Option<BTreeMap<u16, BTreeSet<Stri
         found.entry(year).or_default().insert(form.to_owned());
     }
     Some(found)
+}
+
+impl Outcome {
+    /// The outcome as the window words it.
+    pub(crate) fn word(self) -> &'static str {
+        match self {
+            Self::Brought => "brought",
+            Self::NothingFound => "nothing_found",
+            Self::Failed(_) => "failed",
+            Self::Unknown => "unknown",
+        }
+    }
 }
 
 /// The worst of an area's outcomes: unknown outranks a failure, a failure
