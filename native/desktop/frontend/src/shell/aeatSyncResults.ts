@@ -40,8 +40,10 @@ export type AeatSyncResult = {
 /** How a filed declaration at AEAT stands against the profile's own record. */
 export type FiledMatch = "matched" | "aeat_only" | "local_only" | "differing";
 
-/** What differs, where the two disagree. */
-export type FiledDifference = "amount" | "status" | "date";
+/** What differs, where the two disagree: the stored captures establish
+ * the status, which AEAT shows inactive, of unknown state or filed more
+ * than once. */
+export type FiledDifference = "status";
 
 export type FiledRow = {
   /** A modelo number such as "303". */
@@ -50,7 +52,8 @@ export type FiledRow = {
   /** A period such as "1T"; null for an annual form. */
   period: string | null;
   match: FiledMatch;
-  /** The profile's own record: a draft, or marked as filed on this computer. */
+  /** The profile's own record: a draft, or marked as filed on this computer.
+   * A draft alone is never a row; it shows beside what AEAT showed. */
   record: { status: "draft" | "marked_filed"; on: string } | null;
   /** What AEAT showed when it was last read; null if it showed nothing. */
   aeat: { seen_on: string } | null;

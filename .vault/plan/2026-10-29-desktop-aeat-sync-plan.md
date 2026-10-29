@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:c363c3d49418f14cb297ae3d722185a5363f9e25c1ee3a021eeff7c2de779ebe'
+body_hash: 'sha256:4add85a4cf221636c6cb7cb7322077a728ab554e22caf899c2814d0e2f653d87'
 ---
 
 # `desktop-aeat-sync` plan
@@ -78,7 +78,7 @@ Build the aeat-sync window view: overview, preflight, sign-in, selection, progre
 - [x] `P04.S16` - build results: the shared census review band, filed declaration matches, notifications with read state, legal-receipt warning and open-in-Sede action, and Borrador import; `native/desktop/frontend/src/components/aeatSync/ (new), native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
 - [x] `P04.S22` - add a global command palette action, available on every page, that opens the one existing census flow (useCensoSync and ProfileSync over the profile_censo_* commands) without duplicating it; `native/desktop/frontend/src/App.tsx, native/desktop/frontend/src/shell/profileCenso.ts, native/desktop/frontend/src/components/profile/ProfileSync.tsx`.
 - [x] `P04.S23` - add a census entry on the Modelo page that opens the same census flow, and route the AEAT sync page's census area to it; `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx, native/desktop/frontend/src/components/aeatSync/`.
-- [ ] `P04.S29` - align the filed results types, contract and scenario fixtures to the served filed rows so FiledResults shows each declaration by match group with its local record, AEAT observation, receipt and differences, per the owner ruling of 2026-10-29; `native/desktop/frontend/src/shell/aeatSyncResults.ts, native/desktop/frontend/src/ipc/contract.ts, native/desktop/frontend/src/dev/ (fixtures), native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`.
+- [x] `P04.S29` - align the filed results types, contract and scenario fixtures to the served filed rows so FiledResults shows each declaration by match group with its local record, AEAT observation, receipt and differences, per the owner ruling of 2026-10-29; `native/desktop/frontend/src/shell/aeatSyncResults.ts, native/desktop/frontend/src/ipc/contract.ts, native/desktop/frontend/src/dev/ (fixtures), native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`.
 
 ### Phase `P05` - Locales
 

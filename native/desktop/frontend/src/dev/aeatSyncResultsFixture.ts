@@ -10,9 +10,6 @@ import type {
 export type AeatSyncResultsMode =
   /** Every kind of result: news, changes, failures, an unread notification. */
   | "mixed"
-  /** As the host serves them for now: no filed declaration row, so the
-   * counts the status serves are all the page has of them. */
-  | "counts"
   /** Everything read and nothing new anywhere. */
   | "quiet"
   /** Nothing was found at AEAT. */
@@ -72,7 +69,7 @@ const filed: FiledRow[] = [
     record: { status: "marked_filed", on: ago(38) },
     aeat: { seen_on: ago(0) },
     receipt: "not_confirmed",
-    differences: ["amount", "date"],
+    differences: ["status"],
   },
   {
     form: "390",
@@ -108,9 +105,9 @@ const filed: FiledRow[] = [
     form: "130",
     year: 2025,
     period: "4T",
-    match: "local_only",
+    match: "aeat_only",
     record: { status: "draft", on: ago(5) },
-    aeat: null,
+    aeat: { seen_on: ago(0) },
     receipt: "not_confirmed",
     differences: [],
   },
@@ -164,8 +161,6 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         filed,
         notifications,
       };
-    case "counts":
-      return { ...served("mixed"), filed: [] };
     case "quiet":
       return {
         areas: [

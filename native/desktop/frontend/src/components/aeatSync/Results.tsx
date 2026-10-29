@@ -7,7 +7,6 @@ import {
   aeatSyncDay,
   aeatSyncFailure,
   type AeatSyncAreaId,
-  type AeatSyncCountKind,
   type AeatSyncOutcome,
 } from "../../shell/aeatSync";
 import {
@@ -103,16 +102,12 @@ export const Results = memo(function Results({
   port,
   profile,
   language,
-  filedCounts,
   onOpenAeat,
   onReviewCensus,
 }: {
   port: AeatSyncResultsPort;
   profile: string;
   language: string;
-  /** The counts the status serves for filed declarations, shown while the
-   * results carry no row. */
-  filedCounts?: readonly { kind: AeatSyncCountKind; value: number }[];
   /** Opens the in-app AEAT browser at its start page. */
   onOpenAeat(): void;
   /** Goes to the profile's comparison of its details with AEAT's. */
@@ -316,11 +311,7 @@ export const Results = memo(function Results({
                 </Alert>
               )}
               {result.area === "filed" && (
-                <FiledResults
-                  rows={data.filed}
-                  counts={filedCounts}
-                  language={language}
-                />
+                <FiledResults rows={data.filed} language={language} />
               )}
               {result.area === "notifications" && (
                 <NotificationResults

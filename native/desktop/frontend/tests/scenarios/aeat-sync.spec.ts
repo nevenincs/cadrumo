@@ -393,22 +393,33 @@ test("the results lead on to the AEAT browser", async ({ page: target }) => {
   ).toBeVisible();
 });
 
-test("filed declarations show the served counts while no row is served", async ({
+test("filed declarations are grouped with their record, what AEAT showed and the receipt apart", async ({
   page: target,
 }) => {
-  const page = await open(target, "aeat-sync-counts");
+  const page = await open(target, "aeat-sync");
   await update(page).click();
   await expect(results(page)).toBeVisible();
   const filed = results(page).locator('[data-area="filed"]');
   for (const [match, count] of [
-    ["matched", 9],
-    ["aeat_only", 2],
-    ["local_only", 1],
+    ["aeat_only", 3],
     ["differing", 1],
-  ] as const)
-    await expect(filed).toContainText(
+    ["local_only", 1],
+    ["matched", 2],
+  ] as const) {
+    await expect(filed.locator(`[data-group="${match}"]`)).toContainText(
       label(`desktop.aeat_sync.results.filed.group.${match}`, { count }),
     );
+    await expect(filed.locator(`[data-match="${match}"]`)).toHaveCount(count);
+  }
+  await expect(filed.locator('[data-match="differing"]')).toContainText(
+    label("desktop.aeat_sync.results.filed.differs.status"),
+  );
+  await expect(filed.locator('[data-match="local_only"]')).toContainText(
+    label("desktop.aeat_sync.results.filed.aeat.none"),
+  );
+  await expect(filed).toContainText(
+    label("desktop.aeat_sync.results.filed.receipt.confirmed"),
+  );
   await expect(filed).not.toContainText(
     label("desktop.aeat_sync.results.filed.empty"),
   );

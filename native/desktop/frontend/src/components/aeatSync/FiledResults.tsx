@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
-import { aeatSyncDay, type AeatSyncCountKind } from "../../shell/aeatSync";
+import { aeatSyncDay } from "../../shell/aeatSync";
 import type { FiledMatch, FiledRow } from "../../shell/aeatSyncResults";
 import { useStrings, type Translate } from "../../shell/strings";
 
@@ -10,13 +10,6 @@ const GROUPS: readonly FiledMatch[] = [
   "local_only",
   "matched",
 ];
-
-const COUNT_MATCH: Partial<Record<AeatSyncCountKind, FiledMatch>> = {
-  filed_matched: "matched",
-  filed_aeat_only: "aeat_only",
-  filed_differing: "differing",
-  filed_local_only: "local_only",
-};
 
 function title(t: Translate, row: FiledRow): string {
   return row.period
@@ -101,40 +94,18 @@ function Row({ row, language }: { row: FiledRow; language: string }) {
  */
 export function FiledResults({
   rows,
-  counts = [],
   language,
 }: {
   rows: readonly FiledRow[];
-  /** The counts the status serves, shown while no row is served. */
-  counts?: readonly { kind: AeatSyncCountKind; value: number }[];
   language: string;
 }) {
   const t = useStrings();
-  if (rows.length === 0) {
-    const served = GROUPS.flatMap((match) => {
-      const value = counts
-        .filter((count) => COUNT_MATCH[count.kind] === match)
-        .reduce((sum, count) => sum + count.value, 0);
-      return value > 0 ? [{ match, value }] : [];
-    });
-    if (served.length > 0)
-      return (
-        <ul className="flex flex-col gap-0.5 text-base text-foreground">
-          {served.map(({ match, value }) => (
-            <li key={match} data-group={match}>
-              {t(`desktop.aeat_sync.results.filed.group.${match}`, {
-                count: value,
-              })}
-            </li>
-          ))}
-        </ul>
-      );
+  if (rows.length === 0)
     return (
       <p className="text-sm text-muted-foreground">
         {t("desktop.aeat_sync.results.filed.empty")}
       </p>
     );
-  }
   return (
     <div className="flex flex-col gap-3">
       {GROUPS.map((match) => {

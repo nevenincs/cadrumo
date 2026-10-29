@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:f5732a88326cc91694b56d37b92cbda9e27c98b0b2d4a2e0d92d4186b0f16bc9'
+body_hash: 'sha256:72164dff752fd2020f9725e49a8005b7b42ef4f72602691e15c5897dab193ed3'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -250,6 +250,16 @@ related:
 - `S28` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
 - `S28` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test (CADRUMO_DESKTOP_HOST_TEST_FILTER=aeat_sync)` -> `pass`
 - `S28` `verify:` `just check-rust` -> `pass`
+- `S29` `M` `native/desktop/frontend/src/shell/aeatSyncResults.ts`
+- `S29` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S29` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncResults.stories.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/aeatSync/FiledResults.tsx`
+- `S29` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S29` `verify:` `npm run check` -> `pass`
+- `S29` `verify:` `playwright tests/scenarios/aeat-sync.spec.ts` -> `pass`
 
 ## Notes
 
