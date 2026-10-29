@@ -24,7 +24,7 @@ from http.client import HTTPConnection
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from threading import Thread
-from typing import Final
+from typing import Any, Final
 from urllib.parse import urlencode
 
 import pytest
@@ -87,16 +87,6 @@ _TOOL_LESS_LANE: Final = ModelRunLane(
 _PNG: Final = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
 )
-_PDF: Final = b"\n".join(
-    (
-        b"%PDF-1.4",
-        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj 2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj "
-        b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 10 10]>>endobj",
-        b"trailer<</Root 1 0 R>>",
-        b"%%EOF",
-        b"",
-    )
-)
 
 
 @dataclass(frozen=True)
@@ -105,35 +95,40 @@ class _Gateway:
     bearer: str
     host_token: str
 
-    def lane_for_refusal(self, *, background: bool, pdf: bool | None = None) -> ModelRunLane:
-        """Choose a selectable lane whose own catalog declares the refusal precondition."""
-        status, catalog = self.exchange(
-            "GET", "/v1/provider-catalog?" + urlencode({"workspace_root": str(self.endpoint.workspace_root)})
-        )
-        assert status == 200 and isinstance(catalog, dict), (status, catalog)
-        records = catalog["providers"]
-        assert isinstance(records, list)
-        for record in records:
+    def lane_that_is_not_selectable(self) -> ModelRunLane:
+        """Choose an executable lane the agent's own health does not offer for selection on this computer."""
+        for record in self._lane_records():
+            if record["executable"] is True and record["health"]["selectable"] is not True:
+                return self._lane_of(record)
+        pytest.fail("the agent catalog lists no executable lane that is unselectable here")
+
+    def lane_that_takes_no_image(self) -> ModelRunLane:
+        """Choose a selectable lane whose own background support states that it takes text but no image."""
+        for record in self._lane_records():
             support = record["background_requests"]
             if record["health"]["selectable"] is not True or record["executable"] is not True:
                 continue
-            if (support["text"] != "unsupported") is not background:
-                continue
-            if pdf is not None and (support["pdf"] != "unsupported") is not pdf:
-                continue
-            if pdf is False and support["image"] == "unsupported":
-                continue
-            models = record["catalog"]["models"]
-            assert models, "the selected refusal fixture must name a declared model"
-            # The gateway never reads the flag, and this route does not serve it; the agent's declared
-            # catalogue marks only the keyless local lane, the one ``local_lane`` picks, as on-host.
-            return ModelRunLane(
-                provider_id=record["provider_id"],
-                transport=record["transport"],
-                model=models[0]["model"],
-                reads_off_host=(record["provider_id"], record["transport"]) != ("ollama", "api"),
-            )
-        pytest.fail(f"the agent catalog provides no selectable refusal fixture for background={background}, pdf={pdf}")
+            if support["text"] != "unsupported" and support["image"] == "unsupported":
+                return self._lane_of(record)
+        pytest.fail("the agent catalog provides no selectable lane that takes no image")
+
+    def _lane_records(self) -> list[dict[str, Any]]:
+        records = self.served_catalog()["providers"]
+        assert isinstance(records, list)
+        return records
+
+    @staticmethod
+    def _lane_of(record: Mapping[str, Any]) -> ModelRunLane:
+        models = record["catalog"]["models"]
+        assert models, "the selected refusal fixture must name a declared model"
+        # The gateway never reads the flag, and this route does not serve it; the agent's declared
+        # catalogue marks only the keyless local lane, the one ``local_lane`` picks, as on-host.
+        return ModelRunLane(
+            provider_id=record["provider_id"],
+            transport=record["transport"],
+            model=models[0]["model"],
+            reads_off_host=(record["provider_id"], record["transport"]) != ("ollama", "api"),
+        )
 
     def served_catalog(self) -> dict[str, object]:
         """The live catalogue document, as the service reads it from the gateway."""
@@ -403,28 +398,28 @@ def test_without_the_host_s_own_token_the_agent_refuses_and_the_run_is_unavailab
     assert gateway.exchange("GET", f"/v1/runs/{run_id}/reply")[0] == 404
 
 
-def test_a_lane_that_cannot_run_without_tools_is_refused_as_unavailable(gateway: _Gateway) -> None:
+def test_a_lane_the_agent_does_not_offer_for_selection_is_refused_as_unavailable(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
-    lane = gateway.lane_for_refusal(background=False)
+    lane = gateway.lane_that_is_not_selectable()
     status, answer = gateway.background(run_id, lane)
-    assert (status, _refusal_code(answer)) == (422, "background_lane_unsupported"), (status, answer)
+    assert (status, _refusal_code(answer)) == (422, "provider_not_selectable"), (status, answer)
 
     assert gateway.runs().run(lane=lane, body=_body(), deadline_seconds=30, options=()) == ModelRunRefusal(
         code=ModelRunRefusalCode.LANE_UNAVAILABLE
     )
 
 
-def test_a_pdf_on_a_lane_that_takes_none_is_refused_and_its_upload_removed(gateway: _Gateway) -> None:
+def test_an_image_on_a_lane_that_takes_none_is_refused_and_its_upload_removed(gateway: _Gateway) -> None:
     run_id = secrets.token_hex(16)
-    lane = gateway.lane_for_refusal(background=True, pdf=False)
+    lane = gateway.lane_that_takes_no_image()
 
     refused = gateway.runs(run_id=run_id).run(
-        lane=lane, body=_body(("application/pdf", _PDF)), deadline_seconds=30, options=()
+        lane=lane, body=_body(("image/png", _PNG)), deadline_seconds=30, options=()
     )
 
     assert refused == ModelRunRefusal(code=ModelRunRefusalCode.INPUT_NOT_SUPPORTED), refused
     background = ServedCatalogModels(gateway.served_catalog).lane_background(lane.provider_id, lane.transport)
-    assert background is not None and background.accepted_media == (ModelRunMediaKind.IMAGE,)
+    assert background is not None and background.accepted_media == (ModelRunMediaKind.PDF,)
     status, listed = gateway.exchange("GET", f"/v1/conversations/{run_id}/attachments")
     assert status == 404 or (isinstance(listed, dict) and not listed.get("attachments"))
 
