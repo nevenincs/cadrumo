@@ -3093,6 +3093,7 @@ export function App({ host }: { host: Host }) {
             language={locale}
             shown={firstPaneShown}
             page={aeatSyncPage}
+            results={host.aeatSyncResults}
           />
         ) : (
           <SignedOut

@@ -51,6 +51,32 @@ test("the page names its six areas and their states from what is served", async 
   );
 });
 
+test("a card carries its name, and only the actions that apply", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync");
+  await expect(
+    area(page, "census").getByRole("heading", {
+      name: label("desktop.aeat_sync.area.census.name"),
+    }),
+  ).toBeVisible();
+  // The Borrador is imported from a file, never updated from AEAT; with no
+  // import behind the page the button is off.
+  const borrador = area(page, "borrador");
+  await expect(
+    borrador.getByRole("button", {
+      name: label("desktop.aeat_sync.update_area", {
+        area: label("desktop.aeat_sync.area.borrador.name"),
+      }),
+    }),
+  ).toHaveCount(0);
+  await expect(
+    borrador.getByRole("button", {
+      name: label("desktop.aeat_sync.results.borrador.import"),
+    }),
+  ).toBeDisabled();
+});
+
 test("one action brings everything and each area can be updated on its own", async ({
   page: target,
 }) => {
