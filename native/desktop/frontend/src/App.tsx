@@ -55,7 +55,6 @@ import {
 import { Settings } from "./components/Settings";
 import { GoogleAccount } from "./components/GoogleAccount";
 import { ProvisioningPanel } from "./components/setup/ProvisioningPanel";
-import { SetupApprovals } from "./shell/setupApprovals";
 import {
   canSignInGoogle,
   itemName,
@@ -559,18 +558,6 @@ export function App({ host }: { host: Host }) {
   // session the runtime keeps suspended that only the password can bring back.
   const signInAsked = gated || account.reconnecting?.passwordRequired === true;
   usePersonActivity(host, signedIn);
-  // Setup reviews belong to the verified profile: a new profile starts with
-  // none, and an unconfirmed answer is never offered again while it lasts.
-  const setupApprovalsProfile = signedIn
-    ? (account.status?.active_profile ?? null)
-    : null;
-  const setupApprovals = useMemo(
-    () =>
-      setupApprovalsProfile && host.setupReview
-        ? new SetupApprovals(host.setupReview)
-        : null,
-    [setupApprovalsProfile, host.setupReview],
-  );
   const accountRef = useRef(account);
   accountRef.current = account;
   const signOut = useCallback(() => {
@@ -3259,11 +3246,6 @@ export function App({ host }: { host: Host }) {
         onToolRefused={onToolRefused}
         onOpenLink={openLink}
         setupSettled={settledSetups}
-        setupApprovals={
-          setupApprovals
-            ? { approvals: setupApprovals, onCheckSetup: () => openSetup(null) }
-            : undefined
-        }
         onOpenView={(url, opened) =>
           nav.openLink(url, {
             opened: (shown) => opened?.(shown.opened),

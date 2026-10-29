@@ -99,7 +99,7 @@ const RUNTIME_REFUSAL_CODES: [&str; 12] = [
     "runtime_draining",
     "runtime_containment_unavailable",
 ];
-const REPLY_KINDS: [&str; 9] = [
+const REPLY_KINDS: [&str; 7] = [
     "operation_submitted",
     "operation_acknowledged",
     "operation_observed",
@@ -107,8 +107,6 @@ const REPLY_KINDS: [&str; 9] = [
     "operation_projected",
     "operation_page",
     "operation_managed",
-    "operation_review_claimed",
-    "operation_reviews_claimable",
 ];
 const ENVELOPE: [&str; 4] = ["kind", "request_id", "runtime_boot_id", "connection_id"];
 const SECRET_REQUIREMENT_KEYS: [&str; 5] = [
@@ -335,7 +333,7 @@ const PROFILE_VIEW_PAGE_REQUIRED: [&str; 10] = [
 ];
 
 /// Each relay action and the request members it takes beside `request_id` and `action`.
-pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 10] = [
+pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 8] = [
     (
         "operation_submit",
         &["definition_id", "subject_ref", "payload"],
@@ -353,16 +351,6 @@ pub const RELAY_ACTION_KEYS: [(&str, &[&str]); 10] = [
     ("operation_observe", &["operation_id", "after_cursor"]),
     ("operation_result", &["operation_id"]),
     ("operation_review", &["operation_id"]),
-    ("operation_review_claimable", &[]),
-    (
-        "operation_review_claim",
-        &[
-            "operation_id",
-            "interaction_id",
-            "revision",
-            "review_digest",
-        ],
-    ),
     (
         "operation_respond",
         &[
@@ -536,9 +524,6 @@ impl OperationRelay {
         if action == "operation_financial_submit" {
             return self.submit_financial(held, request, deadline);
         }
-        if action == "operation_review_claimable" {
-            return claimable_reviews(held, deadline);
-        }
         let operation_id = argument_text(request, "operation_id")?;
         match action {
             "operation_observe" => {
@@ -563,7 +548,6 @@ impl OperationRelay {
                     "document": Value::Object(document),
                 })))
             }
-            "operation_review_claim" => self.claim_review(held, operation_id, request, deadline),
             "operation_respond" => self.respond(held, operation_id, request, deadline),
             "operation_cancel" => {
                 let expected_revision = argument_count(request, "expected_revision")?;
@@ -800,63 +784,6 @@ impl OperationRelay {
             return Err(Failure::code("unavailable"));
         }
         Ok((pending, projected.document))
-    }
-
-    fn claim_review(
-        &mut self,
-        held: &Held,
-        operation_id: &str,
-        request: &Map<String, Value>,
-        deadline: Instant,
-    ) -> Outcome<Map<String, Value>> {
-        let interaction_id = argument_text(request, "interaction_id")?;
-        let revision = argument_count(request, "revision")?;
-        let digest = argument_text(request, "review_digest")?;
-        let (pending, document) = self.review(held, operation_id, deadline)?;
-        if pending.interaction_id != interaction_id || pending.revision != revision {
-            return Err(Failure::code("not_pending"));
-        }
-        if content_hash(&Value::Object(document)) != digest {
-            return Err(Failure::code("review_changed"));
-        }
-        let reply = held.exchange(
-            "operation_review_claim",
-            json!({"review_claim_version": 1, "reference": pending.reference, "reviewed_document_digest": digest}),
-            deadline,
-        )?;
-        let reference = reply
-            .get("reference")
-            .and_then(Value::as_object)
-            .ok_or_else(Failure::frame)?;
-        let next_revision = count(reference, "revision")?;
-        let mut original = reference.clone();
-        original.insert("revision".into(), pending.revision.into());
-        let intents = reply
-            .get("allowed_intents")
-            .and_then(Value::as_array)
-            .ok_or_else(Failure::frame)?;
-        if text(&reply, "kind") != Some("operation_review_claimed")
-            || count(&reply, "review_claim_version")? != 1
-            || text(&reply, "reviewed_document_digest") != Some(digest)
-            || original != pending.reference
-            || !(next_revision == revision || revision.checked_add(1) == Some(next_revision))
-            || !["apply", "reject"]
-                .iter()
-                .all(|intent| intents.iter().any(|value| value.as_str() == Some(intent)))
-        {
-            return Err(Failure::frame());
-        }
-        let (successor, document) = self.review(held, operation_id, deadline)?;
-        if successor.reference != *reference {
-            return Err(Failure::code("not_pending"));
-        }
-        Ok(members(json!({
-            "kind": "operation_review_claimed", "operation_id": operation_id,
-            "interaction_id": successor.interaction_id, "revision": successor.revision,
-            "expires_at": successor.expires_at,
-            "review_digest": content_hash(&Value::Object(document.clone())),
-            "document": Value::Object(document),
-        })))
     }
 
     fn respond(
@@ -1961,38 +1888,6 @@ fn response_accepted(
         return Err(Failure::frame());
     }
     Ok(())
-}
-
-/// The most operations one claimable-review listing names, as the runtime bounds it.
-const CLAIMABLE_REVIEWS_MAX: usize = 16;
-
-/// The setup operations whose current review this desktop person may claim.
-/// Naming one grants nothing: each is read and claimed on its own.
-fn claimable_reviews(held: &Held, deadline: Instant) -> Outcome<Map<String, Value>> {
-    let reply = held.exchange("operation_review_claimable", json!({}), deadline)?;
-    let listed = reply
-        .get("operation_ids")
-        .and_then(Value::as_array)
-        .filter(|ids| ids.len() <= CLAIMABLE_REVIEWS_MAX)
-        .ok_or_else(Failure::frame)?;
-    let mut operation_ids = Vec::with_capacity(listed.len());
-    for id in listed {
-        let id = id
-            .as_str()
-            .filter(|id| is_hex64(id))
-            .ok_or_else(Failure::frame)?;
-        if operation_ids.contains(&id) {
-            return Err(Failure::frame());
-        }
-        operation_ids.push(id);
-    }
-    if text(&reply, "kind") != Some("operation_reviews_claimable") {
-        return Err(Failure::frame());
-    }
-    Ok(members(json!({
-        "kind": "operation_reviews_claimable",
-        "operation_ids": operation_ids,
-    })))
 }
 
 fn cancel(
@@ -4636,127 +4531,6 @@ mod tests {
             assert!(matches!(failure, Err(RelayFailure::Invalid)), "{failure:?}");
             assert!(fake.sent().is_empty());
         }
-    }
-
-    #[test]
-    fn an_explicit_review_claim_uses_only_the_acknowledged_successor() {
-        let mut successor = awaiting_review();
-        successor["projection"]["revision"] = json!(4);
-        successor["projection"]["pending_interaction"]["revision"] = json!(4);
-        successor["projection"]["pending_interaction"]["review_reference"]["revision"] = json!(4);
-        let mut reference = review_reference();
-        reference["revision"] = json!(4);
-        let ack = json!({
-            "kind": "operation_review_claimed", "review_claim_version": 1,
-            "reference": reference, "reviewed_document_digest": REVIEW_DIGEST,
-            "allowed_intents": ["apply", "reject"],
-        });
-        let mut steps = reviewed();
-        steps.push(reply(ack));
-        steps.push(reply(observed(successor)));
-        steps.push(reply(projected_reply(
-            &operation(),
-            "review",
-            review_document(),
-        )));
-        let fake = Fake::new(steps);
-        let result = handle(
-            &fake,
-            &mut OperationRelay::new(),
-            "operation_review_claim",
-            json!({
-                "operation_id": operation(), "interaction_id": interaction(), "revision": 3,
-                "review_digest": REVIEW_DIGEST,
-            }),
-        )
-        .unwrap();
-        assert_eq!(result["kind"], "operation_review_claimed");
-        assert_eq!(result["revision"], 4);
-        assert_eq!(
-            fake.sent()[2],
-            target(json!({
-                "action": "operation_review_claim", "review_claim_version": 1,
-                "reference": review_reference(), "reviewed_document_digest": REVIEW_DIGEST,
-            }))
-        );
-        assert!(fake.finished());
-    }
-
-    #[test]
-    fn claimable_reviews_pass_only_distinct_operation_ids_and_runtime_refusals() {
-        let fake = Fake::new(vec![reply(json!({
-            "kind": "operation_reviews_claimable", "operation_ids": [operation()],
-        }))]);
-        let result = handle(
-            &fake,
-            &mut OperationRelay::new(),
-            "operation_review_claimable",
-            json!({}),
-        )
-        .unwrap();
-        assert_eq!(
-            Value::Object(result),
-            json!({"kind": "operation_reviews_claimable", "operation_ids": [operation()]})
-        );
-        assert_eq!(
-            fake.sent(),
-            vec![target(json!({"action": "operation_review_claimable"}))]
-        );
-        assert!(fake.finished());
-
-        for listed in [
-            json!([operation(), operation()]),
-            json!(["not-an-operation"]),
-            json!(vec![operation(); CLAIMABLE_REVIEWS_MAX + 1]),
-            json!(null),
-        ] {
-            let fake = Fake::new(vec![reply(json!({
-                "kind": "operation_reviews_claimable", "operation_ids": listed,
-            }))]);
-            refused_with(
-                handle(
-                    &fake,
-                    &mut OperationRelay::new(),
-                    "operation_review_claimable",
-                    json!({}),
-                ),
-                "unavailable",
-            );
-        }
-
-        let refused = Fake::new(vec![refuse(Refusal::Denied {
-            code: "human_authority_required".into(),
-            sign_in: None,
-            holder_operation_id: None,
-            recovery_remaining_seconds: None,
-        })]);
-        refused_with(
-            handle(
-                &refused,
-                &mut OperationRelay::new(),
-                "operation_review_claimable",
-                json!({}),
-            ),
-            "human_authority_required",
-        );
-    }
-
-    #[test]
-    fn a_claim_never_sends_a_changed_displayed_digest() {
-        let fake = Fake::new(reviewed());
-        refused_with(
-            handle(
-                &fake,
-                &mut OperationRelay::new(),
-                "operation_review_claim",
-                json!({
-                    "operation_id": operation(), "interaction_id": interaction(), "revision": 3,
-                    "review_digest": "f".repeat(64),
-                }),
-            ),
-            "review_changed",
-        );
-        assert!(fake.finished());
     }
 
     #[test]

@@ -39,7 +39,6 @@ import {
   type FixtureStream,
 } from "./agentFixtureHost";
 import { agentAccessFixture } from "./agentAccessFixture";
-import { setupApprovalsFixture } from "./setupApprovalsFixture";
 import { ABOUT_FIXTURE } from "./fixtures/about";
 import type { FixtureSkills } from "./fixtures/agentSkills";
 import { BUSY_CALENDAR } from "./fixtures/calendarBusy";
@@ -111,8 +110,6 @@ export type ScenarioHostOptions = {
   /** The shape of the made-up computer's component setup; where neither
    * this nor the scenario names one, the host offers no setup. */
   setup?: SetupShape | null;
-  /** Offer setup reviews that an assistant's setup leaves for the person. */
-  setupReviews?: boolean;
   /** How the made-up ledger answers, over the scenario's own shape. */
   ledger?: LedgerShape | null;
   /** How the made-up declarations answer. */
@@ -712,9 +709,6 @@ export function scenarioHost(
           agentAccess,
         }),
     ...(setup ? { setup } : {}),
-    ...(options.setupReviews
-      ? { setupReview: setupApprovalsFixture(say) }
-      : {}),
     ...(scenario.profiles === "absent" ? {} : { profiles }),
     ...managerCommand,
     ...(supervision

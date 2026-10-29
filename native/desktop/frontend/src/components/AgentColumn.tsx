@@ -75,8 +75,6 @@ import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
-import { SetupApprovalPrompts } from "./agent/SetupApprovalPrompts";
-import type { SetupApprovals } from "../shell/setupApprovals";
 import { Composer, type ComposerReferences } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
@@ -241,7 +239,6 @@ export function AgentColumn({
   onOpenView,
   control,
   setupSettled = null,
-  setupApprovals,
 }: {
   agent: AgentViews | undefined;
   /** Sending and the live stream, where the host offers them. */
@@ -278,9 +275,6 @@ export function AgentColumn({
   /** The last setup that settled, by operation: what this computer holds may
    * have changed, so the catalog is read again. */
   setupSettled?: string | null;
-  /** Setup reviews waiting on this person, answered beside the agent's own
-   * approvals, and where to check setup after an unconfirmed answer. */
-  setupApprovals?: { approvals: SetupApprovals; onCheckSetup: () => void };
   control?: Ref<AgentColumnControl>;
 }) {
   const t = useStrings();
@@ -420,20 +414,6 @@ export function AgentColumn({
   }, [live.read, pending, locale, t, projectTranscript]);
   // What the agent served of the conversation's replies beside their words: the
   // state of the newest, what they ran with, and the tokens they used.
-  // A finished tool call or reply can leave setup waiting on the person:
-  // read the waiting reviews again whenever one does.
-  const toolsSettled =
-    live.read.kind === "ready"
-      ? live.read.value.filter(
-          (record) =>
-            record.kind === "tool" &&
-            (record.status === "completed" || record.status === "failed"),
-        ).length
-      : 0;
-  const waitingSetup = setupApprovals?.approvals;
-  useEffect(() => {
-    if (shown) void waitingSetup?.refresh();
-  }, [waitingSetup, shown, conversationId, toolsSettled, view.revision]);
   const newest =
     live.read.kind === "ready" ? newestReply(live.read.value) : undefined;
   const facts = useMemo(
@@ -1464,13 +1444,6 @@ export function AgentColumn({
                 {t("desktop.agent.aeat_setup_check")}
               </Button>
             )}
-          {setupApprovals && (
-            <SetupApprovalPrompts
-              approvals={setupApprovals.approvals}
-              locale={locale}
-              onCheckSetup={setupApprovals.onCheckSetup}
-            />
-          )}
           {live.approvals.map((approval) => (
             <ApprovalPrompt
               key={approval.request_id}

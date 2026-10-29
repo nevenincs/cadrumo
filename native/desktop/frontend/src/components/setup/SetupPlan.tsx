@@ -6,8 +6,7 @@ import { itemName, partName } from "./setupWords";
 
 // A setup plan as a person approves it: what it downloads in all and the
 // free space it needs, then each entry's parts, sources and destination.
-// The panel shows it inside the row it sets up; the agent's approvals show
-// it beside the agent's own.
+// The panel shows it inside the row it sets up.
 
 /** What the plan downloads in all, said once above the detail. A plan whose
  * only sizes are unknown says so, never that it downloads nothing. */
@@ -126,22 +125,6 @@ export function PlanEntry({
         </p>
       )}
     </li>
-  );
-}
-
-export function PlanDetail({
-  review,
-  locale,
-}: {
-  review: SetupReview;
-  locale: string;
-}) {
-  return (
-    <ul className="setup-plan grid gap-2">
-      {review.entries.map((entry) => (
-        <PlanEntry key={entry.item} entry={entry} locale={locale} named />
-      ))}
-    </ul>
   );
 }
 

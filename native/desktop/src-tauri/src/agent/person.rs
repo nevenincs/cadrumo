@@ -402,8 +402,6 @@ impl Person {
                 "operation_observe" => Some("person_action_operation_observe"),
                 "operation_result" => Some("person_action_operation_result"),
                 "operation_review" => Some("person_action_operation_review"),
-                "operation_review_claimable" => Some("person_action_operation_review_claimable"),
-                "operation_review_claim" => Some("person_action_operation_review_claim"),
                 "operation_respond" => Some("person_action_operation_respond"),
                 "operation_cancel" => Some("person_action_operation_cancel"),
                 _ => None,
@@ -523,15 +521,13 @@ impl Person {
 pub type HeldPerson = std::sync::Arc<Mutex<Person>>;
 
 /// The generic relay actions of the held session and the reply each answers with.
-const RELAY_REPLIES: [(&str, &str); 10] = [
+const RELAY_REPLIES: [(&str, &str); 8] = [
     ("operation_submit", "operation_submitted"),
     ("operation_secret_submit", "operation_submitted"),
     ("operation_financial_submit", "operation_submitted"),
     ("operation_observe", "operation_observed"),
     ("operation_result", "operation_result"),
     ("operation_review", "operation_review"),
-    ("operation_review_claimable", "operation_reviews_claimable"),
-    ("operation_review_claim", "operation_review_claimed"),
     ("operation_respond", "operation_responded"),
     ("operation_cancel", "operation_cancel_requested"),
 ];

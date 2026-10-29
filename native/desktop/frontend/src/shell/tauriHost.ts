@@ -245,12 +245,6 @@ export function tauriHost(): Host {
         };
       },
     },
-    setupReview: {
-      pending: () => call("desktop_setup_review_pending", {}),
-      claim: (review) => call("desktop_setup_review_claim", { review }),
-      answer: (review, decision) =>
-        call("desktop_setup_review_answer", { review, decision }),
-    },
     setup: {
       read: () => call("desktop_setup_read", {}),
       check: (mode) => call("desktop_setup_check", { mode }),

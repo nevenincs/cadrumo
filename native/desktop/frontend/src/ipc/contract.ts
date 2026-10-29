@@ -1680,22 +1680,6 @@ export interface HostCommands {
   };
   about_info: { args: Authorized; result: AboutInfo };
   /** Each setup command refuses with `SetupRefusal` or a `HostFailure`. */
-  /** The setup reviews this desktop person may claim now, each as shown. */
-  desktop_setup_review_pending: {
-    args: Authorized;
-    result: SetupOperationReview[];
-  };
-  desktop_setup_review_claim: {
-    args: Authorized<{ review: SetupReviewCoordinates }>;
-    result: SetupOperationReview;
-  };
-  desktop_setup_review_answer: {
-    args: Authorized<{
-      review: SetupReviewCoordinates;
-      decision: "apply" | "reject";
-    }>;
-    result: SetupReviewAnswer;
-  };
   desktop_setup_read: { args: Authorized; result: DesktopSetup };
   /** Starts a status read; "quick" reads local facts only, "full" also
    * reaches the network and exercises each item. */
@@ -2346,21 +2330,3 @@ export type ShellToDocs =
   ShellKeymap | ShellCommand | ShellZoom | ShellSearch | ShellAppearance;
 
 export type BridgeMessage = DocsToShell | ShellToDocs;
-
-/** Current registered setup review; the document is displayed unchanged. */
-export type SetupReviewCoordinates = {
-  operation_id: string;
-  interaction_id: string;
-  revision: number;
-  review_digest: string;
-};
-export type SetupOperationReview = SetupReviewCoordinates & {
-  kind: "operation_review" | "operation_review_claimed";
-  expires_at: string | null;
-  document: Readonly<Record<string, unknown>>;
-};
-export type SetupReviewAnswer = {
-  kind: "operation_responded";
-  operation_id: string;
-  decision: "apply" | "reject";
-};
