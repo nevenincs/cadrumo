@@ -691,52 +691,194 @@ desktop:
     area:
       borrador:
         about: Your Renta draft, from a PDF you import.
-        name: Income tax draft (Borrador)
+        name: Borrador
       census:
         about: Your registered details at AEAT.
-        name: Census data
+        name: Census
       filed:
-        about: What AEAT holds as filed for you.
+        about: What AEAT has as filed for you.
         name: Filed declarations
       identity:
-        about: Whether AEAT recognises your tax number and name.
+        about: Whether AEAT recognises your tax ID and name.
         name: Identity checks
       notifications:
-        about: Messages AEAT has sent you.
+        about: Messages AEAT sent you.
         name: Notifications
       vat:
-        about: VAT credit you carry into later periods.
-        name: VAT balance carried forward
-    areas: Your data from AEAT
+        about: VAT credit carried to later periods.
+        name: VAT balance
+    areas: Data from AEAT
     attempt:
-      failed: Last update didn't work ({date}).
-      nothing_found: Last update found nothing new ({date}).
-      unknown: We couldn't confirm the last update finished ({date}).
+      failed: Couldn't update on {date}.
+      nothing_found: Nothing new on {date}.
+      unknown: Couldn't confirm the update on {date}.
+    before:
+      access_again: Check again
+      access_body: Add your certificate or Cl@ve to your profile, then update again.
+      access_open: Set up AEAT access
+      access_title: AEAT access not set up
+      browser_install: Install and continue
+      browser_no_setup: Setup isn't available in this window.
+      browser_size: 'Download: {size}'
+      browser_size_unknown: Download size unknown
+      browser_title: Secure browser not installed
+      browser_why: Cadrumo reads AEAT with its own secure browser, separate from your
+        everyday one.
+      cancel: Cancel
+      checking: Checking…
+      ended_body: Sign in again to continue.
+      ended_sign_in: Sign in again
+      ended_title: AEAT sign-in timed out
+      failed_body: Try again, or check your AEAT access in your profile.
+      failed_title: Couldn't sign in to AEAT
+      not_now: Not now
+      phone_body: Open the Cl@ve app and approve the sign-in request. This continues
+        once you do.
+      phone_title: Approve on your phone
+      try_again: Try again
     bring_all: Update from AEAT
     close: Close AEAT data
     count:
       filed_aeat_only: '{count} only at AEAT'
       filed_differing: '{count} differ'
-      filed_local_only: '{count} only in your records'
-      filed_matched: '{count} match your records'
       unread_notifications: '{count} unread'
-    intro: What Cadrumo has from AEAT, and when it was last updated.
-    loading: Checking…
+    loading: Loading…
     maximize: Maximize AEAT data
+    progress:
+      action_failed: Couldn't do that. Try again.
+      action_unknown: Can't tell if that went through.
+      check_again: Check again
+      check_again_for: 'Check again: {name}'
+      done_all: Done
+      done_problems: Done, with problems
+      not_started: Not started
+      outcome:
+        brought: Done
+        failed: Couldn't update
+        nothing_found: Nothing new
+        unknown: Couldn't confirm
+      paused: Your AEAT sign-in timed out. Sign in again to continue.
+      paused_status: Paused
+      reason:
+        no_access: Access details not accepted
+        other: Something went wrong
+        refused: AEAT refused
+        session_ended: Sign-in timed out
+        unavailable: AEAT didn't answer
+      resume: Sign in again
+      running: Updating…
+      stop: Stop
+      stop_hint: Stops after this step
+      stopped: Stopped
+      stopping: Stopping…
+      title: Updating from AEAT
+      try_again: Try again
+      try_again_for: 'Try again: {name}'
+      unavailable: Couldn't load progress
+      waiting: Waiting
+      warn_cancel: Cancel
+      warn_confirm: Check anyway
+      warn_unknown: May already be updated. Check anyway?
+    results:
+      borrador:
+        failed: Couldn't import {name}.
+        import: Import PDF
+        imported: Imported {name}.
+        nothing_found: No Borrador in {name}.
+        unknown: Can't tell if {name} was imported. Check first.
+      census_review: Review
+      changed:
+        census:
+          one: '{count} detail differs from your profile'
+          other: '{count} details differ from your profile'
+        filed:
+          one: '{count} declaration differs from your records'
+          other: '{count} declarations differ from your records'
+        other:
+          one: '{count} entry changed'
+          other: '{count} entries changed'
+      failed: Couldn't update.
+      filed:
+        aeat:
+          none: Not shown
+          shown: Shown, {date}
+        column:
+          aeat: At AEAT
+          receipt: Receipt
+          record: Your record
+        differs:
+          amount: Amount differs
+          date: Date differs
+          status: Status differs
+        empty: No declarations.
+        group:
+          aeat_only: New at AEAT ({count})
+          differing: Different from your records ({count})
+          local_only: Only in your records ({count})
+          matched: Matches your records ({count})
+        receipt:
+          confirmed: Confirmed
+          not_confirmed: Not confirmed
+        record:
+          draft: Draft, {date}
+          marked_filed: Marked filed, {date}
+          none: None
+        title_period: Modelo {form}, {period} {year}
+        title_year: Modelo {form}, {year}
+      loading: Loading…
+      new:
+        filed:
+          one: '{count} new declaration at AEAT'
+          other: '{count} new declarations at AEAT'
+        notifications:
+          one: '{count} new notification'
+          other: '{count} new notifications'
+        other:
+          one: '{count} new entry'
+          other: '{count} new entries'
+      nothing_found: Nothing found.
+      nothing_new: Nothing new.
+      notifications:
+        empty: No notifications.
+        from: '{sender}, {date}'
+        group:
+          read: Read ({count})
+          unread: Unread ({count})
+        open: Open AEAT
+        read_on: Read {date}
+        warning: Opening a notification at AEAT can count as receiving it.
+      part:
+        form: Modelo {form}, {year}
+        year: Declarations for {year}
+      partly: Some couldn't be updated.
+      problems: '{name}: problems'
+      reason:
+        no_access: Access details not accepted.
+        other: Something went wrong.
+        refused: AEAT refused.
+        session_ended: Sign-in timed out.
+        unavailable: AEAT didn't answer.
+      retry: Try again
+      retry_failed: Couldn't start. Try again.
+      retry_named: 'Try again: {name}'
+      retry_unknown: Can't tell if it started. Check first.
+      title: Results
+      unavailable: Couldn't load.
+      unknown: Can't tell if this finished.
+      updated: Updated {date}
     retry: Try again
     signed_out: Sign in to update your data from AEAT.
-    start_failed: That didn't start. Nothing changed — try again.
-    start_unknown: We couldn't confirm that started. Check this page before trying
-      again.
+    start_failed: Couldn't start. Try again.
+    start_unknown: Can't tell if it started. Check this page first.
     state:
-      current: Up to date (updated {date})
+      current: Updated {date}
       current_undated: Up to date
       never_brought: Not updated yet
-      possibly_stale: May be out of date (updated {date})
+      possibly_stale: Updated {date}, may be out of date
       possibly_stale_undated: May be out of date
       unavailable: Couldn't check
     title: AEAT data
-    unavailable: AEAT data can't be shown right now. Try again in a moment.
+    unavailable: Can't show AEAT data right now.
     update: Update
     update_area: Update {area}
   automation_access:

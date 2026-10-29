@@ -122,6 +122,62 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "identity.name",
         ),
         "desktop.aeat_sync.attempt.": ("failed", "nothing_found", "unknown"),
+        "desktop.aeat_sync.progress.": (
+            "title",
+            "running",
+            "stopping",
+            "stopped",
+            "paused_status",
+            "done_all",
+            "done_problems",
+            "stop",
+            "stop_hint",
+            "paused",
+            "resume",
+            "waiting",
+            "not_started",
+            "outcome.brought",
+            "outcome.nothing_found",
+            "outcome.failed",
+            "outcome.unknown",
+            "reason.session_ended",
+            "reason.no_access",
+            "reason.unavailable",
+            "reason.refused",
+            "reason.other",
+            "try_again",
+            "try_again_for",
+            "check_again",
+            "check_again_for",
+            "warn_unknown",
+            "warn_confirm",
+            "warn_cancel",
+            "action_failed",
+            "action_unknown",
+            "unavailable",
+        ),
+        "desktop.aeat_sync.results.borrador.": ("imported", "nothing_found", "failed", "unknown"),
+        "desktop.aeat_sync.results.changed.": (
+            "census.one",
+            "census.other",
+            "filed.one",
+            "filed.other",
+            "other.one",
+            "other.other",
+        ),
+        "desktop.aeat_sync.results.filed.differs.": ("amount", "date", "status"),
+        "desktop.aeat_sync.results.filed.group.": ("aeat_only", "differing", "local_only", "matched"),
+        "desktop.aeat_sync.results.filed.record.": ("draft", "marked_filed"),
+        "desktop.aeat_sync.results.new.": (
+            "filed.one",
+            "filed.other",
+            "notifications.one",
+            "notifications.other",
+            "other.one",
+            "other.other",
+        ),
+        "desktop.aeat_sync.results.notifications.group.": ("unread", "read"),
+        "desktop.aeat_sync.results.reason.": ("session_ended", "no_access", "unavailable", "refused", "other"),
         "desktop.setup.item.": ("browser", "local_ai"),
         "desktop.setup.state.": (
             "absent",
@@ -833,6 +889,10 @@ def shell_key_references(source: Path) -> tuple[frozenset[str], frozenset[str]]:
         text = path.read_text(encoding=UTF_8_ENCODING)
         literals.update(_SHELL_LITERAL_KEY.findall(text))
         templates.update(_SHELL_TEMPLATE_HEAD.findall(text))
+    # A constant such as ``"desktop.example.progress."`` that later code joins
+    # with a member names a family, not a catalogue leaf.
+    templates.update(key for key in literals if key.endswith("."))
+    literals = {key for key in literals if not key.endswith(".")}
     return frozenset(literals), frozenset(templates)
 
 

@@ -713,13 +713,13 @@ desktop:
   aeat_sync:
     area:
       borrador:
-        about: El teu Borrador de la Renda, a partir d'un PDF que importes.
-        name: Borrador de la Renda
+        about: El teu Borrador de la Renda, d'un PDF que importes.
+        name: Borrador
       census:
         about: Les teves dades registrades a l'AEAT.
-        name: Dades censals
+        name: Cens
       filed:
-        about: El que l'AEAT té registrat com a presentat a nom teu.
+        about: El que l'AEAT té com a presentat a nom teu.
         name: Declaracions presentades
       identity:
         about: Si l'AEAT reconeix el teu NIF i el teu nom.
@@ -728,39 +728,180 @@ desktop:
         about: Missatges que t'ha enviat l'AEAT.
         name: Notificacions
       vat:
-        about: El crèdit d'IVA que portes a períodes posteriors.
-        name: Saldo d'IVA a compensar
-    areas: Les teves dades de l'AEAT
+        about: Crèdit d'IVA que passa a períodes posteriors.
+        name: Saldo d'IVA
+    areas: Dades de l'AEAT
     attempt:
-      failed: L'última actualització no ha funcionat ({date}).
-      nothing_found: L'última actualització no ha trobat res de nou ({date}).
-      unknown: No hem pogut confirmar que l'última actualització hagi acabat ({date}).
+      failed: No s'ha pogut actualitzar el {date}.
+      nothing_found: Res de nou el {date}.
+      unknown: No s'ha pogut confirmar l'actualització del {date}.
+    before:
+      access_again: Torna a comprovar
+      access_body: Afegeix el teu certificat o Cl@ve al teu perfil i torna a actualitzar.
+      access_open: Configura l'accés a l'AEAT
+      access_title: Accés a l'AEAT sense configurar
+      browser_install: Instal·la i continua
+      browser_no_setup: La instal·lació no està disponible en aquesta finestra.
+      browser_size: 'Descàrrega: {size}'
+      browser_size_unknown: Mida de la descàrrega desconeguda
+      browser_title: Navegador segur no instal·lat
+      browser_why: Cadrumo llegeix l'AEAT amb el seu propi navegador segur, a part
+        del que fas servir cada dia.
+      cancel: Cancel·la
+      checking: Comprovant…
+      ended_body: Inicia la sessió de nou per continuar.
+      ended_sign_in: Inicia la sessió de nou
+      ended_title: Ha caducat l'accés a l'AEAT
+      failed_body: Torna-ho a provar o revisa el teu accés a l'AEAT al perfil.
+      failed_title: No s'ha pogut iniciar la sessió a l'AEAT
+      not_now: Ara no
+      phone_body: Obre l'app Cl@ve i aprova la sol·licitud d'accés. Continuarà tan
+        bon punt ho facis.
+      phone_title: Aprova al mòbil
+      try_again: Torna-ho a provar
     bring_all: Actualitza des de l'AEAT
     close: Tanca les dades de l'AEAT
     count:
       filed_aeat_only: '{count} només a l''AEAT'
       filed_differing: '{count} difereixen'
-      filed_local_only: '{count} només als teus registres'
-      filed_matched: '{count} coincideixen amb els teus registres'
       unread_notifications: '{count} sense llegir'
-    intro: El que Cadrumo té de l'AEAT i quan es va actualitzar per última vegada.
-    loading: Comprovant…
+    loading: Carregant…
     maximize: Maximitza les dades de l'AEAT
+    progress:
+      action_failed: No s'ha pogut fer. Torna-ho a provar.
+      action_unknown: No se sap si s'ha fet.
+      check_again: Torna a comprovar
+      check_again_for: 'Torna a comprovar: {name}'
+      done_all: Fet
+      done_problems: Fet, amb problemes
+      not_started: Sense començar
+      outcome:
+        brought: Fet
+        failed: No s'ha pogut actualitzar
+        nothing_found: Res de nou
+        unknown: No s'ha pogut confirmar
+      paused: Ha caducat el teu accés a l'AEAT. Inicia la sessió de nou per continuar.
+      paused_status: En pausa
+      reason:
+        no_access: Dades d'accés no acceptades
+        other: Alguna cosa ha fallat
+        refused: L'AEAT ho ha rebutjat
+        session_ended: Accés caducat
+        unavailable: L'AEAT no ha respost
+      resume: Inicia la sessió de nou
+      running: Actualitzant…
+      stop: Atura
+      stop_hint: S'atura després d'aquest pas
+      stopped: Aturat
+      stopping: Aturant…
+      title: Actualitzant des de l'AEAT
+      try_again: Torna-ho a provar
+      try_again_for: 'Torna-ho a provar: {name}'
+      unavailable: No s'ha pogut carregar el progrés
+      waiting: En espera
+      warn_cancel: Cancel·la
+      warn_confirm: Comprova igualment
+      warn_unknown: Potser ja està actualitzat. Vols comprovar-ho igualment?
+    results:
+      borrador:
+        failed: No s'ha pogut importar {name}.
+        import: Importa un PDF
+        imported: Importat {name}.
+        nothing_found: No hi ha Borrador a {name}.
+        unknown: No se sap si s'ha importat {name}. Comprova-ho abans.
+      census_review: Revisa
+      changed:
+        census:
+          one: '{count} dada difereix del teu perfil'
+          other: '{count} dades difereixen del teu perfil'
+        filed:
+          one: '{count} declaració difereix dels teus registres'
+          other: '{count} declaracions difereixen dels teus registres'
+        other:
+          one: '{count} entrada ha canviat'
+          other: '{count} entrades han canviat'
+      failed: No s'ha pogut actualitzar.
+      filed:
+        aeat:
+          none: No hi apareix
+          shown: Hi apareix, {date}
+        column:
+          aeat: A l'AEAT
+          receipt: Justificant
+          record: El teu registre
+        differs:
+          amount: L'import difereix
+          date: La data difereix
+          status: L'estat difereix
+        empty: Sense declaracions.
+        group:
+          aeat_only: Noves a l'AEAT ({count})
+          differing: Diferents dels teus registres ({count})
+          local_only: Només als teus registres ({count})
+          matched: Coincideixen amb els teus registres ({count})
+        receipt:
+          confirmed: Confirmat
+          not_confirmed: Sense confirmar
+        record:
+          draft: Esborrany, {date}
+          marked_filed: Marcada com a presentada, {date}
+          none: Cap
+        title_period: Modelo {form}, {period} {year}
+        title_year: Modelo {form}, {year}
+      loading: Carregant…
+      new:
+        filed:
+          one: '{count} declaració nova a l''AEAT'
+          other: '{count} declaracions noves a l''AEAT'
+        notifications:
+          one: '{count} notificació nova'
+          other: '{count} notificacions noves'
+        other:
+          one: '{count} entrada nova'
+          other: '{count} entrades noves'
+      nothing_found: No s'ha trobat res.
+      nothing_new: Res de nou.
+      notifications:
+        empty: Sense notificacions.
+        from: '{sender}, {date}'
+        group:
+          read: Llegides ({count})
+          unread: Sense llegir ({count})
+        open: Obre l'AEAT
+        read_on: Llegida el {date}
+        warning: Obrir una notificació a l'AEAT pot comptar com a rebuda.
+      part:
+        form: Modelo {form}, {year}
+        year: Declaracions de {year}
+      partly: Alguns no s'han pogut actualitzar.
+      problems: '{name}: problemes'
+      reason:
+        no_access: Dades d'accés no acceptades.
+        other: Alguna cosa ha fallat.
+        refused: L'AEAT ho ha rebutjat.
+        session_ended: Accés caducat.
+        unavailable: L'AEAT no ha respost.
+      retry: Torna-ho a provar
+      retry_failed: No s'ha pogut iniciar. Torna-ho a provar.
+      retry_named: 'Torna-ho a provar: {name}'
+      retry_unknown: No se sap si s'ha iniciat. Comprova-ho abans.
+      title: Resultats
+      unavailable: No s'ha pogut carregar.
+      unknown: No se sap si això ha acabat.
+      updated: Actualitzat el {date}
     retry: Torna-ho a provar
     signed_out: Inicia la sessió per actualitzar les teves dades de l'AEAT.
-    start_failed: No s'ha iniciat. No ha canviat res — torna-ho a provar.
-    start_unknown: No hem pogut confirmar que s'hagi iniciat. Mira aquesta pàgina
-      abans de tornar-ho a provar.
+    start_failed: No s'ha pogut iniciar. Torna-ho a provar.
+    start_unknown: No se sap si s'ha iniciat. Mira abans aquesta pàgina.
     state:
-      current: Al dia (actualitzat {date})
+      current: Actualitzat el {date}
       current_undated: Al dia
-      never_brought: Encara sense actualitzar
-      possibly_stale: Potser està desactualitzat (actualitzat {date})
-      possibly_stale_undated: Potser està desactualitzat
+      never_brought: Sense actualitzar
+      possibly_stale: Actualitzat el {date}, pot estar desfasat
+      possibly_stale_undated: Pot estar desfasat
       unavailable: No s'ha pogut comprovar
     title: Dades de l'AEAT
-    unavailable: Ara mateix no es poden mostrar les dades de l'AEAT. Torna-ho a provar
-      d'aquí un moment.
+    unavailable: Ara no es poden mostrar les dades de l'AEAT.
     update: Actualitza
     update_area: Actualitza {area}
   automation_access:

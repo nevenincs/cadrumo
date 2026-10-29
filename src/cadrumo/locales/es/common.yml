@@ -718,54 +718,196 @@ desktop:
   aeat_sync:
     area:
       borrador:
-        about: Tu Borrador de la Renta, a partir de un PDF que importas.
-        name: Borrador de la Renta
+        about: Tu Borrador de la Renta, de un PDF que importas.
+        name: Borrador
       census:
         about: Tus datos registrados en la AEAT.
-        name: Datos censales
+        name: Censo
       filed:
-        about: Lo que la AEAT tiene registrado como presentado a tu nombre.
+        about: Lo que la AEAT tiene como presentado a tu nombre.
         name: Declaraciones presentadas
       identity:
         about: Si la AEAT reconoce tu NIF y tu nombre.
         name: Comprobaciones de identidad
       notifications:
-        about: Mensajes que te ha enviado la AEAT.
+        about: Mensajes que te envió la AEAT.
         name: Notificaciones
       vat:
-        about: El crédito de IVA que arrastras a periodos posteriores.
-        name: Saldo de IVA a compensar
-    areas: Tus datos de la AEAT
+        about: Crédito de IVA que pasa a periodos posteriores.
+        name: Saldo de IVA
+    areas: Datos de la AEAT
     attempt:
-      failed: La última actualización no funcionó ({date}).
-      nothing_found: La última actualización no encontró nada nuevo ({date}).
-      unknown: No hemos podido confirmar que la última actualización terminara ({date}).
+      failed: No se pudo actualizar el {date}.
+      nothing_found: Nada nuevo el {date}.
+      unknown: No se pudo confirmar la actualización del {date}.
+    before:
+      access_again: Comprobar de nuevo
+      access_body: Añade tu certificado o Cl@ve a tu perfil y vuelve a actualizar.
+      access_open: Configurar acceso a la AEAT
+      access_title: Acceso a la AEAT sin configurar
+      browser_install: Instalar y continuar
+      browser_no_setup: La instalación no está disponible en esta ventana.
+      browser_size: 'Descarga: {size}'
+      browser_size_unknown: Tamaño de descarga desconocido
+      browser_title: Navegador seguro no instalado
+      browser_why: Cadrumo lee la AEAT con su propio navegador seguro, aparte del
+        que usas a diario.
+      cancel: Cancelar
+      checking: Comprobando…
+      ended_body: Inicia sesión de nuevo para continuar.
+      ended_sign_in: Iniciar sesión de nuevo
+      ended_title: Se agotó el tiempo de acceso a la AEAT
+      failed_body: Inténtalo de nuevo o revisa tu acceso a la AEAT en tu perfil.
+      failed_title: No se pudo iniciar sesión en la AEAT
+      not_now: Ahora no
+      phone_body: Abre la app Cl@ve y aprueba la solicitud de acceso. Continuará en
+        cuanto lo hagas.
+      phone_title: Aprueba en tu móvil
+      try_again: Inténtalo de nuevo
     bring_all: Actualizar desde la AEAT
     close: Cerrar datos de la AEAT
     count:
       filed_aeat_only: '{count} solo en la AEAT'
       filed_differing: '{count} difieren'
-      filed_local_only: '{count} solo en tus registros'
-      filed_matched: '{count} coinciden con tus registros'
       unread_notifications: '{count} sin leer'
-    intro: Lo que Cadrumo tiene de la AEAT y cuándo se actualizó por última vez.
-    loading: Comprobando…
+    loading: Cargando…
     maximize: Maximizar datos de la AEAT
+    progress:
+      action_failed: No se pudo hacer. Inténtalo de nuevo.
+      action_unknown: No se sabe si se hizo.
+      check_again: Comprobar de nuevo
+      check_again_for: 'Comprobar de nuevo: {name}'
+      done_all: Hecho
+      done_problems: Hecho, con problemas
+      not_started: Sin empezar
+      outcome:
+        brought: Hecho
+        failed: No se pudo actualizar
+        nothing_found: Nada nuevo
+        unknown: No se pudo confirmar
+      paused: Se agotó el tiempo de tu acceso a la AEAT. Inicia sesión de nuevo para
+        continuar.
+      paused_status: En pausa
+      reason:
+        no_access: Datos de acceso no aceptados
+        other: Algo salió mal
+        refused: La AEAT lo rechazó
+        session_ended: Acceso caducado
+        unavailable: La AEAT no respondió
+      resume: Iniciar sesión de nuevo
+      running: Actualizando…
+      stop: Detener
+      stop_hint: Se detiene tras este paso
+      stopped: Detenido
+      stopping: Deteniendo…
+      title: Actualizando desde la AEAT
+      try_again: Inténtalo de nuevo
+      try_again_for: 'Inténtalo de nuevo: {name}'
+      unavailable: No se pudo cargar el progreso
+      waiting: En espera
+      warn_cancel: Cancelar
+      warn_confirm: Comprobar igualmente
+      warn_unknown: Puede que ya esté actualizado. ¿Comprobar igualmente?
+    results:
+      borrador:
+        failed: No se pudo importar {name}.
+        import: Importar PDF
+        imported: Importado {name}.
+        nothing_found: No hay Borrador en {name}.
+        unknown: No se sabe si se importó {name}. Compruébalo antes.
+      census_review: Revisar
+      changed:
+        census:
+          one: '{count} dato difiere de tu perfil'
+          other: '{count} datos difieren de tu perfil'
+        filed:
+          one: '{count} declaración difiere de tus registros'
+          other: '{count} declaraciones difieren de tus registros'
+        other:
+          one: '{count} entrada cambió'
+          other: '{count} entradas cambiaron'
+      failed: No se pudo actualizar.
+      filed:
+        aeat:
+          none: No aparece
+          shown: Aparece, {date}
+        column:
+          aeat: En la AEAT
+          receipt: Justificante
+          record: Tu registro
+        differs:
+          amount: El importe difiere
+          date: La fecha difiere
+          status: El estado difiere
+        empty: Sin declaraciones.
+        group:
+          aeat_only: Nuevas en la AEAT ({count})
+          differing: Distintas de tus registros ({count})
+          local_only: Solo en tus registros ({count})
+          matched: Coinciden con tus registros ({count})
+        receipt:
+          confirmed: Confirmado
+          not_confirmed: Sin confirmar
+        record:
+          draft: Borrador, {date}
+          marked_filed: Marcada como presentada, {date}
+          none: Ninguno
+        title_period: Modelo {form}, {period} {year}
+        title_year: Modelo {form}, {year}
+      loading: Cargando…
+      new:
+        filed:
+          one: '{count} declaración nueva en la AEAT'
+          other: '{count} declaraciones nuevas en la AEAT'
+        notifications:
+          one: '{count} notificación nueva'
+          other: '{count} notificaciones nuevas'
+        other:
+          one: '{count} entrada nueva'
+          other: '{count} entradas nuevas'
+      nothing_found: No se encontró nada.
+      nothing_new: Nada nuevo.
+      notifications:
+        empty: Sin notificaciones.
+        from: '{sender}, {date}'
+        group:
+          read: Leídas ({count})
+          unread: Sin leer ({count})
+        open: Abrir la AEAT
+        read_on: Leída el {date}
+        warning: Abrir una notificación en la AEAT puede contar como recibirla.
+      part:
+        form: Modelo {form}, {year}
+        year: Declaraciones de {year}
+      partly: Algunos no se pudieron actualizar.
+      problems: '{name}: problemas'
+      reason:
+        no_access: Datos de acceso no aceptados.
+        other: Algo salió mal.
+        refused: La AEAT lo rechazó.
+        session_ended: Acceso caducado.
+        unavailable: La AEAT no respondió.
+      retry: Inténtalo de nuevo
+      retry_failed: No se pudo iniciar. Inténtalo de nuevo.
+      retry_named: 'Inténtalo de nuevo: {name}'
+      retry_unknown: No se sabe si se inició. Compruébalo antes.
+      title: Resultados
+      unavailable: No se pudo cargar.
+      unknown: No se sabe si esto terminó.
+      updated: Actualizado el {date}
     retry: Inténtalo de nuevo
     signed_out: Inicia sesión para actualizar tus datos de la AEAT.
-    start_failed: No se ha iniciado. No ha cambiado nada — inténtalo de nuevo.
-    start_unknown: No hemos podido confirmar que se haya iniciado. Mira esta página
-      antes de volver a intentarlo.
+    start_failed: No se pudo iniciar. Inténtalo de nuevo.
+    start_unknown: No se sabe si se inició. Mira antes esta página.
     state:
-      current: Al día (actualizado {date})
+      current: Actualizado el {date}
       current_undated: Al día
-      never_brought: Aún sin actualizar
-      possibly_stale: Puede estar desactualizado (actualizado {date})
-      possibly_stale_undated: Puede estar desactualizado
-      unavailable: No se ha podido comprobar
+      never_brought: Sin actualizar
+      possibly_stale: Actualizado el {date}, puede estar desfasado
+      possibly_stale_undated: Puede estar desfasado
+      unavailable: No se pudo comprobar
     title: Datos de la AEAT
-    unavailable: Ahora mismo no se pueden mostrar los datos de la AEAT. Inténtalo
-      de nuevo en un momento.
+    unavailable: Ahora no se pueden mostrar los datos de la AEAT.
     update: Actualizar
     update_area: Actualizar {area}
   automation_access:

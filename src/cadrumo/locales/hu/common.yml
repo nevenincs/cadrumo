@@ -697,7 +697,7 @@ desktop:
     area:
       borrador:
         about: A Renta-tervezeted, egy importált PDF-ből.
-        name: Személyi jövedelemadó-tervezet (Borrador)
+        name: Borrador
       census:
         about: Az AEAT-nál nyilvántartott adataid.
         name: Censo-adatok
@@ -711,39 +711,181 @@ desktop:
         about: Az AEAT által küldött üzenetek.
         name: Értesítések
       vat:
-        about: Az áfa-jóváírás, amelyet későbbi időszakokra viszel át.
-        name: Átvitt áfa-egyenleg
-    areas: Az AEAT-adataid
+        about: Későbbi időszakra átvitt áfa-jóváírás.
+        name: Áfa-egyenleg
+    areas: AEAT-adatok
     attempt:
-      failed: Az utolsó frissítés nem sikerült ({date}).
-      nothing_found: Az utolsó frissítés nem talált újat ({date}).
-      unknown: Nem tudtuk megerősíteni, hogy az utolsó frissítés befejeződött ({date}).
+      failed: 'Nem sikerült frissíteni: {date}.'
+      nothing_found: 'Nincs újdonság: {date}.'
+      unknown: A(z) {date} frissítést nem sikerült megerősíteni.
+    before:
+      access_again: Ellenőrzés újra
+      access_body: Add hozzá a tanúsítványodat vagy a Cl@ve-et a profilodhoz, aztán
+        frissíts újra.
+      access_open: AEAT-hozzáférés beállítása
+      access_title: Az AEAT-hozzáférés nincs beállítva
+      browser_install: Telepítés és folytatás
+      browser_no_setup: A telepítés ebben az ablakban nem érhető el.
+      browser_size: 'Letöltés: {size}'
+      browser_size_unknown: A letöltés mérete ismeretlen
+      browser_title: A biztonságos böngésző nincs telepítve
+      browser_why: A Cadrumo a saját biztonságos böngészőjével olvassa az AEAT-ot,
+        a mindennapi böngésződtől elkülönítve.
+      cancel: Mégse
+      checking: Ellenőrzés…
+      ended_body: Jelentkezz be újra a folytatáshoz.
+      ended_sign_in: Bejelentkezés újra
+      ended_title: Lejárt az AEAT-bejelentkezés
+      failed_body: Próbáld újra, vagy ellenőrizd az AEAT-hozzáférésedet a profilodban.
+      failed_title: Nem sikerült bejelentkezni az AEAT-ba
+      not_now: Most nem
+      phone_body: Nyisd meg a Cl@ve alkalmazást, és hagyd jóvá a bejelentkezési kérést.
+        Utána magától folytatódik.
+      phone_title: Hagyd jóvá a telefonodon
+      try_again: Próbáld újra
     bring_all: Frissítés az AEAT-ból
     close: AEAT-adatok bezárása
     count:
       filed_aeat_only: '{count} csak az AEAT-nál van'
       filed_differing: '{count} eltér'
-      filed_local_only: '{count} csak a saját nyilvántartásodban van'
-      filed_matched: '{count} egyezik a nyilvántartásaiddal'
       unread_notifications: '{count} olvasatlan'
-    intro: Amit a Cadrumo az AEAT-tól tud, és mikor frissült utoljára.
-    loading: Ellenőrzés…
+    loading: Betöltés…
     maximize: AEAT-adatok maximalizálása
+    progress:
+      action_failed: Ez nem sikerült. Próbáld újra.
+      action_unknown: Nem tudni, hogy sikerült-e.
+      check_again: Ellenőrzés újra
+      check_again_for: 'Ellenőrzés újra: {name}'
+      done_all: Kész
+      done_problems: Kész, hibákkal
+      not_started: Nem indult el
+      outcome:
+        brought: Kész
+        failed: Nem sikerült frissíteni
+        nothing_found: Nincs újdonság
+        unknown: Nem sikerült megerősíteni
+      paused: Lejárt az AEAT-bejelentkezésed. Jelentkezz be újra a folytatáshoz.
+      paused_status: Szüneteltetve
+      reason:
+        no_access: A hozzáférési adatokat nem fogadták el
+        other: Valami hiba történt
+        refused: Az AEAT elutasította
+        session_ended: Lejárt a bejelentkezés
+        unavailable: Az AEAT nem válaszolt
+      resume: Bejelentkezés újra
+      running: Frissítés…
+      stop: Leállítás
+      stop_hint: Ennek a lépésnek a végén áll le
+      stopped: Leállítva
+      stopping: Leállítás…
+      title: Frissítés az AEAT-ból
+      try_again: Próbáld újra
+      try_again_for: 'Próbáld újra: {name}'
+      unavailable: Nem sikerült betölteni az előrehaladást
+      waiting: Várakozik
+      warn_cancel: Mégse
+      warn_confirm: Ellenőrzés mégis
+      warn_unknown: Lehet, hogy már frissült. Ellenőrzöd mégis?
+    results:
+      borrador:
+        failed: 'Nem sikerült importálni: {name}.'
+        import: PDF importálása
+        imported: '{name} importálva.'
+        nothing_found: Nincs Borrador a(z) {name} fájlban.
+        unknown: Nem tudni, hogy a(z) {name} importálva lett-e. Előbb ellenőrizd.
+      census_review: Átnézés
+      changed:
+        census:
+          one: '{count} adat eltér a profilodtól'
+          other: '{count} adat eltér a profilodtól'
+        filed:
+          one: '{count} nyilatkozat eltér a nyilvántartásodtól'
+          other: '{count} nyilatkozat eltér a nyilvántartásodtól'
+        other:
+          one: '{count} bejegyzés változott'
+          other: '{count} bejegyzés változott'
+      failed: Nem sikerült frissíteni.
+      filed:
+        aeat:
+          none: Nem szerepel
+          shown: Szerepel, {date}
+        column:
+          aeat: Az AEAT-nál
+          receipt: Igazolás
+          record: A nyilvántartásod
+        differs:
+          amount: Az összeg eltér
+          date: A dátum eltér
+          status: Az állapot eltér
+        empty: Nincs nyilatkozat.
+        group:
+          aeat_only: Újak az AEAT-nál ({count})
+          differing: Eltér a nyilvántartásodtól ({count})
+          local_only: Csak a nyilvántartásodban ({count})
+          matched: Egyezik a nyilvántartásoddal ({count})
+        receipt:
+          confirmed: Megerősítve
+          not_confirmed: Nincs megerősítve
+        record:
+          draft: Tervezet, {date}
+          marked_filed: Benyújtottnak jelölve, {date}
+          none: Nincs
+        title_period: Modelo {form}, {period} {year}
+        title_year: Modelo {form}, {year}
+      loading: Betöltés…
+      new:
+        filed:
+          one: '{count} új nyilatkozat az AEAT-nál'
+          other: '{count} új nyilatkozat az AEAT-nál'
+        notifications:
+          one: '{count} új értesítés'
+          other: '{count} új értesítés'
+        other:
+          one: '{count} új bejegyzés'
+          other: '{count} új bejegyzés'
+      nothing_found: Nincs találat.
+      nothing_new: Nincs újdonság.
+      notifications:
+        empty: Nincs értesítés.
+        from: '{sender}, {date}'
+        group:
+          read: Olvasott ({count})
+          unread: Olvasatlan ({count})
+        open: AEAT megnyitása
+        read_on: 'Elolvasva: {date}'
+        warning: Az értesítés megnyitása az AEAT-nál átvételnek számíthat.
+      part:
+        form: Modelo {form}, {year}
+        year: '{year} évi nyilatkozatok'
+      partly: Néhányat nem sikerült frissíteni.
+      problems: '{name}: hibák'
+      reason:
+        no_access: A hozzáférési adatokat nem fogadták el.
+        other: Valami hiba történt.
+        refused: Az AEAT elutasította.
+        session_ended: Lejárt a bejelentkezés.
+        unavailable: Az AEAT nem válaszolt.
+      retry: Próbáld újra
+      retry_failed: Nem sikerült elindítani. Próbáld újra.
+      retry_named: 'Próbáld újra: {name}'
+      retry_unknown: Nem tudni, hogy elindult-e. Előbb ellenőrizd.
+      title: Eredmények
+      unavailable: Nem sikerült betölteni.
+      unknown: Nem tudni, hogy ez befejeződött-e.
+      updated: 'Frissítve: {date}'
     retry: Próbáld újra
-    signed_out: Jelentkezz be, hogy frissíthesd az adataidat az AEAT-ból.
-    start_failed: Nem indult el. Semmi sem változott — próbáld újra.
-    start_unknown: Nem tudtuk megerősíteni, hogy elindult. Nézd meg ezt az oldalt,
-      mielőtt újra próbálkozol.
+    signed_out: Jelentkezz be, hogy frissítsd az AEAT-adataidat.
+    start_failed: Nem sikerült elindítani. Próbáld újra.
+    start_unknown: Nem tudni, hogy elindult-e. Előbb nézd meg ezt az oldalt.
     state:
-      current: 'Naprakész (frissítve: {date})'
+      current: 'Frissítve: {date}'
       current_undated: Naprakész
       never_brought: Még nincs frissítve
-      possibly_stale: 'Lehet, hogy elavult (frissítve: {date})'
+      possibly_stale: 'Frissítve: {date}, lehet, hogy elavult'
       possibly_stale_undated: Lehet, hogy elavult
       unavailable: Nem sikerült ellenőrizni
     title: AEAT-adatok
-    unavailable: Az AEAT-adatok most nem jeleníthetők meg. Próbáld újra egy pillanat
-      múlva.
+    unavailable: Az AEAT-adatok most nem jeleníthetők meg.
     update: Frissítés
     update_area: '{area} frissítése'
   automation_access:
