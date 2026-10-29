@@ -978,6 +978,48 @@ test("a ready browser is removed only after a second confirmation, and then offe
   await noInternalWords(target);
 });
 
+test("a browser removed and set up again offers its removal afresh, without the old question", async ({
+  page: target,
+}) => {
+  await open(target, "ready");
+  await (await palette(target, paletteItem(BROWSER))).click();
+  const row = browserRow(target);
+  const remove = row.getByRole("button", {
+    name: label("desktop.setup.remove"),
+    exact: true,
+  });
+  const question = label("desktop.setup.remove_confirm");
+  await remove.click();
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_confirm_yes") })
+    .click();
+  await expect(row).toContainText(NOT_SET_UP);
+  await expect(row).not.toContainText(question);
+  await startBrowser(target);
+  await stepUntil(target, "browser", async () =>
+    (await row.innerText()).includes(label("desktop.setup.state.ready")),
+  );
+  // The ready row offers its removal as a button; the question is not asked.
+  await expect(remove).toBeVisible();
+  await expect(row).not.toContainText(question);
+  await expect(
+    row.getByRole("button", {
+      name: label("desktop.setup.remove_confirm_yes"),
+    }),
+  ).toHaveCount(0);
+  // It is asked again only when the person asks for the removal again.
+  await remove.click();
+  await expect(row).toContainText(question);
+  await row
+    .getByRole("button", { name: label("desktop.setup.remove_keep") })
+    .click();
+  await expect(remove).toBeVisible();
+  await expect(row).not.toContainText(question);
+  expect(
+    (await hostCalls(target)).filter((call) => call === "setup.remove browser"),
+  ).toHaveLength(1);
+});
+
 test("a ready local AI offers its removal two ways, each after a second confirmation", async ({
   page: target,
 }) => {

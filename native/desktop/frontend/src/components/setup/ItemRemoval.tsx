@@ -38,33 +38,41 @@ function removable(row: SetupRow): boolean {
   );
 }
 
-export function ItemRemoval({
-  row,
-  removals,
-  onRemoved,
-}: {
+type ItemRemovalProps = {
   row: SetupRow;
   /** The removals this row offers, in the order they are listed. */
   removals: readonly SetupRemoval[];
   /** Told once a removal is made, for what else shows what it took away. */
   onRemoved?: () => void;
-}) {
+};
+
+// The question and the answer to it belong to a stretch in which the row has
+// something to remove. The offer is mounted only for that stretch, so a row
+// that stops having it -- the removal itself, a setup under way -- takes the
+// question with it, and a row that has it again starts without one.
+export function ItemRemoval(props: ItemRemovalProps) {
+  const store = useProvisioning();
+  const live = store.runOf(props.row.item)?.stage;
+  if (!removable(props.row) || (live !== undefined && live !== "settled"))
+    return null;
+  return <ItemRemovalOffer {...props} />;
+}
+
+function ItemRemovalOffer({ row, removals, onRemoved }: ItemRemovalProps) {
   const t = useStrings();
   const store = useProvisioning();
   const [asking, setAsking] = useState<SetupRemoval | null>(null);
   const [removing, setRemoving] = useState(false);
   const [refusal, setRefusal] = useState<string | null>(null);
-  const live = store.runOf(row.item)?.stage;
-  if (!removable(row) || (live !== undefined && live !== "settled"))
-    return null;
 
   const remove = (removal: SetupRemoval) => {
     setRemoving(true);
     store.control.remove(removal).then((code) => {
       setRemoving(false);
       setRefusal(code);
-      if (code !== null) setAsking(null);
-      else onRemoved?.();
+      // Asked and answered, refused or done: the question is not asked again.
+      setAsking(null);
+      if (code === null) onRemoved?.();
     });
   };
 
