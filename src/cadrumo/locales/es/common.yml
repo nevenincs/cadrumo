@@ -1679,18 +1679,10 @@ desktop:
       read_here: Leer en este equipo
       read_off_host: Leer fuera de este equipo…
       reader:
-        all_documents: Todos los documentos
         available: Disponible
-        cannot_read_images: El modelo que elegiste no puede leer imágenes, así que
-          las páginas escaneadas no se leen. Elige un modelo que pueda leer imágenes.
-        choose_model: Elegir un modelo
-        extraction: Lectura de documentos
         host: Servidor local de modelos
-        no_model: Los documentos no se leen hasta que elijas un modelo que el agente
-          pueda usar. Elige uno en el selector de modelos del agente.
         off_host: Lectura fuera de este equipo
         off_host_note: Solo con tu conformidad, cada vez
-        text_only: Solo documentos con capa de texto
         unavailable: No disponible
         version: Versión {version}
       reading_changed: La lectura cambió. Revísala de nuevo.
@@ -3486,7 +3478,6 @@ desktop:
     modal: Termina o cierra primero el cuadro de diálogo abierto.
     notice:
       ancestor: '{requested} no se puede abrir aquí, así que se ha abierto {view}.'
-      in_window: '{view} se ha abierto en la ventana.'
       params_dropped: '{view} se ha abierto, pero el elemento al que apunta el enlace
         aún no se puede mostrar ahí.'
     pending: Responde primero a la pregunta abierta.

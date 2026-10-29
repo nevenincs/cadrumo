@@ -1644,18 +1644,10 @@ desktop:
       read_here: Read on this computer
       read_off_host: Read off this computer…
       reader:
-        all_documents: Every document
         available: Available
-        cannot_read_images: The model you picked can't read images, so scanned pages
-          aren't read. Pick a model that can read images.
-        choose_model: Pick a model
-        extraction: Reading documents
         host: Local model host
-        no_model: Documents aren't read until you pick a model the agent can use.
-          Pick one in the agent's model picker.
         off_host: Reading off this computer
         off_host_note: Only with your acknowledgement, each time
-        text_only: Documents with a text layer only
         unavailable: Not available
         version: Version {version}
       reading_changed: The reading changed. Review it again.
@@ -3435,7 +3427,6 @@ desktop:
     modal: Finish or close the open dialog first.
     notice:
       ancestor: '{requested} can''t be opened here, so {view} opened instead.'
-      in_window: '{view} opened in the window.'
       params_dropped: '{view} opened, but the item the link points to can''t be shown
         there yet.'
     pending: Answer the open question first.

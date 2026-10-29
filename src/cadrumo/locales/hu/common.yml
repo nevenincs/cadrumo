@@ -1654,19 +1654,10 @@ desktop:
       read_here: Beolvasás ezen a gépen
       read_off_host: Beolvasás a gépen kívül…
       reader:
-        all_documents: Minden dokumentum
         available: Elérhető
-        cannot_read_images: A kiválasztott modell nem tud képeket olvasni, ezért a
-          beszkennelt oldalak nem lesznek beolvasva. Válassz olyan modellt, amely
-          tud képeket olvasni.
-        choose_model: Modell kiválasztása
-        extraction: Dokumentumok beolvasása
         host: Helyi modellkiszolgáló
-        no_model: A dokumentumok beolvasásához válassz egy modellt, amelyet az ügynök
-          használni tud. Válassz egyet az ügynök modellválasztójában.
         off_host: Beolvasás a gépen kívül
         off_host_note: Csak a jóváhagyásoddal, minden alkalommal
-        text_only: Csak szövegréteggel rendelkező dokumentumok
         unavailable: Nem elérhető
         version: '{version} verzió'
       reading_changed: Az olvasat megváltozott. Ellenőrizd újra.
@@ -3456,7 +3447,6 @@ desktop:
     modal: Előbb fejezd be vagy zárd be a nyitott párbeszédablakot.
     notice:
       ancestor: '{requested} itt nem nyitható meg, ezért ez nyílt meg helyette: {view}.'
-      in_window: 'Megnyílt az ablakban: {view}.'
       params_dropped: 'Megnyílt: {view}, de a hivatkozott elemet ott még nem lehet
         megjeleníteni.'
     pending: Előbb válaszolj a nyitott kérdésre.

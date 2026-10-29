@@ -1677,19 +1677,10 @@ desktop:
       read_here: Llegeix en aquest ordinador
       read_off_host: Llegeix fora d'aquest ordinador…
       reader:
-        all_documents: Tots els documents
         available: Disponible
-        cannot_read_images: El model que has triat no pot llegir imatges, així que
-          les pàgines escanejades no es llegeixen. Tria un model que pugui llegir
-          imatges.
-        choose_model: Triar un model
-        extraction: Lectura de documents
         host: Servidor local de models
-        no_model: Els documents no es llegeixen fins que triïs un model que l'agent
-          pugui fer servir. Tria'n un al selector de models de l'agent.
         off_host: Lectura fora d'aquest ordinador
         off_host_note: Només amb la teva conformitat, cada vegada
-        text_only: Només documents amb capa de text
         unavailable: No disponible
         version: Versió {version}
       reading_changed: La lectura ha canviat. Torna-la a revisar.
@@ -3484,7 +3475,6 @@ desktop:
     modal: Acaba o tanca primer el quadre de diàleg obert.
     notice:
       ancestor: '{requested} no es pot obrir aquí, així que s''ha obert {view}.'
-      in_window: '{view} s''ha obert a la finestra.'
       params_dropped: '{view} s''ha obert, però l''element al qual apunta l''enllaç
         encara no es pot mostrar allà.'
     pending: Respon primer la pregunta oberta.

@@ -762,7 +762,6 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.navigation.leave.title",
         "desktop.navigation.modal",
         "desktop.navigation.notice.ancestor",
-        "desktop.navigation.notice.in_window",
         "desktop.navigation.notice.params_dropped",
         "desktop.navigation.pending",
         "desktop.navigation.refused.credentials",
