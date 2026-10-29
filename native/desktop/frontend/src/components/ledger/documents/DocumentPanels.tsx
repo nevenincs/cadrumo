@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
 import { useTableView, type ViewColumn } from "@/components/ui/table-view";
-import { useModelList } from "../../../shell/agentModelList";
-import { provisionActionOf } from "../../../shell/provisioningRecovery";
+import { useProvisioning } from "../../../shell/provisioning";
+import {
+  provisionActionOf,
+  setupActionOf,
+} from "../../../shell/provisioningRecovery";
 import type {
   AttachmentReviewItem,
   EvidenceConsentListResult,
@@ -20,10 +23,10 @@ import type {
   InvoiceKind,
   LedgerPort,
   PickedFile,
-  ReaderReadinessResult,
 } from "../../../shell/ledger";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { SetupOffer } from "../../setup/SetupOffer";
+import { rowTone } from "../../setup/setupWords";
 import { kindChoice } from "../invoices/invoiceWords";
 import { failureCode } from "../ledgerWords";
 import { stampText } from "../movements/movementWords";
@@ -33,7 +36,7 @@ import { write } from "../invoices/invoiceWrites";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import { batchStatusLabel, sourceLabel } from "./documentWords";
 import { extractionLanding } from "./documentLanding";
-import { fileName, readerProblems } from "./documentsModel";
+import { fileName } from "./documentsModel";
 import type { Read } from "./useLedgerRead";
 
 function Failed({
@@ -734,53 +737,15 @@ export function ConsentHistory({
 
 // ---- What can read documents here ---------------------------------------------------
 
-/** What can read documents on this computer, and what keeps them from being
- * read: no reading task is named, only what is wrong. */
-export function ReaderReadiness({
-  read,
-  onRetry,
-}: {
-  read: Read<ReaderReadinessResult>;
-  onRetry(): void;
-}) {
+/** What can read documents on this computer, as the setup engine's local AI
+ * row states it: whether its program is usable, and the way into its setup
+ * while it is not. Which model reads, and whether it can, is the agent's to
+ * say when a reading is refused. */
+export function ReaderReadiness() {
   const t = useStrings();
-  const modelList = useModelList();
-  if (read.phase === "failed")
-    return <Failed t={t} read={read} onRetry={onRetry} />;
-  if (!read.value) return <Reading t={t} />;
-  const ready = read.value;
-  // Each role that is not ready says which setup, if any, supplies what it
-  // lacks; a role whose lack no setup supplies names none. One offer per
-  // distinct setup.
-  const setups = [
-    ...new Set(
-      ready.roles
-        .filter((role) => !role.ready)
-        .map((role) => provisionActionOf(role.recovery_action_id))
-        .filter((action): action is string => action !== null),
-    ),
-  ];
-  const problems = readerProblems(ready.roles);
-  // A problem the person settles by picking another model leads to the picker.
-  const problem = (words: string) => (
-    <li className="ledger-reader-problem flex items-start gap-2 border-b border-border py-2">
-      <Icon name="unplug" size="sm" className="text-warning" />
-      <span className="grid min-w-0 flex-1 gap-1">
-        <span className="text-sm">{words}</span>
-        {modelList && (
-          <Button
-            size="xs"
-            variant="outline"
-            className="ledger-reader-choose-model justify-self-start"
-            onClick={modelList.open}
-          >
-            <Icon name="agent" />
-            {t("desktop.ledger.documents.reader.choose_model")}
-          </Button>
-        )}
-      </span>
-    </li>
-  );
+  const row = useProvisioning().localAiRow;
+  const usable = row !== null && rowTone(row) === "ready";
+  const version = row?.version ?? null;
   const line = (ok: boolean, label: string, detail: string) => (
     <li className="flex items-start gap-2 border-b border-border py-2">
       <Icon
@@ -794,36 +759,22 @@ export function ReaderReadiness({
   );
   return (
     <div className="ledger-readers grid gap-3 p-3">
-      {setups.map((action) => (
+      {row !== null && !usable && (
         <SetupOffer
-          key={action}
-          action={action}
+          action={row.recovery_action_id ?? setupActionOf(row.item)}
           className="ledger-readers-set-up justify-self-start"
         />
-      ))}
+      )}
       <ul aria-label={t("desktop.ledger.documents.tab.readers")}>
         {line(
-          ready.extraction_ready,
-          t("desktop.ledger.documents.reader.extraction"),
-          ready.document_readiness === "all_documents"
-            ? t("desktop.ledger.documents.reader.all_documents")
-            : t("desktop.ledger.documents.reader.text_only"),
-        )}
-        {line(
-          ready.host.available,
+          usable,
           t("desktop.ledger.documents.reader.host"),
-          ready.host.available
-            ? !ready.host.version
-              ? t("desktop.ledger.documents.reader.available")
-              : t("desktop.ledger.documents.reader.version", {
-                  version: ready.host.version,
-                })
-            : t("desktop.ledger.documents.reader.unavailable"),
+          !usable
+            ? t("desktop.ledger.documents.reader.unavailable")
+            : version
+              ? t("desktop.ledger.documents.reader.version", { version })
+              : t("desktop.ledger.documents.reader.available"),
         )}
-        {problems.noModel &&
-          problem(t("desktop.ledger.documents.reader.no_model"))}
-        {problems.cannotReadImages &&
-          problem(t("desktop.ledger.documents.reader.cannot_read_images"))}
         <li className="flex items-start gap-2 border-b border-border py-2">
           <Icon name="lock" size="sm" className="text-muted-foreground" />
           <span className="min-w-0 flex-1 font-medium">

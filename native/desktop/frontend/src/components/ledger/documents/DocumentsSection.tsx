@@ -131,13 +131,6 @@ export function DocumentsSection({
     "ledger.evidence.consent.list",
     {},
   );
-  const readers = useLedgerRead(
-    port,
-    reader,
-    shown && tab === "readers",
-    "ledger.evidence.reader-readiness",
-    {},
-  );
   const rereadAll = () => {
     queue.reread();
     records.reread();
@@ -467,7 +460,7 @@ export function DocumentsSection({
         />
       </TabsContent>
       <TabsContent value="readers" className="overflow-y-auto">
-        <ReaderReadiness read={readers.read} onRetry={readers.reread} />
+        <ReaderReadiness />
       </TabsContent>
       <Toast className="ledger-documents-toast">{toast}</Toast>
     </Tabs>

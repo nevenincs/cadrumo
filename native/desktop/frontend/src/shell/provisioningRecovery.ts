@@ -1,18 +1,33 @@
+import type { SetupItemId } from "../ipc/contract";
 import type { LedgerOutcome, LedgerPort } from "./ledger";
 import type { CensoPort, CensoSnapshot } from "./profileCenso";
 
-// A refusal the product recovers by setting a component up names that setup
-// as an `operator.provision.<item>` action: on an agent tool's refusal, on a
-// settled operation's precondition verdict, or on a reading that stood
-// without its model fill. This module finds that action in any of those
-// shapes, so every surface routes it the same way to the window's one
-// provisioning panel. The action is an identifier for routing, never shown.
+// A refusal the product recovers by setting a component up says so plainly:
+// its registered code, a reading that stood because the local AI could not
+// read, a statement file the local AI was needed for, or a batch whose reading
+// paused. This module turns each into the `operator.provision.<item>` action
+// of the engine's item it needs, so every surface routes it the same way to
+// the window's one provisioning panel, where the engine's own row says whether
+// setup can act. A host-side refusal that already names the action keeps it.
+// The action is an identifier for routing, never shown.
 
 const PROVISION_PREFIX = "operator.provision.";
 /** Lower-case letters, digits, `_` and `.`, within the host's token cap. */
 const ACTION_TOKEN = /^[a-z0-9_.]{1,128}$/;
-/** How deep a refusal's nested shapes are searched for the action. */
-const DEPTH = 4;
+/** How deep a refusal's nested shapes are searched. */
+const DEPTH = 3;
+
+/** The setup action of the engine's item `item`. */
+export const setupActionOf = (item: SetupItemId) =>
+  `${PROVISION_PREFIX}${item}`;
+
+/** The registered refusals that stand for a component that is not usable. */
+const REFUSED_FOR: ReadonlyMap<string, SetupItemId> = new Map([
+  ["REFUSED_BROWSER_NOT_READY", "browser"],
+  ["REFUSED_LEDGER_EVIDENCE_READER", "local_ai"],
+]);
+/** What a reading or a statement file says when the local AI could not read. */
+const READER_UNAVAILABLE = "reader_unavailable";
 
 function provisionAction(value: unknown): string | null {
   return typeof value === "string" &&
@@ -23,40 +38,23 @@ function provisionAction(value: unknown): string | null {
     : null;
 }
 
-function parsed(text: string): unknown {
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return null;
-  }
-}
-
 function search(value: unknown, depth: number): string | null {
   const direct = provisionAction(value);
   if (direct !== null || depth === 0) return direct;
   if (typeof value !== "object" || value === null || Array.isArray(value))
     return null;
   const held = value as Record<string, unknown>;
-  // A refusal or a fallback names its recovery; a verdict snapshot names
-  // its action; a verdict as the product serializes it holds the action's
-  // reference.
-  for (const named of [held.recovery_action_id, held.action_id]) {
-    const found = provisionAction(named);
-    if (found !== null) return found;
-  }
-  const action = held.action;
-  if (typeof action === "object" && action !== null && !Array.isArray(action)) {
-    const found = provisionAction(
-      (action as Record<string, unknown>).action_id,
-    );
-    if (found !== null) return found;
-  }
-  // An error detail carries its verdict as the verdict's own JSON text.
-  if (typeof held.precondition_verdict_json === "string") {
-    const found = search(parsed(held.precondition_verdict_json), depth - 1);
-    if (found !== null) return found;
-  }
-  for (const nested of [held.precondition_verdict, held.detail, held.refusal]) {
+  const named = provisionAction(held.recovery_action_id);
+  if (named !== null) return named;
+  const code = held.error_code ?? held.code;
+  const item = typeof code === "string" ? REFUSED_FOR.get(code) : undefined;
+  if (item !== undefined) return setupActionOf(item);
+  if (
+    held.cause === READER_UNAVAILABLE ||
+    held.reason_code === READER_UNAVAILABLE
+  )
+    return setupActionOf("local_ai");
+  for (const nested of [held.detail, held.refusal]) {
     const found = search(nested, depth - 1);
     if (found !== null) return found;
   }
@@ -64,28 +62,31 @@ function search(value: unknown, depth: number): string | null {
 }
 
 /**
- * The setup action a refusal, verdict, error detail or label-reading
- * fallback names as its recovery, or null when it names none or names an
- * action that is not about setup. Anything not exactly an action token is
- * no action.
+ * The setup action a refusal, error detail, refused file or label-reading
+ * fallback stands for, or null when it stands for none. Anything not exactly
+ * an action token is no action.
  */
 export function provisionActionOf(value: unknown): string | null {
   return search(value, DEPTH);
 }
 
+/** The setup action a batch's reading pause stands for: only the local AI
+ * pauses a reading. Null for no pause. */
+export function pauseActionOf(pause: unknown): string | null {
+  return pause === null || pause === undefined
+    ? null
+    : setupActionOf("local_ai");
+}
+
 /**
- * The setup action a settled batch's reading pause names: a batch whose
- * reading the missing local AI paused settles, and its run carries the
- * pause's verdict. Null for any other result.
+ * The setup action a settled batch's reading pause stands for. Null for any
+ * other result.
  */
 export function pausedActionOf(result: unknown): string | null {
   if (typeof result !== "object" || result === null) return null;
   const run = (result as Record<string, unknown>).run;
   if (typeof run !== "object" || run === null) return null;
-  const pause = (run as Record<string, unknown>).inference_pause;
-  return pause === null || pause === undefined
-    ? null
-    : provisionActionOf(pause);
+  return pauseActionOf((run as Record<string, unknown>).inference_pause);
 }
 
 /** Hands `offer` the setup action an operation names, once per operation,

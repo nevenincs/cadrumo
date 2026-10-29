@@ -63,7 +63,6 @@ import type {
   ProrrataSeedSectorRequest,
   ProrrataSettleSectorRequest,
 } from "./ledgerSetup";
-import type { SetupState } from "../ipc/contract";
 
 /** The definitions the host admits, mirroring its closed list. */
 export const LEDGER_DEFINITIONS = [
@@ -898,8 +897,6 @@ export type LedgerImportResult = {
   refused_files: {
     file_name: string;
     reason_code: LedgerImportRefusalCode;
-    /** Present exactly for `reader_unavailable`: the reader's verdict. */
-    precondition_verdict?: JsonObject | null;
   }[];
   source_digests: { file_index: number; sha256: string }[];
 };
@@ -1494,10 +1491,6 @@ export type LabelReadingFallback = {
   cause: "reader_unavailable" | "load_headroom_refused";
   unread_fields: string[];
   reader_error_type: string;
-  failed_condition_id?: string | null;
-  /** The operator action that would let the model fill run, such as the
-   * local AI setup; an identifier for routing, never shown. */
-  recovery_action_id?: string | null;
 };
 export type ConfirmationBlockReason =
   | "closure_discrepancy"
@@ -1715,36 +1708,6 @@ export type EvidenceConsentListResult = {
     transmitted_bytes_are_unrecallable?: true;
   };
 };
-export type ReaderRole = {
-  role: string;
-  model?: string | null;
-  /** Whether the local AI server holds the model, as the agent states it;
-   * absent or null when nobody stated it, which is not "not installed". */
-  installed?: boolean | null;
-  ready: boolean;
-  failed_condition_id?: string | null;
-  /** The operator action the reader check named for `failed_condition_id`,
-   * such as the local AI setup for a program that is not set up or a model
-   * that is not installed; absent where setup cannot change what is
-   * missing. An identifier for routing, never shown. */
-  recovery_action_id?: string | null;
-};
-/** What can read documents on this computer. */
-export type ReaderReadinessResult = {
-  profile_id: string;
-  /** The local AI program as the components role's status row reports it;
-   * `state` is absent when the role reported no row, which is unknown. */
-  host: {
-    state?: SetupState | null;
-    version?: string | null;
-    available: boolean;
-    failed_condition_id?: string | null;
-  };
-  roles: ReaderRole[];
-  extraction_ready: boolean;
-  document_readiness: "all_documents" | "text_layer_only";
-  text_layer_model_fill_available: boolean;
-};
 
 // ---- Links between movements and invoices ---------------------------------
 
@@ -1862,7 +1825,6 @@ export interface LedgerRequests {
   "ledger.evidence.attachment_view": AttachmentViewRequest;
   "ledger.evidence.page": EvidencePageRequest;
   "ledger.evidence.consent.list": Record<string, never>;
-  "ledger.evidence.reader-readiness": Record<string, never>;
   "ledger.link": LedgerLinkRequest;
   "ledger.attach": LedgerAttachRequest;
   "ledger.detach": LedgerDetachRequest;
@@ -1945,7 +1907,6 @@ export interface LedgerResults {
   "ledger.evidence.attachment_view": AttachmentViewResult;
   "ledger.evidence.page": EvidencePageResult;
   "ledger.evidence.consent.list": EvidenceConsentListResult;
-  "ledger.evidence.reader-readiness": ReaderReadinessResult;
   "ledger.link": LedgerLinkResult;
   "ledger.attach": LedgerAttachResult;
   "ledger.detach": LedgerAttachResult;

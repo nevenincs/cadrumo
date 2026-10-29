@@ -12,12 +12,12 @@ import type { SetupRow } from "../src/ipc/contract";
 /** The action the engine names as the local AI's recovery. */
 const LOCAL_AI_SETUP_ACTION = "operator.provision.local_ai";
 
-// The setup action a refusal names, wherever its shape carries it: an agent
-// tool's refusal, a settled operation's error detail with the verdict as its
-// JSON text, a verdict snapshot, or a label reading that stood without its
-// model fill. And the ledger port that hands each refusal naming one to the
-// window's provisioning panel once. The scenario ledger needs a window; a bare one
-// stands in for it here. No page is opened.
+// The setup action a refusal stands for, from its plain shape: an agent
+// tool's refusal that names it, a settled operation's registered error code,
+// a statement file or a label reading that stood because the local AI could
+// not read, or a batch whose reading paused. And the ledger port that hands
+// each such refusal to the window's provisioning panel once. The scenario
+// ledger needs a window; a bare one stands in for it here. No page is opened.
 
 const stand = globalThis as unknown as { window?: unknown };
 stand.window = {
@@ -30,50 +30,44 @@ const { censoFixture } = await import("../src/dev/censoFixture");
  * apply a review, neither of which a start or a status read does. */
 const unreadProfile = {} as unknown as Parameters<typeof censoFixture>[0];
 
-/** A verdict as the product serializes it, recovered by `action`. */
-const verdict = (action: string | null) => ({
-  failed_condition_id: "probe.role_model.installed",
-  evidence: [],
-  action: action === null ? null : { action_id: action },
-  argument_bindings: [],
-  missing_argument_names: [],
-  conditionality: action === null ? "no_recovery" : "immediate",
-  no_recovery_outcome: action === null ? "not_recoverable" : null,
-});
-const detail = (verdictJson: string | null) => ({
+/** A settled operation's registered error detail, refused with `code`. */
+const detail = (code: string | null) => ({
   detail_version: 1,
   kind: "registered_error",
-  error_code: "REFUSED_LEDGER_EVIDENCE_READER",
-  message_key: "errors.refused.refused_ledger_evidence_reader_unavailable",
+  error_code: code,
+  message_key: null,
   context: [],
   context_entries_omitted: 0,
-  precondition_verdict_json: verdictJson,
+  precondition_verdict_json: null,
 });
 
-test("the setup action is found in every shape a refusal carries it", () => {
+test("the setup action is found in every plain shape of a refusal", () => {
   expect(
     provisionActionOf({
       code: "operation_not_successful",
       recovery_action_id: "operator.provision.browser",
     }),
   ).toBe("operator.provision.browser");
-  expect(
-    provisionActionOf(
-      detail(JSON.stringify(verdict("operator.provision.local_ai"))),
-    ),
-  ).toBe("operator.provision.local_ai");
-  expect(
-    provisionActionOf({
-      failed_condition_id: "probe.runtime.reachable",
-      action_id: "operator.provision.local_ai",
-    }),
-  ).toBe("operator.provision.local_ai");
+  expect(provisionActionOf(detail("REFUSED_LEDGER_EVIDENCE_READER"))).toBe(
+    LOCAL_AI_SETUP_ACTION,
+  );
+  expect(provisionActionOf(detail("REFUSED_BROWSER_NOT_READY"))).toBe(
+    "operator.provision.browser",
+  );
+  expect(provisionActionOf({ code: "REFUSED_BROWSER_NOT_READY" })).toBe(
+    "operator.provision.browser",
+  );
   expect(
     provisionActionOf({
       cause: "reader_unavailable",
       unread_fields: ["grand_total"],
       reader_error_type: "InvoiceDraftReaderUnavailableError",
-      recovery_action_id: LOCAL_AI_SETUP_ACTION,
+    }),
+  ).toBe(LOCAL_AI_SETUP_ACTION);
+  expect(
+    provisionActionOf({
+      file_name: "movimientos-tarjeta.pdf",
+      reason_code: "reader_unavailable",
     }),
   ).toBe(LOCAL_AI_SETUP_ACTION);
   // Setup as a whole is a setup action too; where it leads is the window's.
@@ -82,18 +76,22 @@ test("the setup action is found in every shape a refusal carries it", () => {
   );
 });
 
-test("a refusal that names no setup, or names it malformed, has none", () => {
-  // A verdict with no recovery, and one recovered by something else.
-  expect(provisionActionOf(detail(JSON.stringify(verdict(null))))).toBeNull();
-  expect(
-    provisionActionOf(
-      detail(JSON.stringify(verdict("operator.ledger.classify"))),
-    ),
-  ).toBeNull();
+test("a refusal that stands for no component, or names it malformed, has none", () => {
+  expect(provisionActionOf(detail("ERROR_EVIDENCE_NOT_FOUND"))).toBeNull();
   expect(provisionActionOf(detail(null))).toBeNull();
-  expect(provisionActionOf(detail("{not json"))).toBeNull();
   expect(provisionActionOf(null)).toBeNull();
   expect(provisionActionOf({ code: "refused" })).toBeNull();
+  expect(provisionActionOf({ code: "toString" })).toBeNull();
+  expect(
+    provisionActionOf({
+      cause: "load_headroom_refused",
+      unread_fields: [],
+      reader_error_type: "LLMContentionError",
+    }),
+  ).toBeNull();
+  expect(
+    provisionActionOf({ file_name: "a.csv", reason_code: "source_changed" }),
+  ).toBeNull();
   for (const malformed of [
     "operator.provision.",
     "operator.provision.Browser",
@@ -122,7 +120,7 @@ async function missingReader(shape: "reader_missing" | "documents") {
   return { port, scan: scan.evidence_id };
 }
 
-test("each ledger refusal that names a setup reaches the prompt once, unchanged", async () => {
+test("each ledger refusal that stands for a setup reaches the prompt once, unchanged", async () => {
   const { port, scan } = await missingReader("reader_missing");
   const offered: string[] = [];
   const routed: LedgerPort = routeProvisioningRefusals(port, (action) => {
@@ -142,7 +140,7 @@ test("each ledger refusal that names a setup reaches the prompt once, unchanged"
   await routed.submit("ledger.evidence.extract", { evidence_id: scan });
   expect(offered).toHaveLength(2);
   // A read that settles offers nothing.
-  await routed.submit("ledger.evidence.reader-readiness", {});
+  await routed.submit("ledger.evidence.list", {});
   expect(offered).toHaveLength(2);
 });
 
@@ -172,7 +170,7 @@ test("a batch whose reading the missing local AI paused reaches the prompt once"
       (item) => item.status === "paused",
     );
     if (shape === "reader_missing") {
-      // The batch settles: its pause names the local AI's setup.
+      // The batch settles: its pause stands for the local AI's setup.
       expect(paused).toHaveLength(scans.length);
       expect(pausedActionOf(added.result)).toBe(LOCAL_AI_SETUP_ACTION);
       expect(offered).toEqual([LOCAL_AI_SETUP_ACTION]);
@@ -185,21 +183,13 @@ test("a batch whose reading the missing local AI paused reaches the prompt once"
       expect(offered).toEqual([]);
     }
   }
-  // A pause whose verdict names no action names nothing.
-  expect(
-    pausedActionOf({
-      run: {
-        inference_pause: { facts: [], precondition_verdict: verdict(null) },
-      },
-    }),
-  ).toBeNull();
   expect(pausedActionOf({ run: { inference_pause: null } })).toBeNull();
   expect(pausedActionOf(null)).toBeNull();
 });
 
 test("a ledger refusal that names no setup offers nothing", async () => {
-  // With the reader present the scan is read; a refusal whose detail holds
-  // no verdict names nothing either.
+  // With the reader present the scan is read; a refusal for something else
+  // names nothing either.
   const { port, scan } = await missingReader("documents");
   const offered: string[] = [];
   const routed = routeProvisioningRefusals(port, (action) => {

@@ -117,10 +117,6 @@ export const LEDGER_SHAPES = [
   "documents",
   // The `documents` ledger on a computer whose local AI is not set up.
   "reader_missing",
-  // The `documents` ledger where no model is picked to read with.
-  "reader_unselected",
-  // The `documents` ledger where the model picked cannot read images.
-  "reader_no_images",
 ] as const;
 export type LedgerShape = (typeof LEDGER_SHAPES)[number];
 
@@ -1466,12 +1462,11 @@ export function ledgerFixture(options: Options): LedgerPort {
         return;
       }
       // Where the local AI is not set up, a PDF statement, which only the
-      // local AI reads, is refused for it, and its verdict names the setup.
+      // local AI reads, is refused for it.
       if (shape === "reader_missing" && file.name.endsWith(".pdf")) {
         refused.push({
           file_name: file.name,
           reason_code: "reader_unavailable",
-          precondition_verdict: readerPause().precondition_verdict ?? null,
         });
         return;
       }
@@ -1736,21 +1731,9 @@ export function ledgerFixture(options: Options): LedgerPort {
     };
   }
 
-  /** The pause a batch reports when the local AI's program is not set up:
-   * its verdict names the local AI's setup. */
+  /** The pause a batch reports when the local AI's program is not set up. */
   function readerPause(): JsonObject {
-    return {
-      facts: [{ name: "local_ai_state", value: "absent" }],
-      precondition_verdict: {
-        failed_condition_id: "probe.runtime.reachable",
-        evidence: [],
-        action_id: "operator.provision.local_ai",
-        argument_bindings: [],
-        missing_argument_names: [],
-        conditionality: "immediate",
-        no_recovery_outcome: null,
-      },
-    };
+    return { facts: [{ name: "local_ai_state", value: "absent" }] };
   }
 
   function exportLedger(request: JsonObject): JsonObject {
@@ -1891,14 +1874,8 @@ export function ledgerFixture(options: Options): LedgerPort {
     now,
     fileOf: (token) => fileOf(token, "documents"),
     issuesFor: (period) => issues(ledger, period),
-    seed:
-      shape === "documents" ||
-      shape === "reader_missing" ||
-      shape === "reader_unselected" ||
-      shape === "reader_no_images",
+    seed: shape === "documents" || shape === "reader_missing",
     readerMissing: shape === "reader_missing",
-    readerUnselected: shape === "reader_unselected",
-    readerNoImages: shape === "reader_no_images",
   });
   const reads: Partial<
     Record<LedgerDefinitionId, (request: JsonObject) => JsonObject>

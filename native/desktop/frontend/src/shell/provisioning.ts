@@ -77,7 +77,8 @@ export type ProvisioningStore = {
   open(item?: SetupItemId | null, options?: { takeFocus?: boolean }): void;
   close(): void;
   /** Where a recovery `action` leads now: the row it recovers, setup as a
-   * whole, or nowhere while this window offers no setup. */
+   * whole, or nowhere while this window offers no setup or the engine reports
+   * the row's item ready, which setup cannot improve. */
   targetOf(action: string): SetupRow | "general" | null;
   /** Opens the panel on the row `action` recovers, or on every row; false
    * where it leads nowhere. */
@@ -137,6 +138,17 @@ const NO_PROVISIONING: ProvisioningStore = {
   offer: () => false,
   raise: () => undefined,
 };
+
+/** Where a refusal's recovery `action` leads: the row it recovers unless the
+ * engine reports that item ready, since a refusal then lacks something setup
+ * does not supply; setup as a whole; or nowhere. */
+function recoveryTarget(
+  action: string,
+  rows: readonly SetupRow[],
+): SetupRow | "general" | null {
+  const target = setupTargetOf(action, rows);
+  return target !== "general" && target?.state === "ready" ? null : target;
+}
 
 export const ProvisioningContext =
   createContext<ProvisioningStore>(NO_PROVISIONING);
@@ -211,7 +223,7 @@ export function useProvisioningStore(
   const offer = useCallback(
     (action: string): boolean => {
       if (!offeredRef.current) return false;
-      const target = setupTargetOf(action, rowsRef.current);
+      const target = recoveryTarget(action, rowsRef.current);
       if (target === null) return false;
       // Raised while the person types, it leaves the keyboard where it is.
       open(target === "general" ? null : target.item, {
@@ -305,7 +317,7 @@ export function useProvisioningStore(
       panel,
       open,
       close,
-      targetOf: (action) => (offered ? setupTargetOf(action, rows) : null),
+      targetOf: (action) => (offered ? recoveryTarget(action, rows) : null),
       offer,
       raise,
     };

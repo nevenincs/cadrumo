@@ -4,7 +4,6 @@ import type {
   ConfirmationBlocker,
   EvidenceDraft,
   EvidenceRecord,
-  ReaderRole,
 } from "../src/shell/ledger";
 import {
   confirmation,
@@ -14,7 +13,6 @@ import {
   holdsUpdate,
   recordUpdate,
   resolutionOf,
-  readerProblems,
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
 import { hexId } from "./support/ledger";
@@ -276,38 +274,4 @@ test("a record's correction sends only what changed and clears with a blank", ()
       update.request,
     ),
   ).toBe(true);
-});
-
-test("model problems are said once, and only for roles held back by the model", () => {
-  const held: ReaderRole = {
-    role: "vision_transcription",
-    model: null,
-    installed: null,
-    ready: false,
-    failed_condition_id: "probe.selected_model.available",
-    recovery_action_id: null,
-  };
-  expect(readerProblems([held, { ...held, role: "text_extraction" }])).toEqual({
-    noModel: true,
-    cannotReadImages: false,
-  });
-  expect(
-    readerProblems([
-      {
-        ...held,
-        failed_condition_id: "probe.selected_model.reads_images",
-      },
-    ]),
-  ).toEqual({ noModel: false, cannotReadImages: true });
-  // A role that reads, or is held back for another reason, says no model problem.
-  for (const role of [
-    { ...held, ready: true, failed_condition_id: null },
-    { ...held, failed_condition_id: "probe.role_model.installed" },
-    { ...held, failed_condition_id: "probe.runtime.reachable" },
-    { role: "vision_transcription", ready: false },
-  ])
-    expect(readerProblems([role])).toEqual({
-      noModel: false,
-      cannotReadImages: false,
-    });
 });

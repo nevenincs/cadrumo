@@ -1,8 +1,6 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { agentColumn } from "../support/agent";
-import { seedLayout } from "../support/layout";
 import { label } from "../support/strings";
 
 // The Documents section over the scenario's `documents` ledger: readings
@@ -757,56 +755,18 @@ test("a confirmed ticket no movement settles offers the movements near its day, 
   await expect(target.locator(".ledger-tray")).toBeVisible();
 });
 
-test("with no model picked the readers say so, name no reading task and lead to the model picker", async ({
+test("readers say the local AI as setup reports it, and offer nothing when it is ready", async ({
   page: target,
 }) => {
-  await seedLayout(target, { layout: { agentShown: false } });
-  await openDocuments(target, undefined, "reader_unselected");
-  await tab(target, "readers").click();
-  const readers = section(target).locator(".ledger-readers");
-  // Every reading runs with the one model picked, so the problem is said once.
-  const problems = readers.locator(".ledger-reader-problem");
-  await expect(problems).toHaveCount(1);
-  await expect(problems).toContainText(
-    label("desktop.ledger.documents.reader.no_model"),
-  );
-  // No reading task is named, in words or by the id the service uses.
-  for (const role of ["text_extraction", "vision_transcription"])
-    await expect(readers).not.toContainText(role);
-  // Setup cannot pick a model, so it is not what the readers offer.
-  await expect(readers.locator(".setup-offer")).toHaveCount(0);
-  await expect(agentColumn(target)).toBeHidden();
-  await problems
-    .getByRole("button", {
-      name: label("desktop.ledger.documents.reader.choose_model"),
-    })
-    .click();
-  await expect(agentColumn(target)).toBeVisible();
-  await expect(
-    target.getByRole("dialog", { name: label("desktop.agent.settings_title") }),
-  ).toBeVisible();
-});
-
-test("a model picked that cannot read images says so in plain words", async ({
-  page: target,
-}) => {
-  await openDocuments(target, undefined, "reader_no_images");
-  await tab(target, "readers").click();
-  const readers = section(target).locator(".ledger-readers");
-  const problems = readers.locator(".ledger-reader-problem");
-  await expect(problems).toHaveCount(1);
-  await expect(problems).toContainText(
-    label("desktop.ledger.documents.reader.cannot_read_images"),
-  );
-  await expect(problems.getByRole("button")).toHaveText(
-    label("desktop.ledger.documents.reader.choose_model"),
-  );
-});
-
-test("readers that can read say no problem", async ({ page: target }) => {
-  await openDocuments(target);
+  await openDocuments(target, undefined, "documents&setup=ready");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");
   await expect(readers).toBeVisible();
-  await expect(readers.locator(".ledger-reader-problem")).toHaveCount(0);
+  await expect(readers).toContainText(
+    label("desktop.ledger.documents.reader.host"),
+  );
+  await expect(readers).not.toContainText(
+    label("desktop.ledger.documents.reader.unavailable"),
+  );
+  await expect(readers.locator(".setup-offer")).toHaveCount(0);
 });

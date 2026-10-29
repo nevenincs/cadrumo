@@ -32,7 +32,10 @@ import {
 } from "../../../shell/ledgerGrammar";
 import { importBatchFilters } from "../../../shell/ledgerImports";
 import { readPage } from "../../../shell/ledgerWindow";
-import { provisionActionOf } from "../../../shell/provisioningRecovery";
+import {
+  pauseActionOf,
+  provisionActionOf,
+} from "../../../shell/provisioningRecovery";
 import type { Landing } from "../WritePause";
 
 export const IMPORT_KINDS = ["bank", "book", "documents"] as const;
@@ -463,7 +466,7 @@ export async function applyDocuments(
       const pause = sent.result.run.inference_pause;
       if (pause !== null)
         done.paused = {
-          action: done.paused?.action ?? provisionActionOf(pause),
+          action: done.paused?.action ?? pauseActionOf(pause),
         };
     } else
       done.stopped = {

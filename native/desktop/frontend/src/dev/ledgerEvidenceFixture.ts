@@ -65,10 +65,6 @@ type Tools = {
   seed: boolean;
   /** Whether the local AI is missing on this computer. */
   readerMissing: boolean;
-  /** Whether no model is picked to read with. */
-  readerUnselected: boolean;
-  /** Whether the model picked reads text but not images. */
-  readerNoImages: boolean;
 };
 
 type Reading = {
@@ -94,29 +90,14 @@ const decimal = (value: string | null): PublicDecimal | null =>
   value === null ? null : { decimal: value };
 const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
 
-/** The setup the components role names when the local AI is missing. */
-const LOCAL_AI_SETUP = "operator.provision.local_ai";
-/** What the reader check found missing: the program that runs the models. */
-const RUNTIME_REACHABLE = "probe.runtime.reachable";
-/** What the reader check found missing for a role the agent resolves no model
- * for: none is picked, or the one picked cannot run. The person picks it in
- * the agent's model picker, which no setup replaces. */
-const SELECTED_MODEL_AVAILABLE = "probe.selected_model.available";
-/** What the reader check found missing for reading images: the model picked
- * is not stated to read them. */
-const SELECTED_MODEL_READS_IMAGES = "probe.selected_model.reads_images";
-
 /** A label reading that stood without the model fill the local AI gives. */
 const withoutReader = (unread: string[]): LabelReadingFallback => ({
   cause: "reader_unavailable",
   unread_fields: unread,
   reader_error_type: "InvoiceDraftReaderUnavailableError",
-  failed_condition_id: RUNTIME_REACHABLE,
-  recovery_action_id: LOCAL_AI_SETUP,
 });
 
-/** The registered refusal of a read that needed the missing local AI, with
- * the probe's verdict as the product serializes it. */
+/** The registered refusal of a read that needed the missing local AI. */
 const readerRefusal = () =>
   new InvoiceStopped("REFUSED_LEDGER_EVIDENCE_READER", {
     detail_version: 1,
@@ -125,22 +106,7 @@ const readerRefusal = () =>
     message_key: "errors.refused.refused_ledger_evidence_reader_unavailable",
     context: [],
     context_entries_omitted: 0,
-    precondition_verdict_json: JSON.stringify({
-      failed_condition_id: RUNTIME_REACHABLE,
-      evidence: [
-        {
-          condition_id: RUNTIME_REACHABLE,
-          evidence_id: `${RUNTIME_REACHABLE}.observation`,
-          provenance: "runtime_observation",
-          values: { local_ai_state: "absent" },
-        },
-      ],
-      action: { action_id: LOCAL_AI_SETUP },
-      argument_bindings: [],
-      missing_argument_names: [],
-      conditionality: "immediate",
-      no_recovery_outcome: null,
-    }),
+    precondition_verdict_json: null,
   });
 
 /** A value of any shape in one comparable text, keys sorted. */
@@ -709,7 +675,6 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
             cause: "load_headroom_refused",
             unread_fields: ["invoice_number", "grand_total", "invoice_date"],
             reader_error_type: "LLMContentionError",
-            failed_condition_id: null,
           }
         : tools.readerMissing
           ? withoutReader(["retencion_rate", "retencion_amount"])
@@ -1410,88 +1375,6 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       },
     };
   }
-  function readerReadiness(): JsonObject {
-    if (tools.readerMissing) return missingReader();
-    return {
-      profile_id: profileId,
-      host: {
-        state: "ready",
-        version: "0.9.2",
-        available: true,
-        failed_condition_id: null,
-      },
-      // Every reading runs with the one model the person picked.
-      roles: tools.readerUnselected
-        ? ["text_extraction", "vision_transcription"].map((role) => ({
-            role,
-            model: null,
-            installed: null,
-            ready: false,
-            failed_condition_id: SELECTED_MODEL_AVAILABLE,
-            // Setup cannot pick a model for the person: the check names none.
-            recovery_action_id: null,
-          }))
-        : [
-            {
-              role: "text_extraction",
-              model: "reader-text-small",
-              installed: true,
-              ready: true,
-              failed_condition_id: null,
-            },
-            tools.readerNoImages
-              ? {
-                  role: "vision_transcription",
-                  model: null,
-                  installed: null,
-                  ready: false,
-                  failed_condition_id: SELECTED_MODEL_READS_IMAGES,
-                  recovery_action_id: null,
-                }
-              : {
-                  role: "vision_transcription",
-                  model: "reader-text-small",
-                  installed: true,
-                  ready: true,
-                  failed_condition_id: null,
-                },
-          ],
-      extraction_ready: !tools.readerUnselected,
-      document_readiness:
-        tools.readerUnselected || tools.readerNoImages
-          ? "text_layer_only"
-          : "all_documents",
-      text_layer_model_fill_available: true,
-    };
-  }
-
-  /** The readers of a computer whose local AI program is not installed: the
-   * components role reports it absent, so no role can read. */
-  function missingReader(): JsonObject {
-    const role = (name: string) => ({
-      role: name,
-      model: null,
-      installed: null,
-      ready: false,
-      failed_condition_id: RUNTIME_REACHABLE,
-      // The components role names the local AI setup for an absent program.
-      recovery_action_id: LOCAL_AI_SETUP,
-    });
-    return {
-      profile_id: profileId,
-      host: {
-        state: "absent",
-        version: null,
-        available: false,
-        failed_condition_id: RUNTIME_REACHABLE,
-      },
-      roles: [role("text_extraction"), role("vision_transcription")],
-      extraction_ready: false,
-      document_readiness: "text_layer_only",
-      text_layer_model_fill_available: false,
-    };
-  }
-
   // ---- Links -------------------------------------------------------------------
 
   function movementOf(id: JsonValue | undefined): FixtureMovement {
@@ -1694,7 +1577,6 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
       "ledger.evidence.attachment_view": attachmentView,
       "ledger.evidence.page": page,
       "ledger.evidence.consent.list": consentList,
-      "ledger.evidence.reader-readiness": readerReadiness,
       "ledger.check": check,
     } satisfies Record<string, (request: JsonObject) => JsonObject>,
     writes: {

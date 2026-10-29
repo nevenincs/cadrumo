@@ -19,7 +19,6 @@ import type {
   FindingResolutionAction,
   InvoiceKind,
   JsonValue,
-  ReaderRole,
 } from "../../../shell/ledger";
 import {
   TAX_AMOUNT_RULE,
@@ -614,27 +613,3 @@ export function holdsUpdate(
 
 /** The name a file is shown by: the last part of what the result names. */
 export const fileName = (path: string) => path.split(/[\\/]/).pop() || path;
-
-/** The reader check's condition for a role the agent resolves no model
- * for. */
-const NO_USABLE_MODEL = "probe.selected_model.available";
-const READS_NO_IMAGES = "probe.selected_model.reads_images";
-
-/** What keeps documents from being read that the person settles by picking
- * another model in the agent's model picker; no setup supplies either. */
-export type ReaderProblems = {
-  /** No model is picked, or the agent cannot use the one picked. */
-  noModel: boolean;
-  /** The model picked is not stated to read images, which scanned pages need. */
-  cannotReadImages: boolean;
-};
-
-/** The model problems behind `roles` that are not ready, each said once. */
-export function readerProblems(roles: readonly ReaderRole[]): ReaderProblems {
-  const held = (condition: string) =>
-    roles.some((role) => !role.ready && role.failed_condition_id === condition);
-  return {
-    noModel: held(NO_USABLE_MODEL),
-    cannotReadImages: held(READS_NO_IMAGES),
-  };
-}

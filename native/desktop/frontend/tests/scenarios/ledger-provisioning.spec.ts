@@ -81,8 +81,9 @@ test("the Readers tab offers the local AI's setup and the panel sets it up", asy
   await openDocuments(target, "fresh");
   await tab(target, "readers").click();
   const readers = section(target).locator(".ledger-readers");
-  // A missing program is setup's to supply, not a model the person picks.
-  await expect(readers.locator(".ledger-reader-problem")).toHaveCount(0);
+  await expect(readers).toContainText(
+    label("desktop.ledger.documents.reader.unavailable"),
+  );
   const offer = readers.locator(".ledger-readers-set-up");
   await expect(offer).toContainText(LOCAL_AI);
   // The tab does not say the setup's state; the prompt does, once.
@@ -327,25 +328,6 @@ test("a PDF statement while the setup status cannot be read offers nothing", asy
   await expect(card.locator(".setup-held")).toHaveCount(0);
   await expect(card.getByRole("button")).toHaveCount(0);
   await expect(setupDialog(target)).toHaveCount(0);
-});
-
-test("a reading with no model picked offers the model picker, not setup", async ({
-  page: target,
-}) => {
-  await openDocuments(target, "fresh", "reader_unselected");
-  await tab(target, "readers").click();
-  const readers = section(target).locator(".ledger-readers");
-  const problem = readers.locator(".ledger-reader-problem");
-  await expect(problem).toHaveCount(1);
-  await expect(readers.locator(".setup-offer")).toHaveCount(0);
-  await problem
-    .getByRole("button", {
-      name: label("desktop.ledger.documents.reader.choose_model"),
-    })
-    .click();
-  await expect(
-    target.getByRole("dialog", { name: label("desktop.agent.settings_title") }),
-  ).toBeVisible();
 });
 
 test("a window that offers no setup offers nothing and opens nothing", async ({
