@@ -245,7 +245,7 @@ def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
     # while retaining the direct-literal rule for every other module.
     return bool(
         module is not None
-        and module.name == "commands.py"
+        and module.name == "command_parameters.py"
         and module.parent.name == "wizard"
         and isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
