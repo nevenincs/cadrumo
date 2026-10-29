@@ -159,6 +159,9 @@ foreach(helper assemble assembly_transaction service_descriptors stdlib package_
 endforeach()
 cadrumo_assembly_backend_inputs(assembly_backend_inputs "${PROJECT_SOURCE_DIR}" "${CADRUMO_BACKEND}")
 list(APPEND assembly_inputs ${assembly_backend_inputs})
+# The component engine's pin tables are staged whole beside the authority.
+file(GLOB component_pin_inputs CONFIGURE_DEPENDS "${PROJECT_SOURCE_DIR}/native/component-pins/*.toml")
+list(APPEND assembly_inputs ${component_pin_inputs})
 if(WIN32)
   list(APPEND assembly_inputs "${PROJECT_SOURCE_DIR}/dev/packaging/native/platforms/pe.py")
 endif()

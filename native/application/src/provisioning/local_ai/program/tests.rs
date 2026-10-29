@@ -21,11 +21,7 @@ use std::{
 };
 
 fn committed_pins() -> ProgramPins {
-    let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .unwrap();
-    ComponentPins::load(&checkout.join("src/cadrumo/_data/dependencies"))
+    ComponentPins::load(&crate::provisioning::pins::committed_tables())
         .unwrap()
         .program
         .unwrap()

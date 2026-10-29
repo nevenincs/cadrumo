@@ -17,7 +17,7 @@
     "native": "bin",
     "authority": "data/authority",
     "docs": "docs",
-    "component_pins": "cadrumo/site-packages/cadrumo/_data/dependencies"
+    "component_pins": "data/component-pins"
   },
   "files": {
     "path_file": "cadrumo/python.pth",

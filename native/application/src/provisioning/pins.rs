@@ -1,7 +1,7 @@
 //! The component pins: declarative package data that names the only bytes the engine accepts.
 //!
-//! Two tables sit together in the product package's `cadrumo/_data/dependencies`
-//! folder, which the package layout names `component_pins`.
+//! Two tables sit together in the product package's `data/component-pins` folder, which
+//! the package layout names `component_pins` and stages whole from `native/component-pins`.
 //!
 //! - `browser_archives.toml`: every archive the bundled Playwright driver's Chromium builds
 //!   need, per platform, with its build directory, sources, size and SHA-256.
@@ -26,6 +26,15 @@ use std::{collections::BTreeSet, path::Path};
 
 pub const BROWSER_ARCHIVES: &str = "browser_archives.toml";
 pub const LOCAL_AI_PROGRAM: &str = "local_ai_program.toml";
+
+/// The pin tables of this checkout, which the package stages as they are.
+#[cfg(test)]
+pub(crate) fn committed_tables() -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .unwrap()
+        .join("component-pins")
+}
 
 const TABLE_BYTES_LIMIT: u64 = 1024 * 1024;
 
@@ -373,23 +382,14 @@ fn archive_path(value: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::path::PathBuf;
-
-    fn committed() -> PathBuf {
-        let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(Path::parent)
-            .unwrap();
-        checkout.join("src/cadrumo/_data/dependencies")
-    }
 
     fn committed_text(name: &str) -> String {
-        std::fs::read_to_string(committed().join(name)).unwrap()
+        std::fs::read_to_string(committed_tables().join(name)).unwrap()
     }
 
     #[test]
     fn the_committed_tables_load_and_pin_every_supported_platform() {
-        let pins = ComponentPins::load(&committed()).unwrap();
+        let pins = ComponentPins::load(&committed_tables()).unwrap();
         let browser = pins.browser.unwrap();
         let program = pins.program.unwrap();
         for platform in [

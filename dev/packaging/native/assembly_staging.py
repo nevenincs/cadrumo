@@ -10,7 +10,7 @@ from contextlib import nullcontext
 from pathlib import Path
 from typing import Any, cast
 
-from dev._paths import REPO_ROOT
+from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
 
 from .agent_runtime import stage_agent_runtime
 from .agent_runtime_validation import load_runtime_declaration
@@ -180,9 +180,12 @@ def stage_binaries(
     native_manifest = _relocate_native(timings, contract, provenance, python, packages, native, root, reuse)
     modules = native_manifest["modules"]
     if not interpreter:
+        # The native component engine reads its pin tables from the package, beside the authority.
+        pins = root / layout["component_pins"]
+        shutil.copytree(COMPONENT_PINS_ROOT, pins, copy_function=reuse.copy)
         # The packaged browser setup refuses archives no pin authenticates, so a package whose own
         # pins do not cover its own Playwright driver could never set its browser up.
-        verify_browser_archive_coverage(packages, target)
+        verify_browser_archive_coverage(packages, pins, target)
     service_descriptors = None if interpreter else stage_service_descriptors(root, contract, staged_images)
     paths = native_manifest["python_paths"]
     relocation = native_manifest.pop("relocation")

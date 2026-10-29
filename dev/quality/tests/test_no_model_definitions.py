@@ -15,7 +15,7 @@ Scanned, by kind of file:
 - Python: every ``.py`` file under ``src/cadrumo``, ``src/cadrumo_runtime``,
   ``src/cadrumo_mcp``, ``src/cadrumo_client`` and ``src/cadrumo_agent_service``,
   except test directories and the shared test support in ``src/cadrumo/tests``.
-- TOML: every ``.toml`` file under ``src/cadrumo/_data/dependencies``.
+- TOML: every ``.toml`` file under ``native/component-pins``.
 - Rust: every ``.rs`` file under ``native/application`` and ``native/desktop``,
   tests included, so a fixture names a synthetic model such as
   ``synthetic-text:test`` and never a real one.
@@ -141,7 +141,7 @@ _PRODUCT_ROOTS: Final = (
     REPO_ROOT / "src" / "cadrumo_agent_service",
 )
 _TEST_SUPPORT: Final = REPO_ROOT / "src" / "cadrumo" / "tests"
-_DATA_ROOT: Final = REPO_ROOT / "src" / "cadrumo" / "_data" / "dependencies"
+_DATA_ROOT: Final = REPO_ROOT / "native" / "component-pins"
 _RUST_ROOTS: Final = (REPO_ROOT / "native" / "application", REPO_ROOT / "native" / "desktop")
 _TYPESCRIPT_ROOTS: Final = (REPO_ROOT / "native" / "desktop",)
 _TYPESCRIPT_SUFFIXES: Final = frozenset({".ts", ".tsx", ".mts", ".mjs", ".js"})

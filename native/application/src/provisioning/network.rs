@@ -179,6 +179,7 @@ mod tests {
     use super::*;
     use crate::provisioning::{
         connection::Resolve,
+        pins::committed_tables,
         proxy::{PROXY_URL, ProxySettings},
         test_servers::{
             ProxyAnswer, ProxyServer, Reply, Request, TestCertificate, TlsServer, network_nowhere,
@@ -349,11 +350,7 @@ mod tests {
 
     #[test]
     fn items_check_the_hosts_their_pins_declare() {
-        let checkout = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(std::path::Path::parent)
-            .unwrap();
-        let pins = ComponentPins::load(&checkout.join("src/cadrumo/_data/dependencies")).unwrap();
+        let pins = ComponentPins::load(&committed_tables()).unwrap();
         let browser = item_hosts(&pins, "browser").unwrap();
         assert!(browser.contains(&host("cdn.playwright.dev")));
         let local_ai = item_hosts(&pins, "local_ai").unwrap();

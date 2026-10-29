@@ -1,6 +1,6 @@
 """Generate and check the local AI program pins the product's component engine trusts.
 
-This regenerates ``src/cadrumo/_data/dependencies/local_ai_program.toml``. The
+This regenerates ``native/component-pins/local_ai_program.toml``. The
 pins cover the program archive per platform only: models are the person's
 selection, pulled through the program's server and verified by its own
 content-addressed manifests. It reads one Ollama release from the publisher's
@@ -42,17 +42,16 @@ from urllib.parse import urlsplit
 import httpx
 from pydantic import BaseModel, Field, PositiveInt, StringConstraints, field_validator, model_validator
 
-from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.toml import parse_toml
 from cadrumo.core.type_guards import is_object_list
 from dev import exit_codes
-from dev._paths import REPO_ROOT
+from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
 
-PINS_PATH: Final = REPO_ROOT / "src" / "cadrumo" / "_data" / "dependencies" / "local_ai_program.toml"
+PINS_PATH: Final = COMPONENT_PINS_ROOT / "local_ai_program.toml"
 
-#: The declared host group the program archives are fetched from.
-HOST_GROUP: Final = "model_runtime"
+#: The only hosts the program archives may be fetched from; the table names them for the engine.
+PROGRAM_HOSTS: Final[tuple[str, ...]] = ("github.com", "release-assets.githubusercontent.com")
 
 _RELEASES_API: Final = "https://api.github.com/repos/ollama/ollama/releases"
 _DOWNLOAD_PREFIX: Final = "https://github.com/ollama/ollama/releases/download"
@@ -173,7 +172,7 @@ def render_pins(pins: ProgramPins) -> str:
 
 def declared_hosts() -> frozenset[str]:
     """Return the hosts the program's downloads are declared to pass through."""
-    return frozenset(load_external_constants().dependency_hosts.hosts_for(HOST_GROUP))
+    return frozenset(PROGRAM_HOSTS)
 
 
 def check_pins(pins: ProgramPins, rendered: str) -> list[str]:

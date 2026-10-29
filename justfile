@@ -148,18 +148,20 @@ doctor-python:
 setup-browser:
     uv run --no-sync python -m dev.env.playwright_setup
 
-# Regenerate the browser archive pins after a Playwright upgrade: the size and
-# SHA-256 of every archive `playwright install chromium` downloads, per
-# platform. The product's browser setup accepts no other bytes. `--check`
-# compares the table with the locked driver without downloading.
+# Regenerate the browser archive pins (native/component-pins/browser_archives.toml)
+# after a Playwright upgrade: the size and SHA-256 of every archive
+# `playwright install chromium` downloads, per platform. The product's browser
+# setup accepts no other bytes. `--check` compares the table with the locked
+# driver without downloading.
 [doc('Pin the browser archives the bundled Playwright downloads.')]
 [group('setup')]
 pin-browser-archives *args:
     uv run --no-sync python -m dev.env.browser_archive_pins {{args}}
 
-# Regenerate the local AI program pins: the address, format, executable, size
-# and SHA-256 of the official Ollama standalone archive per platform of one
-# release, each downloaded once. The component engine accepts no other bytes.
+# Regenerate the local AI program pins (native/component-pins/local_ai_program.toml):
+# the address, format, executable, size and SHA-256 of the official Ollama
+# standalone archive per platform of one release, each downloaded once. The
+# component engine accepts no other bytes.
 # Models are not pinned: the person selects them and the program's server
 # verifies each pull by its own manifest. `--version` names the release.
 # `--check` validates the committed table and its declared hosts without

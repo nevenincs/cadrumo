@@ -18,6 +18,8 @@ from typing import Final
 
 REPO_ROOT: Final[Path] = Path(__file__).resolve().parents[1]
 UTF_8: Final[str] = "utf-8"
+COMPONENT_PINS_ROOT: Final[Path] = REPO_ROOT / "native" / "component-pins"
+"""The folder holding the pin tables the native component engine reads; assembly stages it whole."""
 
 # Standalone dev commands may not run from an editable installation. Make the
 # checkout's source package importable before dev tooling reaches its storage

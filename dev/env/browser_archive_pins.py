@@ -1,6 +1,6 @@
 """Generate and check the browser archive pins the product's browser setup trusts.
 
-``just pin-browser-archives`` regenerates ``src/cadrumo/_data/dependencies/
+``just pin-browser-archives`` regenerates ``native/component-pins/
 browser_archives.toml``. For every supported platform it asks the locked
 Playwright driver which archives ``install chromium`` would download (the
 driver's own ``--dry-run`` with its platform override, so nothing about the
@@ -8,7 +8,10 @@ selection is re-implemented here), downloads each archive once over HTTPS from
 the declared browser hosts, and records its path, sources, size and SHA-256.
 Run it after every Playwright upgrade, and review the diff: the pins are the
 only content authority for the browser, so a pin is a statement that these
-bytes are the ones this release ships against.
+bytes are the ones this release ships against. The native component engine
+downloads only pinned archives and refuses any byte that does not match its
+pin, so a substituted archive is never extracted or launched; the pins cannot
+prove the publisher's copy was genuine when it was pinned.
 
 ``--check`` downloads nothing. It compares the table with the locked driver's
 listings and the declared hosts and exits non-zero on any difference; the gate
@@ -29,24 +32,32 @@ import tempfile
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
+from typing import Annotated, Final, Literal
 from urllib.parse import urlsplit
 
 import httpx
-from cadrumo.application.browser_archive_pins import (
-    BROWSER_ARCHIVE_PINS_RESOURCE,
-    BrowserArchivePin,
-    BrowserArchivePins,
-    load_browser_archive_pins,
-)
+from pydantic import BaseModel, Field, PositiveInt, StringConstraints, field_validator, model_validator
 
-from cadrumo.core.external_constants import load_external_constants
+from cadrumo.core.models import STRICT_FROZEN_CONFIG
+from cadrumo.core.toml import parse_toml
+from cadrumo.core.type_guards import is_object_list
 from dev import exit_codes
-from dev._paths import REPO_ROOT
+from dev._paths import COMPONENT_PINS_ROOT, REPO_ROOT
 from dev.packaging.command_execution import run_command
 from dev.packaging.playwright_driver import installed_playwright_driver_version
 
-PINS_PATH: Final = REPO_ROOT.joinpath("src", "cadrumo", "_data", *BROWSER_ARCHIVE_PINS_RESOURCE)
+#: The only hosts the browser item's archives may be fetched from; the table names them for the engine.
+BROWSER_HOSTS: Final[tuple[str, ...]] = (
+    "cdn.playwright.dev",
+    "playwright.download.prss.microsoft.com",
+    "storage.googleapis.com",
+)
+
+#: The table's file name in the component pins folder, committed and staged under the same name.
+PINS_FILE: Final = "browser_archives.toml"
+
+#: The table the native component engine reads, beside the other component pins.
+PINS_PATH: Final = COMPONENT_PINS_ROOT / PINS_FILE
 
 #: The browser item's platform keys and the driver's own name for one representative host of each.
 #: The Chromium, headless-shell and FFmpeg archives do not vary by Linux distribution or macOS release.
@@ -57,6 +68,115 @@ PLAYWRIGHT_HOST_PLATFORMS: Final[Mapping[str, str]] = {
     "mac-x64": "mac15",
     "mac-arm64": "mac15-arm64",
 }
+
+#: The browser item's platform keys; each names one vendor build family.
+type BrowserArchivePlatform = Literal["win-x64", "linux-x64", "linux-arm64", "mac-x64", "mac-arm64"]
+
+type BrowserBuildDirectoryName = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]*-\d+$", max_length=96)]
+
+type _ArchivePath = Annotated[
+    str, StringConstraints(pattern=r"^builds(?:/[A-Za-z0-9][A-Za-z0-9._-]*)+\.zip$", max_length=512)
+]
+type _ArchiveUrl = Annotated[str, StringConstraints(pattern=r"^https://[a-z0-9.-]+/\S+$", max_length=2048)]
+type _Sha256 = Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]
+type _Host = Annotated[str, StringConstraints(pattern=r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$", max_length=253)]
+
+
+class BrowserArchivePin(BaseModel):
+    """One archive the installer fetches on one platform, and the exact bytes it must be.
+
+    ``path`` is where the installer asks for the archive under its download
+    host; each of ``urls`` is that path under one of the vendor's mirrors, in
+    the order the installer tries them.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    platform: BrowserArchivePlatform
+    directory_name: BrowserBuildDirectoryName
+    path: _ArchivePath
+    urls: tuple[_ArchiveUrl, ...] = Field(min_length=1)
+    download_bytes: PositiveInt
+    sha256: _Sha256
+
+    @field_validator("urls", mode="before")
+    @classmethod
+    def _urls_from_toml_array(cls, value: object) -> object:
+        return tuple(value) if is_object_list(value) else value
+
+    @model_validator(mode="after")
+    def _validate_pin(self) -> BrowserArchivePin:
+        if ".." in self.path.split("/"):
+            raise ValueError("an archive path stays under the download host")
+        if any(not url.endswith(f"/{self.path}") for url in self.urls):
+            raise ValueError("every source of an archive serves its pinned path")
+        if len(set(self.urls)) != len(self.urls):
+            raise ValueError("an archive names each source once")
+        return self
+
+
+class BrowserArchivePins(BaseModel):
+    """Every pinned archive of one Playwright driver version, across the supported platforms.
+
+    ``hosts`` are the declared browser hosts, the only ones a download may pass
+    through; the native component engine reads them from this table.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    playwright_driver: Annotated[str, StringConstraints(min_length=1, max_length=128)]
+    hosts: tuple[_Host, ...] = Field(min_length=1)
+    archives: tuple[BrowserArchivePin, ...] = Field(min_length=1)
+
+    @field_validator("hosts", "archives", mode="before")
+    @classmethod
+    def _tuple_from_toml_array(cls, value: object) -> object:
+        return tuple(value) if is_object_list(value) else value
+
+    @model_validator(mode="after")
+    def _validate_table(self) -> BrowserArchivePins:
+        directories = [(pin.platform, pin.directory_name) for pin in self.archives]
+        paths = [(pin.platform, pin.path) for pin in self.archives]
+        if len(set(directories)) != len(directories) or len(set(paths)) != len(paths):
+            raise ValueError("a platform pins each build directory and each path once")
+        if len(set(self.hosts)) != len(self.hosts):
+            raise ValueError("the table names each host once")
+        return self
+
+    def for_platform(self, platform: str) -> tuple[BrowserArchivePin, ...]:
+        """Return the archives pinned for ``platform``, in table order; empty when none are."""
+        return tuple(pin for pin in self.archives if pin.platform == platform)
+
+    def covering(
+        self, platform: str, driver_version: str | None, directory_names: Sequence[str]
+    ) -> tuple[BrowserArchivePin, ...] | None:
+        """Return ``platform``'s archives when they belong to ``driver_version`` and cover every named build.
+
+        ``None`` means this table cannot authenticate what the installed
+        driver would download: another driver version, or a build directory
+        the table does not pin for this platform.
+        """
+        if driver_version != self.playwright_driver:
+            return None
+        pins = self.for_platform(platform)
+        pinned = {pin.directory_name for pin in pins}
+        if not pins or not set(directory_names) <= pinned:
+            return None
+        return pins
+
+
+def load_browser_archive_pins(text: str | None = None) -> BrowserArchivePins | None:
+    """Return the committed pin table, or the one ``text`` holds; ``None`` when none is committed.
+
+    Raises:
+        pydantic.ValidationError: When the table is present but malformed.
+    """
+    if text is None:
+        if not PINS_PATH.is_file():
+            return None
+        text = PINS_PATH.read_text(encoding="utf-8")
+    return BrowserArchivePins.model_validate(parse_toml(text))
+
 
 #: A download host that cannot resolve, so the listing prints each archive's path beneath it.
 _PATH_PROBE_HOST: Final = "https://pin.invalid"
@@ -76,8 +196,8 @@ class ListedArchive:
 
 
 def _browser_hosts() -> tuple[str, ...]:
-    """Return the hosts the browser item's archives may come from, as the external constants declare them."""
-    return load_external_constants().dependency_hosts.hosts_for("browser")
+    """Return the hosts the browser item's archives may come from."""
+    return BROWSER_HOSTS
 
 
 def _driver_paths() -> tuple[Path, Path]:

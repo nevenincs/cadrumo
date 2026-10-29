@@ -24,8 +24,7 @@
   ],
   "paths": {
     "executable": "python",
-    "packages": "lib/cadrumo/site-packages",
-    "component_pins": "lib/cadrumo/site-packages/cadrumo/_data/dependencies"
+    "packages": "lib/cadrumo/site-packages"
   },
   "entrypoint_suffix": "",
   "application_images": [

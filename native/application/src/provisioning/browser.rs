@@ -1384,12 +1384,8 @@ pub(crate) mod tests {
 
     #[test]
     fn the_committed_pins_cover_the_bundled_drivers_builds_on_this_platform() {
-        let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(Path::parent)
-            .unwrap();
         let pins = crate::provisioning::pins::ComponentPins::load(
-            &checkout.join("src/cadrumo/_data/dependencies"),
+            &crate::provisioning::pins::committed_tables(),
         )
         .unwrap()
         .browser

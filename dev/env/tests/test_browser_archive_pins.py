@@ -9,13 +9,13 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.browser_archive_pins import BrowserArchivePins, load_browser_archive_pins
-
 from ..browser_archive_pins import (
     PINS_PATH,
+    BrowserArchivePins,
     ListedArchive,
     check_pins,
     listed_archives,
+    load_browser_archive_pins,
     locked_driver_version,
     parse_listing,
     render_pins,

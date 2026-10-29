@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from dev._paths import REPO_ROOT
+from dev._paths import COMPONENT_PINS_ROOT
 from dev.packaging.native.layout import entrypoint_files, load_layout
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -65,11 +65,11 @@ def test_checkout_layout_declares_the_runtime_entrypoint() -> None:
 
 
 @pytest.mark.parametrize("platform", ["windows-x64", "linux-x86-64", "linux-aarch64", "macos-arm64"])
-def test_every_platform_locates_the_component_pins_inside_its_staged_product_package(platform: str) -> None:
+def test_every_platform_stages_the_component_pins_beside_the_authority(platform: str) -> None:
     paths = load_layout(platform)["paths"]
 
-    assert paths["component_pins"] == f"{paths['packages']}/cadrumo/_data/dependencies"
-    staged = REPO_ROOT / "src" / Path(paths["component_pins"]).relative_to(paths["packages"])
-    staged_names = {child.name for child in staged.iterdir()}
+    assert paths["component_pins"] == "data/component-pins"
+    assert Path(paths["component_pins"]).parent == Path(paths["authority"]).parent
+    staged_names = {child.name for child in COMPONENT_PINS_ROOT.iterdir()}
     assert {"browser_archives.toml", "local_ai_program.toml"} <= staged_names
     assert "local_ai_models.toml" not in staged_names, "no model pins are staged; models are the person's selection"
