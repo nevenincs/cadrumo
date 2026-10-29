@@ -26,6 +26,9 @@ function Page({ mode, language }: { mode: AeatSyncMode; language: string }) {
         language={language}
         shown
         page={page}
+        onOpenAccess={noop}
+        onOpenAeat={noop}
+        onReviewCensus={noop}
       />
     </div>
   );

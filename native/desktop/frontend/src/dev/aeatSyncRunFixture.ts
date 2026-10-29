@@ -139,11 +139,13 @@ function snapshot(mode: AeatSyncRunMode): AeatSyncRunSnapshot | null {
 }
 
 /** The update's host port over demo data. Stop, a retry and a resume move the
- * demo along a step so each state can be followed; nothing is read. */
+ * demo along a step so each state can be followed; nothing is read. `begin`
+ * is a start asked of the host: the run goes on for a moment and then
+ * reaches `outcome`, where it stays. */
 export function aeatSyncRunFixture(
   mode: AeatSyncRunMode,
   say: (line: string) => void,
-): AeatSyncRunPort {
+): AeatSyncRunPort & { begin(outcome: AeatSyncRunMode): void } {
   let current = snapshot(mode);
   const listeners = new Set<() => void>();
   const push = () => listeners.forEach((listener) => listener());
@@ -163,6 +165,15 @@ export function aeatSyncRunFixture(
       })),
     }));
   return {
+    begin(outcome) {
+      current = snapshot("running");
+      push();
+      if (outcome !== "running")
+        setTimeout(() => {
+          current = snapshot(outcome);
+          push();
+        }, 700);
+    },
     progress: () => Promise.resolve(current),
     observe(changed) {
       listeners.add(changed);

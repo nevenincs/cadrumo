@@ -1,4 +1,4 @@
-import { memo, useCallback, useState, type RefObject } from "react";
+import { memo, useCallback, useRef, useState, type RefObject } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,9 +16,18 @@ import {
   type AeatSyncPort,
   type AeatSyncState,
 } from "../../shell/aeatSync";
+import type { AeatSyncPreparePort } from "../../shell/aeatSyncPrepare";
 import type { AeatSyncResultsPort } from "../../shell/aeatSyncResults";
+import {
+  aeatSyncRunProblems,
+  useAeatSyncRun,
+  type AeatSyncRunPort,
+} from "../../shell/aeatSyncRun";
 import { useStrings, type Translate } from "../../shell/strings";
+import { AeatSyncFlow } from "./AeatSyncFlow";
+import { AeatSyncRunView } from "./AeatSyncProgress";
 import { BorradorImport } from "./BorradorImport";
+import { Results } from "./Results";
 
 // An icon and a token colour for each standing, so the state reads at a glance.
 const STATE_LOOK: Record<AeatSyncState, { icon: IconName; tone: string }> = {
@@ -65,11 +74,18 @@ function lastTry(t: Translate, locale: string, area: AeatSyncArea) {
   return t(`desktop.aeat_sync.attempt.${attempt.outcome}`, { date });
 }
 
+// Where the page stands: the overview of what was brought, the checks before
+// an update, or the update itself and then its results.
+type Stage = { kind: "overview" } | { kind: "before" } | { kind: "update" };
+
 /**
  * What the person has from AEAT, area by area: whether it was ever brought,
  * how current it is and the counts the host serves, with a way to bring it
- * again. It draws served values only; the host owns what is current.
- * `results` carries the Borrador import; without it the import is off.
+ * again. An update checks what it needs (saying so only when something
+ * blocks), runs in view and ends in its results; an update still going is
+ * shown again when the page is. It draws served values only; the host owns
+ * what is current. `results` carries the Borrador import and the results;
+ * without `prepare` and `run` an update is only asked of the host.
  */
 export const AeatSyncPage = memo(function AeatSyncPage({
   port,
@@ -78,6 +94,11 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   shown,
   page,
   results,
+  run: runPort,
+  prepare,
+  onOpenAccess,
+  onOpenAeat,
+  onReviewCensus,
 }: {
   port: AeatSyncPort;
   reader: string;
@@ -86,25 +107,66 @@ export const AeatSyncPage = memo(function AeatSyncPage({
   /** The page's own element, for whoever sends focus to it. */
   page: RefObject<HTMLElement | null>;
   results?: AeatSyncResultsPort;
+  run?: AeatSyncRunPort;
+  prepare?: AeatSyncPreparePort;
+  /** Opens the existing AEAT access editor in the profile. */
+  onOpenAccess(): void;
+  /** Opens the in-app AEAT browser. */
+  onOpenAeat(): void;
+  /** Goes to the one review of the census against the profile. */
+  onReviewCensus(): void;
 }) {
   const t = useStrings();
   const status = useAeatSync(port, reader, language, shown);
   const [starting, setStarting] = useState(false);
   const [failure, setFailure] = useState<"failed" | "unknown" | null>(null);
+  const [stage, setStage] = useState<Stage>({ kind: "overview" });
+  // A paused update the person chose to leave for now.
+  const [parked, setParked] = useState(false);
+  const wanted = useRef<AeatSyncAreaId[]>([]);
   const { refresh } = status;
   const profile = status.data?.profile_id;
+  const connected = prepare !== undefined && runPort !== undefined;
+  const run = useAeatSyncRun(
+    connected ? runPort : undefined,
+    profile ?? null,
+    shown,
+  );
+  const snapshot = run.snapshot;
+  const going =
+    snapshot !== null &&
+    (snapshot.state === "running" ||
+      snapshot.state === "stopping" ||
+      snapshot.state === "paused");
+  // An update going on is followed to its results, also when the page came
+  // upon it already going.
+  if (connected && going && !parked && stage.kind === "overview")
+    setStage({ kind: "update" });
+  const request = useCallback(
+    async (areas: AeatSyncAreaId[]) => {
+      if (profile === undefined) return;
+      await port.start(profile, {
+        areas: areas.filter(
+          (area): area is AeatSyncBringArea => area !== "borrador",
+        ),
+        dry_run: false,
+      });
+    },
+    [port, profile],
+  );
   const start = useCallback(
     async (areas: AeatSyncAreaId[]) => {
       if (profile === undefined) return;
-      setStarting(true);
       setFailure(null);
+      if (connected) {
+        wanted.current = areas;
+        setParked(false);
+        setStage({ kind: "before" });
+        return;
+      }
+      setStarting(true);
       try {
-        await port.start(profile, {
-          areas: areas.filter(
-            (area): area is AeatSyncBringArea => area !== "borrador",
-          ),
-          dry_run: false,
-        });
+        await request(areas);
       } catch (error) {
         setFailure(aeatSyncFailure(error) === "unknown" ? "unknown" : "failed");
       } finally {
@@ -112,8 +174,32 @@ export const AeatSyncPage = memo(function AeatSyncPage({
         refresh();
       }
     },
-    [port, profile, refresh],
+    [connected, profile, refresh, request],
   );
+  // The checks passed and the person is signed in: the update is asked of
+  // the host, and the page follows it.
+  const checked = useCallback(async () => {
+    try {
+      await request(wanted.current);
+      setStage({ kind: "update" });
+    } catch (error) {
+      setFailure(aeatSyncFailure(error) === "unknown" ? "unknown" : "failed");
+      setStage({ kind: "overview" });
+    } finally {
+      refresh();
+    }
+  }, [request, refresh]);
+  const leave = useCallback(() => setStage({ kind: "overview" }), []);
+  const park = useCallback(() => {
+    setParked(true);
+    setStage({ kind: "overview" });
+  }, []);
+  const finish = useCallback(() => {
+    setStage({ kind: "overview" });
+    refresh();
+  }, [refresh]);
+  const { resume } = run;
+  const signedBackIn = useCallback(() => void resume(), [resume]);
 
   const served = new Map(status.data?.areas.map((a) => [a.area, a]));
   const rows = AEAT_SYNC_AREAS.map((id) => ({ id, area: served.get(id) }));
@@ -121,17 +207,87 @@ export const AeatSyncPage = memo(function AeatSyncPage({
     .filter((area) => area.update === "bring")
     .map((area) => area.area);
 
+  const shell =
+    "aeat-sync-page @container/aeat relative flex min-h-0 flex-1 flex-col overflow-y-auto outline-none";
+  const ended = snapshot?.state === "done" || snapshot?.state === "stopped";
+  if (prepare && connected && stage.kind === "before")
+    return (
+      <section
+        ref={page}
+        tabIndex={-1}
+        aria-label={t("desktop.aeat_sync.title")}
+        className={shell}
+      >
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+          <AeatSyncFlow
+            port={prepare}
+            locale={language}
+            onReady={checked}
+            onClose={leave}
+            onOpenAccess={onOpenAccess}
+          />
+        </div>
+      </section>
+    );
+  if (prepare && connected && snapshot !== null && stage.kind === "update")
+    return (
+      <section
+        ref={page}
+        tabIndex={-1}
+        aria-label={t("desktop.aeat_sync.title")}
+        className={shell}
+      >
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
+          {ended && (
+            <div className="flex justify-end">
+              <Button onClick={finish}>
+                {t("desktop.aeat_sync.progress.done_all")}
+              </Button>
+            </div>
+          )}
+          {/* A finished update with every part in order is told by its
+              results alone. */}
+          {(!ended ||
+            snapshot.state === "stopped" ||
+            aeatSyncRunProblems(snapshot) > 0) && (
+            <AeatSyncRunView
+              run={run}
+              paused={
+                <AeatSyncFlow
+                  port={prepare}
+                  locale={language}
+                  reason="session_ended"
+                  onReady={signedBackIn}
+                  onClose={park}
+                  onOpenAccess={onOpenAccess}
+                />
+              }
+            />
+          )}
+          {ended && results && profile !== undefined && (
+            <Results
+              port={results}
+              profile={profile}
+              language={language}
+              onOpenAeat={onOpenAeat}
+              onReviewCensus={onReviewCensus}
+            />
+          )}
+        </div>
+      </section>
+    );
+
   return (
     <section
       ref={page}
       tabIndex={-1}
       aria-label={t("desktop.aeat_sync.title")}
-      className="aeat-sync-page @container/aeat relative flex min-h-0 flex-1 flex-col overflow-y-auto outline-none"
+      className={shell}
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-4 p-4">
         <div className="flex justify-end">
           <Button
-            disabled={starting || bringable.length === 0}
+            disabled={starting || going || bringable.length === 0}
             onClick={() => void start(bringable)}
           >
             {starting ? <Spinner /> : <Icon name="sync" size="sm" />}
@@ -204,7 +360,7 @@ export const AeatSyncPage = memo(function AeatSyncPage({
                         aria-label={t("desktop.aeat_sync.update_area", {
                           area: name,
                         })}
-                        disabled={starting || !area}
+                        disabled={starting || going || !area}
                         onClick={() => void start([id])}
                       >
                         {t("desktop.aeat_sync.update")}

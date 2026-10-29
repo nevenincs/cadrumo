@@ -354,6 +354,8 @@ function Summary({
   );
 }
 
+type Run = ReturnType<typeof useAeatSyncRun>;
+
 /**
  * The update from AEAT as it goes: each kind of data in the order it is read,
  * saying in plain words what is happening and how each part came out. Stop is
@@ -361,19 +363,18 @@ function Summary({
  * again only when the person presses; a part whose outcome is unknown is
  * never shown as done or as failed, and is read again only after the person
  * is told it may already have been brought. The host owns the queue and the
- * outcomes; this draws what it serves.
+ * outcomes; this draws what it serves. `paused` replaces the sign-in prompt
+ * of a run whose AEAT session ended, for a caller that signs in itself before
+ * it resumes the run.
  */
-export function AeatSyncProgress({
-  port,
-  reader,
-  shown = true,
+export function AeatSyncRunView({
+  run,
+  paused,
 }: {
-  port: AeatSyncRunPort;
-  reader: string;
-  shown?: boolean;
+  run: Run;
+  paused?: ReactNode;
 }) {
   const t = useStrings();
-  const run = useAeatSyncRun(port, reader, shown);
   const [confirming, setConfirming] = useState<number | null>(null);
   const { snapshot } = run;
   return (
@@ -412,20 +413,21 @@ export function AeatSyncProgress({
             busy={run.busy}
             onStop={() => void run.stop()}
           />
-          {snapshot.state === "paused" && (
-            <Alert tone="warning" icon={<Icon name="alert" />}>
-              <AlertTitle>{t(`${KEY}paused`)}</AlertTitle>
-              <span className="mt-1">
-                <Button
-                  size="sm"
-                  disabled={run.busy}
-                  onClick={() => void run.resume()}
-                >
-                  {t(`${KEY}resume`)}
-                </Button>
-              </span>
-            </Alert>
-          )}
+          {snapshot.state === "paused" &&
+            (paused ?? (
+              <Alert tone="warning" icon={<Icon name="alert" />}>
+                <AlertTitle>{t(`${KEY}paused`)}</AlertTitle>
+                <span className="mt-1">
+                  <Button
+                    size="sm"
+                    disabled={run.busy}
+                    onClick={() => void run.resume()}
+                  >
+                    {t(`${KEY}resume`)}
+                  </Button>
+                </span>
+              </Alert>
+            ))}
           <ul aria-label={t(`${KEY}title`)} className="flex flex-col gap-3">
             {snapshot.areas.map((area) => (
               <AreaRow
@@ -445,4 +447,17 @@ export function AeatSyncProgress({
       )}
     </section>
   );
+}
+
+/** The update as it goes, followed from `port` for the profile `reader`. */
+export function AeatSyncProgress({
+  port,
+  reader,
+  shown = true,
+}: {
+  port: AeatSyncRunPort;
+  reader: string;
+  shown?: boolean;
+}) {
+  return <AeatSyncRunView run={useAeatSyncRun(port, reader, shown)} />;
 }

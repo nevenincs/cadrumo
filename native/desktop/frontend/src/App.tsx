@@ -2867,6 +2867,10 @@ export function App({ host }: { host: Host }) {
           reader={reader}
           workUnitId={openDeclaration.workUnitId}
           onOpen={openWorkUnit}
+          // The one census flow, as the palette offers it.
+          onCensus={
+            signedIn && host.censo && host.userProfile ? askCenso : undefined
+          }
           onBack={() => guarded(() => openWorkUnit(null))}
           onOpenSurface={(surface) => {
             if (surface === "declarations") guarded(() => openWorkUnit(null));
@@ -3094,6 +3098,11 @@ export function App({ host }: { host: Host }) {
             shown={firstPaneShown}
             page={aeatSyncPage}
             results={host.aeatSyncResults}
+            run={host.aeatSyncRun}
+            prepare={host.aeatSyncPrepare}
+            onOpenAccess={() => openView("profile/aeat-access")}
+            onOpenAeat={() => openView("browser")}
+            onReviewCensus={askCenso}
           />
         ) : (
           <SignedOut

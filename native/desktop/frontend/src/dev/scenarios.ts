@@ -7,6 +7,9 @@
 import type { LedgerShape } from "./ledgerFixture";
 import type { CensoMode } from "./censoFixture";
 import type { AeatSyncMode } from "./aeatSyncFixture";
+import type { AeatSyncPrepareMode } from "./aeatSyncPrepareFixture";
+import type { AeatSyncResultsMode } from "./aeatSyncResultsFixture";
+import type { AeatSyncRunMode } from "./aeatSyncRunFixture";
 import type { SetupShape } from "./setupFixture";
 import type {
   HostErrorCode,
@@ -31,6 +34,14 @@ export type Scenario = {
   /** The AEAT data page: left out, some areas were brought and some were
    * not. */
   aeatSync?: AeatSyncMode;
+  /** What an update from the AEAT data page meets: the check before it
+   * (left out, nothing blocks), where its run ends (left out, everything is
+   * brought) and the results afterwards (left out, a mix). */
+  aeatUpdate?: {
+    before?: AeatSyncPrepareMode;
+    run?: AeatSyncRunMode;
+    results?: AeatSyncResultsMode;
+  };
   /** The Sede browser: left out, it opens; `browser_missing`, the runtime
    * refuses every view for want of the browser and names its setup. */
   sedeView?: "browser_missing";
@@ -272,6 +283,96 @@ export const SCENARIOS: readonly Scenario[] = [
     title: "AEAT data: what was brought and when",
     summary:
       "Open AEAT data from the palette: six areas, each with its state, its date and the counts it serves. Bringing data is recorded and changes nothing.",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-running",
+    title: "AEAT data: an update that keeps going",
+    summary:
+      "Update from AEAT: the page follows the run, which keeps going until it is stopped.",
+    aeatUpdate: { run: "running" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-browser",
+    title: "AEAT data: the secure browser is not installed",
+    summary:
+      "Update from AEAT stops for the missing secure browser, installs it, and goes on by itself.",
+    aeatUpdate: { before: "browser_missing" },
+    setup: "fresh",
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-access",
+    title: "AEAT data: AEAT access not set up",
+    summary:
+      "Update from AEAT stops for want of AEAT access and leads to the access editor in the profile.",
+    aeatUpdate: { before: "access_missing" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-timeout",
+    title: "AEAT data: the AEAT session times out",
+    summary:
+      "An update pauses when AEAT ends the session; signing in again carries it on.",
+    aeatUpdate: { run: "paused" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-partial",
+    title: "AEAT data: some parts could not be updated",
+    summary: "An update ends with a failed year and a failed area.",
+    aeatUpdate: { run: "partial_failure", results: "failed" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-unknown",
+    title: "AEAT data: an outcome that could not be confirmed",
+    summary:
+      "An update ends with parts whose outcome is unknown; reading them again is warned first.",
+    aeatUpdate: { run: "unknown", results: "unknown" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-quiet",
+    title: "AEAT data: nothing new",
+    summary: "An update ends and AEAT had nothing new.",
+    aeatUpdate: { run: "nothing_found", results: "quiet" },
     signIn: {
       status: { ...signedOut, state: "present" },
       profile: "Ana Soler",

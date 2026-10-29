@@ -4,9 +4,7 @@ import {
   aeatSyncRunFixture,
   type AeatSyncRunMode,
 } from "@/dev/aeatSyncRunFixture";
-import { withPendingWords } from "@/dev/aeatSyncRunWords";
 import type { AeatSyncRunPort } from "../../shell/aeatSyncRun";
-import { StringsContext } from "../../shell/strings";
 import { AeatSyncProgress } from "./AeatSyncProgress";
 
 // The update from AEAT as it goes, over the scenario port's demo run: under
@@ -16,34 +14,20 @@ import { AeatSyncProgress } from "./AeatSyncProgress";
 
 const noop = () => undefined;
 
-function Progress({
-  mode,
-  language,
-}: {
-  mode: AeatSyncRunMode;
-  language: string;
-}) {
+function Progress({ mode }: { mode: AeatSyncRunMode }) {
   const port = useRef<AeatSyncRunPort | null>(null);
   port.current ??= aeatSyncRunFixture(mode, noop);
   return (
-    <StringsContext value={withPendingWords(language)}>
-      <div className="mx-auto w-full max-w-3xl p-4">
-        <AeatSyncProgress port={port.current} reader="synthetic" />
-      </div>
-    </StringsContext>
+    <div className="mx-auto w-full max-w-3xl p-4">
+      <AeatSyncProgress port={port.current} reader="synthetic" />
+    </div>
   );
 }
 
 const meta: Meta<typeof Progress> = {
   title: "AEAT data/Bringing",
   component: Progress,
-  render: (args, { globals }) => (
-    <Progress
-      key={args.mode}
-      {...args}
-      language={String(globals.locale ?? "en")}
-    />
-  ),
+  render: (args) => <Progress key={args.mode} {...args} />,
   parameters: { fill: true, layout: "fullscreen" },
 };
 export default meta;

@@ -25,6 +25,9 @@ import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
 import { userProfileFixture } from "./userProfileFixture";
 import { aeatSyncFixture } from "./aeatSyncFixture";
+import { aeatSyncPrepareFixture } from "./aeatSyncPrepareFixture";
+import { aeatSyncResultsFixture } from "./aeatSyncResultsFixture";
+import { aeatSyncRunFixture } from "./aeatSyncRunFixture";
 import type { Host } from "../shell/host";
 import type { AgentServiceStatus } from "../shell/agentSession";
 import type { ProfileAccounts } from "../shell/profiles";
@@ -581,6 +584,17 @@ export function scenarioHost(
       })
     : undefined;
 
+  // The update from AEAT: its check reads the browser from the made-up
+  // setup, so installing it there is what lets the update go on.
+  const aeatUpdate = scenario.aeatUpdate ?? {};
+  let aeatBrowserReady = false;
+  void setup?.observe((state) => {
+    aeatBrowserReady =
+      state.snapshot?.rows.find((row) => row.kind === "browser")?.state ===
+      "ready";
+  });
+  const aeatSyncRun = aeatSyncRunFixture("idle", say);
+
   let languageRevision = 0;
   let outputLanguage = options.language;
   let refuseLanguageSet = false;
@@ -693,7 +707,20 @@ export function scenarioHost(
           views,
           ledger,
           modelo,
-          aeatSync: aeatSyncFixture(scenario.aeatSync ?? "mixed", say),
+          aeatSync: aeatSyncFixture(scenario.aeatSync ?? "mixed", say, () =>
+            aeatSyncRun.begin(aeatUpdate.run ?? "done"),
+          ),
+          aeatSyncRun,
+          aeatSyncResults: aeatSyncResultsFixture(
+            aeatUpdate.results ?? "mixed",
+            say,
+          ),
+          aeatSyncPrepare: aeatSyncPrepareFixture(
+            aeatUpdate.before ?? "ready",
+            {
+              browserReady: () => aeatBrowserReady,
+            },
+          ),
           sedeView: sedeViewFixture({
             say,
             ...(scenario.sedeView === "browser_missing"

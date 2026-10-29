@@ -89,10 +89,11 @@ function never(): AeatSyncArea[] {
 }
 
 /** The AEAT data page's host port over demo data. A start is recorded and
- * changes nothing, as no flow is behind it here. */
+ * tells `started`, which stands for the run the host would begin. */
 export function aeatSyncFixture(
   mode: AeatSyncMode,
   say: (line: string) => void,
+  started: () => void = () => undefined,
 ): AeatSyncPort {
   const listeners = new Set<() => void>();
   return {
@@ -111,6 +112,7 @@ export function aeatSyncFixture(
     },
     start(_profile: string, request: AeatSyncStart) {
       say(`aeatSync.start ${request.areas.join(",")}`);
+      started();
       listeners.forEach((listener) => listener());
       return Promise.resolve();
     },

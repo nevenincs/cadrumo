@@ -29,7 +29,9 @@ export function aeatSyncPrepareFixture(
   let cancel: (() => void) | null = null;
   return {
     prepare: (): Promise<AeatSyncPrepared> => {
-      const installed = mode === "ready" || options.browserReady?.() === true;
+      const installed =
+        (mode !== "browser_missing" && mode !== "browser_attention") ||
+        options.browserReady?.() === true;
       return Promise.resolve({
         browser: installed
           ? { state: "ready" }
