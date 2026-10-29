@@ -50,7 +50,6 @@ if TYPE_CHECKING:
 _RESOLVED_PROFILE_TARGET_KEY = "cadrumo.resolved_profile_target"
 _PROFILE_CONNECTION_KEYS = frozenset(
     {
-        "config_check",
         "config_google_folder_view",
         "config_google_folder_organize",
         "config_google_probe",

@@ -190,8 +190,7 @@ class CliCommandGroupUnavailableError(CadrumoError):
     Degrading that case to an unavailable-command placeholder would turn a hard
     dependency failure into an invisible capability loss — the whole subtree
     would answer every invocation with a plausible refusal while naming no
-    cause. This refusal names the module, the group it broke, and the
-    reinstall remedy instead.
+    cause. This refusal names the module and the group it broke instead.
 
     Attributes:
         group: The command-group name whose subtree failed to load.

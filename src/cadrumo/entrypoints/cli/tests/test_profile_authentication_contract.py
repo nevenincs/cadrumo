@@ -184,7 +184,6 @@ def test_profile_authentication_posture_is_graph_and_exemption_derived() -> None
     # declaration more and the same family is gated again.
     for profile_free in ("modelo.list", "ledger.categories", "config.storage.list"):
         assert postures[profile_free] is ProfileAuthenticationPosture.NOT_APPLICABLE, profile_free
-    assert postures["config.check"] is ProfileAuthenticationPosture.RESUME_FALLBACK
     metadata = {row.command: row.profile_authentication for row in command_registration_metadata()}
     assert metadata == {identity: posture.value for identity, posture in postures.items() if identity is not None}
 

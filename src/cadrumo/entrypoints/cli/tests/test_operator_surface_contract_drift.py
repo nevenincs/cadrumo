@@ -10,7 +10,7 @@ Without this gate the contract is self-referential: the sibling
 ``test_required_children_match_mounted_command_families`` checks the contract
 against itself, and the manifest tests check it against the same
 contract. Neither resolves the real Typer tree, so a whole family
-(``config google``, ``config check``, ``config reset``) or a sub-verb (every
+(``config google``, ``config repair``, ``config reset``) or a sub-verb (every
 ``app live`` child but ``filed``) could be — and was — absent from the manifest
 while the CLI mounted it, handing its reader an authoritative-looking tool map with
 holes.
