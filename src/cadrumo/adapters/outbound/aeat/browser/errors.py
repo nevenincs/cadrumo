@@ -32,6 +32,7 @@ class BrowserPreconditionCondition(StrEnum):
     """Stable failed conditions observed at the AEAT browser boundary."""
 
     OPTIONAL_EXTRA_AVAILABLE = "aeat.browser.optional_extra.available"
+    BROWSER_AVAILABLE = "aeat.browser.available"
     RUNTIME_STARTABLE = "aeat.browser.runtime.startable"
     RUNTIME_STOPPABLE = "aeat.browser.runtime.stoppable"
     SESSION_AVAILABLE = "aeat.browser.session.available"
@@ -140,10 +141,10 @@ class BrowserFailureMode(StrEnum):
 
 
 class BrowserNotReadyError(BrowserError):
-    """Raised when browser work starts while the browser is not available.
+    """Raised when launching the browser finds no browser build to launch.
 
-    A refusal rather than a failure: it is raised before any browser, driver,
-    certificate or secret is touched, so the operation it stops had no effect.
+    A refusal rather than a failure: no browser started, so the launch it
+    stops had no effect.
 
     Its failure mode is always :attr:`BrowserFailureMode.BROWSER_NOT_AVAILABLE`
     and is read from the class. The base keeps the mode in the error context and
@@ -160,6 +161,6 @@ class BrowserNotReadyError(BrowserError):
         translated_message: str,
         precondition_verdict: PreconditionVerdict | None,
     ) -> None:
-        """Construct the refusal from its message key and the probe's verdict."""
+        """Construct the refusal from its message key and its verdict."""
         super().__init__(message, translated_message=translated_message, precondition_verdict=precondition_verdict)
         del self.failure_mode

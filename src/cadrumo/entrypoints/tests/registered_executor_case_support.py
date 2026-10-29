@@ -24,7 +24,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ...adapters.outbound.aeat.browser.tests.installed_builds import with_installed_browser
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -465,9 +464,6 @@ def conformance_operation_runtime(
     with (
         override_settings(cadrumo_auth_provider=AuthProviderKind.CERTIFICATE, cadrumo_certificate_path=None),
         isolated_profile_storage_root(tmp_path=tmp_path) as root,
-        # The suite proves each executor reaches its sign-in precondition, so the
-        # browser is present under this private root whatever the host has installed.
-        with_installed_browser(root / "browsers"),
     ):
         enrolled = register_profile_with_credentials(
             label="S45 registered executor subject",
@@ -682,8 +678,7 @@ def seeded_conformance_operation_submission(
     )
     evidence_case = (
         prepare_invoice_evidence_conformance_case(definition.definition_id, profile_id=profile_id, operation=operation)
-        if definition.definition_id
-        in {"ledger.evidence.reader-readiness", "ledger.evidence.extract", "ledger.evidence.confirm"}
+        if definition.definition_id in {"ledger.evidence.extract", "ledger.evidence.confirm"}
         else None
     )
     if family_preparation is not None:

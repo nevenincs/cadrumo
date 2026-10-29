@@ -75,31 +75,27 @@ logger = get_logger(__name__)
 #: The refusal for a browser that is not available.
 _BROWSER_NOT_AVAILABLE_KEY = "adapters.browser.errors.not_available"
 
+#: The sentence Playwright's launch raises when the browser build it names is not in the browsers folder.
+_MISSING_EXECUTABLE_MARKER = "Executable doesn't exist"
 
-def require_browser_ready(settings: Settings, *, profile_name: str) -> None:
-    """Refuse browser work while the browser is not available.
 
-    This is the one browser readiness check. Tax agency read and sign-in
-    operations call it when they start, before they load a certificate or a
-    secret, and :class:`BrowserSession` calls it again before every launch.
-    It locates the installed browser builds and probes nothing itself. The
-    refusal carries the locate step's verdict, so every caller refuses the
-    same way.
-    """
-    from .....application.browser_location import probe_playwright_browser
-
-    status = probe_playwright_browser(settings=settings)
-    if status.available:
-        return
+def _browser_not_available(exc: BaseException, *, profile_name: str) -> BrowserNotReadyError | None:
+    """Return the plain refusal when ``exc`` is Playwright finding no browser to launch, else ``None``."""
+    if not isinstance(exc, PlaywrightError) or _MISSING_EXECUTABLE_MARKER not in exc.message:
+        return None
     logger.error(
         "browser work refused failure_mode=%s profile=%s",
         BrowserFailureMode.BROWSER_NOT_AVAILABLE,
         profile_name,
     )
-    raise BrowserNotReadyError(
+    return BrowserNotReadyError(
         "Chromium browser build is not available",
         translated_message=_BROWSER_NOT_AVAILABLE_KEY,
-        precondition_verdict=status.precondition_verdict,
+        precondition_verdict=browser_no_action_verdict(
+            condition=BrowserPreconditionCondition.BROWSER_AVAILABLE,
+            facts={"browser_available": False},
+            outcome=NoRecoveryOutcome.OPERATOR_DECISION,
+        ),
     )
 
 
@@ -313,10 +309,6 @@ class BrowserSession:
 
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's headless/proxy config; raise BrowserError on failure."""
-        # Playwright-managed Chromium is the only supported browser. Checking
-        # again here keeps a missing build from surfacing as Playwright's raw
-        # missing-executable error when a caller skipped its own start check.
-        require_browser_ready(self.settings, profile_name=self.profile.name)
         try:
             root = self.settings.cadrumo_chromium_data_root
             root.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -361,6 +353,9 @@ class BrowserSession:
                 raise InternalInvariantError("Chromium context has no browser owner")
             return browser
         except Exception as exc:
+            refusal = _browser_not_available(exc, profile_name=self.profile.name)
+            if refusal is not None:
+                raise refusal from None
             logger.error(
                 "browser launch failed failure_mode=%s profile=%s headless=%s has_proxy=%s exc_type=%s",
                 BrowserFailureMode.BROWSER_LAUNCH_FAILED,

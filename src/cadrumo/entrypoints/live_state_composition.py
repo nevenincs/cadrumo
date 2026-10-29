@@ -22,7 +22,6 @@ from cadrumo_client.contracts.contracts import RefusalError
 
 from ..adapters.inbound.notificacion.document_reader import NotificationDocumentReader
 from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from ..adapters.outbound.aeat.browser.session import require_browser_ready
 from ..adapters.outbound.aeat.sede.declarations import (
     DeclaracionesRegisterSession,
     open_declarations_register,
@@ -158,14 +157,9 @@ _WALLET_DIRNAME = Path(storage_location(StorageCategory.LIVE_STATE_IVA_WALLET).s
 
 
 def preflight_filed_history_provider(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
-    """Probe browser and provider readiness in the exact profile worker before remote work.
-
-    The browser is checked first: provider readiness reads the configured
-    credentials, and none of them is touched while the browser is not set up.
-    """
+    """Check the configured provider credentials in the exact profile worker before remote work."""
     from .auth_read_composition import compose_auth_read_ports
 
-    require_browser_ready(load_settings(), profile_name=str(profile_id))
     ports = compose_auth_read_ports(profile_id)
     report = build_auth_sync_readiness(
         certificate_secret_backend_factory=ports.certificate_secret_backend_factory,

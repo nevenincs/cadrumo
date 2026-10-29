@@ -180,7 +180,6 @@ def build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggregat
 def build_auth_operation_ports(operator_scope_ports: OperatorScopePorts | None = None) -> AuthOperationPorts:
     """Compose the outer capabilities the registered auth executors run against."""
     from ..adapters.outbound.aeat.browser.factory import default_browser_session_factory
-    from ..adapters.outbound.aeat.browser.session import require_browser_ready
     from ..adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from ..adapters.persistence.storage.operator_scope import build_operator_scope_ports
     from ..application.auth.operation_definitions import AuthOperationPorts
@@ -189,7 +188,6 @@ def build_auth_operation_ports(operator_scope_ports: OperatorScopePorts | None =
     return AuthOperationPorts(
         certificate_secret_backend_factory=build_certificate_secret_backend,
         browser_session_factory=default_browser_session_factory,
-        browser_readiness=require_browser_ready,
         operator_probe_ports=build_operator_probe_ports(),
         operator_scope_ports=operator_scope_ports or build_operator_scope_ports(),
     )
@@ -224,12 +222,10 @@ async def acquire_registry_verify_observation(
 
 
 def verify_live_preflight(settings: Settings, profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
-    """Refuse a live identity check whose browser is not set up or that the access gate does not allow."""
-    from ..adapters.outbound.aeat.browser.session import require_browser_ready
+    """Refuse a live identity check that the access gate does not allow."""
     from ..core.access_gate.gate import AeatAccessGate
 
-    del operation
-    require_browser_ready(settings, profile_name=str(profile_id))
+    del operation, profile_id
     AeatAccessGate(settings).require_live_read()
 
 

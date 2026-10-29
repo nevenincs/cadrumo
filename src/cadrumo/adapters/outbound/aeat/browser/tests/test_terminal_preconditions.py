@@ -50,6 +50,11 @@ def _contract(
 # scope.  Fact values remain AST expressions so dynamic checks and polarities
 # cannot silently drift while retaining the same mapping keys.
 _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
+    "session:_browser_not_available:BrowserNotReadyError:Chromium browser build is not available": _contract(
+        BrowserPreconditionCondition.BROWSER_AVAILABLE,
+        (("browser_available", "False"),),
+        NoRecoveryOutcome.OPERATOR_DECISION,
+    ),
     "factory:_SharedPlaywrightRuntimeOwner.close:BrowserError:Playwright runtime stop failed": _contract(
         BrowserPreconditionCondition.RUNTIME_STOPPABLE,
         (("playwright_runtime_stoppable", "False"),),
@@ -120,11 +125,6 @@ _BROWSER_FAILURE_TOTALITY: dict[str, _CarrierContract] = {
         NoRecoveryOutcome.SAFETY,
     ),
 }
-
-# Carriers whose verdict is the availability probe's own rather than a browser-authored one.
-_PROBE_DELEGATED_CARRIERS: frozenset[str] = frozenset(
-    {"session:require_browser_ready:BrowserNotReadyError:Chromium browser build is not available"}
-)
 
 _BROWSER_PRODUCER_MODULES: tuple[ModuleType, ...] = (
     factory_module,
@@ -264,11 +264,8 @@ def _assert_terminal_contract(
 def test_browser_failure_totality_uses_one_canonical_no_action_projection() -> None:
     observed = _browser_error_carriers()
 
-    assert set(observed) == set(_BROWSER_FAILURE_TOTALITY) | _PROBE_DELEGATED_CARRIERS
+    assert set(observed) == set(_BROWSER_FAILURE_TOTALITY)
     for key, carrier in observed.items():
-        if key in _PROBE_DELEGATED_CARRIERS:
-            assert ast.unparse(_keyword(carrier, "precondition_verdict")) == "status.precondition_verdict"
-            continue
         expected = _BROWSER_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition

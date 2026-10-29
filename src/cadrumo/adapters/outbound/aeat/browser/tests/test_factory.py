@@ -21,7 +21,6 @@ from ..factory import (
     shared_playwright_runtime,
 )
 from ..profile import Profile
-from .installed_builds import place_installed_builds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -249,22 +248,15 @@ async def test_default_browser_session_reaps_browser_after_real_context_failure(
 
 
 @pytest.mark.asyncio
-async def test_launch_failure_is_a_factual_typed_safety_outcome(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Browser builds without executables fail the real launch.
+async def test_launch_failure_is_a_factual_typed_safety_outcome(tmp_path: Path) -> None:
+    """A launch that fails for a reason other than a missing browser is a typed safety outcome.
 
-    The completion markers locate the browser, so the refusal does not fire and
-    the launch itself fails on builds that hold no programs.
+    The Chromium working root names an existing file, so the real launch cannot
+    make its working directory.
     """
-    cache = tmp_path / "marked-but-unrunnable-cache"
-    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(cache))
-    place_installed_builds(cache)
-    await _assert_the_launch_fails()
-
-
-async def _assert_the_launch_fails() -> None:
-    session = await create_browser_session(Settings(), _profile("launch-hint"))
+    working_root = tmp_path / "not-a-directory"
+    working_root.write_bytes(b"")
+    session = await create_browser_session(Settings(cadrumo_chromium_data_root=working_root), _profile("launch-hint"))
     try:
         with pytest.raises(BrowserError) as excinfo:
             await session.create_context()

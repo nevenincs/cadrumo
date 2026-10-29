@@ -15,8 +15,6 @@ import pytest
 from cadrumo.adapters.outbound.aeat.auth.certificate import CertificateHealthProbeAdapter
 from cadrumo.adapters.outbound.aeat.auth.clave_movil_support import ClaveIdentityProbeAdapter
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.outbound.aeat.browser.session import require_browser_ready
-from cadrumo.adapters.outbound.aeat.browser.tests.installed_builds import with_installed_browser
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -35,7 +33,6 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_profile_storage_root,
     isolated_runtime_profile,
 )
-from cadrumo.application.auth.certificate_secret_backend import CertificateSecretBackend
 from cadrumo.application.auth.operation_definitions import (
     AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
     AUTH_LOGOUT_OPERATION_DEFINITION_ID,
@@ -51,17 +48,14 @@ from cadrumo.application.auth.operation_definitions import (
     build_auth_operation_registrations,
 )
 from cadrumo.application.auth.operator_probe_ports import OperatorProbePorts
-from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.operations.supervisor import OperationSupervisor
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.application.user_profile.custody_ports import profile_custody_secure_object_repository
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.passphrase_rotation import ProfilePassphraseRotationOutcome
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.auth_provider import AuthProviderKind
-from cadrumo.core.config import Settings, override_settings
 from cadrumo.core.operations import (
     OperationEffect,
     OperationTerminalCondition,
@@ -80,7 +74,6 @@ _AUTH_DEFINITIONS = build_auth_operation_definitions(
     ports=AuthOperationPorts(
         certificate_secret_backend_factory=build_certificate_secret_backend,
         browser_session_factory=default_browser_session_factory,
-        browser_readiness=require_browser_ready,
         operator_probe_ports=OperatorProbePorts(
             active_profile_session=ActiveProfileSessionPresenceAdapter(),
             certificate_health=CertificateHealthProbeAdapter(),
@@ -291,93 +284,3 @@ def test_configure_acquire_logout_and_reset_execute_through_real_active_profile_
         assert reset.effect is OperationEffect.UPDATED
         assert reset.terminal_receipt is not None
         assert reset.terminal_receipt.result_ref is not None
-
-
-class _RecordingCertificateSecretBackendFactory:
-    """The real certificate-secret factory, counting every credential capability it builds."""
-
-    def __init__(self) -> None:
-        self.calls = 0
-
-    def __call__(self, *, bucket_id: str, settings: Settings) -> CertificateSecretBackend:
-        self.calls += 1
-        return build_certificate_secret_backend(bucket_id=bucket_id, settings=settings)
-
-
-def test_sign_in_without_the_browser_refuses_before_any_credential_loads(
-    tmp_path: Path, operation: PinnedAuthorityOperation
-) -> None:
-    secrets = _RecordingCertificateSecretBackendFactory()
-    definitions = build_auth_operation_definitions(
-        ports=AuthOperationPorts(
-            certificate_secret_backend_factory=secrets,
-            browser_session_factory=default_browser_session_factory,
-            browser_readiness=require_browser_ready,
-            operator_probe_ports=OperatorProbePorts(
-                active_profile_session=ActiveProfileSessionPresenceAdapter(),
-                certificate_health=CertificateHealthProbeAdapter(),
-                clave_identity=ClaveIdentityProbeAdapter(),
-            ),
-            operator_scope_ports=build_operator_scope_ports(),
-        ),
-    )
-    empty_root = tmp_path / "browsers-empty"
-    with isolated_runtime_profile(tmp_path=tmp_path / "profile") as profile:
-        journal = OperationJournalRepository(storage_root=profile.storage_root)
-        supervisor = OperationSupervisor(
-            authority_operation=operation,
-            registry=OperationRegistry(
-                definitions=definitions, public_registrations=build_auth_operation_registrations(definitions)
-            ),
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=profile.storage_root),
-            operands=operation_secure_reference_repository(objects=profile.repository),
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: datetime.now(UTC),
-            lease_duration=timedelta(minutes=6),
-        )
-        subject_ref = f"profile:{profile.bucket_id}"
-
-        def acquire(operation_id: str):
-            created = asyncio.run(
-                supervisor.submit(
-                    OperationRequest(
-                        definition_id=AUTH_SESSION_ACQUIRE_OPERATION_DEFINITION_ID,
-                        subject_ref=subject_ref,
-                        payload=AuthSessionAcquireOperationRequest(provider=AuthProviderKind.CERTIFICATE),
-                    ),
-                    operation_id=operation_id,
-                )
-            )
-            return asyncio.run(run_to_settlement(supervisor, created))
-
-        with override_settings(cadrumo_playwright_browsers_dir=empty_root):
-            refused = acquire("a" * 64)
-        assert refused.terminal_condition is OperationTerminalCondition.REFUSED
-        assert refused.effect is OperationEffect.NONE
-        assert secrets.calls == 0
-        receipt = refused.terminal_receipt
-        assert receipt is not None
-        assert receipt.refusal_ref == "REFUSED_BROWSER_NOT_READY"
-        assert receipt.error_detail_ref is not None
-        detail = asyncio.run(
-            operation_secure_reference_repository(objects=profile.repository).resolve(
-                receipt.error_detail_ref, OperationErrorDetailV1
-            )
-        )
-        assert detail.error_code == "REFUSED_BROWSER_NOT_READY"
-        assert detail.message_key == "adapters.browser.errors.not_available"
-        assert detail.precondition_verdict_json is not None
-        verdict = json.loads(detail.precondition_verdict_json)
-        assert verdict["failed_condition_id"] == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
-        assert verdict["action"] is None
-
-        # With the browser present, the same sign-in goes on to read credentials
-        # and stops at the provider's own local precondition instead.
-        with with_installed_browser(tmp_path / "browsers-recorded"):
-            reached_provider = acquire("b" * 64)
-        assert reached_provider.terminal_condition is OperationTerminalCondition.REFUSED
-        assert reached_provider.effect is OperationEffect.NONE
-        assert secrets.calls > 0

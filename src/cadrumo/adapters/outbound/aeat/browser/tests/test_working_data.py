@@ -11,19 +11,18 @@ if TYPE_CHECKING:
 import psutil
 import pytest
 
-from ......application.browser_location import playwright_browsers_root, probe_playwright_browser
+from ......application.browser_location import playwright_browsers_root
 from ......core.config import Settings, override_settings
 from ..errors import BrowserError
 from ..factory import create_browser_session
 from ..profile import Profile
 from ..session import BrowserSession
-from .installed_builds import place_installed_builds
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
 
 def test_binary_cache_survives_private_storage_isolation(tmp_path: Path) -> None:
-    """Direct drivers and product probes use the same binary cache under every storage root."""
+    """Direct drivers and product launches use the same binary cache under every storage root."""
     binary_root = Path(os.environ["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"])
     assert binary_root.is_absolute()
     assert Path(os.environ["PLAYWRIGHT_BROWSERS_PATH"]) == binary_root
@@ -32,9 +31,8 @@ def test_binary_cache_survives_private_storage_isolation(tmp_path: Path) -> None
         settings = Settings(cadrumo_local_storage_root=storage_root)
         assert playwright_browsers_root(settings=settings) == binary_root
         assert settings.cadrumo_chromium_data_root == storage_root / "chromium-data"
-        assert not binary_root.is_relative_to(storage_root)
         # The binaries live outside every storage root.
-        assert probe_playwright_browser(settings=settings).available
+        assert not binary_root.is_relative_to(storage_root)
 
 
 @pytest.mark.parametrize("override", [None, "", "custom-browser-data", "absolute"])
@@ -136,18 +134,12 @@ async def test_chromium_child_data_paths_are_scoped_to_session(tmp_path: Path, m
             captured.update(kwargs)
             return SimpleNamespace(browser=FakeBrowser())
 
-    # The launch guard locates the browser from its completion markers; the
-    # builds need not run, since the launch itself is captured above.
-    browsers_root = tmp_path / "browsers"
-    place_installed_builds(browsers_root)
-
     session = BrowserSession(
         playwright=cast("Playwright", SimpleNamespace(chromium=FakeChromium())),
         settings=Settings(
             cadrumo_local_storage_root=storage_root,
             cadrumo_chromium_data_root=managed_root,
             cadrumo_temp_dir=temporary_root,
-            cadrumo_playwright_browsers_dir=browsers_root,
         ),
         profile=Profile(name="isolated-environment"),
     )

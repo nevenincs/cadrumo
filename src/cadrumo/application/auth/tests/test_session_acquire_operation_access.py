@@ -44,17 +44,11 @@ async def _no_browser(settings: Settings) -> BrowserSessionPort:
     raise AssertionError("admission must not open a browser")
 
 
-def _unchecked_browser_readiness(settings: Settings, *, profile_name: str) -> None:
-    del settings, profile_name
-    raise AssertionError("admission must not check the browser")
-
-
 def _registry() -> OperationRegistry:
     definitions = build_auth_operation_definitions(
         ports=AuthOperationPorts(
             certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
             browser_session_factory=_no_browser,
-            browser_readiness=_unchecked_browser_readiness,
             operator_probe_ports=fake_operator_probe_ports(),
             operator_scope_ports=build_inward_operator_scope_ports(session=None),
         )

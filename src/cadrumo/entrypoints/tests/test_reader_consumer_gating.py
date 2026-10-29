@@ -1,10 +1,9 @@
-"""Every browser and local AI consumer refuses with its typed verdict before any effect.
+"""Every local AI consumer refuses with the agent's typed verdict before any run.
 
-A feature that needs the browser or the local AI must say so when the
-component is not available: the refusal carries the probe's verdict and
-nothing was sent to the runtime or launched first. This gate holds that
-for the whole consumer set, and finds the set in the source rather than in a
-list that could go stale.
+A feature that needs the local AI must say so when the agent refuses its
+lookup: the refusal carries the agent's verdict and nothing was sent to the
+service first. This gate holds that for the whole consumer set, and finds the
+set in the source rather than in a list that could go stale.
 
 Local AI rows:
 
@@ -41,45 +40,22 @@ Local AI operation rows:
   An operation that swallows the refusal into its result, or stops without
   publishing its detail, fails here.
 
-Browser rows:
-
-- Launch. Every production function that constructs a ``BrowserSession`` or
-  launches Chromium calls ``require_browser_ready`` earlier in its own body.
-- Operations. Every call to an operation definition builder (``build_*definition``
-  or ``build_*definitions``) or to ``AuthOperationPorts`` that hands it a browser
-  resource also hands it a preflight whose first call is
-  ``require_browser_ready``, or ``require_browser_ready`` itself.
-- Behaviour. Every discovered launch site and gated preflight is driven with an
-  empty browsers root and must raise ``BrowserNotReadyError`` carrying its
-  verdict.
-
 Where it stops:
 
 - The model transport (``llm.client``) dispatches on purpose and is exempt by
   name; an exemption that no longer matches a discovered site fails.
-- The runtime traffic of loading and keeping a model resident (under
-  the workstation probes) does not build a request and is not a
-  consumer. ``src/cadrumo_agent_service`` and the desktop are not scanned.
+- ``src/cadrumo_agent_service`` and the desktop are not scanned.
 - A dispatch reached only through ``self`` attributes, a dynamic import or a
   value read from a mapping is not discovered.
-- A behavioural row proves the refusal for the gated lookup refusals and the
-  empty browsers root. A refusal that only a run, rather than the lookup,
-  returns is covered by the client's agent dispatch tests. It does not prove the order inside an operation
-  executor: that its registered preflight runs before credentials load is
-  covered by the operation tests for the capture, identity-check and sign-in
-  executors, not here.
-- A browser resource that reaches an operation only inside a composed port,
-  rather than as an argument of its definition builder, is outside the
-  operations row.
+- A behavioural row proves the refusal for the gated lookup refusals. A
+  refusal that only a run, rather than the lookup, returns is covered by the
+  client's agent dispatch tests.
 - Which registered operation reaches a local AI consumer is declared on the
   consumer row, not discovered: a new operation composed over an existing
   consumer passes until someone names it there. Each operation is settled
   through one lane per row, once per gated refusal code; a refusal raised only
   on another lane is covered by the consumer rows and the operations' own
   settlement tests.
-- Browser operations are held to their preflight here, not to what they
-  publish: that a live capture or sign-in refusal publishes its verdict is
-  covered by those operations' own settlement tests.
 
 Each structural row and each assertion helper is run once more against an
 isolated fixture that carries the defect it exists to catch.
@@ -90,10 +66,8 @@ from __future__ import annotations
 import ast
 import asyncio
 import base64
-import os
-import re
 import traceback
-from collections.abc import Callable, Generator, Iterable, Iterator, Mapping, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -102,7 +76,7 @@ from io import BytesIO
 from pathlib import Path
 from textwrap import dedent
 from typing import override
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from PIL import Image
@@ -110,16 +84,6 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.model_runs import ModelRunBody, ModelRunHeader, ModelRunRefusal, ModelRunRefusalCode
 
-from ...adapters.outbound.aeat.browser.errors import (
-    BrowserNotReadyError,
-)
-from ...adapters.outbound.aeat.browser.factory import (
-    create_browser_session,
-    opened_browser_page,
-    shared_playwright_runtime,
-)
-from ...adapters.outbound.aeat.browser.profile import Profile
-from ...adapters.outbound.aeat.browser.session import BrowserSession, require_browser_ready
 from ...adapters.outbound.llm.client import LLMClient
 from ...adapters.outbound.llm.evidence_draft_text import default_extraction_authority_values
 from ...adapters.outbound.llm.models import LLMRequest
@@ -169,8 +133,6 @@ from ..adapter_composition_work_ports import build_ledger_evidence_ports
 from ..invoice_intake_operation_composition import build_invoice_intake_ports
 from ..ledger_evidence_extraction_composition import invoice_draft_extraction_ports
 from ..ledger_llm_composition import compose_ledger_llm
-from ..live_state_composition import preflight_filed_history_provider
-from ..operation_composition_inputs import verify_live_preflight
 from .dependency_operation_gating_support import (
     OperationSettler,
     RecordingRunsAuthority,
@@ -190,16 +152,6 @@ from .dependency_operation_gating_support import (
 )
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _restore_playwright_browsers_path(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Undo the browser root the Playwright start points the whole process at, for later tests on this worker."""
-    current = os.environ.get("PLAYWRIGHT_BROWSERS_PATH")
-    if current is None:
-        monkeypatch.delenv("PLAYWRIGHT_BROWSERS_PATH", raising=False)
-    else:
-        monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", current)
 
 
 _PACKAGE = "cadrumo"
@@ -424,153 +376,6 @@ def _local_ai_discovery(
     return _consumer_sites(modules, counted), counted, stale
 
 
-# -- Browser discovery -------------------------------------------------------------
-
-_BROWSER_SESSION = "cadrumo.adapters.outbound.aeat.browser.session.BrowserSession"
-_BROWSER_READY = "cadrumo.adapters.outbound.aeat.browser.session.require_browser_ready"
-_BROWSER_RESOURCES = frozenset(
-    {
-        "cadrumo.adapters.outbound.aeat.browser.factory.BrowserRuntimeResourceScope",
-        "cadrumo.adapters.outbound.aeat.browser.factory.default_browser_session_factory",
-        "cadrumo.adapters.outbound.aeat.browser.factory.create_browser_session",
-    }
-)
-_LAUNCH_ATTRIBUTES = frozenset({"launch", "launch_persistent_context"})
-_DEFINITION_BUILDER = re.compile(r"^(build_\w*definitions?|AuthOperationPorts)$")
-
-type _Function = ast.FunctionDef | ast.AsyncFunctionDef
-
-
-def _functions(module: _Module) -> Iterator[tuple[str, _Function]]:
-    """Yield every function and method of a module under its dotted qualified name."""
-
-    def walk(prefix: str, body: Sequence[ast.stmt]) -> Iterator[tuple[str, _Function]]:
-        for node in body:
-            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
-                yield f"{prefix}.{node.name}", node
-                yield from walk(f"{prefix}.{node.name}", node.body)
-            elif isinstance(node, ast.ClassDef):
-                yield from walk(f"{prefix}.{node.name}", node.body)
-
-    yield from walk(module.name, module.tree.body)
-
-
-def _own_calls(function: _Function) -> list[ast.Call]:
-    """Return the calls in a function's own body, in source order, leaving nested definitions out."""
-    calls: list[ast.Call] = []
-    pending: list[ast.AST] = list(function.body)
-    while pending:
-        node = pending.pop()
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef | ast.Lambda):
-            continue
-        if isinstance(node, ast.Call):
-            calls.append(node)
-        pending.extend(ast.iter_child_nodes(node))
-    return sorted(calls, key=lambda call: (call.lineno, call.col_offset))
-
-
-def _callee(module: _Module, call: ast.Call) -> str | None:
-    func = call.func
-    if isinstance(func, ast.Name):
-        return module.aliases.get(func.id)
-    if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name):
-        base = module.aliases.get(func.value.id)
-        return None if base is None else f"{base}.{func.attr}"
-    return None
-
-
-def _starts_browser(module: _Module, call: ast.Call) -> bool:
-    func = call.func
-    launches = (
-        isinstance(func, ast.Attribute)
-        and func.attr in _LAUNCH_ATTRIBUTES
-        and isinstance(func.value, ast.Attribute)
-        and func.value.attr == "chromium"
-    )
-    return launches or _callee(module, call) == _BROWSER_SESSION
-
-
-def _browser_start_sites(modules: Mapping[str, _Module]) -> dict[str, str | None]:
-    """Return every function that starts a browser, with why it is ungated or ``None`` when it checks first."""
-    sites: dict[str, str | None] = {}
-    for module in modules.values():
-        for qualified, function in _functions(module):
-            calls = _own_calls(function)
-            starts = [call for call in calls if _starts_browser(module, call)]
-            if not starts:
-                continue
-            checks = [call for call in calls if _callee(module, call) == _BROWSER_READY]
-            if not checks:
-                sites[qualified] = f"line {starts[0].lineno} starts a browser and nothing checks it is available"
-            elif (checks[0].lineno, checks[0].col_offset) > (starts[0].lineno, starts[0].col_offset):
-                sites[qualified] = (
-                    f"line {starts[0].lineno} starts a browser before the check on line {checks[0].lineno}"
-                )
-            else:
-                sites[qualified] = None
-    return sites
-
-
-def _top_level_functions(modules: Mapping[str, _Module]) -> dict[str, tuple[_Module, _Function]]:
-    return {
-        f"{module.name}.{name}": (module, node)
-        for module in modules.values()
-        for name, node in module.definitions.items()
-        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
-    }
-
-
-def _checks_browser_first(origin: str, functions: Mapping[str, tuple[_Module, _Function]]) -> bool:
-    if origin == _BROWSER_READY:
-        return True
-    found = functions.get(origin)
-    if found is None:
-        return False
-    module, function = found
-    calls = _own_calls(function)
-    return bool(calls) and _callee(module, calls[0]) == _BROWSER_READY
-
-
-def _preflight_origins(module: _Module, call: ast.Call) -> set[str]:
-    """Return the functions a builder call hands over as callables, unwrapping ``functools.partial``."""
-    origins: set[str] = set()
-    for argument in (*call.args, *(keyword.value for keyword in call.keywords)):
-        handed = argument
-        if isinstance(argument, ast.Call) and _callee(module, argument) == "functools.partial" and argument.args:
-            handed = argument.args[0]
-        if isinstance(handed, ast.Name) and (origin := module.aliases.get(handed.id)) is not None:
-            origins.add(origin)
-    return origins
-
-
-def _operation_browser_preflights(modules: Mapping[str, _Module]) -> tuple[frozenset[str], list[str]]:
-    """Return the gated preflights handed to browser operations, and every builder call that has none."""
-    functions = _top_level_functions(modules)
-    gated: set[str] = set()
-    problems: list[str] = []
-    for module in modules.values():
-        for call in (node for node in ast.walk(module.tree) if isinstance(node, ast.Call)):
-            func = call.func
-            name = func.id if isinstance(func, ast.Name) else func.attr if isinstance(func, ast.Attribute) else ""
-            if not _DEFINITION_BUILDER.match(name):
-                continue
-            handed = set().union(
-                *(_references(module, argument) for argument in (*call.args, *(k.value for k in call.keywords)))
-            )
-            if not handed & _BROWSER_RESOURCES:
-                continue
-            checked = {
-                origin for origin in _preflight_origins(module, call) if _checks_browser_first(origin, functions)
-            }
-            if checked:
-                gated |= checked
-            else:
-                problems.append(
-                    f"{module.name}:{call.lineno} {name}() is handed a browser and no preflight that checks it first"
-                )
-    return frozenset(gated), problems
-
-
 # -- Shared runtime and outcomes -------------------------------------------------
 
 
@@ -661,15 +466,6 @@ def _local_ai_gating_problems(
     if missing:
         problems.append(f"verdict does not state {missing} as the {code.value} refusal does")
     return problems
-
-
-def _browser_refusal_problems(outcome: object) -> list[str]:
-    """Return why an outcome is not a browser refusal that carries its verdict."""
-    if not isinstance(outcome, BrowserNotReadyError):
-        return [f"ended in {type(outcome).__name__}, not a refusal for a browser that is not available"]
-    if outcome.terminal_precondition_verdict is None:
-        return ["the refusal carries no verdict"]
-    return []
 
 
 # -- Local AI consumer drivers -----------------------------------------------------
@@ -989,77 +785,6 @@ def _operation_problems(
     return [] if any(not attempt for attempt in attempts) else [f"{what}: {problem}" for problem in attempts[0]]
 
 
-# -- Browser drivers ---------------------------------------------------------------
-
-_FIXTURE_PROFILE = Profile(name="consumer-gating")
-
-
-def _drive_create_browser_session(settings: Settings) -> object:
-    return asyncio.run(create_browser_session(settings, _FIXTURE_PROFILE))
-
-
-def _drive_opened_browser_page(settings: Settings) -> object:
-    async def run() -> None:
-        async with (
-            shared_playwright_runtime() as playwright,
-            opened_browser_page(playwright, settings, _FIXTURE_PROFILE),
-        ):
-            return
-
-    return asyncio.run(run())
-
-
-def _drive_browser_launch(settings: Settings) -> object:
-    async def run() -> object:
-        async with shared_playwright_runtime() as playwright:
-            session = BrowserSession(playwright=playwright, settings=settings, profile=_FIXTURE_PROFILE)
-            try:
-                return await session.create_context()
-            finally:
-                await session.close()
-
-    return asyncio.run(run())
-
-
-_FACTORY = "cadrumo.adapters.outbound.aeat.browser.factory"
-
-#: Every function that starts a browser, with the driver that starts it through its own entry.
-_BROWSER_STARTS: Mapping[str, Callable[[Settings], object]] = {
-    f"{_FACTORY}.create_browser_session": _drive_create_browser_session,
-    f"{_FACTORY}.opened_browser_page": _drive_opened_browser_page,
-    "cadrumo.adapters.outbound.aeat.browser.session.BrowserSession._launch_chromium": _drive_browser_launch,
-}
-
-
-def _drive_live_preflight(settings: Settings) -> object:
-    del settings
-    with bundled_indexed_authority().operation() as operation:
-        return preflight_filed_history_provider(uuid4(), operation)
-
-
-def _drive_identity_check_preflight(settings: Settings) -> object:
-    with bundled_indexed_authority().operation() as operation:
-        return verify_live_preflight(settings, uuid4(), operation)
-
-
-def _drive_sign_in_readiness(settings: Settings) -> object:
-    return require_browser_ready(settings, profile_name=_FIXTURE_PROFILE.name)
-
-
-#: Every preflight handed to a browser operation, with the driver that calls it as its executor does.
-_BROWSER_PREFLIGHTS: Mapping[str, Callable[[Settings], object]] = {
-    "cadrumo.entrypoints.live_state_composition.preflight_filed_history_provider": _drive_live_preflight,
-    "cadrumo.entrypoints.operation_composition_inputs.verify_live_preflight": _drive_identity_check_preflight,
-    _BROWSER_READY: _drive_sign_in_readiness,
-}
-
-
-@contextmanager
-def _empty_browsers_root(tmp_path: Path) -> Generator[Settings]:
-    with override_settings(cadrumo_playwright_browsers_dir=tmp_path / "browsers-empty") as settings:
-        yield settings
-
-
 # -- The production gate -----------------------------------------------------------
 
 
@@ -1138,42 +863,6 @@ def _row_problems(discovered: Iterable[str], rows: Iterable[str], *, what: str) 
     return [f"{site} {what} and has no row" for site in sorted(found - registered)] + [
         f"{site} has a row but no longer {what}" for site in sorted(registered - found)
     ]
-
-
-def _browser_start_problems(sites: Mapping[str, str | None]) -> list[str]:
-    ungated = [f"{site}: {problem}" for site, problem in sorted(sites.items()) if problem is not None]
-    return ungated + _row_problems(sites, _BROWSER_STARTS, what="starts a browser")
-
-
-def test_every_browser_start_checks_the_browser_first(production: dict[str, _Module]) -> None:
-    problems = _browser_start_problems(_browser_start_sites(production))
-
-    assert not problems, "\n".join(problems)
-
-
-def test_every_browser_operation_is_handed_a_preflight_that_checks_the_browser_first(
-    production: dict[str, _Module],
-) -> None:
-    gated, problems = _operation_browser_preflights(production)
-
-    problems += _row_problems(gated, _BROWSER_PREFLIGHTS, what="gates a browser operation")
-    assert not problems, "\n".join(problems)
-
-
-_BROWSER_DRIVES = [
-    pytest.param(driver, id=origin.rsplit(".", 1)[-1])
-    for origin, driver in {**_BROWSER_STARTS, **_BROWSER_PREFLIGHTS}.items()
-]
-
-
-@pytest.mark.parametrize("driver", _BROWSER_DRIVES)
-def test_a_browser_consumer_refuses_while_the_browser_is_not_available(
-    tmp_path: Path, driver: Callable[[Settings], object]
-) -> None:
-    with _empty_browsers_root(tmp_path) as settings:
-        problems = _browser_refusal_problems(_outcome(lambda: driver(settings)))
-
-    assert not problems, "\n".join(problems)
 
 
 # -- Falsifiers: each check run against the defect it exists to catch ----------
@@ -1258,22 +947,6 @@ def test_discovery_finds_a_new_local_ai_consumer_that_has_no_row(tmp_path: Path)
     ]
 
 
-def test_a_browser_start_or_preflight_without_a_row_and_a_stale_row_are_reported() -> None:
-    sites: dict[str, str | None] = {site: None for site in _BROWSER_STARTS}
-    sites["cadrumo.fixture.new_start"] = None
-    del sites[f"{_FACTORY}.opened_browser_page"]
-
-    assert _browser_start_problems(sites) == [
-        "cadrumo.fixture.new_start starts a browser and has no row",
-        f"{_FACTORY}.opened_browser_page has a row but no longer starts a browser",
-    ]
-    preflight_problems = _row_problems(
-        {"cadrumo.fixture.new_preflight"}, _BROWSER_PREFLIGHTS, what="gates a browser operation"
-    )
-    assert "cadrumo.fixture.new_preflight gates a browser operation and has no row" in preflight_problems
-    assert len(preflight_problems) == 1 + len(_BROWSER_PREFLIGHTS)
-
-
 def test_discovery_reports_an_exemption_that_no_longer_dispatches(tmp_path: Path) -> None:
     modules = _write_tree(tmp_path, {"adapters/outbound/llm/client.py": "def dispatch():\n    return None\n"})
 
@@ -1309,106 +982,6 @@ def test_a_consumer_that_skips_the_check_or_answers_for_another_code_is_reported
     assert any(p == "verdict speaks for role ['text_extraction'], not vision_transcription" for p in wrong_role)
     assert any(" is not " in problem for problem in wrong_code), wrong_code
     assert correct == [], "the real client's refusal is what a gated consumer returns"
-
-
-_FIXTURE_SESSION = """
-    class BrowserSession:
-        pass
-
-    def require_browser_ready(settings, *, profile_name):
-        return None
-"""
-
-
-def test_a_browser_start_without_an_earlier_check_is_reported(tmp_path: Path) -> None:
-    modules = _write_tree(
-        tmp_path,
-        {
-            "adapters/outbound/aeat/browser/session.py": _FIXTURE_SESSION,
-            "adapters/outbound/aeat/browser/fixture_factory.py": """
-                from .session import BrowserSession, require_browser_ready
-
-                def ungated(settings):
-                    return BrowserSession()
-
-                def checked_too_late(settings):
-                    session = BrowserSession()
-                    require_browser_ready(settings, profile_name="fixture")
-                    return session
-
-                def gated(settings):
-                    require_browser_ready(settings, profile_name="fixture")
-                    return BrowserSession()
-
-                async def launches(playwright):
-                    return await playwright.chromium.launch()
-            """,
-        },
-    )
-
-    sites = _browser_start_sites(modules)
-
-    factory = "cadrumo.adapters.outbound.aeat.browser.fixture_factory"
-    assert sites[f"{factory}.gated"] is None
-    assert sites[f"{factory}.ungated"] == "line 5 starts a browser and nothing checks it is available"
-    assert sites[f"{factory}.checked_too_late"] == "line 8 starts a browser before the check on line 9"
-    assert sites[f"{factory}.launches"] == "line 17 starts a browser and nothing checks it is available"
-
-
-def test_a_browser_operation_without_a_browser_first_preflight_is_reported(tmp_path: Path) -> None:
-    modules = _write_tree(
-        tmp_path,
-        {
-            "adapters/outbound/aeat/browser/session.py": _FIXTURE_SESSION,
-            "adapters/outbound/aeat/browser/factory.py": "class BrowserRuntimeResourceScope:\n    pass\n",
-            "entrypoints/fixture_operations.py": """
-                from functools import partial
-
-                from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope
-                from ..adapters.outbound.aeat.browser.session import require_browser_ready
-
-                def credentials_first(profile_id, operation):
-                    load_credentials(profile_id)
-                    require_browser_ready(None, profile_name=str(profile_id))
-
-                def browser_first(profile_id, operation):
-                    require_browser_ready(None, profile_name=str(profile_id))
-
-                def compose():
-                    build_capture_definition(BrowserRuntimeResourceScope, credentials_first)
-                    build_capture_definition(BrowserRuntimeResourceScope)
-                    build_capture_definition(BrowserRuntimeResourceScope, browser_first)
-                    build_capture_definitions(BrowserRuntimeResourceScope, provider_preflight=partial(browser_first))
-                    build_local_definition(credentials_first)
-            """,
-        },
-    )
-
-    gated, problems = _operation_browser_preflights(modules)
-
-    assert gated == {"cadrumo.entrypoints.fixture_operations.browser_first"}
-    assert problems == [
-        "cadrumo.entrypoints.fixture_operations:15 build_capture_definition() is handed a browser and no "
-        "preflight that checks it first",
-        "cadrumo.entrypoints.fixture_operations:16 build_capture_definition() is handed a browser and no "
-        "preflight that checks it first",
-    ]
-
-
-def test_a_browser_consumer_that_does_not_refuse_or_carries_no_verdict_is_reported(tmp_path: Path) -> None:
-    def carries_no_verdict() -> object:
-        raise BrowserNotReadyError(
-            "fixture", translated_message="adapters.browser.errors.not_available", precondition_verdict=None
-        )
-
-    with _empty_browsers_root(tmp_path) as settings:
-        real = _browser_refusal_problems(_outcome(lambda: _drive_sign_in_readiness(settings)))
-
-    assert _browser_refusal_problems(_outcome(lambda: None)) == [
-        "ended in NoneType, not a refusal for a browser that is not available"
-    ]
-    assert _browser_refusal_problems(_outcome(carries_no_verdict)) == ["the refusal carries no verdict"]
-    assert real == [], "the real readiness check's refusal is what a gated consumer raises"
 
 
 def test_an_operation_without_a_row_a_stale_row_and_a_silent_site_are_reported() -> None:

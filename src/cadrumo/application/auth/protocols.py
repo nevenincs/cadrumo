@@ -147,14 +147,6 @@ class ViewLoginSessionFactoryPort(BrowserSessionFactoryPort, Protocol):
         ...
 
 
-class BrowserReadinessPort(Protocol):
-    """Refusal check run when browser-backed auth work starts."""
-
-    def __call__(self, settings: Settings, *, profile_name: str) -> None:
-        """Raise the browser refusal when the browser is not available for ``settings``."""
-        ...
-
-
 @runtime_checkable
 class PersistedSessionDataProtocol(Protocol):
     """Minimal surface the application layer reads from a persisted session record."""
@@ -246,7 +238,6 @@ __all__ = [
     "BrowserContextPort",
     "BrowserContextProvisioner",
     "BrowserPagePort",
-    "BrowserReadinessPort",
     "BrowserResponsePort",
     "BrowserSessionFactoryPort",
     "BrowserSessionPort",

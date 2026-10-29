@@ -1,28 +1,19 @@
-"""Browser work without an available build is a typed refusal.
+"""A launch that finds no browser build is a typed refusal, not Playwright's raw error.
 
-The readiness check locates the browser by the completion markers of its
-builds. The launch guard runs a real Playwright driver against an empty browser
-cache, so its refusal must come from the session's own readiness check rather
-than from Playwright's missing-executable error. The factory refuses before the
-Playwright driver starts at all.
+Each case runs a real Playwright driver against an empty browsers folder, so
+the refusal comes from the launch itself finding nothing to start.
 """
 
 from __future__ import annotations
 
 import asyncio
-import os
-import sys
-from importlib.machinery import ModuleSpec
 from pathlib import Path
-from types import ModuleType
 
-import psutil
 import pytest
 from playwright.async_api import async_playwright
 
 from ......application.operations.error_detail import build_operation_error_detail
-from ......application.probe_outcomes import ProbePreconditionCondition
-from ......core.config import Settings
+from ......core.config import Settings, override_settings
 from ......core.errors.error_codes import (
     ErrorCategory,
     build_error_envelope,
@@ -30,39 +21,19 @@ from ......core.errors.error_codes import (
     render_error_text,
     resolve_error_message,
 )
-from ..errors import BrowserError, BrowserFailureMode, BrowserNotReadyError
+from ..errors import BrowserError, BrowserFailureMode, BrowserNotReadyError, BrowserPreconditionCondition
 from ..factory import create_browser_session, opened_browser_page, shared_playwright_runtime
 from ..profile import Profile
-from ..session import BrowserSession, require_browser_ready
-from .installed_builds import place_installed_builds
+from ..session import BrowserSession
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
-
-
-async def _launch_refusal() -> BrowserError:
-    async with async_playwright() as playwright:
-        session = BrowserSession(
-            playwright,
-            Settings(),
-            Profile(name="unavailable-refusal", locale="es-ES", timezone_id="Europe/Madrid"),
-        )
-        with pytest.raises(BrowserError) as raised:
-            await session.create_context()
-        return raised.value
 
 
 def _profile(name: str) -> Profile:
     return Profile(name=name, locale="es-ES", timezone_id="Europe/Madrid")
 
 
-def _installed_browser(tmp_path: Path) -> Settings:
-    """Settings whose browsers root holds the builds the installed driver launches."""
-    browsers = tmp_path / "installed-cache"
-    place_installed_builds(browsers)
-    return Settings(cadrumo_local_storage_root=tmp_path / "storage", cadrumo_playwright_browsers_dir=browsers)
-
-
-def _assert_names_the_unavailable_browser(error: BrowserError, browsers_root: Path) -> None:
+def _assert_names_the_unavailable_browser(error: BrowserError) -> None:
     assert isinstance(error, BrowserNotReadyError)
     registered = get_registered_error_code(error)
     assert registered.category is ErrorCategory.REFUSED
@@ -74,91 +45,75 @@ def _assert_names_the_unavailable_browser(error: BrowserError, browsers_root: Pa
     assert error.translated_message == "adapters.browser.errors.not_available"
     verdict = error.terminal_precondition_verdict
     assert verdict is not None
-    assert verdict.failed_condition_id == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_INSTALLED.value
-    # The verdict is published with every refusal, so it names why the browser was not
-    # located, never the folder.
-    assert verdict.evidence[0].values["chromium_installed"] is False
-    assert not [value for value in verdict.evidence[0].values.values() if str(browsers_root) in str(value)]
+    assert verdict.failed_condition_id == BrowserPreconditionCondition.BROWSER_AVAILABLE.value
+    assert verdict.evidence[0].values["browser_available"] is False
     assert verdict.action is None
 
 
-def test_missing_bundled_chromium_is_refused_as_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", str(tmp_path / "empty-cache"))
-
-    error = asyncio.run(_launch_refusal())
-
-    _assert_names_the_unavailable_browser(error, tmp_path / "empty-cache")
-
-
-def test_readiness_check_refuses_an_empty_root_and_admits_a_complete_one(tmp_path: Path) -> None:
-    empty = tmp_path / "empty-cache"
-    with pytest.raises(BrowserError) as raised:
-        require_browser_ready(Settings(cadrumo_playwright_browsers_dir=empty), profile_name="readiness")
-    _assert_names_the_unavailable_browser(raised.value, empty)
-
-    require_browser_ready(_installed_browser(tmp_path), profile_name="readiness")
-
-
-def test_session_factory_refuses_before_the_playwright_driver_starts(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    empty = tmp_path / "empty-cache"
-    # Starting the driver points PLAYWRIGHT_BROWSERS_PATH at the managed root
-    # and spawns a driver child; neither may happen for a refused session.
-    driver_root = str(tmp_path / "driver-root-unchanged")
-    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", driver_root)
-    children_before = {child.pid for child in psutil.Process().children(recursive=True)}
-
-    with pytest.raises(BrowserError) as raised:
-        asyncio.run(
-            create_browser_session(Settings(cadrumo_playwright_browsers_dir=empty), _profile("factory-refusal"))
+async def _launch_refusal(empty_root: Path) -> BrowserError:
+    async with async_playwright() as playwright:
+        session = BrowserSession(
+            playwright,
+            Settings(cadrumo_playwright_browsers_dir=empty_root),
+            _profile("unavailable-refusal"),
         )
+        with pytest.raises(BrowserError) as raised:
+            await session.create_context()
+        return raised.value
 
-    _assert_names_the_unavailable_browser(raised.value, empty)
-    assert os.environ["PLAYWRIGHT_BROWSERS_PATH"] == driver_root
-    assert {child.pid for child in psutil.Process().children(recursive=True)} <= children_before
+
+def test_missing_bundled_chromium_is_refused_as_unavailable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    empty = tmp_path / "empty-cache"
+    monkeypatch.setenv("PLAYWRIGHT_BROWSERS_PATH", str(empty))
+
+    error = asyncio.run(_launch_refusal(empty))
+
+    _assert_names_the_unavailable_browser(error)
+
+
+def test_session_factory_refuses_at_launch_and_leaves_no_session_open(tmp_path: Path) -> None:
+    empty = tmp_path / "empty-cache"
+
+    async def attempt() -> BrowserError:
+        session = await create_browser_session(Settings(cadrumo_playwright_browsers_dir=empty), _profile("factory"))
+        try:
+            with pytest.raises(BrowserError) as raised:
+                await session.create_context()
+            return raised.value
+        finally:
+            await session.close()
+
+    _assert_names_the_unavailable_browser(asyncio.run(attempt()))
 
 
 @pytest.mark.asyncio
 async def test_page_factory_refuses_a_missing_browser_on_a_shared_runtime(tmp_path: Path) -> None:
     empty = tmp_path / "empty-cache"
     settings = Settings(cadrumo_playwright_browsers_dir=empty)
-    async with shared_playwright_runtime() as playwright:
-        with pytest.raises(BrowserError) as raised:
-            async with opened_browser_page(playwright, settings, _profile("page-refusal")):
-                pytest.fail("a page opened without an available browser")
+    with override_settings(cadrumo_playwright_browsers_dir=empty):
+        async with shared_playwright_runtime() as playwright:
+            with pytest.raises(BrowserError) as raised:
+                async with opened_browser_page(playwright, settings, _profile("page-refusal")):
+                    pytest.fail("a page opened without an available browser")
 
-    _assert_names_the_unavailable_browser(raised.value, empty)
-
-
-def test_an_unreadable_driver_is_refused_as_an_unavailable_browser(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """An installed Playwright whose browser manifest is gone leaves no browser to use."""
-    damaged = tmp_path / "damaged-playwright"
-    damaged.mkdir()
-    module = ModuleType("playwright")
-    module.__spec__ = ModuleSpec("playwright", None, origin=str(damaged / "__init__.py"))
-    monkeypatch.setitem(sys.modules, "playwright", module)
-
-    with pytest.raises(BrowserNotReadyError) as raised:
-        require_browser_ready(Settings(cadrumo_playwright_browsers_dir=tmp_path / "cache"), profile_name="damaged")
-
-    error = raised.value
-    registered = get_registered_error_code(error)
-    assert registered.category is ErrorCategory.REFUSED
-    assert registered.code == "REFUSED_BROWSER_NOT_READY"
-    verdict = error.terminal_precondition_verdict
-    assert verdict is not None
-    assert verdict.failed_condition_id == ProbePreconditionCondition.PLAYWRIGHT_BROWSER_MANIFEST_READABLE.value
-    assert verdict.action is None
+    _assert_names_the_unavailable_browser(raised.value)
 
 
 def test_the_rendered_refusal_is_its_sentence_alone(tmp_path: Path) -> None:
-    """The failure mode and the browser profile stay internal; the verdict carries the action."""
-    with pytest.raises(BrowserNotReadyError) as raised:
-        require_browser_ready(Settings(cadrumo_playwright_browsers_dir=tmp_path / "empty"), profile_name="internal")
-    error = raised.value
+    """The failure mode and the browser profile stay internal; the verdict carries the condition."""
+    empty = tmp_path / "empty"
+
+    async def attempt() -> BrowserError:
+        session = await create_browser_session(Settings(cadrumo_playwright_browsers_dir=empty), _profile("internal"))
+        try:
+            with pytest.raises(BrowserError) as raised:
+                await session.create_context()
+            return raised.value
+        finally:
+            await session.close()
+
+    error = asyncio.run(attempt())
+    assert isinstance(error, BrowserNotReadyError)
 
     text = render_error_text(error)
     assert text.splitlines()[1:] == []
