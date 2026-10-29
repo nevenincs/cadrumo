@@ -70,13 +70,14 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
     OperationRegistry,
 )
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
+from cadrumo.application.tests.agent_refusal_support import model_not_installed_verdict
 from cadrumo.core.config import override_settings
 from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.core.field_origin import FieldOrigin
+from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
     OperationEffect,
     OperationLifecycle,
@@ -686,10 +687,7 @@ async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The recorded detail is the one the reader's refusal publishes, read back as another process reads it."""
-    verdict = probe_no_recovery_verdict(
-        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-        facts={"role": "invoice_reading", "model": "reader", "role_model_installed": False},
-    )
+    verdict = model_not_installed_verdict(ModelRole.TEXT_EXTRACTION)
     detail = build_operation_error_detail(
         PurchaseInvoiceEvidenceReaderError(
             translated_message=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY, precondition_verdict=verdict

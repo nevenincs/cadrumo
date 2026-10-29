@@ -20,7 +20,6 @@ from .models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
-    LedgerReaderReadinessV1,
 )
 from .workspace_presentation import door_refusal_text
 from .workspace_screen import LedgerWorkspaceScreen
@@ -94,32 +93,6 @@ class LedgerEvidenceRecordActions(LedgerWorkspaceScreen):
             # Read after the addition whose outcome was unknown, the records now show whether it landed.
             self.add_awaits_reread = False
             self.query_one("#ledger-evidence-add", Button).disabled = False
-
-    async def _read_readiness(self) -> LedgerReaderReadinessV1 | None:
-        """Ask the reader off the event loop: the read waits on the components role and the agent service."""
-        return await asyncio.to_thread(self.controller.reader_readiness)
-
-    async def _measure_reader(self) -> None:
-        try:
-            readiness = await self._read_readiness()
-        except AccountSessionExpiredError as error:
-            self._handle_expired_session(error)
-        else:
-            self._show_reader(readiness)
-
-    def _show_reader(self, readiness: LedgerReaderReadinessV1 | None) -> None:
-        line = self.query_one("#ledger-evidence-reader", Static)
-        if readiness is None:
-            line.update("")
-        elif readiness.extraction_ready:
-            line.update(tr("tui.ledger.evidence.reader_ready"))
-        else:
-            line.update(
-                tr(
-                    "tui.ledger.evidence.reader_not_ready",
-                    condition=readiness.failed_condition_id or "-",
-                )
-            )
 
     def _select_record(self, evidence_id: str) -> None:
         record = next(item for item in self._records or () if item.evidence_id == evidence_id)

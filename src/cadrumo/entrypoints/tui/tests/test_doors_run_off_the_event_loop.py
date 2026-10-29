@@ -32,7 +32,6 @@ from ..ledger.models import (
     LedgerEvidenceConfirmedV1,
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
-    LedgerReaderReadinessV1,
 )
 from ..ledger.tests.workspace_fixtures import (
     ledger_context,
@@ -125,10 +124,6 @@ class _GuardedEvidenceDoor:
     async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
         raise AssertionError(f"not exercised: {source_path}")
 
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        self.boundary.enter("reader_readiness")
-        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="probe.runtime.reachable")
-
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         raise AssertionError(f"not exercised: {evidence_id}")
 
@@ -153,13 +148,13 @@ def _evidence_screen(boundary: TransportBoundary) -> LedgerEvidenceScreen:
 
 
 @pytest.mark.asyncio
-async def test_the_evidence_area_reads_records_and_the_reader_off_the_loop() -> None:
+async def test_the_evidence_area_reads_records_off_the_loop() -> None:
     boundary = TransportBoundary()
     screen = _evidence_screen(boundary)
     async with ScreenHostApp[None](screen).run_test(size=(100, 40)) as pilot:
         await settle(pilot)
 
-    assert boundary.names == {"list_records", "reader_readiness"}
+    assert boundary.names == {"list_records"}
     assert boundary.on_loop == []
 
 

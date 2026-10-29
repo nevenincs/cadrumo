@@ -446,7 +446,7 @@ def _review_exclusion(gate: _Gate, _tmp_path: Path) -> _Flow:
 
 class _HeldEvidenceDoor(_EvidenceDoor):
     def __init__(self, gate: _Gate) -> None:
-        super().__init__(ready=False)
+        super().__init__()
         self._gate = gate
 
     @override

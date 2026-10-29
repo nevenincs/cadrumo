@@ -38,7 +38,6 @@ from click.testing import Result
 
 from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from cadrumo.adapters.outbound.llm.tests.model_run_support import ON_HOST_LANE, RecordingModelRuns
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.config import load_settings
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.tests.pdf_fixtures import text_pdf_bytes
@@ -56,7 +55,7 @@ _LABEL_READING_CODES = {_HEADROOM_REFUSED, _READER_UNAVAILABLE}
 _BATCH_LABEL_READING_DEGRADED = "ledger.evidence.batch.label_reading_degraded"
 
 #: The precondition the agent's refusal to load a model too large for the free memory fails.
-_LOAD_CAPACITY = ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value
+_LOAD_CAPACITY = LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value
 _DOES_NOT_FIT = ModelRunRefusalCode.MODEL_DOES_NOT_FIT
 
 _SUPPLIER_NAME = "Estacion de Servicio Albufera SL"

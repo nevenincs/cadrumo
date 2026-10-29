@@ -19,7 +19,6 @@ from cadrumo.application.ledger.import_operation import (
     LedgerImportResultProjection,
 )
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -84,30 +83,8 @@ def _outcome(result: LedgerImportResultProjection, files: tuple[Path, ...]) -> L
     )
 
 
-_SELECTED_MODEL_CONDITIONS = frozenset(
-    {
-        ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE.value,
-        ProbePreconditionCondition.SELECTED_MODEL_READS_IMAGES.value,
-    }
-)
-
-
 def _refused_file(item: LedgerImportFileRefusal) -> LedgerImportFileRefusalV1:
-    """Word one refused file by its reader verdict.
-
-    A file only the local AI reads is told the local AI is not ready when the
-    verdict says its program or model is missing; a reader whose model the
-    person selected, or failed to select, is told that model is unavailable.
-    """
-    verdict = item.precondition_verdict
-    if (
-        item.reason_code == "reader_unavailable"
-        and verdict is not None
-        and verdict.failed_condition_id in _SELECTED_MODEL_CONDITIONS
-    ):
-        return LedgerImportFileRefusalV1(
-            file_name=item.file_name, reason=tr("tui.ledger.import.refusal.reader_unavailable_here")
-        )
+    """Word one refused file by the reason code the import recorded."""
     return LedgerImportFileRefusalV1(
         file_name=item.file_name, reason=tr(f"tui.ledger.import.refusal.{item.reason_code}")
     )

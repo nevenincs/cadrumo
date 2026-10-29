@@ -462,15 +462,6 @@ class LedgerEvidenceRecordRowV1(BaseModel):
     status: LedgerEvidenceRecordStatus
 
 
-class LedgerReaderReadinessV1(BaseModel):
-    """Whether documents can be read on this machine, as the reader reports it."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    extraction_ready: bool
-    failed_condition_id: str | None = None
-
-
 class LedgerEvidenceDraftV1(BaseModel):
     """What the on-host reader found in one document, including its canonical review.
 
@@ -535,10 +526,6 @@ class LedgerEvidenceDoorV1(Protocol):
         The path travels as typed: the service resolves it for byte access and
         records the operator's own spelling as provenance.
         """
-        ...
-
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        """Measure the local document reader without starting or loading anything."""
         ...
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
@@ -643,7 +630,6 @@ __all__ = [
     "LedgerLinkResultV1",
     "LedgerLinkSubmissionV1",
     "LedgerLinkSubmitterV1",
-    "LedgerReaderReadinessV1",
     "LedgerRecordDoorsV1",
     "LedgerRouteRefusalV1",
     "LedgerRouteTargetV1",

@@ -43,7 +43,6 @@ from .models import (
     LedgerInvoiceEntryV1,
     LedgerLinkResultV1,
     LedgerLinkSubmissionV1,
-    LedgerReaderReadinessV1,
     LedgerRouteRefusalV1,
     LedgerRouteTargetV1,
 )
@@ -433,10 +432,6 @@ class LedgerWorkspaceController:
         if self.evidence_door is None:
             raise InternalInvariantError("evidence confirmation is unavailable")
         return await self.evidence_door.confirm(confirmation)
-
-    def reader_readiness(self) -> LedgerReaderReadinessV1 | None:
-        """Measure the local reader, or ``None`` when no door can measure it."""
-        return None if self.evidence_door is None else self.evidence_door.reader_readiness()
 
     def can_refresh(self) -> bool:
         """Report whether this workspace can re-read its state after a write."""

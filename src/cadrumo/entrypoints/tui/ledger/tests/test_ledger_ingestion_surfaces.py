@@ -40,7 +40,6 @@ from ..models import (
     LedgerFlowState,
     LedgerInvoiceAddResultV1,
     LedgerInvoiceEntryV1,
-    LedgerReaderReadinessV1,
 )
 from ..review import LedgerReviewScreen
 from ..routes import ledger_screen_factory
@@ -212,8 +211,7 @@ async def test_invoice_writer_refusal_is_shown_as_the_application_says_it() -> N
 
 
 class _EvidenceDoor:
-    def __init__(self, *, ready: bool, expire_on_confirm: bool = False) -> None:
-        self.ready = ready
+    def __init__(self, *, expire_on_confirm: bool = False) -> None:
         self.expire_on_confirm = expire_on_confirm
         self.full_projection: InvoiceDraftProjectionV1 | None = None
         self.records: list[LedgerEvidenceRecordRowV1] = []
@@ -242,11 +240,6 @@ class _EvidenceDoor:
         )
         self.records.append(record)
         return record
-
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        if self.ready:
-            return LedgerReaderReadinessV1(extraction_ready=True)
-        return LedgerReaderReadinessV1(extraction_ready=False, failed_condition_id="probe.runtime.reachable")
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         self.extracted.append(evidence_id)
@@ -304,14 +297,13 @@ def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenc
 
 
 @pytest.mark.asyncio
-async def test_evidence_is_added_listed_and_reader_readiness_is_informational() -> None:
-    door = _EvidenceDoor(ready=False)
+async def test_evidence_is_added_and_listed() -> None:
+    door = _EvidenceDoor()
     refreshes: list[int] = []
     screen = _evidence_screen(door, refreshes)
     with override_settings(cadrumo_output_language="en"):
         async with ScreenHostApp[None](screen).run_test(size=(100, 60)) as pilot:
             await settle(pilot)
-            assert "probe.runtime.reachable" in str(screen.query_one("#ledger-evidence-reader", Static).render())
             screen.query_one("#ledger-evidence-path", Input).value = "notes.txt"
             screen.query_one("#ledger-evidence-add", Button).press()
             await settle(pilot)
@@ -353,7 +345,7 @@ async def test_evidence_is_added_listed_and_reader_readiness_is_informational() 
 
 class _RefusedRecordsDoor(_EvidenceDoor):
     def __init__(self, refusal: RefusalError) -> None:
-        super().__init__(ready=True)
+        super().__init__()
         self.refusal = refusal
 
     @override
@@ -377,7 +369,7 @@ async def test_a_refused_records_load_is_said_on_the_screen() -> None:
 
 @pytest.mark.asyncio
 async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record() -> None:
-    door = _EvidenceDoor(ready=True)
+    door = _EvidenceDoor()
     first = LedgerEvidenceRecordRowV1(
         evidence_id="8747cbf318cf0adb",
         media_kind="pdf",
@@ -424,7 +416,7 @@ async def test_confirm_eligibility_is_limited_to_the_currently_reviewed_record()
 
 @pytest.mark.asyncio
 async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
-    door = _EvidenceDoor(ready=True, expire_on_confirm=True)
+    door = _EvidenceDoor(expire_on_confirm=True)
     door.full_projection = InvoiceDraftProjectionV1(supplier_name="private full evidence draft")
     door.records.append(
         LedgerEvidenceRecordRowV1(
@@ -464,7 +456,7 @@ async def test_session_expiry_clears_full_draft_and_record_rows() -> None:
 @pytest.mark.asyncio
 async def test_runtime_evidence_route_needs_no_attachment_review_inventory() -> None:
     projection = ledger_projection()
-    door = _EvidenceDoor(ready=True)
+    door = _EvidenceDoor()
     action = ledger_evidence_action()
     factory = ledger_screen_factory(
         projection,

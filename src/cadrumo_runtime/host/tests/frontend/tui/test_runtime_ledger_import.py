@@ -38,7 +38,7 @@ from cadrumo.application.operations.registry import (
 )
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.application.operator_actions.projection import PreconditionVerdictSnapshot
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
+from cadrumo.application.tests.agent_refusal_support import model_not_installed_verdict
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.model_roles import ModelRole
 from cadrumo.core.operations import (
@@ -259,21 +259,9 @@ def test_preview_runs_a_dry_run_of_the_planned_files_and_keeps_each_parsed_diges
     assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.own_account_mismatch")]
 
 
-def _reader_verdict(*, no_selection: bool) -> PreconditionVerdict:
-    """The column mapper has no model selected for its role, or the local AI holds none for it."""
-    if no_selection:
-        return probe_no_recovery_verdict(
-            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
-            facts={
-                "role": ModelRole.COLUMN_ROLE_MAPPING.value,
-                "model_run_refusal": "no_selection",
-                "role_selection_required": True,
-            },
-        )
-    return probe_no_recovery_verdict(
-        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-        facts={"role": ModelRole.COLUMN_ROLE_MAPPING.value, "model": "reader", "role_model_installed": False},
-    )
+def _reader_verdict() -> PreconditionVerdict:
+    """The agent refuses the column mapper's role."""
+    return model_not_installed_verdict(ModelRole.COLUMN_ROLE_MAPPING)
 
 
 def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFileRefusal:
@@ -284,7 +272,7 @@ def _reader_refused(name: str, verdict: PreconditionVerdict) -> LedgerImportFile
     )
 
 
-def test_a_file_the_local_ai_cannot_read_is_worded_apart_from_one_without_a_model_selection(
+def test_a_file_the_reader_refuses_is_worded_by_its_reason_code(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     client = _Client()
@@ -294,8 +282,8 @@ def test_a_file_the_local_ai_cannot_read_is_worded_apart_from_one_without_a_mode
         imported=0,
         valid_files=0,
         refused=(
-            _reader_refused("april.csv", _reader_verdict(no_selection=False)),
-            _reader_refused("may.csv", _reader_verdict(no_selection=True)),
+            _reader_refused("april.csv", _reader_verdict()),
+            _reader_refused("may.csv", _reader_verdict()),
         ),
     )
     _install(monkeypatch, client, [(OperationEffect.NONE, preview)])
@@ -303,10 +291,7 @@ def test_a_file_the_local_ai_cannot_read_is_worded_apart_from_one_without_a_mode
 
     outcome = asyncio.run(_door(client).preview(request))
 
-    not_ready, no_selection = outcome.refused_files
-    assert not_ready.reason == tr("tui.ledger.import.refusal.reader_unavailable")
-    assert no_selection.reason == tr("tui.ledger.import.refusal.reader_unavailable_here")
-    assert no_selection.reason != not_ready.reason
+    assert [item.reason for item in outcome.refused_files] == [tr("tui.ledger.import.refusal.reader_unavailable")] * 2
 
 
 def test_apply_submits_exactly_the_previewed_files_with_their_digests(

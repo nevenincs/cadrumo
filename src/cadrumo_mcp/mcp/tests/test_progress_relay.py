@@ -39,7 +39,7 @@ _NOW = datetime(2026, 10, 18, 12, 0, tzinfo=UTC)
 
 def _observe_reply() -> dict[str, Any]:
     """Return an ``observe`` tool result whose page carries one phase and two progress events."""
-    phase = "local-reader.read"
+    phase = "ledger.evidence.read"
     page = OperationPublicEventPageV1(
         operation_id=_OPERATION_ID,
         anchor_cursor=3,
@@ -51,7 +51,7 @@ def _observe_reply() -> dict[str, Any]:
                 revision=1,
                 sequence=2,
                 timestamp=_NOW,
-                code="local-reader.progress",
+                code="ledger.evidence.progress",
                 completed=25,
                 total=100,
                 unit_code="bytes",
@@ -60,7 +60,7 @@ def _observe_reply() -> dict[str, Any]:
                 revision=1,
                 sequence=3,
                 timestamp=_NOW,
-                code="local-reader.progress",
+                code="ledger.evidence.progress",
                 completed=3,
                 total=4,
                 unit_code=None,

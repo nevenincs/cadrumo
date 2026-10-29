@@ -71,7 +71,7 @@ COMPLETE_NATURAL_PERSON_FLAGS = (
 
 @pytest.fixture
 def config_check_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated storage/locale backend for the ``config check`` suites."""
+    """Isolated storage and locale backend for the ``config`` command suites."""
 
     with (
         override_settings(cadrumo_output_language="en"),
@@ -82,7 +82,7 @@ def config_check_backend(tmp_path: Path) -> Iterator[None]:
 
 @pytest.fixture(name="_isolated_backend", autouse=True)
 def config_check_isolated_backend(config_check_backend: None) -> None:
-    """Autouse variant of :func:`config_check_backend` for the ``config check`` suites."""
+    """Autouse variant of :func:`config_check_backend` for the ``config`` command suites."""
 
     return config_check_backend
 

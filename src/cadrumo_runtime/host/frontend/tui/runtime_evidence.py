@@ -34,11 +34,6 @@ from cadrumo.application.ledger.invoice_evidence_extract_operation import (
     LedgerEvidenceExtractProjection,
     LedgerEvidenceExtractRequest,
 )
-from cadrumo.application.ledger.invoice_evidence_readiness_operation import (
-    LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
-    LedgerEvidenceReaderReadinessProjection,
-    LedgerEvidenceReaderReadinessRequest,
-)
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operations.public_scalar import PublicDecimal
 from cadrumo.core.hex import is_hex16, is_hex64
@@ -49,7 +44,6 @@ from cadrumo.entrypoints.tui.ledger.models import (
     LedgerEvidenceDraftV1,
     LedgerEvidenceRecordRowV1,
     LedgerEvidenceRecordStatus,
-    LedgerReaderReadinessV1,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -188,22 +182,6 @@ class RuntimeEvidenceTuiDoorV1:
             correlate=correlate,
         )
         return self._record_row(projection.record)
-
-    def reader_readiness(self) -> LedgerReaderReadinessV1:
-        """Measure the local reader without starting it."""
-        projection = self._call_sync(
-            LedgerEvidenceReaderReadinessRequest(profile_id=self._profile_id),
-            definition_id=LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
-            result_type=LedgerEvidenceReaderReadinessProjection,
-            success_effect=OperationEffect.NONE,
-        )
-        return LedgerReaderReadinessV1(
-            extraction_ready=projection.extraction_ready,
-            failed_condition_id=next(
-                (role.failed_condition_id for role in projection.roles if not role.ready),
-                None,
-            ),
-        )
 
     async def extract(self, evidence_id: str) -> LedgerEvidenceDraftV1:
         """Extract locally and retain only digests needed to bind a later confirmation."""

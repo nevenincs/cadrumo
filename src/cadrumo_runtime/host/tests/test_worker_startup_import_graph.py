@@ -51,7 +51,6 @@ _FORBIDDEN_AT_READY: tuple[str, ...] = (
     "cadrumo.application.ledger.invoice_draft_extraction_ports",
     "cadrumo.application.ledger.establishment_ladder",
     "cadrumo.application.filing.export_envelope",
-    "cadrumo.application.local_reader_contracts",
     # The pinned tax authority and its typed registry.
     "cadrumo.domain.calculations.registry.authority",
     "cadrumo.domain.calculations.registry.schema",

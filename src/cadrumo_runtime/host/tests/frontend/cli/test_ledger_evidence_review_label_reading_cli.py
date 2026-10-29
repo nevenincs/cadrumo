@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from cadrumo.adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
 from cadrumo.application.ledger.extraction_draft_store import (
     ExtractionDraftDocument,
@@ -37,7 +38,6 @@ from cadrumo.application.ledger.invoice_draft_records import (
     LabelReadingFallback,
     LabelReadingFallbackCause,
 )
-from cadrumo.application.probe_outcomes import ProbePreconditionCondition
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.core.config import load_settings
 
@@ -58,7 +58,7 @@ _REFUSALS: dict[LabelReadingFallbackCause, tuple[str, str | None]] = {
     LabelReadingFallbackCause.READER_UNAVAILABLE: ("InvoiceDraftReaderUnavailableError", None),
     LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED: (
         "InvoiceDraftReaderHeadroomRefusedError",
-        ProbePreconditionCondition.LOAD_CAPACITY_AVAILABLE.value,
+        LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED.value,
     ),
 }
 

@@ -140,7 +140,6 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
                     Static(tr("tui.ledger.evidence.records_heading"), classes="cadrumo-heading", markup=False),
                     "tui.ledger.evidence.records_heading",
                 )
-                yield Static("", id="ledger-evidence-reader", markup=False)
                 yield ContentDataTable[str](id="ledger-evidence-records", cursor_type="row", zebra_stripes=True)
                 yield Static("", id="ledger-evidence-record-detail", markup=False)
                 yield localized(
@@ -302,7 +301,6 @@ class LedgerEvidenceScreen(LedgerEvidenceRecordActions):
         records.add_column(tr("tui.ledger.evidence.column.invoice"), key="invoice")
         records.add_column(tr("tui.ledger.evidence.column.status"), key="status")
         self._show_records()
-        self.run_worker(self._measure_reader(), group="ledger-evidence-reader")
 
     def _focus_initial_table(self) -> None:
         if self.controller.evidence_review_door is not None:

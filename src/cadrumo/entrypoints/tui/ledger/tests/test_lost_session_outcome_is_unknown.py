@@ -408,7 +408,7 @@ _RECORD = LedgerEvidenceRecordRowV1(
 
 @pytest.mark.asyncio
 async def test_a_confirmation_whose_review_is_withdrawn_before_it_runs_does_not_stay_in_flight() -> None:
-    door = _EvidenceDoor(ready=True)
+    door = _EvidenceDoor()
     door.records.append(_RECORD)
     body = _evidence_body(door, refresh_fails=False)
     with override_settings(cadrumo_output_language="en"):

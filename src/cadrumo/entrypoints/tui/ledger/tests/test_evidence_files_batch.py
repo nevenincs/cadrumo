@@ -1,7 +1,7 @@
 """Bulk intake of one folder: reviewed first, then each document's outcome, and a partial batch said so.
 
 A batch whose reader paused it says so in its outcome, whatever the pause's
-verdict. The pause verdicts are the probe no-recovery verdicts.
+verdict. The pause verdicts are the agent's refusals.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from textual.widgets import DataTable, Input, Select
 
 from .....application.ledger.batch_ingest import InferencePause
 from .....application.ledger.evidence_ingestion_contracts import LedgerEvidenceBatchRequest
-from .....application.probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
+from .....application.tests.agent_refusal_support import model_not_installed_verdict
 from .....core.config import override_settings
 from .....core.i18n.render import tr
 from .....core.model_roles import ModelRole
@@ -140,24 +140,16 @@ async def test_a_refused_batch_is_shown_on_the_write_step(tmp_path: Path) -> Non
             assert text_of(write, "#ledger-refusal") == tr(EVIDENCE_FILES_REFUSAL_KEY)
 
 
-def _model_pause() -> InferencePause:
-    """The pause a refused read gives when the role's selected model is not installed."""
-    verdict = probe_no_recovery_verdict(
-        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-        facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_installed": False},
-    )
+def _text_pause() -> InferencePause:
+    """The pause a refused read gives when the text role's selected model is not installed."""
+    verdict = model_not_installed_verdict(ModelRole.TEXT_EXTRACTION)
     return InferencePause(facts={"role_model_installed": False}, precondition_verdict=verdict)
 
 
-def _unselected_pause() -> InferencePause:
-    """A pause for a role with no selected model."""
-    return InferencePause(
-        facts={"role_model_selected": False},
-        precondition_verdict=probe_no_recovery_verdict(
-            ProbePreconditionCondition.SELECTED_MODEL_AVAILABLE,
-            facts={"role": ModelRole.TEXT_EXTRACTION.value, "role_model_selected": False},
-        ),
-    )
+def _vision_pause() -> InferencePause:
+    """A pause for the vision role, whose selected model the lane does not hold."""
+    verdict = model_not_installed_verdict(ModelRole.VISION_TRANSCRIPTION)
+    return InferencePause(facts={"role_model_installed": False}, precondition_verdict=verdict)
 
 
 def _paused_store(pause: InferencePause) -> MemoryEvidenceFilesStore:
@@ -168,7 +160,7 @@ def _paused_store(pause: InferencePause) -> MemoryEvidenceFilesStore:
 
 
 @pytest.mark.asyncio
-@pytest.mark.parametrize("pause", [_model_pause, _unselected_pause], ids=["model-not-installed", "no-selection"])
+@pytest.mark.parametrize("pause", [_text_pause, _vision_pause], ids=["text-role", "vision-role"])
 async def test_a_paused_batch_says_so_in_its_outcome(tmp_path: Path, pause: Callable[[], InferencePause]) -> None:
     store = _paused_store(pause())
     with override_settings(cadrumo_output_language="en"):
