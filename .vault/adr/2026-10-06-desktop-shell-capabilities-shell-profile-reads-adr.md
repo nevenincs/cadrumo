@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell-capabilities'
 date: '2026-10-06'
-modified: '2026-10-22'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:f78acb6ec71e65a234e57636bee6121daa5f5263a0bd048750fdf02e82c34d6a'
+body_hash: 'sha256:cdb6e2c2cc39f046ff5c9cf5038f0aa014600c398b9807cede066dfeb6f205d3'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-research]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -45,7 +45,7 @@ The user asked on 2026-10-06 for the desktop window to show a count of messages 
 - A view is read only while the account is signed in, and the answer is rejected when the held account changed while it was read. The host keeps nothing it reads. The shell holds a view in memory only and discards it on sign-out, on a change of profile and when the window closes: never in the window's storage, a log line, a diagnostic snapshot or an error message.
 - The views keep the product's own distinctions. Never captured, stale, unknown and empty are shown as such; a count is shown only where the product gives one, and an unknown is never drawn as zero. A profile without a declared taxpayer model is said, in the product's own sentence, rather than drawn as nothing due.
 - A failed or refused read is shown as unavailable with its code, never retried automatically. A read is bounded in time as the profile read is.
-- The views are the notifications summary and the filing calendar. Each further view is added to the list by amending this record. Sync counts are out of scope: no product read gives them. The profile's Drive folder is out of scope: `2026-10-04-google-app-identity-adr` reserves it.
+- The views are the notifications summary, the filing calendar, the AEAT sync status view and the notification rows view. Each further view is added to the list by amending this record. Sync counts are served by `live.sync.status` through the AEAT sync status view. The profile's Drive folder is out of scope: `2026-10-04-google-app-identity-adr` reserves it.
 
 ## Implementation
 
@@ -66,3 +66,7 @@ The reads already exist, are already admitted by the runtime for the signed-in p
 - Private data enters the webview's memory. The constraints on storage and logging are things to test, in the browser and in the packaged window.
 - A view is as fresh as the last local capture; the window says so rather than imply the agency's current state.
 - Reconsider if a view needs to change anything, if the number of views makes per-view commands a burden, or if the runtime gains a read-only client role the shell could hold safely.
+
+### Amendment 2026-10-29: AEAT sync views
+
+Accepted by the owner on 2026-10-29 with `2026-10-29-desktop-aeat-sync-adr`. Two views are added. The AEAT sync status view submits `live.sync.status` for the signed-in profile and passes on, per area, the served state, the last capture instant, the last attempt outcome where given and the served counts. The notification rows view submits `live.notifications.latest` and `live.notifications.show` and passes on each row's subject wording, dates, category and read state; the window receives no snapshot or row identifier, only an opaque per-view position. Every other ruling of this record stands.

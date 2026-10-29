@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#sync-control-surface'
 date: '2026-08-08'
-modified: '2026-10-05'
+modified: '2026-10-29'
 body_schema: 'body-v1'
-body_hash: 'sha256:1b95bdfee6370bcf335304d94b4ec3021023adc69a27b25a48baca16ac8faf6d'
+body_hash: 'sha256:98fa82a3474c359ed73b3ff5a648093e64fbcf4c3f05a2b19e885666b6abdfd4'
 related:
   - '[[2026-08-08-sync-control-surface-reference]]'
   - '[[2026-07-25-censal-profile-autofill-adr]]'
@@ -169,13 +169,14 @@ remembers what it did.
 
 - An operator gains the ability to see what a sweep would destroy before it
   destroys it, on both surfaces, through one flag spelled the same way.
-- **Open gap: none of this is implemented.** This record is a ruling, not a
-  build. Landing it requires, per surface: the `--dry-run` flag and its
-  short-circuit before the outbound write; the existing differ relocated in
-  front of the write; the typed sync-run record and its persistence; the
-  truncation notice on a limited sweep; and the clear-then-write window closed
-  on the Sheets adapter. Each is its own change with its own test, and none of
-  them is started.
+- The filed sweep's dry run returns before persistence, and its recapture
+  divergence is computed in front of the write
+  (`src/cadrumo/application/live/filed_capture_accumulator.py:155`). The filed
+  sweep writes the typed sync-run record `SyncRunRecord`
+  (`src/cadrumo/application/storage/sync_runs/records.py:173`) on success and
+  on partial failure (`src/cadrumo/application/live/filed_data_capture.py:705`),
+  and the Sheets export records its own run on success and failure
+  (`src/cadrumo/application/storage/calc_sheets/export_service.py:124`).
 - **The Sheets torn-write window is a live defect, not a future concern.** An
   interruption between the clear and the update empties the operator's workbook
   today. It is named here because this record's cancellation ruling depends on
@@ -183,10 +184,15 @@ remembers what it did.
 - The premise that the filed sweep is append-only is incorrect and is corrected
   here. Any earlier reasoning that relied on it — including the framing this
   decision was commissioned under — should be re-read against the upsert.
-- Progress reporting is deliberately unruled. It needs a decision about whether
-  the CLI envelope grows a streaming channel, which is a contract-level question
-  this record has no standing to answer.
+- CLI progress reporting is deliberately unruled. It needs a decision about
+  whether the CLI envelope grows a streaming channel, which is a contract-level
+  question this record has no standing to answer. Desktop progress is ruled by
+  the 2026-10-29 amendment below.
 
 ## Amendment 2026-10-05 - outbound review
 
 The product owner's Session 01 instruction authorizes the scoped wording changes above, governed by 2026-10-05-google-outbound-review-adr. Earlier descriptions of then-current behavior remain historical evidence, not permission to retain retired routes. Other commitments remain in force. This amendment records architecture, not completed implementation or live acceptance.
+
+## Amendment 2026-10-29 - the desktop AEAT sync page
+
+Accepted by the owner on 2026-10-29 with `2026-10-29-desktop-aeat-sync-adr`. The desktop's stop control stops a run between items: the in-flight capture settles and nothing further starts. It interrupts no operation, so the interruption-safety ruling stands. Progress for the desktop is item-level, refined by the operation's own observation events where it emits them; the CLI envelope is unchanged. Last-sync provenance for every AEAT area is served by `live.sync.status`: the filed sweep's typed sync-run record where one exists, otherwise the latest stored capture's own instant. Dry run on the filed sweep remains the only AEAT dry run; it reads AEAT and saves nothing.

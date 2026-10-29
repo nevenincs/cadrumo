@@ -5,7 +5,7 @@ tags:
 date: '2026-10-04'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbd93b6119a580cb48d4c93072134160c8a1f649c870aefd0b1bce2b490c248d'
+body_hash: 'sha256:ef3ccda1257693c1a5135e358c2659eb213e30839398e3f5ec9afe46d7e5b11c'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"
@@ -339,7 +339,7 @@ Accepted by the user on 2026-10-23, who approved the profile page mockup with it
 
 - **Profile actions.** The profile page's actions are entries of the one action registry, so the palette, the page's actions button and its context menu offer the same list. Field actions (edit, copy, clear, about) follow the focused detail. The context menu and the actions button open through the shell's menu path.
 - **Saved profile view.** The layout store keeps the profile's show filter (all, unset, required, filled), grouping (section, status, none), sort (form order, missing first, alphabetical) and collapsed sections. It no longer keeps a selected section. The section selector is a section index while the page is full screen and wide enough, and a sections menu otherwise. A stored filter from before this amendment is read as the equivalent show filter.
-- **Censo.** Synchronization is a band of the profile page, not a dialog. It uses the existing `profile_censo_*` commands unchanged. The incoming values of a review are shown on the details they would change, and the review is still answered as a whole, apply or reject, with its digest. The band shows no last-synchronized time, because no product read reports one.
+- **Censo.** Synchronization is a band of the profile page, not a dialog. It uses the existing `profile_censo_*` commands unchanged. The incoming values of a review are shown on the details they would change, and the review is still answered as a whole, apply or reject, with its digest. The band shows the census's last capture time served by `live.sync.status`.
 - **Password change.** The host gains `profile_password_change`, a closed, token-checked command. It runs the canonical runtime CLI `config passphrase change --secrets-stdin` for the active profile. The current password, the new password and its confirmation travel in the command's raw body and the helper's standard input only. They are wiped on drop, and never appear in arguments, logs, diagnostics or the window's storage. The command line first proves the current password, then rotates the password without replacing the profile's data key. The window receives only a success or a refusal code. Nothing is retried, and an unconfirmed outcome is shown as unconfirmed. The shell still holds no session, receipt, credential, token or DEK.
 
 Evidence: `native/desktop/frontend/src/components/profile/UserProfilePage.tsx`, `native/desktop/frontend/src/shell/layout.ts`, `native/desktop/frontend/src/App.tsx`, `native/desktop/src-tauri/src/shell/sign_in/password.rs`, and `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`.
@@ -406,3 +406,10 @@ Accepted by the user on 2026-10-27, who chose an in-app browser that streams Cad
 - **Keys.** While the canvas has focus it receives keys as a terminal does, and the shell reserves only its everywhere chords.
 - **Lifetime.** Leaving the page keeps the view running without frames. Closing the page or the window, or retiring the window's person session, ends it; it has no other time limit. The navigation guard reports the page `busy` only while the view publishes its session.
 - The shell still holds no session beyond its own person session, and no receipt, cookie, storage state, credential or DEK.
+
+### Amendment 2026-10-29: the AEAT sync page
+
+Accepted by the owner on 2026-10-29 with `2026-10-29-desktop-aeat-sync-adr`.
+
+- **AEAT sync run family.** The `aeat-sync` page brings AEAT data into the profile through the host's `aeat_sync_*` commands, which submit only the closed list of read captures in `2026-10-29-desktop-aeat-sync-adr`, a Rust constant checked by test against the contract manifest. The run is held by the host for the signed-in profile, survives page navigation and is discarded on sign-out, profile change and window close. The window receives closed states, outcomes and served wording only. Nothing is submitted to AEAT.
+- **Census entries.** The one Censo flow (the `profile_censo_*` commands and the profile page's band) is reachable from a global command palette action on every page, the profile page, the Modelo page and the AEAT sync page's census area. Each entry opens the same flow; none duplicates it.

@@ -1,0 +1,25 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-aeat-sync'
+date: '2026-10-29'
+modified: '2026-10-29'
+body_schema: 'body-v2'
+body_hash: 'sha256:cf62771a2921bbda8ee5ca2f6a2087e6785ab739b910898542389080876504fd'
+related:
+  - "[[2026-10-29-desktop-aeat-sync-plan]]"
+---
+
+# `desktop-aeat-sync` ledger
+
+## Changes
+
+- `S01` `M` `.vault/adr/2026-10-29-desktop-aeat-sync-adr.md`
+- `S01` `M` `.vault/adr/2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr.md`
+- `S01` `M` `.vault/adr/2026-10-04-desktop-shell-adr.md`
+- `S01` `M` `.vault/adr/2026-08-08-sync-control-surface-adr.md`
+- `S01` `R` `.vault/adr/2026-10-29-desktop-aeat-sync-shell-profile-reads-amendment-adr.md` -> `.vault/_archive/adr/2026-10-29-desktop-aeat-sync-shell-profile-reads-amendment-adr.md`
+- `S01` `R` `.vault/adr/2026-10-29-desktop-aeat-sync-desktop-shell-amendment-adr.md` -> `.vault/_archive/adr/2026-10-29-desktop-aeat-sync-desktop-shell-amendment-adr.md`
+- `S01` `R` `.vault/adr/2026-10-29-desktop-aeat-sync-sync-control-surface-amendment-adr.md` -> `.vault/_archive/adr/2026-10-29-desktop-aeat-sync-sync-control-surface-amendment-adr.md`
+- `S01` `M` `.vault/plan/2026-10-29-desktop-aeat-sync-plan.md`
+- `S01` `verify:` `vaultspec-core vault check all --feature desktop-aeat-sync` -> `pass`
