@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:72164dff752fd2020f9725e49a8005b7b42ef4f72602691e15c5897dab193ed3'
+body_hash: 'sha256:c7492c1043ad87d0dd3057e36b9634de766cd4b24ba4a063e541e33abbaf5d32'
 related:
   - "[[2026-10-29-desktop-aeat-sync-plan]]"
 ---
@@ -260,6 +260,21 @@ related:
 - `S29` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
 - `S29` `verify:` `npm run check` -> `pass`
 - `S29` `verify:` `playwright tests/scenarios/aeat-sync.spec.ts` -> `pass`
+- `S17` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S17` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S17` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S17` `verify:` `desktop-frontend-generated` -> `pass`
+- `S17` `verify:` `dev.locales status --check` -> `pass`
+- `S18` `M` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S18` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S18` `verify:` `npm run check` -> `pass`
+- `S18` `verify:` `playwright aeat-sync 26` -> `pass`
+- `S19` `M` `native/desktop/frontend/src/dev/aeatSyncPrepareFixture.ts`
+- `S19` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S19` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S19` `verify:` `npm run check` -> `pass`
+- `S19` `verify:` `playwright aeat-sync 26` -> `pass`
 
 ## Notes
 
@@ -280,3 +295,6 @@ related:
 - `S09` builds only together with S10 outcome.rs
 - `S10` gaps: filed result rows need a backend extension; access readiness reuses auth.local-read outside the closed list (decision pending)
 - `S27` just check-types fails only in dev/docs files another session owns; just check-import-boundaries kept 30 of 30 contracts with no finding but reported unavailable because the source tree changed while it ran
+- `S17` owner wording rulings applied (plain browser naming, short labels) in 6bf8e4cdb5 and ba5a53ba05; en/adapters browser line left uncommitted (foreign hunks)
+- `S18` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead
+- `S19` owner rulings removed the sign-in step, selection screen and dry run; signed-out, phone wait and blocked install covered instead

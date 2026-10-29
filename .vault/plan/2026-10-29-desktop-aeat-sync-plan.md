@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:4add85a4cf221636c6cb7cb7322077a728ab554e22caf899c2814d0e2f653d87'
+body_hash: 'sha256:af05b29ab6987ad6abc617a7132151a31eb82f96c488ed282c2f75ea10a23fdf'
 ---
 
 # `desktop-aeat-sync` plan
@@ -84,14 +84,14 @@ Build the aeat-sync window view: overview, preflight, sign-in, selection, progre
 
 Author every window string for the page through dev.locales in en, es, ca and hu.
 
-- [ ] `P05.S17` - declare the page keys and author en, es, ca and hu catalogue entries through dev.locales in the informal singular, then regenerate the desktop strings; `dev/locales/desktop_interface_keys.py, src/cadrumo/locales/ (en, es, ca, hu)`.
+- [x] `P05.S17` - declare the page keys and author en, es, ca and hu catalogue entries through dev.locales in the informal singular, then regenerate the desktop strings; `dev/locales/desktop_interface_keys.py, src/cadrumo/locales/ (en, es, ca, hu)`.
 
 ### Phase `P06` - Playwright scenarios
 
 Cover every page state with scenario-host data.
 
-- [ ] `P06.S18` - add scenarios for browser missing then installed, signed out then signed in, and session expires mid-sync; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts (new), native/desktop/frontend/src/dev/aeatSyncFixture.ts (new)`.
-- [ ] `P06.S19` - add scenarios for partial failure, unknown outcome, nothing found, dry run and stop; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
+- [x] `P06.S18` - add scenarios for browser missing then installed, signed out then signed in, and session expires mid-sync; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts (new), native/desktop/frontend/src/dev/aeatSyncFixture.ts (new)`.
+- [x] `P06.S19` - add scenarios for partial failure, unknown outcome, nothing found, dry run and stop; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [x] `P06.S24` - add scenarios proving the palette action, the profile page, the Modelo page and the AEAT sync census area all open the one census flow and reattach to a running census session; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts, native/desktop/frontend/tests/scenarios/user-profile.spec.ts`.
 - [x] `P06.S25` - add scenarios for each area showing possibly out of date at its served horizon (notifications 7 days, IVA wallet 30 days, others 90 days) from scenario-host data; `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts, native/desktop/frontend/src/dev/aeatSyncFixture.ts`.
 
