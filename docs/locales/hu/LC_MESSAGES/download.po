@@ -100,19 +100,16 @@ msgid "Confirm the install"
 msgstr "A telepítés megerősítése"
 
 #: ../../download.md:37
-#, fuzzy
 msgid ""
 "A version number confirms the install. Then add the optional extras you "
 "want (Google export, the live AEAT browser, OFX/QFX import) by following "
 "[Install Cadrumo](workstation-setup.md), which covers the per-extra "
 "install commands."
 msgstr ""
-"A verziószám megerősíti a telepítést. Ezután futtasd a teljes "
-"munkaállomás-ellenőrzést, és add hozzá a kívánt opcionális extrákat "
-"(Google-export, élő AEAT-böngésző, OFX/QFX-import) a [Cadrumo telepítése"
-"](workstation-setup.md) oldal alapján; ez ismerteti a függőségi "
-"jelentést, a platformellenőrzéseket és az egyes extrák telepítési "
-"parancsait."
+"A verziószám igazolja a telepítést. Ezután add hozzá a kívánt opcionális "
+"extrákat (Google-exportálás, élő AEAT-böngésző, OFX/QFX-import) a "
+"[Cadrumo telepítése](workstation-setup.md) útmutató szerint, amely az "
+"egyes extrák telepítési parancsait ismerteti."
 
 #: ../../download.md:42
 msgid ""
@@ -274,4 +271,3 @@ msgid ""
 msgstr ""
 "Lehetővé teszi, hogy egy Claude-hoz hasonló MI-asszisztens veled együtt, "
 "a saját gépeden vezérelje a Cadrumót."
-

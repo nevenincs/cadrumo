@@ -168,7 +168,6 @@ msgstr ""
 "proveedores."
 
 #: ../../how-to/import-bank-statements.md:71
-#, fuzzy
 msgid ""
 "`--provider pdf` reads a PDF statement in any bank's layout and language."
 " A local language model proposes the movements it finds on each page, and"
@@ -202,13 +201,13 @@ msgstr ""
 " ningún saldo impreso lo confirma. Haz primero una prueba en seco: "
 "enumera cada propuesta que no se conservó e indica cuándo el extracto no "
 "imprime ningún saldo con el que comprobarlos. Leer un extracto PDF "
-"requiere el extra `llm` y la IA local, con un modelo elegido para el rol "
-"de extracción de texto en el agente de Cadrumo. Una página sin capa de "
-"texto la transcribe el modelo elegido para el rol de transcripción por "
-"visión. El extracto nunca sale de tu ordenador: si el modelo elegido para"
-" un rol fuera a enviarlo fuera del equipo, la importación se niega antes "
-"de enviar nada. Consulta [Clasificar movimientos con un LLM](classify-"
-"with-llm.md#set-up-the-local-reader)."
+"requiere el extra `llm`, con un modelo elegido para el rol de extracción "
+"de texto en el agente de Cadrumo. Una página sin capa de texto la "
+"transcribe el modelo elegido para el rol de transcripción por visión. El "
+"extracto nunca sale de tu ordenador: si el modelo elegido para un rol "
+"fuera a enviarlo fuera del equipo, la importación se niega antes de "
+"enviar nada. Consulta [Clasificar movimientos con un LLM](classify-with-"
+"llm.md#set-up-a-provider)."
 
 #: ../../how-to/import-bank-statements.md:89
 msgid ""
@@ -670,4 +669,3 @@ msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.m
 #: ../../how-to/import-bank-statements.md:299
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
-

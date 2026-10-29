@@ -23,7 +23,6 @@ msgid "Classify transactions with an LLM"
 msgstr "Classifica els moviments amb un LLM"
 
 #: ../../how-to/classify-with-llm.md:3
-#, fuzzy
 msgid ""
 "This page covers large language model (LLM) assisted classification: "
 "previewing a suggestion for one transaction, the review loop (apply, "
@@ -34,14 +33,13 @@ msgid ""
 "correct it, and the model never sets a euro amount."
 msgstr ""
 "Aquesta pàgina tracta la classificació assistida per un model de "
-"llenguatge gran (LLM): configurar el lector local, previsualitzar un "
-"suggeriment per a un moviment, el bucle de revisió (aplicar, rebutjar o "
-"sobreescriure), emplenar els camps fiscals de l'IVA i llegir una factura "
-"adjunta amb un model. Cada lectura fa servir el model que has triat per "
-"al seu rol, i aquestes ordres només fan servir un model que s'executa al "
-"teu propi ordinador. El suggeriment sempre és un punt de partida: el "
-"confirmes o el corregeixes, i el model mai no estableix cap import en "
-"euros."
+"llenguatge gran (LLM): previsualitzar un suggeriment per a un moviment, "
+"el bucle de revisió (aplicar, rebutjar o sobreescriure), emplenar els "
+"camps fiscals de l'IVA i llegir una factura adjunta amb un model. Cada "
+"lectura fa servir el model que has triat per al seu rol, i aquestes "
+"ordres només fan servir un model que s'executa al teu propi ordinador. El"
+" suggeriment sempre és un punt de partida: tu el confirmes o el "
+"corregeixes, i el model mai no fixa un import en euros."
 
 #: ../../how-to/classify-with-llm.md:5
 msgid ""
@@ -101,11 +99,10 @@ msgstr ""
 "install \"cadrumo[llm]\"`."
 
 #: ../../how-to/classify-with-llm.md:21
-#, fuzzy
 msgid "A model chosen for each reader role, as the next section describes."
 msgstr ""
-"La IA local i un model triat per a cada rol de lector, tal com descriu la"
-" secció següent."
+"Un model triat per a cada rol de lector, tal com descriu la secció "
+"següent."
 
 #: ../../how-to/classify-with-llm.md:23
 msgid ""
@@ -119,10 +116,9 @@ msgstr ""
 
 #: ../../how-to/classify-with-llm.md:28
 msgid "How a read chooses its model"
-msgstr ""
+msgstr "Com tria el seu model una lectura"
 
 #: ../../how-to/classify-with-llm.md:30
-#, fuzzy
 msgid ""
 "`aeat` sends every model request through the Cadrumo agent service, which"
 " runs it with the model you chose for that request's role. Classification"
@@ -136,23 +132,19 @@ msgstr ""
 "sol·licitud. La classificació i els documents amb capa de text fan servir"
 " el rol d'extracció de text; els documents escanejats i les imatges fan "
 "servir el rol de transcripció per visió. Cadrumo no anomena cap model ni "
-"en fixa cap per defecte. Els models disponibles provenen del catàleg de "
-"l'agent, que mostra de cada model la mida, la longitud de context, la "
-"llicència, si llegeix imatges i si s'executa en aquest ordinador o envia "
-"el que llegeix fora de la màquina. `aeat` no desa credencials d'LLM i no "
-"necessita cap compte per a un model que s'executa en aquest ordinador."
+"en fixa cap per defecte. `aeat` no desa credencials d'LLM i no necessita "
+"cap compte per a un model que s'executa en aquest ordinador."
 
 #: ../../how-to/classify-with-llm.md:37
-#, fuzzy
 msgid ""
 "A role with no chosen model is never filled in for you: reads for that "
 "role refuse until you choose one. The vision transcription role accepts "
 "only a model the agent's catalogue marks as reading images."
 msgstr ""
-"Un model triat per a cada rol de lector a l'agent de Cadrumo. Per a les "
-"ordres d'aquesta pàgina, tria models que s'executin en aquest ordinador. "
-"El rol de transcripció per visió només accepta un model que el catàleg "
-"marqui com a capaç de llegir imatges."
+"Un rol sense model triat mai no s'emplena per tu: les lectures d'aquest "
+"rol es rebutgen fins que en triïs un. El rol de transcripció per visió "
+"només accepta un model que el catàleg de l'agent marqui com a capaç de "
+"llegir imatges."
 
 #: ../../how-to/classify-with-llm.md:41
 msgid ""
@@ -169,23 +161,19 @@ msgstr ""
 
 #: ../../how-to/classify-with-llm.md:43
 msgid "Preview a suggestion for one transaction, which saves nothing:"
-msgstr ""
+msgstr "Obtén una vista prèvia d'un suggeriment per a un moviment; no desa res:"
 
 #: ../../how-to/classify-with-llm.md:48
-#, fuzzy
 msgid ""
 "If no model is chosen for the role, the command refuses and reads "
 "nothing. If the model chosen for the role sends what it reads off this "
 "computer, the command refuses too: classification sends nothing off the "
 "machine. Retry once the role has a local model."
 msgstr ""
-"Si no hi ha cap model triat per al rol, la IA local no està en marxa o el"
-" model triat encara no s'ha baixat, l'ordre es rebutja i no llegeix res. "
-"El rebuig indica què cal arreglar, com ara triar un model per al rol o "
-"posar en marxa la IA local. Si el model triat per al rol envia el que "
-"llegeix fora d'aquest ordinador, l'ordre també es rebutja: la "
-"classificació no envia res fora de la màquina. Corregeix el que falti i "
-"torna-ho a provar."
+"Si no hi ha cap model triat per al rol, l'ordre es rebutja i no llegeix "
+"res. Si el model triat per al rol envia el que llegeix fora d'aquest "
+"ordinador, l'ordre també es rebutja: la classificació no envia res fora "
+"de la màquina. Torna-ho a provar quan el rol tingui un model local."
 
 #: ../../how-to/classify-with-llm.md:53
 msgid "Ask for a suggestion"
@@ -525,7 +513,6 @@ msgstr ""
 " en un fitxer temporal, un registre ni una memòria cau."
 
 #: ../../how-to/classify-with-llm.md:201
-#, fuzzy
 msgid ""
 "A read sends the image or the extracted text through the agent service to"
 " the model chosen for its role, which runs on your machine. If that model"
@@ -533,9 +520,9 @@ msgid ""
 " Nothing leaves the machine."
 msgstr ""
 "Una lectura envia la imatge o el text extret a través del servei de "
-"l'agent al model triat per al seu rol, que s'executa a la IA local de la "
-"teva màquina. Si aquest model l'hagués d'enviar fora de la màquina, la "
-"lectura es rebutja abans d'enviar res. Res no surt de la màquina."
+"l'agent al model triat per al seu rol, que s'executa a la teva màquina. "
+"Si aquest model l'hagués d'enviar fora de la màquina, la lectura es "
+"rebutja abans d'enviar res. Res no surt de la màquina."
 
 #: ../../how-to/classify-with-llm.md:205
 msgid ""
@@ -687,49 +674,3 @@ msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 #: ../../how-to/classify-with-llm.md:266
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
-
-#~ msgid "Set up the local reader"
-#~ msgstr "Configura el lector local"
-
-#~ msgid "The local reader needs two things in place before `aeat` can use it:"
-#~ msgstr ""
-#~ "El lector local necessita dues coses "
-#~ "abans que `aeat` el pugui fer "
-#~ "servir:"
-
-#~ msgid ""
-#~ "The local AI program (Ollama) running"
-#~ " with the chosen models downloaded."
-#~ msgstr ""
-#~ "El programa de IA local (Ollama) "
-#~ "en execució, amb els models triats "
-#~ "baixats."
-
-#~ msgid ""
-#~ "A role with no chosen model is "
-#~ "never filled in for you: reads for"
-#~ " that role refuse until you choose"
-#~ " one. `aeat` takes no model name "
-#~ "and does not install or start the"
-#~ " local AI. `aeat config check` "
-#~ "reports the profile's service capabilities,"
-#~ " whether each reader role is ready,"
-#~ " and the fix for each problem."
-#~ msgstr ""
-#~ "Un rol sense model triat no "
-#~ "s'omple mai per tu: les lectures "
-#~ "d'aquest rol es rebutgen fins que "
-#~ "en triïs un. `aeat` no admet cap"
-#~ " nom de model i no instal·la ni"
-#~ " inicia la IA local. `aeat config "
-#~ "check` indica les capacitats de servei"
-#~ " del perfil, si cada rol de "
-#~ "lectura està a punt i la solució"
-#~ " per a cada problema."
-
-#~ msgid "Smoke-test the setup with a preview, which saves nothing:"
-#~ msgstr ""
-#~ "Fes una prova ràpida de la "
-#~ "configuració amb una previsualització, que "
-#~ "no desa res:"
-

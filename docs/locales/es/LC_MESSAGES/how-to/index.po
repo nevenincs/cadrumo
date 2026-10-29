@@ -273,11 +273,10 @@ msgid "Classify with an LLM"
 msgstr "Clasificar con un LLM"
 
 #: ../../how-to/index.md:159
-#, fuzzy
 msgid "Preview and apply suggestions, and classify from an attached invoice."
 msgstr ""
-"Configura el lector local, previsualiza y aplica sugerencias, y clasifica"
-" a partir de una factura adjunta."
+"Previsualiza y aplica sugerencias, y clasifica a partir de una factura "
+"adjunta."
 
 #: ../../how-to/index.md:163
 msgid "Attach invoices and receipts to transactions"
@@ -522,4 +521,3 @@ msgid ""
 msgstr ""
 "Publica y comprueba las reglas fiscales firmadas que lee Cadrumo, como "
 "responsable de publicación."
-

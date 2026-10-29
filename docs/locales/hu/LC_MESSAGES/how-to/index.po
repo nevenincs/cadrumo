@@ -272,11 +272,10 @@ msgid "Classify with an LLM"
 msgstr "Besorolás LLM-mel"
 
 #: ../../how-to/index.md:159
-#, fuzzy
 msgid "Preview and apply suggestions, and classify from an attached invoice."
 msgstr ""
-"Állítsd be a helyi olvasót, nézd meg előnézetben a javaslatokat, "
-"alkalmazd őket, és sorold be a tranzakciókat a csatolt számla alapján."
+"Javaslatok előnézete és alkalmazása, valamint besorolás csatolt számla "
+"alapján."
 
 #: ../../how-to/index.md:163
 msgid "Attach invoices and receipts to transactions"
@@ -516,4 +515,3 @@ msgid ""
 msgstr ""
 "Kiadási felelősként tedd közzé és ellenőrizd a Cadrumo által beolvasott "
 "aláírt adószabályokat."
-

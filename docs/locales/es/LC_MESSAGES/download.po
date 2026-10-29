@@ -101,19 +101,16 @@ msgid "Confirm the install"
 msgstr "Confirmar la instalación"
 
 #: ../../download.md:37
-#, fuzzy
 msgid ""
 "A version number confirms the install. Then add the optional extras you "
 "want (Google export, the live AEAT browser, OFX/QFX import) by following "
 "[Install Cadrumo](workstation-setup.md), which covers the per-extra "
 "install commands."
 msgstr ""
-"Un número de versión confirma la instalación. Después ejecuta la "
-"comprobación completa de la estación de trabajo y añade los extras "
+"Un número de versión confirma la instalación. Después añade los extras "
 "opcionales que quieras (exportación a Google, el navegador en vivo de la "
 "AEAT, importación OFX/QFX) siguiendo [Instalar Cadrumo](workstation-"
-"setup.md), que cubre el informe de dependencias, las comprobaciones de la"
-" plataforma y los comandos de instalación de cada extra."
+"setup.md), que cubre los comandos de instalación de cada extra."
 
 #: ../../download.md:42
 msgid ""
@@ -277,4 +274,3 @@ msgid ""
 msgstr ""
 "Permite que un asistente de IA como Claude maneje Cadrumo contigo en tu "
 "propia máquina."
-

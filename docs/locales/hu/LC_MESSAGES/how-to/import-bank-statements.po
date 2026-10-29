@@ -168,7 +168,6 @@ msgstr ""
 "referenciában](../cli/index.rst)."
 
 #: ../../how-to/import-bank-statements.md:71
-#, fuzzy
 msgid ""
 "`--provider pdf` reads a PDF statement in any bank's layout and language."
 " A local language model proposes the movements it finds on each page, and"
@@ -202,13 +201,13 @@ msgstr ""
 "csak a modell döntött, és ezt egyetlen nyomtatott egyenleg sem erősíti "
 "meg. Először futtass próbafuttatást: felsorol minden javaslatot, amely "
 "nem maradt meg, és jelzi, ha a kivonat nem nyomtat ellenőrizhető "
-"egyenleget. A PDF-kivonat olvasásához az `llm` extra és a helyi MI "
-"szükséges, a Cadrumo-ügynökben a szövegkinyerési szerepkörhöz választott "
-"modellel. A szövegréteg nélküli oldalt a képi átírási szerepkörhöz "
-"választott modell írja át. A kivonat soha nem hagyja el a számítógépedet:"
-" ha egy szerepkörhöz választott modell a gépen kívülre küldené, az "
-"importálás még a küldés előtt elutasításra kerül. Lásd: [Tranzakciók "
-"besorolása LLM-mel](classify-with-llm.md#set-up-the-local-reader)."
+"egyenleget. A PDF-kivonat olvasásához az `llm` extra szükséges, a "
+"Cadrumo-ügynökben a szövegkinyerési szerepkörhöz választott modellel. A "
+"szövegréteg nélküli oldalt a képi átírási szerepkörhöz választott modell "
+"írja át. A kivonat soha nem hagyja el a számítógépedet: ha egy "
+"szerepkörhöz választott modell a gépen kívülre küldené, az importálás még"
+" a küldés előtt elutasításra kerül. Lásd: [Tranzakciók besorolása LLM-mel"
+"](classify-with-llm.md#set-up-a-provider)."
 
 #: ../../how-to/import-bank-statements.md:89
 msgid ""
@@ -677,4 +676,3 @@ msgstr ""
 #: ../../how-to/import-bank-statements.md:299
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
-

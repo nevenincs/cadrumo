@@ -99,19 +99,16 @@ msgid "Confirm the install"
 msgstr "Confirma la instal·lació"
 
 #: ../../download.md:37
-#, fuzzy
 msgid ""
 "A version number confirms the install. Then add the optional extras you "
 "want (Google export, the live AEAT browser, OFX/QFX import) by following "
 "[Install Cadrumo](workstation-setup.md), which covers the per-extra "
 "install commands."
 msgstr ""
-"Un número de versió confirma la instal·lació. Després executa la "
-"comprovació completa de l'estació de treball i afegeix els extres "
-"opcionals que vulguis (exportació a Google, el navegador de l'AEAT en "
-"directe, importació OFX/QFX) seguint [Instal·la Cadrumo](workstation-"
-"setup.md), que cobreix l'informe de dependències, les comprovacions de la"
-" plataforma i les ordres d'instal·lació de cada extra."
+"Un número de versió confirma la instal·lació. Després afegeix els extras "
+"opcionals que vulguis (exportació a Google, el navegador en viu de "
+"l'AEAT, importació OFX/QFX) seguint [Instal·lar Cadrumo](workstation-"
+"setup.md), que cobreix les ordres d'instal·lació de cada extra."
 
 #: ../../download.md:42
 msgid ""
@@ -274,4 +271,3 @@ msgid ""
 msgstr ""
 "Permet que un assistent d'IA com ara Claude faci servir Cadrumo amb tu, a"
 " la teva màquina."
-

@@ -168,7 +168,6 @@ msgstr ""
 "proveïdors."
 
 #: ../../how-to/import-bank-statements.md:71
-#, fuzzy
 msgid ""
 "`--provider pdf` reads a PDF statement in any bank's layout and language."
 " A local language model proposes the movements it finds on each page, and"
@@ -201,13 +200,13 @@ msgstr ""
 "moviment el sentit del qual només ha decidit el model quan cap saldo "
 "imprès no el confirma. Fes primer una simulació: enumera cada proposta "
 "que no s'ha conservat i indica quan l'extracte no imprimeix cap saldo amb"
-" què comprovar-los. Llegir un extracte PDF requereix l'extra `llm` i la "
-"IA local, amb un model triat per al rol d'extracció de text a l'agent de "
-"Cadrumo. Una pàgina sense capa de text la transcriu el model triat per al"
-" rol de transcripció per visió. L'extracte no surt mai del teu ordinador:"
-" si el model triat per a un rol l'hagués d'enviar fora de la màquina, la "
+" què comprovar-los. Llegir un extracte PDF requereix l'extra `llm`, amb "
+"un model triat per al rol d'extracció de text a l'agent de Cadrumo. Una "
+"pàgina sense capa de text la transcriu el model triat per al rol de "
+"transcripció per visió. L'extracte no surt mai del teu ordinador: si el "
+"model triat per a un rol l'hagués d'enviar fora de la màquina, la "
 "importació es rebutja abans d'enviar res. Consulta [Classifica els "
-"moviments amb un LLM](classify-with-llm.md#set-up-the-local-reader)."
+"moviments amb un LLM](classify-with-llm.md#set-up-a-provider)."
 
 #: ../../how-to/import-bank-statements.md:89
 msgid ""
@@ -667,4 +666,3 @@ msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 #: ../../how-to/import-bank-statements.md:299
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"
-

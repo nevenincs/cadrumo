@@ -106,20 +106,18 @@ msgid "Confirm the install"
 msgstr "A telepítés megerősítése"
 
 #: ../../workstation-setup.md:43
-#, fuzzy
 msgid ""
 "The version check needs no taxpayer profile. Create a profile with `aeat "
 "config profile create` when you are ready to use Cadrumo. See [Set up a "
 "profile](how-to/profile-setup.md)."
 msgstr ""
-"Ezekhez az ellenőrzésekhez nincs szükség adózói profilra. Hozz létre "
-"profilt az `aeat config profile create` paranccsal, amikor készen állsz a"
-" Cadrumo használatára. Lásd: [Profil beállítása](how-to/profile-"
-"setup.md)."
+"A verzióellenőrzéshez nem kell adózói profil. Hozz létre profilt az `aeat"
+" config profile create` paranccsal, amikor készen állsz a Cadrumo "
+"használatára. Lásd: [Profil beállítása](how-to/profile-setup.md)."
 
 #: ../../workstation-setup.md:47
 msgid "Confirm the command is on your path:"
-msgstr ""
+msgstr "Győződj meg róla, hogy a parancs elérhető az útvonalon (PATH):"
 
 #: ../../workstation-setup.md:53
 msgid "Install optional extras"
@@ -173,14 +171,12 @@ msgstr ""
 "hozzá."
 
 #: ../../workstation-setup.md:70
-#, fuzzy
 msgid ""
 "Install a missing extra by repeating your channel's install command with "
 "that extra named."
 msgstr ""
-"Az `aeat config check` minden extrát `extra:<name>` néven, elérhetőként "
-"vagy hiányzóként jelez. A hiányzót úgy telepítheted, hogy megismétled a "
-"csatornád telepítőparancsát az adott extra megnevezésével."
+"A hiányzó extrát úgy telepítheted, hogy megismétled a csatornád "
+"telepítési parancsát, megadva az adott extrát."
 
 #: ../../workstation-setup.md:73
 msgid "Connect an AI assistant"
@@ -238,36 +234,3 @@ msgstr "[Ügynök csatlakoztatása](how-to/connect-an-agent.md)"
 #: ../../workstation-setup.md:96
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Hibaelhárítás](how-to/troubleshooting.md)"
-
-#~ msgid ""
-#~ "Confirm the command is on your "
-#~ "path and the capability posture is "
-#~ "readable. Then run the workstation check"
-#~ " on your own machine. Its dependency"
-#~ " and platform rows intentionally reflect"
-#~ " that workstation, including tools on "
-#~ "your path and operating-system settings."
-#~ " Use the machine-readable form for"
-#~ " scripted setup checks (`--format json` "
-#~ "is a global flag, so it goes "
-#~ "before the command):"
-#~ msgstr ""
-#~ "Ellenőrizd, hogy a parancs elérhető az"
-#~ " elérési utadon, és hogy a képességek"
-#~ " állapota olvasható. Ezután futtasd a "
-#~ "munkaállomás-ellenőrzést a saját gépeden. "
-#~ "A függőségeket és a platformot vizsgáló"
-#~ " sorok szándékosan az adott munkaállomást"
-#~ " tükrözik, beleértve az elérési utadon "
-#~ "lévő eszközöket és az operációs rendszer"
-#~ " beállításait. Szkriptelt beállítás-"
-#~ "ellenőrzésekhez használd a géppel olvasható"
-#~ " formát (a `--format json` globális "
-#~ "kapcsoló, ezért a parancs elé kerül):"
-
-#~ msgid "Run `aeat config check` after each change to confirm the gap is closed."
-#~ msgstr ""
-#~ "Minden változtatás után futtasd újra az"
-#~ " `aeat config check` parancsot, hogy "
-#~ "megbizonyosodj róla, a hiányosság megszűnt."
-
