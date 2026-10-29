@@ -88,7 +88,7 @@ from ..application.auth.sync_readiness import build_auth_sync_readiness
 from ..application.auth.sync_requirement_text import sync_requirement_reason
 from ..application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from ..application.calculations.observations_repository import iva_wallet_decision_key
-from ..application.live.errors import LiveApplicationError, LiveApplicationInputError
+from ..application.live.errors import LiveApplicationError, LiveApplicationInputError, raise_if_aeat_session_ended
 from ..application.live.expedientes_ports import ExpedientesDeclaration
 from ..application.live.filed_capture_accumulator import capture_report_path
 from ..application.live.filed_data_ports import FiledDataCapturePort, FiledEffectGuard
@@ -188,6 +188,7 @@ class _SedeNotificationSnapshotQuery(NotificationSnapshotQueryProtocol):
         try:
             captured = await fetch_notifications_query(session, settings=settings)
         except SedeError as exc:
+            raise_if_aeat_session_ended(exc)
             if isinstance(exc, SedeParseError):
                 failure_kind = "parse"
             elif isinstance(exc, SedeNavigationError):
@@ -928,6 +929,7 @@ async def _capture_one_iva_history_declaration(
                 timeout=capture_timeout,
             )
         except (TimeoutError, CadrumoError, OSError) as exc:
+            raise_if_aeat_session_ended(exc)
             failures.append(
                 f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
                 f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"
@@ -943,6 +945,7 @@ async def _capture_one_iva_history_declaration(
         except (ProfileAccessRefusedError, AutomationCustodyError, RefusalError):
             raise
         except (TimeoutError, CadrumoError, OSError) as exc:
+            raise_if_aeat_session_ended(exc)
             failures.append(
                 f"modelo={declaration.modelo};ejercicio={declaration.ejercicio};"
                 f"period={declaration.period.registry_token};failure_type={type(exc).__name__}"

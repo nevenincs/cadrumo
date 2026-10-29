@@ -8,11 +8,13 @@ from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import cast
+from types import SimpleNamespace
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import pytest
 
+from cadrumo.adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from cadrumo.adapters.persistence.operations.journal import OperationJournalRepository
 from cadrumo.adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
 from cadrumo.adapters.persistence.operations.secure_references import operation_secure_reference_repository
@@ -22,6 +24,8 @@ from cadrumo.application.auth.session_types import (
     ClavePermanenteSessionDetail,
 )
 from cadrumo.application.auth.sessions import AuthenticatedAeatSessionResult
+from cadrumo.application.live.errors import LiveAeatSessionEndedError
+from cadrumo.application.live.expedientes_ports import ExpedientesDeclaration
 from cadrumo.application.live.filed_data_ports import FiledEffectGuard
 from cadrumo.application.live.filed_history_operation import FiledHistoryComposition
 from cadrumo.application.live.iva_remote_state_ports import IvaRemoteStatePort
@@ -427,3 +431,69 @@ def test_supervisor_admits_exact_external_client_profile_and_projects_guarded_iv
     assert port.guard_entries == 1
     assert port.guard_depth == 0
     assert port.local_effects == 1
+
+
+def test_an_ended_aeat_session_stops_the_history_walk_instead_of_recording_a_failed_declaration(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An ended session escapes the per-declaration failure record, since every later declaration would fail alike."""
+    from cadrumo.entrypoints import live_state_composition
+
+    declaration = ExpedientesDeclaration(
+        modelo="303",
+        ejercicio=2026,
+        period=Period.from_year_and_code(2026, "1T"),
+        expediente_id="3032026Q1SYNTHETIC0001",
+        estado="ALTA",
+        presented_at=datetime(2026, 4, 20, tzinfo=UTC),
+    )
+    walked: list[int] = []
+
+    class _Register:
+        async def walk(self, *, modelo: str, ejercicio: int) -> tuple[ExpedientesDeclaration, ...]:
+            assert modelo == "303"
+            walked.append(ejercicio)
+            return (declaration,)
+
+        async def capture_observation(self, declaration: object, *, artefact_sink: object) -> object:
+            del declaration, artefact_sink
+            raise SedeNavigationError(
+                "declaration page answered with the login wall",
+                failure_mode=SedeFailureMode.SESSION_ENDED,
+                translated_message="adapters.sede.errors.session_expired_nav_failed",
+            )
+
+    @asynccontextmanager
+    async def playwright(session: object) -> AsyncGenerator[object]:
+        del session
+        yield object()
+
+    @asynccontextmanager
+    async def register(session: object, **kwargs: object) -> AsyncGenerator[_Register]:
+        del session, kwargs
+        yield _Register()
+
+    monkeypatch.setattr(live_state_composition, "shared_playwright", playwright)
+    monkeypatch.setattr(live_state_composition, "open_declarations_register", register)
+    port = live_state_composition.AppIvaRemoteStatePort(
+        objects=cast(Any, None),
+        filed_observation_ports=cast(Any, SimpleNamespace(observation_persistence=None)),
+        authority_operation=cast(Any, None),
+        certificate_secret_backend_factory=cast(Any, None),
+        browser_session_factory=cast(Any, None),
+        operator_scope_ports=cast(Any, None),
+    )
+
+    with pytest.raises(LiveAeatSessionEndedError):
+        asyncio.run(
+            port.capture_history(
+                cast(Any, object()),
+                settings=load_settings(),
+                year_from=2025,
+                year_to=2026,
+                output_root=Path("unused"),
+                progress_context=None,
+                authority_operation=cast(Any, object()),
+            )
+        )
+    assert walked == [2026]

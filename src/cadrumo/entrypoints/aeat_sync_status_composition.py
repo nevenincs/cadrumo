@@ -58,15 +58,26 @@ def compose_aeat_sync_status_ports(
         return None if latest is None else AeatSyncAreaAttempt(latest.completed_at, latest.succeeded)
 
     def iva_wallet_captured_at():
-        from ..adapters.outbound.aeat.sede.observation_store import IvaCompensationWalletObservationRepository
-
-        return max(
-            (
-                observation.captured_at
-                for observation in IvaCompensationWalletObservationRepository(objects=objects()).iter_records()
-            ),
-            default=None,
+        # The page brings this area with the Modelo 303 history capture, which
+        # stores filed 303 observations and no wallet observation, so both
+        # stores date the area.
+        from ..adapters.outbound.aeat.sede.observation_store import (
+            FiledDeclaracionObservationRepository,
+            IvaCompensationWalletObservationRepository,
         )
+        from ..core.modelo import Modelo
+
+        wallet = (
+            observation.captured_at
+            for observation in IvaCompensationWalletObservationRepository(objects=objects()).iter_records()
+        )
+        history = (
+            artefact.captured_at
+            for observation in FiledDeclaracionObservationRepository(objects=objects()).iter_records()
+            if observation.modelo == Modelo("303").value
+            for artefact in observation.artefacts
+        )
+        return max((*wallet, *history), default=None)
 
     def filings():
         return tuple(ModeloRecordCatalogueRepository(bucket_id=bucket_id).load_revisioned()[0].records.values())

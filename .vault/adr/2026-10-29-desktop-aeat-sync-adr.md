@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c96b47ed3610089342ffdc119ce4b59b48817483dd46c1cef4635441594ae34'
+body_hash: 'sha256:bff60a5991c3b6e150079afde5f6527f36acae989684aa67b636f8c8053e1644'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -64,7 +64,7 @@ We will add one backend read and a host-run area queue, and build the page on th
 
 **Backend (the only Python).**
 
-- `live.sync.status`: registered read, no effect, no network, all frontends. It extends `read_local_aeat_sync_workspace_projection` with IVA wallet, Borrador 100 and identity-check sources and composes only the stores it needs: latest censal observation, filed observations and their sync-run record, latest notification snapshot, IVA wallet history, latest active Borrador, and the latest verify observation for the profile's own tax number resolved in the worker. Per area it returns a closed state (`never_brought`, `current`, `possibly_stale`, `unavailable`), the last successful capture instant, the last attempt and its outcome where a sync-run record exists, and product-given counts (unread notifications; filed periods matched, AEAT-only, local-only, differing). It also serves the year choices for filed declarations and the IVA wallet. The staleness horizon per area is backend-owned data with these defaults, ruled by the owner on 2026-10-29: notifications 7 days, IVA wallet 30 days, census, filed declarations and identity checks 90 days. An area becomes `possibly_stale` once its last successful capture is older than its horizon.
+- `live.sync.status`: registered read, no effect, no network, all frontends. It extends `read_local_aeat_sync_workspace_projection` with IVA wallet, Borrador 100 and identity-check sources and composes only the stores it needs: latest censal observation, filed observations and their sync-run record, latest notification snapshot, IVA wallet history (the stored Modelo 303 filed observations `live.iva-wallet.history-capture` writes, and any stored wallet observation), latest active Borrador, and the latest verify observation for the profile's own tax number resolved in the worker. Per area it returns a closed state (`never_brought`, `current`, `possibly_stale`, `unavailable`), the last successful capture instant, the last attempt and its outcome where a sync-run record exists, and product-given counts (unread notifications; filed periods matched, AEAT-only, local-only, differing). It also serves the year choices for filed declarations and the IVA wallet. The staleness horizon per area is backend-owned data with these defaults, ruled by the owner on 2026-10-29: notifications 7 days, IVA wallet 30 days, census, filed declarations and identity checks 90 days. An area becomes `possibly_stale` once its last successful capture is older than its horizon.
 - `output_root` becomes optional on `live.filed-capture.bulk`, `live.filed-history.pull` and `live.iva-wallet.history-capture`; the worker defaults it to the setting the CLI uses today, and the CLI drops its own default.
 - `nif` becomes optional on `live.verify.nif-iva` and `live.verify.tgvi`; omitted, the worker checks the profile's own taxpayer number.
 - Live captures report an ended AEAT session as a distinct typed refusal detail, separate from navigation failures and the unread-notification guard.
