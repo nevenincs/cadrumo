@@ -14,6 +14,7 @@ unplantable gate proves only that the happy path runs.
 
 from __future__ import annotations
 
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
@@ -99,6 +100,33 @@ def write_prior(spec: WaveSpec, rows: list[tuple[str, str, str]]) -> None:
         for number, caption, data_type in rows
     ]
     (spec.prior_casillas_dir / f"c{SEGMENTO}+planted.toml").write_text("\n".join(blocks), encoding="utf-8")
+
+
+@pytest.mark.parametrize("existing_output", [False, True])
+def test_later_record_refusal_preserves_output(tmp_path: Path, *, existing_output: bool) -> None:
+    """A successful first record must not be published when a later record refuses."""
+    spec = spec_for(tmp_path, adjudicate=True)
+    second_segmento = "T99002000"
+    spec = replace(spec, records=(SEGMENTO, second_segmento))
+    first = sheet_of([field(16, 17, "Importe [00562]")])
+    second = first.model_copy(
+        update={
+            "name": second_segmento,
+            "fields": tuple(row.model_copy(update={"sheet": second_segmento}) for row in first.fields),
+        }
+    )
+    if existing_output:
+        accepted = emit_records(spec_for(tmp_path, adjudicate=True), {SEGMENTO: first}, write=True)
+        assert accepted.total_emitted == 1
+        target = next(spec.out_dir.glob("*.toml"))
+        target.write_bytes(target.read_bytes() + b"\n# preserve existing output\n")
+    before = {path.name: path.read_bytes() for path in spec.out_dir.glob("*")}
+
+    with pytest.raises(GenerationRefusedError, match=second_segmento):
+        emit_records(spec, {SEGMENTO: first, second_segmento: second}, write=True)
+
+    assert {path.name: path.read_bytes() for path in spec.out_dir.glob("*")} == before
+    assert spec.out_dir.exists() == existing_output
 
 
 class TestPlantedGrowthInsideARun:

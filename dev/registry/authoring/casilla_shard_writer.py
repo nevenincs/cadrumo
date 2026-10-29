@@ -18,14 +18,14 @@ from .casilla_shard_types import GenerationRefusedError, GenerationReport, WaveS
 
 
 def _finalize_emission(spec: WaveSpec, report: GenerationReport, *, write: bool) -> None:
-    _refuse_duplicate_ids(report)
-    _preserve_attestations(spec, report)
-    if write:
-        _write_outcomes(spec, report)
     if report.refusals:
         raise GenerationRefusedError(
             f"{len(report.refusals)} row(s) need adjudication: " + "; ".join(report.refusals[:5])
         )
+    _refuse_duplicate_ids(report)
+    _preserve_attestations(spec, report)
+    if write:
+        _write_outcomes(spec, report)
 
 
 def _preserve_attestations(spec: WaveSpec, report: GenerationReport) -> None:
