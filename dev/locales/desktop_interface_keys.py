@@ -979,6 +979,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.setup.close",
         "desktop.setup.copy_details",
         "desktop.setup.lead_review",
+        "desktop.setup.models_signed_out",
         "desktop.setup.not_now",
         "desktop.setup.open",
         "desktop.setup.outcome_cancelled",

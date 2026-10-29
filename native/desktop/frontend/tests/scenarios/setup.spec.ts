@@ -626,17 +626,86 @@ test("the palette has a way to each element, which opens the panel on it", async
   await expect(retry).toHaveCount(1);
 });
 
-test("signed out, setup is nowhere to be found", async ({ page: target }) => {
+test("signed out, a fresh install opens the panel and sets the browser up", async ({
+  page: target,
+}) => {
   await open(target, "fresh", "signed-out");
-  await expect(panel(target)).toHaveCount(0);
-  await expect(target.locator("[data-rail=settings] [data-pin]")).toHaveCount(
+  await expect(panel(target)).toBeVisible();
+  await expect(browserRow(target)).toContainText(BROWSER);
+  await once(browserRow(target), NOT_SET_UP);
+  await openLocalAi(target);
+  // The program is this computer's and is set up signed out; the model list
+  // is the person's and waits for a sign-in.
+  await expect(setUpButton(programRow(target))).toHaveCount(1);
+  await expect(localAi(target)).toContainText(
+    label("desktop.setup.models_signed_out"),
+  );
+  await expect(
+    localAi(target).locator('[data-slot="local-models"]'),
+  ).toHaveCount(0);
+  await startBrowser(target);
+  const row = browserRow(target);
+  await stepUntil(target, "browser", async () =>
+    (await row.innerText()).includes(label("desktop.setup.state.ready")),
+  );
+  await noInternalWords(target);
+  const calls = await hostCalls(target);
+  expect(calls).toContain("setup.start browser");
+  expect(calls.filter((call) => call.startsWith("google."))).toEqual([]);
+});
+
+test("signed out, Settings keeps its setup section and shows no Google account", async ({
+  page: target,
+}) => {
+  await open(target, "fresh", "signed-out");
+  await closePanel(target);
+  // The sign-in waits beneath the panel; put away, Settings is reachable.
+  const signIn = target.locator(".sign-in");
+  await expect(signIn).toBeVisible();
+  await target.keyboard.press("Escape");
+  await expect(signIn).toBeHidden();
+  const rail = target.locator("[data-rail=settings]");
+  await expect(rail.locator("[data-pin=attention]")).toHaveCount(1);
+  await rail.click();
+  const section = target.locator(".settings [data-settings-provisioning]");
+  await expect(section).toContainText(label("desktop.setup.rail_incomplete"));
+  await expect(target.locator(".settings [data-google-account]")).toHaveCount(
     0,
   );
-  expect(
-    (await hostCalls(target)).filter(
-      (call) => call.startsWith("setup.") || call.startsWith("google."),
-    ),
-  ).toEqual([]);
+  await section
+    .getByRole("button", { name: label("desktop.setup.open") })
+    .click();
+  await expect(panel(target)).toBeVisible();
+  await expect(browserRow(target)).toContainText(BROWSER);
+});
+
+test("a sign-in keeps a setup started signed out running", async ({
+  page: target,
+}) => {
+  await open(target, "fresh", "signed-out");
+  await startBrowser(target);
+  await steps(target, 2, "browser");
+  await closePanel(target);
+  const dialog = target.locator(".sign-in");
+  await expect(dialog).toBeVisible();
+  await target.locator("#profile-password").fill("anything");
+  await dialog
+    .getByRole("button", { name: label("desktop.signin.submit"), exact: true })
+    .click();
+  await expect(dialog).toBeHidden();
+  const rail = target.locator("[data-rail=settings]");
+  await expect(rail.locator("[data-pin=busy]")).toHaveCount(1);
+  await (await palette(target, label("desktop.setup.palette_open"))).click();
+  const row = browserRow(target);
+  await expect(row.locator("[data-setup-progress]")).toHaveCount(1);
+  await stepUntil(target, "browser", async () =>
+    (await row.innerText()).includes(label("desktop.setup.state.ready")),
+  );
+  // Signed in, the person's model list is read again.
+  await openLocalAi(target);
+  await expect(localAi(target)).not.toContainText(
+    label("desktop.setup.models_signed_out"),
+  );
 });
 
 test("Copy details puts the report on the clipboard", async ({

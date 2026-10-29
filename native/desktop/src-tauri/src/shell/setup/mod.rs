@@ -1,15 +1,20 @@
 //! Component setup through this window's own engine: status reads, full
 //! checks, setup with its plan review, and cancellation, each run by the
-//! component engine in this process (`components`). Riding the held person
-//! session but apart from setup, the profile's Google account: its stored
-//! sign-in, sign-in and sign-out (`google`). The window names items and
+//! component engine in this process (`components`). The components are this
+//! installation's, not a profile's, so the engine serves them whether or not
+//! anyone is signed in. Riding the held person session but apart from setup,
+//! the profile's Google account: its stored sign-in, sign-in and sign-out
+//! (`google`). The window names items and
 //! choices only, and words every code the snapshot carries from its own
 //! catalogue. Engine progress and the session's cues each push the typed
 //! snapshot on the window's channel. Nothing polls.
 //!
 //! The local AI is provisioned from the person's selection of models, which only
 //! this host reads: before each engine command it asks the agent service for the
-//! per-role selection and the catalogue's download sizes (`admission`).
+//! per-role selection and the catalogue's download sizes (`admission`). The model list
+//! is the signed-in person's, so signed out a model download or removal, and a removal
+//! of the local AI that takes the listed models with it, is refused as not signed in,
+//! as is the Google account.
 //!
 //! The window words an `unavailable` refusal and every host failure by a code alone.
 //! The cause behind each is recorded in diagnostics (`reports`), where the Logs
@@ -39,7 +44,9 @@ use std::sync::{
     atomic::{AtomicBool, Ordering},
 };
 use tauri::{State, ipc::Channel};
-use wire::{Action, CommandFailure, Google, Refusal, Snapshot, Stop};
+use wire::{
+    Action, CommandFailure, Google, GoogleStage, GoogleState, Refusal, Removal, Snapshot, Stop,
+};
 
 /// The setup host could not carry on, for the stable `reason` named.
 fn failed(reason: &'static str) -> ApplicationError {
@@ -91,12 +98,26 @@ fn lock<T>(value: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     value.lock().unwrap_or_else(|error| error.into_inner())
 }
 
+/// Whether the window is shown setup: `Unavailable` until the engine's side is
+/// first read and whenever the snapshot cannot be composed, `Ready` with the
+/// snapshot otherwise, signed in or not.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Availability {
-    SignedOut,
     Unavailable,
     Ready,
+}
+
+/// The account beside the snapshot while nobody is signed in: there is no
+/// profile, so no Google sign-in either.
+fn no_account() -> Google {
+    Google {
+        state: Some(GoogleState::SignedOut),
+        email: None,
+        drive_folder_id: None,
+        stage: GoogleStage::Idle,
+        failure: None,
+    }
 }
 
 /// What every setup command answers and the observe channel carries.
@@ -197,18 +218,27 @@ pub struct SetupHost {
 
 impl SetupHost {
     pub fn new(sign_in: Arc<SignIn>, agent: Arc<AgentHost>, diagnostics: Arc<Diagnostics>) -> Self {
+        let components = Components::new(
+            components::installation(),
+            Arc::new(Admission::new(agent)),
+            diagnostics.clone(),
+        );
+        Self::with_components(sign_in, components, diagnostics)
+    }
+
+    fn with_components(
+        sign_in: Arc<SignIn>,
+        components: Components,
+        diagnostics: Arc<Diagnostics>,
+    ) -> Self {
         Self {
             sign_in,
-            components: Components::new(
-                components::installation(),
-                Arc::new(Admission::new(agent)),
-                diagnostics.clone(),
-            ),
+            components,
             reports: Reports::new(diagnostics),
             current: Mutex::new(Current {
                 value: DesktopSetup {
                     revision: 0,
-                    state: Availability::SignedOut,
+                    state: Availability::Unavailable,
                     snapshot: None,
                 },
                 listener: None,
@@ -287,8 +317,8 @@ impl SetupHost {
 
     /// Carry one setup action to the engine and the account's part of it to
     /// the held session of the signed-in profile, then publish the snapshot
-    /// after it. Signed out, an action is refused and a read answers the
-    /// signed-out state. Whatever lay behind an `unavailable` refusal or a host
+    /// after it. Signed out, the engine still carries it, and what is a
+    /// profile's is refused (`signed_out`). Whatever lay behind an `unavailable` refusal or a host
     /// failure the window is told, diagnostics are told as well.
     async fn exchange(
         &self,
@@ -330,13 +360,7 @@ impl SetupHost {
         let profile = match standing(&status)? {
             Standing::SignedOut => {
                 self.release_person().await?;
-                let value = self.publish(Availability::SignedOut, None);
-                self.reports.recovered();
-                return if action {
-                    Err(Refusal::NotSignedIn.into())
-                } else {
-                    Ok(value)
-                };
+                return self.signed_out(&request, action).await;
             }
             Standing::Unready => {
                 self.publish(Availability::Unavailable, None);
@@ -399,6 +423,55 @@ impl SetupHost {
             }
             Err(stop) => return Err(stop),
         };
+        self.show(action, google, refused)
+    }
+
+    /// What a profile is needed for: its Google account, and a model its person's
+    /// local model list admits, downloaded or removed, the removal of the local AI
+    /// with the listed models included.
+    fn profile_bound(&self, request: &Action) -> bool {
+        match request {
+            Action::GoogleSignIn
+            | Action::GoogleSignOut
+            | Action::RemoveModel { .. }
+            | Action::Remove(Removal::LocalAi) => true,
+            Action::Start {
+                item,
+                resume,
+                download,
+            } => self.components.downloads(*item, *resume, download.as_ref()),
+            Action::Observe
+            | Action::Check(_)
+            | Action::Verify(_)
+            | Action::Answer { .. }
+            | Action::Cancel { .. }
+            | Action::Remove(Removal::Browser | Removal::LocalAiProgram) => false,
+        }
+    }
+
+    /// Signed out: the engine carries what is this installation's and the
+    /// snapshot is shown beside no account; what is a profile's is refused.
+    async fn signed_out(
+        &self,
+        request: &Action,
+        action: bool,
+    ) -> std::result::Result<DesktopSetup, Stop> {
+        let refused = if self.profile_bound(request) {
+            Some(Refusal::NotSignedIn.into())
+        } else {
+            self.act(request).await.err()
+        };
+        self.show(action, no_account(), refused)
+    }
+
+    /// Publishes the engine's side beside `google`, kept as the account the engine's
+    /// own changes are shown beside, and answers with what the engine `refused`.
+    fn show(
+        &self,
+        action: bool,
+        google: Google,
+        refused: Option<Stop>,
+    ) -> std::result::Result<DesktopSetup, Stop> {
         *lock(&self.google) = Some(google.clone());
         let Some(snapshot) = compose(self.components.view(), google) else {
             self.publish(Availability::Unavailable, None);
@@ -717,7 +790,7 @@ mod tests {
         Current {
             value: DesktopSetup {
                 revision: 0,
-                state: Availability::SignedOut,
+                state: Availability::Unavailable,
                 snapshot: None,
             },
             listener,
@@ -727,7 +800,7 @@ mod tests {
     #[test]
     fn revisions_follow_changes_only() {
         let mut current = current(None);
-        assert_eq!(current.update(Availability::SignedOut, None).revision, 0);
+        assert_eq!(current.update(Availability::Unavailable, None).revision, 0);
         let ready = current.update(Availability::Ready, Some(snapshot("a")));
         assert_eq!((ready.revision, ready.state), (1, Availability::Ready));
         assert_eq!(
@@ -769,7 +842,7 @@ mod tests {
         current.unobserve(id + 1);
         assert!(current.listener.is_some());
         current.unobserve(id);
-        current.update(Availability::SignedOut, None);
+        current.update(Availability::Unavailable, None);
         assert_eq!(lock(&frames).len(), 1);
     }
 
@@ -880,5 +953,231 @@ mod tests {
         let mut failed = unread();
         failed.failure = Some(wire::Failure::Unexpected);
         assert!(compose(view(), failed).is_none());
+        assert!(compose(view(), no_account()).is_some());
+    }
+
+    /// Signed out, against a real engine of a throwaway installation: the
+    /// window's host is driven through its signed-out branch, which reads no
+    /// session, so the sign-in it is built with is never consulted.
+    mod signed_out {
+        use super::super::admission::tests::{GB, LOCAL, Replies, VISION, requested};
+        use super::super::components::tests::{Fixture, Serving, serving, window};
+        use super::*;
+        use cadrumo_application::provisioning::test_servers::Released;
+        use wire::{Decision, RunStage};
+
+        fn host(components: Components) -> SetupHost {
+            SetupHost::with_components(
+                Arc::new(SignIn::new(&crate::terminal::tests::unit_launch())),
+                components,
+                Arc::default(),
+            )
+        }
+
+        /// What a signed-out read shows once `done` holds of its snapshot.
+        async fn shown_until(host: &SetupHost, done: impl Fn(&Snapshot) -> bool) -> DesktopSetup {
+            let mut changes = host.components.changes();
+            loop {
+                let shown = host
+                    .signed_out(&Action::Observe, false)
+                    .await
+                    .expect("a signed-out read is served");
+                if shown.snapshot.as_ref().is_some_and(&done) {
+                    return shown;
+                }
+                changes.changed().await.expect("the engine is alive");
+            }
+        }
+
+        fn browser_run(shown: &DesktopSetup) -> wire::Run {
+            shown
+                .snapshot
+                .as_ref()
+                .and_then(|snapshot| snapshot.runs.first())
+                .cloned()
+                .expect("the browser's setup is shown")
+        }
+
+        fn start_browser() -> Action {
+            Action::Start {
+                item: ItemId::Browser,
+                resume: false,
+                download: None,
+            }
+        }
+
+        fn refused(answer: std::result::Result<DesktopSetup, Stop>) -> Option<Refusal> {
+            answer.err().and_then(|stop| stop.refusal())
+        }
+
+        #[tokio::test]
+        async fn the_engine_serves_this_installations_rows_beside_no_account() {
+            let fixture = Fixture::new(Serving::Whole);
+            let host = host(window(&fixture));
+            let shown = shown_until(&host, |snapshot| !snapshot.rows.is_empty()).await;
+            assert_eq!(shown.state, Availability::Ready);
+            let snapshot = shown.snapshot.expect("a snapshot");
+            let items: Vec<&str> = snapshot.rows.iter().map(|row| row.item.as_str()).collect();
+            assert_eq!(items, ["browser", "local_ai"]);
+            assert_eq!(snapshot.rows[0].recovery, Some(wire::Recovery::SetUp));
+            assert_eq!(snapshot.google, no_account());
+            // A full check is the installation's too.
+            host.signed_out(&Action::Check(wire::CheckMode::Full), true)
+                .await
+                .expect("a check is served signed out");
+            host.close().await.unwrap();
+        }
+
+        #[tokio::test]
+        async fn the_browser_is_started_answered_and_cancelled_and_a_sign_in_keeps_its_run() {
+            let gate = Arc::new(Released::default());
+            let fixture = Fixture::new(Serving::Gated(gate.clone()));
+            let host = host(window(&fixture));
+
+            // A plan waiting for its answer is declined by a cancel.
+            let asked = browser_run(&host.signed_out(&start_browser(), true).await.unwrap());
+            assert_eq!(asked.stage, RunStage::Review);
+            host.signed_out(
+                &Action::Cancel {
+                    operation_id: asked.operation_id.clone(),
+                },
+                true,
+            )
+            .await
+            .unwrap();
+            let declined = shown_until(&host, |snapshot| {
+                snapshot
+                    .runs
+                    .first()
+                    .is_some_and(|run| run.stage == RunStage::Settled)
+            })
+            .await;
+            assert_eq!(
+                browser_run(&declined).outcome,
+                Some(wire::Outcome::Cancelled)
+            );
+            assert_eq!(fixture.downloads(), 0);
+
+            // Approved, it runs, held at the gate halfway through its archive.
+            let asked = browser_run(&host.signed_out(&start_browser(), true).await.unwrap());
+            let review = asked.review.clone().expect("a plan under review");
+            host.signed_out(
+                &Action::Answer {
+                    operation_id: asked.operation_id.clone(),
+                    plan_digest: review.plan_digest,
+                    decision: Decision::Apply,
+                },
+                true,
+            )
+            .await
+            .unwrap();
+            let running = shown_until(&host, |snapshot| {
+                snapshot
+                    .runs
+                    .first()
+                    .is_some_and(|run| run.items.iter().any(|item| item.completed.is_some()))
+            })
+            .await;
+            assert_eq!(browser_run(&running).stage, RunStage::Running);
+
+            // A sign-in shows the same run beside the account, at a later revision.
+            let account = Google {
+                state: Some(GoogleState::SignedIn),
+                email: Some("person@example.com".into()),
+                drive_folder_id: None,
+                stage: GoogleStage::Idle,
+                failure: None,
+            };
+            let signed_in = host.show(false, account.clone(), None).unwrap();
+            assert!(signed_in.revision > running.revision);
+            let kept = browser_run(&signed_in);
+            assert_eq!(
+                (kept.operation_id.as_str(), kept.stage),
+                (asked.operation_id.as_str(), RunStage::Running)
+            );
+            assert_eq!(signed_in.snapshot.as_ref().unwrap().google, account);
+
+            // Signed out again, it is cancelled; the run settles where it was shown.
+            host.signed_out(
+                &Action::Cancel {
+                    operation_id: asked.operation_id.clone(),
+                },
+                true,
+            )
+            .await
+            .unwrap();
+            gate.release();
+            let settled = shown_until(&host, |snapshot| {
+                snapshot
+                    .runs
+                    .first()
+                    .is_some_and(|run| run.stage == RunStage::Settled)
+            })
+            .await;
+            assert!(settled.revision > signed_in.revision);
+            let run = browser_run(&settled);
+            assert_eq!(
+                (run.operation_id.as_str(), run.outcome),
+                (asked.operation_id.as_str(), Some(wire::Outcome::Cancelled))
+            );
+            assert_eq!(settled.snapshot.unwrap().google, no_account());
+            host.close().await.unwrap();
+        }
+
+        #[tokio::test]
+        async fn what_the_persons_model_list_admits_is_refused_and_consults_no_service() {
+            let fixture = Fixture::new(Serving::Whole);
+            // A service that would admit the model: signed out it is never asked.
+            let (components, replies) = serving(
+                &fixture,
+                Replies::serving(&[VISION], &[], &[(VISION, Some(GB))]),
+            );
+            let host = host(components);
+            for (name, request) in [
+                (
+                    "a model download",
+                    Action::Start {
+                        item: ItemId::LocalAi,
+                        resume: false,
+                        download: Some(requested(LOCAL, VISION)),
+                    },
+                ),
+                (
+                    "a model removal",
+                    Action::RemoveModel {
+                        model: VISION.into(),
+                    },
+                ),
+                (
+                    "the local AI with its models",
+                    Action::Remove(Removal::LocalAi),
+                ),
+                ("a Google sign-in", Action::GoogleSignIn),
+                ("a Google sign-out", Action::GoogleSignOut),
+            ] {
+                let answer = host.signed_out(&request, true).await;
+                assert_eq!(refused(answer), Some(Refusal::NotSignedIn), "{name}");
+                let shown = lock(&host.current).value.clone();
+                assert_eq!(
+                    shown.state,
+                    Availability::Ready,
+                    "{name}: setup stays shown"
+                );
+                assert!(
+                    shown.snapshot.unwrap().runs.is_empty(),
+                    "{name}: nothing runs"
+                );
+            }
+            assert!(replies.asked().is_empty(), "{:?}", replies.asked());
+            assert_eq!(fixture.downloads(), 0);
+            // A setup of the program alone is the installation's, not the person's.
+            assert!(!host.profile_bound(&Action::Start {
+                item: ItemId::LocalAi,
+                resume: true,
+                download: None,
+            }));
+            assert!(!host.profile_bound(&Action::Remove(Removal::LocalAiProgram)));
+            host.close().await.unwrap();
+        }
     }
 }

@@ -34,10 +34,12 @@ function LocalAiElement({
   row,
   locale,
   localAi,
+  signedOut,
 }: {
   row: SetupRow;
   locale: string;
   localAi: LocalAiSource | null;
+  signedOut: boolean;
 }) {
   const t = useStrings();
   const store = useProvisioning();
@@ -93,6 +95,7 @@ function LocalAiElement({
             lanes={lanes}
             host={host}
             locale={locale}
+            signedOut={signedOut}
             onRemoved={() =>
               setReads((held) => ({ ...held, count: held.count + 1 }))
             }
@@ -107,12 +110,16 @@ export function ProvisioningPanel({
   locale,
   onCopyDetails,
   localAi = null,
+  signedOut = false,
 }: {
   locale: string;
   onCopyDetails: (details: string) => void;
   /** Where the local AI's model lists are read from; null where the window
    * offers none. */
   localAi?: LocalAiSource | null;
+  /** Nobody is signed in: every element is still set up here, but the local
+   * AI's model lists are the person's and wait for a sign-in. */
+  signedOut?: boolean;
 }) {
   const t = useStrings();
   const store = useProvisioning();
@@ -194,6 +201,7 @@ export function ProvisioningPanel({
                   row={row}
                   locale={locale}
                   localAi={localAi}
+                  signedOut={signedOut}
                 />
               ) : (
                 <ProvisioningRow key={row.item} row={row} locale={locale}>

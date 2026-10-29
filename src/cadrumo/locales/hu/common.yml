@@ -3778,6 +3778,7 @@ desktop:
       browser: Böngésző az adóhivatal webhelyéhez
       local_ai: Helyi MI
     lead_review: Nézd át, mi töltődik le és hová kerül, majd hagyd jóvá.
+    models_signed_out: Jelentkezz be a profilodba, hogy lásd és letöltsd a helyi modelljeidet.
     not_now: Most nem
     open: Beállítás megnyitása
     outcome_cancelled: A beállítás megszakadt. Ami már letöltődött, megmarad.
@@ -6321,9 +6322,7 @@ tui:
         file_limit: az importálás több fájlt tartalmaz, mint amennyit egy importálás
           elfogad, ezért egyiket sem olvastuk be; importálj egyszerre kevesebbet
         own_account_mismatch: a kivonat más számlát nevez meg, mint amit választottál
-        reader_unavailable: a helyi MI, amely ezt a fájlt olvassa, nem áll készen,
-          ezért a fájl nem lett beolvasva
-        reader_unavailable_here: a kiválasztott modell jelenleg nem érhető el, ezért
+        reader_unavailable: a kiválasztott modell jelenleg nem érhető el, ezért
           a fájl nem lett beolvasva; próbáld újra, amint elérhető
         result_limit: az importálás e fájl előtt elérte a sorkorlátot
         source_changed: a fájl az előnézet után megváltozott, ezért semmi sem került

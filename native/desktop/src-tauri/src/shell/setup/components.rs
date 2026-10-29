@@ -338,6 +338,20 @@ struct Window {
 }
 
 impl Window {
+    /// The download a start of `item` that names none takes over: on a resume, or
+    /// after a failed or interrupted setup, the local AI's last explicit download.
+    /// Resume never substitutes document roles.
+    fn retained(&self, item: ItemId, resume: bool) -> Option<wire::ModelDownload> {
+        self.setups
+            .get(&item)
+            .filter(|track| {
+                item == ItemId::LocalAi
+                    && (resume
+                        || matches!(track.outcome, Some(Outcome::Failed | Outcome::Interrupted)))
+            })
+            .and_then(|track| track.download.clone())
+    }
+
     fn setup_of(&mut self, operation_id: &str) -> Option<&mut SetupTrack> {
         self.setups
             .values_mut()
@@ -544,6 +558,20 @@ impl Components {
         }
     }
 
+    /// Whether a start of `item` would download a model, which only the person's
+    /// local model list admits: the one asked for, or the one a resume or retry takes
+    /// over. A start that joins a setup already running downloads nothing of its own.
+    pub fn downloads(
+        &self,
+        item: ItemId,
+        resume: bool,
+        download: Option<&wire::ModelDownload>,
+    ) -> bool {
+        let window = lock(&self.shared.window);
+        !window.setups.get(&item).is_some_and(SetupTrack::live)
+            && (download.is_some() || window.retained(item, resume).is_some())
+    }
+
     /// Plans a setup of `item` and waits until it asks for an answer, runs or settles.
     /// A setup of `item` already running is joined; another item's setup runs beside it.
     /// With `resume`, a plan this window approved for the item before applies without
@@ -563,21 +591,7 @@ impl Components {
             if window.setups.get(&item).is_some_and(SetupTrack::live) {
                 return Ok(());
             }
-            // Resume retains the explicit download; it never substitutes document roles.
-            let download = download.or_else(|| {
-                window
-                    .setups
-                    .get(&item)
-                    .filter(|track| {
-                        item == ItemId::LocalAi
-                            && (resume
-                                || matches!(
-                                    track.outcome,
-                                    Some(Outcome::Failed | Outcome::Interrupted)
-                                ))
-                    })
-                    .and_then(|track| track.download.clone())
-            });
+            let download = download.or_else(|| window.retained(item, resume));
             let id = operation_id();
             let cancellation = Arc::new(Cancellation::default());
             let mut track = SetupTrack {
@@ -1407,4 +1421,4 @@ fn failure(category: FailureCategory) -> wire::Failure {
 
 #[cfg(test)]
 #[path = "components_tests.rs"]
-mod tests;
+pub(super) mod tests;

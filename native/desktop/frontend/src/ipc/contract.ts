@@ -1059,13 +1059,17 @@ export type SetupSnapshot = {
  * whose runtime answers. */
 export type DesktopSetup = {
   revision: number;
-  state: "signed_out" | "unavailable" | "ready";
+  /** `ready` with the snapshot whether or not anyone is signed in: the
+   * components are this installation's. Signed out, `google` reads
+   * `signed_out` and what is a profile's is refused as `not_signed_in`. */
+  state: "unavailable" | "ready";
   snapshot: SetupSnapshot | null;
 };
 
 /** Why a setup command was refused; a host failure rejects as `HostFailure`. */
 export type SetupRefusalCode =
-  /** No profile is signed in. */
+  /** No profile is signed in, for what is a profile's: its Google account,
+   * or a model of its person's local model list. */
   | "not_signed_in"
   /** Another setup, started elsewhere, is running. */
   | "busy"

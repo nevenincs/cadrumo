@@ -56,7 +56,7 @@ export function ProvisioningStage({
       }),
     [shape, latencyMs, models],
   );
-  const control = useSetup(host, "Demo profile", true);
+  const control = useSetup(host, "Demo profile");
   const store = useProvisioningStore(control, "Demo profile");
   const { snapshot, start, answer } = control;
   const read = snapshot !== null && snapshot.rows.length > 0;

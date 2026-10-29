@@ -845,13 +845,15 @@ export function App({ host }: { host: Host }) {
     [host, say, t],
   );
 
-  // Component setup, for the signed-in profile only. Setup incomplete is
-  // never treated as optional, but it never holds the window either: the
-  // dialog opens once per launch and closes at any time.
-  const setup = useSetup(host.setup, reader, signedIn);
+  // Component setup, this installation's whether or not anyone is signed
+  // in; only the profile's Google account and its person's model list wait
+  // for a sign-in. Setup incomplete is never treated as optional, but it
+  // never holds the window either: the dialog opens once per launch and
+  // closes at any time.
+  const setup = useSetup(host.setup, reader);
   const setupOffered = setup.offered;
   const setupSnapshot = setup.snapshot;
-  const google = setupOffered ? setupSnapshot?.google : null;
+  const google = signedIn && setupOffered ? setupSnapshot?.google : null;
   const driveFolder = google?.drive_folder_id;
   const driveUrl =
     signedIn &&
@@ -2040,7 +2042,9 @@ export function App({ host }: { host: Host }) {
         icon: "user",
         keywords: "google drive sign in login connect",
         enabled: () =>
-          setupOffered && canSignInGoogle(setupSnapshot?.google ?? null),
+          signedIn &&
+          setupOffered &&
+          canSignInGoogle(setupSnapshot?.google ?? null),
         run: () => setup.signInGoogle(),
       },
       {
@@ -3330,7 +3334,7 @@ export function App({ host }: { host: Host }) {
                 setSignInDismissed(false);
               }}
               google={
-                setupOffered && setupSnapshot ? (
+                signedIn && setupOffered && setupSnapshot ? (
                   <GoogleAccount
                     google={setupSnapshot.google}
                     disabled={setup.pending || account.busy}
@@ -3699,6 +3703,7 @@ export function App({ host }: { host: Host }) {
               <ProvisioningPanel
                 locale={locale}
                 onCopyDetails={copy}
+                signedOut={!signedIn}
                 localAi={
                   signedIn && agentSession && host.providerSettings
                     ? {

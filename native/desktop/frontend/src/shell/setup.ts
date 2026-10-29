@@ -13,18 +13,22 @@ import { failureCode } from "../errors";
 import { useCachedRead, type AgentRead } from "./agentViews";
 import type { Setup } from "./host";
 
-// Component setup as the window sees it: one cached read of the signed-in
-// profile's setup, kept current by the host's change signal and by the answer
-// to every command. Nothing polls; the read is asked once per profile and
-// every later state arrives pushed. The newest revision wins, whichever way it
-// came.
+// Component setup as the window sees it: one cached read of this
+// installation's setup, kept current by the host's change signal and by the
+// answer to every command. The components are the installation's, not a
+// profile's, so setup is offered signed in or not; the host refuses only what
+// is a profile's (its Google account, a model of its person's list) while
+// nobody is signed in. Nothing polls; the read is asked at launch and again
+// whenever the signed-in profile changes, and every later state arrives
+// pushed. The host numbers every state of the window in one sequence across
+// sign-in and sign-out, so the newest revision wins, whichever way it came,
+// and a sign-in keeps every setup on screen.
 
 export type SetupControl = {
-  /** Whether this window offers setup now: the host serves it and a profile
-   * is signed in. */
+  /** Whether this window offers setup now: the host serves it. */
   offered: boolean;
   read: AgentRead<DesktopSetup>;
-  /** The current snapshot, once the host has one for a signed-in profile. */
+  /** The current snapshot, once the host has one. */
   snapshot: SetupSnapshot | null;
   /** A command of this window's is waiting for its answer. */
   pending: boolean;
@@ -52,7 +56,8 @@ export type SetupControl = {
    * with the refusal's code, or null once it is removed. */
   remove(removal: SetupRemoval): Promise<string | null>;
   /** The profile's Google account, which rides the same session but is not
-   * setup: sign in through Google's own page, or remove the sign-in. */
+   * setup: sign in through Google's own page, or remove the sign-in. Refused
+   * while nobody is signed in. */
   signInGoogle(): void;
   signOutGoogle(): void;
   clearRefusal(): void;
@@ -135,8 +140,7 @@ function checked(value: unknown): DesktopSetup {
     "revision" in value &&
     typeof value.revision === "number" &&
     "state" in value &&
-    (value.state === "signed_out" ||
-      value.state === "unavailable" ||
+    (value.state === "unavailable" ||
       (value.state === "ready" &&
         "snapshot" in value &&
         typeof value.snapshot === "object" &&
@@ -146,37 +150,44 @@ function checked(value: unknown): DesktopSetup {
   throw { code: "unavailable" };
 }
 
+/** The one key the installation's setup is cached under, whoever is signed
+ * in. */
+const INSTALLATION = "installation";
+
+/**
+ * The setup `setup` serves. `owner` is the signed-in profile, or null: a
+ * change of it reads the setup again, under the same cache, so the newer
+ * revision still wins and nothing on screen is dropped meanwhile.
+ */
 export function useSetup(
   setup: Setup | undefined,
   owner: string | null,
-  signedIn: boolean,
 ): SetupControl {
-  const offered = setup !== undefined && signedIn && owner !== null;
+  const offered = setup !== undefined;
   const readSetup = useMemo(
     () => (setup ? () => setup.read().then(checked) : null),
     [setup],
   );
-  const { read: cached } = useCachedRead(readSetup, owner, offered, 0);
-  const [pushed, setPushed] = useState<{
-    owner: string | null;
-    state: DesktopSetup;
-  } | null>(null);
+  const [asked, setAsked] = useState({ owner, count: 0 });
+  if (asked.owner !== owner) setAsked({ owner, count: asked.count + 1 });
+  const { read: cached } = useCachedRead(
+    readSetup,
+    INSTALLATION,
+    offered,
+    asked.count,
+  );
+  const [pushed, setPushed] = useState<DesktopSetup | null>(null);
   const [commands, setCommands] = useState({
-    owner,
     pending: 0,
     refusal: null as string | null,
   });
-  if (commands.owner !== owner)
-    setCommands({ owner, pending: 0, refusal: null });
 
   const accept = useCallback(
     (state: DesktopSetup) =>
       setPushed((held) =>
-        held && held.owner === owner && held.state.revision > state.revision
-          ? held
-          : { owner, state },
+        held && held.revision > state.revision ? held : state,
       ),
-    [owner],
+    [],
   );
 
   useEffect(() => {
@@ -208,7 +219,7 @@ export function useSetup(
     };
   }, [setup, offered, accept]);
 
-  const fresh = pushed && pushed.owner === owner ? pushed.state : null;
+  const fresh = pushed;
   const read = useMemo(
     (): AgentRead<DesktopSetup> =>
       !offered
@@ -239,25 +250,20 @@ export function useSetup(
         .then(
           (state) => {
             accept(state);
-            setCommands((held) =>
-              held.owner === owner
-                ? { ...held, pending: Math.max(0, held.pending - 1) }
-                : held,
-            );
+            setCommands((held) => ({
+              ...held,
+              pending: Math.max(0, held.pending - 1),
+            }));
           },
           (error: unknown) =>
-            setCommands((held) =>
-              held.owner === owner
-                ? {
-                    ...held,
-                    pending: Math.max(0, held.pending - 1),
-                    refusal: failureCode(error),
-                  }
-                : held,
-            ),
+            setCommands((held) => ({
+              ...held,
+              pending: Math.max(0, held.pending - 1),
+              refusal: failureCode(error),
+            })),
         );
     },
-    [setup, accept, owner],
+    [setup, accept],
   );
 
   // A removal answers its own refusal to the control that asked, not the
@@ -276,8 +282,8 @@ export function useSetup(
     [accept],
   );
 
-  const pending = commands.owner === owner && commands.pending > 0;
-  const refusal = commands.owner === owner ? commands.refusal : null;
+  const pending = commands.pending > 0;
+  const { refusal } = commands;
   return useMemo(
     (): SetupControl => ({
       offered,

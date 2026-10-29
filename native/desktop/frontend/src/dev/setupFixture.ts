@@ -22,7 +22,10 @@ import {
 // The scenario host's component setup: a made-up computer with the browser
 // and the local AI (its program and its models, one item), each in the state
 // a shape gives it, and the profile's Google account beside them -- not a
-// setup item. Like the host, it sends codes only, which the window words.
+// setup item. Like the host, it serves the items whether or not anyone is
+// signed in, and refuses only what is a profile's while nobody is: the
+// Google account, beside which it shows no sign-in, and a model of the
+// person's list. Like the host, it sends codes only, which the window words.
 // Nothing is downloaded: every plan, byte count and receipt is synthetic. Each
 // item has a setup of its own, and items set up side by side. The local AI's
 // setup installs its program when it is missing, then the one model asked
@@ -296,8 +299,20 @@ export function setupFixture({
     shape === "hardware";
 
   const rows = () => items.map((seed) => seed.row);
+  // Signed out there is no profile, so no Google sign-in either.
+  const account = (): GoogleAccount =>
+    readable()
+      ? google
+      : {
+          state: "signed_out",
+          email: null,
+          drive_folder_id: null,
+          stage: "idle",
+          failure: null,
+        };
   const snapshot = (): SetupSnapshot => {
     const now = unread ? [] : rows();
+    const shown = account();
     return {
       rows: now,
       rows_mode: unread ? null : mode,
@@ -307,14 +322,14 @@ export function setupFixture({
         : now.some((held) => held.blocked_reason === "hardware"),
       check,
       runs,
-      google,
+      google: shown,
       details: [
         "Cadrumo component report (simulated)",
         ...now.map(
           (held) =>
             `${held.item}: ${held.state}${held.failure ? ` (${held.failure})` : ""}`,
         ),
-        `google: ${google.state ?? "unread"}`,
+        `google: ${shown.state ?? "unread"}`,
         ...(runs.length > 0
           ? runs.map((held) => `setup ${held.operation_id}: ${held.stage}`)
           : ["no setup"]),
@@ -322,11 +337,9 @@ export function setupFixture({
     };
   };
   const state = (): DesktopSetup =>
-    !readable()
-      ? { revision, state: "signed_out", snapshot: null }
-      : shape === "unavailable"
-        ? { revision, state: "unavailable", snapshot: null }
-        : { revision, state: "ready", snapshot: snapshot() };
+    shape === "unavailable"
+      ? { revision, state: "unavailable", snapshot: null }
+      : { revision, state: "ready", snapshot: snapshot() };
   const publish = () => {
     revision += 1;
     const next = state();
@@ -343,10 +356,12 @@ export function setupFixture({
   };
   const refuse = (code: string) => Promise.reject({ code });
   const ready = () => {
-    if (!readable()) return refuse("not_signed_in");
     if (shape === "unavailable") return refuse("unavailable");
     return null;
   };
+  // What is a profile's: its Google account and its person's model list.
+  const personal = () =>
+    ready() ?? (readable() ? null : refuse("not_signed_in"));
 
   const review = (wanted: Seed[]): SetupReview => {
     plans += 1;
@@ -821,7 +836,7 @@ export function setupFixture({
     },
     start(wanted, options) {
       say(`setup.start ${wanted}${options?.resume ? " resume" : ""}`);
-      const refused = ready();
+      const refused = options?.download ? personal() : ready();
       if (refused) return refused;
       if (shape === "busy") return refuse("busy");
       const running = runFor(wanted);
@@ -918,7 +933,7 @@ export function setupFixture({
     },
     removeModel(model) {
       say(`setup.removeModel ${model}`);
-      const refused = ready();
+      const refused = personal();
       if (refused) return refused;
       // Only the local AI's own setup holds its models.
       const localAi = runFor("local_ai");
@@ -928,7 +943,7 @@ export function setupFixture({
     },
     remove(removal) {
       say(`setup.remove ${removal}`);
-      const refused = ready();
+      const refused = removal === "local_ai" ? personal() : ready();
       if (refused) return refused;
       const item = removal === "browser" ? "browser" : "local_ai";
       const running = runFor(item);
@@ -946,7 +961,7 @@ export function setupFixture({
     },
     signInGoogle() {
       say("google.signIn");
-      const refused = ready();
+      const refused = personal();
       if (refused) return refused;
       google = {
         ...google,
@@ -959,7 +974,7 @@ export function setupFixture({
     },
     signOutGoogle() {
       say("google.signOut");
-      const refused = ready();
+      const refused = personal();
       if (refused) return refused;
       // Removing the stored sign-in contacts nothing, so it settles at once.
       google = {

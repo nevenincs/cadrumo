@@ -136,13 +136,13 @@ fn program_archive() -> Vec<u8> {
 
 /// How the publisher answers the first archive it is asked for.
 #[derive(Clone)]
-enum Serving {
+pub(in super::super) enum Serving {
     Whole,
     /// Its first bytes, then the rest once the gate is released.
     Gated(Arc<Released>),
 }
 
-struct Fixture {
+pub(in super::super) struct Fixture {
     scratch: Scratch,
     server: TlsServer,
     certificate: TestCertificate,
@@ -151,7 +151,7 @@ struct Fixture {
 }
 
 impl Fixture {
-    fn new(serving: Serving) -> Self {
+    pub(in super::super) fn new(serving: Serving) -> Self {
         let scratch = Scratch::new();
         let (table, served) = archives();
         let pins = scratch.0.join("pins");
@@ -271,7 +271,7 @@ sha256 = \"{}\"
     }
 
     /// The archive paths the publisher was asked for.
-    fn downloads(&self) -> usize {
+    pub(in super::super) fn downloads(&self) -> usize {
         self.server
             .targets()
             .iter()
@@ -286,13 +286,13 @@ fn unconsulted() -> Arc<Admission> {
 }
 
 /// The window's component engine over `fixture`, with no download asked for.
-fn window(fixture: &Fixture) -> Components {
+pub(in super::super) fn window(fixture: &Fixture) -> Components {
     Components::new(fixture.engines(), unconsulted(), Arc::default())
 }
 
 /// The window's engine over `fixture`, admitting downloads from `replies`, which the
 /// caller keeps to ask what the engine read.
-fn serving(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>) {
+pub(in super::super) fn serving(fixture: &Fixture, replies: Replies) -> (Components, Arc<Replies>) {
     let (components, replies, _) = watching(fixture, replies);
     (components, replies)
 }

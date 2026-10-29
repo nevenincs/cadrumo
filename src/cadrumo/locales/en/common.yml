@@ -3748,6 +3748,7 @@ desktop:
       browser: Browser for the tax agency website
       local_ai: Local AI
     lead_review: Check what will be downloaded and where it goes, then approve it.
+    models_signed_out: Sign in to your profile to see and download your local models.
     not_now: Not now
     open: Open setup
     outcome_cancelled: Setup was cancelled. What was already downloaded is kept.
@@ -6242,9 +6243,7 @@ tui:
           read; import fewer at a time
         own_account_mismatch: the statement names a different account than the one
           you chose
-        reader_unavailable: the local AI, which reads this file, is not ready, so
-          the file was not read
-        reader_unavailable_here: the model you picked is not available right now,
+        reader_unavailable: the model you picked is not available right now,
           so the file was not read; try again once it is available
         result_limit: the import reached its row limit before this file
         source_changed: the file changed after its preview, so nothing from it was
