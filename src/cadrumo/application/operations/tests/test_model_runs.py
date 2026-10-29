@@ -27,11 +27,6 @@ _LANE = ModelRunLane(
     transport="cli",
     model="m",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 
 

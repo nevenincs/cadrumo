@@ -302,11 +302,6 @@ _ON_HOST_VISION_LANE = ModelRunLane(
     model="synthetic-vision:1",
     reads_off_host=False,
     accepted_media=(ModelRunMediaKind.IMAGE,),
-    licence=None,
-    size_bytes=None,
-    vision=True,
-    context_length=None,
-    installed=None,
 )
 _OFF_HOST_VISION_LANE = _ON_HOST_VISION_LANE.model_copy(update={"provider_id": "faraway", "reads_off_host": True})
 _CONSENT = EvidenceConsentToken(surface="runtime:ledger.evidence.extract", evidence_content_address=_SOURCE_SHA)

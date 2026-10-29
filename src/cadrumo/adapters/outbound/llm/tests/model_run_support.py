@@ -33,11 +33,6 @@ DEFAULT_LANE = ModelRunLane(
     transport="api",
     model="example-model-1",
     reads_off_host=True,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 
 
@@ -118,11 +113,6 @@ IMAGE_LANE = ModelRunLane(
     model="synthetic-reader-1",
     reads_off_host=False,
     accepted_media=(ModelRunMediaKind.IMAGE,),
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 TEXT_ONLY_LANE = ModelRunLane(
     provider_id="nearby",
@@ -130,21 +120,11 @@ TEXT_ONLY_LANE = ModelRunLane(
     model="synthetic-reader-1",
     reads_off_host=False,
     accepted_media=(),
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 ON_HOST_LANE = ModelRunLane(
     provider_id="nearby",
     transport="api",
     model="synthetic-reader-1",
     reads_off_host=False,
-    licence=None,
-    size_bytes=None,
-    vision=None,
-    context_length=None,
-    installed=None,
 )
 """A lane whose catalogue entry declares it stays on this computer."""
