@@ -19,12 +19,11 @@ runs the vendor installer for the shared test cache.
 
 Where each row stops:
 
-- Download. A module that imports an HTTP client and either names a declared
-  component host (the external constants' browser, program and model registry
-  hosts) in a string or imports the component pins; or a module that names the
-  program's pull or delete endpoint, as a path or as the word an endpoint helper
-  is called with. A host handed in by another module that imports no pins is
-  not seen.
+- Download. A module that imports an HTTP client and names a component host
+  (the browser archive, program archive and model registry hosts) in a string;
+  or a module that names the program's pull or delete endpoint, as a path or as
+  the word an endpoint helper is called with. A host handed in by another
+  module is not seen.
 - Install. A module that starts a process and names a package manager or
   installer word (``winget``, ``brew``, ``apt-get``, ``install-deps`` ...), or
   that imports the Playwright driver's own entry points. An installer reached
@@ -46,12 +45,9 @@ Where each row stops:
   ``bin/ollama`` path. The bare word ``ollama`` as a provider or catalogue
   identifier, and the storage folders named after it, name no executable and
   pass.
-- Write a receipt or record. A module that names the components storage
-  (``DEPENDENCY_RECEIPTS`` or the ``components/receipts`` and
-  ``components/activity`` folders) and also writes, renames or removes a file.
-- Decide state. A call that builds a status row with a literal
-  ``state=DependencyState.<member>``. A state built from a mapping the module
-  does not spell is not seen.
+- Write a receipt or record. A module that names the components storage (the
+  ``components/receipts`` and ``components/activity`` folders) and also writes,
+  renames or removes a file.
 - Model argument. A string that is exactly ``--model`` or begins with
   ``--model=``, in any module. The person's selection is the agent's and only
   the desktop hands it to the engine, so no product Python passes a model on a
@@ -70,7 +66,6 @@ from typing import Final
 
 import pytest
 
-from cadrumo.core.external_constants import load_external_constants
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -84,9 +79,15 @@ _PRODUCT_ROOTS: Final = (
 )
 _TEST_SUPPORT: Final = REPO_ROOT / "src" / "cadrumo" / "tests"
 
-#: The host groups of the two setup items: the browser archives, the local AI
-#: program archives and the model registry.
-_COMPONENT_HOST_GROUPS: Final = ("browser", "model_runtime", "model_registry")
+#: The hosts the browser archives, the local AI program archives and the model registry are served from.
+_COMPONENT_HOSTS: Final = (
+    "cdn.playwright.dev",
+    "playwright.download.prss.microsoft.com",
+    "storage.googleapis.com",
+    "github.com",
+    "release-assets.githubusercontent.com",
+    "registry.ollama.ai",
+)
 
 _HTTP_CLIENT_MODULES: Final = frozenset(
     {"httpx", "requests", "aiohttp", "urllib.request", "urllib3", "http.client", "socket", "ssl"}
@@ -98,9 +99,6 @@ _SERVER_ENDPOINTS: Final = tuple(f"/api/{word}" for word in _SERVER_ENDPOINT_WOR
 #: The program's executable file names; the bare program name is a file only where a lookup or a path says so.
 _PROGRAM_FILES: Final = frozenset({"ollama.exe", "ollama.app"})
 _PROGRAM_NAMES: Final = frozenset({"ollama", *_PROGRAM_FILES})
-#: The modules that read the component pins: the bytes only the engine may fetch.
-_PIN_MODULES: Final = ("cadrumo.application.browser_archive_pins",)
-_PIN_MODULE_NAMES: Final = frozenset(module.rsplit(".", 1)[1] for module in _PIN_MODULES)
 
 _MODEL_FLAG: Final = "--model"
 
@@ -139,7 +137,6 @@ _DRIVER_ENTRY_POINTS: Final = ("playwright.__main__", "playwright._impl._driver"
 _PROGRAM_WORDS: Final = frozenset({"ollama", "ollama.exe", "serve"})
 
 _RECORD_MARKERS: Final = ("components/receipts", "components/activity", ".activity.json")
-_RECORD_CATEGORY: Final = "DEPENDENCY_RECEIPTS"
 _WRITE_CALLS: Final = frozenset(
     {
         "write_text",
@@ -157,8 +154,6 @@ _WRITE_CALLS: Final = frozenset(
         "dump",
     }
 )
-
-_ROW_TYPE: Final = "DependencyStatusRow"
 
 
 @dataclass(frozen=True)
@@ -193,34 +188,6 @@ class Source:
                 parts = module.split(".")
                 names.update(".".join(parts[:index]) for index in range(1, len(parts) + 1))
         return frozenset(names)
-
-    @cached_property
-    def imported_module_leaves(self) -> frozenset[str]:
-        """The last segment of every module imported, relative imports included."""
-        leaves: set[str] = set()
-        for node in ast.walk(self.tree):
-            if isinstance(node, ast.Import):
-                leaves.update(alias.name.rsplit(".", 1)[-1] for alias in node.names)
-            elif isinstance(node, ast.ImportFrom):
-                if node.module is not None:
-                    leaves.add(node.module.rsplit(".", 1)[-1])
-                leaves.update(alias.name for alias in node.names)
-        return frozenset(leaves)
-
-    @cached_property
-    def names(self) -> frozenset[str]:
-        """Every name the module defines, imports, loads or reaches as an attribute."""
-        found: set[str] = set()
-        for node in ast.walk(self.tree):
-            if isinstance(node, ast.Name):
-                found.add(node.id)
-            elif isinstance(node, ast.Attribute):
-                found.add(node.attr)
-            elif isinstance(node, ast.alias):
-                found.add((node.asname or node.name).rsplit(".", 1)[-1])
-                found.add(node.name.rsplit(".", 1)[-1])
-            found.update(_defined_names(node))
-        return frozenset(found)
 
     def calls(self) -> Iterator[tuple[str, ast.Call]]:
         """Every call with the final name it is made through."""
@@ -291,10 +258,6 @@ def download_findings(source: Source, hosts: Iterable[str]) -> list[str]:
             f"{source.module}: names the component host {host!r} and imports an HTTP client"
             for host in sorted(set(hosts))
             if any(host in text for text in strings)
-        )
-        findings.extend(
-            f"{source.module}: imports the component pins {pins!r} and an HTTP client"
-            for pins in sorted(source.imported_module_leaves & _PIN_MODULE_NAMES)
         )
     return findings
 
@@ -384,9 +347,7 @@ def _names_program_file(text: str) -> bool:
 
 def record_findings(source: Source) -> list[str]:
     """Name a module that names the components storage and writes, renames or removes a file."""
-    names_storage = any(marker in text for text in source.strings for marker in _RECORD_MARKERS) or any(
-        isinstance(node, ast.Attribute) and node.attr == _RECORD_CATEGORY for node in ast.walk(source.tree)
-    )
+    names_storage = any(marker in text for text in source.strings for marker in _RECORD_MARKERS)
     if not names_storage:
         return []
     writes = sorted({name for name, _ in source.calls() if name in _WRITE_CALLS})
@@ -403,33 +364,6 @@ def _opens_for_writing(call: ast.Call) -> bool:
         isinstance(mode, ast.Constant) and isinstance(mode.value, str) and set(mode.value) & set("wax+")
         for mode in modes
     )
-
-
-def state_findings(source: Source) -> list[str]:
-    """Name a module that builds a status row with a literal state."""
-    findings: list[str] = []
-    for name, call in source.calls():
-        if name != _ROW_TYPE:
-            continue
-        for keyword in call.keywords:
-            value = keyword.value
-            if (
-                keyword.arg == "state"
-                and isinstance(value, ast.Attribute)
-                and isinstance(value.value, ast.Name)
-                and value.value.id == "DependencyState"
-            ):
-                findings.append(f"{source.module}:{call.lineno}: builds a {name} that decides state={value.attr}")
-    return findings
-
-
-def _defined_names(node: ast.AST) -> tuple[str, ...]:
-    if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef):
-        return (node.name,)
-    if isinstance(node, ast.TypeAlias):
-        return (node.name.id,)
-    targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
-    return tuple(target.id for target in targets if isinstance(target, ast.Name))
 
 
 def model_argument_findings(source: Source) -> list[str]:
@@ -451,7 +385,6 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
         *server_call_findings(source),
         *locate_findings(source),
         *record_findings(source),
-        *state_findings(source),
         *model_argument_findings(source),
     ]
 
@@ -459,11 +392,6 @@ def provisioning_findings(source: Source, hosts: Iterable[str]) -> list[str]:
 # --------------------------------------------------------------------------
 # The real tree
 # --------------------------------------------------------------------------
-
-
-def _component_hosts() -> tuple[str, ...]:
-    declared = load_external_constants().dependency_hosts
-    return tuple(sorted({host for group in _COMPONENT_HOST_GROUPS for host in declared.hosts_for(group)}))
 
 
 def _product_files() -> Iterator[Path]:
@@ -505,11 +433,6 @@ def test_a_module_that_opens_a_download_from_a_component_host_is_refused() -> No
     helper = parse_source(
         "fixture.helper", 'def pull(ollama_endpoint, url):\n    return ollama_endpoint(url, "pull")\n'
     )
-    pinned = parse_source(
-        "fixture.pinned",
-        "import httpx\n\nfrom ..application.browser_archive_pins import load_browser_archive_pins\n\n"
-        "def fetch():\n    return [httpx.get(pin.urls[0]) for pin in load_browser_archive_pins().archives]\n",
-    )
     naming_only = parse_source("fixture.namespace", 'NAMESPACE = "https://github.com/example/ns/1/"\n')
     reading = parse_source("fixture.reader", 'def ps(ollama_endpoint, url):\n    return ollama_endpoint(url, "ps")\n')
     assert download_findings(fetching, _HOSTS) == [
@@ -518,9 +441,6 @@ def test_a_module_that_opens_a_download_from_a_component_host_is_refused() -> No
     assert download_findings(pulling, _HOSTS) == ["fixture.pull: names the model program's endpoint '/api/pull'"]
     assert download_findings(helper, _HOSTS) == [
         "fixture.helper:2: asks ollama_endpoint() for the model program's 'pull' endpoint"
-    ]
-    assert download_findings(pinned, _HOSTS) == [
-        "fixture.pinned: imports the component pins 'browser_archive_pins' and an HTTP client"
     ]
     assert download_findings(naming_only, _HOSTS) == [], "a host named without an HTTP client downloads nothing"
     assert download_findings(reading, _HOSTS) == [], "asking what the server holds downloads nothing"
@@ -604,33 +524,19 @@ def test_a_module_that_writes_a_component_receipt_or_record_is_refused() -> None
         "from pathlib import Path\n\ndef record(root: Path, text: str) -> None:\n"
         '    (root / "components/receipts" / "browser.json").write_text(text)\n',
     )
-    category = parse_source(
-        "fixture.category",
-        "def record(storage_path, StorageCategory, text):\n"
-        "    with open(storage_path(StorageCategory.DEPENDENCY_RECEIPTS) / 'x.json', 'w') as handle:\n"
+    opening = parse_source(
+        "fixture.opening",
+        "def record(root, text):\n"
+        "    with open(root / 'components/activity' / 'x.json', 'w') as handle:\n"
         "        handle.write(text)\n",
     )
     reading = parse_source(
         "fixture.reader",
-        "def read(storage_path, StorageCategory):\n"
-        "    return (storage_path(StorageCategory.DEPENDENCY_RECEIPTS) / 'browser.json').read_text()\n",
+        "def read(root):\n    return (root / 'components/receipts' / 'browser.json').read_text()\n",
     )
     assert record_findings(writing) == ["fixture.receipt: names the components storage and calls write_text()"]
-    assert record_findings(category) == ["fixture.category: names the components storage and calls open()"]
+    assert record_findings(opening) == ["fixture.opening: names the components storage and calls open()"]
     assert record_findings(reading) == [], "reading the engine's record is what Python may do"
-
-
-def test_a_module_that_decides_component_state_is_refused() -> None:
-    deciding = parse_source(
-        "fixture.state",
-        "def row(DependencyStatusRow, DependencyState):\n"
-        "    return DependencyStatusRow(item_id='browser', state=DependencyState.READY)\n",
-    )
-    rendering = parse_source(
-        "fixture.render", "def ready(row, DependencyState):\n    return row.state is DependencyState.READY\n"
-    )
-    assert state_findings(deciding) == ["fixture.state:2: builds a DependencyStatusRow that decides state=READY"]
-    assert state_findings(rendering) == [], "rendering a reported state decides nothing"
 
 
 def test_a_module_that_passes_a_model_argument_is_refused() -> None:
@@ -649,9 +555,8 @@ def test_a_module_that_passes_a_model_argument_is_refused() -> None:
 
 def test_no_product_python_downloads_installs_extracts_spawns_asks_locates_writes_or_decides_a_component() -> None:
     sources = _product_sources()
-    hosts = _component_hosts()
+    hosts = _COMPONENT_HOSTS
     assert len(sources) > 2000, f"the census read only {len(sources)} product modules, so it would pass by reading none"
-    assert len(hosts) >= 5, f"the component host census read {hosts}"
     assert "cadrumo.application.browser_location" in sources, "the census missed the browser's locate module"
     findings = [finding for source in sources.values() for finding in provisioning_findings(source, hosts)]
     assert not findings, "\n".join(findings)

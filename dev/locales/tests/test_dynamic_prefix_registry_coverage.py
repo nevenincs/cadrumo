@@ -715,12 +715,12 @@ def test_a_key_suffix_is_not_an_identity_wrapped_catalogue_key(tmp_path) -> None
 
     source = "\n".join(
         (
-            'def _key(suffix): return f"application.provisioning.{suffix}"',
+            'def _key(suffix): return f"application.example.{suffix}"',
             "def tr(translation_key, **values): return translation_key",
-            'tr(_key("dependency.local_ai.program"))',
-            'tr(_key("dependency.local_ai.model"), role="role")',
-            'tr(TranslationKey("application.provisioning.dependency.local_ai.program"))',
-            'tr(TranslationKey("application.provisioning.dependency.local_ai.model"))',
+            'tr(_key("entry.first"))',
+            'tr(_key("entry.second"), role="role")',
+            'tr(TranslationKey("application.example.entry.first"))',
+            'tr(TranslationKey("application.example.entry.second"))',
             'option(help_key=_key("cli.config.help"))',
             'tr("application.direct.first" if condition else "application.direct.second")',
         )
@@ -730,11 +730,11 @@ def test_a_key_suffix_is_not_an_identity_wrapped_catalogue_key(tmp_path) -> None
     tree_keys = scan_source_tree(tmp_path)
 
     for keys in (text_keys, tree_keys):
-        assert "dependency.local_ai.program" not in keys
-        assert "dependency.local_ai.model" not in keys
+        assert "entry.first" not in keys
+        assert "entry.second" not in keys
         assert {
-            "application.provisioning.dependency.local_ai.program",
-            "application.provisioning.dependency.local_ai.model",
+            "application.example.entry.first",
+            "application.example.entry.second",
             "cli.config.help",
             "application.direct.first",
             "application.direct.second",
