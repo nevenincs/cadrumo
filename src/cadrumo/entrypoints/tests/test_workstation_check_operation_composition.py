@@ -9,12 +9,13 @@ import pytest
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...adapters.outbound.components.tests.recorded_rows import set_up_row
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ...application import workstation_check as service
 from ...application.auth.operator_probe_ports import OperatorProbePorts
-from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE
+from ...application.local_reader import LOCAL_AI_PROGRAM_SERVICE, ProgramRow
 from ...application.preflight import HealthSeverity, PreflightCheck
 from ...application.provisioning import DependencyStatus
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
@@ -43,8 +44,15 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
     observed: list[str] = []
     captured: list[OperatorProbePorts] = []
 
-    def dependencies() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
+    program_row = set_up_row("local_ai")
+
+    def read_program() -> ProgramRow:
+        observed.append("program")
+        return program_row
+
+    def dependencies(row: ProgramRow) -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
         assert governed_facts_in_scope() is authority_operation
+        assert row is program_row
         observed.append("dependencies")
         return (program, google), (google,)
 
@@ -57,6 +65,7 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
         observed.append("preflight")
         return (preflight_row,)
 
+    monkeypatch.setattr(composition, "read_local_ai_program", read_program)
     monkeypatch.setattr(service, "_probe_dependency_statuses", dependencies)
     monkeypatch.setattr(service, "run_preflight_checks", preflight)
     previous_scope = governed_facts_in_scope()
@@ -79,7 +88,7 @@ def test_exact_encrypted_profile_capabilities_and_retained_pin_reach_canonical_r
         assert not decisions[ServiceCapability.GOOGLE_EXPORT].enabled
         assert report.dependencies == (program, google) and report.preflight == (preflight_row,)
         assert WorkstationCheckProjection.from_report(report).to_report() == report
-        assert observed == ["dependencies", "preflight"] and captured == [ports.operator_probe_ports]
+        assert observed == ["program", "dependencies", "preflight"] and captured == [ports.operator_probe_ports]
         assert governed_facts_in_scope() is previous_scope
 
 
