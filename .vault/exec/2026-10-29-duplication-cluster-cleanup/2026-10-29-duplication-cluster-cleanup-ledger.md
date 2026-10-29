@@ -5,7 +5,7 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:c78b49487de355588845b4c06c262099f907437a67315a5e7f89d850e1a33a86'
+body_hash: 'sha256:7dc1551df9726d2e0ee21393099d0a80da03df0f0c4c4e641a13e706479942c3'
 related:
   - "[[2026-10-29-duplication-cluster-cleanup-plan]]"
 ---
@@ -79,6 +79,10 @@ related:
 - `S09` `verify:` `three additional M303 export parity and refusal cases after clock fix` -> `pass`
 - `S09` `verify:` `fixture Ruff format and Windows ty` -> `pass`
 - `S09` `by:` `Sol 6.1 high`
+- `S10` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_register_owned_acquisition_cli.py`
+- `S10` `verify:` `owned acquisition runtime module positive and negative 2 cases` -> `pass`
+- `S10` `verify:` `scoped Ruff format and Windows ty` -> `pass`
+- `S10` `by:` `Terra 6.1 xhigh`
 
 ## Notes
 
@@ -93,3 +97,4 @@ related:
 - `S04` S04 checkpoint also adopted a concurrent foreign ViewDownstreamReader test-support import migration. Targeted postimage rerun passed26; relay/helper/admission hashes unchanged during rerun. Existing worker-loss background thread `runtime_connection_closed` warning remained visible.
 - `S08` Original failure was only the stale first-line text prefix. Expected full categorized line is independently grounded in English locale and registered REFUSED rendering; preceding ordinary notices remain allowed. PDB was diagnostic only, not passing evidence. All typed verdict, no-model-run, settlement, exit and no-desktop assertions preserved.
 - `S09` Original five export failures stopped at CLI `session_expired` before intended assertions: login thread read real time while test proof used frozen time. Existing public `wall_clock` port now reads captured context through a fresh copy per call. Production authentication thresholds and expiry logic unchanged; explicit `SESSION_EXPIRED` negative control passed. A separate acquisition fixture failure in the four-node probe remains separately triaged.
+- `S10` Original second unregistered row was excluded before the intended conflict guard. Its PDF evidence and ledger fields now use the already established eligible furniture fixture amounts coherently; original acquisition defaults and all refusal/persistence assertions remain. No production calculation or policy change.

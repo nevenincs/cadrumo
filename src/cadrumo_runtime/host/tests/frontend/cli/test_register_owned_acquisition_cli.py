@@ -170,7 +170,14 @@ def _result(arguments: list[str]) -> dict[str, Any]:
     return payload
 
 
-def _add_supplier_invoice_evidence(tmp_path: Path, *, invoice_number: str = "MAQ-2025-0001") -> str:
+def _add_supplier_invoice_evidence(
+    tmp_path: Path,
+    *,
+    invoice_number: str = "MAQ-2025-0001",
+    taxable_base: Decimal = _BASE,
+    iva_amount: Decimal = _IVA,
+    paid_amount: Decimal = _PAID,
+) -> str:
     """Register the supplier invoice the input-IVA deduction rests on.
 
     LIVA art. 97 makes the invoice the deduction's justificante, and the ledger
@@ -183,9 +190,9 @@ def _add_supplier_invoice_evidence(tmp_path: Path, *, invoice_number: str = "MAQ
             (
                 "Maquinaria Sintetica SL",
                 f"Factura {invoice_number}",
-                "Base imponible 1.000,00",
-                "IVA 21% 210,00",
-                "Total 1.210,00",
+                f"Base imponible {format(taxable_base, ',.2f').translate(str.maketrans('.,', ',.'))}",
+                f"IVA 21% {format(iva_amount, ',.2f').translate(str.maketrans('.,', ',.'))}",
+                f"Total {format(paid_amount, ',.2f').translate(str.maketrans('.,', ',.'))}",
             ),
         ),
     )
@@ -203,11 +210,11 @@ def _add_supplier_invoice_evidence(tmp_path: Path, *, invoice_number: str = "MAQ
             "--invoice-date",
             _ACQUIRED_ON.isoformat(),
             "--taxable-base",
-            str(_BASE),
+            str(taxable_base),
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            str(_IVA),
+            str(iva_amount),
         ],
     )
     evidence_id = payload.get("evidence_id")
@@ -220,6 +227,9 @@ def _add_machine_purchase(
     *,
     category_id: str = "hardware_amortizable",
     description: str = "Compra de maquinaria",
+    taxable_base: Decimal = _BASE,
+    iva_amount: Decimal = _IVA,
+    paid_amount: Decimal = _PAID,
 ) -> str:
     """Record the bank payment of the machine, with its deductible input IVA."""
     payload = _result(
@@ -230,7 +240,7 @@ def _add_machine_purchase(
             "--date",
             _ACQUIRED_ON.isoformat(),
             "--amount",
-            str(_PAID),
+            str(paid_amount),
             "--direction",
             "OUTGOING",
             "--description",
@@ -238,11 +248,11 @@ def _add_machine_purchase(
             "--classification",
             "BUSINESS",
             "--taxable-base",
-            str(_BASE),
+            str(taxable_base),
             "--iva-rate",
             "0.21",
             "--iva-amount",
-            str(_IVA),
+            str(iva_amount),
             "--iva-category",
             "domestic_general",
             "--deduction-kind",
@@ -398,10 +408,20 @@ def test_a_separate_depreciation_row_still_refuses_the_calculation(tmp_path: Pat
         transaction_id = _add_machine_purchase(_add_supplier_invoice_evidence(tmp_path))
         _register_machine(transaction_id)
         _claim_2025_charge()
+        competing_base, competing_iva, competing_paid = Decimal("250.00"), Decimal("52.50"), Decimal("302.50")
         _add_machine_purchase(
-            _add_supplier_invoice_evidence(tmp_path, invoice_number="MOB-2025-0002"),
+            _add_supplier_invoice_evidence(
+                tmp_path,
+                invoice_number="MOB-2025-0002",
+                taxable_base=competing_base,
+                iva_amount=competing_iva,
+                paid_amount=competing_paid,
+            ),
             category_id="mobiliario_amortizable",
             description="Amortizacion de mobiliario declarada en el libro",
+            taxable_base=competing_base,
+            iva_amount=competing_iva,
+            paid_amount=competing_paid,
         )
 
         refused_quarter = invoke_cached_cli(

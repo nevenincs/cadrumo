@@ -10,9 +10,13 @@ related:
   - '[[2026-10-03-duplication-remediation-hashing-proof-boundaries-adr]]'
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
   - '[[2026-10-02-duplication-remediation-plan]]'
+  - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
+  - '[[2026-06-15-dependency-provisioning-adr]]'
+  - '[[2026-10-18-dependency-provisioning-unified-setup-adr]]'
+  - '[[2026-10-24-rust-component-provisioning-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:da70bc8704b5befbb60dfd19de4ff1f41857b3b1d28ef26d24fa8870a6cf5d9e'
+body_hash: 'sha256:745e78006615f5cab4386b4ca8d7e5fb57f745dfe153e2fff1a70529b7fdb8ea'
 ---
 
 # `duplication-cluster-cleanup` plan
@@ -40,6 +44,8 @@ The accepted canonical-module decision governs all extraction and atomic consume
 - [x] `S07` - Correct the reader-consumer negative oracle to require the actual refusal evidence mismatch; `src/cadrumo/entrypoints/tests/test_reader_consumer_gating.py wrong-code assertion, matching explanation and targeted verification`.
 - [x] `S08` - Align the ledger reader-refusal presentation assertion with the categorized localized CLI contract; `src/cadrumo/entrypoints/cli/tests/test_ledger_import_reader_refusal_settlement.py refusal text assertion only and owning verification`.
 - [x] `S09` - Propagate the portable runtime test clock through the existing public wall-clock port; `src/cadrumo_runtime/host/tests/frontend/cli/portable_human_cli_runtime.py captured test context and wall_clock wiring only`.
+- [x] `S10` - Seed a coherent eligible competing depreciation row in the acquisition refusal test; `src/cadrumo_runtime/host/tests/frontend/cli/test_register_owned_acquisition_cli.py two amount-aware fixture helpers and the second unregistered negative-case row only`.
+- [ ] `S11` - Pin the retired config check and provision families as absent from the tax CLI; `src/cadrumo/entrypoints/cli/tests/test_operator_surface_contract_drift.py independent config-family pins and explicit retirement assertion only`.
 
 ## Parallelization
 
