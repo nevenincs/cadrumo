@@ -708,7 +708,7 @@ async def test_a_refused_extraction_raises_its_recorded_reason_with_the_verdict_
     assert raised.value.recorded_code == detail.error_code
     assert raised.value.translated_message == EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY
     assert resolve_error_message(raised.value, locale="en") == (
-        "The automatic reader could not run, so nothing was read. Check the model you picked, then try again."
+        "The automatic reader could not run, so nothing was read."
     )
     restored = nested_terminal_precondition_verdict(raised.value)
     assert restored == verdict

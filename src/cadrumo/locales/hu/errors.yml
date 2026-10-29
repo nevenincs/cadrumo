@@ -1144,8 +1144,7 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Oldalként csak PDF-, JPEG- és
       PNG-dokumentum jeleníthető meg.
     refused_ledger_evidence_reader_unavailable: Az automatikus olvasó nem tudott elindulni,
-      ezért semmi sem lett beolvasva. Ellenőrizd a kiválasztott modellt, majd próbáld
-      újra.
+      ezért semmi sem lett beolvasva.
     refused_ledger_evidence_reader_unreadable_answer: A dokumentumolvasó olyan formában
       válaszolt, amelyet ez a parancs nem tudott értelmezni, ezért semmi sem került
       átvételre a dokumentumból. Semmi sem lett mentve; futtasd újra a parancsot,

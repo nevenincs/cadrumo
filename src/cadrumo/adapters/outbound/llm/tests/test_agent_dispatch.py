@@ -139,7 +139,7 @@ def test_a_lookup_refusal_reaches_the_consumer_without_a_run(tmp_path: Path) -> 
 
 
 @pytest.mark.parametrize("locale", SUPPORTED_OUTPUT_LANGUAGES)
-def test_a_role_with_no_picked_model_says_to_pick_one_in_the_desktop_app(tmp_path: Path, locale: str) -> None:
+def test_a_role_with_no_picked_model_says_to_pick_one(tmp_path: Path, locale: str) -> None:
     with (
         serving_agent(lookup_refusal=ModelRunRefusalCode.NO_SELECTION),
         pytest.raises(LLMConfigError) as caught,
@@ -148,13 +148,10 @@ def test_a_role_with_no_picked_model_says_to_pick_one_in_the_desktop_app(tmp_pat
 
     sentence = resolve_error_message(caught.value, locale=locale)
     assert sentence != resolve_error_message(LLMConfigError(), locale=locale), "the generic configuration sentence"
-    assert "Cadrumo" in sentence
     assert "aeat" not in sentence
+    assert "desktop" not in sentence.lower()
     if locale == "en":
-        assert sentence == (
-            "No model is picked to read with. Pick one in the agent's model picker in the Cadrumo desktop app, "
-            "then try again."
-        )
+        assert sentence == "No model is picked to read with. Pick one, then try again."
 
 
 @pytest.mark.parametrize(
@@ -199,10 +196,7 @@ def test_a_model_the_agent_cannot_fit_names_the_free_memory_condition_and_how_to
     sentence = resolve_error_message(caught.value, locale=locale)
     assert "Cadrumo" in sentence
     if locale == "en":
-        assert sentence == (
-            "The model Cadrumo reads with does not fit in this computer's free memory right now. "
-            "Close other programs, then try again."
-        )
+        assert sentence == ("The model Cadrumo reads with does not fit in this computer's free memory right now.")
 
 
 def test_a_consented_evidence_run_binds_its_consent_to_the_resolved_lane(tmp_path: Path) -> None:
@@ -298,11 +292,6 @@ def test_an_injected_port_wins_over_the_bound_one(tmp_path: Path) -> None:
             transport="cli",
             model="m",
             reads_off_host=True,
-            licence=None,
-            size_bytes=None,
-            vision=None,
-            context_length=None,
-            installed=None,
         )
     )
     settings = _settings(tmp_path)

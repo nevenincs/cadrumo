@@ -1216,8 +1216,7 @@ errors:
     refused_ledger_evidence_page_unsupported_media: Solo los documentos PDF, JPEG
       y PNG se pueden mostrar como página.
     refused_ledger_evidence_reader_unavailable: El lector automático no ha podido
-      funcionar, así que no se ha leído nada. Revisa el modelo que elegiste y vuelve
-      a intentarlo.
+      funcionar, así que no se ha leído nada.
     refused_ledger_evidence_reader_unreadable_answer: El lector de documentos respondió
       en un formato que este comando no ha podido leer, así que no se ha tomado nada
       del documento. No se ha guardado nada; vuelve a ejecutar el comando y, si sigue
