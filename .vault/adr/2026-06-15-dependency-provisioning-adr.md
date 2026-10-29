@@ -10,155 +10,105 @@ related:
   - "[[2026-06-15-service-capabilities-adr]]"
   - '[[2026-07-06-dependency-provisioning-research]]'
 ---
-# `dependency-provisioning` adr: `Dependency management and graceful degradation: cohesive missing-dependency behaviour and a single doctor` | (**status:** `accepted`)
+# `dependency-provisioning` adr: `Dependency management and graceful degradation: a missing dependency is a typed point-of-use refusal` | (**status:** `accepted`)
 
 ## Problem Statement
 
-On a fresh workstation, the app's external dependencies fail incohesively
-(research F3, F5). Subprocess LLM CLIs, Google export, the OS keychain, and ECB FX
-degrade gracefully (typed refusals, fallbacks); but the **on-host Ollama vision
-path emits a raw `httpx.ConnectError` traceback** when the server is down or the
-model is unpulled — no probe, and the CLI catches neither the connection error nor
-`LLMProviderError`. Playwright's browser-missing case is typed. Workstation checks
-are fragmented: `just bootstrap` never verifies, `just env-doctor` hard-crashes on a
-non-existent `cadrumo.entrypoints.cli.browser.health` module, the README (`uv sync`)
-and the justfile (`just bootstrap`) give conflicting entry points, and the retired
-April `aeat setup`/`aeat doctor` verification loop was never replaced. There is no
-single command that tells the operator what is missing. This is the companion to the
-profile-capabilities ADR: a service runs only when (capability opted-in) AND
-(dependency available) AND (safety posture permits).
+The application's external dependencies must fail cohesively. The OS keychain,
+Google export and ECB FX degrade gracefully (typed refusals, fallbacks), and the
+Playwright browser-missing case is typed. A dependency that is absent at the moment
+an operation needs it must never surface as a raw `httpx.ConnectError` traceback,
+and never as a silent no-op. This is the companion to the profile-capabilities ADR:
+a service runs only when (capability opted-in) AND (safety posture permits), and the
+operation then refuses at the point of use if the dependency is not there.
 
 ## Considerations
 
 - The in-tree graceful-degradation references are strong: the keychain provider's
   `KeyringUnavailableError` + file fallback, the Google `GoogleAuthError` →
-  locale-rendered `_google_refusal`, and the subprocess-CLI typed pre-check. The
-  fix is to make the Ollama/vision and Playwright paths *match* these, not invent a
-  new pattern.
+  locale-rendered `_google_refusal`, and the subprocess-CLI typed pre-check. Every
+  other dependency path matches these rather than inventing a new pattern.
 - Diagnostics belong on the typed `Notice`/refusal channel
   (`cli-notices-are-the-only-diagnostic-channel`); a missing dependency is an
   instructive refusal, never a stack trace and never a silent no-op
   (`no-silent-under-declaration`).
-- The dependency surface should mirror the capability surface: a capability the
-  operator can opt into should have an installable extra and a doctor row.
+- `src/cadrumo` is a tax calculation engine, not a dependency platform. It does not
+  check, probe, diagnose, size hardware for or report the readiness of any
+  third-party dependency: the AEAT browser, Ollama, models, model lanes or optional
+  extras. The desktop owns dependency readiness and setup.
 - `torch` is a ~GB CUDA core dependency that **no runtime path imports** (deptry
   DEP002-suppressed) — it exists only for the dev-only vaultspec-rag pin. Carrying
   it in `[project.dependencies]` bloats every install (`aeat-source-hygiene`,
   `no-legacy-compatibility` spirit: don't ship dead weight).
-- The CLI root surface is `config` + `app` only (enforced); a workstation doctor
-  must live under `config` (e.g. `aeat config check`), not a third root family
-  (`aeat-architecture-boundaries`).
 
 ## Constraints
 
 - The shared-Windows-worktree exe-lock hazard forbids `uv sync` in `bootstrap`
   (documented); provisioning recipes must stay additive (`uv pip install`).
-- Live AEAT writes remain permanently forbidden (`aeat-safety-legal-gates`); the
-  doctor probes reachability/availability only, never performs a live write.
-- The Ollama probe must not block the hot path with a long timeout; a fast
-  reachability check (short connect timeout to `/api/tags`) plus a model-presence
-  read, surfaced as a typed refusal before the expensive inference call.
+- Live AEAT writes remain permanently forbidden (`aeat-safety-legal-gates`).
+- A refusal is raised only when the operation actually reaches the dependency. No
+  operation spends time on a pre-flight check of a dependency it may not need.
 - Parent surfaces (the LLM client/adapter, the browser session, the justfile, the
   CLI config surface) are shipped and stable; this layers additively.
 
 ## Implementation
 
-**Decision: define one cohesive missing-dependency contract — probe → typed
-refusal/Notice naming the missing dependency — apply it to the ungraceful paths,
-give pyproject a capability-mapped extras structure, and add a single
-`aeat config check` (plus a `just doctor`) that reports every external
-dependency's availability and the active profile's capability posture.**
+**Decision: one cohesive missing-dependency contract — a dependency that is
+unavailable when an operation needs it is a typed refusal/Notice that names the
+missing dependency and nothing else — and a pyproject with a capability-mapped
+extras structure over a lean core.**
 
-1. **A dependency-probe layer (application/adapters).** A small typed
-   `DependencyStatus` model (`available: bool`, `detail`)
-   and per-service probes: Ollama reachability + vision-model presence (fast
-   `/api/tags` read), Playwright browser-binary presence, Google credential
-   presence (reuse the `GoogleAuthError` typing), subprocess-CLI PATH (reuse
-   `is_llm_provider_available`). Probes never raise on absence — they return a
-   typed status.
+1. **Typed refusal at the point of use.** When a call reaches an unavailable
+   dependency, the adapter raises a typed refusal that the CLI renders as an
+   instructive `Notice`. The refusal names the missing dependency (the browser, the
+   optional extra, the agent's own refusal) and names no command, no application
+   and no setup step. Availability is never probed ahead of the call, never
+   aggregated into a report and never exposed as a status row.
 
-2. **Close the Ollama headline gap.** Before the vision inference, probe Ollama;
-   on unreachable/model-missing, raise the existing typed
-   `PurchaseInvoiceEvidenceInputError` / a `LLMClassifierError`-class refusal (which
-   the classify CLI already catches) carrying a `Notice` that names the missing
-   dependency. Also widen the classify CLI to catch
-   `LLMProviderError` and connection errors and render them as the same instructive
-   refusal — no raw traceback. Add an Ollama/vision row to `aeat app ledger
-   providers`.
-
-3. **Browser refusal.** The `BrowserError(BROWSER_LAUNCH_FAILED)` message names the
+2. **Browser refusal.** The `BrowserError(BROWSER_LAUNCH_FAILED)` message names the
    missing browser when the failure is browser-not-installed.
 
-4. **pyproject torch relocation (done) + capability-mapped extras (scoped).**
-   `torch` is the vaultspec-rag embedding backend — no `src/cadrumo/` runtime path
-   imports it — yet it sat in `[project.dependencies]` (a ~GB CUDA wheel on every
-   production install). It is relocated to `[dependency-groups].dev`, which
-   vaultspec-rag's `torch_config` accepts as a valid direct-dep location (PEP 735),
-   so the `[tool.uv.sources]` cu130 pin still applies and `just install` (dev group)
-   still provisions it for contributors; the deptry DEP002 suppression is removed.
-   The capability-mapped `[project.optional-dependencies]` extras (`google`,
-   `browser`, cloud-LLM) over a *leaner* core are deferred as a separately-scoped
-   refactor: those libraries are eagerly imported across many adapter modules, so a
-   true lean-core requires converting every adapter import to lazy and extending the
-   probes to detect a missing *package* (ImportError → `pip install aeat[…]`), not
-   only a missing runtime service. That is a large, breakage-risky migration; torch
-   (the one genuinely-unused-in-core dependency) is the safe, immediate win.
+3. **Optional extras.** The capability-mapped `[project.optional-dependencies]`
+   extras (`google`, `browser`, cloud-LLM and others) sit over a lean core. Each
+   library is imported lazily, and the feature that needs it raises
+   `MissingOptionalExtraError` naming the missing extra when it is absent.
 
-5. **A single `aeat config check`.** Under the `config` family (named `check`, since `config doctor` is a retired path), a read-only report
-   that, for every external service, prints: dependency availability (from the
-   probe), the active profile's capability posture (from ADR A's resolver), the
-   global safety posture, and — when a gap exists — the typed refusal that names it
-   (and, for a capability gap, `aeat config google …` or
-   `aeat config profile capabilities set …`). It emits the typed envelope + notices
-   and a non-zero exit when a required dependency for an opted-in capability is
-   missing. This is the product-side "is my workstation set up for what I asked
-   for" the retired `aeat doctor` used to be.
-
-6. **`just doctor` + provisioning recipes + fixes.** A `just doctor` aggregate that
-   runs `aeat config check` and the dev-toolchain checks; fix the broken
-   `env-playwright` (point it at the real browser-health path or `playwright
-   install`), add `env-vision` (ollama model pull guidance) and a `provision`
-   recipe, make `bootstrap` end by running `just doctor`, and reconcile the
-   README/justfile so there is one documented entry point.
+4. **pyproject torch relocation.** `torch` is the vaultspec-rag embedding backend —
+   no `src/cadrumo/` runtime path imports it — so it lives in
+   `[dependency-groups].dev`, which vaultspec-rag's `torch_config` accepts as a valid
+   direct-dep location (PEP 735). The `[tool.uv.sources]` cu130 pin still applies
+   and `just install` (dev group) still provisions it for contributors.
 
 ## Rationale
 
-The graceful paths already in the tree are the template; the work is to bring the
-two ungraceful paths (Ollama vision, Playwright) up to that bar and to give the
-operator one place to see and fix gaps. Routing every missing-dependency outcome
-through the typed refusal/Notice channel (not a traceback, not a silent skip)
-satisfies `cli-notices-are-the-only-diagnostic-channel` and
-`no-silent-under-declaration`. Mapping extras to capabilities makes the install
-surface mirror the runtime opt-in surface, so "I want vision" maps to one extra and
-one doctor row. A single `aeat config check` replaces the dissolved
-`aeat doctor` from the availability angle without re-adding a third CLI root.
+The graceful paths already in the tree are the template. Routing every
+missing-dependency outcome through the typed refusal/Notice channel (not a
+traceback, not a silent skip) satisfies `cli-notices-are-the-only-diagnostic-channel`
+and `no-silent-under-declaration`. Mapping extras to capabilities makes the install
+surface mirror the runtime opt-in surface. Keeping the refusal at the point of use
+leaves the tax engine with no dependency-management surface to maintain.
 
 ## Consequences
 
-- A fresh-workstation operator runs one command (`just doctor` / `aeat config
-  check`) and gets a per-service table of availability — no more unguided
-  tracebacks.
-- `classify --read-evidence` with Ollama down/model-missing now refuses
-  instructively instead of crashing — the headline reliability win.
-- The default install can become leaner over time as integrations move behind
-  extras; the doctor makes the capability/dependency/safety axes legible together
-  (it consumes ADR A's resolver, so the two ADRs ship as one coherent surface).
-- Cost/risk: probes add a small pre-flight latency (bounded by short timeouts);
-  the `torch` relocation must be verified against the vaultspec-rag dev workflow so
+- An operation that reaches a missing dependency refuses instructively instead of
+  crashing.
+- The default install stays lean because integrations sit behind extras.
+- The `torch` relocation must be verified against the vaultspec-rag dev workflow so
   contributors' RAG still installs.
-- Pitfall: the doctor must not itself crash when a probe target is absent — every
-  probe returns a typed status, never raises.
 
 ## Codification candidates
 
-- **Rule slug:** `missing-dependency-is-a-typed-refusal-with-remediation`.
-  **Rule:** When an external dependency (Ollama/model, Playwright browser, Google
-  credentials, a provider CLI) is unavailable, the runtime MUST surface a typed
-  refusal / `Notice` that names the missing dependency, never a raw stack
-  trace and never a silent no-op; a new external-service integration MUST ship its
-  probe and a `config check` row. Deferred until the doctor
-  surface ships and a review confirms the ungraceful paths are closed.
+- **Rule slug:** `missing-dependency-is-a-typed-refusal`.
+  **Rule:** When an external dependency (a Playwright browser, Google credentials,
+  an optional extra, a provider CLI) is unavailable at the point of use, the runtime
+  MUST surface a typed refusal / `Notice` that names the missing dependency, never a
+  raw stack trace and never a silent no-op, and MUST NOT probe or report dependency
+  availability outside that refusal.
 
 ## Amendment: component setup belongs to the desktop
 
-Setup of the browser and the local AI is the desktop application's capability, driven by the native engine (`2026-10-18-dependency-provisioning-unified-setup-adr`, `2026-10-24-rust-component-provisioning-adr`). The probe contract stands: probes stay read-only, never raise on absence and return a typed status. A missing component shown to a person is one plain sentence and one action in the desktop's provisioning panel.
+Setup and readiness of the browser and the local AI belong to the desktop
+application, driven by the native engine
+(`2026-10-18-dependency-provisioning-unified-setup-adr`,
+`2026-10-24-rust-component-provisioning-adr`). A missing component shown to a person
+is one plain sentence and one action in the desktop's provisioning panel.

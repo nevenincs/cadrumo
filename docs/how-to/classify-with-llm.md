@@ -1,6 +1,6 @@
 # Classify transactions with an LLM
 
-This page covers large language model (LLM) assisted classification: setting up the local reader, previewing a suggestion for one transaction, the review loop (apply, reject, or override), filling in the VAT tax fields, and reading an attached invoice with a model. Each read uses the model you chose for its role, and these commands use only a model that runs on your own computer. The suggestion is always a starting point: you confirm or correct it, and the model never sets a euro amount.
+This page covers large language model (LLM) assisted classification: previewing a suggestion for one transaction, the review loop (apply, reject, or override), filling in the VAT tax fields, and reading an attached invoice with a model. Each read uses the model you chose for its role, and these commands use only a model that runs on your own computer. The suggestion is always a starting point: you confirm or correct it, and the model never sets a euro amount.
 
 Classification does not contact AEAT and does not submit anything. It also
 sends nothing to a cloud service. See [the privacy boundary](#privacy-boundary)
@@ -18,50 +18,37 @@ You need:
 - Your passphrase. The command opens your encrypted records, so it prompts for the passphrase.
 - The `llm` extra, installed through your install channel, for example
   `pip install "cadrumo[llm]"`.
-- The local AI and a model chosen for each reader role, as the next section
-  describes.
+- A model chosen for each reader role, as the next section describes.
 
 The examples in this documentation are recorded in English. `aeat` prints its
 messages in Spanish unless you
 [choose another language](profile-setup.md#choose-the-output-language).
 
 (set-up-a-provider)=
-## Set up the local reader
+## How a read chooses its model
 
 `aeat` sends every model request through the Cadrumo agent service, which
 runs it with the model you chose for that request's role. Classification and
 text-layer documents use the text extraction role; scanned and image documents
 use the vision transcription role. Cadrumo names no model and sets no default.
-The models on offer come from the agent's catalogue, which shows each model's
-size, context length, licence, whether it reads images, and whether it runs on
-this computer or sends what it reads off the machine. `aeat` stores no LLM
-credentials and needs no account for a model that runs on this computer.
-
-The local reader needs two things in place before `aeat` can use it:
-
-- A model chosen for each reader role in the Cadrumo agent. For the commands on
-  this page, choose models that run on this computer. The vision transcription
-  role accepts only a model the catalogue marks as reading images.
-- The local AI program (Ollama) running with the chosen models downloaded.
+`aeat` stores no LLM credentials and needs no account for a model that runs on
+this computer.
 
 A role with no chosen model is never filled in for you: reads for that role
-refuse until you choose one. `aeat` takes no model name and does not install or
-start the local AI. `aeat config check` reports the profile's service
-capabilities, whether each reader role is ready, and the fix for each problem.
+refuse until you choose one. The vision transcription role accepts only a model
+the agent's catalogue marks as reading images.
 
 The profile capability `llm_vision` is on by default. To stop `aeat` from reading scanned or image supporting documents, turn that capability off with `aeat config profile capabilities set`, naming `llm_vision` and `off`. Reads of scanned or image supporting documents then refuse.
 
-Smoke-test the setup with a preview, which saves nothing:
+Preview a suggestion for one transaction, which saves nothing:
 
 ```{cli-sequence} llm-provider-smoke-test
 ```
 
-If no model is chosen for the role, the local AI is not running, or the
-chosen model is not downloaded yet, the command refuses and reads nothing. The
-refusal names what to fix, such as choosing a model for the role or starting
-the local AI. If the model chosen for the role sends what it
-reads off this computer, the command refuses too: classification sends nothing
-off the machine. Fix the gap and retry.
+If no model is chosen for the role, the command refuses and reads nothing. If
+the model chosen for the role sends what it reads off this computer, the
+command refuses too: classification sends nothing off the machine. Retry once
+the role has a local model.
 
 ## Ask for a suggestion
 
@@ -212,7 +199,7 @@ place with no split.
   into memory for the one call and never writes them to a temp file, a log,
   or a cache.
 - A read sends the image or the extracted text through the agent service to
-  the model chosen for its role, which runs in the local AI on your machine.
+  the model chosen for its role, which runs on your machine.
   If that model would send it off the machine, the read refuses before
   anything is sent. Nothing leaves the machine.
 - The model selects only the classification, the category, the VAT category,

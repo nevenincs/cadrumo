@@ -40,18 +40,14 @@ uv run aeat --version
 
 ## Confirm the install
 
-Version and capability checks need no taxpayer profile. Create a profile with
+The version check needs no taxpayer profile. Create a profile with
 `aeat config profile create` when you are ready to use Cadrumo. See
 [Set up a profile](how-to/profile-setup.md).
 
-Confirm the command is on your path and the capability posture is readable.
-Then run the workstation check on your own machine. Its dependency and
-platform rows intentionally reflect that workstation, including tools on
-your path and operating-system settings. Use the machine-readable form for
-scripted setup checks (`--format json` is a global flag, so it goes before the
-command):
+Confirm the command is on your path:
 
-```{cli-sequence} install-confirm
+```bash
+aeat --version
 ```
 
 ## Install optional extras
@@ -71,11 +67,8 @@ write the package as `cadrumo[google,browser]` instead of `cadrumo`. Extras
 install into the same environment as Cadrumo, so use the channel you installed
 with. In a source checkout, add extras with `uv sync --extra google --extra browser`.
 
-`aeat config check` reports each extra as `extra:<name>` available or missing.
-Install a missing one by repeating your channel's install command with that
+Install a missing extra by repeating your channel's install command with that
 extra named.
-
-Run `aeat config check` after each change to confirm the gap is closed.
 
 ## Connect an AI assistant
 

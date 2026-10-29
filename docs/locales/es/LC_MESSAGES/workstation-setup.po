@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-29 07:40+0100\n"
+"POT-Creation-Date: 2026-10-29 13:43+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -105,59 +105,47 @@ msgid "Confirm the install"
 msgstr "Confirmar la instalación"
 
 #: ../../workstation-setup.md:43
+#, fuzzy
 msgid ""
-"Version and capability checks need no taxpayer profile. Create a profile "
-"with `aeat config profile create` when you are ready to use Cadrumo. See "
-"[Set up a profile](how-to/profile-setup.md)."
+"The version check needs no taxpayer profile. Create a profile with `aeat "
+"config profile create` when you are ready to use Cadrumo. See [Set up a "
+"profile](how-to/profile-setup.md)."
 msgstr ""
 "Estas comprobaciones no necesitan ningún perfil de contribuyente. Crea un"
 " perfil con `aeat config profile create` cuando estés listo para usar "
 "Cadrumo. Consulta [Configurar un perfil](how-to/profile-setup.md)."
 
 #: ../../workstation-setup.md:47
-msgid ""
-"Confirm the command is on your path and the capability posture is "
-"readable. Then run the workstation check on your own machine. Its "
-"dependency and platform rows intentionally reflect that workstation, "
-"including tools on your path and operating-system settings. Use the "
-"machine-readable form for scripted setup checks (`--format json` is a "
-"global flag, so it goes before the command):"
+msgid "Confirm the command is on your path:"
 msgstr ""
-"Confirma que el comando está en tu PATH y que el estado de capacidades es"
-" legible. Luego ejecuta la comprobación de la estación de trabajo en tu "
-"propia máquina. Sus filas de dependencias y de plataforma reflejan a "
-"propósito esa estación de trabajo, incluidas las herramientas de tu PATH "
-"y los ajustes del sistema operativo. Usa la forma legible por máquina "
-"para las comprobaciones de configuración automatizadas (`--format json` "
-"es una opción global, así que va antes del comando):"
 
-#: ../../workstation-setup.md:57
+#: ../../workstation-setup.md:53
 msgid "Install optional extras"
 msgstr "Instalar extras opcionales"
 
-#: ../../workstation-setup.md:59
+#: ../../workstation-setup.md:55
 msgid "The core install is lean. Each optional extra adds one capability:"
 msgstr "La instalación básica es ligera. Cada extra opcional añade una capacidad:"
 
-#: ../../workstation-setup.md:61
+#: ../../workstation-setup.md:57
 msgid "`google` - Google Drive and Sheets export."
 msgstr "`google`: exportación a Google Drive y Google Sheets."
 
-#: ../../workstation-setup.md:62
+#: ../../workstation-setup.md:58
 msgid "`browser` - live AEAT reads through browser automation."
 msgstr ""
 "`browser`: lecturas en vivo de la AEAT mediante automatización del "
 "navegador."
 
-#: ../../workstation-setup.md:63
+#: ../../workstation-setup.md:59
 msgid "`ofx` - OFX and QFX bank-statement import."
 msgstr "`ofx`: importación de extractos bancarios OFX y QFX."
 
-#: ../../workstation-setup.md:64
+#: ../../workstation-setup.md:60
 msgid "`llm` - on-host document reading through the local AI."
 msgstr "`llm`: lectura de documentos en el propio equipo a través de la IA local."
 
-#: ../../workstation-setup.md:65
+#: ../../workstation-setup.md:61
 msgid ""
 "`pdf` - writing the calculation-summary PDF. Reading and verifying a "
 "summary needs no extra."
@@ -165,11 +153,11 @@ msgstr ""
 "`pdf`: generación del PDF del resumen del cálculo. Leer y verificar un "
 "resumen no requiere ningún extra."
 
-#: ../../workstation-setup.md:67
+#: ../../workstation-setup.md:63
 msgid "`all` - every extra in this list."
 msgstr "`all`: todos los extras de esta lista."
 
-#: ../../workstation-setup.md:69
+#: ../../workstation-setup.md:65
 msgid ""
 "Name the extras you need when you install: in your channel's install "
 "command, write the package as `cadrumo[google,browser]` instead of "
@@ -183,27 +171,21 @@ msgstr ""
 " que usa el canal con el que lo instalaste. En una copia del código "
 "fuente, añade extras con `uv sync --extra google --extra browser`."
 
-#: ../../workstation-setup.md:74
+#: ../../workstation-setup.md:70
+#, fuzzy
 msgid ""
-"`aeat config check` reports each extra as `extra:<name>` available or "
-"missing. Install a missing one by repeating your channel's install "
-"command with that extra named."
+"Install a missing extra by repeating your channel's install command with "
+"that extra named."
 msgstr ""
 "`aeat config check` indica de cada extra, como `extra:<name>`, si está "
 "disponible o falta. Instala el que falte repitiendo el comando de "
 "instalación de tu canal con ese extra indicado."
 
-#: ../../workstation-setup.md:78
-msgid "Run `aeat config check` after each change to confirm the gap is closed."
-msgstr ""
-"Ejecuta `aeat config check` de nuevo tras cada cambio para confirmar que "
-"la carencia se ha resuelto."
-
-#: ../../workstation-setup.md:80
+#: ../../workstation-setup.md:73
 msgid "Connect an AI assistant"
 msgstr "Conectar un asistente de IA"
 
-#: ../../workstation-setup.md:82
+#: ../../workstation-setup.md:75
 msgid ""
 "Cadrumo installs `cadrumo-mcp` alongside `aeat`. The server connects an "
 "agent to registered operations through the local runtime, either under "
@@ -218,7 +200,7 @@ msgstr ""
 "que está en tu ruta de búsqueda. En una copia de trabajo del código "
 "fuente, comprueba el punto de entrada instalado con:"
 
-#: ../../workstation-setup.md:93
+#: ../../workstation-setup.md:86
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows both ways to connect"
 " and the grant request flow."
@@ -226,11 +208,11 @@ msgstr ""
 "[Conectar un agente](how-to/connect-an-agent.md) muestra las dos formas "
 "de conectarse y el flujo de solicitud de autorizaciones."
 
-#: ../../workstation-setup.md:96
+#: ../../workstation-setup.md:89
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../workstation-setup.md:98
+#: ../../workstation-setup.md:91
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -238,7 +220,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:100
+#: ../../workstation-setup.md:93
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -247,10 +229,45 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:102
+#: ../../workstation-setup.md:95
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conectar un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:103
+#: ../../workstation-setup.md:96
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"
+
+#~ msgid ""
+#~ "Confirm the command is on your "
+#~ "path and the capability posture is "
+#~ "readable. Then run the workstation check"
+#~ " on your own machine. Its dependency"
+#~ " and platform rows intentionally reflect"
+#~ " that workstation, including tools on "
+#~ "your path and operating-system settings."
+#~ " Use the machine-readable form for"
+#~ " scripted setup checks (`--format json` "
+#~ "is a global flag, so it goes "
+#~ "before the command):"
+#~ msgstr ""
+#~ "Confirma que el comando está en tu"
+#~ " PATH y que el estado de "
+#~ "capacidades es legible. Luego ejecuta la"
+#~ " comprobación de la estación de "
+#~ "trabajo en tu propia máquina. Sus "
+#~ "filas de dependencias y de plataforma"
+#~ " reflejan a propósito esa estación de"
+#~ " trabajo, incluidas las herramientas de "
+#~ "tu PATH y los ajustes del sistema"
+#~ " operativo. Usa la forma legible por"
+#~ " máquina para las comprobaciones de "
+#~ "configuración automatizadas (`--format json` "
+#~ "es una opción global, así que va"
+#~ " antes del comando):"
+
+#~ msgid "Run `aeat config check` after each change to confirm the gap is closed."
+#~ msgstr ""
+#~ "Ejecuta `aeat config check` de nuevo "
+#~ "tras cada cambio para confirmar que "
+#~ "la carencia se ha resuelto."
+

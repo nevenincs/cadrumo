@@ -34,10 +34,10 @@ channel Cadrumo is set up to publish to, including those two.
 aeat --version
 ```
 
-A version number confirms the install. Then run the full workstation check and
-add the optional extras you want (Google export, the live AEAT browser, OFX/QFX
-import) by following [Install Cadrumo](workstation-setup.md), which covers the
-dependency report, platform checks, and per-extra install commands.
+A version number confirms the install. Then add the optional extras you want
+(Google export, the live AEAT browser, OFX/QFX import) by following
+[Install Cadrumo](workstation-setup.md), which covers the per-extra install
+commands.
 
 To let an AI assistant such as Claude drive Cadrumo, continue with
 [Connect an agent (MCP)](how-to/connect-an-agent.md).

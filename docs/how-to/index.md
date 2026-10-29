@@ -155,7 +155,7 @@ Classify entries manually, in bulk, with allocation, or through the review queue
 :link: classify-with-llm
 :link-type: doc
 
-Set up the local reader, preview and apply suggestions, and classify from an
+Preview and apply suggestions, and classify from an
 attached invoice.
 :::
 
