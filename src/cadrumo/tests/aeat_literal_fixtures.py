@@ -22,6 +22,8 @@ AEAT_HOST_SUFFIX_EXPECTED = _AEAT.domains.host_suffix
 # moves them with the constants instead of leaving nine test modules pinned to
 # a host the product no longer uses.
 SEDE_ROOT_URL_FIXTURE = f"{_AEAT.domains.sede}/"
+# Synthetic login-wall redirect used to exercise ended-session detection.
+SEDE_LOGIN_WALL_URL_FIXTURE = f"{_AEAT.domains.sede}/Sede/identificacion.html"
 IVA_WALLET_SOURCE_URL_FIXTURE = f"{_AEAT.domains.sede}/wallet"
 COTEJO_VERIFICATION_URL_FIXTURE = f"{_AEAT.domains.sede}/cotejo/A1B2C3D4E5F6G7H8"
 #: Base of the published Diseno de Registro tree. Catalogue tests assert the
@@ -298,6 +300,7 @@ __all__ = [
     "REDACTION_INTERNAL_PATH_CANARY",
     "REDACTION_PATH_CANARY",
     "REMOTE_GUARD_LITERAL_SCAN_TOKENS",
+    "SEDE_LOGIN_WALL_URL_FIXTURE",
     "STATIC_DESIGN_REGISTER_PATH_FIXTURE",
     "UNCLASSIFIED_MUTATING_READ_POST_PATH_CANARY",
     "UNCLASSIFIED_WWW2_READ_PATH_CANARY",

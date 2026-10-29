@@ -15,8 +15,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El Impuesto sobre la Renta de las Personas Fisicas, el impuesto espanol sobre la renta de los particulares."
-definition = "Impuesto directo y personal que grava la renta de las personas fisicas residentes en territorio espanol, incluyendo los rendimientos del trabajo, del capital mobiliario e inmobiliario, de actividades economicas, las ganancias y perdidas patrimoniales y las imputaciones de renta. Se declara en el Modelo 100 anual, con pagos fraccionados y retenciones en los Modelos 111, 115, 130, 131, 180 y 190. No abarca el Impuesto sobre la Renta de no Residentes ni el Impuesto sobre Sociedades."
+short_description = "El Impuesto sobre la Renta de las Personas Físicas, el impuesto español sobre la renta de los particulares."
+definition = "Impuesto directo y personal que grava la renta de las personas físicas residentes en territorio español, incluyendo los rendimientos del trabajo, del capital mobiliario e inmobiliario, de actividades económicas, las ganancias y perdidas patrimoniales y las imputaciones de renta. Se declara en el Modelo 100 anual, con pagos fraccionados y retenciones en los Modelos 111, 115, 130, 131, 180 y 190. No abarca el Impuesto sobre la Renta de no Residentes ni el Impuesto sobre Sociedades."
 
 [language.es.source]
 citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
@@ -46,7 +46,7 @@ term_status = "admitted"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "L'Impost sobre la Renda de les Persones Fisiques, l'impost espanyol sobre la renda dels particulars."
+short_description = "L'Impost sobre la Renda de les Persones Físiques, l'impost espanyol sobre la renda dels particulars."
 definition = "Impost directe i personal que grava la renda de les persones físiques residents en territori espanyol, incloent-hi els rendiments del treball, del capital mobiliari i immobiliari, d'activitats econòmiques, els guanys i pèrdues patrimonials i les imputacions de renda. Es declara en el Model 100 anual, amb pagaments fraccionats i retencions en els Models 111, 115, 130, 131, 180 i 190. No inclou l'Impost sobre la Renda de no Residents ni l'Impost sobre Societats."
 
 [language.ca.source]

@@ -12,9 +12,7 @@ from ..view_stream import (
     VIEW_CREDIT_MAX_IMAGES,
     VIEW_IMAGE_MAX_BYTES,
     ViewClosedReason,
-    ViewDownstreamFrame,
     ViewNoticeCode,
-    ViewUpstreamFrame,
 )
 from ..view_transfer import (
     VIEW_MAX_TRANSFER_ID,
@@ -35,22 +33,6 @@ _FRAMES: dict[str, type[ViewConnectionDownstreamFrame] | type[ViewConnectionUpst
     "downstream": ViewConnectionDownstreamFrame,
     "upstream": ViewConnectionUpstreamFrame,
 }
-_IMAGE_STREAM_FRAMES: dict[str, type[ViewDownstreamFrame] | type[ViewUpstreamFrame]] = {
-    "downstream": ViewDownstreamFrame,
-    "upstream": ViewUpstreamFrame,
-}
-_TRANSFER_KINDS = frozenset(
-    {
-        "view.download",
-        "view.file_chooser",
-        "view.download_answer",
-        "view.file_chooser_answer",
-        "view.upload",
-        "view.transfer_complete",
-        "view.transfer_credit",
-        "view.transfer_cancel",
-    }
-)
 
 
 def _validate(case: dict[str, Any]) -> dict[str, Any]:
@@ -125,19 +107,6 @@ def test_every_notice_code_and_closed_reason_has_one_valid_spelling() -> None:
     for reason in ViewClosedReason:
         document = {"kind": "view.closed", "reason": reason.value}
         assert _validate({"direction": "downstream", "document": document}) == document
-
-
-def test_the_image_stream_frames_stay_closed_to_transfer_documents() -> None:
-    for case in _VECTORS["documents"]["accepted"]:
-        frame = _IMAGE_STREAM_FRAMES[case["direction"]]
-        if case["document"]["kind"] in _TRANSFER_KINDS:
-            with pytest.raises(ValidationError):
-                frame.model_validate_json(json.dumps(case["document"]))
-        else:
-            assert (
-                frame.model_validate_json(json.dumps(case["document"])).root.model_dump(mode="json", exclude_none=True)
-                == case["document"]
-            )
 
 
 def test_every_download_and_chooser_outcome_has_one_valid_spelling() -> None:

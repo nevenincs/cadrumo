@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import re
 
+from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import extract_placeholders
+from cadrumo.domain.calculations.registry.censo_modelos import CensoModeloEventKind
 
 from .signal_syntax import (
     TRANSLATION_BRACKET_REFERENCE_RE,
@@ -24,6 +26,28 @@ from .signal_syntax import (
     TRANSLATION_RST_ROLE_RE,
     TRANSLATION_URL_RE,
 )
+
+# These are complete command-contract choice lists, not vocabulary exceptions.
+# Exact lower-case tokens come from the same types used by command admission.
+# The spelling of the surrounding explanation and each gloss stays visible.
+_OUTPUT_LANGUAGE_CHOICES_RE = re.compile(
+    r"\(" + r"\s*,\s*".join(re.escape(language.value) for language in OutputLanguage) + r"\)"
+)
+_CENSO_GLOSSED_CHOICES_RE = re.compile(
+    rf"(?<!\w)(?P<alta>{re.escape(CensoModeloEventKind.ALTA.value)})(?P<alta_gloss>\s*\([^()\r\n]+\))"
+    rf",\s*(?P<modificacion>{re.escape(CensoModeloEventKind.MODIFICACION.value)})"
+    rf"(?P<modificacion_gloss>\s*\([^()\r\n]+\)),\s*(?:or\s+)?"
+    rf"(?P<baja>{re.escape(CensoModeloEventKind.BAJA.value)})(?P<baja_gloss>\s*\([^()\r\n]+\))"
+)
+
+
+def _visible_choice_glosses(match: re.Match[str]) -> str:
+    """Remove only the three exact event tokens, preserving every gloss character."""
+    text = list(match.group())
+    for name in ("alta", "modificacion", "baja"):
+        start, end = match.span(name)
+        text[start - match.start() : end - match.start()] = [" "] * (end - start)
+    return "".join(text)
 
 
 def translation_tokens(value: str) -> tuple[frozenset[str], frozenset[str]]:
@@ -73,6 +97,8 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         (TRANSLATION_LITERAL_RE, " "),
         (TRANSLATION_BRACKET_REFERENCE_RE, " "),
         (TRANSLATION_PLACEHOLDER_RE, " "),
+        (_OUTPUT_LANGUAGE_CHOICES_RE, " "),
+        (_CENSO_GLOSSED_CHOICES_RE, _visible_choice_glosses),
         (TRANSLATION_URL_RE, " "),
         (TRANSLATION_PATH_RE, " "),
         (TRANSLATION_OPTION_RE, " "),

@@ -152,21 +152,21 @@ def test_shutdown_terminates_owned_tree_but_preserves_external_copy_and_unrelate
     external_ready = tmp_path / "external.ready"
     with ThreadPoolExecutor(max_workers=3) as executor:
         unrelated = executor.submit(
-            run_command, [sys.executable, "-c", code, str(unrelated_ready), "none"], cwd=tmp_path, timeout_seconds=30
+            run_command, [sys.executable, "-c", code, str(unrelated_ready), "none"], cwd=tmp_path, timeout_seconds=120
         )
         product = executor.submit(
             run_command,
             [str(interpreter), "-c", code, str(product_ready), "child"],
             cwd=tmp_path,
             environment=environment,
-            timeout_seconds=30,
+            timeout_seconds=120,
         )
         external = executor.submit(
             run_command,
             [str(external_interpreter), "-c", code, str(external_ready), "none"],
             cwd=tmp_path,
             environment=environment,
-            timeout_seconds=30,
+            timeout_seconds=120,
         )
         try:
             deadline = time.monotonic() + 5
@@ -267,9 +267,11 @@ else:
             [str(interpreter), "-c", code, str(ready)],
             cwd=tmp_path,
             environment=environment,
-            timeout_seconds=15,
+            timeout_seconds=60,
         )
-        deadline = time.monotonic() + 5
+        # A copied interpreter can start slowly while other native tests build
+        # in parallel; readiness still has a bounded deadline.
+        deadline = time.monotonic() + 45
         while not ready.exists():
             if product.done():
                 result = product.result()

@@ -5,8 +5,6 @@ from __future__ import annotations
 from threading import Thread
 from typing import Any, override
 
-from cadrumo.core.logging import get_logger
-
 from .host.controller import (
     AgentHostError,
     AgentHostRefusal,
@@ -20,8 +18,6 @@ from .service_startup import AgentServiceStartup
 from .service_support import (
     service_failure,
 )
-
-_LOGGER = get_logger("cadrumo_agent_service.service")
 
 
 class AgentServiceScheduling(AgentServiceStartup):

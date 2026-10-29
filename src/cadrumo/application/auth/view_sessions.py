@@ -7,7 +7,7 @@ from contextlib import AbstractAsyncContextManager, ExitStack
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
-from pydantic import BaseModel, ConfigDict, Field, SkipValidation, TypeAdapter
+from pydantic import BaseModel, ConfigDict, Field, SkipValidation
 
 from ...core.auth_provider import AuthProviderKind
 from ...core.errors.hierarchy import (
@@ -60,7 +60,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 _logger = get_logger(__name__)
-_JSON_OBJECT = TypeAdapter(dict[str, object])
 
 
 @runtime_checkable

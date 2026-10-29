@@ -14,8 +14,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El identificador de un calculo concreto de un modelo, ano, periodo y revision."
-definition = "Identificador de un unico calculo de un modelo para un ano, periodo y revision determinados. La aplicacion registra cada declaracion que la persona prepara como una work unit, lo que le permite seguir su estado a lo largo del flujo de calculo, verificacion y presentacion."
+short_description = "El identificador de un calculo concreto de un modelo, ano, periodo y revisión."
+definition = "Identificador de un único calculo de un modelo para un ano, periodo y revisión determinados. La aplicación registra cada declaración que la persona prepara como una work unit, lo que le permite seguir su estado a lo largo del flujo de calculo, verificación y presentación."
 scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
 
 [language.es.source]
@@ -34,7 +34,7 @@ scope_note = "An internal concept in the application's search and calculation ma
 
 
 [language.ca]
-short_description = "L'identificador d'un calcul concret d'un model, any, periode i revisio."
+short_description = "L'identificador d'un càlcul concret d'un model, any, període i revisió."
 definition = "Identificador d'un únic càlcul d'un model per a un any, període i revisió determinats. L'aplicació registra cada declaració que la persona prepara com una work unit, cosa que li permet seguir-ne l'estat al llarg del flux de càlcul, verificació i presentació."
 scope_note = "Concepte intern de la maquinària de cerca i càlcul de l'aplicació; es documenta per al RAG de desenvolupament, no és un terme tributari adreçat al contribuent i per això queda fora del glossari."
 

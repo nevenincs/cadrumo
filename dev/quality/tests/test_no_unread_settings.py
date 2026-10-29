@@ -242,12 +242,15 @@ _CLEAN_TEMPLATE: Final = (
     "NO_COLOR=\n"
 )
 _NEXT_TEMPLATE_LINE: Final = _CLEAN_TEMPLATE.count("\n") + 1
+_PACKAGE_CONTRACT: Final = tomllib.loads((REPO_ROOT / PACKAGE_DECLARATION).read_text(encoding="utf-8"))
+_AGENT_PREFIX: Final = _PACKAGE_CONTRACT["agent"]["prefix"]
+_AGENT_NEVER_ADMITTED: Final = _PACKAGE_CONTRACT["agent"]["never_admitted"][0]
 
 _CLEAN: Final = {
     "env/.env.example": _CLEAN_TEMPLATE,
     "native/application-environment.toml": (
         '[names]\nCADRUMO_PACKAGE_FACT = { kind = "text", role = "fixed" }\n'
-        '[agent]\nprefix = "CADRUMO_AGENT_"\nnever_admitted = ["CADRUMO_AGENT_ENV_FILE"]\n'
+        f'[agent]\nprefix = "{_AGENT_PREFIX}"\nnever_admitted = ["{_AGENT_NEVER_ADMITTED}"]\n'
         '[[launch_vectors]]\nname = "v"\nambient = { CADRUMO_VECTOR_ONLY = "x" }\n'
     ),
     "dev/tool.py": _lookup("CADRUMO_DEV_TOOL"),

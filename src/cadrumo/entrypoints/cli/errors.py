@@ -62,7 +62,7 @@ from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
 from ...core.errors.record_fault import internal_record_fault_context
 from ...core.json_contract import Notice, ResolvedPreconditionAction
 from ...core.redaction.rules import redact_for_cli_output
-from ...core.terminal_encoding import encode_terminal_field, encode_terminal_text
+from ...core.terminal_encoding import encode_terminal_text
 from ...domain.user_profile.errors import StoredProfileDriftError
 
 _log = logging.getLogger(__name__)
@@ -319,23 +319,6 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
             :data:`~sys.stderr`. Primarily useful in tests.
     """
     _write_stderr_encoded(encode_terminal_text(redact_for_cli_output(text)), stream=stream)
-
-
-def redraw_stderr_line(text: str, *, stream: io.TextIOBase | None = None) -> None:
-    """Redraw the current stderr line in place with ``text``, redacted and terminal-encoded.
-
-    The carriage return and erase-line sequence that perform the redraw are
-    the only terminal controls emitted, and they come from here rather than
-    from the caller's text, which is encoded like any other stderr output.
-    """
-    _write_stderr_encoded(
-        _REDRAW_LINE_PREFIX + encode_terminal_field(redact_for_cli_output(text)),
-        stream=stream,
-    )
-
-
-#: Return to column zero, then erase the whole line.
-_REDRAW_LINE_PREFIX = "\r\x1b[2K"
 
 
 def _write_stderr_encoded(safe_text: str, *, stream: io.TextIOBase | None) -> None:

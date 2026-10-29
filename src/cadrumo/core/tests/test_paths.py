@@ -15,24 +15,13 @@ from pathlib import Path
 import pytest
 
 from ..config_state_root import StateRootInputs, platform_user_data_root
-from ..errors.hierarchy import CoreValidationError
 from ..paths import (
-    WINDOWS_MAX_PATH,
     effective_storage_root,
     is_windows_long_path_error,
     resolve_project_path,
-    windows_long_paths_enabled,
-    windows_storage_root_long_path_margin,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
-
-#: An arbitrary but realistic suffix budget for the margin arithmetic tests.
-#: ``core`` deliberately holds no opinion about the real value -- the layer
-#: that owns the on-disk grammar derives it and passes it in -- so these tests
-#: pin the arithmetic, not any particular storage layout.
-_SUFFIX = 155
-
 
 # ----------------------------------------------------------------- #
 # resolve_project_path — relative-path anchoring (no run-mode branch)  #
@@ -205,57 +194,3 @@ def test_is_windows_long_path_error_rejects_non_long_path_errors() -> None:
     exc = OSError(0, "boom")
     setattr(exc, "winerror", 5)  # noqa: B010  # real ERROR_ACCESS_DENIED payload
     assert is_windows_long_path_error(exc) is False
-
-
-def test_windows_long_paths_enabled_returns_current_platform_contract() -> None:
-    """The registry probe returns a real bool on Windows and ``None`` off Windows."""
-    result = windows_long_paths_enabled()
-    if sys.platform == "win32":
-        assert isinstance(result, bool)
-    else:
-        assert result is None
-
-
-def test_windows_storage_root_long_path_margin_shrinks_with_deeper_roots(tmp_path: Path) -> None:
-    """A deeper, longer resolved root yields a strictly smaller margin than a shallow one."""
-    shallow = tmp_path / "s"
-    deep = tmp_path / ("segment-" + "x" * 60) / ("segment-" + "y" * 60)
-
-    shallow_margin = windows_storage_root_long_path_margin(shallow, object_path_suffix_length=_SUFFIX)
-    deep_margin = windows_storage_root_long_path_margin(deep, object_path_suffix_length=_SUFFIX)
-
-    assert deep_margin < shallow_margin
-
-
-def test_windows_storage_root_long_path_margin_matches_the_explicit_formula(tmp_path: Path) -> None:
-    """The margin is exactly MAX_PATH minus the resolved root length minus the supplied suffix."""
-    root = tmp_path / "storage"
-    expected = WINDOWS_MAX_PATH - len(str(root.resolve())) - _SUFFIX
-    assert windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX) == expected
-
-
-def test_windows_storage_root_long_path_margin_tracks_the_supplied_suffix(tmp_path: Path) -> None:
-    """A longer supplied suffix budget shrinks the margin one-for-one.
-
-    The suffix is an argument precisely so the owning layer can widen it when
-    its grammar grows; a margin that ignored the argument would silently keep
-    reporting the old, narrower ceiling.
-    """
-    root = tmp_path / "storage"
-    base = windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX)
-    wider = windows_storage_root_long_path_margin(root, object_path_suffix_length=_SUFFIX + 54)
-    assert base - wider == 54
-
-
-@pytest.mark.parametrize("suffix_length", [0, -1])
-def test_windows_storage_root_long_path_margin_refuses_a_non_positive_suffix(
-    tmp_path: Path,
-    suffix_length: int,
-) -> None:
-    """A non-positive suffix budget is refused rather than silently inflating the margin.
-
-    Zero or negative would report headroom that no real layout leaves, which
-    is the failure mode this probe exists to prevent.
-    """
-    with pytest.raises(CoreValidationError):
-        windows_storage_root_long_path_margin(tmp_path, object_path_suffix_length=suffix_length)

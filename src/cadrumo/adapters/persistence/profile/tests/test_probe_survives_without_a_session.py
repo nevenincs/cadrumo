@@ -1,10 +1,8 @@
 """Real profile-storage proof that auth readiness probes do not read without a session.
 
-``probe_provider_configuration`` promises it works "without any network
-call or active-profile session" and "never raises". That promise lived only
-in a docstring until a change made the probe read the active profile, and
-the encrypted store refuses without a bucket session: SQLAlchemy wraps
-that refusal in a driver exception no domain-level except clause catches.
+Auth identity readiness must remain answerable without an active-profile
+session. The encrypted store refuses without a bucket session: SQLAlchemy
+wraps that refusal in a driver exception no domain-level except clause catches.
 
 What is asserted here is that the probe DECLINES the read, not merely
 that it survives one. "Does not raise" depends on which secret-store

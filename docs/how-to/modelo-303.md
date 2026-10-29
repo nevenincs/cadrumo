@@ -113,7 +113,7 @@ In ordinary cases based on your records, calculation can combine:
 - Deductible VAT paid on purchases and expenses (`IVA soportado`) from classified
   supplier entries.
 - VAT categories, rates, directions, taxable bases, VAT amounts, business
-  percentage, currency/FX support, and intracommunity/reverse-charge treatment
+  percentage, currency/FX support, and intra-community/reverse-charge treatment
   recorded on your entries.
 - Profile facts, including VAT regime and profile-derived values that Cadrumo
   fills into the form.
@@ -128,7 +128,7 @@ boxes remain manual, taken from the profile, set by the tax rules, or sourced
 from prior filing history rather than transaction entries.
 
 Classification matters because the calculation does not guess whether an entry is
-business, personal, mixed-use, deductible, domestic, exempt, intracommunity, or
+business, personal, mixed-use, deductible, domestic, exempt, intra-community, or
 reverse-charge. Entries that are unclassified or missing required VAT fields can
 block calculation or leave values missing.
 

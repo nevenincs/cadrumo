@@ -829,8 +829,6 @@ desktop:
           receipt: Justificant
           record: El teu registre
         differs:
-          amount: L'import difereix
-          date: La data difereix
           status: L'estat difereix
         empty: Sense declaracions.
         group:
@@ -869,7 +867,6 @@ desktop:
         read_on: Llegida el {date}
         warning: Obrir una notificació a l'AEAT pot comptar com a rebuda.
       part:
-        form: Modelo {form}, {year}
         year: Declaracions de {year}
       partly: Alguns no s'han pogut actualitzar.
       problems: '{name}: algunes han fallat'

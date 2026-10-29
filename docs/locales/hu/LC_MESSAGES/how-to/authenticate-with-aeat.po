@@ -57,7 +57,7 @@ msgid ""
 "guide](censo-update.md)."
 msgstr ""
 "Ha az azonosítóddal elérhető, a parancssori felület (CLI) beolvashatja a "
-"benyújtott bevallásokat, az expedientéket, az értesítéseket és az AEAT-"
+"benyújtott bevallásokat, az ügyiratokat, az értesítéseket és az AEAT-"
 "igazolásokat. A censo-címed profilodba importálásához használd a [censo-"
 "adatok útmutatóját](censo-update.md)."
 
@@ -123,7 +123,7 @@ msgstr "A Cadrumo három szolgáltatót támogat:"
 
 #: ../../how-to/authenticate-with-aeat.md:49
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr "`certificate`: a digitális tanúsítványfájlod (certificado digital)."
+msgstr "`certificate`: a digitális tanúsítványfájlod."
 
 #: ../../how-to/authenticate-with-aeat.md:50
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
@@ -139,7 +139,7 @@ msgid ""
 "national ID card (DNI electrónico) are not supported."
 msgstr ""
 "Az azonosítót add meg a `--provider` kapcsolóval. A Cl@ve PIN és az "
-"elektronikus személyi igazolvány (DNI electrónico) nem támogatott."
+"elektronikus személyi igazolvány (DNI) nem támogatott."
 
 #: ../../how-to/authenticate-with-aeat.md:56
 msgid "Configure a provider"
@@ -448,7 +448,7 @@ msgstr ""
 
 #: ../../how-to/authenticate-with-aeat.md:233
 msgid "Act for someone else (apoderado)"
-msgstr "Eljárás valaki más nevében (apoderado)"
+msgstr "Eljárás valaki más nevében (meghatalmazott képviselő)"
 
 #: ../../how-to/authenticate-with-aeat.md:235
 msgid ""
@@ -458,8 +458,8 @@ msgid ""
 " asesor."
 msgstr ""
 "Ha egy másik adózó felhatalmazott adóképviselőjeként jársz el, helyben "
-"rögzítsd, kit képviselsz, és a vonatkozó AEAT apoderamiento-hatóköröket. "
-"Az apoderado felhatalmazott képviselő, például egy gestor vagy asesor."
+"rögzítsd, kit képviselsz, és a vonatkozó AEAT meghatalmazási hatóköröket. "
+"A meghatalmazott képviselő például könyvelő vagy adótanácsadó."
 
 #: ../../how-to/authenticate-with-aeat.md:239
 msgid ""
@@ -470,12 +470,12 @@ msgid ""
 "renounce an apoderamiento at AEAT. No command writes representation state"
 " to AEAT."
 msgstr ""
-"Magát az apoderamientót az AEAT-nál adják meg. A képviselt fél az AEAT "
-"saját apoderamiento-eljárásain keresztül téged hatalmaz fel. Az ebben a "
+"Magát a meghatalmazást az AEAT-nál adják meg. A képviselt fél az AEAT "
+"saját meghatalmazási eljárásain keresztül téged hatalmaz fel. Az ebben a "
 "szakaszban szereplő parancsok ezt a felhatalmazást a helyi profilodban "
 "rögzítik, hogy az olvasási parancsok tudják, kinek az adatait olvassák. "
 "Soha nem regisztrálnak, hosszabbítanak meg, vonnak vissza vagy mondanak "
-"le apoderamientót az AEAT-nál. Egyetlen parancs sem ír képviseleti "
+"le meghatalmazást az AEAT-nál. Egyetlen parancs sem ír képviseleti "
 "állapotot az AEAT-hoz."
 
 #: ../../how-to/authenticate-with-aeat.md:245
@@ -488,7 +488,7 @@ msgstr "Listázd az eszköz által elfogadott hatókörkódokat:"
 
 #: ../../how-to/authenticate-with-aeat.md:253
 msgid "Each scope is an AEAT apoderamiento area. Examples include:"
-msgstr "Minden hatókör egy AEAT apoderamiento-terület. Például:"
+msgstr "Minden hatókör egy AEAT-meghatalmazási terület. Például:"
 
 #: ../../how-to/authenticate-with-aeat.md:255
 msgid "`RENT` for Modelos 100 and 714."
@@ -544,7 +544,7 @@ msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
 msgstr ""
-"Az aktív profil legfeljebb egy apoderado-konfigurációt tárol; az újbóli "
+"Az aktív profil legfeljebb egy képviselői konfigurációt tárol; az újbóli "
 "beállítás felülírja azt. A képviselt azonosító titkosítva van tárolva."
 
 #: ../../how-to/authenticate-with-aeat.md:279
@@ -579,7 +579,7 @@ msgid ""
 "unaffected. Revoke it through AEAT's own procedures."
 msgstr ""
 "A törlés csak a helyi bejegyzést távolítja el. Az AEAT-nál lévő "
-"apoderamientót ez nem érinti. Azt az AEAT saját eljárásain keresztül "
+"meghatalmazást ez nem érinti. Azt az AEAT saját eljárásain keresztül "
 "vonja vissza."
 
 #: ../../how-to/authenticate-with-aeat.md:298

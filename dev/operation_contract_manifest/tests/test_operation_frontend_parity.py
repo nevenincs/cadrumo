@@ -1,17 +1,21 @@
 """Every registered operation is answered alike on every frontend: the person's and the delegated clients'.
 
-The one exception is the person's own act: a credential or access act, or a
+One exception is the person's own act: a credential or access act, or a
 request carrying the person's consent to send a stored document off this
 machine. It is answered alike on the person's frontends, and on external client and the
 automation host it is either answered the same or refused with the typed
 person-act refusal.
 
+The person-driven Sede browser view additionally requires the desktop window
+that displays and drives its stream. Every other frontend must receive a
+typed frontend or person-act refusal; ordinary operations retain parity.
+
 No definition declares the frontends it is open to: every registered
-operation is open to all of them. What a submission is answered is decided in
+ordinary operation is open to all of them. What a submission is answered is decided in
 two places, the operation's own access resolver and the access policy that
-holds the resolved access to the session, and neither may tell the frontends
-apart. This file puts both to every registered operation, through the
-production registry and with the real policy evaluation.
+holds the resolved access to the session. Apart from the Sede view's window
+requirement, neither may tell the person's frontends apart. This file puts both
+to every registered operation, through the production registry and with the real policy evaluation.
 
 Each operation is asked on requests built from its registered schema alone
 and admitted through its own decoder. Where its resolver admits none of those,
@@ -622,6 +626,16 @@ def _answers_on(
 
 _PERSON_ACT_REQUIRED = AccessDenialCode.PERSON_ACT_REQUIRED.value
 _REFUSED_AS_PERSONS_ACT = f"refused:{_PERSON_ACT_REQUIRED}"
+_REFUSED_AS_FRONTEND = f"refused:{AccessDenialCode.FRONTEND_DENIED.value}"
+
+
+def _has_only_refusals(answer: object, permitted: frozenset[str]) -> bool:
+    """Check every probed position, including access-policy decisions, for a typed refusal."""
+    if isinstance(answer, _Decision):
+        return answer.resolution in permitted
+    if isinstance(answer, Mapping):
+        return bool(answer) and all(_has_only_refusals(value, permitted) for value in answer.values())
+    return answer in permitted if isinstance(answer, str) else False
 
 
 def _is_persons_act(request: OperationRequest[BaseModel]) -> bool:
@@ -662,7 +676,19 @@ def _on_the_persons_frontends[AnswerT](
 
     An automation is answered either as the person is, where a later door refuses
     it, or with the person-act refusal; never with anything else.
+    The Sede view separately proves the window requirement's typed refusals.
     """
+    if request.definition_id == "live.sede.view":
+        # Only the desktop window consumes and drives the person-held browser
+        # stream. Every excluded frontend must still prove its typed refusal.
+        for frontend, answer in by_frontend.items():
+            if frontend is OperationFrontendProjection.DESKTOP:
+                continue
+            permitted = frozenset({_REFUSED_AS_FRONTEND})
+            if frontend in _AUTOMATION_FRONTENDS:
+                permitted |= {_REFUSED_AS_PERSONS_ACT}
+            assert _has_only_refusals(answer, permitted), (request.definition_id, frontend.value, answer)
+        return {OperationFrontendProjection.DESKTOP: by_frontend[OperationFrontendProjection.DESKTOP]}
     if not _is_persons_act(request):
         return by_frontend
     for frontend in _AUTOMATION_FRONTENDS:

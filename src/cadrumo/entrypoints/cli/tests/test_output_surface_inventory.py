@@ -74,8 +74,8 @@ _ALLOWED_DIRECT_OUTPUTS: dict[tuple[str, str, str], str] = {
         "private copy of the same three lines."
     ),
     ("entrypoints/cli/errors.py", "_write_stderr_encoded", "write"): (
-        "IS the stderr funnel's writer: its only callers, write_stderr and "
-        "redraw_stderr_line, hand it text already through the error-path "
+        "IS the stderr funnel's writer: its only caller, write_stderr, "
+        "hands it text already through the error-path "
         "redaction boundary and terminal encoding, so every write emits safe_text."
     ),
     ("entrypoints/cli/common.py", "emit_help_text", "typer.echo"): (

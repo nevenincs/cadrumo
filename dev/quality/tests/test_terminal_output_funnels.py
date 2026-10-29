@@ -39,7 +39,7 @@ _ENCODERS = frozenset({"encode_terminal_text", "encode_terminal_field"})
 #: ``(path, enclosing qualname)`` -> why the raw write is safe there.
 _FUNNELS: dict[tuple[str, str], str] = {
     ("src/cadrumo/entrypoints/cli/common.py", "_render_and_echo"): "emits render_command_output text",
-    ("src/cadrumo/application/wizard/commands.py", "_echo_wizard_text"): "emits render_command_output text",
+    ("src/cadrumo/application/wizard/command_success.py", "_echo_wizard_text"): "emits render_command_output text",
     ("src/cadrumo_client/commands/custody.py", "_emit_envelope"): "emits render_command_output text",
     ("src/cadrumo_runtime/commands/presentation.py", "emit_envelope"): "emits render_command_output text",
     ("src/cadrumo_runtime/host/caller_owned.py", "CallerOwnedRuntime._announce_ready"): (

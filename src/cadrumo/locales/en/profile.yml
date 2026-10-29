@@ -298,7 +298,7 @@ profile:
         cash_accounting_regime_enrolled:
           label: Cash-accounting regime enrolment
         does_intracomunitario:
-          label: Intracommunity operations
+          label: Intra-community operations
         group_dominant_entity_enrolled:
           label: IVA group dominant entity (Modelo 353)
         group_member_enrolled:
@@ -306,7 +306,7 @@ profile:
         hydrocarbon_deposit_advance_payment_deduction_entitled:
           label: Hydrocarbon tax-deposit advance-payment deduction entitlement
         intracommunity_operations_exceed_50000_eur:
-          label: Intracommunity operations over 50,000 EUR
+          label: Intra-community operations over 50,000 EUR
         m303_regime_composition:
           choices:
             general: General regime only

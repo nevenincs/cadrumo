@@ -165,7 +165,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "other.one",
             "other.other",
         ),
-        "desktop.aeat_sync.results.filed.differs.": ("amount", "date", "status"),
+        "desktop.aeat_sync.results.filed.differs.": ("status",),
         "desktop.aeat_sync.results.filed.group.": ("aeat_only", "differing", "local_only", "matched"),
         "desktop.aeat_sync.results.filed.record.": ("draft", "marked_filed"),
         "desktop.aeat_sync.results.new.": (

@@ -17,7 +17,7 @@ related:
   - '[[2026-10-03-aeat-live-write-guard-adr]]'
 modified: '2026-10-29'
 body_schema: body-v2
-body_hash: 'sha256:af05b29ab6987ad6abc617a7132151a31eb82f96c488ed282c2f75ea10a23fdf'
+body_hash: 'sha256:02aedbaaca5403d91c19d82a3ed99695bd1dd4debbfde48ff3d7f33ed64ebcc0'
 ---
 
 # `desktop-aeat-sync` plan
@@ -99,7 +99,7 @@ Cover every page state with scenario-host data.
 
 Review the integrated work and confirm it with the owner on a real AEAT session.
 
-- [ ] `P07.S20` - review the integrated backend, host and page against the governing ADRs and append findings to the feature audit; `.vault/audit/ (feature audit scaffolded by the owning verb)`.
+- [x] `P07.S20` - review the integrated backend, host and page against the governing ADRs and append findings to the feature audit; `.vault/audit/ (feature audit scaffolded by the owning verb)`.
 - [ ] `P07.S21` - run the attended live check with the owner on a real AEAT session: preflight, sign-in, everything, stop, results and census review; `native/desktop/ (installed dev build, no installer)`.
 
 ## Parallelization

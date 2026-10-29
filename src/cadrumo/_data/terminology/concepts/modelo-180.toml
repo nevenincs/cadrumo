@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual de retenciones sobre alquileres urbanos."
-definition = "Declaracion informativa anual que resume las retenciones sobre arrendamientos de inmuebles urbanos declaradas en los modelos 115 del ejercicio, con el detalle por arrendador."
+definition = "Declaración informativa anual que resume las retenciones sobre arrendamientos de inmuebles urbanos declaradas en los modelos 115 del ejercicio, con el detalle por arrendador."
 
 [language.es.source]
 citation = "Articulo 99 de la Ley 35/2006 del IRPF; articulo 100 del RD 439/2007."

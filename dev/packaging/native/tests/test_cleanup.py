@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import sys
 from pathlib import Path
@@ -75,7 +76,7 @@ def test_clean_all_includes_all_configured_target_outputs_but_preserves_identity
     assert (build / "_deps/builder/python.exe").exists()
 
 
-def test_clean_stage_empties_but_keeps_the_preset_temporary_directory(tmp_path: Path) -> None:
+def test_clean_stage_restores_the_preset_and_ctest_temporary_directories(tmp_path: Path) -> None:
     source = tmp_path / "source"
     source.mkdir()
     build = tmp_path / "build"
@@ -97,7 +98,15 @@ def test_clean_stage_empties_but_keeps_the_preset_temporary_directory(tmp_path: 
     clean(build, "stage")
     assert not (build / "stage").exists()
     assert (build / "temporary").is_dir()
-    assert not any((build / "temporary").iterdir())
+    ctest_temporary = build / "temporary/ctest"
+    assert ctest_temporary.is_dir()
+    assert not any(ctest_temporary.iterdir())
+    environment = dict(os.environ, TEMP=str(ctest_temporary), TMP=str(ctest_temporary), TMPDIR=str(ctest_temporary))
+    result = run_command(
+        [sys.executable, "-c", "import tempfile; print(tempfile.gettempdir())"], cwd=source, environment=environment
+    )
+    assert result.returncode == 0, result.stderr
+    assert Path(result.stdout.strip()).resolve() == ctest_temporary.resolve()
 
 
 def test_object_file_list_is_enrolled_without_generator_metadata(tmp_path: Path) -> None:

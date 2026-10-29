@@ -142,7 +142,7 @@ def _token_display(token: str) -> str:
     return token.upper() if token.lower() in _ACRONYMS else _humanise_token(token)
 
 
-def _section_display(section: tuple[str, ...], language: OutputLanguage) -> str:
+def section_display(section: tuple[str, ...], language: OutputLanguage) -> str:
     """The human display for a registry section path, token by token."""
     return " › ".join(_token_display(part) for part in section if part) or docs_chrome(
         "docs.casilla.chrome.general_section", language

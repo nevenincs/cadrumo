@@ -106,9 +106,9 @@ adapters:
         snapshot_modelo_conflict: A nyomtatványdefiníciók {snapshot_modelo!r} nyomtatványa
           ütközik az észlelt {detected!r} értékkel.
         tax_id_unresolved: Az adóazonosító nem volt meghatározható a PDF szövegéből.
-        template_not_detected: A(z) {path} sablona nem észlelhető automatikusan; a
-          felülbíráláshoz add meg a --modelo és --año értékeket.
-        year_conflict: A --año {year} ütközik az észlelt {detected} értékkel.
+        template_not_detected: A(z) {path} sablonja nem észlelhető automatikusan; a
+          felülbíráláshoz add meg a --modelo és --year értékeket.
+        year_conflict: A --year {year} ütközik az észlelt {detected} értékkel.
     financial:
       providers:
         pdf_statement:
@@ -163,8 +163,8 @@ adapters:
             termékhez tartozik és nem használható; használd a Cadrumo vault mappát.
           googleapiclient_import_failed: 'A google-api-python-client függőség nem
             importálható; futtasd: `uv sync`, majd próbáld újra.'
-          media_non_bytes: A Google Drive medialetöltés {payload_type} típust adott
-            vissza bytes helyett.
+          media_non_bytes: A Google Drive médiatartalom-letöltése {payload_type} típusú
+            értéket adott vissza bytes helyett.
           modified_time_invalid: A Google Drive nem adott vissza használható módosítási
             időpontot ehhez az objektumhoz; a metaadatai nem megbízhatók.
           namespace_blank: A Google Drive tárhely névtere nem lehet üres.
@@ -191,35 +191,37 @@ adapters:
             sikertelen.
           namespace_blank: A helyi tárhely névtere nem lehet üres.
           namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
-            {namespace} névteret: az elérési út meghaladja a Windows elérésiút-hossz
-            korlátját. Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb
+            {namespace} névteret: az útvonal hosszabb a Windows által megengedettnél.
+            Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb
             útvonalra, vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat
-            config check`).'
+            config storage check`).'
           namespace_create_permission: 'A helyi tárhely nem tudta létrehozni a névteret:
             {namespace}.'
           namespace_forbidden_characters: A helyi tárhely névtere {namespace} tiltott
             útvonal-karaktereket tartalmaz.
           namespace_not_found: 'A helyi névtér nem található: {namespace}.'
           object_delete_permission: A helyi tárhely nem tudta törölni az objektum
-            payloadjat.
+            payloadját.
           object_not_found: 'A helyi objektum {object_key_hmac} nem található ebben
             a névtérben: {namespace}.'
           payload_commit_failed: A helyi tárhely nem tudta atomikusan véglegesíteni
-            az objektum payloadjat.
-          payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadjat.
+            az objektum payloadját.
+          payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadját.
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
-            tartalmát: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
+            tartalmát: az útvonal hosszabb a Windows által megengedettnél.
             Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
-            vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config check`).'
-          payload_write_permission: A helyi tárhely nem tudta írni az objektum payloadjat.
+            vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage
+            check`).'
+          payload_write_permission: A helyi tárhely nem tudta írni az objektum payloadját.
           sidecar_malformed: A helyi sidecar {sidecar_path} nem olvasható vagy hibás.
           sidecar_missing: A helyi objektum sidecarja hiányzik.
           sidecar_not_object: A helyi sidecar {sidecar_path} nem JSON objektum.
-          sidecar_write_failed: A helyi tárhely nem tudta írni az objektum sidecarjat.
+          sidecar_write_failed: A helyi tárhely nem tudta írni az objektum sidecarját.
           sidecar_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
-            sidecar fájlját: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
+            sidecar fájlját: az útvonal hosszabb a Windows által megengedettnél.
             Helyezd át a CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
-            vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config check`).'
+            vagy engedélyezd a LongPathsEnabled beállítást (lásd `aeat config storage
+            check`).'
           written_at_invalid: 'A helyi sidecar written_at mezője hiányzik, nem értelmezhető,
             vagy nem tartalmaz időzónát: {actual_value}.'
   persistence:

@@ -465,8 +465,8 @@ msgid ""
 "](filing-spine.md)."
 msgstr ""
 "A rutinmunkához a cél (`--modelo`, `--year`, `--period`) minden, amire "
-"szükséged van. A hivatkozásiszám-munkafolyamatokat [A benyújtási "
-"munkafolyamat](filing-spine.md) tárgyalja."
+"szükséged van. A hivatkozási számmal végzett munkafolyamatokat [A "
+"benyújtási munkafolyamat](filing-spine.md) tárgyalja."
 
 #: ../../how-to/modelo-303.md:162
 msgid "Check the period's records"

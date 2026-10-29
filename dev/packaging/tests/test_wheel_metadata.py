@@ -23,7 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_shared_core_and_extra_names_preserve_both_metadata_rows(tmp_path: Path, leak_optional: bool) -> None:
     configuration = load_toml(REPO_ROOT / "pyproject.toml")["project"]
     surfaces = pyproject_surfaces(REPO_ROOT)
-    assert {"pillow", "pywin32"} <= surfaces.project_names & surfaces.external_optional_names
+    assert "pywin32" in surfaces.project_names & surfaces.external_optional_names
     rows = ["Metadata-Version: 2.4", "Name: cadrumo", "Version: 1.0"]
     rows.extend(f"Requires-Dist: {requirement}" for requirement in configuration["dependencies"])
     for extra, requirements in configuration["optional-dependencies"].items():
@@ -37,6 +37,9 @@ def test_shared_core_and_extra_names_preserve_both_metadata_rows(tmp_path: Path,
     wheel = _wheel(
         tmp_path / "cadrumo-1.0-py3-none-any.whl", {"cadrumo-1.0.dist-info/METADATA": "\n".join(rows) + "\n"}
     )
+    pywin32_rows = [row for row in wheel_metadata(wheel)[0] if row.lower().startswith("pywin32")]
+    assert len(pywin32_rows) == 2
+    assert sum('extra == "workbook-windows"' in row for row in pywin32_rows) == 1
 
     if leak_optional:
         with pytest.raises(SystemExit, match=r"optional dependencies leaked.*google-auth"):

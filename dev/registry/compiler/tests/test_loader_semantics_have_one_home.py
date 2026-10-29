@@ -46,6 +46,7 @@ import pytest
 
 import dev.registry.edition_delta_drop_planning as edition_delta_drop_planning
 import dev.registry.edition_delta_row_delta_existing as edition_delta_row_delta_existing
+import dev.registry.edition_delta_row_delta_preserving as edition_delta_row_delta_preserving
 import dev.registry.edition_delta_row_delta_reconstruction as edition_delta_row_delta_reconstruction
 import dev.registry.edition_delta_row_delta_selection as edition_delta_row_delta_selection
 import dev.registry.edition_delta_source as edition_delta_source
@@ -409,6 +410,7 @@ def test_the_edition_migration_routes_its_simulation_through_the_canonical_modul
     runtime_modules = {
         "dev/registry/edition_delta_drop_planning.py": edition_delta_drop_planning,
         "dev/registry/edition_delta_row_delta_existing.py": edition_delta_row_delta_existing,
+        "dev/registry/edition_delta_row_delta_preserving.py": edition_delta_row_delta_preserving,
         "dev/registry/edition_delta_row_delta_reconstruction.py": edition_delta_row_delta_reconstruction,
         "dev/registry/edition_delta_row_delta_selection.py": edition_delta_row_delta_selection,
         "dev/registry/edition_delta_source.py": edition_delta_source,

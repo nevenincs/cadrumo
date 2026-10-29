@@ -26,12 +26,14 @@ def find_bbox_casilla_hits(
     """Find the value word for a ``bbox_anchored`` target using word positions.
 
     Algorithm:
-    1. Scan each page's word list for words matching ``bbox_anchor.box_number_pattern``.
-    2. For each anchor-word match, locate the value word using ``value_offset``.
+
+    #. Scan each page's word list for words matching
+       ``bbox_anchor.box_number_pattern``.
+    #. For each anchor-word match, locate the value word using ``value_offset``.
        ``"right_of_number"`` selects the closest word to the right on the same
        y-row (same ``top`` within ``_BBOX_Y_TOLERANCE`` points, x0 greater than
        the anchor word's x1).
-    3. If ``column_anchor`` is set, pre-compute the x-range of the column header
+    #. If ``column_anchor`` is set, pre-compute the x-range of the column header
        and constrain the anchor-word search to that x-range.
 
     Returns a list of ``(1-based page number, raw value text)`` tuples.

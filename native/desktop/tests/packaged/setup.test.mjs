@@ -32,9 +32,23 @@ import {
   secondSetupVerdict,
   setupHostVerdict,
   setupItemsFrom,
+  setupFailureVerdict,
+  concurrentSetupVerdict,
   treeBytes,
 } from "./setup.mjs";
-import { FAIL, PASS } from "./verdicts.mjs";
+import { FAIL, PASS, cspVerdict } from "./verdicts.mjs";
+import {
+  startupPanelVerdict,
+  firstNullSnapshotVerdict,
+  panelRowsVerdict,
+  progressVerdict,
+  partSizesVerdict,
+  localAiPartsVerdict,
+  smallestLocalModels,
+  settingsVerdict,
+  removalVerdict,
+} from "./provisioning.mjs";
+import { sedeMissingVerdict } from "./probes.mjs";
 
 const testing = resolve(tmpdir(), "cadrumo-testing");
 const run = resolve(testing, "cadrumo-setup-run");
@@ -42,6 +56,448 @@ const settled = "2026-10-18T12:00:00.000Z";
 const later = "2026-10-18T12:05:00.000Z";
 const earlier = "2026-10-18T11:55:00.000Z";
 const fullCheck = { source: "full_check", mode: "full", checkedAt: later };
+
+test("check 1 rejects startup overlap, missing first snapshot and an unexercised null snapshot", () => {
+  const valid = {
+    states: [
+      { signIn: true, panel: false },
+      { signIn: false, panel: true },
+    ],
+    reads: [{ snapshot: { complete: null } }],
+    overflow: false,
+  };
+  for (const judge of [startupPanelVerdict, firstNullSnapshotVerdict]) {
+    assert.equal(judge(valid).verdict, PASS);
+    for (const defect of [
+      { states: [] },
+      { reads: [] },
+      { overflow: true },
+      {
+        states: [
+          { signIn: true, panel: true },
+          { signIn: false, panel: true },
+        ],
+      },
+      {
+        states: [
+          { signIn: true, panel: false },
+          { signIn: false, panel: false },
+        ],
+      },
+    ])
+      assert.equal(judge({ ...valid, ...defect }).verdict, FAIL);
+  }
+  assert.equal(
+    firstNullSnapshotVerdict({
+      ...valid,
+      reads: [{ snapshot: { complete: false } }],
+    }).verdict,
+    FAIL,
+  );
+});
+
+test("check 2 rejects missing, duplicated or unordered engine rows and duplicate sentences or close controls", () => {
+  const snapshot = {
+    rows: [
+      { item: "browser", recovery: "set_up" },
+      { item: "local_ai", recovery: "set_up" },
+    ],
+  };
+  const action = { label: "Set up", disabled: false };
+  const browser = {
+    item: "browser",
+    expandable: false,
+    sentences: ["Not installed"],
+    buttons: [action],
+  };
+  const local = {
+    item: "local_ai",
+    expandable: true,
+    expanded: true,
+    sentences: [],
+    buttons: [action],
+    nested: [
+      { item: "local_ai", sentences: ["Not installed"], actions: [action] },
+    ],
+  };
+  const valid = { elements: [browser, local], close: ["Close"] };
+  assert.equal(panelRowsVerdict(snapshot, valid).verdict, PASS);
+  for (const defect of [
+    { elements: [browser] },
+    { elements: [local, browser] },
+    { elements: [browser, browser] },
+    { close: [] },
+    { close: ["Close", "Close"] },
+    { elements: [{ ...browser, sentences: ["Absent", "Absent"] }, local] },
+    { elements: [{ ...browser, buttons: [] }, local] },
+    { elements: [browser, { ...local, nested: [] }] },
+    {
+      elements: [
+        browser,
+        {
+          ...local,
+          nested: [{ ...local.nested[0], sentences: ["Absent", "Absent"] }],
+        },
+      ],
+    },
+    {
+      elements: [
+        browser,
+        { ...local, nested: [{ ...local.nested[0], actions: [] }] },
+      ],
+    },
+  ])
+    assert.equal(
+      panelRowsVerdict(snapshot, { ...valid, ...defect }).verdict,
+      FAIL,
+    );
+});
+
+test("checks 2 and 3 reject aggregate progress sizes, premature bytes and missing separate local AI steps", () => {
+  assert.equal(
+    progressVerdict({ completed: 0, total: 100, displayedBytes: "" }).verdict,
+    PASS,
+  );
+  assert.equal(
+    progressVerdict({ completed: 0, total: 100, displayedBytes: "0 / 100" })
+      .verdict,
+    FAIL,
+  );
+  assert.equal(
+    progressVerdict({
+      completed: 10,
+      total: 100,
+      displayedBytes: "10 / 100 MB",
+      expectedTotalText: "100 MB",
+    }).verdict,
+    PASS,
+  );
+  assert.equal(
+    progressVerdict({
+      completed: 10,
+      total: 100,
+      displayedBytes: "10 / 900 MB",
+      expectedTotalText: "100 MB",
+    }).verdict,
+    FAIL,
+  );
+  const expected = [
+    { part: "program", sizeBytes: 100, sizeText: "100 MB" },
+    { part: "download", sizeBytes: 20, sizeText: "20 MB" },
+  ];
+  const rendered = [
+    { part: "program", text: "Program 100 MB" },
+    { part: "download", text: "Model synthetic:small 20 MB" },
+  ];
+  assert.equal(partSizesVerdict(expected, rendered).verdict, PASS);
+  assert.equal(
+    partSizesVerdict(expected, [
+      { ...rendered[0], text: "Program 120 MB" },
+      rendered[1],
+    ]).verdict,
+    FAIL,
+  );
+  assert.equal(partSizesVerdict(expected, rendered.slice(1)).verdict, FAIL);
+  const review = {
+    entries: [
+      {
+        item: "local_ai",
+        parts: [
+          { part: "program" },
+          { part: "download", model: "synthetic:small" },
+        ],
+      },
+    ],
+  };
+  assert.equal(
+    localAiPartsVerdict(review, "synthetic:small", rendered).verdict,
+    PASS,
+  );
+  assert.equal(
+    localAiPartsVerdict(review, "synthetic:other", rendered).verdict,
+    FAIL,
+  );
+  assert.equal(
+    localAiPartsVerdict(review, "synthetic:small", rendered.slice(1)).verdict,
+    FAIL,
+  );
+  assert.equal(
+    localAiPartsVerdict({ entries: [] }, "synthetic:small", rendered).verdict,
+    FAIL,
+  );
+});
+
+test("check 3 derives the smallest local model from agent sizes and refuses unknown or nonlocal candidates", () => {
+  const settings = { providers: [{ id: "synthetic_api", auth_kind: "none" }] };
+  const catalog = {
+    kind: "declared",
+    catalog: {
+      providers: [
+        {
+          id: "synthetic_api",
+          provider: "synthetic",
+          models: [
+            { id: "large", size_bytes: 200 },
+            { id: "small", size_bytes: 20 },
+            { id: "unknown" },
+          ],
+        },
+      ],
+    },
+  };
+  assert.equal(smallestLocalModels(catalog, settings).model, "small");
+  assert.throws(() => smallestLocalModels(catalog, { providers: [] }));
+  assert.throws(() =>
+    smallestLocalModels(
+      {
+        kind: "declared",
+        catalog: {
+          providers: [{ id: "synthetic_api", models: [{ id: "unknown" }] }],
+        },
+      },
+      settings,
+    ),
+  );
+  const served = {
+    providers: [
+      {
+        provider_id: "synthetic",
+        transport: "api",
+        model_source: "catalog",
+        catalog: { models: [{ model: "small", size_bytes: 20 }] },
+      },
+    ],
+  };
+  assert.equal(smallestLocalModels(served, settings).model, "small");
+  assert.throws(() =>
+    smallestLocalModels(
+      { providers: [{ ...served.providers[0], model_source: "custom" }] },
+      settings,
+    ),
+  );
+});
+
+test("check 6 rejects duplicate Settings sections, extra controls and a panel that did not open or close", () => {
+  const valid = {
+    sections: 2,
+    provisioningSections: 1,
+    statuses: 1,
+    statusText: "Setup incomplete",
+    provisioningButtons: 1,
+    windowButtons: 1,
+    extraSetupControls: 0,
+    panelOpened: true,
+    panelClosed: true,
+    panelVerdict: { verdict: PASS },
+  };
+  assert.equal(settingsVerdict(valid).verdict, PASS);
+  for (const defect of [
+    { sections: 3 },
+    { provisioningSections: 2 },
+    { statuses: 2 },
+    { statusText: "" },
+    { provisioningButtons: 2 },
+    { windowButtons: 2 },
+    { extraSetupControls: 1 },
+    { panelOpened: false },
+    { panelClosed: false },
+    { panelVerdict: { verdict: FAIL } },
+  ])
+    assert.equal(settingsVerdict({ ...valid, ...defect }).verdict, FAIL);
+});
+
+test("check 7 rejects stale confirmations, refused removal or an unsuccessful reinstall", () => {
+  const valid = {
+    confirmationShown: true,
+    removal: {
+      cmd: "desktop_setup_remove",
+      args: { removal: "local_ai" },
+      ok: true,
+    },
+    removed: true,
+    absentBefore: true,
+    sawLive: true,
+    confirmationReappeared: false,
+    absentAfter: true,
+    reinstall: { verdict: PASS },
+    modelInstalled: true,
+  };
+  assert.equal(removalVerdict(valid).verdict, PASS);
+  for (const defect of [
+    { confirmationShown: false },
+    { removal: { ...valid.removal, ok: false } },
+    { removal: { ...valid.removal, args: { removal: "browser" } } },
+    { removed: false },
+    { absentBefore: false },
+    { sawLive: false },
+    { confirmationReappeared: true },
+    { absentAfter: false },
+    { reinstall: { verdict: FAIL } },
+    { modelInstalled: false },
+  ])
+    assert.equal(removalVerdict({ ...valid, ...defect }).verdict, FAIL);
+});
+
+test("check 8 rejects CSP violation events and console reports", () => {
+  assert.equal(
+    cspVerdict([{ role: "shell", csp: [], console: [] }]).verdict,
+    PASS,
+  );
+  assert.equal(
+    cspVerdict([{ role: "shell", csp: [{ effectiveDirective: "script-src" }] }])
+      .verdict,
+    FAIL,
+  );
+  assert.equal(
+    cspVerdict(
+      [{ role: "shell" }],
+      [
+        "Refused to execute inline script because it violates the following Content Security Policy directive",
+      ],
+    ).verdict,
+    FAIL,
+  );
+});
+
+test("check 10 rejects a missing Sede offer, wrong persisted refusal or absent local warning", () => {
+  const record = {
+    service: {
+      event: "feature_refused",
+      feature: "sede_view",
+      refusal: "component_not_ready",
+      item: "browser",
+    },
+  };
+  const valid = {
+    absent: true,
+    sentence: "The browser is not installed",
+    offer: true,
+    panel: true,
+    records: [record],
+    warning: true,
+  };
+  assert.equal(sedeMissingVerdict(valid).verdict, PASS);
+  for (const defect of [
+    { absent: false },
+    { sentence: "Something failed" },
+    { offer: false },
+    { panel: false },
+    { records: [] },
+    { records: [record, record] },
+    { warning: false },
+    { records: [{ service: { ...record.service, item: "local_ai" } }] },
+    { records: [{ service: { ...record.service, refusal: "unexpected" } }] },
+  ])
+    assert.equal(sedeMissingVerdict({ ...valid, ...defect }).verdict, FAIL);
+});
+
+test("concurrency requires real overlap, independent cancellation and a global spinner", () => {
+  const run = (item, stage, outcome = null) => ({
+    item,
+    stage,
+    outcome,
+    operation_id: item,
+  });
+  const state = (...runs) => ({ snapshot: { runs } });
+  const evidence = {
+    overlap: state(run("browser", "running"), run("local_ai", "running")),
+    cancelled: state(
+      run("browser", "settled", "cancelled"),
+      run("local_ai", "running"),
+    ),
+    browserWire: { bytes: 1024 },
+    localAiWire: { bytes: 1024 },
+    controls: { browserCancel: true, localAiCancel: true, modelHeld: true },
+    browserActionAfterCancel: true,
+    spinnerDuring: { present: true, overlay: true },
+    spinnerAfterCancel: { present: true, overlay: true },
+    spinnerAfter: { present: false },
+  };
+  assert.equal(concurrentSetupVerdict(evidence).verdict, PASS);
+  for (const defect of [
+    { overlap: state(run("browser", "settled"), run("local_ai", "running")) },
+    { browserWire: { bytes: 0 } },
+    {
+      controls: { browserCancel: false, localAiCancel: true, modelHeld: true },
+    },
+    {
+      cancelled: state(
+        run("browser", "settled", "cancelled"),
+        run("local_ai", "settled", "cancelled"),
+      ),
+    },
+    {
+      cancelled: state(run("browser", "settled", "cancelled"), {
+        ...run("local_ai", "running"),
+        operation_id: "replacement",
+      }),
+    },
+    { spinnerAfterCancel: { present: false } },
+    { spinnerDuring: { present: true, overlay: false } },
+    { browserActionAfterCancel: false },
+    { spinnerAfter: { present: true } },
+  ])
+    assert.equal(
+      concurrentSetupVerdict({ ...evidence, ...defect }).verdict,
+      FAIL,
+    );
+});
+
+test("a real setup failure needs its one plain sentence, recovery and exactly one persisted diagnostic event", () => {
+  const event = {
+    kind: "failure",
+    source: "desktop",
+    sequence: 17,
+    hostPid: 123,
+    failure: {
+      code: "setup_failed",
+      reason: "setup_browser_failed",
+      causes: [
+        {
+          kind: "application",
+          code: "setup_failed",
+          reason: "blocked_by_network",
+        },
+      ],
+    },
+  };
+  const valid = {
+    run: { stage: "settled", outcome: "failed", failure: "blocked_by_network" },
+    expectedSentence: "Your network is blocking the download.",
+    sentences: ["Your network is blocking the download."],
+    action: "Try again",
+    refusals: 1,
+    events: [event],
+    records: [event],
+  };
+  assert.equal(setupFailureVerdict(valid).verdict, PASS);
+  for (const defect of [
+    { refusals: 0 },
+    { run: { ...valid.run, outcome: "completed" } },
+    { run: { ...valid.run, failure: "unexpected" } },
+    { sentences: [] },
+    { sentences: [...valid.sentences, ...valid.sentences] },
+    { sentences: ["blocked_by_network"] },
+    { expectedSentence: "" },
+    {
+      expectedSentence: "Cadrumo refused that request.",
+      sentences: ["Cadrumo refused that request."],
+    },
+    { action: "" },
+    { events: [] },
+    { events: [event, event] },
+    { events: [{ ...event, failure: { ...event.failure, causes: [] } }] },
+    { records: [] },
+    { records: [event, event] },
+    { records: [{ ...event, sequence: 18 }] },
+    { records: [{ ...event, hostPid: 456 }] },
+  ])
+    assert.equal(
+      setupFailureVerdict({ ...valid, ...defect }).verdict,
+      FAIL,
+      JSON.stringify(defect),
+    );
+});
 
 test("the setup refuses unless asked for, with a clean root inside a throwaway run under the testing directory", () => {
   const clean = {

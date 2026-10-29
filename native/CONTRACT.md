@@ -891,6 +891,11 @@ admits only `build/<name>` at the repository root, where `<name>` is a configure
 preset of the project being configured; a directory of another name, or an
 enrolled name elsewhere, stops with the enrolled names.
 
+`native/cmake/BuildPaths.cmake` owns the output-directory map. Keys use uppercase
+snake case; relative directory segments use lowercase kebab case. Configuration
+rejects duplicate keys, duplicate destinations and overlapping directory owners.
+Helpers consume the emitted `build-paths.json` rather than inventing output roots.
+
 | Path beneath the binary directory | Contents |
 | --- | --- |
 | `inputs/python-sdk/` | Verified pinned CPython SDK, independent of runtime wheel changes |
@@ -900,9 +905,10 @@ enrolled name elsewhere, stops with the enrolled names.
 | `product/build/wheels/` | Existing CADRUMO three-wheel cohort built from source |
 | `product/dependencies/` | Exact production closure plus those product wheels |
 | `generated/` | Native contracts, metadata, icon and resource source |
+| `timings/` | Per-action phase timing records, retained after failures until explicit cleanup |
 | `bin/<Config>/`, `lib/<Config>/`, `symbols/<Config>/` | Native executables/DLLs, import libraries and symbols |
 | `cargo/native/` | Native Rust build products; isolated from `cargo/desktop/` |
-| `tmp/` | Preset-scoped compiler and MSBuild scratch files; retained during cleanup targets because MSBuild can still be using them |
+| `temporary/` | Preset-scoped compiler and test scratch; cleanup empties it and recreates the preset and CTest directories |
 | `stage/<Config>/app/` | Complete application tree used by install and CPack |
 | `install/` | Default local install prefix; override with `cmake --install --prefix` |
 | `packages/<Config>/` | ZIP artifacts |
@@ -1057,7 +1063,8 @@ divergence before staging. ZIP acceptance also checks the reported Windows versi
 | `package` | Standard CPack target; use `zip` for content-aware archive reuse |
 | `verify-package` | Build ZIP, extract into a Unicode/spaces path, run cohesion and runtime probes |
 | `clean` | Generator's standard build-output cleanup |
-| `clean-stage` | Remove stage, testing and verification trees |
+| `clean-stage` | Remove stage, testing, verification and temporary contents; recreate the temporary directories |
+| `clean-timings` | Remove per-action timing records without rebuilding products |
 | `clean-packages` | Remove ZIP and CPack staging trees |
 | `clean-dependencies` | Remove downloaded SDK/dependencies and product wheel staging |
 | `clean-native` | Remove bin, lib, symbols and Cargo outputs; retain configure metadata |

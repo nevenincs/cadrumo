@@ -34,7 +34,7 @@ msgstr ""
 "felületen keresztül készít elő spanyol adóbevallásokat. Modellezi az "
 "adóhatóság szabályozási registryjét, beolvassa és besorolja a pénzügyi "
 "nyilvántartásaidat, és kiszámítja az egyes adóűrlapok számozott "
-"casilláit. Ezután ellenőrzi a borradort, és exportál egy fájlt, amelyet "
+"casilláit. Ezután ellenőrzi a piszkozatot, és exportál egy fájlt, amelyet "
 "te magad nyújtasz be. Az AEAT az Agencia Estatal de Administración "
 "Tributaria, Spanyolország adóhivatala."
 
@@ -233,7 +233,7 @@ msgid ""
 msgstr ""
 "**Az `application`** hangolja össze a felhasználási eseteket. A domain "
 "szabályait olyan portokon keresztül köti össze, amelyeket az adapterek "
-"valósítanak meg, hogy benyújtási borradorokat építsen, aggregálja a "
+"valósítanak meg, hogy benyújtási piszkozatokat készítsen, összesítse a "
 "ledgert, diagnosztikát futtasson és állapotot vetítsen. Külső "
 "szolgáltatásokat is csak ilyen portokon át ér el."
 
@@ -338,7 +338,7 @@ msgstr "`filing`, `export`, `review`"
 
 #: ../../architecture/index.md:64
 msgid "Live, portals, and auth"
-msgstr "Live, portálok és hitelesítés"
+msgstr "Élő, portálok és hitelesítés"
 
 #: ../../architecture/index.md:64
 msgid "`portals`, `auth`, `notifications`"
@@ -409,7 +409,7 @@ msgstr ""
 "Minden modelót és revíziót TOML-töredékekként írnak meg a "
 "`src/cadrumo/_data/registry/` alatt. A `dev/registry`-beli fordító "
 "determinisztikus sorrendben egyesíti ezeket a töredékeket, a szerzői "
-"deltákat teljes revíziókká bontja ki, elutasítja az egyértelműtlen "
+"deltákat teljes revíziókká bontja ki, elutasítja a nem egyértelmű "
 "ütközéseket, és szigorú, rögzített `ModeloDefinition` és `ModeloRevision`"
 " objektumokká validálja őket. A közzététel az eredményt egy kis "
 "leíróként, az `authority.current.json` fájlként és az általa megnevezett "
@@ -518,7 +518,7 @@ msgstr ""
 
 #: ../../architecture/index.md:225
 msgid "`verify` runs a completeness and consistency gate over the draft."
-msgstr "A `verify` teljességi és konzisztencia-kaput futtat a borrador felett."
+msgstr "A `verify` teljességi és konzisztencia-kaput futtat a piszkozat felett."
 
 #: ../../architecture/index.md:226
 msgid ""
@@ -759,7 +759,7 @@ msgstr ""
 "Ebből a tárolóból semmi nem jut át íráskérésként a hatósághoz. A csak "
 "olvasható élő ellenőrzések kizárólag olvasni érik el a hatóságot. Az "
 "egyetlen útvonal, amely írásként éri el a hatóságot, az emberi benyújtás,"
-" amely az eszköz határán túl van. Minden AEAT sede-olvasó hibára záró "
+" amely az eszköz határán túl van. Minden AEAT-portált olvasó hibára záró "
 "védelem mögött fut, amely visszautasít minden olyan kérést, ami nem "
 "megengedett olvasás, így a biztonsági helyzet nem kophat el véletlenül."
 

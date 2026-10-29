@@ -16,8 +16,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Informativa de operaciones vinculadas y paraisos fiscales."
-definition = "Declaracion informativa anual de las operaciones con personas o entidades vinculadas y de las operaciones con paraisos fiscales."
+short_description = "Informativa de operaciones vinculadas y paraísos fiscales."
+definition = "Declaración informativa anual de las operaciones con personas o entidades vinculadas y de las operaciones con paraísos fiscales."
 
 [language.es.source]
 citation = "Articulo 18 de la Ley 27/2014; articulo 13 del RD 634/2015."

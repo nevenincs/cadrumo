@@ -806,8 +806,6 @@ desktop:
           receipt: Receipt
           record: Your record
         differs:
-          amount: Amount differs
-          date: Date differs
           status: Status differs
         empty: No declarations.
         group:
@@ -846,7 +844,6 @@ desktop:
         read_on: Read {date}
         warning: Opening a notification at AEAT can count as receiving it.
       part:
-        form: Modelo {form}, {year}
         year: Declarations for {year}
       partly: Some couldn't be updated.
       problems: '{name}: some failed'
@@ -2550,14 +2547,14 @@ desktop:
       m210:
         applicable_rate: Applicable rate
         asset_or_right_id: Asset or right
-        code_refused: Write the two-digit tipo de renta code.
+        code_refused: Write the two-digit income type code.
         gross_income_amount: Gross income
         incoming_only: Only for income a non-resident earns in Spain.
         payer_id: Payer
         payer_mode: Payer type
         stage: Stage Modelo 210 facts
         staged: Modelo 210 facts staged · not saved
-        tipo_renta_code: Tipo de renta
+        tipo_renta_code: Income type
         title: Modelo 210
       merge:
         description: Every part goes back into the movement it was split from.
@@ -3178,14 +3175,14 @@ desktop:
       codes_hint: Separated by commas
       column:
         definitive: Definitive
-        ejercicio: Ejercicio
+        ejercicio: Year
         provenance: Source
         provisional: Provisional
         regime: Regime
         sector: Sector
         volumes: With / without right to deduct
       con_derecho: Volume with right to deduct
-      ejercicio: Ejercicio
+      ejercicio: Year
       empty: No prorrata entries yet.
       evidence: Evidence reference
       evidence_hint: The document of the option or its revocation
@@ -3300,7 +3297,7 @@ desktop:
       missing_counterparty_establishment_on_export: Establishment
       missing_counterparty_identification_state: VAT state
       missing_eur_tax_substrate: EUR figures
-      missing_home_office_afectacion: Afectación
+      missing_home_office_afectacion: Business-use allocation
       missing_iva_amount: IVA amount
       missing_iva_rate: IVA rate
       missing_proportionality_reference: Usage ratio
@@ -3322,7 +3319,7 @@ desktop:
       missing_counterparty_identification_state: Counterparty's VAT identification
         not stated
       missing_eur_tax_substrate: Euro figures missing
-      missing_home_office_afectacion: Home-office afectación missing
+      missing_home_office_afectacion: Home-office business-use allocation missing
       missing_iva_amount: IVA amount missing
       missing_iva_rate: IVA rate missing
       missing_proportionality_reference: Mixed without a usage ratio

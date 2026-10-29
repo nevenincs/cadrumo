@@ -420,7 +420,7 @@ application:
           declarat a les definicions del model.
         record_emit_order_duplicated: Diversos registres d'exportació comparteixen
           ordre d'emissió, així que la seqüència és ambigua.
-        required_casillas_omitted: L'exportació ometria casilles obligatòries que
+        required_casillas_omitted: L'exportació ometria caselles obligatòries que
           el registre oficial declara.
     m303_exonerado_390:
       errors:

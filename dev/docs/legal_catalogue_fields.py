@@ -8,7 +8,14 @@ from pathlib import Path
 from typing import Final, cast
 from urllib.parse import urlsplit
 
-from cadrumo.domain.calculations.registry.schema_references import LegalReference
+from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema_references import (
+    LegalNoteLanguageSpan,
+    LegalReference,
+    legal_note_language_ranges,
+)
 
 from .legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
@@ -132,5 +139,18 @@ def _record_from_table(path: Path, legal_id: str, body: object) -> LegalProvisio
         reviewed_at=_optional_date(table, "reviewed_at", path=path, legal_id=legal_id),
         reviewed_by=_optional_string(table, "reviewed_by", path=path, legal_id=legal_id),
         notes=_optional_string(table, "notes", path=path, legal_id=legal_id),
+        notes_language_spans=_note_language_spans(table, path=path, legal_id=legal_id),
         required_text=required_text(table, path=path, legal_id=legal_id),
     )
+
+
+def _note_language_spans(body: dict[str, object], *, path: Path, legal_id: str) -> tuple[LegalNoteLanguageSpan, ...]:
+    value = body.get("notes_language_spans", [])
+    if not isinstance(value, list):
+        raise LegalReferenceError(f"{path}: legal entry {legal_id!r} notes_language_spans must be a table array")
+    try:
+        spans = tuple(LegalNoteLanguageSpan.model_validate(item) for item in cast(list[object], value))
+        legal_note_language_ranges(_optional_string(body, "notes", path=path, legal_id=legal_id), spans)
+        return spans
+    except (ValidationError, RegistryValidationError) as exc:
+        raise LegalReferenceError(f"{path}: legal entry {legal_id!r} has invalid notes_language_spans: {exc}") from exc

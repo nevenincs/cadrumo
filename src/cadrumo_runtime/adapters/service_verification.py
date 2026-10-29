@@ -32,8 +32,6 @@ _log = get_logger(__name__)
 
 _SERVICE_RECHECK_SLOW_SECONDS: Final = 1.0
 """Reading a peer's process and image from the kernel can stall; a recheck this long is reported."""
-_MAXIMUM_PACKAGE_MANIFEST_BYTES = 16 * 1024 * 1024
-_MAXIMUM_SERVICE_DESCRIPTOR_BYTES = 1024 * 1024
 
 
 @dataclass(frozen=True, slots=True)

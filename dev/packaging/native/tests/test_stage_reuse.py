@@ -33,7 +33,7 @@ def _write(path: Path, content: str | bytes) -> Path:
 
 def _build(tmp_path: Path, paths: dict[str, str]) -> Path:
     build = tmp_path / "build"
-    _write(build / "build-paths.json", json.dumps({"paths": {"generated": "generated", **paths}}))
+    _write(build / "build-paths.json", json.dumps({"paths": {"generated": "generated", "timings": "timings", **paths}}))
     _write(build / "generated/identity.json", json.dumps({"target": "windows-x86-64", "version": "0.6.0"}))
     _write(build / "generated/build-freeze.json", json.dumps({"number": "", "id": "", "date": ""}))
     return build

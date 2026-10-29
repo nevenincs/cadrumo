@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import html
+import re
 from collections import Counter
 from collections.abc import Mapping
 from pathlib import Path
@@ -11,6 +13,7 @@ from .signal_document_prose import embedded_document_language_prose, visible_doc
 from .signal_documentation_counts import docs_extraction_finding, documentation_counts
 from .signal_documentation_templates import inventory_documentation_manifest
 from .signal_echo_classification import load_platform_identity_terms
+from .signal_tokens import filtered_translation_text
 
 
 def observed_documentation_catalogue_files(
@@ -231,7 +234,7 @@ def inventory_generated_document_file(
         )
         return
     counts["docs_generated_spellchecked_pages"] += 1
-    embedded = embedded_document_language_prose(path)
+    embedded = embedded_document_language_prose(path) + _legal_note_untagged_prose(path)
     counts["docs_generated_prose_cells"] += len(prose) + len(embedded)
     if spelling_values is not None:
         relative = path.relative_to(repository).as_posix()
@@ -239,3 +242,34 @@ def inventory_generated_document_file(
             spelling_values.setdefault("en", {})[f"parallel:{relative}:line[{line}]"] = text
         for line, language, text in embedded:
             spelling_values.setdefault(language, {})[f"parallel:{relative}:line[{line}]:lang[{language}]"] = text
+
+
+_LEGAL_NOTE_BODY = re.compile(
+    r"<!--cadrumo-legal-note-->(?P<body>.*?)</p></dd>",
+    re.DOTALL,
+)
+_LEGAL_NOTE_LANGUAGE_SPAN = re.compile(
+    r'<span\b[^>]*\blang\s*=\s*["\'][A-Za-z]{2}(?:-[^"\']*)?["\'][^>]*>.*?</span>',
+    re.DOTALL | re.IGNORECASE,
+)
+_HTML_TAG = re.compile(r"</?[^>]+>")
+
+
+def _legal_note_untagged_prose(path: Path) -> tuple[tuple[int, str, str], ...]:
+    """Keep untagged mixed-note text in the English spelling inventory.
+
+    The exact Spanish quote spans are separately read by
+    :func:`embedded_document_language_prose`. The generated legal-note raw
+    block is invisible to the RST prose parser, so inventory its remaining
+    text explicitly instead of exempting the whole note.
+    """
+    source = path.read_text(encoding="utf-8")
+    found: list[tuple[int, str, str]] = []
+    for match in _LEGAL_NOTE_BODY.finditer(source):
+        untagged = _LEGAL_NOTE_LANGUAGE_SPAN.sub(" ", match.group("body"))
+        visible = _HTML_TAG.sub(" ", untagged)
+        text = filtered_translation_text(html.unescape(visible))[0].strip()
+        if text:
+            line = source.count("\n", 0, match.start()) + 1
+            found.append((line, "en", text))
+    return tuple(found)

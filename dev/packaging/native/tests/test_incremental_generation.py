@@ -32,6 +32,12 @@ from ..metadata import generate as generate_metadata
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
+
+
 @pytest.mark.parametrize("mutation", ["none", "source", "producer", "independent"])
 def test_shared_producer_reuses_stable_generation_and_refuses_moving_inputs(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mutation: str

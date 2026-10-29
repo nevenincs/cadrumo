@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 
+from cadrumo.domain.calculations.registry.schema_references import LegalNoteLanguageSpan
+
 
 class LegalReferenceError(RuntimeError):
     """Raised when the legal reference surface cannot be rendered safely."""
@@ -35,6 +37,7 @@ class LegalProvisionRecord:
     reviewed_at: date | None = None
     reviewed_by: str | None = None
     notes: str | None = None
+    notes_language_spans: tuple[LegalNoteLanguageSpan, ...] = ()
     required_text: tuple[str, ...] = ()
 
 

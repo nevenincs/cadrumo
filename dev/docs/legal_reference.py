@@ -47,8 +47,9 @@ def render_legal_reference(
     grouped: dict[str, list[LegalProvisionRecord]] = {}
     for record in ordered:
         grouped.setdefault(record.document_id, []).append(record)
+    source_cache: dict[Path, str | None] = {}
     pages = tuple(
-        _render_document_page(document_id, tuple(grouped[document_id]), resolved_language)
+        _render_document_page(document_id, tuple(grouped[document_id]), resolved_language, repo_root, source_cache)
         for document_id in sorted(grouped)
     )
     return _reference_result(pages)

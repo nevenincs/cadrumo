@@ -42,6 +42,7 @@ endfunction()
 # Build output ownership. Helpers consume build-paths.json.
 set(CADRUMO_BUILD_DIRECTORIES
   GENERATED generated
+  TIMINGS timings
   TEMPORARY temporary
   RUNTIME inputs/runtime
   PYTHON_SDK inputs/python-sdk
@@ -74,15 +75,33 @@ set(CADRUMO_BUILD_DIRECTORIES
 set(build_paths "{\"paths\":{}}")
 string(JSON build_paths SET "${build_paths}" source "\"${CMAKE_SOURCE_DIR}\"")
 set(CADRUMO_BUILD_DIRECTORY_KEYS)
+set(build_directory_members)
 while(CADRUMO_BUILD_DIRECTORIES)
   list(POP_FRONT CADRUMO_BUILD_DIRECTORIES key relative)
+  if(NOT key MATCHES "^[A-Z][A-Z0-9_]*$"
+      OR NOT relative MATCHES "^[a-z0-9]+(-[a-z0-9]+)*(/[a-z0-9]+(-[a-z0-9]+)*)*$")
+    message(FATAL_ERROR "Build output names require uppercase keys and lowercase kebab-case path segments: ${key} ${relative}")
+  endif()
+  if(key IN_LIST CADRUMO_BUILD_DIRECTORY_KEYS)
+    message(FATAL_ERROR "Duplicate build output key: ${key}")
+  endif()
+  if(relative IN_LIST build_directory_members)
+    message(FATAL_ERROR "Duplicate build output directory: ${relative}")
+  endif()
+  foreach(member IN LISTS build_directory_members)
+    if(relative MATCHES "^${member}/" OR member MATCHES "^${relative}/")
+      message(FATAL_ERROR "Overlapping build output directories: ${member} and ${relative}")
+    endif()
+  endforeach()
   list(APPEND CADRUMO_BUILD_DIRECTORY_KEYS "${key}")
+  list(APPEND build_directory_members "${relative}")
   set(CADRUMO_PATH_${key} "${CMAKE_BINARY_DIR}/${relative}")
   cadrumo_require_physical_build_member("${CADRUMO_PATH_${key}}" "CMake output directory")
   string(TOLOWER "${key}" name)
   string(JSON build_paths SET "${build_paths}" paths "${name}" "\"${relative}\"")
 endwhile()
 set(cleanup_groups [=[{
+  "timings": ["timings"],
   "stage": ["stage", "verification", "testing", "temporary"],
   "packages": ["packages"],
   "dependencies": ["runtime", "python_sdk", "tools", "product", "agent"],

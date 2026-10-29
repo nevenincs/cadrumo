@@ -10,7 +10,6 @@ from ...core.config import Settings
 from ...core.document_shape import PDF_CONTAINER_SHAPES
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.image_media_type import ImageMediaType, detect_image_media_type
-from ...core.logging import get_logger
 from ...core.model_roles import ModelRole
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.llm import (
@@ -29,8 +28,6 @@ from .llm_classification_ports import (
     VisionClassifier,
 )
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
-
-_logger = get_logger(__name__)
 
 if TYPE_CHECKING:
     pass

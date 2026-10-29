@@ -1458,9 +1458,9 @@ cli:
           de auditoría)
         amend_wizard_reason_required: Se requiere un motivo para el registro de auditoría
           de la corrección.
-        amend_wizard_select_prompt: 'Registrada como presentada: %{modelo} %{year}
+        amend_wizard_select_prompt: "Registrada como presentada: %{modelo} %{year}
           %{period}, valores actuales:\n%{summary}\n¿Qué números de casilla cambiaron?
-          (separados por comas o espacios, en blanco para ninguno)'
+          (separados por comas o espacios, en blanco para ninguno)"
         amend_wizard_unknown_casilla: La casilla %{token} no forma parte de la declaración
           %{modelo} %{year} %{period} registrada como presentada; elige una de las
           casillas listadas.

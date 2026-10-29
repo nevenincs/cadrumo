@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Los datos censales que la AEAT mantiene sobre el contribuyente."
-definition = "Conjunto de datos de registro que la AEAT mantiene sobre el obligado tributario (actividades, domicilio, obligaciones), declarado mediante los modelos 036 o 037 y que la aplicacion puede sincronizar en un perfil."
+definition = "Conjunto de datos de registro que la AEAT mantiene sobre el obligado tributario (actividades, domicilio, obligaciones), declarado mediante los modelos 036 o 037 y que la aplicación puede sincronizar en un perfil."
 
 [language.es.source]
 citation = "Modelos 036 y 037 (declaracion censal) de la AEAT."

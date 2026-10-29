@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ..signal_spelling_segments import spanish_word_context, translation_spelling_segments
+from ..signal_spelling_segments import locale_spelling_words, spanish_word_context, translation_spelling_segments
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -45,9 +45,37 @@ def test_hungarian_date_notation_excludes_structure_and_preserves_prose(notation
     assert segments == (("hu", ("Dátum", "hibásszó"), 1),)
 
 
-def test_hungarian_acronym_case_ending_does_not_become_a_word() -> None:
+def test_hungarian_acronym_suffix_keeps_the_acronym_inside_existing_identifier_rules() -> None:
     segments = translation_spelling_segments("Az AEAT-nál hibásszó", "filing", "hu")
-    assert segments == (("hu", ("Az", "hibásszó"), 1),)
+    assert segments == (("hu", ("Az", "hibásszó"), 2),)
+
+
+@pytest.mark.parametrize(
+    ("token", "stem", "suffix"),
+    [
+        ("Sede-ről", "Sede", "ről"),
+        ("Censal-tól", "Censal", "tól"),
+        ("036-os", "036", "os"),
+        ("110-es", "110", "es"),
+        ("115-ös", "115", "ös"),
+        ("2022-től", "2022", "től"),
+        ("2025-ös", "2025", "ös"),
+    ],
+)
+def test_hungarian_hyphenated_suffix_preserves_stem_and_excludes_only_suffix(
+    token: str, stem: str, suffix: str
+) -> None:
+    words, excluded = locale_spelling_words(f"{token} hibásszó", "hu")
+    if stem.isalpha():
+        assert stem in words
+    assert suffix not in words
+    assert "hibásszó" in words
+    assert excluded >= 1
+
+
+def test_hungarian_hyphenated_suffix_does_not_hide_a_misspelled_alphabetic_stem() -> None:
+    words = words_by_language("Censel-ről hibásszó", "hu")["hu"]
+    assert {"Censel", "hibásszó"} <= words
 
 
 def test_malformed_date_and_suffix_are_not_suppressed() -> None:
@@ -55,8 +83,20 @@ def test_malformed_date_and_suffix_are_not_suppressed() -> None:
     assert {"ÉÉÉÉ", "náll", "hibásszó"} <= words
 
 
+@pytest.mark.parametrize(
+    "token",
+    ["Sede-rőlx", "Sede-röle", "Sede-röl", "036-öös", "2025-tőll"],
+)
+def test_unattested_or_malformed_hungarian_suffix_tokens_remain_spelling_input(token: str) -> None:
+    words = words_by_language(f"{token} hibásszó", "hu")["hu"]
+    assert "hibásszó" in words
+    assert any(part in words for part in token.replace("-", " ").split())
+
+
 def test_hungarian_notation_rules_do_not_apply_to_other_languages() -> None:
     assert "nál" in words_by_language("AEAT-nál")["en"]
+    words = words_by_language("AEAT-tól AEAT-től 2025-ös", "en")["en"]
+    assert {"tól", "től", "ös"} <= words
 
 
 def test_spanish_title_does_not_reassign_surrounding_english_typo() -> None:

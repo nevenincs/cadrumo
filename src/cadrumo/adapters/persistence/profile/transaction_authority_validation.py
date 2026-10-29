@@ -9,7 +9,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING
 
-from ....core.logging import get_logger
 from ....domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     InvestmentAssetAcquisitionLink,
@@ -38,9 +37,6 @@ from .transaction_row_contracts import (
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-
-
-_log = get_logger(__name__)
 
 
 def validated_migrated_transactions(bucket_id: str, payloads: Mapping[str, bytes]) -> tuple[Transaction, ...]:

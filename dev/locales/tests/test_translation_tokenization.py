@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.i18n.render import tr
+
 from ..signal_spelling_segments import locale_spelling_words
 from ..signal_tokens import filtered_translation_text, translation_words
 
@@ -51,4 +53,23 @@ def test_quotes_and_punctuation_do_not_join_neighboring_words() -> None:
     assert locale_spelling_words("'You've' read 'words'; taxpayer's, misspeling.", "en") == (
         ("You've", "read", "words", "taxpayer's", "misspeling"),
         0,
+    )
+
+
+def test_unicode_cli_options_are_excluded_as_a_whole() -> None:
+    assert filtered_translation_text("Use --año and --modelo.") == ("Use and .", 2)
+
+
+def test_english_amend_wizard_prompt_renders_line_breaks() -> None:
+    rendered = tr(
+        "cli.app.modelo.work.amend_wizard_select_prompt",
+        modelo="303",
+        year="2025",
+        period="1T",
+        summary="Box 01",
+        locale="en",
+    )
+    assert rendered == (
+        "Recorded as filed: 303 2025 1T,\ncurrent values:\nBox 01\n"
+        "Which box numbers changed? (comma/space separated, blank for none)"
     )

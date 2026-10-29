@@ -21,8 +21,8 @@ attribution = "IATE - Interactive Terminology for Europe (c) European Union, reu
 source_entry_id = "1126728"
 
 [language.es]
-short_description = "Porcentaje de IVA soportado deducible cuando se realizan a la vez operaciones con y sin derecho a deduccion."
-definition = "Regla que determina la parte de las cuotas de IVA soportado que un sujeto pasivo puede deducir cuando en su actividad concurren operaciones que originan el derecho a deducir y operaciones que no lo originan. El porcentaje se calcula como el cociente entre el importe de las operaciones con derecho a deduccion y el total de operaciones, redondeado por exceso a la unidad superior."
+short_description = "Porcentaje de IVA soportado deducible cuando se realizan a la vez operaciones con y sin derecho a deducción."
+definition = "Regla que determina la parte de las cuotas de IVA soportado que un sujeto pasivo puede deducir cuando en su actividad concurren operaciones que originan el derecho a deducir y operaciones que no lo originan. El porcentaje se calcula como el cociente entre el importe de las operaciones con derecho a deducción y el total de operaciones, redondeado por exceso a la unidad superior."
 scope_note = "Cubre tanto la prorrata general como la especial. La regularizacion de bienes de inversion se rige por los articulos 107 a 110 LIVA y se trata como concepto aparte."
 
 [language.es.source]
@@ -67,7 +67,7 @@ term_status = "admitted"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "Percentatge d'IVA suportat deduible quan es fan alhora operacions amb i sense dret a deduccio."
+short_description = "Percentatge d'IVA suportat deduïble quan es fan alhora operacions amb i sense dret a deducció."
 definition = "Regla que determina la part de les quotes d'IVA suportat que un subjecte passiu pot deduir quan en la seva activitat concorren operacions que originen el dret a deduir i operacions que no l'originen."
 scope_note = "Inclou tant la prorrata general com l'especial. La regularització dels béns d'inversió es regeix pels articles 107 a 110 de la LIVA i es tracta com un concepte diferent."
 

@@ -13,8 +13,9 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
+from io import StringIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, override
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
@@ -134,6 +135,41 @@ def locked_spylls_version() -> str:
     return versions.pop()
 
 
+def _load_hungarian_dictionary(root: Path) -> Dictionary:
+    """Repair two known npm data defects while parsing the verified package."""
+    from spylls.hunspell import Dictionary, readers
+    from spylls.hunspell.readers.file_reader import BaseReader, FileReader
+
+    class HungarianAffReader(FileReader):
+        @override
+        def readlines(self):
+            # dictionary-hu encodes these characters as HTML entities inside
+            # affix regex classes. Restore only the two upstream characters:
+            # https://github.com/LibreOffice/dictionaries/blob/master/hu_HU/hu_HU.aff
+            for number, line in super().readlines():
+                yield number, line.replace("&agrave;", "à").replace("&ugrave;", "ù")
+
+    aff, context = readers.read_aff(HungarianAffReader(str(root.with_suffix(".aff"))))
+    dic = readers.read_dic(
+        FileReader(str(root.with_suffix(".dic")), encoding=context.encoding), aff=aff, context=context
+    )
+    # The pinned npm dictionary concatenates these pronouns with morphological
+    # metadata (őketén, őkén, teén) and several explicit pronoun forms
+    # (nekedén, nekemén, általaáltalaáltal)). Upstream lists the actual words
+    # explicitly, without affix flags; retain that exact scope. dictionary-hu's
+    # README identifies LibreOffice dictionaries as the upstream source:
+    # https://github.com/wooorm/dictionaries/tree/main
+    # https://github.com/LibreOffice/dictionaries/blob/master/hu_HU/hu_HU.dic
+    supplement = readers.read_dic(
+        BaseReader(StringIO("9\nőket\nők\nte\nneked\nnekem\náltala\náltalam\náltaluk\náltalunk\n")),
+        aff=aff,
+        context=context,
+    )
+    for word in supplement.words:
+        dic.append(word, lower=[word.stem])
+    return Dictionary(aff, dic)
+
+
 def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
     """Load every pinned Hunspell dictionary through the pinned Python engine.
 
@@ -162,7 +198,10 @@ def load_dictionaries(repository: Path) -> dict[str, Dictionary]:
     try:
         from spylls.hunspell import Dictionary
 
-        return {locale: Dictionary.from_files(str(root)) for locale, root in roots.items()}
+        return {
+            locale: _load_hungarian_dictionary(root) if locale == "hu" else Dictionary.from_files(str(root))
+            for locale, root in roots.items()
+        }
     except Exception as exc:  # The checker must fail closed on malformed upstream data.
         raise SpellingToolError(
             kind="spelling_tool_failure",

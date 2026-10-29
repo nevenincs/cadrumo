@@ -84,7 +84,7 @@ cli:
         withdraw_help: Vonja vissza az ügyfélről rögzített megerősítést, kijelentve,
           hogy a korábbi válasz téves volt.
       evidence:
-        add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
+        add_help: Beszerzési számlához tartozó bizonyíték regisztrálása PDF-ből vagy képből.
         attachment_id_help: A tartalom alapján címzett melléklet azonosítója.
         attachment_queue_help: A számlaellenőrzésre váró Drive-mellékletek listázása.
         attachment_view_help: A tárolt melléklet metaadatainak és eredetének vizsgálata.
@@ -245,7 +245,7 @@ cli:
           egyezik a mezőhöz rögzített értékkel. {detail}'
         field_no_anchor: '{field}: az olvasó semmit nem jelölt meg a dokumentumban,
           így nincs nyomtatott alak, amelyhez ez az érték ellenőrizhető lenne.'
-        group_help: Vásárlásiszámla-bizonyíték PDF- vagy képformátumban.
+        group_help: Beszerzési számlához tartozó bizonyíték PDF- vagy képformátumban.
         idempotency_key_help: Saját kulcs ehhez a melléklethez. A parancs ugyanazzal
           a kulccsal megismételve a már létrehozott rekordot adja vissza új helyett,
           és elutasítja, ha a kulcshoz tartozó dokumentum megváltozott. Kulcs nélkül
@@ -260,7 +260,7 @@ cli:
           ezen a gépen nincs elég szabad memória hozzá. A címkék által nem lefedett
           {count} mező még nem lett beolvasva, ezért üres marad: {fields}. A dokumentumot
           csak a címkék alapján olvastuk be; töltsd ki ezeket a mezőket te magad.'
-        list_help: Regisztrált vásárlásiszámla-bizonyítékok listázása.
+        list_help: Regisztrált, beszerzési számlához tartozó bizonyítékok listázása.
         notes_help: Belső megjegyzések a bizonyítékról.
         page_help: Egy tárolt dokumentum egy oldalát PNG-képként rajzolja meg, és
           az --output fájlba írja.
@@ -270,7 +270,7 @@ cli:
         page_output_help: A PNG-fájl, amelybe az oldal kerül.
         pull_actor_help: A neved vagy címkéd.
         pull_id_help: A nyilvántartás tranzakciójának azonosítója.
-        remove_help: Vásárlásiszámla-bizonyíték törlése.
+        remove_help: Beszerzési számlához tartozó bizonyíték törlése.
         review:
           advised_pending_message: Néhány függőben lévő dokumentum figyelmeztetéseket
             hordoz. Ezek semmit sem blokkolnak, és a jelenlegi állapotukban megerősítésre
@@ -320,8 +320,8 @@ cli:
         source_path_help: A számla PDF- vagy képfájljának elérési útja.
         supplier_help: Szállító neve.
         taxable_base_help: Számla adóköteles alapja.
-        update_help: Vásárlásiszámla-bizonyíték adatainak frissítése.
-        view_help: Vásárlásiszámla-bizonyíték megjelenítése.
+        update_help: A beszerzési számlához tartozó bizonyíték adatainak frissítése.
+        view_help: Beszerzési számlához tartozó bizonyíték megjelenítése.
         yes_help: Bizonyíték törlésének megerősítése.
         yes_required: Add meg a --yes kapcsolót a bizonyíték törléséhez.
       inventory:
@@ -349,7 +349,7 @@ cli:
         unit_cost_help: Egységár vásárlási mozgásokhoz.
         valuation_group_help: Készletértékelés számítása és előnézete.
         valuation_method_help: Értékelési módszer (fifo vagy pmp).
-        valuation_preview_help: Zárópreparát és értékesítési önköltség előnézete.
+        valuation_preview_help: Zárókészlet és az értékesítési önköltség előnézete.
         year_help: Adóév.
       invoice:
         add_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
@@ -1434,9 +1434,9 @@ cli:
           naplóban)
         amend_wizard_reason_required: A helyesbítés ellenőrzési naplójához indoklás
           szükséges.
-        amend_wizard_select_prompt: 'Benyújtottként rögzítve: %{modelo} %{year} %{period},
+        amend_wizard_select_prompt: "Benyújtottként rögzítve: %{modelo} %{year} %{period},
           jelenlegi értékek:\n%{summary}\nMely rovatszámok változtak? (vesszővel vagy
-          szóközzel elválasztva, üresen, ha egyik sem)'
+          szóközzel elválasztva, üresen, ha egyik sem)"
         amend_wizard_unknown_casilla: A(z) %{token} rovat nem része a benyújtottként
           rögzített %{modelo} %{year} %{period} bevallásnak; válassz a felsorolt rovatszámok
           közül.
@@ -1479,7 +1479,7 @@ cli:
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető). A CASILLA_ID
           a `aeat app modelo casillas` által mutatott kanonikus casilla.id.
         casilla_not_decimal: 'A(z) {key} mező --casilla értéke nem decimális: {value}.'
-        causante_ccaa_help: Az örökhagyó autonóm közöségének kódja (IRPF öröklési
+        causante_ccaa_help: Az örökhagyó autonóm közösségének kódja (IRPF öröklési
           ügyek).
         compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető
           el: {detail}'
@@ -2977,7 +2977,7 @@ cli:
       prorrata_sector_help: Annak a megkülönböztetett szektornak az azonosítója (LIVA
         9.1.c és 101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy már
         deklarált szektorral.
-      purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
+      purchase_invoice_evidence_help: A beszerzési számlához tartozó bizonyíték kanonikus azonosítója.
       recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
         értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
         IVA-kulcs szerint összesítve
@@ -3023,7 +3023,7 @@ cli:
         előtt történt, ezért a korábbi bizonylatcsomagot őrzi.
       help: Meglévő bizonylat csatolása egy tranzakcióhoz a nyilvántartásban.
       id_help: A tranzakció azonosítója, amelyhez a bizonylatot csatolod.
-      purchase_invoice_evidence_help: A tranzakciót alátámasztó, meglévő vásárlásiszámla-bizonyíték
+      purchase_invoice_evidence_help: A tranzakciót alátámasztó, beszerzési számlához tartozó meglévő bizonyíték
         azonosítója.
     categories:
       family_column: Kategóriacsalád
@@ -3335,7 +3335,7 @@ cli:
       split_group_id: Felosztási csoportazonosító
       stashed: Elrejtett
       taxable_base: Adóköteles alap
-      usage_ratio_id: Felhasználásiarány-azonosító
+      usage_ratio_id: Használati arány azonosítója
       valid: Érvényes
       value_date: Értékdátum
       warning: Figyelmeztetés
@@ -3807,9 +3807,9 @@ cli:
       profile_missing: Nincs beállítva aktív profil. Hozzon létre egyet az adatok
         importálása előtt.
       storage_ok: A helyi titkosított tár olvasható az aktuális főkulccsal.
-      storage_warning: '%{count} titkosított helyi társor nem olvasható az aktuális
-        főkulccsal. Ezek nem bankikivonás-sorok; importálhatsz új tranzakciókat, de
-        ellenőrizd a diagnosztikát a régebbi helyi adatokra való támaszkodás előtt.'
+      storage_warning: 'Az aktuális főkulccsal nem olvasható %{count} titkosított rekord
+        a helyi tárolóból. Ezek nem a bankszámlakivonat sorai; importálhatsz új tranzakciókat,
+        de a régebbi helyi adatok használata előtt ellenőrizd a diagnosztikát.'
       title: Munkaterület állapota
       transactions_empty: Még nem importáltak banki tranzakciókat.
       transactions_present: '%{count} banki tranzakció érhető el a nyilvántartásodban.'

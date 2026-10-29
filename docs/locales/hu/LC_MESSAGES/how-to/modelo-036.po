@@ -34,8 +34,8 @@ msgid ""
 msgstr ""
 "A Modelo 036 az AEAT censo-bevallása: ezzel a nyomtatvánnyal jelentheted "
 "be, módosíthatod vagy szüntetheted meg az adójogi helyzetedet. Te magad "
-"nyújtod be az AEAT Sede Electrónicáján (a sede), a hivatalos online "
-"portálon. Az ezen az oldalon szereplő parancsok csak utólag rögzítik ezt "
+"nyújtod be az AEAT hivatalos online portálján. Az ezen az oldalon "
+"szereplő parancsok csak utólag rögzítik ezt "
 "a tényt a helyi auditnyomvonaladban - az AEAT-hoz semmit sem nyújtanak "
 "be. Ha naprakészen szeretnéd tartani a profilodban nyilvántartott censo-"
 "adatokat, lásd: [Tartsd karban a profilod Modelo 036 censo-adatait"
@@ -67,15 +67,15 @@ msgstr ""
 
 #: ../../how-to/modelo-036.md:18
 msgid "The date you filed the declaration at the sede."
-msgstr "A dátum, amikor a bevallást a sedénél benyújtotta."
+msgstr "A dátum, amikor a bevallást az AEAT online portálján benyújtottad."
 
 #: ../../how-to/modelo-036.md:19
 msgid ""
 "Optional: the AEAT receipt number (justificante) that the sede shows "
 "after you file."
 msgstr ""
-"Opcionális: az AEAT-igazolás száma (justificante), amelyet a sede a "
-"benyújtás után mutat."
+"Opcionális: az AEAT-igazolás száma, amelyet az online portál a "
+"benyújtás után megjelenít."
 
 #: ../../how-to/modelo-036.md:22
 msgid ""
@@ -102,15 +102,15 @@ msgstr "Válaszd ki azt a parancsot, amely megfelel annak, amit benyújtottál:"
 
 #: ../../how-to/modelo-036.md:32
 msgid "If you registered an activity, record an alta."
-msgstr "Ha tevékenységet jelentettél be, rögzíts egy altát."
+msgstr "Ha tevékenységet jelentettél be, rögzítsd a tevékenység bejelentését."
 
 #: ../../how-to/modelo-036.md:33
 msgid "If you changed registered facts, record a modificacion."
-msgstr "Ha a nyilvántartott adatokat módosítottad, rögzíts egy modificaciont."
+msgstr "Ha a nyilvántartott adatokat módosítottad, rögzítsd a módosító bevallást."
 
 #: ../../how-to/modelo-036.md:34
 msgid "If you deregistered, record a baja."
-msgstr "Ha megszüntetted a nyilvántartást, rögzíts egy baját."
+msgstr "Ha megszüntetted a nyilvántartást, rögzítsd a tevékenység megszüntetését."
 
 #: ../../how-to/modelo-036.md:36
 msgid ""
@@ -119,25 +119,25 @@ msgid ""
 " further declaration is accepted, not even an alta."
 msgstr ""
 "A bevallásokat abban a sorrendben rögzítsd, ahogy benyújtottad őket. A "
-"rendszer elutasítja a modificacion vagy a baja rögzítését, ha a profilban"
-" még nincs alta. Baja után a rendszer egyetlen további bevallást sem "
-"fogad el, még altát sem."
+"rendszer elutasítja a módosítás vagy a megszüntetés rögzítését, ha a "
+"profilban még nincs tevékenységbejelentés. A megszüntetés után a rendszer "
+"egyetlen további bevallást sem fogad el, még új bejelentést sem."
 
 #: ../../how-to/modelo-036.md:40
 msgid "Record an alta:"
-msgstr "Alta rögzítése:"
+msgstr "Tevékenységbejelentés rögzítése:"
 
 #: ../../how-to/modelo-036.md:46
 msgid ""
 "Record a modificacion (the same flow as the alta, with a different event "
 "kind):"
 msgstr ""
-"Modificacion rögzítése (ugyanaz a folyamat, mint az altánál, más "
-"eseményfajtával):"
+"Módosítás rögzítése (ugyanaz a folyamat, mint a tevékenységbejelentésnél, "
+"más eseményfajtával):"
 
 #: ../../how-to/modelo-036.md:51
 msgid "Record a baja:"
-msgstr "Baja rögzítése:"
+msgstr "A tevékenység megszüntetésének rögzítése:"
 
 #: ../../how-to/modelo-036.md:56
 msgid ""
@@ -146,8 +146,9 @@ msgid ""
 "characters. `--note` adds an optional note for your own records, up to "
 "512 characters."
 msgstr ""
-"A `--declared-on` kötelező: az ISO-dátum (év-hónap-nap), amikor a sedénél"
-" benyújtotta. A `--sede-justificante` opcionális, és legfeljebb 128 "
+"A `--declared-on` kötelező: az ISO-dátum (év-hónap-nap), amikor "
+"benyújtottad a bevallást az AEAT online portálján. A `--sede-justificante` "
+"opcionális, és legfeljebb 128 "
 "karaktert fogad el. A `--note` opcionális megjegyzést ad hozzá a saját "
 "nyilvántartásához, legfeljebb 512 karakter hosszan."
 
@@ -165,7 +166,7 @@ msgstr "Egy `declaration_id`: a bejegyzés hosszú hivatkozási száma."
 
 #: ../../how-to/modelo-036.md:65
 msgid "The event kind - alta, modificacion, or baja."
-msgstr "Az eseményfajta: alta, modificacion vagy baja."
+msgstr "Az eseményfajta: tevékenységbejelentés, módosító bevallás vagy megszüntetés."
 
 #: ../../how-to/modelo-036.md:66
 msgid "The declared-on date."
@@ -308,4 +309,4 @@ msgstr "[Tervezd meg a benyújtási naptáradat](filing-calendar.md)"
 
 #: ../../how-to/modelo-036.md:120
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

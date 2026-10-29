@@ -299,36 +299,6 @@ class ProviderConfigurationProbe(BaseModel):
     summary: str = ""
 
 
-def probe_provider_configuration(
-    provider: str,
-    *,
-    settings: Settings | None = None,
-    operator_probe_ports: OperatorProbePorts,
-) -> ProviderConfigurationProbe:
-    """Run the pure-local per-provider configuration probe for ``provider``.
-
-    Resolves the certificate path or Cl@ve Móvil identity from
-    :class:`core.config.Settings` and classifies the local
-    configuration health without any network call or active-profile
-    session. Returns a typed :class:`ProviderConfigurationProbe`; it
-    never raises for a missing or malformed configuration — an absent
-    provider surfaces as :attr:`ProviderProbeResult.NO_PATH_SET` /
-    :attr:`ProviderProbeResult.IDENTITY_UNSET`, a broken one as
-    ``expired`` / ``corrupt`` / ``invalid_identity``.
-    """
-    resolved_settings = settings or load_settings()
-    credentials = (
-        unnamed_certificate_credentials(resolved_settings) if provider == AuthProviderKind.CERTIFICATE.value else None
-    )
-    return probe_provider_credentials(
-        provider,
-        "",
-        settings=resolved_settings,
-        certificate_credentials=credentials,
-        operator_probe_ports=operator_probe_ports,
-    )
-
-
 def probe_provider_credentials(
     provider: str,
     certificate_path: str,
@@ -581,6 +551,5 @@ __all__ = [
     "probe_certificate_bundle",
     "probe_clave_credentials",
     "probe_local_session",
-    "probe_provider_configuration",
     "probe_provider_credentials",
 ]

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import TYPE_CHECKING
 
-from ....core.logging import get_logger
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import (
     Transaction,
@@ -16,9 +15,6 @@ from ..storage.secure_object_namespaces import (
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage.sql.secure_object_records import SecureObjectRevisionAssertion
-
-
-_log = get_logger(__name__)
 
 
 def resolved_transaction_row_revisions(row_revisions: Mapping[str, str | None]) -> dict[str, str] | None:

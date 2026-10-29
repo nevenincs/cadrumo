@@ -96,7 +96,7 @@ msgid ""
 "](#update-fields-on-a-transaction)."
 msgstr ""
 "Si un movimiento tiene un importe, una fecha o un texto incorrectos, "
-"[actualízala](#update-fields-on-a-transaction)."
+"[actualízalo](#update-fields-on-a-transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:25
 msgid ""
@@ -104,7 +104,7 @@ msgid ""
 "it](#remove-a-transaction)."
 msgstr ""
 "Si un movimiento no debería existir en absoluto, "
-"[elimínala](#remove-a-transaction)."
+"[elimínalo](#remove-a-transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:26
 msgid ""
@@ -160,8 +160,8 @@ msgid ""
 "If you stashed or archived a transaction by mistake, [restore it to "
 "active](#restore-a-stashed-or-archived-transaction)."
 msgstr ""
-"Si apartaste o archivaste un movimiento por error, [restáurala a "
-"activa](#restore-a-stashed-or-archived-transaction)."
+"Si apartaste o archivaste un movimiento por error, [restáuralo para que "
+"vuelva a estar activo](#restore-a-stashed-or-archived-transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:35
 msgid "Update fields on a transaction"
@@ -218,8 +218,8 @@ msgid ""
 "transactions refuse it, as does a split parent - the active parts of a "
 "split can be updated normally."
 msgstr ""
-"Update solo funciona sobre movimientos activas. Los movimientos "
-"archivadas y apartadas lo rechazan, igual que un padre de división: las "
+"Update solo funciona sobre movimientos activos. Los movimientos "
+"archivados y apartados lo rechazan, igual que un padre de división: las "
 "partes activas de una división se pueden actualizar con normalidad."
 
 #: ../../how-to/correct-ledger-entries.md:50
@@ -233,7 +233,7 @@ msgid ""
 "resolves, which is how the sequence confirms the deletion:"
 msgstr ""
 "Remove borra un movimiento de tus registros activos. Haz primero una "
-"vista previa con `--dry-run` y luego elimínala de verdad. El id eliminado"
+"vista previa con `--dry-run` y luego elimínalo de verdad. El id eliminado"
 " ya no se resuelve, que es como la secuencia confirma el borrado:"
 
 #: ../../how-to/correct-ledger-entries.md:58
@@ -327,7 +327,7 @@ msgid ""
 "out of ordinary work. The sequence stashes a row and confirms its new "
 "lifecycle state:"
 msgstr ""
-"Stash aparta un movimiento para más adelante. Un movimiento apartada se "
+"Stash aparta un movimiento para más adelante. Un movimiento apartado se "
 "mantiene fuera del trabajo ordinario. La secuencia aparta una fila y "
 "confirma su nuevo estado del ciclo de vida:"
 
@@ -401,7 +401,7 @@ msgstr ""
 
 #: ../../how-to/correct-ledger-entries.md:118
 msgid "Restore a stashed or archived transaction"
-msgstr "Restaura un movimiento apartada o archivada"
+msgstr "Restaura un movimiento apartado o archivado"
 
 #: ../../how-to/correct-ledger-entries.md:120
 msgid ""

@@ -34,7 +34,7 @@ wizard:
       pontot tizedeselválasztóként.'
     invalid_integer: 'Érvénytelen egész szám a következőhöz: %{prompt_key}: %{raw}.'
     invalid_postcode: 'Érvénytelen irányítószám a következőhöz: %{prompt_key}: %{raw}.
-      A spanyol irányítószám 5 jegyű (01-52 tartományKód, majd három számjegy).'
+      A spanyol irányítószám 5 jegyű (01-52 tartománykód, majd három számjegy).'
     invalid_tax_id: 'Érvénytelen NIF/CIF/DNI/NIE a következőhöz: %{prompt_key}: %{raw}.
       %{detail}'
     select_unknown: 'Ismeretlen érték a következőhöz: %{flag} (%{prompt_key}): %{raw}.
@@ -95,7 +95,8 @@ wizard:
             description: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.
             label: Fogyatékossági fokozat 33%-tól 64%-ig
           65-plus:
-            description: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.
+            description: Elismert 65%-os vagy nagyobb fogyatékosság - a személyi minimum
+              nagyobb mértékű növelése.
             label: Fogyatékossági fokozat 65% vagy magasabb
           assistance-or-reduced-mobility:
             description: Igazolt harmadik személy segítségének szükségessége vagy

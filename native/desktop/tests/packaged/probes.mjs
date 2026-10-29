@@ -1,9 +1,147 @@
 // Probe sequences shared by the packaged run and the harness's own tests.
 import { randomBytes } from "node:crypto";
+import { readFileSync, watch } from "node:fs";
+import { isAbsolute, relative } from "node:path";
 
 import { docsProbe } from "./browser.mjs";
 import { refusalVerdict, tokenVerdict } from "./verdicts.mjs";
 import { sleep } from "./session.mjs";
+
+export function sedeMissingVerdict({
+  absent,
+  sentence,
+  offer,
+  panel,
+  records,
+  warning,
+}) {
+  const record = records?.[0];
+  const valid =
+    absent === true &&
+    /(?:not|isn't) installed/i.test(sentence ?? "") &&
+    offer === true &&
+    panel === true &&
+    records?.length === 1 &&
+    record.service?.event === "feature_refused" &&
+    record.service?.feature === "sede_view" &&
+    record.service?.refusal === "component_not_ready" &&
+    record.service?.item === "browser" &&
+    warning === true;
+  return {
+    verdict: valid ? "PASS" : "FAIL",
+    detail: valid
+      ? "Sede names the missing browser, opens its provisioning panel and records a local warning"
+      : "Sede's missing-browser offer or persisted warning is missing",
+    data: { absent, sentence, offer, panel, records, warning },
+  };
+}
+
+/** The existing native log is watched before navigation, so no delay stands for a write. */
+export async function runSedeMissingAcceptance({ session, driver }) {
+  const read = await driver.read();
+  const absent =
+    read.snapshot?.rows.find((row) => row.item === "browser")?.state ===
+    "absent";
+  const diagnostics = await session.call("diagnostics_snapshot", { after: 0 });
+  if (!diagnostics.ok || !diagnostics.value.paths?.current)
+    throw new Error("the local diagnostics log is unavailable");
+  const path = diagnostics.value.paths.current;
+  const inside = relative(driver.layout.root, path);
+  if (!inside || inside.startsWith("..") || isAbsolute(inside))
+    throw new Error("the native log escaped the throwaway root");
+  const prior = new Set(
+    diagnostics.value.events.map(
+      (event) => `${event.hostPid}:${event.sequence}`,
+    ),
+  );
+  const records = () =>
+    readFileSync(path, "utf8")
+      .split("\n")
+      .slice(0, -1)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line))
+      .filter(
+        (event) =>
+          !prior.has(`${event.hostPid}:${event.sequence}`) &&
+          event.service?.event === "feature_refused" &&
+          event.service?.feature === "sede_view",
+      );
+  let watcher;
+  let timer;
+  const persisted = new Promise((resolve, reject) => {
+    const inspect = () => {
+      try {
+        const found = records();
+        if (found.length) resolve(found);
+      } catch (error) {
+        reject(error);
+      }
+    };
+    watcher = watch(path, inspect);
+    watcher.on("error", reject);
+    timer = setTimeout(
+      () => reject(new Error("Sede refusal did not reach the local log")),
+      30000,
+    );
+    inspect();
+  });
+  persisted.catch(() => undefined);
+  try {
+    await driver.closeDialog();
+    await session.page.locator('[data-rail="browser"]').click();
+    const offer = session.page.locator('[data-setup-offer="browser"]');
+    await offer.waitFor({ state: "visible", timeout: 30000 });
+    const sentence = await offer.locator("xpath=..").innerText();
+    await offer.getByRole("button").click();
+    await session.page
+      .locator('.setup-dialog [data-setup-row="browser"]')
+      .waitFor({ state: "visible" });
+    const local = await persisted;
+    await driver.closeDialog();
+    await session.showTab("logs");
+    const warning = await session.page.evaluate(
+      () =>
+        new Promise((resolve, reject) => {
+          const inspect = () => {
+            const records = window.__s10.logs.records;
+            if (
+              records.some(
+                (entry) =>
+                  entry.level === "WARNING" &&
+                  entry.message.includes("feature_refused"),
+              )
+            ) {
+              observer.disconnect();
+              clearTimeout(timer);
+              resolve(true);
+            }
+          };
+          const observer = new MutationObserver(inspect);
+          observer.observe(document, {
+            subtree: true,
+            childList: true,
+            characterData: true,
+          });
+          const timer = setTimeout(() => {
+            observer.disconnect();
+            reject(new Error("Sede warning was not projected locally"));
+          }, 30000);
+          inspect();
+        }),
+    );
+    return sedeMissingVerdict({
+      absent,
+      sentence,
+      offer: true,
+      panel: true,
+      records: local,
+      warning,
+    });
+  } finally {
+    watcher?.close();
+    clearTimeout(timer);
+  }
+}
 
 /** Host refusals of a missing or wrong token recorded in host diagnostics. */
 export async function hostRefusals(session) {

@@ -16,7 +16,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "El contrato upstream para transformar fuentes PDF, XLS, HTML u otras antes de indexarlas."
-definition = "Interfaz generica solicitada al servicio RAG de desarrollo para registrar preprocessors por patron de fichero, emitir una salida versionada con texto extraido o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. Este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro del indexador."
+definition = "Interfaz genérica solicitada al servicio RAG de desarrollo para registrar preprocessors por patrón de fichero, emitir una salida versionada con texto extraído o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. Este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro del indexador."
 scope_note = "Mientras el gancho upstream no exista, este proyecto usa sidecars de extraccion como camino interino."
 
 [[language.es.term]]

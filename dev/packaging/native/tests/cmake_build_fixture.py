@@ -41,7 +41,7 @@ def build_manifest_cmake() -> str:
         'set(_fixture_source "${CMAKE_SOURCE_DIR}")\n'
         'string(REPLACE "\\\\" "/" _fixture_source "${_fixture_source}")\n'
         'set(_fixture_manifest "{\\"paths\\":{\\"testing\\":\\"testing\\",'
-        '\\"stage\\":\\"stage\\",\\"generated\\":\\"generated\\"}}")\n'
+        '\\"stage\\":\\"stage\\",\\"generated\\":\\"generated\\",\\"timings\\":\\"timings\\"}}")\n'
         'string(JSON _fixture_manifest SET "${_fixture_manifest}" source "\\"${_fixture_source}\\"")\n'
         'file(WRITE "${CMAKE_BINARY_DIR}/build-paths.json" "${_fixture_manifest}\\n")\n'
     )

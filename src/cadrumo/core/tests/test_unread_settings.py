@@ -8,8 +8,11 @@ still carry from the settings that once read them.
 
 from __future__ import annotations
 
+import tomllib
+
 import pytest
 
+from ...tests.inventory import REPO_ROOT
 from ..config import Settings
 from ..errors.error_codes import resolve_error_message
 from ..external_constants import SUPPORTED_OUTPUT_LANGUAGES
@@ -98,7 +101,8 @@ def test_an_empty_value_configures_nothing_and_is_not_refused(monkeypatch: pytes
 
 def test_a_name_outside_the_owned_families_is_left_to_its_owner(monkeypatch: pytest.MonkeyPatch) -> None:
     """The check stops at the families the settings own whole: other prefixes belong to other readers."""
-    monkeypatch.setenv("CADRUMO_AGENT_PORT", "0")
+    contract = tomllib.loads((REPO_ROOT / "native" / "application-environment.toml").read_text(encoding="utf-8"))
+    monkeypatch.setenv(contract["agent"]["prefix"] + "PORT", "0")
 
     Settings()
 

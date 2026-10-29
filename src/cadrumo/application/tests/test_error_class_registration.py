@@ -134,7 +134,7 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
     """The application probe propagates an unrelated inward-port failure."""
     from ...core.auth_provider import AuthProviderKind
     from ...core.config import Settings
-    from ..auth.operator_probes import probe_provider_configuration
+    from ..auth.operator_probes import probe_provider_credentials
 
     certificate_path = tmp_path / "probe.p12"
     certificate_path.write_bytes(b"placeholder certificate bytes")
@@ -149,8 +149,9 @@ def test_certificate_configuration_probe_does_not_swallow_unrelated_exceptions(t
         raise RuntimeError("programmer failure")
 
     with pytest.raises(RuntimeError, match="programmer failure"):
-        probe_provider_configuration(
+        probe_provider_credentials(
             AuthProviderKind.CERTIFICATE.value,
+            str(certificate_path),
             settings=settings,
             operator_probe_ports=fake_operator_probe_ports(certificate_evaluator=raise_programmer_error),
         )

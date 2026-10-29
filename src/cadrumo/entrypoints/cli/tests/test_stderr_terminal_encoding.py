@@ -11,7 +11,7 @@ from cadrumo_client.commands.output import write_stderr as write_client_stderr
 
 from ....core.errors.error_codes import render_error_json
 from ....core.output_rendering import OutputRenderingError
-from ..errors import redraw_stderr_line, write_stderr
+from ..errors import write_stderr
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -48,20 +48,6 @@ def test_cli_stderr_funnel_keeps_a_json_error_document_valid() -> None:
     written = stream.getvalue()
     assert not _UNSAFE.intersection(written)
     assert json.loads(written) == json.loads(document)
-
-
-def test_redraw_emits_only_its_own_control_prefix() -> None:
-    stream = io.StringIO()
-
-    redraw_stderr_line(f"browser: {_HOSTILE}\nforged", stream=stream)
-
-    written = stream.getvalue()
-    prefix = f"\r{_ESC}[2K"
-    assert written.startswith(prefix)
-    body = written.removeprefix(prefix)
-    assert not _UNSAFE.intersection(body)
-    assert "\n" not in body
-    assert body.endswith("\\nforged")
 
 
 def test_client_stderr_funnel_renders_controls_inert() -> None:

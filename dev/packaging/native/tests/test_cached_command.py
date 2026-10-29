@@ -20,6 +20,12 @@ from .cmake_build_fixture import build_manifest_cmake, enrolled_cmake_root
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
+
+
 def test_native_contract_cache_tracks_the_publisher_identity_without_recording_it(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

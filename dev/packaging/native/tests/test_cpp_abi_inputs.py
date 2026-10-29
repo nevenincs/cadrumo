@@ -159,6 +159,10 @@ def test_artifact_admission_precedes_external_or_shipped_execution(
     build = tmp_path / "build"
     generated = build / "generated"
     generated.mkdir(parents=True)
+    (build / "build-paths.json").write_text(
+        json.dumps({"paths": {"timings": "timings", "verification": "verification", "generated": "generated"}}),
+        encoding="utf-8",
+    )
     (generated / "build-toolchain.json").write_text("{}", encoding="utf-8")
     archive = build / "input.zip"
     archive.write_bytes(b"fixture archive bytes")
@@ -166,9 +170,6 @@ def test_artifact_admission_precedes_external_or_shipped_execution(
     manifest_bytes = json.dumps(manifest).encode()
     # The real layout parser supplies the contract, so a schema change reaches this fixture.
     manifest_path = load_layout("linux-x86-64")["files"]["package_manifest"]
-    monkeypatch.setattr(
-        artifact_verify, "build_paths", lambda root: {"verification": root / "verification", "generated": generated}
-    )
     monkeypatch.setattr(artifact_verify, "verify_release", lambda *args: None)
 
     def extract(path: Path, destination: Path) -> None:

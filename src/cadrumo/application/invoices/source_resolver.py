@@ -294,7 +294,7 @@ def _m349_incoherent_verdict(
     record CONTRADICTS ITSELF. Absence is deliberately not disqualifying, and
     the reason is structural: **an absent category does not mean the operation
     was inexpressible, it usually means the clave came from somewhere else.**
-    :func:`_intracommunity_clave` consults an explicit
+    :func:`~cadrumo.application.invoices.source_observations.intracommunity_clave` consults an explicit
     :attr:`~cadrumo.domain.invoices.models.Invoice.operation_type` FIRST and returns
     without ever reading ``iva_category``, so a record carrying a directly
     declared clave legitimately carries no category at all. Since this check
@@ -310,8 +310,8 @@ def _m349_incoherent_verdict(
     but not services". The enum has since gained
     ``INTRA_COMMUNITY_SERVICE_SUPPLY`` and
     ``INTRA_COMMUNITY_SERVICE_ACQUISITION_REVERSE_CHARGE``, and
-    :func:`_intracommunity_clave` maps both to their claves a hundred-odd lines
-    below -- so the stated ground for weakening a filing-path guard was refuted
+    :func:`~cadrumo.application.invoices.source_observations.intracommunity_clave` maps both to their claves
+    -- so the stated ground for weakening a filing-path guard was refuted
     by the same module that stated it.
 
     The behaviour is unchanged, and that is a decision rather than an

@@ -12,7 +12,6 @@ from typing import Any
 
 from pydantic import SecretStr
 
-from cadrumo.core.logging import get_logger
 from cadrumo.core.storage_environment import storage_mode
 from cadrumo_client.transport.service_client import InstalledServiceClient
 
@@ -50,8 +49,6 @@ from .service_support import (
     ADMIN_READ_SECONDS,
     LIFECYCLE_ADMISSION_SECONDS,
 )
-
-_LOGGER = get_logger("cadrumo_agent_service.service")
 
 
 class AgentServiceAdministration(ABC):

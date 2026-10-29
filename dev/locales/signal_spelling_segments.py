@@ -8,8 +8,8 @@ from .signal_syntax import (
     MODELO_FORM_RE,
     TRANSLATION_CLAVE_NAME_RE,
     TRANSLATION_HTML_LANGUAGE_RE,
-    TRANSLATION_HUNGARIAN_ACRONYM_CASE_RE,
     TRANSLATION_HUNGARIAN_DATE_RE,
+    TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE,
     TRANSLATION_LEGAL_TITLE_RE,
     TRANSLATION_LITERAL_RE,
     TRANSLATION_MARKDOWN_LINK_CONTEXT_RE,
@@ -145,9 +145,12 @@ def locale_spelling_words(value: str, locale: str) -> tuple[tuple[str, ...], int
     """Exclude locale-specific notation before generic syntax splits its tokens."""
     excluded = 0
     if locale == "hu":
-        for pattern in (TRANSLATION_HUNGARIAN_DATE_RE, TRANSLATION_HUNGARIAN_ACRONYM_CASE_RE):
-            value, matches = pattern.subn(" ", value)
-            excluded += matches
+        value, matches = TRANSLATION_HUNGARIAN_DATE_RE.subn(" ", value)
+        excluded += matches
+        # Keep the stem visible to ordinary spelling checks; only the
+        # recognized Hungarian suffix is structural notation.
+        value, matches = TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE.subn(lambda match: match.group("stem"), value)
+        excluded += matches
     filtered, structural_excluded = filtered_translation_text(value)
     # English dictionaries own contractions and possessives as complete words;
     # Catalan elisions still need their lexical word checked separately.

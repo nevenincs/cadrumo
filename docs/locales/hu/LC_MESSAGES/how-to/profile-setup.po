@@ -893,7 +893,7 @@ msgid ""
 "[descendiente command](#manage-your-descendants). The edit summary "
 "reminds you of this every time."
 msgstr ""
-"A descendientek nem részei a profilszerkesztésnek. A [descendiente "
+"A leszármazottak nem részei a profilszerkesztésnek. A [descendiente "
 "paranccsal](#manage-your-descendants) kezeld őket. A szerkesztési "
 "összefoglaló erre minden alkalommal emlékeztet."
 
@@ -916,7 +916,7 @@ msgid ""
 "Declare them during first-time setup; manage them afterwards with the "
 "`descendiente` command."
 msgstr ""
-"A descendientek határozzák meg az éves Renta *mínimo por descendientes* "
+"A leszármazottak határozzák meg az éves Renta *mínimo por descendientes* "
 "értékét. Az első beállításkor add meg őket, később pedig kezeld a "
 "`descendiente` paranccsal."
 
@@ -1252,4 +1252,4 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

@@ -68,8 +68,8 @@ TRANSLATION_NUMERIC_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])\d+(?:[.,
 
 
 TRANSLATION_OPTION_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w])--[A-Za-z][A-Za-z0-9-]*(?:=[^\s,;:()[\]{}]+)?|"
-    r"(?<![\w])-[A-Za-z](?=\s|$|[,;:.)\]}])"
+    r"(?<![\w])--[^\W\d_][\w-]*(?:=[^\s,;:()[\]{}]+)?|"
+    r"(?<![\w])-[^\W\d_](?=\s|$|[,;:.)\]}])"
 )
 
 
@@ -151,8 +151,12 @@ TRANSLATION_CLAVE_NAME_RE: Final[re.Pattern[str]] = re.compile(
 TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])ÉÉÉÉ-HH-NN(?:TÓÓ:PP:MMZ)?(?![\w-])")
 
 
-TRANSLATION_HUNGARIAN_ACRONYM_CASE_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w])[A-ZÁÉÍÓÖŐÚÜŰ]{2,}-n[áé]l(?![\w-])"
+# Hungarian attaches case suffixes to foreign words, abbreviations, and numbers
+# with a hyphen. Strip only suffix spellings attested as Hunspell fragments in
+# the locale corpus, retaining the stem for normal spelling validation.
+TRANSLATION_HUNGARIAN_HYPHENATED_SUFFIX_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w-])(?P<stem>(?:[^\W\d_][\w.-]*|\d+))-"
+    r"(?P<suffix>ból|ből|tól|től|nál|nél|ról|ről|os|ös|es)(?![\w-])"
 )
 
 

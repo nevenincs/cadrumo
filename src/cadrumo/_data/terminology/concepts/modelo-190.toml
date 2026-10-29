@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual de retenciones del trabajo y actividades."
-definition = "Declaracion informativa anual que resume las retenciones del trabajo y de actividades economicas declaradas en los modelos 111 del ejercicio, con el detalle por perceptor."
+definition = "Declaración informativa anual que resume las retenciones del trabajo y de actividades económicas declaradas en los modelos 111 del ejercicio, con el detalle por perceptor."
 
 [language.es.source]
 citation = "Articulo 99 de la Ley 35/2006 del IRPF; Orden EHA/3127/2009."

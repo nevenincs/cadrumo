@@ -334,20 +334,24 @@ def test_delete_preserves_the_authenticated_replacement_selection(
 
 
 @pytest.mark.parametrize("lifetime_change", ["root_changed", "template_removed"])
-def test_sandbox_template_respects_temporary_root_lifetime(tmp_path: Path, lifetime_change: str) -> None:
+def test_sandbox_template_respects_temporary_root_lifetime(
+    tmp_path: Path, lifetime_change: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Canonical provisioning owns both initial and replacement cached state."""
 
     authority_root = load_settings().cadrumo_authority_root
     first_root = tmp_path / "first-lifetime"
     second_root = tmp_path / "second-lifetime" if lifetime_change == "root_changed" else first_root
-    with derived_storage_settings(first_root), override_settings(cadrumo_authority_root=authority_root):
+    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(first_root))
+    with override_settings(cadrumo_authority_root=authority_root):
         first = sequence_sandbox_module._sandbox_template()
         assert first.is_relative_to(first_root.resolve())
         assert sequence_sandbox_module._sandbox_template() == first
     if lifetime_change == "template_removed":
         assert first.resolve(strict=True).is_relative_to(tmp_path.resolve(strict=True))
         shutil.rmtree(first)
-    with derived_storage_settings(second_root), override_settings(cadrumo_authority_root=authority_root):
+    monkeypatch.setenv("CADRUMO_TEMP_DIR", str(second_root))
+    with override_settings(cadrumo_authority_root=authority_root):
         second = sequence_sandbox_module._sandbox_template()
         assert second != first
         assert second.is_relative_to(second_root.resolve())
@@ -357,21 +361,47 @@ def test_sandbox_template_respects_temporary_root_lifetime(tmp_path: Path, lifet
 
 @pytest.mark.parametrize("attempt_other_login", [False, True])
 @pytest.mark.usefixtures("profile_selection_storage")
-def test_logout_and_failed_login_do_not_admit_selected_profile_deletion(
-    tmp_path: Path, attempt_other_login: bool
+def test_logout_and_failed_login_preserve_deletion_preflight_and_require_unlocked_os_login(
+    tmp_path: Path, attempt_other_login: bool, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Logout and an unknown login target leave both capsules and selection intact."""
+    """Sessionless deletion still requires confirmation and an unlocked OS login.
+
+    The custody rollup ADR's deletion transaction clears selection itself;
+    a replacement profile login is no longer a deletion prerequisite.
+    """
+    from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
+    from cadrumo_client.contracts.access_vocabulary import Availability
+
+    from .. import runner as sequence_runner
+    from ..runtime_fixture import _SequenceLoginObservation
+
+    invoke = sequence_runner._invoke_frame
+    observe = _SequenceLoginObservation.observe
+    locked = False
+
+    def observe_login(self: _SequenceLoginObservation, *, credential_facilities: Availability) -> OsLoginContext:
+        observation = observe(self, credential_facilities=credential_facilities)
+        return observation.model_copy(update={"lock_state": OsLockState.LOCKED}) if locked else observation
+
+    def lock_after_preflight(args: tuple[str, ...], *, program: CommandProgram) -> Result:
+        nonlocal locked
+        result = invoke(args, program=program)
+        if args[-4:] == ("config", "profile", "delete", "docs-sequence-sandbox"):
+            assert result.exit_code == 0, result.output
+            locked = True
+        return result
+
+    monkeypatch.setattr(_SequenceLoginObservation, "observe", observe_login)
+    monkeypatch.setattr(sequence_runner, "_invoke_frame", lock_after_preflight)
     login = "aeat --format json config login missing-profile\n@expect exit_code == 2\n" if attempt_other_login else ""
     sequence = _result_sequence(
         "aeat --format json config logout\n"
-        '@expect status == "success"\n'
-        + login
-        + "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
+        '@expect status == "success"\n' + login + "aeat --format json config profile delete docs-sequence-sandbox\n"
+        "@expect result.deleted == false\n"
+        "@expect exit_code == 0\n"
+        "@result aeat --format json config profile delete docs-sequence-sandbox --yes\n"
         '@expect error.code == "REFUSED_CLI_BOUNDARY"\n'
-        "@expect error.action.evidence[0].values.target_is_selected_profile == true\n"
-        '@expect error.action.action.action_id == "operator.profile.login"\n'
-        '@expect error.action.missing_argument_names[0] == "name"\n'
-        '@expect error.action.conditionality == "requires_arguments"\n'
+        '@expect error.context.reason == "needs_user"\n'
         "@expect exit_code == 2\n",
         sequence_id="profile-setup-delete",
     )
@@ -381,10 +411,9 @@ def test_logout_and_failed_login_do_not_admit_selected_profile_deletion(
     assert transcript.result_frame.envelope is not None
     error = transcript.result_frame.envelope["error"]
     assert isinstance(error, dict)
-    message = error["message"]
-    assert isinstance(message, str)
-    assert "aeat config login NAME" in message
-    assert "Logout preserves the selected profile" in message
+    assert locked
+    assert error["code"] == "REFUSED_CLI_BOUNDARY"
+    assert error["context"] == {"reason": "needs_user"}
     assert read_pointer_selection(Path(transcript.storage_root)).bucket_id == SANDBOX_PROFILE_ID
     assert (Path(transcript.storage_root) / "buckets" / SANDBOX_PROFILE_ID).is_dir()
     assert (Path(transcript.storage_root) / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
@@ -413,7 +442,9 @@ def test_cumulative_profile_list_precedes_replacement_provisioning(tmp_path: Pat
     assert isinstance(profiles, list) and len(profiles) == 1
     assert _envelope_result(transcripts[1].result_frame.envelope)["deleted"] is True
     storage_root = Path(transcripts[1].storage_root)
-    assert read_pointer_selection(storage_root).bucket_id == SANDBOX_REPLACEMENT_PROFILE_ID
+    # This recipe deletes the selected profile directly; the runtime clears
+    # its pointer instead of silently selecting the unrelated replacement.
+    assert read_pointer_selection(storage_root).bucket_id is None
     assert not (storage_root / "buckets" / SANDBOX_PROFILE_ID).exists()
     assert (storage_root / "buckets" / SANDBOX_REPLACEMENT_PROFILE_ID).is_dir()
 

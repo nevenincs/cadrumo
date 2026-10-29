@@ -38,7 +38,7 @@ def test_modelo_360_validator_accepts_committed_definition() -> None:
 def test_modelo_360_metadata_matches_its_approving_orden() -> None:
     modelo, catalogues = _load_modelo_360()
     assert modelo.tax_domain == "iva"
-    assert modelo.cadence == "annual"
+    assert modelo.cadence == "event"
     assert "orden-eha-789-2010:art-1" in modelo.legal_refs
     assert "orden-eha-789-2010:art-4" in modelo.legal_refs
     assert "aeat-dr-360-2010" in modelo.source_refs

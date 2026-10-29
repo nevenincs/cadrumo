@@ -16,8 +16,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Autoliquidacion anual del Impuesto sobre Sociedades."
-definition = "Autoliquidacion anual del Impuesto sobre Sociedades que declara el resultado contable, la base imponible y la cuota de la entidad."
+short_description = "Autoliquidación anual del Impuesto sobre Sociedades."
+definition = "Autoliquidación anual del Impuesto sobre Sociedades que declara el resultado contable, la base imponible y la cuota de la entidad."
 
 [language.es.source]
 citation = "Articulos 40 y 41 de la Ley 27/2014 del Impuesto sobre Sociedades."

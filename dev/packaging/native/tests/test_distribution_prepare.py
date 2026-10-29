@@ -27,7 +27,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def _paths(build: Path) -> dict[str, str]:
     paths = {f"installation_{name}": f"installation/{name}" for name in ("stage", "metadata", "work", "receipts")}
-    paths.update(generated="generated", packages="packages", temporary="temporary")
+    paths.update(generated="generated", packages="packages", temporary="temporary", timings="timings")
     build.mkdir(parents=True)
     (build / "build-paths.json").write_text(json.dumps({"paths": paths}), encoding="utf-8")
     return paths

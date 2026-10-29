@@ -446,11 +446,13 @@ async def test_with_pushed_retirement_the_session_is_read_only_at_its_expiry() -
         assert first_expiry is not None
         reads.append(loop.time())
         if len(reads) == 1:
-            # Activity extended the session: the root must wake again at the new expiry.
+            # Activity extended the session: anchor renewal to this read, not
+            # the original expiry, so scheduler delay cannot make the fixture's
+            # simulated new expiry stale before the root arms its next timer.
             return HomeAccountSession(
                 posture=HomeSessionPosture.ACTIVE,
                 profile_label="Current profile",
-                expires_at=first_expiry + timedelta(seconds=0.6),
+                expires_at=datetime.now(UTC) + timedelta(seconds=0.6),
             )
         return HomeAccountSession(posture=HomeSessionPosture.ACTIVE, profile_label="Current profile", expires_at=None)
 

@@ -19,7 +19,6 @@ from pydantic import ValidationError
 
 from .....application.user_profile.proof_cancellation import ProfileProofCancellation, ProfileProofCancelledError
 from .....core.config import Settings, load_settings
-from .....core.logging import get_logger
 from ..crypto.aes_gcm import KEY_SIZE
 from ._kdf_attestation import (
     parse_ready_attestation as _parse_ready_attestation,
@@ -57,8 +56,6 @@ from ._kdf_windows_job import _WindowsJob
 from ._kdf_worker_identity import verify_ready_worker as _verify_ready_worker
 from ._kdf_worker_observation import KDF_WORKER_PHASE_FIELDS, KdfCleanupPart, KdfWorkerObservation, KdfWorkerStage
 from .records import ProfileCustodyKdfParameters, ProfileCustodyWrappedDek
-
-logger = get_logger(__name__)
 
 _NEVER_ATTESTED = "_kdf_worker_never_attested"
 

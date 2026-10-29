@@ -10,7 +10,6 @@ from typing import Any, cast, override
 
 import httpx
 
-from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.deadline_budget import (
     DEFAULT_TIMEOUT_POLICY,
     TimeoutDeadline,
@@ -35,8 +34,6 @@ from .service_support import (
     controller_is_ready,
     without_lanes,
 )
-
-_LOGGER = get_logger("cadrumo_agent_service.service")
 
 
 class AgentService(AgentServiceScheduling):

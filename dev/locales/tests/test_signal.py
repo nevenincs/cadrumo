@@ -553,6 +553,116 @@ def test_generated_user_doc_adapter_reads_visible_prose_not_option_or_literal_sy
     assert all("raw_internal_token" not in text for text in rendered)
 
 
+def test_generated_cli_docs_exempt_only_exact_executable_command_headings(tmp_path) -> None:
+    page = tmp_path / "docs" / "cli" / "commands.rst"
+    page.parent.mkdir(parents=True)
+    command = "aeat app diagnostics errors"
+    unknown_path = "aeat app diagnostics definitely-unknown"
+    command_with_option = "aeat app diagnostics errors --format"
+    page.write_text(
+        f"{command}\n{'=' * len(command)}\n\n"
+        "Check this adjacent misspeling.\n\n"
+        f"{unknown_path}\n{'-' * len(unknown_path)}\n\n"
+        f"{command_with_option}\n{'-' * len(command_with_option)}\n\n"
+        "Run aeat app diagnostics errors for the report.\n",
+        encoding="utf-8",
+    )
+
+    prose = visible_document_prose(page)
+
+    assert prose == (
+        (4, "Check this adjacent misspeling."),
+        (7, unknown_path),
+        (10, command_with_option),
+        (12, "Run aeat app diagnostics errors for the report."),
+    )
+
+
+def test_generated_casilla_inventory_excludes_only_exact_registry_section_heading(tmp_path) -> None:
+    page = tmp_path / "docs" / "_generated" / "casillas" / "130.rst"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "Casilla reference\n=================\n\n"
+        "Model reference navigation.\n\n"
+        '.. cadrumo-casilla-section-identifier: ["did", "devolucion_banco_bank_name"]\n\n'
+        "Did › Devolucion banco bank name\n" + "-" * len("Did › Devolucion banco bank name") + "\n\n"
+        "Review this misspeling carefully.\n",
+        encoding="utf-8",
+    )
+
+    prose = visible_document_prose(page)
+
+    assert prose == (
+        (2, "Casilla reference"),
+        (4, "Model reference navigation."),
+        (11, "Review this misspeling carefully."),
+    )
+
+
+def test_generated_casilla_marker_validates_first_heading_parsed_as_subtitle(tmp_path) -> None:
+    page = tmp_path / "docs" / "_generated" / "casillas" / "038.rst"
+    page.parent.mkdir(parents=True)
+    heading = "Declarante"
+    page.write_text(
+        "Casilla reference\n=================\n\n"
+        '.. cadrumo-casilla-section-identifier: ["declarante"]\n\n'
+        f"{heading}\n{'-' * len(heading)}\n\n"
+        "Nearby misspeling stays visible.\n",
+        encoding="utf-8",
+    )
+
+    prose = visible_document_prose(page)
+
+    assert prose == ((2, "Casilla reference"), (9, "Nearby misspeling stays visible."))
+
+
+@pytest.mark.parametrize(
+    "page_path, marker, separator, heading",
+    [
+        (
+            "docs/_generated/casillas/130.rst",
+            '.. cadrumo-casilla-section-identifier ["did"]',
+            "\n\n",
+            "Did",
+        ),
+        (
+            "docs/_generated/casillas/130.rst",
+            '.. cadrumo-casilla-section-identifier: ["other"]',
+            "\n\n",
+            "Expected wrong heading",
+        ),
+        (
+            "docs/_generated/casillas/130.rst",
+            '.. cadrumo-casilla-section-identifier: ["did"]',
+            "\nIntervening prose\n\n",
+            "Did",
+        ),
+        (
+            "docs/_generated/other.rst",
+            '.. cadrumo-casilla-section-identifier: ["did"]',
+            "\n\n",
+            "Did",
+        ),
+    ],
+)
+def test_casilla_section_marker_fails_closed_when_stale_or_out_of_scope(
+    tmp_path: Path,
+    page_path: str,
+    marker: str,
+    separator: str,
+    heading: str,
+) -> None:
+    page = tmp_path / page_path
+    page.parent.mkdir(parents=True, exist_ok=True)
+    page.write_text(
+        "Casilla reference\n=================\n\n" + marker + separator + heading + "\n" + "-" * len(heading) + "\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="casilla section"):
+        visible_document_prose(page)
+
+
 def test_generated_user_doc_adapter_enrols_explicit_embedded_language(tmp_path) -> None:
     page = tmp_path / "legal.rst"
     page.write_text(

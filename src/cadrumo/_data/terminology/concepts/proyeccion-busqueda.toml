@@ -15,8 +15,8 @@ created_at = 2026-06-12
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "La compilacion que convierte conceptos, casillas, CLI y paginas en registros de busqueda."
-definition = "Transformacion build-time que toma los conceptos del Terminology Handbook, las casillas proyectadas desde el registro, las superficies CLI y las paginas construidas, y las convierte en registros tipados para la busqueda offline. La proyeccion une las clases de resultado antes de inyectarlas en Pagefind."
+short_description = "La compilación que convierte conceptos, casillas, CLI y paginas en registros de búsqueda."
+definition = "Transformación build-time que toma los conceptos del Terminology Handbook, las casillas proyectadas desde el registro, las superficies CLI y las paginas construidas, y las convierte en registros tipados para la búsqueda offline. La proyección une las clases de resultado antes de inyectarlas en Pagefind."
 scope_note = "Las casillas concretas se proyectan desde el registro; no se curan como fragmentos del Handbook."
 
 [[language.es.term]]
@@ -41,7 +41,7 @@ term_status = "preferred"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "La compilacio que converteix conceptes, caselles, CLI i pagines en registres de cerca."
+short_description = "La compilació que converteix conceptes, caselles, CLI i pagines en registres de cerca."
 definition = "Transformació en temps de compilació que pren els conceptes del Terminology Handbook, les caselles projectades del registre, les superfícies de la CLI i les pàgines construïdes, i les converteix en registres tipats per a la cerca fora de línia. La projecció uneix les classes de resultats abans d'injectar-les a Pagefind."
 scope_note = "Les caselles concretes es projecten des del registre; no es curen com a fragments del Handbook."
 

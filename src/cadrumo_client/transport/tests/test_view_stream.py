@@ -14,10 +14,8 @@ import pytest
 
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo_client.transport.view_stream_readers import (
-    ViewDownstreamReader,
     ViewImageOutbox,
     ViewUpstreamReader,
-    read_view_upstream,
 )
 
 from ...contracts.contracts import RefusalCode, RefusalError
@@ -51,7 +49,6 @@ from ..view_stream import (
     VIEW_CHUNK_BODY_BYTES,
     VIEW_CHUNK_FRAME_KIND,
     VIEW_CHUNK_HEADER_BYTES,
-    AssembledViewImage,
     ViewChunkHeader,
     ViewTransferChunk,
     ViewTransferChunkHeader,
@@ -65,6 +62,7 @@ from ..view_stream import (
     write_view_transfer_document,
 )
 from .memory_channel import MemoryChannel
+from .view_stream_peer import AssembledViewImage, ViewDownstreamReader, read_view_upstream
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -606,7 +604,7 @@ def test_a_refused_receiver_stays_refused() -> None:
         assert refused.value.check == "view_stream_refused"
 
 
-def test_a_reader_without_a_receiver_refuses_transfer_frames_as_it_always_did() -> None:
+def test_a_peer_without_a_receiver_refuses_transfer_frames() -> None:
     writer, reader_channel = _pair()
     writer.write_all(_transfer_chunk_frame(), deadline=_deadline())
     with pytest.raises(RefusalError) as refused:

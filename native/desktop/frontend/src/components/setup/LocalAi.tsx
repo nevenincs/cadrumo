@@ -38,7 +38,7 @@ export function LocalAi({
   const store = useProvisioning();
   const row = store.localAiRow;
   return (
-    <div data-slot="local-ai" className="grid gap-2">
+    <div data-slot="local-ai" data-testid="local-ai" className="grid gap-2">
       {row && (
         <ul className="grid">
           <ProvisioningRow

@@ -909,4 +909,4 @@ msgstr "[Diagnosztizáld és javítsd a helyi beállításodat](troubleshooting.
 
 #: ../../how-to/modelo-390.md:263
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

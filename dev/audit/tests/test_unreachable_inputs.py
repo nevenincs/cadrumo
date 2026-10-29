@@ -98,6 +98,7 @@ def _write_repository(root: Path, sources: dict[str, str]) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(source, encoding="utf-8")
     (root / "dev").mkdir(exist_ok=True)
+    (root / "packaging").mkdir(exist_ok=True)
 
 
 def _pyproject(script: str) -> str:
@@ -162,6 +163,53 @@ def test_each_audited_package_reads_its_own_shipped_payloads(tmp_path: Path) -> 
     )
 
     assert {"first_token", "second_token"} <= _data_tokens(spec)
+
+
+def test_packaging_hooks_clear_resolved_consumers_but_not_lookalikes_or_tests(tmp_path: Path) -> None:
+    """Build-hook edges count; matching tokens and packaging tests cannot clear code."""
+    _write_repository(
+        tmp_path,
+        {
+            "src/cadrumo/__init__.py": "",
+            "src/cadrumo/cli.py": "from . import facts\ndef main(): pass\n",
+            "src/cadrumo/facts.py": (
+                "def prepare_temporary_directory(): pass\ndef lookalike(): pass\ndef test_only(): pass\n"
+            ),
+            "src/cadrumo/build_support.py": "def stage(): pass\n",
+            "src/cadrumo/probe_support.py": "def check(): pass\n",
+            "packaging/authority/hatch_build.py": (
+                "def initialize():\n"
+                "    from cadrumo.coreless import lookalike\n"
+                "    from cadrumo.facts import prepare_temporary_directory\n"
+                "    from cadrumo.build_support import stage\n"
+                "    prepare_temporary_directory()\n"
+                "    stage()\n"
+                "    lookalike()\n"
+                "    return {'lookalike': 'lookalike'}\n"
+            ),
+            "src/cadrumo/coreless.py": "def lookalike(): pass\n",
+            "packaging/tests/test_hook.py": (
+                "from cadrumo.facts import test_only\nfrom cadrumo.probe_support import check\ntest_only()\ncheck()\n"
+            ),
+            "conftest.py": "",
+            "pyproject.toml": _pyproject("cadrumo.cli:main"),
+        },
+    )
+
+    spec = ShippedTreeSpec.from_repository(tmp_path)
+    result = scan_unreachable_code(spec)
+
+    assert any(corpus.label == "packaging" and corpus.root == tmp_path / "packaging" for corpus in spec.outside)
+    assert result.outcome is UnreachableCodeOutcome.FINDINGS
+    symbols = {(finding.module, finding.name): finding for finding in result.symbols}
+    assert ("cadrumo.facts", "prepare_temporary_directory") not in symbols
+    assert ("cadrumo.build_support", "stage") not in symbols
+    assert ("cadrumo.facts", "lookalike") in symbols
+    assert symbols["cadrumo.facts", "test_only"].used_by == ("tests",)
+    modules = {finding.module: finding for finding in result.modules}
+    assert "cadrumo.build_support" not in modules
+    assert modules["cadrumo.probe_support"].used_by == ("tests",)
+    assert result.dev_cleared == 0
 
 
 def test_a_package_outside_the_declared_source_scope_is_refused(tmp_path: Path) -> None:

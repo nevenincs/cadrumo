@@ -253,7 +253,7 @@ msgstr ""
 "llengua de sortida. Respon-la i la resta de l'assistent es mostrarà en la"
 " llengua que hagis triat. Les pàgines recorren la teva identitat, "
 "residència fiscal, activitat econòmica, IVA, alta, situació familiar "
-"(inclosos els teus descendientes), obligacions recurrents i preferències "
+"(inclosos els teus descendents), obligacions recurrents i preferències "
 "de servei, i acaben en una pàgina de revisió que mostra cada resposta "
 "abans de desar res. Les preguntes són condicionals: l'assistent només "
 "pregunta allò que s'aplica a les respostes que ja has donat."
@@ -892,7 +892,7 @@ msgid ""
 "[descendiente command](#manage-your-descendants). The edit summary "
 "reminds you of this every time."
 msgstr ""
-"Els descendientes no formen part de l'edició del perfil. Gestiona'ls amb "
+"Els descendents no formen part de l'edició del perfil. Gestiona'ls amb "
 "l'[ordre descendiente](#manage-your-descendants). El resum de l'edició "
 "t'ho recorda cada vegada."
 
@@ -906,7 +906,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:351
 msgid "Manage your descendants"
-msgstr "Gestiona els teus descendientes"
+msgstr "Gestiona els teus descendents"
 
 #: ../../how-to/profile-setup.md:353
 msgid ""
@@ -920,7 +920,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:357
 msgid "Open the paged descendant editor:"
-msgstr "Obre l'editor paginat de descendientes:"
+msgstr "Obre l'editor paginat de descendents:"
 
 #: ../../how-to/profile-setup.md:362
 msgid ""
@@ -929,9 +929,9 @@ msgid ""
 "confirm. Reducing the count removes the descendientes beyond it. The "
 "stored set always matches exactly what you confirmed."
 msgstr ""
-"L'editor mostra els descendientes declarats, et permet canviar qualsevol "
+"L'editor mostra els descendents declarats, et permet canviar qualsevol "
 "resposta, afegir-ne un o reduir-ne el nombre, i desa el conjunt complet "
-"quan confirmes. Reduir el nombre elimina els descendientes que queden més"
+"quan confirmes. Reduir el nombre elimina els descendents que queden més"
 " enllà. El conjunt desat coincideix sempre exactament amb el que has "
 "confirmat."
 

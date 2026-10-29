@@ -79,7 +79,6 @@ from .template_source import WorkbookTemplateSource
 # registry snapshot. Increment it whenever a change can move an operator
 # input, relation, or tariff coordinate.
 CALC_SHEETS_ENGINE_VERSION: Final[str] = "calc-sheets/0.3.0"
-_ACQUISITION_MIRROR_BINDING_SUFFIX: Final[str] = "-adquisicion"
 
 # The scalar parameter shapes a tariff anchor can materialise, mapped to the
 # workbook token the tariff record declares. A parameter shape absent here

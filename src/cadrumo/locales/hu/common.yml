@@ -813,8 +813,6 @@ desktop:
           receipt: Igazolás
           record: A nyilvántartásod
         differs:
-          amount: Az összeg eltér
-          date: A dátum eltér
           status: Az állapot eltér
         empty: Nincs nyilatkozat.
         group:
@@ -853,7 +851,6 @@ desktop:
         read_on: 'Elolvasva: {date}'
         warning: Az értesítés megnyitása az AEAT-nál átvételnek számíthat.
       part:
-        form: Modelo {form}, {year}
         year: '{year} évi nyilatkozatok'
       partly: Néhányat nem sikerült frissíteni.
       problems: '{name}: néhány nem sikerült'

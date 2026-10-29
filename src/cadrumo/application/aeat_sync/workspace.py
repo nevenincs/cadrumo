@@ -684,6 +684,17 @@ class AeatSyncFiledRowV1(BaseModel):
         if (self.local_record is AeatSyncFiledLocalRecord.NONE) != (self.local_record_at is None):
             raise ValueError("only a held local record carries its date")
         shown = self.aeat_shown_at is not None
+        self._validate_match_group(shown=shown)
+        if (self.match is AeatSyncFiledMatch.DIFFERING) != bool(self.differences):
+            raise ValueError("only a differing declaration names what differs")
+        if self.receipt_confirmed and not shown:
+            raise ValueError("a confirmed receipt requires an AEAT observation")
+        if self.receipt_confirmed and self.match is AeatSyncFiledMatch.DIFFERING:
+            raise ValueError("a differing declaration cannot carry a confirmed receipt")
+        return self
+
+    def _validate_match_group(self, *, shown: bool) -> None:
+        """Check the match claim against the independently held records."""
         filed = self.local_record is AeatSyncFiledLocalRecord.MARKED_FILED
         expected = {
             AeatSyncFiledMatch.MATCHED: shown and filed,
@@ -693,13 +704,6 @@ class AeatSyncFiledRowV1(BaseModel):
         }[self.match]
         if not expected:
             raise ValueError("match group contradicts the local record and the AEAT observation")
-        if (self.match is AeatSyncFiledMatch.DIFFERING) != bool(self.differences):
-            raise ValueError("only a differing declaration names what differs")
-        if self.receipt_confirmed and not shown:
-            raise ValueError("a confirmed receipt requires an AEAT observation")
-        if self.receipt_confirmed and self.match is AeatSyncFiledMatch.DIFFERING:
-            raise ValueError("a differing declaration cannot carry a confirmed receipt")
-        return self
 
 
 class AeatSyncAreaStatusV1(BaseModel):
@@ -750,6 +754,10 @@ class AeatSyncAreaStatusV1(BaseModel):
             raise ValueError("only notifications carry an unread count")
         if self.filed_periods is not None and self.area is not AeatSyncStatusArea.FILED_DECLARATIONS:
             raise ValueError("only filed declarations carry period counts")
+        self._validate_filed_counts()
+
+    def _validate_filed_counts(self) -> None:
+        """Require filed rows and their group sizes to travel together."""
         if (self.filed_rows is None) != (self.filed_periods is None):
             raise ValueError("filed rows are served with their counts")
         if self.filed_rows is not None and self.filed_periods is not None:

@@ -19,6 +19,12 @@ from ..cached_command import run_cached
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
+
+
 @pytest.mark.parametrize(
     ("environment", "expected"),
     [

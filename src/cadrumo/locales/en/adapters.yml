@@ -46,8 +46,7 @@ adapters:
           context; call authenticate() first.
   browser:
     errors:
-      not_available: The browser for the tax agency website is not available, so this
-        operation cannot run.
+      not_available: The browser isn't installed, so this can't run.
   google:
     calc_sheets:
       errors:
@@ -104,8 +103,8 @@ adapters:
           conflicts with the detected {detected!r}.
         tax_id_unresolved: Declaration tax id could not be resolved from the PDF text.
         template_not_detected: Could not auto-detect template for {path}; pass --modelo
-          and --año to override.
-        year_conflict: --año {year} conflicts with detected {detected}.
+          and --year to override.
+        year_conflict: --year {year} conflicts with detected {detected}.
     financial:
       providers:
         pdf_statement:
@@ -121,10 +120,10 @@ adapters:
         hash_failed: PDF file could not be hashed.
   notificacion:
     errors:
-      sancion_does_not_reconcile: The amounts printed on the sanción document do not
-        reconcile, so the reading was refused. Check the document by hand.
-      sancion_incomplete: The sanción document could not be read completely. Open
-        it in the sede and check it by hand.
+      sancion_does_not_reconcile: The amounts printed on the penalty notice do not
+        reconcile, so the reading was refused. Check the document manually.
+      sancion_incomplete: The penalty notice could not be read completely. Open it
+        in the AEAT electronic office and check it manually.
   outbound:
     calculation_summary_pdf:
       errors:
@@ -188,7 +187,8 @@ adapters:
           namespace_blank: Local storage namespace must not be blank.
           namespace_create_path_too_long: 'Local storage could not create namespace
             {namespace}: the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
-            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+            to a shorter path or enable LongPathsEnabled (see `aeat config storage
+            check`).'
           namespace_create_permission: Local storage could not create namespace {namespace}.
           namespace_forbidden_characters: Local storage namespace {namespace} contains
             forbidden path characters.
@@ -200,7 +200,8 @@ adapters:
           payload_read_permission: Local storage could not read object payload.
           payload_write_path_too_long: 'Local storage could not write the object payload:
             the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
-            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+            to a shorter path or enable LongPathsEnabled (see `aeat config storage
+            check`).'
           payload_write_permission: Local storage could not write object payload.
           sidecar_malformed: Local storage sidecar {sidecar_path} is unreadable or
             malformed.
@@ -209,7 +210,8 @@ adapters:
           sidecar_write_failed: Local storage could not write the object sidecar.
           sidecar_write_path_too_long: 'Local storage could not write the object sidecar:
             the path exceeds the Windows path-length limit. Move CADRUMO_LOCAL_STORAGE_ROOT
-            to a shorter path or enable LongPathsEnabled (see `aeat config check`).'
+            to a shorter path or enable LongPathsEnabled (see `aeat config storage
+            check`).'
           written_at_invalid: 'Local storage sidecar written_at is missing, unparseable,
             or carries no timezone: {actual_value}.'
   persistence:
@@ -238,10 +240,11 @@ adapters:
           load_register_failed: Unable to load the encrypted own bank account register.
   sede:
     errors:
-      censal_bad_landing: The AEAT censal page did not load correctly; re-authenticate
+      censal_bad_landing: The AEAT tax registration page did not load correctly; re-authenticate
         and retry.
-      censal_modification_surface: The AEAT censal read was refused because it landed
-        on a modification page; this reader never changes censal data.
+      censal_modification_surface: The AEAT tax registration read was refused because
+        it landed on a modification page; this reader never changes tax registration
+        data.
       ejercicio_unavailable: The AEAT declarations register does not offer the requested
         tax year for this modelo.
       empty_identity_nif: AEAT session identity NIF is empty; cannot bind live filing
@@ -277,8 +280,8 @@ adapters:
       parse_failed: Failed to parse the AEAT declarations response; the page structure
         may have changed.
       playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
-      playwright_buscar_click_failed: Clicking the Buscar button on the Sede page
-        failed.
+      playwright_buscar_click_failed: Clicking the Buscar (Search) button on the AEAT
+        electronic office page failed.
       playwright_combobox_open_failed: Opening the Sede combobox failed.
       playwright_combobox_select_failed: Selecting a combobox option on the Sede page
         failed.

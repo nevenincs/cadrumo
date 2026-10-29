@@ -106,7 +106,7 @@ msgstr "Si diste de alta una actividad, registra un alta."
 
 #: ../../how-to/modelo-036.md:33
 msgid "If you changed registered facts, record a modificacion."
-msgstr "Si modificaste datos registrados, registra una modificacion."
+msgstr "Si modificaste datos registrados, registra una modificación."
 
 #: ../../how-to/modelo-036.md:34
 msgid "If you deregistered, record a baja."
@@ -119,7 +119,7 @@ msgid ""
 " further declaration is accepted, not even an alta."
 msgstr ""
 "Registra las declaraciones en el orden en que las presentaste. Una "
-"modificacion o una baja se rechaza hasta que el perfil tenga un alta "
+"modificación o una baja se rechaza hasta que el perfil tenga un alta "
 "registrada. Después de una baja no se acepta ninguna otra declaración, ni"
 " siquiera un alta."
 
@@ -132,7 +132,7 @@ msgid ""
 "Record a modificacion (the same flow as the alta, with a different event "
 "kind):"
 msgstr ""
-"Registra una modificacion (el mismo flujo que el alta, con un tipo de "
+"Registra una modificación (el mismo flujo que el alta, con un tipo de "
 "evento distinto):"
 
 #: ../../how-to/modelo-036.md:51
@@ -165,7 +165,7 @@ msgstr "Un `declaration_id`: un número de referencia largo para el registro."
 
 #: ../../how-to/modelo-036.md:65
 msgid "The event kind - alta, modificacion, or baja."
-msgstr "El tipo de evento: alta, modificacion o baja."
+msgstr "El tipo de evento: alta, modificación o baja."
 
 #: ../../how-to/modelo-036.md:66
 msgid "The declared-on date."

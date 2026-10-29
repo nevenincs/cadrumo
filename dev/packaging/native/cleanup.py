@@ -100,10 +100,10 @@ def clean(build: Path, group: str) -> None:
     if group == "all":
         _add_all_targets(build, targets)
     _remove(build, [str(target) for target in targets], BuildLog(f"clean-{group}"))
-    # Presets point TEMP/TMP/TMPDIR here; later builds and CTest need it present
-    # or tools fail and Python silently falls back to the OS temporary directory.
+    # Presets and CTest point at these directories; later commands need both or
+    # tools can silently fall back to the OS temporary directory.
     if "temporary" in paths and paths["temporary"] in targets:
-        paths["temporary"].mkdir()
+        (paths["temporary"] / "ctest").mkdir(parents=True)
 
 
 if __name__ == "__main__":

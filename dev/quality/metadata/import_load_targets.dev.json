@@ -516,6 +516,7 @@
         "dev.locales.desktop_ledger_catalogue_keys",
         "dev.locales.desktop_ledger_document_keys",
         "dev.locales.desktop_ledger_workflow_keys",
+        "dev.locales.desktop_profile_interface_keys",
         "dev.locales.desktop_workspace_keys",
         "dev.locales.errors",
         "dev.locales.fstring_registry",

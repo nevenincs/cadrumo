@@ -14,8 +14,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El resguardo que la AEAT emite tras presentar una declaracion."
-definition = "Documento acreditativo (habitualmente un PDF) que la AEAT emite tras la presentacion de una declaracion, con el codigo seguro de verificacion y las cifras presentadas, como prueba de la presentacion."
+short_description = "El resguardo que la AEAT emite tras presentar una declaración."
+definition = "Documento acreditativo (habitualmente un PDF) que la AEAT emite tras la presentación de una declaración, con el código seguro de verificación y las cifras presentadas, como prueba de la presentación."
 
 [language.es.source]
 citation = "Manuales de la Sede Electronica de la AEAT sobre presentacion de declaraciones."

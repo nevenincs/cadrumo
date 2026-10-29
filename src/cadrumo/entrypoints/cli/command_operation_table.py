@@ -395,6 +395,7 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "ledger.history.typed",
     "live.borrador.100.query",
     "live.sede.view",
+    "live.sync.status",
     "modelo.036.query",
     "modelo.audit.query",
     "modelo.bindings.resolve.typed",

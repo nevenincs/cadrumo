@@ -675,4 +675,4 @@ msgstr ""
 
 #: ../../how-to/import-bank-statements.md:299
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

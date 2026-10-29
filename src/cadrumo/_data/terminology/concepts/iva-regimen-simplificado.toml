@@ -15,8 +15,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Regimen simplificado del IVA (modulos)."
-definition = "Regimen especial del IVA en el que la cuota se determina por modulos o indices objetivos en lugar de por las operaciones reales, para actividades incluidas por orden ministerial."
+short_description = "Régimen simplificado del IVA (módulos)."
+definition = "Régimen especial del IVA en el que la cuota se determina por módulos o indices objetivos en lugar de por las operaciones reales, para actividades incluidas por orden ministerial."
 
 [language.es.source]
 citation = "Articulos 122 y 123 de la Ley 37/1992 del IVA."

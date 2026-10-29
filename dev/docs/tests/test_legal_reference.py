@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from collections import Counter
 from datetime import date
 from html import unescape
 from io import StringIO
@@ -10,13 +11,18 @@ from pathlib import Path
 from typing import TypedDict
 
 import pytest
+from bs4 import BeautifulSoup, Comment
+from bs4.element import Tag
 from docutils import nodes
-from docutils.core import publish_doctree
+from docutils.core import publish_doctree, publish_parts
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
+from cadrumo.core.external_constants import OutputLanguage
 from dev._paths import REPO_ROOT
+from dev.locales.signal_documentation_inventory import inventory_generated_document_file
 
 from ..legal_catalogue import load_legal_provisions
+from ..legal_page_rendering import _rst_escape
 from ..legal_reference import generate_legal_reference, render_legal_reference
 from ..legal_reference_models import LegalProvisionRecord, LegalReferenceError
 
@@ -170,6 +176,233 @@ def test_official_wording_is_marked_spanish_and_the_note_is_not_the_summary() ->
     record_panel_at = page.rst.index("cadrumo-legal-record")
     assert note_at > wording_at, "the undeclared-language note is leading the entry"
     assert note_at > record_panel_at, "the note is outside the provenance panel"
+
+
+def test_generated_inventory_checks_wording_in_spanish_and_commentary_in_english(tmp_path: Path) -> None:
+    """The language boundary survives the renderer and the spelling inventory together."""
+    record = LegalProvisionRecord(
+        legal_id="ley-37-1992:art-96",
+        kind="ley",
+        document_id="BOE-A-1992-28740",
+        corpus_ref="corpus/normatives/html/ley-37-1992.html#a96",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a96",
+        article="96",
+        notes="English curator commentary remains checked.",
+        required_text=("no serán deducibles las cuotas soportadas",),
+    )
+    page = tmp_path / "legal.rst"
+    page.write_text(render_legal_reference(_REPO_ROOT, records=(record,)).pages[0].rst, encoding="utf-8")
+    values: dict[str, dict[str, str]] = {}
+    findings: list[dict[str, object]] = []
+
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+
+    assert not findings
+    assert "no serán deducibles las cuotas soportadas" in values["es"].values()
+    assert any("English curator commentary remains checked." in text for text in values["en"].values())
+    assert all("no serán deducibles las cuotas soportadas" not in text for text in values["en"].values())
+
+
+def test_mixed_catalogue_note_tags_only_source_verified_quote_and_keeps_english_checked(tmp_path: Path) -> None:
+    quote = "La cuota tributaria se determinará aplicando el tipo correspondiente."
+    source = tmp_path / "src/cadrumo/_data/corpus/normatives/html/example.html.extracted.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(f"Excerpt: {quote}\n", encoding="utf-8")
+    record = LegalProvisionRecord(
+        legal_id="ley-example:art-1",
+        kind="ley",
+        document_id="BOE-A-2000-1",
+        corpus_ref="corpus/normatives/html/example.html#art-1",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2000-1#art-1",
+        article="1",
+        notes=f"The old rule said: {quote} This neighboring English definately stays checked.",
+        required_text=(quote,),
+    )
+
+    page = tmp_path / "legal.rst"
+    page.write_text(render_legal_reference(tmp_path, records=(record,)).pages[0].rst, encoding="utf-8")
+    values: dict[str, dict[str, str]] = {}
+    findings: list[dict[str, object]] = []
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+
+    assert f'<span lang="es">{quote}</span>' in page.read_text(encoding="utf-8")
+    assert any("This neighboring English definately stays checked." in text for text in values["en"].values())
+    assert any(quote in text for text in values["es"].values())
+    assert all(quote not in text for text in values["en"].values())
+    assert any("definately" in text for text in values["en"].values())
+
+
+def test_tagged_note_changes_only_the_quote_language_span(tmp_path: Path) -> None:
+    quote = "La cuota tributaria se determina según la ley."
+    note = f"English note starts. {quote} English note ends."
+    source = tmp_path / "src/cadrumo/_data/corpus/normatives/html/example.html.extracted.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(quote, encoding="utf-8")
+    record = LegalProvisionRecord(
+        legal_id="ley-example:art-5",
+        kind="ley",
+        document_id="BOE-A-2000-6",
+        corpus_ref="corpus/normatives/html/example.html#art-5",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2000-6#art-5",
+        article="5",
+        notes=note,
+        required_text=(quote,),
+    )
+
+    tagged_rst = render_legal_reference(tmp_path, records=(record,), language=OutputLanguage.EN).pages[0].rst
+    raw_note = re.search(
+        r"   \.\. raw:: html\n\n      <dl class=\"field-list simple\">\n"
+        r"        <dt>.*?</dt>.*?<!--cadrumo-legal-note-->.*?</dl>",
+        tagged_rst,
+        re.DOTALL,
+    )
+    assert raw_note is not None
+    prior_rst = tagged_rst.replace(raw_note.group(), f"   :Cataloguer's note: {_rst_escape(note)}")
+
+    before = publish_parts(prior_rst, writer_name="html5")["html_body"]
+    after = publish_parts(tagged_rst, writer_name="html5")["html_body"]
+    before_soup = BeautifulSoup(before, "html.parser")
+    after_soup = BeautifulSoup(after, "html.parser")
+    old_term = next(item for item in before_soup.find_all("dt") if "note" in item.get_text().casefold())
+    new_term = next(item for item in after_soup.find_all("dt") if "note" in item.get_text().casefold())
+    assert new_term.get_text() == old_term.get_text()
+
+    def note_definition(soup: BeautifulSoup) -> Tag | None:
+        term = next(item for item in soup.find_all("dt") if "note" in item.get_text().casefold())
+        return term.find_next_sibling("dd")
+
+    old_definition = note_definition(before_soup)
+    new_definition = note_definition(after_soup)
+    assert old_definition is not None
+    assert new_definition is not None
+    spanish_span = new_definition.find("span", attrs={"lang": "es"})
+    assert isinstance(spanish_span, Tag)
+    spanish_span.unwrap()
+    for comment in new_definition.find_all(string=lambda value: isinstance(value, Comment)):
+        comment.extract()
+
+    def structure(node: Tag) -> object:
+        attributes = tuple(sorted(node.attrs.items()))
+        direct_text = "".join(
+            str(child) for child in node.children if not isinstance(child, Tag) and str(child).strip()
+        )
+        children = tuple(structure(child) for child in node.children if isinstance(child, Tag))
+        return node.name, attributes, direct_text, children
+
+    assert structure(new_definition) == structure(old_definition)
+    assert new_definition.get_text(" ", strip=True) == note
+    assert len(new_definition.find_all("p")) == 1
+    assert new_definition.find_all("a") == old_definition.find_all("a")
+
+
+def test_stale_or_ambiguous_note_quote_is_not_tagged(tmp_path: Path) -> None:
+    source = tmp_path / "src/cadrumo/_data/corpus/normatives/html/example.html.extracted.md"
+    source.parent.mkdir(parents=True)
+    stale_quote = "Una frase que ya no está en la fuente."
+    ambiguous_quote = "Una frase oficial repetida en la nota."
+    source.write_text(f"The official text says a different thing. {ambiguous_quote}", encoding="utf-8")
+    records = (
+        LegalProvisionRecord(
+            legal_id="ley-example:art-2",
+            kind="ley",
+            document_id="BOE-A-2000-2",
+            corpus_ref="corpus/normatives/html/example.html#art-2",
+            permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2000-2#art-2",
+            article="2",
+            notes=stale_quote,
+            required_text=(stale_quote,),
+        ),
+        LegalProvisionRecord(
+            legal_id="ley-example:art-3",
+            kind="ley",
+            document_id="BOE-A-2000-2",
+            corpus_ref="corpus/normatives/html/example.html#art-3",
+            permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2000-2#art-3",
+            article="3",
+            notes=f"{ambiguous_quote} {ambiguous_quote}",
+            required_text=(ambiguous_quote,),
+        ),
+    )
+
+    rst = render_legal_reference(tmp_path, records=records).pages[0].rst
+
+    assert f'<span lang="es">{stale_quote}</span>' not in rst
+    assert f'<span lang="es">{ambiguous_quote}</span>' not in rst
+
+
+def test_link_like_note_keeps_its_existing_rst_projection(tmp_path: Path) -> None:
+    quote = "Texto citado con fuente exacta."
+    source = tmp_path / "src/cadrumo/_data/corpus/normatives/html/example.html.extracted.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(quote, encoding="utf-8")
+    note = f"{quote} See `official <https://example.test/law>`_ and keep this source text unchanged."
+    record = LegalProvisionRecord(
+        legal_id="ley-example:art-4",
+        kind="ley",
+        document_id="BOE-A-2000-4",
+        corpus_ref="corpus/normatives/html/example.html#art-4",
+        permalink="https://www.boe.es/buscar/act.php?id=BOE-A-2000-4#art-4",
+        article="4",
+        notes=note,
+        required_text=(quote,),
+    )
+
+    rst = render_legal_reference(tmp_path, records=(record,)).pages[0].rst
+
+    assert _rst_escape(note) in rst
+    assert "https://example.test/law" in rst
+    assert f'<span lang="es">{quote}</span>' not in rst
+    rendered = BeautifulSoup(publish_parts(rst, writer_name="html5")["html_body"], "html.parser")
+    term = next(item for item in rendered.find_all("dt") if "note" in item.get_text().casefold())
+    definition = term.find_next_sibling("dd")
+    assert definition is not None
+    assert "official" in definition.get_text()
+    assert "https://example.test/law" in definition.get_text()
+    links = definition.find_all("a")
+    assert len(links) == 1
+    assert links[0]["href"] == "https://example.test/law"
+    assert len(definition.find_all("p")) == 1
+
+
+def test_shared_corpus_excerpt_is_read_once_per_generation(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    first_quote = "Primera frase exacta."
+    second_quote = "Segunda frase exacta."
+    source = tmp_path / "src/cadrumo/_data/corpus/normatives/html/example.html.extracted.md"
+    source.parent.mkdir(parents=True)
+    source.write_text(f"{first_quote} {second_quote}", encoding="utf-8")
+    records = tuple(
+        LegalProvisionRecord(
+            legal_id=f"ley-example:art-{number}",
+            kind="ley",
+            document_id="BOE-A-2000-5",
+            corpus_ref=f"corpus/normatives/html/example.html#art-{number}",
+            permalink=f"https://www.boe.es/buscar/act.php?id=BOE-A-2000-5#art-{number}",
+            article=str(number),
+            notes=quote,
+            required_text=(quote,),
+        )
+        for number, quote in ((1, first_quote), (2, second_quote))
+    )
+    original_read_text = Path.read_text
+    source_reads = 0
+
+    def counted_read_text(
+        path: Path,
+        encoding: str | None = None,
+        errors: str | None = None,
+        newline: str | None = None,
+    ) -> str:
+        nonlocal source_reads
+        if path.resolve() == source.resolve():
+            source_reads += 1
+        return original_read_text(path, encoding=encoding, errors=errors, newline=newline)
+
+    monkeypatch.setattr(Path, "read_text", counted_read_text)
+
+    result = render_legal_reference(tmp_path, records=records)
+
+    assert source_reads == 1
+    assert result.provision_count == 2
 
 
 def test_provision_heading_leads_with_the_citation_not_the_catalogue_id() -> None:

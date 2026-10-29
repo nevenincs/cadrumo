@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Modalidad de prorrata que deduce el IVA de cada sector de actividad por separado."
-definition = "Modalidad de la regla de prorrata en la que las cuotas soportadas se deducen segun el destino real de cada bien o servicio, aplicando la prorrata general solo a las cuotas comunes a varios sectores. Es obligatoria cuando la prorrata general superaria en mas de un 10 por ciento la deduccion que resulta de la especial."
+definition = "Modalidad de la regla de prorrata en la que las cuotas soportadas se deducen según el destino real de cada bien o servicio, aplicando la prorrata general solo a las cuotas comunes a varios sectores. Es obligatoria cuando la prorrata general superaría en mas de un 10 por ciento la deducción que resulta de la especial."
 
 [language.es.source]
 citation = "Articulo 103 de la Ley 37/1992 del IVA (LIVA)."

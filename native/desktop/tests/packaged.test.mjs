@@ -18,15 +18,41 @@ import {
 } from "node:fs";
 import { dirname, isAbsolute, resolve } from "node:path";
 import { test } from "node:test";
+import "./packaged/setup.test.mjs";
 import { fileURLToPath } from "node:url";
 
 import { buildPath } from "../scripts/build-paths.mjs";
 import { docsOrigin as docsOriginOf } from "../scripts/configuration.mjs";
 import { docsProbe, pagefindSearch, pasteInto } from "./packaged/browser.mjs";
-import { hostRefusals, refusalProbe, tokenCheck } from "./packaged/probes.mjs";
+import {
+  hostRefusals,
+  refusalProbe,
+  tokenCheck,
+  runSedeMissingAcceptance,
+} from "./packaged/probes.mjs";
 import { installedHost, packagedHostPaths } from "./packaged/host.mjs";
 import { SignInFixture } from "./packaged/sign-in.mjs";
 import { docsUiChecks } from "./packaged/docs-ui.mjs";
+import {
+  installProvisioningObserver,
+  startupObservation,
+  startupPanelVerdict,
+  firstNullSnapshotVerdict,
+  panelObservation,
+  panelRowsVerdict,
+  prepareSmallestModel,
+  installSmallestModel,
+  removeSmallestModel,
+  assertLocalAiShared,
+  runSettingsAcceptance,
+  runRemovalAcceptance,
+  addCustomLocalModel,
+  removeCustomLocalModel,
+  assertPlanSizes,
+  assertPreByteProgress,
+  localAiPartsVerdict,
+  planPartsObservation,
+} from "./packaged/provisioning.mjs";
 import {
   DesktopInput,
   descendants,
@@ -49,6 +75,8 @@ import {
   realStorageVerdict,
   removeScratch,
   runSetupAcceptance,
+  runSetupFailureAcceptance,
+  runConcurrentSetup,
   scratchLayout,
   setupHostVerdict,
   treeBytes,
@@ -236,7 +264,7 @@ function launch(executable, args, { env, cwd, out, err }) {
     cwd,
     env,
     stdio: ["ignore", openSync(out, "w"), openSync(err, "w")],
-    windowsHide: false,
+    windowsHide: true,
   });
   const exit = new Promise((done) =>
     child.on("exit", (code) => done({ code, at: Date.now() })),
@@ -542,6 +570,11 @@ test("packaged desktop window", WINDOW_RUN, async (t) => {
       "canonical-sign-in",
       "real password form signs in through the packaged CLI",
       () => signIn.signIn(session, input, hostPid),
+    );
+    await check(
+      "provisioning-6-settings",
+      "Settings has one provisioning entry opening the panel",
+      () => runSettingsAcceptance(session),
     );
     await check(
       "profile-list",
@@ -1829,6 +1862,7 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
   // CLI from the stager's mirror of the staged package, never the stage itself.
   const testHost = installedHost();
   config.packageRoot = testHost.package;
+  config.hostSupervisesRuntime = true;
   const { layout } = config;
   const results = new Results(config.results);
   const startedAt = new Date().toISOString();
@@ -1998,6 +2032,7 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
     const port = await freePort();
     const { env: hostEnv } = hostEnvironment(config, {
       [REMOTE]: `--remote-debugging-port=${port}`,
+      CADRUMO_PROXY_URL: proxy.url,
     });
     host = launch(testHost.executable, ["--gui"], {
       env: hostEnv,
@@ -2034,6 +2069,7 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       },
     );
     if (launched.verdict !== PASS) return;
+    await installProvisioningObserver(session);
     // The host installs its sign-in state while startup assembles the workspace,
     // so nothing is asked of it before the workspace has loaded, as in the main suite.
     const workspace = await check(
@@ -2062,6 +2098,36 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       },
     );
     if (workspace.verdict !== PASS) return;
+    await session.page
+      .locator('.sign-in[data-state="open"]')
+      .waitFor({ state: "visible" });
+    await session.page.locator(".sign-in button[aria-label]").click();
+    await session.page
+      .locator('.setup-dialog[data-state="open"]')
+      .waitFor({ state: "visible", timeout: 20000 });
+    await check(
+      "provisioning-1-startup",
+      "signed-out startup defers the panel until sign-in is dismissed",
+      async () => startupPanelVerdict(await startupObservation(session)),
+    );
+    await check(
+      "provisioning-1-null-first",
+      "an undecided first snapshot still leads to the startup panel",
+      async () => firstNullSnapshotVerdict(await startupObservation(session)),
+    );
+    await check(
+      "provisioning-1-elements",
+      "each engine element has one status and its own action",
+      async () => {
+        const read = await session.call("desktop_setup_read");
+        return panelRowsVerdict(
+          read.value?.snapshot,
+          await panelObservation(session),
+        );
+      },
+    );
+    await session.page.locator(".setup-dialog button[aria-label]").click();
+    await session.page.locator('[data-rail="profile"]').click();
     const authenticated = await check(
       "canonical-sign-in",
       "real password form signs in to the throwaway profile",
@@ -2075,7 +2141,140 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
       driver.abort(
         `the throwaway root reached ${summary.budgetExceeded} bytes`,
       );
+    await check(
+      "provisioning-6-settings",
+      "Settings has one provisioning section opening the same panel",
+      () => runSettingsAcceptance(session),
+    );
+    await check(
+      "setup-rows-before",
+      "a clean root reads the browser as absent",
+      () => driver.rowsBefore(),
+    );
+    await check(
+      "provisioning-10-sede",
+      "Sede without a browser offers setup and logs its refusal locally",
+      () => runSedeMissingAcceptance({ session, driver }),
+    );
+    const chrome = JSON.parse(
+      readFileSync(
+        resolve(buildPath("desktop_frontend_generated"), "chrome-strings.json"),
+        "utf8",
+      ),
+    );
+    const words = chrome["en"] ?? chrome;
+    await check(
+      "provisioning-9-failure",
+      "a real setup failure has specific wording and exactly one local record",
+      () =>
+        runSetupFailureAcceptance({
+          driver,
+          expectedSentence: words["desktop.setup.failure.blocked_by_network"],
+        }),
+    );
+    let model;
+    await check(
+      "provisioning-3-model-list",
+      "local AI groups its program and catalog-derived custom model",
+      async () => {
+        model = await prepareSmallestModel({ session, driver });
+        const custom = "cadrumo-acceptance-synthetic:local";
+        await addCustomLocalModel({
+          session,
+          driver,
+          lane: model.lane,
+          model: custom,
+        });
+        await removeCustomLocalModel({
+          session,
+          driver,
+          lane: model.lane,
+          model: custom,
+        });
+        return {
+          verdict: PASS,
+          detail: `smallest catalog model ${model.model}`,
+          data: model,
+        };
+      },
+    );
+    if (model) {
+      await check(
+        "provisioning-3-shared-component",
+        "agent Ollama settings render the panel's Local AI component by test id",
+        () =>
+          assertLocalAiShared({
+            session,
+            driver,
+            provider: model.provider,
+            openAgentSettings: async () => {
+              const button = session.page
+                .locator(".pane-agent")
+                .getByRole("button", {
+                  name: words["desktop.agent.settings"],
+                  exact: true,
+                });
+              if ((await button.getAttribute("aria-pressed")) !== "true")
+                await button.click();
+            },
+          }),
+      );
+      await driver.openComponents();
+      await check(
+        "provisioning-4-5-concurrency-spinner",
+        "browser and local AI transfer independently and drive the rail spinner",
+        () =>
+          runConcurrentSetup(driver, model, async (snapshot) => {
+            await check(
+              "provisioning-2-part-sizes",
+              "each real plan part shows its own known size",
+              () => assertPlanSizes(session, snapshot),
+            );
+            await check(
+              "provisioning-3-program-model-steps",
+              "Ollama and the selected model are separate plan steps",
+              async () =>
+                localAiPartsVerdict(
+                  snapshot.runs.find((run) => run.item === "local_ai")?.review,
+                  model.model,
+                  await planPartsObservation(session, "local_ai"),
+                ),
+            );
+          }),
+      );
+      await check(
+        "provisioning-2-before-bytes",
+        "no byte count appears before bytes arrive",
+        () => assertPreByteProgress(session),
+      );
+    }
     await runSetupAcceptance({ driver, check, results });
+    if (model) {
+      await check(
+        "provisioning-3-model-download",
+        "the smallest model downloads through the local AI component",
+        () => installSmallestModel({ driver, ...model }),
+      );
+      await check(
+        "provisioning-7-remove-reinstall",
+        "removal confirmation stays gone when the element is set up again",
+        () => runRemovalAcceptance({ driver, model }),
+      );
+      await check(
+        "provisioning-3-model-remove",
+        "the downloaded model can be removed",
+        () => removeSmallestModel({ driver, ...model }),
+      );
+    }
+    await check(
+      "csp-zero",
+      "zero CSP violations during provisioning",
+      async () =>
+        cspVerdict(
+          await session.frames(),
+          session.console.map((entry) => entry.text),
+        ),
+    );
     await results.screenshot(session.page, "setup-02-finished");
   } finally {
     clearInterval(watchdog);
@@ -2116,7 +2315,6 @@ test("packaged setup acceptance", SETUP_ACCEPTANCE, async (t) => {
           () => signIn.stop(),
         );
       await proxy?.stop();
-      await sleep(3000);
       await check(
         "setup-children-closed",
         "the window and every process it or its runtime started have ended",

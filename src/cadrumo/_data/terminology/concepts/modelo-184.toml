@@ -16,8 +16,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Informativa anual de entidades en atribucion de rentas."
-definition = "Declaracion informativa anual de las entidades en regimen de atribucion de rentas, que atribuye a cada socio, heredero o participe su parte de rentas, retenciones y deducciones."
+short_description = "Informativa anual de entidades en atribución de rentas."
+definition = "Declaración informativa anual de las entidades en régimen de atribución de rentas, que atribuye a cada socio, heredero o participe su parte de rentas, retenciones y deducciones."
 
 [language.es.source]
 citation = "Orden HAP/2250/2015."

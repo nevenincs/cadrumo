@@ -33,7 +33,7 @@ from .unreachable_models import (
     SymbolKind,
     TestFinding,
 )
-from .unreachable_policy import DEV_LABEL
+from .unreachable_policy import DEV_LABEL, TRUSTED_OUTSIDE_LABELS
 from .unreachable_receiver_types import receiver_types
 from .unreachable_records import record_member_uses
 from .unreachable_references import assembled_reference_names, source_references, string_tokens
@@ -51,18 +51,18 @@ def _module_findings(
     importers: Mapping[str, frozenset[str]],
     edges: Mapping[str, frozenset[str]],
 ) -> tuple[ModuleFinding, ...]:
-    """Report audited modules no product command reaches and no ``dev/`` tool uses.
+    """Report modules no product command, developer tool or build hook uses.
 
-    A module ``dev/`` imports is in use, and so is everything it imports in
+    A module ``dev/`` or ``packaging/`` imports is in use, as are its imports in
     turn: deleting it breaks a repository gate rather than shrinking what an
-    installed user reaches. The clear rests on the same resolved ``dev`` corpus
+    installed user reaches. The clear rests on the same trusted resolved corpus
     label that clears a symbol; a ``tests`` label, including ``dev/`` tests,
     only annotates the finding.
     """
     findings: list[ModuleFinding] = []
-    dev_roots = [name for name in modules if DEV_LABEL in outside.labels_for_module(name)]
-    dev_reach = reachable_closure(dev_roots, modules, dict(edges))
-    audited = frozenset(name for name in modules if spec.audits(name)) - dev_reach
+    tooling_roots = [name for name in modules if TRUSTED_OUTSIDE_LABELS.intersection(outside.labels_for_module(name))]
+    tooling_reach = reachable_closure(tooling_roots, modules, dict(edges))
+    audited = frozenset(name for name in modules if spec.audits(name)) - tooling_reach
     unreachable = audited - full_reach
     for name, spanned in _collapse_packages(unreachable, modules):
         findings.append(_unreachable_module_finding(name, spanned, spec, modules, outside, importers))
@@ -327,15 +327,16 @@ def _definition_finding(
     data_tokens: frozenset[str],
     declared_values: frozenset[str],
 ) -> tuple[SymbolFinding | None, int, int]:
-    """Keep Python, data and resolved dev clears separate and in their original order."""
+    """Clear resolved uses while counting data and development-tool clears separately."""
     if _python_reaches_definition(name, definition, usage):
         return None, 0, 0
     if _data_reaches_definition(definition, data_tokens, declared_values):
         return None, 1, 0
     labels = outside.labels_for_name(definition.name)
-    # Tests annotate findings; only an exact development-tool reference clears.
-    if DEV_LABEL in outside.resolved_labels(name, definition.qualname):
-        return None, 0, 1
+    # Tests annotate findings; only a resolved tooling or build-hook edge clears.
+    resolved_labels = outside.resolved_labels(name, definition.qualname)
+    if TRUSTED_OUTSIDE_LABELS.intersection(resolved_labels):
+        return None, 0, int(DEV_LABEL in resolved_labels)
     return (
         SymbolFinding(
             path=relative_to_repo(module.path, spec),

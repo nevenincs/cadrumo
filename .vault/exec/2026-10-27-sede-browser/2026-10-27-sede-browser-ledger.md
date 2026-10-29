@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#sede-browser'
 date: '2026-10-27'
-modified: '2026-10-28'
+modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:5969f222f9b40dd8342016f0d4f057b5aa83e734ef04d8141d5e45be0c621eba'
+body_hash: 'sha256:e4815f098de35b4dfc14e540c60a9c41e8c944ee0274821ed2e6c14597248ec7'
 related:
   - "[[2026-10-27-sede-browser-plan]]"
 ---
@@ -408,6 +408,16 @@ related:
 - `S03` `M` `native/platform/src/runtime_pipe.rs`
 - `S03` `verify:` `ctest --preset debug -R ^(application|platform)\.(rust|resolver|fmt|clippy|features\.clippy)$` -> `pass`
 - `S03` `by:` `implementation engineer`
+- `S17` `M` `src/cadrumo_client/contracts/view_stream.py`
+- `S17` `M` `src/cadrumo_client/contracts/tests/test_view_stream_documents.py`
+- `S17` `M` `src/cadrumo_client/transport/view_stream.py`
+- `S17` `M` `src/cadrumo_client/transport/tests/view_stream_peer.py`
+- `S17` `M` `src/cadrumo_client/transport/tests/test_view_stream.py`
+- `S17` `M` `src/cadrumo_runtime/host/tests/test_view_stream_relay.py`
+- `S17` `M` `src/cadrumo_runtime/host/tests/test_view_stream_integration.py`
+- `S17` `M` `.vault/plan/2026-10-27-sede-browser-plan.md`
+- `S17` `verify:` `uv run --no-sync pytest src/cadrumo_client/transport/tests/test_view_stream.py src/cadrumo_client/contracts/tests/test_view_stream_documents.py src/cadrumo_runtime/host/tests/test_view_stream_relay.py src/cadrumo_runtime/host/tests/test_view_stream_integration.py -m "" -q` -> `pass`
+- `S17` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
 
 ## Notes
 
@@ -453,3 +463,4 @@ related:
 - `S10` aeat-click-target: an AEAT click on an open view brings the Browser page forward and navigates the view home; landed in the operator checkpoint commit 7de262810f together with the offer-removal hunks
 - `S16` Page state marker landed in the operator-requested checkpoint commit 7de262810f; offer codes removed in 3dab8ab998.
 - `S03` desktop view lane writes bounded by connection liveness, not 5 s (commit b12996b911)
+- `S17` Authorized correction to completed S01/S15: remove superseded image-only Python frame wrappers, retain the production transfer-aware closed schemas and shared vectors, and relocate Python image assembly with its assembled-image record into the owning test window peer. Rust production assembly and runtime chunk forwarding are unchanged. The focused run passed 315 cases; one worker-gone fixture emits PytestUnhandledThreadExceptionWarning for its background sender after connection close. Scoped Ruff, format and ty checks passed. No native sources changed and no native build was rerun.

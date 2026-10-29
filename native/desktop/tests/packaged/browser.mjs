@@ -150,6 +150,18 @@ export function instrument(config) {
   state.blockExternal = !!config.blockExternal;
   state.tokenSeen = false;
   state.tokenGetter = null;
+  state.setupSnapshots = [];
+  state.setupLatest = null;
+  const setupSnapshot = (value) => {
+    if (!value || typeof value.revision !== "number" || !("snapshot" in value))
+      return;
+    state.setupLatest = value;
+    if (state.setupSnapshots.length === 4096) state.setupSnapshots.shift();
+    state.setupSnapshots.push({ at: Date.now(), value });
+    window.dispatchEvent(
+      new CustomEvent("packaged-setup-snapshot", { detail: value }),
+    );
+  };
   const channelOf = (id) =>
     (channels[id] ??= {
       kind: null,
@@ -245,6 +257,7 @@ export function instrument(config) {
   };
   const ALT_SCREEN = "\x1b[?1049h";
   const observe = (id, data) => {
+    setupSnapshot(data?.message ?? data);
     if (!data || typeof data !== "object" || !("index" in data)) return;
     const message = data.message;
     if (message && typeof message === "object" && "records" in message) {
@@ -498,11 +511,14 @@ export function instrument(config) {
     if (
       json &&
       (!entry.ok ||
+        entry.cmd.startsWith("desktop_setup_") ||
         entry.cmd === "terminal_open" ||
         entry.cmd === "sign_in_submit")
     ) {
       try {
         const value = await response.clone().json();
+        if (entry.ok && entry.cmd.startsWith("desktop_setup_"))
+          setupSnapshot(value);
         if (entry.ok && entry.cmd === "terminal_open") {
           entry.session = value?.session ?? null;
           if (entry.channel !== null && entry.channel !== undefined) {

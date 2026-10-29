@@ -344,7 +344,7 @@ class CertificateSourceCheckEntry(BaseModel):
     """Expiry/rotation verdict for one registered certificate source.
 
     Reuses the same local PKCS#12 health classification
-    :func:`application.auth.operator_probes.probe_provider_configuration` runs for the
+    :func:`application.auth.operator_probes.probe_certificate_bundle` runs for the
     single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
     ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
     source in the ``certificate_sources`` registry on

@@ -644,7 +644,11 @@ def _pytest_temp_bootstrap(root: Path) -> bool:
                 ):
                     roots.update(name for target in targets for name in _assigned_names(target))
                     root_lines.append(statement.lineno)
-            elif call[-1:] == ("prepare_temporary_directory",) or call == ("dev", "_paths", "prepare_temp_root"):
+            elif call[-1:] == ("prepare_temporary_directory",) or call == (
+                "dev",
+                "temporary_output",
+                "prepare_temp_root",
+            ):
                 roots.update(name for target in targets for name in _assigned_names(target))
                 root_lines.append(statement.lineno)
 
@@ -952,6 +956,27 @@ def test_pytest_temp_bootstrap_requires_rooted_and_early_os_and_stdlib_bindings(
     )
     (tmp_path / "conftest.py").write_text(unrooted + bindings, encoding=UTF_8)
     assert not _pytest_temp_bootstrap(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("module", "accepted"),
+    [("dev.temporary_output", True), ("dev._paths", False), ("unrelated", False)],
+)
+def test_pytest_temp_bootstrap_recognizes_only_the_current_temp_root_authority(
+    tmp_path: Path, module: str, *, accepted: bool
+) -> None:
+    """The developer root helper is trusted by its defining module, not its name."""
+    source = (
+        "import os\nimport tempfile\n"
+        f"from {module} import prepare_temp_root\n"
+        "_TEMP_BASE = prepare_temp_root()\n"
+        "os.environ.update({'TEMP': str(_TEMP_BASE), 'TMP': str(_TEMP_BASE), 'TMPDIR': str(_TEMP_BASE)})\n"
+        "tempfile.tempdir = str(_TEMP_BASE)\n"
+        "tempfile.gettempdir()\n"
+    )
+    (tmp_path / "conftest.py").write_text(source, encoding=UTF_8)
+
+    assert _pytest_temp_bootstrap(tmp_path) is accepted
 
 
 def test_reading_a_platform_setting_without_writing_is_not_reported(tmp_path: Path) -> None:

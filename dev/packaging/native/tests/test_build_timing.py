@@ -17,6 +17,12 @@ from ..cargo_command import run_configured_command
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
+@pytest.fixture(autouse=True)
+def timing_output_map(tmp_path: Path) -> None:
+    """Give synthetic actions the same declared timing owner as CMake builds."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
+
+
 def test_cached_command_pins_temporary_environment_to_its_build(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -60,3 +66,21 @@ def test_command_failure_marks_enclosing_intervals_without_changing_exit_code(tm
         ("configured-command", "fail"),
         ("total", "fail"),
     ]
+
+
+def test_timing_records_follow_the_declared_output_instead_of_a_parallel_default(tmp_path: Path) -> None:
+    (tmp_path / "build-paths.json").write_text(
+        json.dumps({"paths": {"timings": "diagnostics/phases"}}), encoding="utf-8"
+    )
+    with measure_build(tmp_path, "fixture") as timings:
+        pass
+    assert timings.path.parent == tmp_path / "diagnostics" / "phases"
+    assert timings.path.is_file()
+    assert not (tmp_path / "timings").exists()
+
+
+def test_older_output_maps_require_reconfigure_without_creating_an_unmapped_directory(tmp_path: Path) -> None:
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {}}), encoding="utf-8")
+    with pytest.raises(ValueError, match="reconfigure"), measure_build(tmp_path, "fixture"):
+        pass
+    assert not (tmp_path / "timings").exists()

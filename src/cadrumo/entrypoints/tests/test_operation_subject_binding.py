@@ -99,7 +99,13 @@ def _submission_context(
         profile_id=profile_id,
         destination_id=_DESTINATION,
         action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
+        # Subject validation must run on an admitted frontend. The Sede view
+        # needs the desktop window that displays and drives its browser stream.
+        frontend=(
+            OperationFrontendProjection.DESKTOP
+            if definition_id == "live.sede.view"
+            else OperationFrontendProjection.CLI
+        ),
         contract=registry.lookup_public_contract(definition_id),
         published_authority=Availability.AVAILABLE,
         authority_operation=operation,

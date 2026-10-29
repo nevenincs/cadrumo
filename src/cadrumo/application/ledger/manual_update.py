@@ -82,8 +82,6 @@ from .models import (
     ManualLedgerTransactionResult,
 )
 
-_MANUAL_PROVIDER_NAME = "manual-ledger"
-
 # Evidence catalogue and provenance are mutated ONLY through the attach authority
 # (`attach_manual_transaction_evidence`). The generic manual-field update door
 

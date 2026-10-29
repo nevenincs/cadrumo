@@ -73,7 +73,7 @@ sequence classifies the expense with its taxable base, rate, and VAT amount:
 
 Common fields include taxable base, VAT rate, VAT amount, VAT category, IRPF
 category, the deduction kind, and the counterparty's EU member state for
-intracommunity VAT cases. Use `aeat app ledger classify --help` for the exact
+intra-community VAT cases. Use `aeat app ledger classify --help` for the exact
 current option list.
 
 For ordinary domestic VAT, use the taxable base, rate, and amount shown by the

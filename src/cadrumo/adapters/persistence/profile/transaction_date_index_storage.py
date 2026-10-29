@@ -9,7 +9,6 @@ from sqlalchemy import delete, select, update
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
-from ....core.logging import get_logger
 from ....domain.transactions.models import (
     Transaction,
 )
@@ -20,9 +19,6 @@ from .transaction_date_projection import (
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from sqlalchemy.orm import Session
-
-
-_log = get_logger(__name__)
 
 
 def date_index_revision(rows: dict[str, tuple[int, IndexedTransactionDates]]) -> str:

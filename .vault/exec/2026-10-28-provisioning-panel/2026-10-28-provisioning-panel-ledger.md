@@ -5,40 +5,14 @@ tags:
 date: '2026-10-28'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:2b394496f83295f382fc92a65485cc3757f76ffc6f93d86237fc8faeaaaad69b'
+body_hash: 'sha256:adeffd0844332dd3afcda9d1cbb665af4ff7398e2f11015f07f51efa455927aa'
 related:
   - "[[2026-10-28-provisioning-panel-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `provisioning-panel` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S01` `M` `native/application/src/provisioning/engine.rs`
 - `S01` `M` `native/application/src/provisioning/protocol.rs`
@@ -213,6 +187,75 @@ related:
 - `S05` `verify:` `tauri.mjs test-unit shell::setup` -> `pass`
 - `S05` `verify:` `tauri.mjs clippy-backend` -> `pass`
 - `S05` `verify:` `playwright scenarios setup.spec.ts local-models.spec.ts` -> `pass`
+- `S05` `verify:` `just build-native Release bundle (HEAD 9a33857fc7 then d0ad22cb4a; user-docs xref docs/how-to/import-bank-statements.md:87 to classify-with-llm.md#set-up-a-provider)` -> `fail`
+- `S05` `verify:` `just build-native Debug bundle (HEAD 9477d64ae6; same user-docs failure)` -> `fail`
+- `S05` `verify:` `just build-native Debug app-native (HEAD 9477d64ae6)` -> `pass`
+- `S05` `verify:` `just build-native Debug desktop-packaged-host (HEAD 9477d64ae6)` -> `pass`
+- `S05` `verify:` `python -m dev.desktop_agent_live.stage_host at 15:15, later refused because app-payload records nothing staged while docs fail` -> `pass`
+- `S05` `verify:` `built app signed out: only the create-profile dialog shows first` -> `pass`
+- `S05` `verify:` `built app: panel opens after Ahora no (store decided on pre-read complete=null snapshot; fixed in b0652a5d2a, not yet rechecked in a restaged host)` -> `fail`
+- `S05` `verify:` `npx playwright test tests/scenarios/setup.spec.ts (41 passed; new launch-after-unread test fails without the fix and passes with it)` -> `pass`
+- `S05` `verify:` `built app: one row per element with its own action, status said once, close button` -> `pass`
+- `S05` `verify:` `built app: no unknown size reads 0 byte (333 MB, 1,6 GB)` -> `pass`
+- `S05` `verify:` `built app: Local AI dropdown holds the program row; signed-out model list says sign-in is needed` -> `pass`
+- `S05` `verify:` `built app: browser setup review, approve, progress and ready on the real engine, twice` -> `pass`
+- `S05` `verify:` `built app: local AI program setup runs beside the browser (plan falls back silently within about 1 s, or stays in planning over 3.5 min with every button disabled)` -> `fail`
+- `S05` `verify:` `built app: rail Settings spinner while a run is live and not after` -> `pass`
+- `S05` `verify:` `built app: Settings has exactly one provisioning section with status and open button, no Local AI or browser section` -> `pass`
+- `S05` `verify:` `Sede page signed out needs a profile; feature_refused warning covered by native/desktop/src-tauri/src/shell/sede_view/tests.rs:1122-1176` -> `pass`
+- `S05` `verify:` `WebView console clean (one CSP unsafe-eval pageerror, source not identified)` -> `fail`
+- `S05` `M` `native/desktop/frontend/src/components/setup/ItemRemoval.tsx`
+- `S05` `verify:` `playwright setup.spec.ts local-models.spec.ts (57 passed)` -> `pass`
+- `S05` `A` `docs/_static/cadrumo-plural-expression.js`
+- `S05` `M` `docs/conf.py`
+- `S05` `A` `dev/docs/tests/test_plural_expression.py`
+- `S05` `M` `dev/docs/tests/test_docs_desktop_flavor.py`
+- `S05` `verify:` `pytest dev/docs/tests/test_docs_desktop_flavor.py dev/docs/tests/test_plural_expression.py` -> `pass`
+- `S05` `verify:` `ruff check and format, ty check on touched python` -> `pass`
+- `S05` `M` `native/application/src/provisioning/http.rs`
+- `S05` `M` `native/application/src/provisioning/network.rs`
+- `S05` `verify:` `cargo test application provisioning:: (139)` -> `pass`
+- `S05` `verify:` `desktop shell::setup unit (93)` -> `pass`
+- `S05` `verify:` `clippy -D warnings application+desktop` -> `pass`
+- `S05` `verify:` `playwright setup.spec.ts (44)` -> `pass`
+- `S05` `verify:` `built Debug app local AI plan review + unreachable alert` -> `pass`
+- `S05` `M` `native/application/src/provisioning/connection.rs`
+- `S05` `M` `native/application/src/provisioning/engine.rs`
+- `S05` `verify:` `cargo test --lib --features platform,test-support provisioning` -> `pass`
+- `S05` `verify:` `cargo clippy --all-targets --features platform,test-support -D warnings` -> `pass`
+- `S05` `M` `native/application/src/error/application.rs`
+- `S05` `M` `dev/packaging/native/package_health_facts.py`
+- `S05` `verify:` `desktop-host-unit-test shell::setup (95 passed)` -> `pass`
+- `S05` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `verify:` `test_cmake_installer_flow (8 passed)` -> `pass`
+- `S05` `M` `native/application/src/provisioning/plan.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/models/tests.rs`
+- `S05` `M` `native/application/src/provisioning/local_ai/program/tests.rs`
+- `S05` `verify:` `cargo test --lib provisioning (145)` -> `pass`
+- `S05` `verify:` `desktop-host-unit-test shell::setup (95)` -> `pass`
+- `S05` `verify:` `clippy -D warnings` -> `pass`
+- `S05` `M` `native/application/src/provisioning/test_servers.rs`
+- `S05` `verify:` `cargo test provisioning (150 passed)` -> `pass`
+- `S05` `verify:` `cargo clippy all-targets -D warnings` -> `pass`
+- `S05` `verify:` `rustfmt check` -> `pass`
+- `S05` `A` `dev/packaging/native/tests/test_native_error_code_parity.py`
+- `S05` `verify:` `pytest dev/packaging/native/tests/test_native_error_code_parity.py test_cmake_installer_flow.py` -> `pass`
+- `S05` `verify:` `ruff check+format, ty check, tsc --noEmit` -> `pass`
+- `S05` `M` `native/desktop/src-tauri/src/shell/setup/wire.rs`
+- `S05` `M` `native/desktop/frontend/src/components/setup/SetupPlan.tsx`
+- `S05` `verify:` `desktop-host-unit-test-shell-setup-95` -> `pass`
+- `S05` `verify:` `desktop-host-unit-clippy` -> `pass`
+- `S05` `verify:` `playwright-setup-spec-45` -> `pass`
+- `S05` `verify:` `playwright-local-models-spec-14` -> `pass`
+- `S05` `verify:` `cmake --build build/windows-x64 --config Release --target bundle` -> `fail`
+- `S05` `M` `native/desktop/tests/packaged.test.mjs`
+- `S05` `M` `native/desktop/tests/packaged/browser.mjs`
+- `S05` `M` `native/desktop/tests/packaged/probes.mjs`
+- `S05` `M` `native/desktop/tests/packaged/setup.test.mjs`
+- `S05` `M` `native/desktop/tests/packaged/provisioning.mjs`
+- `S05` `verify:` `node --test native/desktop/tests/packaged/setup.test.mjs` -> `pass`
+- `S05` `verify:` `packaged harness JavaScript syntax checks` -> `pass`
+- `S05` `verify:` `Prettier explicit changed files` -> `pass`
 
 ## Notes
 
@@ -226,3 +269,11 @@ related:
 - `S05` Rebuild blocked by other sessions' uncommitted work: src/agent/person/native.rs:1549 E0599 unwrap on `Vec<Sender<Pushed>>;` `src/shell/sign_in/process.rs:493-494` E0373 closure borrows wake. Rebuilt-app check not run; S05 left open.
 - `S05` fixture holdPublication/publish committed in 0b064efd2f; spec poll fixes in a007e37053 (auto-commits)
 - `S05` Built-app checks need a signed-in profile; creating one needs the operator's password. Builds pass; S05 left open.
+- `S05` S05 left open: needs (1) the user-docs anchor fixed so the bundles build and the Debug host can be restaged with b0652a5d2a, then the launch opening rechecked in the built app; (2) the local AI program plan diagnosed (silent fallback or planning hang) and the concurrent run rechecked; (3) triage of the removal confirmation reappearing after a browser is set up again, and of the CSP unsafe-eval pageerror.
+- `S05` removal question cleared on settle; commit db1805cdb7
+- `S05` csp-eval: source was Sphinx doctools.js addTranslations new Function (docs frame, es); full `bundle/stage_host` not rebuilt, in-app proof via live call in WebView2
+- `S05` local AI plan: github.com 4214-byte CSP header exceeded the 4 KiB line bound, preflight said `host_unreachable` and the row stayed silent; commit 2f994b5100. Endless planning not reproduced; cancel now settles a planning setup. `stage_host` still blocked, built app checked via a lane-package mirror.
+- `S05` DNS bound already existed in connection.rs resolved() since 67cd87f077; added cancel reach and tests; commits f30854fdc7, 8f16dabb9c
+- `S05` new SetupFailed code for component setup failures; hand-kept mirrors updated (no generator exists); `child_failed` absent from both mirrors (pre-existing)
+- `S05` 2026-10-29 18:04-21:13, HEAD 65d05917db..e21c31c181: Release bundle 13 attempts, all exit 1, refused by `docs_build` 'Documentation inputs changed during the build' (concurrent peer edits); desktop-frontend-chrome also exited 1 in 5 runs, cause not isolated. Debug bundle and Debug desktop-packaged-host not reached; built-app checks 1-10 not run; S05 left open. Coverage gap: registered lanes desktop-packaged-test/desktop-packaged-setup-test (signed in, browser only) do not assert checks 1,3,4,5,7,9,10; 2 and 6 partial; 8 via csp-zero.
+- `S05` Packaged provisioning assertions implemented with pure negative cases (25 unit tests passed). Release rebuild and both packaged lanes pending: peer CMake desktop-frontend-dev PID 38512 still owns build/windows-x64. Initial complete:null is not deterministically exercised by reloading the cached native host; real crash-interruption/resume remains unverified (cancellation/retry is distinct). S05 remains open. Pre-existing shared .tmp entries preserved; this task retained no scratch.

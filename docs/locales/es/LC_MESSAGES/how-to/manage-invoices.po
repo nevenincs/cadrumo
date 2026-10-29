@@ -29,7 +29,7 @@ msgid ""
 "both kinds and shows which records feed your tax calculations."
 msgstr ""
 "Registra las facturas que emite y recibe tu negocio: el dinero que te "
-"debe un clientete y el dinero que debes a un proveedor. Esta guía cubre "
+"debe un cliente y el dinero que debes a un proveedor. Esta guía cubre "
 "ambos tipos y muestra qué registros alimentan tus cálculos fiscales."
 
 #: ../../how-to/manage-invoices.md:7
@@ -380,4 +380,3 @@ msgstr "[Preparar una presentación de IVA con el Modelo 303](modelo-303.md)"
 #: ../../how-to/manage-invoices.md:167
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
-

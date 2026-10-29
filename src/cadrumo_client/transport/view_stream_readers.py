@@ -61,19 +61,11 @@ from threading import Lock
 from ..contracts.contracts import ByteChannel
 from ..contracts.view_stream import (
     VIEW_CREDIT_MAX_IMAGES,
-    ViewClosed,
-    ViewDownstreamFrame,
     ViewImage,
-    ViewNotice,
-    ViewState,
-    ViewUpstreamDocument,
-    ViewUpstreamFrame,
 )
 from ..contracts.view_transfer import (
-    ViewConnectionDownstreamFrame,
     ViewConnectionUpstreamDocument,
     ViewConnectionUpstreamFrame,
-    ViewTransferDownstreamDocument,
 )
 from .frame_io import (
     DOCUMENT_FRAME_KIND,
@@ -83,121 +75,13 @@ from .frame_io import (
 from .transport_cleanup import close_transport_after_failure
 from .view_stream import (
     VIEW_CHUNK_FRAME_KIND,
-    AssembledViewImage,
-    ViewImageAssembler,
     ViewTransferChunk,
     ViewTransferReceiver,
     is_view_transfer_chunk,
     view_stream_violation,
 )
 
-_DOWNSTREAM_KINDS = frozenset({DOCUMENT_FRAME_KIND, VIEW_CHUNK_FRAME_KIND})
-_UPSTREAM_KINDS = frozenset({DOCUMENT_FRAME_KIND})
 _UPSTREAM_TRANSFER_KINDS = frozenset({DOCUMENT_FRAME_KIND, VIEW_CHUNK_FRAME_KIND})
-
-
-class ViewDownstreamReader:
-    """Read the documents, complete images and transfer chunks a view connection carries toward the window.
-
-    ``view.image`` is consumed here and returned only with its assembled
-
-    bytes. A ``B`` frame without an announcement, a document inside an
-
-    image, or any other kind refuses and closes the connection.
-
-
-
-    A connection that carries downloads is read with the window's
-
-    ``transfers`` receiver: its chunks come back as :class:`ViewTransferChunk`
-
-    in order, the transfer documents come back as documents after the receiver
-
-    has applied them, and a violation of any transfer rule closes the
-
-    connection. Without ``transfers`` the connection carries no transfer and
-
-    any transfer chunk or document refuses, as it always did.
-
-    """
-
-    def __init__(self, channel: ByteChannel, *, transfers: ViewTransferReceiver | None = None) -> None:
-        """Bind the reader to one view connection."""
-        self._channel = channel
-
-        self._assembler = ViewImageAssembler()
-
-        self._transfers = transfers
-
-    def read(
-        self, *, deadline: float
-    ) -> ViewState | ViewNotice | ViewClosed | AssembledViewImage | ViewTransferDownstreamDocument | ViewTransferChunk:
-        """Return the next control document, complete image or transfer chunk."""
-        try:
-            while True:
-                kind, payload = read_frame_of_kinds(self._channel, kinds=_DOWNSTREAM_KINDS, deadline=deadline)
-
-                if kind == VIEW_CHUNK_FRAME_KIND:
-                    item = self._accept_chunk(payload)
-                    if item is not None:
-                        return item
-                    continue
-                if self._assembler.assembling:
-                    self._assembler.discard()
-
-                    raise view_stream_violation("view_image_interleaved")
-
-                if self._transfers is None:
-                    document = decode_document(payload, ViewDownstreamFrame).root
-
-                else:
-                    document = decode_document(payload, ViewConnectionDownstreamFrame).root
-
-                    self._transfers.observe(document)
-
-                if isinstance(document, ViewImage):
-                    self._assembler.announce(document)
-
-                    continue
-
-                return document
-
-        except BaseException as error:
-            self._assembler.discard()
-
-            close_transport_after_failure(self._channel, error)
-
-            raise
-
-    def _accept_chunk(self, payload: bytes) -> AssembledViewImage | ViewTransferChunk | None:
-        if is_view_transfer_chunk(payload):
-            return self._accept_transfer_chunk(payload)
-        return self._assembler.accept(payload)
-
-    def _accept_transfer_chunk(self, payload: bytes) -> ViewTransferChunk | None:
-
-        if self._transfers is None:
-            raise view_stream_violation("view_transfer_unexpected")
-
-        if self._assembler.assembling:
-            # An image's chunks run unbroken; a transfer chunk inside them is an interleaving.
-
-            raise view_stream_violation("view_image_interleaved")
-
-        return self._transfers.accept(payload)
-
-
-def read_view_upstream(channel: ByteChannel, *, deadline: float) -> ViewUpstreamDocument:
-    """Read one control document sent from the window; ``B`` never travels upstream."""
-    try:
-        _, payload = read_frame_of_kinds(channel, kinds=_UPSTREAM_KINDS, deadline=deadline)
-
-        return decode_document(payload, ViewUpstreamFrame).root
-
-    except BaseException as error:
-        close_transport_after_failure(channel, error)
-
-        raise
 
 
 class ViewUpstreamReader:

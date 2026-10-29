@@ -23,6 +23,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 def test_replaced_archive_preserves_previous_acceptance(tmp_path: Path) -> None:
     """A same-name replacement must not inherit the original package's identity."""
+    (tmp_path / "build-paths.json").write_text(json.dumps({"paths": {"timings": "timings"}}), encoding="utf-8")
     archive = tmp_path / "product.zip"
     with zipfile.ZipFile(archive, "w") as output:
         output.writestr("app/content.txt", "original")
@@ -77,7 +78,7 @@ def test_application_probe_receives_extracted_root_and_controls_acceptance(
         ],
     }
     (tmp_path / "build-paths.json").write_text(
-        json.dumps({"paths": {"verification": "verification"}}), encoding="utf-8"
+        json.dumps({"paths": {"verification": "verification", "timings": "timings"}}), encoding="utf-8"
     )
     manifest_bytes = json.dumps(manifest).encode()
     archive = tmp_path / "product.zip"

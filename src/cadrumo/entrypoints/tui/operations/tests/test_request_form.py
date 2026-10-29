@@ -113,12 +113,10 @@ def test_the_profile_field_is_filled_with_the_session_profile_and_never_entered(
 
 
 def test_the_derived_subject_is_what_the_contract_declares_for_every_operation() -> None:
-    kinds: set[OperationSubjectKind] = set()
     for entry in _catalogue().entries:
         if entry.typed_operator_input:
             continue
         reference = entry.contract.subject_reference
-        kinds.add(reference.kind)
         fields = request_fields(entry.input_json_schema, profile_id=_PROFILE_ID)
         untouched, _problems = request_document(fields, {field.name: field.initial for field in fields})
         documents = ((False, untouched), (True, _with_subject_field(reference, untouched)))
@@ -129,7 +127,19 @@ def test_the_derived_subject_is_what_the_contract_declares_for_every_operation()
                 )
                 expected = _declared_subject(reference, field_set=field_set, entered=entered)
                 assert derived == expected, (entry.definition_id, field_set, entered)
-    assert kinds == set(OperationSubjectKind)
+
+    # FIXED is a valid contract kind even though no production operation currently uses it.
+    fixed_reference = OperationSubjectReferenceV1.fixed("machine:runtime")
+    assert (
+        derived_subject(
+            fixed_reference,
+            profile_id=_PROFILE_ID,
+            document={},
+            entered=None,
+            typed_operator_input=False,
+        )
+        == "machine:runtime"
+    )
 
 
 def test_a_person_names_the_subject_only_where_nothing_else_can() -> None:

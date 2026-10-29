@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.toml import load_toml
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, TEMP_ROOT
 from dev.first_party_source import SOURCE_PACKAGES
 
 from ..security import (
@@ -46,8 +46,9 @@ def test_scanner_state_uses_existing_controlled_directories(tmp_path: Path, monk
         assert path.parent.is_dir()
     assert Path(environment["SEMGREP_LOG_FILE"]) == tmp_path / "scanner-state" / "semgrep" / "semgrep.log"
     assert Path(environment["SEMGREP_SETTINGS_FILE"]) != tmp_path / "ambient-settings.yml"
-    assert Path(environment["TEMP"]).is_dir()
-    assert Path(environment["TEMP"]).resolve().is_relative_to(tmp_path.resolve())
+    temporary = Path(environment["TEMP"])
+    assert temporary.is_dir()
+    assert temporary.resolve().is_relative_to(TEMP_ROOT.resolve())
 
 
 # A real captured semgrep --json payload, trimmed from a scoped run against

@@ -835,8 +835,6 @@ desktop:
           receipt: Justificante
           record: Tu registro
         differs:
-          amount: El importe difiere
-          date: La fecha difiere
           status: El estado difiere
         empty: Sin declaraciones.
         group:
@@ -875,7 +873,6 @@ desktop:
         read_on: Leída el {date}
         warning: Abrir una notificación en la AEAT puede contar como recibirla.
       part:
-        form: Modelo {form}, {year}
         year: Declaraciones de {year}
       partly: Algunos no se pudieron actualizar.
       problems: '{name}: algunas fallaron'

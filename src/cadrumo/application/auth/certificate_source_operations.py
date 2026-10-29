@@ -24,7 +24,7 @@ See Also:
         Sibling operator verb configuring the active auth *provider*;
         this module manages named certificate *sources* within the
         certificate provider.
-    :func:`~application.auth.operator_probes.probe_provider_configuration`
+    :func:`~application.auth.operator_probes.probe_certificate_bundle`
         Sibling single-certificate expiry probe this module's
         :func:`~application.auth.certificate_source_operations.check_operator_certificate_sources` reuses per named
         source.

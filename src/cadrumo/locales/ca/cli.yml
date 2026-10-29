@@ -1446,9 +1446,9 @@ cli:
           d'auditoria)
         amend_wizard_reason_required: Cal un motiu per al registre d'auditoria de
           la correcció.
-        amend_wizard_select_prompt: 'Registrada com a presentada: %{modelo} %{year}
+        amend_wizard_select_prompt: "Registrada com a presentada: %{modelo} %{year}
           %{period}, valors actuals:\n%{summary}\nQuins números de casella van canviar?
-          (separats per comes o espais, en blanc per a cap)'
+          (separats per comes o espais, en blanc per a cap)"
         amend_wizard_unknown_casilla: La casella %{token} no forma part de la declaració
           %{modelo} %{year} %{period} registrada com a presentada; tria una de les
           caselles llistades.
@@ -1656,7 +1656,7 @@ cli:
           en aquesta ordre; KEY és un id de relació de les definicions dels models,
           no una clau de --binding. Executa %{discover} per llistar la guia de relacions
           i els altres valors que encara necessita el càlcul.'
-        missing_relation_guidance_m200_m202: '%{base} Aporta els pagos fraccionados
+        missing_relation_guidance_m200_m202: '%{base} Aporta els pagaments fraccionats
           del Model 202 al Model 200 amb --relation RELATION_ID=VALUE, no amb --binding.
           DP200014B:00611 resta dos canals de relació M202 mútuament exclusius: modelo-200-2024-rel-202-pagos-fraccionados
           per a 40.3 casella [34] i modelo-200-2024-rel-202-pagos-fraccionados-40-2
@@ -1733,14 +1733,15 @@ cli:
           de l'AEAT importada.
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         refund_election_help: Tria si un resultat negatiu elegible del Model 303 es
-          compensa o se sollicita com a devolució.
+          compensa o se sol·licita com a devolució.
         relation_help: Valor d'una relació de les definicions dels models amb sintaxi
           KEY=VALUE (repetible). KEY és un id de relació, no una clau de --binding;
           fes-lo servir per a entrades que venen d'un altre període o d'un altre model.
           Executa aeat app modelo bindings list --missing per veure la guia de relacions
-          d'aquesta declaració. Per als pagos fraccionados M202 del Model 200, usa
-          els canals de relació mútuament exclusius 40.3 casella [34] i 40.2 casella
-          [03], posant 0 a la modalitat no usada quan introdueixis valors manuals.
+          d'aquesta declaració. Per als pagaments fraccionats M202 del Model 200,
+          fes servir els canals de relació mútuament exclusius 40.3 casella [34] i
+          40.2 casella [03], posant 0 a la modalitat no usada quan introdueixis valors
+          manuals.
         rename_help: Actualitzar el nom de visualització d'una declaració
         report:
           development_software_identity: El fitxer de presentació d'aquest model portaria
@@ -2488,11 +2489,11 @@ cli:
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
         ambiguous_relacion_advisory: descendent %{indices} declara meses_madre_trabajo
-          sota la relació no indicada. El manual concedeix el minim pero exclou la
+          sota la relació no indicada. El manual concedeix el mínim però exclou la
           deducció per maternitat de l'art. 81.1 per a un net o altre descendent per
-          consanguinitat diferent d'un fill, o un menor sota guarda i custodia judicial
+          consanguinitat diferent d'un fill, o un menor sota guarda i custòdia judicial
           -- la dada emmagatzemada no permet distingir-lo d'un fill real. Confirma
-          que aquest descendent es un fill, o indica la relació real amb RELACION=.
+          que aquest descendent és un fill, o indica la relació real amb RELACION=.
         guarderia_spend_shapes_conflict: Per a un descendent, declara GASTOS_GUARDERIA
           o GASTOS_GUARDERIA_MENSUAL, però no tots dos.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.

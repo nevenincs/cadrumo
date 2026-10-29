@@ -117,8 +117,8 @@ from cadrumo_client.contracts.view_transfer import (
     ViewTransferUpstreamDocument,
     ViewUpload,
 )
+from cadrumo_client.transport.tests.view_stream_peer import AssembledViewImage, ViewDownstreamReader
 from cadrumo_client.transport.view_stream import (
-    AssembledViewImage,
     ViewTransferChunk,
     ViewTransferReceiver,
     ViewTransferSender,
@@ -126,7 +126,6 @@ from cadrumo_client.transport.view_stream import (
     write_view_transfer_chunk,
     write_view_transfer_document,
 )
-from cadrumo_client.transport.view_stream_readers import ViewDownstreamReader
 
 from ...adapters.worker_transport import worker_endpoint
 from ..view_stream_relay import ViewStreamRelay

@@ -387,4 +387,4 @@ msgstr "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)"
 
 #: ../../how-to/manage-invoices.md:167
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

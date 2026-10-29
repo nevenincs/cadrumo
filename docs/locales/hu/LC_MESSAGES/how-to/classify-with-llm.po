@@ -670,4 +670,4 @@ msgstr ""
 
 #: ../../how-to/classify-with-llm.md:264
 msgid "[CLI reference](../cli/index.rst)"
-msgstr "[CLI-referencia](../cli/index.rst)"
+msgstr "[Parancssori referencia](../cli/index.rst)"

@@ -30,7 +30,7 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal, Protocol, Self
 from urllib.parse import urlsplit
 from uuid import UUID
 
-from pydantic import BaseModel, Field, RootModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from cadrumo.application.operations.models import OperationId
 from cadrumo.core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -472,14 +472,6 @@ class ViewClose(BaseModel):
 
 type ViewDownstreamDocument = ViewImage | ViewState | ViewNotice | ViewClosed
 type ViewUpstreamDocument = ViewCredit | ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClose
-
-
-class ViewDownstreamFrame(RootModel[Annotated[ViewDownstreamDocument, Field(discriminator="kind")]]):
-    """The closed set of control documents sent toward the window."""
-
-
-class ViewUpstreamFrame(RootModel[Annotated[ViewUpstreamDocument, Field(discriminator="kind")]]):
-    """The closed set of control documents sent from the window."""
 
 
 SEDE_VIEW_DEFINITION_ID: Final = "live.sede.view"

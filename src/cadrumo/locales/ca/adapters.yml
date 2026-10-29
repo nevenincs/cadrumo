@@ -114,8 +114,8 @@ adapters:
         tax_id_unresolved: No s'ha pogut resoldre l'identificador fiscal de la declaració
           a partir del text del PDF.
         template_not_detected: No s'ha pogut detectar automàticament la plantilla
-          de {path}; indica --modelo i --año per forçar-la.
-        year_conflict: --año {year} entra en conflicte amb l'any detectat {detected}.
+          de {path}; indica --modelo i --year per forçar-la.
+        year_conflict: --year {year} entra en conflicte amb l'any detectat {detected}.
     financial:
       providers:
         pdf_statement:
@@ -206,7 +206,7 @@ adapters:
           namespace_create_path_too_long: 'L''emmagatzematge local no ha pogut crear
             l''espai de noms {namespace}: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
-            activa LongPathsEnabled (consulta `aeat config check`).'
+            activa LongPathsEnabled (consulta `aeat config storage check`).'
           namespace_create_permission: L'emmagatzematge local no ha pogut crear l'espai
             de noms {namespace}.
           namespace_forbidden_characters: L'espai de noms local {namespace} conté
@@ -223,7 +223,7 @@ adapters:
           payload_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             la càrrega de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
-            activa LongPathsEnabled (consulta `aeat config check`).'
+            activa LongPathsEnabled (consulta `aeat config storage check`).'
           payload_write_permission: L'emmagatzematge local no ha pogut escriure el
             payload de l'objecte.
           sidecar_malformed: El sidecar local {sidecar_path} no es pot llegir o està
@@ -235,7 +235,7 @@ adapters:
           sidecar_write_path_too_long: 'L''emmagatzematge local no ha pogut escriure
             el sidecar de l''objecte: el camí supera el límit de longitud de camí
             de Windows. Trasllada CADRUMO_LOCAL_STORAGE_ROOT a un camí més curt o
-            activa LongPathsEnabled (consulta `aeat config check`).'
+            activa LongPathsEnabled (consulta `aeat config storage check`).'
           written_at_invalid: 'El camp written_at del sidecar local falta, no es pot
             interpretar o no indica zona horària: {actual_value}.'
   persistence:

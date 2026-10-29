@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from html import escape
+from pathlib import Path
 from typing import Final
 
 from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.domain.calculations.registry.schema_references import legal_note_language_ranges
 
 from ._locale_chrome import chrome_anchor, docs_chrome, same_wording
 from .compile_slots import Rendering, language_text
@@ -115,26 +117,25 @@ def _official_wording_block(required_text: tuple[str, ...], language: OutputLang
     ]
 
 
-def _catalogue_record_block(record: LegalProvisionRecord, language: OutputLanguage) -> list[str]:
+def _catalogue_record_block(
+    record: LegalProvisionRecord,
+    language: OutputLanguage,
+    repo_root: Path,
+    source_cache: dict[Path, str | None],
+) -> list[str]:
     """The demoted provenance panel: the identifiers and the review trail.
 
-    Everything a reader does not need in order to understand the provision, but
-    which must stay visible for anyone auditing where the figure came from: the
-    catalogue id, the instrument kind, the bundled-corpus locator, and the
-    review stamp.  It renders after the content and is styled as subordinate.
-
-    The authored ``notes`` field lives here rather than leading the entry.  It
-    is a single free-text field with no declared language -- measured across
-    the catalogue it is roughly three quarters Spanish and one quarter English
-    -- so it cannot be marked honestly for the reader, and presenting it as the
-    entry's summary would put unlabelled other-language prose in the position
-    where a reader expects the answer.  As provenance beside the review stamp
-    it is what it actually is: the cataloguer's own note.
+    Keep the identifiers, review trail, and mixed-language note after the
+    provision text so they remain provenance rather than its summary.
     """
+    fields = _catalogue_record_fields(record, language)
+    note = _catalogue_note_projection(record, language, repo_root, source_cache)
+    title = docs_chrome("docs.legal.record.title", language)
+    return [".. container:: cadrumo-legal-record", "", f"   {title}", "", *(f"   {line}" for line in fields), *note]
 
-    # Every key is spelled out at its call site rather than composed from a
-    # field name. A composed key is invisible to the locale scanner, which then
-    # reports the catalogue entry as one no code requests and prunes it.
+
+def _catalogue_record_fields(record: LegalProvisionRecord, language: OutputLanguage) -> list[str]:
+    """Render the provenance fields that have no range-level language split."""
     fields = [
         f":{docs_chrome('docs.legal.record.catalogue_id', language)}: {_rst_literal(record.legal_id)}",
         f":{docs_chrome('docs.legal.record.instrument_kind', language)}: {_rst_literal(record.kind)}",
@@ -158,22 +159,176 @@ def _catalogue_record_block(record: LegalProvisionRecord, language: OutputLangua
         )
     if record.reviewed_at is not None:
         fields.append(f":{docs_chrome('docs.legal.record.reviewed_at', language)}: {record.reviewed_at.isoformat()}")
-    # The review stamp and the note are catalogue prose, the same words on every
-    # language's page, and they are the only fields here that reach a text block
-    # rather than an inline literal -- so they are the only ones a language's
-    # own smart-quotes transform educates (:func:`~dev.docs.compile_slots.same_wording`).
     if record.reviewed_by is not None:
         fields.append(
             f":{docs_chrome('docs.legal.record.reviewed_by', language)}: "
             f"{same_wording(record.reviewed_by, language, as_source=_rst_escape)}",
         )
-    if record.notes is not None:
-        fields.append(
-            f":{docs_chrome('docs.legal.record.note', language)}: "
-            f"{same_wording(record.notes, language, as_source=_rst_escape)}",
+    return fields
+
+
+def _catalogue_note_projection(
+    record: LegalProvisionRecord,
+    language: OutputLanguage,
+    repo_root: Path,
+    source_cache: dict[Path, str | None],
+) -> list[str]:
+    """Render the note with verified language ranges or the established RST path."""
+    if record.notes is None:
+        return []
+    explicit = legal_note_language_ranges(record.notes, record.notes_language_spans)
+    verified = _verified_note_spans(record, repo_root, source_cache)
+    # Explicit reviewed language wins, including an English annotation over
+    # wording that happens to occur in a Spanish source. Untagged prose keeps
+    # the page language; source verification alone never expands a quote.
+    note_spans = tuple(
+        sorted(
+            (
+                *explicit,
+                *(
+                    (start, end, "es")
+                    for start, end in verified
+                    if all(end <= left or start >= right for left, right, _language in explicit)
+                ),
+            )
         )
-    title = docs_chrome("docs.legal.record.title", language)
-    return [".. container:: cadrumo-legal-record", "", f"   {title}", "", *(f"   {line}" for line in fields)]
+    )
+    if explicit and not _supports_inline_note_markup(record.notes):
+        raise LegalReferenceError(f"legal entry {record.legal_id!r}: annotated note requires plain inline text")
+    if note_spans and _supports_inline_note_markup(record.notes):
+        return _catalogue_note_html(record.notes, note_spans, language)
+    else:
+        note = [
+            "   "
+            + f":{docs_chrome('docs.legal.record.note', language)}: "
+            + same_wording(record.notes, language, as_source=_rst_escape),
+        ]
+    return note
+
+
+def _catalogue_note_html(note: str, spans: tuple[tuple[int, int, str], ...], language: OutputLanguage) -> list[str]:
+    """Render verified quote ranges as language-marked HTML text runs."""
+    label = escape(docs_chrome("docs.legal.record.note", language))
+    pieces: list[str] = []
+    cursor = 0
+    for start, end, span_language in spans:
+        pieces.append(escape(note[cursor:start]))
+        pieces.append(f'<span lang="{span_language}">{escape(note[start:end])}</span>')
+        cursor = end
+    pieces.append(escape(note[cursor:]))
+    body = "".join(pieces)
+    return [
+        "",
+        "   .. raw:: html",
+        "",
+        '      <dl class="field-list simple">',
+        f"        <dt>{label}:</dt>",
+        f"        <dd><p><!--cadrumo-legal-note-->{body}</p></dd>",
+        "      </dl>",
+    ]
+
+
+def _supports_inline_note_markup(note: str | None) -> bool:
+    """Limit raw HTML to text whose old RST smart-quote pass cannot change it."""
+    if note is None or any(char in note for char in "\r\n<>"):
+        return False
+    folded = note.casefold()
+    if any(token in folded for token in ("http://", "https://", "www.", "mailto:", "ftp://")):
+        return False
+    return not any(token in note for token in ("'", '"', "--", "..."))
+
+
+_DATA_ROOT = Path("src") / "cadrumo" / "_data"
+_CORPUS_PREFIX = "src/cadrumo/_data/"
+
+
+def _verified_note_spans(
+    record: LegalProvisionRecord,
+    repo_root: Path,
+    source_cache: dict[Path, str | None],
+) -> tuple[tuple[int, int], ...]:
+    """Return unambiguous note ranges grounded by this row's exact source."""
+    if record.notes is None or not record.notes or not record.required_text:
+        return ()
+    source = _source_text_for_record(record, repo_root, source_cache)
+    if source is None:
+        return ()
+    candidates = _grounded_note_matches(record.notes, record.required_text, source)
+    return _non_overlapping_spans(candidates)
+
+
+def _source_text_for_record(
+    record: LegalProvisionRecord,
+    repo_root: Path,
+    source_cache: dict[Path, str | None],
+) -> str | None:
+    """Read one safe corpus source at most once per generation pass."""
+    reference = record.corpus_ref.split("#", 1)[0]
+    if reference.startswith(_CORPUS_PREFIX):
+        reference = reference[len(_CORPUS_PREFIX) :]
+    relative = Path(reference)
+    if relative.is_absolute() or any(part in {"", ".", ".."} for part in relative.parts):
+        return None
+    corpus_root = (repo_root / _DATA_ROOT).resolve()
+    target = (corpus_root / relative).resolve()
+    if not target.is_relative_to(corpus_root):
+        return None
+    extracted = target.with_name(target.name + ".extracted.md")
+    source_path = extracted if extracted.is_file() else target
+    if not source_path.resolve().is_relative_to(corpus_root):
+        return None
+    source_path = source_path.resolve()
+    if source_path in source_cache:
+        return source_cache[source_path]
+    try:
+        source = source_path.read_text(encoding="utf-8")
+    except OSError:
+        source_cache[source_path] = None
+        return None
+    source_cache[source_path] = source
+    return source
+
+
+def _grounded_note_matches(
+    note: str,
+    required_text: tuple[str, ...],
+    source: str,
+) -> list[tuple[int, int]]:
+    """Find exact, unique note occurrences that are present in the source."""
+    matches: list[tuple[int, int]] = []
+    for quote in dict.fromkeys(required_text):
+        if quote and quote in source:
+            span = _unique_note_match(note, quote)
+            if span is not None:
+                matches.append(span)
+    return matches
+
+
+def _unique_note_match(note: str, quote: str) -> tuple[int, int] | None:
+    """Return one exact note occurrence, refusing repeated and empty phrases."""
+    if not quote:
+        return None
+    start = note.find(quote)
+    if start < 0 or note.find(quote, start + 1) >= 0:
+        return None
+    return start, start + len(quote)
+
+
+def _non_overlapping_spans(spans: list[tuple[int, int]]) -> tuple[tuple[int, int], ...]:
+    """Return candidates with no overlap against any other quote candidate."""
+    ordered = sorted(set(spans))
+    conflicting: set[tuple[int, int]] = set()
+    furthest_end = -1
+    furthest_span: tuple[int, int] | None = None
+    for span in ordered:
+        start, end = span
+        if start < furthest_end and furthest_span is not None:
+            conflicting.add(span)
+            conflicting.add(furthest_span)
+        if end > furthest_end:
+            furthest_end = end
+            furthest_span = span
+    return tuple(span for span in ordered if span not in conflicting)
 
 
 def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) -> dict[str, str]:
@@ -213,7 +368,13 @@ def _headings_by_id(records: tuple[LegalProvisionRecord, ...], instrument: str) 
     return headings
 
 
-def _render_entry(record: LegalProvisionRecord, heading: str, language: OutputLanguage) -> tuple[str, str | None, str]:
+def _render_entry(
+    record: LegalProvisionRecord,
+    heading: str,
+    language: OutputLanguage,
+    repo_root: Path,
+    source_cache: dict[Path, str | None],
+) -> tuple[str, str | None, str]:
     """Render one provision: what it says first, where it came from last."""
     anchor = legal_provision_anchor(
         record.legal_id,
@@ -246,7 +407,7 @@ def _render_entry(record: LegalProvisionRecord, heading: str, language: OutputLa
             "",
         ],
     )
-    lines.extend(_catalogue_record_block(record, language))
+    lines.extend(_catalogue_record_block(record, language, repo_root, source_cache))
     lines.append("")
     return "\n".join(lines), anchor, record.permalink
 
@@ -255,6 +416,8 @@ def _render_document_page(
     document_id: str,
     records: tuple[LegalProvisionRecord, ...],
     language: OutputLanguage,
+    repo_root: Path,
+    source_cache: dict[Path, str | None],
 ) -> LegalPage:
     header = (
         "..\n"
@@ -273,7 +436,7 @@ def _render_document_page(
     seen_anchors: dict[str, str] = {}
     headings = _headings_by_id(records, instrument)
     for record in records:
-        entry, anchor, permalink = _render_entry(record, headings[record.legal_id], language)
+        entry, anchor, permalink = _render_entry(record, headings[record.legal_id], language, repo_root, source_cache)
         if anchor is not None:
             previous = seen_anchors.get(anchor)
             if previous is not None:

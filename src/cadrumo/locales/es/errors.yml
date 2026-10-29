@@ -350,7 +350,7 @@ errors:
     error_storage_bucket: Se produjo un error en el ciclo de vida del bucket de almacenamiento.
     error_storage_bucket_path_too_long: La ruta del directorio del bucket supera el
       límite MAX_PATH de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más
-      corta o habilite LongPathsEnabled (véase `aeat config check`).
+      corta o habilite LongPathsEnabled (véase `aeat config storage check`).
     error_storage_management: No se ha podido leer ni liberar el árbol de almacenamiento
       local.
     error_submission_validation: Un modelo de envío no superó la validación.

@@ -928,8 +928,8 @@ def _filed_revision_for_work_unit(
 
     Shared read path for both the receipt-total compare
     (:func:`reconcile_receipt_totals`) and the casilla-level declaración compare
-    (:func:`_reconcile_declaracion_casillas`): both must read the exact same
-    persisted revision so a total reconcile and a casilla reconcile can never
+    (:func:`~cadrumo.application.modelo.reconciliation_comparison.reconcile_declaracion_casillas`):
+    both must read the exact same persisted revision so a total reconcile and a casilla reconcile can never
     silently disagree about which revision represents "what was filed."
     """
     catalogue = calculation_revision_catalogue_repository(bucket_id=work_unit.bucket_id, operation=operation).load(

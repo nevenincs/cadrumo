@@ -14,6 +14,7 @@ import pytest
 
 from dev.packaging.command_execution import run_command
 from dev.source_tree import content_digest, repository_files, snapshot
+from dev.temporary_output import prepare_temp_root
 
 from .. import python_cohort, release_cohort
 from ..cohort_attestation import make_minimal_test_python_cohort
@@ -42,6 +43,7 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
     (root / ".gitattributes").write_bytes(b"*.py text eol=lf\n")
     (root / "program.py").write_bytes(b"original\r\n")
     expected = {".gitattributes": b"*.py text eol=lf\n", "program.py": b"original\n"}
+    expected_scratch_root = prepare_temp_root()
 
     def changing_snapshot(source: Path, files: Sequence[str], destination: Path) -> None:
         if mutation == "before_copy":
@@ -67,7 +69,8 @@ def test_ordinary_cohort_names_the_bytes_actually_captured(
         remove_build_root: bool,
     ) -> Never:
         assert authority_source_root == root and remove_build_root
-        assert scratch_root == root / "build"
+        assert scratch_root == expected_scratch_root
+        assert build_root.parent == scratch_root
         assert source_digest == _expected_identity(expected)
         archive_path = python_cohort._archive_source_snapshot(
             build_root, source_files, output / "captured.zip", expected_source_digest=source_digest

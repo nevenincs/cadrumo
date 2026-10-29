@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Retenciones sobre rendimientos del capital mobiliario."
-definition = "Autoliquidacion periodica de las retenciones practicadas sobre determinados rendimientos del capital mobiliario, como intereses y dividendos."
+definition = "Autoliquidación periódica de las retenciones practicadas sobre determinados rendimientos del capital mobiliario, como intereses y dividendos."
 
 [language.es.source]
 citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."

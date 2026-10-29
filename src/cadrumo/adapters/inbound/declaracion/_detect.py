@@ -3,7 +3,7 @@
 AEAT prints the form code + año + period in a header / footer stamp.
 ``detect_template_revision`` peeks at the first page text; returns
 ``None`` on ambiguity so the caller can fall back to explicit
-``--modelo --año`` flags. Detection resolves template identity only; the
+``--modelo --year`` flags. Detection resolves template identity only; the
 revision tag selects the registry ``declaracion_pdf`` extraction profile
 for the matched modelo and ejercicio.
 

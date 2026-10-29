@@ -189,9 +189,9 @@ profile:
         base_imponible_attributed:
           label: Base imposable atribuïda al membre
         entity_name:
-          label: Nom de l'entitat atribuent
+          label: Nom de l'entitat en règim d'atribució de rendes
         entity_nif:
-          label: NIF de l'entitat atribuent
+          label: NIF de l'entitat en règim d'atribució de rendes
         filing_year:
           label: Exercici de l'atribució
         share_pct:

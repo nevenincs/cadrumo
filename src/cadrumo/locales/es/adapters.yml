@@ -114,8 +114,8 @@ adapters:
         tax_id_unresolved: No se pudo resolver el identificador fiscal de la declaración
           a partir del texto del PDF.
         template_not_detected: No se pudo detectar automáticamente la plantilla de
-          {path}; indica --modelo y --año para forzarla.
-        year_conflict: --año {year} entra en conflicto con el año detectado {detected}.
+          {path}; indica --modelo y --year para forzarla.
+        year_conflict: --year {year} entra en conflicto con el año detectado {detected}.
     financial:
       providers:
         pdf_statement:
@@ -207,7 +207,7 @@ adapters:
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
             ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
-            o habilite LongPathsEnabled (véase `aeat config check`).'
+            o habilite LongPathsEnabled (véase `aeat config storage check`).'
           namespace_create_permission: El almacenamiento local no pudo crear el espacio
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
@@ -224,7 +224,7 @@ adapters:
           payload_write_path_too_long: 'El almacenamiento local no pudo escribir la
             carga del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
-            (véase `aeat config check`).'
+            (véase `aeat config storage check`).'
           payload_write_permission: El almacenamiento local no pudo escribir el payload
             del objeto.
           sidecar_malformed: El sidecar local {sidecar_path} no se puede leer o esta
@@ -236,7 +236,7 @@ adapters:
           sidecar_write_path_too_long: 'El almacenamiento local no pudo escribir el
             sidecar del objeto: la ruta supera el límite de longitud de ruta de Windows.
             Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta o habilite LongPathsEnabled
-            (véase `aeat config check`).'
+            (véase `aeat config storage check`).'
           written_at_invalid: 'El campo written_at del sidecar local falta, no se
             puede interpretar o no indica zona horaria: {actual_value}.'
   persistence:

@@ -10,7 +10,7 @@ from typing import cast
 
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT, UTF_8
-from dev.first_party_source import DEVELOPMENT_TOOLING, SOURCE_PACKAGES, is_test_source
+from dev.first_party_source import DEVELOPMENT_TOOLING, PACKAGING_HOOKS, SOURCE_PACKAGES, is_test_source
 from dev.quality.source_import_analysis import (
     is_shipped_module,
     module_name_for,
@@ -19,7 +19,7 @@ from dev.quality.source_import_analysis import (
 
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule
-from .unreachable_policy import DATA_GLOBS, DEV_LABEL, SKIPPED_DIRS
+from .unreachable_policy import DATA_GLOBS, DEV_LABEL, PACKAGING_LABEL, SKIPPED_DIRS
 
 
 def _repository_console_scripts(repo_root: Path) -> tuple[Path, dict[str, str]]:
@@ -162,6 +162,7 @@ class ShippedTreeSpec:
                 ),
                 OutsideCorpus(label="tests", root=repo_root / "conftest.py"),
                 OutsideCorpus(label=DEV_LABEL, root=repo_root / DEVELOPMENT_TOOLING),
+                OutsideCorpus(label=PACKAGING_LABEL, root=repo_root / PACKAGING_HOOKS),
             ),
             data_globs=DATA_GLOBS,
         )

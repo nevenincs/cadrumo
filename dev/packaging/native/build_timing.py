@@ -12,6 +12,7 @@ from pathlib import Path
 from uuid import uuid4
 
 from .build_log import BuildLog, display_path
+from .build_paths import build_paths
 
 
 class BuildTimings:
@@ -21,10 +22,11 @@ class BuildTimings:
         """Choose a unique record inside the admitted build's timing directory."""
         if re.fullmatch(r"[a-zA-Z0-9_.-]+", action) is None:
             raise ValueError("Build timing action must be a simple identifier")
-        directory = build.resolve(strict=True) / "timings"
-        if directory.is_symlink() or directory.is_junction():
-            raise ValueError("Build timing directory must not be linked")
-        directory.mkdir(exist_ok=True)
+        paths = build_paths(build)
+        if "timings" not in paths:
+            raise ValueError("Build output map has no timings directory; reconfigure the CMake preset")
+        directory = paths["timings"]
+        directory.mkdir(parents=True, exist_ok=True)
         self.path = directory / f"{action}-{uuid4().hex}.json"
         self.log = BuildLog(action) if log is None else log
         self._phases: list[dict[str, str | float]] = []

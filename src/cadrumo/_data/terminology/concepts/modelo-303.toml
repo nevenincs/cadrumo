@@ -16,8 +16,8 @@ created_at = 2026-06-10
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "Autoliquidacion periodica del IVA en regimen general."
-definition = "Declaracion-liquidacion periodica del Impuesto sobre el Valor Anadido que presentan los sujetos pasivos en regimen general, trimestral o mensualmente segun el volumen de operaciones."
+short_description = "Autoliquidación periódica del IVA en régimen general."
+definition = "Declaracion-liquidacion periódica del Impuesto sobre el Valor Añadido que presentan los sujetos pasivos en régimen general, trimestral o mensualmente según el volumen de operaciones."
 
 [language.es.source]
 citation = "Articulos 164 y 167 de la Ley 37/1992 del IVA."

@@ -18,6 +18,7 @@ from ......core.config import Settings
 from ......core.diagnostic_log import DiagnosticFormatter, diagnostic_scope
 from ......core.logging import LOG_FILE_FORMAT
 from ......tests.log_records import delivered_records
+from .. import _kdf_worker_observation as observation
 from .. import _kdf_worker_supervision as supervision
 from .._kdf_codec import KDF_FAILED_FRAME, KDF_FRAME_CONTROL, calibration_frame_bytes
 from .._kdf_worker_supervision import _SupervisedKdfWorker
@@ -265,7 +266,7 @@ def test_sink_cannot_replace_either_original_or_escaping_cleanup_failure(
         assert failed
         raise cleanup
 
-    monkeypatch.setattr(supervision.logger, "log", log)
+    monkeypatch.setattr(observation.logger, "log", log)
     if cleanup_fails:
         monkeypatch.setattr(_SupervisedKdfWorker, "_close", close)
     expected = cleanup if cleanup_fails else primary
@@ -284,7 +285,7 @@ def test_normal_sink_exception_is_nonfatal_after_successful_cleanup(
         calls += 1
         raise OSError(_PRIVATE)
 
-    monkeypatch.setattr(supervision.logger, "log", log)
+    monkeypatch.setattr(observation.logger, "log", log)
     with simulated_worker as worker:
         assert worker.calibrate(_kdf()) == 0.000000125
     assert calls == 1

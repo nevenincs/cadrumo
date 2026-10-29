@@ -220,7 +220,6 @@
         "cadrumo.adapters.outbound.storage.local",
         "cadrumo.adapters.outbound.storage.mirror_manifest",
         "cadrumo.adapters.outbound.storage.mirror_push",
-        "cadrumo.adapters.outbound.storage.path_budget",
         "cadrumo.adapters.outbound.storage.protocol",
         "cadrumo.adapters.outbound.storage.records",
         "cadrumo.adapters.outbound.workbook",

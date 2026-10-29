@@ -6,9 +6,10 @@ tags:
 date: '2026-10-29'
 modified: '2026-10-29'
 body_schema: 'body-v2'
-body_hash: 'sha256:c5885db7990faadae6c074ce9f6df62a54e0e80519baf7d77a7ebcf26638e031'
+body_hash: 'sha256:a83d71c01319eba9c9512e642dcfaf54a9f8db11cbcf91476c8b98f685081154'
 related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
+  - '[[2026-10-29-desktop-aeat-sync-audit]]'
   - '[[2026-10-29-desktop-aeat-sync-ledger]]'
   - '[[2026-10-29-desktop-aeat-sync-plan]]'
   - '[[2026-10-29-desktop-aeat-sync-reference]]'
@@ -23,6 +24,10 @@ Auto-generated index of all documents tagged with `#desktop-aeat-sync`.
 ### adr
 
 - `2026-10-29-desktop-aeat-sync-adr` - `desktop-aeat-sync` adr: `AEAT sync page: backend area status read and host-run area queue` | (**status:** `accepted`)
+
+### audit
+
+- `2026-10-29-desktop-aeat-sync-audit` - `desktop-aeat-sync` audit: `desktop AEAT sync integrated review`
 
 ### exec
 

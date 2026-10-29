@@ -14,7 +14,7 @@ created_at = 2026-08-07
 updated_at = 2026-08-07
 
 [language.es]
-short_description = "Tipo impositivo general del IVA, aplicable a toda entrega de bienes o prestacion de servicios interior que no tenga reconocido un tipo reducido o superreducido (LIVA art. 90)."
+short_description = "Tipo impositivo general del IVA, aplicable a toda entrega de bienes o prestación de servicios interior que no tenga reconocido un tipo reducido o superreducido (LIVA art. 90)."
 
 [language.ca]
 short_description = "Tipus general de l'IVA per a operacions interiors, segons l'article 90 de la LIVA"

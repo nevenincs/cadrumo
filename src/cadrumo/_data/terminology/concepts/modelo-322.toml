@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "IVA de grupo de entidades: modelo individual mensual."
-definition = "Autoliquidacion mensual individual que presenta cada entidad integrada en un grupo de entidades de IVA."
+definition = "Autoliquidación mensual individual que presenta cada entidad integrada en un grupo de entidades de IVA."
 
 [language.es.source]
 citation = "Orden EHA/3434/2007."

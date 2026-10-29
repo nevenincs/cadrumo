@@ -303,7 +303,7 @@ wizard:
       google-export:
         help: Enable Google Sheets export.
       has-employees:
-        help: Has employees and pays salaries with retención
+        help: Has employees and pays salaries subject to withholding
       incn-prior-12-months:
         help: Net turnover (importe neto de la cifra de negocios) over the prior 12
           months, in euros. Above 6,000,000 EUR Modelo 202 mandates the Art. 40.3
@@ -354,8 +354,9 @@ wizard:
         help: Allow reading scanned or image documents with the image-reading model
           you selected.
       modelo-111-no-retenciones-periods:
-        help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
-          (for example 2025:2T,2025:3T). Use only when no subject payments were made.
+        help: Comma-separated Modelo 111 periods with no withholding, format YYYY:PERIOD
+          (for example 2025:2T,2025:3T). Use only when no payments subject to withholding
+          were made.
       modelo-115-no-relevant-payment-periods:
         help: Comma-separated Modelo 115 periods with no relevant urban-rent payment,
           format YYYY:PERIOD (for example 2025:3T,2025:4T). This is explicit local
@@ -371,14 +372,14 @@ wizard:
       output-language:
         help: CLI output language for this profile
       pays-capital-income-with-retencion:
-        help: Pays capital income with retención
+        help: Pays capital income subject to withholding
       pays-professionals-with-retencion:
-        help: Pays professionals with retención
+        help: Pays professionals subject to withholding
       pays-rent-with-retencion:
-        help: Pays local rent with retención
+        help: Pays urban property rent subject to withholding
       premio-loteria-gravamen-especial-sin-retencion:
-        help: Obtained a lottery or betting prize subject to the gravamen especial
-          without retención or ingreso a cuenta (Modelo 136)
+        help: Obtained a lottery or betting prize subject to the special tax without
+          withholding or payment on account (Modelo 136)
       premio-loteria-gravamen-especial-trimestres:
         help: Quarters in which the prize was cashed, as YYYY-nT tokens separated
           by | (for example 2025-1T|2025-3T)
@@ -517,7 +518,7 @@ wizard:
       does-intracomunitario:
         prompt: Conducts intracomunitario operations
       has-employees:
-        prompt: Has employees and pays salaries with retención
+        prompt: Do you have employees and pay salaries subject to withholding?
       irpf-estimation-regime:
         choices:
           directa-normal:
@@ -552,9 +553,9 @@ wizard:
           regime expires at the end of the 6th calendar year.
         prompt: Special regime election date (YYYY-MM-DD)
       modelo-111-no-retenciones-periods:
-        help: Comma-separated YYYY:PERIOD periods where no rentas subject to retención
-          or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.
-        prompt: Modelo 111 no-retenciones periods
+        help: Comma-separated YYYY:PERIOD periods in which no income subject to withholding
+          or payment on account was paid, so no all-blank Modelo 111 is filed.
+        prompt: Modelo 111 periods with no withholding
       modelo-115-no-relevant-payment-periods:
         help: Comma-separated YYYY:PERIOD periods where no relevant urban-rent payment
           subject to withholding occurred, permitting a local zero Modelo 115 calculation.
@@ -562,14 +563,14 @@ wizard:
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
       pays-capital-income-with-retencion:
-        prompt: Pays capital income with retención
+        prompt: Do you pay capital income subject to withholding?
       pays-professionals-with-retencion:
-        prompt: Pays professionals with retención
+        prompt: Do you pay professionals subject to withholding?
       pays-rent-with-retencion:
-        prompt: Pays local rent with retención
+        prompt: Do you pay urban property rent subject to withholding?
       premio-loteria-gravamen-especial-sin-retencion:
-        prompt: Obtained a lottery or betting prize subject to the gravamen especial
-          without retención or ingreso a cuenta
+        prompt: Obtained a lottery or betting prize subject to the special tax without
+          withholding or payment on account
       premio-loteria-gravamen-especial-trimestres:
         help: One YYYY-nT token per natural quarter, separated by | (for example 2025-1T|2025-3T).
           Each quarter opens its own Modelo 136 filing.

@@ -15,8 +15,8 @@ created_at = 2026-06-11
 updated_at = 2026-07-22
 
 [language.es]
-short_description = "El sistema europeo de intercambio de informacion sobre el IVA para validar numeros de operador intracomunitario."
-definition = "Sistema de Intercambio de Informacion sobre el IVA de la Union Europea (VAT Information Exchange System) que permite comprobar si un numero de identificacion a efectos del IVA esta registrado como operador intracomunitario en otro Estado miembro. La aplicacion puede consultarlo en modo de solo lectura para validar un numero de IVA antes de declarar una operacion intracomunitaria."
+short_description = "El sistema europeo de intercambio de información sobre el IVA para validar números de operador intracomunitario."
+definition = "Sistema de Intercambio de Información sobre el IVA de la Union Europea (VAT Information Exchange System) que permite comprobar si un numero de identificación a efectos del IVA esta registrado como operador intracomunitario en otro Estado miembro. La aplicación puede consultarlo en modo de solo lectura para validar un numero de IVA antes de declarar una operación intracomunitaria."
 
 [language.es.source]
 citation = "Reglamento (UE) n. 904/2010 del Consejo, sobre cooperacion administrativa y lucha contra el fraude en el ambito del IVA; Comision Europea, sistema VIES."

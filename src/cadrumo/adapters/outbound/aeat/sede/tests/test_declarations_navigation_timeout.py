@@ -17,6 +17,7 @@ import pytest
 from playwright.async_api import Route, async_playwright
 
 from ......core.config import override_settings
+from ......tests.aeat_literal_fixtures import SEDE_LOGIN_WALL_URL_FIXTURE
 from ..._playwright import PlaywrightTimeoutError
 from ..declarations import _LISTING_URL, _drive_search
 from ..errors import SedeFailureMode, SedeNavigationError
@@ -55,13 +56,10 @@ async def test_navigation_timeout_raises_typed_navigation_error() -> None:
     assert isinstance(exc_info.value.__cause__, PlaywrightTimeoutError)
 
 
-_LOGIN_WALL_URL = "https://sede.agenciatributaria.gob.es/Sede/identificacion.html"
-
-
 async def _redirect_listing_to_login_wall(route: Route) -> None:
     """Serve the register listing as AEAT does once the session is gone: a redirect to its login wall."""
     if route.request.url == _LISTING_URL:
-        await route.fulfill(status=302, headers={"Location": _LOGIN_WALL_URL})
+        await route.fulfill(status=302, headers={"Location": SEDE_LOGIN_WALL_URL_FIXTURE})
         return
     await route.fulfill(status=200, content_type="text/html", body="<html><body>Identificate</body></html>")
 

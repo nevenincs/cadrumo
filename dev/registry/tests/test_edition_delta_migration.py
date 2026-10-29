@@ -980,7 +980,7 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     assert " publication_readiness_status=not_checked " in summary, output
     assert " publication_execution_status=not_performed " in summary, output
     assert " applied=False " in summary, output
-    assert persisted.is_relative_to((development_log_root() / ".logs" / "audit-runs").resolve())
+    assert persisted.is_relative_to((development_log_root() / "logs" / "audit-runs").resolve())
     assert persisted.is_file()
     assert "summary changed=True" in persisted.read_text(encoding="utf-8")
     assert not persisted.is_relative_to((tmp_path / "work").resolve())
@@ -1039,7 +1039,7 @@ def test_migration_reports_use_unique_logs_runs_and_not_the_scratch_directory(tm
     first = persist_migration_report(tmp_path, outcome, ("migration", "first"))
     second = persist_migration_report(tmp_path, outcome, ("migration", "second"))
 
-    logs_root = (tmp_path / ".logs" / "audit-runs").resolve()
+    logs_root = (tmp_path / "logs" / "audit-runs").resolve()
     assert first.is_relative_to(logs_root)
     assert second.is_relative_to(logs_root)
     assert first != second

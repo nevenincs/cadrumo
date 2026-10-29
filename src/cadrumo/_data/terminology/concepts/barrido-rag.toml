@@ -10,8 +10,8 @@ created_at = 2026-06-12
 updated_at = 2026-06-12
 
 [language.es]
-short_description = "La ejecucion build-time que consulta RAG para cada termino cerrado y guarda resultados laundered."
-definition = "Proceso de compilacion que enumera el vocabulario cerrado de conceptos, terminos admitidos y formas ocultas, consulta el servicio RAG residente y transforma los hits en una lista revisable de destinos de documentacion. El barrido pre-ejecuta en build-time lo que un RAG haria en runtime."
+short_description = "La ejecución build-time que consulta RAG para cada termino cerrado y guarda resultados laundered."
+definition = "Proceso de compilación que enumera el vocabulario cerrado de conceptos, términos admitidos y formas ocultas, consulta el servicio RAG residente y transforma los hits en una lista revisable de destinos de documentación. El barrido pre-ejecuta en build-time lo que un RAG haría en runtime."
 scope_note = "El barrido usa el servicio RAG como oraculo de compilacion; CI consume solo los datos resultantes, no ejecuta embeddings ni recuperacion live."
 
 [[language.es.term]]
@@ -36,7 +36,7 @@ term_status = "preferred"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "L'execucio build-time de RAG sobre el vocabulari terminologic tancat."
+short_description = "L'execució build-time de RAG sobre el vocabulari terminològic tancat."
 definition = "Procés de compilació que enumera el vocabulari tancat de conceptes, termes admesos i formes ocultes, consulta el servei RAG resident i transforma els resultats en una llista revisable de destinacions documentals. El rastreig preexecuta en temps de compilació el que un RAG faria en temps d'execució."
 scope_note = "A rastreig utilitza el servei RAG com a oracle de compilació; la CI només consumeix les dades resultants, no executa embeddings ni recuperació en directe."
 

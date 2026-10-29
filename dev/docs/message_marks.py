@@ -917,9 +917,9 @@ class ResolveOwnPageAnchors(SphinxPostTransform):
             return
         plan.anchors.setdefault(owner, set())
         for node in self.document.findall(addnodes.pending_xref):
-            self._resolve_reference(node, owner, plan)
+            self._resolve_own_page_anchor(node, owner, plan)
 
-    def _resolve_reference(self, node: addnodes.pending_xref, owner: str, plan: MessagePlan) -> None:
+    def _resolve_own_page_anchor(self, node: addnodes.pending_xref, owner: str, plan: MessagePlan) -> None:
         """Preserve declared-target precedence while resolving an owning page's heading."""
         slugs = self.env.metadata.get(owner, {}).get("myst_slugs", {})
         standard = self.env.domains.standard_domain

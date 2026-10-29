@@ -597,6 +597,7 @@ cli:
             operator_timeout: approval timed out
             pending_clave_request: pending Cl@ve request
             qr_required: QR approval required
+            session_ended: AEAT session ended
             unknown: Unknown
             wrong_identity: wrong identity
         app_help: AEAT IVA compensation wallet pull (read-only; allows only own-name
@@ -750,7 +751,7 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         override_help: Temporary value for a box source with KEY=VALUE syntax (repeatable)
         period_help: 'Period code: 0A annual, 1T-4T quarters, 01-12 months; for censo
-          modelos (036) use alta, modificacion, or baja.'
+          modelos (036): alta (registration), modificacion (change), or baja (deregistration).'
         readiness:
           activo_extranjero: foreign asset
           afiliado_cotizacion: contributions-relationship affiliate
@@ -804,8 +805,8 @@ cli:
         number_help: Filter casillas by printed casilla number or canonical id (e.g.
           0596).
         period_help: 'Period code used to pick the version of the official form: 0A
-          annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta,
-          modificacion, or baja.'
+          annual, 1T-4T quarters, 01-12 months; for censo modelos (036): alta (registration),
+          modificacion (change), or baja (deregistration).'
         required_help: Show only casillas the modelo marks as required
       compare:
         modelo_help: Modelo number to compare (e.g. 100, 130).
@@ -848,8 +849,8 @@ cli:
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_error: 'Error in the modelo definitions: %{message}'
         period_help: 'Period code used to pick the version of the official form: 0A
-          annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta,
-          modificacion, or baja.'
+          annual, 1T-4T quarters, 01-12 months; for censo modelos (036): alta (registration),
+          modificacion (change), or baja (deregistration).'
         period_token_invalid: '--period ''%{period}'' is not a valid period token
           for modelo %{modelo}. Valid tokens: %{tokens}.'
       export:
@@ -948,13 +949,13 @@ cli:
           revision.
         modelo_help: Tax form code (e.g. 303, 130, 100)
         period_help: 'Period code used to pick the version of the official form: 0A
-          annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta,
-          modificacion, or baja.'
+          annual, 1T-4T quarters, 01-12 months; for censo modelos (036): alta (registration),
+          modificacion (change), or baja (deregistration).'
       history:
         modelo_help: Modelo code (e.g. 100, 303)
         period_help: 'Optional period filter using a period code: 0A annual, 1T-4T
-          quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
-          or baja.'
+          quarters, 01-12 months; for censo modelos (036): alta (registration), modificacion
+          (change), or baja (deregistration).'
         year_help: Optional filing year filter
       history_help: Show the chronological lifecycle audit for one modelo
       iva_wallet:
@@ -1033,25 +1034,27 @@ cli:
         help: List all official tax forms (modelos) registered in the system.
         year_help: Filter the modelo catalogue to a single fiscal year
       m036:
-        alta_help: Record an M036 alta declaration (initial census registration) filed
-          at sede.
-        baja_help: Record an M036 baja declaration (census deregistration) filed at
-          sede.
+        alta_help: Record an M036 alta (initial census registration) declaration filed
+          through the AEAT online filing service (sede).
+        baja_help: Record an M036 baja (census deregistration) declaration filed through
+          the AEAT online filing service (sede).
         declaration_id_help: The declaration id (or an unambiguous prefix of it) to
           view.
-        declared_on_help: ISO date (YYYY-MM-DD) you filed the M036 at sede.
+        declared_on_help: ISO date (YYYY-MM-DD) when you filed the M036 through the
+          AEAT online filing service (sede).
         errors:
           bad_declared_on: --declared-on must be an ISO date (YYYY-MM-DD); got {value}.
           declaration_not_found: No M036 declaration matches {value!r}. Run 'aeat
             app modelo m036 list' to see recorded declarations.
-        group_help: Record an M036 declaration filed at sede (alta / modificacion
-          / baja). The local app never files; AEAT is the authority.
-        justificante_help: Optional AEAT acuse de recibo identifier emitted by sede
-          for the filing.
+        group_help: 'Record an M036 declaration filed through the AEAT online filing
+          service (sede): alta (registration), modificacion (change), or baja (deregistration).
+          The local app never files; AEAT is the authority.'
+        justificante_help: Optional AEAT acuse de recibo (filing receipt) identifier
+          issued by sede for the filing.
         list_empty: No M036 declarations recorded yet.
         list_help: List the M036 declarations recorded in the active profile.
-        modificacion_help: Record an M036 modificacion declaration (census update)
-          filed at sede.
+        modificacion_help: Record an M036 modificacion (census update) declaration
+          filed through the AEAT online filing service (sede).
         note_help: Optional note of your own (up to 512 chars).
         view_help: View one recorded M036 declaration by id (or unambiguous prefix).
       m145:
@@ -1069,7 +1072,8 @@ cli:
         mark_locally_completed_help: Mark a Modelo 145 local communication record
           locally completed.
         note_help: Optional note of your own.
-        period_help: 'Communication period token: comunicacion or variacion.'
+        period_help: 'Communication period token: comunicacion (communication) or
+          variacion (change).'
         validate_help: Validate a Modelo 145 local payer communication record.
         year_help: Communication year.
       m360:
@@ -1101,8 +1105,8 @@ cli:
       readiness:
         modelo_help: Modelo code (e.g. 303).
         period_help: 'Period code used to pick the version of the official form: 0A
-          annual, 1T-4T quarters, 01-12 months; for censo modelos (036) use alta,
-          modificacion, or baja.'
+          annual, 1T-4T quarters, 01-12 months; for censo modelos (036): alta (registration),
+          modificacion (change), or baja (deregistration).'
         revision_help: Version id of the official form (from the modelo definitions).
         sources_still_missing: Your records passed this period's checks, but the declaration
           still lacks values from some sources. Review the missing values before calculating.
@@ -1151,8 +1155,8 @@ cli:
         no_active_profile: No active profile is set, so profile-dependent coefficients
           (e.g. home-office usage ratio) could not be checked for gaps.
         period_help: 'Period token used to resolve the modelo revision: 0A annual,
-          1T-4T quarters, 01-12 months; for censo modelos (036) use alta, modificacion,
-          or baja.'
+          1T-4T quarters, 01-12 months; for censo modelos (036): alta (registration),
+          modificacion (change), or baja (deregistration).'
         section_ledger: ledger_derivable
         section_optional: optional_manual
         section_profile: profile_derivable
@@ -1347,9 +1351,7 @@ cli:
           trail)
         amend_wizard_reason_required: A reason is required for the correction audit
           trail.
-        amend_wizard_select_prompt: 'Recorded as filed: %{modelo} %{year} %{period},
-          current values:\n%{summary}\nWhich box numbers changed? (comma/space separated,
-          blank for none)'
+        amend_wizard_select_prompt: "Recorded as filed: %{modelo} %{year} %{period},\ncurrent values:\n%{summary}\nWhich box numbers changed? (comma/space separated, blank for none)"
         amend_wizard_unknown_casilla: Box %{token} is not part of the %{modelo} %{year}
           %{period} return recorded as filed; choose from the listed box numbers.
         amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
@@ -1574,7 +1576,8 @@ cli:
         payment_election_help: 'Choose how a positive Modelo 303 result is paid: ordinary
           payment or direct debit.'
         period_help: 'Period code of the declaration: 0A annual, 1T-4T quarters, 01-12
-          months; for censo modelos (036) use alta, modificacion, or baja.'
+          months; for censo modelos (036): alta (registration), modificacion (change),
+          or baja (deregistration).'
         period_token_invalid: '--period ''%{token}'' is not a valid period token for
           modelo %{modelo}. --year and --period are composed separately: pass --year
           %{year} for the filing year and one of the declared period tokens for --period.

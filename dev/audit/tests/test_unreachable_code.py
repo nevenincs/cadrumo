@@ -843,7 +843,7 @@ def test_repository_spec_reads_the_console_scripts_from_pyproject() -> None:
     assert spec.packages == tuple(PurePosixPath(root).name for root in SOURCE_PACKAGES)
     assert {entry.spec for entry in spec.entry_points} == declared
     assert any(glob.endswith("tests/**") for glob in spec.exclude_globs)
-    assert {corpus.label for corpus in spec.outside} == {"tests", "dev"}
+    assert {corpus.label for corpus in spec.outside} == {"tests", "dev", "packaging"}
     # Every audited package's own tests are read, so their labels name real use.
     assert {corpus.root for corpus in spec.outside if corpus.test_modules_only} == set(spec.package_roots)
     assert spec.data_globs

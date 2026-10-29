@@ -48,7 +48,6 @@ from typing import TYPE_CHECKING, Final, NamedTuple, Never, override
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.identity.tax_id import same_tax_identifier
-from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period as _Period
@@ -56,9 +55,6 @@ from ...core.type_guards import is_object_collection
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.ids import BindingId
-from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
-    M303_COMPENSATION_AVAILABLE_CASILLA as M303_DISPONIBLE_CASILLA,
-)
 from ...domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_PENDING_PRIOR_CASILLA as M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
 )
@@ -98,9 +94,6 @@ _M303_PRIOR_COMPENSATION_ORIGIN_IDS: Final[frozenset[str]] = frozenset(
 
 
 _M303_PRIOR_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA
-_M303_AVAILABLE_COMPENSATION_CASILLA_ID: Final[CasillaId] = M303_DISPONIBLE_CASILLA
-
-
 _LOCAL_EVIDENCE_SOURCE_KINDS: Final[frozenset[str]] = frozenset(
     {"local_recurrence", "filed_history_observation"},
 )
@@ -110,15 +103,6 @@ Tested twice in this module, each time paired with a different second condition,
 two checks agreed on the kinds only by hand. Held as a name so a kind added to one check
 cannot be missed by the other.
 """
-
-
-_OPERATOR_DECLARED_PROVENANCES: Final[frozenset[IvaCompensationStateProvenance]] = frozenset(
-    {
-        IvaCompensationStateProvenance.OPERATOR_SEED,
-        IvaCompensationStateProvenance.OPERATOR_CORRECTION,
-    },
-)
-"""History provenances that declare an opening balance without a filed envelope."""
 
 
 class _WalletBindingTarget(NamedTuple):

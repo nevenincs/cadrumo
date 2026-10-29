@@ -17,7 +17,7 @@ updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual del IVA."
-definition = "Declaracion informativa resumen anual del Impuesto sobre el Valor Anadido que recapitula las operaciones declaradas en los modelos 303 del ejercicio."
+definition = "Declaración informativa resumen anual del Impuesto sobre el Valor Añadido que recapitula las operaciones declaradas en los modelos 303 del ejercicio."
 
 [language.es.source]
 citation = "Articulo 164 de la Ley 37/1992 del IVA y su normativa de desarrollo."

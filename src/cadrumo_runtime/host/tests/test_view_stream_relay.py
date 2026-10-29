@@ -70,9 +70,8 @@ from cadrumo_client.contracts.view_transfer import (
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, write_document
-from cadrumo_client.transport.tests.view_stream_peer import ViewDownstreamReader
+from cadrumo_client.transport.tests.view_stream_peer import AssembledViewImage, ViewDownstreamReader
 from cadrumo_client.transport.view_stream import (
-    AssembledViewImage,
     ViewTransferChunk,
     ViewTransferReceiver,
     ViewTransferSender,

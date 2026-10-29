@@ -67,6 +67,11 @@ _COMMAND_TOKEN: Final = re.compile(r"[a-z][a-z0-9]*(?:[-_][a-z0-9]+)*")
 DEV_LABEL = "dev"
 
 
+# Distribution build hooks are maintained consumers with their own ownership.
+PACKAGING_LABEL = "packaging"
+TRUSTED_OUTSIDE_LABELS: Final[frozenset[str]] = frozenset({DEV_LABEL, PACKAGING_LABEL})
+
+
 _MODULE_EXEC_FLAG: Final[str] = "-m"
 
 
