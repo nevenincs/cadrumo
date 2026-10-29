@@ -681,8 +681,8 @@ pub(crate) mod tests {
     #[cfg(all(unix, feature = "platform"))]
     const CHECK_OWNER: &str = "CADRUMO_TEST_BROWSER_CHECK_OWNER";
 
-    /// The child-process mode: an owner that contains itself as the `components` role does
-    /// and runs a check of a browser that never answers.
+    /// The child-process mode: an owner that contains itself as the desktop does and runs a
+    /// check of a browser that never answers.
     #[cfg(all(unix, feature = "platform"))]
     #[test]
     fn browser_check_owner() {

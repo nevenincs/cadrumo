@@ -2185,16 +2185,8 @@ pub(crate) mod tests {
         assert_eq!(BROWSERS_DEFAULT, "components/playwright");
     }
 
-    /// The browser record the Python reader's tests read, with the storage root spelled
-    /// as a placeholder those tests replace.
-    const RECORD_FIXTURE: &str = "src/cadrumo/core/tests/_component_records/browser.json";
-    const STORAGE_ROOT_PLACEHOLDER: &str = "<storage-root>";
-
-    /// Set to rewrite the fixture from what the engine writes now.
-    const REWRITE_FIXTURE: &str = "CADRUMO_REWRITE_COMPONENT_RECORD_FIXTURE";
-
     #[test]
-    fn the_record_the_engine_writes_is_the_one_the_python_reader_reads() {
+    fn the_record_the_engine_writes_names_where_the_builds_are() {
         let directory = tempfile::tempdir().unwrap();
         let storage = directory.path().join("storage");
         let locations = crate::provisioning::items::Locations::under(&storage);
@@ -2222,31 +2214,11 @@ pub(crate) mod tests {
                 UNIX_EPOCH + Duration::from_secs(1_792_846_800),
             )
             .unwrap();
-        let mut written: serde_json::Value =
-            serde_json::from_slice(&fs::read(locations.receipts.join("browser.json")).unwrap())
-                .unwrap();
-        let relative =
-            RelativePath::from_native(layout.root().strip_prefix(&storage).unwrap()).unwrap();
-        written["location"]["root"] =
-            format!("{STORAGE_ROOT_PLACEHOLDER}/{}", relative.as_str()).into();
-
-        let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
-            .parent()
-            .and_then(Path::parent)
-            .unwrap();
-        let fixture = checkout.join(RECORD_FIXTURE);
-        if std::env::var_os(REWRITE_FIXTURE).is_some() {
-            fs::create_dir_all(fixture.parent().unwrap()).unwrap();
-            let mut text = serde_json::to_string_pretty(&written).unwrap();
-            text.push('\n');
-            fs::write(&fixture, text).unwrap();
-        }
-        let committed: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&fixture).unwrap()).unwrap();
-        assert_eq!(
-            committed, written,
-            "rewrite {RECORD_FIXTURE} with {REWRITE_FIXTURE}=1 when the record changes on purpose"
-        );
+        let reading = receipts.read(ItemId::Browser);
+        let receipt = layout
+            .receipt(&reading)
+            .expect("the record describes the builds it was written for");
+        assert_eq!(receipt.location.as_ref().unwrap().root(), layout.root());
     }
 
     #[cfg(feature = "platform")]

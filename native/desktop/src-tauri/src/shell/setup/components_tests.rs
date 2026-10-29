@@ -1447,10 +1447,19 @@ async fn a_setup_counts_what_another_running_setup_still_downloads_against_the_s
     use cadrumo_application::provisioning::plan::required_free_bytes;
     let gate = Arc::new(Released::default());
     let mut fixture = Fixture::new(Serving::Gated(gate.clone())).with_program();
+    let request = SetupRequest {
+        items: Some(vec![ItemId::Browser]),
+        approved: None,
+    };
     let browser_bytes = (fixture.engines())()
         .unwrap()
         .engine
-        .plan(Some(&[ItemId::Browser]))
+        .setup(
+            &request,
+            &mut |_| Answer::Decline,
+            &mut |_| {},
+            &Cancellation::default(),
+        )
         .plan
         .expect("the browser's plan")
         .known_download_bytes();

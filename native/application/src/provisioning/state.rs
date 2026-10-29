@@ -58,9 +58,6 @@ pub enum RecoveryAction {
     TryAgain,
     Resume,
     CheckAgain,
-    /// The local AI's set-up, update, retry or resume, offered by an engine that serves
-    /// it read-only: only the desktop sets the local AI up.
-    SetUpInDesktop,
 }
 
 /// The ordered steps of one item's setup.
@@ -332,19 +329,14 @@ pub fn setup_complete(rows: &[StatusRow]) -> bool {
 }
 
 /// The items a setup with no explicit request covers, in setup order: every item whose
-/// row offers the person an action this engine performs. That leaves out an item that is
-/// ready or already running, one held back by this computer or this build, blocked or
-/// failed, and one only the desktop sets up.
+/// row offers the person an action. That leaves out an item that is ready or already
+/// running, and one held back by this computer or this build, blocked or failed.
 pub fn items_to_set_up(rows: &[StatusRow]) -> Vec<ItemId> {
     ItemId::ALL
         .into_iter()
         .filter(|item| {
-            rows.iter().any(|row| {
-                row.item == *item
-                    && row
-                        .recovery
-                        .is_some_and(|recovery| recovery != RecoveryAction::SetUpInDesktop)
-            })
+            rows.iter()
+                .any(|row| row.item == *item && row.recovery.is_some())
         })
         .collect()
 }
@@ -710,9 +702,6 @@ mod tests {
         );
         assert!(setup_complete(&done));
         assert_eq!(items_to_set_up(&done), [ItemId::LocalAi]);
-        let mut desktop_only = rows(Observation::Absent, Observation::Absent);
-        desktop_only[1].recovery = Some(RecoveryAction::SetUpInDesktop);
-        assert_eq!(items_to_set_up(&desktop_only), [ItemId::Browser]);
         assert_eq!(
             SetupStep::Download.phase_code(ItemId::LocalAi),
             "dependencies.setup.local_ai.download"

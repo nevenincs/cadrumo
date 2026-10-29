@@ -653,13 +653,6 @@ fn a_copy_installed_outside_cadrumo_is_reported_and_left_untouched() {
     );
 }
 
-/// The local AI record the Python reader's tests read, with the storage root spelled as a
-/// placeholder those tests replace.
-const RECORD_FIXTURE: &str = "src/cadrumo/core/tests/_component_records/local_ai.json";
-const STORAGE_ROOT_PLACEHOLDER: &str = "<storage-root>";
-/// Set to rewrite the fixture from what the engine writes now.
-const REWRITE_FIXTURE: &str = "CADRUMO_REWRITE_COMPONENT_RECORD_FIXTURE";
-
 /// The fixed address the package's environment declaration gives the local AI server.
 fn declared_address() -> SocketAddr {
     let native = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
@@ -674,7 +667,7 @@ fn declared_address() -> SocketAddr {
 }
 
 #[test]
-fn the_record_names_the_program_the_models_and_the_fixed_address_the_python_reader_reads() {
+fn the_record_names_the_program_the_models_and_the_fixed_address() {
     let directory = tempfile::tempdir().unwrap();
     let storage = directory.path().join("storage");
     let locations = Locations::under(&storage);
@@ -723,27 +716,5 @@ fn the_record_names_the_program_the_models_and_the_fixed_address_the_python_read
     assert_eq!(
         location.paths["models"].under(&location.root()),
         locations.models
-    );
-
-    let mut written: serde_json::Value =
-        serde_json::from_slice(&fs::read(locations.receipts.join("local_ai.json")).unwrap())
-            .unwrap();
-    written["location"]["root"] = STORAGE_ROOT_PLACEHOLDER.into();
-    let checkout = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .and_then(Path::parent)
-        .unwrap();
-    let fixture = checkout.join(RECORD_FIXTURE);
-    if std::env::var_os(REWRITE_FIXTURE).is_some() {
-        fs::create_dir_all(fixture.parent().unwrap()).unwrap();
-        let mut text = serde_json::to_string_pretty(&written).unwrap();
-        text.push('\n');
-        fs::write(&fixture, text).unwrap();
-    }
-    let committed: serde_json::Value =
-        serde_json::from_str(&fs::read_to_string(&fixture).unwrap()).unwrap();
-    assert_eq!(
-        committed, written,
-        "rewrite {RECORD_FIXTURE} with {REWRITE_FIXTURE}=1 when the record changes on purpose"
     );
 }

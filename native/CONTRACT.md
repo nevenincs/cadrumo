@@ -663,95 +663,69 @@ are the release version and `OriginalFilename` is `cadrumo-manager.exe`. The
 crate's build script writes that resource and the process manifest without a
 resource compiler, from the `CADRUMO_ID_*` identity projection.
 
-### The components role
+### The component engine
 
-`cadrumo --role components <command> [options]` runs the native component engine:
-it reports, plans, sets up, checks and removes the browser and the local AI for the
-command line, the TUI and the MCP service. It is the one role that hosts no
-interpreter. The desktop links the same engine in process, so every surface reads the
-same rows, plans and plan digests.
+The native component engine reports, plans, sets up, checks and removes the browser and
+the local AI. The desktop links it in process and is the only surface that provisions;
+the command line, the TUI and the MCP service neither provision nor start the engine.
+The engine words nothing: its rows, reports and events carry closed codes and
+locale-neutral facts (item ids, step and category codes, byte counts, versions,
+digests), and the desktop words them from its locale catalogue.
 
-| Command | Options | Does |
-| --- | --- | --- |
-| `status` | `--full`, `--item <id>`... | Every item's row; a quick check unless `--full` |
-| `plan` | `--item <id>`... | The plan a setup would ask the person to approve |
-| `setup` | `--item <id>`..., `--approve <digest>` | Sets the items up under an approval of their plan |
-| `verify` | `--item <id>`... | A full check, of every item by default |
-| `cancel` | none | Asks setups running in other processes to stop |
-| `remove` | `--item <id>`..., at least one | Removes the items |
+The item ids are `browser` and `local_ai`. A setup that names no item covers every item
+whose row offers an action. A quick check reads local files only: no network and no
+model load, within 2 s. A full check also runs each item's network preflight, one
+headless launch of the browser, and one generated token for each selected local model.
+The person's local model selection, as role, model name and size, reaches the engine
+from the desktop; a check, verification or general setup selects the local AI program
+alone, and only a download names a model.
 
-The item ids are `browser` and `local_ai`. Without `--item`, a setup covers every
-item whose row offers an action. A quick check reads local files only: no network and
-no model load, within 2 s. A full check also runs each item's network preflight, one
-headless launch of the browser, and one generated token for each model the check
-admits. A check, verification or general setup admits the local AI program alone; only
-a download names a model.
+A setup's approval binds its plan's digest. A setup that carries a digest runs only
+while the plan still has that digest and asks for no review, which is how a Resume
+after an interruption proceeds without a second review. Without one, the engine asks
+its owner to review the plan and computes the plan again after the answer, which must
+still match; a plan that changed reports `plan_changed` with the current plan for a new
+approval. An offline computer, an unreachable host or too little free space refuses
+before any review; the free space must cover the download plus a fifth plus 1 GiB. A
+setup stops at its next transfer chunk when it is cancelled, and a cancelled setup's
+report names the item it stopped at and the `cancelled` category. A report's outcome is
+one closed code; `busy` says that another engine changes the item and this command did
+not follow it to its end.
 
-Standard output carries one JSON object per line, each with a `type`: `started`
-(with `protocol` and `command`) first, then the events, then one `result` last. The
-events are `phase` (`phase_code` `dependencies.setup.<item>.<step>`, `item_id`,
-`step`), `progress` (`subject_code`, `unit_code` `bytes`, `completed`, `total`, at
-most one per item every 500 ms and only on a 1 % change), `notice` (`notice_code`
-`retrying` with `attempt` and `delay_ms`; `waiting_for_server`; `following` with
-`subject_code` and `plan_digest`; `cancel_requested`; `input_refused`) and `review`
-(`plan_digest` and `plan`). The `result` carries the
-`outcome`, every item's `rows` with `setup_complete`, and, where they apply, the
-`plan` with its `plan_digest`, the `item_id` and `failure_category` a refusal or
-failure is for, and the `items` a cancel or removal touched. Every value is a closed
-code or a locale-neutral fact; each surface words them from its locale catalogue.
-
-| Outcome | Exit | Meaning |
-| --- | --- | --- |
-| `ok`, `nothing_to_do`, `completed`, `cancel_requested`, `nothing_running`, `removed` | 0 | The command did what was asked |
-| `needs_approval`, `plan_changed`, `busy`, `refused`, `failed`, `cancelled` | 1 | It did not; `plan_changed` reports the current plan for a new approval, and `busy` that another process changes the item and this command did not follow it to its end |
-| `invalid_request` | 64 | The command line names no command; this is the only line written |
-
-A setup's approval binds its plan's digest. With `--approve`, the setup runs only while
-the plan still has that digest, and asks for no review, which is how a Resume after an
-interruption proceeds without a second review. Without it, the role sends a `review`
-and reads one line from standard input: `{"type":"approve","plan_digest":"<digest>"}`
-approves that plan, which is computed again and must still match, and
-`{"type":"decline"}` declines. `{"type":"cancel"}` stops a running setup or check at
-its next transfer chunk. Closing standard input declines a waiting review and cancels a
-running setup. An offline computer, an unreachable host or too little free space
-refuses before any review; the free space must cover the download plus a fifth plus
-1 GiB. A cancelled setup's `result` names the item it stopped at and the `cancelled`
-category.
-
-A second setup of an item another process is already setting up follows that setup
-instead of refusing. With `--item`, it follows the named items another process holds;
-without, every item another process holds. It plans nothing, sends no `review` and
-downloads nothing. It sends a `following` notice for each item, naming the digest of the
-plan the other setup was approved under, then that setup's `phase`, `progress` and
-`notice` lines as it reaches them, and ends with the `result` that setup reached for the
-items: `completed`, or the `outcome`, `item_id` and `failure_category` of the item it
-stopped at. A followed setup whose process dies reads `failed` `interrupted`. The
-result carries every item's rows and no plan. The follower's `{"type":"cancel"}` line,
-or the end of its input, stops only the following, which ends `busy` while the other
-setup goes on; the `cancel` command asks the followed setup itself to stop, as the
-person's act from any surface. An item being removed is not followed and answers
-`busy`.
+A second setup of an item another engine is already setting up follows that setup
+instead of refusing, whether that engine runs in this process or another. It plans
+nothing, asks for no review and downloads nothing. It reports a following event for
+each item, naming the digest of the plan the other setup was approved under, then that
+setup's phase, progress, retry and server-wait events as it reaches them, and ends with
+the result that setup reached for the items: completed, or the outcome, item and
+failure category of the item it stopped at. A followed setup whose process dies reads
+`failed` `interrupted`. The report carries every item's rows and no plan. Cancelling
+the follower stops only the following, which ends `busy` while the other setup goes on;
+stopping the followed setup itself is the person's act, made by leaving a cancel
+request beside each named item's lock, which the setup looks for at every transfer
+chunk. An item being removed is not followed and answers `busy`.
 
 The engine coordinates through `components/activity` under the storage root. A setup
 takes the writer lock of every item it will change before the first starts, so its
 whole run reads as running, and keeps each item's activity record current with the run
 id, the approved plan digest, every step reached, the latest byte figure, any retry
 and any wait for the local AI server. Before it removes the record it writes the item's
-end record, which names how the run ended for that item. A follower reads the record
-again when the folder's change notification fires on Windows, and within 100 ms
-elsewhere, where no notification source is used yet; it learns that the setup ended or
-died by taking the item's lock shared once the kernel releases it, on a thread of its
-own, and a follower's cancellation ends its wait at once.
+end record, which names how the run ended for that item. A removal takes the same lock
+and leaves no record of a run, so it is refused with `busy` while a setup holds the
+item. A follower reads the record again when the folder's change notification fires on
+Windows, and within 100 ms elsewhere, where no notification source is used yet; it
+learns that the setup ended or died by taking the item's lock shared once the kernel
+releases it, on a thread of its own, and a follower's cancellation ends its wait at once.
 
-The role resolves the installation from its own image: the package's pin tables and
+The desktop resolves the installation from its own image: the package's pin tables and
 bundled browser driver, and the storage root with its relocatable browsers, models and
 server-home members, by the same rules every other Cadrumo process uses. It honours the
-`CADRUMO_PROXY_*` settings. On Windows the role places itself in a kill-on-close job
+`CADRUMO_PROXY_*` settings. On Windows the desktop places itself in a kill-on-close job
 before it starts anything; on Linux and macOS it first starts a guardian process whose
 process group every browser check and hardware query it starts is created into, and
-the guardian kills that group once the role ends. Either way a browser it launches for
-a check ends with it, however the role ends; on Linux and macOS a process that moves
-itself out of the group is not reached. The role never runs the local AI server: the
+the guardian kills that group once the desktop ends. Either way a browser it launches
+for a check ends with it, however it ends; on Linux and macOS a process that moves
+itself out of the group is not reached. The engine never runs the local AI server: the
 runtime manager runs it on the fixed local AI address while the program is set up, and
 contains it the same way, in a kill-on-close job on Windows and in a guarded process
 group of its own on Linux and macOS, so the server and what it starts end when the

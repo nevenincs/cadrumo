@@ -106,7 +106,7 @@ value already present in your shell always wins.
 | `CADRUMO_LOG_FILE_BACKUP_COUNT` | int | `5` | Number of rotated cadrumo.log backups retained by the rotating file handler |
 | `CADRUMO_LOG_FILE_LEVEL` | str | `DEBUG` | Log level for the file handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_FILE_MAX_BYTES` | int | `10485760` | Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; default 10 MiB |
-| `CADRUMO_LOG_LEVEL` | str | empty | Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. The desktop Logs view defaults to INFO and uses this as its initial minimum level. CLI verbosity names quiet, default, verbose, and debug remain supported. |
+| `CADRUMO_LOG_LEVEL` | str | empty | Log severity override: DEBUG, INFO, WARNING, ERROR, or CRITICAL. Log views default to INFO and use this as their initial minimum level. CLI verbosity names quiet, default, verbose, and debug remain supported. |
 | `CADRUMO_LOG_ROOT_LEVEL` | str | `DEBUG` | Root logger level installed by ``cadrumo.core.logging`` |
 | `CADRUMO_LOG_STDERR_LEVEL` | str | `ERROR` | Log level for the stderr handler installed by ``cadrumo.core.logging`` |
 | `CADRUMO_OLLAMA_HOME_DIR` | Path | (derived) | Private home for Cadrumo-owned Ollama processes, including their runtime identity. |
@@ -194,7 +194,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Program:** `aeat`
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
-- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package` and the names `CADRUMO_PROXY_URL`, `CADRUMO_PROXY_USERNAME` and `CADRUMO_PROXY_BYPASS`
+- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
 - **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order
@@ -204,7 +204,7 @@ Each profile belongs to one program. The host validates a launch parameter again
 - **Program:** `cadrumo-mcp`
 - **Started with:** any arguments
 - **Starts from:** only the operating-system groups `system`, `session`, `terminal`, `display` and `network`
-- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package` and the names `CADRUMO_PROXY_URL`, `CADRUMO_PROXY_USERNAME` and `CADRUMO_PROXY_BYPASS`
+- **Passes from its caller:** the name groups `locations`, `presentation`, `remote` and `package`
 - **Accepts from its parent:** `CADRUMO_PROFILE_ROOT` (directory, optional)
 - **Sets itself:** `CADRUMO_LOCAL_STORAGE_ROOT` to the storage root the package's rule resolves (an absolute value you set wins, otherwise the per-user, per-channel default), `TEMP`, `TMP` and `TMPDIR` to the temporary-files location beneath the storage root and `CADRUMO_AUTHORITY_ROOT` to the package's registry authority
 - **Search path (`PATH`):** set by the package to the directory of the package's interpreter; the existing absolute directories `CADRUMO_EXTERNAL_BIN_DIRS` names; the package's native program directory; those of the usual installation directories that exist (`%USERPROFILE%\.local\bin` on Windows, `%USERPROFILE%\scoop\shims` on Windows, `%APPDATA%\npm` on Windows, `$HOME/.local/bin` on Linux and macOS, `/usr/local/bin` on Linux and macOS and `/opt/homebrew/bin` on macOS); the system directory (`%SYSTEMROOT%\System32` on Windows, `/usr/bin` and `/bin` elsewhere), in that order

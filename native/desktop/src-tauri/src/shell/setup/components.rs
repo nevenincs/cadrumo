@@ -27,8 +27,8 @@
 //! request, and the window keeps following until that setup ends. Closing the
 //! window stops only its following; the setup it followed goes on.
 //!
-//! Each engine a check or setup builds admits the local AI as its program alone;
-//! a download admits the one model the person asked for from a local lane's
+//! Each engine a check or setup builds selects the local AI as its program alone;
+//! a download selects the one model the person asked for from a local lane's
 //! model list before it runs (`admission`). A download that cannot be admitted
 //! refuses the command and the engine never runs, so it changes no row.
 //!
@@ -130,10 +130,9 @@ fn engine_unavailable(error: Error) -> ApplicationError {
         .caused_by(error)
 }
 
-/// An engine of this installation, admitted with the local AI's program alone or,
-/// for an explicit download, with the one model the person asked for from a local
-/// lane's model list, as the agent service states it now. Every check and setup
-/// runs on one.
+/// An engine of this installation, given the local AI's program alone or, for an
+/// explicit download, the one model the person asked for from a local lane's model
+/// list, as the agent service states it now. Every check and setup runs on one.
 fn admitted(
     engines: &Engines,
     admission: &Admission,
@@ -147,7 +146,7 @@ fn admitted(
         None => Ok(LocalModels::default()),
     }
     .map_err(Unready::Stopped)?;
-    engine.admit_local_ai(models);
+    engine.select_local_models(models);
     Ok(engine)
 }
 
@@ -777,8 +776,8 @@ impl Components {
         let removed = tokio::task::spawn_blocking(move || -> Result<Report, Stop> {
             let Installation { mut engine } =
                 engines().map_err(|error| Stop::Unavailable(engine_unavailable(error)))?;
-            // The local AI is admitted as its program alone: a removal pulls nothing.
-            engine.admit_local_ai(LocalModels::default());
+            // The local AI is selected as its program alone: a removal pulls nothing.
+            engine.select_local_models(LocalModels::default());
             Ok(engine.remove_model(&name, &mut |_| {}))
         })
         .await
@@ -1354,10 +1353,7 @@ fn blocked(reason: BlockedReason) -> wire::BlockedReason {
 
 fn recovery(action: RecoveryAction) -> wire::Recovery {
     match action {
-        // Only an engine that was never admitted names the desktop, and every engine this
-        // window runs is admitted. Were one not, the desktop's set-up is the button the
-        // window offers.
-        RecoveryAction::SetUp | RecoveryAction::SetUpInDesktop => wire::Recovery::SetUp,
+        RecoveryAction::SetUp => wire::Recovery::SetUp,
         RecoveryAction::Update => wire::Recovery::Update,
         RecoveryAction::TryAgain => wire::Recovery::TryAgain,
         RecoveryAction::Resume => wire::Recovery::Resume,

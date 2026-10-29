@@ -1,7 +1,5 @@
-//! The component engine: status, plan, setup, verify, cancel and remove for every setup
-//! item, composed from the item modules. The `components` role runs it for the command
-//! line, the TUI and the MCP service, and the desktop links it in process; both see the
-//! same rows, plans and digests.
+//! The component engine: status, setup, verify and remove for every setup item, composed
+//! from the item modules. The desktop links it in process.
 //!
 //! A setup reads every item's quick state, plans the items the request names, or by
 //! default every item whose row offers the person an action, and checks the planned
@@ -40,14 +38,10 @@
 //! selected model through it. Without a manager the server never comes, and the models
 //! fail as `program_not_running`.
 //!
-//! Only an owner that admits the local AI with [`Engine::admit_local_ai`] may plan, set up
-//! or remove it; the desktop host alone does, handing over the person's selection: role,
-//! model name and download size, as the selected catalogue entries state them. The engine
-//! names no model itself, so with an empty selection the local AI is its program alone.
-//! An engine that was never admitted serves the local AI read-only: it reports and fully
-//! checks the program, offers [`RecoveryAction::SetUpInDesktop`] where a set-up, update,
-//! retry or resume would be offered, leaves the item out of a setup that names none, and
-//! refuses a plan, setup or removal that names it.
+//! The owner hands the engine the person's local model selection with
+//! [`Engine::select_local_models`]: role, model name and download size, as the selected
+//! catalogue entries state them. The engine names no model itself, so with an empty
+//! selection the local AI is its program alone.
 
 use super::{
     activity::{
@@ -70,8 +64,8 @@ use super::{
     plan::{PlanEntry, SetupPlan},
     receipts::{ReceiptReading, ReceiptStore},
     state::{
-        self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, RecoveryAction,
-        SetupStep, StatusRow,
+        self, Activity, BlockedReason, CheckMode, ItemState, Observation, Reading, SetupStep,
+        StatusRow,
     },
     transfer::{Pacing, RetryPolicy, SystemPacing, Transfer, TransferEvent},
 };
@@ -175,10 +169,6 @@ pub enum Outcome {
     Failed,
     /// The setup stopped because it was asked to.
     Cancelled,
-    /// A stop was asked of the setups running in other processes.
-    CancelRequested,
-    /// No setup was running to stop.
-    NothingRunning,
     /// The requested items were removed.
     Removed,
 }
@@ -188,20 +178,15 @@ impl Outcome {
     pub fn succeeded(self) -> bool {
         matches!(
             self,
-            Self::Ok
-                | Self::NothingToDo
-                | Self::Completed
-                | Self::CancelRequested
-                | Self::NothingRunning
-                | Self::Removed
+            Self::Ok | Self::NothingToDo | Self::Completed | Self::Removed
         )
     }
 }
 
 /// What one command found and did. `rows` is every item's state after the command;
-/// `plan` is the plan a setup or plan reports; `item` and `failure` name the item and
-/// the category a refusal or failure is for; `items` are the items a cancel asked to
-/// stop or a removal removed.
+/// `plan` is the plan a setup reports; `item` and `failure` name the item and the
+/// category a refusal or failure is for; `items` are the items a removal removed, or the
+/// items another engine is changing.
 #[derive(Clone, Debug)]
 pub struct Report {
     pub outcome: Outcome,
@@ -303,9 +288,8 @@ pub struct Engine {
     config: EngineConfig,
     activity: ActivityStore,
     receipts: ReceiptStore,
-    /// The person's local model selection when the owner admitted the local AI's
-    /// provisioning; `None` serves the local AI read-only.
-    local_ai: Option<LocalModels>,
+    /// The person's local model selection; empty plans the local AI's program alone.
+    local_models: LocalModels,
     /// Arguments a test's stand-in browser is launched with.
     #[cfg(test)]
     pub(crate) browser_leading: Vec<OsString>,
@@ -564,7 +548,7 @@ impl Engine {
         Ok(Self {
             activity: ActivityStore::new(config.locations.activity.clone())?,
             receipts: ReceiptStore::new(config.locations.receipts.clone())?,
-            local_ai: None,
+            local_models: LocalModels::default(),
             config,
             #[cfg(test)]
             browser_leading: Vec::new(),
@@ -575,27 +559,10 @@ impl Engine {
         &self.config.locations
     }
 
-    /// Admits the local AI's provisioning with the local models every later command plans,
-    /// pulls, checks and removes: the person's selection, as the desktop read it. It
-    /// replaces any earlier selection. No other owner calls it.
-    pub fn admit_local_ai(&mut self, models: LocalModels) {
-        self.local_ai = Some(models);
-    }
-
-    /// The selection the local AI is admitted with; none for a read-only engine.
-    fn local_models(&self) -> LocalModels {
-        self.local_ai.clone().unwrap_or_default()
-    }
-
-    /// Whether this engine may plan, set up or remove `item`.
-    fn provisions(&self, item: ItemId) -> bool {
-        item != ItemId::LocalAi || self.local_ai.is_some()
-    }
-
-    /// The refusal of a plan, setup or removal naming an item this engine serves read-only.
-    fn read_only_refusal(&mut self, items: &[ItemId]) -> Option<Report> {
-        let item = items.iter().copied().find(|item| !self.provisions(*item))?;
-        Some(Report::new(Outcome::Refused, self.quick_rows(&ItemId::ALL)).for_item(item, None))
+    /// Selects the local models every later command plans, pulls, checks and removes: the
+    /// person's selection, as the desktop read it. It replaces any earlier selection.
+    pub fn select_local_models(&mut self, models: LocalModels) {
+        self.local_models = models;
     }
 
     /// Every item's state. A quick check reads local facts only; a full check also runs
@@ -631,15 +598,6 @@ impl Engine {
             items
         };
         self.status(CheckMode::Full, items, events, cancellation)
-    }
-
-    /// The plan a setup of `items` would ask the person to approve, without asking.
-    pub fn plan(&mut self, items: Option<&[ItemId]>) -> Report {
-        match self.planned(items) {
-            Ok((rows, Some(plan))) => Report::new(Outcome::Ok, rows).with_plan(plan),
-            Ok((rows, None)) => Report::new(Outcome::NothingToDo, rows),
-            Err(report) => report,
-        }
     }
 
     /// Sets up the requested items under an approval of their plan's digest. Without an
@@ -725,38 +683,36 @@ impl Engine {
         Report { rows, ..report }.with_plan(plan)
     }
 
-    /// Asks every setup running in another process of this installation to stop at its
-    /// next transfer chunk.
-    pub fn request_cancel(&mut self) -> Report {
-        self.request_cancel_of(&ItemId::ALL)
-    }
-
-    /// [`Self::request_cancel`] for the setups of `items` alone.
-    pub fn request_cancel_of(&mut self, items: &[ItemId]) -> Report {
-        let asked = self.ask_to_stop(items);
-        let outcome = if asked.is_empty() {
-            Outcome::NothingRunning
-        } else {
-            Outcome::CancelRequested
-        };
-        Report {
-            items: asked,
-            ..Report::new(outcome, self.quick_rows(&ItemId::ALL))
-        }
-    }
-
-    /// Removes `items`, each under its writer lock: the browser's builds and receipt, and
-    /// the local AI's program and selected models.
+    /// Removes `items`, each under its writer lock, with its receipt and recorded
+    /// activity: the browser's builds, and the whole local AI, which is its program and
+    /// the selected models. A model the person keeps beside them stays. An item a setup
+    /// holds is not removed: the report is `Busy` and names it.
     pub fn remove(&mut self, items: &[ItemId], events: &mut dyn FnMut(Event)) -> Report {
-        if let Some(refusal) = self.read_only_refusal(items) {
-            return refusal;
-        }
+        self.removal(items, true, events)
+    }
+
+    /// Removes the local AI's program alone, under the local AI's writer lock: every
+    /// installed version, with the manager's server stopped first, and the item's receipt.
+    /// Every model stays in the models folder, and so does the selection. A local AI a
+    /// setup holds is not removed: the report is `Busy`. The report's `items` hold the
+    /// local AI once it is removed.
+    pub fn remove_program(&mut self, events: &mut dyn FnMut(Event)) -> Report {
+        self.removal(&[ItemId::LocalAi], false, events)
+    }
+
+    /// [`Self::remove`], with the local AI's selected models going with its program or not.
+    fn removal(
+        &mut self,
+        items: &[ItemId],
+        with_models: bool,
+        events: &mut dyn FnMut(Event),
+    ) -> Report {
         let sink = Sink::new(events);
         let mut removed = Vec::new();
         for item in ItemId::ALL.into_iter().filter(|item| items.contains(item)) {
             let report =
                 |outcome, failure| Report::new(outcome, Vec::new()).for_item(item, failure);
-            let stopped = match self.remove_item(item, &sink) {
+            let stopped = match self.remove_item(item, with_models, &sink) {
                 Ok(()) => {
                     removed.push(item);
                     continue;
@@ -779,13 +735,9 @@ impl Engine {
     /// Removes the local model `name` alone, under the local AI's writer lock: its
     /// manifest and each layer no other stored model uses, keeping the program, its
     /// receipt and every other model. The desktop clears the roles that selected it
-    /// first, so the local AI's row then reads from the remaining selection. Only an
-    /// engine admitted to provision the local AI removes one; any other is refused.
+    /// first, so the local AI's row then reads from the remaining selection.
     pub fn remove_model(&mut self, name: &ModelName, events: &mut dyn FnMut(Event)) -> Report {
         let item = ItemId::LocalAi;
-        if let Some(refusal) = self.read_only_refusal(&[item]) {
-            return refusal;
-        }
         let sink = Sink::new(events);
         let observer = |step| sink.emit(Event::Phase { item, step });
         let removed = self
@@ -885,7 +837,10 @@ impl Engine {
         match Program::new(pins, platform, self.config.locations.clone()) {
             Ok(Some(program)) => Some(Ok((
                 program,
-                Models::new(self.local_models(), self.config.locations.models.clone()),
+                Models::new(
+                    self.local_models.clone(),
+                    self.config.locations.models.clone(),
+                ),
             ))),
             Ok(None) => None,
             Err(error) => Some(Err(error)),
@@ -993,19 +948,6 @@ impl Engine {
                 .filter(|entry| !entry.has_unknown_size())
                 .and_then(|entry| entry.download_bytes);
         }
-        if !self.provisions(item)
-            && matches!(
-                row.recovery,
-                Some(
-                    RecoveryAction::SetUp
-                        | RecoveryAction::Update
-                        | RecoveryAction::TryAgain
-                        | RecoveryAction::Resume
-                )
-            )
-        {
-            row.recovery = Some(RecoveryAction::SetUpInDesktop);
-        }
         row
     }
 
@@ -1045,7 +987,7 @@ impl Engine {
                 });
                 if let Some(mut hosts) = network::item_hosts(&self.config.pins, item.as_str()) {
                     if item == ItemId::LocalAi {
-                        hosts.extend(self.local_models().hosts());
+                        hosts.extend(self.local_models.hosts());
                     }
                     let hosts: Vec<HostName> = hosts.into_iter().collect();
                     let report = network::preflight(&self.config.network, &hosts, HOST_TIMEOUT);
@@ -1168,9 +1110,6 @@ impl Engine {
         &mut self,
         items: Option<&[ItemId]>,
     ) -> Result<(Vec<StatusRow>, Option<SetupPlan>), Report> {
-        if let Some(refusal) = items.and_then(|requested| self.read_only_refusal(requested)) {
-            return Err(refusal);
-        }
         let mut surveys: Vec<(ItemId, Survey)> = ItemId::ALL
             .into_iter()
             .map(|item| (item, self.survey(item)))
@@ -1182,7 +1121,7 @@ impl Engine {
         let running: Vec<ItemId> = rows
             .iter()
             .filter(|row| match items {
-                None => self.provisions(row.item),
+                None => true,
                 Some(requested) => requested.contains(&row.item),
             })
             .filter(|row| matches!(row.state, ItemState::Provisioning | ItemState::Verifying))
@@ -1668,7 +1607,12 @@ impl Engine {
         finish(writer, outcome)
     }
 
-    fn remove_item(&mut self, item: ItemId, sink: &Sink<'_>) -> Result<(), Stop> {
+    fn remove_item(
+        &mut self,
+        item: ItemId,
+        with_models: bool,
+        sink: &Sink<'_>,
+    ) -> Result<(), Stop> {
         let layout = match item {
             ItemId::Browser => self.browser_layout(),
             ItemId::LocalAi => None,
@@ -1690,7 +1634,9 @@ impl Engine {
                 let (mut program, models) = parts?;
                 // Waits for the manager to stop its server first.
                 program.remove()?;
-                models.remove()?;
+                if with_models {
+                    models.remove()?;
+                }
             }
             receipts.remove(item)?;
             Ok(())
@@ -1966,3 +1912,6 @@ mod follower_access_tests {
         );
     }
 }
+
+#[cfg(test)]
+mod tests;

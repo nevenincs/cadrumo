@@ -1,6 +1,6 @@
 //! The process group a child is created in on Linux and macOS.
 //!
-//! An owner that keeps a process scope for its children, as the `components` role does,
+//! An owner that keeps a process scope for its children, as the desktop does,
 //! has each child created into it, so the child and what it starts end with the owner
 //! however the owner ends. Any other owner gives the child a group of its own, apart from
 //! the terminal's job control.
