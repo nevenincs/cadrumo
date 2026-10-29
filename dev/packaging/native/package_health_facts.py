@@ -3,8 +3,48 @@
 import json
 from collections.abc import Set
 from pathlib import Path
+from typing import Final
 
 from cadrumo.core.type_guards import is_str_keyed_dict
+
+# Wire spellings of `ErrorCode` in native/application/src/error/application.rs; a parity
+# gate compares this set with the enum and the frontend's `HostErrorCode`.
+NATIVE_ERROR_CODES: Final = frozenset(
+    {
+        "invalid_arguments",
+        "package_unavailable",
+        "environment_failed",
+        "timed_out",
+        "output_limit",
+        "spawn_failed",
+        "child_failed",
+        "read_failed",
+        "write_failed",
+        "resize_failed",
+        "cleanup_failed",
+        "session_unavailable",
+        "setup_failed",
+        "queue_full",
+        "cli_busy",
+        "cli_wait_timed_out",
+        "lock_poisoned",
+        "log_unavailable",
+        "desktop_unavailable",
+        "webview_failed",
+        "webview_process_failed",
+        "webview_monitor_unavailable",
+        "unsupported_platform",
+        "instance_lock_foreign",
+        "manager_unavailable",
+        "manager_dispatch_failed",
+        "installation_unavailable",
+        "installation_refused",
+        "installation_cancelled",
+        "installation_failed",
+        "installation_unsettled",
+        "panic",
+    }
+)
 
 
 def health_events(root: Path) -> list[dict[str, object]]:
@@ -26,15 +66,7 @@ def health_events(root: Path) -> list[dict[str, object]]:
 
 def health_facts(root: Path) -> dict[str, object]:
     """Project bounded native codes and timings; discard messages and coordinates."""
-    code_names = (
-        "invalid_arguments package_unavailable environment_failed timed_out output_limit spawn_failed "
-        "read_failed write_failed resize_failed cleanup_failed session_unavailable setup_failed queue_full cli_busy "
-        "cli_wait_timed_out lock_poisoned log_unavailable desktop_unavailable webview_failed "
-        "webview_process_failed webview_monitor_unavailable unsupported_platform instance_lock_foreign "
-        "manager_unavailable manager_dispatch_failed installation_unavailable installation_refused "
-        "installation_cancelled installation_failed installation_unsettled panic "
-    )
-    codes = set(code_names.split())
+    codes = NATIVE_ERROR_CODES
     stage_names = (
         "admission environment manager window shutdown job_escape instance storage package session supervision "
     )

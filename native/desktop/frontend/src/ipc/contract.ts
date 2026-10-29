@@ -95,6 +95,7 @@ export type HostErrorCode =
   | "timed_out"
   | "output_limit"
   | "spawn_failed"
+  | "child_failed"
   | "read_failed"
   | "write_failed"
   | "resize_failed"
