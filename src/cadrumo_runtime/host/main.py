@@ -18,7 +18,7 @@ from cadrumo.core.async_cleanup import AsyncResourceCleanupError, async_cleanup_
 from cadrumo.core.child_console import isolate_child_consoles
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.diagnostic_log import diagnostic_error_fields, diagnostic_event, diagnostic_process, diagnostic_scope
-from cadrumo.core.logging import configure_logging, get_logger, register_first_party_logger
+from cadrumo.core.logging import configure_logging, flush_logging, get_logger, register_first_party_logger
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo.core.terminal_encoding import encode_terminal_text
 from cadrumo.domain.calculations.registry.authority_location import published_authority_generation
@@ -323,6 +323,9 @@ def _run_runtime(
         )
         if sys.platform == "win32" and has_async_cleanup_failure(error):
             raise
+        # Diagnostics reach stderr on a delivery thread; drain them so the
+        # refusal reason stays the line after the event that announced it.
+        flush_logging()
         sys.stderr.write(encode_terminal_text(error.reason.value) + "\n")
         return int(refusal_exit_reason(error.reason))
     except KeyboardInterrupt as error:
