@@ -475,7 +475,7 @@ msgstr "Nem bizonyítja a beküldést vagy az elfogadást"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Google Sheet export"
-msgstr "Google Sheet-export"
+msgstr "Exportálás Google-táblázatba"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Human review, reconciliation, parity checking, and what-if editing"

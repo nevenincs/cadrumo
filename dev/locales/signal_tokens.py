@@ -52,7 +52,7 @@ def human_translation_text(value: str) -> str:
     either signal inspects the text.  The original value remains untouched for
     placeholder parity and rendering checks.
     """
-    return filtered_translation_text(value)[0]
+    return filtered_translation_text(value)[0].casefold()
 
 
 def filtered_translation_text(value: str) -> tuple[str, int]:
@@ -85,7 +85,7 @@ def filtered_translation_text(value: str) -> tuple[str, int]:
         text, matches = pattern.subn(replacement, text)
         excluded += matches
     text = re.sub(r"[,;]+", " ", text)
-    return " ".join(text.casefold().split()), excluded
+    return " ".join(text.split()), excluded
 
 
 def visible_link_label(match: re.Match[str]) -> str:
@@ -103,6 +103,9 @@ def visible_role_label(match: re.Match[str]) -> str:
     return f" {label} " if label else " "
 
 
-def translation_words(value: str) -> tuple[str, ...]:
+def translation_words(value: str, *, preserve_apostrophes: bool = False) -> tuple[str, ...]:
     """Return alphabetic prose words for locale-quality signals."""
-    return tuple(match.group(0) for match in re.finditer(r"[^\W\d_]+", value, flags=re.UNICODE))
+    joiners = "·'’" if preserve_apostrophes else "·"
+    return tuple(
+        match.group(0) for match in re.finditer(rf"[^\W\d_]+(?:[{joiners}][^\W\d_]+)*", value, flags=re.UNICODE)
+    )

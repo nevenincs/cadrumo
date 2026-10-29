@@ -27,3 +27,18 @@ INVARIANT_ECHO_REASONS: Final[tuple[str, ...]] = (
     "canonical_product_identity",
     "target_dictionary_shared_term",
 )
+
+
+# These reason codes come from runtime state; missing authored copy uses the
+# generic availability or refusal message. New families require evidence of
+# the same fallback, and the dynamic-prefix gate checks entries remain live.
+OPEN_ENDED_NAMESPACES: Final[dict[str, str]] = {
+    "workspace.declarations.refusal.reason": (
+        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
+        "and the page falls back to its generic refusal line for an unauthored reason."
+    ),
+    "tui.home.availability.reason": (
+        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
+        "and the page falls back to its generic availability line for an unauthored reason."
+    ),
+}

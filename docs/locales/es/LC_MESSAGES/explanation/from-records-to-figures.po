@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-29 12:33+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
@@ -119,22 +119,25 @@ msgstr "Repartir un gasto mixto y comprobar la preparación"
 
 #: ../../explanation/from-records-to-figures.md:30
 msgid ""
-"Some costs serve both your business and your private life - a phone bill,"
-" home internet, a home office. Only the business share counts, and the "
-"split can come from a percentage on the single record, a saved default "
-"for the whole category, or a ratio worked out from your registered facts "
-"- see [the mixed-use workflow](../how-to/classify-transactions.md"
-"#classify-mixed-use-transactions)."
+"Some costs serve both your business and your private life - home "
+"internet, a home office. Only the business share counts, and the split "
+"can come from a percentage on the single record, a saved default for the "
+"whole category, or a ratio worked out from your registered facts - see "
+"[the mixed-use workflow](../how-to/classify-transactions.md#classify-"
+"mixed-use-transactions). A mobile line or a car is not split: for income "
+"tax it counts only when it serves the business alone."
 msgstr ""
-"Algunos gastos sirven a la vez a tu actividad y a tu vida privada: una "
-"factura de teléfono, internet en casa, una oficina en casa. Solo computa "
-"la parte empresarial, y el reparto puede venir de un porcentaje en el "
-"registro concreto, de un valor por defecto guardado para toda la "
-"categoría, o de una proporción calculada a partir de tus datos "
-"registrados; consulta [el flujo de uso mixto](../how-to/classify-"
-"transactions.md#classify-mixed-use-transactions)."
+"Algunos gastos sirven a la vez a tu actividad y a tu vida privada: "
+"internet en casa o una oficina en casa. Solo computa la parte "
+"empresarial, y el reparto puede venir de un porcentaje en el registro "
+"concreto, de un valor por defecto guardado para toda la categoría o de "
+"una proporción calculada a partir de tus datos registrados; consulta [el "
+"flujo de uso mixto](../how-to/classify-transactions.md#classify-mixed-"
+"use-transactions). Una línea móvil o un coche no se reparten: para el "
+"impuesto sobre la renta solo computan si se usan exclusivamente para la "
+"actividad."
 
-#: ../../explanation/from-records-to-figures.md:36
+#: ../../explanation/from-records-to-figures.md:38
 msgid ""
 "Before the tool adds anything up, a readiness check flags each record in "
 "the period that is still missing a decision, a category, a tax figure, a "
@@ -151,11 +154,11 @@ msgstr ""
 "cualquier total; consulta la sección de preparación de [Importar y "
 "gestionar movimientos](../how-to/import-bank-statements.md)."
 
-#: ../../explanation/from-records-to-figures.md:43
+#: ../../explanation/from-records-to-figures.md:45
 msgid "Which form, and which period"
 msgstr "Qué modelo y qué periodo"
 
-#: ../../explanation/from-records-to-figures.md:45
+#: ../../explanation/from-records-to-figures.md:47
 msgid ""
 "A calculation is always for one form, one year, and one period. The "
 "period decides which of your records count."
@@ -163,7 +166,7 @@ msgstr ""
 "Un cálculo siempre es para un modelo, un año y un periodo. El periodo "
 "decide cuáles de tus registros cuentan."
 
-#: ../../explanation/from-records-to-figures.md:47
+#: ../../explanation/from-records-to-figures.md:49
 msgid ""
 "A period is a quarter, a single month, or a whole year. The tool turns it"
 " into a start and end date, then keeps only the records whose date falls "
@@ -180,7 +183,7 @@ msgstr ""
 "del Modelo 130 lee el año hasta la fecha, así que su presentación del "
 "segundo trimestre ve de enero a junio."
 
-#: ../../explanation/from-records-to-figures.md:49
+#: ../../explanation/from-records-to-figures.md:51
 #, python-brace-format
 msgid ""
 "Choosing the right form for your activity is its own decision - see [Find"
@@ -194,11 +197,11 @@ msgstr ""
 "los meses y los periodos anuales, consulta {ref}`Códigos de periodo y "
 "fechas <period-tokens-and-dates>`."
 
-#: ../../explanation/from-records-to-figures.md:51
+#: ../../explanation/from-records-to-figures.md:53
 msgid "From records to numbered boxes"
 msgstr "De los registros a las casillas numeradas"
 
-#: ../../explanation/from-records-to-figures.md:53
+#: ../../explanation/from-records-to-figures.md:55
 msgid ""
 "Here's where the figures appear. The tool reads two things: your tax-"
 "ready records for the period, and your profile - who you are and what you"
@@ -208,7 +211,7 @@ msgstr ""
 "registros listos para su tratamiento fiscal del periodo, y tu perfil: "
 "quién eres y a qué te dedicas."
 
-#: ../../explanation/from-records-to-figures.md:55
+#: ../../explanation/from-records-to-figures.md:57
 msgid ""
 "It then applies the rules the agency publishes for that form. Those rules"
 " decide which input feeds which box, and how the boxes relate to each "
@@ -227,7 +230,7 @@ msgstr ""
 "para llegar a la cuota) hasta que cada casilla del modelo contiene una "
 "cifra."
 
-#: ../../explanation/from-records-to-figures.md:57
+#: ../../explanation/from-records-to-figures.md:59
 msgid ""
 "You don't wire any of this by hand. You make your records tax-ready and "
 "keep your profile current; the published rules do the routing and the "
@@ -237,11 +240,11 @@ msgstr ""
 "tratamiento fiscal y mantienes tu perfil al día; las reglas publicadas "
 "hacen el encaminamiento y la aritmética."
 
-#: ../../explanation/from-records-to-figures.md:59
+#: ../../explanation/from-records-to-figures.md:61
 msgid "Tracing a number back to the law"
 msgstr "Rastrear una cifra hasta la ley"
 
-#: ../../explanation/from-records-to-figures.md:61
+#: ../../explanation/from-records-to-figures.md:63
 msgid ""
 "Every figure the tool produces keeps three things attached: the rule that"
 " produced it, the law article behind that rule, and the official source "
@@ -254,7 +257,7 @@ msgstr ""
 "en el BOE. Las cifras que introdujiste tú mismo llevan el mismo rastro "
 "hasta su origen."
 
-#: ../../explanation/from-records-to-figures.md:63
+#: ../../explanation/from-records-to-figures.md:65
 msgid ""
 "This is the point of the whole design. Spanish tax filing expects you to "
 "justify every number. If an inspector asks why a box holds a certain "
@@ -267,11 +270,11 @@ msgstr ""
 "registros que la respaldan y la regla y la ley que convirtieron esos "
 "registros en esa cifra. Nada es una caja negra."
 
-#: ../../explanation/from-records-to-figures.md:65
+#: ../../explanation/from-records-to-figures.md:67
 msgid "Where this sits in the journey"
 msgstr "Dónde encaja esto en el recorrido"
 
-#: ../../explanation/from-records-to-figures.md:67
+#: ../../explanation/from-records-to-figures.md:69
 msgid ""
 "This page is part of understanding the AEAT pipeline - how your data "
 "flows from bank statement to the form you file."
@@ -279,11 +282,11 @@ msgstr ""
 "Esta página forma parte de entender el circuito de la AEAT: cómo fluyen "
 "tus datos desde el extracto bancario hasta el modelo que presentas."
 
-#: ../../explanation/from-records-to-figures.md:69
+#: ../../explanation/from-records-to-figures.md:71
 msgid "Start at the [how-it-works overview](index.md)."
 msgstr "Empieza por la [visión general de cómo funciona](index.md)."
 
-#: ../../explanation/from-records-to-figures.md:70
+#: ../../explanation/from-records-to-figures.md:72
 msgid ""
 "Continue to the next stage: [Editing and checking a calculation](editing-"
 "and-verifying.md)."

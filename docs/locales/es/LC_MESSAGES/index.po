@@ -413,7 +413,3 @@ msgstr ""
 "evidence.md) para distinguir los datos de origen, los resultados de "
 "revisión, los ficheros de subida a la AEAT, el justificante de la AEAT y "
 "los paquetes de auditoría."
-
-#~ msgid "Architecture and internals"
-#~ msgstr "Arquitectura y funcionamiento interno"
-

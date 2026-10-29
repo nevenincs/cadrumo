@@ -12,7 +12,12 @@ from .manager import (
     LocaleManager,
 )
 from .signal_contracts import LocaleSignal, LocaleSignalDetails
-from .signal_discovery import discover_signal_catalogues, include_signal_namespace_keys, signal_catalogue_coverage
+from .signal_discovery import (
+    discover_signal_catalogues,
+    include_signal_namespace_keys,
+    is_optional_namespace_key,
+    signal_catalogue_coverage,
+)
 from .signal_domain_summary import domain_summaries, headline, largest_domain_locale, locale_summaries, next_action
 from .signal_parallel_inventory import parallel_localization_inventory
 from .signal_report import (
@@ -33,6 +38,16 @@ def _inventory_count(inventory: Mapping[str, object], key: str) -> int:
     return value if isinstance(value, int) else 0
 
 
+def _optional_catalogue_values(locale_leaves: Mapping[str, Mapping[str, object]]) -> dict[str, dict[str, str]]:
+    """Enroll authored optional reason copy in spelling coverage."""
+    parallel_values: dict[str, dict[str, str]] = defaultdict(dict)
+    for locale, leaves in locale_leaves.items():
+        parallel_values[locale].update(
+            (key, value) for key, value in leaves.items() if is_optional_namespace_key(key) and isinstance(value, str)
+        )
+    return parallel_values
+
+
 def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> LocaleSignal:
     """Build the known translation backlog and inventory-integrity findings."""
     (
@@ -45,7 +60,7 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> Local
         catalogue_findings,
     ) = discover_signal_catalogues(manager)
     include_signal_namespace_keys(required_keys, namespace_markers, finite_families, locale_leaves)
-    parallel_values: dict[str, dict[str, str]] = defaultdict(dict)
+    parallel_values = _optional_catalogue_values(locale_leaves)
     parallel_inventory, parallel_findings = parallel_localization_inventory(repository, spelling_values=parallel_values)
     spelling, spelling_inventory, spelling_findings = spellcheck_catalogues(
         required_keys, locale_leaves, repository, additional_values=parallel_values

@@ -12,6 +12,7 @@ from babel.messages.pofile import read_po
 
 from dev._paths import UTF_8
 
+from .signal_documentation_inventory import catalogue_in_localization_scope
 from .signal_gettext import po_message_identity, po_translation_strings
 from .signal_parallel_findings import data_finding
 
@@ -28,9 +29,19 @@ def inventory_parallel_po_sources(
     spelling_values: dict[str, dict[str, str]] | None,
 ) -> None:
     """Inventory parallel po sources."""
-    from dev.docs.i18n import TARGET_LANGUAGES
+    from dev.docs.i18n import TARGET_LANGUAGES, user_scope_source_pages
 
+    source_root = repository / "docs"
+    pages = set(user_scope_source_pages(source_root)) if source_root.is_dir() else set()
     for path in sorted(docs_root.rglob("*.po")) if docs_root.is_dir() else ():
+        relative = path.relative_to(docs_root)
+        if (
+            len(relative.parts) >= 3
+            and relative.parts[0] in TARGET_LANGUAGES
+            and relative.parts[1] == "LC_MESSAGES"
+            and not catalogue_in_localization_scope(Path(*relative.parts[2:]).as_posix(), source_root, pages)
+        ):
+            continue
         inventory_parallel_po_file(
             path,
             docs_root,

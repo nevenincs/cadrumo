@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 
+from .locale_audit import _covered_by_namespace
 from .locale_tree import _flatten_raw_locale_leaves
 from .locale_yaml import discover_locale_codes, locale_catalogue_source
 from .manager import LocaleManager
+from .signal_policy import OPEN_ENDED_NAMESPACES
 from .signal_syntax import DOTTED_KEY_RE
 
 
 def signal_catalogue_only_findings(
-    catalogue_only_keys: set[str], locale_leaves: dict[str, dict[str, object]]
+    catalogue_only_keys: set[str], locale_leaves: Mapping[str, Mapping[str, object]]
 ) -> list[dict[str, object]]:
     """Signal catalogue only findings."""
     catalogue_only_findings: list[dict[str, object]] = [
@@ -57,7 +59,10 @@ def discover_signal_catalogues(
         )
     namespace_markers = sorted(manager.get_codebase_namespaces())
     finite_families, unresolved_families = dynamic_key_families(namespace_markers)
-    locale_leaves, catalogue_findings = catalogue_leaves(manager)
+    unresolved_families = tuple(
+        marker for marker in unresolved_families if marker.rstrip("*").rstrip(".") not in OPEN_ENDED_NAMESPACES
+    )
+    locale_leaves, catalogue_findings = catalogue_leaves(manager, required_keys)
     if discovery_findings:
         required_keys.update(key for leaves in locale_leaves.values() for key in leaves)
     return (
@@ -81,19 +86,34 @@ def include_signal_namespace_keys(
     namespace_prefixes = tuple(marker.rstrip("*").rstrip(".") for marker in namespace_markers)
     required_keys.update(key for values in finite_families.values() for key in values)
     required_keys.update(
-        key for leaves in locale_leaves.values() for key in leaves if covered_by_namespace(key, namespace_prefixes)
+        key
+        for leaves in locale_leaves.values()
+        for key in leaves
+        if covered_by_namespace(key, namespace_prefixes) and not is_optional_namespace_key(key)
     )
 
 
 def signal_catalogue_coverage(
-    locale_leaves: dict[str, dict[str, object]], required_keys: set[str]
+    locale_leaves: Mapping[str, Mapping[str, object]], required_keys: set[str]
 ) -> tuple[int, int, set[str], list[dict[str, object]]]:
     """Signal catalogue coverage."""
     catalogue_key_cells = sum(len(leaves) for leaves in locale_leaves.values())
     catalogue_keys_unique = len({key for leaves in locale_leaves.values() for key in leaves})
-    catalogue_only_keys = {key for leaves in locale_leaves.values() for key in leaves if key not in required_keys}
+    catalogue_only_keys = {
+        key for leaves in locale_leaves.values() for key in leaves if is_catalogue_only_key(key, required_keys)
+    }
     catalogue_only_findings = signal_catalogue_only_findings(catalogue_only_keys, locale_leaves)
     return catalogue_key_cells, catalogue_keys_unique, catalogue_only_keys, catalogue_only_findings
+
+
+def is_catalogue_only_key(key: str, required_keys: set[str]) -> bool:
+    """Apply the catalogue audit exemptions to keys outside the required inventory."""
+    return key not in required_keys and not is_optional_namespace_key(key) and not _covered_by_namespace(key, ())
+
+
+def is_optional_namespace_key(key: str) -> bool:
+    """Identify authored optional reason copy, which has a generic fallback."""
+    return any(key.startswith(prefix + ".") for prefix in OPEN_ENDED_NAMESPACES)
 
 
 def dynamic_key_families(
@@ -129,16 +149,47 @@ def dynamic_key_families(
 
 def catalogue_leaves(
     manager: LocaleManager,
+    required_keys: set[str],
 ) -> tuple[dict[str, dict[str, object]], list[dict[str, object]]]:
-    """Read every discovered catalogue and report non-text translation leaves."""
+    """Read catalogue leaves and the audited desktop owner projection."""
     leaves_by_locale: dict[str, dict[str, object]] = {}
-    findings: list[dict[str, object]] = []
     for locale in sorted(discover_locale_codes(manager.locales_dir)):
         source = locale_catalogue_source(manager.locales_dir, locale)
         if source is None:
             continue
         leaves = _flatten_raw_locale_leaves(manager.load_locale(source))
         leaves_by_locale[locale] = leaves
+    _include_desktop_catalogue_leaves(manager, required_keys, leaves_by_locale)
+    findings = _non_string_catalogue_findings(leaves_by_locale)
+    return leaves_by_locale, findings
+
+
+def _include_desktop_catalogue_leaves(
+    manager: LocaleManager,
+    required_keys: set[str],
+    leaves_by_locale: dict[str, dict[str, object]],
+) -> None:
+    """Compose required desktop keys only for the canonical product catalogues."""
+    from ._paths import LOCALES_DIR
+
+    if manager.locales_dir == LOCALES_DIR:
+        from .desktop_chrome import DESKTOP_CHROME_KEYS, desktop_chrome_strings
+
+        composed = desktop_chrome_strings(manager.locales_dir, keys=DESKTOP_CHROME_KEYS)
+        for locale, strings in composed.items():
+            if locale not in leaves_by_locale:
+                from .errors import LocaleError
+
+                raise LocaleError(f"desktop catalogue locale {locale!r} has no product audit row")
+            leaves_by_locale[locale].update({key: value for key, value in strings.items() if key in required_keys})
+
+
+def _non_string_catalogue_findings(
+    leaves_by_locale: Mapping[str, Mapping[str, object]],
+) -> list[dict[str, object]]:
+    """Keep invalid leaf evidence separate from catalogue composition."""
+    findings: list[dict[str, object]] = []
+    for locale, leaves in leaves_by_locale.items():
         for key, value in sorted(leaves.items()):
             if not isinstance(value, str):
                 findings.append(
@@ -151,7 +202,7 @@ def catalogue_leaves(
                         "next_action": "set_translation",
                     }
                 )
-    return leaves_by_locale, findings
+    return findings
 
 
 def signal_key_domain(key: str) -> str:

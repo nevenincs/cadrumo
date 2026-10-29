@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 17:01+0200\n"
+"POT-Creation-Date: 2026-10-29 12:33+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -343,26 +343,43 @@ msgstr "Classifica els moviments d'ús mixt"
 #: ../../how-to/classify-transactions.md:125
 msgid ""
 "A mixed-use transaction is one you use partly for business and partly "
-"personally, such as a phone bill, a car cost, or a home-office expense. "
-"Record the business share so the calculation counts only the deductible "
-"part. The split can come from three places, in rising order of grounding:"
-" a percentage on a single record, a saved default ratio for a whole "
+"personally, such as home internet or a home-office expense. Record the "
+"business share so the calculation counts only the deductible part. The "
+"split can come from three places, in rising order of grounding: a "
+"percentage on a single record, a saved default ratio for a whole "
 "category, or a ratio worked out from your registered facts (for example, "
 "the registered home-office area against the size of your home). All three"
 " keep only the part of a cost that genuinely belongs to the business."
 msgstr ""
-"Un moviment d'ús mixt és aquella que utilitzes en part per a l'activitat "
-"i en part personalment, com ara una factura de telèfon, una despesa de "
-"cotxe o una despesa de despatx a casa. Registra la proporció professional"
-" perquè el càlcul comptabilitzi només la part deduïble. La proporció pot "
-"venir de tres llocs, en ordre creixent de fonamentació: un percentatge en"
-" un sol registre, una proporció per defecte desada per a tota una "
-"categoria, o una proporció calculada a partir de les teves dades "
-"registrades (per exemple, la superfície de despatx a casa registrada "
-"respecte a la mida de l'habitatge). Tots tres conserven només la part "
-"d'un cost que pertany realment a l'activitat."
+"Un moviment d'ús mixt és el que utilitzes en part per a l'activitat i en "
+"part personalment, com ara l'internet de casa o una despesa de despatx a "
+"casa. Registra la proporció professional perquè el càlcul comptabilitzi "
+"només la part deduïble. La proporció pot venir de tres llocs, en ordre "
+"creixent de fonamentació: un percentatge en un sol registre, una "
+"proporció per defecte desada per a tota una categoria o una proporció "
+"calculada a partir de les teves dades registrades (per exemple, la "
+"superfície de despatx a casa registrada respecte a la mida de "
+"l'habitatge). Tots tres conserven només la part d'un cost que pertany "
+"realment a l'activitat."
 
 #: ../../how-to/classify-transactions.md:134
+msgid ""
+"A mobile line and a car are not split. For income tax they count only "
+"when you use them exclusively for the business: a `MIXED` mobile or car "
+"row deducts nothing, and the calculation reports it for review. For VAT, "
+"a car's running costs (fuel, maintenance, tolls, parking) deduct 50 per "
+"cent of their VAT, the share the law presumes, and a mobile line you also"
+" use privately deducts no VAT."
+msgstr ""
+"Una línia mòbil i un cotxe no es reparteixen. Per a l'impost sobre la "
+"renda només compten quan els utilitzes exclusivament per a l'activitat: "
+"una fila de mòbil o cotxe amb `MIXED` no dedueix res i el càlcul la marca"
+" per revisar. Pel que fa a l'IVA, les despeses d'ús del cotxe "
+"(combustible, manteniment, peatges i aparcament) dedueixen el 50 per cent"
+" del seu IVA, la proporció que presumeix la llei, i una línia mòbil que "
+"també utilitzes de manera privada no dedueix IVA."
+
+#: ../../how-to/classify-transactions.md:140
 msgid ""
 "A `MIXED` row needs a proportionality reference before a modelo can "
 "calculate from it. The reference is a saved category ratio applied "
@@ -378,7 +395,7 @@ msgstr ""
 " preflight continua informant de `missing_proportionality_reference` fins"
 " que la fila porti `--usage-ratio-id`."
 
-#: ../../how-to/classify-transactions.md:140
+#: ../../how-to/classify-transactions.md:146
 msgid ""
 "For one-row commands, `--usage-ratio-id` lives on the `allocate` verb "
 "(and on `add`), not on `classify`. Its value is the spending-category id,"
@@ -392,35 +409,34 @@ msgstr ""
 "desada. La seqüència comprova les categories elegibles, desa una "
 "proporció i assigna la part a una fila:"
 
-#: ../../how-to/classify-transactions.md:149
+#: ../../how-to/classify-transactions.md:155
 msgid ""
 "A row's `--usage-ratio-id` must name a ratio-eligible category (the ones "
-"`ratios eligible` lists, such as `telefonia_movil` or a home-office "
-"suministros category), and the same category is passed as `--category-"
-"id`. The `--business-pct` value must match the saved ratio for that "
-"category. The classification follows the share automatically: a `0.5` "
-"allocation becomes `MIXED`, a `1` allocation becomes `BUSINESS`, and a "
-"`0` allocation becomes `PERSONAL`."
+"`ratios eligible` lists, such as `arrendamiento_vivienda_afecto` or a "
+"home-office suministros category), and the same category is passed as "
+"`--category-id`. The `--business-pct` value must match the saved ratio "
+"for that category. The classification follows the share automatically: a "
+"`0.5` allocation becomes `MIXED`, a `1` allocation becomes `BUSINESS`, "
+"and a `0` allocation becomes `PERSONAL`."
 msgstr ""
 "El `--usage-ratio-id` d'una fila ha d'indicar una categoria elegible per "
-"a proporció (les que llista `ratios eligible`, com ara `telefonia_movil` "
-"o una categoria de suministros de despatx a casa), i la mateixa categoria"
-" es passa com a `--category-id`. El valor de `--business-pct` ha de "
-"coincidir amb la proporció desada per a aquella categoria. La "
-"classificació segueix la proporció automàticament: una assignació `0.5` "
-"passa a `MIXED`, una assignació `1` passa a `BUSINESS` i una assignació "
-"`0` passa a `PERSONAL`."
+"a proporció (les que llista `ratios eligible`, com ara "
+"`arrendamiento_vivienda_afecto` o una categoria de suministros de despatx"
+" a casa), i la mateixa categoria es passa com a `--category-id`. El valor"
+" de `--business-pct` ha de coincidir amb la proporció desada per a "
+"aquella categoria. La classificació segueix la proporció automàticament: "
+"una assignació `0.5` passa a `MIXED`, una assignació `1` passa a "
+"`BUSINESS` i una assignació `0` passa a `PERSONAL`."
 
-#: ../../how-to/classify-transactions.md:157
+#: ../../how-to/classify-transactions.md:163
 msgid ""
-"List or check the saved ratios at any time. The sequence saves a ratio, "
-"lists the saved ratios, and validates them:"
+"Check the saved ratios at any time. The sequence saves a ratio and "
+"validates the saved ratios:"
 msgstr ""
-"Llista o comprova les proporcions desades en qualsevol moment. La "
-"seqüència desa una proporció, llista les proporcions desades i les "
-"valida:"
+"Comprova les proporcions desades en qualsevol moment. La seqüència desa "
+"una proporció i valida les proporcions desades:"
 
-#: ../../how-to/classify-transactions.md:164
+#: ../../how-to/classify-transactions.md:170
 msgid ""
 "Remove a category ratio you no longer want with `aeat app ledger ratios "
 "unset <category-id>`."
@@ -428,7 +444,22 @@ msgstr ""
 "Elimina una proporció de categoria que ja no vulguis amb `aeat app ledger"
 " ratios unset <category-id>`."
 
-#: ../../how-to/classify-transactions.md:167
+#: ../../how-to/classify-transactions.md:173
+msgid ""
+"Every ratio-eligible category is a home-office category, so its saved "
+"ratio must agree with the office and dwelling areas in your profile. "
+"`aeat app ledger ratios list` shows the saved ratios once the profile "
+"declares those areas, and refuses while a saved ratio disagrees with "
+"them."
+msgstr ""
+"Totes les categories que admeten proporcions són categories de despatx a "
+"casa, de manera que la proporció desada ha de concordar amb les "
+"superfícies del despatx i de l'habitatge del teu perfil. `aeat app ledger"
+" ratios list` mostra les proporcions desades quan el perfil declara "
+"aquestes superfícies i es nega a continuar mentre alguna proporció desada"
+" no hi concordi."
+
+#: ../../how-to/classify-transactions.md:178
 msgid ""
 "For home-office expenses, save a ratio for the relevant home-office "
 "category and allocate the share on the row. Home-office ratios follow the"
@@ -443,11 +474,11 @@ msgstr ""
 "correctes - consulta [Mantén les dades censals del Modelo 036 al teu "
 "perfil](censo-update.md)."
 
-#: ../../how-to/classify-transactions.md:172
+#: ../../how-to/classify-transactions.md:183
 msgid "Classify many rows from CSV"
 msgstr "Classifica moltes files des d'un CSV"
 
-#: ../../how-to/classify-transactions.md:174
+#: ../../how-to/classify-transactions.md:185
 msgid ""
 "For bulk review, `classify --file` reads a CSV with columns "
 "`transaction_id`, `classification`, and optional classification facts "
@@ -467,7 +498,7 @@ msgstr ""
 "reduït que contingui només les files que vols canviar, una fila per "
 "moviment:"
 
-#: ../../how-to/classify-transactions.md:189
+#: ../../how-to/classify-transactions.md:200
 msgid ""
 "In the file, amounts such as the taxable base and the VAT amount take at "
 "most two decimals. A business share and a VAT rate are fractions from `0`"
@@ -482,7 +513,7 @@ msgstr ""
 "`0.052` o `0.0175`. `classify` aplica els mateixos límits a una sola "
 "fila."
 
-#: ../../how-to/classify-transactions.md:194
+#: ../../how-to/classify-transactions.md:205
 msgid ""
 "The following sequence starts from the imported quarter. It lists the "
 "rows still needing a decision, exports a review snapshot to work from, "
@@ -492,7 +523,7 @@ msgstr ""
 " encara necessiten una decisió, exporta una instantània de revisió per "
 "treballar-hi, aplica un CSV preparat i confirma el resultat:"
 
-#: ../../how-to/classify-transactions.md:202
+#: ../../how-to/classify-transactions.md:213
 msgid ""
 "Use the CSV path when filtered review shows many rows you can classify "
 "safely from their descriptions, counterparties, and supporting documents."
@@ -519,11 +550,11 @@ msgstr ""
 "pot reeixir només en part; corregeix únicament les files fallides en lloc"
 " de repetir el fitxer sencer."
 
-#: ../../how-to/classify-transactions.md:212
+#: ../../how-to/classify-transactions.md:223
 msgid "Apply stored rules automatically"
 msgstr "Aplica regles desades automàticament"
 
-#: ../../how-to/classify-transactions.md:214
+#: ../../how-to/classify-transactions.md:225
 msgid ""
 "Rules automatically classify transactions whose description contains a "
 "word or phrase you specify. Matching ignores uppercase and lowercase "
@@ -538,7 +569,7 @@ msgstr ""
 "l'aplica. Els registres de l'exemple no tenen cap fila, de manera que ni "
 "la previsualització ni l'aplicació coincideixen amb res:"
 
-#: ../../how-to/classify-transactions.md:223
+#: ../../how-to/classify-transactions.md:234
 msgid ""
 "Run `--dry-run` first. Add `--reaffirm` only if you want the rule to "
 "overwrite classifications you already set by hand."
@@ -546,11 +577,11 @@ msgstr ""
 "Executa `--dry-run` primer. Afegeix `--reaffirm` només si vols que la "
 "regla sobreescrigui classificacions que ja has establert a mà."
 
-#: ../../how-to/classify-transactions.md:226
+#: ../../how-to/classify-transactions.md:237
 msgid "Use an LLM suggestion"
 msgstr "Utilitza un suggeriment d'un LLM"
 
-#: ../../how-to/classify-transactions.md:228
+#: ../../how-to/classify-transactions.md:239
 msgid ""
 "Cadrumo can use a configured language model to suggest how to classify "
 "each transaction. The suggestion is a starting point. You must confirm or"
@@ -562,7 +593,7 @@ msgstr ""
 " confirmar o corregir. No emplena imports fiscals com ara la base "
 "imposable, el tipus d'IVA o la categoria d'IRPF."
 
-#: ../../how-to/classify-transactions.md:233
+#: ../../how-to/classify-transactions.md:244
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
@@ -571,11 +602,11 @@ msgstr ""
 "al flux complet de proveïdor, previsualització, aplicació i "
 "sobreescriptura."
 
-#: ../../how-to/classify-transactions.md:237
+#: ../../how-to/classify-transactions.md:248
 msgid "See everything that still needs a decision"
 msgstr "Consulta tot el que encara necessita una decisió"
 
-#: ../../how-to/classify-transactions.md:239
+#: ../../how-to/classify-transactions.md:250
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -595,7 +626,7 @@ msgstr ""
 "corregeixes el registre subjacent. L'exemple parteix del trimestre "
 "importat i llegeix després la cua:"
 
-#: ../../how-to/classify-transactions.md:251
+#: ../../how-to/classify-transactions.md:262
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -606,7 +637,7 @@ msgstr ""
 "columna final amb l'ordre a executar tot seguit. Acota la llista per "
 "mena, model o estat:"
 
-#: ../../how-to/classify-transactions.md:259
+#: ../../how-to/classify-transactions.md:270
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -625,7 +656,7 @@ msgstr ""
 "utilitza l'opció global `--format json` (abans de l'ordre) per obtenir un"
 " camp `legal_refs` a cada fila."
 
-#: ../../how-to/classify-transactions.md:267
+#: ../../how-to/classify-transactions.md:278
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -640,11 +671,11 @@ msgstr ""
 "els valors indicats i tornes a comprovar: consulta [Comprova un esborrany"
 " de declaració i actua segons les incidències](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:272
+#: ../../how-to/classify-transactions.md:283
 msgid "Confirm readiness"
 msgstr "Confirma la preparació"
 
-#: ../../how-to/classify-transactions.md:274
+#: ../../how-to/classify-transactions.md:285
 msgid ""
 "Run preflight after classification. The example starts from the "
 "classified quarter, then runs preflight and reads the status of your "
@@ -654,7 +685,7 @@ msgstr ""
 "trimestre classificat, executa el preflight i llegeix l'estat dels teus "
 "registres:"
 
-#: ../../how-to/classify-transactions.md:281
+#: ../../how-to/classify-transactions.md:292
 msgid ""
 "Preflight names rows that still need category, taxable base, VAT amount, "
 "VAT rate, currency, or proportionality reference."
@@ -663,11 +694,11 @@ msgstr ""
 "imposable, import d'IVA, tipus d'IVA, divisa o referència de "
 "proporcionalitat."
 
-#: ../../how-to/classify-transactions.md:284
+#: ../../how-to/classify-transactions.md:295
 msgid "Correct a classification"
 msgstr "Corregeix una classificació"
 
-#: ../../how-to/classify-transactions.md:286
+#: ../../how-to/classify-transactions.md:297
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The example starts from a row classified as "
@@ -677,23 +708,23 @@ msgstr ""
 "manual substitueix la classificació anterior. L'exemple parteix d'una "
 "fila classificada com a professional i la corregeix després a personal:"
 
-#: ../../how-to/classify-transactions.md:294
+#: ../../how-to/classify-transactions.md:305
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "Inspecciona la fila de nou amb `ledger view` abans de calcular."
 
-#: ../../how-to/classify-transactions.md:296
+#: ../../how-to/classify-transactions.md:307
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/classify-transactions.md:298
+#: ../../how-to/classify-transactions.md:309
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:299
+#: ../../how-to/classify-transactions.md:310
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Classifica els moviments amb un LLM](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:300
+#: ../../how-to/classify-transactions.md:311
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -701,14 +732,14 @@ msgstr ""
 "[Com els teus registres es converteixen en xifres "
 "tributàries](../explanation/from-records-to-figures.md)"
 
-#: ../../how-to/classify-transactions.md:301
+#: ../../how-to/classify-transactions.md:312
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
-#: ../../how-to/classify-transactions.md:302
+#: ../../how-to/classify-transactions.md:313
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisa càlculs amb Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/classify-transactions.md:303
+#: ../../how-to/classify-transactions.md:314
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referència de la CLI](../cli/index.rst)"

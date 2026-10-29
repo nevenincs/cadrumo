@@ -9,6 +9,20 @@ from .signal_contracts import DictionaryLike, ExcludedStructuralInventory
 from .signal_policy import LOCALES, SPELLING_SURFACES
 from .signal_spelling_segments import spanish_word_context, translation_spelling_segments
 
+# Exact, attested forms absent from the pinned dictionaries. AEAT and modelo
+# are documented in src/cadrumo/_data/terminology/concepts/{aeat,modelo}.toml.
+# Enumerating spellings does not admit arbitrary inflections or name typos.
+_SHARED_SPELLINGS = frozenset({"Cadrumo", "AEAT"})
+_LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
+    "en": frozenset({"modelo", "Modelo"}),
+    "hu": frozenset({"modelo", "Modelo"}),
+}
+
+
+def is_project_spelling(locale: str, word: str) -> bool:
+    """Accept only explicitly attested forms, without changing Hunspell data."""
+    return word in _SHARED_SPELLINGS or word in _LOCALE_SPELLINGS.get(locale, frozenset())
+
 
 def spelling_surface(key: str) -> str:
     """Classify a spelling cell by its authored source surface."""
@@ -118,7 +132,7 @@ def check_dictionary_spelling_words(
     """Check dictionary spelling words."""
     dictionary = dictionaries[dictionary_locale]
     for word in words:
-        if dictionary.lookup(word):
+        if is_project_spelling(dictionary_locale, word) or dictionary.lookup(word):
             continue
         for owner_locale, key in words[word]:
             record_unknown_spelling_word(

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-02 00:43+0200\n"
+"POT-Creation-Date: 2026-10-29 12:33+0100\n"
 "PO-Revision-Date: 2026-07-18 13:20+0200\n"
 "Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
@@ -120,22 +120,25 @@ msgstr "Egy vegyes költség megosztása és a készültség ellenőrzése"
 
 #: ../../explanation/from-records-to-figures.md:30
 msgid ""
-"Some costs serve both your business and your private life - a phone bill,"
-" home internet, a home office. Only the business share counts, and the "
-"split can come from a percentage on the single record, a saved default "
-"for the whole category, or a ratio worked out from your registered facts "
-"- see [the mixed-use workflow](../how-to/classify-transactions.md"
-"#classify-mixed-use-transactions)."
+"Some costs serve both your business and your private life - home "
+"internet, a home office. Only the business share counts, and the split "
+"can come from a percentage on the single record, a saved default for the "
+"whole category, or a ratio worked out from your registered facts - see "
+"[the mixed-use workflow](../how-to/classify-transactions.md#classify-"
+"mixed-use-transactions). A mobile line or a car is not split: for income "
+"tax it counts only when it serves the business alone."
 msgstr ""
-"Néhány költség az üzleti és a magánéletedet egyaránt szolgálja - egy "
-"telefonszámla, otthoni internet, egy otthoni iroda. Csak az üzleti hányad"
-" számít, és a megosztás származhat az adott nyilvántartáson szereplő "
-"százalékból, a teljes kategóriára elmentett alapértelmezésből, vagy a "
-"nyilvántartott adataidból kiszámított arányból - lásd: [a vegyes "
-"használatú munkafolyamat](../how-to/classify-transactions.md#classify-"
-"mixed-use-transactions)."
+"Néhány költség az üzleti és a magánéletedet egyaránt szolgálja: az "
+"otthoni internet vagy egy otthoni iroda. Csak az üzleti hányad számít, és"
+" a megosztás származhat az adott nyilvántartáson szereplő százalékból, a "
+"teljes kategóriára elmentett alapértelmezésből vagy a nyilvántartott "
+"adataidból kiszámított arányból; lásd [a vegyes használatú "
+"munkafolyamatot](../how-to/classify-transactions.md#classify-mixed-use-"
+"transactions). Egy mobil-előfizetés vagy egy autó költségét nem osztjuk "
+"meg: a jövedelemadónál csak akkor számít, ha kizárólag az üzleti "
+"tevékenységet szolgálja."
 
-#: ../../explanation/from-records-to-figures.md:36
+#: ../../explanation/from-records-to-figures.md:38
 msgid ""
 "Before the tool adds anything up, a readiness check flags each record in "
 "the period that is still missing a decision, a category, a tax figure, a "
@@ -153,11 +156,11 @@ msgstr ""
 "[Tranzakciók importálása és kezelése](../how-to/import-bank-"
 "statements.md)."
 
-#: ../../explanation/from-records-to-figures.md:43
+#: ../../explanation/from-records-to-figures.md:45
 msgid "Which form, and which period"
 msgstr "Melyik nyomtatvány és melyik időszak"
 
-#: ../../explanation/from-records-to-figures.md:45
+#: ../../explanation/from-records-to-figures.md:47
 msgid ""
 "A calculation is always for one form, one year, and one period. The "
 "period decides which of your records count."
@@ -166,7 +169,7 @@ msgstr ""
 "vonatkozik. Az időszak dönti el, hogy a nyilvántartásaid közül melyek "
 "számítanak."
 
-#: ../../explanation/from-records-to-figures.md:47
+#: ../../explanation/from-records-to-figures.md:49
 msgid ""
 "A period is a quarter, a single month, or a whole year. The tool turns it"
 " into a start and end date, then keeps only the records whose date falls "
@@ -183,7 +186,7 @@ msgstr ""
 " előleg az év elejétől a mai napig olvas, így a második negyedéves "
 "benyújtása januártól júniusig lát."
 
-#: ../../explanation/from-records-to-figures.md:49
+#: ../../explanation/from-records-to-figures.md:51
 #, python-brace-format
 msgid ""
 "Choosing the right form for your activity is its own decision - see [Find"
@@ -197,11 +200,11 @@ msgstr ""
 "időszakok dátumokra, lásd: {ref}`Időszakkódok és dátumok <period-tokens-"
 "and-dates>`."
 
-#: ../../explanation/from-records-to-figures.md:51
+#: ../../explanation/from-records-to-figures.md:53
 msgid "From records to numbered boxes"
 msgstr "A nyilvántartásoktól a számozott rovatokig"
 
-#: ../../explanation/from-records-to-figures.md:53
+#: ../../explanation/from-records-to-figures.md:55
 msgid ""
 "Here's where the figures appear. The tool reads two things: your tax-"
 "ready records for the period, and your profile - who you are and what you"
@@ -211,7 +214,7 @@ msgstr ""
 "vonatkozó adókész nyilvántartásaidat és a profilodat - azt, hogy ki vagy "
 "és mivel foglalkozol."
 
-#: ../../explanation/from-records-to-figures.md:55
+#: ../../explanation/from-records-to-figures.md:57
 msgid ""
 "It then applies the rules the agency publishes for that form. Those rules"
 " decide which input feeds which box, and how the boxes relate to each "
@@ -230,7 +233,7 @@ msgstr ""
 "nettó értékhez, egy kulcsot alkalmaznak a fizetendő adó eléréséhez -, "
 "amíg a nyomtatvány minden rovata tartalmaz egy adatot."
 
-#: ../../explanation/from-records-to-figures.md:57
+#: ../../explanation/from-records-to-figures.md:59
 msgid ""
 "You don't wire any of this by hand. You make your records tax-ready and "
 "keep your profile current; the published rules do the routing and the "
@@ -240,11 +243,11 @@ msgstr ""
 " naprakészen tartod a profilodat; a közzétett szabályok végzik az "
 "útválasztást és a számolást."
 
-#: ../../explanation/from-records-to-figures.md:59
+#: ../../explanation/from-records-to-figures.md:61
 msgid "Tracing a number back to the law"
 msgstr "Egy szám visszavezetése a törvényhez"
 
-#: ../../explanation/from-records-to-figures.md:61
+#: ../../explanation/from-records-to-figures.md:63
 msgid ""
 "Every figure the tool produces keeps three things attached: the rule that"
 " produced it, the law article behind that rule, and the official source "
@@ -257,7 +260,7 @@ msgstr ""
 " BOE-nyomtatvány. Az általad beírt bemeneti adatok ugyanezt a "
 "visszavezető nyomot hordozzák a forrásukhoz."
 
-#: ../../explanation/from-records-to-figures.md:63
+#: ../../explanation/from-records-to-figures.md:65
 msgid ""
 "This is the point of the whole design. Spanish tax filing expects you to "
 "justify every number. If an inspector asks why a box holds a certain "
@@ -270,11 +273,11 @@ msgstr ""
 "valamint a szabályt és a törvényt, amely ezekből a nyilvántartásokból azt"
 " az adatot alkotta. Semmi sem fekete doboz."
 
-#: ../../explanation/from-records-to-figures.md:65
+#: ../../explanation/from-records-to-figures.md:67
 msgid "Where this sits in the journey"
 msgstr "Hol helyezkedik el ez az útban"
 
-#: ../../explanation/from-records-to-figures.md:67
+#: ../../explanation/from-records-to-figures.md:69
 msgid ""
 "This page is part of understanding the AEAT pipeline - how your data "
 "flows from bank statement to the form you file."
@@ -282,11 +285,11 @@ msgstr ""
 "Ez az oldal az AEAT-folyamat megértésének része: hogyan áramlanak az "
 "adataid a bankszámlakivonattól az általad benyújtott nyomtatványig."
 
-#: ../../explanation/from-records-to-figures.md:69
+#: ../../explanation/from-records-to-figures.md:71
 msgid "Start at the [how-it-works overview](index.md)."
 msgstr "Kezdje a [működési áttekintéssel](index.md)."
 
-#: ../../explanation/from-records-to-figures.md:70
+#: ../../explanation/from-records-to-figures.md:72
 msgid ""
 "Continue to the next stage: [Editing and checking a calculation](editing-"
 "and-verifying.md)."

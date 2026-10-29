@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 17:01+0200\n"
+"POT-Creation-Date: 2026-10-29 12:33+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
@@ -344,26 +344,44 @@ msgstr "Vegyes felhasználású tranzakciók besorolása"
 #: ../../how-to/classify-transactions.md:125
 msgid ""
 "A mixed-use transaction is one you use partly for business and partly "
-"personally, such as a phone bill, a car cost, or a home-office expense. "
-"Record the business share so the calculation counts only the deductible "
-"part. The split can come from three places, in rising order of grounding:"
-" a percentage on a single record, a saved default ratio for a whole "
+"personally, such as home internet or a home-office expense. Record the "
+"business share so the calculation counts only the deductible part. The "
+"split can come from three places, in rising order of grounding: a "
+"percentage on a single record, a saved default ratio for a whole "
 "category, or a ratio worked out from your registered facts (for example, "
 "the registered home-office area against the size of your home). All three"
 " keep only the part of a cost that genuinely belongs to the business."
 msgstr ""
 "A vegyes felhasználású tranzakció olyan, amelyet részben üzleti, részben "
-"személyes célra használsz, például telefonszámla, autóköltség vagy "
-"otthoni iroda kiadása. Rögzítsd az üzleti arányt, hogy a számítás csak a "
-"levonható részt vegye figyelembe. A megosztás három helyről származhat, a"
-" megalapozottság növekvő sorrendjében: egy százalék egyetlen "
-"nyilvántartáson, egy egész kategóriára mentett alapértelmezett arány, "
-"vagy a nyilvántartott adataidból kiszámított arány (például a "
-"nyilvántartott otthoni iroda területe az otthonod méretéhez viszonyítva)."
-" Mindhárom csak a költségnek azt a részét tartja meg, amely valóban az "
-"üzlethez tartozik."
+"személyes célra használsz, például otthoni internet vagy otthoni iroda "
+"kiadása. Rögzítsd az üzleti arányt, hogy a számítás csak a levonható "
+"részt vegye figyelembe. A megosztás három helyről származhat, a "
+"megalapozottság növekvő sorrendjében: egy százalék egyetlen "
+"nyilvántartáson, egy egész kategóriára mentett alapértelmezett arány vagy"
+" a nyilvántartott adataidból kiszámított arány (például a nyilvántartott "
+"otthoni iroda területe az otthonod méretéhez viszonyítva). Mindhárom csak"
+" a költségnek azt a részét tartja meg, amely valóban az üzlethez "
+"tartozik."
 
 #: ../../how-to/classify-transactions.md:134
+msgid ""
+"A mobile line and a car are not split. For income tax they count only "
+"when you use them exclusively for the business: a `MIXED` mobile or car "
+"row deducts nothing, and the calculation reports it for review. For VAT, "
+"a car's running costs (fuel, maintenance, tolls, parking) deduct 50 per "
+"cent of their VAT, the share the law presumes, and a mobile line you also"
+" use privately deducts no VAT."
+msgstr ""
+"Egy mobil-előfizetés és egy autó költségét nem osztjuk meg. A "
+"jövedelemadónál csak akkor számítanak, ha kizárólag üzleti célra "
+"használod őket: egy `MIXED` besorolású mobil- vagy autós sorból semmi sem"
+" vonható le, és a számítás ellenőrzésre jelöli a sort. Az IVA esetében az"
+" autó használati költségei (üzemanyag, karbantartás, útdíj, parkolás) "
+"IVA-tartalmának 50 százaléka vonható le, a törvényben vélelmezett hányad "
+"szerint, a magáncélra is használt mobil-előfizetés után pedig nem vonható"
+" le IVA."
+
+#: ../../how-to/classify-transactions.md:140
 msgid ""
 "A `MIXED` row needs a proportionality reference before a modelo can "
 "calculate from it. The reference is a saved category ratio applied "
@@ -379,7 +397,7 @@ msgstr ""
 "előellenőrzés továbbra is `missing_proportionality_reference` értéket "
 "jelez, amíg a sorban nincs `--usage-ratio-id`."
 
-#: ../../how-to/classify-transactions.md:140
+#: ../../how-to/classify-transactions.md:146
 msgid ""
 "For one-row commands, `--usage-ratio-id` lives on the `allocate` verb "
 "(and on `add`), not on `classify`. Its value is the spending-category id,"
@@ -393,34 +411,34 @@ msgstr ""
 "aránynak. A sorozat ellenőrzi a jogosult kategóriákat, ment egy arányt, "
 "és felosztja az arányt egy soron:"
 
-#: ../../how-to/classify-transactions.md:149
+#: ../../how-to/classify-transactions.md:155
 msgid ""
 "A row's `--usage-ratio-id` must name a ratio-eligible category (the ones "
-"`ratios eligible` lists, such as `telefonia_movil` or a home-office "
-"suministros category), and the same category is passed as `--category-"
-"id`. The `--business-pct` value must match the saved ratio for that "
-"category. The classification follows the share automatically: a `0.5` "
-"allocation becomes `MIXED`, a `1` allocation becomes `BUSINESS`, and a "
-"`0` allocation becomes `PERSONAL`."
+"`ratios eligible` lists, such as `arrendamiento_vivienda_afecto` or a "
+"home-office suministros category), and the same category is passed as "
+"`--category-id`. The `--business-pct` value must match the saved ratio "
+"for that category. The classification follows the share automatically: a "
+"`0.5` allocation becomes `MIXED`, a `1` allocation becomes `BUSINESS`, "
+"and a `0` allocation becomes `PERSONAL`."
 msgstr ""
 "Egy sor `--usage-ratio-id` értékének arányra jogosult kategóriát kell "
 "megneveznie (azokat, amelyeket a `ratios eligible` felsorol, például a "
-"`telefonia_movil` vagy egy otthoni iroda suministros kategóriája), és "
-"ugyanazt a kategóriát add meg a `--category-id` értékeként is. A "
-"`--business-pct` értékének egyeznie kell az adott kategóriához mentett "
-"aránnyal. A besorolás automatikusan követi az arányt: egy `0.5` "
-"felosztásból `MIXED`, egy `1` felosztásból `BUSINESS`, egy `0` "
-"felosztásból pedig `PERSONAL` lesz."
+"`arrendamiento_vivienda_afecto` vagy egy otthoni iroda suministros "
+"kategóriája), és ugyanazt a kategóriát add meg a `--category-id` "
+"értékeként is. A `--business-pct` értékének egyeznie kell az adott "
+"kategóriához mentett aránnyal. A besorolás automatikusan követi az "
+"arányt: egy `0.5` felosztásból `MIXED`, egy `1` felosztásból `BUSINESS`, "
+"egy `0` felosztásból pedig `PERSONAL` lesz."
 
-#: ../../how-to/classify-transactions.md:157
+#: ../../how-to/classify-transactions.md:163
 msgid ""
-"List or check the saved ratios at any time. The sequence saves a ratio, "
-"lists the saved ratios, and validates them:"
+"Check the saved ratios at any time. The sequence saves a ratio and "
+"validates the saved ratios:"
 msgstr ""
-"A mentett arányokat bármikor listázd vagy ellenőrizd. A sorozat ment egy "
-"arányt, listázza a mentett arányokat, és érvényesíti őket:"
+"A mentett arányokat bármikor ellenőrizheted. A sorozat ment egy arányt, "
+"és ellenőrzi a mentett arányok érvényességét:"
 
-#: ../../how-to/classify-transactions.md:164
+#: ../../how-to/classify-transactions.md:170
 msgid ""
 "Remove a category ratio you no longer want with `aeat app ledger ratios "
 "unset <category-id>`."
@@ -428,7 +446,21 @@ msgstr ""
 "A már nem kívánt kategóriaarányt az `aeat app ledger ratios unset "
 "<category-id>` paranccsal távolítsd el."
 
-#: ../../how-to/classify-transactions.md:167
+#: ../../how-to/classify-transactions.md:173
+msgid ""
+"Every ratio-eligible category is a home-office category, so its saved "
+"ratio must agree with the office and dwelling areas in your profile. "
+"`aeat app ledger ratios list` shows the saved ratios once the profile "
+"declares those areas, and refuses while a saved ratio disagrees with "
+"them."
+msgstr ""
+"Minden arányra jogosult kategória otthoni irodához tartozik, ezért a "
+"mentett aránynak meg kell egyeznie a profilodban megadott iroda- és "
+"lakóterület arányával. Az `aeat app ledger ratios list` megjeleníti a "
+"mentett arányokat, ha a profil már tartalmazza ezeket a területeket, és "
+"megtagadja a végrehajtást, amíg valamelyik mentett arány eltér tőlük."
+
+#: ../../how-to/classify-transactions.md:178
 msgid ""
 "For home-office expenses, save a ratio for the relevant home-office "
 "category and allocate the share on the row. Home-office ratios follow the"
@@ -442,11 +474,11 @@ msgstr ""
 " hogy helyesek legyenek a profilodban lévő censo-adatok - lásd: [Tartsd "
 "karban a profilod Modelo 036 censo-adatait](censo-update.md)."
 
-#: ../../how-to/classify-transactions.md:172
+#: ../../how-to/classify-transactions.md:183
 msgid "Classify many rows from CSV"
 msgstr "Sok sor besorolása CSV-ből"
 
-#: ../../how-to/classify-transactions.md:174
+#: ../../how-to/classify-transactions.md:185
 msgid ""
 "For bulk review, `classify --file` reads a CSV with columns "
 "`transaction_id`, `classification`, and optional classification facts "
@@ -466,7 +498,7 @@ msgstr ""
 "CSV-t, amely csak azokat a sorokat tartalmazza, amelyeket módosítani "
 "szándékozol, tranzakciónként egy sort:"
 
-#: ../../how-to/classify-transactions.md:189
+#: ../../how-to/classify-transactions.md:200
 msgid ""
 "In the file, amounts such as the taxable base and the VAT amount take at "
 "most two decimals. A business share and a VAT rate are fractions from `0`"
@@ -480,7 +512,7 @@ msgstr ""
 "tartsd meg az adott kulcs tizedesjegyeit, például `0.052` vagy `0.0175`. "
 "A `classify` egyetlen sorra ugyanezeket a korlátokat alkalmazza."
 
-#: ../../how-to/classify-transactions.md:194
+#: ../../how-to/classify-transactions.md:205
 msgid ""
 "The following sequence starts from the imported quarter. It lists the "
 "rows still needing a decision, exports a review snapshot to work from, "
@@ -491,7 +523,7 @@ msgstr ""
 " dolgozhatsz, alkalmaz egy előkészített CSV-t, és megerősíti az "
 "eredményt:"
 
-#: ../../how-to/classify-transactions.md:202
+#: ../../how-to/classify-transactions.md:213
 msgid ""
 "Use the CSV path when filtered review shows many rows you can classify "
 "safely from their descriptions, counterparties, and supporting documents."
@@ -519,11 +551,11 @@ msgstr ""
 "részlegesen is sikerülhet; csak a sikertelen sorokat javítsd, ne ismételd"
 " meg az egész fájlt."
 
-#: ../../how-to/classify-transactions.md:212
+#: ../../how-to/classify-transactions.md:223
 msgid "Apply stored rules automatically"
 msgstr "Tárolt szabályok automatikus alkalmazása"
 
-#: ../../how-to/classify-transactions.md:214
+#: ../../how-to/classify-transactions.md:225
 msgid ""
 "Rules automatically classify transactions whose description contains a "
 "word or phrase you specify. Matching ignores uppercase and lowercase "
@@ -539,7 +571,7 @@ msgstr ""
 "nyilvántartásaiban nincsenek sorok, ezért az előnézet és az alkalmazás "
 "sem talál egyezést:"
 
-#: ../../how-to/classify-transactions.md:223
+#: ../../how-to/classify-transactions.md:234
 msgid ""
 "Run `--dry-run` first. Add `--reaffirm` only if you want the rule to "
 "overwrite classifications you already set by hand."
@@ -548,11 +580,11 @@ msgstr ""
 "akkor add hozzá, ha szeretnéd, hogy a szabály felülírja a már kézzel "
 "beállított besorolásokat."
 
-#: ../../how-to/classify-transactions.md:226
+#: ../../how-to/classify-transactions.md:237
 msgid "Use an LLM suggestion"
 msgstr "LLM-javaslat használata"
 
-#: ../../how-to/classify-transactions.md:228
+#: ../../how-to/classify-transactions.md:239
 msgid ""
 "Cadrumo can use a configured language model to suggest how to classify "
 "each transaction. The suggestion is a starting point. You must confirm or"
@@ -564,7 +596,7 @@ msgstr ""
 "erősítened vagy javítanod kell. Nem tölti ki az adóösszegeket, például az"
 " adóalapot, az IVA-kulcsot vagy az IRPF-kategóriát."
 
-#: ../../how-to/classify-transactions.md:233
+#: ../../how-to/classify-transactions.md:244
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
@@ -573,11 +605,11 @@ msgstr ""
 "folyamathoz használd a [Tranzakciók besorolása LLM-mel](classify-with-"
 "llm.md) útmutatót."
 
-#: ../../how-to/classify-transactions.md:237
+#: ../../how-to/classify-transactions.md:248
 msgid "See everything that still needs a decision"
 msgstr "Nézd meg, mi vár még döntésre"
 
-#: ../../how-to/classify-transactions.md:239
+#: ../../how-to/classify-transactions.md:250
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -597,7 +629,7 @@ msgstr ""
 "nyilvántartást. A példa az importált negyedévből indul, majd beolvassa a "
 "sort:"
 
-#: ../../how-to/classify-transactions.md:251
+#: ../../how-to/classify-transactions.md:262
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -608,7 +640,7 @@ msgstr ""
 " egy utolsó oszlopot mutat a következőként futtatandó paranccsal. "
 "Szűkítsd a listát típus, nyomtatvány vagy állapot szerint:"
 
-#: ../../how-to/classify-transactions.md:259
+#: ../../how-to/classify-transactions.md:270
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -627,7 +659,7 @@ msgstr ""
 "jogszabályi hivatkozásokat, vagy használd a globális `--format json` "
 "kapcsolót (a parancs előtt), hogy minden sorban legyen `legal_refs` mező."
 
-#: ../../how-to/classify-transactions.md:267
+#: ../../how-to/classify-transactions.md:278
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -643,11 +675,11 @@ msgstr ""
 "[Bevallás-piszkozat ellenőrzése és teendők a problémák alapján"
 "](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:272
+#: ../../how-to/classify-transactions.md:283
 msgid "Confirm readiness"
 msgstr "Erősítsd meg a készenlétet"
 
-#: ../../how-to/classify-transactions.md:274
+#: ../../how-to/classify-transactions.md:285
 msgid ""
 "Run preflight after classification. The example starts from the "
 "classified quarter, then runs preflight and reads the status of your "
@@ -657,7 +689,7 @@ msgstr ""
 "besorolt negyedévből indul, majd lefuttatja az előellenőrzést, és "
 "beolvassa a nyilvántartásaid állapotát:"
 
-#: ../../how-to/classify-transactions.md:281
+#: ../../how-to/classify-transactions.md:292
 msgid ""
 "Preflight names rows that still need category, taxable base, VAT amount, "
 "VAT rate, currency, or proportionality reference."
@@ -665,11 +697,11 @@ msgstr ""
 "Az előellenőrzés megnevezi azokat a sorokat, amelyekhez még kategória, "
 "adóalap, IVA-összeg, IVA-kulcs, pénznem vagy arányossági hivatkozás kell."
 
-#: ../../how-to/classify-transactions.md:284
+#: ../../how-to/classify-transactions.md:295
 msgid "Correct a classification"
 msgstr "Egy besorolás javítása"
 
-#: ../../how-to/classify-transactions.md:286
+#: ../../how-to/classify-transactions.md:297
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The example starts from a row classified as "
@@ -679,23 +711,23 @@ msgstr ""
 "kézi döntés felülírja a korábbi besorolást. A példa üzletiként besorolt "
 "sorból indul, majd személyesre javítja:"
 
-#: ../../how-to/classify-transactions.md:294
+#: ../../how-to/classify-transactions.md:305
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "A számítás előtt vizsgálja meg újra a sort a `ledger view` paranccsal."
 
-#: ../../how-to/classify-transactions.md:296
+#: ../../how-to/classify-transactions.md:307
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/classify-transactions.md:298
+#: ../../how-to/classify-transactions.md:309
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:299
+#: ../../how-to/classify-transactions.md:310
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Tranzakciók besorolása LLM-mel](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:300
+#: ../../how-to/classify-transactions.md:311
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -703,18 +735,18 @@ msgstr ""
 "[Hogyan válnak a nyilvántartásaid adóadatokká](../explanation/from-"
 "records-to-figures.md)"
 
-#: ../../how-to/classify-transactions.md:301
+#: ../../how-to/classify-transactions.md:312
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[A számítási bemenetek áttekintése és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/classify-transactions.md:302
+#: ../../how-to/classify-transactions.md:313
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások áttekintése Google Sheets segítségével](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/classify-transactions.md:303
+#: ../../how-to/classify-transactions.md:314
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"

@@ -47,8 +47,7 @@ if not (__package__ is not None and __package__):
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.hashing import sha256_file
-from cadrumo.core.storage_environment import prepare_temporary_directory
-from dev._paths import REPO_ROOT
+from dev._paths import REPO_ROOT, prepare_temp_root
 from dev.first_party_source import is_test_source
 
 from .build import docs_build_jobs, ensure_isolated_storage_root
@@ -311,9 +310,10 @@ def prune_orphan_catalogues(
 
     Extraction and ``sphinx-intl update`` add and refresh catalogues but do not
     remove ones left behind by a deleted or generator-owned source page. The
-    authored user-scope set is the sole authority for those paths, so cleanup
+    authored user-scope set is the authority for those paths, so cleanup
     maps it to expected ``.po`` leaves and unlinks only individually validated
-    files beneath each language's ``LC_MESSAGES`` root.
+    files beneath each language's ``LC_MESSAGES`` root. Technical catalogues
+    are outside this user-scope pass and are left untouched.
 
     Removals are bounded and the whole set is decided across every language
     before the first unlink, so a refused pass leaves every catalogue in place
@@ -522,14 +522,14 @@ def update_catalogues(
     templates = pot_root(docs_root)
     if not templates.is_dir():
         raise SystemExit(f"POT templates not found at {templates}; run extraction first.")
+    selected = user_scope_source_pages(docs_root) if pages is None else validated_pages(docs_root, pages)
+    with TemporaryDirectory(prefix="cadrumo-docs-pot-", dir=prepare_temp_root()) as scoped_text:
+        scoped = Path(scoped_text)
+        _stage_selected_templates(templates, selected, scoped, docs_root)
+        _run_catalogue_update(repo_root, docs_root, scoped, languages)
     if pages is None:
-        _run_catalogue_update(repo_root, docs_root, templates, languages)
         prune_orphan_catalogues(repo_root, languages)
         return
-    with TemporaryDirectory(prefix="cadrumo-docs-pot-", dir=prepare_temporary_directory()) as scoped_text:
-        scoped = Path(scoped_text)
-        _stage_selected_templates(templates, validated_pages(docs_root, pages), scoped, docs_root)
-        _run_catalogue_update(repo_root, docs_root, scoped, languages)
     # Pruning is deliberately skipped here. It decides what to remove from the
     # whole authored page set, and a pass that was asked to touch two pages has
     # no standing to delete a catalogue on behalf of the other fifty-six.
@@ -593,7 +593,7 @@ def _run_scoped_pages(repo_root: Path, pages: Sequence[str], *, extract_only: bo
     """
     docs_root = repo_root / "docs"
     selected = validated_pages(docs_root, pages)
-    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-", dir=prepare_temporary_directory()) as scoped_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-", dir=prepare_temp_root()) as scoped_text:
         templates = extract_pot(repo_root, out_dir=Path(scoped_text))
         print(f"Extracted the whole surface; syncing {len(selected)} page(s) from {templates}", flush=True)
         if extract_only:
@@ -698,7 +698,7 @@ def _stage_selected_templates(templates: Path, pages: Sequence[str], destination
 
 def _scoped_update_from(repo_root: Path, docs_root: Path, templates: Path, pages: Sequence[str]) -> None:
     """Run the catalogue update from a tree narrowed to exactly *pages*."""
-    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-", dir=prepare_temporary_directory()) as selected_text:
+    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-", dir=prepare_temp_root()) as selected_text:
         selected = Path(selected_text)
         _stage_selected_templates(templates, pages, selected, docs_root)
         _run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)
@@ -773,6 +773,10 @@ def _language_orphan_catalogues(docs_root: Path, language: str, expected: set[st
             relative_catalogue = resolved_catalogue.relative_to(catalogue_root)
         except ValueError as exc:
             raise ValueError(f"catalogue path escapes {catalogue_root}: {catalogue}") from exc
+        # Technical pages are outside the user-scope extraction authority.
+        # Their catalogues may have another owner and cannot be judged here.
+        if relative_catalogue.parts[0] == "technical":
+            continue
         if relative_catalogue.as_posix() in expected:
             continue
         doomed.append(catalogue)

@@ -11,13 +11,14 @@ from pathlib import Path
 import pytest
 
 from ..manager import LocaleManager
-from ..signal_discovery import dynamic_key_families
+from ..signal_discovery import dynamic_key_families, signal_catalogue_coverage
 from ..signal_document_prose import embedded_document_language_prose, visible_document_prose
-from ..signal_documentation_inventory import documentation_source_inventory
+from ..signal_documentation_inventory import documentation_source_inventory, inventory_generated_document_file
 from ..signal_domain_summary import domain_summaries, headline
 from ..signal_echo_classification import load_platform_identity_terms, translation_invariant_echo_reason
 from ..signal_parallel_inventory import parallel_localization_inventory
 from ..signal_policy import LOCALES
+from ..signal_report import signal_catalogue_only_cells
 from ..signal_source_inventory import collect_source_inventory
 from ..signal_spelling import spellcheck_catalogues
 from ..signal_tokens import filtered_translation_text, human_translation_text
@@ -155,14 +156,14 @@ def test_spelling_filter_excludes_transport_syntax_but_keeps_visible_labels() ->
 
     filtered, excluded = filtered_translation_text(value)
 
-    assert filtered == "open or guide visible guide ."
+    assert filtered == "Open or Guide Visible guide ."
     assert excluded == 10
 
 
 def test_spelling_filter_keeps_plain_prose_and_removes_file_extensions() -> None:
     filtered, excluded = filtered_translation_text("Olvassa el a guide.md fájlt, majd folytassa.")
 
-    assert filtered == "olvassa el a fájlt majd folytassa."
+    assert filtered == "Olvassa el a fájlt majd folytassa."
     assert excluded == 1
 
 
@@ -561,7 +562,7 @@ def test_generated_user_doc_adapter_enrols_explicit_embedded_language(tmp_path) 
         encoding="utf-8",
     )
 
-    assert embedded_document_language_prose(page) == ((6, "es", "administracion tributaria"),)
+    assert embedded_document_language_prose(page) == ((6, "es", "Administracion Tributaria"),)
 
 
 def _write_docs_source_cache(docs, page: str, source_text: str, pot_text: str) -> None:
@@ -952,3 +953,144 @@ def test_identifier_signal_pattern_terminates_on_adversarial_underscore_runs() -
 
     assert elapsed < 2.0
     assert "é" in filtered
+
+
+def test_catalogue_only_findings_and_counts_share_optional_modelo_exemptions() -> None:
+    required = {"cli.save"}
+    delta = "modelo.schema.303.casilla.continuidad.example.label"
+    heading = "modelo.schema.303.form.authored.page-1.heading"
+    stray = "modelo.schema.303.form.page.not-a-page.heading"
+    leaves = {
+        "en": {key: "text" for key in ("cli.save", delta, heading, stray)},
+        "es": {key: "texto" for key in (delta, heading, stray)},
+    }
+
+    cells, unique, keys, findings = signal_catalogue_coverage(leaves, required)
+
+    assert (cells, unique, keys) == (7, 4, {stray})
+    assert signal_catalogue_only_cells(leaves, required) == 2
+    assert [(finding["key"], finding["cells"]) for finding in findings] == [(stray, 2)]
+
+
+def test_spelling_preserves_dictionary_case_and_similarity_normalizes(tmp_path, monkeypatch) -> None:
+    from .. import signal_spelling as spelling_module
+
+    class Dictionary:
+        def lookup(self, word: str) -> bool:
+            return word == "Spanish"
+
+    monkeypatch.setattr(spelling_module, "load_dictionaries", lambda _repository: {"en": Dictionary()})
+    spelling, _inventory, _findings = spellcheck_catalogues(
+        {"cli.language", "cli.typo"},
+        {"en": {"cli.language": "Spanish", "cli.typo": "spanish"}},
+        tmp_path,
+    )
+
+    assert spelling == {("en", "cli.typo"): ("spanish",)}
+    assert human_translation_text("Spanish") == human_translation_text("spanish")
+
+
+def test_generated_legal_prose_uses_explicit_language_dictionary(tmp_path, monkeypatch) -> None:
+    from collections import Counter
+
+    from .. import signal_spelling as spelling_module
+
+    class Dictionary:
+        def __init__(self, known: set[str]) -> None:
+            self.known = known
+
+        def lookup(self, word: str) -> bool:
+            return word in self.known
+
+    page = tmp_path / "docs" / "_generated" / "legal" / "example.rst"
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        'Official wording.\n\n.. raw:: html\n\n   <blockquote lang="es"><p>Dividendos desconocido</p></blockquote>\n',
+        encoding="utf-8",
+    )
+    values: dict[str, dict[str, str]] = {}
+    findings: list[dict[str, object]] = []
+    inventory_generated_document_file(page, tmp_path, Counter(), findings, values)
+    monkeypatch.setattr(
+        spelling_module,
+        "load_dictionaries",
+        lambda _repository: {"en": Dictionary({"Official", "wording"}), "es": Dictionary({"Dividendos"})},
+    )
+    spelling, _inventory, _findings = spellcheck_catalogues(set(), {}, tmp_path, additional_values=values)
+
+    assert not findings
+    assert spelling == {("es", "parallel:docs/_generated/legal/example.rst:line[5]:lang[es]"): ("desconocido",)}
+
+
+def test_intentionally_open_reason_copy_is_optional_but_unknown_family_blocks(tmp_path, monkeypatch) -> None:
+    from .. import signal_discovery as discovery
+
+    manager = LocaleManager(tmp_path, tmp_path)
+    monkeypatch.setattr(manager, "get_codebase_keys", lambda: set())
+    monkeypatch.setattr(
+        manager,
+        "get_codebase_namespaces",
+        lambda: {"tui.home.availability.reason.*", "unknown.family.*"},
+    )
+    monkeypatch.setattr(discovery, "dynamic_key_families", lambda markers: ({}, tuple(sorted(markers))))
+    optional = "tui.home.availability.reason.ready"
+    leaves = {"en": {optional: "Ready"}, "es": {}}
+    monkeypatch.setattr(discovery, "catalogue_leaves", lambda _manager, _required_keys: (leaves, []))
+
+    required, _, markers, finite, unresolved, discovered_leaves, _ = discovery.discover_signal_catalogues(manager)
+    discovery.include_signal_namespace_keys(required, markers, finite, discovered_leaves)
+
+    assert unresolved == ("unknown.family.*",)
+    assert optional not in required
+    assert discovery.signal_catalogue_coverage(leaves, required)[2] == set()
+    assert signal_catalogue_only_cells(leaves, required) == 0
+
+
+def test_signal_catalogue_reads_cross_owner_desktop_projection(tmp_path, monkeypatch) -> None:
+    from .. import _paths, desktop_chrome, signal_discovery
+
+    (tmp_path / "en.yml").write_text("cli:\n  save: Save\n", encoding="utf-8")
+    manager = LocaleManager(tmp_path, tmp_path)
+    monkeypatch.setattr(_paths, "LOCALES_DIR", tmp_path)
+    monkeypatch.setattr(desktop_chrome, "DESKTOP_CHROME_KEYS", frozenset({"desktop.attendance.title", "desktop.other"}))
+    monkeypatch.setattr(
+        desktop_chrome,
+        "desktop_chrome_strings",
+        lambda _root, *, keys: {"en": {"desktop.attendance.title": "Attendance", "desktop.other": "Other"}},
+    )
+    leaves, findings = signal_discovery.catalogue_leaves(manager, {"desktop.attendance.title", "cli.save"})
+
+    assert leaves == {"en": {"cli.save": "Save", "desktop.attendance.title": "Attendance"}}
+    assert findings == []
+    assert translation_matrix({"desktop.attendance.title"}, leaves)["cells"]["missing"] == 0
+
+
+def test_parallel_docs_scope_ignores_english_only_catalogues_but_reports_user_gaps(tmp_path) -> None:
+    docs = tmp_path / "docs"
+    _write_docs_source_cache(docs, "guide.md", "A guide.\n", 'msgid ""\nmsgstr ""\n\nmsgid "A guide."\nmsgstr ""\n')
+    generated = docs / "reference" / "generated.md"
+    generated.parent.mkdir(parents=True)
+    generated.write_text("<!-- GENERATED FILE -->\nGenerated.\n", encoding="utf-8")
+    catalogues = docs / "locales"
+    for locale, relative, contents in (
+        ("es", "guide.po", 'msgid ""\nmsgstr ""\n\nmsgid "A guide."\nmsgstr ""\n'),
+        ("ca", "old-guide.po", 'msgid ""\nmsgstr ""\n\nmsgid "Old."\nmsgstr ""\n'),
+        ("es", "technical/old.po", "invalid gettext artefact"),
+        ("ca", "reference/generated.po", "invalid gettext artefact"),
+    ):
+        path = catalogues / locale / "LC_MESSAGES" / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(contents, encoding="utf-8")
+    values: dict[str, dict[str, str]] = {}
+
+    inventory, findings = parallel_localization_inventory(tmp_path, spelling_values=values)
+
+    assert inventory["docs_orphan_catalogue_files"] == 1
+    assert inventory["docs_missing_catalogue_files"] == 2
+    assert any(finding["kind"] == "docs_orphan_catalogue" and "old-guide.po" in str(finding) for finding in findings)
+    assert any(finding["kind"] == "docs_translation_missing" and "guide.po" in str(finding) for finding in findings)
+    assert not any("technical/" in str(finding) or "reference/generated.po" in str(finding) for finding in findings)
+    assert not any(
+        "technical/" in cell or "reference/generated.po" in cell for cells in values.values() for cell in cells
+    )
+    assert (catalogues / "es" / "LC_MESSAGES" / "technical" / "old.po").is_file()

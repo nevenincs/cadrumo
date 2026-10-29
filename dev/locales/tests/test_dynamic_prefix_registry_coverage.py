@@ -60,6 +60,7 @@ from ..fstring_registry import get_registered_keys
 from ..locale_nodes import LocaleNode
 from ..locale_yaml import locale_catalogue_source
 from ..manager import LocaleManager
+from ..signal_policy import OPEN_ENDED_NAMESPACES
 from ..wizard_translation_audit import wizard_descriptor_keys
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -100,16 +101,6 @@ def _catalogue_payload(locale: str) -> dict[str, LocaleNode]:
 #
 # This allowlist ratchets: adding a line is a reviewed edit that must state why
 # the namespace is genuinely open-ended.
-OPEN_ENDED_NAMESPACES: dict[str, str] = {
-    "workspace.declarations.refusal.reason": (
-        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
-        "and the page falls back to its generic refusal line for an unauthored reason."
-    ),
-    "tui.home.availability.reason": (
-        "Keyed by the free-text reason_code a workbench zone carries; copy is optional "
-        "and the page falls back to its generic availability line for an unauthored reason."
-    ),
-}
 
 
 def _marker_prefix(marker: str) -> str:
@@ -176,7 +167,7 @@ def test_every_dynamic_prefix_is_registry_covered_or_allowlisted() -> None:
             "to dev/locales/fstring_registry.py so scaffold "
             "re-materialises every concrete key. If the value space is genuinely "
             "OPEN-ENDED, add a reason-carrying entry to OPEN_ENDED_NAMESPACES in "
-            "this gate stating why it cannot be registered."
+            "dev/locales/signal_policy.py stating why it cannot be registered."
         )
 
 

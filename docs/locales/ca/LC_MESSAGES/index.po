@@ -412,7 +412,3 @@ msgstr ""
 "and-evidence.md) per distingir les dades d'origen, les sortides de "
 "revisió, els fitxers de pujada de l'AEAT, el justificant de l'AEAT i els "
 "paquets d'auditoria."
-
-#~ msgid "Architecture and internals"
-#~ msgstr "Arquitectura i funcionament intern"
-

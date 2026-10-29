@@ -418,7 +418,3 @@ msgstr ""
 " az auditcsomagok közötti különbség megismeréséhez használd az "
 "[Importálás, exportálás és bizonylatok](reference/import-export-and-"
 "evidence.md) oldalt."
-
-#~ msgid "Architecture and internals"
-#~ msgstr "Architektúra és belső működés"
-

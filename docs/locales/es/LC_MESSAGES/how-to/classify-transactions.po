@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-21 17:01+0200\n"
+"POT-Creation-Date: 2026-10-29 12:33+0100\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
@@ -342,26 +342,43 @@ msgstr "Clasifica los movimientos de uso mixto"
 #: ../../how-to/classify-transactions.md:125
 msgid ""
 "A mixed-use transaction is one you use partly for business and partly "
-"personally, such as a phone bill, a car cost, or a home-office expense. "
-"Record the business share so the calculation counts only the deductible "
-"part. The split can come from three places, in rising order of grounding:"
-" a percentage on a single record, a saved default ratio for a whole "
+"personally, such as home internet or a home-office expense. Record the "
+"business share so the calculation counts only the deductible part. The "
+"split can come from three places, in rising order of grounding: a "
+"percentage on a single record, a saved default ratio for a whole "
 "category, or a ratio worked out from your registered facts (for example, "
 "the registered home-office area against the size of your home). All three"
 " keep only the part of a cost that genuinely belongs to the business."
 msgstr ""
-"Un movimiento de uso mixto es la que usas en parte para la actividad y en"
-" parte de forma personal, como una factura de teléfono, un gasto del "
-"coche o un gasto de oficina en casa. Registra el porcentaje de la "
-"actividad para que el cálculo cuente solo la parte deducible. El reparto "
-"puede venir de tres sitios, en orden creciente de fundamento: un "
-"porcentaje en un único registro, un porcentaje predeterminado guardado "
-"para toda una categoría, o un porcentaje calculado a partir de tus datos "
-"registrados (por ejemplo, la superficie registrada de la oficina en casa "
-"frente al tamaño de tu vivienda). Los tres conservan solo la parte de un "
-"gasto que pertenece de verdad a la actividad."
+"Un movimiento de uso mixto es el que usas en parte para la actividad y en"
+" parte de forma personal, como internet en casa o un gasto de oficina en "
+"casa. Registra el porcentaje de la actividad para que el cálculo cuente "
+"solo la parte deducible. El reparto puede venir de tres sitios, en orden "
+"creciente de fundamento: un porcentaje en un único registro, un "
+"porcentaje predeterminado guardado para toda una categoría o un "
+"porcentaje calculado a partir de tus datos registrados (por ejemplo, la "
+"superficie registrada de la oficina en casa frente al tamaño de tu "
+"vivienda). Los tres conservan solo la parte de un gasto que pertenece de "
+"verdad a la actividad."
 
 #: ../../how-to/classify-transactions.md:134
+msgid ""
+"A mobile line and a car are not split. For income tax they count only "
+"when you use them exclusively for the business: a `MIXED` mobile or car "
+"row deducts nothing, and the calculation reports it for review. For VAT, "
+"a car's running costs (fuel, maintenance, tolls, parking) deduct 50 per "
+"cent of their VAT, the share the law presumes, and a mobile line you also"
+" use privately deducts no VAT."
+msgstr ""
+"Una línea móvil y un coche no se reparten. Para el impuesto sobre la "
+"renta solo computan cuando los usas exclusivamente para la actividad: una"
+" fila de móvil o coche con `MIXED` no deduce nada y el cálculo la señala "
+"para revisión. En el IVA, los gastos de uso del coche (combustible, "
+"mantenimiento, peajes y aparcamiento) deducen el 50 por ciento de su IVA,"
+" la proporción que presume la ley, y una línea móvil que también usas de "
+"forma privada no deduce IVA."
+
+#: ../../how-to/classify-transactions.md:140
 msgid ""
 "A `MIXED` row needs a proportionality reference before a modelo can "
 "calculate from it. The reference is a saved category ratio applied "
@@ -378,7 +395,7 @@ msgstr ""
 "`missing_proportionality_reference` hasta que la fila lleve `--usage-"
 "ratio-id`."
 
-#: ../../how-to/classify-transactions.md:140
+#: ../../how-to/classify-transactions.md:146
 msgid ""
 "For one-row commands, `--usage-ratio-id` lives on the `allocate` verb "
 "(and on `add`), not on `classify`. Its value is the spending-category id,"
@@ -392,35 +409,34 @@ msgstr ""
 "guardado. La secuencia comprueba las categorías elegibles, guarda un "
 "porcentaje y asigna la parte en una fila:"
 
-#: ../../how-to/classify-transactions.md:149
+#: ../../how-to/classify-transactions.md:155
 msgid ""
 "A row's `--usage-ratio-id` must name a ratio-eligible category (the ones "
-"`ratios eligible` lists, such as `telefonia_movil` or a home-office "
-"suministros category), and the same category is passed as `--category-"
-"id`. The `--business-pct` value must match the saved ratio for that "
-"category. The classification follows the share automatically: a `0.5` "
-"allocation becomes `MIXED`, a `1` allocation becomes `BUSINESS`, and a "
-"`0` allocation becomes `PERSONAL`."
+"`ratios eligible` lists, such as `arrendamiento_vivienda_afecto` or a "
+"home-office suministros category), and the same category is passed as "
+"`--category-id`. The `--business-pct` value must match the saved ratio "
+"for that category. The classification follows the share automatically: a "
+"`0.5` allocation becomes `MIXED`, a `1` allocation becomes `BUSINESS`, "
+"and a `0` allocation becomes `PERSONAL`."
 msgstr ""
 "El `--usage-ratio-id` de una fila debe nombrar una categoría elegible "
 "para porcentaje (las que enumera `ratios eligible`, como "
-"`telefonia_movil` o una categoría de suministros de oficina en casa), y "
-"esa misma categoría se pasa como `--category-id`. El valor de "
-"`--business-pct` debe coincidir con el porcentaje guardado para esa "
+"`arrendamiento_vivienda_afecto` o una categoría de suministros de oficina"
+" en casa), y esa misma categoría se pasa como `--category-id`. El valor "
+"de `--business-pct` debe coincidir con el porcentaje guardado para esa "
 "categoría. La clasificación sigue el porcentaje automáticamente: una "
 "asignación de `0.5` pasa a `MIXED`, una asignación de `1` pasa a "
 "`BUSINESS` y una asignación de `0` pasa a `PERSONAL`."
 
-#: ../../how-to/classify-transactions.md:157
+#: ../../how-to/classify-transactions.md:163
 msgid ""
-"List or check the saved ratios at any time. The sequence saves a ratio, "
-"lists the saved ratios, and validates them:"
+"Check the saved ratios at any time. The sequence saves a ratio and "
+"validates the saved ratios:"
 msgstr ""
-"Enumera o comprueba los porcentajes guardados en cualquier momento. La "
-"secuencia guarda un porcentaje, enumera los porcentajes guardados y los "
-"valida:"
+"Comprueba los porcentajes guardados en cualquier momento. La secuencia "
+"guarda un porcentaje y valida los porcentajes guardados:"
 
-#: ../../how-to/classify-transactions.md:164
+#: ../../how-to/classify-transactions.md:170
 msgid ""
 "Remove a category ratio you no longer want with `aeat app ledger ratios "
 "unset <category-id>`."
@@ -428,7 +444,22 @@ msgstr ""
 "Elimina un porcentaje de categoría que ya no quieras con `aeat app ledger"
 " ratios unset <category-id>`."
 
-#: ../../how-to/classify-transactions.md:167
+#: ../../how-to/classify-transactions.md:173
+msgid ""
+"Every ratio-eligible category is a home-office category, so its saved "
+"ratio must agree with the office and dwelling areas in your profile. "
+"`aeat app ledger ratios list` shows the saved ratios once the profile "
+"declares those areas, and refuses while a saved ratio disagrees with "
+"them."
+msgstr ""
+"Todas las categorías que admiten porcentajes son categorías de oficina en"
+" casa, por lo que su porcentaje guardado debe concordar con las "
+"superficies de la oficina y de la vivienda de tu perfil. `aeat app ledger"
+" ratios list` muestra los porcentajes guardados una vez que el perfil "
+"declara esas superficies y se niega a continuar mientras algún porcentaje"
+" guardado no concuerde con ellas."
+
+#: ../../how-to/classify-transactions.md:178
 msgid ""
 "For home-office expenses, save a ratio for the relevant home-office "
 "category and allocate the share on the row. Home-office ratios follow the"
@@ -443,11 +474,11 @@ msgstr ""
 "perfil (consulta [Mantener los datos censales del Modelo 036 en tu perfil"
 "](censo-update.md))."
 
-#: ../../how-to/classify-transactions.md:172
+#: ../../how-to/classify-transactions.md:183
 msgid "Classify many rows from CSV"
 msgstr "Clasifica muchas filas desde un CSV"
 
-#: ../../how-to/classify-transactions.md:174
+#: ../../how-to/classify-transactions.md:185
 msgid ""
 "For bulk review, `classify --file` reads a CSV with columns "
 "`transaction_id`, `classification`, and optional classification facts "
@@ -466,7 +497,7 @@ msgstr ""
 " los valores guardados. Prepara un CSV reducido que contenga solo las "
 "filas que pretendes cambiar, una fila por movimiento:"
 
-#: ../../how-to/classify-transactions.md:189
+#: ../../how-to/classify-transactions.md:200
 msgid ""
 "In the file, amounts such as the taxable base and the VAT amount take at "
 "most two decimals. A business share and a VAT rate are fractions from `0`"
@@ -481,7 +512,7 @@ msgstr ""
 " como en `0.052` o `0.0175`. `classify` aplica los mismos límites a una "
 "sola fila."
 
-#: ../../how-to/classify-transactions.md:194
+#: ../../how-to/classify-transactions.md:205
 msgid ""
 "The following sequence starts from the imported quarter. It lists the "
 "rows still needing a decision, exports a review snapshot to work from, "
@@ -491,7 +522,7 @@ msgstr ""
 "que aún necesitan una decisión, exporta una instantánea de revisión con "
 "la que trabajar, aplica un CSV preparado y confirma el resultado:"
 
-#: ../../how-to/classify-transactions.md:202
+#: ../../how-to/classify-transactions.md:213
 msgid ""
 "Use the CSV path when filtered review shows many rows you can classify "
 "safely from their descriptions, counterparties, and supporting documents."
@@ -518,11 +549,11 @@ msgstr ""
 "tener éxito solo en parte; corrige únicamente las filas fallidas en lugar"
 " de repetir el fichero entero."
 
-#: ../../how-to/classify-transactions.md:212
+#: ../../how-to/classify-transactions.md:223
 msgid "Apply stored rules automatically"
 msgstr "Aplica reglas guardadas automáticamente"
 
-#: ../../how-to/classify-transactions.md:214
+#: ../../how-to/classify-transactions.md:225
 msgid ""
 "Rules automatically classify transactions whose description contains a "
 "word or phrase you specify. Matching ignores uppercase and lowercase "
@@ -537,7 +568,7 @@ msgstr ""
 "registros del ejemplo no contienen filas, así que la vista previa y la "
 "aplicación no coinciden con nada:"
 
-#: ../../how-to/classify-transactions.md:223
+#: ../../how-to/classify-transactions.md:234
 msgid ""
 "Run `--dry-run` first. Add `--reaffirm` only if you want the rule to "
 "overwrite classifications you already set by hand."
@@ -545,11 +576,11 @@ msgstr ""
 "Ejecuta `--dry-run` primero. Añade `--reaffirm` solo si quieres que la "
 "regla sobrescriba clasificaciones que ya hayas establecido a mano."
 
-#: ../../how-to/classify-transactions.md:226
+#: ../../how-to/classify-transactions.md:237
 msgid "Use an LLM suggestion"
 msgstr "Usa una sugerencia de un LLM"
 
-#: ../../how-to/classify-transactions.md:228
+#: ../../how-to/classify-transactions.md:239
 msgid ""
 "Cadrumo can use a configured language model to suggest how to classify "
 "each transaction. The suggestion is a starting point. You must confirm or"
@@ -561,7 +592,7 @@ msgstr ""
 "confirmarla o corregirla. No rellena importes fiscales como la base "
 "imponible, el tipo de IVA o la categoría de IRPF."
 
-#: ../../how-to/classify-transactions.md:233
+#: ../../how-to/classify-transactions.md:244
 msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
@@ -569,11 +600,11 @@ msgstr ""
 "Usa [Clasificar movimientos con un LLM](classify-with-llm.md) para el "
 "flujo completo de proveedor, vista previa, aplicación y anulación."
 
-#: ../../how-to/classify-transactions.md:237
+#: ../../how-to/classify-transactions.md:248
 msgid "See everything that still needs a decision"
 msgstr "Ve todo lo que aún necesita una decisión"
 
-#: ../../how-to/classify-transactions.md:239
+#: ../../how-to/classify-transactions.md:250
 msgid ""
 "The review queue is one profile-wide list of everything that still wants "
 "your attention before a filing: transactions without a classification, "
@@ -592,7 +623,7 @@ msgstr ""
 "lectura; los elementos se resuelven cuando corriges el registro "
 "subyacente. El ejemplo parte del trimestre importado y luego lee la cola:"
 
-#: ../../how-to/classify-transactions.md:251
+#: ../../how-to/classify-transactions.md:262
 msgid ""
 "Each row shows the item id, its kind, the affected record, the period, a "
 "severity (`critical`, `high`, `normal`, or `info`), and a final column "
@@ -603,7 +634,7 @@ msgstr ""
 "última columna con el comando que ejecutar a continuación. Acota la lista"
 " por tipo, modelo o estado:"
 
-#: ../../how-to/classify-transactions.md:259
+#: ../../how-to/classify-transactions.md:270
 msgid ""
 "Accepted `--kind` tokens are `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice`, "
@@ -622,7 +653,7 @@ msgstr ""
 "o usa la opción global `--format json` (antes del comando) para obtener "
 "un campo `legal_refs` en cada fila."
 
-#: ../../how-to/classify-transactions.md:267
+#: ../../how-to/classify-transactions.md:278
 msgid ""
 "Transaction items clear when you classify the row (this page). Invoice "
 "items clear when you link or update the invoice - see [Attach invoices "
@@ -638,11 +669,11 @@ msgstr ""
 "consulta [Comprobar un borrador de declaración y actuar según las "
 "incidencias](verification-reports.md)."
 
-#: ../../how-to/classify-transactions.md:272
+#: ../../how-to/classify-transactions.md:283
 msgid "Confirm readiness"
 msgstr "Confirma la preparación"
 
-#: ../../how-to/classify-transactions.md:274
+#: ../../how-to/classify-transactions.md:285
 msgid ""
 "Run preflight after classification. The example starts from the "
 "classified quarter, then runs preflight and reads the status of your "
@@ -652,7 +683,7 @@ msgstr ""
 "del trimestre clasificado, luego ejecuta la comprobación previa y lee el "
 "estado de tus registros:"
 
-#: ../../how-to/classify-transactions.md:281
+#: ../../how-to/classify-transactions.md:292
 msgid ""
 "Preflight names rows that still need category, taxable base, VAT amount, "
 "VAT rate, currency, or proportionality reference."
@@ -661,11 +692,11 @@ msgstr ""
 " imponible, cuota de IVA, tipo de IVA, moneda o referencia de "
 "proporcionalidad."
 
-#: ../../how-to/classify-transactions.md:284
+#: ../../how-to/classify-transactions.md:295
 msgid "Correct a classification"
 msgstr "Corrige una clasificación"
 
-#: ../../how-to/classify-transactions.md:286
+#: ../../how-to/classify-transactions.md:297
 msgid ""
 "Re-run `classify` on the same transaction id. A manual decision replaces "
 "the previous classification. The example starts from a row classified as "
@@ -675,23 +706,23 @@ msgstr ""
 "decisión manual reemplaza la clasificación anterior. El ejemplo parte de "
 "una fila clasificada como de la actividad y luego la corrige a personal:"
 
-#: ../../how-to/classify-transactions.md:294
+#: ../../how-to/classify-transactions.md:305
 msgid "Inspect the row again with `ledger view` before calculating."
 msgstr "Examina la fila de nuevo con `ledger view` antes de calcular."
 
-#: ../../how-to/classify-transactions.md:296
+#: ../../how-to/classify-transactions.md:307
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/classify-transactions.md:298
+#: ../../how-to/classify-transactions.md:309
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Importar y gestionar movimientos](import-bank-statements.md)"
 
-#: ../../how-to/classify-transactions.md:299
+#: ../../how-to/classify-transactions.md:310
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
 msgstr "[Clasificar movimientos con un LLM](classify-with-llm.md)"
 
-#: ../../how-to/classify-transactions.md:300
+#: ../../how-to/classify-transactions.md:311
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
@@ -699,14 +730,14 @@ msgstr ""
 "[Cómo tus registros se convierten en cifras fiscales](../explanation"
 "/from-records-to-figures.md)"
 
-#: ../../how-to/classify-transactions.md:301
+#: ../../how-to/classify-transactions.md:312
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.md)"
 
-#: ../../how-to/classify-transactions.md:302
+#: ../../how-to/classify-transactions.md:313
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr "[Revisar los cálculos con Google Sheets](review-with-google-sheets.md)"
 
-#: ../../how-to/classify-transactions.md:303
+#: ../../how-to/classify-transactions.md:314
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"

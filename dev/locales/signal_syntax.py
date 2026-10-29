@@ -16,7 +16,7 @@ TRANSLATION_PLACEHOLDER_RE: Final[re.Pattern[str]] = re.compile(
 
 
 TRANSLATION_CODE_RE: Final[re.Pattern[str]] = re.compile(
-    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]+(?:=[^][,;\s]+)?|"
+    r"`[^`]*`|--[A-Za-z][A-Za-z0-9-]*|\b[A-Z][A-Z0-9_]+(?![\w])(?:=[^][,;\s]+)?|"
     r"\b[A-Za-z][A-Za-z0-9]*(?:_[A-Za-z0-9]+)+\b|\[\d{1,4}\]"
 )
 
@@ -112,8 +112,22 @@ TRANSLATION_MARKDOWN_LINK_CONTEXT_RE: Final[re.Pattern[str]] = re.compile(
 
 
 TRANSLATION_LEGAL_TITLE_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?P<title>\b(?:[A-ZÁÉÍÓÚÜÑ][\wÁÉÍÓÚÜÑáéíóúüñ]*\s+){1,3})"
+    r"(?P<title>\b(?:Ley(?:\s+Orgánica)?|Real\s+Decreto(?:-ley|\s+Legislativo)?|"
+    r"Decreto(?:-ley|\s+Legislativo)?|Orden|Resolución)\s+)"
     r"(?P<identifier>[A-Z]{0,5}/?\d{1,4}/\d{4})\b"
+)
+
+
+TRANSLATION_SPANISH_AUTHORITY_RE: Final[re.Pattern[str]] = re.compile(
+    r"\b(?:Agencia (?:Estatal de Administración )?Tributaria|Boletín Oficial del Estado)\b"
+)
+
+
+TRANSLATION_HUNGARIAN_DATE_RE: Final[re.Pattern[str]] = re.compile(r"(?<![\w])ÉÉÉÉ-HH-NN(?:TÓÓ:PP:MMZ)?(?![\w-])")
+
+
+TRANSLATION_HUNGARIAN_ACRONYM_CASE_RE: Final[re.Pattern[str]] = re.compile(
+    r"(?<![\w])[A-ZÁÉÍÓÖŐÚÜŰ]{2,}-n[áé]l(?![\w-])"
 )
 
 

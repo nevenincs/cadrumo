@@ -561,6 +561,31 @@ def test_sections_carry_jump_targets_matching_the_page_nav() -> None:
     assert linked == emitted
 
 
+def test_registry_section_labels_declare_spanish_but_translated_fallback_does_not(tmp_path: Any) -> None:
+    """Source paths retain their language in navigation and section headings."""
+    records = (
+        _record(section=("declaracion", "actividades")),
+        _record(casilla_id="09", number="09", section=()),
+    )
+    rst = _render(records, OutputLanguage.EN)
+
+    assert 'href="#section-declaracion-actividades" lang="es">Declaracion › Actividades</a>' in rst
+    assert ':casilla-section-source:`<span lang="es">Declaracion › Actividades</span>`' in rst
+    assert ".. cadrumo-section-anchor:: declaracion-actividades" in rst
+    assert 'href="#section-general">General</a>' in rst
+    assert '<span lang="es">General</span>' not in rst
+
+    from dev.locales.signal_document_prose import embedded_document_language_prose, visible_document_prose
+    from dev.locales.signal_spelling_segments import locale_spelling_words
+
+    path = tmp_path / "casilla.rst"
+    path.write_text(rst, encoding="utf-8")
+    foreign = embedded_document_language_prose(path)
+    assert any(locale == "es" and "Declaracion" in text for _line, locale, text in foreign)
+    assert not any("Declaracion" in text for _line, text in visible_document_prose(path))
+    assert "Declaracion" in locale_spelling_words(foreign[0][2], "es")[0]
+
+
 def test_colliding_section_anchors_are_a_build_failure() -> None:
     """Two section paths folding to one jump target are refused, never merged."""
     from ..casilla_display import _section_anchor

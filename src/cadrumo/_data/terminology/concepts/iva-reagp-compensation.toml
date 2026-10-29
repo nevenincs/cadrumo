@@ -15,3 +15,12 @@ updated_at = 2026-09-17
 
 [language.es]
 short_description = "(sin curar) draft pendiente de definicion"
+
+[language.ca]
+short_description = "Compensació del règim especial de l'IVA de l'agricultura, la ramaderia i la pesca (REAGP)."
+
+[language.en]
+short_description = "Compensation under the special VAT scheme for agriculture, livestock farming and fisheries (REAGP)."
+
+[language.hu]
+short_description = "A mezőgazdaságra, állattenyésztésre és halászatra vonatkozó különleges spanyol áfarendszer (REAGP) szerinti kompenzáció."

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+
 from .signal_contracts import TranslationBacklogItem, TranslationMatrix
-from .signal_discovery import covered_by_namespace
+from .signal_discovery import covered_by_namespace, is_catalogue_only_key
 
 
 def signal_finite_dynamic_keys(finite_families: dict[str, tuple[str, ...]]) -> set[str]:
@@ -105,6 +107,6 @@ def signal_dynamic_family_details(
     return dynamic_key_families
 
 
-def signal_catalogue_only_cells(locale_leaves: dict[str, dict[str, object]], required_keys: set[str]) -> int:
+def signal_catalogue_only_cells(locale_leaves: Mapping[str, Mapping[str, object]], required_keys: set[str]) -> int:
     """Count populated catalogue cells outside the required key inventory."""
-    return sum(1 for leaves in locale_leaves.values() for key in leaves if key not in required_keys)
+    return sum(1 for leaves in locale_leaves.values() for key in leaves if is_catalogue_only_key(key, required_keys))

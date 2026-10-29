@@ -11,6 +11,7 @@ from babel.messages.pofile import read_po, write_po
 
 from dev._paths import REPO_ROOT
 
+from .. import i18n
 from ..i18n import _EXCLUDED_FILES, prune_orphan_catalogues, relocate_template_locations, sync_catalogue_locations
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
@@ -63,6 +64,33 @@ def test_prune_orphan_catalogues_is_idempotent(tmp_path: Path) -> None:
 
     assert prune_orphan_catalogues(tmp_path, ("es",)) == (orphan,)
     assert prune_orphan_catalogues(tmp_path, ("es",)) == ()
+
+
+def test_prune_preserves_out_of_scope_technical_catalogues(tmp_path: Path) -> None:
+    _source(tmp_path, "index.md")
+    technical = [_catalogue(tmp_path, "es", f"technical/page-{index}.md", "translation") for index in range(20)]
+    orphan = _catalogue(tmp_path, "es", "retired.md", "translation")
+
+    assert prune_orphan_catalogues(tmp_path, ("es",)) == (orphan,)
+    assert all(path.read_text(encoding="utf-8") == "translation" for path in technical)
+
+
+def test_full_update_stages_only_authored_templates(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    _source(tmp_path, "index.md")
+    _source(tmp_path, "technical/internal.md")
+    templates = tmp_path / "docs" / "locales" / "pot"
+    (templates / "technical").mkdir(parents=True)
+    (templates / "index.pot").write_text("authored", encoding="utf-8")
+    (templates / "technical" / "internal.pot").write_text("stale", encoding="utf-8")
+    observed: list[str] = []
+
+    def capture(_repo: Path, _docs: Path, staged: Path, _languages: tuple[str, ...]) -> None:
+        observed.extend(path.relative_to(staged).as_posix() for path in staged.rglob("*.pot"))
+
+    monkeypatch.setattr(i18n, "_run_catalogue_update", capture)
+    i18n.update_catalogues(tmp_path, ("es",))
+
+    assert observed == ["index.pot"]
 
 
 @pytest.mark.parametrize(

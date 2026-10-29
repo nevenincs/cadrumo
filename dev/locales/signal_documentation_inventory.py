@@ -23,6 +23,24 @@ def observed_documentation_catalogue_files(
     return catalogue_files
 
 
+def catalogue_in_localization_scope(catalogue: str, docs_root: Path, pages: set[str]) -> bool:
+    """Keep authored or orphan user catalogues, excluding English-only sources.
+
+    Existing sources follow the canonical page selector, including generated
+    files outside excluded directories. Missing sources remain orphan candidates
+    unless their whole top-level tree is outside the translation authority.
+    """
+    from dev.docs.i18n import _EXCLUDED_TOP_DIRS
+
+    relative = Path(catalogue)
+    if not relative.parts or relative.parts[0] in _EXCLUDED_TOP_DIRS:
+        return False
+    possible_sources = tuple(relative.with_suffix(suffix) for suffix in (".md", ".rst"))
+    return any(path.as_posix() in pages for path in possible_sources) or not any(
+        (docs_root / path).is_file() for path in possible_sources
+    )
+
+
 def inventory_generated_document_sources(
     docs_root: Path,
     repository: Path,
@@ -125,9 +143,6 @@ def documentation_source_inventory(
         catalogue_obsolete: dict[tuple[str, str], set[str]] = {}
     if catalogue_translations is None:
         catalogue_translations: dict[tuple[str, str], Mapping[str, tuple[str, ...]]] = {}
-    for (locale, _catalogue), identities in catalogue_obsolete.items():
-        counts["docs_catalogue_messages_obsolete"] += len(identities)
-        counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
     catalogue_files = observed_documentation_catalogue_files(catalogue_files, catalogue_messages)
     docs_root = repository / "docs"
     try:
@@ -136,6 +151,16 @@ def documentation_source_inventory(
         counts["docs_extraction_failures"] += 1
         findings.append(docs_extraction_finding(docs_root, exc))
         return documentation_counts(counts), findings
+    scope_pages = set(pages)
+    catalogue_files = {
+        (locale, catalogue)
+        for locale, catalogue in catalogue_files
+        if catalogue_in_localization_scope(catalogue, docs_root, scope_pages)
+    }
+    for (locale, catalogue), identities in catalogue_obsolete.items():
+        if catalogue_in_localization_scope(catalogue, docs_root, scope_pages):
+            counts["docs_catalogue_messages_obsolete"] += len(identities)
+            counts[f"docs_catalogue_messages_obsolete_{locale}"] += len(identities)
     counts["docs_source_pages"] = len(pages)
     if not pages:
         counts["docs_extraction_failures"] += 1
