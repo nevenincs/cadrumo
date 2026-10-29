@@ -29,12 +29,6 @@
     "browser"
   ],
   "retired": [
-    "setup",
-    "home",
-    "withholding",
-    "aeat-sync",
-    "operations",
-    "installation",
-    "reference"
+    "setup"
   ]
 }

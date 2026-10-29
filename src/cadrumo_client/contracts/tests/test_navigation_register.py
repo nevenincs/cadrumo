@@ -183,6 +183,7 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
     register = load_navigation_register()
     gui = NavigationSurface.GUI
     assert {element.id: set(element.surfaces) for element in register.elements} == {
+        "home": {gui},
         "ledger": {gui},
         "ledger/movements": {gui},
         "ledger/invoices": {gui},
@@ -190,7 +191,12 @@ def test_the_shipped_register_declares_the_initial_elements() -> None:
         "ledger/rules": {gui},
         "ledger/registers": {gui},
         "ledger/health": {gui},
+        "withholding": {gui},
         "declarations": {gui},
+        "aeat-sync": {gui},
+        "operations": {gui},
+        "installation": {gui},
+        "reference": {gui},
         "profile": {gui},
         "profile/aeat-access": {gui},
         "calendar": {gui},

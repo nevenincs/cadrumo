@@ -4208,6 +4208,8 @@ llm:
         for this invocation.'
 navigation:
   view:
+    aeat_sync:
+      label: AEAT Sync
     agent:
       label: Agent
     browser:
@@ -4218,6 +4220,10 @@ navigation:
       label: Declarations
     docs:
       label: Docs
+    home:
+      label: Home
+    installation:
+      label: Installation
     ledger:
       documents:
         label: Documents
@@ -4232,6 +4238,8 @@ navigation:
         label: Registers
       rules:
         label: Rules
+    operations:
+      label: Operations
     panel:
       console:
         label: Console
@@ -4244,8 +4252,12 @@ navigation:
       aeat_access:
         label: AEAT access
       label: Profile
+    reference:
+      label: Reference
     terminal:
       label: Workspace
+    withholding:
+      label: Withholding
 operation:
   modal:
     action:

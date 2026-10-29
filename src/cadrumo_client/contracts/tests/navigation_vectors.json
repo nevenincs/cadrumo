@@ -77,9 +77,9 @@
       }
     },
     {
-      "link": "cadrumo://view/calendar",
+      "link": "cadrumo://view/aeat-sync",
       "expect": {
-        "view_id": "calendar",
+        "view_id": "aeat-sync",
         "params": {},
         "prefer": null
       }
@@ -527,12 +527,6 @@
       "expect": {
         "refused": "query"
       }
-    },
-    {
-      "link": "cadrumo://view/aeat-sync",
-      "expect": {
-        "refused": "unknown_view"
-      }
     }
   ],
   "resolve": [
@@ -649,6 +643,141 @@
         "prefer": null
       },
       "implemented": {},
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "aeat-sync",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": null,
+      "expect": {
+        "opened": "aeat-sync",
+        "surface": "gui",
+        "fallback": "none",
+        "notice": false,
+        "params": {}
+      }
+    },
+    {
+      "link": {
+        "view_id": "home",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "declarations",
+            "profile"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "withholding",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "declarations",
+            "profile"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "aeat-sync",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "declarations",
+            "profile"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "operations",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "declarations",
+            "profile"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "installation",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "declarations",
+            "profile"
+          ],
+          "params": {}
+        }
+      },
+      "expect": {
+        "refused": "not_implemented"
+      }
+    },
+    {
+      "link": {
+        "view_id": "reference",
+        "params": {},
+        "prefer": null
+      },
+      "implemented": {
+        "gui": {
+          "views": [
+            "ledger",
+            "declarations",
+            "profile"
+          ],
+          "params": {}
+        }
+      },
       "expect": {
         "refused": "not_implemented"
       }

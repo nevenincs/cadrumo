@@ -13,14 +13,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FAMILY_PAGES = {
     "ledger": "ledger",
+    "live": "aeat-sync",
     "user-profile": "profile",
     "auth": "profile/aeat-access",
+    "overview": "home",
     "export": "declarations",
 }
 _EXCEPTIONS = {
-    "modelo.aggregate.capture_received_invoice_retencion": "declarations",
-    "modelo.reconcile.pull": "declarations",
-    "modelo.reconcile.import": "declarations",
+    "modelo.aggregate.capture_received_invoice_retencion": "withholding",
+    "modelo.reconcile.pull": "aeat-sync",
+    "modelo.reconcile.import": "aeat-sync",
 }
 
 
@@ -30,7 +32,7 @@ def _registered() -> tuple[str, ...]:
 
 def test_every_registered_family_has_a_decided_page() -> None:
     # A new family must be given a page, or be named here as one no page shows.
-    pageless = {"app", "config", "diagnostics", "live", "overview", "profile", "workbench", "workflow"}
+    pageless = {"app", "config", "diagnostics", "profile", "workbench", "workflow"}
     register = load_navigation_register()
     for definition_id in _registered():
         family = definition_id.split(".", 1)[0]
@@ -51,6 +53,7 @@ def test_bookkeeping_profile_and_declaration_writes_open_their_pages() -> None:
         "user-profile.patch": "profile",
         "modelo.work.calculate": "declarations",
         "modelo.export": "declarations",
+        "live.notifications.capture": "aeat-sync",
         **_EXCEPTIONS,
     }.items():
         assert definition_id in registered, definition_id
@@ -58,11 +61,5 @@ def test_bookkeeping_profile_and_declaration_writes_open_their_pages() -> None:
 
 
 def test_operations_no_page_shows_name_none() -> None:
-    for definition_id in (
-        "workflow.run.read",
-        "diagnostics.read",
-        "config.google.status",
-        "app.review.queue",
-        "live.notifications.capture",
-    ):
+    for definition_id in ("workflow.run.read", "diagnostics.read", "config.google.status", "app.review.queue"):
         assert operation_destination(definition_id) is None, definition_id

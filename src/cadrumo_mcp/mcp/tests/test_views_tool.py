@@ -124,12 +124,12 @@ async def test_a_search_matches_labels_keywords_and_ids_best_first() -> None:
     by_keyword = await _call({"query": "facturas"}, language="en")
     assert by_keyword["views"][0]["id"] == "ledger/invoices"
 
-    by_id = await _call({"query": "calendar"}, language="en")
-    assert by_id["views"][0]["id"] == "calendar"
+    by_id = await _call({"query": "aeat sync"}, language="en")
+    assert by_id["views"][0]["id"] == "aeat-sync"
 
     # Accents fold, and a word must match for a view to be answered at all.
-    folded = await _call({"query": "plázos"}, language="es")
-    assert [row["id"] for row in folded["views"]] == ["calendar"]
+    folded = await _call({"query": "sincronización"}, language="es")
+    assert [row["id"] for row in folded["views"]] == ["aeat-sync"]
     assert (await _call({"query": "zzzz"}))["views"] == []
 
 
@@ -169,6 +169,23 @@ async def test_a_link_naming_a_surface_the_register_does_not_declare_is_invalid(
     assert await _call({"link": f"cadrumo://view/ledger/invoices?select={_INVOICE}&prefer=tui"}) == {
         "outcome": "invalid",
         "reason": "query",
+    }
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize("view_id", ["home", "withholding", "aeat-sync", "operations", "installation", "reference"])
+async def test_a_window_view_the_desktop_has_not_built_is_still_declared_for_the_window(view_id: str) -> None:
+    found = await _call({"id": view_id}, language="en")
+    assert found["outcome"] == "found"
+    assert found["views"][0]["surfaces"] == ["gui"]
+    checked = await _call({"link": f"cadrumo://view/{view_id}"})
+    assert checked["outcome"] == "valid"
+    assert checked["opens"] == {
+        "surface": "gui",
+        "view": view_id,
+        "fallback": "none",
+        "params_kept": True,
+        "notice_due": False,
     }
 
 

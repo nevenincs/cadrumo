@@ -6,7 +6,9 @@
 # segment; a root has none. `label` is the one locale key every palette shows,
 # `keywords` are extra search words, and `surfaces` lists which interfaces
 # implement the element. How a surface implements an element is that surface's
-# own table, never this file.
+# own table, never this file. An element the window has not built yet is still
+# declared with `gui`; resolving it against the window's table, which does not
+# list it, refuses it as `not_implemented`.
 #
 # An element may declare link parameters in `params`, a map from parameter
 # name to value kind, such as `params = { select = "invoice" }` for a link
@@ -19,7 +21,7 @@
 # is never declared again, so an old link cannot open something new.
 
 schema = 1
-retired = ["setup", "home", "withholding", "aeat-sync", "operations", "installation", "reference"]
+retired = ["setup"]
 
 # A bank or manual ledger movement: its content-derived SHA-256 transaction id.
 [[kind]]
@@ -32,6 +34,12 @@ length = 64
 name = "invoice"
 alphabet = "0123456789abcdef"
 length = 64
+
+[[element]]
+id = "home"
+label = "navigation.view.home.label"
+keywords = "overview start summary inicio"
+surfaces = ["gui"]
 
 [[element]]
 id = "ledger"
@@ -85,9 +93,39 @@ keywords = "health readiness checks findings estado"
 surfaces = ["gui"]
 
 [[element]]
+id = "withholding"
+label = "navigation.view.withholding.label"
+keywords = "withholding retenciones irpf"
+surfaces = ["gui"]
+
+[[element]]
 id = "declarations"
 label = "navigation.view.declarations.label"
 keywords = "declarations returns modelo filing declaraciones"
+surfaces = ["gui"]
+
+[[element]]
+id = "aeat-sync"
+label = "navigation.view.aeat_sync.label"
+keywords = "aeat sync capture sede notifications sincronizacion"
+surfaces = ["gui"]
+
+[[element]]
+id = "operations"
+label = "navigation.view.operations.label"
+keywords = "operations runs jobs history operaciones"
+surfaces = ["gui"]
+
+[[element]]
+id = "installation"
+label = "navigation.view.installation.label"
+keywords = "installation runtime version instalacion"
+surfaces = ["gui"]
+
+[[element]]
+id = "reference"
+label = "navigation.view.reference.label"
+keywords = "reference law sources corpus referencia"
 surfaces = ["gui"]
 
 [[element]]
