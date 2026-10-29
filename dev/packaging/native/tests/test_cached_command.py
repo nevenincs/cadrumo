@@ -180,6 +180,9 @@ def test_cmake_targets_reuse_siblings_and_cpack_uses_install(tmp_path: Path, mon
         f'''cmake_minimum_required(VERSION 4.4)
 project(Currency LANGUAGES NONE)
 {build_manifest_cmake()}
+file(READ "${{CMAKE_BINARY_DIR}}/build-paths.json" fixture_manifest)
+string(JSON fixture_manifest SET "${{fixture_manifest}}" paths temporary "\\\"temporary\\\"")
+file(WRITE "${{CMAKE_BINARY_DIR}}/build-paths.json" "${{fixture_manifest}}\n")
 set(CADRUMO_DEV_PYTHON "{Path(sys.executable).as_posix()}")
 include("{REPO_ROOT.as_posix()}/native/cmake/Cleanup.cmake")
 include("{REPO_ROOT.as_posix()}/native/cmake/CachedCommand.cmake")
