@@ -221,8 +221,6 @@ class StorageCategory(StrEnum):
     TEMPORARY_FILES = "temporary-files"
     CONNECTION_SOCKETS = "runtime-sockets"
     PLAYWRIGHT_BROWSERS = "playwright-browsers"
-    OLLAMA_MODELS = "ollama-models"
-    OLLAMA_HOME = "ollama-home"
     GNOME_EXTENSIONS = "gnome-extensions"
     SECRETS = "secrets"
     BLOBS = "blobs"

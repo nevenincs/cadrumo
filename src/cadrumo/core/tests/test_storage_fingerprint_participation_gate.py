@@ -70,14 +70,6 @@ class ExclusionExpectation(NamedTuple):
 
 EXPECTED_EXCLUSIONS: Final[tuple[ExclusionExpectation, ...]] = (
     ExclusionExpectation(
-        "cadrumo_ollama_home_dir",
-        "Model-server runtime identity belongs to the provisioned server, independently of taxpayer facts.",
-    ),
-    ExclusionExpectation(
-        "cadrumo_ollama_models_dir",
-        "Provisioned public model weights are executable resources, independent of profile facts.",
-    ),
-    ExclusionExpectation(
         "cadrumo_gnome_extensions_dir",
         "Published integration code is an executable resource, independent of profile facts.",
     ),

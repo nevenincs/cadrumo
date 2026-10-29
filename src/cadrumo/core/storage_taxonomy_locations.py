@@ -98,24 +98,6 @@ orphan the file member nested inside it.
 
 _ROOT_LOCATIONS: Final[tuple[StorageLocation, ...]] = (
     _location(
-        StorageCategory.OLLAMA_HOME,
-        "components/ollama/home",
-        dormant_reason=("The local AI server reads it; no tax application module reads or writes it."),
-        settings_field="cadrumo_ollama_home_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
-        StorageCategory.OLLAMA_MODELS,
-        "models/ollama",
-        dormant_reason=("The local AI server reads it; no tax application module reads or writes it."),
-        settings_field="cadrumo_ollama_models_dir",
-        lifecycle=StorageLifecycle.UNBOUNDED_BY_DESIGN,
-        grouping=StorageGrouping.STATE,
-        fingerprint_participation=FingerprintParticipation.EXCLUDED,
-    ),
-    _location(
         StorageCategory.GNOME_EXTENSIONS,
         "integrations/gnome/extensions",
         consumer_module="cadrumo_runtime/adapters/linux_gnome_lock.py",

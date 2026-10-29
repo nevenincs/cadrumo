@@ -27,7 +27,7 @@ def test_linux_worker_receives_only_declared_storage_controls_and_managed_temp(
     monkeypatch.setenv("CADRUMO_STORAGE_ROOT", str(tmp_path / "configured"))
     monkeypatch.setenv("CADRUMO_LOCAL_STORAGE_ROOT", str(tmp_path / "local"))
     monkeypatch.setenv("CADRUMO_TEMP_DIR", "worker-temp")
-    monkeypatch.setenv("CADRUMO_OLLAMA_MODELS_DIR", "models/ollama-test")
+    monkeypatch.setenv("CADRUMO_PLAYWRIGHT_BROWSERS_DIR", "components/playwright-test")
     monkeypatch.setenv("CADRUMO_LLM_OPENAI_API_KEY", "must-not-cross-worker-boundary")
     monkeypatch.setenv("PYTHONPATH", "must-not-cross-worker-boundary")
 
@@ -42,7 +42,7 @@ def test_linux_worker_receives_only_declared_storage_controls_and_managed_temp(
     # The worker inherits the root it serves; it never re-resolves the parent's override.
     assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(storage_root.resolve())
     assert environment["CADRUMO_TEMP_DIR"] == "worker-temp"
-    assert environment["CADRUMO_OLLAMA_MODELS_DIR"] == "models/ollama-test"
+    assert environment["CADRUMO_PLAYWRIGHT_BROWSERS_DIR"] == "components/playwright-test"
     assert not any("OPENAI_API_KEY" in name or name == "PYTHONPATH" for name in environment)
     assert {environment[name] for name in ("TEMP", "TMP", "TMPDIR")} == {str(temporary_root.resolve())}
     assert temporary_root.is_dir()

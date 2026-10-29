@@ -92,7 +92,7 @@ def test_isolated_launch_allowlist_carries_storage_controls_without_credentials(
         "CADRUMO_LOCAL_STORAGE_ROOT",
         "CADRUMO_TEMP_DIR",
         "CADRUMO_RUNTIME_SOCKET_DIR",
-        "CADRUMO_OLLAMA_HOME_DIR",
+        "CADRUMO_PLAYWRIGHT_BROWSERS_DIR",
     } <= controls
     # The development root variable is honoured only in a checkout; children inherit the pinned root.
     assert STORAGE_ROOT.development_variable not in controls

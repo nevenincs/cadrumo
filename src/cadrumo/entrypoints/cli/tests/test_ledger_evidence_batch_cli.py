@@ -173,7 +173,7 @@ def _degraded_row(name: str, *, status: BatchItemStatus = "ingested") -> BatchIt
             cause=LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
             unread_fields=("currency", "supplier_name"),
             reader_error_type="LLMContentionError",
-            failed_condition_id="load_capacity.available",
+            failed_condition_id="llm.agent.model_run_completed",
         ),
     )
 
@@ -196,7 +196,7 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert degraded.cause == "load_headroom_refused"
     assert degraded.unread_fields == ["currency", "supplier_name"]
     assert degraded.reader_error_type == "LLMContentionError"
-    assert degraded.failed_condition_id == "load_capacity.available"
+    assert degraded.failed_condition_id == "llm.agent.model_run_completed"
     assert rows["clean.pdf"].label_reading_fallback is None
 
     notices = {notice.code: notice for notice in _run_notices(run)}
@@ -205,7 +205,10 @@ def test_a_degraded_draft_keeps_its_status_and_is_reported_on_every_surface() ->
     assert warning.context == {"label_reading_degraded": "1", "reasons": "load_headroom_refused"}
 
     lines = _batch_text_lines(run, bucket_id="bucket", direction=InvoiceKind.RECEIVED)
-    assert "label_reading\tticket.pdf\tload_headroom_refused\tload_capacity.available\tcurrency,supplier_name" in lines
+    assert (
+        "label_reading\tticket.pdf\tload_headroom_refused\tllm.agent.model_run_completed\tcurrency,supplier_name"
+        in lines
+    )
     assert not any(line.startswith("label_reading\tclean.pdf") for line in lines)
 
     clean = BatchRunResult(items=(_pending_review_row("clean.pdf"),))

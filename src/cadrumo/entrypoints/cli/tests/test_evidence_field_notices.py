@@ -515,7 +515,7 @@ def test_a_draft_whose_model_fill_ran_or_was_never_needed_raises_no_label_readin
 def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_fields() -> None:
     fallback = _fallback(
         LabelReadingFallbackCause.LOAD_HEADROOM_REFUSED,
-        failed_condition_id="load_capacity.available",
+        failed_condition_id="llm.agent.model_run_completed",
     )
 
     (notice,) = label_reading_fallback_notices(fallback)
@@ -527,7 +527,7 @@ def test_a_headroom_refused_fill_is_a_warning_naming_the_refusal_and_the_unread_
         "unread_fields": "currency, supplier_name",
         "unread_field_count": "2",
         "reader_error_type": "ReaderFailureForTest",
-        "failed_condition_id": "load_capacity.available",
+        "failed_condition_id": "llm.agent.model_run_completed",
     }
     assert "currency, supplier_name" in notice.message
     assert "enough free memory" in notice.message

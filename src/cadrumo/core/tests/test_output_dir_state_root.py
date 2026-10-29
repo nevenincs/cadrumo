@@ -44,8 +44,6 @@ DERIVED_OUTPUT_SUBPATHS: Final[dict[str, str]] = {
     "cadrumo_temp_dir": "tmp",
     "cadrumo_connection_socket_dir": "runtime",
     "cadrumo_playwright_browsers_dir": "components/playwright",
-    "cadrumo_ollama_models_dir": "models/ollama",
-    "cadrumo_ollama_home_dir": "components/ollama/home",
     "cadrumo_gnome_extensions_dir": "integrations/gnome/extensions",
     "cadrumo_chromium_data_root": "chromium-data",
     "cadrumo_token_dir": "tokens",

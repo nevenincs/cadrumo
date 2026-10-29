@@ -364,13 +364,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         default=Path("components/playwright"),
         description="Managed Playwright browser binaries beneath the storage root.",
     )
-    cadrumo_ollama_home_dir: Path = Field(
-        default=Path("components/ollama/home"),
-        description="Private home for Cadrumo-owned Ollama processes, including their runtime identity.",
-    )
-    cadrumo_ollama_models_dir: Path = Field(
-        default=Path("models/ollama"), description="Model weights for Cadrumo-owned Ollama processes."
-    )
     cadrumo_gnome_extensions_dir: Path = Field(
         default=Path("integrations/gnome/extensions"), description="Explicit GNOME extension publication directory."
     )
@@ -977,8 +970,6 @@ class Settings(CadrumoLlmSettings, AuthorityRootSettings, GoogleOAuthClientSetti
         "cadrumo_temp_dir",
         "cadrumo_connection_socket_dir",
         "cadrumo_playwright_browsers_dir",
-        "cadrumo_ollama_models_dir",
-        "cadrumo_ollama_home_dir",
         "cadrumo_gnome_extensions_dir",
         "cadrumo_chromium_data_root",
         "cadrumo_usage_ratios_path",
