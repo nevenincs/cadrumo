@@ -171,8 +171,7 @@ pin-local-ai-program *args:
 
 # Verify the managed browser the test lanes share: one headless launch through
 # the bundled Playwright driver, whose reported version must match the driver's
-# manifest. The product's browser item is checked by the components role.
-# Prints the exact remediation command on failure.
+# manifest. Prints the exact remediation command on failure.
 [doc('Launch the managed browser once through the bundled Playwright, read-only.')]
 [group('doctor')]
 doctor-browser:
@@ -1325,7 +1324,7 @@ test-windows:
         }
     }
     $env:CADRUMO_TEST_MSI_ADAPTER = $inputs.adapter
-    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" --ignore=dev/runtime_lifecycle/tests/test_components_review.py --ignore=dev/runtime_lifecycle/tests/test_components_human_claim.py dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
+    uv run --no-sync pytest -v -n0 -m "windows_only and not os_keychain and not native_package" dev/packaging/tests dev/packaging/native/tests dev/desktop_agent_live/tests dev/registry/tests/test_authority_generation_publication.py dev/mcp_eval/tests dev/tests/test_native_build_recipes.py src/cadrumo/core/tests/test_atomic_write.py src/cadrumo/core/tests/test_log_file_handler.py src/cadrumo_mcp/mcp/tests src/cadrumo/adapters/persistence/storage/custody/tests src/cadrumo/entrypoints src/cadrumo_client/transport/tests src/cadrumo_runtime src/cadrumo_agent_service dev/runtime_lifecycle/tests
     if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 [doc('Run native macOS and Linux peer, worker containment, and custody tests on their owning host.')]
@@ -1412,22 +1411,6 @@ test-calculation-summary-pdf:
 test-powershell-literal:
     uv run --no-sync pytest -v -n0 -m external_tool src/cadrumo/entrypoints/cli/tests/test_common_action_resolution.py
 
-# Drive the native component engine's `components` role of a built Cadrumo binary from
-# the Python client, the command line and the MCP setup tools. The argument is the binary: a staged package's
-# `cadrumo` image, or one built with cargo, which the tests stage beside the package's
-# pin tables. Every case uses its own throwaway storage root and a local proxy, so
-# nothing reaches a publisher; a source checkout without a built binary has no role.
-[doc('Drive the components role of a built Cadrumo binary from the client, the CLI, the TUI, MCP and the acquisition lane (external_tool marker).')]
-[group('test')]
-test-components-role $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
-    uv run --no-sync pytest -v -n0 -m "integration and external_tool" src/cadrumo/adapters/outbound/components/tests/test_client_drives_the_real_role.py dev/runtime_lifecycle/tests/test_provision_registered_role.py dev/runtime_lifecycle/tests/test_components_review.py dev/runtime_lifecycle/tests/test_components_human_claim.py dev/runtime_lifecycle/tests/test_components_surface_conformance.py dev/smoke/tests/test_acquisition_lane.py
-
-[windows]
-[doc('Verify component review authority through the native Windows runtime using a built Cadrumo binary.')]
-[group('test')]
-test-components-role-windows $CADRUMO_DEVELOPMENT_ROLE_IMAGE:
-    uv run --no-sync pytest -v -n0 -m "integration and external_tool and windows_only" dev/runtime_lifecycle/tests/test_components_review.py dev/runtime_lifecycle/tests/test_components_human_claim.py
-
 # Run the locale orthography tests. These carry `external_tool` because they
 # read the pinned Hunspell dictionaries that `setup-locale-spelling` installs
 # from npm, which the default unit lane cannot assume.
@@ -1499,6 +1482,11 @@ audit-types:
 [group('audit')]
 audit-complexity:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label audit-complexity -- uv run --no-sync python -m dev.audit.complexity
+
+[doc('Reject complexity hotspots and oversized modules or callables across all first-party production roots, including src/ and dev/.')]
+[group('check')]
+complexity-gate:
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label complexity-gate -- uv run --no-sync python -m dev.audit.complexity --gate
 
 # Both scans cover every package under src/ (the tax application, client,
 # runtime, MCP harness and agent service), excluding tests and bundled data.

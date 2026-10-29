@@ -212,7 +212,9 @@ test("a model whose download succeeds is on this computer, as the catalog then r
       name: label("desktop.setup.approve_size", { size: "3.2 GB" }),
     })
     .click();
-  // The made-up setup moves only when the scenario steps it.
+  // The made-up setup moves only when the scenario steps it, and a step
+  // before the approval has started it is lost: wait for the run to show.
+  await expect(vision.locator("[data-setup-progress]")).toBeVisible();
   const settled = async () =>
     (await vision.getAttribute("data-installed")) === "true";
   for (let index = 0; index < 40 && !(await settled()); index += 1)

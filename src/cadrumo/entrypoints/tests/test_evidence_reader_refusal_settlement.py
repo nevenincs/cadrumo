@@ -6,7 +6,7 @@ composition, against a stored document. Its model runs reach a recording
 stand-in for the agent service through an execution authority, as the runtime
 host's authority relays them. The refusal is then read back the way a
 frontend in another process reads it: as the operation's recorded error
-detail. A selected model that is not installed names the local AI setup; a
+detail. A selected model that is not installed is named in the verdict; a
 role with no selection names the role and says it needs one; an off-host lane
 without the person's consent refuses. In every case no run reaches the service.
 """
@@ -33,7 +33,6 @@ from ...adapters.persistence.operations.tests.supervisor_test_support import ope
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import (
-    EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY,
     EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
     PurchaseInvoiceEvidenceReaderError,
 )
@@ -56,7 +55,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -182,7 +181,7 @@ def _assert_refused_by_the_reader(
     return detail
 
 
-def test_a_text_read_refused_for_its_missing_model_settles_with_the_local_ai_setup(
+def test_a_text_read_refused_for_its_missing_model_settles(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
     attachment_id = _stored(
@@ -191,31 +190,29 @@ def test_a_text_read_refused_for_its_missing_model_settles_with_the_local_ai_set
     with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as service:
         settled = _settle_and_read_detail(tmp_path, profile, operation, attachment_id, service)
 
-    detail = _assert_refused_by_the_reader(settled, EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY)
+    detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert verdict.action is None
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
     assert service.runs == [], "a run was sent for a role whose model is not installed"
 
 
-def test_an_image_read_refused_for_its_missing_vision_model_settles_with_the_local_ai_setup(
+def test_an_image_read_refused_for_its_missing_vision_model_settles(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
     attachment_id = _stored(profile, png_image(), kind=AttachmentKind.RECEIPT_IMAGE, mime_type="image/png")
     with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as service:
         settled = _settle_and_read_detail(tmp_path, profile, operation, attachment_id, service)
 
-    detail = _assert_refused_by_the_reader(settled, EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY)
+    detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert verdict.evidence[0].values["role"] == ModelRole.VISION_TRANSCRIPTION.value
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert verdict.action is None
     assert service.lookups == [ModelRole.VISION_TRANSCRIPTION]
     assert service.runs == [], "a run was sent for a role whose model is not installed"
 
@@ -229,7 +226,6 @@ def test_a_text_read_with_no_selection_settles_naming_the_role_that_needs_one(
     with agent_refusing(ModelRunRefusalCode.NO_SELECTION) as service:
         settled = _settle_and_read_detail(tmp_path, profile, operation, attachment_id, service)
 
-    # No setup supplies a selection, so the refusal offers none.
     detail = _assert_refused_by_the_reader(settled, EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY)
     verdict = detail.precondition_verdict()
     assert verdict is not None, "the settled refusal lost the service's verdict"

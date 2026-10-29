@@ -1,4 +1,4 @@
-"""An invoice book only the column-naming model reads settles REFUSED with the local AI setup in its detail.
+"""An invoice book only the column-naming model reads settles REFUSED with the missing model in its detail.
 
 The registered ``ledger.invoice.import`` runs through the production registry,
 the real supervisor, journal and encrypted operand store, and its production
@@ -7,7 +7,7 @@ service through an execution authority, as the runtime host's authority
 relays them, and the service reports the column-mapping selection's model is
 not installed. The refusal is then read back the way a frontend in another
 process reads it: as the operation's recorded error detail. That detail must
-carry the verdict naming the local AI setup, must not carry a value from the
+carry the verdict naming the missing model, must not carry a value from the
 book, and no run may reach the service.
 """
 
@@ -36,7 +36,7 @@ from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.registry import OperationRegistry
-from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -83,7 +83,7 @@ def _settle_and_read_detail(
     return asyncio.run(run())
 
 
-def test_an_invoice_book_whose_column_model_is_missing_settles_with_the_local_ai_setup(
+def test_an_invoice_book_whose_column_model_is_missing_settles(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     del operation
@@ -102,8 +102,7 @@ def test_an_invoice_book_whose_column_model_is_missing_settles_with_the_local_ai
     assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert {str(item.values.get("role")) for item in verdict.evidence} == {ModelRole.COLUMN_ROLE_MAPPING.value}
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert verdict.action is None
     published = detail.model_dump_json()
     assert not [value for value in _BOOK_VALUES if value in published], "the published detail carries book values"
     assert runtime.service.lookups == [ModelRole.COLUMN_ROLE_MAPPING]

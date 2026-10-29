@@ -616,10 +616,12 @@ test("downloads wait for the person oldest first, and the native dialog opens on
     .click();
   await expect(second).toHaveCount(0);
 
-  expect(await answers(target)).toEqual([
-    { kind: "download", id: 1, accepted: true },
-    { kind: "download", id: 2, accepted: false },
-  ]);
+  await expect
+    .poll(() => answers(target))
+    .toEqual([
+      { kind: "download", id: 1, accepted: true },
+      { kind: "download", id: 2, accepted: false },
+    ]);
   expect(await since(target, at, "sedeViewDownload save")).toHaveLength(1);
   expect(await since(target, at, "sedeViewDownload decline")).toHaveLength(1);
 });
@@ -658,10 +660,12 @@ test("file choosers wait for the person oldest first, and a refusal says it was 
     line(target, label("desktop.browser.upload.cancelled")),
   ).toBeVisible();
 
-  expect(await answers(target)).toEqual([
-    { kind: "file_chooser", id: 1, accepted: true },
-    { kind: "file_chooser", id: 2, accepted: false },
-  ]);
+  await expect
+    .poll(() => answers(target))
+    .toEqual([
+      { kind: "file_chooser", id: 1, accepted: true },
+      { kind: "file_chooser", id: 2, accepted: false },
+    ]);
   expect(await since(target, at, "sedeViewUpload choose")).toHaveLength(1);
   expect(await since(target, at, "sedeViewUpload cancel")).toHaveLength(1);
 });
@@ -727,12 +731,14 @@ test("page dialogs are answered by the person, each in its own words", async ({
   await button("desktop.browser.dialog.stay").click();
   await expect(dialog).toHaveCount(0);
 
-  expect(await answers(target)).toEqual([
-    { kind: "dialog", id: 1, accepted: true, text: null },
-    { kind: "dialog", id: 2, accepted: false, text: null },
-    { kind: "dialog", id: 3, accepted: true, text: "Berta" },
-    { kind: "dialog", id: 4, accepted: false, text: null },
-  ]);
+  await expect
+    .poll(() => answers(target))
+    .toEqual([
+      { kind: "dialog", id: 1, accepted: true, text: null },
+      { kind: "dialog", id: 2, accepted: false, text: null },
+      { kind: "dialog", id: 3, accepted: true, text: "Berta" },
+      { kind: "dialog", id: 4, accepted: false, text: null },
+    ]);
 });
 
 test("dialogs queue oldest first, and closing one any other way declines it", async ({
@@ -754,10 +760,12 @@ test("dialogs queue oldest first, and closing one any other way declines it", as
     })
     .click();
   await expect(dialog).toHaveCount(0);
-  expect(await answers(target)).toEqual([
-    { kind: "dialog", id: 1, accepted: false, text: null },
-    { kind: "dialog", id: 2, accepted: true, text: null },
-  ]);
+  await expect
+    .poll(() => answers(target))
+    .toEqual([
+      { kind: "dialog", id: 1, accepted: false, text: null },
+      { kind: "dialog", id: 2, accepted: true, text: null },
+    ]);
 });
 
 // ---------------------------------------------------------------------------

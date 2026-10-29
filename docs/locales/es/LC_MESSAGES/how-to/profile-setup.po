@@ -1074,7 +1074,6 @@ msgstr ""
 "perfiles de gestor."
 
 #: ../../how-to/profile-setup.md:432
-#, fuzzy
 msgid ""
 "`llm_vision`: read scanned and image invoices with the vision model you "
 "chose in the Cadrumo agent. On by default. It does not decide where the "
@@ -1082,10 +1081,10 @@ msgid ""
 "`cloud_evidence_upload` and your consent for each read."
 msgstr ""
 "`llm_vision`: lee las facturas escaneadas y en imagen con el modelo de "
-"visión que elegiste en la aplicación de escritorio de Cadrumo. Activada "
-"por defecto. No decide dónde se ejecuta la lectura: un modelo que lee "
-"fuera de este equipo necesita además `cloud_evidence_upload` y tu "
-"consentimiento en cada lectura."
+"visión que elegiste en el agente de Cadrumo. Activada por defecto. No "
+"decide dónde se ejecuta la lectura: un modelo que lee fuera de este "
+"equipo necesita además `cloud_evidence_upload` y tu consentimiento en "
+"cada lectura."
 
 #: ../../how-to/profile-setup.md:436
 msgid "`google_export`: export calculations to Google Sheets. On by default."
@@ -1249,4 +1248,3 @@ msgstr "[Revisar y aportar las entradas de cálculo](review-calculation-values.m
 #: ../../how-to/profile-setup.md:507
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[Referencia de la CLI](../cli/index.rst)"
-

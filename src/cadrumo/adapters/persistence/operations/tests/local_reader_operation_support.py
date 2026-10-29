@@ -1,8 +1,7 @@
 """Real supervision of the local-reader operations for tests.
 
 Every run goes through the real registry, supervisor, journal and encrypted
-operand store. The local AI program's row is the components role's quick
-status, decoded from the role's recorded output. Each role's lane is answered
+operand store. Each role's lane is answered
 by an execution authority standing in for the runtime host and the agent
 service, which have their own tests; the supervisor binds the model-run port it
 offers exactly as it binds the host's. Every model id is synthetic.
@@ -30,7 +29,7 @@ from cadrumo_client.contracts.model_runs import (
     ModelRunRoleSelection,
 )
 
-from .....application.local_reader import ProgramRow, RoleLane
+from .....application.local_reader import RoleLane
 from .....application.local_reader_report import (
     build_local_reader_report_definition,
     build_local_reader_report_registration,
@@ -51,7 +50,6 @@ from .....application.operations.registry import OperationRegistry
 from .....application.operations.tests.authority_test_support import unread_authority_operation
 from .....core.model_roles import ModelRole
 from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
-from ....outbound.components.tests.recorded_rows import set_up_row
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository
@@ -59,21 +57,16 @@ from ..secure_references import operation_secure_reference_repository
 
 __all__ = [
     "READER_LANES",
-    "SET_UP_PROGRAM",
     "TEXT_MODEL",
     "VISION_MODEL",
     "SupervisedRun",
-    "provisioning_registry",
+    "reader_registry",
     "run_supervised",
     "run_supervised_in",
 ]
 
 VISION_MODEL = "synthetic-vision:small"
 TEXT_MODEL = "synthetic-text:small"
-
-
-#: The local AI program as the components role reports it once set up.
-SET_UP_PROGRAM: ProgramRow = set_up_row("local_ai")
 
 
 def _on_host_lane(model: str, *, installed: bool) -> ModelRunLane:
@@ -133,9 +126,9 @@ class _SelectionAuthority:
         return ModelRunRefusal(code=ModelRunRefusalCode.RUN_FAILED)
 
 
-def provisioning_registry(program: ProgramRow = SET_UP_PROGRAM) -> OperationRegistry:
-    """Register the two local-reader operations, the status reading ``program`` as the local AI's row."""
-    status = build_local_reader_status_definition(lambda: program)
+def reader_registry() -> OperationRegistry:
+    """Register the two local-reader operations."""
+    status = build_local_reader_status_definition()
     report = build_local_reader_report_definition()
     return OperationRegistry(
         definitions=(report, status),
@@ -184,10 +177,9 @@ def run_supervised[RequestT: BaseModel, ResultT: BaseModel](
     result_type: type[ResultT],
     *,
     lanes: Mapping[ModelRole, RoleLane] = READER_LANES,
-    program: ProgramRow = SET_UP_PROGRAM,
 ) -> SupervisedRun[ResultT]:
-    """Settle ``request`` with ``lanes`` selected and ``program`` reported, and resolve its public result."""
-    return run_supervised_in(tmp_path, provisioning_registry(program), request, result_type, lanes=lanes)
+    """Settle ``request`` with ``lanes`` selected, and resolve its public result."""
+    return run_supervised_in(tmp_path, reader_registry(), request, result_type, lanes=lanes)
 
 
 def run_supervised_in[RequestT: BaseModel, ResultT: BaseModel](

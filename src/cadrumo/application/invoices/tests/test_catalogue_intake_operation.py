@@ -24,7 +24,6 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.schema import InvoiceKind
-from ...dependency_contracts import DependencyState
 from ...ledger.column_roles import ColumnRoleReaderUnavailable
 from ...ledger.import_ports import LedgerImportReaderUnavailableError
 from ...local_reader import probe_local_ai_program
@@ -36,8 +35,7 @@ from ...operations.models import OperationIdentity, OperationRequest, OperationT
 from ...operations.owner import OperationExecutorContext
 from ...operations.refusal_evidence import OperationRefusalEvidence
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID
-from ...tests.local_ai_program_rows import local_ai_row
+from ...probe_outcomes import ProbePreconditionCondition, probe_no_recovery_verdict
 from ...user_profile.access_contracts import SessionKind
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import catalogue_intake_contracts as intake_contracts
@@ -529,23 +527,24 @@ def test_a_book_whose_column_reader_is_unavailable_refuses_with_the_reader_verdi
 ) -> None:
     """The verdict the reader probe returned reaches the operation error detail, and nothing was written."""
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
-    status = probe_local_ai_program(local_ai_row(DependencyState.ABSENT))
-    assert status.precondition_verdict is not None
+    verdict = probe_no_recovery_verdict(
+        ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
+        facts={"role": "column_role_mapping", "role_model_installed": False},
+    )
     request = _unreadable_book_import(tmp_path)
     context, events, operands, _fence = _context(request, authority_operation)
-    factory = _mapper_factory(ColumnRoleReaderUnavailable(precondition_verdict=status.precondition_verdict))
+    factory = _mapper_factory(ColumnRoleReaderUnavailable(precondition_verdict=verdict))
 
     with pytest.raises(LedgerImportReaderUnavailableError) as raised:
         asyncio.run(InvoiceIntakeExecutor(factory).execute(request, context))
 
     assert events.effects[-1] is OperationEffect.NONE and operands.value is None
-    assert raised.value.terminal_precondition_verdict == status.precondition_verdict
+    assert raised.value.terminal_precondition_verdict == verdict
     detail = build_operation_error_detail(raised.value)
     assert detail is not None
     assert detail.error_code == "REFUSED_LEDGER_IMPORT_READER"
     projected = detail.precondition_verdict()
-    assert projected is not None and projected.action is not None
-    assert projected.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert projected is not None and projected.action is None
 
 
 def test_a_book_the_mapper_declined_still_refuses_for_its_missing_columns(

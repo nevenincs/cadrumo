@@ -25,7 +25,7 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 from .....adapters.inbound.financial.ledger_import import FinancialProviderResolverAdapter
 from .....adapters.inbound.financial.providers.detection import detect_provider
 from .....adapters.inbound.financial.providers.pdf_statement import PdfStatementProvider
-from .....application.dependency_wording import statement_reader_refusal_reason
+from .....application.reader_refusal_wording import statement_reader_refusal_reason
 from .....application.ledger.import_ports import LedgerImportReaderUnavailableError
 from .....application.ledger.statement_reading import bind_statement_reader_factory
 from .....application.operator_actions.models import PreconditionVerdict
@@ -94,11 +94,11 @@ def test_a_text_role_without_a_selection_is_declined_at_every_import_boundary(tm
     _model_run_refusal(verdict, ModelRunRefusalCode.NO_SELECTION, ModelRole.TEXT_EXTRACTION)
     assert verdict is not None
     assert not validation.is_valid
-    assert validation.warnings == (statement_reader_refusal_reason(verdict),)
+    assert validation.warnings == (statement_reader_refusal_reason(),)
     assert isinstance(detected, PdfStatementProvider)
     assert crossed.reader_unavailable_verdict == verdict
     assert refused.value.terminal_precondition_verdict == verdict
-    assert refused.value.context == {"reason": statement_reader_refusal_reason(verdict)}
+    assert refused.value.context == {"reason": statement_reader_refusal_reason()}
     assert ModelRole.TEXT_EXTRACTION in service.lookups
     assert service.runs == []
 

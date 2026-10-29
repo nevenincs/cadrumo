@@ -15,6 +15,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from contextlib import suppress
+from dataclasses import replace
 from datetime import timedelta
 from typing import ClassVar, Literal, override
 
@@ -41,6 +42,7 @@ from ....application.operations.frontend_requests import (
     OperationObservationSuccessV1,
     OperationResponseApplyRequestV1,
     OperationResponseControlRefusalCode,
+    OperationResponseControlSuccessV1,
     OperationResponseMutationSuccessV1,
     OperationResponseRejectRequestV1,
 )
@@ -60,6 +62,7 @@ from .controller_port import (
     OperationChangeWaiterPort,
     OperationControllerPort,
     OperationErrorDetailPort,
+    OperationReviewClaimPort,
 )
 from .interactions import (
     OperationModalInteractionStateV1,
@@ -172,6 +175,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         controller: OperationControllerPort,
         *,
         review_text: Callable[[BaseModel], str] | None = None,
+        response_only: bool = False,
     ) -> None:
         """Bind the modal to exactly one already-submitted operation.
 
@@ -181,6 +185,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         """
         super().__init__()
         self._controller = controller
+        self._response_only = response_only
         self._review_text = review_text
         self._view_model: OperationModalViewModelV1 | None = None
         # The last operator action this modal refused, held on the screen rather
@@ -217,6 +222,11 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
                 yield Static("", id="operation-modal-review")
                 yield Static("", id="operation-modal-log")
             with ItemGrid(id="operation-modal-actions", min_column_width=_ACTION_MIN_COLUMN_WIDTH):
+                claim = localized(
+                    Button(tr("operation.modal.action.claim"), id="btn-operation-claim"), "operation.modal.action.claim"
+                )
+                claim.display = False
+                yield claim
                 yield localized(
                     Button(tr("operation.modal.action.reject"), id="btn-operation-reject", disabled=True),
                     "operation.modal.action.reject",
@@ -241,6 +251,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     def on_mount(self) -> None:
         """Start observing, on each runtime cue, as an exclusive worker."""
+        if self._response_only:
+            self.query_one("#btn-operation-cancel", Button).display = False
+            self.query_one("#btn-operation-detach", Button).display = False
         self._poll_worker = self.run_worker(self._poll_loop(), name="operation-modal-poll", exclusive=True)
 
     async def refresh_language(self) -> None:
@@ -275,7 +288,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             if not self._observing():
                 return
             if not isinstance(observed, OperationObservationSuccessV1):
-                self._clear_private_view(observed.code.value)
+                self._clear_private_view(
+                    tr("operation.modal.claim.unavailable") if self._response_only else observed.code.value
+                )
                 cursor = 0
                 await asyncio.sleep(refused_retry.total_seconds())
                 refused_retry = min(refused_retry * 2, _REFUSED_RETRY_MAX)
@@ -311,6 +326,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             observed.projection,
             BaseModel,
             current=self._interaction,
+            claim_required=self._response_only,
         )
         if not self._observing():
             self._clear_private_view(self._action_refusal or "")
@@ -344,6 +360,17 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self._observation_stopped = True
         code = error.reason if isinstance(error, FrontendRefusedError) else error.reason.value
         self._clear_private_view(code)
+        if self._response_only:
+            match code:
+                case "review_already_claimed":
+                    self._action_refusal = tr("operation.modal.claim.already_claimed")
+                case "review_claim_stale":
+                    self._action_refusal = tr("operation.modal.claim.stale")
+                case "response_authority_required":
+                    self._action_refusal = tr("operation.modal.claim.authority_lost")
+                case _:
+                    self._action_refusal = tr("operation.modal.claim.unavailable")
+            self._render_action_refusal()
 
     def _clear_private_view(self, code: str) -> None:
         """Discard private presentation when it can no longer be authorized."""
@@ -355,7 +382,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             self.query_one(f"#operation-modal-{suffix}", Static).update("")
         self.query_one("#operation-modal-status", Static).update(tr("operation.modal.status.access_unavailable"))
         self._render_action_refusal()
-        for action in ("cancel", "detach", "apply", "reject"):
+        for action in ("cancel", "detach", "claim", "apply", "reject"):
             self.query_one(f"#btn-operation-{action}", Button).disabled = True
         self.query_one("#btn-operation-close", Button).disabled = False
 
@@ -405,17 +432,31 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         self._refresh_review()
         log_widget = self.query_one("#operation-modal-log", Static)
         log_widget.update("\n".join(log_row_text(row) for row in self._log_view.rows))
-        self.query_one("#btn-operation-cancel", Button).disabled = not view_model.cancel_control_enabled
-        self.query_one("#btn-operation-detach", Button).disabled = not view_model.detach_control_enabled
+        self.query_one("#btn-operation-cancel", Button).display = not self._response_only
+        self.query_one("#btn-operation-detach", Button).display = not self._response_only
+        self.query_one("#btn-operation-cancel", Button).disabled = (
+            self._response_only or not view_model.cancel_control_enabled
+        )
+        self.query_one("#btn-operation-detach", Button).disabled = (
+            self._response_only or not view_model.detach_control_enabled
+        )
         self._refresh_controls(view_model)
 
     def _refresh_controls(self, view_model: OperationModalViewModelV1) -> None:
         interaction = self._interaction
         apply_enabled = isinstance(interaction, OperationModalReviewInteractionV1) and interaction.apply_enabled
         reject_enabled = isinstance(interaction, OperationModalReviewInteractionV1) and interaction.reject_enabled
+        claim = self.query_one("#btn-operation-claim", Button)
+        claim.display = (
+            isinstance(interaction, OperationModalReviewInteractionV1)
+            and interaction.reviewed_document_digest is not None
+        )
+        claim.disabled = (
+            not isinstance(interaction, OperationModalReviewInteractionV1) or interaction.control is not None
+        )
         self.query_one("#btn-operation-apply", Button).disabled = not apply_enabled
         self.query_one("#btn-operation-reject", Button).disabled = not reject_enabled
-        self.query_one("#btn-operation-close", Button).disabled = view_model.spinner_visible
+        self.query_one("#btn-operation-close", Button).disabled = view_model.spinner_visible and not self._response_only
 
     def _refresh_review(self) -> None:
         review = self.query_one("#operation-modal-review", Static)
@@ -483,6 +524,8 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             await self._request_cancel()
         elif event.button.id == "btn-operation-detach":
             await self._request_detach()
+        elif event.button.id == "btn-operation-claim":
+            await self._claim_review()
         elif event.button.id == "btn-operation-apply":
             await self._respond(intent=OperationResponseIntent.APPLY)
         elif event.button.id == "btn-operation-reject":
@@ -492,6 +535,10 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     async def action_request_close(self) -> None:
         """Close the modal, detaching first if the operation is still live."""
+        if self._response_only:
+            await self._stop_poll_worker()
+            self.dismiss(None)
+            return
         view_model = self._view_model
         if view_model is None:
             # No observation has ever succeeded, so there is no revision to
@@ -516,7 +563,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     async def _request_cancel(self) -> None:
         view_model = self._view_model
-        if view_model is None or not view_model.cancel_control_enabled:
+        if self._response_only or view_model is None or not view_model.cancel_control_enabled:
             return
         try:
             result = await self._controller.cancel(expected_revision=view_model.projection.revision)
@@ -535,7 +582,7 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
 
     async def _request_detach(self) -> None:
         view_model = self._view_model
-        if view_model is None:
+        if self._response_only or view_model is None:
             return
         try:
             result = await self._controller.detach(expected_revision=view_model.projection.revision)
@@ -553,6 +600,53 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         else:
             self._show_action_refusal(result.code)
 
+    async def _claim_review(self) -> None:
+        """Claim the displayed document before inspecting any response authority."""
+        interaction = self._interaction
+        controller = self._controller
+        if (
+            not isinstance(interaction, OperationModalReviewInteractionV1)
+            or interaction.control is not None
+            or interaction.reviewed_document_digest is None
+            or not isinstance(controller, OperationReviewClaimPort)
+        ):
+            return
+        self.query_one("#btn-operation-claim", Button).disabled = True
+        try:
+            claimed = await controller.claim_review(
+                interaction.interaction.review_reference,
+                interaction.reviewed_document_digest,
+            )
+            if not self._observing():
+                return
+            reference = claimed.reference
+            pending = interaction.interaction.model_copy(
+                update={"revision": reference.revision, "review_reference": reference}
+            )
+            control = await self._controller.response_control(
+                interaction_id=reference.interaction_id, revision=reference.revision
+            )
+            availability = await control.inspect()
+            if not self._observing():
+                return
+            permitted = (
+                availability.permitted_intents
+                if isinstance(availability, OperationResponseControlSuccessV1)
+                else frozenset()
+            )
+            # Retain only the binding acknowledged by the runtime, never an observed one.
+            self._interaction = replace(
+                interaction,
+                interaction=pending,
+                control=control,
+                apply_enabled="apply" in permitted,
+                reject_enabled="reject" in permitted,
+            )
+            self._clear_action_refusal()
+            self._refresh_view_state()
+        except (FrontendRefusedError, RefusalError) as error:
+            self._runtime_access_lost(error)
+
     async def _respond(self, *, intent: OperationResponseIntentValue) -> None:
         try:
             await self._send_response(intent=intent)
@@ -565,6 +659,8 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
             return
         pending = interaction.interaction
         control = interaction.control
+        if control is None:
+            return
         if intent == "apply":
             outcome = await control.apply(
                 OperationResponseApplyRequestV1(

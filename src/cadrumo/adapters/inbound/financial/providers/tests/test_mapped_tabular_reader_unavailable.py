@@ -12,10 +12,8 @@ import pytest
 
 from ......application.ledger.column_roles import ColumnRoleReaderUnavailable, bind_column_role_mapping_resolver
 from ......application.probe_outcomes import (
-    LOCAL_AI_PROVISION_ACTION_ID,
     ProbePreconditionCondition,
     probe_no_recovery_verdict,
-    provisioning_setup_verdict,
 )
 from ......tests.english_locale_fixture import english_locale_fixture
 from ......tests.inventory import FIXTURES_DIR
@@ -35,10 +33,9 @@ _UNREAD_VOCABULARY = FIXTURES_DIR / "financial" / "tabular-dialects" / "expenses
 def _reader_unavailable() -> ColumnRoleReaderUnavailable:
     """The outcome a composed mapper reports when the role's model is not installed."""
     return ColumnRoleReaderUnavailable(
-        precondition_verdict=provisioning_setup_verdict(
+        precondition_verdict=probe_no_recovery_verdict(
             ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
             facts={"role": "column_role_mapping", "runtime_reachable": True, "role_model_installed": False},
-            action_id=LOCAL_AI_PROVISION_ACTION_ID,
         )
     )
 

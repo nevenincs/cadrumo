@@ -11,13 +11,10 @@ from ...core.capabilities import ServiceCapability
 from ...core.config import Settings, load_settings, override_settings
 from .. import workstation_check as module
 from ..auth.operator_probe_ports import OperatorProbePorts
-from ..dependency_contracts import DependencyState
-from ..local_reader import ProgramRow
 from ..preflight import PreflightCheck
 from ..workstation_probes import DependencyStatus
 from ..user_profile.capabilities import CapabilityDecision, CapabilitySource, resolve_capability_from_values
 from ..workstation_check import WorkstationCheckReport
-from .local_ai_program_rows import local_ai_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -34,16 +31,12 @@ def _report(monkeypatch: pytest.MonkeyPatch, *, profile_values: dict[str, str]) 
             settings=load_settings(),
         )
 
-    program = DependencyStatus(service="local-ai:program", available=True)
     google = DependencyStatus(service="extra:google", available=True)
     browser = DependencyStatus(service="extra:browser", available=True)
     extras = (google, browser)
 
-    program_row = local_ai_row(DependencyState.READY)
-
-    def dependencies(row: ProgramRow) -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
-        assert row is program_row
-        return (program, *extras), extras
+    def dependencies() -> tuple[tuple[DependencyStatus, ...], tuple[DependencyStatus, ...]]:
+        return extras, extras
 
     def preflight(
         *,
@@ -63,7 +56,6 @@ def _report(monkeypatch: pytest.MonkeyPatch, *, profile_values: dict[str, str]) 
         profile_id=_PROFILE_ID,
         operator_probe_ports=cast(OperatorProbePorts, object()),
         object_path_suffix_length=1,
-        read_local_ai_program=lambda: program_row,
     )
 
 

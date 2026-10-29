@@ -2,7 +2,7 @@
 
 Evidence ingestion does not refuse the run when the local AI is not ready.
 The first document that needs the role is attempted, and the service's
-refusal is that document's own: it names the local AI setup and closes the
+refusal is that document's own: it names the missing model and closes the
 role for the rest of the run, so every later document that needs it pauses
 unread. The settled result carries the verdict, so it reaches a frontend in
 another process through the result projection rather than through an error
@@ -46,7 +46,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -76,7 +76,7 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
         yield pinned
 
 
-def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_setup_in_its_result(
+def test_a_batch_paused_for_its_missing_text_model_settles_with_the_missing_model_in_its_result(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
     folder = tmp_path / "documents"
@@ -166,8 +166,7 @@ def test_a_batch_paused_for_its_missing_text_model_settles_with_the_local_ai_set
     for verdict in (refused, pause.precondition_verdict):
         assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
         assert verdict.evidence[0].values["role"] == ModelRole.TEXT_EXTRACTION.value
-        assert verdict.action is not None
-        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+        assert verdict.action is None
     # The closed role is not asked again for the second document.
     assert agent.lookups == [ModelRole.TEXT_EXTRACTION]
     assert agent.runs == [], "a run was sent for a role whose model is not installed"

@@ -2,8 +2,7 @@
 //!
 //! The desktop and the command line keep every other first argument; only the reserved role
 //! argument is claimed here, and an undeclared role is refused without starting anything.
-//! The interpreter roles run inside the linked interpreter host; the `components` role runs
-//! the native component engine and hosts no interpreter.
+//! Every role runs inside the linked interpreter host.
 
 use cadrumo_application::{
     error::application::{ApplicationError, ErrorCode, Operation},
@@ -18,37 +17,14 @@ pub fn dispatch() -> Option<i32> {
         return Some(code);
     }
     Some(match role::select(&arguments)? {
-        Ok((Role::Components, forwarded)) => components(forwarded),
         Ok((role, forwarded)) => run(role, forwarded),
         Err(_) => refuse(ErrorCode::InvalidArguments),
     })
 }
 
-/// The component engine's role. It first contains what it will start: on Windows it
-/// places itself in a kill-on-close job, on Linux and macOS it keeps a process scope that
-/// every browser check and query it starts is created into. Either way nothing it starts
-/// outlives it, however the role ends.
-fn components(forwarded: &[OsString]) -> i32 {
-    #[cfg(windows)]
-    {
-        if super::contain_application().is_err() {
-            return refuse(ErrorCode::SpawnFailed);
-        }
-    }
-    #[cfg(unix)]
-    {
-        if cadrumo_platform::process_scope::contain_current().is_err() {
-            return refuse(ErrorCode::SpawnFailed);
-        }
-    }
-    cadrumo_application::provisioning::role_host::run(forwarded)
-}
-
 #[cfg(windows)]
 fn run(role: Role, forwarded: &[OsString]) -> i32 {
-    let Some(hosted) = role.hosted() else {
-        return refuse(ErrorCode::InvalidArguments);
-    };
+    let hosted = role.hosted();
     let Ok(executable) = std::env::current_exe() else {
         return refuse(ErrorCode::EnvironmentFailed);
     };

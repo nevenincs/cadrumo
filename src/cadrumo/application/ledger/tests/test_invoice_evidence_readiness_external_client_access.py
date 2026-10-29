@@ -1,4 +1,4 @@
-"""Reader readiness is open to every frontend and releases the program's row and each role's judgement."""
+"""Reader readiness is open to every frontend and releases each role's judgement."""
 
 from __future__ import annotations
 
@@ -16,15 +16,12 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 from ....core.model_roles import ModelRole
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
-from ...dependency_contracts import DependencyState
 from ...local_reader import LocalReaderStatus, RoleLane, read_local_reader_status
 from ...operations import profile_guard
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import OperationFrontendProjection, OperationRegistry
-from ...probe_outcomes import ProbePreconditionCondition
-from ...tests.local_ai_program_rows import LOCAL_AI_VERSION, local_ai_row
 from ..invoice_evidence_readiness_operation import (
     LEDGER_EVIDENCE_READER_READINESS_OPERATION_DEFINITION_ID,
     LedgerEvidenceReaderReadinessExecutionResult,
@@ -41,8 +38,8 @@ _PROFILE = UUID("5aa00000-0000-4000-8000-0000000000aa")
 
 
 def _status(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderStatus:
-    """Judge the real reader status over a program the components role reports set up."""
-    return read_local_reader_status(lanes, local_ai_row(DependencyState.READY))
+    """Judge the real reader status."""
+    return read_local_reader_status(lanes)
 
 
 def _unread_status(lanes: Mapping[ModelRole, RoleLane]) -> LocalReaderStatus:
@@ -91,32 +88,18 @@ def test_readiness_is_admitted_alike_on_every_frontend_for_either_kind_of_sessio
     assert AccessAction.COMMIT not in resolved.policy.actions
 
 
-def test_the_projection_publishes_the_program_s_row_and_each_role_s_judgement() -> None:
+def test_the_projection_publishes_each_role_s_judgement() -> None:
     status = _status({})
 
     projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, status)
 
-    assert projection.host.state is DependencyState.READY
-    assert projection.host.version == LOCAL_AI_VERSION
-    assert projection.host.available is True and projection.host.failed_condition_id is None
     assert projection.extraction_ready is status.extraction_ready
     assert [row.role for row in projection.roles] == [row.role.value for row in status.roles]
     assert [row.model for row in projection.roles] == [row.model for row in status.roles]
 
 
-def test_an_absent_program_publishes_no_version_and_its_failed_condition() -> None:
-    status = read_local_reader_status({}, local_ai_row(DependencyState.ABSENT))
-
-    projection = LedgerEvidenceReaderReadinessProjection.from_status(_PROFILE, status)
-
-    assert projection.host.state is DependencyState.ABSENT
-    assert projection.host.version is None, "an absent program's row names the version setup would install"
-    assert projection.host.available is False
-    assert projection.host.failed_condition_id == ProbePreconditionCondition.RUNTIME_INSTALLED.value
-
-
 @pytest.mark.asyncio
-async def test_the_executor_and_the_registered_projector_release_the_program_s_row(
+async def test_the_executor_and_the_registered_projector_release_each_role_s_judgement(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
@@ -174,5 +157,3 @@ async def test_the_executor_and_the_registered_projector_release_the_program_s_r
         ),
     )
     assert isinstance(released, LedgerEvidenceReaderReadinessProjection)
-    assert released.host.state is DependencyState.READY
-    assert released.host.version == LOCAL_AI_VERSION

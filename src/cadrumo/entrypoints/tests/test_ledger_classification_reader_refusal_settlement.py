@@ -6,7 +6,7 @@ model composition, against a stored ledger row. Its model runs reach a
 recording stand-in for the agent service through an execution authority, as
 the runtime host's authority relays them. The refusal is then read back the
 way a frontend in another process reads it: as the operation's recorded error
-detail. A selected model that is not installed names the local AI setup; a
+detail. A selected model that is not installed is named in the verdict; a
 role with no selection names the role and says it needs one. The detail must
 not carry the row's private text, and no run may reach the service.
 """
@@ -33,7 +33,6 @@ from ...adapters.persistence.profile.tests.ledger_action_create_support import l
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import (
-    EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY,
     EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
     PurchaseInvoiceEvidenceReaderError,
 )
@@ -61,7 +60,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.config import load_settings
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
@@ -217,15 +216,11 @@ def _assert_refused_by_the_reader(
     assert _PRIVATE_DESCRIPTION not in detail.model_dump_json(), "the published detail carries the row's text"
     assert service.lookups == [ModelRole.TEXT_EXTRACTION]
     assert service.runs == [], "a run was sent for a role the service cannot run"
-    if message_key == EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY:
-        assert verdict.action is not None
-        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    else:
-        assert verdict.action is None
+    assert verdict.action is None
     return facts
 
 
-def test_a_classification_refused_for_its_missing_text_model_settles_with_the_local_ai_setup(
+def test_a_classification_refused_for_its_missing_text_model_settles(
     tmp_path: Path, profile: TestRuntimeProfile
 ) -> None:
     with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as service:
@@ -234,7 +229,7 @@ def test_a_classification_refused_for_its_missing_text_model_settles_with_the_lo
     _assert_refused_by_the_reader(
         settled,
         service,
-        message_key=EVIDENCE_LOCAL_AI_NOT_READY_LOCALE_KEY,
+        message_key=EVIDENCE_READER_UNAVAILABLE_LOCALE_KEY,
         condition=ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
     )
 

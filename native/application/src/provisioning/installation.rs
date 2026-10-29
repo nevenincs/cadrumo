@@ -1,27 +1,25 @@
-//! The `components` role's host: resolves this installation for the engine from the
-//! process's own image and environment, then serves the role's protocol on standard
-//! input and output. The desktop builds its in-process engines from the same
-//! resolution ([`installation_config`]).
+//! The installation the component engine serves, resolved from the process's own image
+//! and environment. The desktop builds its in-process engines from this resolution
+//! ([`installation_config`]).
 //!
 //! The installation fixes everything but the local models: those are the person's
-//! selection, which only the desktop admits to its own engine, so the host reads no model
-//! from the package or the environment and the role serves the local AI read-only.
+//! selection, which only the desktop knows, so the resolution reads no model from the
+//! package or the environment.
 //!
 //! The image's package names the pins and the bundled browser driver; the storage root
 //! and its relocatable members come from the package's storage rules, the same ones every
 //! other process of the installation reads. The free space comes from the platform's
-//! volume query, and the local AI server's fixed address from the package's contract. The
-//! owner contains the process before the engine starts anything: a kill-on-close job on
-//! Windows, and on Linux and macOS a process scope every browser check and hardware query
-//! is created into, so whatever the engine starts ends with its owner.
+//! volume query, and the local AI server's fixed address from the package's contract.
+//! The owner contains the process before the engine starts anything: a kill-on-close job
+//! on Windows, and on Linux and macOS a process scope every browser check and hardware
+//! query is created into, so whatever the engine starts ends with its owner.
 
 use super::{
     browser::{self, DRIVER_PACKAGE, DriverManifest},
     connection::Network,
-    engine::{Engine, EngineConfig},
+    engine::EngineConfig,
     items::Locations,
     pins::{ComponentPins, Platform},
-    protocol,
     proxy::ProxySettings,
     transfer::RetryPolicy,
 };
@@ -61,12 +59,6 @@ const BROWSER_PASSED_THROUGH: &[&str] = &[
     "LC_ALL",
 ];
 
-/// Serves the command `arguments` name on standard input and output and returns the
-/// process's exit status.
-pub fn run(arguments: &[OsString]) -> i32 {
-    protocol::serve(arguments, std::io::stdin(), std::io::stdout(), engine)
-}
-
 fn package_path(package: &Path, relative: &str) -> PathBuf {
     relative
         .split('/')
@@ -82,11 +74,6 @@ fn member(
 ) -> Result<PathBuf, Error> {
     storage::member_path(root, variable, default, lookup)
         .map_err(|refusal| Error::Invalid(format!("location refused: {}", refusal.code)))
-}
-
-/// The engine for this process's installation.
-pub fn engine() -> Result<Engine, Error> {
-    Engine::new(installation_config()?)
 }
 
 /// What the engine of this process's installation is built from, for an owner that

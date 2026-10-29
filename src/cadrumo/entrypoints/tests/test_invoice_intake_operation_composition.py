@@ -19,7 +19,7 @@ from ...application.invoices.bulk_import import import_invoices_from_rows, read_
 from ...application.invoices.creation_wizard import create_invoice_via_wizard
 from ...application.ledger.import_ports import LedgerImportReaderUnavailableError
 from ...application.operations.error_detail import build_operation_error_detail
-from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.config import override_settings
 from ...core.hashing import canonical_json_bytes, sha256_hex
@@ -123,14 +123,10 @@ def test_composed_wizard_and_book_use_retained_pin_and_reopen_canonical_encrypte
 
 
 @pytest.mark.parametrize(
-    ("refusal", "condition", "action_id"),
+    ("refusal", "condition"),
     [
-        (
-            ModelRunRefusalCode.MODEL_NOT_INSTALLED,
-            ProbePreconditionCondition.ROLE_MODEL_INSTALLED,
-            LOCAL_AI_PROVISION_ACTION_ID,
-        ),
-        (ModelRunRefusalCode.NO_SELECTION, LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED, None),
+        (ModelRunRefusalCode.MODEL_NOT_INSTALLED, ProbePreconditionCondition.ROLE_MODEL_INSTALLED),
+        (ModelRunRefusalCode.NO_SELECTION, LLMPreconditionCondition.AGENT_MODEL_RUN_COMPLETED),
     ],
     ids=["model-not-installed", "no-selection"],
 )
@@ -139,14 +135,12 @@ def test_a_book_whose_mapping_reader_is_missing_refuses_with_its_typed_verdict(
     authority_operation: PinnedAuthorityOperation,
     refusal: ModelRunRefusalCode,
     condition: LLMPreconditionCondition | ProbePreconditionCondition,
-    action_id: str | None,
 ) -> None:
     """The composed mapper reports the reader, and the book refuses with its verdict rather than missing columns.
 
     The agent service refuses the column-mapping role's lookup. A selected
-    model the local server does not hold names the local AI setup; a role
-    with no selection names no action and says the role needs one. Either
-    way nothing is run.
+    model the local server does not hold is named in the verdict; a role
+    with no selection says the role needs one. Either way nothing is run.
     """
     admissions: list[str] = []
     with (
@@ -185,11 +179,5 @@ def test_a_book_whose_mapping_reader_is_missing_refuses_with_its_typed_verdict(
     projected = detail.precondition_verdict()
     assert projected is not None
     assert projected.failed_condition_id == condition.value
-    if action_id is None:
-        assert verdict.action is None
-        assert projected.action is None
-    else:
-        assert verdict.action is not None
-        assert verdict.action.action_id == action_id
-        assert projected.action is not None
-        assert projected.action.action_id == action_id
+    assert verdict.action is None
+    assert projected.action is None

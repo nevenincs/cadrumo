@@ -130,23 +130,14 @@ developer's local override.
 ### Component engine coverage
 
 The native component engine (`native/application/src/provisioning/`) downloads,
-installs, checks and removes the browser and the local AI; no Python provisions a
-component, and `dev/quality/tests/test_no_python_provisioning.py` refuses one that
-tries. A change to the engine, its `components` role or a Python client of it runs
-three lanes beside the gate below:
+installs, checks and removes the browser and the local AI for the desktop
+application; no Python provisions a component, and
+`dev/quality/tests/test_no_python_provisioning.py` refuses one that tries. A change
+to the engine runs `just test-native-provisioning-linux` beside the gate below. It
+runs the engine's tests on Linux, directly or through WSL, including the transfer
+fault set in `native/application/tests/provisioning_faults.rs`.
 
-- `just test-native-provisioning-linux` runs the engine's tests on Linux, directly
-  or through WSL, including the transfer fault set in
-  `native/application/tests/provisioning_faults.rs`.
-- `just test-components-role IMAGE` drives the `components` role of a built Cadrumo
-  binary from the client, the CLI, the TUI and MCP, for one storage root.
-- `uv run --no-sync python -m dev.smoke.acquisition_lane run --accept-size` sets the
-  browser up for real in a throwaway root under the build tree's `testing`
-  directory: an approved setup, a forced interruption, Resume without a second
-  review, the full check, a second run that moves nothing, and the removal. Without
-  `--accept-size` it stops after naming the download size.
-
-The continuous-integration workflows do not run these lanes; where they run is the
+The continuous-integration workflows do not run this lane; where it runs is the
 runner fleet's decision.
 
 ### Native host and credential-store coverage

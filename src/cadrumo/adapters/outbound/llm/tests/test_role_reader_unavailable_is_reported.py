@@ -26,7 +26,6 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusal, ModelRunRefusal
 
 from .....application.ledger.column_roles import ColumnRoleReaderUnavailable
 from .....application.operator_actions.models import PreconditionVerdict
-from .....application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID
 from .....core.config import Settings
 from .....core.field_role import FieldRole
 from .....core.model_roles import ModelRole
@@ -98,11 +97,7 @@ def _assert_refusal(verdict: PreconditionVerdict | None, code: ModelRunRefusalCo
     assert verdict == model_run_refusal_verdict(ModelRunRefusal(code=code), role=role)
     assert verdict.evidence[0].values["model_run_refusal"] == code.value
     assert verdict.evidence[0].values["model_role"] == role.value
-    if code is ModelRunRefusalCode.MODEL_NOT_INSTALLED:
-        assert verdict.action is not None
-        assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
-    else:
-        assert verdict.action is None
+    assert verdict.action is None
     if code is ModelRunRefusalCode.NO_SELECTION:
         assert verdict.evidence[0].values["role_selection_required"] is True
 

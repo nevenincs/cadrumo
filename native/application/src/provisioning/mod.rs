@@ -1,5 +1,5 @@
 //! Component provisioning: the engine that downloads, installs, checks and removes the
-//! browser and the local AI for every surface.
+//! browser and the local AI.
 //!
 //! `pins` reads the declarative package data naming the only bytes the engine accepts.
 //! `url` reduces an address to what a download hop is judged by. `proxy` reads the
@@ -18,10 +18,10 @@
 //!
 //! `browser` installs the bundled driver's pinned Chromium builds into the layout it reads.
 //!
-//! `engine` composes the items into status, plan, setup, verify, cancel and remove, the
-//! one engine every surface reads; `follow` is what a setup that follows another engine's
-//! running setup waits on. `protocol` is the `components` role's line protocol
-//! over it, and `role_host` resolves an installation for the role from its own process.
+//! `engine` composes the items into status, setup, verify and remove, the one engine the
+//! desktop drives in process; `follow` is what a setup that follows another engine's
+//! running setup waits on. `installation` resolves the installation an engine serves from
+//! the process's own image and environment.
 
 pub mod activity;
 pub mod browser;
@@ -30,16 +30,15 @@ pub mod engine;
 pub mod failure;
 pub mod follow;
 pub(crate) mod http;
+#[cfg(feature = "platform")]
+pub mod installation;
 pub mod items;
 pub mod local_ai;
 pub mod network;
 pub mod pins;
 pub mod plan;
-pub mod protocol;
 pub mod proxy;
 pub mod receipts;
-#[cfg(feature = "platform")]
-pub mod role_host;
 pub mod state;
 pub mod transfer;
 pub mod url;

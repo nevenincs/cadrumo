@@ -8,7 +8,7 @@ service through an execution authority, as the runtime host's authority
 relays them, and the service reports the vision selection's model is not
 installed. The refusal is read back the way a frontend in another process
 reads it: as the operation's recorded error detail, which must carry the
-verdict naming the local AI setup, with no run sent to the service.
+verdict naming the missing model, with no run sent to the service.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
-from ...application.probe_outcomes import LOCAL_AI_PROVISION_ACTION_ID, ProbePreconditionCondition
+from ...application.probe_outcomes import ProbePreconditionCondition
 from ...core.errors.error_codes import get_registered_error_code
 from ...core.model_roles import ModelRole
 from ...core.operations import OperationTerminalCondition, profile_operation_subject
@@ -102,7 +102,7 @@ def _stored_image(profile: TestRuntimeProfile) -> tuple[str, str]:
     return attachment_id, digest
 
 
-def test_a_confirm_whose_re_read_needs_the_vision_model_settles_with_the_local_ai_setup(
+def test_a_confirm_whose_re_read_needs_the_vision_model_settles(
     tmp_path: Path, profile: TestRuntimeProfile, operation: PinnedAuthorityOperation
 ) -> None:
     attachment_id, digest = _stored_image(profile)
@@ -175,7 +175,6 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles_with_the_local_a
     assert verdict is not None, "the settled refusal lost the service's verdict"
     assert verdict.failed_condition_id == ProbePreconditionCondition.ROLE_MODEL_INSTALLED.value
     assert verdict.evidence[0].values["role"] == ModelRole.VISION_TRANSCRIPTION.value
-    assert verdict.action is not None
-    assert verdict.action.action_id == LOCAL_AI_PROVISION_ACTION_ID
+    assert verdict.action is None
     assert agent.lookups == [ModelRole.VISION_TRANSCRIPTION]
     assert agent.runs == [], "a run was sent for a role whose model is not installed"

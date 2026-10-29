@@ -57,13 +57,13 @@ use cadrumo_application::{
         browser::failure_category,
         engine::{Answer, Engine, Event, Outcome as Ended, Report, SetupRequest},
         failure::FailureCategory,
+        installation::installation_config,
         items::{Destination, ItemId, Locations, PROGRAM_PART},
         local_ai::{
             hardware::Hardware,
             models::{LocalModels, ModelName},
         },
         plan::{PlanEntry, SetupPlan},
-        role_host,
         state::{
             BlockedReason, CheckMode, ItemState, RecoveryAction, SetupStep, StaleReason, StatusRow,
         },
@@ -95,7 +95,7 @@ pub fn installation() -> Arc<Engines> {
     Arc::new(move || {
         #[cfg(unix)]
         cadrumo_platform::process_scope::contain_current()?;
-        let mut config = role_host::installation_config()?;
+        let mut config = installation_config()?;
         let measured = *hardware.get_or_init(|| Hardware::measure(&*config.ambient));
         config.hardware = Some(measured);
         Ok(Installation {
