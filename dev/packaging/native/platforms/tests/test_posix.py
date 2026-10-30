@@ -240,6 +240,31 @@ def test_sdk_result_is_the_declared_destination_after_archive_root_move(tmp_path
     assert (tmp_path / "sdk-provenance.json").is_file()
 
 
+def test_sdk_rebuild_replaces_derived_state_and_build_tool_output_directories(tmp_path: Path) -> None:
+    contract = {"platform": "linux-x86-64", "sdk": {"archive_root": "python", "root": "selected/python"}}
+    tools = _sdk_archive(tmp_path)
+    (tmp_path / "selected/python/install/lib").mkdir(parents=True)
+    first = acquire_sdk(tmp_path, "3.13.11", tools, contract)
+    (first / "stale.txt").write_text("previous build", encoding="utf-8")
+    second = acquire_sdk(tmp_path, "3.13.11", tools, contract)
+    assert second == first
+    assert (second / "include/patchlevel.h").is_file()
+    assert not (second / "stale.txt").exists()
+    assert not (second / "install").exists()
+
+
+def test_sdk_rebuild_refuses_symlinked_derived_state(tmp_path: Path) -> None:
+    contract = {"platform": "linux-x86-64", "sdk": {"archive_root": "python", "root": "sdk"}}
+    tools = _sdk_archive(tmp_path)
+    outside = tmp_path.parent / f"{tmp_path.name}-outside"
+    outside.mkdir()
+    (outside / "keep.txt").write_text("outside", encoding="utf-8")
+    (tmp_path / "sdk").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="must not be a symlink"):
+        acquire_sdk(tmp_path, "3.13.11", tools, contract)
+    assert (outside / "keep.txt").is_file()
+
+
 @pytest.mark.parametrize("selected", ["sdk-extraction", "sdk-extraction/python", "sdk-extraction/python/nested"])
 def test_sdk_move_rejects_overlapping_archive_and_destination_roots(tmp_path: Path, selected: str) -> None:
     with pytest.raises(ValueError, match="must not overlap"):

@@ -27,7 +27,15 @@ inputs refuse configuration. The toolchain preserves the canonical architecture
 and deployment floor and does not change the host's selected developer tools.
 Supply an explicit `CADRUMO_RUST_LINKER` carrying that same compiler and SDK;
 Cargo does not inherit CMake's sysroot options. Builder receipts bind the selected
-files and complete SDK inventory to their bytes.
+files and complete SDK inventory to their bytes. A developer records these
+per-machine values once in an ignored `CMakeUserPresets.json` configure preset
+that inherits `macos-arm64` (for example from `xcrun -f clang`,
+`xcrun --show-sdk-path` and `xcrun --show-sdk-version`), together with
+`CADRUMO_RUST_ROOT`, `CADRUMO_ZSTD`, `CADRUMO_INSTALL_NAME_TOOL`,
+`CADRUMO_CODESIGN`, `CADRUMO_CARGO_DENY` and the agent source directory. The
+binary directory's cache retains them, so the `just` native recipes reuse the
+same reviewed inputs. The signing identity `-` produces an ad-hoc signed local
+build that is not a distributable release.
 
 `CADRUMO_CONFIGURE_PAYLOAD=OFF` configures native component targets and their tests
 without the full product/documentation/desktop assembly graph. It supports backend
