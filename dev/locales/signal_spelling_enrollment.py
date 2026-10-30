@@ -126,6 +126,36 @@ _LOCALE_SPELLINGS: dict[str, frozenset[str]] = {
             "loopback",
             # Authored documentation uses the valid US English spelling too.
             "behavior",
+            # The English catalogue and authored docs also use these exact US
+            # forms, absent from the pinned British dictionary: common.yml's
+            # window actions, application.yml's synchronization/finalization
+            # prose, errors.yml's authorization diagnostics, wizard.yml's
+            # enrollment prompts, and docs/how-to/censo-update.md. Preserve
+            # only the spellings and capitalization observed by the audit.
+            "Maximize",
+            "Minimize",
+            "Organize",
+            "Initialize",
+            "Summarize",
+            "summarize",
+            "finalized",
+            "synchronization",
+            "Synchronization",
+            "synchronizing",
+            "synchronize",
+            "enrollment",
+            "Enrollment",
+            "enroll",
+            "Enroll",
+            "Unrecognized",
+            "recognized",
+            "authorized",
+            "authorize",
+            "authorization",
+            "serialization",
+            "localized",
+            "localization",
+            "normalization",
             # These exact lowercase names occur in translated operator
             # commands and English CLI diagnostics: ``aeat`` is the literal
             # command root, ``auth``/``config`` are command namespaces, and

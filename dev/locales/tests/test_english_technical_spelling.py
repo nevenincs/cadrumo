@@ -64,6 +64,44 @@ def test_attested_english_cli_and_application_terms_are_exact_and_scoped() -> No
     assert not is_project_spelling("ca", "keychain")
     assert not is_project_spelling("es", "keychain")
     assert not is_project_spelling("hu", "keychain")
-    assert not is_project_spelling("ca", "antigravity")
-    assert not is_project_spelling("es", "antigravity")
-    assert not is_project_spelling("hu", "antigravity")
+    # Provider identifiers keep their canonical spelling in every locale.
+    for locale in ("en", "es", "ca", "hu"):
+        assert is_project_spelling(locale, "antigravity")
+        assert not is_project_spelling(locale, "antigravty")
+
+
+@pytest.mark.parametrize(
+    ("word", "near_miss"),
+    [
+        ("Maximize", "Maximze"),
+        ("Minimize", "Minimze"),
+        ("Organize", "Organze"),
+        ("Initialize", "Initialze"),
+        ("Summarize", "Summarze"),
+        ("summarize", "summarze"),
+        ("finalized", "finalzed"),
+        ("synchronization", "syncronization"),
+        ("Synchronization", "Syncronization"),
+        ("synchronizing", "syncronizing"),
+        ("synchronize", "syncronize"),
+        ("enrollment", "enrolmentt"),
+        ("Enrollment", "Enrolmentt"),
+        ("enroll", "enrolll"),
+        ("Enroll", "Enrolll"),
+        ("Unrecognized", "Unrecogized"),
+        ("recognized", "recogized"),
+        ("authorized", "autorized"),
+        ("authorize", "autorize"),
+        ("authorization", "autorization"),
+        ("serialization", "seralization"),
+        ("localized", "localzed"),
+        ("localization", "localzation"),
+        ("normalization", "normalzation"),
+    ],
+)
+def test_attested_us_english_forms_do_not_admit_typos_or_other_locales(word: str, near_miss: str) -> None:
+    assert is_project_spelling("en", word)
+    assert not is_project_spelling("en", near_miss)
+    assert not is_project_spelling("en", word.upper())
+    for locale in ("es", "ca", "hu"):
+        assert not is_project_spelling(locale, word)
