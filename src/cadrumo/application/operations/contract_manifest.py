@@ -27,13 +27,14 @@ from typing import Literal, Self, override
 
 from pydantic import BaseModel, Field, PrivateAttr, field_validator, model_validator
 
-from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.resources.bundled_data import packaged_data
 from ...core.type_guards import is_object_list, is_object_list_or_tuple, is_str_keyed_dict
 from ..operator_actions.models import ActionReference
 from ._registry_contracts import declared_public_schema_identities
+from .errors import OperationContractStaleError
 from .operation_definition import OperationDefinition
 from .registry import (
     OperationPublicContractSetV1,
@@ -205,14 +206,14 @@ class ManifestOperationRegistry(OperationRegistry):
             self._validate_public_registration(definition, registration)
             lifetime = definition.ephemeral_secret.lifetime if definition.ephemeral_secret is not None else None
             if registration.contract != entry.contract or lifetime != _lifetime(entry):
-                raise InternalInvariantError(
+                raise OperationContractStaleError(
                     f"operation {definition_id!r} no longer matches the contract manifest; regenerate it"
                 )
             for binding in registration.schema_bindings:
                 key = (binding.identity.schema_id, binding.identity.schema_version)
                 current = (binding.identity.schema_fingerprint, binding.model_type)
                 if schema_models.setdefault(key, current) != current:
-                    raise InternalInvariantError(
+                    raise OperationContractStaleError(
                         "one operation schema identity must bind one exact model and fingerprint"
                     )
         self._schema_models = schema_models
@@ -285,7 +286,9 @@ def _assert_group_population(
         or frozenset(definitions) != expected
         or frozenset(registrations) != expected
     ):
-        raise InternalInvariantError(f"operation group {group!r} does not compose what the contract manifest names")
+        raise OperationContractStaleError(
+            f"operation group {group!r} does not compose what the contract manifest names"
+        )
 
 
 def _ordered_sets(value: object, dumped: object) -> object:

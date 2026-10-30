@@ -14,6 +14,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ValidationError
 
+from cadrumo.application.operations.errors import OperationContractStaleError
 from cadrumo.application.operations.frontend_requests import (
     OperationResponseControlRequestV1,
     OperationResultProjectionRequestV1,
@@ -215,6 +216,20 @@ async def operate(
                 if failed.is_set():
                     raise
                 _write_operation_refusal(channel, operations, request.request_id, refusal)
+            except OperationContractStaleError:
+                # The shipped manifest and the composed group disagree for this
+                # operation only. Answer it as unavailable, with no retry
+                # signal, and keep serving the profile's other operations.
+                outcome = "refused"
+                if failed.is_set():
+                    raise
+                _LOGGER.error("worker operation contract is stale; operation refused as unavailable")
+                _write_operation_refusal(
+                    channel,
+                    operations,
+                    request.request_id,
+                    ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE),
+                )
             finally:
                 if expiry_needed:
                     changed.set()

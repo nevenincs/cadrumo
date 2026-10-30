@@ -536,7 +536,7 @@ build-release: build-distributions
 
 [doc('Build every published distribution and refuse any file over the index cap.')]
 [group('build')]
-build-distributions:
+build-distributions: check-operation-contract-manifest
     @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions .
     @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions packaging/cadrumo_data_manuals
     @uv run --no-sync python -B -m dev.packaging.build_storage --work build/distributions-work -- uv build --out-dir build/distributions packaging/cadrumo_data_official
