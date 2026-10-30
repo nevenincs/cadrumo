@@ -20,7 +20,7 @@ from ...domain.renta.actividad_asset.claims import current_revisions
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction
-from ..actividad_asset.ports import AcquisitionLedgerReader
+from ..invoices.catalogue_reads_ports import TransactionCatalogueReader
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import CalculationSourceDiagnostic
 
@@ -67,7 +67,7 @@ def _paid_in_euro(row: Transaction) -> Decimal | None:
 def activity_asset_ledger_findings(
     revisions: tuple[ActivityAssetRevision, ...],
     *,
-    ledger: AcquisitionLedgerReader,
+    ledger: TransactionCatalogueReader,
     tax_year: int,
     source_kind: str,
     resolver_id: str,
@@ -91,7 +91,7 @@ def activity_asset_ledger_findings(
     )
     if not groups:
         return ()
-    found = ledger.load_by_ids(sorted({row for group in groups for row in group.transaction_ids})).transactions
+    found = ledger.load().transactions
     findings: list[CalculationSourceDiagnostic] = []
     for group in groups:
         rows = tuple(found[row] for row in sorted(group.transaction_ids) if row in found)
@@ -159,7 +159,7 @@ def _group_finding(
 def capital_good_transaction_ids(
     transaction_ids: Iterable[str],
     *,
-    ledger: AcquisitionLedgerReader,
+    ledger: TransactionCatalogueReader,
     tax_year: int,
 ) -> frozenset[str]:
     """Return the rows whose IVA treatment already declares them a bien de inversión.
@@ -171,13 +171,14 @@ def capital_good_transaction_ids(
     Returns:
         The addressed rows carrying an investment-acquisition deduction kind.
     """
-    addressed = sorted(set(transaction_ids))
+    addressed = frozenset(transaction_ids)
     if not addressed:
-        return frozenset()
+        return frozenset[str]()
     return frozenset(
         str(transaction_id)
-        for transaction_id, row in ledger.load_by_ids(addressed).transactions.items()
-        if row.deduction_fact_kind is not None
+        for transaction_id, row in ledger.load().transactions.items()
+        if transaction_id in addressed
+        and row.deduction_fact_kind is not None
         and is_iva_deduction_kind(
             row.deduction_fact_kind,
             _INVESTMENT_ACQUISITION_KINDS,
